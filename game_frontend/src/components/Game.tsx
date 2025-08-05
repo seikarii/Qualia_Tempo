@@ -1,11 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DebugHUD } from './DebugHUD';
 import { Metronome } from './Metronome';
-import { startGame, stopGame, eventManager } from '../game';
+import { startGame, stopGame, eventManager as globalEventManager } from '../game';
 import { QualiaState } from '../ecs/components/QualiaState';
+import { EventManager } from '../events/EventManager';
 
 import { useRhythmicInput } from '../hooks/useRhythmicInput';
 import { useAbilities } from '../hooks/useAbilities';
+
+interface GameProps {
+  eventManager: EventManager;
+  useAbility: (abilityName: string) => boolean;
+  selectedCombatId: string;
+}
 
 const gameContainerStyle: React.CSSProperties = {
   width: '100vw',
@@ -16,7 +23,7 @@ const gameContainerStyle: React.CSSProperties = {
   cursor: 'crosshair',
 };
 
-export const Game: React.FC = () => {
+export const Game: React.FC<GameProps> = ({ eventManager, useAbility, selectedCombatId }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [qualia, setQualia] = useState<QualiaState>({
     name: 'QualiaState', intensity: 0, precision: 0, aggression: 0, flow: 0, chaos: 0, recovery: 0, transcendence: 0,
@@ -30,7 +37,7 @@ export const Game: React.FC = () => {
 
   useEffect(() => {
     if (canvasRef.current) {
-      startGame(canvasRef.current);
+      startGame(canvasRef.current, eventManager, useAbility, selectedCombatId);
 
       // Subscribe to Qualia updates
       eventManager.on('qualia_updated', (newQualia: QualiaState) => {
@@ -58,7 +65,7 @@ export const Game: React.FC = () => {
       eventManager.off('boss_health_updated');
       eventManager.off('combo_updated');
     };
-  }, []);
+  }, [eventManager, useAbility, selectedCombatId]);
 
   const cooldowns = {
     pause: getRemainingCooldown('pause'),
@@ -71,7 +78,7 @@ export const Game: React.FC = () => {
     <div style={gameContainerStyle}>
       <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} />
       <DebugHUD qualia={qualia} combo={combo} cooldowns={cooldowns} />
-      <Metronome />
+      <Metronome eventManager={eventManager} />
       <div style={{ position: 'fixed', top: 10, right: 10, color: 'white', fontSize: '24px' }}>
         Boss Health: {bossHealth.toFixed(0)}
       </div>

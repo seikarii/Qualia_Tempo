@@ -8,6 +8,8 @@ import {
   TalentComponent,
 } from '../../ecs/Component';
 
+import { NoteComponent } from '../../ecs/components/NoteComponent';
+
 export interface IRenderer {
   initialize(canvas: HTMLCanvasElement): void;
   cleanup(activeEntities: Set<Entity>): void;
@@ -21,7 +23,8 @@ export interface IRenderer {
     isProjectile: boolean,
     health?: HealthComponent,
     buff?: BuffComponent,
-    talents?: TalentComponent
+    talents?: TalentComponent,
+    note?: NoteComponent
   ): void;
   render(deltaTime: number, time: number): void;
   addAnimatedVFX(animation: (deltaTime: number) => boolean): void;

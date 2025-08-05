@@ -10,7 +10,8 @@ import {
   ProjectileComponent,
   TalentComponent,
 } from '../ecs/Component.js';
-import { IRenderer } from './rendering/IRenderer.js';
+import { NoteComponent } from '../ecs/components/NoteComponent.js';
+import type { IRenderer } from './rendering/IRenderer.js';
 import { WebGLRenderer } from './rendering/WebGLRenderer.js';
 
 export class RenderSystem extends System {
@@ -34,7 +35,7 @@ export class RenderSystem extends System {
     if (!this.ecs) return;
 
     // Limpieza de entidades que ya no existen en el ECS
-    const activeEntities = new Set(this.ecs.queryEntities().map(e => e));
+    const activeEntities = new Set(this.ecs.queryEntities().map((e: number) => e));
     this.renderer.cleanup(activeEntities);
 
     this.renderer.drawBackground(
@@ -43,7 +44,7 @@ export class RenderSystem extends System {
       false // Default beat
     );
 
-    const query = this.ecs.queryEntities(
+    const query: number[] = this.ecs.queryEntities(
       PositionComponent,
       RenderableComponent
     );
@@ -53,6 +54,7 @@ export class RenderSystem extends System {
       const health = this.ecs.getComponent(entity, HealthComponent);
       const buff = this.ecs.getComponent(entity, BuffComponent);
       const talents = this.ecs.getComponent(entity, TalentComponent);
+      const note = this.ecs.getComponent(entity, NoteComponent);
 
       const isPlayer = this.ecs.hasComponent(entity, PlayerComponent);
       const isEnemy = this.ecs.hasComponent(entity, AIComponent);
@@ -67,7 +69,8 @@ export class RenderSystem extends System {
         isProjectile,
         health,
         buff,
-        talents
+        talents,
+        note
       );
     }
 

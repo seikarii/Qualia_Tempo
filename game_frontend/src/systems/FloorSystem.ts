@@ -4,13 +4,13 @@ import {
   PlayerComponent,
   RenderableComponent,
 } from '../ecs/Component.js';
-import { NoteComponent } from '../ecs/components/NoteComponent.js';
+import type { NoteComponent } from '../ecs/components/NoteComponent.js';
 import { Entity } from '../ecs/Entity.js';
 import { GameEvent } from '../events/GameEvents.js';
 import { EventManager } from '../events/EventManager.js';
 import { ECSManager } from '../ecs/ECSManager.js';
 import { CombatManager } from '../data/CombatManager.js';
-import { NoteData } from '../data/CombatData.js';
+import type { NoteData } from '../data/CombatData.js';
 
 export class FloorSystem extends System {
     private combatManager: CombatManager;
@@ -40,7 +40,7 @@ export class FloorSystem extends System {
         this.gameTime = time; // Update game time
 
         if (!this.playerEntity) {
-            const playerEntities = this.ecs.getEntitiesByComponent(PlayerComponent);
+            const playerEntities: Entity[] = this.ecs.getEntitiesByComponent(PlayerComponent);
             if (playerEntities.length > 0) {
                 this.playerEntity = playerEntities[0];
             }
@@ -70,13 +70,13 @@ export class FloorSystem extends System {
 
     private spawnNotes(): void {
         while (this.notesToSpawn.length > 0 && this.notesToSpawn[0].timestamp <= this.gameTime / 1000) {
-            const noteData = this.notesToSpawn.shift();
+            const noteData: NoteData | undefined = this.notesToSpawn.shift();
             if (noteData) {
-                const noteEntity = this.ecs.createEntity();
-                const noteComponent = { ...NoteComponent, position: noteData.position, spawnTime: this.gameTime, duration: noteData.duration, color: '#FFFF00' }; // Example color
+                const noteEntity: Entity = this.ecs.createEntity();
+                const noteComponent = new NoteComponent(noteData.position, this.gameTime, noteData.duration, '#FFFF00'); // Example color
                 this.ecs.addComponent(noteEntity, noteComponent);
-                this.ecs.addComponent(noteEntity, { ...PositionComponent, x: noteData.position.x, y: noteData.position.y });
-                this.ecs.addComponent(noteEntity, { ...RenderableComponent, shape: 'rectangle', width: 50, height: 50, color: noteComponent.color });
+                this.ecs.addComponent(noteEntity, new PositionComponent(noteData.position.x, noteData.position.y));
+                this.ecs.addComponent(noteEntity, new RenderableComponent('rectangle', 50, 50, noteComponent.color));
                 this.spawnedNotes.set(noteEntity, noteComponent);
                 this.eventManager.emit(GameEvent.FloorTileSpawned, { tileId: noteEntity, position: noteData.position, color: noteComponent.color });
                 console.log(`Spawned note at ${noteData.timestamp}s`);
@@ -99,9 +99,9 @@ export class FloorSystem extends System {
             }
 
             // Check player collision (simplified for now)
-            const dx = playerPositionComponent.x - noteComponent.position.x;
-            const dy = playerPositionComponent.y - noteComponent.position.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const dx: number = playerPositionComponent.x - noteComponent.position.x;
+            const dy: number = playerPositionComponent.y - noteComponent.position.y;
+            const distance: number = Math.sqrt(dx * dx + dy * dy);
 
             // If player is close enough and note hasn't been hit yet
             if (distance < 50 && !noteComponent.hit) { // 50 is a placeholder radius
@@ -118,13 +118,13 @@ export class FloorSystem extends System {
         const playerPositionComponent = this.playerEntity ? this.ecs.getComponent(this.playerEntity, PositionComponent) : null;
         if (!playerPositionComponent) return;
 
-        let hitNoteThisDash = false;
+        let hitNoteThisDash: boolean = false;
         for (const [entity, noteComponent] of this.spawnedNotes.entries()) {
             if (noteComponent.hit) continue; // Already hit
 
-            const dx = playerPositionComponent.x - noteComponent.position.x;
-            const dy = playerPositionComponent.y - noteComponent.position.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const dx: number = playerPositionComponent.x - noteComponent.position.x;
+            const dy: number = playerPositionComponent.y - noteComponent.position.y;
+            const distance: number = Math.sqrt(dx * dx + dy * dy);
 
             if (distance < 50) { // Player is near a note
                 // The actual hit/miss decision is made by useRhythmicInput based on rhythm.
@@ -147,4 +147,3 @@ export class FloorSystem extends System {
              // this system just needs to react to those specific events.
         }
     }
-}

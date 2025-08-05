@@ -2,24 +2,25 @@ import { System } from '../ecs/System.js';
 import { EventManager } from '../events/EventManager';
 import * as Tone from 'tone';
 import { CombatManager } from '../data/CombatManager';
+import { GameEvent } from '../events/GameEvents';
 
 // Rutas a los archivos de audio. Se asume que están en public/sounds.
 const LAYER_1_TRACK = '/sounds/Musica2.mp3';
 const LAYER_2_TRACK = '/sounds/Musica3.mp3';
 const LAYER_3_TRACK = '/sounds/Musica4.mp3';
 const CHARLIE_VOICE_TRACK = '/sounds/charlie_voice.mp3'; // Placeholder: Este archivo debe ser provisto.
+const BOSS1_TRACK = '/sounds/Boss1.mp3';
 
 export class MusicSystem extends System {
   private eventManager: EventManager;
   private combatManager: CombatManager;
   private player: Tone.Player | null = null;
-  private meter: Tone.Meter | null = null;
-  private fft: Tone.FFT | null = null;
   private isInitialized = false;
   private currentBpm: number = 0;
   private panner: Tone.Panner3D | null = null;
   private charlieVoicePlayer: Tone.Player | null = null;
   private layers: Tone.Player[] = [];
+  private beatLoop: Tone.Loop | null = null;
 
   constructor(eventManager: EventManager, combatManager: CombatManager) {
     super(); // Call the base System constructor
@@ -65,6 +66,11 @@ export class MusicSystem extends System {
     ]);
     
     Tone.Transport.start(); // Start Tone.Transport
+
+    this.beatLoop = new Tone.Loop(time => {
+        this.eventManager.emit(GameEvent.Beat, { time: Tone.Transport.seconds, bpm: Tone.Transport.bpm.value });
+    }, '4n').start(0); // Trigger every quarter note
+
     this.isInitialized = true;
     console.log('MusicSystem initialized with Tone.js');
   }
@@ -77,12 +83,20 @@ export class MusicSystem extends System {
       return;
     }
 
-    this.player.url.value = combatData.audioPath;
+    if (combatId === 'Boss1') {
+        this.player.url.value = BOSS1_TRACK;
+    } else {
+        this.player.url.value = combatData.audioPath;
+    }
     this.currentBpm = combatData.bpm;
     Tone.Transport.bpm.value = this.currentBpm; // Set initial BPM
     this.player.start();
     this.layers.forEach(layer => layer.start());
     this.charlieVoicePlayer?.start();
+    if (this.beatLoop) {
+        this.beatLoop.interval = `${60 / this.currentBpm}s`; // Set beat interval based on BPM
+        this.beatLoop.start(0);
+    }
   }
 
   private async handleStartAudio(data: { trackId: string }) {
@@ -102,6 +116,9 @@ export class MusicSystem extends System {
 
     if (Tone.Transport) {
       Tone.Transport.bpm.value = this.currentBpm * tempoMultiplier;
+      if (this.beatLoop) {
+          this.beatLoop.interval = `${60 / Tone.Transport.bpm.value}s`;
+      }
     }
 
     // Coro Infinito: Adjust layer volumes based on intensity/combo
@@ -140,7 +157,7 @@ export class MusicSystem extends System {
     }
   }
 
-  public update() {
+  public update(deltaTime: number, time: number): void {
     // Lógica de análisis de música si es necesaria
   }
 }

@@ -5,9 +5,12 @@ interface DebugHUDProps {
   qualia: QualiaState;
   combo: number;
   cooldowns: { [key: string]: number };
+  playerHealth: number;
+  bossHealth: number;
+  dashCharges: number;
 }
 
-export const DebugHUD: React.FC<DebugHUDProps> = ({ qualia, combo, cooldowns }) => {
+export const DebugHUD: React.FC<DebugHUDProps> = ({ qualia, combo, cooldowns, playerHealth, bossHealth, dashCharges }) => {
   return (
     <div style={{
       position: 'fixed',
@@ -21,6 +24,9 @@ export const DebugHUD: React.FC<DebugHUDProps> = ({ qualia, combo, cooldowns }) 
       padding: '10px',
       borderRadius: '5px',
     }}>
+      <div>Player Health: {playerHealth.toFixed(0)}</div>
+      <div>Boss Health: {bossHealth.toFixed(0)}</div>
+      <div>Dash Charges: {dashCharges.toFixed(0)}</div>
       <div>Intensity: {qualia.intensity.toFixed(2)}</div>
       <div>Precision: {qualia.precision.toFixed(2)}</div>
       <div>Aggression: {qualia.aggression.toFixed(2)}</div>

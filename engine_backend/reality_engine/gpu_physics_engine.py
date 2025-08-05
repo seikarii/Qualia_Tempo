@@ -31,13 +31,16 @@ class GPUPhysicsEngine:
         # Buffers will be created/updated dynamically based on simulation data
         self.entity_buffer: moderngl.Buffer | None = None
         self.lattice_buffer: moderngl.Buffer | None = None
+        self.particle_buffer: moderngl.Buffer | None = None
         self.uniform_buffer: moderngl.Buffer | None = None
 
         self.entities_data: np.ndarray | None = None  # Store CPU-side entity data
         self.lattices_data: np.ndarray | None = None  # Store CPU-side lattice data
+        self.particles_data: np.ndarray | None = None # Store CPU-side particle data
 
         self.entity_count = 0
         self.lattice_count = 0
+        self.particle_count = 0
         self.simulation_tick = 0
 
     def _pack_structured_data(self, data: np.ndarray, dtype: np.dtype) -> bytes:
@@ -104,6 +107,29 @@ class GPUPhysicsEngine:
         self.lattice_buffer.bind_to_storage_buffer(1)  # Bind to binding point 1
         logger.debug(f"Created lattice buffer with {self.lattice_count} lattices.")
 
+    def _create_particle_buffer(self, particles_data: np.ndarray):
+        """Creates or updates the particle buffer on the GPU."""
+        if self.ctx is None:
+            logger.error("ModernGL context is None. Cannot create particle buffer.")
+            return
+
+        if len(particles_data) == 0:
+            if self.particle_buffer:
+                self.particle_buffer.release()
+                self.particle_buffer = None
+            self.particle_count = 0
+            logger.debug("No particle data provided. Particle buffer released.")
+            return
+
+        if self.particle_buffer:
+            self.particle_buffer.release()
+
+        packed_particles = self._pack_structured_data(particles_data, particles_data.dtype)
+        self.particle_buffer = self.ctx.buffer(packed_particles)
+        self.particle_count = len(particles_data)
+        self.particle_buffer.bind_to_storage_buffer(3)  # Bind to binding point 3
+        logger.debug(f"Created particle buffer with {self.particle_count} particles.")
+
     def _create_uniform_buffer(
         self,
         delta_time: float,
@@ -140,6 +166,7 @@ class GPUPhysicsEngine:
         self,
         entities_data: np.ndarray,
         lattices_data: np.ndarray,
+        particles_data: np.ndarray,
         delta_time: float,
         reality_coherence: float,
         unified_field_center: tuple,
@@ -151,8 +178,10 @@ class GPUPhysicsEngine:
         self.simulation_tick = simulation_tick
         self.entities_data = entities_data  # Store CPU-side data
         self.lattices_data = lattices_data  # Store CPU-side data
+        self.particles_data = particles_data # Store CPU-side particle data
         self._create_entity_buffer(entities_data)
         self._create_lattice_buffer(lattices_data)
+        self._create_particle_buffer(particles_data)
         self._create_uniform_buffer(
             delta_time,
             reality_coherence,

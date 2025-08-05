@@ -6,6 +6,9 @@ import {
   PositionComponent,
   RenderableComponent,
   AIComponent,
+  HealthComponent,
+  BuffComponent,
+  TalentComponent,
 } from '../../ecs/Component';
 import { NoteComponent } from '../../ecs/components/NoteComponent'; // Import NoteComponent
 import { ECSManager } from '../../ecs/ECSManager';
@@ -73,6 +76,9 @@ export class WebGLRenderer implements IRenderer {
   private ecs: ECSManager | null = null;
   private context: RenderContext = 'menu';
   private entityMap: Map<Entity, THREE.Object3D> = new Map();
+  private noteInstanceMap: Map<Entity, number> = new Map();
+  private noteInstancedMesh: THREE.InstancedMesh;
+  private noteDummy: THREE.Object3D = new THREE.Object3D();
 
   constructor(private canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({
@@ -100,6 +106,13 @@ export class WebGLRenderer implements IRenderer {
     this.setupBackground();
     this.setupScenes();
     this.createShaderMaterials();
+
+    // Initialize InstancedMesh for notes
+    const noteGeometry = new THREE.PlaneGeometry(50, 50);
+    const noteMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff }); // White material, color will be set per instance
+    this.noteInstancedMesh = new THREE.InstancedMesh(noteGeometry, noteMaterial, 1000); // Max 1000 notes
+    this.noteInstancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.scene.add(this.noteInstancedMesh);
   }
 
   public setECS(ecs: ECSManager) {
@@ -196,11 +209,17 @@ export class WebGLRenderer implements IRenderer {
     });
   }
   
-  public drawEntity(
+    public drawEntity(
     entity: Entity,
     pos: PositionComponent,
     renderable: RenderableComponent,
     isPlayer: boolean,
+    isEnemy: boolean,
+    isProjectile: boolean,
+    health?: HealthComponent,
+    buff?: BuffComponent,
+    talents?: TalentComponent,
+    note?: NoteComponent
   ): void {
     if (this.context !== 'playing') return;
     let object = this.entityMap.get(entity);
@@ -227,22 +246,36 @@ export class WebGLRenderer implements IRenderer {
 
     const aiComponent = this.ecs?.getComponent(entity, AIComponent);
     if (aiComponent && object instanceof THREE.Mesh) {
-        const material = object.material as THREE.MeshStandardMaterial;
         if (aiComponent.aiType === 'conductor') {
             object.material = conductorMaterial;
             conductorMaterial.uniforms.u_color.value.set(renderable.color);
         } else if (aiComponent.aiType === 'virtuoso') {
             object.material = virtuosoMaterial;
             virtuosoMaterial.uniforms.u_color.value.set(renderable.color);
-        } else if (material.isMeshStandardMaterial) {
-            material.color.set(renderable.color);
+        } else if (object.material instanceof THREE.MeshStandardMaterial) {
+            (object.material as THREE.MeshStandardMaterial).color.set(renderable.color);
         }
     }
 
     // Handle NoteComponent rendering
-    const noteComponent = this.ecs?.getComponent(entity, NoteComponent);
-    if (noteComponent && object instanceof THREE.Mesh) {
-        (object.material as THREE.MeshStandardMaterial).color.set(noteComponent.color);
+    // Handle NoteComponent rendering with InstancedMesh
+    if (note) {
+      let instanceId = this.noteInstanceMap.get(entity);
+      if (instanceId === undefined) {
+        instanceId = this.noteInstancedMesh.count;
+        this.noteInstanceMap.set(entity, instanceId);
+        this.noteInstancedMesh.count++;
+      }
+
+      this.noteDummy.position.set(pos.x, pos.y, 0);
+      this.noteDummy.updateMatrix();
+      this.noteInstancedMesh.setMatrixAt(instanceId, this.noteDummy.matrix);
+      this.noteInstancedMesh.setColorAt(instanceId, new THREE.Color(note.color));
+      this.noteInstancedMesh.instanceMatrix.needsUpdate = true;
+      if (this.noteInstancedMesh.instanceColor) {
+        this.noteInstancedMesh.instanceColor.needsUpdate = true;
+      }
+      return; // Note handled by instancing
     }
   }
 
@@ -251,33 +284,32 @@ export class WebGLRenderer implements IRenderer {
     renderable: RenderableComponent,
     isPlayer: boolean,
   ): THREE.Object3D | null {
+    // If it's a note, we don't create a separate object, it's handled by InstancedMesh
+    const noteComponent = this.ecs?.getComponent(entity, NoteComponent);
+    if (noteComponent) {
+        return null; // Notes are handled by InstancedMesh
+    }
+
     let geometry: THREE.BufferGeometry;
     let material: THREE.Material;
 
-    // Check for NoteComponent to determine geometry and material
-    const noteComponent = this.ecs?.getComponent(entity, NoteComponent);
-    if (noteComponent) {
-        geometry = new THREE.PlaneGeometry(50, 50); // Default size for notes
-        material = new THREE.MeshBasicMaterial({ color: noteComponent.color });
-    } else {
-        switch (renderable.shape) {
-            case 'circle':
-                geometry = new THREE.CircleGeometry(renderable.width / 2, 32);
-                break;
-            case 'rectangle':
-                geometry = new THREE.PlaneGeometry(renderable.width, renderable.height);
-                break;
-            case 'diamond':
-                geometry = new THREE.CylinderGeometry(renderable.width / 2, renderable.width / 2, renderable.height, 4, 1);
-                break;
-            case 'floordrop': // Handle floordrop specifically for notes if not using NoteComponent directly
-                geometry = new THREE.PlaneGeometry(50, 50);
-                break;
-            default:
-                return null;
-        }
-        material = new THREE.MeshStandardMaterial({ color: renderable.color });
+    switch (renderable.shape) {
+        case 'circle':
+            geometry = new THREE.CircleGeometry(renderable.width / 2, 32);
+            break;
+        case 'rectangle':
+            geometry = new THREE.PlaneGeometry(renderable.width, renderable.height);
+            break;
+        case 'diamond':
+            geometry = new THREE.CylinderGeometry(renderable.width / 2, renderable.width / 2, renderable.height, 4, 1);
+            break;
+        case 'floordrop':
+            geometry = new THREE.PlaneGeometry(50, 50);
+            break;
+        default:
+            return null;
     }
+    material = new THREE.MeshStandardMaterial({ color: renderable.color });
 
     const object = new THREE.Mesh(geometry, material);
 
@@ -309,6 +341,47 @@ export class WebGLRenderer implements IRenderer {
             }
         }
 
+        // Handle notes cleanup
+        const noteEntitiesToRemove = new Set<Entity>();
+        for (const entityId of this.noteInstanceMap.keys()) {
+            if (!activeEntities.has(entityId)) {
+                noteEntitiesToRemove.add(entityId);
+            }
+        }
+
+        for (const entityId of noteEntitiesToRemove) {
+            const instanceId = this.noteInstanceMap.get(entityId);
+            if (instanceId !== undefined) {
+                // Swap with the last active instance to maintain a dense array
+                const lastInstanceId = this.noteInstancedMesh.count - 1;
+                if (instanceId !== lastInstanceId) {
+                    this.noteInstancedMesh.getMatrixAt(lastInstanceId, this.noteDummy.matrix);
+                    this.noteInstancedMesh.setMatrixAt(instanceId, this.noteDummy.matrix);
+                    if (this.noteInstancedMesh.instanceColor) {
+                        const lastColor = new THREE.Color();
+                        this.noteInstancedMesh.getColorAt(lastInstanceId, lastColor);
+                        this.noteInstancedMesh.setColorAt(instanceId, lastColor);
+                    }
+                    // Update the entity that was at the last position to its new position
+                    for (const [key, value] of this.noteInstanceMap.entries()) {
+                        if (value === lastInstanceId) {
+                            this.noteInstanceMap.set(key, instanceId);
+                            break;
+                        }
+                    }
+                }
+                this.noteInstancedMesh.count--;
+                this.noteInstanceMap.delete(entityId);
+            }
+        }
+        if (this.noteInstancedMesh.instanceMatrix) {
+            this.noteInstancedMesh.instanceMatrix.needsUpdate = true;
+        }
+        if (this.noteInstancedMesh.instanceColor) {
+            this.noteInstancedMesh.instanceColor.needsUpdate = true;
+        }
+
+        // Handle other entities cleanup
         for (const entityId of entitiesToRemove) {
             const object = this.entityMap.get(entityId);
             if (object) {

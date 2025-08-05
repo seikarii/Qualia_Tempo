@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { EventManager } from '../events/EventManager';
+import { GameEvent } from '../events/GameEvents';
 
 export const useRhythmicInput = (isRunning: boolean, eventManager: EventManager) => {
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
@@ -19,30 +20,59 @@ export const useRhythmicInput = (isRunning: boolean, eventManager: EventManager)
       const timeSinceLastBeat = currentTime - lastBeatTime;
 
       // Check if the click is within a rhythmic window (e.g., 100ms around the beat)
-      if (Math.abs(timeSinceLastBeat % beatInterval) < 100 || Math.abs(beatInterval - (timeSinceLastBeat % beatInterval)) < 100) {
-        eventManager.emit('player_dash_success', { cursorPosition }); // Pass cursorPosition
+      const rhythmicWindow = 100; // ms
+      const isRhythmicallyCorrect = (
+        Math.abs(timeSinceLastBeat % beatInterval) < rhythmicWindow ||
+        Math.abs(beatInterval - (timeSinceLastBeat % beatInterval)) < rhythmicWindow
+      );
+
+      if (isRhythmicallyCorrect) {
+        eventManager.emit(GameEvent.PlayerDashSuccess, { cursorPosition }); // Pass cursorPosition
       } else {
-        eventManager.emit('player_dash_fail', {});
+        eventManager.emit(GameEvent.PlayerDashFail, {});
       }
-      setLastBeatTime(currentTime); // Update last beat time for next calculation
+      // setLastBeatTime(currentTime); // No longer needed, as we listen to Beat event
     };
 
-    // Listen for BPM updates from MusicSystem
-    eventManager.on('music_tempo_update', (data: { intensity: number; combo: number }) => {
-      // Assuming music_tempo_update provides the current BPM or a factor to calculate it
-      // For now, let's just use a placeholder for BPM update logic
-      setBpm(120 * (1 + data.intensity * 0.5)); // Example: BPM scales with intensity
-    });
+    const handleMouseDown = () => {
+        const currentTime = performance.now();
+        // The beatInterval and rhythmicWindow should ideally come from game state or combat data
+        // For now, using fixed values or values updated by the MusicSystem's Beat event
+        const beatInterval = 60 / bpm * 1000; // in ms
+        const timeSinceLastBeat = currentTime - lastBeatTime;
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mousedown', handleMouseDown);
+        // Check if the click is within a rhythmic window (e.g., 100ms around the beat)
+        // This logic needs to account for wrapping around the beat interval
+        const rhythmicWindow = 100; // ms
+        const isRhythmicallyCorrect = (
+          Math.abs(timeSinceLastBeat) < rhythmicWindow ||
+          Math.abs(timeSinceLastBeat - beatInterval) < rhythmicWindow ||
+          Math.abs(timeSinceLastBeat + beatInterval) < rhythmicWindow
+        );
 
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mousedown', handleMouseDown);
-      eventManager.off('music_tempo_update', () => {}); // Clean up event listener
-    };
-  }, [isRunning, lastBeatTime, bpm, eventManager, cursorPosition]); // Add cursorPosition to dependencies
+        if (isRhythmicallyCorrect) {
+          eventManager.emit(GameEvent.PlayerDashSuccess, { cursorPosition }); // Pass cursorPosition
+        } else {
+          eventManager.emit(GameEvent.PlayerDashFail, {});
+        }
+      };
+
+      const handleBeat = (data: { time: number; bpm: number }) => {
+          setLastBeatTime(performance.now()); // Update last beat time when a beat event is received
+          setBpm(data.bpm); // Update BPM from the music system
+      };
+
+      eventManager.on(GameEvent.Beat, handleBeat);
+
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mousedown', handleMouseDown);
+
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mousedown', handleMouseDown);
+        eventManager.off(GameEvent.Beat, handleBeat);
+      };
+    }, [isRunning, lastBeatTime, bpm, eventManager, cursorPosition]);
 
   return { cursorPosition };
 };

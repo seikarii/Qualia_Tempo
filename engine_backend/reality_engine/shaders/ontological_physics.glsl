@@ -9,13 +9,32 @@ struct LivingEntity {
     float consciousness_level;
     vec3 velocity;
     float ontological_drift;
-    vec4 qualia_state; // x=emotional_valence (mapped from -1 to 1 in Python), y=arousal, z=cognitive_complexity, w=consciousness_density
+    float qualia_state_intensity;
+    float qualia_state_precision;
+    float qualia_state_aggression;
+    float qualia_state_flow;
+    float qualia_state_chaos;
+    float qualia_state_recovery;
+    float qualia_state_transcendence;
     float lifecycle_stage;
     float empathetic_resonance;
     float chaos_influence;
     uint entity_id;
     uint is_active; // 1 if active, 0 if dead/inactive
-    vec2 padding; // Align to 16-byte boundaries
+    float padding; // Align to 16-byte boundaries
+};
+
+// Particle structure
+struct Particle {
+    vec3 position;
+    vec3 velocity;
+    vec3 color;
+    float lifetime;
+    float max_lifetime;
+    float size;
+    uint type;
+    uint active;
+    vec2 padding;
 };
 
 // Lattice point structure
@@ -38,17 +57,25 @@ layout(std430, binding = 1) restrict buffer LatticeBuffer {
     LatticePoint lattices[];
 };
 
+layout(std430, binding = 3) restrict buffer ParticleBuffer {
+    Particle particles[];
+};
+
 // Uniform parameters
 layout(std430, binding = 2) restrict readonly buffer UniformBuffer {
     float delta_time;
     float reality_coherence;
     uint entity_count;
     uint lattice_count;
+    uint particle_count;
     vec3 unified_field_center;
     float chaos_entropy_level;
     float time_dilation_factor;
     uint simulation_tick;
+    float particle_multiplier;
 };
+
+uniform sampler2D particle_texture;
 
 // Constants for ontological physics
 const float CONSCIOUSNESS_DECAY_RATE = 0.98;
@@ -102,8 +129,14 @@ vec4 calculateLatticeInfluence(vec3 entity_pos, uint entity_id) {
 float calculateEmpatheticResonance(uint entity_idx) {
     float total_resonance = 0.0;
     vec3 entity_pos = entities[entity_idx].position;
-    vec4 entity_qualia = entities[entity_idx].qualia_state;
-    
+    float entity_qualia_intensity = entities[entity_idx].qualia_state_intensity;
+    float entity_qualia_precision = entities[entity_idx].qualia_state_precision;
+    float entity_qualia_aggression = entities[entity_idx].qualia_state_aggression;
+    float entity_qualia_flow = entities[entity_idx].qualia_state_flow;
+    float entity_qualia_chaos = entities[entity_idx].qualia_state_chaos;
+    float entity_qualia_recovery = entities[entity_idx].qualia_state_recovery;
+    float entity_qualia_transcendence = entities[entity_idx].qualia_state_transcendence;
+
     for (uint i = 0; i < entity_count; i++) {
         if (i == entity_idx || entities[i].is_active == 0) continue;
         
@@ -111,10 +144,23 @@ float calculateEmpatheticResonance(uint entity_idx) {
         float distance = length(entity_pos - other_pos);
         
         if (distance < EMPATHETIC_RANGE) {
-            vec4 other_qualia = entities[i].qualia_state;
+            float other_qualia_intensity = entities[i].qualia_state_intensity;
+            float other_qualia_precision = entities[i].qualia_state_precision;
+            float other_qualia_aggression = entities[i].qualia_state_aggression;
+            float other_qualia_flow = entities[i].qualia_state_flow;
+            float other_qualia_chaos = entities[i].qualia_state_chaos;
+            float other_qualia_recovery = entities[i].qualia_state_recovery;
+            float other_qualia_transcendence = entities[i].qualia_state_transcendence;
             
-            // Calculate qualia similarity (dot product normalized)
-            float qualia_similarity = dot(normalize(entity_qualia), normalize(other_qualia));
+            // Calculate qualia similarity based on all components
+            float qualia_similarity = 1.0 -
+                abs(entity_qualia_intensity - other_qualia_intensity) -
+                abs(entity_qualia_precision - other_qualia_precision) -
+                abs(entity_qualia_aggression - other_qualia_aggression) -
+                abs(entity_qualia_flow - other_qualia_flow) -
+                abs(entity_qualia_chaos - other_qualia_chaos) -
+                abs(entity_qualia_recovery - other_qualia_recovery) -
+                abs(entity_qualia_transcendence - other_qualia_transcendence);
             
             if (qualia_similarity > QUALIA_RESONANCE_THRESHOLD) {
                 float proximity_factor = (EMPATHETIC_RANGE - distance) / EMPATHETIC_RANGE;
@@ -164,28 +210,51 @@ void updateOntologicalDrift(inout LivingEntity entity, vec4 lattice_influence) {
 // Update qualia state based on experiences
 void updateQualiaState(inout LivingEntity entity, vec4 lattice_influence, float empathetic_resonance) {
     // Lattice influences directly affect qualia
-    entity.qualia_state += lattice_influence * delta_time * 0.1;
+    entity.qualia_state_intensity += lattice_influence.x * delta_time * 0.1;
+    entity.qualia_state_precision += lattice_influence.y * delta_time * 0.1;
+    entity.qualia_state_aggression += lattice_influence.z * delta_time * 0.1;
+    entity.qualia_state_flow += lattice_influence.w * delta_time * 0.1;
     
     // Empathetic resonance creates qualia harmonization
     if (empathetic_resonance > 0.5) {
         // Smooth out extreme qualia values when in resonance
-        entity.qualia_state = mix(entity.qualia_state, vec4(0.5), empathetic_resonance * 0.02 * delta_time);
+        entity.qualia_state_intensity = mix(entity.qualia_state_intensity, 0.5, empathetic_resonance * 0.02 * delta_time);
+        entity.qualia_state_precision = mix(entity.qualia_state_precision, 0.5, empathetic_resonance * 0.02 * delta_time);
+        entity.qualia_state_aggression = mix(entity.qualia_state_aggression, 0.5, empathetic_resonance * 0.02 * delta_time);
+        entity.qualia_state_flow = mix(entity.qualia_state_flow, 0.5, empathetic_resonance * 0.02 * delta_time);
+        entity.qualia_state_chaos = mix(entity.qualia_state_chaos, 0.5, empathetic_resonance * 0.02 * delta_time);
+        entity.qualia_state_recovery = mix(entity.qualia_state_recovery, 0.5, empathetic_resonance * 0.02 * delta_time);
+        entity.qualia_state_transcendence = mix(entity.qualia_state_transcendence, 0.5, empathetic_resonance * 0.02 * delta_time);
     }
     
     // Ontological drift creates qualia instability
     if (entity.ontological_drift > 0.5) {
         uint seed = entity.entity_id + simulation_tick * 7;
-        vec4 random_shift = vec4(
-            random(seed) - 0.5,
-            random(seed + 1) - 0.5,
-            random(seed + 2) - 0.5,
-            random(seed + 3) - 0.5
-        ) * entity.ontological_drift * 0.1;
-        entity.qualia_state += random_shift;
+        float random_shift_intensity = (random(seed) - 0.5) * entity.ontological_drift * 0.1;
+        float random_shift_precision = (random(seed + 1) - 0.5) * entity.ontological_drift * 0.1;
+        float random_shift_aggression = (random(seed + 2) - 0.5) * entity.ontological_drift * 0.1;
+        float random_shift_flow = (random(seed + 3) - 0.5) * entity.ontological_drift * 0.1;
+        float random_shift_chaos = (random(seed + 4) - 0.5) * entity.ontological_drift * 0.1;
+        float random_shift_recovery = (random(seed + 5) - 0.5) * entity.ontological_drift * 0.1;
+        float random_shift_transcendence = (random(seed + 6) - 0.5) * entity.ontological_drift * 0.1;
+
+        entity.qualia_state_intensity += random_shift_intensity;
+        entity.qualia_state_precision += random_shift_precision;
+        entity.qualia_state_aggression += random_shift_aggression;
+        entity.qualia_state_flow += random_shift_flow;
+        entity.qualia_state_chaos += random_shift_chaos;
+        entity.qualia_state_recovery += random_shift_recovery;
+        entity.qualia_state_transcendence += random_shift_transcendence;
     }
     
     // Normalize and clamp qualia
-    entity.qualia_state = clamp(entity.qualia_state, vec4(0.0), vec4(1.0));
+    entity.qualia_state_intensity = clamp(entity.qualia_state_intensity, 0.0, 1.0);
+    entity.qualia_state_precision = clamp(entity.qualia_state_precision, 0.0, 1.0);
+    entity.qualia_state_aggression = clamp(entity.qualia_state_aggression, 0.0, 1.0);
+    entity.qualia_state_flow = clamp(entity.qualia_state_flow, 0.0, 1.0);
+    entity.qualia_state_chaos = clamp(entity.qualia_state_chaos, 0.0, 1.0);
+    entity.qualia_state_recovery = clamp(entity.qualia_state_recovery, 0.0, 1.0);
+    entity.qualia_state_transcendence = clamp(entity.qualia_state_transcendence, 0.0, 1.0);
 }
 
 // Update entity movement and velocity
@@ -217,6 +286,9 @@ void updateMovement(inout LivingEntity entity, vec4 lattice_influence, float emp
         acceleration += chaos_force;
     }
     
+    // Apply qualia state to movement (e.g., flow makes movement smoother, chaos makes it erratic)
+    acceleration *= (1.0 + entity.qualia_state_flow * 0.5 - entity.qualia_state_chaos * 0.5);
+
     // Update velocity and position
     entity.velocity += acceleration * delta_time;
     entity.velocity = clamp(entity.velocity, vec3(-MAX_VELOCITY), vec3(MAX_VELOCITY));
@@ -232,34 +304,57 @@ void updateMovement(inout LivingEntity entity, vec4 lattice_influence, float emp
 void main() {
     uint entity_idx = gl_GlobalInvocationID.x;
     
-    // Bounds check
-    if (entity_idx >= entity_count) return;
-    
-    // Skip inactive entities
-    if (entities[entity_idx].is_active == 0) return;
-    
-    // Calculate influences
-    vec4 lattice_influence = calculateLatticeInfluence(entities[entity_idx].position, entities[entity_idx].entity_id);
-    float empathetic_resonance = calculateEmpatheticResonance(entity_idx);
-    
-    // Update entity state
-    updateConsciousness(entities[entity_idx], lattice_influence, empathetic_resonance);
-    updateOntologicalDrift(entities[entity_idx], lattice_influence);
-    updateQualiaState(entities[entity_idx], lattice_influence, empathetic_resonance);
-    updateMovement(entities[entity_idx], lattice_influence, empathetic_resonance);
-    
-    // Store empathetic resonance for use by other systems
-    entities[entity_idx].empathetic_resonance = empathetic_resonance;
-    
-    // Update lifecycle stage based on consciousness and drift
-    if (entities[entity_idx].consciousness_level < 0.1 && entities[entity_idx].ontological_drift > 0.8) {
-        // Entity approaches death/transcendence
-        entities[entity_idx].lifecycle_stage += delta_time * 0.1;
-        if (entities[entity_idx].lifecycle_stage > 1.0) {
-            entities[entity_idx].is_active = 0; // Mark for cleanup/transformation
+    // Bounds check for entities
+    if (entity_idx < entity_count) {
+        // Skip inactive entities
+        if (entities[entity_idx].is_active == 0) return;
+        
+        // Calculate influences
+        vec4 lattice_influence = calculateLatticeInfluence(entities[entity_idx].position, entities[entity_idx].entity_id);
+        float empathetic_resonance = calculateEmpatheticResonance(entity_idx);
+        
+        // Update entity state
+        updateConsciousness(entities[entity_idx], lattice_influence, empathetic_resonance);
+        updateOntologicalDrift(entities[entity_idx], lattice_influence);
+        updateQualiaState(entities[entity_idx], lattice_influence, empathetic_resonance);
+        updateMovement(entities[entity_idx], lattice_influence, empathetic_resonance);
+        
+        // Store empathetic resonance for use by other systems
+        entities[entity_idx].empathetic_resonance = empathetic_resonance;
+        
+        // Update lifecycle stage based on consciousness and drift
+        if (entities[entity_idx].consciousness_level < 0.1 && entities[entity_idx].ontological_drift > 0.8) {
+            // Entity approaches death/transcendence
+            entities[entity_idx].lifecycle_stage += delta_time * 0.1;
+            if (entities[entity_idx].lifecycle_stage > 1.0) {
+                entities[entity_idx].is_active = 0; // Mark for cleanup/transformation
+            }
+        } else if (entities[entity_idx].consciousness_level > 1.5 && empathetic_resonance > 1.0) {
+            // Entity approaches transcendence through love/connection
+            entities[entity_idx].lifecycle_stage += delta_time * 0.05;
         }
-    } else if (entities[entity_idx].consciousness_level > 1.5 && empathetic_resonance > 1.0) {
-        // Entity approaches transcendence through love/connection
-        entities[entity_idx].lifecycle_stage += delta_time * 0.05;
+    }
+
+    // Particle simulation
+    uint particle_idx = gl_GlobalInvocationID.x;
+    if (particle_idx < particle_count) {
+        if (particles[particle_idx].active == 0) return;
+
+        // Update position based on velocity, influenced by particle_multiplier
+        particles[particle_idx].position += particles[particle_idx].velocity * delta_time * particle_multiplier;
+
+        // Decrease lifetime
+        particles[particle_idx].lifetime -= delta_time;
+
+        // Deactivate if lifetime runs out
+        if (particles[particle_idx].lifetime <= 0.0) {
+            particles[particle_idx].active = 0;
+        }
+
+        // Example: particle color and size influenced by qualia state
+        if (particles[particle_idx].type == 0u) { // Aura particles
+            particles[particle_idx].color = vec3(qualia_state_aggression, qualia_state_flow, qualia_state_precision);
+            particles[particle_idx].size = 5.0 + qualia_state_intensity * 10.0;
+        }
     }
 }

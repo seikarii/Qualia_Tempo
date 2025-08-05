@@ -1,11 +1,13 @@
-import { System } from '../ecs/ECSManager';
-import { EventManager } from '../events/EventManager';
-import { QualiaState } from '../ecs/components/QualiaState';
-import { BossState } from '../ecs/components/BossState';
-import { PlayerState } from '../ecs/components/PlayerState';
-import { GameState } from '../ecs/components/GameState';
+import { System } from '../ecs/System.js';
+import { EventManager } from '../events/EventManager.js';
+import { QualiaState } from '../ecs/components/QualiaState.js';
+import { BossState } from '../ecs/components/BossState.js';
+import { PlayerState } from '../ecs/components/PlayerState.js';
+import { GameState } from '../ecs/components/GameState.js';
+import { ECSManager } from '../ecs/ECSManager.js';
+import { Entity } from '../ecs/Entity.js';
 
-export class QualiaSystem implements System {
+export class QualiaSystem extends System {
     name = 'QualiaSystem';
     private eventManager: EventManager;
 
@@ -14,8 +16,9 @@ export class QualiaSystem implements System {
     private dashSuccessCount: number = 0;
     private dashAttemptCount: number = 0;
 
-    constructor(eventManager: EventManager) {
+    constructor(ecs: ECSManager, eventManager: EventManager) {
         super();
+        this.ecs = ecs;
         this.eventManager = eventManager;
         this.eventManager.on('player_hit_note', this.handlePlayerHitNote.bind(this));
         this.eventManager.on('player_miss_note', this.handlePlayerMissNote.bind(this));
@@ -27,18 +30,18 @@ export class QualiaSystem implements System {
         this.eventManager.on('player_dash_fail', this.handlePlayerDashFail.bind(this));
     }
 
-    update(deltaTime: number) {
-        const qualiaEntities = this.ecs.getEntitiesByComponent(QualiaState);
-        const bossEntities = this.ecs.getEntitiesByComponent(BossState);
-        const gameEntities = this.ecs.getEntitiesByComponent(GameState);
+    update(deltaTime: number): void {
+        const qualiaEntities: Entity[] = this.ecs.getEntitiesByComponent(QualiaState);
+        const bossEntities: Entity[] = this.ecs.getEntitiesByComponent(BossState);
+        const gameEntities: Entity[] = this.ecs.getEntitiesByComponent(GameState);
 
         if (qualiaEntities.length === 0 || bossEntities.length === 0 || gameEntities.length === 0) {
             return;
         }
 
-        const qualiaState = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
-        const bossState = this.ecs.getComponent<BossState>(bossEntities[0], BossState);
-        const gameState = this.ecs.getComponent<GameState>(gameEntities[0], GameState);
+        const qualiaState: QualiaState | undefined = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
+        const bossState: BossState | undefined = this.ecs.getComponent<BossState>(bossEntities[0], BossState);
+        const gameState: GameState | undefined = this.ecs.getComponent<GameState>(gameEntities[0], GameState);
 
         if (!qualiaState || !bossState || !gameState) {
             return;
@@ -84,18 +87,18 @@ export class QualiaSystem implements System {
     }
 
     private handlePlayerHitNote() {
-        const qualiaEntities = this.ecs.getEntitiesByComponent(QualiaState);
+        const qualiaEntities: Entity[] = this.ecs.getEntitiesByComponent(QualiaState);
         if (qualiaEntities.length === 0) return;
-        const qualiaState = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
+        const qualiaState: QualiaState | undefined = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
         if (!qualiaState) return;
 
         this.comboCount++;
     }
 
     private handlePlayerMissNote() {
-        const qualiaEntities = this.ecs.getEntitiesByComponent(QualiaState);
+        const qualiaEntities: Entity[] = this.ecs.getEntitiesByComponent(QualiaState);
         if (qualiaEntities.length === 0) return;
-        const qualiaState = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
+        const qualiaState: QualiaState | undefined = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
         if (!qualiaState) return;
 
         this.comboCount = 0; // Reset combo on miss
@@ -111,9 +114,9 @@ export class QualiaSystem implements System {
     }
 
     private handleAbilityPause() {
-        const gameEntities = this.ecs.getEntitiesByComponent(GameState);
+        const gameEntities: Entity[] = this.ecs.getEntitiesByComponent(GameState);
         if (gameEntities.length === 0) return;
-        const gameState = this.ecs.getComponent<GameState>(gameEntities[0], GameState);
+        const gameState: GameState | undefined = this.ecs.getComponent<GameState>(gameEntities[0], GameState);
         if (!gameState) return;
 
         const originalGameSpeed = gameState.gameSpeedMultiplier;
@@ -123,18 +126,18 @@ export class QualiaSystem implements System {
         }, 200); // 0.2 seconds
         this.eventManager.emit('game_speed_changed', { multiplier: gameState.gameSpeedMultiplier });
         
-        const qualiaEntities = this.ecs.getEntitiesByComponent(QualiaState);
+        const qualiaEntities: Entity[] = this.ecs.getEntitiesByComponent(QualiaState);
         if (qualiaEntities.length === 0) return;
-        const qualiaState = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
+        const qualiaState: QualiaState | undefined = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
         if (qualiaState) {
             qualiaState.precision = Math.min(1, qualiaState.precision + 0.1); // Example increase
         }
     }
 
     private handleAbilityFastForward() {
-        const qualiaEntities = this.ecs.getEntitiesByComponent(QualiaState);
+        const qualiaEntities: Entity[] = this.ecs.getEntitiesByComponent(QualiaState);
         if (qualiaEntities.length === 0) return;
-        const qualiaState = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
+        const qualiaState: QualiaState | undefined = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
         if (!qualiaState) return;
 
         const originalAggression = qualiaState.aggression;
@@ -146,27 +149,27 @@ export class QualiaSystem implements System {
     }
 
     private handleAbilityRewind() {
-        const playerEntities = this.ecs.getEntitiesByComponent(PlayerState);
+        const playerEntities: Entity[] = this.ecs.getEntitiesByComponent(PlayerState);
         if (playerEntities.length === 0) return;
-        const playerState = this.ecs.getComponent<PlayerState>(playerEntities[0], PlayerState);
+        const playerState: PlayerState | undefined = this.ecs.getComponent<PlayerState>(playerEntities[0], PlayerState);
         if (!playerState) return;
 
         playerState.health = Math.min(playerState.maxHealth, playerState.health + playerState.maxHealth * 0.2); // Restore 20% health
         playerState.dashCharges = Math.min(playerState.maxDashCharges, playerState.dashCharges + 1); // Restore 1 dash charge
         this.eventManager.emit('player_rewind_activated', { health: playerState.health, dashCharges: playerState.dashCharges });
 
-        const qualiaEntities = this.ecs.getEntitiesByComponent(QualiaState);
+        const qualiaEntities: Entity[] = this.ecs.getEntitiesByComponent(QualiaState);
         if (qualiaEntities.length === 0) return;
-        const qualiaState = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
+        const qualiaState: QualiaState | undefined = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
         if (qualiaState) {
             qualiaState.recovery = Math.min(1, qualiaState.recovery + 0.2); // Example increase
         }
     }
 
     private handleAbilityUltimate() {
-        const qualiaEntities = this.ecs.getEntitiesByComponent(QualiaState);
+        const qualiaEntities: Entity[] = this.ecs.getEntitiesByComponent(QualiaState);
         if (qualiaEntities.length === 0) return;
-        const qualiaState = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
+        const qualiaState: QualiaState | undefined = this.ecs.getComponent<QualiaState>(qualiaEntities[0], QualiaState);
         if (!qualiaState) return;
 
         qualiaState.transcendence = 1; // Activate ultimate state

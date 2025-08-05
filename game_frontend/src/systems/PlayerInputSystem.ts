@@ -1,16 +1,17 @@
 import { System } from '../ecs/System.js';
 import { PositionComponent, PlayerComponent, AbilityComponent } from '../ecs/Component.js';
-import { IEventManager } from '../events/EventManager.js';
+import { EventManager } from '../events/EventManager.js';
 import { GameEvent } from '../events/GameEvents.js';
 import { ECSManager } from '../ecs/ECSManager.js';
+import { Entity } from '../ecs/Entity.js';
 
 export class PlayerInputSystem extends System {
-  private keyMap: { [key: string]: boolean } = {};
+  private keyMap: Record<string, boolean> = {};
   private isContinuePromptActive = false;
 
-      constructor(
+    constructor(
         ecs: ECSManager,
-        eventManager: IEventManager
+        eventManager: EventManager
     ) {
         super();
         this.ecs = ecs;
@@ -20,8 +21,34 @@ export class PlayerInputSystem extends System {
     
     this.eventManager.on(GameEvent.ShowContinuePrompt, () => this.isContinuePromptActive = true);
     this.eventManager.on(GameEvent.SceneLoaded, () => this.isContinuePromptActive = false);
-    this.eventManager.on('player_dash_success', this.handlePlayerDashSuccess.bind(this));
-    this.eventManager.on('player_dash_fail', this.handlePlayerDashFail.bind(this));
+    import { System } from '../ecs/System.js';
+import { PositionComponent, PlayerComponent, AbilityComponent } from '../ecs/Component.js';
+import { EventManager } from '../events/EventManager.js';
+import { GameEvent } from '../events/GameEvents.js';
+import { ECSManager } from '../ecs/ECSManager.js';
+import { Entity } from '../ecs/Entity.js';
+
+export class PlayerInputSystem extends System {
+  private keyMap: Record<string, boolean> = {};
+  private isContinuePromptActive = false;
+  private useAbility: (abilityName: string) => boolean;
+
+    constructor(
+        ecs: ECSManager,
+        eventManager: EventManager,
+        useAbility: (abilityName: string) => boolean
+    ) {
+        super();
+        this.ecs = ecs;
+        this.eventManager = eventManager;
+        this.useAbility = useAbility;
+    window.addEventListener('keydown', this.handleKeyDown.bind(this));
+    window.addEventListener('keyup', this.handleKeyUp.bind(this));
+    
+    this.eventManager.on(GameEvent.ShowContinuePrompt, () => this.isContinuePromptActive = true);
+    this.eventManager.on(GameEvent.SceneLoaded, () => this.isContinuePromptActive = false);
+    this.eventManager.on(GameEvent.PlayerDashSuccess, this.handlePlayerDashSuccess.bind(this));
+    this.eventManager.on(GameEvent.PlayerDashFail, this.handlePlayerDashFail.bind(this));
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
@@ -33,12 +60,63 @@ export class PlayerInputSystem extends System {
     this.keyMap[event.key.toLowerCase()] = true;
 
     // Emit ability events on key down to avoid multiple emissions if key is held
-    const playerEntity = this.ecs.getEntitiesByComponent(PlayerComponent)[0];
+    const playerEntity: Entity | undefined = this.ecs.getEntitiesByComponent(PlayerComponent)[0];
     if (playerEntity) {
         const abilityComponent = this.ecs.getComponent(playerEntity, AbilityComponent);
         if (abilityComponent) {
             for (const key in abilityComponent.keybinds) {
-                if (event.key.toLowerCase() === abilityComponent.keybinds[key]) {
+                if (event.key.toLowerCase() === abilityComponent.keybinds[key as keyof typeof abilityComponent.keybinds]) {
+                    // Use the useAbility hook to trigger the ability
+                    this.useAbility(key);
+                }
+            }
+        }
+    }
+  }
+
+  private handleKeyUp(event: KeyboardEvent): void {
+    delete this.keyMap[event.key.toLowerCase()];
+  }
+
+  update(deltaTime: number, time: number): void {
+    // WASD movement removed as per GDD
+    // Player movement is now handled by rhythmic dash
+  }
+
+  private handlePlayerDashSuccess(data: { cursorPosition: { x: number, y: number } }): void {
+    const playerEntity: Entity | undefined = this.ecs.getEntitiesByComponent(PlayerComponent)[0];
+    if (playerEntity) {
+      const playerPosition = this.ecs.getComponent(playerEntity, PositionComponent);
+      if (playerPosition) {
+        playerPosition.x = data.cursorPosition.x;
+        playerPosition.y = data.cursorPosition.y;
+        // console.log(`Player dashed to: (${playerPosition.x}, ${playerPosition.y})`);
+      }
+    }
+  }
+
+  private handlePlayerDashFail(): void {
+    // console.log("Player dash failed rhythmically.");
+    // Potentially emit event for visual/audio feedback for a failed dash
+  }
+}
+  }
+
+  private handleKeyDown(event: KeyboardEvent): void {
+    if (this.isContinuePromptActive && event.key === 'Enter') {
+        this.eventManager.emit(GameEvent.ContinueAfterBoss);
+        this.isContinuePromptActive = false;
+        return;
+    }
+    this.keyMap[event.key.toLowerCase()] = true;
+
+    // Emit ability events on key down to avoid multiple emissions if key is held
+    const playerEntity: Entity | undefined = this.ecs.getEntitiesByComponent(PlayerComponent)[0];
+    if (playerEntity) {
+        const abilityComponent = this.ecs.getComponent(playerEntity, AbilityComponent);
+        if (abilityComponent) {
+            for (const key in abilityComponent.keybinds) {
+                if (event.key.toLowerCase() === abilityComponent.keybinds[key as keyof typeof abilityComponent.keybinds]) {
                     this.eventManager.emit(GameEvent.PLAYER_ABILITY_USED, { entityId: playerEntity, abilityId: key });
                 }
             }
@@ -50,13 +128,13 @@ export class PlayerInputSystem extends System {
     delete this.keyMap[event.key.toLowerCase()];
   }
 
-  update(): void {
+  update(deltaTime: number, time: number): void {
     // WASD movement removed as per GDD
     // Player movement is now handled by rhythmic dash
   }
 
   private handlePlayerDashSuccess(data: { cursorPosition: { x: number, y: number } }): void {
-    const playerEntity = this.ecs.getEntitiesByComponent(PlayerComponent)[0];
+    const playerEntity: Entity | undefined = this.ecs.getEntitiesByComponent(PlayerComponent)[0];
     if (playerEntity) {
       const playerPosition = this.ecs.getComponent(playerEntity, PositionComponent);
       if (playerPosition) {

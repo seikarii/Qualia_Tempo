@@ -27,6 +27,12 @@ export const GameEvent = {
   AbilityCasted: 'AbilityCasted',
   EntityDamaged: 'EntityDamaged',
   PLAYER_ABILITY_USED: 'player_ability_used',
+  PlayerDashSuccess: 'player_dash_success',
+  PlayerDashFail: 'player_dash_fail',
+  PlayerAbilityPause: 'player_ability_pause',
+  PlayerAbilityFastForward: 'player_ability_fast_forward',
+  PlayerAbilityRewind: 'player_ability_rewind',
+  PlayerAbilityUltimate: 'player_ability_ultimate',
   // ...
 
   // Dialogue
@@ -40,6 +46,7 @@ export const GameEvent = {
   FloorTileSpawned: 'FloorTileSpawned',
   FloorTileCollected: 'FloorTileCollected',
   ComboChanged: 'ComboChanged',
+  Beat: 'Beat',
 
   // UI & System Events
   GamePaused: 'GamePaused',
@@ -93,6 +100,13 @@ export interface GameEventData {
   [GameEvent.TalentPointsGained]: { amount: number };
   [GameEvent.KeybindChanged]: { abilityId: string; newKey: string };
   [GameEvent.AbilityCasted]: AbilityCastedEvent;
+  [GameEvent.PLAYER_ABILITY_USED]: { entityId: Entity; abilityId: string };
+  [GameEvent.PlayerDashSuccess]: { cursorPosition: { x: number; y: number } };
+  [GameEvent.PlayerDashFail]: {};
+  [GameEvent.PlayerAbilityPause]: {};
+  [GameEvent.PlayerAbilityFastForward]: {};
+  [GameEvent.PlayerAbilityRewind]: {};
+  [GameEvent.PlayerAbilityUltimate]: {};
   [GameEvent.EntityDamaged]: EntityDamagedEvent;
   [GameEvent.StartDialogue]: { dialogueId: string };
   [GameEvent.AdvanceDialogue]: undefined;
@@ -104,6 +118,7 @@ export interface GameEventData {
   [GameEvent.FloorTileSpawned]: FloorTileSpawnedEvent;
   [GameEvent.FloorTileCollected]: FloorTileCollectedEvent;
   [GameEvent.ComboChanged]: ComboChangedEvent;
+  [GameEvent.Beat]: { time: number; bpm: number };
   [GameEvent.StartAudio]: StartAudioEvent;
   [GameEvent.StopAudio]: undefined;
   [GameEvent.MusicDataUpdated]: MusicDataUpdatedEvent;

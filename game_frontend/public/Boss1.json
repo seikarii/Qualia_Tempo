@@ -1,23 +1,91 @@
 {
   "id": "Boss1",
-  "title": "The First Encounter",
-  "artist": "Charlie Hellsinger",
   "audioPath": "/sounds/Musica.mp3",
   "bpm": 120,
   "noteMap": [
-    { "timestamp": 1.0, "position": { "x": 200, "y": 200 }, "duration": 0.5 },
-    { "timestamp": 2.0, "position": { "x": 400, "y": 300 }, "duration": 0.5 },
-    { "timestamp": 3.0, "position": { "x": 600, "y": 200 }, "duration": 0.5 },
-    { "timestamp": 4.0, "position": { "x": 300, "y": 400 }, "duration": 0.5 },
-    { "timestamp": 5.0, "position": { "x": 500, "y": 100 }, "duration": 0.5 },
-    { "timestamp": 6.0, "position": { "x": 100, "y": 500 }, "duration": 0.5 },
-    { "timestamp": 7.0, "position": { "x": 700, "y": 400 }, "duration": 0.5 },
-    { "timestamp": 8.0, "position": { "x": 250, "y": 150 }, "duration": 0.5 },
-    { "timestamp": 9.0, "position": { "x": 450, "y": 450 }, "duration": 0.5 },
-    { "timestamp": 10.0, "position": { "x": 650, "y": 100 }, "duration": 0.5 }
+    {
+      "timestamp": 0.5,
+      "position": { "x": 0, "y": 0 },
+      "duration": 0.5,
+      "type": "rhythmic"
+    },
+    {
+      "timestamp": 1.0,
+      "position": { "x": 100, "y": 50 },
+      "duration": 0.5,
+      "type": "rhythmic"
+    },
+    {
+      "timestamp": 1.5,
+      "position": { "x": -50, "y": 100 },
+      "duration": 0.5,
+      "type": "rhythmic"
+    },
+    {
+      "timestamp": 2.0,
+      "position": { "x": 0, "y": 0 },
+      "duration": 0.5,
+      "type": "rhythmic"
+    },
+    {
+      "timestamp": 2.5,
+      "position": { "x": 75, "y": -25 },
+      "duration": 0.5,
+      "type": "rhythmic"
+    },
+    {
+      "timestamp": 3.0,
+      "position": { "x": -100, "y": -75 },
+      "duration": 0.5,
+      "type": "rhythmic"
+    },
+    {
+      "timestamp": 3.5,
+      "position": { "x": 0, "y": 0 },
+      "duration": 0.5,
+      "type": "rhythmic"
+    },
+    {
+      "timestamp": 4.0,
+      "position": { "x": 120, "y": 80 },
+      "duration": 0.5,
+      "type": "rhythmic"
+    },
+    {
+      "timestamp": 4.5,
+      "position": { "x": -80, "y": 120 },
+      "duration": 0.5,
+      "type": "rhythmic"
+    },
+    {
+      "timestamp": 5.0,
+      "position": { "x": 0, "y": 0 },
+      "duration": 0.5,
+      "type": "rhythmic"
+    }
   ],
-  "lyrics": [
-    { "timestamp": 0.5, "text": "Welcome, Conductor!" },
-    { "timestamp": 5.5, "text": "Feel the rhythm!" }
+  "bossAttacks": [
+    {
+      "timestamp": 3.0,
+      "type": "projectile_barrage",
+      "parameters": { "count": 5, "speed": 200 }
+    },
+    {
+      "timestamp": 6.0,
+      "type": "aoe_attack",
+      "parameters": { "radius": 150, "damage": 50 }
+    }
+  ],
+  "dialogue": [
+    {
+      "timestamp": 0.0,
+      "speaker": "Charlie",
+      "text": "Welcome, challenger. Let the rhythm guide your fate."
+    },
+    {
+      "timestamp": 5.0,
+      "speaker": "Boss",
+      "text": "Your tempo is weak! Feel my disharmony!"
+    }
   ]
 }
