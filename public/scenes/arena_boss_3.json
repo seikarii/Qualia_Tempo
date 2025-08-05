@@ -1,0 +1,22 @@
+{
+  "id": "arena_boss_3",
+  "name": "El Corazón del Vacío",
+  "type": "boss",
+  "backgroundColor": "#100014",
+  "music": "Musica3.mp3",
+  "entities": [
+    {
+      "type": "player",
+      "position": { "x": 400, "y": 500 }
+    },
+    {
+      "type": "boss",
+      "enemyId": "the_void",
+      "position": { "x": 400, "y": 200 }
+    }
+  ],
+  "dialogue": {
+    "onIntro": "dialogue_boss3_intro",
+    "onOutro": "dialogue_boss3_outro"
+  }
+}

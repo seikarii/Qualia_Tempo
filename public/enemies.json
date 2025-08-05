@@ -1,0 +1,69 @@
+{
+  "slime": {
+    "name": "Slime",
+    "health": 100,
+    "speed": 1,
+    "description": "Un slime pegajoso y lento."
+  },
+  "goblin": {
+    "name": "Goblin",
+    "health": 80,
+    "speed": 2,
+    "description": "Un pequeño y astuto goblin."
+  },
+  "abyssal_conductor": {
+    "name": "The Abyssal Conductor",
+    "health": 800,
+    "speed": 3,
+    "description": "Un demonio que orquesta la sinfonía de la destrucción.",
+    "aiType": "conductor",
+    "visual": {
+      "shape": "generative_boss",
+      "width": 80,
+      "height": 80,
+      "color": "#8A2BE2",
+      "auraColor": "#4B0082"
+    }
+  },
+  "crystal_golem": {
+    "name": "Crystal Golem",
+    "health": 1200,
+    "speed": 1.5,
+    "description": "A slow but resilient golem made of pure energy crystals.",
+    "visual": {
+      "shape": "diamond",
+      "width": 100,
+      "height": 100,
+      "color": "#00BFFF",
+      "auraColor": "#FFFFFF"
+    }
+  },
+  "the_void": {
+    "name": "The Authentic Void",
+    "health": 5000,
+    "speed": 0.5,
+    "description": "La encarnación del vacío, un ser de poder incomprensible.",
+    "aiType": "void",
+    "visual": {
+      "shape": "generative_boss",
+      "width": 150,
+      "height": 150,
+      "color": "#000000",
+      "auraColor": "#4B0082"
+    }
+  },
+  "the_virtuoso": {
+    "name": "The Virtuoso",
+    "health": 6500,
+    "speed": 3.5,
+    "description": "Un maestro de la melodía letal, cuyos ataques son tan precisos como bellos.",
+    "aiType": "virtuoso",
+    "visual": {
+      "shape": "generative_boss",
+      "width": 70,
+      "height": 70,
+      "color": "#DDA0DD",
+      "auraColor": "#8A2BE2"
+    }
+  }
+}

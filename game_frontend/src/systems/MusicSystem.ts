@@ -1,0 +1,146 @@
+import { System } from '../ecs/System.js';
+import { EventManager } from '../events/EventManager';
+import * as Tone from 'tone';
+import { CombatManager } from '../data/CombatManager';
+
+// Rutas a los archivos de audio. Se asume que están en public/sounds.
+const LAYER_1_TRACK = '/sounds/Musica2.mp3';
+const LAYER_2_TRACK = '/sounds/Musica3.mp3';
+const LAYER_3_TRACK = '/sounds/Musica4.mp3';
+const CHARLIE_VOICE_TRACK = '/sounds/charlie_voice.mp3'; // Placeholder: Este archivo debe ser provisto.
+
+export class MusicSystem extends System {
+  private eventManager: EventManager;
+  private combatManager: CombatManager;
+  private player: Tone.Player | null = null;
+  private meter: Tone.Meter | null = null;
+  private fft: Tone.FFT | null = null;
+  private isInitialized = false;
+  private currentBpm: number = 0;
+  private panner: Tone.Panner3D | null = null;
+  private charlieVoicePlayer: Tone.Player | null = null;
+  private layers: Tone.Player[] = [];
+
+  constructor(eventManager: EventManager, combatManager: CombatManager) {
+    super(); // Call the base System constructor
+    this.eventManager = eventManager;
+    this.combatManager = combatManager;
+    this.eventManager.on(GameEvent.StartAudio, this.handleStartAudio.bind(this));
+    this.eventManager.on('music_tempo_update', this.handleMusicTempoUpdate.bind(this));
+    this.eventManager.on('ultimate_activated_audio_visual', this.handleUltimateActivated.bind(this));
+    this.eventManager.on('ultimate_deactivated', this.handleUltimateDeactivated.bind(this));
+  }
+
+  private async initializeTone() {
+    if (this.isInitialized || typeof window === 'undefined') return;
+    
+    // Tone.js context initialization
+    await Tone.start();
+
+    this.panner = new Tone.Panner3D().toDestination();
+
+    this.player = new Tone.Player({
+      url: '',
+      loop: true,
+      autostart: false,
+    }).connect(this.panner);
+
+    this.charlieVoicePlayer = new Tone.Player({
+      url: CHARLIE_VOICE_TRACK,
+      loop: true,
+      autostart: false,
+      volume: -Infinity // Start muted
+    }).connect(this.panner);
+
+    this.layers = [
+      new Tone.Player({ src: LAYER_1_TRACK, loop: true, autostart: false, volume: -Infinity }).toDestination(),
+      new Tone.Player({ src: LAYER_2_TRACK, loop: true, autostart: false, volume: -Infinity }).toDestination(),
+      new Tone.Player({ src: LAYER_3_TRACK, loop: true, autostart: false, volume: -Infinity }).toDestination(),
+    ];
+
+    await Promise.all([
+      this.player.loaded,
+      this.charlieVoicePlayer.loaded,
+      ...this.layers.map(layer => layer.loaded)
+    ]);
+    
+    Tone.Transport.start(); // Start Tone.Transport
+    this.isInitialized = true;
+    console.log('MusicSystem initialized with Tone.js');
+  }
+
+  public async loadAndPlayTrack(combatId: string) {
+    await this.initializeTone();
+    const combatData = this.combatManager.getCombatData(combatId);
+    if (!combatData || !this.player) {
+      console.error(`Combat data for ${combatId} not found or Tone.Player not initialized.`);
+      return;
+    }
+
+    this.player.url.value = combatData.audioPath;
+    this.currentBpm = combatData.bpm;
+    Tone.Transport.bpm.value = this.currentBpm; // Set initial BPM
+    this.player.start();
+    this.layers.forEach(layer => layer.start());
+    this.charlieVoicePlayer?.start();
+  }
+
+  private async handleStartAudio(data: { trackId: string }) {
+    await this.loadAndPlayTrack(data.trackId);
+  }
+
+  private handleMusicTempoUpdate(data: { intensity: number; combo: number }) {
+    const maxTempoMultiplier = 1.5;
+    const comboThreshold = 50;
+
+    let tempoMultiplier = 1;
+    if (data.combo >= comboThreshold) {
+      tempoMultiplier = maxTempoMultiplier;
+    } else {
+      tempoMultiplier = 1 + (maxTempoMultiplier - 1) * (data.combo / comboThreshold);
+    }
+
+    if (Tone.Transport) {
+      Tone.Transport.bpm.value = this.currentBpm * tempoMultiplier;
+    }
+
+    // Coro Infinito: Adjust layer volumes based on intensity/combo
+    const baseVolume = -12; // dB
+    const maxVolume = 0; // dB
+
+    if (this.layers[0]) this.layers[0].volume.value = baseVolume + (maxVolume - baseVolume) * Math.min(1, data.intensity * 2);
+    if (this.layers[1]) this.layers[1].volume.value = baseVolume + (maxVolume - baseVolume) * Math.min(1, data.intensity * 3);
+    if (this.layers[2]) this.layers[2].volume.value = baseVolume + (maxVolume - baseVolume) * Math.min(1, data.intensity * 4);
+  }
+
+  private handleUltimateActivated() {
+    if (this.panner) {
+      // Example 8D audio effect: move the sound source around the listener
+      this.panner.positionX.value = 5;
+      this.panner.positionY.value = 0;
+      this.panner.positionZ.value = 0;
+      this.panner.orientationX.value = 0;
+      this.panner.orientationY.value = 1;
+      this.panner.orientationZ.value = 0;
+    }
+    if (this.charlieVoicePlayer) {
+      this.charlieVoicePlayer.volume.value = 0; // Unmute Charlie's voice
+    }
+  }
+
+  private handleUltimateDeactivated() {
+    if (this.panner) {
+      // Reset panner position
+      this.panner.positionX.value = 0;
+      this.panner.positionY.value = 0;
+      this.panner.positionZ.value = 0;
+    }
+    if (this.charlieVoicePlayer) {
+      this.charlieVoicePlayer.volume.value = -Infinity; // Mute Charlie's voice
+    }
+  }
+
+  public update() {
+    // Lógica de análisis de música si es necesaria
+  }
+}
