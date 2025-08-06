@@ -1,17 +1,16 @@
 import { System } from '../ecs/System.js';
-import {
-  PlayerComponent,
-  PositionComponent,
-  PlayerState,
-} from '../ecs/Component.js';
-import type { NoteComponent } from '../ecs/components/NoteComponent.js';
+import { PlayerComponent, PositionComponent, type ComponentConstructor } from '../ecs/Component.js';
+import { PlayerState } from '../ecs/components/PlayerState.js';
+import { NoteComponent } from '../ecs/components/NoteComponent.js';
 import { EventManager } from '../events/EventManager.js';
 import { ECSManager } from '../ecs/ECSManager.js';
-import { Entity } from '../ecs/Entity.js';
+import type { Entity } from '../ecs/Entity.js';
 
 const NOTE_HIT_RADIUS = 50; // Placeholder radius for hitting a note
 
 export class PlayerInteractionSystem extends System {
+    private eventManager: EventManager;
+
     constructor(
         ecs: ECSManager,
         eventManager: EventManager
@@ -19,8 +18,10 @@ export class PlayerInteractionSystem extends System {
         super();
         this.ecs = ecs;
         this.eventManager = eventManager;
-        this.eventManager.on('player_dash_success', this.handlePlayerDashSuccess.bind(this));
-        this.eventManager.on('player_dash_fail', this.handlePlayerDashFail.bind(this));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.eventManager.on('player_dash_success', this.handlePlayerDashSuccess.bind(this) as any);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.eventManager.on('player_dash_fail', this.handlePlayerDashFail.bind(this) as any);
     }
 
   public update(): void {
@@ -28,17 +29,17 @@ export class PlayerInteractionSystem extends System {
   }
 
   private handlePlayerDashSuccess(data: { cursorPosition: { x: number, y: number } }): void {
-    const playerQuery: IterableIterator<Entity> = this.ecs.queryEntities(PlayerComponent, PositionComponent, PlayerState);
-    const playerEntity: Entity | undefined = playerQuery.next().value;
+    const playerQuery = this.ecs.queryEntities(PlayerComponent, PositionComponent, PlayerState);
+    const playerEntity: Entity | undefined = playerQuery[Symbol.iterator]().next().value;
 
     if (playerEntity === undefined) return;
 
-    const playerPos = this.ecs.getComponent(playerEntity, PositionComponent)!;
-    const playerState = this.ecs.getComponent(playerEntity, PlayerState)!;
+    const playerPos = this.ecs.getComponent(playerEntity, PositionComponent as ComponentConstructor<PositionComponent>)!;
+    const playerState = this.ecs.getComponent(playerEntity, PlayerState as ComponentConstructor<PlayerState>)!;
 
     if (playerState.dashCharges <= 0) {
         console.log("No dash charges left!");
-        this.eventManager.emit('player_dash_fail', {}); // Emit fail if no charges
+        this.eventManager.emit('player_dash_fail', undefined); // Emit fail if no charges
         return;
     }
 
@@ -49,10 +50,10 @@ export class PlayerInteractionSystem extends System {
     playerPos.y = data.cursorPosition.y; // Update player position immediately on dash
 
     let hitNote: boolean = false;
-    const notesQuery: IterableIterator<Entity> = this.ecs.queryEntities(NoteComponent, PositionComponent);
+    const notesQuery = this.ecs.queryEntities(NoteComponent, PositionComponent);
     for (const noteEntity of notesQuery) {
-        const noteComponent = this.ecs.getComponent(noteEntity, NoteComponent)!;
-        const notePos = this.ecs.getComponent(noteEntity, PositionComponent)!;
+        const noteComponent = this.ecs.getComponent(noteEntity, NoteComponent as ComponentConstructor<NoteComponent>)!;
+        const notePos = this.ecs.getComponent(noteEntity, PositionComponent as ComponentConstructor<PositionComponent>)!;
 
         if (noteComponent.hit) continue; // Skip already hit notes
 
@@ -71,12 +72,12 @@ export class PlayerInteractionSystem extends System {
 
     if (!hitNote) {
         // If a dash was successful rhythmically but didn't hit a note
-        this.eventManager.emit('player_miss_note', {});
+        this.eventManager.emit('player_miss_note', undefined);
     }
   }
 
   private handlePlayerDashFail(): void {
     // A rhythmic dash failed, so it's a miss for note interaction as well
-    this.eventManager.emit('player_miss_note', {});
+    this.eventManager.emit('player_miss_note', undefined);
   }
 }

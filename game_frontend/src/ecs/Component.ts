@@ -3,7 +3,8 @@ import { config } from "../config";
 // Definición de un constructor de Componente para usar como clave e identificador.
 // Esto nos da seguridad de tipos en lugar de usar strings.
 export type ComponentConstructor<T extends Component> = new (
-  ...args: unknown[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ...args: any[]
 ) => T;
 
 /**

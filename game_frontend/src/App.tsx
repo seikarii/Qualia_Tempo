@@ -7,7 +7,10 @@ import { CombatSelectionMenu } from './components/CombatSelectionMenu';
 import { EndOfCombatScreen } from './components/EndOfCombatScreen';
 import { EventManager } from './events/EventManager';
 import { GameEvent } from './events/GameEvents';
-import { QualiaState as QualiaStateType } from './types/QualiaState';
+import type { QualiaState as QualiaStateType } from './types/QualiaState';
+
+
+
 import { useAbilities } from './hooks/useAbilities';
 import { config } from './config';
 
@@ -156,7 +159,7 @@ function App() {
 
       {isGameStarted && selectedCombatId && (
         <>
-          <Game eventManager={eventManager} useAbility={useAbility} selectedCombatId={selectedCombatId} />
+          <Game eventManager={eventManager} useAbility={useAbility as (abilityName: string) => boolean} selectedCombatId={selectedCombatId} />
           <DebugHUD qualia={qualiaState} combo={combo} cooldowns={cooldowns} playerHealth={playerHealth} bossHealth={bossHealth} dashCharges={dashCharges} />
           <Metronome eventManager={eventManager} />
         </>

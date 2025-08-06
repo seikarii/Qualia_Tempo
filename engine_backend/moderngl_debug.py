@@ -1,3 +1,7 @@
+"""This module provides a basic ModernGL debug visualizer.
+It displays a colored background that changes based on simulated QualiaState values.
+"""
+
 import pygame
 import moderngl
 import numpy as np
@@ -9,7 +13,9 @@ import config
 def main():
     """Initializes Pygame and ModernGL and runs the main graphics loop."""
     pygame.init()
-    pygame.display.set_mode((config.DEBUG_WIDTH, config.DEBUG_HEIGHT), pygame.OPENGL | pygame.DOUBLEBUF)
+    pygame.display.set_mode(
+        (config.DEBUG_WIDTH, config.DEBUG_HEIGHT), pygame.OPENGL | pygame.DOUBLEBUF
+    )
     pygame.display.set_caption("Qualia Tempo Visualizer Debug")
 
     ctx = moderngl.create_context()
@@ -79,9 +85,18 @@ def main():
 
         # Simular QualiaState dinámico
         elapsed_time = time.time() - start_time
-        simulated_intensity = (np.sin(elapsed_time * config.DEBUG_FLOAT_VALUE_0_5) + config.DEBUG_FLOAT_VALUE_1_0) / 2.0  # 0 a 1
-        simulated_chaos = (np.sin(elapsed_time * config.DEBUG_FLOAT_VALUE_1_0) + config.DEBUG_FLOAT_VALUE_1_0) / 2.0  # 0 a 1
-        simulated_flow = (np.cos(elapsed_time * config.DEBUG_FLOAT_VALUE_0_7) + config.DEBUG_FLOAT_VALUE_1_0) / 2.0  # 0 a 1
+        simulated_intensity = (
+            np.sin(elapsed_time * config.DEBUG_FLOAT_VALUE_0_5)
+            + config.DEBUG_FLOAT_VALUE_1_0
+        ) / 2.0  # 0 a 1
+        simulated_chaos = (
+            np.sin(elapsed_time * config.DEBUG_FLOAT_VALUE_1_0)
+            + config.DEBUG_FLOAT_VALUE_1_0
+        ) / 2.0  # 0 a 1
+        simulated_flow = (
+            np.cos(elapsed_time * config.DEBUG_FLOAT_VALUE_0_7)
+            + config.DEBUG_FLOAT_VALUE_1_0
+        ) / 2.0  # 0 a 1
 
         # Pasar los valores simulados como uniformes al shader
         prog["u_intensity"].value = simulated_intensity

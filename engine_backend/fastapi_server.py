@@ -3,9 +3,10 @@ import json
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import HTTPException
 from pydantic import BaseModel
 
-import config
+from engine_backend import config
 
 # Configuración de logging
 logging.basicConfig(
@@ -14,12 +15,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Archivo para IPC
-QUALIA_STATE_FILE = "qualia_state.json"
+QUALIA_STATE_FILE = config.QUALIA_STATE_FILE
 
 
 # --- Modelos Pydantic ---
 class QualiaState(BaseModel):
     """Represents the state of Qualia."""
+
     intensity: float
     precision: float
     aggression: float
@@ -47,12 +49,12 @@ async def update_qualia(state: QualiaState):
     """Receives and processes the Qualia state."""
     try:
         with open(QUALIA_STATE_FILE, "w") as f:
-            json.dump(state.dict(), f)
-        logger.info(f"QualiaState recibido y escrito en archivo: {state.dict()}")
-        return {"status": "ok", "received_state": state.dict()}
-    except Exception as e:
+            json.dump(state.model_dump(), f)
+        logger.info(f"QualiaState recibido y escrito en archivo: {state.model_dump()}")
+        return {"status": "ok", "received_state": state.model_dump()}
+    except IOError as e:
         logger.error(f"Error escribiendo QualiaState en archivo: {e}")
-        return {"status": "error", "message": str(e)}, 500
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":

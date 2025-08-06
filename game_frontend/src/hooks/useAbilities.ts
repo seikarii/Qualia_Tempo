@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { EventManager } from '../events/EventManager';
-import { GameEvent } from '../events/GameEvents';
+import { GameEvent, type GameEventData } from '../events/GameEvents';
 import type { AbilitiesData } from '../types/Abilities';
 import { config } from '../config';
 
@@ -15,7 +15,7 @@ interface AbilityState {
 /**
  * Represents the state of all abilities.
  */
-interface Abilities {
+export interface Abilities {
   pause: AbilityState;
   fastForward: AbilityState;
   rewind: AbilityState;
@@ -72,19 +72,19 @@ export const useAbilities = (eventManager: EventManager) => {
     // Emit events for QualiaSystem to handle
     switch (abilityName) {
       case 'pause':
-        eventManager.emit(GameEvent.PlayerAbilityPause, {});
+        eventManager.emit(GameEvent.PlayerAbilityPause, undefined);
         console.log('Ability: Pause activated!');
         break;
       case 'fastForward':
-        eventManager.emit(GameEvent.PlayerAbilityFastForward, {});
+        eventManager.emit(GameEvent.PlayerAbilityFastForward, undefined);
         console.log('Ability: Fast Forward activated!');
         break;
       case 'rewind':
-        eventManager.emit(GameEvent.PlayerAbilityRewind, {});
+        eventManager.emit(GameEvent.PlayerAbilityRewind, undefined);
         console.log('Ability: Rewind activated!');
         break;
       case 'ultimate':
-        eventManager.emit(GameEvent.PlayerAbilityUltimate, {});
+        eventManager.emit(GameEvent.PlayerAbilityUltimate, undefined);
         console.log('Ability: Ultimate activated!');
         break;
     }

@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 class GPUPhysicsEngine:
     """A GPU-based physics engine for simulating and rendering entities and particles."""
-    def __init__(self, ctx):
+
+    def __init__(
         self,
         ctx: moderngl.Context | None,
         max_entities: int = 10000,
@@ -37,7 +38,7 @@ class GPUPhysicsEngine:
 
         self.entities_data: np.ndarray | None = None  # Store CPU-side entity data
         self.lattices_data: np.ndarray | None = None  # Store CPU-side lattice data
-        self.particles_data: np.ndarray | None = None # Store CPU-side particle data
+        self.particles_data: np.ndarray | None = None  # Store CPU-side particle data
 
         self.entity_count = 0
         self.lattice_count = 0
@@ -48,11 +49,11 @@ class GPUPhysicsEngine:
         """Packs structured NumPy array data into a byte string for ModernGL buffer."""
         packed_data = bytearray()
         for record in data:
-            if dtype.names is None: # Add check for None
+            if dtype.names is None:  # Add check for None
                 continue
             for field_name in dtype.names:
                 field_value = record[field_name]
-                if dtype.fields is None: # Add check for None
+                if dtype.fields is None:  # Add check for None
                     continue
                 field_dtype = dtype.fields[field_name][0]
 
@@ -125,7 +126,9 @@ class GPUPhysicsEngine:
         if self.particle_buffer:
             self.particle_buffer.release()
 
-        packed_particles = self._pack_structured_data(particles_data, particles_data.dtype)
+        packed_particles = self._pack_structured_data(
+            particles_data, particles_data.dtype
+        )
         self.particle_buffer = self.ctx.buffer(packed_particles)
         self.particle_count = len(particles_data)
         self.particle_buffer.bind_to_storage_buffer(3)  # Bind to binding point 3
@@ -179,7 +182,7 @@ class GPUPhysicsEngine:
         self.simulation_tick = simulation_tick
         self.entities_data = entities_data  # Store CPU-side data
         self.lattices_data = lattices_data  # Store CPU-side data
-        self.particles_data = particles_data # Store CPU-side particle data
+        self.particles_data = particles_data  # Store CPU-side particle data
         self._create_entity_buffer(entities_data)
         self._create_lattice_buffer(lattices_data)
         self._create_particle_buffer(particles_data)

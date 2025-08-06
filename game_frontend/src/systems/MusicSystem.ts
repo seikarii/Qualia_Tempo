@@ -23,8 +23,10 @@ export class MusicSystem extends System {
     super(); // Call the base System constructor
     this.eventManager = eventManager;
     this.combatManager = combatManager;
-    this.eventManager.on(GameEvent.StartAudio, this.handleStartAudio.bind(this));
-    this.eventManager.on('music_tempo_update', this.handleMusicTempoUpdate.bind(this));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.eventManager.on(GameEvent.StartAudio, this.handleStartAudio.bind(this) as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.eventManager.on('music_tempo_update', this.handleMusicTempoUpdate.bind(this) as any);
     this.eventManager.on('ultimate_activated_audio_visual', this.handleUltimateActivated.bind(this));
     this.eventManager.on('ultimate_deactivated', this.handleUltimateDeactivated.bind(this));
   }
@@ -54,9 +56,9 @@ export class MusicSystem extends System {
     }).connect(this.panner);
 
     this.layers = [
-      new Tone.Player({ src: config.MUSIC.TRACK_2_URL, loop: true, autostart: false, volume: -Infinity }).toDestination(),
-      new Tone.Player({ src: config.MUSIC.TRACK_3_URL, loop: true, autostart: false, volume: -Infinity }).toDestination(),
-      new Tone.Player({ src: config.MUSIC.TRACK_4_URL, loop: true, autostart: false, volume: -Infinity }).toDestination(),
+      new Tone.Player({ url: config.MUSIC.TRACK_2_URL, loop: true, autostart: false, volume: -Infinity }).toDestination(),
+      new Tone.Player({ url: config.MUSIC.TRACK_3_URL, loop: true, autostart: false, volume: -Infinity }).toDestination(),
+      new Tone.Player({ url: config.MUSIC.TRACK_4_URL, loop: true, autostart: false, volume: -Infinity }).toDestination(),
     ];
 
     await Promise.all([
@@ -88,9 +90,11 @@ export class MusicSystem extends System {
     }
 
     if (combatId === 'Boss1') {
-        this.player.url.value = config.MUSIC.BOSS_1_URL;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (this.player as any).url.value = config.MUSIC.BOSS_1_URL;
     } else {
-        this.player.url.value = combatData.audioPath;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (this.player as any).url.value = combatData.audioPath;
     }
     this.currentBpm = combatData.bpm;
     Tone.Transport.bpm.value = this.currentBpm; // Set initial BPM

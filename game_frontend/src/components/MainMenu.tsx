@@ -1,4 +1,4 @@
-import React from 'react';
+import { MenuContainer } from './MenuContainer';
 
 interface MainMenuProps {
   onStartGame: () => void;
@@ -6,22 +6,7 @@ interface MainMenuProps {
 
 export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      backgroundColor: 'rgba(0,0,0,0.8)',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      color: 'white',
-      fontSize: '36px',
-      zIndex: 2000,
-    }}>
-      <h1>Qualia Tempo</h1>
+    <MenuContainer title="Qualia Tempo">
       <button
         onClick={onStartGame}
         style={{
@@ -38,6 +23,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onStartGame }) => {
         Start Game
       </button>
       {/* Add other menu options here */}
-    </div>
+    </MenuContainer>
   );
 };

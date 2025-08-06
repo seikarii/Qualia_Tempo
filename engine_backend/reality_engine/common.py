@@ -1,6 +1,7 @@
 """
 Common data structures and constants for the reality engine.
 """
+
 import numpy as np
 
 # --- NumPy dtypes for GLSL structs ---
@@ -27,7 +28,10 @@ LIVING_ENTITY_DTYPE = np.dtype(
         ("chaos_influence", "f4"),
         ("entity_id", "u4"),
         ("is_active", "u4"),
-        ("padding", "f4"), # Padding to make total size 96 bytes (24 floats * 4 bytes/float)
+        (
+            "padding",
+            "f4",
+        ),  # Padding to make total size 96 bytes (24 floats * 4 bytes/float)
     ]
 )
 

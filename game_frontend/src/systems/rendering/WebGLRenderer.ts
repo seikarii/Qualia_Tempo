@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { IRenderer } from './IRenderer';
-import { Entity } from '../../ecs/Entity';
+import type { IRenderer } from './IRenderer';
+import type { Entity } from '../../ecs/Entity';
 import {
   PositionComponent,
   RenderableComponent,
@@ -82,6 +82,33 @@ export class WebGLRenderer implements IRenderer {
   private noteInstanceMap: Map<Entity, number> = new Map();
   private noteInstancedMesh: THREE.InstancedMesh;
   private noteDummy: THREE.Object3D = new THREE.Object3D();
+
+  initialize(): void {
+    // This method is already implicitly handled by the constructor for now.
+    // If more complex initialization logic is needed outside the constructor,
+    // it can be added here.
+  }
+
+  public drawBackground(
+    time: number,
+    intensity: number,
+    beat: boolean
+  ): void {
+    // Background is a mesh in the scene, update its uniforms
+    const backgroundMaterial = (this.scene.children[0] as THREE.Mesh).material as THREE.ShaderMaterial;
+    if (backgroundMaterial) {
+      backgroundMaterial.uniforms.u_time.value = time;
+      backgroundMaterial.uniforms.u_intensity.value = intensity;
+      backgroundMaterial.uniforms.u_beat.value = beat;
+    }
+  }
+
+  public addAnimatedVFX(): void {
+    // For now, we don't have a dedicated VFX system.
+    // In a full implementation, this would add the animation to a list
+    // to be updated and rendered each frame.
+    console.warn("addAnimatedVFX not fully implemented in WebGLRenderer.");
+  }
 
   constructor(private canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({
@@ -331,7 +358,7 @@ export class WebGLRenderer implements IRenderer {
     }
 
     let geometry: THREE.BufferGeometry;
-    const material: THREE.Material;
+    let material: THREE.Material;
 
     switch (renderable.shape) {
         case 'circle':
@@ -342,9 +369,6 @@ export class WebGLRenderer implements IRenderer {
             break;
         case 'diamond':
             geometry = new THREE.CylinderGeometry(renderable.width / 2, renderable.width / 2, renderable.height, 4, 1);
-            break;
-        case 'floordrop':
-            geometry = new THREE.PlaneGeometry(50, 50);
             break;
         default:
             return null;
@@ -464,5 +488,9 @@ export class WebGLRenderer implements IRenderer {
      */
     public getScene(): THREE.Scene {
         return this.scene;
+    }
+
+    public getCanvas(): HTMLCanvasElement {
+        return this.canvas;
     }
 }

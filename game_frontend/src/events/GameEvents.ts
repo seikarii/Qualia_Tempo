@@ -1,4 +1,5 @@
 import type { Entity } from '../ecs/Entity';
+import type { QualiaState as QualiaStateType } from '../types/QualiaState';
 
 export const GameEvent = {
   // Lifecycle
@@ -31,10 +32,10 @@ export const GameEvent = {
   PLAYER_ABILITY_USED: 'player_ability_used',
   PlayerDashSuccess: 'player_dash_success',
   PlayerDashFail: 'player_dash_fail',
-    PlayerAbilityPause: Record<string, never>,
-  PlayerAbilityFastForward: Record<string, never>,
-  PlayerAbilityRewind: Record<string, never>,
-  PlayerAbilityUltimate: Record<string, never>,
+  PlayerAbilityPause: 'PlayerAbilityPause',
+  PlayerAbilityFastForward: 'PlayerAbilityFastForward',
+  PlayerAbilityRewind: 'PlayerAbilityRewind',
+  PlayerAbilityUltimate: 'PlayerAbilityUltimate',
   // ...
 
   // Dialogue
@@ -48,7 +49,7 @@ export const GameEvent = {
   FloorTileSpawned: 'FloorTileSpawned',
   FloorTileCollected: 'FloorTileCollected',
   ComboChanged: 'ComboChanged',
-  Beat: 'Beat',
+  Beat: 'Beat' as const,
 
   // UI & System Events
   GamePaused: 'GamePaused',
@@ -104,11 +105,11 @@ export interface GameEventData {
   [GameEvent.AbilityCasted]: AbilityCastedEvent;
   [GameEvent.PLAYER_ABILITY_USED]: { entityId: Entity; abilityId: string };
   [GameEvent.PlayerDashSuccess]: { cursorPosition: { x: number; y: number } };
-  [GameEvent.PlayerDashFail]: Record<string, never>;
-  [GameEvent.PlayerAbilityPause]: Record<string, never>;
-  [GameEvent.PlayerAbilityFastForward]: Record<string, never>;
-  [GameEvent.PlayerAbilityRewind]: Record<string, never>;
-  [GameEvent.PlayerAbilityUltimate]: Record<string, never>;
+  [GameEvent.PlayerDashFail]: void;
+    [GameEvent.PlayerAbilityPause]: undefined;
+  [GameEvent.PlayerAbilityFastForward]: undefined;
+  [GameEvent.PlayerAbilityRewind]: undefined;
+  [GameEvent.PlayerAbilityUltimate]: undefined;
   [GameEvent.EntityDamaged]: EntityDamagedEvent;
   [GameEvent.StartDialogue]: { dialogueId: string };
   [GameEvent.AdvanceDialogue]: undefined;

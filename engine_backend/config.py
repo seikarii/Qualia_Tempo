@@ -32,3 +32,9 @@ VP_MAX_NEW_PARTICLES = 50
 VP_INT_VALUE_10 = 10
 VP_SIMULATION_TICK_MULTIPLIER = 1000
 VP_DELAY = 0.01
+
+# --- IPC Settings ---
+QUALIA_STATE_FILE = "qualia_state.json"
+FASTAPI_LOG = "fastapi.log"
+VISUALIZER_PROCESS_LOG = "visualizer_process.log"
+DEFAULT_DISPLAY = ":0"

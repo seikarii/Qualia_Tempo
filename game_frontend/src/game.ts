@@ -13,9 +13,7 @@ import { QualiaState } from './ecs/components/QualiaState';
 import { BossState } from './ecs/components/BossState';
 import { PlayerState } from './ecs/components/PlayerState';
 import { GameState } from './ecs/components/GameState';
-
-import { BossAISystem } from './systems/BossAISystem';
-import { SaveLoadSystem } from './systems/SaveLoadSystem';
+import { PositionComponent } from './ecs/Component';
 
 let animationFrameId: number | null = null;
 
@@ -60,7 +58,7 @@ export async function startGame(canvas: HTMLCanvasElement, eventManager: EventMa
     ecsManager.addSystem(renderSystem);
     ecsManager.addSystem(playerInteractionSystem);
     ecsManager.addSystem(new BossAISystem(ecsManager, eventManager));
-    ecsManager.addSystem(new SaveLoadSystem(ecsManager, eventManager));
+    ecsManager.addSystem(new SaveLoadSystem(ecsManager));
 
     // Create initial entities
     const qualiaEntity = ecsManager.createEntity();

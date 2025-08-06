@@ -1,4 +1,4 @@
-import type { CombatData } from '../types/CombatData';
+import type { CombatData } from './CombatData';
 import { config } from '../config';
 
 /**

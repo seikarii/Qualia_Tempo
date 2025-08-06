@@ -1,3 +1,7 @@
+"""This module handles the main graphics loop for the Qualia Tempo visualizer.
+It initializes Pygame and ModernGL, manages entity and particle data, and renders the simulation.
+"""
+
 import logging
 import time
 import json
@@ -7,6 +11,11 @@ import moderngl
 import numpy as np
 import pygame
 
+from reality_engine.common import (
+    LIVING_ENTITY_DTYPE,
+    LATTICE_POINT_DTYPE,
+    PARTICLE_DTYPE,
+)
 from reality_engine.gpu_physics_engine import GPUPhysicsEngine
 import config
 
@@ -17,13 +26,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Archivo para IPC
-QUALIA_STATE_FILE = os.path.join(os.path.dirname(__file__), "qualia_state.json")
+QUALIA_STATE_FILE = config.QUALIA_STATE_FILE
 
-from reality_engine.common import (
-    LIVING_ENTITY_DTYPE,
-    LATTICE_POINT_DTYPE,
-    PARTICLE_DTYPE,
-)
 
 # --- Funciones del Motor Gráfico ---
 
@@ -32,7 +36,9 @@ def main_graphics_loop():
     """Initializes Pygame and ModernGL and runs the main graphics loop."""
     try:
         pygame.init()
-        pygame.display.set_mode((config.VP_WIDTH, config.VP_HEIGHT), pygame.OPENGL | pygame.DOUBLEBUF)
+        pygame.display.set_mode(
+            (config.VP_WIDTH, config.VP_HEIGHT), pygame.OPENGL | pygame.DOUBLEBUF
+        )
         pygame.display.set_caption("Qualia Tempo Visualizer")
 
         ctx = moderngl.create_context()
@@ -151,15 +157,22 @@ def main_graphics_loop():
         initial_particles = np.array(
             [
                 (
-                    0.0, 0.0, 0.0,  # position
-                    0.1, 0.1, 0.1,  # velocity
-                    1.0, 0.0, 0.0,  # color (red)
+                    0.0,
+                    0.0,
+                    0.0,  # position
+                    0.1,
+                    0.1,
+                    0.1,  # velocity
+                    1.0,
+                    0.0,
+                    0.0,  # color (red)
                     1.0,  # lifetime
                     1.0,  # max_lifetime
                     5.0,  # size
                     0,  # type (aura)
                     1,  # active
-                    0.0, 0.0, # padding
+                    0.0,
+                    0.0,  # padding
                 )
             ],
             dtype=PARTICLE_DTYPE,
@@ -330,15 +343,30 @@ def main_graphics_loop():
         entity_vao = ctx.vertex_array(
             entity_render_prog,
             [
-                (gpu_engine.entity_buffer, "3f", "in_position", 0),  # Offset 0 (position_x, y, z)
-                (gpu_engine.entity_buffer, "1f", "in_qualia_state_intensity", 32), # Offset 32 (consciousness_level is at 12, then 4 floats for velocity, 4 for ontological_drift, then 7 floats for qualia_state)
+                (
+                    gpu_engine.entity_buffer,
+                    "3f",
+                    "in_position",
+                    0,
+                ),  # Offset 0 (position_x, y, z)
+                (
+                    gpu_engine.entity_buffer,
+                    "1f",
+                    "in_qualia_state_intensity",
+                    32,
+                ),  # Offset 32 (consciousness_level is at 12, then 4 floats for velocity, 4 for ontological_drift, then 7 floats for qualia_state)
                 (gpu_engine.entity_buffer, "1f", "in_qualia_state_precision", 36),
                 (gpu_engine.entity_buffer, "1f", "in_qualia_state_aggression", 40),
                 (gpu_engine.entity_buffer, "1f", "in_qualia_state_flow", 44),
                 (gpu_engine.entity_buffer, "1f", "in_qualia_state_chaos", 48),
                 (gpu_engine.entity_buffer, "1f", "in_qualia_state_recovery", 52),
                 (gpu_engine.entity_buffer, "1f", "in_qualia_state_transcendence", 56),
-                (gpu_engine.entity_buffer, "1u", "in_entity_id", 60),  # Offset 60 (entity_id)
+                (
+                    gpu_engine.entity_buffer,
+                    "1u",
+                    "in_entity_id",
+                    60,
+                ),  # Offset 60 (entity_id)
             ],
             mode=moderngl.POINTS,  # Render as points
         )
@@ -347,11 +375,36 @@ def main_graphics_loop():
         particle_vao = ctx.vertex_array(
             particle_render_prog,
             [
-                (gpu_engine.particle_buffer, "3f", "in_position", 0),  # position_x, y, z
-                (gpu_engine.particle_buffer, "3f", "in_color", 24),  # color_r, g, b (offset 6*4 = 24)
-                (gpu_engine.particle_buffer, "1f", "in_size", 40),  # size (offset 10*4 = 40)
-                (gpu_engine.particle_buffer, "1f", "in_lifetime", 36),  # lifetime (offset 9*4 = 36)
-                (gpu_engine.particle_buffer, "1f", "in_max_lifetime", 40),  # max_lifetime (offset 10*4 = 40)
+                (
+                    gpu_engine.particle_buffer,
+                    "3f",
+                    "in_position",
+                    0,
+                ),  # position_x, y, z
+                (
+                    gpu_engine.particle_buffer,
+                    "3f",
+                    "in_color",
+                    24,
+                ),  # color_r, g, b (offset 6*4 = 24)
+                (
+                    gpu_engine.particle_buffer,
+                    "1f",
+                    "in_size",
+                    40,
+                ),  # size (offset 10*4 = 40)
+                (
+                    gpu_engine.particle_buffer,
+                    "1f",
+                    "in_lifetime",
+                    36,
+                ),  # lifetime (offset 9*4 = 36)
+                (
+                    gpu_engine.particle_buffer,
+                    "1f",
+                    "in_max_lifetime",
+                    40,
+                ),  # max_lifetime (offset 10*4 = 40)
             ],
             mode=moderngl.POINTS,
         )
@@ -385,7 +438,7 @@ def main_graphics_loop():
                         qualia_state = json.load(f)
                 except json.JSONDecodeError as e:
                     logger.error(f"Error decoding qualia_state.json: {e}")
-                except Exception as e:
+                except (json.JSONDecodeError, IOError) as e:
                     logger.error(f"Error reading qualia_state.json: {e}")
 
             # Map QualiaState to GPUPhysicsEngine uniform parameters
@@ -395,29 +448,53 @@ def main_graphics_loop():
                 1.0 - qualia_state.get("flow", 0.0) * 0.5
             )  # Example mapping
             unified_field_center = (0.0, 0.0, 0.0)  # Placeholder
-            particle_multiplier = qualia_state.get("transcendence", 0.0) * 5.0 + 1.0 # Example: more particles with transcendence
+            particle_multiplier = (
+                qualia_state.get("transcendence", 0.0) * 5.0 + 1.0
+            )  # Example: more particles with transcendence
 
             # Update dummy entities with current qualia state
-            player_entity[0]["qualia_state_intensity"] = qualia_state.get("intensity", 0.0)
-            player_entity[0]["qualia_state_precision"] = qualia_state.get("precision", 0.0)
-            player_entity[0]["qualia_state_aggression"] = qualia_state.get("aggression", 0.0)
+            player_entity[0]["qualia_state_intensity"] = qualia_state.get(
+                "intensity", 0.0
+            )
+            player_entity[0]["qualia_state_precision"] = qualia_state.get(
+                "precision", 0.0
+            )
+            player_entity[0]["qualia_state_aggression"] = qualia_state.get(
+                "aggression", 0.0
+            )
             player_entity[0]["qualia_state_flow"] = qualia_state.get("flow", 0.0)
             player_entity[0]["qualia_state_chaos"] = qualia_state.get("chaos", 0.0)
-            player_entity[0]["qualia_state_recovery"] = qualia_state.get("recovery", 0.0)
-            player_entity[0]["qualia_state_transcendence"] = qualia_state.get("transcendence", 0.0)
+            player_entity[0]["qualia_state_recovery"] = qualia_state.get(
+                "recovery", 0.0
+            )
+            player_entity[0]["qualia_state_transcendence"] = qualia_state.get(
+                "transcendence", 0.0
+            )
 
-            boss_entity[0]["qualia_state_intensity"] = qualia_state.get("intensity", 0.0)
-            boss_entity[0]["qualia_state_precision"] = qualia_state.get("precision", 0.0)
-            boss_entity[0]["qualia_state_aggression"] = qualia_state.get("aggression", 0.0)
+            boss_entity[0]["qualia_state_intensity"] = qualia_state.get(
+                "intensity", 0.0
+            )
+            boss_entity[0]["qualia_state_precision"] = qualia_state.get(
+                "precision", 0.0
+            )
+            boss_entity[0]["qualia_state_aggression"] = qualia_state.get(
+                "aggression", 0.0
+            )
             boss_entity[0]["qualia_state_flow"] = qualia_state.get("flow", 0.0)
             boss_entity[0]["qualia_state_chaos"] = qualia_state.get("chaos", 0.0)
             boss_entity[0]["qualia_state_recovery"] = qualia_state.get("recovery", 0.0)
-            boss_entity[0]["qualia_state_transcendence"] = qualia_state.get("transcendence", 0.0)
+            boss_entity[0]["qualia_state_transcendence"] = qualia_state.get(
+                "transcendence", 0.0
+            )
 
             updated_entities = np.concatenate([player_entity, boss_entity])
 
             # Dummy particle generation (example: generate particles based on qualia intensity)
-            num_new_particles = int(qualia_state.get("intensity", 0.0) * config.VP_MAX_NEW_PARTICLES * particle_multiplier) # Max 50 new particles per frame
+            num_new_particles = int(
+                qualia_state.get("intensity", 0.0)
+                * config.VP_MAX_NEW_PARTICLES
+                * particle_multiplier
+            )  # Max 50 new particles per frame
             new_particles = []
             for _ in range(num_new_particles):
                 # Particle color based on qualia state
@@ -426,25 +503,46 @@ def main_graphics_loop():
                 particle_color_b = qualia_state.get("precision", 0.0)
 
                 # Particle velocity influenced by chaos
-                particle_vx = np.random.uniform(-0.5, 0.5) * (1 + qualia_state.get("chaos", 0.0))
-                particle_vy = np.random.uniform(-0.5, 0.5) * (1 + qualia_state.get("chaos", 0.0))
-                particle_vz = np.random.uniform(-0.5, 0.5) * (1 + qualia_state.get("chaos", 0.0))
+                particle_vx = np.random.uniform(-0.5, 0.5) * (
+                    1 + qualia_state.get("chaos", 0.0)
+                )
+                particle_vy = np.random.uniform(-0.5, 0.5) * (
+                    1 + qualia_state.get("chaos", 0.0)
+                )
+                particle_vz = np.random.uniform(-0.5, 0.5) * (
+                    1 + qualia_state.get("chaos", 0.0)
+                )
 
-                new_particles.append((
-                    np.random.uniform(-5, 5), np.random.uniform(-5, 5), 0.0,  # position
-                    particle_vx, particle_vy, particle_vz,  # velocity
-                    particle_color_r, particle_color_g, particle_color_b,  # color
-                    1.0,  # lifetime
-                    1.0,  # max_lifetime
-                    np.random.uniform(1.0, config.VP_INT_VALUE_10),  # size
-                    0,  # type (aura)
-                    1,  # active
-                    0.0, 0.0,  # padding
-                ))
-            
-            current_particles = gpu_engine.particles_data if gpu_engine.particles_data is not None else np.array([], dtype=PARTICLE_DTYPE)
+                new_particles.append(
+                    (
+                        np.random.uniform(-5, 5),
+                        np.random.uniform(-5, 5),
+                        0.0,  # position
+                        particle_vx,
+                        particle_vy,
+                        particle_vz,  # velocity
+                        particle_color_r,
+                        particle_color_g,
+                        particle_color_b,  # color
+                        1.0,  # lifetime
+                        1.0,  # max_lifetime
+                        np.random.uniform(1.0, config.VP_INT_VALUE_10),  # size
+                        0,  # type (aura)
+                        1,  # active
+                        0.0,
+                        0.0,  # padding
+                    )
+                )
+
+            current_particles = (
+                gpu_engine.particles_data
+                if gpu_engine.particles_data is not None
+                else np.array([], dtype=PARTICLE_DTYPE)
+            )
             if len(new_particles) > 0:
-                updated_particles = np.concatenate([current_particles, np.array(new_particles, dtype=PARTICLE_DTYPE)])
+                updated_particles = np.concatenate(
+                    [current_particles, np.array(new_particles, dtype=PARTICLE_DTYPE)]
+                )
             else:
                 updated_particles = current_particles
 
@@ -454,19 +552,21 @@ def main_graphics_loop():
                     updated_particles[i]["lifetime"] -= delta_time
                     if updated_particles[i]["lifetime"] <= 0.0:
                         updated_particles[i]["active"] = 0
-            
+
             updated_particles = updated_particles[updated_particles["active"] == 1]
 
             gpu_engine.update_buffers(
                 updated_entities,  # Using updated entities
                 initial_lattices,  # Using dummy lattices for now
-                updated_particles, # Using updated particles
+                updated_particles,  # Using updated particles
                 delta_time,
                 reality_coherence,
                 unified_field_center,
                 chaos_entropy_level,
                 time_dilation_factor,
-                int(current_time * config.VP_SIMULATION_TICK_MULTIPLIER),  # simulation_tick
+                int(
+                    current_time * config.VP_SIMULATION_TICK_MULTIPLIER
+                ),  # simulation_tick
                 particle_multiplier,
             )
             gpu_engine.run_simulation()
@@ -481,7 +581,9 @@ def main_graphics_loop():
 
             # Render particles
             if gpu_engine.particle_count > 0:
-                particle_vao.render(moderngl.POINTS, instances=gpu_engine.particle_count)
+                particle_vao.render(
+                    moderngl.POINTS, instances=gpu_engine.particle_count
+                )
 
             pygame.display.flip()
             time.sleep(config.VP_DELAY)  # Small delay to prevent busy-waiting

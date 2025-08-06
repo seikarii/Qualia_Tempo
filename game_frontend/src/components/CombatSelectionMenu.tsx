@@ -1,4 +1,4 @@
-import React from 'react';
+import { MenuContainer } from './MenuContainer';
 
 interface CombatSelectionMenuProps {
   onCombatSelected: (combatId: string) => void;
@@ -12,22 +12,7 @@ export const CombatSelectionMenu: React.FC<CombatSelectionMenuProps> = ({ onComb
   ];
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      backgroundColor: 'rgba(0,0,0,0.8)',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      color: 'white',
-      fontSize: '24px',
-      zIndex: 2000,
-    }}>
-      <h1>Select Combat</h1>
+    <MenuContainer title="Select Combat">
       {
         availableCombats.map((combat) => (
           <button
@@ -48,6 +33,6 @@ export const CombatSelectionMenu: React.FC<CombatSelectionMenuProps> = ({ onComb
           </button>
         ))
       }
-    </div>
+    </MenuContainer>
   );
 };

@@ -48,7 +48,7 @@ export class RenderSystem extends System {
     if (!this.ecs) return;
 
     // Limpieza de entidades que ya no existen en el ECS
-    const activeEntities = new Set(this.ecs.queryEntities().map((e: number) => e));
+    const activeEntities = new Set(Array.from(this.ecs.queryEntities()).map((e: number) => e));
     this.renderer.cleanup(activeEntities);
 
     this.renderer.drawBackground(
@@ -61,7 +61,7 @@ export class RenderSystem extends System {
       PositionComponent,
       RenderableComponent
     );
-    for (const entity of query) {
+    for (const entity of Array.from(query)) {
       const pos = this.ecs.getComponent(entity, PositionComponent)!;
       const renderable = this.ecs.getComponent(entity, RenderableComponent)!;
       const health = this.ecs.getComponent(entity, HealthComponent);

@@ -10,7 +10,7 @@ import { GameEvent } from '../events/GameEvents.js';
 import { EventManager } from '../events/EventManager.js';
 import { ECSManager } from '../ecs/ECSManager.js';
 import { CombatManager } from '../data/CombatManager.js';
-import type { NoteData } from '../data/CombatData.js';
+import type { NoteData } from '../data/CombatData';
 import { config } from '../config';
 
 /**
@@ -35,9 +35,12 @@ export class FloorSystem extends System {
         this.eventManager = eventManager;
         this.combatManager = combatManager;
 
-        this.eventManager.on(GameEvent.SceneLoaded, (data: { sceneId: string }) => this.handleSceneLoaded(data));
-        this.eventManager.on('player_dash_success', (data: { noteId?: Entity }) => this.handlePlayerDash(data));
-        this.eventManager.on('player_dash_fail', (data: { noteId?: Entity }) => this.handlePlayerDash(data));
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        this.eventManager.on(GameEvent.SceneLoaded, this.handleSceneLoaded.bind(this) as (data: any) => void);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.eventManager.on('player_dash_success', this.handlePlayerDash.bind(this) as (data: any) => void);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.eventManager.on('player_dash_fail', this.handlePlayerDash.bind(this) as (data: any) => void);
     }
 
     /**

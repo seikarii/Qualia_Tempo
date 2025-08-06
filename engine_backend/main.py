@@ -3,7 +3,7 @@ import time
 import os
 import logging
 
-import config
+from engine_backend import config
 
 logging.basicConfig(
     level=logging.INFO, format="[%(levelname)s] %(asctime)s - %(message)s"
@@ -18,8 +18,8 @@ FASTAPI_SCRIPT = os.path.join(os.path.dirname(__file__), "fastapi_server.py")
 PYTHON_VENV = os.path.join(os.path.dirname(__file__), "venv", "bin", "python")
 
 # Archivos de log para los subprocesos
-FASTAPI_LOG = "fastapi.log"
-VISUALIZER_PROCESS_LOG = "visualizer_process.log"  # Log específico para el visualizador
+FASTAPI_LOG = config.FASTAPI_LOG
+VISUALIZER_PROCESS_LOG = config.VISUALIZER_PROCESS_LOG
 
 
 def start_backend():
@@ -33,7 +33,7 @@ def start_backend():
             "DISPLAY environment variable not found. Visualizer might not work."
         )
         # Intentar establecer un DISPLAY por defecto si no se encuentra (común para sesiones SSH)
-        env["DISPLAY"] = ":0"
+        env["DISPLAY"] = config.DEFAULT_DISPLAY
 
     visualizer_process = None
     try:

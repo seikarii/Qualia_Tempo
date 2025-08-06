@@ -1,14 +1,15 @@
 import { System } from '../ecs/System.js';
-import { PositionComponent, PlayerComponent, AbilityComponent } from '../ecs/Component.js';
+import { PositionComponent, PlayerComponent, AbilityComponent, type ComponentConstructor } from '../ecs/Component.js';
 import { EventManager } from '../events/EventManager.js';
 import { GameEvent } from '../events/GameEvents.js';
 import { ECSManager } from '../ecs/ECSManager.js';
-import { Entity } from '../ecs/Entity.js';
+import type { Entity } from '../ecs/Entity.js';
 
 export class PlayerInputSystem extends System {
   private keyMap: Record<string, boolean> = {};
   private isContinuePromptActive = false;
   private useAbility: (abilityName: string) => boolean;
+  private eventManager: EventManager;
 
     constructor(
         ecs: ECSManager,
@@ -24,8 +25,20 @@ export class PlayerInputSystem extends System {
     
     this.eventManager.on(GameEvent.ShowContinuePrompt, () => this.isContinuePromptActive = true);
     this.eventManager.on(GameEvent.SceneLoaded, () => this.isContinuePromptActive = false);
-    this.eventManager.on(GameEvent.PlayerDashSuccess, this.handlePlayerDashSuccess.bind(this));
-    this.eventManager.on(GameEvent.PlayerDashFail, this.handlePlayerDashFail.bind(this));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.eventManager.on('keydown', this.handleKeyDown.bind(this) as (data: any) => void);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.eventManager.on('keyup', this.handleKeyUp.bind(this) as (data: any) => void);
+    this.eventManager.on(GameEvent.ShowContinuePrompt, () => this.isContinuePromptActive = true);
+    this.eventManager.on(GameEvent.SceneLoaded, () => this.isContinuePromptActive = false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.eventManager.on('keydown', this.handleKeyDown.bind(this) as (data: any) => void);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.eventManager.on('keyup', this.handleKeyUp.bind(this) as (data: any) => void);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.eventManager.on(GameEvent.PlayerDashSuccess, this.handlePlayerDashSuccess.bind(this) as (data: any) => void);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.eventManager.on(GameEvent.PlayerDashFail, this.handlePlayerDashFail.bind(this) as (data: any) => void);
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
@@ -39,10 +52,10 @@ export class PlayerInputSystem extends System {
     // Emit ability events on key down to avoid multiple emissions if key is held
     const playerEntity: Entity | undefined = this.ecs.getEntitiesByComponent(PlayerComponent)[0];
     if (playerEntity) {
-        const abilityComponent = this.ecs.getComponent(playerEntity, AbilityComponent);
+        const abilityComponent = this.ecs.getComponent(playerEntity, AbilityComponent) as AbilityComponent;
         if (abilityComponent) {
             for (const key in abilityComponent.keybinds) {
-                if (event.key.toLowerCase() === abilityComponent.keybinds[key as keyof typeof abilityComponent.keybinds]) {
+                if (event.key.toLowerCase() === abilityComponent.keybinds[key]) {
                     // Use the useAbility hook to trigger the ability
                     this.useAbility(key);
                 }
@@ -63,7 +76,7 @@ export class PlayerInputSystem extends System {
   private handlePlayerDashSuccess(data: { cursorPosition: { x: number, y: number } }): void {
     const playerEntity: Entity | undefined = this.ecs.getEntitiesByComponent(PlayerComponent)[0];
     if (playerEntity) {
-      const playerPosition = this.ecs.getComponent(playerEntity, PositionComponent);
+      const playerPosition = this.ecs.getComponent(playerEntity, PositionComponent as ComponentConstructor<PositionComponent>);
       if (playerPosition) {
         playerPosition.x = data.cursorPosition.x;
         playerPosition.y = data.cursorPosition.y;
@@ -75,5 +88,6 @@ export class PlayerInputSystem extends System {
   private handlePlayerDashFail(): void {
     // console.log("Player dash failed rhythmically.");
     // Potentially emit event for visual/audio feedback for a failed dash
+    this.eventManager.emit(GameEvent.PlayerDashFail, undefined);
   }
 }

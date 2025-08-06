@@ -1,3 +1,7 @@
+"""This module integrates a Pygame/ModernGL visualizer with a FastAPI server in a single process.
+It handles rendering based on QualiaState received via an internal queue.
+"""
+
 import logging
 import threading
 import time

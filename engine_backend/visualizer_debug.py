@@ -1,3 +1,7 @@
+"""This module provides a debug visualizer for the GPU physics engine.
+It simulates entities and renders them using Pygame and ModernGL.
+"""
+
 import logging
 import os
 import time
@@ -24,7 +28,9 @@ logger = logging.getLogger(__name__)
 def main():
     """Initializes Pygame and ModernGL and runs the main graphics loop."""
     pygame.init()
-    pygame.display.set_mode((config.DEBUG_WIDTH, config.DEBUG_HEIGHT), pygame.OPENGL | pygame.DOUBLEBUF)
+    pygame.display.set_mode(
+        (config.DEBUG_WIDTH, config.DEBUG_HEIGHT), pygame.OPENGL | pygame.DOUBLEBUF
+    )
     pygame.display.set_caption("Qualia Tempo Visualizer Debug")
     screen = pygame.display.get_surface()
 
@@ -61,8 +67,12 @@ def main():
 
         # --- Actualizar y Computar el Motor de Físicas ---
         # Mapear valores de QualiaState simulados a los parámetros del motor
-        simulated_intensity = (time.time() % config.DEBUG_INT_VALUE_5) / config.DEBUG_INT_VALUE_5  # Simular cambio de intensity
-        simulated_chaos = (time.time() % config.DEBUG_INT_VALUE_3) / config.DEBUG_INT_VALUE_3  # Simular cambio de chaos
+        simulated_intensity = (
+            time.time() % config.DEBUG_INT_VALUE_5
+        ) / config.DEBUG_INT_VALUE_5  # Simular cambio de intensity
+        simulated_chaos = (
+            time.time() % config.DEBUG_INT_VALUE_3
+        ) / config.DEBUG_INT_VALUE_3  # Simular cambio de chaos
 
         # Asegurarse de pasar entities_data como un array 2D para update_buffers
         gpu_engine.update_buffers(
@@ -103,7 +113,9 @@ def main():
                 0,
             )  # Ejemplo: de rojo a verde
 
-            pygame.draw.circle(screen, color, (x_screen, y_screen), config.DEBUG_INT_VALUE_10)
+            pygame.draw.circle(
+                screen, color, (x_screen, y_screen), config.DEBUG_INT_VALUE_10
+            )
 
         pygame.display.flip()
 

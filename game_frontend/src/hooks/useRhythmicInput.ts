@@ -47,7 +47,7 @@ export const useRhythmicInput = (isRunning: boolean, eventManager: EventManager)
         if (isRhythmicallyCorrect) {
           eventManager.emit(GameEvent.PlayerDashSuccess, { cursorPosition }); // Pass cursorPosition
         } else {
-          eventManager.emit(GameEvent.PlayerDashFail, {});
+          eventManager.emit(GameEvent.PlayerDashFail, undefined);
         }
       };
 
@@ -60,7 +60,8 @@ export const useRhythmicInput = (isRunning: boolean, eventManager: EventManager)
           setBpm(data.bpm); // Update BPM from the music system
       };
 
-      eventManager.on(GameEvent.Beat, handleBeat);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      eventManager.on(GameEvent.Beat, handleBeat as any);
 
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mousedown', handleMouseDown);
