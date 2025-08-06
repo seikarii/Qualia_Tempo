@@ -93,7 +93,7 @@ class TestMain(unittest.TestCase):
     @patch("os.path.exists", return_value=True)
     @patch("builtins.open", unittest.mock.mock_open(read_data="fastapi log"))
     @patch("logging.Logger.error")
-    def test_start_backend_fastapi_unexpected_termination(self, mock_popen, mock_environ_copy, mock_sleep, mock_exists, mock_open, mock_logger_error):
+    def test_start_backend_fastapi_unexpected_termination(self, mock_logger_error, mock_open, mock_exists, mock_sleep, mock_environ_copy, mock_popen):
         mock_visualizer_process = MagicMock()
         mock_visualizer_process.pid = 1234
         mock_visualizer_process.poll.return_value = None
