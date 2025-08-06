@@ -3,6 +3,7 @@ export interface Ability {
   color: string;
   damage: number;
   type: 'utility' | 'offensive' | 'defensive';
+  cooldown: number;
 }
 
 export interface AbilitiesData {

@@ -3,6 +3,8 @@ import time
 import os
 import logging
 
+import config
+
 logging.basicConfig(
     level=logging.INFO, format="[%(levelname)s] %(asctime)s - %(message)s"
 )
@@ -21,6 +23,7 @@ VISUALIZER_PROCESS_LOG = "visualizer_process.log"  # Log específico para el vis
 
 
 def start_backend():
+    """Starts the backend processes."""
     logger.info("Starting Qualia Tempo Backend processes...")
 
     # Asegurar que DISPLAY se pase al subproceso para aplicaciones gráficas
@@ -44,7 +47,7 @@ def start_backend():
         logger.error(f"Failed to start visualizer process: {e}")
         return
 
-    time.sleep(2)  # Dar tiempo al visualizador para que se inicialice
+    time.sleep(config.NUM_WORKERS)  # Dar tiempo al visualizador para que se inicialice
 
     fastapi_process = None
     try:

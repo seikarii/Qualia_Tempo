@@ -1,3 +1,5 @@
+import type { Entity } from '../ecs/Entity';
+
 export const GameEvent = {
   // Lifecycle
   EntityDied: 'EntityDied',
@@ -29,10 +31,10 @@ export const GameEvent = {
   PLAYER_ABILITY_USED: 'player_ability_used',
   PlayerDashSuccess: 'player_dash_success',
   PlayerDashFail: 'player_dash_fail',
-  PlayerAbilityPause: 'player_ability_pause',
-  PlayerAbilityFastForward: 'player_ability_fast_forward',
-  PlayerAbilityRewind: 'player_ability_rewind',
-  PlayerAbilityUltimate: 'player_ability_ultimate',
+    PlayerAbilityPause: Record<string, never>,
+  PlayerAbilityFastForward: Record<string, never>,
+  PlayerAbilityRewind: Record<string, never>,
+  PlayerAbilityUltimate: Record<string, never>,
   // ...
 
   // Dialogue
@@ -102,11 +104,11 @@ export interface GameEventData {
   [GameEvent.AbilityCasted]: AbilityCastedEvent;
   [GameEvent.PLAYER_ABILITY_USED]: { entityId: Entity; abilityId: string };
   [GameEvent.PlayerDashSuccess]: { cursorPosition: { x: number; y: number } };
-  [GameEvent.PlayerDashFail]: {};
-  [GameEvent.PlayerAbilityPause]: {};
-  [GameEvent.PlayerAbilityFastForward]: {};
-  [GameEvent.PlayerAbilityRewind]: {};
-  [GameEvent.PlayerAbilityUltimate]: {};
+  [GameEvent.PlayerDashFail]: Record<string, never>;
+  [GameEvent.PlayerAbilityPause]: Record<string, never>;
+  [GameEvent.PlayerAbilityFastForward]: Record<string, never>;
+  [GameEvent.PlayerAbilityRewind]: Record<string, never>;
+  [GameEvent.PlayerAbilityUltimate]: Record<string, never>;
   [GameEvent.EntityDamaged]: EntityDamagedEvent;
   [GameEvent.StartDialogue]: { dialogueId: string };
   [GameEvent.AdvanceDialogue]: undefined;
@@ -122,4 +124,9 @@ export interface GameEventData {
   [GameEvent.StartAudio]: StartAudioEvent;
   [GameEvent.StopAudio]: undefined;
   [GameEvent.MusicDataUpdated]: MusicDataUpdatedEvent;
+  qualia_updated: QualiaStateType;
+  combo_updated: { combo: number };
+  player_ability_cooldown_updated: { [key: string]: number };
+  player_state_updated: { health: number; dashCharges: number };
+  boss_state_updated: { health: number };
 }

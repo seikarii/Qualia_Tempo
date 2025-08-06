@@ -13,7 +13,11 @@ import {
 import { NoteComponent } from '../ecs/components/NoteComponent.js';
 import type { IRenderer } from './rendering/IRenderer.js';
 import { WebGLRenderer } from './rendering/WebGLRenderer.js';
+import { config } from '../config';
 
+/**
+ * The system responsible for rendering the game.
+ */
 export class RenderSystem extends System {
     private renderer: IRenderer;
 
@@ -27,10 +31,19 @@ export class RenderSystem extends System {
         this.renderer.setECS(ecs);
     }
 
+  /**
+   * Gets the renderer.
+   * @returns The renderer.
+   */
   public getRenderer(): IRenderer {
     return this.renderer;
   }
 
+  /**
+   * Updates the render system.
+   * @param deltaTime The time since the last update.
+   * @param time The current time.
+   */
   update(deltaTime: number, time: number): void {
     if (!this.ecs) return;
 
@@ -40,7 +53,7 @@ export class RenderSystem extends System {
 
     this.renderer.drawBackground(
       time,
-      0.5, // Default intensity
+      config.RENDER_SYSTEM.PLAYER_AURA_OPACITY, // Default intensity
       false // Default beat
     );
 

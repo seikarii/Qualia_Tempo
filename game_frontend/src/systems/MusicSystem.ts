@@ -3,14 +3,11 @@ import { EventManager } from '../events/EventManager';
 import * as Tone from 'tone';
 import { CombatManager } from '../data/CombatManager';
 import { GameEvent } from '../events/GameEvents';
+import { config } from '../config';
 
-// Rutas a los archivos de audio. Se asume que están en public/sounds.
-const LAYER_1_TRACK = '/sounds/Musica2.mp3';
-const LAYER_2_TRACK = '/sounds/Musica3.mp3';
-const LAYER_3_TRACK = '/sounds/Musica4.mp3';
-const CHARLIE_VOICE_TRACK = '/sounds/charlie_voice.mp3'; // Placeholder: Este archivo debe ser provisto.
-const BOSS1_TRACK = '/sounds/Boss1.mp3';
-
+/**
+ * The system responsible for managing the music and audio.
+ */
 export class MusicSystem extends System {
   private eventManager: EventManager;
   private combatManager: CombatManager;
@@ -32,6 +29,9 @@ export class MusicSystem extends System {
     this.eventManager.on('ultimate_deactivated', this.handleUltimateDeactivated.bind(this));
   }
 
+  /**
+   * Initializes Tone.js.
+   */
   private async initializeTone() {
     if (this.isInitialized || typeof window === 'undefined') return;
     
@@ -47,16 +47,16 @@ export class MusicSystem extends System {
     }).connect(this.panner);
 
     this.charlieVoicePlayer = new Tone.Player({
-      url: CHARLIE_VOICE_TRACK,
+      url: config.MUSIC.CHARLIE_VOICE_URL,
       loop: true,
       autostart: false,
       volume: -Infinity // Start muted
     }).connect(this.panner);
 
     this.layers = [
-      new Tone.Player({ src: LAYER_1_TRACK, loop: true, autostart: false, volume: -Infinity }).toDestination(),
-      new Tone.Player({ src: LAYER_2_TRACK, loop: true, autostart: false, volume: -Infinity }).toDestination(),
-      new Tone.Player({ src: LAYER_3_TRACK, loop: true, autostart: false, volume: -Infinity }).toDestination(),
+      new Tone.Player({ src: config.MUSIC.TRACK_2_URL, loop: true, autostart: false, volume: -Infinity }).toDestination(),
+      new Tone.Player({ src: config.MUSIC.TRACK_3_URL, loop: true, autostart: false, volume: -Infinity }).toDestination(),
+      new Tone.Player({ src: config.MUSIC.TRACK_4_URL, loop: true, autostart: false, volume: -Infinity }).toDestination(),
     ];
 
     await Promise.all([
@@ -67,7 +67,7 @@ export class MusicSystem extends System {
     
     Tone.Transport.start(); // Start Tone.Transport
 
-    this.beatLoop = new Tone.Loop(time => {
+    this.beatLoop = new Tone.Loop(() => {
         this.eventManager.emit(GameEvent.Beat, { time: Tone.Transport.seconds, bpm: Tone.Transport.bpm.value });
     }, '4n').start(0); // Trigger every quarter note
 
@@ -75,6 +75,10 @@ export class MusicSystem extends System {
     console.log('MusicSystem initialized with Tone.js');
   }
 
+  /**
+   * Loads and plays a track.
+   * @param combatId The ID of the combat.
+   */
   public async loadAndPlayTrack(combatId: string) {
     await this.initializeTone();
     const combatData = this.combatManager.getCombatData(combatId);
@@ -84,7 +88,7 @@ export class MusicSystem extends System {
     }
 
     if (combatId === 'Boss1') {
-        this.player.url.value = BOSS1_TRACK;
+        this.player.url.value = config.MUSIC.BOSS_1_URL;
     } else {
         this.player.url.value = combatData.audioPath;
     }
@@ -99,10 +103,18 @@ export class MusicSystem extends System {
     }
   }
 
+  /**
+   * Handles the start audio event.
+   * @param data The event data.
+   */
   private async handleStartAudio(data: { trackId: string }) {
     await this.loadAndPlayTrack(data.trackId);
   }
 
+  /**
+   * Handles the music tempo update event.
+   * @param data The event data.
+   */
   private handleMusicTempoUpdate(data: { intensity: number; combo: number }) {
     const maxTempoMultiplier = 1.5;
     const comboThreshold = 50;
@@ -122,7 +134,7 @@ export class MusicSystem extends System {
     }
 
     // Coro Infinito: Adjust layer volumes based on intensity/combo
-    const baseVolume = -12; // dB
+    const baseVolume = config.MUSIC.DEFAULT_VOLUME; // dB
     const maxVolume = 0; // dB
 
     if (this.layers[0]) this.layers[0].volume.value = baseVolume + (maxVolume - baseVolume) * Math.min(1, data.intensity * 2);
@@ -130,6 +142,9 @@ export class MusicSystem extends System {
     if (this.layers[2]) this.layers[2].volume.value = baseVolume + (maxVolume - baseVolume) * Math.min(1, data.intensity * 4);
   }
 
+  /**
+   * Handles the ultimate activated event.
+   */
   private handleUltimateActivated() {
     if (this.panner) {
       // Example 8D audio effect: move the sound source around the listener
@@ -145,6 +160,9 @@ export class MusicSystem extends System {
     }
   }
 
+  /**
+   * Handles the ultimate deactivated event.
+   */
   private handleUltimateDeactivated() {
     if (this.panner) {
       // Reset panner position
@@ -157,7 +175,10 @@ export class MusicSystem extends System {
     }
   }
 
-  public update(deltaTime: number, time: number): void {
+  /**
+   * Updates the music system.
+   */
+  public update(): void {
     // Lógica de análisis de música si es necesaria
   }
 }

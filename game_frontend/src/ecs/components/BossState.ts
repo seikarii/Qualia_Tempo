@@ -1,11 +1,15 @@
-import { Component } from '../ECSManager';
+import { Component } from '../Component';
+import { config } from '../../config';
 
+/**
+ * Represents the state of the boss.
+ */
 export class BossState extends Component {
     health: number;
     maxHealth: number;
     isAggressive: boolean;
 
-    constructor(health: number = 1000, maxHealth: number = 1000, isAggressive: boolean = false) {
+    constructor(health: number = config.BOSS.MAX_HEALTH, maxHealth: number = config.BOSS.MAX_HEALTH, isAggressive: boolean = false) {
         super('BossState');
         this.health = health;
         this.maxHealth = maxHealth;

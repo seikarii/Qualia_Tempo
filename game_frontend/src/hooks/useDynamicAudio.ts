@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { EventManager } from '../events/EventManager';
-import { QualiaState } from '../types/QualiaState';
+import type { QualiaState } from '../types/QualiaState';
 
 export const useDynamicAudio = (eventManager: EventManager, qualia: QualiaState) => {
   useEffect(() => {

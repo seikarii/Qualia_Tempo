@@ -23,7 +23,7 @@ export class PlayerInteractionSystem extends System {
         this.eventManager.on('player_dash_fail', this.handlePlayerDashFail.bind(this));
     }
 
-  public update(deltaTime: number, time: number): void {
+  public update(): void {
     // No continuous update needed for interaction, events drive it.
   }
 

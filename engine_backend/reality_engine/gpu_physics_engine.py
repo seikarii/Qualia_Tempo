@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class GPUPhysicsEngine:
-    def __init__(
+    """A GPU-based physics engine for simulating and rendering entities and particles."""
+    def __init__(self, ctx):
         self,
         ctx: moderngl.Context | None,
         max_entities: int = 10000,

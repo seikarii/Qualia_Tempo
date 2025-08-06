@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Game } from './components/Game';
 import { DebugHUD } from './components/DebugHUD';
 import { Metronome } from './components/Metronome';
@@ -7,19 +7,25 @@ import { CombatSelectionMenu } from './components/CombatSelectionMenu';
 import { EndOfCombatScreen } from './components/EndOfCombatScreen';
 import { EventManager } from './events/EventManager';
 import { GameEvent } from './events/GameEvents';
-import { QualiaState as QualiaStateClass } from './ecs/components/QualiaState';
 import { QualiaState as QualiaStateType } from './types/QualiaState';
 import { useAbilities } from './hooks/useAbilities';
+import { config } from './config';
 
 const eventManager = new EventManager();
 
+/**
+ * The main application component.
+ * @returns The main application component.
+ */
 function App() {
-  const [qualiaState, setQualiaState] = useState<QualiaStateType>(new QualiaStateClass());
-  const [combo, setCombo] = useState<number>(0);
+  const [qualiaState, setQualiaState] = useState<QualiaStateType>({
+    name: 'QualiaState', intensity: 0, precision: 0, aggression: 0, flow: 0, chaos: 0, recovery: 0, transcendence: 0,
+  });
+  const [combo, setCombo] = useState<number>(config.APP.INITIAL_COMBO);
   const [cooldowns, setCooldowns] = useState<{[key: string]: number}>({});
-  const [playerHealth, setPlayerHealth] = useState<number>(100); // Initial player health
-  const [bossHealth, setBossHealth] = useState<number>(100); // Initial boss health
-  const [dashCharges, setDashCharges] = useState<number>(3); // Initial dash charges
+  const [playerHealth, setPlayerHealth] = useState<number>(config.APP.INITIAL_HEALTH); // Initial player health
+  const [bossHealth, setBossHealth] = useState<number>(config.APP.INITIAL_BOSS_HEALTH); // Initial boss health
+  const [dashCharges, setDashCharges] = useState<number>(config.APP.INITIAL_DASH_COMBO); // Initial dash charges
   const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
   const [showCombatSelection, setShowCombatSelection] = useState<boolean>(false);
   const [selectedCombatId, setSelectedCombatId] = useState<string | null>(null);
@@ -29,27 +35,50 @@ function App() {
   const { useAbility } = useAbilities(eventManager);
 
   useEffect(() => {
+    /**
+     * Handles the Qualia update event.
+     * @param newQualia The new Qualia state.
+     */
     const handleQualiaUpdate = (newQualia: QualiaStateType) => {
       setQualiaState(newQualia);
     };
 
+    /**
+     * Handles the combo update event.
+     * @param data The event data.
+     */
     const handleComboUpdate = (data: { combo: number }) => {
       setCombo(data.combo);
     };
 
+    /**
+     * Handles the ability cooldown update event.
+     * @param data The event data.
+     */
     const handleAbilityCooldownUpdate = (data: { [key: string]: number }) => {
       setCooldowns(data);
     };
 
+    /**
+     * Handles the player state update event.
+     * @param data The event data.
+     */
     const handlePlayerStateUpdate = (data: { health: number, dashCharges: number }) => {
       setPlayerHealth(data.health);
       setDashCharges(data.dashCharges);
     };
 
+    /**
+     * Handles the boss state update event.
+     * @param data The event data.
+     */
     const handleBossStateUpdate = (data: { health: number }) => {
       setBossHealth(data.health);
     };
 
+    /**
+     * Handles the boss defeated event.
+     */
     const handleBossDefeated = () => {
       setIsVictory(true);
       setShowEndOfCombat(true);
@@ -73,10 +102,17 @@ function App() {
     };
   }, []);
 
+  /**
+   * Handles the start game event.
+   */
   const handleStartGame = useCallback(() => {
     setShowCombatSelection(true);
   }, []);
 
+  /**
+   * Handles the combat selected event.
+   * @param combatId The ID of the selected combat.
+   */
   const handleCombatSelected = useCallback((combatId: string) => {
     setSelectedCombatId(combatId);
     setShowCombatSelection(false);
@@ -84,6 +120,9 @@ function App() {
     setShowEndOfCombat(false); // Hide end of combat screen if visible
   }, []);
 
+  /**
+   * Handles the restart combat event.
+   */
   const handleRestartCombat = useCallback(() => {
     if (selectedCombatId) {
       setIsGameStarted(false); // Stop current game
@@ -95,6 +134,9 @@ function App() {
     }
   }, [selectedCombatId]);
 
+  /**
+   * Handles the return to main menu event.
+   */
   const handleReturnToMainMenu = useCallback(() => {
     setIsGameStarted(false);
     setShowCombatSelection(false);

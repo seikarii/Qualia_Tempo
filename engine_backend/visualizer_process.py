@@ -8,6 +8,7 @@ import numpy as np
 import pygame
 
 from reality_engine.gpu_physics_engine import GPUPhysicsEngine
+import config
 
 # Configuración de logging
 logging.basicConfig(
@@ -18,88 +19,20 @@ logger = logging.getLogger(__name__)
 # Archivo para IPC
 QUALIA_STATE_FILE = os.path.join(os.path.dirname(__file__), "qualia_state.json")
 
-# --- Configuración de Pygame ---
-WIDTH, HEIGHT = 800, 600
-
-# --- NumPy dtypes for GLSL structs ---
-# LivingEntity struct: 80 bytes (20 floats)
-LIVING_ENTITY_DTYPE = np.dtype(
-    [
-        ("position_x", "f4"),
-        ("position_y", "f4"),
-        ("position_z", "f4"),
-        ("consciousness_level", "f4"),
-        ("velocity_x", "f4"),
-        ("velocity_y", "f4"),
-        ("velocity_z", "f4"),
-        ("ontological_drift", "f4"),
-        ("qualia_state_intensity", "f4"),
-        ("qualia_state_precision", "f4"),
-        ("qualia_state_aggression", "f4"),
-        ("qualia_state_flow", "f4"),
-        ("qualia_state_chaos", "f4"),
-        ("qualia_state_recovery", "f4"),
-        ("qualia_state_transcendence", "f4"),
-        ("lifecycle_stage", "f4"),
-        ("empathetic_resonance", "f4"),
-        ("chaos_influence", "f4"),
-        ("entity_id", "u4"),
-        ("is_active", "u4"),
-        ("padding", "f4"), # Padding to make total size 96 bytes (24 floats * 4 bytes/float)
-    ]
-)
-
-# LatticePoint struct: 64 bytes (16 floats)
-LATTICE_POINT_DTYPE = np.dtype(
-    [
-        ("position_x", "f4"),
-        ("position_y", "f4"),
-        ("position_z", "f4"),
-        ("influence_strength", "f4"),
-        ("elemental_composition_x", "f4"),
-        ("elemental_composition_y", "f4"),
-        ("elemental_composition_z", "f4"),
-        ("elemental_composition_w", "f4"),
-        ("metaphysical_state_x", "f4"),
-        ("metaphysical_state_y", "f4"),
-        ("metaphysical_state_z", "f4"),
-        ("metaphysical_state_w", "f4"),
-        ("coherence_level", "f4"),
-        ("lattice_type", "u4"),
-        ("padding1", "f4"),
-        ("padding2", "f4"),
-    ]
-)
-
-# Particle struct
-PARTICLE_DTYPE = np.dtype(
-    [
-        ("position_x", "f4"),
-        ("position_y", "f4"),
-        ("position_z", "f4"),
-        ("velocity_x", "f4"),
-        ("velocity_y", "f4"),
-        ("velocity_z", "f4"),
-        ("color_r", "f4"),
-        ("color_g", "f4"),
-        ("color_b", "f4"),
-        ("lifetime", "f4"),  # Current lifetime (decreases)
-        ("max_lifetime", "f4"),  # Initial lifetime
-        ("size", "f4"),
-        ("type", "u4"),  # e.g., 0=aura, 1=explosion, 2=trail
-        ("active", "u4"),  # 1 if active, 0 if inactive
-        ("padding1", "f4"),
-        ("padding2", "f4"),
-    ]
+from reality_engine.common import (
+    LIVING_ENTITY_DTYPE,
+    LATTICE_POINT_DTYPE,
+    PARTICLE_DTYPE,
 )
 
 # --- Funciones del Motor Gráfico ---
 
 
 def main_graphics_loop():
+    """Initializes Pygame and ModernGL and runs the main graphics loop."""
     try:
         pygame.init()
-        pygame.display.set_mode((WIDTH, HEIGHT), pygame.OPENGL | pygame.DOUBLEBUF)
+        pygame.display.set_mode((config.VP_WIDTH, config.VP_HEIGHT), pygame.OPENGL | pygame.DOUBLEBUF)
         pygame.display.set_caption("Qualia Tempo Visualizer")
 
         ctx = moderngl.create_context()
@@ -369,8 +302,8 @@ def main_graphics_loop():
         # Projection and View matrices (simple orthographic for now)
         projection = np.array(
             [
-                [2.0 / WIDTH, 0.0, 0.0, 0.0],
-                [0.0, 2.0 / HEIGHT, 0.0, 0.0],
+                [2.0 / config.VP_WIDTH, 0.0, 0.0, 0.0],
+                [0.0, 2.0 / config.VP_HEIGHT, 0.0, 0.0],
                 [0.0, 0.0, 1.0, 0.0],
                 [0.0, 0.0, 0.0, 1.0],
             ],
@@ -464,7 +397,6 @@ def main_graphics_loop():
             unified_field_center = (0.0, 0.0, 0.0)  # Placeholder
             particle_multiplier = qualia_state.get("transcendence", 0.0) * 5.0 + 1.0 # Example: more particles with transcendence
 
-            # Update GPUPhysicsEngine buffers and run simulation
             # Update dummy entities with current qualia state
             player_entity[0]["qualia_state_intensity"] = qualia_state.get("intensity", 0.0)
             player_entity[0]["qualia_state_precision"] = qualia_state.get("precision", 0.0)
@@ -485,7 +417,7 @@ def main_graphics_loop():
             updated_entities = np.concatenate([player_entity, boss_entity])
 
             # Dummy particle generation (example: generate particles based on qualia intensity)
-            num_new_particles = int(qualia_state.get("intensity", 0.0) * 50 * particle_multiplier) # Max 50 new particles per frame
+            num_new_particles = int(qualia_state.get("intensity", 0.0) * config.VP_MAX_NEW_PARTICLES * particle_multiplier) # Max 50 new particles per frame
             new_particles = []
             for _ in range(num_new_particles):
                 # Particle color based on qualia state
@@ -504,7 +436,7 @@ def main_graphics_loop():
                     particle_color_r, particle_color_g, particle_color_b,  # color
                     1.0,  # lifetime
                     1.0,  # max_lifetime
-                    np.random.uniform(1.0, 10.0),  # size
+                    np.random.uniform(1.0, config.VP_INT_VALUE_10),  # size
                     0,  # type (aura)
                     1,  # active
                     0.0, 0.0,  # padding
@@ -534,7 +466,7 @@ def main_graphics_loop():
                 unified_field_center,
                 chaos_entropy_level,
                 time_dilation_factor,
-                int(current_time * 1000),  # simulation_tick
+                int(current_time * config.VP_SIMULATION_TICK_MULTIPLIER),  # simulation_tick
                 particle_multiplier,
             )
             gpu_engine.run_simulation()
@@ -552,7 +484,7 @@ def main_graphics_loop():
                 particle_vao.render(moderngl.POINTS, instances=gpu_engine.particle_count)
 
             pygame.display.flip()
-            time.sleep(0.01)  # Small delay to prevent busy-waiting
+            time.sleep(config.VP_DELAY)  # Small delay to prevent busy-waiting
 
     except Exception as e:
         logger.error(f"Critical error in graphics loop: {e}")

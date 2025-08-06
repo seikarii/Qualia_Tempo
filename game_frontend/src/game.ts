@@ -13,7 +13,9 @@ import { QualiaState } from './ecs/components/QualiaState';
 import { BossState } from './ecs/components/BossState';
 import { PlayerState } from './ecs/components/PlayerState';
 import { GameState } from './ecs/components/GameState';
-import { PositionComponent } from './ecs/Component'; // Import PositionComponent
+
+import { BossAISystem } from './systems/BossAISystem';
+import { SaveLoadSystem } from './systems/SaveLoadSystem';
 
 let animationFrameId: number | null = null;
 
@@ -57,8 +59,8 @@ export async function startGame(canvas: HTMLCanvasElement, eventManager: EventMa
     ecsManager.addSystem(playerInputSystem);
     ecsManager.addSystem(renderSystem);
     ecsManager.addSystem(playerInteractionSystem);
-    ecsManager.addSystem(bossAISystem);
-    ecsManager.addSystem(saveLoadSystem);
+    ecsManager.addSystem(new BossAISystem(ecsManager, eventManager));
+    ecsManager.addSystem(new SaveLoadSystem(ecsManager, eventManager));
 
     // Create initial entities
     const qualiaEntity = ecsManager.createEntity();
@@ -81,7 +83,7 @@ export async function startGame(canvas: HTMLCanvasElement, eventManager: EventMa
         lastTime = time;
 
         ecsManager.update(deltaTime, time);
-        renderSystem.render(deltaTime, time); // Call render system
+        renderSystem.update(deltaTime, time); // Call render system
 
         animationFrameId = requestAnimationFrame(gameLoop);
     };

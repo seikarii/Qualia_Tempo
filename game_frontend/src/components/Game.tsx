@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DebugHUD } from './DebugHUD';
 import { Metronome } from './Metronome';
-import { startGame, stopGame, eventManager as globalEventManager } from '../game';
-import { QualiaState } from '../ecs/components/QualiaState';
+import { startGame, stopGame } from '../game';
+import { QualiaState as QualiaStateType } from '../types/QualiaState';
 import { EventManager } from '../events/EventManager';
 
 import { useRhythmicInput } from '../hooks/useRhythmicInput';
 import { useAbilities } from '../hooks/useAbilities';
 
+import type { Abilities } from '../hooks/useAbilities';
+
 interface GameProps {
   eventManager: EventManager;
-  useAbility: (abilityName: string) => boolean;
+  useAbility: (abilityName: keyof Abilities) => boolean;
   selectedCombatId: string;
 }
 
@@ -25,7 +27,7 @@ const gameContainerStyle: React.CSSProperties = {
 
 export const Game: React.FC<GameProps> = ({ eventManager, useAbility, selectedCombatId }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [qualia, setQualia] = useState<QualiaState>({
+  const [qualia, setQualia] = useState<QualiaStateType>({
     name: 'QualiaState', intensity: 0, precision: 0, aggression: 0, flow: 0, chaos: 0, recovery: 0, transcendence: 0,
   });
   const [combo, setCombo] = useState(0);
@@ -40,7 +42,7 @@ export const Game: React.FC<GameProps> = ({ eventManager, useAbility, selectedCo
       startGame(canvasRef.current, eventManager, useAbility, selectedCombatId);
 
       // Subscribe to Qualia updates
-      eventManager.on('qualia_updated', (newQualia: QualiaState) => {
+      eventManager.on('qualia_updated', (newQualia: QualiaStateType) => {
         setQualia(newQualia);
         // Assuming combo is part of qualia_updated event or derived from it
         // If not, a separate event for combo updates would be needed
@@ -49,7 +51,7 @@ export const Game: React.FC<GameProps> = ({ eventManager, useAbility, selectedCo
       });
 
       // Subscribe to Boss health updates
-      eventManager.on('boss_health_updated', (data: { health: number }) => {
+      eventManager.on('boss_state_updated', (data: { health: number }) => {
         setBossHealth(data.health);
       });
 
@@ -61,9 +63,9 @@ export const Game: React.FC<GameProps> = ({ eventManager, useAbility, selectedCo
 
     return () => {
       stopGame();
-      eventManager.off('qualia_updated');
-      eventManager.off('boss_health_updated');
-      eventManager.off('combo_updated');
+      eventManager.off('qualia_updated', setQualia);
+      eventManager.off('boss_state_updated', setBossHealth);
+      eventManager.off('combo_updated', setCombo);
     };
   }, [eventManager, useAbility, selectedCombatId]);
 

@@ -1,12 +1,12 @@
-import { Entity } from './Entity.js';
+import type { Entity } from './Entity.js';
 import { System } from './System.js';
-import { Component, ComponentConstructor } from './Component.js';
+import { Component, type ComponentConstructor } from './Component.js';
 // Import all systems to be registered
 
 
 export class ECSManager {
   private componentPools = new Map<
-    ComponentConstructor<unknown>,
+    ComponentConstructor<Component>,
     Map<Entity, Component>
   >();
   private systems = new Map<new (...args: unknown[]) => System, System>();

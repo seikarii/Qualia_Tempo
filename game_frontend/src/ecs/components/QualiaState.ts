@@ -1,5 +1,8 @@
-import { Component } from '../ECSManager';
+import { Component } from '../Component';
 
+/**
+ * Represents the state of the Qualia.
+ */
 export class QualiaState extends Component {
     intensity: number;
     precision: number;

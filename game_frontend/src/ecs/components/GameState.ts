@@ -1,4 +1,4 @@
-import { Component } from '../ECSManager';
+import { Component } from '../Component';
 
 export class GameState extends Component {
     gameSpeedMultiplier: number;

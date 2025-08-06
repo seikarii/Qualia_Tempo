@@ -6,6 +6,8 @@ import moderngl
 import numpy as np
 import pygame
 
+import config
+
 # Asegurarse de que el path a GPUPhysicsEngine sea correcto
 # Asumiendo que este script está en engine_backend/
 # y gpu_physics_engine.py está en engine_backend/reality_engine/
@@ -18,13 +20,11 @@ from reality_engine.gpu_physics_engine import GPUPhysicsEngine
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- Configuración de Pygame ---
-WIDTH, HEIGHT = 800, 600
-
 
 def main():
+    """Initializes Pygame and ModernGL and runs the main graphics loop."""
     pygame.init()
-    pygame.display.set_mode((WIDTH, HEIGHT), pygame.OPENGL | pygame.DOUBLEBUF)
+    pygame.display.set_mode((config.DEBUG_WIDTH, config.DEBUG_HEIGHT), pygame.OPENGL | pygame.DOUBLEBUF)
     pygame.display.set_caption("Qualia Tempo Visualizer Debug")
     screen = pygame.display.get_surface()
 
@@ -61,8 +61,8 @@ def main():
 
         # --- Actualizar y Computar el Motor de Físicas ---
         # Mapear valores de QualiaState simulados a los parámetros del motor
-        simulated_intensity = (time.time() % 5) / 5.0  # Simular cambio de intensity
-        simulated_chaos = (time.time() % 3) / 3.0  # Simular cambio de chaos
+        simulated_intensity = (time.time() % config.DEBUG_INT_VALUE_5) / config.DEBUG_INT_VALUE_5  # Simular cambio de intensity
+        simulated_chaos = (time.time() % config.DEBUG_INT_VALUE_3) / config.DEBUG_INT_VALUE_3  # Simular cambio de chaos
 
         # Asegurarse de pasar entities_data como un array 2D para update_buffers
         gpu_engine.update_buffers(
@@ -73,7 +73,7 @@ def main():
             (0.0, 0.0, 0.0),  # unified_field_center
             simulated_chaos,  # chaos_entropy_level
             1.0,  # time_dilation_factor
-            int(time.time() * 100),  # simulation_tick
+            int(time.time() * config.DEBUG_INT_VALUE_100),  # simulation_tick
         )
         gpu_engine.compute()
 
@@ -90,8 +90,8 @@ def main():
             x_norm = updated_particle_data[i]
             y_norm = updated_particle_data[i + 1]
 
-            x_screen = int((x_norm + 1) / 2 * WIDTH)
-            y_screen = int((y_norm + 1) / 2 * HEIGHT)
+            x_screen = int((x_norm + 1) / 2 * config.DEBUG_WIDTH)
+            y_screen = int((y_norm + 1) / 2 * config.DEBUG_HEIGHT)
 
             color_val = updated_particle_data[
                 i + 3
@@ -103,7 +103,7 @@ def main():
                 0,
             )  # Ejemplo: de rojo a verde
 
-            pygame.draw.circle(screen, color, (x_screen, y_screen), 10)
+            pygame.draw.circle(screen, color, (x_screen, y_screen), config.DEBUG_INT_VALUE_10)
 
         pygame.display.flip()
 

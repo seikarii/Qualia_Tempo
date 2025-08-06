@@ -1,3 +1,5 @@
+import { config } from "../config";
+
 // Definición de un constructor de Componente para usar como clave e identificador.
 // Esto nos da seguridad de tipos en lugar de usar strings.
 export type ComponentConstructor<T extends Component> = new (
@@ -18,6 +20,9 @@ export class Component {
 
 // --- Core Components ---
 
+/**
+ * Componente de posición.
+ */
 export class PositionComponent extends Component {
   public x: number;
   public y: number;
@@ -31,6 +36,9 @@ export class PositionComponent extends Component {
   }
 }
 
+/**
+ * Componente de velocidad.
+ */
 export class VelocityComponent extends Component {
   public vx: number;
   public vy: number;
@@ -44,6 +52,9 @@ export class VelocityComponent extends Component {
   }
 }
 
+/**
+ * Componente de salud.
+ */
 export class HealthComponent extends Component {
   public max: number;
   public current: number;
@@ -57,6 +68,9 @@ export class HealthComponent extends Component {
   }
 }
 
+/**
+ * Componente renderizable.
+ */
 export class RenderableComponent extends Component {
   public shape: 'circle' | 'diamond' | 'rectangle' | 'generative_boss';
   public width: number;
@@ -68,7 +82,7 @@ export class RenderableComponent extends Component {
     shape: 'circle' | 'diamond' | 'rectangle' | 'generative_boss',
     width: number,
     height: number,
-    color: string = '#fff',
+    color: string = config.COLORS.WHITE,
     auraColor?: string,
     isTelegraph: boolean = false // For semi-transparent rendering
   ) {
@@ -82,6 +96,9 @@ export class RenderableComponent extends Component {
   }
 }
 
+/**
+ * Componente que se puede agrupar.
+ */
 export class PoolableComponent extends Component {
   public poolKey: string;
   public isActive: boolean;
@@ -111,6 +128,9 @@ export class BossComponent extends Component {
   }
 }
 
+/**
+ * Componente de proyectil.
+ */
 export class ProjectileComponent extends Component {
   public owner: number; // Entity ID of the owner
   public damage: number;
@@ -130,6 +150,9 @@ export class ProjectileComponent extends Component {
   }
 }
 
+/**
+ * Componente de área de efecto.
+ */
 export class AoeComponent extends Component {
   public owner: number;
   public damage: number;
@@ -149,6 +172,9 @@ export class AoeComponent extends Component {
   }
 }
 
+/**
+ * Componente de rayo.
+ */
 export class BeamComponent extends Component {
   public owner: number;
   public damage: number;
@@ -168,6 +194,9 @@ export class BeamComponent extends Component {
   }
 }
 
+/**
+ * Componente de telégrafo.
+ */
 export class TelegraphComponent extends Component {
   public lifetime: number; // How long the telegraph is visible
   public abilityIdToTrigger: string; // Which ability to fire after the telegraph
@@ -184,6 +213,9 @@ export class TelegraphComponent extends Component {
   }
 }
 
+/**
+ * Componente de beneficio activo.
+ */
 export class ActiveBuffComponent extends Component {
   public buffId: string; // e.g., 'attackBoost' or 'sprint'
   public lifetime: number;
@@ -203,6 +235,9 @@ export class ActiveBuffComponent extends Component {
   }
 }
 
+/**
+ * Componente de beneficio.
+ */
 export class BuffComponent extends Component {
   public comboCount: number;
   public damageMultiplier: number;
@@ -227,6 +262,9 @@ export class BuffComponent extends Component {
   }
 }
 
+/**
+ * Componente de objetivo.
+ */
 export class TargetComponent extends Component {
   public targetEntityId: number;
   constructor(targetEntityId: number) {
@@ -235,6 +273,9 @@ export class TargetComponent extends Component {
   }
 }
 
+/**
+ * Componente de habilidad.
+ */
 export class AbilityComponent extends Component {
   public cooldowns: { [key: string]: number };
   public keybinds: { [key: string]: string };
@@ -247,6 +288,9 @@ export class AbilityComponent extends Component {
   }
 }
 
+/**
+ * Componente de talento.
+ */
 export class TalentComponent extends Component {
   public talentPoints: number;
   public unlocked: Set<string>;
@@ -260,6 +304,9 @@ export class TalentComponent extends Component {
   }
 }
 
+/**
+ * Componente de aura.
+ */
 export class AuraComponent extends Component {
   public damagePerSecond: number;
   public damageRadius: number;
@@ -307,6 +354,9 @@ export class AuraComponent extends Component {
   }
 }
 
+/**
+ * Componente de IA.
+ */
 export class AIComponent extends Component {
   public speed: number;
   public attackRange: number;
@@ -331,6 +381,9 @@ export class AIComponent extends Component {
 
 export type AIState = 'IDLE' | 'CHASING' | 'ATTACKING' | 'PERFORMING';
 
+/**
+ * Componente de máquina de estados.
+ */
 export class StateMachineComponent extends Component {
   public currentState: AIState;
   public timeInState: number;
@@ -358,6 +411,9 @@ export class StateMachineComponent extends Component {
 
 
 
+/**
+ * Componente de escena.
+ */
 export class SceneComponent extends Component {
   public currentSceneId: string;
   constructor(currentSceneId: string) {
@@ -368,6 +424,9 @@ export class SceneComponent extends Component {
 
 // --- Dialogue Components ---
 
+/**
+ * Componente de diálogo.
+ */
 export class DialogueComponent extends Component {
   public dialogueId: string; // ID del diálogo en data/dialogues.ts
   public currentLine: number;
@@ -384,6 +443,9 @@ export class DialogueComponent extends Component {
   }
 }
 
+/**
+ * Componente de disparador de diálogo.
+ */
 export class DialogueTriggerComponent extends Component {
   public dialogueId: string;
   public triggered: boolean;
@@ -413,6 +475,9 @@ export class FloorDropComponent extends Component {
 
 // --- Progression Components ---
 
+/**
+ * Componente de colisión.
+ */
 export class CollisionComponent extends Component {
   public radius: number;
   constructor(radius: number) {

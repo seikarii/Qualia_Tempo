@@ -1,4 +1,4 @@
-import { Component } from '../ECSManager';
+import { Component } from '../Component';
 
 export class NoteComponent extends Component {
     position: { x: number; y: number };

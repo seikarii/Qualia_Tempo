@@ -1,13 +1,20 @@
 import { useState, useCallback, useEffect } from 'react';
 import { EventManager } from '../events/EventManager';
 import { GameEvent } from '../events/GameEvents';
-import { AbilitiesData } from '../types/Abilities';
+import type { AbilitiesData } from '../types/Abilities';
+import { config } from '../config';
 
+/**
+ * Represents the state of an ability.
+ */
 interface AbilityState {
   cooldown: number;
   lastUsed: number;
 }
 
+/**
+ * Represents the state of all abilities.
+ */
 interface Abilities {
   pause: AbilityState;
   fastForward: AbilityState;
@@ -16,12 +23,17 @@ interface Abilities {
 }
 
 const INITIAL_COOLDOWNS: AbilitiesData = {
-  pause: { id: 'pause', color: '#ADD8E6', damage: 0, type: 'utility', cooldown: 5000 }, // 5 segundos
-  fastForward: { id: 'fastForward', color: '#FFD700', damage: 0, type: 'utility', cooldown: 10000 }, // 10 segundos
-  rewind: { id: 'rewind', color: '#90EE90', damage: 0, type: 'utility', cooldown: 15000 }, // 15 segundos
-  ultimate: { id: 'ultimate', color: '#EE82EE', damage: 0, type: 'utility', cooldown: 30000 }, // 30 segundos
+  pause: { id: 'pause', color: config.COLORS.LIGHT_BLUE, damage: 0, type: 'utility', cooldown: config.ABILITIES.PAUSE_COOLDOWN },
+  fastForward: { id: 'fastForward', color: config.COLORS.GOLD, damage: 0, type: 'utility', cooldown: config.ABILITIES.FAST_FORWARD_COOLDOWN },
+  rewind: { id: 'rewind', color: config.COLORS.LIGHT_GREEN, damage: 0, type: 'utility', cooldown: config.ABILITIES.REWIND_COOLDOWN },
+  ultimate: { id: 'ultimate', color: config.COLORS.VIOLET, damage: 0, type: 'utility', cooldown: config.ABILITIES.ULTIMATE_COOLDOWN },
 };
 
+/**
+ * A hook for managing abilities.
+ * @param eventManager The event manager.
+ * @returns An object with functions for using abilities and getting remaining cooldowns.
+ */
 export const useAbilities = (eventManager: EventManager) => {
   const [abilities, setAbilities] = useState<Abilities>({
     pause: { cooldown: INITIAL_COOLDOWNS.pause.cooldown, lastUsed: 0 },
@@ -30,11 +42,21 @@ export const useAbilities = (eventManager: EventManager) => {
     ultimate: { cooldown: INITIAL_COOLDOWNS.ultimate.cooldown, lastUsed: 0 },
   });
 
+  /**
+   * Checks if an ability can be used.
+   * @param abilityName The name of the ability.
+   * @returns True if the ability can be used, false otherwise.
+   */
   const canUseAbility = useCallback((abilityName: keyof Abilities) => {
     const now = performance.now();
     return now - abilities[abilityName].lastUsed >= abilities[abilityName].cooldown;
   }, [abilities]);
 
+  /**
+   * Uses an ability.
+   * @param abilityName The name of the ability.
+   * @returns True if the ability was used, false otherwise.
+   */
   const useAbility = useCallback((abilityName: keyof Abilities) => {
     if (!canUseAbility(abilityName)) {
       console.log(`${abilityName} is on cooldown.`);
@@ -68,12 +90,16 @@ export const useAbilities = (eventManager: EventManager) => {
     }
 
     // Emit cooldown update for DebugHUD
-    eventManager.emit('player_ability_cooldown_updated', { abilityId: abilityName, cooldownTime: INITIAL_COOLDOWNS[abilityName].cooldown / 1000 });
+    eventManager.emit('player_ability_cooldown_updated', { [abilityName]: INITIAL_COOLDOWNS[abilityName].cooldown / 1000 });
 
     return true;
   }, [canUseAbility, eventManager]);
 
-  // Calcular cooldowns restantes para el HUD
+  /**
+   * Gets the remaining cooldown of an ability.
+   * @param abilityName The name of the ability.
+   * @returns The remaining cooldown in seconds.
+   */
   const getRemainingCooldown = useCallback((abilityName: keyof Abilities) => {
     const now = performance.now();
     const elapsed = now - abilities[abilityName].lastUsed;
@@ -88,8 +114,8 @@ export const useAbilities = (eventManager: EventManager) => {
       (Object.keys(abilities) as Array<keyof Abilities>).forEach(abilityName => {
         currentCooldowns[abilityName] = getRemainingCooldown(abilityName);
       });
-      eventManager.emit('player_ability_cooldown_updated', currentCooldowns);
-    }, 1000);
+      eventManager.emit('player_ability_cooldown_updated', currentCooldowns as GameEventData['player_ability_cooldown_updated']);
+    }, config.ABILITIES.DEFAULT_COOLDOWN);
 
     return () => clearInterval(interval);
   }, [abilities, getRemainingCooldown, eventManager]);

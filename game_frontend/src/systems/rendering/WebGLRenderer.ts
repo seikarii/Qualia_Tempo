@@ -1,4 +1,3 @@
-// src/systems/rendering/WebGLRenderer.ts
 import * as THREE from 'three';
 import { IRenderer } from './IRenderer';
 import { Entity } from '../../ecs/Entity';
@@ -15,6 +14,7 @@ import { ECSManager } from '../../ecs/ECSManager';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { config } from '../../config';
 
 // --- Importación de Shaders ---
 import fireVertexShader from '../../shaders/fire.vert?raw';
@@ -67,6 +67,9 @@ export let beamMaterial: THREE.ShaderMaterial;
 
 type RenderContext = 'menu' | 'playing';
 
+/**
+ * A WebGL renderer that uses Three.js.
+ */
 export class WebGLRenderer implements IRenderer {
   private scene: THREE.Scene;
   private menuScene: THREE.Scene;
@@ -91,12 +94,12 @@ export class WebGLRenderer implements IRenderer {
     this.scene = new THREE.Scene();
     this.menuScene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    this.camera.position.z = 500;
+    this.camera.position.z = config.WEBGL_RENDERER.PLAYER_RADIUS;
 
     const renderPass = new RenderPass(this.scene, this.camera);
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), config.WEBGL_RENDERER.AURA_RADIUS, config.WEBGL_RENDERER.AURA_OPACITY, config.WEBGL_RENDERER.AURA_TURBULENCE);
     bloomPass.threshold = 0;
-    bloomPass.strength = 1.5;
+    bloomPass.strength = config.WEBGL_RENDERER.AURA_RADIUS;
     bloomPass.radius = 0;
 
     this.composer = new EffectComposer(this.renderer);
@@ -115,10 +118,18 @@ export class WebGLRenderer implements IRenderer {
     this.scene.add(this.noteInstancedMesh);
   }
 
+  /**
+   * Sets the ECS manager.
+   * @param ecs The ECS manager.
+   */
   public setECS(ecs: ECSManager) {
     this.ecs = ecs;
   }
 
+  /**
+   * Sets the render context.
+   * @param context The render context.
+   */
   public setContext(context: RenderContext) {
     this.context = context;
     if (context === 'menu') {
@@ -128,6 +139,9 @@ export class WebGLRenderer implements IRenderer {
     }
   }
 
+  /**
+   * Sets up the background.
+   */
   private setupBackground() {
     const backgroundGeometry = new THREE.PlaneGeometry(window.innerWidth, window.innerHeight);
     const backgroundMaterial = new THREE.ShaderMaterial({
@@ -145,6 +159,9 @@ export class WebGLRenderer implements IRenderer {
     this.scene.add(background);
   }
 
+  /**
+   * Sets up the scenes.
+   */
   private setupScenes() {
     // Add a light to the menu scene
     const menuLight = new THREE.PointLight(0xffffff, 1, 100);
@@ -152,12 +169,15 @@ export class WebGLRenderer implements IRenderer {
     this.menuScene.add(menuLight);
   }
 
+  /**
+   * Creates the shader materials.
+   */
   private createShaderMaterials() {
     defaultAuraMaterial = new THREE.MeshStandardMaterial({
-      color: new THREE.Color('#00FFFF'),
+      color: new THREE.Color(config.COLORS.CYAN),
       transparent: true,
       opacity: 0.3,
-      emissive: new THREE.Color('#00FFFF'),
+      emissive: new THREE.Color(config.COLORS.CYAN),
       emissiveIntensity: 0.5,
     });
     fireMaterial = new THREE.ShaderMaterial({
@@ -184,7 +204,7 @@ export class WebGLRenderer implements IRenderer {
     conductorMaterial = new THREE.ShaderMaterial({
         uniforms: { 
             u_time: { value: 0.0 },
-            u_color: { value: new THREE.Color('#8A2BE2') } 
+            u_color: { value: new THREE.Color(config.COLORS.BLUE_VIOLET) } 
         },
         vertexShader: conductorVertexShader,
         fragmentShader: conductorFragmentShader,
@@ -192,7 +212,7 @@ export class WebGLRenderer implements IRenderer {
     virtuosoMaterial = new THREE.ShaderMaterial({
         uniforms: { 
             u_time: { value: 0.0 },
-            u_color: { value: new THREE.Color('#DDA0DD') } 
+            u_color: { value: new THREE.Color(config.COLORS.PLUM) } 
         },
         vertexShader: virtuosoVertexShader,
         fragmentShader: virtuosoFragmentShader,
@@ -200,7 +220,7 @@ export class WebGLRenderer implements IRenderer {
     beamMaterial = new THREE.ShaderMaterial({
       uniforms: {
         u_time: { value: 0.0 },
-        u_color: { value: new THREE.Color('#00FFFF') },
+        u_color: { value: new THREE.Color(config.COLORS.CYAN) },
       },
       vertexShader: beamVertexShader,
       fragmentShader: beamFragmentShader,
@@ -209,6 +229,19 @@ export class WebGLRenderer implements IRenderer {
     });
   }
   
+    /**
+     * Draws an entity.
+     * @param entity The entity to draw.
+     * @param pos The position component.
+     * @param renderable The renderable component.
+     * @param isPlayer Whether the entity is the player.
+     * @param isEnemy Whether the entity is an enemy.
+     * @param isProjectile Whether the entity is a projectile.
+     * @param health The health component.
+     * @param buff The buff component.
+     * @param talents The talent component.
+     * @param note The note component.
+     */
     public drawEntity(
     entity: Entity,
     pos: PositionComponent,
@@ -239,8 +272,8 @@ export class WebGLRenderer implements IRenderer {
     if (isPlayer && playerAura) {
       const time = this.renderer.info.render.frame * 0.01;
       const pulse = (Math.sin(time * 2.0) + 1.0) / 2.0;
-      const baseColor = new THREE.Color('#00FFFF');
-      const pulseColor = new THREE.Color('#8A2BE2');
+      const baseColor = new THREE.Color(config.COLORS.CYAN);
+      const pulseColor = new THREE.Color(config.COLORS.BLUE_VIOLET);
       (playerAura.material as THREE.MeshStandardMaterial).color.lerpColors(baseColor, pulseColor, pulse);
     }
 
@@ -279,6 +312,13 @@ export class WebGLRenderer implements IRenderer {
     }
   }
 
+  /**
+   * Creates an object for an entity.
+   * @param entity The entity.
+   * @param renderable The renderable component.
+   * @param isPlayer Whether the entity is the player.
+   * @returns The created object, or null if it could not be created.
+   */
   private createObjectForEntity(
     entity: Entity,
     renderable: RenderableComponent,
@@ -291,7 +331,7 @@ export class WebGLRenderer implements IRenderer {
     }
 
     let geometry: THREE.BufferGeometry;
-    let material: THREE.Material;
+    const material: THREE.Material;
 
     switch (renderable.shape) {
         case 'circle':
@@ -322,6 +362,11 @@ export class WebGLRenderer implements IRenderer {
     return object;
   }
 
+  /**
+   * Renders the scene.
+   * @param deltaTime The time since the last update.
+   * @param time The current time.
+   */
   public render(deltaTime: number, time: number): void {
     fireMaterial.uniforms.u_time.value = time;
     iceMaterial.uniforms.u_time.value = time;
@@ -333,6 +378,10 @@ export class WebGLRenderer implements IRenderer {
     this.composer.render(deltaTime);
   }
 
+    /**
+     * Cleans up the renderer.
+     * @param activeEntities The active entities.
+     */
     public cleanup(activeEntities: Set<Entity>): void {
         const entitiesToRemove = new Set<Entity>();
         for (const entityId of this.entityMap.keys()) {
@@ -400,10 +449,19 @@ export class WebGLRenderer implements IRenderer {
         }
     }
 
+    /**
+     * Gets the object for an entity.
+     * @param entityId The entity ID.
+     * @returns The object for the entity, or undefined if not found.
+     */
     public getEntityObject(entityId: number): THREE.Object3D | undefined {
         return this.entityMap.get(entityId);
     }
 
+    /**
+     * Gets the scene.
+     * @returns The scene.
+     */
     public getScene(): THREE.Scene {
         return this.scene;
     }

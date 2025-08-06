@@ -5,10 +5,11 @@ import { GameState } from '../ecs/components/GameState.js';
 import { PlayerState } from '../ecs/components/PlayerState.js';
 import { QualiaState } from '../ecs/components/QualiaState.js';
 import { BossState } from '../ecs/components/BossState.js';
+import { config } from '../config';
 
-const AUTOSAVE_INTERVAL = 60 * 1000; // 60 seconds
-const SAVE_KEY = 'qualia_tempo_save_game';
-
+/**
+ * The system responsible for saving and loading the game.
+ */
 export class SaveLoadSystem extends System {
   private lastSaveTime: number = 0;
 
@@ -21,13 +22,21 @@ export class SaveLoadSystem extends System {
     this.loadGame();
   }
 
+  /**
+   * Updates the save/load system.
+   * @param deltaTime The time since the last update.
+   * @param time The current time.
+   */
   update(deltaTime: number, time: number): void {
-    if (time - this.lastSaveTime > AUTOSAVE_INTERVAL) {
+    if (time - this.lastSaveTime > config.SAVE_LOAD_SYSTEM.SAVE_INTERVAL * 1000) {
       this.saveGame();
       this.lastSaveTime = time;
     }
   }
 
+  /**
+   * Saves the game.
+   */
   private saveGame(): void {
     const gameStateEntity = this.ecs.getEntitiesByComponent(GameState)[0];
     const playerStateEntity = this.ecs.getEntitiesByComponent(PlayerState)[0];
@@ -58,16 +67,19 @@ export class SaveLoadSystem extends System {
     };
 
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+      localStorage.setItem(config.SAVE_LOAD_SYSTEM.SAVE_KEY, JSON.stringify(saveData));
       console.log('Game saved successfully!');
     } catch (e) {
       console.error('Failed to save game:', e);
     }
   }
 
+  /**
+   * Loads the game.
+   */
   private loadGame(): void {
     try {
-      const savedData = localStorage.getItem(SAVE_KEY);
+      const savedData = localStorage.getItem(config.SAVE_LOAD_SYSTEM.SAVE_KEY);
       if (savedData) {
         const data = JSON.parse(savedData);
 

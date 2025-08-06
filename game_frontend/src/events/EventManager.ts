@@ -1,6 +1,6 @@
 
 import { System } from '../ecs/System.js';
-import { GameEventData } from './GameEvents.js';
+import type { GameEventData } from './GameEvents.js';
 
 export interface IEventManager {
   on<K extends keyof GameEventData>(eventName: K, listener: (data: GameEventData[K]) => void): void;
@@ -36,7 +36,13 @@ export class EventManager extends System implements IEventManager {
     const eventListeners = this.listeners.get(eventName);
     if (eventListeners) {
       for (const listener of [...eventListeners]) {
-        listener(data);
+        // Ensure data is not undefined if the listener expects a specific type
+        if (data !== undefined) {
+          listener(data);
+        } else {
+          // If data is undefined, call the listener without arguments or with undefined
+          (listener as (data?: GameEventData[K]) => void)(data);
+        }
       }
     }
   }

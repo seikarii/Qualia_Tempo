@@ -1,39 +1,33 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { EventManager } from '../events/EventManager';
 import { GameEvent } from '../events/GameEvents';
+import { config } from '../config';
 
+/**
+ * A hook for handling rhythmic input.
+ * @param isRunning Whether the game is running.
+ * @param eventManager The event manager.
+ * @returns The current cursor position.
+ */
 export const useRhythmicInput = (isRunning: boolean, eventManager: EventManager) => {
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [lastBeatTime, setLastBeatTime] = useState(0);
-  const [bpm, setBpm] = useState(120); // Default BPM, will be updated by MusicSystem
+  const [bpm, setBpm] = useState(config.RHYTHMIC_INPUT.BPM); // Default BPM, will be updated by MusicSystem
 
   useEffect(() => {
     if (!isRunning) return;
 
+    /**
+     * Handles the mouse move event.
+     * @param e The mouse event.
+     */
     const handleMouseMove = (e: MouseEvent) => {
       setCursorPosition({ x: e.clientX, y: e.clientY });
     };
 
-    const handleMouseDown = () => {
-      const currentTime = performance.now();
-      const beatInterval = 60 / bpm * 1000; // in ms
-      const timeSinceLastBeat = currentTime - lastBeatTime;
-
-      // Check if the click is within a rhythmic window (e.g., 100ms around the beat)
-      const rhythmicWindow = 100; // ms
-      const isRhythmicallyCorrect = (
-        Math.abs(timeSinceLastBeat % beatInterval) < rhythmicWindow ||
-        Math.abs(beatInterval - (timeSinceLastBeat % beatInterval)) < rhythmicWindow
-      );
-
-      if (isRhythmicallyCorrect) {
-        eventManager.emit(GameEvent.PlayerDashSuccess, { cursorPosition }); // Pass cursorPosition
-      } else {
-        eventManager.emit(GameEvent.PlayerDashFail, {});
-      }
-      // setLastBeatTime(currentTime); // No longer needed, as we listen to Beat event
-    };
-
+    /**
+     * Handles the mouse down event.
+     */
     const handleMouseDown = () => {
         const currentTime = performance.now();
         // The beatInterval and rhythmicWindow should ideally come from game state or combat data
@@ -43,7 +37,7 @@ export const useRhythmicInput = (isRunning: boolean, eventManager: EventManager)
 
         // Check if the click is within a rhythmic window (e.g., 100ms around the beat)
         // This logic needs to account for wrapping around the beat interval
-        const rhythmicWindow = 100; // ms
+        const rhythmicWindow = config.RHYTHMIC_INPUT.TOLERANCE; // ms
         const isRhythmicallyCorrect = (
           Math.abs(timeSinceLastBeat) < rhythmicWindow ||
           Math.abs(timeSinceLastBeat - beatInterval) < rhythmicWindow ||
@@ -57,6 +51,10 @@ export const useRhythmicInput = (isRunning: boolean, eventManager: EventManager)
         }
       };
 
+      /**
+       * Handles the beat event.
+       * @param data The beat event data.
+       */
       const handleBeat = (data: { time: number; bpm: number }) => {
           setLastBeatTime(performance.now()); // Update last beat time when a beat event is received
           setBpm(data.bpm); // Update BPM from the music system
@@ -72,7 +70,7 @@ export const useRhythmicInput = (isRunning: boolean, eventManager: EventManager)
         window.removeEventListener('mousedown', handleMouseDown);
         eventManager.off(GameEvent.Beat, handleBeat);
       };
-    }, [isRunning, lastBeatTime, bpm, eventManager, cursorPosition]);
+    });
 
   return { cursorPosition };
 };

@@ -4,14 +4,18 @@ import {
   PlayerComponent,
   RenderableComponent,
 } from '../ecs/Component.js';
-import type { NoteComponent } from '../ecs/components/NoteComponent.js';
-import { Entity } from '../ecs/Entity.js';
+import { NoteComponent } from '../ecs/components/NoteComponent.js';
+import type { Entity } from '../ecs/Entity.js';
 import { GameEvent } from '../events/GameEvents.js';
 import { EventManager } from '../events/EventManager.js';
 import { ECSManager } from '../ecs/ECSManager.js';
 import { CombatManager } from '../data/CombatManager.js';
 import type { NoteData } from '../data/CombatData.js';
+import { config } from '../config';
 
+/**
+ * The system responsible for managing the floor, including spawning notes and handling player interaction with them.
+ */
 export class FloorSystem extends System {
     private combatManager: CombatManager;
     private eventManager: EventManager;
@@ -31,12 +35,16 @@ export class FloorSystem extends System {
         this.eventManager = eventManager;
         this.combatManager = combatManager;
 
-        this.eventManager.on(GameEvent.SceneLoaded, this.handleSceneLoaded.bind(this));
-        this.eventManager.on('player_dash_success', this.handlePlayerDash.bind(this));
-        this.eventManager.on('player_dash_fail', this.handlePlayerDash.bind(this));
+        this.eventManager.on(GameEvent.SceneLoaded, (data: { sceneId: string }) => this.handleSceneLoaded(data));
+        this.eventManager.on('player_dash_success', (data: { noteId?: Entity }) => this.handlePlayerDash(data));
+        this.eventManager.on('player_dash_fail', (data: { noteId?: Entity }) => this.handlePlayerDash(data));
     }
 
-    public update(deltaTime: number, time: number): void {
+    /**
+     * Updates the floor system.
+     * @param time The current game time.
+     */
+    public update(time: number): void {
         this.gameTime = time; // Update game time
 
         if (!this.playerEntity) {
@@ -54,6 +62,10 @@ export class FloorSystem extends System {
         this.updateSpawnedNotes();
     }
 
+    /**
+     * Handles the scene loaded event.
+     * @param data The event data.
+     */
     private handleSceneLoaded(data: { sceneId: string }) {
         // Assuming sceneId can be mapped to a combatId
         this.currentCombatId = data.sceneId; // Or derive from sceneId
@@ -68,12 +80,15 @@ export class FloorSystem extends System {
         }
     }
 
+    /**
+     * Spawns notes based on the combat data.
+     */
     private spawnNotes(): void {
         while (this.notesToSpawn.length > 0 && this.notesToSpawn[0].timestamp <= this.gameTime / 1000) {
             const noteData: NoteData | undefined = this.notesToSpawn.shift();
             if (noteData) {
                 const noteEntity: Entity = this.ecs.createEntity();
-                const noteComponent = new NoteComponent(noteData.position, this.gameTime, noteData.duration, '#FFFF00'); // Example color
+                const noteComponent = new NoteComponent(noteData.position, this.gameTime, noteData.duration, config.COLORS.YELLOW); // Example color
                 this.ecs.addComponent(noteEntity, noteComponent);
                 this.ecs.addComponent(noteEntity, new PositionComponent(noteData.position.x, noteData.position.y));
                 this.ecs.addComponent(noteEntity, new RenderableComponent('rectangle', 50, 50, noteComponent.color));
@@ -84,6 +99,9 @@ export class FloorSystem extends System {
         }
     }
 
+    /**
+     * Updates the spawned notes.
+     */
     private updateSpawnedNotes(): void {
         const playerPositionComponent = this.playerEntity ? this.ecs.getComponent(this.playerEntity, PositionComponent) : null;
         if (!playerPositionComponent) return;
@@ -112,6 +130,10 @@ export class FloorSystem extends System {
         }
     }
 
+    /**
+     * Handles the player dash event.
+     * @param data The event data.
+     */
     private handlePlayerDash(data: { noteId?: Entity }) {
         // This event is emitted by useRhythmicInput when a dash attempt occurs.
         // We need to check if the player was near a note when the dash occurred.
@@ -129,21 +151,40 @@ export class FloorSystem extends System {
             if (distance < 50) { // Player is near a note
                 // The actual hit/miss decision is made by useRhythmicInput based on rhythm.
                 // If useRhythmicInput emitted 'player_dash_success', then it's a hit.
+
                 // If it emitted 'player_dash_fail', then it's a miss (even if near a note).
-                // This system just needs to react to those events and mark the note.
+
+                // This system just needs to react to those specific events and mark the note.
+
                 if (data.noteId === entity) { // If the event specifically targets this note
+
                     noteComponent.hit = true;
+
                     this.eventManager.emit('player_hit_note', { noteId: entity });
+
                     this.ecs.destroyEntity(entity);
+
                     this.spawnedNotes.delete(entity);
+
                     hitNoteThisDash = true;
+
                     break; // Only hit one note per dash for now
+
                 }
+
             }
+
         }
+
         // If a dash occurred but no note was hit, it's a miss for the purpose of notes
+
         if (!hitNoteThisDash && data.noteId === undefined) { // Only if it's a general dash event, not tied to a specific note
+
              // This logic might need to be refined. If useRhythmicInput already determines hit/miss,
+
              // this system just needs to react to those specific events.
+
         }
+
     }
+}

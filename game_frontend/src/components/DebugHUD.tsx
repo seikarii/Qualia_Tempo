@@ -1,5 +1,5 @@
 import React from 'react';
-import { QualiaState } from '../types/QualiaState';
+import type { QualiaState } from '../types/QualiaState';
 
 interface DebugHUDProps {
   qualia: QualiaState;

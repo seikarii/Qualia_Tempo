@@ -1,16 +1,14 @@
 import { System } from '../ecs/System.js';
 import { ECSManager } from '../ecs/ECSManager.js';
 import { EventManager } from '../events/EventManager.js';
-import {
-  AIComponent,
-  PositionComponent,
-  HealthComponent,
-  StateMachineComponent,
-  BossComponent,
-} from '../ecs/Component.js';
-import { QualiaState } from '../ecs/components/QualiaState.js';
+import type { AIComponent, PositionComponent, HealthComponent, StateMachineComponent, BossComponent } from '../ecs/Component.js';
+import type { QualiaState } from '../ecs/components/QualiaState.js';
 import { GameEvent } from '../events/GameEvents.js';
 
+
+/**
+ * The system responsible for controlling the boss's AI.
+ */
 export class BossAISystem extends System {
   constructor(ecs: ECSManager, eventManager: EventManager) {
     super();
@@ -18,7 +16,11 @@ export class BossAISystem extends System {
     this.eventManager = eventManager;
   }
 
-  update(deltaTime: number, time: number): void {
+  /**
+   * Updates the boss's AI.
+   * @param deltaTime The time since the last update.
+   */
+  update(deltaTime: number): void {
     const bossEntities = this.ecs.queryEntities(
       BossComponent,
       AIComponent,
@@ -34,9 +36,9 @@ export class BossAISystem extends System {
       const stateMachine = this.ecs.getComponent(bossEntity, StateMachineComponent)!;
 
       const qualiaEntities = this.ecs.getEntitiesByComponent(QualiaState);
-      const qualiaState = qualiaEntities.length > 0 ? this.ecs.getComponent(qualiaEntities[0], QualiaState) : null;
+    const qualiaState = qualiaEntities.length > 0 ? this.ecs.getComponent(qualiaEntities[0], QualiaState) : null;
 
-      if (!qualiaState) continue; // QualiaState is crucial for boss behavior
+    if (!qualiaState) continue; // QualiaState is crucial for boss behavior
 
       stateMachine.timeInState += deltaTime;
 
@@ -45,10 +47,10 @@ export class BossAISystem extends System {
           this.handleIdleState(bossEntity, ai, pos, health, stateMachine, qualiaState);
           break;
         case 'CHASING':
-          this.handleChasingState(bossEntity, ai, pos, health, stateMachine, qualiaState);
+          this.handleChasingState(bossEntity, ai, pos, health, stateMachine, qualiaState, deltaTime);
           break;
         case 'ATTACKING':
-          this.handleAttackingState(bossEntity, ai, pos, health, stateMachine, qualiaState);
+          this.handleAttackingState(bossEntity, ai, pos, health, stateMachine, qualiaState, deltaTime);
           break;
         case 'PERFORMING':
           this.handlePerformingState(bossEntity, ai, pos, health, stateMachine, qualiaState);
@@ -57,12 +59,21 @@ export class BossAISystem extends System {
 
       // Boss health check for defeat
       if (health.current <= 0) {
-        this.eventManager.emit(GameEvent.BossDefeated, { bossId: bossEntity });
+        this.eventManager.on(GameEvent.BossDefeated, { bossId: bossEntity });
         this.ecs.destroyEntity(bossEntity);
       }
     }
   }
 
+  /**
+   * Handles the boss's idle state.
+   * @param bossEntity The boss entity.
+   * @param ai The boss's AI component.
+   * @param pos The boss's position component.
+   * @param health The boss's health component.
+   * @param stateMachine The boss's state machine component.
+   * @param qualiaState The QualiaState component.
+   */
   private handleIdleState(
     bossEntity: number,
     ai: AIComponent,
@@ -85,13 +96,24 @@ export class BossAISystem extends System {
     }
   }
 
+  /**
+   * Handles the boss's chasing state.
+   * @param bossEntity The boss entity.
+   * @param ai The boss's AI component.
+   * @param pos The boss's position component.
+   * @param health The boss's health component.
+   * @param stateMachine The boss's state machine component.
+   * @param qualiaState The QualiaState component.
+   * @param deltaTime The time since the last update.
+   */
   private handleChasingState(
     bossEntity: number,
     ai: AIComponent,
     pos: PositionComponent,
     health: HealthComponent,
     stateMachine: StateMachineComponent,
-    qualiaState: QualiaState
+    qualiaState: QualiaState,
+    deltaTime: number
   ): void {
     // Move towards player
     const playerPos = { x: 0, y: 0 }; // Placeholder: Get actual player position
@@ -100,8 +122,8 @@ export class BossAISystem extends System {
     const magnitude = Math.sqrt(directionX ** 2 + directionY ** 2);
 
     if (magnitude > ai.attackRange) {
-      pos.x += (directionX / magnitude) * ai.speed * this.ecs.deltaTime; // Use ecs.deltaTime
-      pos.y += (directionY / magnitude) * ai.speed * this.ecs.deltaTime; // Use ecs.deltaTime
+      pos.x += (directionX / magnitude) * ai.speed * deltaTime; // Use deltaTime
+      pos.y += (directionY / magnitude) * ai.speed * deltaTime; // Use deltaTime
     } else {
       stateMachine.currentState = 'ATTACKING';
       stateMachine.timeInState = 0;
@@ -109,16 +131,27 @@ export class BossAISystem extends System {
     }
   }
 
+  /**
+   * Handles the boss's attacking state.
+   * @param bossEntity The boss entity.
+   * @param ai The boss's AI component.
+   * @param pos The boss's position component.
+   * @param health The boss's health component.
+   * @param stateMachine The boss's state machine component.
+   * @param qualiaState The QualiaState component.
+   * @param deltaTime The time since the last update.
+   */
   private handleAttackingState(
     bossEntity: number,
     ai: AIComponent,
     pos: PositionComponent,
     health: HealthComponent,
     stateMachine: StateMachineComponent,
-    qualiaState: QualiaState
+    qualiaState: QualiaState,
+    deltaTime: number
   ): void {
     // Perform attacks based on boss type and QualiaState
-    stateMachine.phraseTimer += this.ecs.deltaTime; // Use ecs.deltaTime
+    stateMachine.phraseTimer += deltaTime; // Use deltaTime
 
     if (stateMachine.phraseTimer >= ai.attackCooldown) {
       // Perform attack
@@ -143,6 +176,15 @@ export class BossAISystem extends System {
     }
   }
 
+  /**
+   * Handles the boss's performing state.
+   * @param bossEntity The boss entity.
+   * @param ai The boss's AI component.
+   * @param pos The boss's position component.
+   * @param health The boss's health component.
+   * @param stateMachine The boss's state machine component.
+   * @param qualiaState The QualiaState component.
+   */
   private handlePerformingState(
     bossEntity: number,
     ai: AIComponent,

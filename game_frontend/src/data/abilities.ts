@@ -1,8 +1,12 @@
-import { AbilitiesData } from '../types/Abilities';
+import type { AbilitiesData } from '../types/Abilities';
+import { config } from '../config';
 
+/**
+ * Data for all abilities in the game.
+ */
 export const abilitiesData: AbilitiesData = {
-    pause: { id: 'pause', color: '#ADD8E6', damage: 0, type: 'utility' },
-    fastForward: { id: 'fastForward', color: '#FFD700', damage: 0, type: 'utility' },
-    rewind: { id: 'rewind', color: '#90EE90', damage: 0, type: 'utility' },
-    ultimate: { id: 'ultimate', color: '#EE82EE', damage: 0, type: 'utility' },
+    pause: { id: 'pause', color: config.COLORS.LIGHT_BLUE, damage: 0, type: 'utility' },
+    fastForward: { id: 'fastForward', color: config.COLORS.GOLD, damage: 0, type: 'utility' },
+    rewind: { id: 'rewind', color: config.COLORS.LIGHT_GREEN, damage: 0, type: 'utility' },
+    ultimate: { id: 'ultimate', color: config.COLORS.VIOLET, damage: 0, type: 'utility' },
 };
