@@ -36,5 +36,3 @@ lerna-debug.log*
 *.sw?
 
 # Project specific
-qualia_state.json
-work/
