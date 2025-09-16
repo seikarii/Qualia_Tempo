@@ -1,0 +1,229 @@
+audio:
+  volume: 0.8
+  enableSubtitles: true
+
+gameplay:
+  rhythmTolerance: 0.1
+  comboResetTime: 2.0
+  pauseCooldown: 1.0
+
+visual:
+  updateFrequency: 60
+  debugMode: false
+
+qualia:
+  precision:
+    maxStreak: 100
+    decayRate: 0.05
+    pauseBonus: 0.1
+  flow:
+    rhythmWindow: 0.15
+    maxFlow: 1.0
+    decayRate: 0.02
+    buildRate: 0.1
+  chaos:
+    missMultiplier: 0.2
+    maxChaos: 1.0
+    decayRate: 0.03
+  aggression:
+    comboThreshold: 10
+    maxAggression: 1.0
+    comboMultiplier: 0.05
+  recovery:
+    duration: 5.0
+    maxRecovery: 1.0
+    decayRate: 0.01
+  intensity:
+    baseMultiplier: 0.5
+    precisionWeight: 0.3
+    flowWeight: 0.3
+    aggressionWeight: 0.2
+    chaosWeight: 0.2
+
+backend:
+  throttleMs: 250
+  maxBatchSize: 10
+  baseUrl: "http://localhost:8000"
+  endpoints:
+    qualiaState: "/update_qualia"
+    gameState: "/update_game"
+    health: "/health"
+  maxRetries: 3
+  retryDelayMs: 1000
+  timeoutMs: 5000
+  logRequests: false
+  logResponses: false
+
+services:
+  rhythmicMovement:
+    bpm: 120
+    perfectTiming: 0.05
+    goodTiming: 0.15
+    gridSize: 8
+    slowdownFactor: 0.5
+  backendSync:
+    maxRetries: 3
+    retryDelay: 1000
+    connectionTimeout: 5000
+    healthCheckInterval: 30000
+  errorReporting:
+    rateLimitWindow: 60000
+    maxErrorsPerWindow: 10
+    batchSize: 5
+    batchTimeout: 30000
+    maxRetentionTime: 3600000
+    externalServiceUrl: "https://api.error-reporting.service/reports"
+    retryAttempts: 3
+    maxBatchSize: 100
+    batchInterval: 5000
+    maxRetries: 3
+    retryDelay: 2000
+    enableConsoleOutput: true
+  debug:
+    enableProfiling: false
+    maxSessionHistory: 10
+    maxEventHistory: 500
+    performanceMonitoringInterval: 5000
+    aiAnalysisInterval: 30000
+    enableAIAnalysis: true
+    enablePerformanceMonitoring: true
+    enableGlobalInterface: true
+    memoryCleanupThreshold: 1000
+
+logging:
+  levels:
+    eventBus: "info"
+    qualiaCalculator: "info"
+    backendSync: "warn"
+    gameController: "info"
+    gameStateStore: "warn"
+    audioService: "warn"
+    rhythmicMovement: "info"
+    errorReporting: "warn"
+    configurationService: "info"
+  messages:
+    eventBus:
+      initialized: "EventBus service initialized"
+      started: "EventBus started"
+      stopped: "EventBus stopped"
+      subscribed: "Subscribed to event"
+      unsubscribed: "Unsubscribed from event"
+      emitted: "Event emitted"
+      processed: "Event processed"
+      errorProcessing: "Error processing event"
+      listenerAdded: "Event listener added"
+      listenerRemoved: "Event listener removed"
+    qualiaCalculator:
+      initialized: "QualiaCalculator initialized"
+      started: "QualiaCalculator started"
+      stopped: "QualiaCalculator stopped"
+      stateUpdated: "Qualia state updated"
+      eventReceived: "Player action received"
+      calculationCompleted: "Calculation completed"
+      configUpdated: "Configuration updated"
+      performingAI: "AI analysis in progress"
+      aiAnalysisFailed: "AI analysis failed"
+      subscribed: "Subscribed to events"
+      unsubscribed: "Unsubscribed from events"
+    backendSync:
+      initialized: "BackendSync initialized"
+      started: "BackendSync started"
+      stopped: "BackendSync stopped"
+      syncCompleted: "Sync completed"
+      syncFailed: "Sync failed"
+      connectionEstablished: "Backend connection established"
+      connectionLost: "Backend connection lost"
+      throttled: "Request throttled"
+      retrying: "Retrying request"
+      healthCheckPassed: "Health check passed"
+      healthCheckFailed: "Health check failed"
+    gameController:
+      initialized: "GameController initialized"
+      started: "GameController started"
+      stopped: "GameController stopped"
+      gameStarted: "Game started"
+      gamePaused: "Game paused"
+      gameResumed: "Game resumed"
+      gameReset: "Game reset"
+      actionProcessed: "Action processed"
+      stateChanged: "Game state changed"
+      configUpdated: "Configuration updated"
+    gameStateStore:
+      initialized: "GameStateStore initialized"
+      started: "GameStateStore started"
+      stopped: "GameStateStore stopped"
+      stateUpdated: "Game state updated"
+      eventReceived: "Event received from EventBus"
+      bridgeCompleted: "Bridge operation completed"
+      subscribed: "Subscribed to events"
+      unsubscribed: "Unsubscribed from events"
+    audioService:
+      initialized: "AudioService initialized"
+      started: "AudioService started"
+      stopped: "AudioService stopped"
+      trackLoaded: "Audio track loaded"
+      trackPlayed: "Audio track played"
+      trackPaused: "Audio track paused"
+      trackStopped: "Audio track stopped"
+      volumeChanged: "Volume changed"
+      effectPlayed: "Sound effect played"
+      configUpdated: "Audio configuration updated"
+    rhythmicMovement:
+      initialized: "RhythmicMovement initialized"
+      started: "RhythmicMovement started"
+      failedToStart: "RhythmicMovement failed to start"
+      notRunning: "RhythmicMovement not running"
+      stopping: "RhythmicMovement stopping"
+      stopped: "RhythmicMovement stopped"
+      errorStopping: "Error stopping RhythmicMovement"
+      configUpdated: "RhythmicMovement configuration updated"
+      performingAI: "RhythmicMovement AI analysis"
+      aiAnalysisFailed: "RhythmicMovement AI analysis failed"
+      unsubscribed: "RhythmicMovement unsubscribed"
+    errorReporting:
+      initialized: "ErrorReporting initialized"
+      started: "ErrorReporting started"
+      stopped: "ErrorReporting stopped"
+      configUpdated: "ErrorReporting configuration updated"
+      subscribed: "ErrorReporting subscribed"
+      unsubscribed: "ErrorReporting unsubscribed"
+      receivedWhileStopped: "ErrorReporting received while stopped"
+      malformedEvent: "ErrorReporting malformed event"
+      rateLimitExceeded: "ErrorReporting rate limit exceeded"
+      processingFailed: "ErrorReporting processing failed"
+      batchProcessingFailed: "ErrorReporting batch processing failed"
+      noStackTrace: "ErrorReporting no stack trace"
+      unknownSource: "ErrorReporting unknown source"
+      requiresEventBus: "ErrorReporting requires EventBus"
+    configurationService:
+      fileNotFound: "Configuration file not found"
+      parseError: "Configuration parse error"
+      loadSuccess: "Configuration loaded successfully"
+      validationError: "Configuration validation error"
+
+errorPatterns:
+  critical:
+    - "Failed to initialize"
+    - "Cannot connect to"
+    - "Service unavailable"
+    - "Critical error"
+  high:
+    - "Connection lost"
+    - "Timeout"
+    - "Authentication failed"
+    - "Permission denied"
+  medium:
+    - "Retry attempt"
+    - "Fallback activated"
+    - "Performance warning"
+    - "Validation warning"
+  low:
+    - "Info"
+    - "Debug"
+    - "Trace"
+    - "Verbose"
+
+test:
+  mockServices: false
+  enableDebugOutput: true
+  timeoutMs: 10000

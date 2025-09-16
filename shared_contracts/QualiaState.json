@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QualiaState",
+  "description": "Central data structure representing player mastery in Qualia Tempo",
+  "type": "object",
+  "properties": {
+    "intensity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Overall energy level (0-1)"
+    },
+    "precision": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Accuracy streaks (0-1)"
+    },
+    "aggression": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Fast Forward usage (0-1)"
+    },
+    "flow": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Rhythmic consistency (0-1)"
+    },
+    "chaos": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Rhythm failures (0-1)"
+    },
+    "recovery": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Rewind usage (0-1)"
+    },
+    "transcendence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Ultimate mode (0-1)"
+    }
+  },
+  "required": [
+    "intensity",
+    "precision", 
+    "aggression",
+    "flow",
+    "chaos",
+    "recovery",
+    "transcendence"
+  ],
+  "additionalProperties": false
+}

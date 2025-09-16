@@ -1,0 +1,492 @@
+/**
+ * @fileoverview Rule to prevent hardcoded configuration values
+ * @author Qualia Tempo Team
+ */
+
+'use strict';
+
+//------------------------------------------------------------------------------
+// Rule Definition
+//------------------------------------------------------------------------------
+
+module.exports = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description: 'Prevent hardcoded configuration values, externalize to YAML config files',
+      category: 'Best Practices',
+      recommended: true,
+      url: null
+    },
+    fixable: null,
+    schema: [
+      {
+        type: 'object',
+        properties: {
+          allowedValues: {
+            type: 'array',
+            items: {
+              type: 'string'
+            }
+          },
+          allowedNumbers: {
+            type: 'array',
+            items: {
+              type: 'number'
+            }
+          }
+        },
+        additionalProperties: false
+      }
+    ],
+    messages: {
+      noHardcodedConfig: 'Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService.'
+    }
+  },
+
+  create(context) {
+    const options = context.options[0] || {};
+    const allowedValues = new Set(options.allowedValues || [
+      '', 'true', 'false', 'null', 'undefined',
+      // Common event names and types
+      'QualiaStateUpdated', 'GameStateChanged', 'PlayerAction', 'CombatData',
+      'intensity', 'precision', 'flow', 'chaos', 'aggression', 'recovery', 'transcendence',
+      // Common service names
+      'EventBus', 'ConfigurationService', 'BackendSyncService', 'GameControllerService',
+      'QualiaStateCalculatorService', 'GameStateStoreService', 'ErrorReportingService',
+      'DebugService', 'CompositionRoot'
+    ]);
+    const allowedNumbers = new Set(options.allowedNumbers || [0, 1, -1]);
+
+    function isInServiceContext(node) {
+      const filename = context.getFilename();
+      return filename.includes('/services/') || filename.includes('Service.ts') || filename.includes('Service.tsx');
+    }
+
+    function isConfigurationServiceContext(node) {
+      const filename = context.getFilename();
+      return filename.includes('ConfigurationService.ts') || filename.includes('ConfigurationService.tsx');
+    }
+
+    function isErrorMessage(node) {
+      // Check if this string is part of an error message, console log, or warning
+      let parent = node.parent;
+      while (parent) {
+        if (parent.type === 'NewExpression' && parent.callee?.name === 'Error') {
+          return true;
+        }
+        if (parent.type === 'ThrowStatement') {
+          return true;
+        }
+        if (parent.type === 'CallExpression' && parent.callee) {
+          // Handle console.* calls
+          if (parent.callee.type === 'MemberExpression' && 
+              parent.callee.object?.name === 'console') {
+            return true;
+          }
+          // Handle direct function calls for logging
+          const functionName = parent.callee.name;
+          if (functionName && ['error', 'warn', 'log', 'info', 'debug'].includes(functionName)) {
+            return true;
+          }
+        }
+        parent = parent.parent;
+      }
+      return false;
+    }
+
+    function isEventNameOrType(node) {
+      // Check if this is an event name, type name, or similar identifier
+      const value = node.value;
+      if (typeof value !== 'string') return false;
+
+      // Event names typically end with specific patterns
+      if (value.match(/(Updated|Changed|Started|Stopped|Error|Success|Failed|Event|Action|State)$/)) {
+        return true;
+      }
+
+      // Type names or interface names (PascalCase)
+      if (value.match(/^[A-Z][a-zA-Z]*$/)) {
+        return true;
+      }
+
+      // Event types with underscores (like NARRATIVE_EVENT)
+      if (value.match(/^[A-Z_]+$/)) {
+        return true;
+      }
+
+      // Common event type patterns
+      if (value.includes('_EVENT') || value.includes('_ACTION') || value.includes('_STATE')) {
+        return true;
+      }
+
+      return false;
+    }
+
+    function isLegitimateConfigServiceValue(node) {
+      const value = node.value;
+
+      // Allow configuration file paths
+      if (typeof value === 'string' && (
+        value.includes('/config/') ||
+        value.includes('.yaml') ||
+        value.includes('.yml') ||
+        value.includes('.json')
+      )) {
+        return true;
+      }
+
+      // Allow error messages in ConfigurationService (they're legitimate)
+      if (isErrorMessage(node)) {
+        return true;
+      }
+
+      // Allow small numbers for validation, indexing, etc.
+      if (typeof value === 'number' && Number.isInteger(value) && Math.abs(value) <= 100) {
+        return true;
+      }
+
+      // Allow boolean values
+      if (typeof value === 'boolean') {
+        return true;
+      }
+
+      // Allow null/undefined
+      if (value === null || value === undefined) {
+        return true;
+      }
+
+      // Allow short descriptive strings that are part of the service logic
+      if (typeof value === 'string' && value.length <= 50 && (
+        value.includes('[Config]') || // Log prefixes
+        value.includes('configuration') ||
+        value.includes('config') ||
+        value.includes('loaded') ||
+        value.includes('failed')
+      )) {
+        return true;
+      }
+
+      return false;
+    }
+
+    function isGameStateOrResetValue(node) {
+      // Check if this value is part of game state initialization or reset
+      let parent = node.parent;
+      let depth = 0;
+      const maxDepth = 5;
+      
+      while (parent && depth < maxDepth) {
+        // Check for property names that indicate game state
+        if (parent.type === 'Property' && parent.key) {
+          const propName = parent.key.name || parent.key.value;
+          if (propName && typeof propName === 'string') {
+            // Game state properties that should allow reset values
+            const gameStateProps = [
+              'health', 'combo', 'score', 'position', 'x', 'y', 'z',
+              'currentTime', 'gameStartTime', 'totalNotes', 'notesHit', 'notesMissed',
+              'currentStreak', 'maxStreak', 'pauseCooldownRemaining', 'isMoving',
+              'lastRhythmHit', 'isPlaying', 'intensity', 'precision', 'aggression',
+              'flow', 'chaos', 'recovery', 'transcendence'
+            ];
+            
+            if (gameStateProps.includes(propName)) {
+              return true;
+            }
+          }
+        }
+        
+        // Check for object expressions in state setting contexts
+        if (parent.type === 'ObjectExpression') {
+          let grandParent = parent.parent;
+          while (grandParent && depth < maxDepth) {
+            // Look for state setting patterns
+            if (grandParent.type === 'CallExpression' && grandParent.callee) {
+              const calleeName = grandParent.callee.name || 
+                                (grandParent.callee.property && grandParent.callee.property.name);
+              
+              if (calleeName === 'setStore' || calleeName === 'setState') {
+                return true;
+              }
+            }
+            grandParent = grandParent.parent;
+            depth++;
+          }
+        }
+        
+        parent = parent.parent;
+        depth++;
+      }
+      
+      return false;
+    }
+
+    function isSystemFunctionCall(node) {
+      // Check if this is a call to a system function like Date.now()
+      let parent = node.parent;
+      while (parent) {
+        if (parent.type === 'CallExpression' && parent.callee) {
+          const calleeStr = parent.callee.type === 'MemberExpression' 
+            ? `${parent.callee.object.name}.${parent.callee.property.name}`
+            : parent.callee.name;
+            
+          if (calleeStr === 'Date.now' || calleeStr === 'Math.random' || 
+              calleeStr === 'Math.floor' || calleeStr === 'performance.now') {
+            return true;
+          }
+        }
+        parent = parent.parent;
+      }
+      return false;
+    }
+
+    function isImportPathOrModuleName(node) {
+      // Check if this string is part of an import/export statement
+      let parent = node.parent;
+      let depth = 0;
+      const maxDepth = 3;
+      
+      while (parent && depth < maxDepth) {
+        if (parent.type === 'ImportDeclaration' || parent.type === 'ExportDeclaration') {
+          return true;
+        }
+        // Also check for import() dynamic imports
+        if (parent.type === 'CallExpression' && parent.callee?.name === 'import') {
+          return true;
+        }
+        parent = parent.parent;
+        depth++;
+      }
+
+      // Check if this looks like a module path or file extension
+      if (typeof node.value === 'string') {
+        const value = node.value;
+        if (value.startsWith('./') || value.startsWith('../') || 
+            value.startsWith('/') || value.includes('.ts') || 
+            value.includes('.tsx') || value.includes('.js') ||
+            value.includes('.json') || value.includes('.yaml')) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    function isTypeDefinition(node) {
+      // Check if this string is part of a type definition or interface
+      let parent = node.parent;
+      let depth = 0;
+      const maxDepth = 5;
+      
+      while (parent && depth < maxDepth) {
+        // TypeScript type annotations and properties
+        if (parent.type === 'TSTypeAnnotation' || 
+            parent.type === 'TSInterfaceDeclaration' ||
+            parent.type === 'TSTypeAliasDeclaration' ||
+            parent.type === 'TSPropertySignature' ||
+            parent.type === 'TSLiteralType') {
+          return true;
+        }
+        
+        // Property definitions in interfaces or object types
+        if (parent.type === 'Property' && parent.key === node) {
+          // This is a property key, likely legitimate
+          return true;
+        }
+        
+        parent = parent.parent;
+        depth++;
+      }
+
+      return false;
+    }
+
+    function isHttpOrApiRelated(node) {
+      const value = node.value;
+      if (typeof value !== 'string') return false;
+      
+      // HTTP methods
+      if (['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'].includes(value)) {
+        return true;
+      }
+      
+      // HTTP headers
+      if (['Content-Type', 'Authorization', 'Accept', 'User-Agent'].includes(value)) {
+        return true;
+      }
+      
+      // MIME types
+      if (value.includes('application/') || value.includes('text/') || value.includes('image/')) {
+        return true;
+      }
+      
+      return false;
+    }
+
+    function isLegitimateHardcodedValue(node) {
+      const value = node.value;
+
+      // Allow import/export paths
+      if (isImportPathOrModuleName(node)) {
+        return false;
+      }
+
+      // Allow type definitions and interface properties
+      if (isTypeDefinition(node)) {
+        return false;
+      }
+
+      // Allow HTTP/API related strings
+      if (isHttpOrApiRelated(node)) {
+        return false;
+      }
+
+      // Allow game state and reset values
+      if (isGameStateOrResetValue(node)) {
+        return false;
+      }
+
+      // Allow system function calls
+      if (isSystemFunctionCall(node)) {
+        return false;
+      }
+
+      // Allow very short strings (likely not configuration)
+      if (typeof value === 'string' && value.length <= 3) {
+        return false;
+      }
+
+      // Allow error messages
+      if (isErrorMessage(node)) {
+        return false;
+      }
+
+      // Allow event names and type names
+      if (isEventNameOrType(node)) {
+        return false;
+      }
+
+      // Allow HTML/CSS class names and IDs
+      if (typeof value === 'string' && value.match(/^[a-z-]+$/)) {
+        return false;
+      }
+
+      // Allow import/export related strings
+      if (typeof value === 'string' && value.includes('/') && value.match(/\.(ts|js|json)$/)) {
+        return false;
+      }
+
+      // Only flag numbers that look like configuration values
+      if (typeof value === 'number') {
+        // Allow small integers commonly used for array indexing, boolean conversion, etc.
+        if (Number.isInteger(value) && Math.abs(value) <= 200) {
+          return false;
+        }
+
+        // Allow common mathematical constants
+        if (value === Math.PI || value === Math.E) {
+          return false;
+        }
+
+        // Allow very common default values (expanded for game state)
+        if ([0, 1, 100, 1000].includes(value)) {
+          return false;
+        }
+
+        // Allow common time intervals (milliseconds) - be more generous
+        if (Number.isInteger(value) && value >= 50 && value <= 10000 && value % 50 === 0) {
+          return false; // Allow 50, 100, 150, ..., 10000
+        }
+
+        // Flag numbers that look like configuration (very large numbers, specific thresholds)
+        if (value > 10000 || value < -1000) {
+          return true;
+        }
+
+        // Allow common decimal values (percentages, ratios, etc.)
+        if (!Number.isInteger(value)) {
+          // Allow common percentage/ratio values
+          if (value >= 0 && value <= 1) {
+            return false; // Allow any decimal between 0 and 1 (common for game percentages)
+          }
+          // Allow common multipliers
+          if (value === 0.5 || value === 1.5 || value === 2.0) {
+            return false;
+          }
+          // Flag other large decimal numbers as potential configuration
+          if (Math.abs(value) > 100) {
+            return true;
+          }
+          return false; // Allow smaller decimals
+        }
+      }
+
+      // Flag long strings that are likely configuration
+      if (typeof value === 'string' && value.length > 50) {
+        return true;
+      }
+
+      // Allow localhost/development URLs
+      if (typeof value === 'string' && (
+        value.includes('localhost') ||
+        value.includes('127.0.0.1') ||
+        value.includes('0.0.0.0')
+      )) {
+        return false;
+      }
+
+      // Allow API endpoint paths
+      if (typeof value === 'string' && value.startsWith('/')) {
+        return false;
+      }
+
+      // Flag strings that look like URLs, file paths, or configuration keys
+      if (typeof value === 'string' && (
+        value.includes('http') ||
+        value.includes('://') ||
+        value.includes('.com') ||
+        value.includes('.org') ||
+        value.includes('/api/') ||
+        value.match(/^[A-Z_]+$/) // ALL_CAPS likely configuration keys
+      )) {
+        return true;
+      }
+
+      return false;
+    }
+
+    return {
+      Literal(node) {
+        // Only check in service contexts
+        if (!isInServiceContext(node)) {
+          return;
+        }
+
+        // Skip allowed values
+        if (typeof node.value === 'string' && allowedValues.has(node.value)) {
+          return;
+        }
+
+        if (typeof node.value === 'number' && allowedNumbers.has(node.value)) {
+          return;
+        }
+
+        // Special handling for ConfigurationService
+        if (isConfigurationServiceContext(node)) {
+          // Allow legitimate configuration-related values in ConfigurationService
+          if (isLegitimateConfigServiceValue(node)) {
+            return;
+          }
+        }
+
+        // Only flag values that are legitimately hardcoded configuration
+        if (isLegitimateHardcodedValue(node)) {
+          context.report({
+            node,
+            messageId: 'noHardcodedConfig'
+          });
+        }
+      }
+    };
+  }
+};

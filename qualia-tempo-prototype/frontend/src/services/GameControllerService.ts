@@ -1,0 +1,363 @@
+/**
+ * QUALIA.CODE v1.0 - GameControllerService
+ * Service responsible for game state management and control logic.
+ *
+    try {
+      if (!this.isRunning) {
+        this.logger.warn("⚠️ [GameController] Service not running");
+        return;
+      }
+
+      this.unsubscribeFromEvents();
+      this.isRunning = false;
+
+      const duration = performance.now() - startTime;
+      this.logger.info(
+        `🛑 [GameController] Service stopped successfully - ${duration.toFixed(2)}ms`,
+      );
+    } catch (error) {
+      const duration = performance.now() - startTime;
+      this.logger.error(
+        `🚨 [GameController] Stop failed - ${duration.toFixed(2)}ms`,
+        { error },
+      ); - Event-driven game state management
+ * - Receives PlayerAction events (StartGame, PauseGame, ResetGame, etc.)
+ * - Emits GameStateChanged events with updated state
+ * - Maintains internal game state (isPlaying, currentScore, etc.)
+ * - Integrates with EventBus for decoupled communication
+ */
+
+import {
+  EventBus,
+  EventHandler,
+  PlayerActionEvent,
+  GameStateChangedEvent,
+} from "./EventBus";
+import { logMethod, catchError } from '../utils/decorators';
+import { QualiaLogger } from './Logger';
+
+// Game state interface
+export interface GameState {
+  isPlaying: boolean;
+  isPaused: boolean;
+  currentScore: number;
+  comboCount: number;
+  health: number;
+  level: number;
+  gameMode: "normal" | "hard" | "qualia";
+}
+
+// Configuration interface
+export interface GameControllerConfig {
+  maxHealth: number;
+  initialScore: number;
+  comboMultiplier: number;
+  healthDecayRate: number;
+}
+
+// Default configuration
+const DEFAULT_CONFIG: GameControllerConfig = {
+  maxHealth: 100,
+  initialScore: 0,
+  comboMultiplier: 1.5,
+  healthDecayRate: 0.1,
+};
+
+/**
+ * GameControllerService: Manages game state and control logic
+ *
+ * QUALIA.CODE Compliance:
+ * - Event-driven architecture
+ * - Single responsibility: Game state management
+ * - Dependency injection via EventBus
+ * - No direct UI coupling
+ */
+export class GameControllerService {
+  private config: GameControllerConfig;
+  private eventBus: EventBus;
+  private eventListenerIds: string[] = [];
+  private isRunning = false;
+  private logger: QualiaLogger;
+
+  // Internal game state
+  private gameState: GameState = {
+    isPlaying: false,
+    isPaused: false,
+    currentScore: 0,
+    comboCount: 0,
+    health: 100,
+    level: 1,
+    gameMode: "normal",
+  };
+
+  constructor(eventBus: EventBus, logger: QualiaLogger, config?: Partial<GameControllerConfig>) {
+    this.eventBus = eventBus;
+    this.logger = logger;
+    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.logger.info("🎮 [GameController] Service initialized");
+  }
+
+  /**
+   * Start the game controller service
+   */
+  public async start(): Promise<void> {
+    const startTime = performance.now();
+    this.logger.info("🚀 [GameController] Starting service...");
+
+    try {
+      if (this.isRunning) {
+        this.logger.warn("⚠️ [GameController] Service already running");
+        return;
+      }
+
+      this.subscribeToEvents();
+      this.isRunning = true;
+
+      const duration = performance.now() - startTime;
+      this.logger.info(
+        `🎮 [GameController] Service started successfully - ${duration.toFixed(2)}ms`,
+      );
+    } catch (error) {
+      const duration = performance.now() - startTime;
+      this.logger.error(
+        `🚨 [GameController] Start failed - ${duration.toFixed(2)}ms`,
+        { error },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Stop the game controller service
+   */
+  public async stop(): Promise<void> {
+    const startTime = performance.now();
+    this.logger.info("🛑 [GameController] Stopping service...");
+
+    try {
+      if (!this.isRunning) {
+        this.logger.warn("⚠️ [GameController] Service not running");
+        return;
+      }
+
+      this.unsubscribeFromEvents();
+      this.isRunning = false;
+
+      const duration = performance.now() - startTime;
+      this.logger.info(
+        `✅ [GameController] Service stopped - ${duration.toFixed(2)}ms`,
+      );
+    } catch (error) {
+      const duration = performance.now() - startTime;
+      this.logger.error(
+        `❌ [GameController] Stop failed - ${duration.toFixed(2)}ms:`,
+        { error },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get current game state (read-only)
+   */
+  @logMethod()
+  @catchError()
+  public getGameState(): Readonly<GameState> {
+    return { ...this.gameState };
+  }
+
+  /**
+   * Get configuration
+   */
+  @logMethod()
+  @catchError()
+  public getConfig(): Readonly<GameControllerConfig> {
+    return { ...this.config };
+  }
+
+  // === PRIVATE METHODS ===
+
+  private subscribeToEvents(): void {
+    // Subscribe to PlayerAction events
+    const playerActionHandler: EventHandler<PlayerActionEvent> = (event) => {
+      this.handlePlayerAction(event);
+    };
+
+    const listenerId = this.eventBus.subscribe(
+      "PlayerAction",
+      playerActionHandler,
+      { priority: 10 },
+    );
+    this.eventListenerIds.push(listenerId);
+
+    this.logger.info("📡 [GameController] Subscribed to PlayerAction events");
+  }
+
+  private unsubscribeFromEvents(): void {
+    for (const listenerId of this.eventListenerIds) {
+      this.eventBus.unsubscribe(listenerId);
+    }
+    this.eventListenerIds = [];
+
+    this.logger.info("📡 [GameController] Unsubscribed from all events");
+  }
+
+  private handlePlayerAction(event: PlayerActionEvent): void {
+    this.logger.info(`🎮 [GameController] Handling PlayerAction: ${event.action}`);
+
+    switch (event.action) {
+      case "StartGame":
+        this.handleStartGame();
+        break;
+      case "PauseGame":
+        this.handlePauseGame();
+        break;
+      case "ResetGame":
+        this.handleResetGame();
+        break;
+      case "Dash":
+        this.handleDash(event.context);
+        break;
+      case "HitNote":
+        this.handleHitNote(event.context);
+        break;
+      case "MissNote":
+        this.handleMissNote();
+        break;
+      case "FastForward":
+        this.handleFastForward(event.context);
+        break;
+      case "Rewind":
+        this.handleRewind(event.context);
+        break;
+      default:
+        this.logger.warn(`⚠️ [GameController] Unknown action: ${event.action}`);
+    }
+  }
+
+  private handleDash(_context?: Record<string, any>): void {
+    if (!this.gameState.isPlaying || this.gameState.isPaused) return;
+
+    this.logger.info("💨 [GameController] Dash action performed");
+    // Dash could give a temporary speed boost or score multiplier
+    this.gameState.currentScore += 5;
+    this.emitGameStateChanged("Playing");
+  }
+
+  private handleHitNote(context?: Record<string, any>): void {
+    if (!this.gameState.isPlaying || this.gameState.isPaused) return;
+
+    const points = context?.points || 10;
+    const isPerfect = context?.perfect || false;
+
+    // Update score
+    this.gameState.currentScore += points;
+
+    // Update combo
+    this.gameState.comboCount += 1;
+
+    // Bonus for perfect hits
+    if (isPerfect) {
+      this.gameState.currentScore += Math.floor(points * 0.5);
+    }
+
+    // Health recovery for good hits
+    this.gameState.health = Math.min(
+      this.config.maxHealth,
+      this.gameState.health + 2,
+    );
+
+    this.logger.info(
+      `🎯 [GameController] Note hit! Score: ${this.gameState.currentScore}, Combo: ${this.gameState.comboCount}`,
+    );
+    this.emitGameStateChanged("Playing");
+  }
+
+  private handleMissNote(): void {
+    if (!this.gameState.isPlaying || this.gameState.isPaused) return;
+
+    // Reset combo
+    this.gameState.comboCount = 0;
+
+    // Health damage
+    this.gameState.health = Math.max(0, this.gameState.health - 5);
+
+    this.logger.info(
+      `❌ [GameController] Note missed! Health: ${this.gameState.health}`,
+    );
+    this.emitGameStateChanged("Playing");
+
+    // Check for game over
+    if (this.gameState.health <= 0) {
+      this.emitGameStateChanged("GameOver");
+    }
+  }
+
+  private handleFastForward(_context?: Record<string, any>): void {
+    if (!this.gameState.isPlaying || this.gameState.isPaused) return;
+
+    this.logger.info("⏩ [GameController] Fast forward activated");
+    // Fast forward could give temporary score boost
+    this.gameState.currentScore += 20;
+    this.emitGameStateChanged("Playing");
+  }
+
+  private handleRewind(_context?: Record<string, any>): void {
+    if (!this.gameState.isPlaying || this.gameState.isPaused) return;
+
+    this.logger.info("⏪ [GameController] Rewind activated");
+    // Rewind could restore some health
+    this.gameState.health = Math.min(
+      this.config.maxHealth,
+      this.gameState.health + 10,
+    );
+    this.emitGameStateChanged("Playing");
+  }
+
+  private handleStartGame(): void {
+    this.logger.info("🎮 [GameController] Starting game");
+    this.gameState.isPlaying = true;
+    this.gameState.isPaused = false;
+    this.emitGameStateChanged("Playing");
+  }
+
+  private handlePauseGame(): void {
+    if (!this.gameState.isPlaying) return;
+
+    this.logger.info("⏸️ [GameController] Pausing game");
+    this.gameState.isPaused = !this.gameState.isPaused;
+    this.emitGameStateChanged(this.gameState.isPaused ? "Paused" : "Playing");
+  }
+
+  private handleResetGame(): void {
+    this.logger.info("🔄 [GameController] Resetting game");
+    this.gameState = {
+      isPlaying: false,
+      isPaused: false,
+      currentScore: 0,
+      comboCount: 0,
+      health: this.config.maxHealth,
+      level: 1,
+      gameMode: "normal",
+    };
+    this.emitGameStateChanged("Menu");
+  }
+
+  private emitGameStateChanged(
+    newState: "Playing" | "Paused" | "GameOver" | "Menu",
+  ): void {
+    this.eventBus.emit<GameStateChangedEvent>({
+      type: "GameStateChanged",
+      newState,
+      previousState: this.getCurrentStateString(),
+      source: "GameController",
+    });
+  }
+
+  private getCurrentStateString(): string {
+    if (!this.gameState.isPlaying) return "Menu";
+    if (this.gameState.isPaused) return "Paused";
+    if (this.gameState.health <= 0) return "GameOver";
+    return "Playing";
+  }
+}

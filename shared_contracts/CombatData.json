@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CombatData",
+  "description": "Combat scenario data structure for Qualia Tempo",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the combat scenario"
+    },
+    "title": {
+      "type": "string",
+      "description": "Display title of the combat scenario"
+    },
+    "artist": {
+      "type": "string",
+      "description": "Artist name"
+    },
+    "audioPath": {
+      "type": "string",
+      "description": "Path to audio file (mp3, ogg)"
+    },
+    "bpm": {
+      "type": "number",
+      "minimum": 1,
+      "description": "Beats per minute of the track"
+    },
+    "duration": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Duration of the track in seconds"
+    },
+    "noteMap": {
+      "type": "array",
+      "description": "Array of all notes in the map",
+      "items": {
+        "$ref": "#/definitions/NoteData"
+      }
+    },
+    "lyrics": {
+      "type": "array",
+      "description": "Array of all lyrics in the song",
+      "items": {
+        "$ref": "#/definitions/LyricData"
+      }
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "artist",
+    "audioPath",
+    "bpm",
+    "duration",
+    "noteMap",
+    "lyrics"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "NoteData": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Time in seconds from song start"
+        },
+        "position": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number",
+              "description": "X position on stage"
+            },
+            "y": {
+              "type": "number",
+              "description": "Y position on stage"
+            }
+          },
+          "required": ["x", "y"],
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Duration the note remains active"
+        }
+      },
+      "required": ["timestamp", "position", "duration"],
+      "additionalProperties": false
+    },
+    "LyricData": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Time in seconds from song start"
+        },
+        "text": {
+          "type": "string",
+          "description": "Lyric text content"
+        }
+      },
+      "required": ["timestamp", "text"],
+      "additionalProperties": false
+    }
+  }
+}

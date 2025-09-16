@@ -1,0 +1,38 @@
+{
+  "name": "@qualia-tempo/eslint-plugin-qualia-code",
+  "version": "1.0.0",
+  "description": "ESLint plugin to enforce QUALIA.CODE v1.0 architectural principles",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint lib/**/*.js",
+    "build": "echo 'No build needed - pure JavaScript'"
+  },
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin",
+    "qualia",
+    "architecture",
+    "enforcement"
+  ],
+  "author": "Qualia Tempo Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "eslint": ">=7.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.55.0",
+    "jest": "^29.0.0",
+    "@typescript-eslint/parser": "^6.14.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "file:../",
+    "directory": "eslint-plugin-qualia-code"
+  }
+}

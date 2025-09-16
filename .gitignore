@@ -1,0 +1,74 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+lcov-report/
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+.coverage
+.coverage.*
+/coverage
+/coverage/
+qualia-tempo-prototype/frontend/coverage
+qualia-tempo-prototype/frontend/playwright-report/
+qualia-tempo-prototype/frontend/test-results/
+qualia-tempo-prototype/backend/htmlcov/
+.nyc_output/
+*.lcov
+coverage.json
+coverage.xml
+coverage.lcov
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Electron build outputs
+dist-electron/
+*.AppImage
+*.snap
+*.dmg
+*.exe
+*.msi
+*.deb
+*.rpm
+*.pkg
+*.appx
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Temporary files
+*.tmp
+*.temp
