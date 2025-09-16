@@ -1,0 +1,52 @@
+# QUALIA.CODE v1.0 - QualiaStateCalculatorService Configuration
+# External configuration for qualia state calculation parameters
+
+# Base qualia state values
+baseQualiaState:
+  intensity: 0.5
+  precision: 0.5
+  aggression: 0.0
+  flow: 0.5
+  chaos: 0.0
+  recovery: 0.0
+  transcendence: 0.0
+
+# Performance multipliers
+performanceMultipliers:
+  perfectHit: 1.2
+  goodHit: 1.0
+  missHit: 0.8
+  comboBonus: 1.5
+
+# Decay rates (per second)
+decayRates:
+  intensity: 0.1
+  precision: 0.05
+  aggression: 0.2
+  flow: 0.08
+  chaos: 0.15
+  recovery: 0.1
+  transcendence: 0.05
+
+# Thresholds for state transitions
+thresholds:
+  highIntensity: 0.8
+  lowPrecision: 0.3
+  chaosThreshold: 0.7
+  transcendenceThreshold: 0.9
+
+# Combo system
+comboSystem:
+  maxComboMultiplier: 2.0
+  comboDecayTime: 2.0  # seconds
+  perfectComboBonus: 0.1
+
+# Recovery mechanics
+recoveryMechanics:
+  recoveryRate: 0.1
+  maxRecovery: 1.0
+  recoveryCooldown: 1.0
+
+# Calculation intervals
+updateIntervalMs: 100  # 10 FPS update rate
+historySize: 100      # Keep last 100 states for analysis

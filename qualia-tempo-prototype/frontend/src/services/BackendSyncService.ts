@@ -17,56 +17,14 @@ import {
 } from './EventBus';
 import type { QualiaStateUpdatedEvent } from './EventBus';
 import { logMethod, catchError, validateEventProperty } from '../utils/decorators';
-import type { ConfigurationService } from './ConfigurationService';
+import type { ConfigurationService, BackendSyncConfig } from './ConfigurationService';
 import { QualiaLogger } from './Logger';
 
 // Backend synchronization event interface - REMOVED: Using EventBus definition
 
-// Configuration interface for BackendSync behavior
-export interface BackendSyncConfig {
-  // Throttling settings
-  throttleMs: number;
-  maxBatchSize: number;
+// Configuration interface for BackendSync behavior - REMOVED: Using ConfigurationService interface
 
-  // API endpoints
-  baseUrl: string;
-  endpoints: {
-    qualiaState: string;
-    gameState: string;
-    health: string;
-  };
-
-  // Retry settings
-  maxRetries: number;
-  retryDelayMs: number;
-
-  // Connection settings
-  timeoutMs: number;
-
-  // Debug settings
-  logRequests: boolean;
-  logResponses: boolean;
-}
-
-// Default configuration
-const DEFAULT_CONFIG: BackendSyncConfig = {
-  throttleMs: 250, // Maximum one sync every 250ms
-  maxBatchSize: 10,
-
-  baseUrl: "http://localhost:8000",
-  endpoints: {
-    qualiaState: "/update_qualia",
-    gameState: "/game_state",
-    health: "/health",
-  },
-
-  maxRetries: 3,
-  retryDelayMs: 1000,
-  timeoutMs: 5000,
-
-  logRequests: true,
-  logResponses: false,
-};
+// Default configuration - REMOVED: Using ConfigurationService defaults
 
 // API request/response types
 export interface QualiaStateRequest {
@@ -110,34 +68,19 @@ export class BackendSyncService {
   constructor(
     eventBus: EventBus,
     logger: QualiaLogger,
-    configService?: ConfigurationService,
-    initialConfig?: Partial<BackendSyncConfig>
+    configService: ConfigurationService
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
 
-    // Use configuration from service if provided, otherwise use defaults
-    if (configService && configService.isLoaded()) {
-      const backendConfig = configService.getBackendConfig();
-      const servicesConfig = configService.getServicesConfig();
-      this.config = {
-        throttleMs: backendConfig.throttleMs,
-        maxBatchSize: backendConfig.maxBatchSize,
-        baseUrl: backendConfig.baseUrl,
-        endpoints: backendConfig.endpoints,
-        maxRetries: servicesConfig.backendSync.maxRetries,
-        retryDelayMs: servicesConfig.backendSync.retryDelay,
-        timeoutMs: servicesConfig.backendSync.connectionTimeout,
-        logRequests: backendConfig.logRequests,
-        logResponses: backendConfig.logResponses,
-        ...initialConfig,
-      };
-      // Store health check interval for later use
-      this.healthCheckInterval = servicesConfig.backendSync.healthCheckInterval;
-    } else {
-      this.config = { ...DEFAULT_CONFIG, ...initialConfig };
-      this.healthCheckInterval = 30 * 1000; // fallback default: 30 seconds
+    // ConfigurationService is required - no fallback configuration allowed
+    if (!configService || !configService.isLoaded()) {
+      throw new Error('ConfigurationService must be provided and loaded for BackendSyncService');
     }
+
+    this.config = configService.getBackendSyncConfig();
+    // Store health check interval for later use
+    this.healthCheckInterval = this.config.connection.healthCheckInterval;
 
     this.logger.info("🔄 [BackendSync] Service initialized");
   }
@@ -323,7 +266,7 @@ export class BackendSyncService {
     this.logger.info("📊 [BackendSync] QualiaState update received");
 
     if (!this.isConnected) {
-      this.logger.warn("⚠️ [BackendSync] Backend not connected, skipping sync");
+      this.logger.warn(`⚠️ [BackendSync] ${this.config.messages.backendNotConnected}`);
       return;
     }
 
@@ -348,13 +291,13 @@ export class BackendSyncService {
     this.pendingSync = qualiaRequest;
 
     // If we haven't hit the throttle limit, sync immediately
-    if (timeSinceLastSync >= this.config.throttleMs) {
+    if (timeSinceLastSync >= this.config.sync.throttleDelay) {
       this.performSyncSafe(qualiaRequest);
       this.pendingSync = null;
     } else {
       // Schedule a delayed sync
       this.clearPendingSync();
-      const delay = this.config.throttleMs - timeSinceLastSync;
+      const delay = this.config.sync.throttleDelay - timeSinceLastSync;
 
       this.syncTimeoutId = window.setTimeout(() => {
         if (this.pendingSync) {
@@ -387,14 +330,14 @@ export class BackendSyncService {
   private async performSync(qualiaRequest: QualiaStateRequest): Promise<void> {
     const startTime = performance.now();
 
-    if (this.config.logRequests) {
+    if (this.config.validation.logValidationErrors) {
       this.logger.info(
         "🌐 [BackendSync] Sending QualiaState to backend:",
         { qualiaRequest },
       );
     }
 
-    const url = `${this.config.baseUrl}${this.config.endpoints.qualiaState}`;
+    const url = `${this.config.api.baseUrl}${this.config.api.qualiaEndpoint}`;
 
     try {
       const response = await this.makeRequest<any>(url, {
@@ -407,7 +350,7 @@ export class BackendSyncService {
 
       this.lastSyncTime = performance.now();
 
-      if (this.config.logResponses) {
+      if (this.config.validation.logValidationErrors) {
         this.logger.info("📥 [BackendSync] Backend response:", { response });
       }
 
@@ -435,7 +378,7 @@ export class BackendSyncService {
     this.logger.info("🏥 [BackendSync] Health check");
 
     try {
-      const url = `${this.config.baseUrl}${this.config.endpoints.health}`;
+      const url = `${this.config.api.baseUrl}${this.config.api.healthEndpoint}`;
       await this.makeRequest<any>(url, { method: "GET" });
 
       this.isConnected = true;
@@ -485,7 +428,7 @@ export class BackendSyncService {
     const controller = new AbortController();
     const timeoutId = setTimeout(
       () => controller.abort(),
-      this.config.timeoutMs,
+      this.config.api.timeout,
     );
 
     try {
@@ -506,7 +449,7 @@ export class BackendSyncService {
       clearTimeout(timeoutId);
 
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error(`Request timeout after ${this.config.timeoutMs}ms`);
+        throw new Error(`Request timeout after ${this.config.api.timeout}ms`);
       }
 
       throw error;

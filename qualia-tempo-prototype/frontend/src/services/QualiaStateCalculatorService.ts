@@ -20,114 +20,11 @@ import {
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from '../utils/decorators';
 import { QualiaLogger } from './Logger';
+import type { ConfigurationService, QualiaCalculatorConfig } from './ConfigurationService';
 
-// Configuration interface for externalized parameters
-export interface QualiaCalculatorConfig {
-  // Decay rates (per second)
-  intensityDecay: number;
-  precisionDecay: number;
-  aggressionDecay: number;
-  flowDecay: number;
-  chaosDecay: number;
-  recoveryDecay: number;
-  transcendenceDecay: number;
+// Configuration interface - REMOVED: Using ConfigurationService interface
 
-  // Action multipliers
-  hitNoteMultipliers: {
-    intensity: number;
-    precision: number;
-    flow: number;
-  };
-
-  missNoteMultipliers: {
-    precision: number;
-    chaos: number;
-    flow: number;
-  };
-
-  dashMultipliers: {
-    intensity: number;
-    aggression: number;
-  };
-
-  fastForwardMultipliers: {
-    aggression: number;
-    intensity: number;
-  };
-
-  rewindMultipliers: {
-    recovery: number;
-    precision: number;
-  };
-
-  // Transcendence thresholds
-  transcendenceThresholds: {
-    intensity: number;
-    precision: number;
-    flow: number;
-  };
-
-  // Update frequency
-  updateInterval: number; // milliseconds
-
-  // State boundaries
-  minValue: number;
-  maxValue: number;
-}
-
-// Default configuration (externalized)
-const DEFAULT_CONFIG: QualiaCalculatorConfig = {
-  // Decay rates (values per second)
-  intensityDecay: 0.1,
-  precisionDecay: 0.05,
-  aggressionDecay: 0.2,
-  flowDecay: 0.08,
-  chaosDecay: 0.15,
-  recoveryDecay: 0.3,
-  transcendenceDecay: 0.05,
-
-  // Action multipliers
-  hitNoteMultipliers: {
-    intensity: 0.15,
-    precision: 0.2,
-    flow: 0.1,
-  },
-
-  missNoteMultipliers: {
-    precision: -0.3,
-    chaos: 0.25,
-    flow: -0.15,
-  },
-
-  dashMultipliers: {
-    intensity: 0.2,
-    aggression: 0.1,
-  },
-
-  fastForwardMultipliers: {
-    aggression: 0.3,
-    intensity: 0.1,
-  },
-
-  rewindMultipliers: {
-    recovery: 0.4,
-    precision: 0.1,
-  },
-
-  // Transcendence activation thresholds
-  transcendenceThresholds: {
-    intensity: 0.8,
-    precision: 0.9,
-    flow: 0.85,
-  },
-
-  // Update frequency
-  updateInterval: 100, // 100ms = 10fps
-
-  // State boundaries
-  minValue: 0.0,
-  maxValue: 1.0,
-};
+// Default configuration - REMOVED: Using ConfigurationService
 
 /**
  * Service responsible for calculating and maintaining QualiaState.
@@ -152,11 +49,17 @@ export class QualiaStateCalculatorService {
   constructor(
     eventBus: EventBus,
     logger: QualiaLogger,
-    initialConfig?: Partial<QualiaCalculatorConfig>,
+    configService: ConfigurationService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
-    this.config = { ...DEFAULT_CONFIG, ...initialConfig };
+
+    // Use configuration from service - no fallback allowed
+    if (!configService || !configService.isLoaded()) {
+      throw new Error('ConfigurationService must be provided and loaded for QualiaStateCalculatorService');
+    }
+
+    this.config = configService.getQualiaCalculatorConfig();
     this.currentState = this.createInitialState();
     this.lastUpdateTime = performance.now();
 

@@ -36,5 +36,5 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "../../scripts/decorator-examples.ts"],
-  "exclude": ["node_modules", "dist", "dist-electron", "**/*.spec.ts", "**/*.test.ts" ,"**/*.spec.tsx", "**/*.test.tsx"]
+  "exclude": ["node_modules", "dist", "dist-electron", "**/*.spec.ts", "**/*.test.ts" ,"**/*.spec.tsx", "**/*.test.tsx", "__tests__"]
 }

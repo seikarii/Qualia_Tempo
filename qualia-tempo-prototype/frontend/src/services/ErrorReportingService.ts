@@ -20,6 +20,7 @@
 import { EventBus, ErrorEvent } from "./EventBus";
 import { logMethod, catchError } from '../utils/decorators';
 import { QualiaLogger } from './Logger';
+import { ConfigurationService } from './ConfigurationService';
 
 // Error severity levels
 export type ErrorSeverity = "low" | "medium" | "high" | "critical";
@@ -70,27 +71,23 @@ export class ErrorReportingService {
   private cleanupTimer: any = null;
   private errorEventSubscriptionId: string | null = null;
 
-  // Default configuration
-  private config: ErrorReportingConfig = {
-    rateLimitWindow: 60000, // 1 minute
-    maxErrorsPerWindow: 10, // Max 10 errors per minute
-    batchSize: 5, // Send in batches of 5
-    batchTimeout: 30000, // Send batch every 30 seconds max
-    maxRetentionTime: 3600000, // Keep errors for 1 hour
-    externalServiceUrl: "https://api.error-reporting.service/reports",
-    retryAttempts: 3,
-  };
+  private config: ErrorReportingConfig;
 
   /**
    * QUALIA.CODE v1.0: Dependency injection constructor
    */
-  constructor(eventBus: EventBus, logger: QualiaLogger) {
+  constructor(
+    eventBus: EventBus,
+    logger: QualiaLogger,
+    private configService: ConfigurationService
+  ) {
     if (!eventBus) {
       throw new Error("ErrorReportingService requires EventBus dependency");
     }
 
     this.eventBus = eventBus;
     this.logger = logger;
+    this.config = this.configService.getErrorReportingConfig();
     this.logger.info(
       "🚨 [ErrorReporting] Service initialized with event-driven architecture",
     );
@@ -510,9 +507,8 @@ export class ErrorReportingService {
 }
 
 // Utility function to create an error reporting service instance
-export const createErrorReportingService = (
-  eventBus: EventBus,
-  logger: QualiaLogger,
-): ErrorReportingService => {
-  return new ErrorReportingService(eventBus, logger);
-};
+/**
+ * QUALIA.CODE COMPLIANCE: Direct service instantiation is forbidden.
+ * Services must be created through CompositionRoot dependency injection.
+ * Use the useServices() hook to access ErrorReportingService.
+ */

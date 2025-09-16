@@ -64,17 +64,11 @@ export interface CompositionRootConfig {
   healthCheckIntervalMs: number;
   retryInitializationOnError: boolean;
   maxInitializationRetries: number;
+  serviceInitializationTimeoutMs: number;
+  serviceShutdownTimeoutMs: number;
+  enableServiceLifecycleLogging: boolean;
+  enablePerformanceMonitoring: boolean;
 }
-
-// Default configuration
-const DEFAULT_CONFIG: CompositionRootConfig = {
-  autoStart: true,
-  enableBackendSync: true,
-  enableHealthMonitoring: true,
-  healthCheckIntervalMs: 10000, // 10 seconds
-  retryInitializationOnError: true,
-  maxInitializationRetries: 3,
-};
 
 /**
  * CompositionRoot: Central IoC Container
@@ -94,32 +88,37 @@ export class CompositionRoot {
   private initializationRetryCount = 0;
   private logger: QualiaLogger;
 
-  constructor(config?: Partial<CompositionRootConfig>) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+  constructor(
+    private configService: ConfigurationService,
+    logger?: QualiaLogger
+  ) {
+    // Load configuration from external YAML files
+    this.config = configService.getCompositionRootConfig();
+    this.logger = logger || LoggerProvider.getLogger();
 
     // Create Logger first (simplified - will be enhanced with config later)
-    this.logger = new QualiaLogger('QualiaTempo', LogLevel.INFO);
-    
+    this.logger = logger || new QualiaLogger('QualiaTempo', LogLevel.INFO);
+
     // CRITICAL: Register logger immediately to prevent circular dependency
     LoggerProvider.register(this.logger);
-    
-    // TRUE DEPENDENCY INJECTION: Instantiate services with Logger
+
+    // TRUE DEPENDENCY INJECTION: Instantiate services with Logger and Configuration
     const eventBus = new EventBus(this.logger);
-    const configService = new ConfigurationService(undefined, this.logger);
     this.services = {
       eventBus,
-      qualiaCalculator: new QualiaStateCalculatorService(eventBus, this.logger),
-      backendSync: new BackendSyncService(eventBus, this.logger, configService),
-      errorReporting: new ErrorReportingService(eventBus, this.logger),
-      debugService: new DebugService(eventBus, this.logger),
-      gameController: new GameControllerService(eventBus, this.logger),
+      qualiaCalculator: new QualiaStateCalculatorService(eventBus, this.logger, this.configService),
+      backendSync: new BackendSyncService(eventBus, this.logger, this.configService),
+      errorReporting: new ErrorReportingService(eventBus, this.logger, this.configService),
+      debugService: new DebugService(eventBus, this.logger, this.configService),
+      gameController: new GameControllerService(eventBus, this.logger, this.configService),
       gameStateStore: new GameStateStoreService(
         eventBus,
         this.logger,
         useGameStore.setState,
+        this.configService
       ),
-      configService,
-      audioService: new AudioService(eventBus, this.logger),
+      configService: this.configService,
+      audioService: new AudioService(eventBus, this.logger, this.configService),
       notificationService: new NotificationService(
         eventBus,
         this.logger,

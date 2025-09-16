@@ -1,0 +1,28 @@
+# QUALIA.CODE v1.0 - ErrorReportingService Configuration
+# External configuration for error reporting and batching
+
+# Rate limiting configuration
+rateLimitWindow: 60000    # 1 minute in milliseconds
+maxErrorsPerWindow: 10    # Max 10 errors per minute
+
+# Batching configuration
+batchSize: 5              # Send in batches of 5 errors
+batchTimeout: 30000       # Send batch every 30 seconds max (ms)
+
+# Data retention
+maxRetentionTime: 3600000 # Keep errors for 1 hour (ms)
+
+# External service configuration
+externalServiceUrl: "https://api.error-reporting.service/reports"
+retryAttempts: 3
+
+# Performance settings
+enableCompression: true
+maxBatchSizeBytes: 1048576  # 1MB max batch size
+
+# Privacy and filtering
+enableErrorFiltering: true
+filterSensitiveData: true
+allowedDomains:
+  - "qualia-tempo.com"
+  - "localhost"

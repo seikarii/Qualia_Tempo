@@ -1,0 +1,57 @@
+# QUALIA.CODE v1.0 - GameControllerService Configuration
+# External configuration for game state management
+
+# Game lifecycle settings
+gameLifecycle:
+  autoStart: false
+  enablePause: true
+  enableReset: true
+  saveStateOnExit: true
+
+# Performance settings
+performance:
+  updateIntervalMs: 16  # ~60 FPS
+  maxFrameSkip: 5
+  enableFrameRateLimiting: true
+
+# State management
+stateManagement:
+  enableStateValidation: true
+  enableStatePersistence: true
+  stateSaveInterval: 5000  # Save every 5 seconds
+  maxSaveSlots: 10
+
+# Input handling
+inputHandling:
+  enableInputBuffering: true
+  inputBufferSize: 10
+  enableInputFiltering: true
+  inputDebounceMs: 50
+
+# Scoring system
+scoring:
+  baseScorePerHit: 100
+  comboMultiplier: 1.5
+  maxComboMultiplier: 5.0
+  scoreDecayRate: 0.1
+
+# Health system
+health:
+  maxHealth: 100
+  healthRegenRate: 1.0  # per second
+  damageOnMiss: 5
+  enableInvincibilityFrames: true
+  invincibilityDuration: 1000  # 1 second
+
+# Difficulty settings
+difficulty:
+  adaptiveDifficulty: true
+  difficultyIncreaseRate: 0.1
+  maxDifficulty: 3.0
+  minDifficulty: 0.5
+
+# Event handling
+events:
+  enableEventBuffering: true
+  maxEventQueueSize: 100
+  eventProcessingInterval: 10  # Process events every 10ms

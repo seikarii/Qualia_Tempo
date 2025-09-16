@@ -4,6 +4,7 @@ import { OntologicalAudioEngine } from '../audio/OntologicalAudioEngine';
 import type { QualiaState } from '../types/contracts';
 import { logMethod, catchError, measureTime } from '../utils/decorators';
 import { QualiaLogger } from './Logger';
+import { ConfigurationService } from './ConfigurationService';
 
 /**
  * AudioService - QUALIA.CODE compliant service for audio management
@@ -14,10 +15,16 @@ export class AudioService {
   private logger: QualiaLogger;
   private qualiaStateListenerId: string | null = null;
   private isInitialized: boolean = false;
+  private config: any;
 
-  constructor(eventBus: EventBus, logger: QualiaLogger) {
+  constructor(
+    eventBus: EventBus,
+    logger: QualiaLogger,
+    private configService: ConfigurationService
+  ) {
     this.eventBus = eventBus;
     this.logger = logger;
+    this.config = this.configService.getAudioServiceConfig();
   }
 
   @logMethod()
@@ -161,22 +168,22 @@ export class AudioService {
       // Different frequencies for different timing accuracy
       switch (timing) {
         case 'perfect':
-          oscillator.frequency.value = 880; // A5 - bright, positive
-          gainNode.gain.value = 0.3;
+          oscillator.frequency.value = this.config.rhythmicFeedback.perfect.frequency;
+          gainNode.gain.value = this.config.rhythmicFeedback.perfect.gain;
           break;
         case 'good':
-          oscillator.frequency.value = 660; // E5 - neutral
-          gainNode.gain.value = 0.2;
+          oscillator.frequency.value = this.config.rhythmicFeedback.good.frequency;
+          gainNode.gain.value = this.config.rhythmicFeedback.good.gain;
           break;
         case 'miss':
-          oscillator.frequency.value = 220; // A3 - low, negative
-          gainNode.gain.value = 0.1;
+          oscillator.frequency.value = this.config.rhythmicFeedback.miss.frequency;
+          gainNode.gain.value = this.config.rhythmicFeedback.miss.gain;
           break;
       }
 
       oscillator.type = 'sine';
       oscillator.start();
-      oscillator.stop(audioContext.currentTime + 0.1); // 100ms duration
+      oscillator.stop(audioContext.currentTime + this.config.rhythmicFeedback[timing].duration);
 
       this.logger.info(`🔊 Rhythmic feedback: ${timing}`);
     } catch (error) {
@@ -199,12 +206,12 @@ export class AudioService {
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
 
-      oscillator.frequency.value = 800; // High tick sound
+      oscillator.frequency.value = this.config.metronome.frequency;
       oscillator.type = 'square';
-      gainNode.gain.value = 0.05; // Very quiet metronome
+      gainNode.gain.value = this.config.metronome.gain;
 
       oscillator.start();
-      oscillator.stop(audioContext.currentTime + 0.05); // 50ms duration
+      oscillator.stop(audioContext.currentTime + this.config.metronome.duration);
     } catch (error) {
       // Silent fail for metronome
     }

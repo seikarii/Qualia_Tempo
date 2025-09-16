@@ -1,0 +1,46 @@
+# QUALIA.CODE v1.0 - AudioService Configuration
+# External configuration for audio feedback and sound generation
+
+# Rhythmic feedback audio settings
+rhythmicFeedback:
+  perfect:
+    frequency: 880    # A5 - bright, positive (Hz)
+    gain: 0.3        # Volume level (0-1)
+    duration: 0.1    # Duration in seconds
+  good:
+    frequency: 660    # E5 - neutral (Hz)
+    gain: 0.2        # Volume level (0-1)
+    duration: 0.15   # Duration in seconds
+  miss:
+    frequency: 220    # A3 - low, negative (Hz)
+    gain: 0.1        # Volume level (0-1)
+    duration: 0.2    # Duration in seconds
+
+# Metronome settings
+metronome:
+  frequency: 1000     # 1kHz beep
+  gain: 0.2          # Volume level
+  duration: 0.05     # Short beep duration
+
+# Audio engine settings
+audioEngine:
+  sampleRate: 44100
+  channels: 2
+  bufferSize: 2048
+
+# Entity voice settings
+entityVoices:
+  player:
+    baseFrequency: 440
+    modulationRange: 200
+  boss:
+    baseFrequency: 220
+    modulationRange: 100
+  environment:
+    baseFrequency: 110
+    modulationRange: 50
+
+# Performance settings
+enableAudioPooling: true
+maxConcurrentSounds: 10
+audioFadeTime: 0.5
