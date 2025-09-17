@@ -8,7 +8,7 @@ import "./index.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { CompositionRootProvider } from "./services/CompositionRoot.provider";
+import { CompositionRootProvider } from "./providers";
 import { ConfigurationService } from "./services/ConfigurationService";
 import { CompositionRoot } from "./services/CompositionRoot";
 

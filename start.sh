@@ -125,9 +125,9 @@ start_services() {
     
     # Start backend
     log_info "Starting backend server..."
-    cd "$BACKEND_DIR"
+    cd "$PROTOTYPE_ROOT"
     source "$VENV_PATH/bin/activate"
-    python3 main.py &
+    python3 backend/main.py &
     BACKEND_PID=$!
     
     # Wait a moment for backend to start

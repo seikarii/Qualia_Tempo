@@ -67,9 +67,7 @@ class TestQualiaParticleEngineExtended:
 
     def test_engine_initialization_with_parameters(self):
         """Test engine initialization with various parameters."""
-        engine = QualiaParticleEngine(
-            ctx=None, max_particles=2048
-        )
+        engine = QualiaParticleEngine(ctx=None, max_particles=2048)
 
         assert engine.max_particles == 2048
         assert engine.simulation_tick == 0

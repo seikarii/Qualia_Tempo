@@ -70,7 +70,7 @@ class TestRoutesExtended:
             "flow": 0.4,
             "chaos": 0.2,
             "recovery": 0.3,
-            "transcendence": 0.1
+            "transcendence": 0.1,
         }
 
         response = client.post("/update_qualia", json=complete_data)
@@ -176,7 +176,7 @@ class TestRoutesExtended:
             "flow": 0.5,
             "chaos": 0.5,
             "recovery": 0.5,
-            "transcendence": 0.5
+            "transcendence": 0.5,
         }
         response = client.post("/update_qualia", json=qualia_data)
 
@@ -190,15 +190,18 @@ class TestRoutesExtended:
         results = []
 
         def make_request():
-            response = client.post("/update_qualia", json={
-                "intensity": 0.5,
-                "precision": 0.5,
-                "aggression": 0.5,
-                "flow": 0.5,
-                "chaos": 0.5,
-                "recovery": 0.5,
-                "transcendence": 0.5
-            })
+            response = client.post(
+                "/update_qualia",
+                json={
+                    "intensity": 0.5,
+                    "precision": 0.5,
+                    "aggression": 0.5,
+                    "flow": 0.5,
+                    "chaos": 0.5,
+                    "recovery": 0.5,
+                    "transcendence": 0.5,
+                },
+            )
             results.append(response.status_code)
 
         # Create multiple threads

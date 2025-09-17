@@ -14,6 +14,8 @@ import React, { createContext, useEffect, useState, ReactNode } from "react";
 import { EventBus } from "./EventBus";
 import { QualiaStateCalculatorService } from "./QualiaStateCalculatorService";
 import { BackendSyncService } from "./BackendSyncService";
+import { BackendSyncConfig } from "./ConfigurationService";
+import { QualiaLogger, LogLevel } from "./Logger";
 
 // Service container interface
 export interface ServiceContainer {
@@ -74,8 +76,52 @@ export class CompositionRoot {
 
     // Initialize services with proper dependency injection
     const eventBus = new EventBus();
+    const logger = new QualiaLogger('CompositionRoot', LogLevel.INFO);
+    
+    // Default configuration for BackendSync if none provided
+    const defaultBackendConfig: BackendSyncConfig = {
+      api: {
+        baseUrl: "http://localhost:8000",
+        qualiaEndpoint: "/update_qualia",
+        healthEndpoint: "/health",
+        timeout: 5000
+      },
+      sync: {
+        throttleDelay: 250,
+        batchSize: 5,
+        maxRetries: 3,
+        retryDelay: 1000
+      },
+      connection: {
+        healthCheckInterval: 30000,
+        connectionTimeout: 10000,
+        maxFailedAttempts: 5
+      },
+      validation: {
+        enableSchemaValidation: true,
+        strictMode: false,
+        logValidationErrors: true
+      },
+      performance: {
+        enableCompression: false,
+        maxPayloadSize: 1024 * 1024,
+        enableBuffering: false,
+        bufferFlushInterval: 1000
+      },
+      errorHandling: {
+        enableCircuitBreaker: false,
+        circuitBreakerThreshold: 5,
+        circuitBreakerTimeout: 30000,
+        enableFallbackMode: true
+      },
+      messages: {
+        backendNotConnected: "Backend not connected",
+        serviceAlreadyRunning: "Service already running"
+      }
+    };
+
     const qualiaCalculator = new QualiaStateCalculatorService(eventBus);
-    const backendSync = new BackendSyncService(eventBus);
+    const backendSync = new BackendSyncService(eventBus, logger, defaultBackendConfig);
 
     // Initialize service container with singleton instances
     this.services = {

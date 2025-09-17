@@ -1,3 +1,5 @@
+/* eslint-env jest */
+
 export class OntologicalAudioEngine {
   updateEntitySound = jest.fn();
   playEmergentPattern = jest.fn();

@@ -87,38 +87,49 @@ export class BackendSyncService {
     const startTime = performance.now();
     this.logger.info("🚀 [BackendSync] Start called");
 
-    try {
-      if (this.isRunning) {
-        this.logger.warn("⚠️ [BackendSync] Service already running");
-        return;
+    if (this.isRunning) {
+      this.logger.warn("⚠️ [BackendSync] Service already running");
+      return;
+    }
+
+    const maxRetries = 5;
+    const retryDelay = 1000; // 1 second
+
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        this.logger.info(`[BackendSync] Connection attempt ${i + 1}/${maxRetries}...`);
+        await this.checkHealth(); // Attempt to connect
+        
+        // If checkHealth succeeds, we're connected
+        this.subscribeToEvents();
+        this.startHealthChecking();
+        this.isRunning = true;
+        const duration = performance.now() - startTime;
+        this.logger.info(
+          `🚀 [BackendSync] Service started successfully after ${i + 1} attempts - ${duration.toFixed(2)}ms`,
+        );
+        return; // Exit the function successfully
+
+      } catch (error) {
+        this.logger.warn(
+          `[BackendSync] Connection attempt ${i + 1} failed. Retrying in ${retryDelay}ms...`,
+        );
+        if (i === maxRetries - 1) {
+          // This was the last attempt, so fail permanently
+          const duration = performance.now() - startTime;
+          this.logger.error(
+            `🚨 [BackendSync] Start failed after ${maxRetries} attempts - ${duration.toFixed(2)}ms`,
+            { error },
+          );
+          this.eventBus.emit<ErrorEvent>({
+            type: "Error",
+            error: error instanceof Error ? error : new Error(String(error)),
+            severity: "high",
+          });
+          throw error; // Re-throw the final error
+        }
+        await new Promise(resolve => setTimeout(resolve, retryDelay)); // Wait before retrying
       }
-
-      // Check backend connectivity
-      await this.checkHealth();
-
-      this.subscribeToEvents();
-      this.startHealthChecking();
-      this.isRunning = true;
-
-      const duration = performance.now() - startTime;
-      this.logger.info(
-        `🚀 [BackendSync] Service started - ${duration.toFixed(2)}ms`,
-      );
-    } catch (error) {
-      const duration = performance.now() - startTime;
-      this.logger.error(
-        `🚨 [BackendSync] Start failed - ${duration.toFixed(2)}ms`,
-        { error },
-      );
-
-      // Emit error event
-      this.eventBus.emit<ErrorEvent>({
-        type: "Error",
-        error: error instanceof Error ? error : new Error(String(error)),
-        severity: "high",
-      });
-
-      throw error;
     }
   }
 
@@ -429,6 +440,7 @@ export class BackendSyncService {
     try {
       const response = await fetch(url, {
         ...options,
+        credentials: 'include', // FIX: Required for CORS credentials
         signal: controller.signal,
       });
 
