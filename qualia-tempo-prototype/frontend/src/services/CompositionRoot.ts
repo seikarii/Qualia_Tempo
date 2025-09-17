@@ -232,8 +232,11 @@ export class CompositionRoot {
       // Phase 3: Start AudioService (depends on EventBus and ConfigService)
       await this.startService('audioService', () => this.services.audioService.start());
 
-      // Services without async start(): EventBus, QualiaCalculator, ErrorReporting, 
-      // DebugService, NotificationService, RhythmicMovement
+      // Start RhythmicMovementController (needs keyboard listeners)
+      await this.startService('rhythmicMovement', () => this.services.rhythmicMovement.start());
+
+      // Services without async start(): EventBus, QualiaCalculator, ErrorReporting,
+      // DebugService, NotificationService
       // GameStateStore now properly started above to enable event subscriptions
       // These are already functional after construction.
 

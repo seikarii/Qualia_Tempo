@@ -51,6 +51,7 @@ export class RhythmicMovementController {
   
   // Pause and slowdown settings - will be loaded from injected config
   private isPaused: boolean = false;
+  private isPlaying: boolean = false;
   private slowdownFactor!: number;
   private slowdownTimeout: number | null = null;
   private gameStateListenerId: string | null = null;
@@ -129,6 +130,9 @@ export class RhythmicMovementController {
   @logMethod()
   private handleGameStateChange(event: any): void {
     const newState = event.newState;
+    
+    // Update playing state
+    this.isPlaying = (newState === 'Playing');
     
     if (newState === 'Paused') {
       this.activatePauseWithSlowdown();
@@ -246,9 +250,9 @@ export class RhythmicMovementController {
 
   @logMethod()
   private processDashInput(direction: 'north' | 'south' | 'east' | 'west'): void {
-    // Don't process input when paused
-    if (this.isPaused) {
-      this.logger.debug('🚫 Input ignored - game is paused');
+    // Don't process input when paused OR when game is not playing
+    if (this.isPaused || !this.isGameActive()) {
+      this.logger.debug('🚫 Input ignored - game is paused or not active');
       return;
     }
     
@@ -326,5 +330,12 @@ export class RhythmicMovementController {
       this.stopMetronome();
       this.startMetronome();
     }
+  }
+
+  /**
+   * Check if the game is currently active (playing and not paused)
+   */
+  private isGameActive(): boolean {
+    return this.isPlaying && !this.isPaused;
   }
 }

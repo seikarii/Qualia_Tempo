@@ -250,25 +250,32 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
         return;
       }
       
-      // Standard WASD movement and abilities only
+      // WASD Movement - REMOVED: Handled by RhythmicMovementController
+      // Note hitting (Space/Enter)
       if (key === ' ' || key === 'enter') {
-        // Hit current note
-        const currentNote = currentState.notes
-          .filter(note => !note.id.includes('hit_'))
-          .sort((a, b) => Math.abs(a.timing - currentState.game_status.current_time) - 
-                         Math.abs(b.timing - currentState.game_status.current_time))[0];
+        event.preventDefault();
         
-        if (currentNote) {
-          const timingDiff = Math.abs(currentNote.timing - currentState.game_status.current_time);
-          const accuracy = Math.max(0, 1 - timingDiff);
-          handleNoteHit(currentNote.id, accuracy);
-        }
+        // For now, simulate a note hit since we don't have dynamic note generation
+        const mockAccuracy = Math.random() * 0.5 + 0.5; // 0.5-1.0 accuracy
+        
+        // Emit hit note event
+        services.eventBus.emit<any>({
+          type: 'PlayerAction',
+          action: 'HitNote',
+          source: 'QualiaTempoGame',
+          context: {
+            points: Math.floor(mockAccuracy * 100),
+            perfect: mockAccuracy > 0.9
+          }
+        });
+        
+        console.log(`🎯 Mock Note Hit - Accuracy: ${(mockAccuracy * 100).toFixed(1)}%`);
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isActive, currentState, handleNoteHit, services.eventBus]);
+  }, [isActive, services.eventBus]);
 
   if (!isActive) {
     return null;
