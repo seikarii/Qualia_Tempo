@@ -62,7 +62,7 @@ export const HUD: React.FC<HUDProps> = ({ className = "" }) => {
       </div>
 
       {/* Qualia State Visualization */}
-      {configService.isLoaded() && configService.getGameConfig().visual.debugMode && (
+      {configService.isLoaded() && (
         <div className="bg-black bg-opacity-70 rounded-lg p-4">
           <h3 className="text-white text-lg font-bold mb-3">
             🧠 Qualia State (Debug)

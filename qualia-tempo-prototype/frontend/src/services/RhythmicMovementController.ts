@@ -1,6 +1,5 @@
 import { EventBus, PlayerActionEvent } from './EventBus';
 import { logMethod, catchError } from '../utils/decorators';
-import { ConfigurationService } from './ConfigurationService';
 import { QualiaLogger, LoggerProvider } from './Logger';
 
 export interface RhythmicDashEvent {
@@ -18,62 +17,69 @@ export interface MetronomeTickEvent {
   timestamp: number;
 }
 
+// PURE DI: Configuration interface for this service
+export interface RhythmicMovementConfig {
+  bpm: number;
+  perfectTiming: number;
+  goodTiming: number;
+  gridSize: number;
+  slowdownFactor: number;
+  slowdownDuration: number; // Add missing property
+}
+
 /**
  * RhythmicMovementController - Core rhythm game logic
- * Manages player movement on grid with beat synchronization
+ * QUALIA.CODE v6: Pure Dependency Injection - Receives configuration directly
  */
 export class RhythmicMovementController {
   private eventBus: EventBus;
-  private configurationService: ConfigurationService;
   private logger: QualiaLogger;
+  private config: RhythmicMovementConfig; // DIRECT INJECTION - NO SERVICE LOCATION
+  
   private playerPosition: [number, number] = [4, 4]; // Center of 8x8 grid
-  private gridSize: number;
   private isListening: boolean = false;
   
-  // Rhythm timing settings - loaded from config
-  private bpm: number;
-  private perfectTiming: number;
-  private goodTiming: number;
+  // Rhythm timing settings - will be loaded from injected config
+  private bpm!: number;
+  private perfectTiming!: number;
+  private goodTiming!: number;
+  private gridSize!: number;
   private lastBeatTime: number = 0;
-  private beatInterval: number;
+  private beatInterval!: number;
   private beatNumber: number = 0;
   private metronomeIntervalId: number | null = null;
   
-  // Pause and slowdown settings - loaded from config
+  // Pause and slowdown settings - will be loaded from injected config
   private isPaused: boolean = false;
-  private slowdownFactor: number;
+  private slowdownFactor!: number;
   private slowdownTimeout: number | null = null;
   private gameStateListenerId: string | null = null;
 
-  constructor(eventBus: EventBus, configurationService: ConfigurationService, logger?: QualiaLogger) {
+  constructor(
+    eventBus: EventBus, 
+    logger: QualiaLogger, 
+    config: RhythmicMovementConfig // PURE DI: Receive specific config, not service
+  ) {
     this.eventBus = eventBus;
-    this.configurationService = configurationService;
     this.logger = logger || LoggerProvider.getLogger();
+    this.config = config;
     
-    // Load configuration safely - check if config is loaded first
-    try {
-      const config = this.configurationService.getConfig();
-      const rhythmicConfig = config.services.rhythmicMovement;
-      
-      this.bpm = rhythmicConfig.bpm;
-      this.perfectTiming = rhythmicConfig.perfectTiming;
-      this.goodTiming = rhythmicConfig.goodTiming;
-      this.gridSize = rhythmicConfig.gridSize;
-      this.slowdownFactor = rhythmicConfig.slowdownFactor;
-      
-      this.logger.info("✅ [RhythmicMovementController] Configuration loaded successfully");
-    } catch (error) {
-      this.logger.warn("⚠️ [RhythmicMovementController] Configuration not available, using defaults:", { error });
-      
-      // Use default values
-      this.bpm = 120;
-      this.perfectTiming = 0.05;
-      this.goodTiming = 0.15;
-      this.gridSize = 4;
-      this.slowdownFactor = 0.5;
-    }
-    
+    // Load configuration from injected config - NO HARDCODED DEFAULTS
+    this.loadConfigurationValues();
     this.beatInterval = (60 / this.bpm) * 1000; // Convert BPM to milliseconds
+    
+    this.logger.info("Controller initialized with configuration");
+  }
+
+  /**
+   * PURE DI: Load values from injected configuration object
+   */
+  private loadConfigurationValues(): void {
+    this.bpm = this.config.bpm;
+    this.perfectTiming = this.config.perfectTiming;
+    this.goodTiming = this.config.goodTiming;
+    this.gridSize = this.config.gridSize;
+    this.slowdownFactor = this.config.slowdownFactor;
   }
 
   @logMethod()
@@ -133,11 +139,10 @@ export class RhythmicMovementController {
 
   @logMethod()
   private activatePauseWithSlowdown(): void {
-    const config = this.configurationService.getConfig();
-    const slowdownDuration = config.services.rhythmicMovement.slowdownDuration;
-    const slowdownFactor = config.services.rhythmicMovement.slowdownFactor;
+    const slowdownDuration = this.config.slowdownDuration;
+    const slowdownFactor = this.config.slowdownFactor;
     
-    this.logger.info(`⏸️ Activating pause with ${slowdownDuration}ms slowdown effect`);
+    this.logger.info(`Activating pause with ${slowdownDuration}ms slowdown effect`);
     
     // Set slowdown factor
     this.slowdownFactor = slowdownFactor;
@@ -147,7 +152,7 @@ export class RhythmicMovementController {
     this.slowdownTimeout = window.setTimeout(() => {
       this.slowdownFactor = 0.0; // Complete pause
       this.stopMetronome();
-      this.logger.info('⏸️ Transitioning to full pause');
+      this.logger.info('Transitioning to full pause');
     }, slowdownDuration);
   }
 

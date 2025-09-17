@@ -28,12 +28,12 @@ async function captureConsoleLogs() {
   try {
     console.log('📡 Navegando a http://localhost:5173...');
     await page.goto('http://localhost:5173', { 
-      waitUntil: 'networkidle',
-      timeout: 10000 
+      waitUntil: 'load',
+      timeout: 30000 
     });
     
     // Esperar un poco más para que se inicialicen los servicios
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(5000);
     
     console.log('📊 RESULTADOS DEL DIAGNÓSTICO:');
     console.log('='.repeat(50));

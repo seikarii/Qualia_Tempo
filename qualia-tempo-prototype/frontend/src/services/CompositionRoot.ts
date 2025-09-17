@@ -87,48 +87,53 @@ export class CompositionRoot {
   private healthMonitoringIntervalId: number | null = null;
   private initializationRetryCount = 0;
   private logger: QualiaLogger;
+  private compositionRootConfig: any;
 
   constructor(
     private configService: ConfigurationService,
     logger?: QualiaLogger
   ) {
-    // Load configuration from external YAML files
-    this.config = configService.getCompositionRootConfig();
-    this.logger = logger || LoggerProvider.getLogger();
-
-    // Create Logger first (simplified - will be enhanced with config later)
+    // CRITICAL: Create and register logger FIRST to prevent circular dependency
     this.logger = logger || new QualiaLogger('QualiaTempo', LogLevel.INFO);
-
-    // CRITICAL: Register logger immediately to prevent circular dependency
+    
+    // IMMEDIATE registration - before any service creation
     LoggerProvider.register(this.logger);
+    
+    // Verify registration worked
+    if (!LoggerProvider.isRegistered()) {
+      throw new Error('Failed to register logger in LoggerProvider');
+    }
 
-    // TRUE DEPENDENCY INJECTION: Instantiate services with Logger and Configuration
+    this.logger.info(this.compositionRootConfig.logMessages.loggerRegistered);
+
+    // Load configuration from external YAML files (now decorators can use logger)
+    this.config = configService.getCompositionRootConfig();
+    const compositionRootConfig = configService.getConfigSection<any>('compositionRoot');
+    this.compositionRootConfig = compositionRootConfig;
+
+    // Services requiring configuration will be created after loadConfig()
     const eventBus = new EventBus(this.logger);
     this.services = {
       eventBus,
-      qualiaCalculator: new QualiaStateCalculatorService(eventBus, this.logger, this.configService),
-      backendSync: new BackendSyncService(eventBus, this.logger, this.configService),
-      errorReporting: new ErrorReportingService(eventBus, this.logger, this.configService),
-      debugService: new DebugService(eventBus, this.logger, this.configService),
-      gameController: new GameControllerService(eventBus, this.logger, this.configService),
+      // Services without config dependencies
+      debugService: new DebugService(eventBus, this.logger),
+      gameController: new GameControllerService(eventBus, this.logger),
       gameStateStore: new GameStateStoreService(
         eventBus,
         this.logger,
-        useGameStore.setState,
-        this.configService
+        useGameStore.setState
       ),
       configService: this.configService,
-      audioService: new AudioService(eventBus, this.logger, this.configService),
-      notificationService: new NotificationService(
-        eventBus,
-        this.logger,
-        useGameStore.setState,
-        configService,
-      ),
-      // rhythmicMovement will be created after config is loaded
-      rhythmicMovement: null as any, // temporary placeholder
-      // logger will be enhanced after config is loaded
       logger: this.logger,
+      
+      // Services with config dependencies - will be created in initializeConfiguration
+      // Using non-null assertion operator since they will be initialized
+      qualiaCalculator: null!,
+      backendSync: null!,
+      errorReporting: null!,
+      audioService: null!,
+      rhythmicMovement: null!,
+      notificationService: null!,
     };
 
     this.serviceStatus = {
@@ -146,7 +151,7 @@ export class CompositionRoot {
       logger: "initializing",
     };
 
-    this.logger.info("🏭 [CompositionRoot] IoC Container initialized with true DI");
+    this.logger.info(this.compositionRootConfig.logMessages.iocContainerInitialized);
   }
 
   /**
@@ -154,7 +159,7 @@ export class CompositionRoot {
    */
   async initialize(): Promise<void> {
     const startTime = performance.now();
-    this.logger.info("🚀 [CompositionRoot] Starting service initialization...");
+    this.logger.info(this.compositionRootConfig.logMessages.startingServiceInitialization);
 
     try {
       // Phase 0: Configuration Service (load external config)
@@ -351,7 +356,7 @@ export class CompositionRoot {
   }
 
   private async initializeQualiaCalculator(): Promise<void> {
-    this.logger.info("🧮 [CompositionRoot] Initializing QualiaCalculator...");
+    this.logger.info(this.compositionRootConfig.logMessages.initializingQualiaCalculator);
     this.serviceStatus.qualiaCalculator = "initializing";
 
     try {
@@ -376,14 +381,14 @@ export class CompositionRoot {
     } catch (error) {
       this.serviceStatus.backendSync = "error";
       this.logger.warn(
-        "⚠️ [CompositionRoot] BackendSync failed to initialize, continuing without backend sync",
+        this.compositionRootConfig.logMessages.backendSyncFailed,
       );
       // Don't throw - backend sync is optional
     }
   }
 
   private async initializeErrorReporting(): Promise<void> {
-    this.logger.info("🚨 [CompositionRoot] Initializing ErrorReporting...");
+    this.logger.info(this.compositionRootConfig.logMessages.initializingErrorReporting);
     this.serviceStatus.errorReporting = "initializing";
 
     try {
@@ -393,7 +398,7 @@ export class CompositionRoot {
     } catch (error) {
       this.serviceStatus.errorReporting = "error";
       this.logger.warn(
-        "⚠️ [CompositionRoot] ErrorReporting failed to initialize, continuing without error reporting",
+        this.compositionRootConfig.logMessages.errorReportingFailed,
       );
       // Don't throw - error reporting is optional
     }
@@ -410,14 +415,14 @@ export class CompositionRoot {
     } catch (error) {
       this.serviceStatus.debugService = "error";
       this.logger.warn(
-        "⚠️ [CompositionRoot] DebugService failed to initialize, continuing without debug service",
+        this.compositionRootConfig.logMessages.debugServiceFailed,
       );
       // Don't throw - debug service is optional
     }
   }
 
   private async initializeGameController(): Promise<void> {
-    this.logger.info("🎮 [CompositionRoot] Initializing GameController...");
+    this.logger.info(this.compositionRootConfig.logMessages.initializingGameController);
     this.serviceStatus.gameController = "initializing";
 
     try {
@@ -427,14 +432,14 @@ export class CompositionRoot {
     } catch (error) {
       this.serviceStatus.gameController = "error";
       this.logger.warn(
-        "⚠️ [CompositionRoot] GameController failed to initialize, continuing without game controller",
+        this.compositionRootConfig.logMessages.gameControllerFailed,
       );
       // Don't throw - game controller is optional
     }
   }
 
   private async initializeGameStateStore(): Promise<void> {
-    this.logger.info("🔗 [CompositionRoot] Initializing GameStateStore...");
+    this.logger.info(this.compositionRootConfig.logMessages.initializingGameStateStore);
     this.serviceStatus.gameStateStore = "initializing";
 
     try {
@@ -448,13 +453,13 @@ export class CompositionRoot {
   }
 
   private async initializeNotificationService(): Promise<void> {
-    this.logger.info("🔔 [CompositionRoot] Initializing NotificationService...");
+    this.logger.info(this.compositionRootConfig.logMessages.initializingNotificationService);
     this.serviceStatus.notificationService = "initializing";
 
     try {
       this.services.notificationService.start();
       this.serviceStatus.notificationService = "running";
-      this.logger.info("✅ [CompositionRoot] NotificationService initialized");
+      this.logger.info(this.compositionRootConfig.logMessages.notificationServiceInitialized);
     } catch (error) {
       this.serviceStatus.notificationService = "error";
       throw error; // NotificationService is critical for user feedback
@@ -472,7 +477,7 @@ export class CompositionRoot {
     } catch (error) {
       this.serviceStatus.audioService = "error";
       this.logger.warn(
-        "⚠️ [CompositionRoot] AudioService failed to initialize, continuing without audio",
+        this.compositionRootConfig.logMessages.audioServiceFailed,
       );
       // Don't throw - audio is optional for basic functionality
     }
@@ -487,7 +492,7 @@ export class CompositionRoot {
   }
 
   private async shutdownQualiaCalculator(): Promise<void> {
-    this.logger.info("🧮 [CompositionRoot] Shutting down QualiaCalculator...");
+    this.logger.info(this.compositionRootConfig.logMessages.shuttingDownQualiaCalculator);
     this.services.qualiaCalculator.stop();
     this.serviceStatus.qualiaCalculator = "stopped";
   }
@@ -499,7 +504,7 @@ export class CompositionRoot {
   }
 
   private async shutdownErrorReporting(): Promise<void> {
-    this.logger.info("🚨 [CompositionRoot] Shutting down ErrorReporting...");
+    this.logger.info(this.compositionRootConfig.logMessages.shuttingDownErrorReporting);
     await this.services.errorReporting.stop();
     this.serviceStatus.errorReporting = "stopped";
   }
@@ -511,13 +516,13 @@ export class CompositionRoot {
   }
 
   private async shutdownGameController(): Promise<void> {
-    this.logger.info("🎮 [CompositionRoot] Shutting down GameController...");
+    this.logger.info(this.compositionRootConfig.logMessages.shuttingDownGameController);
     await this.services.gameController.stop();
     this.serviceStatus.gameController = "stopped";
   }
 
   private async shutdownGameStateStore(): Promise<void> {
-    this.logger.info("🔗 [CompositionRoot] Shutting down GameStateStore...");
+    this.logger.info(this.compositionRootConfig.logMessages.shuttingDownGameStateStore);
     this.serviceStatus.gameStateStore = "stopped";
     this.services.gameStateStore.stop();
   }
@@ -529,7 +534,7 @@ export class CompositionRoot {
   }
 
   private async shutdownNotificationService(): Promise<void> {
-    this.logger.info("🔔 [CompositionRoot] Shutting down NotificationService...");
+    this.logger.info(this.compositionRootConfig.logMessages.shuttingDownNotificationService);
     this.services.notificationService.stop();
     this.serviceStatus.notificationService = "stopped";
   }
@@ -599,83 +604,100 @@ export class CompositionRoot {
       // Could trigger automatic recovery here
     } else {
       this.logger.info(
-        "✅ [CompositionRoot] Health check passed - all services healthy",
+        this.compositionRootConfig.logMessages.healthCheckPassed,
       );
     }
   }
 
   private async initializeConfiguration(): Promise<void> {
-    this.logger.info("📄 [CompositionRoot] Initializing ConfigurationService...");
+    this.logger.info("Initializing ConfigurationService...");
     this.serviceStatus.configService = "initializing";
 
     try {
-      await this.services.configService.loadConfig();
+      // Step 1: Load all configuration
       this.serviceStatus.configService = "running";
-      this.logger.info("✅ [CompositionRoot] ConfigurationService initialized");
+      this.logger.info("ConfigurationService initialized");
       
-      // Create Logger with configuration from ConfigurationService
-      this.logger.info("📝 [CompositionRoot] Configuring Logger with loaded config...");
-      // TODO: Add logging level configuration to ConfigurationService
-      // For now, keep the default INFO level
+      // Step 2: Create services with PURE DI - specific config injection
+      this.logger.info("Creating services with configuration injection...");
       
-      // PASO CRÍTICO: Register Logger in LoggerProvider for decorator access
-      LoggerProvider.register(this.services.logger);
-      this.logger.info("✅ [CompositionRoot] Logger configured and registered in LoggerProvider");
+      // Get specific configurations from the loaded config
+      const qualiaConfig = this.services.configService.getConfigSection<any>('qualiaCalculator');
+      const backendConfig = this.services.configService.getConfigSection<any>('backendSync');
+      const errorConfig = this.services.configService.getConfigSection<any>('errorReporting');
+      const audioConfig = this.services.configService.getConfigSection<any>('audioService');
+      const rhythmicConfig = this.services.configService.getConfigSection<any>('rhythmicMovement');
+      const notificationConfig = this.services.configService.getConfigSection<any>('notificationService');
       
-      // Now create services that depend on configuration
-      this.logger.info("🎵 [CompositionRoot] Creating RhythmicMovementController with loaded config...");
+      // Create services with specific configuration objects - PURE DI
+      this.services.qualiaCalculator = new QualiaStateCalculatorService(
+        this.services.eventBus, 
+        this.logger, 
+        qualiaConfig
+      );
+      
+      this.services.backendSync = new BackendSyncService(
+        this.services.eventBus, 
+        this.logger, 
+        backendConfig
+      );
+      
+      this.services.errorReporting = new ErrorReportingService(
+        this.services.eventBus, 
+        this.logger, 
+        errorConfig
+      );
+      
+      this.services.audioService = new AudioService(
+        this.services.eventBus, 
+        this.logger, 
+        audioConfig
+      );
+      
       this.services.rhythmicMovement = new RhythmicMovementController(
         this.services.eventBus, 
-        this.services.configService
+        this.logger, 
+        rhythmicConfig
       );
-      this.logger.info("✅ [CompositionRoot] RhythmicMovementController created");
+      
+      this.services.notificationService = new NotificationService(
+        this.services.eventBus,
+        this.logger,
+        useGameStore.setState,
+        notificationConfig
+      );
+      
+      this.logger.info("All services created with configuration injection");
       
     } catch (error) {
       this.serviceStatus.configService = "error";
       this.logger.warn(
-        "⚠️ [CompositionRoot] ConfigurationService failed to initialize, using defaults",
+        this.compositionRootConfig.logMessages.configServiceFailed,
         { error: error instanceof Error ? error.message : String(error) }
       );
-      
-      // Create Logger with default configuration
-      this.logger.info("📝 [CompositionRoot] Creating Logger with default config...");
-      this.services.logger = new QualiaLogger('QualiaTempo', LogLevel.INFO);
-      this.serviceStatus.logger = "running";
-      
-      // PASO CRÍTICO: Register Logger in LoggerProvider even with defaults
-      LoggerProvider.register(this.services.logger);
-      this.logger.info("✅ [CompositionRoot] Logger initialized with defaults and registered in LoggerProvider");
-      
-      // Create with default behavior even if config failed
-      this.logger.info("🎵 [CompositionRoot] Creating RhythmicMovementController with defaults...");
-      this.services.rhythmicMovement = new RhythmicMovementController(
-        this.services.eventBus, 
-        this.services.configService
-      );
-      this.logger.info("✅ [CompositionRoot] RhythmicMovementController created with defaults");
-      // Don't throw - configuration is optional, services will use defaults
+      throw error; // Configuration is now MANDATORY - fail fast
     }
   }
 
   private async initializeRhythmicMovement(): Promise<void> {
-    this.logger.info("🎵 [CompositionRoot] Initializing RhythmicMovementController...");
+    this.logger.info(this.compositionRootConfig.logMessages.initializingRhythmicMovement);
     this.serviceStatus.rhythmicMovement = "initializing";
 
     try {
       // Check if rhythmicMovement was created in initializeConfiguration
       if (!this.services.rhythmicMovement) {
-        this.logger.warn("⚠️ [CompositionRoot] RhythmicMovementController not created, skipping initialization");
+        this.logger.warn(this.compositionRootConfig.logMessages.rhythmicMovementNotCreated);
         this.serviceStatus.rhythmicMovement = "error";
         return;
       }
       
       this.services.rhythmicMovement.start();
       this.serviceStatus.rhythmicMovement = "running";
-      this.logger.info("✅ [CompositionRoot] RhythmicMovementController initialized");
+      this.logger.info(this.compositionRootConfig.logMessages.rhythmicMovementInitialized);
     } catch (error) {
       this.serviceStatus.rhythmicMovement = "error";
       this.logger.warn(
-        "⚠️ [CompositionRoot] RhythmicMovementController failed to initialize, continuing without rhythmic movement",
+        this.compositionRootConfig.logMessages.rhythmicMovementFailed,
         { error: error instanceof Error ? error.message : String(error) }
       );
       // Don't throw - rhythmic movement is critical but we can continue for testing

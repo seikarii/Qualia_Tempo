@@ -55,7 +55,20 @@ export function logMethod(): UniversalDecorator {
     return function (this: any, ...args: any[]) {
       const className = context.target.constructor.name;
       const methodName = `${className}.${context.propertyKey}`;
-      const logger = LoggerProvider.getLogger();
+      
+      // Safe logger access with fallback
+      let logger: any;
+      try {
+        logger = LoggerProvider.getLogger();
+      } catch (error) {
+        // Fallback to console during initialization
+        console.debug(`→ ENTER ${methodName}`, {
+          arguments: args.length > 0 ? args : "no arguments",
+          timestamp: new Date().toISOString(),
+          note: "Logger not yet available, using console fallback"
+        });
+        return originalMethod.apply(this, args);
+      }
 
       logger.debug(`→ ENTER ${methodName}`, {
         arguments: args.length > 0 ? args : "no arguments",
@@ -113,7 +126,23 @@ export function throttle(milliseconds: number): UniversalDecorator {
       const methodKey = `${className}.${context.propertyKey}`;
       const now = Date.now();
       const lastCall = throttleMap.get(methodKey) || 0;
-      const logger = LoggerProvider.getLogger();
+      
+      // Safe logger access with fallback
+      let logger: any;
+      try {
+        logger = LoggerProvider.getLogger();
+      } catch (error) {
+        // Fallback: still throttle but use console for logging
+        if (now - lastCall < milliseconds) {
+          console.debug(
+            `Skipping ${methodKey} (${now - lastCall}ms < ${milliseconds}ms)`,
+          );
+          return;
+        }
+        throttleMap.set(methodKey, now);
+        console.debug(`Executing ${methodKey}`);
+        return originalMethod.apply(this, args);
+      }
 
       if (now - lastCall < milliseconds) {
         logger.debug(
@@ -139,7 +168,30 @@ export function catchError(fallbackValue?: any): UniversalDecorator {
     return function (this: any, ...args: any[]) {
       const className = context.target.constructor.name;
       const methodName = `${className}.${context.propertyKey}`;
-      const logger = LoggerProvider.getLogger();
+      
+      // Safe logger access with fallback
+      let logger: any;
+      try {
+        logger = LoggerProvider.getLogger();
+      } catch (error) {
+        // Fallback: just execute the original method without logging
+        try {
+          return originalMethod.apply(this, args);
+        } catch (methodError) {
+          console.error(`${methodName}:`, {
+            error: methodError instanceof Error ? methodError.message : String(methodError),
+            stack: methodError instanceof Error ? methodError.stack : "No stack trace",
+            arguments: args,
+            timestamp: new Date().toISOString(),
+            note: "Logger not yet available, using console fallback"
+          });
+          
+          if (fallbackValue !== undefined) {
+            return fallbackValue;
+          }
+          throw methodError;
+        }
+      }
 
       try {
         const result = originalMethod.apply(this, args);

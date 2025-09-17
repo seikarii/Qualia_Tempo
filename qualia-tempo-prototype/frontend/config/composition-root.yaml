@@ -20,3 +20,31 @@ serviceShutdownTimeoutMs: 10000       # 10 seconds
 # Logging configuration
 enableServiceLifecycleLogging: true
 enablePerformanceMonitoring: true
+
+# Log messages (externalized to avoid hardcoded values)
+logMessages:
+  loggerRegistered: "🏭 [CompositionRoot] Logger registered successfully"
+  iocContainerInitialized: "🏭 [CompositionRoot] IoC Container initialized with true DI"
+  startingServiceInitialization: "🚀 [CompositionRoot] Starting service initialization..."
+  initializingQualiaCalculator: "🧮 [CompositionRoot] Initializing QualiaCalculator..."
+  backendSyncFailed: "⚠️ [CompositionRoot] BackendSync failed to initialize, continuing without backend sync"
+  initializingErrorReporting: "🚨 [CompositionRoot] Initializing ErrorReporting..."
+  errorReportingFailed: "⚠️ [CompositionRoot] ErrorReporting failed to initialize, continuing without error reporting"
+  debugServiceFailed: "⚠️ [CompositionRoot] DebugService failed to initialize, continuing without debug service"
+  initializingGameController: "🎮 [CompositionRoot] Initializing GameController..."
+  gameControllerFailed: "⚠️ [CompositionRoot] GameController failed to initialize, continuing without game controller"
+  initializingGameStateStore: "🔗 [CompositionRoot] Initializing GameStateStore..."
+  initializingNotificationService: "🔔 [CompositionRoot] Initializing NotificationService..."
+  notificationServiceInitialized: "✅ [CompositionRoot] NotificationService initialized"
+  audioServiceFailed: "⚠️ [CompositionRoot] AudioService failed to initialize, continuing without audio"
+  shuttingDownQualiaCalculator: "🧮 [CompositionRoot] Shutting down QualiaCalculator..."
+  shuttingDownErrorReporting: "🚨 [CompositionRoot] Shutting down ErrorReporting..."
+  shuttingDownGameController: "🎮 [CompositionRoot] Shutting down GameController..."
+  shuttingDownGameStateStore: "🔗 [CompositionRoot] Shutting down GameStateStore..."
+  shuttingDownNotificationService: "🔔 [CompositionRoot] Shutting down NotificationService..."
+  healthCheckPassed: "✅ [CompositionRoot] Health check passed - all services healthy"
+  configServiceFailed: "ConfigurationService failed to initialize, cannot proceed"
+  initializingRhythmicMovement: "🎵 [CompositionRoot] Initializing RhythmicMovementController..."
+  rhythmicMovementNotCreated: "⚠️ [CompositionRoot] RhythmicMovementController not created, skipping initialization"
+  rhythmicMovementInitialized: "✅ [CompositionRoot] RhythmicMovementController initialized"
+  rhythmicMovementFailed: "⚠️ [CompositionRoot] RhythmicMovementController failed to initialize, continuing without rhythmic movement"

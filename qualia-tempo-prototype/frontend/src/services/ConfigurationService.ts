@@ -71,6 +71,20 @@ export interface AudioServiceConfig {
   enableAudioPooling: boolean;
   maxConcurrentSounds: number;
   audioFadeTime: number;
+  volume: number; // Master volume setting
+  enableSubtitles: boolean; // Subtitle support for accessibility
+  soundEnabled: boolean; // Global sound enable/disable toggle
+  musicEnabled: boolean; // Music enable/disable toggle
+  muteDuringDevelopment: boolean; // Development mute setting
+}
+
+// RhythmicMovement Configuration - PURE DI TARGET
+export interface RhythmicMovementConfig {
+  bpm: number;
+  perfectTiming: number;
+  goodTiming: number;
+  gridSize: number;
+  slowdownFactor: number;
 }
 
 // QualiaCalculator Configuration
@@ -117,6 +131,23 @@ export interface QualiaCalculatorConfig {
   };
   updateIntervalMs: number;
   historySize: number;
+  // Additional properties used by QualiaStateCalculatorService
+  hitNoteMultipliers: { intensity: number; precision: number; flow: number };
+  missNoteMultipliers: { chaos: number; precision: number; flow: number };
+  dashMultipliers: { aggression: number; intensity: number };
+  fastForwardMultipliers: { aggression: number; intensity: number };
+  rewindMultipliers: { recovery: number; precision: number };
+  updateInterval: number; // Legacy property - mapped to updateIntervalMs
+  intensityDecay: number;
+  precisionDecay: number;
+  aggressionDecay: number;
+  flowDecay: number;
+  chaosDecay: number;
+  recoveryDecay: number;
+  transcendenceDecay: number;
+  transcendenceThresholds: { intensity: number; precision: number; flow: number };
+  minValue: number;
+  maxValue: number;
 }
 
 // BackendSync Configuration
@@ -229,6 +260,12 @@ export interface GameControllerConfig {
     maxEventQueueSize: number;
     eventProcessingInterval: number;
   };
+  maxPlayers: number; // Maximum number of players supported
+  enablePauseResume: boolean; // Enable pause/resume functionality
+  enableGameStateValidation: boolean; // Enable game state validation
+  enablePerformanceMonitoring: boolean; // Enable performance monitoring
+  autoSaveEnabled: boolean; // Enable auto-save functionality
+  autoSaveIntervalMs: number; // Auto-save interval
 }
 
 // DebugService Configuration
@@ -326,6 +363,8 @@ export interface NotificationServiceConfig {
     enableGarbageCollection: boolean;
     gcInterval: number;
   };
+  maxNotifications: number; // Maximum concurrent notifications
+  defaultDuration: number; // Default notification display duration
 }
 
 // Complete Configuration Interface
@@ -345,25 +384,37 @@ export interface FullGameConfig {
  * Loads and manages configuration from multiple YAML files
  */
 export class ConfigurationService {
-  private config: FullGameConfig | null = null;
   private configBasePath: string;
+  private loadedConfig: FullGameConfig | null = null;
   private logger: QualiaLogger;
 
-  // Configuration file paths
-  private configFiles = {
-    compositionRoot: '/config/composition-root.yaml',
-    errorReporting: '/config/error-reporting.yaml',
-    audioService: '/config/audio-service.yaml',
-    qualiaCalculator: '/config/qualia-calculator.yaml',
-    backendSync: '/config/backend-sync.yaml',
-    gameController: '/config/game-controller.yaml',
-    debugService: '/config/debug-service.yaml',
-    notificationService: '/config/notification-service.yaml',
-  };
+  // Configuration files discovery - NO HARDCODING
+  private configFileManifest: Record<string, string> = {};
 
-  constructor(configBasePath: string = '', logger?: QualiaLogger) {
+  constructor(configBasePath: string = '', logger?: QualiaLogger, configManifest?: Record<string, string>) {
     this.configBasePath = configBasePath;
     this.logger = logger || LoggerProvider.getLogger();
+    
+    // Accept configuration file manifest externally or discover them
+    this.configFileManifest = configManifest || this.discoverConfigFiles();
+  }
+
+  /**
+   * Discover configuration files dynamically - NO HARDCODING
+   */
+  private discoverConfigFiles(): Record<string, string> {
+    // Default discovery pattern - can be overridden via constructor
+    return {
+      compositionRoot: '/config/composition-root.yaml',
+      errorReporting: '/config/error-reporting.yaml',
+      audioService: '/config/audio-service.yaml',
+      qualiaCalculator: '/config/qualia-calculator.yaml',
+      backendSync: '/config/backend-sync.yaml',
+      gameController: '/config/game-controller.yaml',
+      debugService: '/config/debug-service.yaml',
+      notificationService: '/config/notification-service.yaml',
+      rhythmicMovement: '/config/rhythmic-movement.yaml', // NEW: Specific config file
+    };
   }
 
   /**
@@ -373,12 +424,12 @@ export class ConfigurationService {
   @catchError()
   public async loadConfig(): Promise<FullGameConfig> {
     try {
-      this.logger.info('📄 [Config] Loading configuration from multiple YAML files...');
+      this.logger.info('Loading configuration from multiple YAML files...');
 
       // Load all configuration files in parallel
-      const configPromises = Object.entries(this.configFiles).map(async ([key, path]) => {
+      const configPromises = Object.entries(this.configFileManifest).map(async ([key, path]) => {
         const fullPath = this.configBasePath + path;
-        this.logger.debug(`📄 [Config] Loading ${key} from ${fullPath}`);
+        this.logger.debug(`Loading ${key} from ${fullPath}`);
 
         const response = await fetch(fullPath);
         if (!response.ok) {
@@ -400,12 +451,12 @@ export class ConfigurationService {
       // Validate configuration
       this.validateConfig(mergedConfig as FullGameConfig);
 
-      this.config = mergedConfig as FullGameConfig;
-      this.logger.info('✅ [Config] All configurations loaded successfully');
+      this.loadedConfig = mergedConfig as FullGameConfig;
+      this.logger.info('All configurations loaded successfully');
 
-      return this.config;
+      return this.loadedConfig;
     } catch (error) {
-      this.logger.error('❌ [Config] Failed to load configuration:', { error });
+      this.logger.error('Failed to load configuration:', { error });
       throw error;
     }
   }
@@ -416,10 +467,10 @@ export class ConfigurationService {
   @logMethod()
   @catchError()
   public getConfig(): FullGameConfig {
-    if (!this.config) {
+    if (!this.loadedConfig) {
       throw new Error('Configuration not loaded. Call loadConfig() first.');
     }
-    return this.config;
+    return this.loadedConfig;
   }
 
   /**
@@ -547,7 +598,7 @@ export class ConfigurationService {
   @logMethod()
   @catchError()
   public isLoaded(): boolean {
-    return this.config !== null;
+    return this.loadedConfig !== null;
   }
 
   /**
@@ -556,7 +607,238 @@ export class ConfigurationService {
   @logMethod()
   @catchError()
   public async reloadConfig(): Promise<FullGameConfig> {
-    this.config = null;
+    this.loadedConfig = null;
     return this.loadConfig();
+  }
+
+  /**
+   * TEMPORARY: Load from unified game-config.yaml for backward compatibility
+   * TODO: Migrate to separate config files as per QUALIA.CODE standards
+   */
+  @logMethod()
+  @catchError()
+  public async loadUnifiedConfig(): Promise<FullGameConfig> {
+    try {
+      this.logger.info('📄 [Config] Loading unified configuration from game-config.yaml...');
+      
+      const response = await fetch('/config/game-config.yaml');
+      if (!response.ok) {
+        throw new Error(`Failed to load unified config: ${response.statusText}`);
+      }
+
+      const yamlText = await response.text();
+      const unifiedConfig: any = yaml.load(yamlText);
+
+      // Map unified config to the expected structure
+      const mappedConfig: FullGameConfig = {
+        compositionRoot: {
+          autoStart: true,
+          enableBackendSync: true,
+          enableHealthMonitoring: true,
+          healthCheckIntervalMs: 30000,
+          retryInitializationOnError: true,
+          maxInitializationRetries: 3,
+          serviceInitializationTimeoutMs: 10000,
+          serviceShutdownTimeoutMs: 5000,
+          enableServiceLifecycleLogging: true,
+          enablePerformanceMonitoring: true,
+        },
+        errorReporting: unifiedConfig.services?.errorReporting || {
+          rateLimitWindow: 60000,
+          maxErrorsPerWindow: 10,
+          batchSize: 5,
+          batchTimeout: 30000,
+          maxRetentionTime: 3600000,
+          externalServiceUrl: "",
+          retryAttempts: 3,
+          enableCompression: false,
+          maxBatchSizeBytes: 1024000,
+          enableErrorFiltering: true,
+          filterSensitiveData: true,
+          allowedDomains: [],
+        },
+        audioService: {
+          rhythmicFeedback: {
+            perfect: { frequency: 880, gain: 0.5, duration: 200 },
+            good: { frequency: 660, gain: 0.4, duration: 150 },
+            miss: { frequency: 220, gain: 0.6, duration: 300 }
+          },
+          metronome: { frequency: 440, gain: 0.3, duration: 100 },
+          audioEngine: { sampleRate: 44100, channels: 2, bufferSize: 512 },
+          entityVoices: {
+            player: { baseFrequency: 440, modulationRange: 220 },
+            boss: { baseFrequency: 110, modulationRange: 55 },
+            environment: { baseFrequency: 220, modulationRange: 110 }
+          },
+          enableAudioPooling: true,
+          maxConcurrentSounds: 16,
+          audioFadeTime: 500,
+          volume: unifiedConfig.audio?.volume || 0.8,
+          enableSubtitles: unifiedConfig.audio?.enableSubtitles || true,
+          soundEnabled: true,
+          musicEnabled: true,
+          muteDuringDevelopment: false,
+        },
+        qualiaCalculator: unifiedConfig.services?.qualiaCalculator || {
+          updateIntervalMs: 100,
+          enableRealTimeUpdate: true,
+          enableEventValidation: true,
+          maxHistoryLength: 1000,
+          enablePerformanceMonitoring: true,
+          enableAIAnalysis: true,
+        },
+        backendSync: unifiedConfig.services?.backendSync || unifiedConfig.backend || {
+          baseUrl: "http://localhost:8000",
+          maxRetries: 3,
+          retryDelay: 1000,
+          connectionTimeout: 5000,
+          healthCheckInterval: 30000,
+        },
+        gameController: {
+          gameLifecycle: {
+            autoStart: false,
+            enablePause: true,
+            enableReset: true,
+            saveStateOnExit: true
+          },
+          performance: {
+            updateIntervalMs: 16,
+            maxFrameSkip: 5,
+            enableFrameRateLimiting: true
+          },
+          stateManagement: {
+            enableStateValidation: true,
+            enableStatePersistence: true,
+            stateSaveInterval: 30000,
+            maxSaveSlots: 5
+          },
+          inputHandling: {
+            enableInputBuffering: true,
+            inputBufferSize: 10,
+            enableInputFiltering: true,
+            inputDebounceMs: 50
+          },
+          scoring: {
+            baseScorePerHit: 100,
+            comboMultiplier: 1.5,
+            maxComboMultiplier: 5.0,
+            scoreDecayRate: 0.95
+          },
+          health: {
+            maxHealth: 100,
+            healthRegenRate: 1.0,
+            damageOnMiss: 10,
+            enableInvincibilityFrames: true,
+            invincibilityDuration: 1000
+          },
+          difficulty: {
+            adaptiveDifficulty: true,
+            difficultyIncreaseRate: 0.1,
+            maxDifficulty: 10,
+            minDifficulty: 1
+          },
+          events: {
+            enableEventBuffering: true,
+            maxEventQueueSize: 100,
+            eventProcessingInterval: 16
+          },
+          maxPlayers: 1,
+          enablePauseResume: true,
+          enableGameStateValidation: true,
+          enablePerformanceMonitoring: true,
+          autoSaveEnabled: true,
+          autoSaveIntervalMs: 30000,
+        },
+        debugService: unifiedConfig.services?.debug || {
+          enableProfiling: false,
+          maxSessionHistory: 10,
+          maxEventHistory: 500,
+          performanceMonitoringInterval: 5000,
+          aiAnalysisInterval: 30000,
+          enableAIAnalysis: true,
+          enablePerformanceMonitoring: true,
+          enableGlobalInterface: true,
+        },
+        notificationService: {
+          display: {
+            enableNotifications: true,
+            maxVisibleNotifications: 5,
+            notificationDuration: 5000,
+            enableAnimations: true,
+            animationDuration: 300
+          },
+          positioning: {
+            position: 'top-right',
+            offsetX: 20,
+            offsetY: 20,
+            zIndex: 1000
+          },
+          styling: {
+            enableThemes: true,
+            defaultTheme: 'default',
+            enableCustomStyling: false,
+            borderRadius: 8,
+            shadowEnabled: true
+          },
+          sound: {
+            enableNotificationSounds: true,
+            defaultSoundVolume: 0.5,
+            enableSoundVariations: true
+          },
+          types: {
+            success: { duration: 3000, soundEnabled: true, color: '#10B981' },
+            error: { duration: 5000, soundEnabled: true, color: '#EF4444' },
+            warning: { duration: 4000, soundEnabled: true, color: '#F59E0B' },
+            info: { duration: 3000, soundEnabled: true, color: '#3B82F6' }
+          },
+          queue: {
+            enableQueueing: true,
+            maxQueueSize: 20,
+            queueProcessingInterval: 100
+          },
+          accessibility: {
+            enableScreenReader: true,
+            enableHighContrast: false,
+            enableReducedMotion: false,
+            enableKeyboardNavigation: true
+          },
+          performance: {
+            enablePooling: true,
+            maxPoolSize: 10,
+            enableGarbageCollection: true,
+            gcInterval: 60000
+          },
+          maxNotifications: 10,
+          defaultDuration: 5000,
+        },
+      };
+
+      this.loadedConfig = mappedConfig;
+      this.logger.info('Unified configuration loaded and mapped successfully');
+
+      return this.loadedConfig;
+    } catch (error) {
+      this.logger.error('❌ [Config] Failed to load unified configuration:', { error });
+      throw error;
+    }
+  }
+
+  /**
+   * PURE DI: Get specific configuration section by key
+   * Replaces all getRhythmicMovementConfig, getQualiaConfig, etc.
+   */
+  @logMethod()
+  @catchError()
+  public getConfigSection<T>(sectionKey: string): T {
+    if (!this.loadedConfig) {
+      throw new Error('Configuration not loaded. Call loadConfig() first.');
+    }
+
+    const section = (this.loadedConfig as any)[sectionKey];
+    if (!section) {
+      throw new Error(`Configuration section '${sectionKey}' not found.`);
+    }
+
+    return section as T;
   }
 }

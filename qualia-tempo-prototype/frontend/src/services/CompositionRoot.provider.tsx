@@ -1,12 +1,7 @@
 /**
- * QUALIA.CODE v1.0 - CompositionRoot React Provider
- * React Context integration for service access in components.
- *
- * Architecture:
- * - Clean separation between business logic (CompositionRoot.ts) and UI layer
- * - React Context provider for dependency injection in components
- * - Hook-based service access with proper typing
- * - Service lifecycle management integrated with React lifecycle
+ * QUALIA.CODE v6 - CompositionRoot React Provider
+ * PURE DI: React Context integration for service access in components.
+ * CRITICAL: This provider NO LONGER creates services - it receives them as props
  */
 
 import { useEffect, useState, ReactNode } from "react";
@@ -21,9 +16,10 @@ import {
   CompositionRootContext,
 } from "./CompositionRoot.contexts";
 
-// Provider props interface
+// Provider props interface - PURE DI: Receives container as prop
 export interface CompositionRootProviderProps {
   children: ReactNode;
+  container: CompositionRoot; // PURE DI: Pre-initialized container
   config?: Partial<CompositionRootConfig>;
   onServiceStatusChange?: (_status: ServiceStatus) => void;
   onInitializationError?: (_error: Error) => void;
@@ -31,123 +27,61 @@ export interface CompositionRootProviderProps {
 
 /**
  * CompositionRootProvider: React integration for IoC container
- *
- * Provides services to React components via Context API.
- * Manages CompositionRoot lifecycle synchronized with React lifecycle.
+ * PURE DI: Provides pre-initialized services to React components via Context API.
  */
 export function CompositionRootProvider({
   children,
-  config,
+  container,
+  config: _config, // Renamed to avoid unused variable warning
   onServiceStatusChange,
   onInitializationError,
 }: CompositionRootProviderProps) {
-  const [compositionRoot] = useState(() => new CompositionRoot(config));
   const [services, setServices] = useState<ServiceContainer | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [initializationError, setInitializationError] = useState<Error | null>(
-    null,
-  );
+  const [initializationError, setInitializationError] = useState<Error | null>(null);
 
-  // Initialize services when component mounts
   useEffect(() => {
-    let isMounted = true;
-
-    const initializeServices = async () => {
-      if (isInitializing || isInitialized) {
-        return; // Prevent double initialization
-      }
-
-      setIsInitializing(true);
-      setInitializationError(null);
-
-      try {
-        console.log("🏭 [CompositionRootProvider] Initializing services...");
-
-        await compositionRoot.initialize();
-
-        if (isMounted) {
-          const services = compositionRoot.getServices();
-          console.log(
-            "🏭 [CompositionRootProvider] Setting services:",
-            !!services,
-          );
-          setServices(services);
-          setIsInitialized(true);
-          setIsInitializing(false);
-
-          console.log(
-            "✅ [CompositionRootProvider] Services ready for React components",
-          );
-        }
-      } catch (error) {
-        const initError =
-          error instanceof Error ? error : new Error(String(error));
-
-        if (isMounted) {
-          setInitializationError(initError);
-          setIsInitializing(false);
-          console.error(
-            "❌ [CompositionRootProvider] Service initialization failed:",
-            initError,
-          );
-
-          // Notify parent component of initialization error
-          onInitializationError?.(initError);
-        }
-      }
-    };
-
-    // Start initialization if auto-start is enabled
-    if (compositionRoot.getConfig().autoStart) {
-      initializeServices();
-    } else {
-      // Services available immediately but not started
-      setServices(compositionRoot.getServices());
+    // PURE DI: Container is already initialized, just get the services
+    try {
+      const containerServices = container.getServices();
+      setServices(containerServices);
       setIsInitialized(true);
+      
+      // Monitor service status changes if callback provided
+      if (onServiceStatusChange) {
+        const status = container.getServiceStatus();
+        onServiceStatusChange(status);
+      }
+    } catch (error) {
+      const errorObj = error instanceof Error ? error : new Error(String(error));
+      setInitializationError(errorObj);
+      if (onInitializationError) {
+        onInitializationError(errorObj);
+      }
     }
 
+    // Cleanup on unmount
     return () => {
-      isMounted = false;
+      container.shutdown();
     };
-  }, []); // Removed dependencies to prevent re-initialization
+  }, [container, onServiceStatusChange, onInitializationError]);
 
-  // Monitor service status changes
-  useEffect(() => {
-    if (!isInitialized || !onServiceStatusChange) {
-      return;
-    }
-
-    const statusCheckInterval = setInterval(() => {
-      const currentStatus = compositionRoot.getServiceStatus();
-      onServiceStatusChange(currentStatus);
-    }, 1000); // Check every second
-
-    return () => clearInterval(statusCheckInterval);
-  }, [isInitialized]); // Simplified dependencies
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      console.log(
-        "🏭 [CompositionRootProvider] Component unmounting, shutting down services...",
-      );
-
-      compositionRoot
-        .shutdown()
-        .catch((error) => {
-          console.error("❌ [CompositionRootProvider] Shutdown error:", error);
-        });
-        // Note: destroy() removed to prevent EventBus destruction during page reloads
-        // destroy() should only be called when the entire application is shutting down
-    };
-  }, [compositionRoot]);
-
-  // Show loading state during initialization
-  if (isInitializing) {
+  // Show loading state while services are being retrieved
+  if (!isInitialized && !initializationError) {
     return (
-      <div className="composition-root-loading">
-        <div>🔄 Initializing services...</div>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        fontFamily: 'monospace',
+        color: '#00ff88',
+        backgroundColor: '#000'
+      }}>
+        <div>
+          <h2>🏭 Initializing Services...</h2>
+          <p>Please wait while the application starts up.</p>
+        </div>
       </div>
     );
   }
@@ -155,37 +89,27 @@ export function CompositionRootProvider({
   // Show error state if initialization failed
   if (initializationError) {
     return (
-      <div className="composition-root-error">
-        <div>❌ Service initialization failed:</div>
-        <div
-          style={{ color: "red", fontFamily: "monospace", fontSize: "0.9em" }}
-        >
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        flexDirection: 'column',
+        fontFamily: 'monospace',
+        color: '#ff4444',
+        backgroundColor: '#000'
+      }}>
+        <h1>🚨 Service Initialization Failed</h1>
+        <pre style={{ background: '#222', padding: '20px', borderRadius: '8px' }}>
           {initializationError.message}
-        </div>
-        <button
-          onClick={() => {
-            setInitializationError(null);
-            setIsInitialized(false);
-          }}
-          style={{ marginTop: "10px", padding: "5px 10px" }}
-        >
-          🔄 Retry
-        </button>
+        </pre>
       </div>
     );
   }
 
-  // Don't render children until services are available
-  if (!services) {
-    return (
-      <div className="composition-root-waiting">
-        <div>⏳ Waiting for services...</div>
-      </div>
-    );
-  }
-
+  // Provide services to React tree
   return (
-    <CompositionRootContext.Provider value={compositionRoot}>
+    <CompositionRootContext.Provider value={container}>
       <ServiceContext.Provider value={services}>
         {children}
       </ServiceContext.Provider>

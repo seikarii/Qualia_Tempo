@@ -54,7 +54,7 @@ export class NotificationService {
    */
   private getLoggingMessage(path: string, fallback: string): string {
     try {
-      const config = this.configService.getLoggingConfig();
+      const config = this.configService.getConfig().debugService.logging;
       const pathArray = path.split('.');
       let current: any = config;
       

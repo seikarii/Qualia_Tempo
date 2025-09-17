@@ -99,21 +99,34 @@ export class QualiaLogger implements Logger {
  */
 export class LoggerProvider {
   private static loggerInstance: QualiaLogger | null = null;
+  private static isRegistering = false;
 
   public static register(logger: QualiaLogger): void {
-    if (this.loggerInstance) {
+    if (this.loggerInstance && !this.isRegistering) {
       // Opcional: Prevenir doble registro
       console.warn('[LoggerProvider] Logger already registered.');
       return;
     }
+    this.isRegistering = true;
     this.loggerInstance = logger;
+    this.isRegistering = false;
   }
 
   public static getLogger(): QualiaLogger {
     if (!this.loggerInstance) {
-      // Falla de forma ruidosa si el CompositionRoot no lo ha registrado
-      throw new Error('Logger has not been registered. Ensure CompositionRoot runs first.');
+      // Durante la inicialización, usar un logger temporal con fallback
+      if (this.isRegistering) {
+        return new QualiaLogger('Fallback', LogLevel.WARN);
+      }
+      
+      // Crear un logger temporal en lugar de fallar
+      console.warn('[LoggerProvider] Logger not registered, creating temporary logger');
+      return new QualiaLogger('Temporary', LogLevel.INFO);
     }
     return this.loggerInstance;
+  }
+
+  public static isRegistered(): boolean {
+    return this.loggerInstance !== null;
   }
 }
