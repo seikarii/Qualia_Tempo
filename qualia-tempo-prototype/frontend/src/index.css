@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* QUALIA.CODE v6 - Global Styles */
 /* Externalized configuration should be used for theme values */
 
