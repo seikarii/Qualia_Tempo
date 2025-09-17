@@ -51,7 +51,7 @@ interface GameState {
 }
 
 const initialPlayerState: PlayerState = {
-  position: { x: 0, y: 0 },
+  position: { x: 4, y: 4 },
   health: 100,
   combo: 0,
   score: 0,

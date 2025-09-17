@@ -28,7 +28,7 @@ layout(std430, binding = 1) restrict writeonly buffer ParticleOutputBuffer {
 // QualiaState uniform buffer
 layout(std140, binding = 1) uniform QualiaState {
     float intensity;        // Overall energy level (0-1)
-    float precision;        // Accuracy and focus (0-1)  
+    float focus_level;        // Accuracy and focus (0-1)  
     float aggression;       // Fast, aggressive actions (0-1)
     float flow;            // Rhythmic consistency (0-1)
     float chaos;           // Chaotic, unpredictable actions (0-1)
@@ -135,7 +135,7 @@ vec3 calculate_enhanced_velocity(vec3 position, vec3 current_velocity, float par
     qualia_force += normalize(-position) * aggression * 0.1;
     
     // Movimiento orbital con precisión: patrones matemáticos elegantes
-    qualia_force += vec3(sin(time), cos(time), sin(time*0.5)) * precision * 0.05;
+    qualia_force += vec3(sin(time), cos(time), sin(time*0.5)) * focus_level * 0.05;
     
     // Caos añade turbulencia usando smoothNoise mejorado
     if(chaos > 0.2) {

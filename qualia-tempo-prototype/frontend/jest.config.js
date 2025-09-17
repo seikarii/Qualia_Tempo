@@ -5,6 +5,9 @@ export default {
   moduleNameMapper: {
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
   },
+  transformIgnorePatterns: [
+    "node_modules/(?!tone/.*)",
+  ],
   testMatch: [
     "<rootDir>/src/**/__tests__/**/*.(ts|tsx)",
     "<rootDir>/src/**/*.(test|spec).(ts|tsx)",

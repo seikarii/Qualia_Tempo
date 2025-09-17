@@ -7,6 +7,20 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useGameStore } from '../../../state/useGameStore';
 import QualiaTempoGame from '../QualiaTempoGame';
+import { CompositionRootProvider } from '../../../services/CompositionRoot.provider';
+import { CompositionRoot, ServiceContainer } from '../../../services/CompositionRoot';
+import { EventBus } from '../../../services/EventBus';
+import { QualiaStateCalculatorService } from '../../../services/QualiaStateCalculatorService';
+import { BackendSyncService } from '../../../services/BackendSyncService';
+import { ErrorReportingService } from '../../../services/ErrorReportingService';
+import { DebugService } from '../../../services/DebugService';
+import { GameControllerService } from '../../../services/GameControllerService';
+import { GameStateStoreService } from '../../../services/GameStateStoreService';
+import { ConfigurationService } from '../../../services/ConfigurationService';
+import { AudioService } from '../../../services/AudioService';
+import { RhythmicMovementController } from '../../../services/RhythmicMovementController';
+import { NotificationService } from '../../../services/NotificationService';
+import { QualiaLogger } from '../../../services/Logger';
 
 // Mock Zustand store
 jest.mock('../../../state/useGameStore');
@@ -35,6 +49,140 @@ jest.mock('../QualiaFieldRenderer', () => () => <div data-testid="qualia-field-r
 jest.mock('../MusicalNotesRenderer', () => () => <div data-testid="musical-notes-renderer" />);
 jest.mock('../BossRenderer', () => () => <div data-testid="boss-renderer" />);
 jest.mock('../PlayerRenderer', () => () => <div data-testid="player-renderer" />);
+
+// Mock Tone.js completely
+jest.mock('tone', () => ({
+  Synth: jest.fn().mockImplementation(() => ({
+    triggerAttackRelease: jest.fn(),
+    dispose: jest.fn(),
+  })),
+  Transport: {
+    start: jest.fn(),
+    stop: jest.fn(),
+    bpm: { value: 120 },
+  },
+  getContext: jest.fn(),
+  setContext: jest.fn(),
+}));
+
+// Create simple mock objects
+const mockEventBus = {
+  emit: jest.fn(),
+  subscribe: jest.fn(),
+  unsubscribe: jest.fn(),
+  clear: jest.fn(),
+};
+
+const mockQualiaCalculator = {
+  start: jest.fn(),
+  stop: jest.fn(),
+  calculateQualiaState: jest.fn(),
+  getCurrentState: jest.fn(),
+};
+
+const mockBackendSync = {
+  start: jest.fn(),
+  stop: jest.fn(),
+  isBackendConnected: jest.fn(),
+  forceSync: jest.fn(),
+  getConfig: jest.fn(),
+};
+
+const mockErrorReporting = {
+  start: jest.fn(),
+  stop: jest.fn(),
+  logError: jest.fn(),
+  getStatistics: jest.fn(),
+  updateConfig: jest.fn(),
+};
+
+const mockDebugService = {
+  start: jest.fn(),
+  stop: jest.fn(),
+  logEvent: jest.fn(),
+  getMetrics: jest.fn(),
+  enableProfiling: jest.fn(),
+};
+
+const mockGameController = {
+  start: jest.fn(),
+  stop: jest.fn(),
+  handleStartGame: jest.fn(),
+  handlePauseGame: jest.fn(),
+  handleResetGame: jest.fn(),
+};
+
+const mockGameStateStore = {
+  start: jest.fn(),
+  stop: jest.fn(),
+  handleGameStateChange: jest.fn(),
+  handleQualiaStateUpdate: jest.fn(),
+  getStatus: jest.fn(),
+};
+
+const mockConfigService = {
+  loadConfig: jest.fn(),
+  getConfig: jest.fn(),
+  getGameConfig: jest.fn(),
+  getQualiaConfig: jest.fn(),
+  getBackendConfig: jest.fn(),
+  isLoaded: jest.fn().mockReturnValue(true),
+};
+
+const mockAudioService = {
+  initialize: jest.fn(),
+  playSound: jest.fn(),
+  stopSound: jest.fn(),
+  setVolume: jest.fn(),
+};
+
+const mockRhythmicMovement = {
+  start: jest.fn(),
+  stop: jest.fn(),
+  updatePosition: jest.fn(),
+  getCurrentPosition: jest.fn(),
+};
+
+const mockNotificationService = {
+  showNotification: jest.fn(),
+  hideNotification: jest.fn(),
+  updateConfig: jest.fn(),
+};
+
+const mockLogger = {
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+};
+
+// Mock the useServices hook directly
+jest.mock('../../../services/hooks', () => ({
+  useServices: () => ({
+    eventBus: mockEventBus,
+    qualiaCalculator: mockQualiaCalculator,
+    backendSync: mockBackendSync,
+    errorReporting: mockErrorReporting,
+    debugService: mockDebugService,
+    gameController: mockGameController,
+    gameStateStore: mockGameStateStore,
+    configService: mockConfigService,
+    audioService: mockAudioService,
+    rhythmicMovement: mockRhythmicMovement,
+    notificationService: mockNotificationService,
+    logger: mockLogger,
+  }),
+}));
+
+// Test wrapper component - simplified without CompositionRootProvider
+const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <>{children}</>;
+};
+
+// Helper function to render with wrapper
+const renderWithProvider = (component: React.ReactElement) => {
+  return render(<TestWrapper>{component}</TestWrapper>);
+};
 
 const mockGameState = {
   isPlaying: true,
@@ -77,12 +225,12 @@ describe('QualiaTempoGame', () => {
 
   describe('Component Rendering', () => {
     it('renders main game canvas', () => {
-      render(<QualiaTempoGame isActive={true} />);
+      renderWithProvider(<QualiaTempoGame isActive={true} />);
       expect(screen.getByTestId('canvas')).toBeInTheDocument();
     });
 
     it('renders all game renderers', () => {
-      render(<QualiaTempoGame isActive={true} />);
+      renderWithProvider(<QualiaTempoGame isActive={true} />);
       
       expect(screen.getByTestId('qualia-tempo-hud')).toBeInTheDocument();
       expect(screen.getByTestId('qualia-field-renderer')).toBeInTheDocument();
@@ -92,7 +240,7 @@ describe('QualiaTempoGame', () => {
     });
 
     it('renders visual effects', () => {
-      render(<QualiaTempoGame isActive={true} />);
+      renderWithProvider(<QualiaTempoGame isActive={true} />);
       
       expect(screen.getByTestId('effect-composer')).toBeInTheDocument();
       expect(screen.getByTestId('bloom')).toBeInTheDocument();
@@ -102,7 +250,7 @@ describe('QualiaTempoGame', () => {
 
   describe('State Integration', () => {
     it('adapts Zustand state correctly', () => {
-      render(<QualiaTempoGame isActive={true} />);
+      renderWithProvider(<QualiaTempoGame isActive={true} />);
       
       // Verify store was called
       expect(mockUseGameStore).toHaveBeenCalled();
@@ -112,61 +260,22 @@ describe('QualiaTempoGame', () => {
       const stateWithNullCombat = { ...mockGameState, combatData: null };
       mockUseGameStore.mockReturnValue(stateWithNullCombat);
       
-      render(<QualiaTempoGame isActive={true} />);
+      renderWithProvider(<QualiaTempoGame isActive={true} />);
       expect(screen.getByTestId('canvas')).toBeInTheDocument();
     });
   });
 
   describe('Props Handling', () => {
-    it('accepts external gameState prop', () => {
-      const externalGameState = {
-        status: 'paused' as const,
-        global_qualia_field: { alpha: 0.5, beta: 0.5, coherence: 0.5 },
-        elemental_lattices: {},
-        player: {
-          id: 'test-player',
-          name: 'Test Player',
-          position: [0, 0, 0] as [number, number, number],
-          power_level: 100,
-          consciousness_level: 0.8,
-          qualia_state: { emotional_valence: 0.5, arousal: 0.6, coherence: 0.7 }
-        },
-        boss: {
-          id: 'test-boss',
-          name: 'Test Boss',
-          position: [0, 5, 0] as [number, number, number],
-          power_level: 150,
-          phase: 1,
-          stress_level: 0.3,
-          qualia_state: { consciousness_density: 0.9, emotional_valence: -0.4, arousal: 0.7, coherence: 0.6 }
-        },
-        notes: [],
-        game_status: {
-          current_time: 0,
-          score: 0,
-          combo: 0,
-          music_speed_factor: 1,
-          music_volume_factor: 1,
-          performance_metrics: { accuracy: 0, rhythm_sync: 0, qualia_coherence: 0 }
-        },
-        music_data: {
-          bpm: 120,
-          intensity: 0.5,
-          harmony: 0.5,
-          speed_factor: 1,
-          volume_factor: 1,
-          emotional_valence: 0.5,
-          order_influence: 0.5,
-          chaos_influence: 0.5
-        }
-      };
-
-      render(<QualiaTempoGame gameState={externalGameState} isActive={true} />);
+    it('accepts onGameAction callback prop', () => {
+      const mockOnGameAction = jest.fn();
+      
+      renderWithProvider(<QualiaTempoGame onGameAction={mockOnGameAction} isActive={true} />);
       expect(screen.getByTestId('canvas')).toBeInTheDocument();
     });
 
     it('respects isActive prop', () => {
-      render(<QualiaTempoGame isActive={false} />);
+      renderWithProvider(<QualiaTempoGame isActive={false} />);
+      // Canvas should still be rendered, but controls are disabled
       expect(screen.getByTestId('canvas')).toBeInTheDocument();
     });
   });

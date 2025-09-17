@@ -15,6 +15,3 @@ export { default as QualiaFieldRenderer } from './QualiaFieldRenderer';
 export { default as MusicalNotesRenderer } from './MusicalNotesRenderer';
 export { default as BossRenderer } from './BossRenderer';
 export { default as PlayerRenderer } from './PlayerRenderer';
-
-// Re-export types
-export type { QualiaTempoGameState } from './QualiaTempoGame';

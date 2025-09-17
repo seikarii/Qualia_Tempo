@@ -5,7 +5,6 @@ import "./index.css";
  * PURE DI: UI layer receives pre-initialized services, never creates them
  */
 
-import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { CompositionRootProvider } from "./providers";

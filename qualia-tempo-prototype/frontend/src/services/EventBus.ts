@@ -58,13 +58,21 @@ export interface BackendSyncEvent extends BaseEvent {
   syncType: "qualiaState" | "gameState" | "config";
 }
 
+export interface RhythmicDashEvent extends BaseEvent {
+  type: "RhythmicDash";
+  direction: "north" | "south" | "east" | "west";
+  timing: "perfect" | "good" | "miss";
+  newPosition: [number, number];
+}
+
 // Union type for all events
 export type EventTypes =
   | QualiaStateUpdatedEvent
   | PlayerActionEvent
   | GameStateChangedEvent
   | ErrorEvent
-  | BackendSyncEvent;
+  | BackendSyncEvent
+  | RhythmicDashEvent;
 
 // Event handler types
 export type EventHandler<T extends BaseEvent = BaseEvent> = (

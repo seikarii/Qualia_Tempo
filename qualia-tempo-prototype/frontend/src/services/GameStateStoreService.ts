@@ -71,6 +71,13 @@ export class GameStateStoreService {
     );
     this.listenerIds.push(qualiaStateListenerId);
 
+    // Subscribe to RhythmicDash events to update player position
+    const rhythmicDashListenerId = this.eventBus.subscribe(
+      'RhythmicDash',
+      this.handleRhythmicDash.bind(this),
+    );
+    this.listenerIds.push(rhythmicDashListenerId);
+
     this.isStarted = true;
     this.logger.info("✅ [GameStateStoreService] Event listeners active");
   }
@@ -160,7 +167,7 @@ export class GameStateStoreService {
           currentTime: 0,
           gameStartTime: 0,
           player: {
-            position: { x: 0, y: 0 },
+            position: { x: 4, y: 4 },
             health: 100,
             combo: 0,
             score: 0,
@@ -206,6 +213,27 @@ export class GameStateStoreService {
     this.setStore((state: any) => ({
       ...state,
       qualiaState: { ...event.qualiaState },
+    }));
+  }
+
+  /**
+   * Handle RhythmicDash events to update player position
+   */
+  private handleRhythmicDash(event: any): void {
+    this.logger.info(
+      "🏃 [GameStateStoreService] Processing RhythmicDash:",
+      { direction: event.direction, newPosition: event.newPosition, timing: event.timing },
+    );
+
+    this.setStore((state: any) => ({
+      ...state,
+      player: {
+        ...state.player,
+        position: {
+          x: event.newPosition[0],
+          y: event.newPosition[1],
+        },
+      },
     }));
   }
 
