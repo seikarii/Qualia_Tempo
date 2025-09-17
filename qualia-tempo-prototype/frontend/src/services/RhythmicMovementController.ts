@@ -1,21 +1,7 @@
 import { EventBus, PlayerActionEvent } from './EventBus';
+import type { GameStateChangedEvent, MetronomeTickEvent, RhythmicDashEvent } from './EventBus';
 import { logMethod, catchError } from '../utils/decorators';
 import { QualiaLogger, LoggerProvider } from './Logger';
-
-export interface RhythmicDashEvent {
-  type: 'RhythmicDash';
-  direction: 'north' | 'south' | 'east' | 'west';
-  timing: 'perfect' | 'good' | 'miss';
-  newPosition: [number, number];
-  timestamp: number;
-}
-
-export interface MetronomeTickEvent {
-  type: 'MetronomeTick';
-  beatNumber: number;
-  bpm: number;
-  timestamp: number;
-}
 
 // PURE DI: Configuration interface for this service
 export interface RhythmicMovementConfig {
@@ -24,7 +10,8 @@ export interface RhythmicMovementConfig {
   goodTiming: number;
   gridSize: number;
   slowdownFactor: number;
-  slowdownDuration: number; // Add missing property
+  slowdownDuration: number;
+  keyThrottleMs: number; // CRISALIDA.CODE: Configuration-driven throttling
 }
 
 /**
@@ -55,6 +42,10 @@ export class RhythmicMovementController {
   private slowdownFactor!: number;
   private slowdownTimeout: number | null = null;
   private gameStateListenerId: string | null = null;
+  
+  // CRISALIDA.CODE: Configuration-driven throttling
+  private keyThrottleMs!: number;
+  private lastKeyPressTime: number = 0;
 
   constructor(
     eventBus: EventBus, 
@@ -81,6 +72,7 @@ export class RhythmicMovementController {
     this.goodTiming = this.config.goodTiming;
     this.gridSize = this.config.gridSize;
     this.slowdownFactor = this.config.slowdownFactor;
+    this.keyThrottleMs = this.config.keyThrottleMs; // CRISALIDA.CODE: Load throttle configuration
   }
 
   @logMethod()
@@ -115,7 +107,7 @@ export class RhythmicMovementController {
 
   private setupGameStateListener(): void {
     // Listen for game state changes to handle pause/resume
-    this.gameStateListenerId = this.eventBus.subscribe<any>('GameStateChanged', (event) => {
+    this.gameStateListenerId = this.eventBus.subscribe<GameStateChangedEvent>('GameStateChanged', (event) => {
       this.handleGameStateChange(event);
     });
   }
@@ -128,7 +120,7 @@ export class RhythmicMovementController {
   }
 
   @logMethod()
-  private handleGameStateChange(event: any): void {
+  private handleGameStateChange(event: GameStateChangedEvent): void {
     const newState = event.newState;
     
     // Update playing state
@@ -190,11 +182,11 @@ export class RhythmicMovementController {
       this.lastBeatTime = performance.now();
       
       // Emit metronome tick event with slowdown factor
-      this.eventBus.emit<any>({
+      this.eventBus.emit<MetronomeTickEvent>({
         type: 'MetronomeTick',
         beatNumber: this.beatNumber,
         bpm: this.bpm * this.slowdownFactor, // Affected by slowdown
-        timestamp: this.lastBeatTime
+        source: 'RhythmicMovementController'
       });
     }, this.beatInterval / this.slowdownFactor); // Adjust interval based on slowdown
   }
@@ -215,11 +207,13 @@ export class RhythmicMovementController {
   }
 
   private handleKeyDown = (event: KeyboardEvent): void => {
-    // const config = this.configurationService.getConfig();
-    // const keyThrottleMs = config.services.rhythmicMovement.keyThrottleMs;
+    // CRISALIDA.CODE: Configuration-driven throttling implementation
+    const now = performance.now();
+    if (now - this.lastKeyPressTime < this.keyThrottleMs) {
+      return; // Throttle the input
+    }
+    this.lastKeyPressTime = now;
     
-    // Use dynamic throttle from config
-    // Note: This is a simplified approach - in production you'd need a more sophisticated throttling mechanism
     const direction = this.getDirectionFromKey(event.key);
     if (!direction) return;
 
@@ -267,12 +261,12 @@ export class RhythmicMovementController {
     const newPosition = this.calculateNewPosition(direction);
     
     // Emit rhythmic dash event
-    this.eventBus.emit<any>({
+    this.eventBus.emit<RhythmicDashEvent>({
       type: 'RhythmicDash',
       direction,
       timing,
       newPosition,
-      timestamp: currentTime
+      source: 'RhythmicMovementController'
     });
 
     // Update player position if movement is valid

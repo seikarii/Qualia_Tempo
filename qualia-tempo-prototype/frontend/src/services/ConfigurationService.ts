@@ -44,6 +44,7 @@ export interface ErrorReportingConfig {
   enableErrorFiltering: boolean;
   filterSensitiveData: boolean;
   allowedDomains: string[];
+  cleanupInterval: number; // CRISALIDA.CODE: Explicit cleanup timer interval
 }
 
 // AudioService Configuration
@@ -86,6 +87,7 @@ export interface RhythmicMovementConfig {
   gridSize: number;
   slowdownFactor: number;
   slowdownDuration: number;
+  keyThrottleMs: number; // CRISALIDA.CODE: Configuration-driven throttling
 }
 
 // QualiaCalculator Configuration
@@ -669,6 +671,7 @@ export class ConfigurationService {
           enableErrorFiltering: true,
           filterSensitiveData: true,
           allowedDomains: [],
+          cleanupInterval: 1800000, // CRISALIDA.CODE: Default cleanup every 30 minutes
         },
         audioService: {
           rhythmicFeedback: {
@@ -893,7 +896,8 @@ export class ConfigurationService {
           goodTiming: 200,
           gridSize: 8,
           slowdownFactor: 0.1,
-          slowdownDuration: 100
+          slowdownDuration: 100,
+          keyThrottleMs: 50 // CRISALIDA.CODE: Default throttling delay
         },
       };
 

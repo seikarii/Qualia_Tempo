@@ -65,6 +65,12 @@ export interface RhythmicDashEvent extends BaseEvent {
   newPosition: [number, number];
 }
 
+export interface MetronomeTickEvent extends BaseEvent {
+  type: "MetronomeTick";
+  beatNumber: number;
+  bpm: number;
+}
+
 // Union type for all events
 export type EventTypes =
   | QualiaStateUpdatedEvent
@@ -72,7 +78,8 @@ export type EventTypes =
   | GameStateChangedEvent
   | ErrorEvent
   | BackendSyncEvent
-  | RhythmicDashEvent;
+  | RhythmicDashEvent
+  | MetronomeTickEvent;
 
 // Event handler types
 export type EventHandler<T extends BaseEvent = BaseEvent> = (
