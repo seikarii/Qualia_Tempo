@@ -19,43 +19,45 @@ const root = ReactDOM.createRoot(rootElement);
 
 // Show initial loading screen
 root.render(
-  <React.StrictMode>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "100vh",
+      backgroundColor: "#000",
+      color: "#00ffff",
+      fontFamily: "monospace",
+      flexDirection: "column",
+    }}
+  >
+    <h1 style={{ fontSize: "48px", marginBottom: "20px" }}>
+      🎵 Qualia Tempo
+    </h1>
     <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: '100vh',
-      flexDirection: 'column',
-      fontFamily: 'monospace',
-      color: '#00ffff',
-      backgroundColor: '#000'
+      width: '300px', 
+      height: '4px', 
+      background: '#333', 
+      borderRadius: '2px',
+      overflow: 'hidden',
+      marginTop: '20px'
     }}>
-      <h1>🎵 Loading Qualia Tempo...</h1>
-      <div style={{ 
-        width: '300px', 
-        height: '4px', 
-        background: '#333', 
-        borderRadius: '2px',
-        overflow: 'hidden',
-        marginTop: '20px'
-      }}>
-        <div style={{
-          width: '100%',
-          height: '100%',
-          background: 'linear-gradient(90deg, #00ffff, #ff00ff)',
-          animation: 'loading 2s ease-in-out infinite'
-        }}></div>
-      </div>
-      <style>{`
-        @keyframes loading {
-          0% { transform: translateX(-100%); }
-          50% { transform: translateX(0%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
-      <p style={{ marginTop: '20px', opacity: 0.7 }}>Initializing services...</p>
+      <div style={{
+        width: '100%',
+        height: '100%',
+        background: 'linear-gradient(90deg, #00ffff, #ff00ff)',
+        animation: 'loading 2s ease-in-out infinite'
+      }}></div>
     </div>
-  </React.StrictMode>
+    <style>{`
+      @keyframes loading {
+        0% { transform: translateX(-100%); }
+        50% { transform: translateX(0%); }
+        100% { transform: translateX(100%); }
+      }
+    `}</style>
+    <p style={{ marginTop: '20px', opacity: 0.7 }}>Initializing services...</p>
+  </div>
 );
 
 // PURE DI: Business logic layer creates and initializes all services
@@ -80,11 +82,9 @@ async function initializeApplication() {
 
     // 6. Renderizar React solo tras inicialización exitosa
     root.render(
-      <React.StrictMode>
-        <CompositionRootProvider container={compositionRoot}>
-          <App />
-        </CompositionRootProvider>
-      </React.StrictMode>
+      <CompositionRootProvider container={compositionRoot}>
+        <App />
+      </CompositionRootProvider>
     );
 
     compositionRoot.getServices().logger.info("Qualia Tempo Frontend Ready!");
@@ -94,18 +94,17 @@ async function initializeApplication() {
     
     // Render a detailed error page
     root.render(
-      <React.StrictMode>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh',
-          flexDirection: 'column',
-          fontFamily: 'monospace',
-          color: '#ff4444',
-          backgroundColor: '#000',
-          padding: '20px'
-        }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        flexDirection: 'column',
+        fontFamily: 'monospace',
+        color: '#ff4444',
+        backgroundColor: '#000',
+        padding: '20px'
+      }}>
           <h1>🚨 Application Initialization Failed</h1>
           <div style={{ 
             background: '#222', 
@@ -146,7 +145,6 @@ async function initializeApplication() {
             Reload Application
           </button>
         </div>
-      </React.StrictMode>
     );
   }
 }

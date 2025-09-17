@@ -204,7 +204,7 @@ export class CompositionRoot {
       errorReporting: "running",
       debugService: "running",
       gameController: "running",
-      gameStateStore: "running",
+      gameStateStore: "initializing", // Will be set to running after start() is called
       configService: "running",
       audioService: "running",
       notificationService: "running",
@@ -217,10 +217,12 @@ export class CompositionRoot {
 
     try {
       // Start services that have async start() methods
-      // Note: EventBus, DebugService, GameStateStore, etc. are stateless and don't need start()
       
       // Phase 1: Start GameController (depends on EventBus)
       await this.startService('gameController', () => this.services.gameController.start());
+
+      // Phase 1.5: Start GameStateStore (depends on EventBus) - CRITICAL FOR STORE UPDATES
+      this.startService('gameStateStore', () => this.services.gameStateStore.start());
 
       // Phase 2: Start BackendSync (depends on EventBus, optional)
       if (this.config.enableBackendSync) {
@@ -231,7 +233,8 @@ export class CompositionRoot {
       await this.startService('audioService', () => this.services.audioService.start());
 
       // Services without async start(): EventBus, QualiaCalculator, ErrorReporting, 
-      // DebugService, GameStateStore, NotificationService, RhythmicMovement
+      // DebugService, NotificationService, RhythmicMovement
+      // GameStateStore now properly started above to enable event subscriptions
       // These are already functional after construction.
 
       // Start health monitoring if enabled

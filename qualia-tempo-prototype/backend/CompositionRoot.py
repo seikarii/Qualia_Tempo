@@ -55,13 +55,13 @@ class CompositionRoot:
     async def _initialize_particle_system(self) -> None:
         """Initialize the QualiaParticleEngine service."""
         try:
-            from .engine.qualia_particle_engine import QualiaParticleEngine
+            from .engine.qualia_particle_engine import create_qualia_particle_engine
 
-            # Create standalone context for now - in production this would be shared
-            particle_engine = QualiaParticleEngine(
-                ctx=None,  # Will be initialized when context is available
+            # ✅ FIXED: Use factory function with standalone context
+            particle_engine = create_qualia_particle_engine(
                 max_particles=10000,
                 enable_metrics=True,
+                standalone=True,  # Creates OpenGL context for headless operation
             )
             self._services["particle_system"] = particle_engine
             self._logger.debug("🎆 QualiaParticleEngine service registered")
