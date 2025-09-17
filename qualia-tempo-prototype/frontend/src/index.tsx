@@ -10,6 +10,52 @@ import { CompositionRootProvider } from "./services/CompositionRoot.provider";
 import { ConfigurationService } from "./services/ConfigurationService";
 import { CompositionRoot } from "./services/CompositionRoot";
 
+// Get root element and create React root
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Root element not found");
+const root = ReactDOM.createRoot(rootElement);
+
+// Show initial loading screen
+root.render(
+  <React.StrictMode>
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100vh',
+      flexDirection: 'column',
+      fontFamily: 'monospace',
+      color: '#00ffff',
+      backgroundColor: '#000'
+    }}>
+      <h1>🎵 Loading Qualia Tempo...</h1>
+      <div style={{ 
+        width: '300px', 
+        height: '4px', 
+        background: '#333', 
+        borderRadius: '2px',
+        overflow: 'hidden',
+        marginTop: '20px'
+      }}>
+        <div style={{
+          width: '100%',
+          height: '100%',
+          background: 'linear-gradient(90deg, #00ffff, #ff00ff)',
+          animation: 'loading 2s ease-in-out infinite'
+        }}></div>
+      </div>
+      <style>{`
+        @keyframes loading {
+          0% { transform: translateX(-100%); }
+          50% { transform: translateX(0%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
+      <p style={{ marginTop: '20px', opacity: 0.7 }}>Initializing services...</p>
+    </div>
+  </React.StrictMode>
+);
+
 // PURE DI: Business logic layer creates and initializes all services
 async function initializeApplication() {
   try {
@@ -31,7 +77,6 @@ async function initializeApplication() {
     compositionRoot.getServices().logger.info("Backend Connection: Checking...");
 
     // 6. Renderizar React solo tras inicialización exitosa
-    const root = ReactDOM.createRoot(document.getElementById("root")!);
     root.render(
       <React.StrictMode>
         <CompositionRootProvider container={compositionRoot}>
@@ -42,28 +87,64 @@ async function initializeApplication() {
 
     compositionRoot.getServices().logger.info("Qualia Tempo Frontend Ready!");
   } catch (error) {
-    // 4. Handle initialization errors outside of React
+    // Handle initialization errors outside of React
     console.error("FATAL: Application failed to initialize", error);
     
-    // Render a static error page
-    const root = ReactDOM.createRoot(document.getElementById("root")!);
+    // Render a detailed error page
     root.render(
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        flexDirection: 'column',
-        fontFamily: 'monospace',
-        color: '#ff4444',
-        backgroundColor: '#000'
-      }}>
-        <h1>🚨 Application Initialization Failed</h1>
-        <pre style={{ background: '#222', padding: '20px', borderRadius: '8px' }}>
-          {error instanceof Error ? error.message : String(error)}
-        </pre>
-        <p>Please check the browser console for more details.</p>
-      </div>
+      <React.StrictMode>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          flexDirection: 'column',
+          fontFamily: 'monospace',
+          color: '#ff4444',
+          backgroundColor: '#000',
+          padding: '20px'
+        }}>
+          <h1>🚨 Application Initialization Failed</h1>
+          <div style={{ 
+            background: '#222', 
+            padding: '20px', 
+            borderRadius: '8px',
+            marginTop: '20px',
+            maxWidth: '80%',
+            overflow: 'auto'
+          }}>
+            <h3>Error Details:</h3>
+            <pre style={{ color: '#ff6666', wordWrap: 'break-word' }}>
+              {error instanceof Error ? error.message : String(error)}
+            </pre>
+            {error instanceof Error && error.stack && (
+              <details style={{ marginTop: '10px' }}>
+                <summary style={{ cursor: 'pointer', color: '#ffaa00' }}>Stack Trace</summary>
+                <pre style={{ color: '#888', fontSize: '12px', marginTop: '10px' }}>
+                  {error.stack}
+                </pre>
+              </details>
+            )}
+          </div>
+          <p style={{ marginTop: '20px', color: '#aaa' }}>
+            Please check the browser console for more details.
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            style={{
+              marginTop: '20px',
+              padding: '10px 20px',
+              background: '#444',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Reload Application
+          </button>
+        </div>
+      </React.StrictMode>
     );
   }
 }

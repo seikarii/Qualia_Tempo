@@ -1,229 +1,215 @@
+# Qualia Tempo Game Configuration
+# This file contains all game configuration parameters
+# Managed by BackendSyncService for runtime updates
+
+# Audio configuration
 audio:
   volume: 0.8
   enableSubtitles: true
 
+# Gameplay configuration
 gameplay:
-  rhythmTolerance: 0.1
-  comboResetTime: 2.0
-  pauseCooldown: 1.0
+  rhythmTolerance: 150  # milliseconds - window for rhythm accuracy
+  comboResetTime: 2.0   # seconds - time before combo resets
+  pauseCooldown: 1.0    # seconds - cooldown for Pause ability
 
+# Visual configuration
 visual:
-  updateFrequency: 60
-  debugMode: false
+  updateFrequency: 100  # milliseconds - how often to send QualiaState to backend
+  debugMode: true       # show debug information
 
+# QualiaState calculation constants
 qualia:
+  # Precision settings
   precision:
-    maxStreak: 100
-    decayRate: 0.05
-    pauseBonus: 0.1
-  flow:
-    rhythmWindow: 0.15
-    maxFlow: 1.0
-    decayRate: 0.02
-    buildRate: 0.1
-  chaos:
-    missMultiplier: 0.2
-    maxChaos: 1.0
-    decayRate: 0.03
-  aggression:
-    comboThreshold: 10
-    maxAggression: 1.0
-    comboMultiplier: 0.05
-  recovery:
-    duration: 5.0
-    maxRecovery: 1.0
-    decayRate: 0.01
-  intensity:
-    baseMultiplier: 0.5
-    precisionWeight: 0.3
-    flowWeight: 0.3
-    aggressionWeight: 0.2
-    chaosWeight: 0.2
+    maxStreak: 20      # max consecutive hits for full precision
+    decayRate: 0.95    # how fast precision decays when not hitting
+    pauseBonus: 0.2    # bonus precision for using Pause ability
 
+  # Flow settings
+  flow:
+    rhythmWindow: 100  # milliseconds - perfect rhythm window
+    maxFlow: 1.0       # maximum flow value
+    decayRate: 0.98    # how fast flow decays
+    buildRate: 0.1     # how fast flow builds up
+
+  # Chaos settings
+  chaos:
+    missMultiplier: 0.3  # how much chaos increases per miss
+    maxChaos: 1.0        # maximum chaos value
+    decayRate: 0.95      # how fast chaos decays
+
+  # Aggression settings
+  aggression:
+    comboThreshold: 5    # combo required to start building aggression
+    maxAggression: 1.0   # maximum aggression value
+    comboMultiplier: 0.05  # aggression per combo point
+
+  # Recovery settings
+  recovery:
+    duration: 2.0      # seconds recovery effect lasts
+    maxRecovery: 1.0   # maximum recovery value
+    decayRate: 0.9    # how fast recovery decays
+
+  # Intensity (overall) settings
+  intensity:
+    baseMultiplier: 0.3  # base intensity from other qualia
+    precisionWeight: 0.2  # how much precision contributes
+    flowWeight: 0.3       # how much flow contributes
+    aggressionWeight: 0.2  # how much aggression contributes
+    chaosWeight: -0.1      # chaos reduces intensity (negative)
+
+# Backend synchronization settings
 backend:
-  throttleMs: 250
+  throttleMs: 250      # Maximum one sync every 250ms
   maxBatchSize: 10
   baseUrl: "http://localhost:8000"
   endpoints:
     qualiaState: "/update_qualia"
-    gameState: "/update_game"
+    gameState: "/game_state"
     health: "/health"
   maxRetries: 3
   retryDelayMs: 1000
   timeoutMs: 5000
-  logRequests: false
+  logRequests: true
   logResponses: false
 
+# Service configuration
 services:
-  rhythmicMovement:
-    bpm: 120
-    perfectTiming: 0.05
-    goodTiming: 0.15
-    gridSize: 8
-    slowdownFactor: 0.5
-  backendSync:
-    maxRetries: 3
-    retryDelay: 1000
-    connectionTimeout: 5000
-    healthCheckInterval: 30000
+  # Error reporting configuration
   errorReporting:
-    rateLimitWindow: 60000
-    maxErrorsPerWindow: 10
-    batchSize: 5
-    batchTimeout: 30000
-    maxRetentionTime: 3600000
+    rateLimitWindow: 60000  # 1 minute
+    maxErrorsPerWindow: 10  # Max 10 errors per minute
+    batchSize: 5  # Send in batches of 5
+    batchTimeout: 30000  # Send batch every 30 seconds max
+    maxRetentionTime: 3600000  # Keep errors for 1 hour
     externalServiceUrl: "https://api.error-reporting.service/reports"
     retryAttempts: 3
-    maxBatchSize: 100
-    batchInterval: 5000
+    maxBatchSize: 10
+    batchInterval: 5000  # milliseconds
     maxRetries: 3
-    retryDelay: 2000
+    retryDelay: 1000     # milliseconds
     enableConsoleOutput: true
+    
+  # Debug service configuration  
   debug:
     enableProfiling: false
-    maxSessionHistory: 10
     maxEventHistory: 500
-    performanceMonitoringInterval: 5000
-    aiAnalysisInterval: 30000
+    logLevel: "INFO"
+    performanceThreshold: 1000  # milliseconds
+    performanceMonitoringInterval: 5000  # 5 seconds
+    
+  # Backend sync service configuration
+  backendSync:
+    healthCheckInterval: 30000  # milliseconds - check backend health every 30 seconds
+    maxRetries: 3
+    retryDelay: 1000  # milliseconds
+    connectionTimeout: 5000  # milliseconds
+    aiAnalysisInterval: 30000  # 30 seconds
     enableAIAnalysis: true
     enablePerformanceMonitoring: true
     enableGlobalInterface: true
-    memoryCleanupThreshold: 1000
+    sessionIdLength: 8  # for debug session ID generation
+    recentEventsLimit: 20  # number of recent events to show in snapshot
+    memoryCleanupInterval: 300000  # 5 minutes
+    defaultGameStateValue: "Unknown"  # default value for unknown game state
+    
+  # EventBus configuration
+  eventBus:
+    maxListeners: 100
+    enablePerformanceMonitoring: true
+    eventTypes:
+      playerAction: "PlayerAction"
+      qualiaStateUpdated: "QualiaStateUpdated"
+      error: "Error"
+      gameStateChanged: "GameStateChanged"
+      backendSync: "BackendSync"
+    
+  # Game controller configuration
+  gameController:
+    pauseCooldown: 1000  # milliseconds
+    
+  # Rhythmic movement configuration
+  rhythmicMovement:
+    bpm: 120  # beats per minute
+    perfectTiming: 100  # perfect timing window in ms
+    goodTiming: 200  # good timing window in ms
+    gridSize: 8  # size of the game grid
+    slowdownFactor: 0.1  # slowdown factor when paused (10% speed)
+    slowdownDuration: 100  # slowdown duration in ms
+    keyThrottleMs: 100  # throttle for key presses to prevent spam
+    enabled: true
+    beatThreshold: 0.1        # Threshold for beat detection
+    movementSensitivity: 0.8  # Movement response sensitivity
+    smoothingFactor: 0.9      # Movement smoothing
+    debugMode: false          # Enable debug visualization
 
+  # Notification Service configuration
+  notificationService:
+    enabled: true
+    defaultDuration: 3000     # milliseconds
+    maxNotifications: 5       # Maximum concurrent notifications
+    animationDuration: 300    # milliseconds
+    position: "top-right"     # top-left, top-right, bottom-left, bottom-right
+
+# Logging configuration
 logging:
-  levels:
-    eventBus: "info"
-    qualiaCalculator: "info"
-    backendSync: "warn"
-    gameController: "info"
-    gameStateStore: "warn"
-    audioService: "warn"
-    rhythmicMovement: "info"
-    errorReporting: "warn"
-    configurationService: "info"
   messages:
-    eventBus:
-      initialized: "EventBus service initialized"
-      started: "EventBus started"
-      stopped: "EventBus stopped"
-      subscribed: "Subscribed to event"
-      unsubscribed: "Unsubscribed from event"
-      emitted: "Event emitted"
-      processed: "Event processed"
-      errorProcessing: "Error processing event"
-      listenerAdded: "Event listener added"
-      listenerRemoved: "Event listener removed"
-    qualiaCalculator:
-      initialized: "QualiaCalculator initialized"
-      started: "QualiaCalculator started"
-      stopped: "QualiaCalculator stopped"
-      stateUpdated: "Qualia state updated"
-      eventReceived: "Player action received"
-      calculationCompleted: "Calculation completed"
-      configUpdated: "Configuration updated"
-      performingAI: "AI analysis in progress"
-      aiAnalysisFailed: "AI analysis failed"
-      subscribed: "Subscribed to events"
-      unsubscribed: "Unsubscribed from events"
-    backendSync:
-      initialized: "BackendSync initialized"
-      started: "BackendSync started"
-      stopped: "BackendSync stopped"
-      syncCompleted: "Sync completed"
-      syncFailed: "Sync failed"
-      connectionEstablished: "Backend connection established"
-      connectionLost: "Backend connection lost"
-      throttled: "Request throttled"
-      retrying: "Retrying request"
-      healthCheckPassed: "Health check passed"
-      healthCheckFailed: "Health check failed"
-    gameController:
-      initialized: "GameController initialized"
-      started: "GameController started"
-      stopped: "GameController stopped"
-      gameStarted: "Game started"
-      gamePaused: "Game paused"
-      gameResumed: "Game resumed"
-      gameReset: "Game reset"
-      actionProcessed: "Action processed"
-      stateChanged: "Game state changed"
-      configUpdated: "Configuration updated"
-    gameStateStore:
-      initialized: "GameStateStore initialized"
-      started: "GameStateStore started"
-      stopped: "GameStateStore stopped"
-      stateUpdated: "Game state updated"
-      eventReceived: "Event received from EventBus"
-      bridgeCompleted: "Bridge operation completed"
-      subscribed: "Subscribed to events"
-      unsubscribed: "Unsubscribed from events"
-    audioService:
-      initialized: "AudioService initialized"
-      started: "AudioService started"
-      stopped: "AudioService stopped"
-      trackLoaded: "Audio track loaded"
-      trackPlayed: "Audio track played"
-      trackPaused: "Audio track paused"
-      trackStopped: "Audio track stopped"
-      volumeChanged: "Volume changed"
-      effectPlayed: "Sound effect played"
-      configUpdated: "Audio configuration updated"
-    rhythmicMovement:
-      initialized: "RhythmicMovement initialized"
-      started: "RhythmicMovement started"
-      failedToStart: "RhythmicMovement failed to start"
-      notRunning: "RhythmicMovement not running"
-      stopping: "RhythmicMovement stopping"
-      stopped: "RhythmicMovement stopped"
-      errorStopping: "Error stopping RhythmicMovement"
-      configUpdated: "RhythmicMovement configuration updated"
-      performingAI: "RhythmicMovement AI analysis"
-      aiAnalysisFailed: "RhythmicMovement AI analysis failed"
-      unsubscribed: "RhythmicMovement unsubscribed"
+    debugService:
+      alreadyRunning: "⚠️ [DebugService] Service already running"
+      starting: "🚀 [DebugService] Starting AI debugging service..."
+      started: "🚀 [DebugService] Service started - AI debugging active"
+      failedToStart: "🚨 [DebugService] Failed to start service:"
+      notRunning: "⚠️ [DebugService] Service not running"
+      stopping: "🛑 [DebugService] Stopping service..."
+      stopped: "🛑 [DebugService] Service stopped"
+      errorStopping: "🚨 [DebugService] Error stopping service:"
+      configUpdated: "⚙️ [DebugService] Configuration updated"
+      performingAI: "🤖 [DebugService] Performing AI analysis..."
+      aiAnalysisFailed: "🚨 [DebugService] AI analysis failed:"
+      unsubscribed: "📡 [DebugService] Unsubscribed from all events"
+      initialized: "🔧 [DebugService] Service initialized with AI debugging capabilities"
     errorReporting:
-      initialized: "ErrorReporting initialized"
-      started: "ErrorReporting started"
-      stopped: "ErrorReporting stopped"
-      configUpdated: "ErrorReporting configuration updated"
-      subscribed: "ErrorReporting subscribed"
-      unsubscribed: "ErrorReporting unsubscribed"
-      receivedWhileStopped: "ErrorReporting received while stopped"
-      malformedEvent: "ErrorReporting malformed event"
-      rateLimitExceeded: "ErrorReporting rate limit exceeded"
-      processingFailed: "ErrorReporting processing failed"
-      batchProcessingFailed: "ErrorReporting batch processing failed"
-      noStackTrace: "ErrorReporting no stack trace"
-      unknownSource: "ErrorReporting unknown source"
-      requiresEventBus: "ErrorReporting requires EventBus"
+      initialized: "🚨 [ErrorReporting] Service initialized with event-driven architecture"
+      started: "🚀 [ErrorReporting] Service started - ready to handle errors"
+      stopped: "🛑 [ErrorReporting] Service stopped"
+      configUpdated: "⚙️ [ErrorReporting] Configuration updated"
+      subscribed: "📡 [ErrorReporting] Subscribed to Error events"
+      unsubscribed: "📡 [ErrorReporting] Unsubscribed from all events"
+      receivedWhileStopped: "⚠️ [ErrorReporting] Received error event while service is stopped"
+      malformedEvent: "⚠️ [ErrorReporting] Received malformed error event"
+      rateLimitExceeded: "🚫 [ErrorReporting] Rate limit exceeded, dropping error"
+      processingFailed: "❌ [ErrorReporting] Failed to process error event:"
+      batchProcessingFailed: "⚠️ [ErrorReporting] Exception during batch processing:"
+      noStackTrace: "No stack trace available"
+      unknownSource: "Unknown"
+      requiresEventBus: "ErrorReportingService requires EventBus dependency"
     configurationService:
-      fileNotFound: "Configuration file not found"
-      parseError: "Configuration parse error"
+      fileNotFound: "Configuration file not found at path:"
+      parseError: "Error parsing YAML configuration:"
       loadSuccess: "Configuration loaded successfully"
-      validationError: "Configuration validation error"
+      validationError: "Configuration validation failed:"
 
+# Error categorization patterns
 errorPatterns:
   critical:
-    - "Failed to initialize"
-    - "Cannot connect to"
-    - "Service unavailable"
-    - "Critical error"
+    - "out of memory"
+    - "maximum call stack"
+    - "network error"
+    - "cors error"
   high:
-    - "Connection lost"
-    - "Timeout"
-    - "Authentication failed"
-    - "Permission denied"
+    - "reference error"
+    - "type error"
+    - "range error"
+    - "eval error"
   medium:
-    - "Retry attempt"
-    - "Fallback activated"
-    - "Performance warning"
-    - "Validation warning"
+    - "syntax error"
+    - "uri error"
   low:
-    - "Info"
-    - "Debug"
-    - "Trace"
-    - "Verbose"
+    - "warning"
 
+# Test configuration
 test:
-  mockServices: false
-  enableDebugOutput: true
-  timeoutMs: 10000
+  mockServices: true
+  enableDebugOutput: false
+  timeoutMs: 5000

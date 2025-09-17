@@ -80,6 +80,6 @@ export function useServiceControl() {
     initialize: () => compositionRoot.initialize(),
     shutdown: () => compositionRoot.shutdown(),
     getStatus: () => compositionRoot.getServiceStatus(),
-    getConfig: () => compositionRoot.getConfig(),
+    performHealthCheck: () => compositionRoot.performHealthCheck(),
   };
 }
