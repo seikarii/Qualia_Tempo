@@ -1,3 +1,5 @@
+import "./index.css";
+
 /**
  * QUALIA.CODE v6 - Application Entry Point
  * PURE DI: UI layer receives pre-initialized services, never creates them

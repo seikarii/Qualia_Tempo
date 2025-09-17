@@ -18,8 +18,8 @@ interface PlayerActionEvent extends BaseEvent {
 }
 
 const App: React.FC = () => {
-  const [backendConnected, setBackendConnected] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [backendConnected, setBackendConnected] = React.useState(true); // Start as true - trust the initialization
+  const [isLoading, setIsLoading] = React.useState(false); // No loading since initialization is complete
 
   const isPlaying = useGameStore((state: any) => state.isPlaying);
   const services = useServices();
@@ -40,10 +40,11 @@ const App: React.FC = () => {
       }
     };
 
+    // Check immediately but trust the initial state
     checkConnection();
 
-    // Recheck connection every 5 seconds
-    const interval = setInterval(checkConnection, 5000);
+    // Recheck connection every 10 seconds (less aggressive)
+    const interval = setInterval(checkConnection, 10000);
     return () => clearInterval(interval);
   }, [backendSync]);
 

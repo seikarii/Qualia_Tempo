@@ -198,6 +198,7 @@ export interface BackendSyncConfig {
     syncFailed: string;
     healthCheck: string;
     backendHealthy: string;
+    backendUnhealthy: string;
     healthCheckFailed: string;
     periodicHealthCheckFailed: string;
     serviceStarted: string;
@@ -209,6 +210,16 @@ export interface BackendSyncConfig {
     forceSync: string;
     forceSyncCompleted: string;
     forceSyncFailed: string;
+    circuitBreakerOpen: string;
+    circuitBreakerClosed: string;
+    fallbackMode: string;
+    fallbackModeDisabled: string;
+    connectionRestored: string;
+    connectionLost: string;
+    retryAttempt: string;
+    maxRetriesExceeded: string;
+    throttleActive: string;
+    throttleInactive: string;
   };
 }
 
@@ -378,6 +389,7 @@ export interface FullGameConfig {
   gameController: GameControllerConfig;
   debugService: DebugServiceConfig;
   notificationService: NotificationServiceConfig;
+  rhythmicMovement: RhythmicMovementConfig;
 }
 
 /**
@@ -680,7 +692,7 @@ export class ConfigurationService {
           musicEnabled: true,
           muteDuringDevelopment: false,
         },
-        qualiaCalculator: unifiedConfig.services?.qualiaCalculator || {
+        qualiaCalculator: unifiedConfig.qualia || {
           updateIntervalMs: 100,
           enableRealTimeUpdate: true,
           enableEventValidation: true,
@@ -688,12 +700,75 @@ export class ConfigurationService {
           enablePerformanceMonitoring: true,
           enableAIAnalysis: true,
         },
-        backendSync: unifiedConfig.services?.backendSync || unifiedConfig.backend || {
-          baseUrl: "http://localhost:8000",
-          maxRetries: 3,
-          retryDelay: 1000,
-          connectionTimeout: 5000,
-          healthCheckInterval: 30000,
+        backendSync: {
+          api: {
+            baseUrl: unifiedConfig.backend?.baseUrl || "http://localhost:8000",
+            qualiaEndpoint: unifiedConfig.backend?.endpoints?.qualiaState || "/update_qualia", 
+            healthEndpoint: unifiedConfig.backend?.endpoints?.health || "/health",
+            timeout: unifiedConfig.backend?.timeoutMs || 5000,
+          },
+          sync: {
+            throttleDelay: unifiedConfig.backend?.throttleMs || 250,
+            batchSize: unifiedConfig.backend?.maxBatchSize || 10,
+            maxRetries: unifiedConfig.backend?.maxRetries || 3,
+            retryDelay: unifiedConfig.backend?.retryDelayMs || 1000,
+          },
+          connection: {
+            healthCheckInterval: unifiedConfig.services?.backendSync?.connection?.healthCheckInterval || 30000,
+            connectionTimeout: unifiedConfig.services?.backendSync?.connection?.connectionTimeout || 5000,
+            maxFailedAttempts: unifiedConfig.services?.backendSync?.connection?.maxFailedAttempts || 3,
+          },
+          validation: {
+            enableSchemaValidation: true,
+            strictMode: false,
+            logValidationErrors: true,
+          },
+          performance: {
+            enableCompression: false,
+            maxPayloadSize: 1024 * 1024, // 1MB
+            enableBuffering: true,
+            bufferFlushInterval: 5000,
+          },
+          errorHandling: {
+            enableCircuitBreaker: false,
+            circuitBreakerThreshold: 5,
+            circuitBreakerTimeout: 30000,
+            enableFallbackMode: true,
+          },
+          messages: {
+            backendNotConnected: "Backend not connected",
+            serviceAlreadyRunning: "Service already running",
+            serviceNotRunning: "Service not running", 
+            syncScheduled: "Sync scheduled",
+            sendingQualiaState: "Sending QualiaState",
+            backendResponse: "Backend response",
+            syncCompleted: "Sync completed",
+            syncFailed: "Sync failed",
+            healthCheck: "Health check",
+            backendHealthy: "Backend healthy",
+            backendUnhealthy: "Backend unhealthy",
+            healthCheckFailed: "Health check failed",
+            periodicHealthCheckFailed: "Periodic health check failed",
+            serviceStarted: "Service started",
+            serviceStopped: "Service stopped",
+            startFailed: "Start failed",
+            stopFailed: "Stop failed",
+            updateConfig: "Update config",
+            updateConfigFailed: "Update config failed",
+            forceSync: "Force sync",
+            forceSyncCompleted: "Force sync completed",
+            forceSyncFailed: "Force sync failed",
+            circuitBreakerOpen: "Circuit breaker open",
+            circuitBreakerClosed: "Circuit breaker closed",
+            fallbackMode: "Fallback mode active",
+            fallbackModeDisabled: "Fallback mode disabled",
+            connectionRestored: "Connection restored",
+            connectionLost: "Connection lost",
+            retryAttempt: "Retry attempt",
+            maxRetriesExceeded: "Max retries exceeded",
+            throttleActive: "Throttle active",
+            throttleInactive: "Throttle inactive",
+          }
         },
         gameController: {
           gameLifecycle: {
@@ -811,6 +886,14 @@ export class ConfigurationService {
           },
           maxNotifications: 10,
           defaultDuration: 5000,
+        },
+        rhythmicMovement: unifiedConfig.services?.rhythmicMovement || {
+          bpm: 120,
+          perfectTiming: 100,
+          goodTiming: 200,
+          gridSize: 8,
+          slowdownFactor: 0.1,
+          slowdownDuration: 100
         },
       };
 

@@ -109,67 +109,94 @@ export class CompositionRoot {
       throw new Error('Failed to register logger in LoggerProvider');
     }
 
-    // 3. Obtener configuración (disponible sincrónicamente - NO RACE CONDITION)
+    // 3. Obtener configuración básica (disponible sincrónicamente - NO RACE CONDITION)
     this.config = this._configService.getCompositionRootConfig();
-    this.compositionRootConfig = this._configService.getConfigSection<any>('compositionRoot');
 
-    // 4. Obtener configuraciones específicas para cada servicio
+    // 4. Inicializar estado de servicios como no inicializado
+    this.serviceStatus = {
+      eventBus: "initializing",
+      qualiaCalculator: "initializing", 
+      backendSync: "initializing",
+      errorReporting: "initializing",
+      debugService: "initializing",
+      gameController: "initializing",
+      gameStateStore: "initializing",
+      configService: "running",
+      logger: "running",
+      audioService: "initializing",
+      rhythmicMovement: "initializing",
+      notificationService: "initializing"
+    };
+
+    // 5. Los servicios se crearán en initialize()
+    this.services = {} as ServiceContainer;
+  }
+
+  /**
+   * Initialize all services in proper dependency order
+   * NOTE: Configuration is loaded. This method creates and starts all services.
+   */
+  async initialize(): Promise<void> {
+    const startTime = performance.now();
+    
+    // Obtener configuración específica de CompositionRoot
+    this.compositionRootConfig = this._configService.getConfigSection<any>('compositionRoot');
+    
+    // Obtener configuraciones específicas para cada servicio
     const qualiaConfig = this._configService.getConfigSection<QualiaCalculatorConfig>('qualiaCalculator');
+    const audioConfig = this._configService.getConfigSection<AudioServiceConfig>('audioService');
     const backendConfig = this._configService.getConfigSection<BackendSyncConfig>('backendSync');
     const errorConfig = this._configService.getConfigSection<ErrorReportingConfig>('errorReporting');
-    const audioConfig = this._configService.getConfigSection<AudioServiceConfig>('audioService');
     const rhythmicConfig = this._configService.getConfigSection<RhythmicMovementConfig>('rhythmicMovement');
     const notificationConfig = this._configService.getConfigSection<NotificationServiceConfig>('notificationService');
 
-    // 5. Crear servicios base sin dependencias de configuración
+    // Crear servicios base sin dependencias de configuración
     const eventBus = new EventBus(this.logger);
 
-    // 6. Crear todos los servicios con configuración inyectada (PURE DI)
-    this.services = {
+    // Crear todos los servicios con configuración inyectada (PURE DI)
+    this.services.eventBus = eventBus;
+    this.services.configService = this._configService;
+    this.services.logger = this.logger;
+    this.services.debugService = new DebugService(eventBus, this.logger);
+    this.services.gameController = new GameControllerService(eventBus, this.logger);
+    this.services.gameStateStore = new GameStateStoreService(
       eventBus,
-      configService: this._configService,
-      logger: this.logger,
-      debugService: new DebugService(eventBus, this.logger),
-      gameController: new GameControllerService(eventBus, this.logger),
-      gameStateStore: new GameStateStoreService(
-        eventBus,
-        this.logger,
-        useGameStore.setState
-      ),
-      qualiaCalculator: new QualiaStateCalculatorService(
-        eventBus,
-        this.logger,
-        qualiaConfig
-      ),
-      backendSync: new BackendSyncService(
-        eventBus,
-        this.logger,
-        backendConfig
-      ),
-      errorReporting: new ErrorReportingService(
-        eventBus,
-        this.logger,
-        errorConfig
-      ),
-      audioService: new AudioService(
-        eventBus,
-        this.logger,
-        audioConfig
-      ),
-      rhythmicMovement: new RhythmicMovementController(
-        eventBus,
-        this.logger,
-        rhythmicConfig
-      ),
-      notificationService: new NotificationService(
-        eventBus,
-        this.logger,
-        useGameStore.setState,
-        notificationConfig
-      ),
-    };
+      this.logger,
+      useGameStore.setState
+    );
+    this.services.qualiaCalculator = new QualiaStateCalculatorService(
+      eventBus,
+      this.logger,
+      qualiaConfig
+    );
+    this.services.backendSync = new BackendSyncService(
+      eventBus,
+      this.logger,
+      backendConfig
+    );
+    this.services.errorReporting = new ErrorReportingService(
+      eventBus,
+      this.logger,
+      errorConfig
+    );
+    this.services.audioService = new AudioService(
+      eventBus,
+      this.logger,
+      audioConfig
+    );
+    this.services.rhythmicMovement = new RhythmicMovementController(
+      eventBus,
+      this.logger,
+      rhythmicConfig
+    );
+    this.services.notificationService = new NotificationService(
+      eventBus,
+      this.logger,
+      useGameStore.setState,
+      notificationConfig
+    );
 
-    // 7. Inicializar estado de servicios como "running" (ya están creados correctamente)
+    // Actualizar estado de servicios como "running" (ya están creados correctamente)
     this.serviceStatus = {
       eventBus: "running",
       qualiaCalculator: "running",
@@ -186,15 +213,6 @@ export class CompositionRoot {
     };
 
     this.logger.info(this.compositionRootConfig.logMessages?.servicesCreatedSuccessfully || "CompositionRoot: All services created successfully");
-  }
-
-  /**
-   * Initialize all services in proper dependency order
-   * NOTE: Configuration is already loaded and services are already created.
-   * This method only starts the services that need async initialization.
-   */
-  async initialize(): Promise<void> {
-    const startTime = performance.now();
     this.logger.info(this.compositionRootConfig.logMessages?.startingServiceInitialization || "Starting service initialization");
 
     try {

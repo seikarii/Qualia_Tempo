@@ -2,6 +2,13 @@
 # This file contains all game configuration parameters
 # Managed by BackendSyncService for runtime updates
 
+# Composition Root configuration
+compositionRoot:
+  enableHealthChecks: true
+  initializationTimeout: 10000  # milliseconds
+  enableServiceValidation: true
+  enableConfigValidation: true
+
 # Audio configuration
 audio:
   volume: 0.8
@@ -101,10 +108,14 @@ services:
     
   # Backend sync service configuration
   backendSync:
-    healthCheckInterval: 30000  # milliseconds - check backend health every 30 seconds
-    maxRetries: 3
-    retryDelay: 1000  # milliseconds
-    connectionTimeout: 5000  # milliseconds
+    connection:
+      healthCheckInterval: 30000  # milliseconds - check backend health every 30 seconds
+      connectionTimeout: 5000  # milliseconds
+    sync:
+      maxRetries: 3
+      retryDelay: 1000  # milliseconds
+      throttleDelay: 250  # milliseconds - from backend config
+      batchSize: 10  # from backend config
     aiAnalysisInterval: 30000  # 30 seconds
     enableAIAnalysis: true
     enablePerformanceMonitoring: true
