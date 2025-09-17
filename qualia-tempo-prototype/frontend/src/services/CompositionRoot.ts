@@ -17,7 +17,7 @@ import { ErrorReportingService } from "./ErrorReportingService";
 import { DebugService } from "./DebugService";
 import { GameControllerService } from "./GameControllerService";
 import { GameStateStoreService } from "./GameStateStoreService";
-import { ConfigurationService } from "./ConfigurationService";
+import { ConfigurationService, QualiaCalculatorConfig, BackendSyncConfig, ErrorReportingConfig, AudioServiceConfig, RhythmicMovementConfig, NotificationServiceConfig } from "./ConfigurationService";
 import { AudioService } from "./AudioService";
 import { RhythmicMovementController } from "./RhythmicMovementController";
 import { NotificationService } from "./NotificationService";
@@ -81,41 +81,30 @@ export interface CompositionRootConfig {
  * - Health monitoring: Active service health verification
  */
 export class CompositionRoot {
-  private readonly config: CompositionRootConfig;
+  private config?: CompositionRootConfig;
   private readonly services: ServiceContainer;
   private serviceStatus: ServiceStatus;
   private healthMonitoringIntervalId: number | null = null;
   private initializationRetryCount = 0;
   private logger: QualiaLogger;
-  private compositionRootConfig: any;
+  private compositionRootConfig?: any;
 
   constructor(
-    private configService: ConfigurationService,
+    // eslint-disable-next-line no-unused-vars
+    private readonly configService: ConfigurationService,
     logger?: QualiaLogger
   ) {
-    // CRITICAL: Create and register logger FIRST to prevent circular dependency
+    // 1. ÚNICAMENTE crear y registrar el logger. NO ACCEDER A configService.
     this.logger = logger || new QualiaLogger('QualiaTempo', LogLevel.INFO);
-    
-    // IMMEDIATE registration - before any service creation
     LoggerProvider.register(this.logger);
-    
-    // Verify registration worked
     if (!LoggerProvider.isRegistered()) {
       throw new Error('Failed to register logger in LoggerProvider');
     }
 
-    this.logger.info(this.compositionRootConfig.logMessages.loggerRegistered);
-
-    // Load configuration from external YAML files (now decorators can use logger)
-    this.config = configService.getCompositionRootConfig();
-    const compositionRootConfig = configService.getConfigSection<any>('compositionRoot');
-    this.compositionRootConfig = compositionRootConfig;
-
-    // Services requiring configuration will be created after loadConfig()
+    // 2. Crear el esqueleto de servicios que NO dependen de configuración.
     const eventBus = new EventBus(this.logger);
     this.services = {
       eventBus,
-      // Services without config dependencies
       debugService: new DebugService(eventBus, this.logger),
       gameController: new GameControllerService(eventBus, this.logger),
       gameStateStore: new GameStateStoreService(
@@ -125,9 +114,6 @@ export class CompositionRoot {
       ),
       configService: this.configService,
       logger: this.logger,
-      
-      // Services with config dependencies - will be created in initializeConfiguration
-      // Using non-null assertion operator since they will be initialized
       qualiaCalculator: null!,
       backendSync: null!,
       errorReporting: null!,
@@ -151,13 +137,27 @@ export class CompositionRoot {
       logger: "initializing",
     };
 
-    this.logger.info(this.compositionRootConfig.logMessages.iocContainerInitialized);
+    // NO DEBE HABER NINGÚN LOG O ACCESO A CONFIGURACIÓN AQUÍ
   }
 
   /**
    * Initialize all services in proper dependency order
    */
   async initialize(): Promise<void> {
+    // 1. AÑADIR: Cargar la configuración como primer paso absoluto.
+    try {
+      await this.configService.loadConfig(); // O loadUnifiedConfig() si es el caso
+    } catch (error) {
+      // Use basic logging since config isn't loaded yet
+      this.logger.error("Configuration loading failed during initialization", { error });
+      throw error; // Detener todo si la configuración falla.
+    }
+
+    // 2. AÑADIR: Poblar las propiedades de configuración de la clase AHORA.
+    this.config = this.configService.getCompositionRootConfig();
+    this.compositionRootConfig = this.configService.getConfigSection<any>('compositionRoot');
+
+    // 3. AHORA es seguro usar la configuración.
     const startTime = performance.now();
     this.logger.info(this.compositionRootConfig.logMessages.startingServiceInitialization);
 
@@ -172,7 +172,7 @@ export class CompositionRoot {
       await this.initializeQualiaCalculator();
 
       // Phase 3: BackendSync (depends on EventBus, optional)
-      if (this.config.enableBackendSync) {
+      if (this.config!.enableBackendSync) {
         await this.initializeBackendSync();
       }
 
@@ -198,7 +198,7 @@ export class CompositionRoot {
       await this.initializeRhythmicMovement();
 
       // Start health monitoring if enabled
-      if (this.config.enableHealthMonitoring) {
+      if (this.config!.enableHealthMonitoring) {
         this.startHealthMonitoring();
       }
 
@@ -216,12 +216,12 @@ export class CompositionRoot {
       );
 
       if (
-        this.config.retryInitializationOnError &&
-        this.initializationRetryCount < this.config.maxInitializationRetries
+        this.config!.retryInitializationOnError &&
+        this.initializationRetryCount < this.config!.maxInitializationRetries
       ) {
         this.initializationRetryCount++;
         this.logger.info(
-          `🔄 [CompositionRoot] Retrying initialization (attempt ${this.initializationRetryCount}/${this.config.maxInitializationRetries})`,
+          `🔄 [CompositionRoot] Retrying initialization (attempt ${this.initializationRetryCount}/${this.config!.maxInitializationRetries})`,
         );
 
         // Exponential backoff
@@ -329,6 +329,9 @@ export class CompositionRoot {
    * Get configuration
    */
   getConfig(): Readonly<CompositionRootConfig> {
+    if (!this.config) {
+      throw new Error('Configuration not loaded. Call initialize() first.');
+    }
     return { ...this.config };
   }
 
@@ -547,12 +550,12 @@ export class CompositionRoot {
     }
 
     this.logger.info(
-      `💚 [CompositionRoot] Starting health monitoring (interval: ${this.config.healthCheckIntervalMs}ms)`,
+      `💚 [CompositionRoot] Starting health monitoring (interval: ${this.config!.healthCheckIntervalMs}ms)`,
     );
 
     this.healthMonitoringIntervalId = window.setInterval(() => {
       this.performHealthCheck();
-    }, this.config.healthCheckIntervalMs);
+    }, this.config!.healthCheckIntervalMs);
   }
 
   private stopHealthMonitoring(): void {
@@ -578,7 +581,7 @@ export class CompositionRoot {
     }
 
     if (
-      this.config.enableBackendSync &&
+      this.config!.enableBackendSync &&
       this.serviceStatus.backendSync === "error"
     ) {
       issues.push("BackendSync in error state");
@@ -622,12 +625,12 @@ export class CompositionRoot {
       this.logger.info("Creating services with configuration injection...");
       
       // Get specific configurations from the loaded config
-      const qualiaConfig = this.services.configService.getConfigSection<any>('qualiaCalculator');
-      const backendConfig = this.services.configService.getConfigSection<any>('backendSync');
-      const errorConfig = this.services.configService.getConfigSection<any>('errorReporting');
-      const audioConfig = this.services.configService.getConfigSection<any>('audioService');
-      const rhythmicConfig = this.services.configService.getConfigSection<any>('rhythmicMovement');
-      const notificationConfig = this.services.configService.getConfigSection<any>('notificationService');
+      const qualiaConfig = this.services.configService.getConfigSection<QualiaCalculatorConfig>('qualiaCalculator');
+      const backendConfig = this.services.configService.getConfigSection<BackendSyncConfig>('backendSync');
+      const errorConfig = this.services.configService.getConfigSection<ErrorReportingConfig>('errorReporting');
+      const audioConfig = this.services.configService.getConfigSection<AudioServiceConfig>('audioService');
+      const rhythmicConfig = this.services.configService.getConfigSection<RhythmicMovementConfig>('rhythmicMovement');
+      const notificationConfig = this.services.configService.getConfigSection<NotificationServiceConfig>('notificationService');
       
       // Create services with specific configuration objects - PURE DI
       this.services.qualiaCalculator = new QualiaStateCalculatorService(

@@ -20,7 +20,7 @@ import {
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from '../utils/decorators';
 import { QualiaLogger } from './Logger';
-import type { ConfigurationService, QualiaCalculatorConfig } from './ConfigurationService';
+import type { QualiaCalculatorConfig } from './ConfigurationService';
 
 // Configuration interface - REMOVED: Using ConfigurationService interface
 
@@ -49,17 +49,12 @@ export class QualiaStateCalculatorService {
   constructor(
     eventBus: EventBus,
     logger: QualiaLogger,
-    configService: ConfigurationService,
+    config: QualiaCalculatorConfig
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
 
-    // Use configuration from service - no fallback allowed
-    if (!configService || !configService.isLoaded()) {
-      throw new Error('ConfigurationService must be provided and loaded for QualiaStateCalculatorService');
-    }
-
-    this.config = configService.getQualiaCalculatorConfig();
+    this.config = config;
     this.currentState = this.createInitialState();
     this.lastUpdateTime = performance.now();
 

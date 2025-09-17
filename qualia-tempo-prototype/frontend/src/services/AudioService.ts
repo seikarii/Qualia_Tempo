@@ -4,7 +4,7 @@ import { OntologicalAudioEngine } from '../audio/OntologicalAudioEngine';
 import type { QualiaState } from '../types/contracts';
 import { logMethod, catchError, measureTime } from '../utils/decorators';
 import { QualiaLogger } from './Logger';
-import { ConfigurationService } from './ConfigurationService';
+import { AudioServiceConfig } from './ConfigurationService';
 
 /**
  * AudioService - QUALIA.CODE compliant service for audio management
@@ -15,16 +15,16 @@ export class AudioService {
   private logger: QualiaLogger;
   private qualiaStateListenerId: string | null = null;
   private isInitialized: boolean = false;
-  private config: any;
+  private config: AudioServiceConfig;
 
   constructor(
     eventBus: EventBus,
     logger: QualiaLogger,
-    private configService: ConfigurationService
+    config: AudioServiceConfig
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
-    this.config = this.configService.getAudioServiceConfig();
+    this.config = config;
   }
 
   @logMethod()

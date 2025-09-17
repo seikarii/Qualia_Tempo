@@ -20,7 +20,7 @@
 import { EventBus, ErrorEvent } from "./EventBus";
 import { logMethod, catchError } from '../utils/decorators';
 import { QualiaLogger } from './Logger';
-import { ConfigurationService } from './ConfigurationService';
+import { ErrorReportingConfig } from './ConfigurationService';
 
 // Error severity levels
 export type ErrorSeverity = "low" | "medium" | "high" | "critical";
@@ -44,16 +44,7 @@ interface ExternalServiceResponse {
   error?: string;
 }
 
-// Configuration interface
-interface ErrorReportingConfig {
-  rateLimitWindow: number; // Time window for rate limiting (ms)
-  maxErrorsPerWindow: number; // Max errors per time window
-  batchSize: number; // Number of errors to batch together
-  batchTimeout: number; // Max time to wait before sending batch (ms)
-  maxRetentionTime: number; // How long to keep errors in memory (ms)
-  externalServiceUrl: string; // URL for external error reporting service
-  retryAttempts: number; // Number of retry attempts for failed reports
-}
+// Configuration interface - REMOVED: Using ConfigurationService interface
 
 /**
  * Centralized error reporting service following QUALIA.CODE v1.0 architecture.
@@ -79,7 +70,7 @@ export class ErrorReportingService {
   constructor(
     eventBus: EventBus,
     logger: QualiaLogger,
-    private configService: ConfigurationService
+    config: ErrorReportingConfig
   ) {
     if (!eventBus) {
       throw new Error("ErrorReportingService requires EventBus dependency");
@@ -87,7 +78,7 @@ export class ErrorReportingService {
 
     this.eventBus = eventBus;
     this.logger = logger;
-    this.config = this.configService.getErrorReportingConfig();
+    this.config = config;
     this.logger.info(
       "🚨 [ErrorReporting] Service initialized with event-driven architecture",
     );

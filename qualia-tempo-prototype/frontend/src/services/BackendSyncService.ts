@@ -17,7 +17,7 @@ import {
 } from './EventBus';
 import type { QualiaStateUpdatedEvent } from './EventBus';
 import { logMethod, catchError, validateEventProperty } from '../utils/decorators';
-import type { ConfigurationService, BackendSyncConfig } from './ConfigurationService';
+import type { BackendSyncConfig } from './ConfigurationService';
 import { QualiaLogger } from './Logger';
 
 // Backend synchronization event interface - REMOVED: Using EventBus definition
@@ -68,17 +68,12 @@ export class BackendSyncService {
   constructor(
     eventBus: EventBus,
     logger: QualiaLogger,
-    configService: ConfigurationService
+    config: BackendSyncConfig
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
 
-    // ConfigurationService is required - no fallback configuration allowed
-    if (!configService || !configService.isLoaded()) {
-      throw new Error('ConfigurationService must be provided and loaded for BackendSyncService');
-    }
-
-    this.config = configService.getBackendSyncConfig();
+    this.config = config;
     // Store health check interval for later use
     this.healthCheckInterval = this.config.connection.healthCheckInterval;
 

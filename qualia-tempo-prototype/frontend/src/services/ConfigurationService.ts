@@ -85,6 +85,7 @@ export interface RhythmicMovementConfig {
   goodTiming: number;
   gridSize: number;
   slowdownFactor: number;
+  slowdownDuration: number;
 }
 
 // QualiaCalculator Configuration

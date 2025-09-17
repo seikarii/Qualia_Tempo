@@ -12,7 +12,7 @@
 import { EventBus, ErrorEvent, BackendSyncEvent } from "./EventBus";
 import { logMethod, catchError } from '../utils/decorators';
 import { QualiaLogger } from './Logger';
-import { ConfigurationService } from './ConfigurationService';
+import { NotificationServiceConfig } from './ConfigurationService';
 import { Notification } from '../state/useGameStore';
 
 // Store setter type (from Zustand)
@@ -31,7 +31,7 @@ export class NotificationService {
   private readonly eventBus: EventBus;
   private readonly setStore: StoreSetter;
   private readonly logger: QualiaLogger;
-  private readonly configService: ConfigurationService;
+  private readonly config: NotificationServiceConfig;
   private isStarted = false;
   private listenerIds: string[] = [];
 
@@ -39,30 +39,28 @@ export class NotificationService {
     eventBus: EventBus,
     logger: QualiaLogger,
     setStore: StoreSetter,
-    configService: ConfigurationService
+    config: NotificationServiceConfig
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.setStore = setStore;
-    this.configService = configService;
-    // Note: Configuration access deferred to start() method to avoid circular dependency
-    this.logger.info("🔔 [NotificationService] Service constructor completed - awaiting configuration load");
+    this.config = config;
+    // QUALIA.CODE: Pure DI - config is now injected directly
+    // Verify config is properly injected
+    if (!this.config) {
+      throw new Error("NotificationServiceConfig must be provided");
+    }
+    this.logger.info("🔔 [NotificationService] Service initialized with pure DI");
   }
 
   /**
    * Get logging configuration safely, with fallback messages
    */
-  private getLoggingMessage(path: string, fallback: string): string {
+  private getLoggingMessage(fallback: string): string {
     try {
-      const config = this.configService.getConfig().debugService.logging;
-      const pathArray = path.split('.');
-      let current: any = config;
-      
-      for (const segment of pathArray) {
-        current = current?.[segment];
-      }
-      
-      return current || fallback;
+      // For now, use fallback since we have pure DI
+      // TODO: Move logging messages to NotificationServiceConfig if needed
+      return fallback;
     } catch (error) {
       // Configuration not loaded yet - use fallback
       return fallback;
@@ -77,14 +75,12 @@ export class NotificationService {
   start(): void {
     if (this.isStarted) {
       this.logger.warn(this.getLoggingMessage(
-        'messages.notificationService.alreadyStarted',
         '⚠️ [NotificationService] Already started'
       ));
       return;
     }
 
     this.logger.info(this.getLoggingMessage(
-      'messages.notificationService.startingListeners',
       '🔔 [NotificationService] Starting event listeners'
     ));
 
@@ -104,7 +100,6 @@ export class NotificationService {
 
     this.isStarted = true;
     this.logger.info(this.getLoggingMessage(
-      'messages.notificationService.listenersActive',
       '✅ [NotificationService] Event listeners active'
     ));
   }
@@ -117,14 +112,12 @@ export class NotificationService {
   stop(): void {
     if (!this.isStarted) {
       this.logger.warn(this.getLoggingMessage(
-        'messages.notificationService.notStarted',
         '⚠️ [NotificationService] Service not started'
       ));
       return;
     }
 
     this.logger.info(this.getLoggingMessage(
-      'messages.notificationService.stoppingListeners',
       '🔔 [NotificationService] Stopping event listeners'
     ));
 
@@ -136,7 +129,6 @@ export class NotificationService {
 
     this.isStarted = false;
     this.logger.info(this.getLoggingMessage(
-      'messages.notificationService.listenersStopped',
       '✅ [NotificationService] Event listeners stopped'
     ));
   }
@@ -147,10 +139,9 @@ export class NotificationService {
   private handleErrorEvent(event: ErrorEvent): void {
     this.logger.info(
       this.getLoggingMessage(
-        'messages.notificationService.processingErrorEvent',
         '🔔 [NotificationService] Processing error event'
       ),
-      { severity: event.severity, error: event.error.message },
+      { severity: event.severity },
     );
 
     // Only show notifications for high or critical severity
@@ -167,7 +158,6 @@ export class NotificationService {
 
       this.addNotification(notification);
       this.logger.info(this.getLoggingMessage(
-        'messages.notificationService.errorNotificationGenerated',
         '✅ [NotificationService] Error notification generated'
       ));
     }
@@ -179,7 +169,6 @@ export class NotificationService {
   private handleBackendSyncEvent(event: BackendSyncEvent): void {
     this.logger.info(
       this.getLoggingMessage(
-        'messages.notificationService.processingBackendSyncEvent',
         '🔔 [NotificationService] Processing backend sync event'
       ),
       { syncType: event.syncType },
@@ -199,7 +188,6 @@ export class NotificationService {
 
       this.addNotification(notification);
       this.logger.info(this.getLoggingMessage(
-        'messages.notificationService.configSyncNotificationGenerated',
         '✅ [NotificationService] Config sync notification generated'
       ));
     }
