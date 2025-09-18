@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
@@ -7,6 +7,8 @@ import { useGameStore } from '../../state/useGameStore';
 import { useService } from '../../services/hooks';
 import { TYPES } from '../../services/inversify.types';
 import { IEventBus } from '../../services/interfaces/IEventBus';
+import { PlayerActionEvent, RhythmicDashEvent, MetronomeTickEvent } from '../../services/EventBus';
+import type { NoteData } from '../../types/contracts';
 
 import QualiaTempoHUD from './QualiaTempoHUD';
 import PlayerAvatar from './PlayerAvatar';
@@ -42,10 +44,41 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   // Get real game state from Zustand store
   const zustandState = useGameStore();
 
+  // QUALIA.CODE: Helper function for calculating note timing accuracy
+  const calculateNoteAccuracy = useCallback((currentTime: number, noteTimestamp: number): number => {
+    const timeDiff = Math.abs(currentTime - noteTimestamp);
+    const maxTiming = 200; // milliseconds window for a "good" hit
+    const perfectTiming = 50; // milliseconds window for a "perfect" hit
+    
+    if (timeDiff <= perfectTiming) return 1.0;
+    if (timeDiff <= maxTiming) return Math.max(0.5, 1.0 - (timeDiff / maxTiming));
+    return 0.0; // Miss
+  }, []);
+
+  // QUALIA.CODE: Memoized note transformation - Performance critical
+  const renderedNotes = useMemo(() => {
+    if (!zustandState.combatData?.noteMap) {
+      return [];
+    }
+
+    // Transform NoteData from contracts to Note type for renderer
+    return zustandState.combatData.noteMap.map((noteData: NoteData) => ({
+      id: `note_${noteData.timestamp}_${noteData.position.x}_${noteData.position.y}`,
+      type: 'musical_note', // Default type for all notes
+      timing: noteData.timestamp,
+      position: [
+        noteData.position.x, 
+        noteData.position.y, 
+        0 // Z position - can be calculated based on timing or other factors
+      ] as [number, number, number],
+      qualia_signature: `signature_${Math.floor(noteData.timestamp)}` // Generate based on timing
+    }));
+  }, [zustandState.combatData?.noteMap]);
+
   // Subscribe to rhythmic movement events
   useEffect(() => {
     // Listen for rhythmic dash events to update player position
-    const rhythmicDashListenerId = eventBus.subscribe<any>(
+    const rhythmicDashListenerId = eventBus.subscribe<RhythmicDashEvent>(
       'RhythmicDash',
       (_event) => {
         // Position is updated in the store by GameStateStoreService
@@ -54,7 +87,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
     );
 
     // Listen for metronome ticks for audio feedback
-    const metronomeListenerId = eventBus.subscribe<any>(
+    const metronomeListenerId = eventBus.subscribe<MetronomeTickEvent>(
       'MetronomeTick',
       (_event) => {
         // Visual or audio feedback for metronome tick
@@ -67,10 +100,10 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
     };
   }, [eventBus]);
 
-  // Handle note hits
+  // Handle note hits with real logic (no mock)
   const handleNoteHit = useCallback((noteId: string, accuracy: number) => {
-    // Emit hit note event
-    eventBus.emit<any>({
+    // QUALIA.CODE: Type-safe event emission with real game data
+    eventBus.emit<PlayerActionEvent>({
       type: 'PlayerAction',
       action: 'HitNote',
       source: 'QualiaTempoGame',
@@ -90,8 +123,8 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
       // Global game controls
       if (key === 'p' || key === 'escape') {
         event.preventDefault();
-        // Emit pause action to GameController
-        eventBus.emit<any>({
+        // QUALIA.CODE: Type-safe event emission
+        eventBus.emit<PlayerActionEvent>({
           type: 'PlayerAction',
           action: 'PauseGame',
           source: 'QualiaTempoGame'
@@ -100,23 +133,63 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
       }
       
       // WASD Movement - REMOVED: Handled by RhythmicMovementController
-      // Note hitting (Space/Enter)
+      // Note hitting (Space/Enter) - Real implementation with game state
       if (key === ' ' || key === 'enter') {
         event.preventDefault();
         
-        // For now, simulate a note hit since we don't have dynamic note generation
-        const mockAccuracy = Math.random() * 0.5 + 0.5; // 0.5-1.0 accuracy
+        // QUALIA.CODE: Real note hit logic based on current game state
+        // Get the current notes from combat data
+        const combatNotes = zustandState.combatData?.noteMap || [];
         
-        // Emit hit note event
-        eventBus.emit<any>({
-          type: 'PlayerAction',
-          action: 'HitNote',
-          source: 'QualiaTempoGame',
-          context: {
-            points: Math.floor(mockAccuracy * 100),
-            perfect: mockAccuracy > 0.9
+        if (combatNotes.length > 0) {
+          // Calculate accuracy based on timing with the nearest note
+          const currentTime = Date.now() / 1000; // Convert to seconds to match noteData.timestamp
+          
+          // Find the closest note by timestamp
+          const nearestNote = combatNotes.reduce((closest, note) => {
+            const currentDiff = Math.abs(currentTime - note.timestamp);
+            const closestDiff = Math.abs(currentTime - closest.timestamp);
+            return currentDiff < closestDiff ? note : closest;
+          });
+          
+          const timingAccuracy = calculateNoteAccuracy(currentTime * 1000, nearestNote.timestamp * 1000);
+          
+          if (timingAccuracy > 0) {
+            // Emit real hit note event with calculated accuracy
+            eventBus.emit<PlayerActionEvent>({
+              type: 'PlayerAction',
+              action: 'HitNote',
+              source: 'QualiaTempoGame',
+              context: {
+                noteTimestamp: nearestNote.timestamp,
+                accuracy: timingAccuracy,
+                points: Math.floor(timingAccuracy * 100),
+                perfect: timingAccuracy > 0.9
+              }
+            });
+          } else {
+            // Poor timing - this is a miss
+            eventBus.emit<PlayerActionEvent>({
+              type: 'PlayerAction',
+              action: 'MissNote',
+              source: 'QualiaTempoGame',
+              context: {
+                reason: 'poor_timing',
+                noteTimestamp: nearestNote.timestamp
+              }
+            });
           }
-        });
+        } else {
+          // No notes available - this is a miss
+          eventBus.emit<PlayerActionEvent>({
+            type: 'PlayerAction',
+            action: 'MissNote',
+            source: 'QualiaTempoGame',
+            context: {
+              reason: 'no_notes_available'
+            }
+          });
+        }
       }
     };
 
@@ -200,7 +273,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
         />
         
         <MusicalNotesRenderer 
-          notes={[]} // Will be populated by combat data
+          notes={renderedNotes} // QUALIA.CODE: Real notes from memoized transformation
           currentTime={zustandState.currentTime}
           onNoteHit={handleNoteHit}
         />

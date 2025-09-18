@@ -66,6 +66,7 @@ export interface BackendSyncEvent extends BaseEvent {
   type: "BackendSync";
   data: any;
   syncType: "qualiaState" | "gameState" | "config";
+  status?: "success" | "error" | "pending";
 }
 
 export interface RhythmicDashEvent extends BaseEvent {

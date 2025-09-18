@@ -168,12 +168,12 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
       ...newConfig,
       // Ensure baseQualiaState is never undefined
       baseQualiaState: {
-        ...this.config.baseQualiaState,
+        ...(this.config?.baseQualiaState || {}),
         ...(newConfig.baseQualiaState || {})
       },
       // Ensure performanceMultipliers is never undefined
       performanceMultipliers: {
-        ...this.config.performanceMultipliers,
+        ...(this.config?.performanceMultipliers || {}),
         ...(newConfig.performanceMultipliers || {})
       }
     } as QualiaCalculatorConfig;

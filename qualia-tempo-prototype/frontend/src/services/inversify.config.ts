@@ -18,11 +18,11 @@ import type { IBackendSyncService } from './interfaces/IBackendSyncService';
 import type { IAudioService } from './interfaces/IAudioService';
 import type { IGameControllerService } from './interfaces/IGameControllerService';
 import type { IGameStateStoreService } from './interfaces/IGameStateStoreService';
-// TODO: Re-enable when interface implementations are complete
-// import type { INotificationService } from './interfaces/INotificationService';
-// import type { IErrorReportingService } from './interfaces/IErrorReportingService';
-// import type { IDebugService } from './interfaces/IDebugService';
-// import type { IRhythmicMovementController } from './interfaces/IRhythmicMovementController';
+// QUALIA.CODE: Complete service imports - All services implemented
+import type { INotificationService } from './interfaces/INotificationService';
+import type { IErrorReportingService } from './interfaces/IErrorReportingService';
+import type { IDebugService } from './interfaces/IDebugService';
+import type { IRhythmicMovementController } from './interfaces/IRhythmicMovementController';
 import type { IOntologicalAudioEngine } from '../audio/IOntologicalAudioEngine';
 import type { IApplicationInitializerService } from './interfaces/IApplicationInitializerService';
 import type { IWebAudioAPIService } from './interfaces/IWebAudioAPIService';
@@ -36,11 +36,11 @@ import { BackendSyncService } from './BackendSyncService';
 import { AudioService } from './AudioService';
 import { GameControllerService } from './GameControllerService';
 import { GameStateStoreService } from './GameStateStoreService';
-// TODO: Re-enable when interface implementations are complete
-// import { NotificationService } from './NotificationService';
-// import { ErrorReportingService } from './ErrorReportingService';
-// import { DebugService } from './DebugService';
-// import { RhythmicMovementController } from './RhythmicMovementController';
+// QUALIA.CODE: Complete service implementations - All services implemented
+import { NotificationService } from './NotificationService';
+import { ErrorReportingService } from './ErrorReportingService';
+import { DebugService } from './DebugService';
+import { RhythmicMovementController } from './RhythmicMovementController';
 import { OntologicalAudioEngine } from '../audio/OntologicalAudioEngine';
 import { ApplicationInitializerService } from './ApplicationInitializerService';
 import { WebAudioAPIService } from './WebAudioAPIService';
@@ -65,11 +65,11 @@ container.bind<IBackendSyncService>(TYPES.IBackendSyncService).to(BackendSyncSer
 container.bind<IAudioService>(TYPES.IAudioService).to(AudioService).inSingletonScope();
 container.bind<IGameControllerService>(TYPES.IGameControllerService).to(GameControllerService).inSingletonScope();
 container.bind<IGameStateStoreService>(TYPES.IGameStateStoreService).to(GameStateStoreService).inSingletonScope();
-// TODO: Implement missing interface methods before enabling these bindings
-// container.bind<INotificationService>(TYPES.INotificationService).to(NotificationService).inSingletonScope();
-// container.bind<IErrorReportingService>(TYPES.IErrorReportingService).to(ErrorReportingService).inSingletonScope();
-// container.bind<IDebugService>(TYPES.IDebugService).to(DebugService).inSingletonScope();
-// container.bind<IRhythmicMovementController>(TYPES.IRhythmicMovementController).to(RhythmicMovementController).inSingletonScope();
+// QUALIA.CODE: Complete service bindings - All services implemented and bound
+container.bind<INotificationService>(TYPES.INotificationService).to(NotificationService).inSingletonScope();
+container.bind<IErrorReportingService>(TYPES.IErrorReportingService).to(ErrorReportingService).inSingletonScope();
+container.bind<IDebugService>(TYPES.IDebugService).to(DebugService).inSingletonScope();
+container.bind<IRhythmicMovementController>(TYPES.IRhythmicMovementController).to(RhythmicMovementController).inSingletonScope();
 container.bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).to(OntologicalAudioEngine).inSingletonScope();
 container.bind<IApplicationInitializerService>(TYPES.IApplicationInitializerService).to(ApplicationInitializerService).inSingletonScope();
 container.bind<IWebAudioAPIService>(TYPES.IWebAudioAPIService).to(WebAudioAPIService).inSingletonScope();
