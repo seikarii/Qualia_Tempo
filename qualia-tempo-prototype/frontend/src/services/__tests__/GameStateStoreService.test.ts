@@ -1,11 +1,13 @@
 /**
- * Tests for GameStateStoreService
+ * Tests for GameStateStoreService - GOLD.CODE IoC Compliance
  * Bridge service between EventBus and Zustand store for passive state management
  */
 
+import { createTestContainer, getMocksFromContainer, resetAllMocks } from '../../testing/test-container-factory';
 import { GameStateStoreService } from '../GameStateStoreService';
-import { EventBus } from '../EventBus';
+import { IEventBus } from '../interfaces/IEventBus';
 import { QualiaLogger } from '../Logger';
+import { Container } from 'inversify';
 
 // Mock decorators
 jest.mock('../../utils/decorators', () => ({
@@ -13,41 +15,36 @@ jest.mock('../../utils/decorators', () => ({
   catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
 }));
 
-describe('GameStateStoreService', () => {
+describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
   let gameStateStoreService: GameStateStoreService;
-  let mockEventBus: jest.Mocked<EventBus>;
-  let mockLogger: Partial<QualiaLogger>;
+  let container: Container;
+  let mockEventBus: jest.Mocked<IEventBus>;
+  let mockLogger: jest.Mocked<QualiaLogger>;
   let mockSetStore: jest.Mock;
   let consoleLogSpy: jest.SpyInstance;
   let consoleWarnSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    // Create mock EventBus
-    mockEventBus = {
-      subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
-      emit: jest.fn(),
-      clear: jest.fn(),
-      getListeners: jest.fn(),
-      getEventHistory: jest.fn(),
-    } as any;
+    // Reset all mocks to clean state
+    resetAllMocks();
 
-    // Create mock logger
-    mockLogger = {
-      info: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-      debug: jest.fn(),
-    };
+    // Create fresh test container with proper IoC bindings
+    container = createTestContainer();
 
-    // Create mock store setter
+    // Get mock instances for assertions
+    const mocks = getMocksFromContainer(container);
+    mockEventBus = mocks.mockEventBus as jest.Mocked<IEventBus>;
+    mockLogger = mocks.mockLogger as jest.Mocked<QualiaLogger>;
+
+    // Create mock store setter for this specific service
     mockSetStore = jest.fn();
 
     // Spy on console methods
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
-    gameStateStoreService = new GameStateStoreService(mockEventBus, mockLogger as QualiaLogger, mockSetStore);
+    // GOLD.CODE COMPLIANCE: Resolve service from IoC container
+    gameStateStoreService = container.get<GameStateStoreService>(GameStateStoreService);
   });
 
   afterEach(() => {
