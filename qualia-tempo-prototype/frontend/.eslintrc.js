@@ -2,7 +2,8 @@ module.exports = {
   root: true,
   env: { browser: true, es2020: true, node: true },
   extends: [
-    "eslint:recommended"
+    "eslint:recommended",
+    "plugin:@qualia-tempo/qualia-code/recommended"
   ],
   ignorePatterns: ["dist", ".eslintrc.cjs", "**/__tests__/**", "**/*.test.*", "**/*.spec.*"],
   parser: "@typescript-eslint/parser",
@@ -13,7 +14,6 @@ module.exports = {
     project: "./tsconfig.json"
   },
   rules: {
-    "@qualia-tempo/qualia-code/enforce-method-decorators": "error",
     "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
   },
   settings: {
