@@ -6,10 +6,25 @@
 import { jest } from '@jest/globals';
 
 // Mock electron module completely
+const appEventHandlers = new Map<string, (...args: any[]) => any>();
 const mockApp = {
-  whenReady: jest.fn(() => Promise.resolve()),
-  on: jest.fn(),
-  quit: jest.fn()
+  whenReady: jest.fn().mockImplementation((...args: any[]) => {
+    const callback = args[0];
+    if (typeof callback === 'function') {
+      // Store the callback for later access and call it
+      setTimeout(callback, 0);
+    }
+    return Promise.resolve();
+  }),
+  on: jest.fn().mockImplementation((...args: any[]) => {
+    const [event, handler] = args;
+    if (typeof event === 'string' && typeof handler === 'function') {
+      appEventHandlers.set(event, handler);
+    }
+  }),
+  quit: jest.fn(),
+  // Helper to get stored handlers for testing
+  getEventHandler: (event: string) => appEventHandlers.get(event)
 };
 
 const mockBrowserWindow = jest.fn().mockImplementation(() => ({
@@ -27,8 +42,17 @@ const mockBrowserWindow = jest.fn().mockImplementation(() => ({
 
 mockBrowserWindow.getAllWindows = jest.fn().mockReturnValue([]);
 
+// Enhanced IPC Main mock that stores handlers
+const ipcHandlers = new Map<string, (...args: any[]) => any>();
 const mockIpcMain = {
-  handle: jest.fn()
+  handle: jest.fn().mockImplementation((...args: any[]) => {
+    const [channel, handler] = args;
+    if (typeof channel === 'string' && typeof handler === 'function') {
+      ipcHandlers.set(channel, handler);
+    }
+  }),
+  // Helper to get stored handlers for testing
+  getHandler: (channel: string) => ipcHandlers.get(channel)
 };
 
 jest.mock('electron', () => ({
@@ -166,20 +190,19 @@ describe('Electron Main Process', () => {
     it('should handle fullscreen toggle correctly', async () => {
       await import('../main');
       
-      const fullscreenHandler = mockIpcMain.handle.mock.calls
-        .find(call => call[0] === 'toggle-fullscreen')?.[1];
+      const fullscreenHandler = mockIpcMain.getHandler('toggle-fullscreen');
       
       if (fullscreenHandler) {
         const windowInstance = mockBrowserWindow.mock.results[0]?.value;
         
         // Test entering fullscreen
         windowInstance.isFullScreen.mockReturnValue(false);
-        const result1 = fullscreenHandler();
+        fullscreenHandler();
         expect(windowInstance.setFullScreen).toHaveBeenCalledWith(true);
         
         // Test exiting fullscreen
         windowInstance.isFullScreen.mockReturnValue(true);
-        const result2 = fullscreenHandler();
+        fullscreenHandler();
         expect(windowInstance.setFullScreen).toHaveBeenCalledWith(false);
       }
     });
@@ -187,8 +210,7 @@ describe('Electron Main Process', () => {
     it('should handle window minimize', async () => {
       await import('../main');
       
-      const minimizeHandler = mockIpcMain.handle.mock.calls
-        .find(call => call[0] === 'minimize-window')?.[1];
+      const minimizeHandler = mockIpcMain.getHandler('minimize-window');
       
       if (minimizeHandler) {
         const windowInstance = mockBrowserWindow.mock.results[0]?.value;
@@ -200,8 +222,7 @@ describe('Electron Main Process', () => {
     it('should handle window close', async () => {
       await import('../main');
       
-      const closeHandler = mockIpcMain.handle.mock.calls
-        .find(call => call[0] === 'close-window')?.[1];
+      const closeHandler = mockIpcMain.getHandler('close-window');
       
       if (closeHandler) {
         const windowInstance = mockBrowserWindow.mock.results[0]?.value;
@@ -215,8 +236,7 @@ describe('Electron Main Process', () => {
     it('should handle activate event on macOS', async () => {
       await import('../main');
       
-      const activateHandler = mockApp.on.mock.calls
-        .find(call => call[0] === 'activate')?.[1];
+      const activateHandler = mockApp.getEventHandler('activate');
       
       if (activateHandler) {
         // Mock no windows open
@@ -232,8 +252,7 @@ describe('Electron Main Process', () => {
     it('should handle window-all-closed event', async () => {
       await import('../main');
       
-      const windowsClosedHandler = mockApp.on.mock.calls
-        .find(call => call[0] === 'window-all-closed')?.[1];
+      const windowsClosedHandler = mockApp.getEventHandler('window-all-closed');
       
       if (windowsClosedHandler) {
         // Mock non-macOS platform
@@ -248,8 +267,7 @@ describe('Electron Main Process', () => {
     it('should handle web-contents-created for security', async () => {
       await import('../main');
       
-      const webContentsHandler = mockApp.on.mock.calls
-        .find(call => call[0] === 'web-contents-created')?.[1];
+      const webContentsHandler = mockApp.getEventHandler('web-contents-created');
       
       if (webContentsHandler) {
         const mockContents = {
@@ -267,15 +285,22 @@ describe('Electron Main Process', () => {
     it('should prevent navigation to external URLs', async () => {
       await import('../main');
       
-      const webContentsHandler = mockApp.on.mock.calls
-        .find(call => call[0] === 'web-contents-created')?.[1];
+      const webContentsHandler = mockApp.getEventHandler('web-contents-created');
       
       if (webContentsHandler) {
-        const mockContents = { on: jest.fn() };
+        const contentsHandlers = new Map<string, (...args: any[]) => any>();
+        const mockContents = { 
+          on: jest.fn().mockImplementation((...args: any[]) => {
+            const [event, handler] = args;
+            if (typeof event === 'string' && typeof handler === 'function') {
+              contentsHandlers.set(event, handler);
+            }
+          }),
+          getHandler: (event: string) => contentsHandlers.get(event)
+        };
         webContentsHandler({}, mockContents);
         
-        const navigationHandler = mockContents.on.mock.calls
-          .find(call => call[0] === 'will-navigate')?.[1];
+        const navigationHandler = mockContents.getHandler('will-navigate');
         
         if (navigationHandler) {
           const mockEvent = { preventDefault: jest.fn() };
