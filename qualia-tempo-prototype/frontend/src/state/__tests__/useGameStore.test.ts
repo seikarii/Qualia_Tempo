@@ -21,7 +21,7 @@ describe("useGameStore - Passive State Container", () => {
       combatData: null,
       qualiaState: {
         intensity: 0,
-        precision: 0,
+        focus_level: 0,
         aggression: 0,
         flow: 0,
         chaos: 0,
@@ -50,7 +50,7 @@ describe("useGameStore - Passive State Container", () => {
     expect(result.current.player.lastRhythmHit).toBe(0);
     expect(result.current.combatData).toBeNull();
     expect(result.current.qualiaState.intensity).toBe(0);
-    expect(result.current.qualiaState.precision).toBe(0);
+    expect(result.current.qualiaState.focus_level).toBe(0);
     expect(result.current.qualiaState.aggression).toBe(0);
     expect(result.current.qualiaState.flow).toBe(0);
     expect(result.current.qualiaState.chaos).toBe(0);
@@ -203,7 +203,7 @@ describe("useGameStore - Passive State Container", () => {
 
     const newQualiaState: QualiaState = {
       intensity: 0.9,
-      precision: 0.8,
+      focus_level: 0.8,
       aggression: 0.7,
       flow: 0.95,
       chaos: 0.1,

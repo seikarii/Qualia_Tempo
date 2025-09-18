@@ -53,7 +53,7 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
       }}>
         <div>Intensity: {(qualiaState.intensity * 100).toFixed(1)}%</div>
         <div>Flow: {(qualiaState.flow * 100).toFixed(1)}%</div>
-        <div>Precision: {(qualiaState.precision * 100).toFixed(1)}%</div>
+        <div>Precision: {(qualiaState.focus_level * 100).toFixed(1)}%</div>
       </div>
 
       <div style={{

@@ -199,7 +199,7 @@ const mockGameState = {
   combatData: null,
   qualiaState: {
     intensity: 0.7,
-    precision: 0.8,
+    focus_level: 0.8,
     aggression: 0.3,
     flow: 0.9,
     chaos: 0.2,

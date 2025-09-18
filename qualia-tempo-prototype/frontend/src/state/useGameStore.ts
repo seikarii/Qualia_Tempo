@@ -61,7 +61,7 @@ const initialPlayerState: PlayerState = {
 
 const initialQualiaState: QualiaState = {
   intensity: 0,
-  precision: 0,
+  focus_level: 0,
   aggression: 0,
   flow: 0,
   chaos: 0,

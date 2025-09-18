@@ -151,7 +151,7 @@ describe("DebugService - QUALIA.CODE v1.0", () => {
 
       const testQualiaState: QualiaState = {
         intensity: 0.8,
-        precision: 0.5,
+        focus_level: 0.5,
         aggression: 0.3,
         flow: 0.9,
         chaos: 0.1,
@@ -264,7 +264,7 @@ describe("DebugService - QUALIA.CODE v1.0", () => {
       // Create anomalous QualiaState
       const anomalousState: QualiaState = {
         intensity: 1.5, // Out of bounds
-        precision: -0.1, // Out of bounds
+        focus_level: -0.1, // Out of bounds
         aggression: 0.5,
         flow: 0.5,
         chaos: 0.5,
@@ -304,7 +304,7 @@ describe("DebugService - QUALIA.CODE v1.0", () => {
       await QualiaEvents.playerAction("HitNote");
       await QualiaEvents.qualiaStateUpdated({
         intensity: 0.5,
-        precision: 0.5,
+        focus_level: 0.5,
         aggression: 0.5,
         flow: 0.5,
         chaos: 0.5,
@@ -365,7 +365,7 @@ describe("DebugService - QUALIA.CODE v1.0", () => {
       await QualiaEvents.playerAction("HitNote");
       await QualiaEvents.qualiaStateUpdated({
         intensity: 0.7,
-        precision: 0.8,
+        focus_level: 0.8,
         aggression: 0.3,
         flow: 0.9,
         chaos: 0.1,

@@ -1,5 +1,8 @@
-// QUALIA.CODE v1.0 - Logging Service
-// Centralized logging system for Qualia Tempo
+// QUALIA.CODE v1.1 - Logging Service
+// Centralized logging system for Qualia Tempo with InversifyJS support
+
+import { injectable } from 'inversify';
+import type { ILogger } from './interfaces/ILogger';
 
 export enum LogLevel {
   // eslint-disable-next-line no-unused-vars
@@ -22,32 +25,30 @@ export interface LogEntry {
   source: string;
 }
 
-export interface Logger {
-  // eslint-disable-next-line no-unused-vars
-  debug(message: string, context?: Record<string, any>): void;
-  // eslint-disable-next-line no-unused-vars
-  info(message: string, context?: Record<string, any>): void;
-  // eslint-disable-next-line no-unused-vars
-  warn(message: string, context?: Record<string, any>): void;
-  // eslint-disable-next-line no-unused-vars
-  error(message: string, context?: Record<string, any>): void;
-}
-
 /**
  * Centralized logging service that can be injected into services
  * and configured based on environment
  */
-export class QualiaLogger implements Logger {
+@injectable()
+export class QualiaLogger implements ILogger {
   private level: LogLevel;
   private source: string;
 
-  constructor(source: string, level: LogLevel = LogLevel.INFO) {
+  constructor(source: string = 'QualiaLogger', level: LogLevel = LogLevel.INFO) {
     this.source = source;
     this.level = level;
   }
 
   setLevel(level: LogLevel): void {
     this.level = level;
+  }
+
+  getLevel(): LogLevel {
+    return this.level;
+  }
+
+  child(prefix: string): ILogger {
+    return new QualiaLogger(`${this.source}:${prefix}`, this.level);
   }
 
   debug(message: string, context?: Record<string, any>): void {

@@ -1,5 +1,5 @@
 /**
- * QUALIA.CODE v1.0 - ConfigurationService
+ * QUALIA.CODE v1.1 - ConfigurationService
  * Service responsible for loading and managing game configuration from YAML files.
  *
  * Architecture:
@@ -8,11 +8,15 @@
  * - Integrates with BackendSyncService for runtime updates
  * - Supports configuration validation and defaults
  * - Follows Configuration-First Mandate: NO HARDCODED VALUES
+ * - InversifyJS dependency injection support
  */
 
+import { injectable, inject } from 'inversify';
+import type { IConfigurationService } from './interfaces/IConfigurationService';
+import type { ILogger } from './interfaces/ILogger';
+import { TYPES } from './inversify.types';
 import * as yaml from 'js-yaml';
 import { logMethod, catchError } from '../utils/decorators';
-import { QualiaLogger, LoggerProvider } from './Logger';
 
 // === CONFIGURATION INTERFACES ===
 
@@ -94,7 +98,7 @@ export interface RhythmicMovementConfig {
 export interface QualiaCalculatorConfig {
   baseQualiaState: {
     intensity: number;
-    precision: number;
+    focus_level: number;
     aggression: number;
     flow: number;
     chaos: number;
@@ -109,7 +113,7 @@ export interface QualiaCalculatorConfig {
   };
   decayRates: {
     intensity: number;
-    precision: number;
+    focus_level: number;
     aggression: number;
     flow: number;
     chaos: number;
@@ -135,20 +139,20 @@ export interface QualiaCalculatorConfig {
   updateIntervalMs: number;
   historySize: number;
   // Additional properties used by QualiaStateCalculatorService
-  hitNoteMultipliers: { intensity: number; precision: number; flow: number };
-  missNoteMultipliers: { chaos: number; precision: number; flow: number };
+  hitNoteMultipliers: { intensity: number; focus_level: number; flow: number };
+  missNoteMultipliers: { chaos: number; focus_level: number; flow: number };
   dashMultipliers: { aggression: number; intensity: number };
   fastForwardMultipliers: { aggression: number; intensity: number };
-  rewindMultipliers: { recovery: number; precision: number };
+  rewindMultipliers: { recovery: number; focus_level: number };
   updateInterval: number; // Legacy property - mapped to updateIntervalMs
   intensityDecay: number;
-  precisionDecay: number;
+  focusDecay: number;
   aggressionDecay: number;
   flowDecay: number;
   chaosDecay: number;
   recoveryDecay: number;
   transcendenceDecay: number;
-  transcendenceThresholds: { intensity: number; precision: number; flow: number };
+  transcendenceThresholds: { intensity: number; focus_level: number; flow: number };
   minValue: number;
   maxValue: number;
 }
@@ -395,20 +399,26 @@ export interface FullGameConfig {
 }
 
 /**
- * QUALIA.CODE v1.0 - ConfigurationService Implementation
+ * QUALIA.CODE v1.1 - ConfigurationService Implementation
  * Loads and manages configuration from multiple YAML files
  */
-export class ConfigurationService {
+@injectable()
+@injectable()
+export class ConfigurationService implements IConfigurationService {
   private configBasePath: string;
   private loadedConfig: FullGameConfig | null = null;
-  private logger: QualiaLogger;
+  private logger: ILogger;
 
   // Configuration files discovery - NO HARDCODING
   private configFileManifest: Record<string, string> = {};
 
-  constructor(configBasePath: string = '', logger?: QualiaLogger, configManifest?: Record<string, string>) {
+  constructor(
+    @inject(TYPES.ILogger) logger: ILogger,
+    configBasePath: string = '', 
+    configManifest?: Record<string, string>
+  ) {
+    this.logger = logger;
     this.configBasePath = configBasePath;
-    this.logger = logger || LoggerProvider.getLogger();
     
     // Accept configuration file manifest externally or discover them
     this.configFileManifest = configManifest || this.discoverConfigFiles();
@@ -435,9 +445,24 @@ export class ConfigurationService {
   /**
    * Load all configuration files from YAML
    */
+  /**
+   * Load configuration from external YAML files (interface compliance).
+   * @returns Promise that resolves when configuration is loaded
+   */
+  public async loadConfig(): Promise<void>;
+  
+  /**
+   * Load configuration from external YAML files (implementation).
+   * @returns Promise that resolves with the loaded configuration
+   */
+  public async loadConfig(): Promise<FullGameConfig>;
+  
+  /**
+   * Load configuration implementation.
+   */
   @logMethod()
   @catchError()
-  public async loadConfig(): Promise<FullGameConfig> {
+  public async loadConfig(): Promise<FullGameConfig | void> {
     try {
       this.logger.info('Loading configuration from multiple YAML files...');
 
@@ -614,6 +639,23 @@ export class ConfigurationService {
   @catchError()
   public isLoaded(): boolean {
     return this.loadedConfig !== null;
+  }
+
+  /**
+   * Reload configuration from external sources
+   */
+  @logMethod()
+  @catchError()
+  public async reload(): Promise<void> {
+    this.loadedConfig = null;
+    await this.loadConfig();
+  }
+
+  /**
+   * Get game-specific configuration
+   */
+  public getGameConfig(): any {
+    return this.getConfig();
   }
 
   /**
@@ -928,5 +970,67 @@ export class ConfigurationService {
     }
 
     return section as T;
+  }
+
+  // ===== INTERFACE COMPLIANCE METHODS =====
+  
+  /**
+   * Get qualia calculation configuration.
+   * @returns Qualia calculator configuration
+   */
+  @logMethod()
+  @catchError()
+  public getQualiaConfig(): QualiaCalculatorConfig {
+    return this.getQualiaCalculatorConfig();
+  }
+
+  /**
+   * Get backend synchronization configuration.
+   * @returns Backend sync configuration
+   */
+  @logMethod()
+  @catchError()
+  public getBackendConfig(): BackendSyncConfig {
+    return this.getBackendSyncConfig();
+  }
+
+  /**
+   * Get audio service configuration.
+   * @returns Audio service configuration
+   */
+  @logMethod()
+  @catchError()
+  public getAudioConfig(): AudioServiceConfig {
+    return this.getAudioServiceConfig();
+  }
+
+  /**
+   * Get rhythmic movement configuration.
+   * @returns Rhythmic movement configuration
+   */
+  @logMethod()
+  @catchError()
+  public getRhythmicMovementConfig(): RhythmicMovementConfig {
+    return this.getRhythmicMovementControllerConfig();
+  }
+
+  /**
+   * Get notification service configuration.
+   * @returns Notification service configuration
+   */
+  @logMethod()
+  @catchError()
+  public getNotificationConfig(): NotificationServiceConfig {
+    return this.getNotificationServiceConfig();
+  }
+
+  /**
+   * Reload configuration from external sources.
+   * @returns Promise that resolves when configuration is reloaded
+   */
+  @logMethod()
+  @catchError()
+  public async reload(): Promise<void> {
+    await this.loadConfig();
   }
 }

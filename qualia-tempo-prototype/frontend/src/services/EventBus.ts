@@ -1,5 +1,5 @@
 /**
- * QUALIA.CODE v1.0 - Frontend EventBus
+ * QUALIA.CODE v1.1 - Frontend EventBus
  * Event-driven communication system for decoupled component interaction.
  *
  * Architecture:
@@ -7,11 +7,15 @@
  * - Async/sync event handling with error boundaries
  * - Automatic cleanup and memory management
  * - Performance monitoring and throttling
- * - Manual logging for maximum compatibility
+ * - InversifyJS dependency injection
  */
 
+import { injectable, inject } from 'inversify';
+import { TYPES } from './inversify.types';
+import type { ILogger } from './interfaces/ILogger';
+import type { IEventBus } from './interfaces/IEventBus';
 import { QualiaState } from "../types/contracts";
-import { Logger } from "./Logger";
+import { logMethod, catchError } from '../utils/decorators';
 
 // Event type definitions following QUALIA.CODE contracts
 export interface BaseEvent {
@@ -96,18 +100,21 @@ export type EventListener = {
  * Frontend EventBus implementing QUALIA.CODE event-driven architecture.
  * Provides type-safe, performant event communication between components.
  */
-export class EventBus {
+@injectable()
+export class EventBus implements IEventBus {
   private listeners: Map<string, EventListener[]> = new Map();
   private eventHistory: BaseEvent[] = [];
   private maxHistorySize = 1000;
   private isDestroyed = false;
-  private logger: Logger;
+  private logger: ILogger;
 
-  constructor(logger: Logger) {
+  constructor(
+    @inject(TYPES.ILogger) logger: ILogger
+  ) {
     this.logger = logger;
     this.setupErrorHandling();
     this.setupPerformanceMonitoring();
-    this.logger.info("🚀 [EventBus] EventBus initialized");
+    this.logger.info("🚀 [EventBus] EventBus initialized via InversifyJS");
   }
 
   /**
@@ -116,10 +123,12 @@ export class EventBus {
    * @param handler - The event handler function
    * @param options - Additional options (once, priority)
    */
+  @logMethod()
+  @catchError()
   public subscribe<T extends EventTypes>(
     eventType: T["type"],
     handler: EventHandler<T>,
-    options: { once?: boolean; priority?: number } = {},
+    options: { once?: boolean; priority?: 'low' | 'normal' | 'high' } = {},
   ): string {
     const startTime = performance.now();
     this.logger.info(`🔗 [EventBus] Subscribe called for ${eventType}`);
@@ -134,7 +143,7 @@ export class EventBus {
         id: listenerId,
         handler: handler as EventHandler,
         once: options.once,
-        priority: options.priority || 0,
+        priority: this.convertPriority(options.priority),
       };
 
       if (!this.listeners.has(eventType)) {
@@ -413,6 +422,15 @@ export class EventBus {
   }
 
   // Private helper methods
+
+  private convertPriority(priority?: 'low' | 'normal' | 'high'): number {
+    switch (priority) {
+      case 'high': return 100;
+      case 'normal': return 50;
+      case 'low': return 0;
+      default: return 50; // default to normal
+    }
+  }
 
   private generateListenerId(): string {
     return `listener_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

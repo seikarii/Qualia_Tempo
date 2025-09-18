@@ -80,7 +80,7 @@ describe('ConfigurationService', () => {
         debugMode: false
       },
       qualia: {
-        precision: {
+        focus_level: {
           maxStreak: 50,
           decayRate: 0.95,
           pauseBonus: 0.1

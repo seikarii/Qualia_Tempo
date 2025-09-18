@@ -1,5 +1,5 @@
 /**
- * QUALIA.CODE v1.0 - QualiaStateCalculatorService
+ * QUALIA.CODE v1.1 - QualiaStateCalculatorService
  * Core service for computing QualiaState based on player actions and game events.
  *
  * Architecture:
@@ -7,19 +7,24 @@
  * - Configurable parameters via external config
  * - Time-decay algorithms for dynamic state evolution
  * - Integration with EventBus for decoupled communication
+ * - InversifyJS dependency injection
  *
  * REFACTORED: Eliminates UI coupling, follows single responsibility, uses pure event architecture
  */
 
+import { injectable, inject } from 'inversify';
+import { TYPES } from './inversify.types';
+import type { IEventBus } from './interfaces/IEventBus';
+import type { ILogger } from './interfaces/ILogger';
+import type { IConfigurationService } from './interfaces/IConfigurationService';
+import type { IQualiaStateCalculatorService } from './interfaces/IQualiaStateCalculatorService';
 import {
-  EventBus,
   EventHandler,
   PlayerActionEvent,
   QualiaStateUpdatedEvent,
 } from "./EventBus";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from '../utils/decorators';
-import { QualiaLogger } from './Logger';
 import type { QualiaCalculatorConfig } from './ConfigurationService';
 
 // Configuration interface - REMOVED: Using ConfigurationService interface
@@ -34,27 +39,31 @@ import type { QualiaCalculatorConfig } from './ConfigurationService';
  * - Single Responsibility: Only calculates QualiaState
  * - Event-Driven: Listens to PlayerActionEvent, emits QualiaStateUpdatedEvent
  * - No UI Coupling: No knowledge of useGameStore or React components
- * - Dependency Injection: Receives EventBus via constructor
+ * - Dependency Injection: Receives EventBus via InversifyJS
  */
-export class QualiaStateCalculatorService {
+@injectable()
+export class QualiaStateCalculatorService implements IQualiaStateCalculatorService {
   private currentState: QualiaState;
   private config: QualiaCalculatorConfig;
   private lastUpdateTime: number;
   private updateIntervalId: number | null = null;
   private eventListenerIds: string[] = [];
-  private isRunning = false;
-  private eventBus: EventBus;
-  private logger: QualiaLogger;
+  private _isRunning = false; // Renamed to avoid conflict with method
+  private eventBus: IEventBus;
+  private logger: ILogger;
+  private configService: IConfigurationService;
 
   constructor(
-    eventBus: EventBus,
-    logger: QualiaLogger,
-    config: QualiaCalculatorConfig
+    @inject(TYPES.IEventBus) eventBus: IEventBus,
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
+    this.configService = configService;
 
-    this.config = config;
+    // Load configuration
+    this.config = this.configService.getQualiaConfig();
     this.currentState = this.createInitialState();
     this.lastUpdateTime = performance.now();
 
@@ -68,14 +77,14 @@ export class QualiaStateCalculatorService {
    * Start the calculator service and begin listening to events.
    */
   public start(): void {
-    if (this.isRunning) {
+    if (this._isRunning) {
       this.logger.warn("⚠️ [QualiaCalculator] Service already running");
       return;
     }
 
     this.subscribeToPlayerActionEvents();
     this.startUpdateLoop();
-    this.isRunning = true;
+    this._isRunning = true;
 
     this.logger.info(
       "🚀 [QualiaCalculator] Service started - pure event architecture",
@@ -86,14 +95,14 @@ export class QualiaStateCalculatorService {
    * Stop the calculator service and unsubscribe from events.
    */
   public stop(): void {
-    if (!this.isRunning) {
+    if (!this._isRunning) {
       this.logger.warn("⚠️ [QualiaCalculator] Service not running");
       return;
     }
 
     this.unsubscribeFromEvents();
     this.stopUpdateLoop();
-    this.isRunning = false;
+    this._isRunning = false;
 
     this.logger.info("🛑 [QualiaCalculator] Service stopped");
   }
@@ -122,7 +131,7 @@ export class QualiaStateCalculatorService {
   private createInitialState(): QualiaState {
     return {
       intensity: 0.3,
-      precision: 0.5,
+      focus_level: 0.5,
       aggression: 0.0,
       flow: 0.4,
       chaos: 0.0,
@@ -198,8 +207,8 @@ export class QualiaStateCalculatorService {
     this.currentState.intensity = this.clamp(
       this.currentState.intensity + multipliers.intensity,
     );
-    this.currentState.precision = this.clamp(
-      this.currentState.precision + multipliers.precision,
+    this.currentState.focus_level = this.clamp(
+      this.currentState.focus_level + multipliers.focus_level,
     );
     this.currentState.flow = this.clamp(
       this.currentState.flow + multipliers.flow,
@@ -209,7 +218,7 @@ export class QualiaStateCalculatorService {
     this.currentState.chaos = this.clamp(this.currentState.chaos - 0.1);
 
     this.logger.info(
-      "🎯 [QualiaCalculator] Note Hit! Intensity+, Precision+, Flow+, Chaos-",
+      "🎯 [QualiaCalculator] Note Hit! Intensity+, Focus+, Flow+, Chaos-",
     );
     this.checkTranscendenceActivation();
   }
@@ -217,8 +226,8 @@ export class QualiaStateCalculatorService {
   private onNoteMiss(_context?: Record<string, any>): void {
     const multipliers = this.config.missNoteMultipliers;
 
-    this.currentState.precision = this.clamp(
-      this.currentState.precision + multipliers.precision, // negative value
+    this.currentState.focus_level = this.clamp(
+      this.currentState.focus_level + multipliers.focus_level, // negative value
     );
     this.currentState.chaos = this.clamp(
       this.currentState.chaos + multipliers.chaos,
@@ -227,7 +236,7 @@ export class QualiaStateCalculatorService {
       this.currentState.flow + multipliers.flow, // negative value
     );
 
-    this.logger.info("❌ [QualiaCalculator] Note Miss! Chaos+, Precision-, Flow-");
+    this.logger.info("❌ [QualiaCalculator] Note Miss! Chaos+, Focus-, Flow-");
   }
 
   private onDash(_context?: Record<string, any>): void {
@@ -262,11 +271,11 @@ export class QualiaStateCalculatorService {
     this.currentState.recovery = this.clamp(
       this.currentState.recovery + multipliers.recovery,
     );
-    this.currentState.precision = this.clamp(
-      this.currentState.precision + multipliers.precision,
+    this.currentState.focus_level = this.clamp(
+      this.currentState.focus_level + multipliers.focus_level,
     );
 
-    this.logger.info("⏪ [QualiaCalculator] Rewind! Recovery+, Precision+");
+    this.logger.info("⏪ [QualiaCalculator] Rewind! Recovery+, Focus+");
   }
 
   // ==================== STATE MANAGEMENT ====================
@@ -298,8 +307,8 @@ export class QualiaStateCalculatorService {
     this.currentState.intensity = this.clamp(
       this.currentState.intensity - this.config.intensityDecay * deltaTime,
     );
-    this.currentState.precision = this.clamp(
-      this.currentState.precision - this.config.precisionDecay * deltaTime,
+    this.currentState.focus_level = this.clamp(
+      this.currentState.focus_level - this.config.focusDecay * deltaTime,
     );
     this.currentState.aggression = this.clamp(
       this.currentState.aggression - this.config.aggressionDecay * deltaTime,
@@ -329,7 +338,7 @@ export class QualiaStateCalculatorService {
 
     if (
       this.currentState.intensity >= thresholds.intensity &&
-      this.currentState.precision >= thresholds.precision &&
+      this.currentState.focus_level >= thresholds.focus_level &&
       this.currentState.flow >= thresholds.flow &&
       this.currentState.transcendence === 0
     ) {
@@ -367,13 +376,76 @@ export class QualiaStateCalculatorService {
   private logCurrentState(): void {
     this.logger.info("📊 [QualiaCalculator] Current State:", {
       intensity: this.currentState.intensity.toFixed(3),
-      precision: this.currentState.precision.toFixed(3),
+      focus_level: this.currentState.focus_level.toFixed(3),
       aggression: this.currentState.aggression.toFixed(3),
       flow: this.currentState.flow.toFixed(3),
       chaos: this.currentState.chaos.toFixed(3),
       recovery: this.currentState.recovery.toFixed(3),
       transcendence: this.currentState.transcendence.toFixed(3),
     });
+  }
+
+  // ===== INTERFACE COMPLIANCE METHODS =====
+
+  /**
+   * Calculate new QualiaState based on player action.
+   * @param action The player action to process
+   * @returns The updated QualiaState
+   */
+  @logMethod()
+  public calculateQualiaState(action: PlayerActionEvent): QualiaState {
+    // This method would process the action and return updated state
+    // For now, return current state (implementation can be expanded)
+    return { ...this.currentState };
+  }
+
+  /**
+   * Reset the QualiaState to initial values.
+   */
+  @logMethod()
+  public resetState(): void {
+    this.currentState = this.createInitialState();
+    this.logger.info('🔄 [QualiaCalculator] State reset to initial values');
+  }
+
+  /**
+   * Apply time-based decay to the current state.
+   * Called automatically by the service's internal timer.
+   */
+  @logMethod()
+  public applyTimeDecay(): void {
+    const now = Date.now();
+    const deltaTime = (now - this.lastUpdateTime) / 1000;
+    this.lastUpdateTime = now;
+
+    this.applyDecayToAllValues(deltaTime);
+  }
+
+  /**
+   * Check if the service is currently running.
+   * @returns True if the service is active
+   */
+  public isRunning(): boolean {
+    return this._isRunning;
+  }
+
+  /**
+   * Get performance statistics for the calculator.
+   * @returns Object containing performance metrics
+   */
+  @logMethod()
+  public getStats(): {
+    isRunning: boolean;
+    calculationsPerformed: number;
+    averageCalculationTime: number;
+    currentState: QualiaState;
+  } {
+    return {
+      isRunning: this._isRunning,
+      calculationsPerformed: 0, // To be implemented with actual tracking
+      averageCalculationTime: 0, // To be implemented with actual tracking
+      currentState: { ...this.currentState }
+    };
   }
 }
 

@@ -1,32 +1,16 @@
 /**
- * QUALIA.CODE v1.0 - GameControllerService
+ * QUALIA.CODE v1.1 - GameControllerService
  * Service responsible for game state management and control logic.
  *
-    try {
-      if (!this.isRunning) {
-        this.logger.warn("⚠️ [GameController] Service not running");
-        return;
-      }
-
-      this.unsubscribeFromEvents();
-      this.isRunning = false;
-
-      const duration = performance.now() - startTime;
-      this.logger.info(
-        `🛑 [GameController] Service stopped successfully - ${duration.toFixed(2)}ms`,
-      );
-    } catch (error) {
-      const duration = performance.now() - startTime;
-      this.logger.error(
-        `🚨 [GameController] Stop failed - ${duration.toFixed(2)}ms`,
-        { error },
-      ); - Event-driven game state management
+ * - Event-driven game state management
  * - Receives PlayerAction events (StartGame, PauseGame, ResetGame, etc.)
  * - Emits GameStateChanged events with updated state
  * - Maintains internal game state (isPlaying, currentScore, etc.)
  * - Integrates with EventBus for decoupled communication
  */
 
+import { injectable, inject } from 'inversify';
+import { TYPES } from './inversify.types';
 import {
   EventBus,
   EventHandler,
@@ -35,6 +19,8 @@ import {
 } from "./EventBus";
 import { logMethod, catchError } from '../utils/decorators';
 import { QualiaLogger } from './Logger';
+import type { IGameControllerService } from './interfaces/IGameControllerService';
+import type { IConfigurationService } from './interfaces/IConfigurationService';
 
 // Game state interface
 export interface GameState {
@@ -72,9 +58,11 @@ const DEFAULT_CONFIG: GameControllerConfig = {
  * - Dependency injection via EventBus
  * - No direct UI coupling
  */
-export class GameControllerService {
+@injectable()
+export class GameControllerService implements IGameControllerService {
   private config: GameControllerConfig;
   private eventBus: EventBus;
+  private configService: IConfigurationService;
   private eventListenerIds: string[] = [];
   private isRunning = false;
   private logger: QualiaLogger;
@@ -90,17 +78,24 @@ export class GameControllerService {
     gameMode: "normal",
   };
 
-  constructor(eventBus: EventBus, logger: QualiaLogger, config?: Partial<GameControllerConfig>) {
+  constructor(
+    @inject(TYPES.IEventBus) eventBus: EventBus,
+    @inject(TYPES.ILogger) logger: QualiaLogger,
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService
+  ) {
     this.eventBus = eventBus;
     this.logger = logger;
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.configService = configService;
+    this.config = DEFAULT_CONFIG;
     this.logger.info("🎮 [GameController] Service initialized");
   }
 
   /**
    * Start the game controller service
    */
-  public async start(): Promise<void> {
+  @logMethod()
+  @catchError()
+  public start(): void {
     const startTime = performance.now();
     this.logger.info("🚀 [GameController] Starting service...");
 
@@ -130,7 +125,9 @@ export class GameControllerService {
   /**
    * Stop the game controller service
    */
-  public async stop(): Promise<void> {
+  @logMethod()
+  @catchError()
+  public stop(): void {
     const startTime = performance.now();
     this.logger.info("🛑 [GameController] Stopping service...");
 
@@ -157,14 +154,72 @@ export class GameControllerService {
     }
   }
 
-  /**
-   * Get current game state (read-only)
-   */
+  // --- IGameControllerService Interface Implementation ---
+
   @logMethod()
   @catchError()
-  public getGameState(): Readonly<GameState> {
+  public startGame(): void {
+    this.logger.info("🎮 [GameController] Starting game");
+    this.gameState.isPlaying = true;
+    this.gameState.isPaused = false;
+    this.emitGameStateChanged("Playing");
+  }
+
+  @logMethod()
+  @catchError()
+  public pauseGame(): void {
+    if (!this.gameState.isPlaying) return;
+
+    this.logger.info("⏸️ [GameController] Pausing game");
+    this.gameState.isPaused = true;
+    this.emitGameStateChanged("Paused");
+  }
+
+  @logMethod()
+  @catchError()
+  public resumeGame(): void {
+    if (!this.gameState.isPlaying || !this.gameState.isPaused) return;
+
+    this.logger.info("▶️ [GameController] Resuming game");
+    this.gameState.isPaused = false;
+    this.emitGameStateChanged("Playing");
+  }
+
+  @logMethod()
+  @catchError()
+  public resetGame(): void {
+    this.logger.info("🔄 [GameController] Resetting game");
+    this.gameState = {
+      isPlaying: false,
+      isPaused: false,
+      currentScore: 0,
+      comboCount: 0,
+      health: this.config.maxHealth,
+      level: 1,
+      gameMode: "normal",
+    };
+    this.emitGameStateChanged("Menu");
+  }
+
+  @logMethod()
+  @catchError()
+  public getGameState(): any {
     return { ...this.gameState };
   }
+
+  @logMethod()
+  @catchError()
+  public isPlaying(): boolean {
+    return this.gameState.isPlaying && !this.gameState.isPaused;
+  }
+
+  @logMethod()
+  @catchError()
+  public isPaused(): boolean {
+    return this.gameState.isPaused;
+  }
+
+  // === ORIGINAL METHODS (PRESERVED) ===
 
   /**
    * Get configuration
@@ -207,13 +262,13 @@ export class GameControllerService {
 
     switch (event.action) {
       case "StartGame":
-        this.handleStartGame();
+        this.startGame();
         break;
       case "PauseGame":
-        this.handlePauseGame();
+        this.pauseGame();
         break;
       case "ResetGame":
-        this.handleResetGame();
+        this.resetGame();
         break;
       case "Dash":
         this.handleDash(event.context);
@@ -312,35 +367,6 @@ export class GameControllerService {
       this.gameState.health + 10,
     );
     this.emitGameStateChanged("Playing");
-  }
-
-  private handleStartGame(): void {
-    this.logger.info("🎮 [GameController] Starting game");
-    this.gameState.isPlaying = true;
-    this.gameState.isPaused = false;
-    this.emitGameStateChanged("Playing");
-  }
-
-  private handlePauseGame(): void {
-    if (!this.gameState.isPlaying) return;
-
-    this.logger.info("⏸️ [GameController] Pausing game");
-    this.gameState.isPaused = !this.gameState.isPaused;
-    this.emitGameStateChanged(this.gameState.isPaused ? "Paused" : "Playing");
-  }
-
-  private handleResetGame(): void {
-    this.logger.info("🔄 [GameController] Resetting game");
-    this.gameState = {
-      isPlaying: false,
-      isPaused: false,
-      currentScore: 0,
-      comboCount: 0,
-      health: this.config.maxHealth,
-      level: 1,
-      gameMode: "normal",
-    };
-    this.emitGameStateChanged("Menu");
   }
 
   private emitGameStateChanged(

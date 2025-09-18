@@ -75,7 +75,7 @@ export const HUD: React.FC<HUDProps> = ({ className = "" }) => {
             />
             <QualiaBar
               label="Precision"
-              value={qualiaState.precision}
+              value={qualiaState.focus_level}
               color="blue"
             />
             <QualiaBar label="Flow" value={qualiaState.flow} color="cyan" />
