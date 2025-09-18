@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Subtitles } from "./components/Subtitles";
 import QualiaTempoGame from "./components/game/QualiaTempoGame";
 import { useGameStore } from "./state/useGameStore";
@@ -6,17 +6,41 @@ import { useService } from "./services/hooks";
 import { TYPES } from "./services/inversify.types";
 import type { IEventBus } from "./services/interfaces/IEventBus";
 import type { ILogger } from "./services/interfaces/ILogger";
-import type { PlayerActionEvent } from "./services/EventBus";
+import type { PlayerActionEvent, PlayerInputEvent } from "./services/EventBus";
+import { shallow } from 'zustand/shallow';
 
 const App: React.FC = () => {
-  const gameState = useGameStore((state: any) => state);
+  const { backendConnected, isConfigLoaded, isPlaying } = useGameStore(
+    (state) => ({
+      backendConnected: state.backendConnected,
+      isConfigLoaded: state.isConfigLoaded,
+      isPlaying: state.isPlaying,
+    }),
+    shallow
+  );
   
   // Get services via InversifyJS
   const eventBus = useService<IEventBus>(TYPES.IEventBus);
   const logger = useService<ILogger>(TYPES.ILogger);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      eventBus.emit<PlayerInputEvent>({
+        type: 'PlayerInput',
+        key: event.key,
+        source: 'App',
+      });
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [eventBus]);
+
   const handleStartGame = () => {
-    if (gameState.backendConnected) {
+    if (backendConnected) {
       // Emit PlayerAction event for start game
       eventBus.emit<PlayerActionEvent>({
         type: "PlayerAction",
@@ -78,7 +102,7 @@ const App: React.FC = () => {
         logger.warn(`Unknown game action: ${action}`, { action, data });
     }
   };  // Show loading while configuration is being loaded
-  if (!gameState.isConfigLoaded) {
+  if (!isConfigLoaded) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white text-2xl">Loading Configuration...</div>
@@ -100,7 +124,7 @@ const App: React.FC = () => {
 
       {/* Game Content Area */}
       <div className="relative z-10 flex items-center justify-center h-screen w-full">
-        {!gameState.backendConnected ? (
+        {!backendConnected ? (
           <div className="text-center p-8 bg-black bg-opacity-70 rounded-lg">
             <h1 className="text-4xl font-bold text-red-400 mb-4">❌ Backend Disconnected</h1>
             <p className="text-white text-lg mb-4">Cannot connect to Qualia Tempo Visual Engine</p>
@@ -110,7 +134,7 @@ const App: React.FC = () => {
               <p>Logger: {logger ? "✅" : "❌"}</p>
             </div>
           </div>
-        ) : !gameState.isPlaying ? (
+        ) : !isPlaying ? (
           <div className="text-center p-8 bg-black bg-opacity-70 rounded-lg">
             <h1 className="text-6xl font-bold text-white mb-4">🎵 Qualia Tempo</h1>
             <p className="text-xl text-gray-300 mb-8">A Charlie Hellsinger Story</p>
@@ -143,7 +167,7 @@ const App: React.FC = () => {
       {/* Version Info */}
       <div className="absolute bottom-4 right-4 text-gray-400 text-xs bg-black bg-opacity-50 p-2 rounded">
         <div>Qualia Tempo v1.0 | Prototype Build</div>
-        <div>Backend: {gameState.backendConnected ? "Connected" : "Disconnected"}</div>
+        <div>Backend: {backendConnected ? "Connected" : "Disconnected"}</div>
       </div>
     </div>
   );

@@ -63,7 +63,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     this.configService = configService;
 
     // Load configuration
-    this.config = this.configService.getQualiaConfig();
+    this.config = this.configService.getConfigSection<QualiaCalculatorConfig>('qualiaCalculator');
     this.currentState = this.createInitialState();
     this.lastUpdateTime = performance.now();
 

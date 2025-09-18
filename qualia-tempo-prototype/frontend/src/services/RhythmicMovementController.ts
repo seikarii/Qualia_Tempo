@@ -1,4 +1,4 @@
-import { EventBus, PlayerActionEvent } from './EventBus';
+import { EventBus, PlayerActionEvent, PlayerInputEvent } from './EventBus';
 import type { GameStateChangedEvent, MetronomeTickEvent, RhythmicDashEvent } from './EventBus';
 import { logMethod, catchError } from '../utils/decorators';
 import { QualiaLogger, LoggerProvider } from './Logger';
@@ -83,7 +83,7 @@ export class RhythmicMovementController {
       return;
     }
 
-    this.setupKeyboardListeners();
+    this.setupInputListener();
     this.setupGameStateListener();
     this.startMetronome();
     this.isListening = true;
@@ -98,7 +98,7 @@ export class RhythmicMovementController {
       return;
     }
 
-    this.removeKeyboardListeners();
+    this.removeInputListener();
     this.removeGameStateListener();
     this.stopMetronome();
     this.isListening = false;
@@ -198,15 +198,17 @@ export class RhythmicMovementController {
     }
   }
 
-  private setupKeyboardListeners(): void {
-    document.addEventListener('keydown', this.handleKeyDown);
+  private setupInputListener(): void {
+    this.eventBus.subscribe<PlayerInputEvent>('PlayerInput', this.handlePlayerInput);
   }
 
-  private removeKeyboardListeners(): void {
-    document.removeEventListener('keydown', this.handleKeyDown);
+  private removeInputListener(): void {
+    // In an event-driven system, you might not need to manually remove listeners
+    // if the EventBus handles lifecycle management. However, if you have specific
+    // listener IDs, you would unsubscribe here.
   }
 
-  private handleKeyDown = (event: KeyboardEvent): void => {
+  private handlePlayerInput = (event: PlayerInputEvent): void => {
     // CRISALIDA.CODE: Configuration-driven throttling implementation
     const now = performance.now();
     if (now - this.lastKeyPressTime < this.keyThrottleMs) {
@@ -217,7 +219,6 @@ export class RhythmicMovementController {
     const direction = this.getDirectionFromKey(event.key);
     if (!direction) return;
 
-    event.preventDefault();
     this.processDashInput(direction);
   };
 

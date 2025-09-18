@@ -160,7 +160,7 @@ export class AudioService implements IAudioService {
 
     // Simple audio feedback based on timing
     try {
-      const config = this.configService.getAudioConfig();
+      const config = this.configService.getConfigSection<AudioServiceConfig>('audioService');
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
@@ -202,7 +202,7 @@ export class AudioService implements IAudioService {
     }
 
     try {
-      const config = this.configService.getAudioConfig();
+      const config = this.configService.getConfigSection<AudioServiceConfig>('audioService');
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
@@ -282,7 +282,7 @@ export class AudioService implements IAudioService {
       const frequency = this.getSoundFrequency(soundId);
       oscillator.frequency.value = frequency;
       oscillator.type = 'sine';
-      gainNode.gain.value = volume * this.configService.getAudioConfig().masterVolume;
+      gainNode.gain.value = volume * this.configService.getConfigSection<AudioServiceConfig>('audioService').masterVolume;
 
       oscillator.start();
       if (!loop) {
@@ -311,7 +311,7 @@ export class AudioService implements IAudioService {
   @catchError()
   public setMasterVolume(volume: number): void {
     // Update the configuration service with new volume
-    const config = this.configService.getAudioConfig();
+    const config = this.configService.getConfigSection<AudioServiceConfig>('audioService');
     config.masterVolume = Math.max(0, Math.min(1, volume));
     this.logger.info(`🔊 Master volume set to: ${config.masterVolume}`);
   }

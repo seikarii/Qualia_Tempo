@@ -76,7 +76,7 @@ export class BackendSyncService implements IBackendSyncService {
     this.logger = logger;
     this.configService = configService;
 
-    this.config = this.configService.getBackendConfig();
+    this.config = this.configService.getConfigSection<BackendSyncConfig>('backendSync');
     // Store health check interval for later use
     this.healthCheckInterval = this.config.connection.healthCheckInterval;
 
