@@ -1,725 +1,563 @@
 {
-  "timestamp": "2025-09-17T05:35:42.985Z",
+  "timestamp": "2025-09-18T19:25:48.679Z",
   "url": "http://localhost:5173",
   "success": true,
   "hasRoot": true,
   "stats": {
-    "totalLogs": 119,
+    "totalLogs": 92,
     "errors": 0,
-    "warnings": 37,
-    "configErrors": 5
+    "warnings": 45,
+    "configErrors": 16
   },
   "logs": [
     {
-      "timestamp": "2025-09-17T05:35:27.135Z",
+      "timestamp": "2025-09-18T19:25:32.799Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST SCRIPT LOADED ===",
       "entry": "[LOG] === RACE CONDITION TEST SCRIPT LOADED ==="
     },
     {
-      "timestamp": "2025-09-17T05:35:27.170Z",
+      "timestamp": "2025-09-18T19:25:32.889Z",
       "type": "debug",
       "text": "[vite] connecting...",
       "entry": "[DEBUG] [vite] connecting..."
     },
     {
-      "timestamp": "2025-09-17T05:35:27.181Z",
+      "timestamp": "2025-09-18T19:25:32.904Z",
       "type": "debug",
       "text": "[vite] connected.",
       "entry": "[DEBUG] [vite] connected."
     },
     {
-      "timestamp": "2025-09-17T05:35:27.480Z",
+      "timestamp": "2025-09-18T19:25:33.173Z",
       "type": "info",
       "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
       "entry": "[INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.699Z",
+      "timestamp": "2025-09-18T19:25:33.225Z",
       "type": "log",
       "text": "%c * Tone.js v14.9.17 *  background: #000; color: #fff",
       "entry": "[LOG] %c * Tone.js v14.9.17 *  background: #000; color: #fff"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.748Z",
+      "timestamp": "2025-09-18T19:25:33.279Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.749Z",
+      "timestamp": "2025-09-18T19:25:33.280Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.756Z",
+      "timestamp": "2025-09-18T19:25:33.464Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.467Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendSyncService constructed - configuration will be loaded when start() is called {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendSyncService constructed - configuration will be loaded when start() is called {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.467Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 🔄 [BackendSync] Service initialized {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔄 [BackendSync] Service initialized {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.468Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.468Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: ApplicationInitializerService initialized {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ApplicationInitializerService initialized {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.470Z",
       "type": "warning",
       "text": "[LoggerProvider] Logger not registered, creating temporary logger",
       "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.758Z",
+      "timestamp": "2025-09-18T19:25:33.470Z",
       "type": "warning",
       "text": "[LoggerProvider] Logger not registered, creating temporary logger",
       "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.761Z",
+      "timestamp": "2025-09-18T19:25:33.470Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.471Z",
       "type": "warning",
       "text": "[LoggerProvider] Logger not registered, creating temporary logger",
       "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.761Z",
-      "type": "info",
-      "text": "ℹ️ [Temporary] INFO: 📄 [Config] Loading unified configuration from game-config.yaml... {}",
-      "entry": "[INFO] ℹ️ [Temporary] INFO: 📄 [Config] Loading unified configuration from game-config.yaml... {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.802Z",
-      "type": "info",
-      "text": "ℹ️ [Temporary] INFO: Unified configuration loaded and mapped successfully {}",
-      "entry": "[INFO] ℹ️ [Temporary] INFO: Unified configuration loaded and mapped successfully {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.803Z",
+      "timestamp": "2025-09-18T19:25:33.471Z",
       "type": "warning",
       "text": "[LoggerProvider] Logger not registered, creating temporary logger",
       "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.804Z",
+      "timestamp": "2025-09-18T19:25:33.471Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.491Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.493Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.493Z",
       "type": "warning",
       "text": "[LoggerProvider] Logger not registered, creating temporary logger",
       "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.805Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🚀 [EventBus] EventBus initialized {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🚀 [EventBus] EventBus initialized {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.807Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.808Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.808Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🌐 [DebugService] Global debugging interface exposed as window.QA_DEBUG {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🌐 [DebugService] Global debugging interface exposed as window.QA_DEBUG {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.809Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🎮 [GameController] Service initialized {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🎮 [GameController] Service initialized {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.809Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.809Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🧮 [QualiaCalculator] Service initialized with event-driven architecture {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🧮 [QualiaCalculator] Service initialized with event-driven architecture {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.810Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 📊 [QualiaCalculator] Current State: {intensity: 0.300, precision: 0.500, aggression: 0.000, flow: 0.400, chaos: 0.000}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 📊 [QualiaCalculator] Current State: {intensity: 0.300, precision: 0.500, aggression: 0.000, flow: 0.400, chaos: 0.000}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.815Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔄 [BackendSync] Service initialized {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔄 [BackendSync] Service initialized {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.816Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🚨 [ErrorReporting] Service initialized with event-driven architecture {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🚨 [ErrorReporting] Service initialized with event-driven architecture {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.816Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 📊 [ErrorReporting] Current Configuration: {rateLimitWindow: 60000ms, maxErrorsPerWindow: 10, batchSize: 5, batchTimeout: 30000ms, maxRetentionTime: 3600000ms}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 📊 [ErrorReporting] Current Configuration: {rateLimitWindow: 60000ms, maxErrorsPerWindow: 10, batchSize: 5, batchTimeout: 30000ms, maxRetentionTime: 3600000ms}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.816Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: Controller initialized with configuration {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: Controller initialized with configuration {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.816Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔔 [NotificationService] Service initialized with pure DI {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔔 [NotificationService] Service initialized with pure DI {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.817Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: CompositionRoot: All services created successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: CompositionRoot: All services created successfully {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.817Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: Starting service initialization {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: Starting service initialization {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.817Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🚀 [GameController] Starting service... {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🚀 [GameController] Starting service... {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.817Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.817Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758087327806_rydvln0iw) - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758087327806_rydvln0iw) - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.818Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 📡 [GameController] Subscribed to PlayerAction events {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 📡 [GameController] Subscribed to PlayerAction events {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.818Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🎮 [GameController] Service started successfully - 0.80ms {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🎮 [GameController] Service started successfully - 0.80ms {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.818Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: ✅ [CompositionRoot] gameController started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: ✅ [CompositionRoot] gameController started successfully {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.818Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🚀 [BackendSync] Start called {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🚀 [BackendSync] Start called {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.819Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🏥 [BackendSync] Health check {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🏥 [BackendSync] Health check {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.822Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: ✅ [BackendSync] Backend healthy - 3.80ms {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: ✅ [BackendSync] Backend healthy - 3.80ms {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.822Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.822Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758087327811_n2yqoz5w6) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758087327811_n2yqoz5w6) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.823Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 📡 [BackendSync] Subscribed to events {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 📡 [BackendSync] Subscribed to events {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.823Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🚀 [BackendSync] Service started - 4.60ms {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🚀 [BackendSync] Service started - 4.60ms {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.823Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: ✅ [CompositionRoot] backendSync started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: ✅ [CompositionRoot] backendSync started successfully {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.824Z",
+      "timestamp": "2025-09-18T19:25:33.493Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.824Z",
+      "timestamp": "2025-09-18T19:25:33.493Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.495Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.825Z",
+      "timestamp": "2025-09-18T19:25:33.495Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.825Z",
+      "timestamp": "2025-09-18T19:25:33.496Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.496Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.825Z",
+      "timestamp": "2025-09-18T19:25:33.496Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.825Z",
+      "timestamp": "2025-09-18T19:25:33.496Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 1/5... {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 1/5... {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.496Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.499Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Backend healthy - 4.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Backend healthy - 4.10ms {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.499Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.825Z",
+      "timestamp": "2025-09-18T19:25:33.499Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.825Z",
+      "timestamp": "2025-09-18T19:25:33.500Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.500Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758223533497_o1f849uqr) - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758223533497_o1f849uqr) - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.502Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📡 [BackendSync] Subscribed to events {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [BackendSync] Subscribed to events {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.502Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Service started successfully after 1 attempts - 5.90ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Service started successfully after 1 attempts - 5.90ms {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.502Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.846Z",
+      "timestamp": "2025-09-18T19:25:33.502Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.846Z",
+      "timestamp": "2025-09-18T19:25:33.502Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.848Z",
+      "timestamp": "2025-09-18T19:25:33.503Z",
+      "type": "warning",
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.503Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.503Z",
       "type": "log",
-      "text": "🎵 OntologicalAudioEngine initialized",
-      "entry": "[LOG] 🎵 OntologicalAudioEngine initialized"
+      "text": "🎯 Application initialization completed successfully",
+      "entry": "[LOG] 🎯 Application initialization completed successfully"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.851Z",
+      "timestamp": "2025-09-18T19:25:33.505Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[DEPRECATED] Use `createWithEqualityFn` instead of `create` or use `useStoreWithEqualityFn` instead of `useStore`. They can be imported from 'zustand/traditional'. https://github.com/pmndrs/zustand/discussions/1937",
+      "entry": "[WARNING] [DEPRECATED] Use `createWithEqualityFn` instead of `create` or use `useStoreWithEqualityFn` instead of `useStore`. They can be imported from 'zustand/traditional'. https://github.com/pmndrs/zustand/discussions/1937"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.852Z",
+      "timestamp": "2025-09-18T19:25:33.637Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: App Component: Starting application initialization {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: App Component: Starting application initialization {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.637Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.853Z",
+      "timestamp": "2025-09-18T19:25:33.638Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.854Z",
+      "timestamp": "2025-09-18T19:25:33.639Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.639Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.856Z",
+      "timestamp": "2025-09-18T19:25:33.639Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.858Z",
+      "timestamp": "2025-09-18T19:25:33.639Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.644Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: App Component: Starting application initialization {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: App Component: Starting application initialization {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.645Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.859Z",
+      "timestamp": "2025-09-18T19:25:33.645Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.859Z",
+      "timestamp": "2025-09-18T19:25:33.648Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.648Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.860Z",
+      "timestamp": "2025-09-18T19:25:33.648Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.861Z",
+      "timestamp": "2025-09-18T19:25:33.648Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.663Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.663Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.664Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.863Z",
+      "timestamp": "2025-09-18T19:25:33.664Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.864Z",
+      "timestamp": "2025-09-18T19:25:33.666Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.666Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.864Z",
+      "timestamp": "2025-09-18T19:25:33.666Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.865Z",
+      "timestamp": "2025-09-18T19:25:33.666Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.667Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [BackendSync] Service already running {}",
+      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [BackendSync] Service already running {}"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.866Z",
+      "timestamp": "2025-09-18T19:25:33.667Z",
       "type": "warning",
-      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-      "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.867Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.868Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758087327865_ese07a0fy) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758087327865_ese07a0fy) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.868Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribe called for MetronomeTick {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribe called for MetronomeTick {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.870Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribed to MetronomeTick (ID: listener_1758087327866_6kkyzo6g8) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribed to MetronomeTick (ID: listener_1758087327866_6kkyzo6g8) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.870Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.870Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758087327866_pnedcisw9) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758087327866_pnedcisw9) - 0.10ms {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.870Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: ✅ AudioService initialized successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: ✅ AudioService initialized successfully {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.871Z",
+      "timestamp": "2025-09-18T19:25:33.667Z",
       "type": "warning",
-      "text": "⚠️ [QualiaTempo] WARN: ⏱️ OK AudioService.start: 54.80ms {}",
-      "entry": "[WARNING] ⚠️ [QualiaTempo] WARN: ⏱️ OK AudioService.start: 54.80ms {}"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.873Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: ✅ [CompositionRoot] audioService started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: ✅ [CompositionRoot] audioService started successfully {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.873Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🩺 [CompositionRoot] Starting health monitoring... {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🩺 [CompositionRoot] Starting health monitoring... {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.873Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: ✅ [CompositionRoot] All services initialized successfully - 66.60ms {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: ✅ [CompositionRoot] All services initialized successfully - 66.60ms {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.873Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: Qualia Tempo Frontend Starting... {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: Qualia Tempo Frontend Starting... {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.874Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: CompositionRoot: Services initialized {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: CompositionRoot: Services initialized {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.874Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: Backend Connection: Checking... {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: Backend Connection: Checking... {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.874Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: Qualia Tempo Frontend Ready! {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: Qualia Tempo Frontend Ready! {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.875Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🛑 [CompositionRoot] Starting graceful shutdown... {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🛑 [CompositionRoot] Starting graceful shutdown... {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.878Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🩺 [CompositionRoot] Health monitoring stopped {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🩺 [CompositionRoot] Health monitoring stopped {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.878Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🛑 [BackendSync] Stop called {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🛑 [BackendSync] Stop called {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.880Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔌 [EventBus] Unsubscribe called for ID: listener_1758087327811_n2yqoz5w6 {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔌 [EventBus] Unsubscribe called for ID: listener_1758087327811_n2yqoz5w6 {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.880Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔌 [EventBus] Unsubscribed from QualiaStateUpdated (ID: listener_1758087327811_n2yqoz5w6) {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔌 [EventBus] Unsubscribed from QualiaStateUpdated (ID: listener_1758087327811_n2yqoz5w6) {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.881Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 📡 [BackendSync] Unsubscribed from events {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 📡 [BackendSync] Unsubscribed from events {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.881Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🛑 [BackendSync] Service stopped - 0.90ms {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🛑 [BackendSync] Service stopped - 0.90ms {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.881Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: BackendSync shutdown complete {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: BackendSync shutdown complete {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.886Z",
+      "timestamp": "2025-09-18T19:25:33.667Z",
       "type": "warning",
-      "text": "⚠️ [QualiaTempo] WARN: ⚠️ [DebugService] Service not running {}",
-      "entry": "[WARNING] ⚠️ [QualiaTempo] WARN: ⚠️ [DebugService] Service not running {}"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.886Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: DebugService shutdown complete {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: DebugService shutdown complete {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.887Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🛑 [GameController] Stopping service... {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🛑 [GameController] Stopping service... {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.887Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔌 [EventBus] Unsubscribe called for ID: listener_1758087327806_rydvln0iw {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔌 [EventBus] Unsubscribe called for ID: listener_1758087327806_rydvln0iw {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.887Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔌 [EventBus] Unsubscribed from PlayerAction (ID: listener_1758087327806_rydvln0iw) {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔌 [EventBus] Unsubscribed from PlayerAction (ID: listener_1758087327806_rydvln0iw) {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.887Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 📡 [GameController] Unsubscribed from all events {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 📡 [GameController] Unsubscribed from all events {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.888Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: ✅ [GameController] Service stopped - 0.70ms {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: ✅ [GameController] Service stopped - 0.70ms {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.888Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: GameController shutdown complete {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: GameController shutdown complete {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.888Z",
+      "timestamp": "2025-09-18T19:25:33.669Z",
       "type": "warning",
-      "text": "⚠️ [QualiaTempo] WARN: ⚠️ [GameStateStoreService] Service not started {}",
-      "entry": "[WARNING] ⚠️ [QualiaTempo] WARN: ⚠️ [GameStateStoreService] Service not started {}"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.888Z",
+      "timestamp": "2025-09-18T19:25:33.669Z",
       "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: GameStateStore shutdown complete {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: GameStateStore shutdown complete {}"
+      "text": "ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true}"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.888Z",
+      "timestamp": "2025-09-18T19:25:33.669Z",
       "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔌 [EventBus] Unsubscribe called for ID: listener_1758087327866_pnedcisw9 {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔌 [EventBus] Unsubscribe called for ID: listener_1758087327866_pnedcisw9 {}"
+      "text": "ℹ️ [QualiaLogger] INFO: App Component: Application initialization completed {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: App Component: Application initialization completed {}"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.889Z",
+      "timestamp": "2025-09-18T19:25:33.671Z",
       "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🔌 [EventBus] Unsubscribed from QualiaStateUpdated (ID: listener_1758087327866_pnedcisw9) {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🔌 [EventBus] Unsubscribed from QualiaStateUpdated (ID: listener_1758087327866_pnedcisw9) {}"
+      "text": "ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.889Z",
+      "timestamp": "2025-09-18T19:25:33.673Z",
       "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: ✅ AudioService stopped successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: ✅ AudioService stopped successfully {}"
+      "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.889Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: AudioService shutdown complete {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: AudioService shutdown complete {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.889Z",
+      "timestamp": "2025-09-18T19:25:33.673Z",
       "type": "warning",
-      "text": "⚠️ [QualiaTempo] WARN: ⚠️ [NotificationService] Service not started {}",
-      "entry": "[WARNING] ⚠️ [QualiaTempo] WARN: ⚠️ [NotificationService] Service not started {}"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.889Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: NotificationService shutdown complete {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: NotificationService shutdown complete {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.890Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: ErrorReporting shutdown complete {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: ErrorReporting shutdown complete {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:27.890Z",
+      "timestamp": "2025-09-18T19:25:33.673Z",
       "type": "warning",
-      "text": "⚠️ [QualiaTempo] WARN: ⚠️ [QualiaCalculator] Service not running {}",
-      "entry": "[WARNING] ⚠️ [QualiaTempo] WARN: ⚠️ [QualiaCalculator] Service not running {}"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.890Z",
+      "timestamp": "2025-09-18T19:25:33.675Z",
       "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: QualiaCalculator shutdown complete {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: QualiaCalculator shutdown complete {}"
+      "text": "ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.890Z",
+      "timestamp": "2025-09-18T19:25:33.675Z",
+      "type": "warning",
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.675Z",
+      "type": "warning",
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.676Z",
       "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🧹 [EventBus] Clear called {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🧹 [EventBus] Clear called {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.890Z",
+      "timestamp": "2025-09-18T19:25:33.676Z",
+      "type": "warning",
+      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [BackendSync] Service already running {}",
+      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [BackendSync] Service already running {}"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.676Z",
+      "type": "warning",
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.676Z",
+      "type": "warning",
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.676Z",
+      "type": "warning",
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.677Z",
+      "type": "warning",
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+    },
+    {
+      "timestamp": "2025-09-18T19:25:33.677Z",
       "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: 🧹 [EventBus] Cleared 2 listeners and event history {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: 🧹 [EventBus] Cleared 2 listeners and event history {}"
+      "text": "ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true}"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.891Z",
+      "timestamp": "2025-09-18T19:25:33.677Z",
       "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: ✅ [CompositionRoot] EventBus shutdown complete {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: ✅ [CompositionRoot] EventBus shutdown complete {}"
+      "text": "ℹ️ [QualiaLogger] INFO: App Component: Application initialization completed {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: App Component: Application initialization completed {}"
     },
     {
-      "timestamp": "2025-09-17T05:35:27.891Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaTempo] INFO: ✅ [CompositionRoot] Graceful shutdown completed - 5.60ms {}",
-      "entry": "[INFO] ℹ️ [QualiaTempo] INFO: ✅ [CompositionRoot] Graceful shutdown completed - 5.60ms {}"
-    },
-    {
-      "timestamp": "2025-09-17T05:35:30.134Z",
+      "timestamp": "2025-09-18T19:25:35.799Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST RESULTS ===",
       "entry": "[LOG] === RACE CONDITION TEST RESULTS ==="
     },
     {
-      "timestamp": "2025-09-17T05:35:30.134Z",
+      "timestamp": "2025-09-18T19:25:35.799Z",
       "type": "log",
       "text": "✅ NO CONFIGURATION ERRORS DETECTED",
       "entry": "[LOG] ✅ NO CONFIGURATION ERRORS DETECTED"
     },
     {
-      "timestamp": "2025-09-17T05:35:30.134Z",
+      "timestamp": "2025-09-18T19:25:35.800Z",
       "type": "log",
       "text": "✅ NO SERVICE INITIALIZATION ERRORS DETECTED",
       "entry": "[LOG] ✅ NO SERVICE INITIALIZATION ERRORS DETECTED"
     },
     {
-      "timestamp": "2025-09-17T05:35:30.134Z",
+      "timestamp": "2025-09-18T19:25:35.800Z",
       "type": "log",
       "text": "=== TEST COMPLETE ===",
       "entry": "[LOG] === TEST COMPLETE ==="
@@ -734,42 +572,61 @@
     "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
     "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
     "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] ⚠️ [QualiaTempo] WARN: ⏱️ OK AudioService.start: 54.80ms {}",
-    "[WARNING] ⚠️ [QualiaTempo] WARN: ⚠️ [DebugService] Service not running {}",
-    "[WARNING] ⚠️ [QualiaTempo] WARN: ⚠️ [GameStateStoreService] Service not started {}",
-    "[WARNING] ⚠️ [QualiaTempo] WARN: ⚠️ [NotificationService] Service not started {}",
-    "[WARNING] ⚠️ [QualiaTempo] WARN: ⚠️ [QualiaCalculator] Service not running {}"
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [DEPRECATED] Use `createWithEqualityFn` instead of `create` or use `useStoreWithEqualityFn` instead of `useStore`. They can be imported from 'zustand/traditional'. https://github.com/pmndrs/zustand/discussions/1937",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [BackendSync] Service already running {}",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [BackendSync] Service already running {}",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
   ],
   "configErrors": [
-    "[INFO] ℹ️ [Temporary] INFO: 📄 [Config] Loading unified configuration from game-config.yaml... {}",
-    "[INFO] ℹ️ [Temporary] INFO: Unified configuration loaded and mapped successfully {}",
-    "[INFO] ℹ️ [QualiaTempo] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}",
-    "[INFO] ℹ️ [QualiaTempo] INFO: 📊 [ErrorReporting] Current Configuration: {rateLimitWindow: 60000ms, maxErrorsPerWindow: 10, batchSize: 5, batchTimeout: 30000ms, maxRetentionTime: 3600000ms}",
-    "[INFO] ℹ️ [QualiaTempo] INFO: Controller initialized with configuration {}"
+    "[INFO] ℹ️ [QualiaLogger] INFO: BackendSyncService constructed - configuration will be loaded when start() is called {}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
+    "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true}"
   ]
 }

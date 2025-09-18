@@ -44,7 +44,7 @@ import type { QualiaCalculatorConfig } from './ConfigurationService';
 @injectable()
 export class QualiaStateCalculatorService implements IQualiaStateCalculatorService {
   private currentState: QualiaState;
-  private config: QualiaCalculatorConfig;
+  private config: QualiaCalculatorConfig | null = null; // QUALIA.CODE: Lazy initialization
   private lastUpdateTime: number;
   private updateIntervalId: number | null = null;
   private eventListenerIds: string[] = [];
@@ -52,6 +52,10 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   private eventBus: IEventBus;
   private logger: ILogger;
   private configService: IConfigurationService;
+
+  // Statistics tracking
+  private calculationsPerformed = 0;
+  private totalCalculationTime = 0;
 
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
@@ -62,15 +66,48 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     this.logger = logger;
     this.configService = configService;
 
-    // Load configuration
-    this.config = this.configService.getConfigSection<QualiaCalculatorConfig>('qualiaCalculator');
-    this.currentState = this.createInitialState();
+    // QUALIA.CODE FIX: Do NOT access configuration in constructor
+    // Initialize with basic state, configuration will be loaded when start() is called
+    this.currentState = this.createInitialStateWithDefaults();
     this.lastUpdateTime = performance.now();
 
     this.logger.info(
-      "🧮 [QualiaCalculator] Service initialized with event-driven architecture",
+      "🧮 [QualiaCalculator] Service constructed - configuration will be loaded when start() is called",
     );
     this.logCurrentState();
+  }
+
+  /**
+   * QUALIA.CODE: Ensure configuration is loaded before accessing it
+   */
+  private ensureConfigLoaded(): QualiaCalculatorConfig {
+    if (!this.config) {
+      try {
+        this.config = this.configService.getConfigSection<QualiaCalculatorConfig>('qualiaCalculator');
+        // Reinitialize state with proper configuration
+        this.currentState = this.createInitialState();
+        this.logger.debug('QualiaStateCalculatorService configuration loaded successfully');
+      } catch (error) {
+        this.logger.error('Failed to load QualiaStateCalculatorService configuration', error);
+        throw new Error('QualiaStateCalculatorService configuration not available');
+      }
+    }
+    return this.config;
+  }
+
+  /**
+   * Create initial state with default values (used before config is loaded)
+   */
+  private createInitialStateWithDefaults(): QualiaState {
+    return {
+      intensity: 0,
+      focus_level: 0,
+      aggression: 0,
+      flow: 0,
+      chaos: 0,
+      recovery: 0,
+      transcendence: 0
+    };
   }
 
   /**
@@ -81,6 +118,9 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
       this.logger.warn("⚠️ [QualiaCalculator] Service already running");
       return;
     }
+
+    // QUALIA.CODE: Load configuration before proceeding
+    this.ensureConfigLoaded();
 
     this.subscribeToPlayerActionEvents();
     this.startUpdateLoop();
@@ -173,6 +213,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
    * ARCHITECTURE: This replaces the direct method calls from UI.
    */
   private handlePlayerAction(event: PlayerActionEvent): void {
+    const startTime = performance.now();
     const { action, context } = event;
 
     switch (action) {
@@ -197,12 +238,18 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
 
     // Always emit state update after processing action
     this.emitStateUpdate();
+
+    // Track calculation statistics
+    const duration = performance.now() - startTime;
+    this.calculationsPerformed++;
+    this.totalCalculationTime += duration;
   }
 
   // ==================== ACTION HANDLERS ====================
 
   private onNoteHit(_context?: Record<string, any>): void {
-    const multipliers = this.config.hitNoteMultipliers;
+    const config = this.ensureConfigLoaded();
+    const multipliers = config.hitNoteMultipliers;
 
     this.currentState.intensity = this.clamp(
       this.currentState.intensity + multipliers.intensity,
@@ -224,7 +271,8 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   }
 
   private onNoteMiss(_context?: Record<string, any>): void {
-    const multipliers = this.config.missNoteMultipliers;
+    const config = this.ensureConfigLoaded();
+    const multipliers = config.missNoteMultipliers;
 
     this.currentState.focus_level = this.clamp(
       this.currentState.focus_level + multipliers.focus_level, // negative value
@@ -240,7 +288,8 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   }
 
   private onDash(_context?: Record<string, any>): void {
-    const multipliers = this.config.dashMultipliers;
+    const config = this.ensureConfigLoaded();
+    const multipliers = config.dashMultipliers;
 
     this.currentState.intensity = this.clamp(
       this.currentState.intensity + multipliers.intensity,
@@ -253,7 +302,8 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   }
 
   private onFastForward(_context?: Record<string, any>): void {
-    const multipliers = this.config.fastForwardMultipliers;
+    const config = this.ensureConfigLoaded();
+    const multipliers = config.fastForwardMultipliers;
 
     this.currentState.aggression = this.clamp(
       this.currentState.aggression + multipliers.aggression,
@@ -266,7 +316,8 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   }
 
   private onRewind(_context?: Record<string, any>): void {
-    const multipliers = this.config.rewindMultipliers;
+    const config = this.ensureConfigLoaded();
+    const multipliers = config.rewindMultipliers;
 
     this.currentState.recovery = this.clamp(
       this.currentState.recovery + multipliers.recovery,
@@ -283,9 +334,10 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   private startUpdateLoop(): void {
     this.stopUpdateLoop(); // Ensure no duplicate intervals
 
+    const config = this.ensureConfigLoaded();
     this.updateIntervalId = window.setInterval(() => {
       this.updateStateWithDecay();
-    }, this.config.updateInterval);
+    }, config.updateInterval);
   }
 
   private stopUpdateLoop(): void {
@@ -303,28 +355,30 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     const deltaTime = (now - this.lastUpdateTime) / 1000; // Convert to seconds
     this.lastUpdateTime = now;
 
+    const config = this.ensureConfigLoaded();
+
     // Apply decay to all values
     this.currentState.intensity = this.clamp(
-      this.currentState.intensity - this.config.intensityDecay * deltaTime,
+      this.currentState.intensity - config.intensityDecay * deltaTime,
     );
     this.currentState.focus_level = this.clamp(
-      this.currentState.focus_level - this.config.focusDecay * deltaTime,
+      this.currentState.focus_level - config.focusDecay * deltaTime,
     );
     this.currentState.aggression = this.clamp(
-      this.currentState.aggression - this.config.aggressionDecay * deltaTime,
+      this.currentState.aggression - config.aggressionDecay * deltaTime,
     );
     this.currentState.flow = this.clamp(
-      this.currentState.flow - this.config.flowDecay * deltaTime,
+      this.currentState.flow - config.flowDecay * deltaTime,
     );
     this.currentState.chaos = this.clamp(
-      this.currentState.chaos - this.config.chaosDecay * deltaTime,
+      this.currentState.chaos - config.chaosDecay * deltaTime,
     );
     this.currentState.recovery = this.clamp(
-      this.currentState.recovery - this.config.recoveryDecay * deltaTime,
+      this.currentState.recovery - config.recoveryDecay * deltaTime,
     );
     this.currentState.transcendence = this.clamp(
       this.currentState.transcendence -
-        this.config.transcendenceDecay * deltaTime,
+        config.transcendenceDecay * deltaTime,
     );
 
     // Only emit state update if there's significant change
@@ -334,7 +388,8 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   }
 
   private checkTranscendenceActivation(): void {
-    const thresholds = this.config.transcendenceThresholds;
+    const config = this.ensureConfigLoaded();
+    const thresholds = config.transcendenceThresholds;
 
     if (
       this.currentState.intensity >= thresholds.intensity &&
@@ -350,9 +405,10 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   }
 
   private clamp(value: number): number {
+    const config = this.ensureConfigLoaded();
     return Math.max(
-      this.config.minValue,
-      Math.min(this.config.maxValue, value),
+      config.minValue,
+      Math.min(config.maxValue, value),
     );
   }
 
@@ -393,6 +449,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
    * @returns The updated QualiaState
    */
   @logMethod()
+  @catchError()
   public calculateQualiaState(_action: PlayerActionEvent): QualiaState {
     // This method would process the action and return updated state
     // For now, return current state (implementation can be expanded)
@@ -403,6 +460,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
    * Reset the QualiaState to initial values.
    */
   @logMethod()
+  @catchError()
   public resetState(): void {
     this.currentState = this.createInitialState();
     this.logger.info('🔄 [QualiaCalculator] State reset to initial values');
@@ -413,6 +471,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
    * Called automatically by the service's internal timer.
    */
   @logMethod()
+  @catchError()
   public applyTimeDecay(): void {
     const now = Date.now();
     const deltaTime = (now - this.lastUpdateTime) / 1000;
@@ -427,7 +486,8 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
    */
   @logMethod()
   private applyDecayToAllValues(deltaTime: number): void {
-    const decayRates = this.config.decayRates;
+    const config = this.ensureConfigLoaded();
+    const decayRates = config.decayRates;
     
     // Apply exponential decay to all values using individual decay rates
     this.currentState.intensity *= Math.exp(-decayRates.intensity * deltaTime);
@@ -454,20 +514,25 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
    * @returns Object containing performance metrics
    */
   @logMethod()
+  @catchError()
   public getStats(): {
     isRunning: boolean;
     calculationsPerformed: number;
     averageCalculationTime: number;
     currentState: QualiaState;
   } {
+    const averageCalculationTime = this.calculationsPerformed > 0
+      ? this.totalCalculationTime / this.calculationsPerformed
+      : 0;
+
     return {
       isRunning: this._isRunning,
-      calculationsPerformed: 0, // To be implemented with actual tracking
-      averageCalculationTime: 0, // To be implemented with actual tracking
+      calculationsPerformed: this.calculationsPerformed,
+      averageCalculationTime: averageCalculationTime,
       currentState: { ...this.currentState }
     };
   }
 }
 
-// Note: QualiaStateCalculatorService should be instantiated by CompositionRoot
-// Example: const qualiaCalculator = new QualiaStateCalculatorService(eventBus);
+// QUALIA.CODE COMPLIANCE: Service instantiation handled exclusively by InversifyJS IoC container
+// Manual instantiation (new QualiaStateCalculatorService()) is FORBIDDEN

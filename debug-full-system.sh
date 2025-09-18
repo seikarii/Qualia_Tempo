@@ -13,9 +13,10 @@ BACKEND_DIR="$PROTOTYPE_ROOT/backend"
 FRONTEND_DIR="$PROTOTYPE_ROOT/frontend"
 VENV_PATH="$PROJECT_ROOT/.venv"
 
-# Log files with timestamp
+# Log files with timestamp - UPDATED: logs go inside debuglogs directory
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-LOG_DIR="$PROJECT_ROOT/debug-logs-$TIMESTAMP"
+DEBUGLOGS_DIR="$PROJECT_ROOT/debuglogs"
+LOG_DIR="$DEBUGLOGS_DIR/debug-logs-$TIMESTAMP"
 BACKEND_LOG="$LOG_DIR/backend.log"
 FRONTEND_LOG="$LOG_DIR/frontend.log"
 BROWSER_LOG="$LOG_DIR/browser-console.log"
@@ -58,7 +59,8 @@ init_debug() {
     echo "Project: $PROJECT_ROOT"
     echo ""
     
-    # Create log directory
+    # Create debuglogs directory first, then specific log directory
+    mkdir -p "$DEBUGLOGS_DIR"
     mkdir -p "$LOG_DIR"
     
     # Initialize debug report

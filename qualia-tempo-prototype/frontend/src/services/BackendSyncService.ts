@@ -49,7 +49,7 @@ export interface ApiResponse<T = any> {
  */
 @injectable()
 export class BackendSyncService implements IBackendSyncService {
-  private config: BackendSyncConfig;
+  private config: BackendSyncConfig | null = null; // QUALIA.CODE: Lazy initialization
   private eventListenerIds: string[] = [];
   private isRunning = false;
   private isConnected = false;
@@ -63,8 +63,14 @@ export class BackendSyncService implements IBackendSyncService {
   private syncTimeoutId: number | null = null;
 
   // Connection monitoring
-  private healthCheckInterval: number = 30 * 1000; // 30 seconds in milliseconds
+  private healthCheckInterval: number = 30 * 1000; // 30 seconds default
   private healthCheckIntervalId: number | null = null;
+
+  // Statistics tracking
+  private syncCount = 0;
+  private errorCount = 0;
+  private totalSyncTime = 0;
+  private lastSyncTimestamp: Date | null = null;
 
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
@@ -75,11 +81,28 @@ export class BackendSyncService implements IBackendSyncService {
     this.logger = logger;
     this.configService = configService;
 
-    this.config = this.configService.getConfigSection<BackendSyncConfig>('backendSync');
-    // Store health check interval for later use
-    this.healthCheckInterval = this.config.connection.healthCheckInterval;
+    // QUALIA.CODE FIX: Do NOT access configuration in constructor
+    // Configuration will be loaded lazily when needed
+    this.logger.info('BackendSyncService constructed - configuration will be loaded when start() is called');
 
     this.logger.info("🔄 [BackendSync] Service initialized");
+  }
+
+  /**
+   * QUALIA.CODE: Ensure configuration is loaded before accessing it
+   */
+  private ensureConfigLoaded(): BackendSyncConfig {
+    if (!this.config) {
+      try {
+        this.config = this.configService.getConfigSection<BackendSyncConfig>('backendSync');
+        this.healthCheckInterval = this.config.connection.healthCheckInterval;
+        this.logger.debug('BackendSyncService configuration loaded successfully');
+      } catch (error) {
+        this.logger.error('Failed to load BackendSyncService configuration', error);
+        throw new Error('BackendSyncService configuration not available');
+      }
+    }
+    return this.config;
   }
 
   /**
@@ -91,13 +114,17 @@ export class BackendSyncService implements IBackendSyncService {
     const startTime = performance.now();
     this.logger.info("🚀 [BackendSync] Start called");
 
+    // QUALIA.CODE: Load configuration before proceeding
+    this.ensureConfigLoaded();
+
     if (this.isRunning) {
       this.logger.warn("⚠️ [BackendSync] Service already running");
       return;
     }
 
-    const maxRetries = 5;
-    const retryDelay = 1000; // 1 second
+    const config = this.ensureConfigLoaded();
+    const maxRetries = config.sync.maxRetries;
+    const retryDelay = config.sync.retryDelay;
 
     for (let i = 0; i < maxRetries; i++) {
       try {
@@ -181,7 +208,8 @@ export class BackendSyncService implements IBackendSyncService {
     this.logger.info("⚙️ [BackendSync] UpdateConfig called");
 
     try {
-      this.config = { ...this.config, ...newConfig };
+      const currentConfig = this.ensureConfigLoaded();
+      this.config = { ...currentConfig, ...newConfig };
 
       const duration = performance.now() - startTime;
       this.logger.info(
@@ -241,7 +269,7 @@ export class BackendSyncService implements IBackendSyncService {
   @logMethod()
   @catchError()
   public getConfig(): BackendSyncConfig {
-    return { ...this.config };
+    return { ...this.ensureConfigLoaded() };
   }
 
   // Private methods
@@ -278,7 +306,8 @@ export class BackendSyncService implements IBackendSyncService {
     this.logger.info("📊 [BackendSync] QualiaState update received");
 
     if (!this.isConnected) {
-      this.logger.warn(`⚠️ [BackendSync] ${this.config.messages.backendNotConnected}`);
+      const config = this.ensureConfigLoaded();
+      this.logger.warn(`⚠️ [BackendSync] ${config.messages.backendNotConnected}`);
       return;
     }
 
@@ -298,18 +327,19 @@ export class BackendSyncService implements IBackendSyncService {
   private scheduleSync(qualiaRequest: QualiaStateRequest): void {
     const now = performance.now();
     const timeSinceLastSync = now - this.lastSyncTime;
+    const config = this.ensureConfigLoaded();
 
     // Store the latest state
     this.pendingSync = qualiaRequest;
 
     // If we haven't hit the throttle limit, sync immediately
-    if (timeSinceLastSync >= this.config.sync.throttleDelay) {
+    if (timeSinceLastSync >= config.sync.throttleDelay) {
       this.performSyncSafe(qualiaRequest);
       this.pendingSync = null;
     } else {
       // Schedule a delayed sync
       this.clearPendingSync();
-      const delay = this.config.sync.throttleDelay - timeSinceLastSync;
+      const delay = config.sync.throttleDelay - timeSinceLastSync;
 
       this.syncTimeoutId = window.setTimeout(() => {
         if (this.pendingSync) {
@@ -341,15 +371,16 @@ export class BackendSyncService implements IBackendSyncService {
 
   private async performSync(qualiaRequest: QualiaStateRequest): Promise<void> {
     const startTime = performance.now();
+    const config = this.ensureConfigLoaded();
 
-    if (this.config.validation.logValidationErrors) {
+    if (config.validation.logValidationErrors) {
       this.logger.info(
         "🌐 [BackendSync] Sending QualiaState to backend:",
         { qualiaRequest },
       );
     }
 
-    const url = `${this.config.api.baseUrl}${this.config.api.qualiaEndpoint}`;
+    const url = `${config.api.baseUrl}${config.api.qualiaEndpoint}`;
 
     try {
       const response = await this.makeRequest<any>(url, {
@@ -362,7 +393,7 @@ export class BackendSyncService implements IBackendSyncService {
 
       this.lastSyncTime = performance.now();
 
-      if (this.config.validation.logValidationErrors) {
+      if (config.validation.logValidationErrors) {
         this.logger.info("📥 [BackendSync] Backend response:", { response });
       }
 
@@ -375,22 +406,32 @@ export class BackendSyncService implements IBackendSyncService {
 
       const duration = performance.now() - startTime;
       this.logger.info(`✅ [BackendSync] Sync completed - ${duration.toFixed(2)}ms`);
+
+      // Update statistics
+      this.syncCount++;
+      this.totalSyncTime += duration;
+      this.lastSyncTimestamp = new Date();
     } catch (error) {
       const duration = performance.now() - startTime;
       this.logger.error(
         `🚨 [BackendSync] Sync failed - ${duration.toFixed(2)}ms:`,
         { error },
       );
+
+      // Update error statistics
+      this.errorCount++;
+
       throw error;
     }
   }
 
   private async checkHealth(): Promise<void> {
     const startTime = performance.now();
+    const config = this.ensureConfigLoaded();
     this.logger.info("🏥 [BackendSync] Health check");
 
     try {
-      const url = `${this.config.api.baseUrl}${this.config.api.healthEndpoint}`;
+      const url = `${config.api.baseUrl}${config.api.healthEndpoint}`;
       await this.makeRequest<any>(url, { method: "GET" });
 
       this.isConnected = true;
@@ -437,10 +478,11 @@ export class BackendSyncService implements IBackendSyncService {
 
   private async makeRequest<T>(url: string, options: any): Promise<T> {
     // Add timeout to fetch
+    const config = this.ensureConfigLoaded();
     const controller = new AbortController();
     const timeoutId = setTimeout(
       () => controller.abort(),
-      this.config.api.timeout,
+      config.api.timeout,
     );
 
     try {
@@ -462,7 +504,7 @@ export class BackendSyncService implements IBackendSyncService {
       clearTimeout(timeoutId);
 
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error(`Request timeout after ${this.config.api.timeout}ms`);
+        throw new Error(`Request timeout after ${config.api.timeout}ms`);
       }
 
       throw error;
@@ -511,13 +553,15 @@ export class BackendSyncService implements IBackendSyncService {
     errorCount: number;
     avgSyncTime: number;
   } {
+    const avgSyncTime = this.syncCount > 0 ? this.totalSyncTime / this.syncCount : 0;
+
     return {
       isRunning: this.isRunning,
       isConnected: this.isBackendConnected(),
-      lastSyncTime: null, // To be implemented with actual tracking
-      syncCount: 0, // To be implemented with actual tracking
-      errorCount: 0, // To be implemented with actual tracking
-      avgSyncTime: 0, // To be implemented with actual tracking
+      lastSyncTime: this.lastSyncTimestamp,
+      syncCount: this.syncCount,
+      errorCount: this.errorCount,
+      avgSyncTime: avgSyncTime,
     };
   }
 
@@ -537,5 +581,5 @@ export class BackendSyncService implements IBackendSyncService {
   }
 }
 
-// Note: BackendSyncService should be instantiated by CompositionRoot
-// Example: const backendSync = new BackendSyncService();
+// QUALIA.CODE COMPLIANCE: Service instantiation handled exclusively by InversifyJS IoC container
+// Manual instantiation (new BackendSyncService()) is FORBIDDEN
