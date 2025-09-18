@@ -133,7 +133,7 @@ const QualiaBar: React.FC<QualiaBarProps> = ({ label, value, color }) => {
         <div
           className={`h-2 rounded-full transition-all duration-200 ${colorClasses[color as keyof typeof colorClasses]}`}
           style={{ width: `${percentage}%` }}
-        />
+        ></div>
       </div>
     </div>
   );

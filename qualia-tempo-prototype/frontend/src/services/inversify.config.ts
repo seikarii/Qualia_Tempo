@@ -24,6 +24,7 @@ import type { IDebugService } from './interfaces/IDebugService';
 import type { IRhythmicMovementController } from './interfaces/IRhythmicMovementController';
 import type { IOntologicalAudioEngine } from '../audio/IOntologicalAudioEngine';
 import type { IApplicationInitializerService } from './interfaces/IApplicationInitializerService';
+import type { IWebAudioAPIService } from './interfaces/IWebAudioAPIService';
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { EventBus } from './EventBus';
@@ -40,6 +41,7 @@ import { DebugService } from './DebugService';
 import { RhythmicMovementController } from './RhythmicMovementController';
 import { OntologicalAudioEngine } from '../audio/OntologicalAudioEngine';
 import { ApplicationInitializerService } from './ApplicationInitializerService';
+import { WebAudioAPIService } from './WebAudioAPIService';
 
 // ===== IMPORT ZUSTAND STORE =====
 import { useGameStore } from '../state/useGameStore';
@@ -67,6 +69,7 @@ container.bind<IDebugService>(TYPES.IDebugService).to(DebugService).inSingletonS
 container.bind<IRhythmicMovementController>(TYPES.IRhythmicMovementController).to(RhythmicMovementController).inSingletonScope();
 container.bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).to(OntologicalAudioEngine).inSingletonScope();
 container.bind<IApplicationInitializerService>(TYPES.IApplicationInitializerService).to(ApplicationInitializerService).inSingletonScope();
+container.bind<IWebAudioAPIService>(TYPES.IWebAudioAPIService).to(WebAudioAPIService).inSingletonScope();
 
 // ===== CONTAINER VERIFICATION =====
 // Container is configured and ready

@@ -125,21 +125,13 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   }, [isActive, eventBus]);
 
   return (
-    <div style={{ 
-      position: 'fixed', 
-      top: 0, 
-      left: 0, 
-      width: '100vw', 
-      height: '100vh',
-      zIndex: 10 
-    }}>
+    <div className="fixed top-0 left-0 w-screen h-screen z-10">
       {/* 3D Game Scene */}
       <Canvas
         data-testid="canvas"
         camera={{ position: [0, 8, 8], fov: 45, rotation: [-0.5, 0, 0] }}
+        className="w-full h-full"
         style={{ 
-          width: '100%', 
-          height: '100%',
           background: 'linear-gradient(180deg, #0a0a2e 0%, #16213e 100%)' 
         }}
       >
@@ -272,16 +264,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
       />
       
       {/* Gameplay Instructions */}
-      <div style={{
-        position: 'absolute',
-        bottom: 20,
-        left: 20,
-        background: 'rgba(0,0,0,0.7)',
-        color: '#fff',
-        padding: '10px',
-        borderRadius: '5px',
-        fontSize: '12px'
-      }}>
+      <div className="absolute bottom-5 left-5 bg-black bg-opacity-70 text-white p-2.5 rounded-md text-xs">
         <div><strong>Controls:</strong></div>
         <div>WASD: Move on Grid</div>
         <div>P/ESC: Pause Game</div>

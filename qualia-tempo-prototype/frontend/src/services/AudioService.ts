@@ -9,6 +9,7 @@ import { QualiaLogger } from './Logger';
 import type { AudioServiceConfig } from './ConfigurationService';
 import type { IAudioService } from './interfaces/IAudioService';
 import type { IConfigurationService } from './interfaces/IConfigurationService';
+import type { IWebAudioAPIService } from './interfaces/IWebAudioAPIService';
 
 /**
  * AudioService - QUALIA.CODE compliant service for audio management
@@ -19,6 +20,7 @@ export class AudioService implements IAudioService {
   private eventBus: EventBus;
   private logger: QualiaLogger;
   private configService: IConfigurationService;
+  private webAudioAPIService: IWebAudioAPIService;
   private qualiaStateListenerId: string | null = null;
   private isInitialized: boolean = false;
 
@@ -26,12 +28,14 @@ export class AudioService implements IAudioService {
     @inject(TYPES.IEventBus) eventBus: EventBus,
     @inject(TYPES.ILogger) logger: QualiaLogger,
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
-    @inject(TYPES.IOntologicalAudioEngine) audioEngine: IOntologicalAudioEngine
+    @inject(TYPES.IOntologicalAudioEngine) audioEngine: IOntologicalAudioEngine,
+    @inject(TYPES.IWebAudioAPIService) webAudioAPIService: IWebAudioAPIService
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.configService = configService;
     this.audioEngine = audioEngine;
+    this.webAudioAPIService = webAudioAPIService;
   }
 
   @logMethod()
@@ -161,7 +165,11 @@ export class AudioService implements IAudioService {
     // Simple audio feedback based on timing
     try {
       const config = this.configService.getConfigSection<AudioServiceConfig>('audioService');
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioContext = this.webAudioAPIService.getAudioContext();
+      if (!audioContext) {
+        this.logger.warn('AudioContext not available, cannot play rhythmic feedback.');
+        return;
+      }
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
@@ -203,7 +211,10 @@ export class AudioService implements IAudioService {
 
     try {
       const config = this.configService.getConfigSection<AudioServiceConfig>('audioService');
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioContext = this.webAudioAPIService.getAudioContext();
+      if (!audioContext) {
+        return; // Silently fail if context is not available
+      }
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
@@ -271,7 +282,11 @@ export class AudioService implements IAudioService {
     const loop = options?.loop ?? false;
     
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioContext = this.webAudioAPIService.getAudioContext();
+       if (!audioContext) {
+        this.logger.warn('AudioContext not available, cannot play sound.');
+        return;
+      }
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
