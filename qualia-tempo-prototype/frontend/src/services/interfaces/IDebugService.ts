@@ -3,6 +3,41 @@
  * Development-time debugging and monitoring interface.
  */
 
+export interface DebugConfig {
+  maxEventHistory: number;
+  enableGlobalInterface: boolean;
+  profilingEnabled: boolean;
+  debugLevel: 'minimal' | 'normal' | 'verbose';
+  enableAIAnalysis?: boolean;
+  enablePerformanceMonitoring?: boolean;
+}
+
+export interface DebugStats {
+  isRunning: boolean;
+  eventsLogged: number;
+  memoryUsage: number;
+  uptime: number;
+  profilingEnabled: boolean;
+  eventHistory: any[];
+}
+
+export interface SystemSnapshot {
+  timestamp: number;
+  services: Record<string, any>;
+  performance: {
+    memoryUsage: number;
+    uptime: number;
+  };
+  eventHistory: any[];
+}
+
+export interface AnalysisResult {
+  type: 'error_pattern' | 'state_anomaly' | 'recommendation';
+  severity: 'low' | 'medium' | 'high';
+  message: string;
+  metadata?: any;
+}
+
 export interface IDebugService {
   /**
    * Initialize debug monitoring.
@@ -21,9 +56,9 @@ export interface IDebugService {
 
   /**
    * Log EventBus activity for debugging.
-   * @param event The event to log
+   * @param event The event to log - must be BaseEvent compliant
    */
-  logEvent(event: any): void;
+  logEvent(event: import('../EventBus').BaseEvent): void;
 
   /**
    * Get performance metrics.
@@ -35,6 +70,31 @@ export interface IDebugService {
     memoryUsage: number;
     uptime: number;
   };
+
+  /**
+   * Get debug statistics (compatible with test expectations).
+   */
+  getDebugStats(): DebugStats;
+
+  /**
+   * Get system snapshot for debugging.
+   */
+  getSystemSnapshot(): SystemSnapshot;
+
+  /**
+   * Perform AI-based analysis of debug data.
+   */
+  performAIAnalysis(): AnalysisResult[];
+
+  /**
+   * Export debug data for external analysis.
+   */
+  exportDebugData(): any;
+
+  /**
+   * Update debug configuration.
+   */
+  updateConfig(config: Partial<DebugConfig>): void;
 
   /**
    * Enable performance profiling.

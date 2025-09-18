@@ -349,6 +349,7 @@ describe('GameStateStoreService', () => {
       gameStateHandler({ 
         type: 'GameStateChanged',
         newState: 'Playing',
+        oldState: 'Idle',
         previousState: 'Idle',
         timestamp: new Date()
       });
@@ -396,6 +397,7 @@ describe('GameStateStoreService', () => {
         gameStateHandler({ 
           type: 'GameStateChanged',
           newState: 'Playing',
+          oldState: 'Idle',
           previousState: 'Idle',
           timestamp: new Date()
         });

@@ -1,51 +1,65 @@
 /**
  * QUALIA.CODE v1.1 - IErrorReportingService Interface
- * Centralized error handling and reporting interface.
+ * Complete contract for production-grade error reporting with batching and external service integration.
  */
 
-export interface IErrorReportingService {
-  /**
-   * Report an error with optional context.
-   * @param error The error to report
-   * @param context Optional context information
-   */
-  reportError(error: Error, context?: any): void;
+// Error severity levels
+export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
 
-  /**
-   * Initialize error event subscriptions.
-   */
-  start(): void;
-
-  /**
-   * Clean up subscriptions and process pending errors.
-   */
-  stop(): void;
-
-  /**
-   * Get error reporting statistics.
-   * @returns Object containing error statistics
-   */
-  getStatistics(): {
-    totalErrors: number;
-    errorsByType: Record<string, number>;
-    lastErrorTime: Date | null;
-    isRunning: boolean;
+// Base error report interface
+export interface ErrorReport {
+  error: {
+    name: string;
+    message: string;
+    stack?: string;
   };
+  severity: ErrorSeverity;
+  timestamp: Date;
+  context?: Record<string, any>;
+}
 
-  /**
-   * Update error reporting configuration.
-   * @param newConfig New configuration to apply
-   */
-  updateConfig(newConfig: any): void;
+// Error batch interface
+export interface ErrorBatch {
+  errors: ErrorReport[];
+  timestamp: Date;
+}
 
-  /**
-   * Clear all error statistics and history.
-   */
+// Error reporting statistics
+export interface ErrorStatistics {
+  totalErrors: number;
+  totalBatches: number;
+  successfulReports: number;
+  failedReports: number;
+  duplicatesFiltered: number;
+  averageRetries: number;
+}
+
+// Error reporting configuration
+export interface ErrorReportingConfig {
+  enabled: boolean;
+  maxBatchSize?: number;
+  batchFlushInterval?: number;
+  maxRetries?: number;
+  retryDelay?: number;
+  rateLimitTokens?: number;
+  rateLimitRefillRate?: number;
+  circuitBreakerThreshold?: number;
+  circuitBreakerTimeout?: number;
+  enableDeduplication?: boolean;
+  memoryCleanupThreshold?: number;
+}
+
+// Service interface
+export interface IErrorReportingService {
+  start(): void;
+  stop(): void;
+  reportError(error: Error, severity?: ErrorSeverity, context?: Record<string, any>): Promise<void>;
+  updateConfig(newConfig: Partial<ErrorReportingConfig>): void;
+  getStatistics(): ErrorStatistics;
+  exportErrorData(): any;
+  forceFlush(): Promise<void>;
+  clearHistory(): void;
   clearStatistics(): void;
-
-  /**
-   * Set the error reporting level (what types of errors to report).
-   * @param level The minimum error level to report
-   */
-  setReportingLevel(level: 'debug' | 'info' | 'warn' | 'error'): void;
+  setReportingLevel(level: ErrorSeverity): void;
+  isEnabled(): boolean;
 }

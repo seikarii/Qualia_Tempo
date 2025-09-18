@@ -6,7 +6,7 @@ export default {
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
   },
   transformIgnorePatterns: [
-    "node_modules/(?!tone/.*)",
+    "node_modules/(?!(tone|@react-three/fiber|@react-three/drei|@react-three/postprocessing)/)",
   ],
   testMatch: [
     "<rootDir>/src/**/__tests__/**/*.(ts|tsx)",
@@ -28,4 +28,7 @@ export default {
       statements: 70,
     },
   },
+  // Enable manual mocks in __mocks__ directories
+  clearMocks: true,
+  restoreMocks: true,
 };

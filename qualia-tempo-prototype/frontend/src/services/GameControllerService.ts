@@ -424,10 +424,12 @@ export class GameControllerService implements IGameControllerService {
   private emitGameStateChanged(
     newState: "Playing" | "Paused" | "GameOver" | "Menu",
   ): void {
+    const currentState = this.getCurrentStateString();
     this.eventBus.emit<GameStateChangedEvent>({
       type: "GameStateChanged",
       newState,
-      previousState: this.getCurrentStateString(),
+      oldState: currentState,
+      previousState: currentState,
       source: "GameController",
     });
   }

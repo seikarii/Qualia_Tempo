@@ -1,55 +1,75 @@
 /**
  * QUALIA.CODE v1.1 - INotificationService Interface
- * User notification management interface.
+ * Complete contract for event-driven notification management with Zustand store bridging.
  */
 
+// Notification types with specific handling
+export type NotificationType = 
+  | 'info' 
+  | 'success' 
+  | 'warning' 
+  | 'error' 
+  | 'achievement' 
+  | 'system' 
+  | 'debug';
+
+// Notification priority levels
+export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
+
+// Base notification interface
+export interface Notification {
+  id: string;
+  message: string;
+  type: NotificationType;
+  priority: NotificationPriority;
+  timestamp: Date;
+  displayed: boolean;
+  dismissed: boolean;
+  expiresAt?: Date;
+}
+
+// Notification configuration
+export interface NotificationConfig {
+  enabled: boolean;
+  maxHistorySize?: number;
+  defaultTtl?: number;
+  enablePriorityQueuing?: boolean;
+  enableThrottling?: boolean;
+  storeUpdateThrottleMs?: number;
+  autoCleanupInterval?: number;
+}
+
+// Notification statistics
+export interface NotificationStatistics {
+  totalNotifications: number;
+  displayedNotifications: number;
+  dismissedNotifications: number;
+  expiredNotifications: number;
+  throttledNotifications: number;
+  filteredNotifications: number;
+}
+
+// Service interface
 export interface INotificationService {
-  /**
-   * Show a notification to the user.
-   * @param message The notification message
-   * @param type The type of notification
-   * @param options Optional configuration
-   * @returns Unique notification ID
-   */
+  start(): void;
+  stop(): void;
   showNotification(
     message: string, 
-    type: 'info' | 'success' | 'warning' | 'error',
+    type: NotificationType, 
     options?: {
       duration?: number;
       persistent?: boolean;
-      actions?: Array<{ label: string; action: () => void }>;
+      actions?: { label: string; action: () => void; }[];
     }
   ): string;
-
-  /**
-   * Hide a specific notification.
-   * @param id The unique notification ID
-   */
+  dismissNotification(id: string): void;
+  clearAllNotifications(): void;
   hideNotification(id: string): void;
-
-  /**
-   * Hide all current notifications.
-   */
   hideAllNotifications(): void;
-
-  /**
-   * Initialize the notification service.
-   */
-  start(): void;
-
-  /**
-   * Stop the notification service and clean up.
-   */
-  stop(): void;
-
-  /**
-   * Get the list of currently active notifications.
-   * @returns Array of active notification objects
-   */
-  getActiveNotifications(): Array<{
-    id: string;
-    message: string;
-    type: string;
-    timestamp: Date;
-  }>;
+  getActiveNotifications(): Notification[];
+  updateConfig(newConfig: Partial<NotificationConfig>): void;
+  getStatistics(): NotificationStatistics;
+  getStatus(): { isRunning: boolean; queueSize: number; };
+  exportNotificationData(): any;
+  isEnabled(): boolean;
 }

@@ -53,6 +53,7 @@ export interface PlayerInputEvent extends BaseEvent {
 export interface GameStateChangedEvent extends BaseEvent {
   type: "GameStateChanged";
   newState: "Playing" | "Paused" | "GameOver" | "Menu";
+  oldState: string;
   previousState: string;
 }
 
@@ -60,6 +61,7 @@ export interface ErrorEvent extends BaseEvent {
   type: "Error";
   error: Error;
   severity: "low" | "medium" | "high" | "critical";
+  context?: Record<string, any>;
 }
 
 export interface BackendSyncEvent extends BaseEvent {
@@ -67,6 +69,7 @@ export interface BackendSyncEvent extends BaseEvent {
   data: any;
   syncType: "qualiaState" | "gameState" | "config";
   status?: "success" | "error" | "pending";
+  error?: any;
 }
 
 export interface RhythmicDashEvent extends BaseEvent {

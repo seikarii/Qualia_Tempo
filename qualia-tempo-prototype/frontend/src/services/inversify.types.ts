@@ -29,6 +29,7 @@ export const TYPES = {
   // ===== SPECIAL TYPES =====
   // Used for injecting Zustand store setter function
   StoreSetter: Symbol.for('StoreSetter'),
+  IGameStateStore: Symbol.for('IGameStateStore'),
 } as const;
 
 // Type-safe access to TYPES
