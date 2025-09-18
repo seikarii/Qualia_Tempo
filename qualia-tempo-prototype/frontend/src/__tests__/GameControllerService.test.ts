@@ -139,8 +139,8 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     });
 
     test("should handle StartGame action", async () => {
-      // Reset game state to ensure clean initial state
-      gameController = new GameControllerService(eventBus, mockLogger);
+      // Reset game state to ensure clean initial state  
+      gameController = container.get<IGameControllerService>(TYPES.IGameControllerService);
       await gameController.start();
 
       const mockCallback = jest.fn();
@@ -238,7 +238,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     });
 
     test("should subscribe to PlayerAction events on start", async () => {
-      const subscribeSpy = jest.spyOn(eventBus, "subscribe");
+      const subscribeSpy = jest.spyOn(mockEventBus as any, "subscribe");
 
       await gameController.stop();
       await gameController.start();
@@ -251,7 +251,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     });
 
     test("should unsubscribe from events on stop", async () => {
-      const unsubscribeSpy = jest.spyOn(eventBus, "unsubscribe");
+      const unsubscribeSpy = jest.spyOn(mockEventBus as any, "unsubscribe");
 
       await gameController.stop();
 
@@ -281,7 +281,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     test("should handle start failures gracefully", async () => {
       // Mock a failure scenario
       const originalSubscribe = mockEventBus.subscribe;
-      mockEventBus.subscribe = jest.fn(() => {
+      (mockEventBus.subscribe as any) = jest.fn(() => {
         throw new Error("Subscription failed");
       });
 

@@ -57,7 +57,18 @@ describe('RhythmicMovementController - Simplified Coverage Tests', () => {
     mockEventBusEmit = eventBus.emit as jest.MockedFunction<EventBus['emit']>;
     mockPerformanceNow.mockReturnValue(1000);
     
-    controller = new RhythmicMovementController(eventBus, configService);
+    // Create mock config
+    const mockConfig = {
+      bpm: 120,
+      perfectTiming: 50,
+      goodTiming: 100,
+      gridSize: 64,
+      slowdownFactor: 0.5,
+      slowdownDuration: 1000,
+      keyThrottleMs: 100
+    };
+    
+    controller = new RhythmicMovementController(eventBus, configService, mockConfig);
   });
 
   describe('Constructor and Configuration', () => {

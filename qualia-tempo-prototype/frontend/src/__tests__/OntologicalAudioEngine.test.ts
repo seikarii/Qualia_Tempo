@@ -8,9 +8,7 @@
 import { jest } from "@jest/globals";
 import { container } from '../services/inversify.config';
 import { TYPES } from '../services/inversify.types';
-import { OntologicalAudioEngine } from "../audio/OntologicalAudioEngine";
 import type { IOntologicalAudioEngine, EmergentBehavior } from "../audio/IOntologicalAudioEngine";
-import type { ILogger } from '../services/interfaces/ILogger';
 import { QualiaLogger, LogLevel } from '../services/Logger';
 import { QualiaState } from "../types/contracts";
 

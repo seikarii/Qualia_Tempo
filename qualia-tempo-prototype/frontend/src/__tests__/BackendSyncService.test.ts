@@ -110,7 +110,7 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
     });
 
     test("should subscribe to QualiaStateUpdated events on start", async () => {
-      const subscribeSpy = jest.spyOn(eventBus, "subscribe");
+      const subscribeSpy = jest.spyOn(mockEventBus as any, "subscribe");
 
       await backendSync.stop();
       await backendSync.start();
@@ -123,7 +123,7 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
     });
 
     test("should unsubscribe from events on stop", async () => {
-      const unsubscribeSpy = jest.spyOn(eventBus, "unsubscribe");
+      const unsubscribeSpy = jest.spyOn(mockEventBus as any, "unsubscribe");
 
       await backendSync.stop();
 

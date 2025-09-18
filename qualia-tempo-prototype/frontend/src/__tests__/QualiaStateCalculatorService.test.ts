@@ -434,7 +434,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
       qualiaService.start();
 
       // Set initial high values
-      eventBus
+      mockEventBus
         .emit({
           type: "PlayerAction",
           action: "HitNote",

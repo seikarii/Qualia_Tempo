@@ -13,7 +13,7 @@ import { ErrorSeverity } from "../services/ErrorReportingService";
 import { QualiaLogger, LogLevel } from "../services/Logger";
 
 describe("ErrorReportingService - IOC COMPLIANT", () => {
-  let errorService: IErrorReportingService;
+  let errorService: any; // Using any to access extended methods and properties not in interface
   let mockEventBus: jest.Mocked<IEventBus>;
 
   beforeEach(() => {
@@ -32,7 +32,8 @@ describe("ErrorReportingService - IOC COMPLIANT", () => {
       })
     };
 
-    // Mock error reporting config
+    // Mock error reporting config - TODO: Use in service configuration
+    /*
     const mockConfig = {
       enabled: true,
       maxBatchSize: 10,
@@ -43,6 +44,7 @@ describe("ErrorReportingService - IOC COMPLIANT", () => {
       retryDelay: 1000,
       endpoint: '/api/errors'
     };
+    */
 
     // Inject mocks into IoC container using QUALIA.CODE LAW
     container.unbind(TYPES.IEventBus);
@@ -60,7 +62,7 @@ describe("ErrorReportingService - IOC COMPLIANT", () => {
     if (errorService) {
       errorService.stop();
     }
-    if (eventBus) {
+    if (mockEventBus) {
       mockEventBus.destroy();
     }
   });
@@ -72,9 +74,15 @@ describe("ErrorReportingService - IOC COMPLIANT", () => {
     });
 
     test("should throw error when EventBus is not provided", () => {
-      expect(() => new ErrorReportingService(null as any, mockLogger)).toThrow(
+      // Temporarily bind null to test error case
+      (container as any).rebind(TYPES.IEventBus).toConstantValue(null);
+      
+      expect(() => (container as any).get(TYPES.IErrorReportingService)).toThrow(
         "ErrorReportingService requires EventBus dependency",
       );
+      
+      // Restore proper mock
+      (container as any).rebind(TYPES.IEventBus).toConstantValue(mockEventBus);
     });
 
     test("should follow single responsibility (only handle error reporting)", () => {
@@ -504,8 +512,8 @@ describe("ErrorReportingService - IOC COMPLIANT", () => {
 
   describe("Integration with EventBus", () => {
     test("should properly subscribe and unsubscribe from EventBus", () => {
-      const subscribeSpy = jest.spyOn(eventBus, "subscribe");
-      const unsubscribeSpy = jest.spyOn(eventBus, "unsubscribe");
+      const subscribeSpy = jest.spyOn(mockEventBus, "subscribe");
+      const unsubscribeSpy = jest.spyOn(mockEventBus, "unsubscribe");
 
       errorService.start();
       expect(subscribeSpy).toHaveBeenCalledWith("Error", expect.any(Function));

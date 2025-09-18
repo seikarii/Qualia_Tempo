@@ -1,14 +1,13 @@
-// AudioService.test.ts - Comprehensive test suite for QUALIA.CODE compliant audio management service
+// AudioService.test.ts - IoC-compliant test suite for QUALIA.CODE audio management service
 // Tests: Service lifecycle, event handling, rhythmic feedback, metronome functionality, entity voice management
 
 import { jest } from "@jest/globals";
-import { AudioService } from "../AudioService";
+import { container } from '../inversify.config';
+import { TYPES } from '../inversify.types';
+import type { IEventBus } from '../interfaces/IEventBus';
+import type { IConfigurationService } from '../interfaces/IConfigurationService';
 import type { QualiaState } from "../../types/contracts";
 import type { QualiaStateUpdatedEvent } from "../EventBus";
-import { QualiaLogger, LogLevel } from "../Logger";
-
-// Mock logger for tests
-const mockLogger: QualiaLogger = new QualiaLogger('Test', LogLevel.INFO);
 
 // Mock decorators before importing
 jest.mock("../../utils/decorators", () => ({
@@ -68,8 +67,9 @@ Object.defineProperty(window, "webkitAudioContext", {
 });
 
 describe("AudioService", () => {
-  let audioService: AudioService;
-  let mockEventBus: any;
+  let audioService: any; // Using any to test extended methods not in interface
+  let mockEventBus: jest.Mocked<IEventBus>;
+  let mockConfigService: jest.Mocked<IConfigurationService>;
   let consoleLogSpy: jest.SpiedFunction<typeof console.log>;
   let consoleWarnSpy: jest.SpiedFunction<typeof console.warn>;
 
@@ -89,13 +89,36 @@ describe("AudioService", () => {
       subscribe: jest.fn().mockReturnValue("listener-id"),
       unsubscribe: jest.fn(),
       emit: jest.fn(),
-    };
+      destroy: jest.fn(),
+      getStats: jest.fn().mockReturnValue({ subscriberCount: 0, eventCount: 0 }),
+      clear: jest.fn(),
+    } as any;
+
+    // Fix promise resolution for mock methods
+    mockConfigService = {
+      getConfig: jest.fn().mockReturnValue({}),
+      getGameConfig: jest.fn().mockReturnValue({}),
+      getQualiaConfig: jest.fn().mockReturnValue({}),
+      getBackendConfig: jest.fn().mockReturnValue({}),
+      getAudioConfig: jest.fn().mockReturnValue({}),
+      getErrorReportingConfig: jest.fn().mockReturnValue({}),
+      getRhythmicMovementConfig: jest.fn().mockReturnValue({}),
+      getNotificationConfig: jest.fn().mockReturnValue({}),
+      isLoaded: jest.fn().mockReturnValue(true),
+      loadConfig: jest.fn(),
+      reload: jest.fn(),
+    } as any;
+
+    // Bind mocks to IoC container
+    (container as any).rebind(TYPES.IEventBus).toConstantValue(mockEventBus);
+    (container as any).rebind(TYPES.IConfigurationService).toConstantValue(mockConfigService);
 
     // Spy on console methods
     consoleLogSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
     consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
 
-    audioService = new AudioService(mockEventBus, mockLogger);
+    // Get service from container (cast to any to access extended methods not in interface)
+    audioService = (container as any).get(TYPES.IAudioService);
   });
 
   afterEach(() => {
@@ -282,7 +305,7 @@ describe("AudioService", () => {
     });
 
     it("should handle rhythmic feedback when not initialized", () => {
-      const newAudioService = new AudioService(mockEventBus, mockLogger);
+      const newAudioService = (container as any).get(TYPES.IAudioService);
 
       newAudioService.playRhythmicFeedback("perfect");
 
@@ -311,7 +334,7 @@ describe("AudioService", () => {
     });
 
     it("should handle metronome tick when not initialized", () => {
-      const newAudioService = new AudioService(mockEventBus, mockLogger);
+      const newAudioService = (container as any).get(TYPES.IAudioService);
 
       newAudioService.playMetronomeTick();
 
@@ -343,7 +366,7 @@ describe("AudioService", () => {
     });
 
     it("should not create entity voice when not initialized", () => {
-      const newAudioService = new AudioService(mockEventBus, mockLogger);
+      const newAudioService = (container as any).get(TYPES.IAudioService);
 
       newAudioService.createEntityVoice("test-entity", mockQualiaState);
 
@@ -367,7 +390,7 @@ describe("AudioService", () => {
     });
 
     it("should not remove entity voice when not initialized", () => {
-      const newAudioService = new AudioService(mockEventBus, mockLogger);
+      const newAudioService = (container as any).get(TYPES.IAudioService);
 
       newAudioService.removeEntityVoice("test-entity");
 
