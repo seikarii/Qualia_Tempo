@@ -1,10 +1,12 @@
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
 import { Vector2 } from 'three';
 import { useGameStore } from '../../state/useGameStore';
-import { useServices } from '../../services/hooks';
+import { useService } from '../../services/hooks';
+import { TYPES } from '../../services/inversify.types';
+import { IEventBus } from '../../services/interfaces/IEventBus';
 
 import QualiaTempoHUD from './QualiaTempoHUD';
 import PlayerAvatar from './PlayerAvatar';
@@ -35,29 +37,13 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   isActive = false
 }) => {
 
-  const gameTimeRef = useRef(0);
-  const lastUpdateRef = useRef(Date.now());
-  const services = useServices();
+  const eventBus = useService<IEventBus>(TYPES.IEventBus);
 
   // Get real game state from Zustand store
   const zustandState = useGameStore();
 
-  // Update game time from Zustand store
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const delta = (now - lastUpdateRef.current) / 1000;
-      lastUpdateRef.current = now;
-      gameTimeRef.current += delta;
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, []);
-
   // Subscribe to rhythmic movement events
   useEffect(() => {
-    const eventBus = services.eventBus;
-    
     // Listen for rhythmic dash events to update player position
     const rhythmicDashListenerId = eventBus.subscribe<any>(
       'RhythmicDash',
@@ -79,18 +65,18 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
       eventBus.unsubscribe(rhythmicDashListenerId);
       eventBus.unsubscribe(metronomeListenerId);
     };
-  }, [services.eventBus]);
+  }, [eventBus]);
 
   // Handle note hits
   const handleNoteHit = useCallback((noteId: string, accuracy: number) => {
     // Emit hit note event
-    services.eventBus.emit<any>({
+    eventBus.emit<any>({
       type: 'PlayerAction',
       action: 'HitNote',
       source: 'QualiaTempoGame',
       context: { noteId, accuracy }
     });
-  }, [services.eventBus]);
+  }, [eventBus]);
 
 
 
@@ -105,7 +91,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
       if (key === 'p' || key === 'escape') {
         event.preventDefault();
         // Emit pause action to GameController
-        services.eventBus.emit<any>({
+        eventBus.emit<any>({
           type: 'PlayerAction',
           action: 'PauseGame',
           source: 'QualiaTempoGame'
@@ -122,7 +108,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
         const mockAccuracy = Math.random() * 0.5 + 0.5; // 0.5-1.0 accuracy
         
         // Emit hit note event
-        services.eventBus.emit<any>({
+        eventBus.emit<any>({
           type: 'PlayerAction',
           action: 'HitNote',
           source: 'QualiaTempoGame',
@@ -136,7 +122,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isActive, services.eventBus]);
+  }, [isActive, eventBus]);
 
   return (
     <div style={{ 
@@ -172,13 +158,13 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
           qualiaField={{
             alpha: zustandState.qualiaState.intensity,
             beta: zustandState.qualiaState.flow,
-            coherence: zustandState.qualiaState.precision
+            coherence: zustandState.qualiaState.focus_level
           }}
           musicData={{
             intensity: zustandState.qualiaState.intensity,
             harmony: zustandState.qualiaState.flow,
             emotional_valence: zustandState.qualiaState.recovery,
-            order_influence: zustandState.qualiaState.precision,
+            order_influence: zustandState.qualiaState.focus_level,
             chaos_influence: zustandState.qualiaState.chaos
           }}
         />
@@ -193,13 +179,13 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
             qualia_state: {
               emotional_valence: zustandState.qualiaState.recovery,
               arousal: zustandState.qualiaState.intensity,
-              coherence: zustandState.qualiaState.precision
+              coherence: zustandState.qualiaState.focus_level
             }
           }}
           performance={{
             accuracy: zustandState.notesHit / Math.max(1, zustandState.totalNotes),
             rhythm_sync: zustandState.qualiaState.flow,
-            qualia_coherence: zustandState.qualiaState.precision
+            qualia_coherence: zustandState.qualiaState.focus_level
           }}
         />
         
@@ -256,7 +242,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
       <QualiaTempoHUD 
         qualiaState={{
           intensity: zustandState.qualiaState.intensity,
-          precision: zustandState.notesHit / Math.max(1, zustandState.totalNotes),
+          focus_level: zustandState.notesHit / Math.max(1, zustandState.totalNotes),
           aggression: 0,
           flow: zustandState.qualiaState.flow,
           chaos: zustandState.qualiaState.chaos,
@@ -276,7 +262,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
         position={[zustandState.player.position.x, 0, zustandState.player.position.y]}
         qualiaState={{
           intensity: zustandState.qualiaState.intensity,
-          precision: zustandState.notesHit / Math.max(1, zustandState.totalNotes),
+          focus_level: zustandState.notesHit / Math.max(1, zustandState.totalNotes),
           aggression: 0,
           flow: zustandState.qualiaState.flow,
           chaos: zustandState.qualiaState.chaos,

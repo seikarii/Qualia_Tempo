@@ -23,6 +23,7 @@ export const TYPES = {
   IDebugService: Symbol.for('IDebugService'),
   IRhythmicMovementController: Symbol.for('IRhythmicMovementController'),
   IOntologicalAudioEngine: Symbol.for('IOntologicalAudioEngine'),
+  IApplicationInitializerService: Symbol.for('IApplicationInitializerService'),
 
   // ===== SPECIAL TYPES =====
   // Used for injecting Zustand store setter function

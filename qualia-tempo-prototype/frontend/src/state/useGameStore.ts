@@ -27,6 +27,10 @@ interface GameState {
   currentTime: number;
   gameStartTime: number;
 
+  // Application initialization state
+  isConfigLoaded: boolean;
+  backendConnected: boolean;
+
   // Player state
   player: PlayerState;
 
@@ -74,6 +78,8 @@ const initialState: GameState = {
   isPlaying: false,
   currentTime: 0,
   gameStartTime: 0,
+  isConfigLoaded: false,
+  backendConnected: false,
   player: { ...initialPlayerState },
   combatData: null,
   qualiaState: { ...initialQualiaState },

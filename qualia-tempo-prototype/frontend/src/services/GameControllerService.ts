@@ -21,6 +21,7 @@ import { logMethod, catchError } from '../utils/decorators';
 import { QualiaLogger } from './Logger';
 import type { IGameControllerService } from './interfaces/IGameControllerService';
 import type { IConfigurationService } from './interfaces/IConfigurationService';
+import type { IGameStateStoreService } from './interfaces/IGameStateStoreService';
 
 // Game state interface
 export interface GameState {
@@ -63,9 +64,11 @@ export class GameControllerService implements IGameControllerService {
   private config: GameControllerConfig;
   private eventBus: EventBus;
   private configService: IConfigurationService;
+  private gameStateStoreService: IGameStateStoreService;
   private eventListenerIds: string[] = [];
   private isRunning = false;
   private logger: QualiaLogger;
+  private gameClockInterval: number | null = null;
 
   // Internal game state
   private gameState: GameState = {
@@ -81,11 +84,13 @@ export class GameControllerService implements IGameControllerService {
   constructor(
     @inject(TYPES.IEventBus) eventBus: EventBus,
     @inject(TYPES.ILogger) logger: QualiaLogger,
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
+    @inject(TYPES.IGameStateStoreService) gameStateStoreService: IGameStateStoreService
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.configService = configService;
+    this.gameStateStoreService = gameStateStoreService;
     this.config = DEFAULT_CONFIG;
     this.logger.info("🎮 [GameController] Service initialized");
   }
@@ -137,6 +142,7 @@ export class GameControllerService implements IGameControllerService {
         return;
       }
 
+      this.stopGameClock();
       this.unsubscribeFromEvents();
       this.isRunning = false;
 
@@ -238,14 +244,26 @@ export class GameControllerService implements IGameControllerService {
       this.handlePlayerAction(event);
     };
 
-    const listenerId = this.eventBus.subscribe(
+    const playerActionListenerId = this.eventBus.subscribe(
       "PlayerAction",
       playerActionHandler,
       { priority: 10 },
     );
-    this.eventListenerIds.push(listenerId);
+    this.eventListenerIds.push(playerActionListenerId);
 
-    this.logger.info("📡 [GameController] Subscribed to PlayerAction events");
+    // Subscribe to GameStateChanged events for game clock management
+    const gameStateChangedHandler: EventHandler<GameStateChangedEvent> = (event) => {
+      this.handleGameStateChanged(event);
+    };
+
+    const gameStateListenerId = this.eventBus.subscribe(
+      "GameStateChanged",
+      gameStateChangedHandler,
+      { priority: 5 },
+    );
+    this.eventListenerIds.push(gameStateListenerId);
+
+    this.logger.info("📡 [GameController] Subscribed to PlayerAction and GameStateChanged events");
   }
 
   private unsubscribeFromEvents(): void {
@@ -367,6 +385,43 @@ export class GameControllerService implements IGameControllerService {
       this.gameState.health + 10,
     );
     this.emitGameStateChanged("Playing");
+  }
+
+  private handleGameStateChanged(event: GameStateChangedEvent): void {
+    this.logger.debug(`🎮 [GameController] Game state changed: ${event.previousState} -> ${event.newState}`);
+
+    // Manage game clock based on state changes
+    if (event.newState === "Playing") {
+      this.startGameClock();
+    } else {
+      this.stopGameClock();
+    }
+  }
+
+  private startGameClock(): void {
+    if (this.gameClockInterval !== null) {
+      this.logger.warn("⚠️ [GameController] Game clock already running");
+      return;
+    }
+
+    this.logger.info("⏰ [GameController] Starting game clock");
+
+    this.gameClockInterval = window.setInterval(() => {
+      // Update game time in the store
+      const currentTime = Date.now();
+      this.gameStateStoreService.updateGameState({ currentTime });
+    }, 100); // Update every 100ms
+  }
+
+  private stopGameClock(): void {
+    if (this.gameClockInterval === null) {
+      return;
+    }
+
+    this.logger.info("⏰ [GameController] Stopping game clock");
+
+    clearInterval(this.gameClockInterval);
+    this.gameClockInterval = null;
   }
 
   private emitGameStateChanged(

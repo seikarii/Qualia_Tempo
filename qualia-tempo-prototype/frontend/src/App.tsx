@@ -2,61 +2,28 @@ import React from "react";
 import { Subtitles } from "./components/Subtitles";
 import QualiaTempoGame from "./components/game/QualiaTempoGame";
 import { useGameStore } from "./state/useGameStore";
-import { useServices } from "./services/hooks";
-
-interface BaseEvent {
-  type: string;
-  timestamp: Date;
-  source?: string;
-  metadata?: Record<string, any>;
-}
-
-interface PlayerActionEvent extends BaseEvent {
-  type: "PlayerAction";
-  action: "Dash" | "HitNote" | "MissNote" | "FastForward" | "Rewind" | "StartGame" | "PauseGame" | "ResetGame";
-  context?: Record<string, any>;
-}
+import { useService } from "./services/hooks";
+import { TYPES } from "./services/inversify.types";
+import type { IEventBus } from "./services/interfaces/IEventBus";
+import type { ILogger } from "./services/interfaces/ILogger";
+import type { PlayerActionEvent } from "./services/EventBus";
 
 const App: React.FC = () => {
-  const [backendConnected, setBackendConnected] = React.useState(true); // Start as true - trust the initialization
-  const [isLoading, setIsLoading] = React.useState(false); // No loading since initialization is complete
-
-  const isPlaying = useGameStore((state: any) => state.isPlaying);
-  const services = useServices();
-  const eventBus = services.eventBus;
-  const backendSync = services.backendSync;
-
-  React.useEffect(() => {
-    const checkConnection = () => {
-      try {
-        // Use BackendSyncService to check connection status
-        const connected = backendSync.isBackendConnected();
-        setBackendConnected(connected);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Failed to check backend connection:", error);
-        setBackendConnected(false);
-        setIsLoading(false);
-      }
-    };
-
-    // Check immediately but trust the initial state
-    checkConnection();
-
-    // Recheck connection every 10 seconds (less aggressive)
-    const interval = setInterval(checkConnection, 10000);
-    return () => clearInterval(interval);
-  }, [backendSync]);
+  const gameState = useGameStore((state: any) => state);
+  
+  // Get services via InversifyJS
+  const eventBus = useService<IEventBus>(TYPES.IEventBus);
+  const logger = useService<ILogger>(TYPES.ILogger);
 
   const handleStartGame = () => {
-    if (backendConnected) {
+    if (gameState.backendConnected) {
       // Emit PlayerAction event for start game
       eventBus.emit<PlayerActionEvent>({
         type: "PlayerAction",
         action: "StartGame",
         source: "App",
       });
-      console.log("🎮 Game Start Requested via EventBus!");
+      logger.info("Game Start Requested via EventBus");
     }
   };
 
@@ -67,7 +34,7 @@ const App: React.FC = () => {
       action: "PauseGame",
       source: "App",
     });
-    console.log("⏸️ Game Pause Requested via EventBus");
+    logger.info("Game Pause Requested via EventBus");
   };
 
   const handleResetGame = () => {
@@ -77,12 +44,12 @@ const App: React.FC = () => {
       action: "ResetGame",
       source: "App",
     });
-    console.log("🔄 Game Reset Requested via EventBus");
+    logger.info("Game Reset Requested via EventBus");
   };
 
   const handleGameAction = (action: string, data: any) => {
     // Handle actions from QualiaTempoGame
-    console.log(`🎮 Game Action: ${action}`, data);
+    logger.debug(`Game Action: ${action}`, data);
     
     switch (action) {
       case 'hit_note':
@@ -95,7 +62,7 @@ const App: React.FC = () => {
         break;
       case 'miss_note':
         eventBus.emit<PlayerActionEvent>({
-          type: "PlayerAction", 
+          type: "PlayerAction",
           action: "MissNote",
           source: "QualiaTempoGame",
           context: data
@@ -108,14 +75,13 @@ const App: React.FC = () => {
         handleResetGame();
         break;
       default:
-        console.warn(`Unknown game action: ${action}`);
+        logger.warn(`Unknown game action: ${action}`, { action, data });
     }
-  };
-
-  if (isLoading) {
+  };  // Show loading while configuration is being loaded
+  if (!gameState.isConfigLoaded) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-2xl">Loading Qualia Tempo...</div>
+        <div className="text-white text-2xl">Loading Configuration...</div>
       </div>
     );
   }
@@ -134,17 +100,17 @@ const App: React.FC = () => {
 
       {/* Game Content Area */}
       <div className="relative z-10 flex items-center justify-center h-screen w-full">
-        {!backendConnected ? (
+        {!gameState.backendConnected ? (
           <div className="text-center p-8 bg-black bg-opacity-70 rounded-lg">
             <h1 className="text-4xl font-bold text-red-400 mb-4">❌ Backend Disconnected</h1>
             <p className="text-white text-lg mb-4">Cannot connect to Qualia Tempo Visual Engine</p>
             <p className="text-gray-300 text-sm mb-4">Make sure the backend is running on http://localhost:8000</p>
             <div className="text-xs text-gray-500">
               <p>EventBus: {eventBus ? "✅" : "❌"}</p>
-              <p>BackendSync: {backendSync ? "✅" : "❌"}</p>
+              <p>Logger: {logger ? "✅" : "❌"}</p>
             </div>
           </div>
-        ) : !isPlaying ? (
+        ) : !gameState.isPlaying ? (
           <div className="text-center p-8 bg-black bg-opacity-70 rounded-lg">
             <h1 className="text-6xl font-bold text-white mb-4">🎵 Qualia Tempo</h1>
             <p className="text-xl text-gray-300 mb-8">A Charlie Hellsinger Story</p>
@@ -177,7 +143,7 @@ const App: React.FC = () => {
       {/* Version Info */}
       <div className="absolute bottom-4 right-4 text-gray-400 text-xs bg-black bg-opacity-50 p-2 rounded">
         <div>Qualia Tempo v1.0 | Prototype Build</div>
-        <div>Backend: {backendConnected ? "Connected" : "Disconnected"}</div>
+        <div>Backend: {gameState.backendConnected ? "Connected" : "Disconnected"}</div>
       </div>
     </div>
   );
