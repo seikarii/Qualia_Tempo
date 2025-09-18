@@ -1,11 +1,17 @@
 /**
- * QUALIA.CODE v1.0 - OntologicalAudioEngine Tests
+ * QUALIA.CODE v1.1 - OntologicalAudioEngine Tests - IOC COMPLIANT
  * Comprehensive test suite for the ontological audio processing engine.
  * Tests audio synthesis, qualia state mapping, and emergent behavior sound generation.
+ * Uses InversifyJS container for dependency injection.
  */
 
 import { jest } from "@jest/globals";
-import { OntologicalAudioEngine, EmergentBehavior } from "../audio/OntologicalAudioEngine";
+import { container } from '../services/inversify.config';
+import { TYPES } from '../services/inversify.types';
+import { OntologicalAudioEngine } from "../audio/OntologicalAudioEngine";
+import type { IOntologicalAudioEngine, EmergentBehavior } from "../audio/IOntologicalAudioEngine";
+import type { ILogger } from '../services/interfaces/ILogger';
+import { QualiaLogger, LogLevel } from '../services/Logger';
 import { QualiaState } from "../types/contracts";
 
 // Mock Tone.js completely
@@ -43,14 +49,21 @@ jest.mock('tone', () => ({
   }
 }));
 
-describe('OntologicalAudioEngine', () => {
-  let engine: OntologicalAudioEngine;
+describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
+  let engine: IOntologicalAudioEngine;
   let mockQualiaState: QualiaState;
 
   beforeEach(() => {
     jest.clearAllMocks();
     // Mock console.log to avoid test output pollution
     jest.spyOn(console, 'log').mockImplementation(() => {});
+    
+    // Inject logger into IoC container
+    container.unbind(TYPES.ILogger);
+    container.bind<QualiaLogger>(TYPES.ILogger).toConstantValue(new QualiaLogger('Test', LogLevel.INFO));
+
+    // Get service instance from container - NO MANUAL INSTANTIATION
+    engine = container.get<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine);
     
     mockQualiaState = {
       intensity: 0.5,
@@ -69,8 +82,6 @@ describe('OntologicalAudioEngine', () => {
 
   describe('Engine Initialization', () => {
     it('should initialize with proper audio chain setup', () => {
-      engine = new OntologicalAudioEngine();
-      
       expect(engine).toBeDefined();
       expect(console.log).toHaveBeenCalledWith('🎵 OntologicalAudioEngine initialized');
     });
@@ -78,7 +89,7 @@ describe('OntologicalAudioEngine', () => {
 
   describe('Entity Voice Management', () => {
     beforeEach(() => {
-      engine = new OntologicalAudioEngine();
+      engine = container.get<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine);
     });
 
     it('should create entity voice with qualia-mapped parameters', () => {
@@ -176,7 +187,7 @@ describe('OntologicalAudioEngine', () => {
 
   describe('Emergent Behavior Processing', () => {
     beforeEach(() => {
-      engine = new OntologicalAudioEngine();
+      engine = container.get<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine);
     });
 
     it('should process clustering behavior', () => {
@@ -247,7 +258,7 @@ describe('OntologicalAudioEngine', () => {
 
   describe('Qualia State Mapping', () => {
     beforeEach(() => {
-      engine = new OntologicalAudioEngine();
+      engine = container.get<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine);
     });
 
     it('should map different intensity levels to appropriate parameters', () => {
@@ -306,7 +317,7 @@ describe('OntologicalAudioEngine', () => {
 
   describe('Integration Tests', () => {
     beforeEach(() => {
-      engine = new OntologicalAudioEngine();
+      engine = container.get<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine);
     });
 
     it('should handle complete audio workflow', () => {

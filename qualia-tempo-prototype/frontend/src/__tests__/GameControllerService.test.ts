@@ -1,30 +1,82 @@
 /**
- * QUALIA.CODE v1.0 - GameControllerService Tests
+ * QUALIA.CODE v1.1 - GameControllerService Tests - IOC COMPLIANT
  * Comprehensive test suite for game state management service.
+ * Uses InversifyJS container for dependency injection.
  */
 
-import { GameControllerService } from "../services/GameControllerService";
-import { EventBus, PlayerActionEvent } from "../services/EventBus";
+import { container } from '../services/inversify.config';
+import { TYPES } from '../services/inversify.types';
+import type { IGameControllerService } from '../services/interfaces/IGameControllerService';
+import type { IEventBus } from '../services/interfaces/IEventBus';
+import type { IConfigurationService } from '../services/interfaces/IConfigurationService';
 import { QualiaLogger, LogLevel } from "../services/Logger";
+import { PlayerActionEvent } from "../services/EventBus";
 
-// Mock logger for tests
-const mockLogger: QualiaLogger = new QualiaLogger('Test', LogLevel.INFO);
-
-describe("GameControllerService", () => {
-  let eventBus: EventBus;
-  let gameController: GameControllerService;
+describe("GameControllerService - IOC COMPLIANT", () => {
+  let gameController: IGameControllerService;
+  let mockEventBus: jest.Mocked<IEventBus>;
+  let mockConfigService: jest.Mocked<IConfigurationService>;
 
   beforeEach(() => {
-    eventBus = new EventBus(mockLogger);
-    gameController = new GameControllerService(eventBus, mockLogger);
+    // Create mocks for EventBus interface
+    mockEventBus = {
+      emit: jest.fn(),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
+      clear: jest.fn(),
+      destroy: jest.fn(),
+      getStats: jest.fn().mockReturnValue({
+        totalListeners: 0,
+        eventTypes: [],
+        historySize: 0,
+        isDestroyed: false
+      })
+    };
+
+    // Create mocks for ConfigurationService interface
+    mockConfigService = {
+      loadConfig: jest.fn(),
+      getConfig: jest.fn(),
+      getGameConfig: jest.fn().mockReturnValue({
+        pauseCooldown: 1000,
+        rhythmTolerance: 0.2,
+        comboResetTime: 2000,
+        maxHealth: 100,
+        scoringSystem: {
+          perfect: 100,
+          good: 75,
+          okay: 50,
+          miss: 0
+        }
+      }),
+      getQualiaConfig: jest.fn(),
+      getBackendConfig: jest.fn(),
+      getAudioConfig: jest.fn(),
+      getErrorReportingConfig: jest.fn(),
+      getRhythmicMovementConfig: jest.fn(),
+      getNotificationConfig: jest.fn(),
+      getConfigSection: jest.fn(),
+      isLoaded: jest.fn().mockReturnValue(true),
+      reload: jest.fn()
+    };
+
+    // Inject mocks into IoC container using QUALIA.CODE LAW
+    container.unbind(TYPES.IEventBus);
+    container.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
+    
+    container.unbind(TYPES.IConfigurationService);
+    container.bind<IConfigurationService>(TYPES.IConfigurationService).toConstantValue(mockConfigService);
+    
+    container.unbind(TYPES.ILogger);
+    container.bind<QualiaLogger>(TYPES.ILogger).toConstantValue(new QualiaLogger('Test', LogLevel.INFO));
+
+    // Get service instance from container - NO MANUAL INSTANTIATION
+    gameController = container.get<IGameControllerService>(TYPES.IGameControllerService);
   });
 
   afterEach(async () => {
     if (gameController) {
       await gameController.stop();
-    }
-    if (eventBus) {
-      eventBus.destroy();
     }
   });
 
@@ -60,10 +112,10 @@ describe("GameControllerService", () => {
       await gameController.start();
 
       const mockCallback = jest.fn();
-      eventBus.subscribe("GameStateChanged", mockCallback);
+      mockEventBus.subscribe("GameStateChanged", mockCallback);
 
       // Emit StartGame event
-      eventBus.emit({
+      mockEventBus.emit({
         type: "PlayerAction",
         action: "StartGame",
         source: "Test",
@@ -92,9 +144,9 @@ describe("GameControllerService", () => {
       await gameController.start();
 
       const mockCallback = jest.fn();
-      eventBus.subscribe("GameStateChanged", mockCallback);
+      mockEventBus.subscribe("GameStateChanged", mockCallback);
 
-      eventBus.emit({
+      mockEventBus.emit({
         type: "PlayerAction",
         action: "StartGame",
         source: "Test",
@@ -113,10 +165,10 @@ describe("GameControllerService", () => {
 
     test("should handle PauseGame action", async () => {
       const mockCallback = jest.fn();
-      eventBus.subscribe("GameStateChanged", mockCallback);
+      mockEventBus.subscribe("GameStateChanged", mockCallback);
 
       // Start game first
-      eventBus.emit({
+      mockEventBus.emit({
         type: "PlayerAction",
         action: "StartGame",
         source: "Test",
@@ -125,7 +177,7 @@ describe("GameControllerService", () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Then pause
-      eventBus.emit({
+      mockEventBus.emit({
         type: "PlayerAction",
         action: "PauseGame",
         source: "Test",
@@ -143,9 +195,9 @@ describe("GameControllerService", () => {
 
     test("should handle ResetGame action", async () => {
       const mockCallback = jest.fn();
-      eventBus.subscribe("GameStateChanged", mockCallback);
+      mockEventBus.subscribe("GameStateChanged", mockCallback);
 
-      eventBus.emit({
+      mockEventBus.emit({
         type: "PlayerAction",
         action: "ResetGame",
         source: "Test",
@@ -163,10 +215,10 @@ describe("GameControllerService", () => {
 
     test("should handle gameplay actions only when playing", async () => {
       const mockCallback = jest.fn();
-      eventBus.subscribe("GameStateChanged", mockCallback);
+      mockEventBus.subscribe("GameStateChanged", mockCallback);
 
       // Try to perform action when not playing
-      eventBus.emit({
+      mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
         source: "Test",
@@ -209,7 +261,7 @@ describe("GameControllerService", () => {
     test("should handle unknown actions gracefully", async () => {
       const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
 
-      eventBus.emit({
+      mockEventBus.emit({
         type: "PlayerAction",
         action: "UnknownAction" as any,
         source: "Test",
@@ -228,8 +280,8 @@ describe("GameControllerService", () => {
   describe("Error Handling", () => {
     test("should handle start failures gracefully", async () => {
       // Mock a failure scenario
-      const originalSubscribe = eventBus.subscribe;
-      eventBus.subscribe = jest.fn(() => {
+      const originalSubscribe = mockEventBus.subscribe;
+      mockEventBus.subscribe = jest.fn(() => {
         throw new Error("Subscription failed");
       });
 
@@ -240,7 +292,7 @@ describe("GameControllerService", () => {
       );
 
       consoleSpy.mockRestore();
-      eventBus.subscribe = originalSubscribe;
+      mockEventBus.subscribe = originalSubscribe;
     });
   });
 });

@@ -1,30 +1,81 @@
 /**
- * QUALIA.CODE v1.0 - BackendSyncService Tests
+ * QUALIA.CODE v1.1 - BackendSyncService Tests - IOC COMPLIANT
  * Comprehensive test suite for backend synchronization service.
+ * Uses InversifyJS container for dependency injection.
  */
 
-import { BackendSyncService } from "../services/BackendSyncService";
-import { EventBus } from "../services/EventBus";
+import { container } from '../services/inversify.config';
+import { TYPES } from '../services/inversify.types';
+import type { IBackendSyncService } from '../services/interfaces/IBackendSyncService';
+import type { IEventBus } from '../services/interfaces/IEventBus';
+import type { IConfigurationService } from '../services/interfaces/IConfigurationService';
 import { QualiaLogger, LogLevel } from "../services/Logger";
 
-// Mock logger for tests
-const mockLogger: QualiaLogger = new QualiaLogger('Test', LogLevel.INFO);
-
-describe("BackendSyncService", () => {
-  let eventBus: EventBus;
-  let backendSync: BackendSyncService;
+describe("BackendSyncService - IOC COMPLIANT", () => {
+  let backendSync: IBackendSyncService;
+  let mockEventBus: jest.Mocked<IEventBus>;
+  let mockConfigService: jest.Mocked<IConfigurationService>;
 
   beforeEach(() => {
-    eventBus = new EventBus(mockLogger);
-    backendSync = new BackendSyncService(eventBus, mockLogger);
+    // Create mocks for EventBus interface
+    mockEventBus = {
+      emit: jest.fn(),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
+      clear: jest.fn(),
+      destroy: jest.fn(),
+      getStats: jest.fn().mockReturnValue({
+        totalListeners: 0,
+        eventTypes: [],
+        historySize: 0,
+        isDestroyed: false
+      })
+    };
+
+    // Create mocks for ConfigurationService interface
+    mockConfigService = {
+      loadConfig: jest.fn(),
+      getConfig: jest.fn(),
+      getGameConfig: jest.fn(),
+      getQualiaConfig: jest.fn(),
+      getBackendConfig: jest.fn().mockReturnValue({
+        baseUrl: 'http://localhost:8000',
+        timeout: 5000,
+        retryAttempts: 3,
+        retryDelay: 1000,
+        throttleMs: 250,
+        healthCheckInterval: 30000,
+        endpoints: {
+          qualiaState: '/api/qualia-state',
+          health: '/api/health'
+        }
+      }),
+      getAudioConfig: jest.fn(),
+      getErrorReportingConfig: jest.fn(),
+      getRhythmicMovementConfig: jest.fn(),
+      getNotificationConfig: jest.fn(),
+      getConfigSection: jest.fn(),
+      isLoaded: jest.fn().mockReturnValue(true),
+      reload: jest.fn()
+    };
+
+    // Inject mocks into IoC container using QUALIA.CODE LAW
+    container.unbind(TYPES.IEventBus);
+    container.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
+    
+    container.unbind(TYPES.IConfigurationService);
+    container.bind<IConfigurationService>(TYPES.IConfigurationService).toConstantValue(mockConfigService);
+    
+    container.unbind(TYPES.ILogger);
+    container.bind<QualiaLogger>(TYPES.ILogger).toConstantValue(new QualiaLogger('Test', LogLevel.INFO));
+
+    // Get service instance from container - NO MANUAL INSTANTIATION
+    backendSync = container.get<IBackendSyncService>(TYPES.IBackendSyncService);
   });
 
   afterEach(async () => {
     if (backendSync) {
       await backendSync.stop();
-    }
-    if (eventBus) {
-      eventBus.destroy();
     }
   });
 
@@ -123,7 +174,7 @@ describe("BackendSyncService", () => {
 
       const consoleSpy = jest.spyOn(console, "log").mockImplementation();
 
-      eventBus.emit({
+      mockEventBus.emit({
         type: "QualiaStateUpdated",
         qualiaState: mockQualiaState,
         timestamp: new Date(),
@@ -154,7 +205,7 @@ describe("BackendSyncService", () => {
 
       // Emit multiple rapid updates
       for (let i = 0; i < 5; i++) {
-        eventBus.emit({
+        mockEventBus.emit({
           type: "QualiaStateUpdated",
           qualiaState: { ...mockQualiaState, intensity: i * 0.1 },
           timestamp: new Date(),
@@ -198,7 +249,7 @@ describe("BackendSyncService", () => {
         throw new Error("Sync failed");
       });
 
-      eventBus.emit({
+      mockEventBus.emit({
         type: "QualiaStateUpdated",
         qualiaState: {
           intensity: 0.5,

@@ -31,8 +31,8 @@ describe("App Component", () => {
   const mockUseGameStore = useGameStore as jest.MockedFunction<
     typeof useGameStore
   >;
-  const mockUseServices = useServices as jest.MockedFunction<
-    typeof useServices
+  const mockUseService = useService as jest.MockedFunction<
+    typeof useService
   >;
 
   const mockEventBus = {
@@ -102,7 +102,7 @@ describe("App Component", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseServices.mockReturnValue(mockServices as any);
+    mockUseService.mockReturnValue(mockServices as any);
     mockUseGameStore.mockImplementation(((selector: any) => {
       if (typeof selector === "function") {
         return selector(mockGameState);
@@ -433,7 +433,7 @@ describe("App Component", () => {
   describe("Error Handling", () => {
     it("should handle backend sync service errors", async () => {
       setMockGamePlaying(false);
-      mockUseServices.mockImplementation(() => {
+      mockUseService.mockImplementation(() => {
         throw new Error("Service unavailable");
       });
 

@@ -1,27 +1,58 @@
 /**
- * QUALIA.CODE v1.0 - ErrorReportingService Tests
+ * QUALIA.CODE v1.1 - ErrorReportingService Tests - IOC COMPLIANT
  * Comprehensive test suite for centralized error reporting system.
  * Tests event-driven architecture, rate limiting, batching, and QUALIA.CODE compliance.
+ * Uses InversifyJS container for dependency injection.
  */
 
-import { EventBus } from "../services/EventBus";
-import {
-  ErrorReportingService,
-  ErrorSeverity,
-} from "../services/ErrorReportingService";
+import { container } from '../services/inversify.config';
+import { TYPES } from '../services/inversify.types';
+import type { IErrorReportingService } from '../services/interfaces/IErrorReportingService';
+import type { IEventBus } from '../services/interfaces/IEventBus';
+import { ErrorSeverity } from "../services/ErrorReportingService";
 import { QualiaLogger, LogLevel } from "../services/Logger";
 
-// Mock logger for tests
-const mockLogger: QualiaLogger = new QualiaLogger('Test', LogLevel.INFO);
-
-describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
-  let eventBus: EventBus;
-  let errorService: ErrorReportingService;
+describe("ErrorReportingService - IOC COMPLIANT", () => {
+  let errorService: IErrorReportingService;
+  let mockEventBus: jest.Mocked<IEventBus>;
 
   beforeEach(() => {
-    // Create fresh instances for each test
-    eventBus = new EventBus(mockLogger);
-    errorService = new ErrorReportingService(eventBus, mockLogger);
+    // Create mocks for EventBus interface
+    mockEventBus = {
+      emit: jest.fn(),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
+      clear: jest.fn(),
+      destroy: jest.fn(),
+      getStats: jest.fn().mockReturnValue({
+        totalListeners: 0,
+        eventTypes: [],
+        historySize: 0,
+        isDestroyed: false
+      })
+    };
+
+    // Mock error reporting config
+    const mockConfig = {
+      enabled: true,
+      maxBatchSize: 10,
+      batchTimeout: 5000,
+      rateLimitWindow: 60000,
+      rateLimitThreshold: 100,
+      retryAttempts: 3,
+      retryDelay: 1000,
+      endpoint: '/api/errors'
+    };
+
+    // Inject mocks into IoC container using QUALIA.CODE LAW
+    container.unbind(TYPES.IEventBus);
+    container.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
+    
+    container.unbind(TYPES.ILogger);
+    container.bind<QualiaLogger>(TYPES.ILogger).toConstantValue(new QualiaLogger('Test', LogLevel.INFO));
+
+    // Get service instance from container - NO MANUAL INSTANTIATION
+    errorService = container.get<IErrorReportingService>(TYPES.IErrorReportingService);
   });
 
   afterEach(() => {
@@ -30,7 +61,7 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
       errorService.stop();
     }
     if (eventBus) {
-      eventBus.destroy();
+      mockEventBus.destroy();
     }
   });
 
@@ -125,7 +156,7 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
       expect(initialStats.queuedErrors).toBe(0);
 
       // Emit an Error event
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "Error",
         error: new Error("Test error"),
         severity: "medium",
@@ -145,7 +176,7 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
       const initialStats = errorService.getStatistics();
 
       // Emit an error after stopping
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "Error",
         error: new Error("Test error"),
         severity: "high",
@@ -163,7 +194,7 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
       const severities: ErrorSeverity[] = ["low", "medium", "high", "critical"];
 
       for (const severity of severities) {
-        await eventBus.emit({
+        await mockEventBus.emit({
           type: "Error",
           error: new Error(`${severity} error`),
           severity,
@@ -194,7 +225,7 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
       ];
 
       for (const test of errorTests) {
-        await eventBus.emit({
+        await mockEventBus.emit({
           type: "Error",
           error: new Error(test.message),
           severity: undefined, // Let auto-categorization work
@@ -227,7 +258,7 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
 
       // Send more errors than the limit
       for (let i = 0; i < 5; i++) {
-        await eventBus.emit({
+        await mockEventBus.emit({
           type: "Error",
           error: new Error(`Error ${i}`),
           severity: "low",
@@ -258,7 +289,7 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
       errorService.start();
 
       // Send first error
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "Error",
         error: new Error("First error"),
         severity: "low",
@@ -273,7 +304,7 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
       await new Promise((resolve) => setTimeout(resolve, 150));
 
       // Send second error after reset
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "Error",
         error: new Error("Second error"),
         severity: "low",
@@ -326,13 +357,13 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
       errorService.start();
 
       // Send exactly batch size errors
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "Error",
         error: new Error("Error 1"),
         severity: "low",
       } as any);
 
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "Error",
         error: new Error("Error 2"),
         severity: "low",
@@ -359,7 +390,7 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
       errorService.start();
 
       // Send an error to trigger batch processing
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "Error",
         error: new Error("Test error"),
         severity: "low",
@@ -384,7 +415,7 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
       expect(initialStats.reportedErrors).toBe(0);
 
       // Send an error
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "Error",
         error: new Error("Test error"),
         severity: "low",
@@ -404,7 +435,7 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
       errorService.start();
 
       // Add some errors to queue
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "Error",
         error: new Error("Pending error"),
         severity: "low",
@@ -432,7 +463,7 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
 
       // Try to emit malformed events
       try {
-        await eventBus.emit({
+        await mockEventBus.emit({
           type: "Error",
           error: null as any,
           severity: "low",
@@ -455,7 +486,7 @@ describe("ErrorReportingService - QUALIA.CODE v1.0", () => {
 
       // Don't start the service, and ensure EventBus has no subscribers initially
 
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "Error",
         error: new Error("Error while stopped"),
         severity: "medium",

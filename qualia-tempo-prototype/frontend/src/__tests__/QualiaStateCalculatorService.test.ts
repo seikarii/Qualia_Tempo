@@ -1,33 +1,82 @@
 /**
- * QUALIA.CODE v1.0 - QualiaStateCalculatorService Tests
- * Comprehensive test suite for the refactored QualiaStateCalculatorService.
+ * QUALIA.CODE v1.1 - QualiaStateCalculatorService Tests
+ * IoC COMPLIANT - Uses container.rebind() for dependency injection
  * Tests event-driven architecture, state calculations, and QUALIA.CODE compliance.
  */
 
-import { EventBus } from "../services/EventBus";
-import { QualiaStateCalculatorService } from "../services/QualiaStateCalculatorService";
+import { container } from '../services/inversify.config';
+import { TYPES } from '../services/inversify.types';
+import type { IEventBus } from '../services/interfaces/IEventBus';
+import type { IQualiaStateCalculatorService } from '../services/interfaces/IQualiaStateCalculatorService';
+import type { IConfigurationService } from '../services/interfaces/IConfigurationService';
 import { QualiaLogger, LogLevel } from "../services/Logger";
 
-// Mock logger for tests
-const mockLogger: QualiaLogger = new QualiaLogger('Test', LogLevel.INFO);
-
 describe("QualiaStateCalculatorService - REFACTORED", () => {
-  let eventBus: EventBus;
-  let qualiaService: QualiaStateCalculatorService;
+  let qualiaService: IQualiaStateCalculatorService;
+  let mockEventBus: jest.Mocked<IEventBus>;
+  let mockConfigService: jest.Mocked<IConfigurationService>;
 
   beforeEach(() => {
-    // Create fresh instances for each test
-    eventBus = new EventBus(mockLogger);
-    qualiaService = new QualiaStateCalculatorService(eventBus, mockLogger);
+    // Create mocks for EventBus interface
+    mockEventBus = {
+      emit: jest.fn(),
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
+      clear: jest.fn(),
+      destroy: jest.fn(),
+      getStats: jest.fn().mockReturnValue({
+        totalListeners: 0,
+        eventTypes: [],
+        historySize: 0,
+        isDestroyed: false
+      })
+    };
+
+    // Create mocks for ConfigurationService interface
+    mockConfigService = {
+      loadConfig: jest.fn(),
+      getConfig: jest.fn(),
+      getGameConfig: jest.fn(),
+      getQualiaConfig: jest.fn(),
+      getBackendConfig: jest.fn(),
+      getAudioConfig: jest.fn(),
+      getErrorReportingConfig: jest.fn(),
+      getRhythmicMovementConfig: jest.fn(),
+      getNotificationConfig: jest.fn(),
+      getConfigSection: jest.fn().mockReturnValue({
+        decayRate: 0.001,
+        transcendenceThreshold: 0.8,
+        flowBaseMultiplier: 1.2,
+        focusBaseMultiplier: 1.1,
+        energyBaseMultiplier: 1.0,
+        hitNoteReward: 0.1,
+        missNotePenalty: 0.2,
+        dashBonus: 0.05,
+        fastForwardBonus: 0.03,
+        rewindBonus: 0.02
+      }),
+      isLoaded: jest.fn().mockReturnValue(true),
+      reload: jest.fn()
+    };
+
+    // Inject mocks into IoC container using QUALIA.CODE LAW
+    container.unbind(TYPES.IEventBus);
+    container.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
+    
+    container.unbind(TYPES.IConfigurationService);
+    container.bind<IConfigurationService>(TYPES.IConfigurationService).toConstantValue(mockConfigService);
+    
+    container.unbind(TYPES.ILogger);
+    container.bind<QualiaLogger>(TYPES.ILogger).toConstantValue(new QualiaLogger('Test', LogLevel.INFO));
+
+    // Get service instance from container - NO MANUAL INSTANTIATION
+    qualiaService = container.get<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService);
   });
 
   afterEach(() => {
     // Clean up services
     if (qualiaService) {
       qualiaService.stop();
-    }
-    if (eventBus) {
-      eventBus.destroy();
     }
   });
 
@@ -116,7 +165,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
       const initialState = qualiaService.getCurrentState();
 
       // Emit a HitNote event
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
         context: { score: 100 },
@@ -137,14 +186,14 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
       let receivedEvent: any = null;
 
       // Subscribe to QualiaStateUpdated events
-      eventBus.subscribe("QualiaStateUpdated", (event) => {
+      mockEventBus.subscribe("QualiaStateUpdated", (event: any) => {
         receivedEvent = event;
       });
 
       qualiaService.start();
 
       // Emit a PlayerAction event
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
       } as any);
@@ -165,7 +214,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
       const initialState = qualiaService.getCurrentState();
 
       // Emit an event after stopping
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
       } as any);
@@ -187,7 +236,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should process HitNote actions correctly", async () => {
       const initialState = qualiaService.getCurrentState();
 
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
       } as any);
@@ -205,7 +254,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should process MissNote actions correctly", async () => {
       const initialState = qualiaService.getCurrentState();
 
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "PlayerAction",
         action: "MissNote",
       } as any);
@@ -222,7 +271,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should process Dash actions correctly", async () => {
       const initialState = qualiaService.getCurrentState();
 
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "PlayerAction",
         action: "Dash",
       } as any);
@@ -238,7 +287,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should process FastForward actions correctly", async () => {
       const initialState = qualiaService.getCurrentState();
 
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "PlayerAction",
         action: "FastForward",
       } as any);
@@ -254,7 +303,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should process Rewind actions correctly", async () => {
       const initialState = qualiaService.getCurrentState();
 
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "PlayerAction",
         action: "Rewind",
       } as any);
@@ -270,7 +319,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should handle unknown actions gracefully", async () => {
       const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
 
-      await eventBus.emit({
+      await mockEventBus.emit({
         type: "PlayerAction",
         action: "UnknownAction" as any,
       } as any);
@@ -293,7 +342,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should clamp values between 0 and 1", async () => {
       // Emit many HitNote events to try to exceed 1.0
       for (let i = 0; i < 20; i++) {
-        await eventBus.emit({
+        await mockEventBus.emit({
           type: "PlayerAction",
           action: "HitNote",
         } as any);
@@ -313,7 +362,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should handle negative values correctly", async () => {
       // Emit many MissNote events to try to go below 0.0
       for (let i = 0; i < 20; i++) {
-        await eventBus.emit({
+        await mockEventBus.emit({
           type: "PlayerAction",
           action: "MissNote",
         } as any);
@@ -341,7 +390,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
 
       // Emit enough HitNote events to trigger transcendence
       for (let i = 0; i < 15; i++) {
-        await eventBus.emit({
+        await mockEventBus.emit({
           type: "PlayerAction",
           action: "HitNote",
         } as any);

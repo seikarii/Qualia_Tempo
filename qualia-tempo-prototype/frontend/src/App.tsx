@@ -6,6 +6,7 @@ import { useService } from "./services/hooks";
 import { TYPES } from "./services/inversify.types";
 import type { IEventBus } from "./services/interfaces/IEventBus";
 import type { ILogger } from "./services/interfaces/ILogger";
+import type { IApplicationInitializerService } from "./services/interfaces/IApplicationInitializerService";
 import type { PlayerActionEvent, PlayerInputEvent } from "./services/EventBus";
 import { shallow } from 'zustand/shallow';
 
@@ -19,10 +20,27 @@ const App: React.FC = () => {
     shallow
   );
   
-  // Get services via InversifyJS
+  // Get services via InversifyJS - MANDATORY QUALIA.CODE PATTERN
   const eventBus = useService<IEventBus>(TYPES.IEventBus);
   const logger = useService<ILogger>(TYPES.ILogger);
+  const applicationInitializer = useService<IApplicationInitializerService>(TYPES.IApplicationInitializerService);
 
+  // CRITICAL: Application Initialization on Mount
+  useEffect(() => {
+    const initializeApplication = async () => {
+      try {
+        logger.info('App Component: Starting application initialization');
+        await applicationInitializer.start();
+        logger.info('App Component: Application initialization completed');
+      } catch (error) {
+        logger.error('App Component: Application initialization failed', error);
+      }
+    };
+
+    initializeApplication();
+  }, [applicationInitializer, logger]);
+
+  // Keyboard Event Handling
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       eventBus.emit<PlayerInputEvent>({
