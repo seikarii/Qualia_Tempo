@@ -1,7 +1,13 @@
-import { EventBus, PlayerActionEvent, PlayerInputEvent } from './EventBus';
+import { injectable, inject } from 'inversify';
+import { TYPES } from './inversify.types';
+import type { PlayerActionEvent, PlayerInputEvent } from './EventBus';
 import type { GameStateChangedEvent, MetronomeTickEvent, RhythmicDashEvent } from './EventBus';
 import { logMethod, catchError } from '../utils/decorators';
-import { QualiaLogger, LoggerProvider } from './Logger';
+import type { QualiaState } from '../types/contracts';
+import type { IRhythmicMovementController } from './interfaces/IRhythmicMovementController';
+import type { IEventBus } from './interfaces/IEventBus';
+import type { ILogger } from './interfaces/ILogger';
+import type { IConfigurationService } from './interfaces/IConfigurationService';
 
 // PURE DI: Configuration interface for this service
 export interface RhythmicMovementConfig {
@@ -16,12 +22,14 @@ export interface RhythmicMovementConfig {
 
 /**
  * RhythmicMovementController - Core rhythm game logic
- * QUALIA.CODE v6: Pure Dependency Injection - Receives configuration directly
+ * QUALIA.CODE v7: InversifyJS Compliant - Uses ConfigurationService for settings
  */
-export class RhythmicMovementController {
-  private eventBus: EventBus;
-  private logger: QualiaLogger;
-  private config: RhythmicMovementConfig; // DIRECT INJECTION - NO SERVICE LOCATION
+@injectable()
+export class RhythmicMovementController implements IRhythmicMovementController {
+  private eventBus: IEventBus;
+  private logger: ILogger;
+  private configService: IConfigurationService;
+  private config!: RhythmicMovementConfig; // Will be loaded in constructor
   
   private playerPosition: [number, number] = [4, 4]; // Center of 8x8 grid
   private isListening: boolean = false;
@@ -46,25 +54,49 @@ export class RhythmicMovementController {
   // CRISALIDA.CODE: Configuration-driven throttling
   private keyThrottleMs!: number;
   private lastKeyPressTime: number = 0;
+  
+  // Interface implementation properties
+  private currentIntensity: number = 0.5;
+  private updatesPerformed: number = 0;
+  private totalUpdateTime: number = 0;
 
   constructor(
-    eventBus: EventBus, 
-    logger: QualiaLogger, 
-    config: RhythmicMovementConfig // PURE DI: Receive specific config, not service
+    @inject(TYPES.IEventBus) eventBus: IEventBus,
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService
   ) {
     this.eventBus = eventBus;
-    this.logger = logger || LoggerProvider.getLogger();
-    this.config = config;
+    this.logger = logger;
+    this.configService = configService;
     
-    // Load configuration from injected config - NO HARDCODED DEFAULTS
-    this.loadConfigurationValues();
-    this.beatInterval = (60 / this.bpm) * 1000; // Convert BPM to milliseconds
-    
-    this.logger.info("Controller initialized with configuration");
+    this.logger.info("RhythmicMovementController initialized - configuration will be loaded on start()");
   }
 
   /**
-   * PURE DI: Load values from injected configuration object
+   * QUALIA.CODE: Ensure configuration is loaded when service starts
+   * This replaces the anti-pattern of loading config in constructor
+   */
+  private ensureConfigurationLoaded(): void {
+    const rhythmicConfig = this.configService.getRhythmicMovementConfig();
+    
+    this.config = {
+      bpm: rhythmicConfig.bpm || 120,
+      perfectTiming: rhythmicConfig.perfectTiming || 100,
+      goodTiming: rhythmicConfig.goodTiming || 200,
+      gridSize: rhythmicConfig.gridSize || 32,
+      slowdownFactor: rhythmicConfig.slowdownFactor || 0.3,
+      slowdownDuration: rhythmicConfig.slowdownDuration || 500,
+      keyThrottleMs: rhythmicConfig.keyThrottleMs || 50
+    };
+    
+    this.loadConfigurationValues();
+    this.beatInterval = (60 / this.bpm) * 1000; // Convert BPM to milliseconds
+    
+    this.logger.info('Configuration loaded successfully', { config: this.config });
+  }
+
+  /**
+   * Load values from configuration object into instance variables
    */
   private loadConfigurationValues(): void {
     this.bpm = this.config.bpm;
@@ -83,11 +115,14 @@ export class RhythmicMovementController {
       return;
     }
 
+    // QUALIA.CODE: Load configuration when service starts, not in constructor
+    this.ensureConfigurationLoaded();
+
     this.setupInputListener();
     this.setupGameStateListener();
     this.startMetronome();
     this.isListening = true;
-    this.logger.info('🎵 RhythmicMovementController started');
+    this.logger.info('🎵 RhythmicMovementController started with configuration loaded');
   }
 
   @logMethod()
@@ -332,5 +367,85 @@ export class RhythmicMovementController {
    */
   private isGameActive(): boolean {
     return this.isPlaying && !this.isPaused;
+  }
+
+  // ==================== IRhythmicMovementController INTERFACE IMPLEMENTATION ====================
+
+  /**
+   * Update movement based on QualiaState.
+   */
+  @logMethod()
+  @catchError()
+  public updateMovement(qualiaState: QualiaState): void {
+    const startTime = performance.now();
+    
+    // Update internal state based on qualia
+    this.currentIntensity = qualiaState.intensity;
+    
+    // Update BPM based on flow and intensity
+    const dynamicBPM = this.config.bpm * (1 + (qualiaState.flow * 0.3));
+    this.setBPM(dynamicBPM);
+    
+    // Track performance metrics
+    this.updatesPerformed++;
+    this.totalUpdateTime += performance.now() - startTime;
+    
+    this.logger.debug('Movement updated based on QualiaState', { 
+      intensity: qualiaState.intensity,
+      flow: qualiaState.flow,
+      newBPM: dynamicBPM 
+    });
+  }
+
+  /**
+   * Set the intensity of rhythmic movement.
+   */
+  @logMethod()
+  @catchError()
+  public setIntensity(intensity: number): void {
+    this.currentIntensity = Math.max(0, Math.min(1, intensity));
+    this.logger.debug('Movement intensity set', { intensity: this.currentIntensity });
+  }
+
+  /**
+   * Get the current movement intensity.
+   */
+  public getIntensity(): number {
+    return this.currentIntensity;
+  }
+
+  /**
+   * Check if the controller is currently running.
+   */
+  public isRunning(): boolean {
+    return this.isListening;
+  }
+
+  /**
+   * Update the movement configuration.
+   */
+  @logMethod()
+  @catchError()
+  public updateConfig(config: any): void {
+    this.config = { ...this.config, ...config };
+    this.loadConfigurationValues();
+    this.logger.info('RhythmicMovementController configuration updated');
+  }
+
+  /**
+   * Get current movement statistics.
+   */
+  public getStats(): {
+    isRunning: boolean;
+    currentIntensity: number;
+    updatesPerformed: number;
+    averageUpdateTime: number;
+  } {
+    return {
+      isRunning: this.isRunning(),
+      currentIntensity: this.currentIntensity,
+      updatesPerformed: this.updatesPerformed,
+      averageUpdateTime: this.updatesPerformed > 0 ? this.totalUpdateTime / this.updatesPerformed : 0
+    };
   }
 }
