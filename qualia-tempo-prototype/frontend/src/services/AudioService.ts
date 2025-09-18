@@ -297,7 +297,7 @@ export class AudioService implements IAudioService {
       const frequency = this.getSoundFrequency(soundId);
       oscillator.frequency.value = frequency;
       oscillator.type = 'sine';
-      gainNode.gain.value = volume * this.configService.getConfigSection<AudioServiceConfig>('audioService').masterVolume;
+      gainNode.gain.value = volume * this.configService.getConfigSection<AudioServiceConfig>('audioService').volume;
 
       oscillator.start();
       if (!loop) {
@@ -327,14 +327,14 @@ export class AudioService implements IAudioService {
   public setMasterVolume(volume: number): void {
     // Update the configuration service with new volume
     const config = this.configService.getConfigSection<AudioServiceConfig>('audioService');
-    config.masterVolume = Math.max(0, Math.min(1, volume));
-    this.logger.info(`🔊 Master volume set to: ${config.masterVolume}`);
+    config.volume = Math.max(0, Math.min(1, volume));
+    this.logger.info(`🔊 Master volume set to: ${config.volume}`);
   }
 
   @logMethod()
   @catchError()
   public getMasterVolume(): number {
-    return this.configService.getAudioConfig().masterVolume;
+    return this.configService.getAudioConfig().volume;
   }
 
   @logMethod()

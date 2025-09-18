@@ -579,6 +579,76 @@ export class ConfigurationService implements IConfigurationService {
   }
 
   /**
+   * Get game-specific configuration section.
+   * @returns Game configuration object
+   */
+  @logMethod()
+  @catchError()
+  public getGameConfig(): any {
+    return this.getConfigSection('gameController');
+  }
+
+  /**
+   * Get qualia calculation configuration.
+   * @returns Qualia calculator configuration
+   */
+  @logMethod()
+  @catchError()
+  public getQualiaConfig(): QualiaCalculatorConfig {
+    return this.getConfigSection<QualiaCalculatorConfig>('qualiaCalculator');
+  }
+
+  /**
+   * Get backend synchronization configuration.
+   * @returns Backend sync configuration
+   */
+  @logMethod()
+  @catchError()
+  public getBackendConfig(): BackendSyncConfig {
+    return this.getConfigSection<BackendSyncConfig>('backendSync');
+  }
+
+  /**
+   * Get audio service configuration.
+   * @returns Audio service configuration
+   */
+  @logMethod()
+  @catchError()
+  public getAudioConfig(): AudioServiceConfig {
+    return this.getConfigSection<AudioServiceConfig>('audioService');
+  }
+
+  /**
+   * Get error reporting configuration.
+   * @returns Error reporting configuration
+   */
+  @logMethod()
+  @catchError()
+  public getErrorReportingConfig(): ErrorReportingConfig {
+    return this.getConfigSection<ErrorReportingConfig>('errorReporting');
+  }
+
+  /**
+   * Get rhythmic movement configuration.
+   * @returns Rhythmic movement configuration
+   */
+  @logMethod()
+  @catchError()
+  public getRhythmicMovementConfig(): RhythmicMovementConfig {
+    return this.getConfigSection<RhythmicMovementConfig>('rhythmicMovement');
+  }
+
+  /**
+   * Get notification service configuration.
+   * @returns Notification service configuration
+   */
+  @logMethod()
+  @catchError()
+  public getNotificationConfig(): NotificationServiceConfig {
+    return this.getConfigSection<NotificationServiceConfig>('notificationService');
+  }
+
+  /**
    * Check if configuration is loaded
    */
   @logMethod()

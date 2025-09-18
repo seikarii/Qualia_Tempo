@@ -6,7 +6,6 @@
 import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
 import {
-  EventBus,
   EventHandler,
   BackendSyncEvent,
   ErrorEvent,
@@ -14,11 +13,11 @@ import {
 import type { QualiaStateUpdatedEvent } from './EventBus';
 import { logMethod, catchError, validateEventProperty } from '../utils/decorators';
 import type { BackendSyncConfig } from './ConfigurationService';
-import { QualiaLogger } from './Logger';
 import type { IBackendSyncService } from './interfaces/IBackendSyncService';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { ILogger } from './interfaces/ILogger';
 import type { IConfigurationService } from './interfaces/IConfigurationService';
+import type { QualiaState } from '../types/contracts';
 
 // Backend synchronization event interface - REMOVED: Using EventBus definition
 
@@ -143,7 +142,7 @@ export class BackendSyncService implements IBackendSyncService {
    */
   @logMethod()
   @catchError()
-  public stop(): void {
+  public async stop(): Promise<void> {
     const startTime = performance.now();
     this.logger.info("🛑 [BackendSync] Stop called");
 
@@ -258,7 +257,7 @@ export class BackendSyncService implements IBackendSyncService {
     const listenerId = this.eventBus.subscribe(
       "QualiaStateUpdated",
       qualiaStateListener,
-      { priority: 50 },
+      { priority: 'high' },
     );
     this.eventListenerIds.push(listenerId);
 
@@ -490,7 +489,13 @@ export class BackendSyncService implements IBackendSyncService {
       transcendence: state.transcendence || 0,
     };
 
-    await this.makeRequest<any>('/api/qualia/state', 'POST', qualiaRequest);
+    await this.makeRequest<any>('/api/qualia/state', {
+      method: 'POST',
+      body: JSON.stringify(qualiaRequest),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 
   /**
@@ -507,7 +512,7 @@ export class BackendSyncService implements IBackendSyncService {
     avgSyncTime: number;
   } {
     return {
-      isRunning: this.isHealthCheckActive,
+      isRunning: this.isRunning,
       isConnected: this.isBackendConnected(),
       lastSyncTime: null, // To be implemented with actual tracking
       syncCount: 0, // To be implemented with actual tracking

@@ -44,6 +44,12 @@ export interface PlayerActionEvent extends BaseEvent {
   context?: Record<string, any>;
 }
 
+export interface PlayerInputEvent extends BaseEvent {
+  type: "PlayerInput";
+  key: string;
+  source?: string;
+}
+
 export interface GameStateChangedEvent extends BaseEvent {
   type: "GameStateChanged";
   newState: "Playing" | "Paused" | "GameOver" | "Menu";
@@ -79,6 +85,7 @@ export interface MetronomeTickEvent extends BaseEvent {
 export type EventTypes =
   | QualiaStateUpdatedEvent
   | PlayerActionEvent
+  | PlayerInputEvent
   | GameStateChangedEvent
   | ErrorEvent
   | BackendSyncEvent

@@ -11,11 +11,11 @@
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
-import { EventBus } from "./EventBus";
 import type { GameStateChangedEvent, QualiaStateUpdatedEvent } from "./EventBus";
 import { logMethod, catchError, validateEventProperty } from '../utils/decorators';
-import { QualiaLogger } from './Logger';
 import type { IGameStateStoreService } from './interfaces/IGameStateStoreService';
+import type { IEventBus } from './interfaces/IEventBus';
+import type { ILogger } from './interfaces/ILogger';
 
 // Store setter type (from Zustand)
 type StoreSetter = (_state: any) => void;
@@ -37,9 +37,6 @@ const GAME_EVENTS = {
  */
 @injectable()
 export class GameStateStoreService implements IGameStateStoreService {
-  private readonly eventBus: EventBus;
-  private readonly setStore: StoreSetter;
-  private readonly logger: QualiaLogger;
   private isStarted = false;
   private listenerIds: string[] = [];
 

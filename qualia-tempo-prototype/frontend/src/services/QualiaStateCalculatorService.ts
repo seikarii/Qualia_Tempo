@@ -20,9 +20,9 @@ import type { IConfigurationService } from './interfaces/IConfigurationService';
 import type { IQualiaStateCalculatorService } from './interfaces/IQualiaStateCalculatorService';
 import {
   EventHandler,
-  PlayerActionEvent,
   QualiaStateUpdatedEvent,
 } from "./EventBus";
+import type { PlayerActionEvent } from "./EventBus";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from '../utils/decorators';
 import type { QualiaCalculatorConfig } from './ConfigurationService';
@@ -152,7 +152,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     const listenerId = this.eventBus.subscribe(
       "PlayerAction",
       playerActionHandler,
-      { priority: 100 },
+      { priority: 'high' },
     );
     this.eventListenerIds.push(listenerId);
 
@@ -393,7 +393,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
    * @returns The updated QualiaState
    */
   @logMethod()
-  public calculateQualiaState(action: PlayerActionEvent): QualiaState {
+  public calculateQualiaState(_action: PlayerActionEvent): QualiaState {
     // This method would process the action and return updated state
     // For now, return current state (implementation can be expanded)
     return { ...this.currentState };
@@ -419,6 +419,26 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     this.lastUpdateTime = now;
 
     this.applyDecayToAllValues(deltaTime);
+  }
+
+  /**
+   * Apply decay to all qualia values based on time passed.
+   * @param deltaTime Time passed in seconds
+   */
+  @logMethod()
+  private applyDecayToAllValues(deltaTime: number): void {
+    const decayRates = this.config.decayRates;
+    
+    // Apply exponential decay to all values using individual decay rates
+    this.currentState.intensity *= Math.exp(-decayRates.intensity * deltaTime);
+    this.currentState.focus_level *= Math.exp(-decayRates.focus_level * deltaTime);
+    this.currentState.aggression *= Math.exp(-decayRates.aggression * deltaTime);
+    this.currentState.flow *= Math.exp(-decayRates.flow * deltaTime);
+    this.currentState.chaos *= Math.exp(-decayRates.chaos * deltaTime);
+    this.currentState.recovery *= Math.exp(-decayRates.recovery * deltaTime);
+    this.currentState.transcendence *= Math.exp(-decayRates.transcendence * deltaTime);
+
+    this.logger.debug('Applied temporal decay', { deltaTime, decayRates });
   }
 
   /**

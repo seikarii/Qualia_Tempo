@@ -42,14 +42,6 @@ export interface GameControllerConfig {
   healthDecayRate: number;
 }
 
-// Default configuration
-const DEFAULT_CONFIG: GameControllerConfig = {
-  maxHealth: 100,
-  initialScore: 0,
-  comboMultiplier: 1.5,
-  healthDecayRate: 0.1,
-};
-
 /**
  * GameControllerService: Manages game state and control logic
  *
@@ -61,7 +53,6 @@ const DEFAULT_CONFIG: GameControllerConfig = {
  */
 @injectable()
 export class GameControllerService implements IGameControllerService {
-  private config: GameControllerConfig;
   private eventBus: EventBus;
   private configService: IConfigurationService;
   private gameStateStoreService: IGameStateStoreService;
@@ -91,8 +82,14 @@ export class GameControllerService implements IGameControllerService {
     this.logger = logger;
     this.configService = configService;
     this.gameStateStoreService = gameStateStoreService;
-    this.config = DEFAULT_CONFIG;
     this.logger.info("🎮 [GameController] Service initialized");
+  }
+
+  /**
+   * Get current configuration from ConfigurationService
+   */
+  private get config(): GameControllerConfig {
+    return this.configService.getConfigSection<GameControllerConfig>('gameController');
   }
 
   /**
@@ -247,7 +244,7 @@ export class GameControllerService implements IGameControllerService {
     const playerActionListenerId = this.eventBus.subscribe(
       "PlayerAction",
       playerActionHandler,
-      { priority: 10 },
+      { priority: 'high' },
     );
     this.eventListenerIds.push(playerActionListenerId);
 
@@ -259,7 +256,7 @@ export class GameControllerService implements IGameControllerService {
     const gameStateListenerId = this.eventBus.subscribe(
       "GameStateChanged",
       gameStateChangedHandler,
-      { priority: 5 },
+      { priority: 'normal' },
     );
     this.eventListenerIds.push(gameStateListenerId);
 
