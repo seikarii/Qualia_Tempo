@@ -2,8 +2,17 @@ import "@testing-library/jest-dom";
 import "whatwg-fetch";
 import React from 'react';
 
+// Mock decorators globally for all tests
+jest.mock('./utils/decorators', () => ({
+  logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  validate: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  throttle: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  validateEventProperty: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+}));
+
 // Mock WebGL context
-global.HTMLCanvasElement.prototype.getContext = jest.fn(() => ({
+(global.HTMLCanvasElement.prototype as any).getContext = jest.fn(() => ({
   getExtension: jest.fn(),
   getShaderPrecisionFormat: jest.fn(() => ({
     precision: 1,

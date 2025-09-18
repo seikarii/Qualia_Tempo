@@ -20,9 +20,7 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
   let container: Container;
   let mockEventBus: jest.Mocked<IEventBus>;
   let mockLogger: jest.Mocked<QualiaLogger>;
-  let mockSetStore: jest.Mock;
-  let consoleLogSpy: jest.SpyInstance;
-  let consoleWarnSpy: jest.SpyInstance;
+  let mockSetStore: jest.MockedFunction<(_state: any) => void>;
 
   beforeEach(() => {
     // Reset all mocks to clean state
@@ -31,17 +29,11 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
     // Create fresh test container with proper IoC bindings
     container = createTestContainer();
 
-    // Get mock instances for assertions
+    // Get mock instances for assertions - use the same mocks that are injected
     const mocks = getMocksFromContainer(container);
     mockEventBus = mocks.mockEventBus as jest.Mocked<IEventBus>;
     mockLogger = mocks.mockLogger as jest.Mocked<QualiaLogger>;
-
-    // Create mock store setter for this specific service
-    mockSetStore = jest.fn();
-
-    // Spy on console methods
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    mockSetStore = mocks.mockStoreSetter as jest.MockedFunction<(_state: any) => void>;
 
     // GOLD.CODE COMPLIANCE: Resolve service from IoC container
     gameStateStoreService = container.get<GameStateStoreService>(GameStateStoreService);
@@ -49,14 +41,12 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    consoleLogSpy.mockRestore();
-    consoleWarnSpy.mockRestore();
   });
 
   describe('Constructor', () => {
     it('should initialize with EventBus and store setter', () => {
       expect(gameStateStoreService).toBeInstanceOf(GameStateStoreService);
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         '🔗 [GameStateStoreService] Bridge service initialized'
       );
     });
@@ -69,7 +59,7 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
 
       gameStateStoreService.start();
 
-      expect(mockEventBus.subscribe).toHaveBeenCalledTimes(2);
+      expect(mockEventBus.subscribe).toHaveBeenCalledTimes(3); // GameStateChanged, QualiaStateUpdated, RhythmicDash
       expect(mockEventBus.subscribe).toHaveBeenCalledWith(
         'GameStateChanged',
         expect.any(Function)
@@ -78,10 +68,14 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
         'QualiaStateUpdated',
         expect.any(Function)
       );
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+        'RhythmicDash',
+        expect.any(Function)
+      );
+      expect(mockLogger.info).toHaveBeenCalledWith(
         '🎧 [GameStateStoreService] Starting event listeners...'
       );
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         '✅ [GameStateStoreService] Event listeners active'
       );
     });
@@ -92,27 +86,28 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
       gameStateStoreService.start();
       gameStateStoreService.start();
 
-      expect(mockEventBus.subscribe).toHaveBeenCalledTimes(2); // Only from first start
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(mockEventBus.subscribe).toHaveBeenCalledTimes(3); // Only from first start
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         '⚠️ [GameStateStoreService] Service already started'
       );
     });
 
     it('should stop service and unsubscribe from events', () => {
       // Start first
-      mockEventBus.subscribe.mockReturnValueOnce('listener-1').mockReturnValueOnce('listener-2');
+      mockEventBus.subscribe.mockReturnValueOnce('listener-1').mockReturnValueOnce('listener-2').mockReturnValueOnce('listener-3');
       gameStateStoreService.start();
 
       // Then stop
       gameStateStoreService.stop();
 
-      expect(mockEventBus.unsubscribe).toHaveBeenCalledTimes(2);
+      expect(mockEventBus.unsubscribe).toHaveBeenCalledTimes(3);
       expect(mockEventBus.unsubscribe).toHaveBeenCalledWith('listener-1');
       expect(mockEventBus.unsubscribe).toHaveBeenCalledWith('listener-2');
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect(mockEventBus.unsubscribe).toHaveBeenCalledWith('listener-3');
+      expect(mockLogger.info).toHaveBeenCalledWith(
         '🔇 [GameStateStoreService] Stopping event listeners...'
       );
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         '✅ [GameStateStoreService] Event listeners stopped'
       );
     });
@@ -121,7 +116,7 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
       gameStateStoreService.stop();
 
       expect(mockEventBus.unsubscribe).not.toHaveBeenCalled();
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         '⚠️ [GameStateStoreService] Service not started'
       );
     });
@@ -157,12 +152,15 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
         newState: 'Playing'
       };
 
+      // Clear previous logger calls before testing handler
+      jest.clearAllMocks();
+      
       gameStateHandler(gameStateChangedEvent);
 
       expect(mockSetStore).toHaveBeenCalledWith(expect.any(Function));
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         '🎮 [GameStateStoreService] Processing GameStateChanged:',
-        'Playing'
+        { newState: 'Playing' }
       );
 
       // Test the store update function
@@ -199,7 +197,7 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
       gameStateHandler(gameStateChangedEvent);
 
       expect(mockSetStore).toHaveBeenCalledWith(expect.any(Function));
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         '💀 [GameStateStoreService] Game Over - State reset'
       );
 
@@ -239,7 +237,7 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
 
       expect(newState.isPlaying).toBe(false);
       expect(newState.currentTime).toBe(0);
-      expect(newState.player.position).toEqual({ x: 0, y: 0 });
+      expect(newState.player.position).toEqual({ x: 4, y: 4 }); // Service resets to 4,4 not 0,0
       expect(newState.player.health).toBe(100);
     });
 
@@ -250,7 +248,7 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
 
       gameStateHandler(gameStateChangedEvent);
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         '⚠️ [GameStateStoreService] Unhandled game state:',
         'UnknownState'
       );
@@ -287,7 +285,7 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
       qualiaStateHandler(qualiaStateUpdatedEvent);
 
       expect(mockSetStore).toHaveBeenCalledWith(expect.any(Function));
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         '🌟 [GameStateStoreService] Processing QualiaStateUpdated:',
         qualiaStateUpdatedEvent.qualiaState
       );

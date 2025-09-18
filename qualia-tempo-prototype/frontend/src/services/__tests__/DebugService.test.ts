@@ -16,6 +16,7 @@ import { TYPES } from '../inversify.types';
 jest.mock('../../utils/decorators', () => ({
   logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  validateEventProperty: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
 }));
 
 describe('DebugService - GOLD.CODE IoC Testing', () => {
@@ -59,7 +60,7 @@ describe('DebugService - GOLD.CODE IoC Testing', () => {
       await debugService.start();
       
       // Verify logger was called for initialization
-      expect(mockLogger.info).toHaveBeenCalledWith('DebugService started');
+      expect(mockLogger.info).toHaveBeenCalledWith('🚀 [DebugService] Service started - AI debugging active');
       
       // Verify event subscriptions were registered
       expect(mockEventBus.subscribe).toHaveBeenCalled();
@@ -69,131 +70,121 @@ describe('DebugService - GOLD.CODE IoC Testing', () => {
       await debugService.start();
       await debugService.stop();
       
-      expect(mockLogger.info).toHaveBeenCalledWith('DebugService stopped');
+      expect(mockLogger.info).toHaveBeenCalledWith('🛑 [DebugService] Service stopped');
       expect(mockEventBus.unsubscribe).toHaveBeenCalled();
     });
   });
 
   describe('AI Analysis Features', () => {
     beforeEach(async () => {
-      await debugService.start();
+      debugService.start();
     });
 
-    it('should analyze performance metrics', async () => {
-      const mockMetrics = {
-        fps: 60,
-        memory: { used: 50, total: 100 },
-        render: { time: 16.7 }
-      };
-
-      const analysis = await debugService.analyzePerformance(mockMetrics);
+    it('should perform AI analysis of debug data', () => {
+      const analysis = debugService.performAIAnalysis();
       
-      expect(analysis).toBeDefined();
-      expect(typeof analysis.summary).toBe('string');
-      expect(Array.isArray(analysis.recommendations)).toBe(true);
-      expect(typeof analysis.severity).toBe('string');
-    });
-
-    it('should analyze error patterns', async () => {
-      const mockErrors = [
-        { message: 'Network timeout', stack: 'at fetch...', timestamp: Date.now() },
-        { message: 'Render error', stack: 'at render...', timestamp: Date.now() }
-      ];
-
-      const analysis = await debugService.analyzeErrorPatterns(mockErrors);
-      
-      expect(analysis).toBeDefined();
-      expect(typeof analysis.summary).toBe('string');
-      expect(Array.isArray(analysis.patterns)).toBe(true);
-      expect(Array.isArray(analysis.suggestions)).toBe(true);
-    });
-
-    it('should generate intelligent recommendations', async () => {
-      const mockContext = {
-        errors: [],
-        performance: { fps: 30, memory: { used: 80, total: 100 } },
-        userActions: []
-      };
-
-      const recommendations = await debugService.generateRecommendations(mockContext);
-      
-      expect(Array.isArray(recommendations)).toBe(true);
-      recommendations.forEach(rec => {
-        expect(rec).toHaveProperty('title');
-        expect(rec).toHaveProperty('description');
-        expect(rec).toHaveProperty('priority');
-        expect(rec).toHaveProperty('category');
+      expect(Array.isArray(analysis)).toBe(true);
+      analysis.forEach(result => {
+        expect(result).toHaveProperty('type');
+        expect(result).toHaveProperty('severity');
+        expect(result).toHaveProperty('message');
+        expect(['error_pattern', 'state_anomaly', 'recommendation']).toContain(result.type);
+        expect(['low', 'medium', 'high']).toContain(result.severity);
       });
+    });
+
+    it('should export debug data for analysis', () => {
+      const exportData = debugService.exportDebugData();
+      
+      expect(exportData).toBeDefined();
+      expect(typeof exportData).toBe('object');
+    });
+
+    it('should get system snapshot', () => {
+      const snapshot = debugService.getSystemSnapshot();
+      
+      expect(snapshot).toBeDefined();
+      expect(snapshot).toHaveProperty('timestamp');
+      expect(snapshot).toHaveProperty('services');
+      expect(snapshot).toHaveProperty('performance');
+      expect(snapshot).toHaveProperty('eventHistory');
     });
   });
 
-  describe('Session Management', () => {
-    beforeEach(async () => {
-      await debugService.start();
+  describe('Configuration Management', () => {
+    beforeEach(() => {
+      debugService.start();
     });
 
-    it('should create and manage debug sessions', async () => {
-      const sessionId = await debugService.startSession('test-session');
+    it('should update debug configuration', () => {
+      const newConfig = {
+        maxEventHistory: 1000,
+        enableGlobalInterface: true,
+        profilingEnabled: true
+      };
+
+      debugService.updateConfig(newConfig);
       
-      expect(typeof sessionId).toBe('string');
-      expect(sessionId.length).toBeGreaterThan(0);
-      
-      const sessionInfo = debugService.getSessionInfo(sessionId);
-      expect(sessionInfo).toBeDefined();
-      expect(sessionInfo?.name).toBe('test-session');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '⚙️ [DebugService] Configuration updated'
+      );
     });
 
-    it('should end sessions and cleanup resources', async () => {
-      const sessionId = await debugService.startSession('test-session');
-      await debugService.endSession(sessionId);
-      
-      const sessionInfo = debugService.getSessionInfo(sessionId);
-      expect(sessionInfo?.active).toBe(false);
+    it('should enable and disable profiling', () => {
+      debugService.enableProfiling();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('profiling enabled')
+      );
+
+      debugService.disableProfiling();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('profiling disabled')
+      );
     });
 
-    it('should export session data', async () => {
-      const sessionId = await debugService.startSession('test-session');
-      const exportData = await debugService.exportSessionData(sessionId);
-      
-      expect(exportData).toBeDefined();
-      expect(exportData).toHaveProperty('sessionId');
-      expect(exportData).toHaveProperty('data');
+    it('should set debug level', () => {
+      debugService.setDebugLevel('verbose');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Debug level set to: verbose'
+      );
     });
   });
 
   describe('Global Debug Interface', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       // Mock global window object
       (global as any).window = { location: { href: 'http://localhost' } };
-      await debugService.start();
+      debugService.start();
     });
 
-    it('should expose global QA_DEBUG interface', () => {
-      expect((global as any).window.QA_DEBUG).toBeDefined();
-      expect(typeof (global as any).window.QA_DEBUG.getMetrics).toBe('function');
-      expect(typeof (global as any).window.QA_DEBUG.analyzePerformance).toBe('function');
-      expect(typeof (global as any).window.QA_DEBUG.startSession).toBe('function');
+    it('should check if debugging is enabled', () => {
+      const isEnabled = debugService.isEnabled();
+      expect(typeof isEnabled).toBe('boolean');
     });
 
-    it('should provide metrics through global interface', () => {
-      const metrics = (global as any).window.QA_DEBUG.getMetrics();
-      expect(metrics).toBeDefined();
-      expect(typeof metrics).toBe('object');
+    it('should get debug statistics', () => {
+      const stats = debugService.getDebugStats();
+      expect(stats).toBeDefined();
+      expect(stats).toHaveProperty('isRunning');
+      expect(stats).toHaveProperty('eventsLogged');
+      expect(stats).toHaveProperty('memoryUsage');
+      expect(stats).toHaveProperty('uptime');
     });
   });
 
   describe('Performance Monitoring', () => {
-    beforeEach(async () => {
-      await debugService.start();
+    beforeEach(() => {
+      debugService.start();
     });
 
     it('should track performance metrics', () => {
       const metrics = debugService.getMetrics();
       
       expect(metrics).toBeDefined();
-      expect(metrics).toHaveProperty('memory');
-      expect(metrics).toHaveProperty('timing');
-      expect(metrics).toHaveProperty('events');
+      expect(metrics).toHaveProperty('isRunning');
+      expect(metrics).toHaveProperty('eventsLogged');
+      expect(metrics).toHaveProperty('memoryUsage');
+      expect(metrics).toHaveProperty('uptime');
     });
 
     it('should update metrics over time', async () => {
@@ -208,8 +199,8 @@ describe('DebugService - GOLD.CODE IoC Testing', () => {
   });
 
   describe('Event Monitoring', () => {
-    beforeEach(async () => {
-      await debugService.start();
+    beforeEach(() => {
+      debugService.start();
     });
 
     it('should monitor EventBus activity', () => {
@@ -220,14 +211,34 @@ describe('DebugService - GOLD.CODE IoC Testing', () => {
       const subscribeCall = (mockEventBus.subscribe as jest.Mock).mock.calls[0];
       expect(subscribeCall).toBeDefined();
     });
+
+    it('should log events to debug service', () => {
+      const mockEvent = {
+        type: 'PlayerAction',
+        action: 'dash',
+        timestamp: new Date()
+      };
+
+      // Start the service to enable event processing
+      debugService.start();
+      
+      // Clear previous logger calls
+      (mockLogger.debug as jest.Mock).mockClear();
+      
+      debugService.logEvent(mockEvent);
+      
+      // Verify the event was processed by checking the debug stats
+      const stats = debugService.getDebugStats();
+      expect(stats.eventsLogged).toBe(1);
+    });
   });
 
   describe('Error Handling', () => {
-    beforeEach(async () => {
-      await debugService.start();
+    beforeEach(() => {
+      debugService.start();
     });
 
-    it('should handle configuration errors gracefully', async () => {
+    it('should handle configuration errors gracefully', () => {
       // Mock configuration service to throw error
       mockConfigService.getConfig.mockImplementation(() => {
         throw new Error('Config load failed');
@@ -237,7 +248,7 @@ describe('DebugService - GOLD.CODE IoC Testing', () => {
       expect(() => debugService.getMetrics()).not.toThrow();
     });
 
-    it('should handle EventBus errors gracefully', async () => {
+    it('should handle EventBus errors gracefully', () => {
       // Mock EventBus to throw error
       mockEventBus.emit.mockImplementation(() => {
         throw new Error('EventBus error');

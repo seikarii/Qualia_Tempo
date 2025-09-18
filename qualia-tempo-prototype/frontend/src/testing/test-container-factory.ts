@@ -9,6 +9,15 @@
  * OBLIGATION: All Service Under Test (SUT) must be resolved from container.
  */
 
+// Mock decorators BEFORE importing any services
+jest.mock('../utils/decorators', () => ({
+  logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  validate: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  throttle: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  validateEventProperty: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+}));
+
 import { Container } from 'inversify';
 import { TYPES } from '../services/inversify.types';
 
@@ -39,6 +48,15 @@ const mockLogger: ILogger = {
   debug: jest.fn(),
   setLevel: jest.fn(),
   getLevel: jest.fn().mockReturnValue('info'),
+  child: jest.fn().mockImplementation((_prefix: string) => ({
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    setLevel: jest.fn(),
+    getLevel: jest.fn().mockReturnValue('info'),
+    child: jest.fn()
+  }))
 };
 
 /**
@@ -46,42 +64,141 @@ const mockLogger: ILogger = {
  */
 const mockEventBus: IEventBus = {
   subscribe: jest.fn().mockReturnValue('mock-listener-id'),
-  unsubscribe: jest.fn(),
-  emit: jest.fn(),
+  unsubscribe: jest.fn().mockReturnValue(true),
+  emit: jest.fn().mockResolvedValue(undefined),
   clear: jest.fn(),
-  getListenerCount: jest.fn().mockReturnValue(0),
-  getAllEvents: jest.fn().mockReturnValue([]),
+  destroy: jest.fn(),
+  getStats: jest.fn().mockReturnValue({
+    totalListeners: 0,
+    eventTypes: [],
+    historySize: 0,
+    isDestroyed: false
+  })
 };
 
 /**
- * Mock Configuration Service Implementation
+ * Mock Configuration Service Implementation - Complete with Default Config Structure
  */
 const mockConfigurationService: IConfigurationService = {
-  loadConfig: jest.fn().mockResolvedValue(true),
-  getConfig: jest.fn().mockReturnValue({}),
-  getGameConfig: jest.fn().mockReturnValue({}),
-  getQualiaConfig: jest.fn().mockReturnValue({}),
-  getBackendConfig: jest.fn().mockReturnValue({ url: 'mock://backend' }),
+  loadConfig: jest.fn().mockResolvedValue(undefined),
+  getConfig: jest.fn().mockReturnValue({
+    gameController: { 
+      maxHealth: 100, 
+      initialScore: 0,
+      tickRate: 60
+    },
+    errorReporting: { 
+      enabled: true, 
+      batchSize: 5,
+      batchTimeout: 1000,
+      maxRetries: 3,
+      rateLimitWindow: 60000,
+      rateLimitMax: 100
+    },
+    debug: { 
+      enableAIAnalysis: false,
+      logLevel: 'info',
+      performanceTracking: true
+    },
+    backend: {
+      url: 'http://localhost:8000',
+      timeout: 5000,
+      retryAttempts: 3
+    },
+    audio: {
+      masterVolume: 0.7,
+      enableSpatialAudio: true,
+      bufferSize: 2048
+    },
+    rhythm: {
+      bpm: 120,
+      syncTolerance: 100,
+      adaptive: true
+    },
+    notifications: {
+      enabled: true,
+      maxConcurrent: 5,
+      defaultDuration: 3000
+    }
+  }),
+  getGameConfig: jest.fn().mockReturnValue({
+    maxHealth: 100,
+    initialScore: 0,
+    tickRate: 60
+  }),
+  getQualiaConfig: jest.fn().mockReturnValue({
+    decayRate: 0.01,
+    intensityMultiplier: 1.2,
+    flowThreshold: 0.7
+  }),
+  getBackendConfig: jest.fn().mockReturnValue({ 
+    url: 'http://localhost:8000',
+    timeout: 5000,
+    retryAttempts: 3
+  }),
+  getAudioConfig: jest.fn().mockReturnValue({
+    masterVolume: 0.7,
+    enableSpatialAudio: true,
+    bufferSize: 2048
+  }),
+  getErrorReportingConfig: jest.fn().mockReturnValue({
+    enabled: true,
+    batchSize: 5,
+    batchTimeout: 1000,
+    maxRetries: 3
+  }),
+  getRhythmicMovementConfig: jest.fn().mockReturnValue({
+    bpm: 120,
+    syncTolerance: 100,
+    adaptive: true
+  }),
+  getNotificationConfig: jest.fn().mockReturnValue({
+    enabled: true,
+    maxConcurrent: 5,
+    defaultDuration: 3000
+  }),
+  getConfigSection: jest.fn().mockImplementation((section: string) => {
+    const defaultConfig: any = {
+      gameController: { maxHealth: 100, initialScore: 0, tickRate: 60 },
+      errorReporting: { enabled: true, batchSize: 5, batchTimeout: 1000, maxRetries: 3 },
+      debug: { enableAIAnalysis: false, logLevel: 'info', performanceTracking: true },
+      backend: { url: 'http://localhost:8000', timeout: 5000, retryAttempts: 3 },
+      audio: { masterVolume: 0.7, enableSpatialAudio: true, bufferSize: 2048 },
+      rhythm: { bpm: 120, syncTolerance: 100, adaptive: true },
+      notifications: { enabled: true, maxConcurrent: 5, defaultDuration: 3000 },
+      qualia: { decayRate: 0.01, intensityMultiplier: 1.2, flowThreshold: 0.7 }
+    };
+    return defaultConfig[section] || {};
+  }),
   isLoaded: jest.fn().mockReturnValue(true),
-  reload: jest.fn().mockResolvedValue(true),
+  reload: jest.fn().mockResolvedValue(undefined)
 };
 
 /**
- * Mock Game State Store Implementation  
+ * Mock Game State Store Implementation - Complete Interface Coverage
  */
 const mockGameStateStore: IGameStateStore = {
-  getState: jest.fn().mockReturnValue({
-    gameState: 'idle',
-    qualiaState: { consciousness: 0, attention: 0, clarity: 0, flow: 0 },
-    player: { position: { x: 0, y: 0 }, health: 100 },
-    isPlaying: false,
-    score: 0
-  }),
-  setState: jest.fn(),
-  subscribe: jest.fn().mockReturnValue(() => {}),
+  setNotifications: jest.fn(),
+  getNotifications: jest.fn().mockReturnValue([]),
   updateGameState: jest.fn(),
+  getGameState: jest.fn().mockReturnValue({
+    gameState: 'idle',
+    isPlaying: false,
+    score: 0,
+    health: 100
+  }),
   updateQualiaState: jest.fn(),
-  updatePlayerState: jest.fn(),
+  getQualiaState: jest.fn().mockReturnValue({
+    consciousness: 0,
+    attention: 0,
+    clarity: 0,
+    flow: 0,
+    intensity: 0,
+    focus_level: 0,
+    aggression: 0,
+    recovery: 0,
+    chaos: 0
+  })
 };
 
 /**
@@ -93,7 +210,6 @@ const mockGameStateStore: IGameStateStore = {
  */
 export function createTestContainer(): Container {
   const container = new Container({ 
-    autoBindInjectable: false, // Explicit binding for test clarity
     defaultScope: 'Singleton' 
   });
 
@@ -102,6 +218,10 @@ export function createTestContainer(): Container {
   container.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
   container.bind<IConfigurationService>(TYPES.IConfigurationService).toConstantValue(mockConfigurationService);
   container.bind<IGameStateStore>(TYPES.IGameStateStore).toConstantValue(mockGameStateStore);
+
+  // Mock StoreSetter (Zustand store setter function)
+  const mockStoreSetter = jest.fn();
+  container.bind<(_state: any) => void>(TYPES.StoreSetter).toConstantValue(mockStoreSetter);
 
   // Bind concrete service implementations (Services Under Test)
   container.bind<IDebugService>(TYPES.IDebugService).to(DebugService).inSingletonScope();
@@ -122,6 +242,7 @@ export function getMocksFromContainer(container: Container) {
     mockEventBus: container.get<IEventBus>(TYPES.IEventBus),
     mockConfigurationService: container.get<IConfigurationService>(TYPES.IConfigurationService),
     mockGameStateStore: container.get<IGameStateStore>(TYPES.IGameStateStore),
+    mockStoreSetter: container.get<(_state: any) => void>(TYPES.StoreSetter),
   };
 }
 
@@ -134,9 +255,17 @@ export function resetAllMocks() {
   // Reset mock return values to defaults
   (mockLogger.getLevel as jest.Mock).mockReturnValue('info');
   (mockEventBus.subscribe as jest.Mock).mockReturnValue('mock-listener-id');
-  (mockEventBus.getListenerCount as jest.Mock).mockReturnValue(0);
-  (mockEventBus.getAllEvents as jest.Mock).mockReturnValue([]);
+  (mockEventBus.unsubscribe as jest.Mock).mockReturnValue(true);
+  (mockEventBus.getStats as jest.Mock).mockReturnValue({
+    totalListeners: 0,
+    eventTypes: [],
+    historySize: 0,
+    isDestroyed: false
+  });
   (mockConfigurationService.isLoaded as jest.Mock).mockReturnValue(true);
-  (mockConfigurationService.getBackendConfig as jest.Mock).mockReturnValue({ url: 'mock://backend' });
-  (mockGameStateStore.subscribe as jest.Mock).mockReturnValue(() => {});
+  (mockConfigurationService.getBackendConfig as jest.Mock).mockReturnValue({ 
+    url: 'http://localhost:8000',
+    timeout: 5000,
+    retryAttempts: 3
+  });
 }
