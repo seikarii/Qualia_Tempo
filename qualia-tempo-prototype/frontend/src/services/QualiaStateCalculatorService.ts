@@ -162,7 +162,21 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   @logMethod()
   @catchError()
   public updateConfig(newConfig: Partial<QualiaCalculatorConfig>): void {
-    this.config = { ...this.config, ...newConfig };
+    // Safely merge configurations, ensuring all required properties are preserved
+    this.config = {
+      ...this.config,
+      ...newConfig,
+      // Ensure baseQualiaState is never undefined
+      baseQualiaState: {
+        ...this.config.baseQualiaState,
+        ...(newConfig.baseQualiaState || {})
+      },
+      // Ensure performanceMultipliers is never undefined
+      performanceMultipliers: {
+        ...this.config.performanceMultipliers,
+        ...(newConfig.performanceMultipliers || {})
+      }
+    } as QualiaCalculatorConfig;
     this.logger.info("⚙️ [QualiaCalculator] Configuration updated");
   }
 

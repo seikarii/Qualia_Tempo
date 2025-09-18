@@ -59,6 +59,42 @@ Abre el frontend y deberías ver:
 - ✅ "Backend Connected" en la pantalla principal
 - 🔥 Los logs del backend mostrando datos de QualiaState cuando interactúes
 
+### 5. Verificar Funcionalidad del Botón "Start The First Duel"
+
+Después de la corrección del bug de inicialización de servicios:
+
+1. **Iniciar el Sistema**:
+   ```bash
+   ./start.sh
+   ```
+
+2. **Verificar Servicios**:
+   - Frontend: http://localhost:5173
+   - Backend: http://localhost:8000
+   - API Docs: http://localhost:8000/docs
+
+3. **Probar el Botón**:
+   - Abre http://localhost:5173 en tu navegador
+   - Busca el botón "Start The First Duel"
+   - Haz clic en el botón
+   - **Comportamiento Esperado**:
+     - ✅ La página debe cambiar a la pantalla de juego
+     - ✅ No deben aparecer errores de JavaScript en la consola
+     - ✅ El backend debe recibir eventos PlayerAction
+     - ✅ GameControllerService debe procesar el evento StartGame
+
+4. **Verificación Automática**:
+   ```bash
+   ./test-button-functionality.sh
+   ```
+
+5. **Debug Manual**:
+   - **Consola del navegador**: Busca logs de GameControllerService
+   - **Logs del backend**: Verifica recepción de eventos PlayerAction
+   - **Network tab**: Confirma comunicación frontend-backend
+
+**Estado del Bug**: ✅ **CORREGIDO** - GameControllerService ahora se inicializa correctamente durante el startup de la aplicación.
+
 ## 🎮 Controles (Placeholder)
 
 - **WASD**: Movimiento rítmico
