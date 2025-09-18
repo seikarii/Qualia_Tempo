@@ -1,27 +1,29 @@
 import * as Tone from 'tone';
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../services/inversify.types';
+import type { ILogger } from '../services/interfaces/ILogger';
 import type { QualiaState } from '../types/contracts';
-
-/**
- * EmergentBehavior - describe patrones emergentes en la simulación ontológica.
- * Permite la integración de patrones musicales y sonoros basados en estados cualitativos.
- */
-export interface EmergentBehavior {
-  type: 'CLUSTERING' | 'SYNCHRONIZATION' | 'STATE_PROPAGATOR' | 'NARRATIVE_EVENT';
-  entities: any[]; // Simplified entities array
-  strength?: number;
-  description?: string;
-  timestamp?: number;
-}
+import type { IOntologicalAudioEngine, EmergentBehavior } from './IOntologicalAudioEngine';
+import { logMethod, catchError } from '../utils/decorators';
 
 export type OscillatorType = 'sine' | 'triangle' | 'sawtooth' | 'square' | 'pulse';
 
-export class OntologicalAudioEngine {
+/**
+ * QUALIA.CODE v1.1 - OntologicalAudioEngine Service
+ * Audio engine that generates sound based on ontological states.
+ */
+@injectable()
+export class OntologicalAudioEngine implements IOntologicalAudioEngine {
+  private readonly logger: ILogger;
   private synthPool: Map<string, Tone.PolySynth> = new Map();
   private globalReverb: Tone.Reverb;
   private globalDelay: Tone.FeedbackDelay;
   private masterVolume: Tone.Volume;
 
-  constructor() {
+  constructor(
+    @inject(TYPES.ILogger) logger: ILogger
+  ) {
+    this.logger = logger;
     this.globalReverb = new Tone.Reverb({
       decay: 1.5,
       wet: 0.45
@@ -40,12 +42,14 @@ export class OntologicalAudioEngine {
     this.globalReverb.connect(this.masterVolume);
     this.masterVolume.toDestination();
 
-    console.log('🎵 OntologicalAudioEngine initialized');
+    this.logger.info('OntologicalAudioEngine initialized');
   }
 
   /**
    * Crea una voz musical para una entidad basada en su estado qualia.
    */
+  @logMethod()
+  @catchError()
   public createEntityVoice(entityId: string, qualiaState: QualiaState): void {
     if (this.synthPool.has(entityId)) return;
 
@@ -59,7 +63,7 @@ export class OntologicalAudioEngine {
         sustain: 0.32 + qualiaState.intensity * 0.5,
         release: 0.5 + qualiaState.flow * 1.3
       },
-      volume: -7 + qualiaState.precision * 7
+      volume: -7 + qualiaState.focus_level * 7
     });
 
     synth.connect(this.globalDelay);
@@ -69,6 +73,8 @@ export class OntologicalAudioEngine {
   /**
    * Actualiza el sonido de una entidad según su estado qualia.
    */
+  @logMethod()
+  @catchError()
   public updateEntitySound(entityId: string, qualiaState: QualiaState): void {
     const synth = this.synthPool.get(entityId);
     if (!synth) return;
@@ -79,7 +85,7 @@ export class OntologicalAudioEngine {
 
     if (qualiaState.aggression > 0.2) {
       const note = Tone.Frequency(baseFreq * harmonic).toNote();
-      const velocity = Math.min(qualiaState.aggression + qualiaState.precision * 0.25, 1.0);
+      const velocity = Math.min(qualiaState.aggression + qualiaState.focus_level * 0.25, 1.0);
       const duration = rhythm;
 
       synth.triggerAttackRelease(note, duration, undefined, velocity);
@@ -129,6 +135,8 @@ export class OntologicalAudioEngine {
   /**
    * Ejecuta patrones musicales emergentes según el tipo de comportamiento.
    */
+  @logMethod()
+  @catchError()
   public playEmergentPattern(behavior: EmergentBehavior): void {
     switch (behavior.type) {
       case 'CLUSTERING':
@@ -212,12 +220,31 @@ export class OntologicalAudioEngine {
   /**
    * Elimina la voz de una entidad y libera recursos.
    */
+  @logMethod()
+  @catchError()
   public removeEntityVoice(entityId: string): void {
     const synth = this.synthPool.get(entityId);
     if (synth) {
       synth.dispose();
       this.synthPool.delete(entityId);
     }
+  }
+
+  /**
+   * Get the current master volume.
+   */
+  @logMethod()
+  public getMasterVolume(): number {
+    return this.masterVolume.volume.value;
+  }
+
+  /**
+   * Set the master volume.
+   */
+  @logMethod()
+  @catchError()
+  public setMasterVolume(volume: number): void {
+    this.masterVolume.volume.value = volume;
   }
 }
 

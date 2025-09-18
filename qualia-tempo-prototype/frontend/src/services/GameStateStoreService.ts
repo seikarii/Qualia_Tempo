@@ -1,5 +1,5 @@
 /**
- * QUALIA.CODE v1.0 - GameStateStoreService
+ * QUALIA.CODE v1.1 - GameStateStoreService
  * Bridge service between EventBus and Zustand store for passive state management.
  *
  * Architecture:
@@ -9,10 +9,13 @@
  * - Decoupled from UI components: No direct component knowledge
  */
 
+import { injectable, inject } from 'inversify';
+import { TYPES } from './inversify.types';
 import { EventBus } from "./EventBus";
 import type { GameStateChangedEvent, QualiaStateUpdatedEvent } from "./EventBus";
 import { logMethod, catchError, validateEventProperty } from '../utils/decorators';
 import { QualiaLogger } from './Logger';
+import type { IGameStateStoreService } from './interfaces/IGameStateStoreService';
 
 // Store setter type (from Zustand)
 type StoreSetter = (_state: any) => void;
@@ -32,23 +35,29 @@ const GAME_EVENTS = {
  * - Event-driven: Reacts to events, doesn't emit them
  * - Passive store: Store is just a data container
  */
-export class GameStateStoreService {
+@injectable()
+export class GameStateStoreService implements IGameStateStoreService {
   private readonly eventBus: EventBus;
   private readonly setStore: StoreSetter;
   private readonly logger: QualiaLogger;
   private isStarted = false;
   private listenerIds: string[] = [];
 
-  constructor(eventBus: EventBus, logger: QualiaLogger, setStore: StoreSetter) {
-    this.eventBus = eventBus;
-    this.logger = logger;
-    this.setStore = setStore;
+  constructor(
+    @inject(TYPES.IEventBus) private readonly eventBus: IEventBus,
+    @inject(TYPES.ILogger) private readonly logger: ILogger,
+    @inject(TYPES.StoreSetter) private readonly setStore: StoreSetter
+  ) {
     this.logger.info("🔗 [GameStateStoreService] Bridge service initialized");
   }
+
+  // --- IGameStateStoreService Interface Implementation ---
 
   /**
    * Start listening to events and updating the store
    */
+  @logMethod()
+  @catchError()
   start(): void {
     if (this.isStarted) {
       this.logger.warn("⚠️ [GameStateStoreService] Service already started");
@@ -85,6 +94,8 @@ export class GameStateStoreService {
   /**
    * Stop listening to events
    */
+  @logMethod()
+  @catchError()
   stop(): void {
     if (!this.isStarted) {
       this.logger.warn("⚠️ [GameStateStoreService] Service not started");
@@ -102,6 +113,38 @@ export class GameStateStoreService {
     this.isStarted = false;
     this.logger.info("✅ [GameStateStoreService] Event listeners stopped");
   }
+
+  @logMethod()
+  @catchError()
+  updateGameState(state: any): void {
+    this.setStore((currentState: any) => ({
+      ...currentState,
+      ...state,
+    }));
+  }
+
+  @logMethod()
+  @catchError()
+  updateQualiaState(state: any): void {
+    this.setStore((currentState: any) => ({
+      ...currentState,
+      qualiaState: { ...state },
+    }));
+  }
+
+  @logMethod()
+  @catchError()
+  getStatus(): 'running' | 'stopped' {
+    return this.isStarted ? "running" : "stopped";
+  }
+
+  @logMethod()
+  @catchError()
+  isRunning(): boolean {
+    return this.isStarted;
+  }
+
+  // === PRIVATE EVENT HANDLERS ===
 
   /**
    * Handle GameStateChanged events
@@ -140,7 +183,7 @@ export class GameStateStoreService {
             },
             qualiaState: {
               intensity: 0,
-              precision: 0,
+              focus_level: 0, // Updated to match QualiaState schema
               aggression: 0,
               flow: 0,
               chaos: 0,
@@ -176,7 +219,7 @@ export class GameStateStoreService {
           },
           qualiaState: {
             intensity: 0,
-            precision: 0,
+            focus_level: 0, // Updated to match QualiaState schema
             aggression: 0,
             flow: 0,
             chaos: 0,
@@ -237,12 +280,12 @@ export class GameStateStoreService {
     }));
   }
 
+  // === UTILITY METHODS ===
+
   /**
-   * Get service status
+   * Set the store setter function (for initialization after IoC container setup)
    */
-  @logMethod()
-  @catchError()
-  getStatus(): "stopped" | "running" {
-    return this.isStarted ? "running" : "stopped";
+  public setStoreSetter(setStore: StoreSetter): void {
+    (this as any).setStore = setStore;
   }
 }

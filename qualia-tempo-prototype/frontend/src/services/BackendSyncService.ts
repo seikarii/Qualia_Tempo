@@ -1,14 +1,10 @@
 /**
- * QUALIA.CODE v1.0 - BackendSyncService
+ * QUALIA.CODE v1.1 - BackendSyncService
  * Service responsible for synchronizing frontend state with backend via EventBus.
- *
- * Architecture:
- * - Event-driven synchronization triggered by state changes
- * - Throttled API calls to prevent backend overload
- * - Error recovery and retry mechanisms
- * - Configurable sync intervals and batch sizes
  */
 
+import { injectable, inject } from 'inversify';
+import { TYPES } from './inversify.types';
 import {
   EventBus,
   EventHandler,
@@ -19,6 +15,10 @@ import type { QualiaStateUpdatedEvent } from './EventBus';
 import { logMethod, catchError, validateEventProperty } from '../utils/decorators';
 import type { BackendSyncConfig } from './ConfigurationService';
 import { QualiaLogger } from './Logger';
+import type { IBackendSyncService } from './interfaces/IBackendSyncService';
+import type { IEventBus } from './interfaces/IEventBus';
+import type { ILogger } from './interfaces/ILogger';
+import type { IConfigurationService } from './interfaces/IConfigurationService';
 
 // Backend synchronization event interface - REMOVED: Using EventBus definition
 
@@ -29,7 +29,7 @@ import { QualiaLogger } from './Logger';
 // API request/response types
 export interface QualiaStateRequest {
   intensity: number;
-  precision: number;
+  focus_level: number;
   aggression: number;
   flow: number;
   chaos: number;
@@ -48,13 +48,15 @@ export interface ApiResponse<T = any> {
  * Service for synchronizing frontend state with backend API.
  * Handles throttled requests, error recovery, and connection management.
  */
-export class BackendSyncService {
+@injectable()
+export class BackendSyncService implements IBackendSyncService {
   private config: BackendSyncConfig;
   private eventListenerIds: string[] = [];
   private isRunning = false;
   private isConnected = false;
-  private eventBus: EventBus;
-  private logger: QualiaLogger;
+  private eventBus: IEventBus;
+  private logger: ILogger;
+  private configService: IConfigurationService;
 
   // Throttling state
   private lastSyncTime = 0;
@@ -66,14 +68,15 @@ export class BackendSyncService {
   private healthCheckIntervalId: number | null = null;
 
   constructor(
-    eventBus: EventBus,
-    logger: QualiaLogger,
-    config: BackendSyncConfig
+    @inject(TYPES.IEventBus) eventBus: IEventBus,
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
+    this.configService = configService;
 
-    this.config = config;
+    this.config = this.configService.getBackendConfig();
     // Store health check interval for later use
     this.healthCheckInterval = this.config.connection.healthCheckInterval;
 
@@ -83,6 +86,8 @@ export class BackendSyncService {
   /**
    * Start the sync service and begin listening to events.
    */
+  @logMethod()
+  @catchError()
   public async start(): Promise<void> {
     const startTime = performance.now();
     this.logger.info("🚀 [BackendSync] Start called");
@@ -136,6 +141,8 @@ export class BackendSyncService {
   /**
    * Stop the sync service and clean up resources.
    */
+  @logMethod()
+  @catchError()
   public stop(): void {
     const startTime = performance.now();
     this.logger.info("🛑 [BackendSync] Stop called");
@@ -278,7 +285,7 @@ export class BackendSyncService {
 
     const qualiaRequest: QualiaStateRequest = {
       intensity: event.qualiaState.intensity || 0,
-      precision: event.qualiaState.precision || 0,
+      focus_level: event.qualiaState.focus_level || 0,
       aggression: event.qualiaState.aggression || 0,
       flow: event.qualiaState.flow || 0,
       chaos: event.qualiaState.chaos || 0,
@@ -460,6 +467,67 @@ export class BackendSyncService {
       }
 
       throw error;
+    }
+  }
+
+  // ===== INTERFACE COMPLIANCE METHODS =====
+
+  /**
+   * Synchronize QualiaState with backend.
+   * @param state The QualiaState to sync
+   * @returns Promise that resolves when sync is complete
+   */
+  @logMethod()
+  @catchError()
+  public async syncQualiaState(state: QualiaState): Promise<void> {
+    const qualiaRequest: QualiaStateRequest = {
+      intensity: state.intensity || 0,
+      focus_level: state.focus_level || 0,
+      aggression: state.aggression || 0,
+      flow: state.flow || 0,
+      chaos: state.chaos || 0,
+      recovery: state.recovery || 0,
+      transcendence: state.transcendence || 0,
+    };
+
+    await this.makeRequest<any>('/api/qualia/state', 'POST', qualiaRequest);
+  }
+
+  /**
+   * Get service status and statistics.
+   * @returns Object containing service metrics
+   */
+  @logMethod()
+  public getStatus(): {
+    isRunning: boolean;
+    isConnected: boolean;
+    lastSyncTime: Date | null;
+    syncCount: number;
+    errorCount: number;
+    avgSyncTime: number;
+  } {
+    return {
+      isRunning: this.isHealthCheckActive,
+      isConnected: this.isBackendConnected(),
+      lastSyncTime: null, // To be implemented with actual tracking
+      syncCount: 0, // To be implemented with actual tracking
+      errorCount: 0, // To be implemented with actual tracking
+      avgSyncTime: 0, // To be implemented with actual tracking
+    };
+  }
+
+  /**
+   * Manually test the backend connection.
+   * @returns Promise that resolves with connection status
+   */
+  @logMethod()
+  @catchError()
+  public async testConnection(): Promise<boolean> {
+    try {
+      await this.makeRequest<any>('/api/health', 'GET');
+      return true;
+    } catch {
+      return false;
     }
   }
 }

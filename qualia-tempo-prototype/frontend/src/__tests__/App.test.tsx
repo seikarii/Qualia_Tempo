@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { jest } from "@jest/globals";
 import App from "../App";
 import { useGameStore } from "../state/useGameStore";
-import { useServices } from "../services/hooks";
+import { useService } from "../services/hooks";
 
 // Mock the hooks
 jest.mock("../state/useGameStore");
