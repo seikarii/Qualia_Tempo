@@ -388,10 +388,7 @@ describe('ConfigurationService', () => {
     });
 
     it('should return true when configuration is loaded', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        text: jest.fn().mockResolvedValue('config: data')
-      });
+      mockFetch.mockResolvedValue(createMockResponse({ ok: true, text: 'config: data' }));
       mockYamlLoad.mockReturnValue(mockConfig);
       
       await configService.loadConfig();
@@ -404,10 +401,7 @@ describe('ConfigurationService', () => {
       const invalidConfig = { ...mockConfig };
       invalidConfig.audio = { volume: 'invalid' as any, enableSubtitles: true };
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        text: jest.fn().mockResolvedValue('config: data')
-      });
+      mockFetch.mockResolvedValue(createMockResponse({ ok: true, text: 'config: data' }));
       mockYamlLoad.mockReturnValue(invalidConfig);
 
       await expect(configService.loadConfig()).rejects.toThrow('Invalid audio configuration');
@@ -417,10 +411,7 @@ describe('ConfigurationService', () => {
       const invalidConfig = { ...mockConfig };
       delete invalidConfig.qualia;
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        text: jest.fn().mockResolvedValue('config: data')
-      });
+      mockFetch.mockResolvedValue(createMockResponse({ ok: true, text: 'config: data' }));
       mockYamlLoad.mockReturnValue(invalidConfig);
 
       await expect(configService.loadConfig()).rejects.toThrow('Invalid qualia configuration');
@@ -430,20 +421,14 @@ describe('ConfigurationService', () => {
       const invalidConfig = { ...mockConfig };
       invalidConfig.backend = { ...mockConfig.backend, baseUrl: '' };
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        text: jest.fn().mockResolvedValue('config: data')
-      });
+      mockFetch.mockResolvedValue(createMockResponse({ ok: true, text: 'config: data' }));
       mockYamlLoad.mockReturnValue(invalidConfig);
 
       await expect(configService.loadConfig()).rejects.toThrow('Invalid backend configuration');
     });
 
     it('should pass validation with valid configuration', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        text: jest.fn().mockResolvedValue('config: data')
-      });
+      mockFetch.mockResolvedValue(createMockResponse({ ok: true, text: 'config: data' }));
       mockYamlLoad.mockReturnValue(mockConfig);
 
       await expect(configService.loadConfig()).resolves.toEqual(mockConfig);
@@ -460,10 +445,7 @@ describe('ConfigurationService', () => {
     });
 
     it('should handle malformed YAML gracefully', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        text: jest.fn().mockResolvedValue('invalid yaml content')
-      });
+      mockFetch.mockResolvedValue(createMockResponse({ ok: true, text: 'invalid yaml content' }));
       
       mockYamlLoad.mockImplementation(() => {
         throw new Error('Malformed YAML');
@@ -478,10 +460,7 @@ describe('ConfigurationService', () => {
         // Missing other required sections
       };
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        text: jest.fn().mockResolvedValue('partial: config')
-      });
+      mockFetch.mockResolvedValue(createMockResponse({ ok: true, text: 'partial: config' }));
       mockYamlLoad.mockReturnValue(partialConfig);
 
       await expect(configService.loadConfig()).rejects.toThrow();
@@ -490,10 +469,7 @@ describe('ConfigurationService', () => {
 
   describe('Multiple Load Operations', () => {
     it('should handle multiple load calls correctly', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        text: jest.fn().mockResolvedValue('config: data')
-      });
+      mockFetch.mockResolvedValue(createMockResponse({ ok: true, text: 'config: data' }));
       mockYamlLoad.mockReturnValue(mockConfig);
 
       // Load twice
@@ -516,20 +492,14 @@ describe('ConfigurationService', () => {
       updatedConfig.audio.volume = 0.5; // Different value
 
       // First load
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: jest.fn().mockResolvedValue('original: config')
-      } as any);
+      mockFetch.mockResolvedValueOnce(createMockResponse({ ok: true, text: 'original: config' }));
       mockYamlLoad.mockReturnValueOnce(originalConfig);
       
       const result1 = await freshService.loadConfig();
       expect(result1.audio.volume).toBe(0.8);
 
       // Second load with updated config
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        text: jest.fn().mockResolvedValue('updated: config')
-      } as any);
+      mockFetch.mockResolvedValueOnce(createMockResponse({ ok: true, text: 'updated: config' }));
       mockYamlLoad.mockReturnValueOnce(updatedConfig);
       
       const result2 = await freshService.loadConfig();

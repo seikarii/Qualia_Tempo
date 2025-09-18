@@ -1,226 +1,78 @@
-/**
- * QUALIA.CODE v1.0 - Service Hooks Tests
- * Test suite for React hooks that provide access to services.
- */
+import { renderHook } from "@testing-library/react";
+import { Container } from "inversify";
+import { useService } from "../services/hooks";
+import { TYPES } from "../services/inversify.types";
+import { IEventBus } from "../services/interfaces/IEventBus";
 
-import React from "react";
-import { render } from "@testing-library/react";
-import {
-  useService,
-  useEventBus,
-  useQualiaCalculator,
-  useBackendSync,
-  useGameController,
-} from "../services/hooks";
+// Mock the container
+let container: Container;
 
-// Mock services
-jest.mock("../services/EventBus");
-jest.mock("../services/QualiaStateCalculatorService");
-jest.mock("../services/BackendSyncService");
-jest.mock("../services/GameControllerService");
+// Complete mock EventBus implementation
+const mockEventBus: IEventBus = {
+  emit: jest.fn(),
+  subscribe: jest.fn().mockReturnValue('listener-id'),
+  unsubscribe: jest.fn(),
+  clear: jest.fn(),
+  destroy: jest.fn(),
+  getStats: jest.fn().mockReturnValue({
+    totalListeners: 0,
+    eventTypes: [],
+    historySize: 0,
+    isDestroyed: false,
+  }),
+};
 
-describe("Service Hooks", () => {
-  describe("useServices", () => {
-    test("should provide access to all services", () => {
-      const mockServices = {
-        eventBus: {},
-        qualiaCalculator: {},
-        backendSync: {},
-        errorReporting: {},
-        debugService: {},
-        gameController: {},
-      };
+// Mock the actual container module
+jest.mock('../services/inversify.config', () => {
+  const mockContainer = {
+    get: jest.fn().mockImplementation((type: symbol) => {
+      if (type === TYPES.IEventBus) {
+        return mockEventBus;
+      }
+      throw new Error(`Unmocked service type: ${type.toString()}`);
+    }),
+  };
+  return { container: mockContainer };
+});
 
-      // Mock the context
-      const mockUseContext = jest.spyOn(React, "useContext");
-      mockUseContext.mockReturnValue(mockServices);
-
-      let services: any;
-      const TestComponent = () => {
-        services = useServices();
-        return null;
-      };
-
-      render(<TestComponent />);
-
-      expect(services).toBe(mockServices);
-      mockUseContext.mockRestore();
-    });
-
-    test("should throw error when used outside provider", () => {
-      // Mock the ServiceContext to return undefined (no provider)
-      const mockUseContext = jest.spyOn(React, "useContext");
-      mockUseContext.mockReturnValueOnce(undefined);
-
-      expect(() => {
-        const TestComponent = () => {
-          useServices();
-          return null;
-        };
-        render(<TestComponent />);
-      }).toThrow("useServices must be used within a CompositionRootProvider");
-
-      mockUseContext.mockRestore();
-    });
+describe('useService Hook', () => {
+  beforeEach(() => {
+    container = new Container();
+    container.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
+    jest.clearAllMocks();
   });
 
-  describe("Individual Service Hooks", () => {
-    const mockServices = {
-      eventBus: { emit: jest.fn() },
-      qualiaCalculator: { calculateState: jest.fn() },
-      backendSync: { isBackendConnected: jest.fn() },
-      errorReporting: { logError: jest.fn() },
-      debugService: { logDebug: jest.fn() },
-      gameController: { start: jest.fn() },
-    };
-
-    beforeEach(() => {
-      // Mock the context to return our mock services
-      const mockUseContext = jest.spyOn(React, "useContext");
-      mockUseContext.mockReturnValue(mockServices);
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
-    test("useEventBus should return eventBus service", () => {
-      let eventBus: any;
-      const TestComponent = () => {
-        eventBus = useEventBus();
-        return null;
-      };
-
-      render(<TestComponent />);
-
-      expect(eventBus).toBe(mockServices.eventBus);
-    });
-
-    test("useQualiaCalculator should return qualiaCalculator service", () => {
-      let qualiaCalculator: any;
-      const TestComponent = () => {
-        qualiaCalculator = useQualiaCalculator();
-        return null;
-      };
-
-      render(<TestComponent />);
-
-      expect(qualiaCalculator).toBe(mockServices.qualiaCalculator);
-    });
-
-    test("useBackendSync should return backendSync service", () => {
-      let backendSync: any;
-      const TestComponent = () => {
-        backendSync = useBackendSync();
-        return null;
-      };
-
-      render(<TestComponent />);
-
-      expect(backendSync).toBe(mockServices.backendSync);
-    });
-
-    test("useGameController should return gameController service", () => {
-      let gameController: any;
-      const TestComponent = () => {
-        gameController = useGameController();
-        return null;
-      };
-
-      render(<TestComponent />);
-
-      expect(gameController).toBe(mockServices.gameController);
-    });
+  it('should resolve service from IoC container', () => {
+    const { result } = renderHook(() => useService<IEventBus>(TYPES.IEventBus));
+    
+    expect(result.current).toBeDefined();
+    expect(result.current).toBe(mockEventBus);
   });
 
-  describe("Integration with CompositionRootProvider", () => {
-    test("hooks should work within provider context", () => {
-      const mockServices = {
-        eventBus: { emit: jest.fn() },
-        qualiaCalculator: { getCurrentState: jest.fn() },
-        backendSync: { isBackendConnected: jest.fn() },
-        errorReporting: { logError: jest.fn() },
-        debugService: { logDebug: jest.fn() },
-        gameController: { start: jest.fn() },
-      };
-
-      // Mock the context to return services immediately
-      const mockUseContext = jest.spyOn(React, "useContext");
-      mockUseContext.mockReturnValue(mockServices);
-
-      const TestComponent = () => {
-        const services = useServices();
-        const eventBus = useEventBus();
-        const backendSync = useBackendSync();
-
-        return (
-          <div>
-            <div data-testid="services">
-              {services ? "services-available" : "no-services"}
-            </div>
-            <div data-testid="eventBus">
-              {eventBus ? "eventBus-available" : "no-eventBus"}
-            </div>
-            <div data-testid="backendSync">
-              {backendSync ? "backendSync-available" : "no-backendSync"}
-            </div>
-          </div>
-        );
-      };
-
-      const { getByTestId } = render(<TestComponent />);
-
-      expect(getByTestId("services")).toHaveTextContent("services-available");
-      expect(getByTestId("eventBus")).toHaveTextContent("eventBus-available");
-      expect(getByTestId("backendSync")).toHaveTextContent(
-        "backendSync-available",
-      );
-
-      mockUseContext.mockRestore();
-    });
+  it('should maintain service instance across multiple calls', () => {
+    const { result: result1 } = renderHook(() => useService<IEventBus>(TYPES.IEventBus));
+    const { result: result2 } = renderHook(() => useService<IEventBus>(TYPES.IEventBus));
+    
+    expect(result1.current).toBe(result2.current);
   });
 
-  describe("QUALIA.CODE Compliance", () => {
-    test("should follow hook naming conventions", () => {
-      // Test that hooks follow the 'use' prefix convention
-      expect(useServices.name.startsWith("use")).toBe(true);
-      expect(useEventBus.name.startsWith("use")).toBe(true);
-      expect(useQualiaCalculator.name.startsWith("use")).toBe(true);
-      expect(useBackendSync.name.startsWith("use")).toBe(true);
-      expect(useGameController.name.startsWith("use")).toBe(true);
-    });
+  it('should throw error for unregistered service types', () => {
+    const UNKNOWN_TYPE = Symbol.for("UnknownService");
+    
+    expect(() => {
+      renderHook(() => useService(UNKNOWN_TYPE));
+    }).toThrow();
+  });
 
-    test("should provide type-safe service access", () => {
-      const mockUseContext = jest.spyOn(React, "useContext");
-      const mockServices = {
-        eventBus: { emit: jest.fn() },
-        qualiaCalculator: { getCurrentState: jest.fn() },
-        backendSync: { isBackendConnected: jest.fn() },
-        errorReporting: { logError: jest.fn() },
-        debugService: { logDebug: jest.fn() },
-        gameController: { start: jest.fn() },
-      };
-      mockUseContext.mockReturnValue(mockServices);
-
-      // These should not throw TypeScript errors
-      const TestComponent = () => {
-        const eventBus = useEventBus();
-        const qualiaCalculator = useQualiaCalculator();
-        const backendSync = useBackendSync();
-        const gameController = useGameController();
-
-        // Type check: these should be the correct types
-        expect(typeof eventBus.emit).toBe("function");
-        expect(typeof qualiaCalculator.getCurrentState).toBe("function");
-        expect(typeof backendSync.isBackendConnected).toBe("function");
-        expect(typeof gameController.start).toBe("function");
-
-        return null;
-      };
-
-      expect(() => render(<TestComponent />)).not.toThrow();
-
-      mockUseContext.mockRestore();
-    });
+  it('should provide functional service interface', () => {
+    const { result } = renderHook(() => useService<IEventBus>(TYPES.IEventBus));
+    
+    // Test service methods are available
+    expect(typeof result.current.emit).toBe('function');
+    expect(typeof result.current.subscribe).toBe('function');
+    expect(typeof result.current.unsubscribe).toBe('function');
+    expect(typeof result.current.clear).toBe('function');
+    expect(typeof result.current.destroy).toBe('function');
+    expect(typeof result.current.getStats).toBe('function');
   });
 });

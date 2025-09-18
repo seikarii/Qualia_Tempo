@@ -6,7 +6,7 @@
 import { NotificationService } from '../NotificationService';
 import { EventBus, ErrorEvent, BackendSyncEvent } from '../EventBus';
 import { QualiaLogger } from '../Logger';
-import { ConfigurationService } from '../ConfigurationService';
+import { NotificationServiceConfig } from '../ConfigurationService';
 
 // Mock decorators
 jest.mock('../../utils/decorators', () => ({
@@ -19,7 +19,7 @@ describe('NotificationService', () => {
   let mockEventBus: jest.Mocked<EventBus>;
   let mockLogger: jest.Mocked<QualiaLogger>;
   let mockSetStore: jest.Mock;
-  let mockConfigService: jest.Mocked<ConfigurationService>;
+  let mockConfig: NotificationServiceConfig;
 
   beforeEach(() => {
     // Create comprehensive EventBus mock
@@ -43,26 +43,59 @@ describe('NotificationService', () => {
     // Create mock store setter
     mockSetStore = jest.fn();
 
-    // Create mock ConfigurationService
-    mockConfigService = {
-      getLoggingConfig: jest.fn().mockReturnValue({
-        messages: {
-          notificationService: {
-            initialized: '🔔 [NotificationService] Service initialized',
-            alreadyStarted: '⚠️ [NotificationService] Service already started',
-            startingListeners: '👂 [NotificationService] Starting event listeners...',
-            listenersActive: '✅ [NotificationService] Event listeners active',
-            notStarted: '⚠️ [NotificationService] Service not started',
-            stoppingListeners: '🔇 [NotificationService] Stopping event listeners...',
-            listenersStopped: '✅ [NotificationService] Event listeners stopped',
-            processingErrorEvent: '🚨 [NotificationService] Processing ErrorEvent:',
-            errorNotificationGenerated: '🔔 [NotificationService] Error notification generated',
-            processingBackendSyncEvent: '🔄 [NotificationService] Processing BackendSyncEvent:',
-            configSyncNotificationGenerated: '🔔 [NotificationService] Config sync notification generated',
-          },
-        },
-      }),
-    } as any;
+    // Create mock NotificationServiceConfig
+    mockConfig = {
+      display: {
+        enableNotifications: true,
+        maxVisibleNotifications: 5,
+        notificationDuration: 3000,
+        enableAnimations: true,
+        animationDuration: 300,
+      },
+      positioning: {
+        position: 'top-right',
+        offsetX: 20,
+        offsetY: 20,
+        zIndex: 1000,
+      },
+      styling: {
+        enableThemes: true,
+        defaultTheme: 'default',
+        enableCustomStyling: false,
+        borderRadius: 8,
+        shadowEnabled: true,
+      },
+      sound: {
+        enableNotificationSounds: false,
+        defaultSoundVolume: 0.5,
+        enableSoundVariations: false,
+      },
+      types: {
+        success: { duration: 3000, soundEnabled: false, color: '#22c55e' },
+        error: { duration: 5000, soundEnabled: true, color: '#ef4444' },
+        warning: { duration: 4000, soundEnabled: false, color: '#f59e0b' },
+        info: { duration: 3000, soundEnabled: false, color: '#3b82f6' },
+      },
+      queue: {
+        enableQueueing: true,
+        maxQueueSize: 10,
+        queueProcessingInterval: 100,
+      },
+      accessibility: {
+        enableScreenReader: false,
+        enableHighContrast: false,
+        enableReducedMotion: false,
+        enableKeyboardNavigation: false,
+      },
+      performance: {
+        enablePooling: true,
+        maxPoolSize: 50,
+        enableGarbageCollection: true,
+        gcInterval: 30000,
+      },
+      maxNotifications: 5,
+      defaultDuration: 3000,
+    };
 
     // Spy on console methods
     jest.spyOn(console, 'log').mockImplementation();
@@ -72,7 +105,7 @@ describe('NotificationService', () => {
       mockEventBus,
       mockLogger,
       mockSetStore,
-      mockConfigService
+      mockConfig
     );
   });
 
@@ -150,7 +183,7 @@ describe('NotificationService', () => {
         mockEventBus,
         mockLogger,
         mockSetStore,
-        mockConfigService
+        mockConfig
       );
 
       await newService.stop();
