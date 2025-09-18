@@ -53,6 +53,41 @@ Este plan detalla la refactorización completa del sistema Qualia Tempo para imp
 
 ---
 
+## 🏗️ **FASE 0: PREPARACIÓN - ARCHIVO BARREL (15 min)**
+
+### **0.1 Crear Archivo Barrel (index.ts)**
+
+```typescript
+// RUTA: /frontend/src/services/index.ts
+
+// Exportar el contenedor para uso en tests
+export { container } from './inversify.container';
+
+// Exportar los tipos para inyección
+export { TYPES } from './inversify.types';
+
+// Exportar todas las interfaces para los consumidores
+export * from './interfaces/IEventBus';
+export * from './interfaces/ILogger';
+export * from './interfaces/IConfigurationService';
+export * from './interfaces/IQualiaStateCalculatorService';
+export * from './interfaces/IBackendSyncService';
+export * from './interfaces/IAudioService';
+export * from './interfaces/IGameControllerService';
+export * from './interfaces/IGameStateStoreService';
+export * from './interfaces/INotificationService';
+export * from './interfaces/IErrorReportingService';
+export * from './interfaces/IDebugService';
+export * from './interfaces/IRhythmicMovementController';
+
+// Exportar implementaciones para casos especiales (tests, etc.)
+export { EventBus } from './EventBus';
+export { QualiaLogger } from './Logger';
+export { ConfigurationService } from './ConfigurationService';
+```
+
+---
+
 ## 🏗️ **FASE 1: CREACIÓN DE INTERFACES (30 min)**
 
 ### **1.1 Frontend Interfaces**
@@ -241,11 +276,20 @@ import { ErrorReportingService } from './ErrorReportingService';
 import { DebugService } from './DebugService';
 import { RhythmicMovementController } from './RhythmicMovementController';
 
+// Import Zustand store
+import { useGameStore } from '../state/useGameStore';
+
 // Bind all services
 container.bind<IEventBus>(TYPES.IEventBus).to(EventBus).inSingletonScope();
 container.bind<ILogger>(TYPES.ILogger).to(QualiaLogger).inSingletonScope();
+
+// ConfigurationService needs special handling (async loading)
 container.bind<IConfigurationService>(TYPES.IConfigurationService).to(ConfigurationService).inSingletonScope();
 
+// Bind store setter for GameStateStoreService
+container.bind(TYPES.StoreSetter).toConstantValue(useGameStore.setState);
+
+// Bind all other services
 container.bind<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService).to(QualiaStateCalculatorService).inSingletonScope();
 container.bind<IBackendSyncService>(TYPES.IBackendSyncService).to(BackendSyncService).inSingletonScope();
 container.bind<IAudioService>(TYPES.IAudioService).to(AudioService).inSingletonScope();
@@ -431,72 +475,29 @@ class QualiaProcessor(IQualiaProcessor):
 
 ---
 
-## 🏗️ **FASE 4: REFACTORIZACIÓN DE COMPOSITION ROOT (45 min)**
+## 🏗️ **FASE 4: ELIMINACIÓN DEL COMPOSITION ROOT MANUAL (30 min)**
 
-### **4.1 Frontend CompositionRoot**
+### **4.1 ❌ ELIMINAR CompositionRoot.ts**
 
-```typescript
-// CompositionRoot.ts - REFACTORIZADO
-import 'reflect-metadata';
-import { container } from './inversify.container';
-import { TYPES } from './inversify.types';
+**ACCIÓN CRÍTICA:** Eliminar completamente el archivo `/frontend/src/services/CompositionRoot.ts`
 
-// Import interfaces for type safety
-import { IEventBus } from './interfaces/IEventBus';
-import { ILogger } from './interfaces/ILogger';
-import { IConfigurationService } from './interfaces/IConfigurationService';
-// ... otros imports
+**JUSTIFICACIÓN:** 
+- El contenedor de InversifyJS (`inversify.config.ts`) ES el nuevo Composition Root
+- Mantener CompositionRoot.ts crea un Service Locator anti-patrón
+- Las responsabilidades se distribuyen:
+  - **Bindings:** `inversify.config.ts`
+  - **Consumo:** Hook `useService<T>()`
 
-export class CompositionRoot {
-  private config: CompositionRootConfig;
-  private serviceStatus: ServiceStatus;
-  private healthMonitoringIntervalId: number | null = null;
-  private initializationRetryCount = 0;
+### **4.2 ❌ ELIMINAR CompositionRootProvider**
 
-  constructor(
-    private readonly _configService: ConfigurationService,
-    logger?: QualiaLogger
-  ) {
-    // ... validaciones existentes
+**ACCIÓN CRÍTICA:** Eliminar el archivo `/frontend/src/services/CompositionRoot.provider.tsx`
 
-    // Initialize Inversify container
-    this.initializeContainer();
-  }
+**JUSTIFICACIÓN:**
+- Ya no es necesario pasar instancias manualmente
+- Los hooks resuelven servicios directamente del contenedor
+- Elimina acoplamiento innecesario en el árbol de componentes
 
-  private initializeContainer(): void {
-    // Bind configuration service (already exists)
-    container.bind<IConfigurationService>(TYPES.IConfigurationService).toConstantValue(this._configService);
-
-    // Bind logger
-    const logger = new QualiaLogger('QualiaTempo', LogLevel.INFO);
-    container.bind<ILogger>(TYPES.ILogger).toConstantValue(logger);
-
-    // Bind store setter for GameStateStoreService
-    container.bind(TYPES.StoreSetter).toConstantValue(useGameStore.setState);
-  }
-
-  async initialize(): Promise<void> {
-    // Get services from container instead of manual instantiation
-    const eventBus = container.get<IEventBus>(TYPES.IEventBus);
-    const qualiaCalculator = container.get<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService);
-    const backendSync = container.get<IBackendSyncService>(TYPES.IBackendSyncService);
-    // ... get all other services
-
-    // Start services
-    await qualiaCalculator.start();
-    await backendSync.start();
-    // ... start all services
-
-    this.logger.info("✅ All services initialized via InversifyJS container");
-  }
-
-  getService<T>(serviceType: symbol): T {
-    return container.get<T>(serviceType);
-  }
-}
-```
-
-### **4.2 Backend CompositionRoot**
+### **4.3 ✅ ACTUALIZAR Backend CompositionRoot**
 
 ```python
 # CompositionRoot.py - REFACTORIZADO
@@ -542,7 +543,7 @@ export const useService = <T>(serviceType: symbol): T => {
   try {
     return container.get<T>(serviceType);
   } catch (error) {
-    throw new Error(`Service ${serviceType.toString()} not found in IoC container`);
+    throw new Error(`Service ${'''${serviceType.toString()}'''} not found in IoC container`);
   }
 };
 
@@ -575,63 +576,71 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({ ... }) => {
 
 ---
 
-## 🏗️ **FASE 6: CONFIGURACIÓN Y BOOTSTRAP (30 min)**
+## 🏗️ **FASE 6: BOOTSTRAP SIMPLIFICADO (30 min)**
 
-### **6.1 Frontend Bootstrap**
+### **6.1 ✅ Frontend Bootstrap - CORREGIDO**
 
 ```typescript
-// /frontend/src/main.ts - ACTUALIZADO
+// /frontend/src/index.tsx - CORREGIDO Y SIMPLIFICADO
 import 'reflect-metadata'; // IMPORTANTE: Debe ser el primer import
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+
+// Importar la configuración del contenedor (ejecuta bindings)
+import './services/inversify.config';
+
+// Importar componentes principales
 import App from './App';
 import './index.css';
 
-// Initialize InversifyJS container
-import './services/inversify.config';
-
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
-
-root.render(
+// Renderizar aplicación - El contenedor ya está listo
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
 );
 ```
 
+### **6.2 ✅ App.tsx - Gestión de Configuración Asíncrona**
+
 ```typescript
-// /frontend/src/index.tsx - ACTUALIZADO
-import 'reflect-metadata'; // IMPORTANTE: Debe ser el primer import
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { CompositionRootProvider } from './services/CompositionRoot.provider';
-import App from './App';
+// /frontend/src/App.tsx - GESTIÓN DE CONFIGURACIÓN
+import { useService } from './services/hooks';
+import { TYPES, IConfigurationService } from './services';
+import { useEffect, useState } from 'react';
+import QualiaTempoGame from './components/game/QualiaTempoGame';
 
-// Initialize configuration FIRST (before any service instantiation)
-import { ConfigurationService } from './services/ConfigurationService';
-const configService = new ConfigurationService();
-await configService.loadConfig();
+function App() {
+  const configService = useService<IConfigurationService>(TYPES.IConfigurationService);
+  const [isConfigLoaded, setConfigLoaded] = useState(false);
 
-// Initialize InversifyJS container
-import './services/inversify.config';
+  useEffect(() => {
+    // Cargar configuración de forma asíncrona
+    configService.loadConfig().then(() => {
+      setConfigLoaded(true);
+    }).catch((error) => {
+      console.error('Failed to load configuration:', error);
+      // Aquí podrías mostrar un error o usar configuración por defecto
+    });
+  }, [configService]);
 
-// Create CompositionRoot with loaded configuration
-import { CompositionRoot } from './services/CompositionRoot';
-const compositionRoot = new CompositionRoot(configService);
-await compositionRoot.initialize();
+  // Mostrar loading mientras se carga la configuración
+  if (!isConfigLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl">Loading configuration...</div>
+      </div>
+    );
+  }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <CompositionRootProvider compositionRoot={compositionRoot}>
-      <App />
-    </CompositionRootProvider>
-  </React.StrictMode>,
-);
+  // Una vez cargada la configuración, renderizar la aplicación
+  return <QualiaTempoGame />;
+}
+
+export default App;
 ```
 
-### **6.2 Backend Bootstrap**
+### **6.3 ✅ Backend Bootstrap**
 
 ```python
 # /backend/main.py - ACTUALIZADO
@@ -721,6 +730,14 @@ describe('QualiaStateCalculatorService Integration', () => {
 - [ ] Backend funciona con nuevo sistema
 - [ ] Tests pasan
 
+### **✅ Requisitos Arquitectónicos - CORREGIDOS**
+- [ ] ❌ **ELIMINADO:** CompositionRoot.ts manual
+- [ ] ❌ **ELIMINADO:** CompositionRootProvider
+- [ ] ✅ **NUEVO:** inversify.config.ts como único Composition Root
+- [ ] ✅ **NUEVO:** useService<T>() hook directo al contenedor
+- [ ] ✅ **NUEVO:** Archivo barrel (index.ts) para importaciones limpias
+- [ ] ✅ **NUEVO:** Bootstrap simplificado sin instanciación manual
+
 ### **✅ Requisitos No Funcionales**
 - [ ] Sin instanciación manual (`new Service()`)
 - [ ] Configuración externa completa
@@ -731,19 +748,27 @@ describe('QualiaStateCalculatorService Integration', () => {
 
 ---
 
-## 🚨 **RIESGOS Y MITIGACIONES**
+## 🚨 **CORRECCIONES CRÍTICAS APLICADAS**
 
-### **Riesgo 1: Errores de Dependencias Circulares**
-**Mitigación:** Crear interfaces primero, luego implementar servicios
+### **1. ❌ Eliminación del Service Locator Anti-Patrón**
+- **ANTES:** CompositionRoot.ts usaba `container.get<T>()` (Service Locator)
+- **DESPUÉS:** Contenedor InversifyJS es el único Composition Root
 
-### **Riesgo 2: Pérdida de Estado en Servicios**
-**Mitigación:** Mantener singletons donde sea necesario
+### **2. ❌ Eliminación del CompositionRootProvider**
+- **ANTES:** Provider pasaba instancias manualmente por el árbol de componentes
+- **DESPUÉS:** Hooks resuelven servicios directamente del contenedor
 
-### **Riesgo 3: Errores en Runtime por Container**
-**Mitigación:** Validar container en tiempo de compilación con tests
+### **3. ✅ Bootstrap Verdaderamente Simplificado**
+- **ANTES:** index.tsx creaba servicios manualmente y CompositionRoot
+- **DESPUÉS:** Solo importa configuración del contenedor y renderiza
 
-### **Riesgo 4: Performance Degradation**
-**Mitigación:** Usar singletons apropiadamente, lazy loading cuando sea necesario
+### **4. ✅ Gestión Asíncrona de Configuración**
+- **ANTES:** Bloqueaba el renderizado de la aplicación
+- **DESPUÉS:** App.tsx maneja la carga asíncrona con loading state
+
+### **5. ✅ Archivo Barrel para Importaciones Limpias**
+- **ANTES:** Importaciones largas y repetitivas
+- **DESPUÉS:** `import { TYPES, useService } from './services'`
 
 ---
 
@@ -753,6 +778,8 @@ describe('QualiaStateCalculatorService Integration', () => {
 - ✅ **100% de servicios** con interfaces
 - ✅ **100% de dependencias** inyectadas automáticamente
 - ✅ **0 instanciación manual** en CompositionRoot
+- ✅ **0 Service Locator** anti-patrón
+- ✅ **0 CompositionRootProvider** innecesario
 - ✅ **Tests pasando** para todos los servicios
 - ✅ **Aplicación funcionando** sin regressions
 
@@ -760,13 +787,14 @@ describe('QualiaStateCalculatorService Integration', () => {
 
 ## 🎯 **SIGUIENTES PASOS**
 
-1. **Ejecutar Fase 1:** Crear todas las interfaces
-2. **Ejecutar Fase 2:** Configurar InversifyJS
-3. **Ejecutar Fase 3:** Refactorizar servicios uno por uno
-4. **Ejecutar Fase 4:** Actualizar CompositionRoot
-5. **Ejecutar Fase 5:** Migrar componentes
-6. **Ejecutar Fase 6:** Actualizar bootstrap
-7. **Ejecutar Fase 7:** Testing y validación
+1. **Ejecutar Fase 0:** Crear archivo barrel (index.ts)
+2. **Ejecutar Fase 1:** Crear todas las interfaces
+3. **Ejecutar Fase 2:** Configurar InversifyJS
+4. **Ejecutar Fase 3:** Refactorizar servicios uno por uno
+5. **Ejecutar Fase 4:** Eliminar CompositionRoot.ts y provider
+6. **Ejecutar Fase 5:** Migrar componentes
+7. **Ejecutar Fase 6:** Actualizar bootstrap
+8. **Ejecutar Fase 7:** Testing y validación
 
 **Tiempo total estimado:** 4-6 horas
 **Equipo requerido:** 1 desarrollador fullstack
@@ -774,4 +802,4 @@ describe('QualiaStateCalculatorService Integration', () => {
 
 ---
 
-**🏆 RESULTADO FINAL:** Sistema completamente desacoplado con InversifyJS, 100% testeable, arquitectura limpia y mantenible.
+**🏆 RESULTADO FINAL:** Arquitectura InversifyJS pura, sin Service Locator, con verdadero IoC y gestión asíncrona de configuración.
