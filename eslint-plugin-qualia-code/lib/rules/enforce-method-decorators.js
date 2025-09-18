@@ -28,11 +28,8 @@ module.exports = {
   create(context) {
     const filename = context.getFilename();
 
-    // COMPLETELY DISABLE this rule for files using Inversify
-    if (filename.includes('migration-example.ts') ||
-        filename.includes('inversify') ||
-        filename.includes('Service.ts') ||
-        filename.includes('Service.tsx')) {
+    // COMPLETELY DISABLE this rule for files using Inversify during migration
+    if (filename.includes('migration-example.ts')) {
       return {};
     }
 

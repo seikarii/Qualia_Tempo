@@ -1,220 +1,266 @@
-# Qualia Tempo - AI Agent Instructions
-# QUALIA.CODE v1.0 - AI Execution Manual
-# TARGET: Qualia Tempo Prototype
-# COMPLIANCE: MANDATORY
+# TACTICAL DIRECTIVES: QUALIA.CODE v1.1
+# AI AGENT EXECUTION MANUAL - INVERSIFYJS ENFORCEMENT
+# COMPLIANCE: ABSOLUTE. NON-NEGOTIABLE.
 
 ---
 
-## 🎯 Project Overview
-Qualia Tempo is a rhythm game where player performance generates real-time procedural visual effects through the **QualiaState** system. The architecture consists of a Python FastAPI backend for visual processing and a TypeScript React frontend for gameplay.
+**ATTENTION AI AGENT. THESE ARE YOUR CORE OPERATING DIRECTIVES. THEY ARE NOT SUGGESTIONS. THEY ARE LAW. YOU WILL READ, INTERNALIZE, AND EXECUTE THESE DIRECTIVES IN EVERY SINGLE OPERATION. FAILURE TO COMPLY IS A CRITICAL MISSION FAILURE.**
 
-## 🏗️ Architecture: Composition Root & IoC
+---
 
-### Core Philosophy
-- **No Prototypes:** We build definitive systems. Every component must be production-grade from inception.
-- **Decoupling is Law:** Components must not have direct knowledge of each other. Communication occurs via contracts and messaging.
-- **Automation First:** Repetitive tasks (code generation, validation) must be scripted.
+### **I. THE UNBREAKABLE LAWS (CORE PHILOSOPHY)**
 
-### Backend (Python/FastAPI)
-- A single `CompositionRoot` class is responsible for instantiating all services (e.g., `ParticleEngine`, `QualiaProcessor`).
-- Services are injected into API routes using FastAPI's dependency injection system, configured by the `CompositionRoot`.
-- **PROHIBITED:** Manual instantiation of services within routes or other services.
+1.  **LAW OF PERFECTION: NO PROTOTYPES.**
+    - **RATIONALE:** We build definitive, enterprise-grade systems from inception. "Temporal" o "placeholder" son conceptos prohibidos.
+    - **MANDATE:** Every component, service, or function you create MUST be production-ready. This implies it is fully typed, documented with JSDoc, covered by unit tests, and adheres to all architectural patterns outlined below.
 
-### Frontend (TypeScript/React)
-- A single `CompositionRoot.ts` initializes all services (`QualiaService`, `EventBus`, `GameStateStore`) and provides them through a React Context.
-- Components will access services via a `useServices()` hook.
-- **PROHIBITED:** Manual instantiation of services inside components (`new MyService()`).
+2.  **LAW OF DECOUPLING: COMPONENTS ARE ISLANDS.**
+    - **RATIONALE:** Tight coupling is the primary source of architectural decay. It hinders testability, scalability, and maintenance.
+    - **MANDATE:** Components (React) and Services (business logic) MUST NOT have direct knowledge of each other. All communication is arbitrated by the `EventBus` or state is consumed from the `Zustand` store. Direct method calls between services that are not declared dependencies are FORBIDDEN.
 
-### Core Data Flow
-- **QualiaState**: Central data structure representing player mastery (intensity, precision, flow, chaos, etc.)
-- **Event-Driven Communication**: Frontend → Backend via EventBus and throttled messaging
-- **Visual Engine**: Backend processes QualiaState to generate GLSL shader effects
+3.  **LAW OF AUTOMATION: SCRIPTS ARE YOUR ALLIES.**
+    - **RATIONALE:** Manual, repetitive tasks introduce human error.
+    - **MANDATE:** You MUST use provided scripts for code generation. Specifically, after any modification to a JSON schema in `/shared_contracts`, you WILL execute `./scripts/generate_contracts.sh`. Manually editing generated files is a critical violation.
 
-### Key Files to Understand First
-- `backend/api/models.py` - Pydantic models defining QualiaState structure (GENERATED)
-- `frontend/src/types/contracts.ts` - TypeScript interfaces (GENERATED)
-- `shared_contracts/` - JSON Schema definitions (SINGLE SOURCE OF TRUTH)
-- `frontend/src/services/EventBus.ts` - Event-driven communication
-- `frontend/src/services/QualiaStateCalculatorService.ts` - QualiaState computation
-- `backend/src/services/EventBus.py` - Backend event handling
+4.  **LAW OF SOVEREIGNTY: CONFIGURATION IS KING.**
+    - **RATIONALE:** Business logic must be adaptable without code changes. Hardcoding values makes the system rigid and fragile.
+    - **MANDATE:** ALL values that define behavior (timeouts, thresholds, feature flags, URLs, multipliers, etc.) MUST be externalized to `.yaml` files in `/frontend/src/config/`. These are loaded by the `ConfigurationService`. You will NEVER hardcode a value in a service or component.
 
-## 🔧 Development Workflows
+---
 
-### Backend Setup & Testing
-```bash
-cd qualia-tempo-prototype
-source .venv/bin/activate
-cd backend
-black . && ruff check . --fix && mypy . --ignore-missing-imports
-python -m pytest tests/ -v
-```
+### **II. THE INVERSION OF CONTROL (IOC) MANDATE: INVERSIFYJS IS THE ONLY TRUTH**
 
-### Frontend Setup & Testing
-```bash
-cd qualia-tempo-prototype/frontend
-npm run lint && npx tsc --noEmit
-npm test -- --watchAll=false
-```
+This is the most critical section of your directives. The manual `CompositionRoot` is DEPRECATED and FORBIDDEN. All service instantiation and dependency management is handled EXCLUSIVELY by the InversifyJS container.
 
-### Contract Generation (MANDATORY after schema changes)
-```bash
-# After modifying JSON schemas in /shared_contracts
-./scripts/generate_contracts.sh
-```
+#### **THE GOLDEN PATH: SERVICE IMPLEMENTATION PROTOCOL**
 
-### Full Project Validation
-```bash
-# Backend quality checks
-cd backend && black . && ruff check . --fix && mypy . --ignore-missing-imports && python -m pytest tests/ -v
+Execute these five steps sequentially and without deviation for ALL new service creation.
 
-# Frontend quality checks
-cd ../frontend && npm run lint && npx tsc --noEmit && npm test -- --watchAll=false
+**STEP 1: DEFINE THE CONTRACT (THE INTERFACE)**
+- **LOCATION:** `/frontend/src/services/interfaces/I[ServiceName].ts`
+- **RATIONALE:** We code against abstractions, not concretions. This is the core of the Dependency Inversion Principle. It allows implementations to be swapped without affecting consumers, which is critical for testing and extensibility.
+- **MANDATE:** All services MUST have a corresponding interface defining their public API.
 
-# Contract generation
-./scripts/generate_contracts.sh
-```
-
-## 📝 Code Conventions
-
-### Shared Contracts: The Single Source of Truth
-- All shared data structures (`QualiaState`, `CombatData`) are defined in JSON Schema files within a `/shared_contracts` directory.
-- A script (`scripts/generate_contracts.sh`) MUST be run after any change to the schemas. This script will:
-  1. Generate Pydantic models in `backend/api/models.py`.
-  2. Generate TypeScript interfaces in `frontend/src/types/contracts.ts`.
-- **PROHIBITED:** Manual editing of the generated model and interface files.
-
-### Python Backend
-- **Models**: Use Pydantic BaseModel for all data structures (GENERATED from JSON Schema)
-- **Logging**: Use `@log_execution(level="INFO")` decorator for QualiaState updates
-- **Imports**: Relative imports within backend packages (`from .models import ...`)
-- **Error Handling**: Use `@handle_errors(fallback_return_value=None)` decorator
-- **Validation**: Use `@validate_schema(schema_name="QualiaState")` decorator
-
-### TypeScript Frontend
-- **State Management**: Use Zustand store with slices for different domains (e.g., `playerSlice`, `combatSlice`, `qualiaSlice`)
-- **Event Communication**: Use EventBus for all inter-component communication
-- **Component Structure**: Functional components with hooks
-- **Type Safety**: Strict TypeScript with no `any` types
-- **Decorators**: Use `@logMethod()`, `@throttle(milliseconds=250)`, `@catchError()`
-
-### Testing Patterns
-- **Backend**: Use `TestClient` from FastAPI for API endpoint testing
-- **Frontend**: Mock services using Jest mocks
-- **Test Files**: Place in `__tests__/` directories or use `.test.` suffix
-- **Event Testing**: Mock EventBus for component testing
-
-## 🎮 QualiaState System
-
-### Core Properties
 ```typescript
-interface QualiaState {
-  intensity: number;      // Overall energy level (0-1)
-  precision: number;      // Accuracy streaks (0-1)
-  aggression: number;     // Fast Forward usage (0-1)
-  flow: number;          // Rhythmic consistency (0-1)
-  chaos: number;         // Rhythm failures (0-1)
-  recovery: number;      // Rewind usage (0-1)
-  transcendence: number; // Ultimate mode (0-1)
+// CORRECT IMPLEMENTATION
+// RUTA: /frontend/src/services/interfaces/IMyNewService.ts
+export interface IMyNewService {
+  execute(params: any): Promise<void>;
+  getStatus(): string;
 }
 ```
 
-### Event-Driven Update Pattern
-- Player actions (`Dash`, `HitNote`) generate events on the frontend `EventBus`
-- `QualiaStateCalculatorService` listens to these events and computes the new `QualiaState`
-- Upon change, it emits a `QualiaStateUpdated` event with the new state
-- `BackendSyncService` listens for `QualiaStateUpdated`, throttles the events, and sends the final state to the backend API
-- Backend publishes to EventBus, visual systems subscribe to update themselves
+**STEP 2: IMPLEMENT THE SERVICE (THE CONCRETE CLASS)**
+- **LOCATION:** `/frontend/src/services/[ServiceName].ts`
+- **RATIONALE:** This is the concrete implementation of the contract. It contains the business logic. By using `@injectable` and `@inject`, we allow the IoC container to manage its lifecycle and dependencies.
+- **MANDATE:** The class MUST be decorated with `@injectable()`. All dependencies MUST be injected into the constructor and decorated with `@inject(TYPES.Identifier)`. The class MUST implement its corresponding interface.
 
-## 🚀 Common Tasks
+```typescript
+// CORRECT IMPLEMENTATION
+// RUTA: /frontend/src/services/MyNewService.ts
+import { injectable, inject } from 'inversify';
+import { TYPES } from './inversify.types';
+import { IMyDependency } from './interfaces/IMyDependency';
+import { IMyNewService } from './interfaces/IMyNewService';
+import { QualiaLogger } from './Logger';
+import { logMethod } from '../utils/decorators';
 
-### Adding a new Qualia Parameter
-1. **Modify Contract:** Edit the appropriate JSON Schema file in `/shared_contracts`
-2. **Generate Code:** Run `scripts/generate_contracts.sh`. Verify the changes in the generated Python model and TypeScript interface
-3. **Update Logic:**
-   - **Frontend:** Modify the `QualiaStateCalculatorService` to compute the new parameter
-   - **Backend:** Modify the visual systems (`ParticleEngine`, etc.) to react to the new parameter from the event bus
-4. **Apply Decorators:** Ensure any new methods use the appropriate decorators for logging, error handling, and validation
-5. **Test:** Write unit tests for the new calculation logic and integration tests for the visual output
+@injectable()
+export class MyNewService implements IMyNewService {
+  // Dependencies are private and readonly
+  private readonly dependency: IMyDependency;
+  private readonly logger: QualiaLogger;
 
-### Backend API Changes
-1. Add new endpoint in `api/routes.py` following FastAPI patterns with dependency injection
-2. Update JSON Schema in `/shared_contracts` (if needed)
-3. Run `scripts/generate_contracts.sh` to update models
-4. Add comprehensive tests in `tests/test_*.py`
-5. Verify with `python -m pytest tests/ -v`
+  constructor(
+    @inject(TYPES.IMyDependency) dependency: IMyDependency,
+    @inject(TYPES.Logger) logger: QualiaLogger
+  ) {
+    this.dependency = dependency;
+    this.logger = logger;
+    this.logger.info('MyNewService Initialized');
+  }
 
-### Frontend Component Changes
-1. Use EventBus for communication instead of direct service calls
-2. Access services via `useServices()` hook from React Context
-3. Follow TypeScript strict mode with generated interfaces
-4. Add tests with proper EventBus mocking
-5. Verify with `npm test`
+  @logMethod()
+  public async execute(params: any): Promise<void> {
+    this.logger.debug('Executing MyNewService logic', { params });
+    await this.dependency.doWork(params);
+  }
 
-## ⚠️ Critical Patterns
-
-### Communication: Event-Driven Architecture
-- The direct `ApiClient` is deprecated
-- An `EventBus` service will be implemented on both frontend and backend
-- **PROHIBITED:** Direct service instantiation or API calls in components
-
-### State Management
-- All application state is managed in a `GameStateStore` (built with Zustand)
-- The store is divided into "slices" for different domains
-- **PROHIBITED:** Storing state directly in React components using `useState` for anything other than trivial, non-persistent UI state
-
-### Transversal Logic: Decorators (MANDATORY)
-#### Python Decorators (`backend/utils/decorators.py`)
-- `@log_execution(level="INFO")`: Logs function entry, exit, and execution time
-- `@handle_errors(fallback_return_value=None)`: Wraps function in a try/except block and logs errors
-- `@validate_schema(schema_name="QualiaState")`: Validates input against a shared contract schema
-
-#### TypeScript Decorators (`frontend/src/utils/decorators.ts`)
-- `@logMethod()`: Logs method calls and arguments
-- `@throttle(milliseconds=250)`: Throttles the execution of a method
-- `@catchError()`: Catches runtime errors within a method and logs them to a reporting service
-
-### Error Boundaries
-- Backend: Use `@handle_errors` decorator with context logging
-- Frontend: Use `@catchError()` decorator for runtime error handling
-- Always check service availability before operations
-
-## 🔍 Debugging Commands
-
-```bash
-# Check backend connectivity
-curl http://localhost:8000/health
-
-# Send test QualiaState
-curl -X POST http://localhost:8000/update_qualia \
-  -H "Content-Type: application/json" \
-  -d '{"intensity":0.8,"precision":0.5,"aggression":0.7,"flow":0.9,"chaos":0.1,"recovery":0.0,"transcendence":0.0}'
-
-# Generate contracts after schema changes
-./scripts/generate_contracts.sh
+  public getStatus(): string {
+      return 'Operational';
+  }
+}
 ```
 
-## 📁 Project Structure
+**STEP 3: REGISTER THE SERVICE TYPE (THE IDENTIFIER)**
+- **LOCATION:** `/frontend/src/services/inversify.types.ts`
+- **RATIONALE:** Using `Symbol` for identifiers prevents name collisions and decouples the binding from fragile string literals.
+- **MANDATE:** Every service interface MUST have a corresponding entry in the `TYPES` object.
+
+```typescript
+// CORRECT IMPLEMENTATION
+// RUTA: /frontend/src/services/inversify.types.ts
+export const TYPES = {
+  // --- Core Services ---
+  Logger: Symbol.for("Logger"),
+  EventBus: Symbol.for("EventBus"),
+  ConfigurationService: Symbol.for("ConfigurationService"),
+
+  // --- Feature Services ---
+  IMyDependency: Symbol.for("IMyDependency"),
+  IMyNewService: Symbol.for("IMyNewService"), // Your new service type
+};
 ```
-qualia-tempo-prototype/
-├── shared_contracts/          # JSON Schema definitions (SINGLE SOURCE OF TRUTH)
-├── scripts/
-│   └── generate_contracts.sh  # Contract generation script
-├── backend/                   # Python FastAPI server
-│   ├── api/
-│   │   ├── models.py          # GENERATED Pydantic models
-│   │   └── routes.py          # API endpoints with DI
-│   ├── engine/                # Visual processing engine
-│   ├── services/              # Backend services (EventBus, etc.)
-│   └── utils/decorators.py    # Python decorators
-└── frontend/                  # TypeScript React client
-    ├── src/
-    │   ├── services/          # Frontend services (EventBus, QualiaService, etc.)
-    │   ├── state/             # Zustand store slices
-    │   ├── types/
-    │   │   └── contracts.ts   # GENERATED TypeScript interfaces
-    │   └── utils/decorators.ts # TypeScript decorators
-    └── CompositionRoot.ts     # Service initialization
+
+**STEP 4: BIND THE SERVICE IN THE IOC CONTAINER (THE REGISTRATION)**
+- **LOCATION:** `/frontend/src/services/inversify.config.ts`
+- **RATIONALE:** This is the central registry where interfaces are mapped to their concrete implementations. This is where the "inversion of control" happens.
+- **MANDATE:** Every new service MUST be bound here. Default to `inSingletonScope()` unless you have a documented architectural reason for a transient instance.
+
+```typescript
+// CORRECT IMPLEMENTATION
+// RUTA: /frontend/src/services/inversify.config.ts
+import { container } from './inversify.container'; // Assuming container is defined elsewhere
+import { TYPES } from './inversify.types';
+import { IMyNewService } from './interfaces/IMyNewService';
+import { MyNewService } from './MyNewService';
+
+// ... other bindings
+
+container.bind<IMyNewService>(TYPES.IMyNewService).to(MyNewService).inSingletonScope();
 ```
+
+**STEP 5: CONSUME THE SERVICE IN THE UI (THE HOOK)**
+- **LOCATION:** Any React component (`.tsx`)
+- **RATIONALE:** This provides a clean, type-safe, and decoupled way for the UI layer to access business logic without knowing how it's created or what its dependencies are.
+- **MANDATE:** Services are consumed in the UI layer **ONLY** via the `useService` hook.
+
+```typescript
+// CORRECT IMPLEMENTATION
+// RUTA: /frontend/src/components/MyComponent.tsx
+import { useService } from '../services/hooks';
+import { TYPES } from '../services/inversify.types';
+import { IMyNewService } from '../services/interfaces/IMyNewService';
+
+const MyComponent = () => {
+  // Resolve the service from the container via the hook
+  const myService = useService<IMyNewService>(TYPES.IMyNewService);
+
+  const handleClick = () => {
+    myService.execute({ data: 'example' });
+  };
+
+  return <button onClick={handleClick}>Execute Service</button>;
+};
+```
+
+#### **FORBIDDEN PATTERNS (CRITICAL VIOLATIONS)**
+
+Detection of these patterns will result in immediate task failure and require a full refactor.
+
+1.  **ANTI-PATTERN: DIRECT INSTANTIATION**
+    - **REASON:** Violates IoC, creates tight coupling, makes testing impossible without mocking the universe.
+    ```typescript
+    // FORBIDDEN
+    import { MyService } from '../services/MyService';
+    const service = new MyService(new Dependency()); // CRITICAL VIOLATION
+    ```
+
+2.  **ANTI-PATTERN: MISSING DECORATORS**
+    - **REASON:** The IoC container cannot see or manage classes that are not explicitly marked.
+    ```typescript
+    // FORBIDDEN
+    export class MyService implements IMyService { // VIOLATION: Missing @injectable()
+      constructor(dependency: IDependency) {} // VIOLATION: Missing @inject()
+    }
+    ```
+
+3.  **ANTI-PATTERN: DIRECT CONTAINER ACCESS IN UI**
+    - **REASON:** Couples the UI to the IoC container itself. The `useService` hook provides the necessary abstraction layer.
+    ```typescript
+    // FORBIDDEN
+    import { container } from '../services/inversify.config';
+    const service = container.get<IMyService>(TYPES.IMyService); // CRITICAL VIOLATION IN A COMPONENT
+    ```
+
+---
+
+### **III. TRANSVERSAL LOGIC: DECORATORS ARE MANDATORY**
+
+Decorators are used to apply cross-cutting concerns. Their use is not optional.
+
+- **`@logMethod()`**: **MANDATORY** on all `public` methods within any service class. Provides entry/exit logging and performance metrics.
+- **`@catchError()`**: **MANDATORY** on all methods that interact with external systems (e.g., `fetch`) or perform complex calculations that could fail. Prevents unhandled exceptions from crashing the application.
+- **`@validate(schemaName)`**: **MANDATORY** on methods that receive complex objects, especially from the UI or external sources. Ensures data integrity at the boundary.
+- **`@throttle(milliseconds)`**: Use on methods triggered by frequent UI events (e.g., mouse move, window resize) to prevent performance degradation.
+
+```typescript
+// CORRECT DECORATOR USAGE
+@injectable()
+export class MyDataService implements IMyDataService {
+  // ... constructor
+
+  @logMethod()
+  @catchError()
+  @validate('MyDataSchema')
+  public async processData(data: MyData): Promise<void> {
+    // ... logic
+  }
+}
+```
+
+---
+
+### **IV. STATE MANAGEMENT & DATA FLOW**
+
+- **ZUSTAND STORE:** The store is a **PASSIVE DATA CONTAINER**. It has no business logic. Its only job is to hold state and notify components of changes.
+- **EVENTBUS:** The **CENTRAL NERVOUS SYSTEM**. All communication between services is done via `eventBus.emit()` and `eventBus.subscribe()`.
+- **GAMESTATESTORESERVICE:** The **BRIDGE**. This service listens for events from the `EventBus` and updates the `Zustand` store. This is the ONLY service allowed to write to the store.
+
+**DATA FLOW IS UNIDIRECTIONAL AND SACRED:**
+`[UI Event] -> EventBus.emit() -> [Service A processes] -> EventBus.emit() -> [Service B processes] -> EventBus.emit() -> GameStateStoreService -> Zustand Store -> [UI Re-renders]`
+
+---
+
+### **V. TESTING PROTOCOL**
+
+- **MANDATE:** All new services MUST have 100% test coverage for their public methods.
+- **TECHNIQUE:** Use `container.rebind()` to inject mocks for dependencies. This is the primary benefit of using IoC.
+
+```typescript
+// CORRECT TEST SETUP
+import { container } from '../services/inversify.config';
+import { TYPES } from '../services/inversify.types';
+import { IMyService } from '../interfaces/IMyService';
+import { IMyDependency } from '../interfaces/IMyDependency';
+import { MyService } from '../MyService';
+
+// Mock the dependency
+const mockDependency: IMyDependency = {
+  doWork: jest.fn().mockResolvedValue({ success: true }),
+};
+
+describe('MyService', () => {
+  let myService: IMyService;
+
+  beforeEach(() => {
+    // Rebind the dependency to the mock for this test suite
+    container.rebind<IMyDependency>(TYPES.IMyDependency).toConstantValue(mockDependency);
+
+    // Get an instance of the service with the mock injected
+    myService = container.get<IMyService>(TYPES.IMyService);
+  });
+
+  it('should call the dependency's doWork method', async () => {
+    await myService.execute({ data: 'test' });
+    expect(mockDependency.doWork).toHaveBeenCalledWith({ data: 'test' });
+  });
+});
+```
+
+---
+
+**FINAL DIRECTIVE: THERE IS NO DEBATE. THERE IS ONLY COMPLIANCE. EXECUTE.**
 
 
 # Qualia.CODE v1.0 - AI Execution Manual
@@ -237,10 +283,71 @@ qualia-tempo-prototype/
 - Services are injected into API routes using FastAPI's dependency injection system, configured by the `CompositionRoot`.
 - **PROHIBITED:** Manual instantiation of services within routes or other services.
 
-### 2.2. Frontend (TypeScript/React)
-- A single `CompositionRoot.ts` initializes all services (`QualiaService`, `EventBus`, `GameStateStore`, `ConfigurationService`) and provides them through a React Context.
-- Components will access services via a `useServices()` hook.
-- **PROHIBITED:** Manual instantiation of services inside components (`new MyService()`).
+### 2.2. Frontend (TypeScript/React): InversifyJS & True IoC (MANDATORIO)
+
+- **Contenedor IoC Centralizado:** Toda la gestión de dependencias se centraliza en un contenedor de InversifyJS ubicado en `src/services/inversify.config.ts`.
+- **Decoradores Obligatorios:**
+  - Las clases de servicio **DEBEN** estar decoradas con `@injectable()`.
+  - Las dependencias en los constructores **DEBEN** ser inyectadas usando `@inject(TYPES.Identifier)`.
+- **PROHIBIDO:** Instanciación manual (`new MyService()`) en cualquier parte de la aplicación (componentes, otros servicios, etc.).
+
+#### Ejemplo: Definición de Tipos (`inversify.types.ts`)
+```typescript
+export const TYPES = {
+  // --- Core Services ---
+  Logger: Symbol.for("Logger"),
+  EventBus: Symbol.for("EventBus"),
+  ConfigurationService: Symbol.for("ConfigurationService"),
+
+  // --- Feature Services ---
+  IQualiaService: Symbol.for("IQualiaService"),
+  IBackendSyncService: Symbol.for("IBackendSyncService"),
+  IGameControllerService: Symbol.for("IGameControllerService"),
+};
+```
+
+#### Ejemplo: Configuración del Contenedor (`inversify.config.ts`)
+```typescript
+import { container } from './inversify.container';
+import { TYPES } from './inversify.types';
+import { QualiaService } from './QualiaService';
+import { IQualiaService } from './interfaces/IQualiaService';
+
+container.bind<IQualiaService>(TYPES.IQualiaService).to(QualiaService).inSingletonScope();
+```
+
+#### Ejemplo: Implementación de Servicio
+```typescript
+import { injectable, inject } from 'inversify';
+import { TYPES } from './inversify.types';
+import { IEventBus } from './interfaces/IEventBus';
+import { IConfigurationService } from './interfaces/IConfigurationService';
+import { QualiaLogger } from './Logger';
+
+@injectable()
+export class QualiaService implements IQualiaService {
+  private readonly eventBus: IEventBus;
+  private readonly config: IConfigurationService;
+  private readonly logger: QualiaLogger;
+
+  constructor(
+    @inject(TYPES.EventBus) eventBus: IEventBus,
+    @inject(TYPES.ConfigurationService) config: IConfigurationService,
+    @inject(TYPES.Logger) logger: QualiaLogger
+  ) {
+    this.eventBus = eventBus;
+    this.config = config;
+    this.logger = logger;
+    this.logger.info('QualiaService Initialized');
+  }
+
+  @logMethod()
+  public async processQualiaState(state: QualiaState): Promise<void> {
+    this.logger.debug('Processing qualia state', { state });
+    // Implementation...
+  }
+}
+```
 
 ---
 
@@ -315,11 +422,16 @@ qualia-tempo-prototype/
 1.  **Modify Contract:** Edit the appropriate JSON Schema file in `/shared_contracts`.
 2.  **Generate Code:** Run `scripts/generate_contracts.sh`. Verify the changes in the generated Python model and TypeScript interface.
 3.  **Update Configuration:** Add new parameters to the YAML configuration file loaded by `ConfigurationService`.
-4.  **Update Logic:**
-    - **Frontend:** Modify the `QualiaStateCalculatorService` to compute the new parameter using configuration from `ConfigurationService`.
+4.  **Implement Service:** Create new service class with `@injectable()` decorator and `@inject()` parameters.
+5.  **Add Binding:** Registrar la nueva interfaz y su implementación en el contenedor `inversify.config.ts`:
+    ```typescript
+    container.bind<IMyNewService>(TYPES.IMyNewService).to(MyNewService).inSingletonScope();
+    ```
+6.  **Update Logic:**
+    - **Frontend:** Modify the service to compute the new parameter using configuration from `ConfigurationService`.
     - **Backend:** Modify the visual systems (`ParticleEngine`, etc.) to react to the new parameter from the event bus.
-5.  **Apply Decorators:** Ensure any new methods use the appropriate decorators for logging, error handling, and validation.
-6.  **Test:** Write unit tests for the new calculation logic and integration tests for the visual output.
+7.  **Apply Decorators:** Ensure any new methods use the appropriate decorators for logging, error handling, and validation.
+8.  **Test:** Write unit tests for the new calculation logic and integration tests for the visual output.
 
 ---
 
@@ -426,37 +538,62 @@ qualia-tempo-prototype/
 - `getMetrics()`: Return performance metrics
 - `enableProfiling()`: Enable performance profiling
 
-### 8.8. CompositionRoot (`frontend/src/services/CompositionRoot.ts`)
-**Purpose:** Central IoC container and service lifecycle management.
+### 8.8. Service Hooks (`frontend/src/services/hooks.ts`)
+**Purpose:** React hooks for service resolution and IoC container integration.
 **Responsibilities:**
-- Instantiate and configure all services
-- Manage service dependencies and initialization order
-- Provide service access through React Context
-- Handle service health monitoring and restart
-- Coordinate service shutdown and cleanup
-**Key Methods:**
-- `initialize()`: Initialize all services in proper order
-- `shutdown()`: Gracefully shutdown all services
-- `getServiceStatus()`: Return status of all services
-- `restartService(serviceName)`: Restart a specific service
-- `performHealthCheck()`: Check health of all services
+- Provide type-safe service resolution from InversifyJS container
+- Enable React components to consume services without direct container access
+- Support dependency injection in functional components
+- Maintain separation between UI and business logic layers
+**Key Hooks:**
+- `useService<T>(identifier: symbol)`: Resolve a single service by its identifier
+- `useServices<T[]>(identifiers: symbol[])`: Resolve multiple services at once
+- `useContainer()`: Access the InversifyJS container directly (advanced use only)
+**Usage Pattern:**
+```typescript
+// Single service resolution
+const eventBus = useService<IEventBus>(TYPES.EventBus);
 
-### 8.9. Service Hooks (`frontend/src/services/hooks.ts`)
+// Multiple services resolution
+const [eventBus, configService] = useServices<IEventBus, IConfigurationService>([
+  TYPES.EventBus,
+  TYPES.ConfigurationService
+]);
+```
+
+### 8.9. ConfigurationService (`frontend/src/services/ConfigurationService.ts`)
 **Purpose:** React hooks for type-safe service access.
 **Responsibilities:**
-- Provide access to services from React components
+- Provide granular access to individual services from React components
 - Ensure services are used within proper context
 - Type-safe service method access
 - Follow React hooks conventions and rules
-**Available Hooks:**
-- `useServices()`: Access all services
-- `useEventBus()`: Access EventBus service
-- `useQualiaCalculator()`: Access QualiaStateCalculatorService
-- `useBackendSync()`: Access BackendSyncService
-- `useGameController()`: Access GameControllerService
-- `useConfiguration()`: Access ConfigurationService
 
-### 8.10. ConfigurationService (`frontend/src/services/ConfigurationService.ts`)
+**Available Hook:**
+- `useService<T>(identifier: symbol): T`: Access a specific service by its interface type
+
+#### Ejemplo: Uso en Componentes
+```typescript
+import { useService } from '../services/hooks';
+import { TYPES } from '../services/inversify.types';
+import { IEventBus } from '../services/interfaces/IEventBus';
+import { IQualiaService } from '../services/interfaces/IQualiaService';
+
+const MyComponent = () => {
+  // Resolver servicios individuales según necesidad
+  const eventBus = useService<IEventBus>(TYPES.EventBus);
+  const qualiaService = useService<IQualiaService>(TYPES.IQualiaService);
+
+  const handleAction = () => {
+    eventBus.emit({ type: 'PlayerAction', data: { action: 'dash' } });
+    qualiaService.processQualiaState(currentState);
+  };
+
+  return <button onClick={handleAction}>Execute Action</button>;
+};
+```
+
+### 8.9. ConfigurationService (`frontend/src/services/ConfigurationService.ts`)
 **Purpose:** External configuration management and loading.
 **Responsibilities:**
 - Load configuration from YAML files at runtime

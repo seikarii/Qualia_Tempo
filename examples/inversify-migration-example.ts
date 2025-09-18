@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import React from 'react';
 import { Container, injectable, inject } from 'inversify';
 
 // 🎯 EJEMPLO CORREGIDO: Inversify con configuración correcta
@@ -141,3 +142,35 @@ console.log('Services obtained:', backendSync, httpService, timerService);
 
 // Services are automatically injected with their dependencies
 backendSync.syncData(); // Logger and EventBus are automatically injected
+
+// Ejemplo de código que VIOLARÍA las reglas de InversifyJS
+// Este archivo demuestra cómo la nueva regla enforce-inversify-conventions detectaría problemas
+
+// ❌ FALTA: import 'reflect-metadata'; en la primera línea
+import React from 'react';
+
+// Servicio sin @injectable
+export class UserService {
+  constructor(private logger: any) {} // ❌ FALTA: @inject(TYPES.Logger)
+
+  calculateData() {} // ❌ FALTA: decorador @logMethod
+}
+
+// Controlador sin @injectable
+export class AuthController {
+  constructor(
+    private authService: any, // ❌ FALTA: @inject(TYPES.AuthService)
+    private database: any        // ❌ FALTA: @inject(TYPES.Database)
+  ) {}
+
+  login() {} // ❌ FALTA: decorador @catchError
+}
+
+// ❌ VIOLACIÓN: Instanciación directa de servicios
+const userService = new UserService({}); // ❌ VIOLACIÓN: no-direct-service-instantiation
+
+// ❌ VIOLACIÓN: Configuración hardcodeada
+const timeout = 5000; // ❌ VIOLACIÓN: no-hardcoded-config
+const maxRetries = 25; // ❌ VIOLACIÓN: no-hardcoded-config
+
+export {};

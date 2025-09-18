@@ -18,10 +18,71 @@
 - Services are injected into API routes using FastAPI's dependency injection system, configured by the `CompositionRoot`.
 - **PROHIBITED:** Manual instantiation of services within routes or other services.
 
-### 2.2. Frontend (TypeScript/React)
-- A single `CompositionRoot.ts` initializes all services (`QualiaService`, `EventBus`, `GameStateStore`, `ConfigurationService`) and provides them through a React Context.
-- Components will access services via a `useServices()` hook.
-- **PROHIBITED:** Manual instantiation of services inside components (`new MyService()`).
+### 2.2. Frontend (TypeScript/React): InversifyJS & True IoC (MANDATORIO)
+
+- **Contenedor IoC Centralizado:** Toda la gestión de dependencias se centraliza en un contenedor de InversifyJS ubicado en `src/services/inversify.config.ts`.
+- **Decoradores Obligatorios:**
+  - Las clases de servicio **DEBEN** estar decoradas con `@injectable()`.
+  - Las dependencias en los constructores **DEBEN** ser inyectadas usando `@inject(TYPES.Identifier)`.
+- **PROHIBIDO:** Instanciación manual (`new MyService()`) en cualquier parte de la aplicación (componentes, otros servicios, etc.).
+
+#### Ejemplo: Definición de Tipos (`inversify.types.ts`)
+```typescript
+export const TYPES = {
+  // --- Core Services ---
+  Logger: Symbol.for("Logger"),
+  EventBus: Symbol.for("EventBus"),
+  ConfigurationService: Symbol.for("ConfigurationService"),
+
+  // --- Feature Services ---
+  IQualiaService: Symbol.for("IQualiaService"),
+  IBackendSyncService: Symbol.for("IBackendSyncService"),
+  IGameControllerService: Symbol.for("IGameControllerService"),
+};
+```
+
+#### Ejemplo: Configuración del Contenedor (`inversify.config.ts`)
+```typescript
+import { container } from './inversify.container';
+import { TYPES } from './inversify.types';
+import { QualiaService } from './QualiaService';
+import { IQualiaService } from './interfaces/IQualiaService';
+
+container.bind<IQualiaService>(TYPES.IQualiaService).to(QualiaService).inSingletonScope();
+```
+
+#### Ejemplo: Implementación de Servicio
+```typescript
+import { injectable, inject } from 'inversify';
+import { TYPES } from './inversify.types';
+import { IEventBus } from './interfaces/IEventBus';
+import { IConfigurationService } from './interfaces/IConfigurationService';
+import { QualiaLogger } from './Logger';
+
+@injectable()
+export class QualiaService implements IQualiaService {
+  private readonly eventBus: IEventBus;
+  private readonly config: IConfigurationService;
+  private readonly logger: QualiaLogger;
+
+  constructor(
+    @inject(TYPES.EventBus) eventBus: IEventBus,
+    @inject(TYPES.ConfigurationService) config: IConfigurationService,
+    @inject(TYPES.Logger) logger: QualiaLogger
+  ) {
+    this.eventBus = eventBus;
+    this.config = config;
+    this.logger = logger;
+    this.logger.info('QualiaService Initialized');
+  }
+
+  @logMethod()
+  public async processQualiaState(state: QualiaState): Promise<void> {
+    this.logger.debug('Processing qualia state', { state });
+    // Implementation...
+  }
+}
+```
 
 ---
 
@@ -96,11 +157,16 @@
 1.  **Modify Contract:** Edit the appropriate JSON Schema file in `/shared_contracts`.
 2.  **Generate Code:** Run `scripts/generate_contracts.sh`. Verify the changes in the generated Python model and TypeScript interface.
 3.  **Update Configuration:** Add new parameters to the YAML configuration file loaded by `ConfigurationService`.
-4.  **Update Logic:**
-    - **Frontend:** Modify the `QualiaStateCalculatorService` to compute the new parameter using configuration from `ConfigurationService`.
+4.  **Implement Service:** Create new service class with `@injectable()` decorator and `@inject()` parameters.
+5.  **Add Binding:** Registrar la nueva interfaz y su implementación en el contenedor `inversify.config.ts`:
+    ```typescript
+    container.bind<IMyNewService>(TYPES.IMyNewService).to(MyNewService).inSingletonScope();
+    ```
+6.  **Update Logic:**
+    - **Frontend:** Modify the service to compute the new parameter using configuration from `ConfigurationService`.
     - **Backend:** Modify the visual systems (`ParticleEngine`, etc.) to react to the new parameter from the event bus.
-5.  **Apply Decorators:** Ensure any new methods use the appropriate decorators for logging, error handling, and validation.
-6.  **Test:** Write unit tests for the new calculation logic and integration tests for the visual output.
+7.  **Apply Decorators:** Ensure any new methods use the appropriate decorators for logging, error handling, and validation.
+8.  **Test:** Write unit tests for the new calculation logic and integration tests for the visual output.
 
 ---
 
@@ -207,37 +273,62 @@
 - `getMetrics()`: Return performance metrics
 - `enableProfiling()`: Enable performance profiling
 
-### 8.8. CompositionRoot (`frontend/src/services/CompositionRoot.ts`)
-**Purpose:** Central IoC container and service lifecycle management.
+### 8.8. Service Hooks (`frontend/src/services/hooks.ts`)
+**Purpose:** React hooks for service resolution and IoC container integration.
 **Responsibilities:**
-- Instantiate and configure all services
-- Manage service dependencies and initialization order
-- Provide service access through React Context
-- Handle service health monitoring and restart
-- Coordinate service shutdown and cleanup
-**Key Methods:**
-- `initialize()`: Initialize all services in proper order
-- `shutdown()`: Gracefully shutdown all services
-- `getServiceStatus()`: Return status of all services
-- `restartService(serviceName)`: Restart a specific service
-- `performHealthCheck()`: Check health of all services
+- Provide type-safe service resolution from InversifyJS container
+- Enable React components to consume services without direct container access
+- Support dependency injection in functional components
+- Maintain separation between UI and business logic layers
+**Key Hooks:**
+- `useService<T>(identifier: symbol)`: Resolve a single service by its identifier
+- `useServices<T[]>(identifiers: symbol[])`: Resolve multiple services at once
+- `useContainer()`: Access the InversifyJS container directly (advanced use only)
+**Usage Pattern:**
+```typescript
+// Single service resolution
+const eventBus = useService<IEventBus>(TYPES.EventBus);
 
-### 8.9. Service Hooks (`frontend/src/services/hooks.ts`)
+// Multiple services resolution
+const [eventBus, configService] = useServices<IEventBus, IConfigurationService>([
+  TYPES.EventBus,
+  TYPES.ConfigurationService
+]);
+```
+
+### 8.9. ConfigurationService (`frontend/src/services/ConfigurationService.ts`)
 **Purpose:** React hooks for type-safe service access.
 **Responsibilities:**
-- Provide access to services from React components
+- Provide granular access to individual services from React components
 - Ensure services are used within proper context
 - Type-safe service method access
 - Follow React hooks conventions and rules
-**Available Hooks:**
-- `useServices()`: Access all services
-- `useEventBus()`: Access EventBus service
-- `useQualiaCalculator()`: Access QualiaStateCalculatorService
-- `useBackendSync()`: Access BackendSyncService
-- `useGameController()`: Access GameControllerService
-- `useConfiguration()`: Access ConfigurationService
 
-### 8.10. ConfigurationService (`frontend/src/services/ConfigurationService.ts`)
+**Available Hook:**
+- `useService<T>(identifier: symbol): T`: Access a specific service by its interface type
+
+#### Ejemplo: Uso en Componentes
+```typescript
+import { useService } from '../services/hooks';
+import { TYPES } from '../services/inversify.types';
+import { IEventBus } from '../services/interfaces/IEventBus';
+import { IQualiaService } from '../services/interfaces/IQualiaService';
+
+const MyComponent = () => {
+  // Resolver servicios individuales según necesidad
+  const eventBus = useService<IEventBus>(TYPES.EventBus);
+  const qualiaService = useService<IQualiaService>(TYPES.IQualiaService);
+
+  const handleAction = () => {
+    eventBus.emit({ type: 'PlayerAction', data: { action: 'dash' } });
+    qualiaService.processQualiaState(currentState);
+  };
+
+  return <button onClick={handleAction}>Execute Action</button>;
+};
+```
+
+### 8.9. ConfigurationService (`frontend/src/services/ConfigurationService.ts`)
 **Purpose:** External configuration management and loading.
 **Responsibilities:**
 - Load configuration from YAML files at runtime

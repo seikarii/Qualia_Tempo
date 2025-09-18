@@ -379,8 +379,18 @@ module.exports = {
       // Only flag numbers that look like configuration values
       if (typeof value === 'number') {
         // Allow small integers commonly used for array indexing, boolean conversion, etc.
-        if (Number.isInteger(value) && Math.abs(value) <= 200) {
-          return false;
+        // But be more restrictive for values that look like configuration
+        if (Number.isInteger(value) && Math.abs(value) <= 10) {
+          return false; // Allow 0-10 for indexing, flags, etc.
+        }
+        
+        // Flag small numbers that look like configuration (retries, limits, etc.)
+        if (Number.isInteger(value) && Math.abs(value) > 10 && Math.abs(value) <= 100) {
+          // Allow only very common small values
+          const commonSmallValues = [12, 24, 30, 31, 60, 100];
+          if (!commonSmallValues.includes(Math.abs(value))) {
+            return true; // Flag as potential hardcoded config
+          }
         }
 
         // Allow common mathematical constants
@@ -393,9 +403,14 @@ module.exports = {
           return false;
         }
 
-        // Allow common time intervals (milliseconds) - be more generous
+        // Allow common time intervals (milliseconds) - but flag suspicious values
         if (Number.isInteger(value) && value >= 50 && value <= 10000 && value % 50 === 0) {
-          return false; // Allow 50, 100, 150, ..., 10000
+          // Allow only very common intervals, flag others as potential config
+          const commonIntervals = [100, 200, 250, 300, 500, 1000, 2000, 3000, 10000];
+          if (!commonIntervals.includes(value)) {
+            return true; // Flag as potential hardcoded config
+          }
+          return false;
         }
 
         // Flag numbers that look like configuration (very large numbers, specific thresholds)
