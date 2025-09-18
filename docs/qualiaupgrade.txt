@@ -1,0 +1,13 @@
+TODO ES QUALIA, al dashear o tirar una habilidad ya sea el player o el boss se genera qualia,cada tic del metronomo de la cancion generara qualia tambien, al recoger qualia haces sonido y aumentas combo, el sonido dependera del color del qualia que dependera del sonido que hubiera sonando en ese momento, qualia es una especie de memoria y al cogerlo hara una especie como de eco, habra muy poco margen para recogerlo, 1 sec max.A ser posible hacer que dependiendo de donde cojas el audio suene como si viniera de esa direccion para aumentar la experiencia 8d.
+
+Generar sonido genera luz y efectos, asiq recoger qualia tambien hara lo mismo, cambios al player, ahora solo tendra habilidades de sonido ,un dash que se restaurara cada tic del metronomo en la barra espaciadora, y la q,e,r,t,f,g,c y el boton control para tirar la "habilidad especial" que se podra usar solo cuando generes combo x40 y que hara que todo sea sonido 8d y que se duplique la generacion de qualia (puede que se suba o se baje) ,las teclas q,e,r,t,f leeran que sonido va a entrar de la pista de audio y lo generaran como si fuera una escala musical, las notas daran combo y tendran 5 secs de cd que ira bajando segun la velocidad de la musica.
+
+las habilidades per se, no haran nada, solo generaran musica, pero cuando se combine ciertos elementos causaran cosas 
+q+e+r tal vez genere un remolino , q+r+f tal vez generen un atractor, t+e+r tal vez genere un repulsor y una escalera entera tal vez cure, habra que decidirlo,el caso esq haya combos de 3,4,5 habilidades, algunos beneficiosos, otros perjudiciales para evitar que el jugador simplemente recoja todo y como la cancion tendra sus propios do-re-mi-fa-sol-la-si mas el qualia del suelo, mas el generado por tirar habilidades de los bosses ,pues haran que cada pelea sea totalmente distinta.
+
+el movimiento del juego actual le mueve de una casilla a otra, eso ha de cambiar para que se sienta mas como movimiento libre y el telegraph del boss se vera siempre morado y hara ataques dependiendo de la cancion, mas agresivos en las fases mas intensas y mas relajados en las mas relajadas, ademas que ir acumulando combo hara que el personaje brille mas, la cancion vaya mas rapido, con mas volumen, y por lo tanto el boss genere mas ataques de manera mas amplia con menos tiempo de reaccion, con menos tiempo de telegraph.
+
+PD: el volumen sera el medidor de "facil/dificil" ,poner el volumen a 0 equivale a jugar en modo ultrafacil y ponerlo a tope (dejaremos 80% para que segun avance el propio gameplay del juego lo suba a 100%) sera lo dificil.
+
+
+Los primeros combates seran 2d pero tal vez se escale a un combate 3d mas adelante

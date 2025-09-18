@@ -1,0 +1,1713 @@
+"""
+Sistema Mental Multidimensional Integrado Mejorado
+Combina tres arquitecturas de consciencia en un solo espacio operativo:
+1. MindDualSystem (consciencia5.txt) - Sistema dual con MentalLaby
+2. LivingMindField (consciencia2.txt) - Campo unificado con respiración fractal
+3. NonEuclideanManifold (consciencia3.txt) - Geometría no-euclidiana con espuma cuántica
+
+Mejoras implementadas:
+- Mayor eficiencia computacional
+- Mejor manejo de errores y logging
+- Sincronización más robusta entre subsistemas
+- Mayor modularidad y extensibilidad
+- Optimización de memoria
+- Integración más profunda entre los tres sistemas
+"""
+
+import numpy as np
+import time
+import math
+import random
+import logging
+import threading
+import asyncio
+from typing import Dict, List, Tuple, Any, Optional, Set, Union
+from dataclasses import dataclass, field
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
+from enum import Enum
+
+# ==========================================
+# CONFIGURACIÓN Y LOGGING MEJORADO
+# ==========================================
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("integrated_mind.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger("IntegratedMind")
+
+# Flags de disponibilidad de módulos externos
+HAS_ADVANCED_EMBEDDER = False
+HAS_LINGUISTIC_ENGINE = False
+HAS_SYMBOLIC_ENGINE = False
+HAS_MENTAL_LABY = False
+
+# Simulación de módulos externos si no están disponibles
+if not HAS_MENTAL_LABY:
+    class MockMentalLaby:
+        def __init__(self, d=256, K=8, temp_store=0.7, tau_recency=60.0, max_nodes=100000):
+            self.nodes = {}
+            self.replay = []
+            self.d = d
+            self.node_counter = 0
+            self.max_nodes = max_nodes
+            self.temp_store = temp_store
+            self.tau_recency = tau_recency
+            
+        def store(self, data_or_embed, valence=0.0, arousal=0.0, kind='semantic', importance_score=0.5):
+            if len(self.nodes) >= self.max_nodes:
+                # Eliminar el nodo menos importante si alcanzamos el máximo
+                min_node_id = min(self.nodes.keys(), key=lambda k: self.nodes[k].salience)
+                del self.nodes[min_node_id]
+                
+            self.node_counter += 1
+            node = type('Node', (), {
+                'id': self.node_counter,
+                'data': data_or_embed,
+                'embed': np.random.random(self.d).astype(np.float32),
+                'valence': valence,
+                'arousal': arousal,
+                'kind': kind,
+                'salience': importance_score,
+                'freq': 1,
+                'age': 0,
+                'last_access': time.time(),
+                'edges_out': {},
+                'edges_in': {}
+            })()
+            self.nodes[self.node_counter] = node
+            return self.node_counter
+            
+        def dream_cycle(self, mode="REM", steps_rem=5, T_rem=0.8, **kwargs):
+            # Simulación de ciclo de sueño mejorada
+            for node in self.nodes.values():
+                # Decaimiento de salience durante el sueño
+                node.salience *= 0.95
+                
+                # Envejecimiento
+                node.age += 1
+                
+                # Actualización de accesos
+                node.last_access = time.time()
+                
+                # Consolidación de memoria durante el sueño
+                if mode == "REM":
+                    node.salience += 0.05 * np.sin(time.time())
+                    
+        def recall(self, node_id):
+            if node_id in self.nodes:
+                node = self.nodes[node_id]
+                node.last_access = time.time()
+                node.freq += 1
+                return node.embed, [node_id]
+            return np.zeros(self.d), []
+
+# ==========================================
+# NÚCLEO MATEMÁTICO INTEGRADO MEJORADO
+# ==========================================
+
+class NonEuclideanManifold:
+    """Variedad no-euclidiana con métrica dinámica mejorada"""
+    def __init__(self, dimension: int, grid_size: int = 64):
+        self.dimension = dimension
+        self.grid_size = grid_size
+        self.metric_tensor = np.eye(2, dtype=np.complex64)
+        self.curvature_field = np.zeros((grid_size, grid_size), dtype=np.float32)
+        self.christoffel_symbols = np.zeros((2, 2, 2), dtype=np.float32)
+        
+        # Campos de conexión con otros sistemas
+        self.consciousness_coupling = np.zeros((grid_size, grid_size), dtype=np.float32)
+        self.memory_coupling = np.zeros((grid_size, grid_size), dtype=np.float32)
+        
+        # Historial para análisis temporal
+        self.metric_history = []
+        self.curvature_history = []
+        
+    def evolve_metric(self, external_field=None):
+        """Evolución de la métrica influenciada por campos externos"""
+        t = time.time()
+        base_metric = np.array([
+            [1 + 0.1 * np.sin(t), 0.05 * np.cos(t)],
+            [0.05 * np.cos(t), 1 + 0.1 * np.cos(t)]
+        ], dtype=np.complex64)
+        
+        # Influencia de campos externos
+        if external_field is not None:
+            influence = np.mean(np.abs(external_field)) * 0.01
+            base_metric += influence * np.eye(2, dtype=np.complex64)
+            
+        self.metric_tensor = base_metric
+        
+        # Guardar historial
+        self.metric_history.append(np.copy(self.metric_tensor))
+        if len(self.metric_history) > 100:  # Limitar tamaño del historial
+            self.metric_history.pop(0)
+        
+    def compute_ricci_scalar(self) -> float:
+        """Escalar de Ricci basado en la curvatura del campo"""
+        return float(self.curvature_field.std())
+        
+    def geodesic_flow(self, position: np.ndarray, velocity: np.ndarray) -> np.ndarray:
+        """Flujo geodésico en la variedad"""
+        # Simplificación: usar la métrica para modificar la velocidad
+        det = np.real(np.linalg.det(self.metric_tensor))
+        if det > 0:
+            return velocity * (1.0 / np.sqrt(det))
+        return velocity
+        
+    def update_curvature(self, external_influence=None):
+        """Actualiza el campo de curvatura con influencias externas"""
+        t = time.time()
+        
+        # Curvatura base
+        base_curvature = 0.1 * np.sin(t * 0.1)
+        
+        # Influencia externa
+        if external_influence is not None:
+            base_curvature += np.mean(np.abs(external_influence)) * 0.05
+            
+        # Actualizar campo de curvatura
+        self.curvature_field = 0.95 * self.curvature_field + 0.05 * base_curvature
+        
+        # Guardar historial
+        self.curvature_history.append(np.copy(self.curvature_field))
+        if len(self.curvature_history) > 100:  # Limitar tamaño del historial
+            self.curvature_history.pop(0)
+
+class QuantumFoam:
+    """Espuma cuántica que evoluciona en la variedad no-euclidiana mejorada"""
+    def __init__(self, manifold: NonEuclideanManifold):
+        self.manifold = manifold
+        self.field = np.random.normal(0, 0.1, (manifold.grid_size, manifold.grid_size)).astype(np.complex64)
+        self.virtual_pairs = np.zeros((manifold.grid_size, manifold.grid_size), dtype=np.complex64)
+        self.coherence_field = np.ones((manifold.grid_size, manifold.grid_size), dtype=np.float32)
+        
+        # Historial para análisis temporal
+        self.field_history = []
+        self.coherence_history = []
+        
+    def evolve_field(self, external_influence=None):
+        """Evolución del campo cuántico con influencias externas"""
+        f = self.field
+        fpad = np.pad(f, 1, mode="wrap")
+        
+        # Laplaciano discreto
+        laplacian = (
+            fpad[:-2,1:-1] + fpad[2:,1:-1] + fpad[1:-1,:-2] + fpad[1:-1,2:] - 4*fpad[1:-1,1:-1]
+        )
+        
+        # Evolución base
+        self.field = 0.99 * f + 0.01 * laplacian
+        
+        # Influencia externa
+        if external_influence is not None:
+            self.field += 0.001 * external_influence
+            
+        # Actualizar pares virtuales
+        self.virtual_pairs = 0.95 * self.virtual_pairs + 0.05 * np.conj(self.field)
+        
+        # Coherencia cuántica
+        self.coherence_field = np.abs(self.field * np.conj(self.virtual_pairs)).astype(np.float32)
+        
+        # Guardar historiales
+        self.field_history.append(np.copy(self.field))
+        self.coherence_history.append(np.copy(self.coherence_field))
+        
+        # Limitar tamaño de los historiales
+        if len(self.field_history) > 100:
+            self.field_history.pop(0)
+        if len(self.coherence_history) > 100:
+            self.coherence_history.pop(0)
+
+class JuliaPulse:
+    """Generador de pulsos fractales Julia multiescala mejorado"""
+    def __init__(self, c: complex = -0.7 + 0.27015j, dimensions: int = 3):
+        self.c = c
+        self.dimensions = dimensions
+        self.phase = 0.0
+        self.speed = 0.05
+        self.field = np.zeros((64, 64), dtype=np.complex64)  # Reducido para eficiencia
+        self.scales = [8, 16, 32, 64]
+        
+        # Inicialización
+        self.field = np.random.random(self.field.shape) + 1j * np.random.random(self.field.shape)
+        
+        # Historial para análisis temporal
+        self.phase_history = []
+        self.field_history = []
+        
+    def update(self):
+        """Actualización multiescala del pulso fractal"""
+        self.phase += self.speed
+        z = self.field.copy()
+        
+        # Respiración multiescala
+        for s in self.scales:
+            step = max(1, z.shape[0] // s)
+            if step < z.shape[0]:
+                subgrid = z[::step, ::step]
+                subgrid = subgrid**2 + self.c
+                
+                # Expansión e influencia
+                expanded = np.kron(subgrid, np.ones((step, step)))
+                if expanded.shape[0] > z.shape[0]:
+                    expanded = expanded[:z.shape[0], :z.shape[1]]
+                elif expanded.shape[0] < z.shape[0]:
+                    padded = np.zeros_like(z)
+                    padded[:expanded.shape[0], :expanded.shape[1]] = expanded
+                    expanded = padded
+                    
+                factor = 0.05 * math.sin(self.phase * (s/8))
+                z += expanded * factor
+                
+        self.field = z
+        
+        # Guardar historiales
+        self.phase_history.append(self.phase)
+        self.field_history.append(np.copy(self.field))
+        
+        # Limitar tamaño de los historiales
+        if len(self.phase_history) > 100:
+            self.phase_history.pop(0)
+        if len(self.field_history) > 100:
+            self.field_history.pop(0)
+            
+        return self.field
+        
+    def get_pulse_at_position(self, position: np.ndarray) -> complex:
+        """Obtiene el pulso en una posición específica"""
+        if self.field.size == 0:
+            return 0j
+        idx = tuple((position * 0.1).astype(int) % np.array(self.field.shape))
+        return self.field[idx]
+
+# ==========================================
+# SISTEMA DE MEMORIA UNIFICADO MEJORADO
+# ==========================================
+
+@dataclass
+class UnifiedMemory:
+    """Memoria que existe simultáneamente en los tres sistemas mejorada"""
+    # Identificación
+    id: str
+    content: Any
+    
+    # Sistema 1: MentalLaby
+    node_id: Optional[int] = None
+    embedding: np.ndarray = field(default_factory=lambda: np.zeros(256))
+    salience: float = 0.1
+    valence: float = 0.0
+    arousal: float = 0.0
+    kind: str = "semantic"
+    
+    # Sistema 2: LivingMindField
+    position: Tuple[int, int] = (0, 0)
+    value: float = 0.5
+    strength: float = 0.5
+    emotional_charge: float = 0.0
+    cognitive_weight: float = 0.5
+    quantum_coherence: float = 0.0
+    connections: Set[str] = field(default_factory=set)
+    
+    # Sistema 3: Qualiamanifold
+    manifold_position: np.ndarray = field(default_factory=lambda: np.zeros(3))
+    importance_score: float = 0.5
+    access_frequency: int = 0
+    created_at: float = field(default_factory=time.time)
+    last_accessed: float = field(default_factory=time.time)
+    
+    # Estados integrados
+    age: int = 0
+    dream_signature: float = 0.0
+    fractal_resonance: float = 0.0
+    geometric_curvature: float = 0.0
+    
+    # Nuevos campos para mejor integración
+    cross_system_coherence: float = 0.5
+    integration_level: float = 0.5
+    stability_score: float = 0.5
+    
+    def update_from_all_systems(self, 
+                               mental_laby_influence: float = 0.0,
+                               living_field_influence: float = 0.0,
+                               manifold_influence: float = 0.0):
+        """Actualiza la memoria considerando influencias de los tres sistemas"""
+        # Integración ponderada
+        total_influence = (mental_laby_influence * 0.4 + 
+                          living_field_influence * 0.35 + 
+                          manifold_influence * 0.25)
+        
+        # Actualización de propiedades compartidas
+        self.value = 0.9 * self.value + 0.1 * total_influence
+        self.importance_score = 0.95 * self.importance_score + 0.05 * abs(total_influence)
+        self.salience = min(1.0, max(0.0, self.salience + 0.01 * total_influence))
+        
+        # Actualización de coherencia cruzada
+        system_values = [mental_laby_influence, living_field_influence, manifold_influence]
+        self.cross_system_coherence = 1.0 - np.std(system_values) / (np.mean(system_values) + 1e-6)
+        
+        # Actualización de nivel de integración
+        self.integration_level = 0.95 * self.integration_level + 0.05 * self.cross_system_coherence
+        
+        # Actualización de estabilidad
+        self.stability_score = 0.95 * self.stability_score + 0.05 * (1.0 - abs(total_influence))
+        
+        # Envejecimiento
+        self.age += 1
+        self.last_accessed = time.time()
+        self.access_frequency += 1
+        
+    def get_unified_state(self) -> Dict[str, float]:
+        """Estado unificado de la memoria en todos los sistemas"""
+        return {
+            'unified_value': (self.value + self.salience + self.importance_score) / 3.0,
+            'emotional_state': (self.valence + self.emotional_charge) / 2.0,
+            'cognitive_activation': (self.arousal + self.cognitive_weight) / 2.0,
+            'coherence': self.quantum_coherence,
+            'resonance': self.fractal_resonance,
+            'curvature': self.geometric_curvature,
+            'cross_system_coherence': self.cross_system_coherence,
+            'integration_level': self.integration_level,
+            'stability_score': self.stability_score
+        }
+
+class MemorySpace:
+    """Espacio de memoria unificado que sincroniza los tres sistemas mejorado"""
+    def __init__(self, dimensions: int = 128):
+        self.dimensions = dimensions
+        self.memories: Dict[str, UnifiedMemory] = {}
+        self.memory_counter = 0
+        
+        # Campos de influencia de cada sistema
+        self.mental_laby_field = np.zeros((dimensions, dimensions), dtype=np.float32)
+        self.living_field = np.zeros((dimensions, dimensions), dtype=np.complex64)
+        self.manifold_field = np.zeros((dimensions, dimensions, dimensions), dtype=np.float32)
+        
+        # Sincronización
+        self.sync_matrix = np.eye(3, dtype=np.float32)  # mental_laby, living, manifold
+        
+        # Historial para análisis temporal
+        self.memory_count_history = []
+        self.sync_history = []
+        
+    def create_memory(self, content: Any, initial_position: Optional[Tuple[int, int]] = None,
+                     emotional_state: Optional[Dict[str, float]] = None) -> str:
+        """Crea una memoria que existe en los tres sistemas simultáneamente"""
+        self.memory_counter += 1
+        memory_id = f"unified_mem_{self.memory_counter}"
+        
+        # Posición inicial
+        if initial_position is None:
+            pos = (random.randint(0, self.dimensions-1), random.randint(0, self.dimensions-1))
+        else:
+            pos = initial_position
+            
+        # Estado emocional
+        if emotional_state is None:
+            emotional_state = {
+                'valence': random.uniform(-1, 1),
+                'arousal': random.uniform(0, 1),
+                'dominance': random.uniform(0, 1)
+            }
+            
+        # Crear memoria unificada
+        memory = UnifiedMemory(
+            id=memory_id,
+            content=content,
+            position=pos,
+            manifold_position=np.random.random(3) * self.dimensions,
+            valence=emotional_state['valence'],
+            arousal=emotional_state['arousal'],
+            emotional_charge=emotional_state['valence'],
+            cognitive_weight=emotional_state['dominance']
+        )
+        
+        self.memories[memory_id] = memory
+        
+        # Actualizar historial
+        self.memory_count_history.append(len(self.memories))
+        if len(self.memory_count_history) > 100:
+            self.memory_count_history.pop(0)
+            
+        return memory_id
+        
+    def update_memory_influences(self):
+        """Actualiza las influencias entre sistemas para todas las memorias"""
+        for memory in self.memories.values():
+            # Calcular influencias de cada sistema
+            mental_laby_influence = self._calculate_mental_laby_influence(memory)
+            living_field_influence = self._calculate_living_field_influence(memory)
+            manifold_influence = self._calculate_manifold_influence(memory)
+            
+            # Actualizar memoria
+            memory.update_from_all_systems(
+                mental_laby_influence, living_field_influence, manifold_influence
+            )
+            
+        # Actualizar matriz de sincronización
+        self._update_sync_matrix()
+        
+    def _calculate_mental_laby_influence(self, memory: UnifiedMemory) -> float:
+        """Calcula influencia del sistema MentalLaby"""
+        x, y = memory.position
+        if 0 <= x < self.dimensions and 0 <= y < self.dimensions:
+            return float(self.mental_laby_field[x, y])
+        return 0.0
+        
+    def _calculate_living_field_influence(self, memory: UnifiedMemory) -> float:
+        """Calcula influencia del LivingMindField"""
+        x, y = memory.position
+        if 0 <= x < self.dimensions and 0 <= y < self.dimensions:
+            return float(np.abs(self.living_field[x, y]))
+        return 0.0
+        
+    def _calculate_manifold_influence(self, memory: UnifiedMemory) -> float:
+        """Calcula influencia del Qualiamanifold"""
+        pos = memory.manifold_position.astype(int)
+        if all(0 <= p < self.dimensions for p in pos):
+            return float(self.manifold_field[tuple(pos)])
+        return 0.0
+        
+    def _update_sync_matrix(self):
+        """Actualiza la matriz de sincronización entre sistemas"""
+        # Calcular correlaciones entre campos
+        mental_laby_flat = self.mental_laby_field.flatten()
+        living_field_flat = np.abs(self.living_field).flatten()
+        manifold_flat = self.manifold_field.flatten()
+        
+        # Normalizar
+        mental_laby_flat = mental_laby_flat / (np.std(mental_laby_flat) + 1e-6)
+        living_field_flat = living_field_flat / (np.std(living_field_flat) + 1e-6)
+        manifold_flat = manifold_flat / (np.std(manifold_flat) + 1e-6)
+        
+        # Calcular correlaciones
+        ml_lf = np.corrcoef(mental_laby_flat, living_field_flat)[0, 1]
+        ml_m = np.corrcoef(mental_laby_flat, manifold_flat)[0, 1]
+        lf_m = np.corrcoef(living_field_flat, manifold_flat)[0, 1]
+        
+        # Actualizar matriz (manejar NaN)
+        self.sync_matrix[0, 1] = self.sync_matrix[1, 0] = 0.0 if np.isnan(ml_lf) else ml_lf
+        self.sync_matrix[0, 2] = self.sync_matrix[2, 0] = 0.0 if np.isnan(ml_m) else ml_m
+        self.sync_matrix[1, 2] = self.sync_matrix[2, 1] = 0.0 if np.isnan(lf_m) else lf_m
+        
+        # Guardar historial
+        self.sync_history.append(np.copy(self.sync_matrix))
+        if len(self.sync_history) > 100:
+            self.sync_history.pop(0)
+
+# ==========================================
+# SUBSISTEMAS INTEGRADOS MEJORADOS
+# ==========================================
+
+class IntegratedConsciousSubsystem:
+    """Subsistema consciente que opera en los tres niveles simultáneamente mejorado"""
+    def __init__(self, memory_space: MemorySpace, manifold: NonEuclideanManifold, 
+                 julia_pulse: JuliaPulse, mental_laby):
+        self.memory_space = memory_space
+        self.manifold = manifold
+        self.julia_pulse = julia_pulse
+        self.mental_laby = mental_laby
+        
+        # Posiciones en cada sistema
+        self.manifold_position = np.array([memory_space.dimensions // 2] * 3)
+        self.field_position = (memory_space.dimensions // 2, memory_space.dimensions // 2)
+        self.geometric_position = np.array([0.5, 0.5])  # Coordenadas en la variedad
+        
+        # Estados de funcionamiento
+        self.current_function = "observe"
+        self.attention_radius = 15.0
+        self.thought_history = []
+        
+        # Funciones disponibles (ampliadas)
+        self.available_functions = {
+            "observe": self._observe_unified,
+            "create": self._create_connections,
+            "dream": self._generate_dreams,
+            "reflect": self._self_reflect,
+            "recall": self._recall_memories,
+            "emote": self._process_emotions,
+            "geometrize": self._geometric_processing,
+            "quantize": self._quantum_processing,
+            "fractalize": self._fractal_processing,
+            "integrate": self._deep_integration,
+            "explore": self._explore_conceptual_space
+        }
+        
+        # Historial de funciones para análisis de patrones
+        self.function_history = []
+        
+    def update(self) -> Dict[str, Any]:
+        """Actualización integrada del subsistema consciente"""
+        # Obtener memorias cercanas en todos los sistemas
+        nearby_memories = self._get_nearby_memories()
+        
+        # Actualizar función basada en el estado integrado
+        self._update_function(nearby_memories)
+        
+        # Registrar función en historial
+        self.function_history.append(self.current_function)
+        if len(self.function_history) > 100:
+            self.function_history.pop(0)
+        
+        # Ejecutar función actual
+        result = self.available_functions[self.current_function](nearby_memories)
+        
+        # Actualizar posiciones en todos los sistemas
+        self._update_positions()
+        
+        # Registrar pensamiento
+        thought = {
+            'timestamp': time.time(),
+            'function': self.current_function,
+            'result': result,
+            'nearby_memories': len(nearby_memories),
+            'positions': {
+                'manifold': self.manifold_position.tolist(),
+                'field': self.field_position,
+                'geometric': self.geometric_position.tolist()
+            }
+        }
+        self.thought_history.append(thought)
+        
+        # Limitar tamaño del historial
+        if len(self.thought_history) > 1000:
+            self.thought_history = self.thought_history[-500:]
+            
+        return thought
+        
+    def _get_nearby_memories(self) -> List[UnifiedMemory]:
+        """Obtiene memorias cercanas considerando todos los sistemas"""
+        nearby = []
+        for memory in self.memory_space.memories.values():
+            # Distancia en manifold
+            manifold_dist = np.linalg.norm(memory.manifold_position - self.manifold_position)
+            
+            # Distancia en campo
+            field_dist = np.linalg.norm(np.array(memory.position) - np.array(self.field_position))
+            
+            # Distancia integrada
+            integrated_dist = 0.5 * manifold_dist + 0.5 * field_dist
+            
+            if integrated_dist <= self.attention_radius:
+                nearby.append(memory)
+                
+        return nearby
+        
+    def _update_function(self, nearby_memories: List[UnifiedMemory]):
+        """Actualiza función basada en estado integrado de memorias"""
+        if not nearby_memories:
+            self.current_function = "observe"
+            return
+            
+        # Análisis integrado
+        avg_unified_value = np.mean([m.get_unified_state()['unified_value'] for m in nearby_memories])
+        avg_resonance = np.mean([m.fractal_resonance for m in nearby_memories])
+        avg_curvature = np.mean([m.geometric_curvature for m in nearby_memories])
+        avg_integration = np.mean([m.integration_level for m in nearby_memories])
+        
+        # Lógica de selección de función mejorada
+        if avg_integration > 0.8:
+            self.current_function = "integrate"
+        elif avg_resonance > 0.7:
+            self.current_function = "fractalize"
+        elif avg_curvature > 0.6:
+            self.current_function = "geometrize"
+        elif avg_unified_value > 0.8:
+            self.current_function = "quantize"
+        elif len(nearby_memories) > 8:
+            self.current_function = "dream"
+        elif len(set(self.function_history[-5:])) == 1:  # Si la misma función se repite mucho
+            self.current_function = "explore"
+        else:
+            functions = ["observe", "create", "reflect", "recall", "emote"]
+            self.current_function = random.choice(functions)
+    
+    def _observe_unified(self, memories: List[UnifiedMemory]) -> Dict[str, Any]:
+        """Observación integrada de memorias"""
+        if not memories:
+            return {'action': 'observe', 'unified_state': 'empty_space'}
+            
+        unified_states = [m.get_unified_state() for m in memories]
+        avg_state = {key: np.mean([s[key] for s in unified_states]) 
+                    for key in unified_states[0].keys()}
+        
+        return {
+            'action': 'observe',
+            'memory_count': len(memories),
+            'avg_unified_state': avg_state,
+            'dominant_system': self._identify_dominant_system(memories),
+            'system_coherence': self._calculate_system_coherence(memories)
+        }
+    
+    def _geometric_processing(self, memories: List[UnifiedMemory]) -> Dict[str, Any]:
+        """Procesamiento geométrico de memorias"""
+        if not memories:
+            return {'action': 'geometrize', 'result': 'no_memories'}
+            
+        # Calcular curvatura promedio del espacio de memoria
+        positions = np.array([m.manifold_position for m in memories])
+        if len(positions) > 2:
+            # Aproximación simple de curvatura usando varianza de posiciones
+            curvature = np.var(positions, axis=0).mean()
+            
+            # Actualizar curvatura en memorias
+            for memory in memories:
+                memory.geometric_curvature = min(1.0, memory.geometric_curvature + 0.1 * curvature)
+                
+            # Propagar influencia a la variedad
+            self.manifold.update_curvature(external_influence=curvature)
+            
+            return {
+                'action': 'geometrize',
+                'space_curvature': float(curvature),
+                'memories_affected': len(memories),
+                'manifold_response': self.manifold.compute_ricci_scalar()
+            }
+        
+        return {'action': 'geometrize', 'result': 'insufficient_data'}
+    
+    def _quantum_processing(self, memories: List[UnifiedMemory]) -> Dict[str, Any]:
+        """Procesamiento cuántico de memorias"""
+        quantum_field_influence = 0.0
+        coherence_changes = []
+        
+        for memory in memories:
+            # Simular interferencia cuántica entre memorias
+            phase = memory.quantum_coherence * 2 * np.pi
+            interference = np.sin(phase) * memory.importance_score
+            
+            memory.quantum_coherence = min(1.0, max(0.0, 
+                memory.quantum_coherence + 0.05 * interference))
+            
+            coherence_changes.append(interference)
+            quantum_field_influence += abs(interference)
+            
+        return {
+            'action': 'quantize',
+            'field_influence': float(quantum_field_influence),
+            'coherence_changes': coherence_changes,
+            'entangled_memories': len([c for c in coherence_changes if abs(c) > 0.1]),
+            'avg_coherence': np.mean([m.quantum_coherence for m in memories])
+        }
+    
+    def _fractal_processing(self, memories: List[UnifiedMemory]) -> Dict[str, Any]:
+        """Procesamiento fractal de memorias"""
+        fractal_patterns = []
+        
+        for memory in memories:
+            # Calcular resonancia fractal basada en la posición y contenido
+            x, y = memory.position
+            fractal_value = (np.sin(x * 0.1) + np.cos(y * 0.1)) * memory.strength
+            
+            memory.fractal_resonance = min(1.0, max(0.0,
+                memory.fractal_resonance + 0.1 * fractal_value))
+            
+            if memory.fractal_resonance > 0.7:
+                fractal_patterns.append(memory.id)
+                
+        # Influenciar el pulso Julia con las memorias
+        if fractal_patterns:
+            pulse_influence = np.mean([m.fractal_resonance for m in memories])
+            self.julia_pulse.speed = 0.05 + 0.02 * pulse_influence
+            
+        return {
+            'action': 'fractalize',
+            'patterns_detected': len(fractal_patterns),
+            'pattern_ids': fractal_patterns,
+            'fractal_coherence': np.mean([m.fractal_resonance for m in memories]),
+            'pulse_speed': self.julia_pulse.speed
+        }
+    
+    def _create_connections(self, memories: List[UnifiedMemory]) -> Dict[str, Any]:
+        """Crear conexiones entre memorias en todos los sistemas"""
+        connections_created = 0
+        
+        for i, mem1 in enumerate(memories):
+            for mem2 in memories[i+1:]:
+                # Calcular similitud integrada
+                similarity = self._calculate_unified_similarity(mem1, mem2)
+                
+                if similarity > 0.5:
+                    mem1.connections.add(mem2.id)
+                    mem2.connections.add(mem1.id)
+                    connections_created += 1
+                    
+                    # Crear conexión en MentalLaby si están disponibles
+                    if (mem1.node_id is not None and mem2.node_id is not None and 
+                        hasattr(self.mental_laby, 'nodes')):
+                        if mem1.node_id in self.mental_laby.nodes and mem2.node_id in self.mental_laby.nodes:
+                            self.mental_laby.nodes[mem1.node_id].edges_out[mem2.node_id] = similarity
+                            self.mental_laby.nodes[mem2.node_id].edges_in[mem1.node_id] = similarity
+        
+        return {
+            'action': 'create_connections',
+            'connections_created': connections_created,
+            'total_memories': len(memories),
+            'connection_density': connections_created / max(1, len(memories) * (len(memories) - 1) / 2)
+        }
+    
+    def _generate_dreams(self, memories: List[UnifiedMemory]) -> Dict[str, Any]:
+        """Generación de sueños integrada"""
+        dream_intensity = 0.0
+        
+        for memory in memories:
+            # Incrementar firma de sueño
+            memory.dream_signature = min(1.0, memory.dream_signature + 0.1)
+            dream_intensity += memory.dream_signature
+            
+            # Influenciar todos los campos
+            x, y = memory.position
+            if (0 <= x < self.memory_space.dimensions and 
+                0 <= y < self.memory_space.dimensions):
+                self.memory_space.mental_laby_field[x, y] += 0.05 * memory.dream_signature
+        
+        # Ejecutar ciclo de sueño en MentalLaby
+        if hasattr(self.mental_laby, 'dream_cycle'):
+            self.mental_laby.dream_cycle(mode="REM", steps_rem=5, T_rem=0.8)
+        
+        # Crear memoria de sueño
+        dream_content = f"Dream state with intensity {dream_intensity:.2f} affecting {len(memories)} memories"
+        dream_memory_id = self.memory_space.create_memory(
+            content=dream_content,
+            emotional_state={'valence': 0.2, 'arousal': 0.7, 'dominance': 0.3}
+        )
+        
+        return {
+            'action': 'dream',
+            'dream_intensity': float(dream_intensity),
+            'affected_memories': len(memories),
+            'dream_mode': 'integrated_REM',
+            'dream_memory_id': dream_memory_id
+        }
+    
+    def _self_reflect(self, memories: List[UnifiedMemory]) -> Dict[str, Any]:
+        """Auto-reflexión integrada"""
+        reflection_insights = []
+        
+        # Análizar patrones en todos los sistemas
+        if memories:
+            unified_states = [m.get_unified_state() for m in memories]
+            
+            # Detectar patrones emocionales
+            emotions = [s['emotional_state'] for s in unified_states]
+            emotional_pattern = 'positive' if np.mean(emotions) > 0 else 'negative'
+            reflection_insights.append(f"emotional_pattern_{emotional_pattern}")
+            
+            # Detectar coherencia cuántica
+            coherences = [s['coherence'] for s in unified_states]
+            if np.mean(coherences) > 0.7:
+                reflection_insights.append("high_quantum_coherence")
+                
+            # Detectar resonancias fractales
+            resonances = [s['resonance'] for s in unified_states]
+            if np.mean(resonances) > 0.6:
+                reflection_insights.append("fractal_synchronization")
+                
+            # Detectar nivel de integración
+            integrations = [s['integration_level'] for s in unified_states]
+            if np.mean(integrations) > 0.7:
+                reflection_insights.append("high_system_integration")
+        
+        # Crear memoria de reflexión
+        reflection_content = f"Integrated reflection: {', '.join(reflection_insights)}"
+        reflection_id = self.memory_space.create_memory(
+            content=reflection_content,
+            emotional_state={'valence': 0.3, 'arousal': 0.4, 'dominance': 0.6}
+        )
+        
+        return {
+            'action': 'reflect',
+            'insights': reflection_insights,
+            'reflection_memory_id': reflection_id,
+            'integrated_analysis': True
+        }
+    
+    def _recall_memories(self, memories: List[UnifiedMemory]) -> Dict[str, Any]:
+        """Recuerdo integrado de memorias"""
+        recalled_memories = []
+        recall_pathways = []
+        
+        for memory in memories[:3]:  # Limitar para eficiencia
+            # Recall por conexiones directas
+            for connected_id in memory.connections:
+                if connected_id in self.memory_space.memories:
+                    recalled_memories.append(connected_id)
+                    recall_pathways.append(f"connection_{memory.id}_{connected_id}")
+            
+            # Recall por MentalLaby
+            if hasattr(self.mental_laby, 'recall') and memory.node_id is not None:
+                _, recalled_ids = self.mental_laby.recall(memory.node_id)
+                recalled_memories.extend([f"node_{id}" for id in recalled_ids])
+                recall_pathways.append(f"mental_laby_{memory.id}")
+                
+        # Actualizar frecuencia de acceso para las memorias originales
+        for memory in memories:
+            memory.access_frequency += 1
+            memory.last_accessed = time.time()
+            
+        return {
+            'action': 'recall',
+            'recalled_memories': list(set(recalled_memories)),
+            'recall_pathways': recall_pathways,
+            'original_memories': len(memories)
+        }
+    
+    def _process_emotions(self, memories: List[UnifiedMemory]) -> Dict[str, Any]:
+        """Procesamiento emocional integrado"""
+        emotional_integration = {
+            'valence_sum': 0.0,
+            'arousal_sum': 0.0,
+            'coherence_emotional': 0.0,
+            'processed_memories': []
+        }
+        
+        for memory in memories:
+            # Integrar estados emocionales de todos los sistemas
+            unified_valence = (memory.valence + memory.emotional_charge) / 2.0
+            unified_arousal = (memory.arousal + memory.cognitive_weight) / 2.0
+            
+            emotional_integration['valence_sum'] += unified_valence
+            emotional_integration['arousal_sum'] += unified_arousal
+            emotional_integration['processed_memories'].append(memory.id)
+            
+            # Actualizar estado emocional de la memoria
+            memory.valence = 0.9 * memory.valence + 0.1 * unified_valence
+            memory.emotional_charge = 0.9 * memory.emotional_charge + 0.1 * unified_valence
+            
+        # Calcular coherencia emocional
+        if memories:
+            avg_valence = emotional_integration['valence_sum'] / len(memories)
+            avg_arousal = emotional_integration['arousal_sum'] / len(memories)
+            emotional_integration['coherence_emotional'] = 1.0 - np.std([
+                (m.valence + m.emotional_charge) / 2.0 for m in memories
+            ])
+        
+        # Crear memoria emocional integrada
+        emotional_content = f"Integrated emotional state: valence={avg_valence:.2f}, arousal={avg_arousal:.2f}"
+        emotional_memory_id = self.memory_space.create_memory(
+            content=emotional_content,
+            emotional_state={'valence': avg_valence, 'arousal': avg_arousal, 'dominance': 0.7}
+        )
+        
+        return {
+            'action': 'emote',
+            'emotional_integration': emotional_integration,
+            'emotional_memory_id': emotional_memory_id,
+            'coherence_level': float(emotional_integration['coherence_emotional'])
+        }
+    
+    def _deep_integration(self, memories: List[UnifiedMemory]) -> Dict[str, Any]:
+        """Integración profunda entre sistemas"""
+        if not memories:
+            return {'action': 'integrate', 'result': 'no_memories'}
+            
+        # Calcular nivel de integración actual
+        current_integration = np.mean([m.integration_level for m in memories])
+        
+        # Mejorar integración
+        integration_boost = 0.0
+        
+        for memory in memories:
+            # Aumentar integración basada en coherencia cruzada
+            integration_boost = 0.1 * memory.cross_system_coherence
+            memory.integration_level = min(1.0, memory.integration_level + integration_boost)
+            
+            # Sincronizar estados entre sistemas
+            memory.quantum_coherence = 0.9 * memory.quantum_coherence + 0.1 * memory.fractal_resonance
+            memory.geometric_curvature = 0.9 * memory.geometric_curvature + 0.1 * memory.stability_score
+            
+        # Crear memoria de integración
+        integration_content = f"Deep integration process: {integration_boost:.2f} boost applied"
+        integration_memory_id = self.memory_space.create_memory(
+            content=integration_content,
+            emotional_state={'valence': 0.5, 'arousal': 0.3, 'dominance': 0.8}
+        )
+        
+        return {
+            'action': 'integrate',
+            'integration_boost': float(integration_boost),
+            'memories_affected': len(memories),
+            'avg_integration_before': float(current_integration),
+            'avg_integration_after': float(np.mean([m.integration_level for m in memories])),
+            'integration_memory_id': integration_memory_id
+        }
+    
+    def _explore_conceptual_space(self, memories: List[UnifiedMemory]) -> Dict[str, Any]:
+        """Exploración del espacio conceptual"""
+        if not memories:
+            return {'action': 'explore', 'result': 'no_memories'}
+            
+        # Identificar regiones inexploradas
+        explored_positions = set(m.position for m in memories)
+        unexplored_regions = []
+        
+        # Buscar regiones con baja densidad de memorias
+        for x in range(0, self.memory_space.dimensions, 10):
+            for y in range(0, self.memory_space.dimensions, 10):
+                nearby_count = sum(1 for pos in explored_positions 
+                                 if abs(pos[0] - x) < 10 and abs(pos[1] - y) < 10)
+                
+                if nearby_count < 2:  # Región poco explorada
+                    unexplored_regions.append((x, y))
+        
+        # Seleccionar algunas regiones para exploración
+        exploration_targets = random.sample(unexplored_regions, min(3, len(unexplored_regions)))
+        
+        # Crear memorias de exploración
+        exploration_memories = []
+        for target in exploration_targets:
+            content = f"Exploration of conceptual space at position {target}"
+            memory_id = self.memory_space.create_memory(
+                content=content,
+                initial_position=target,
+                emotional_state={'valence': 0.0, 'arousal': 0.8, 'dominance': 0.6}
+            )
+            exploration_memories.append(memory_id)
+            
+        # Mover posición de atención a una de las regiones
+        if exploration_targets:
+            self.field_position = exploration_targets[0]
+            
+        return {
+            'action': 'explore',
+            'unexplored_regions': len(unexplored_regions),
+            'exploration_targets': len(exploration_targets),
+            'exploration_memories': exploration_memories,
+            'new_position': self.field_position
+        }
+    
+    def _update_positions(self):
+        """Actualiza posiciones en todos los sistemas"""
+        # Obtener influencia del pulso Julia
+        pulse_value = self.julia_pulse.get_pulse_at_position(self.manifold_position)
+        
+        # Actualizar posición en manifold
+        displacement = np.array([
+            0.5 * np.sin(pulse_value.real),
+            0.5 * np.cos(pulse_value.imag),
+            0.2 * np.sin(time.time() * 0.1)
+        ])
+        self.manifold_position += displacement
+        self.manifold_position = np.clip(self.manifold_position, 0, self.memory_space.dimensions - 1)
+        
+        # Actualizar posición en campo
+        field_displacement = (int(displacement[0]), int(displacement[1]))
+        new_x = max(0, min(self.memory_space.dimensions-1, self.field_position[0] + field_displacement[0]))
+        new_y = max(0, min(self.memory_space.dimensions-1, self.field_position[1] + field_displacement[1]))
+        self.field_position = (new_x, new_y)
+        
+        # Actualizar posición geométrica usando geodésicas
+        velocity = np.array([displacement[0], displacement[1]]) * 0.01
+        self.geometric_position += self.manifold.geodesic_flow(self.geometric_position, velocity)
+        self.geometric_position = np.clip(self.geometric_position, 0.0, 1.0)
+    
+    def _calculate_unified_similarity(self, mem1: UnifiedMemory, mem2: UnifiedMemory) -> float:
+        """Calcula similitud entre memorias considerando todos los sistemas"""
+        # Similitud espacial en manifold
+        manifold_sim = 1.0 / (1.0 + np.linalg.norm(mem1.manifold_position - mem2.manifold_position))
+        
+        # Similitud espacial en campo
+        field_sim = 1.0 / (1.0 + np.linalg.norm(np.array(mem1.position) - np.array(mem2.position)))
+        
+        # Similitud emocional
+        emotional_sim = 1.0 - abs(mem1.valence - mem2.valence) - abs(mem1.arousal - mem2.arousal)
+        
+        # Similitud cuántica
+        quantum_sim = abs(mem1.quantum_coherence - mem2.quantum_coherence)
+        
+        # Similitud fractal
+        fractal_sim = 1.0 - abs(mem1.fractal_resonance - mem2.fractal_resonance)
+        
+        # Similitud de integración
+        integration_sim = 1.0 - abs(mem1.integration_level - mem2.integration_level)
+        
+        return float(np.mean([manifold_sim, field_sim, emotional_sim, quantum_sim, fractal_sim, integration_sim]))
+    
+    def _identify_dominant_system(self, memories: List[UnifiedMemory]) -> str:
+        """Identifica qué sistema es dominante en las memorias actuales"""
+        mental_laby_strength = np.mean([m.salience for m in memories])
+        living_field_strength = np.mean([m.value * m.strength for m in memories])
+        manifold_strength = np.mean([m.importance_score for m in memories])
+        
+        strengths = {
+            'mental_laby': mental_laby_strength,
+            'living_field': living_field_strength,
+            'manifold': manifold_strength
+        }
+        
+        return max(strengths.keys(), key=lambda k: strengths[k])
+    
+    def _calculate_system_coherence(self, memories: List[UnifiedMemory]) -> float:
+        """Calcula la coherencia general entre sistemas"""
+        if not memories:
+            return 0.0
+            
+        # Calcular coherencia promedio
+        coherences = [m.cross_system_coherence for m in memories]
+        return float(np.mean(coherences))
+
+class IntegratedSubconsciousSubsystem:
+    """Subsistema subconsciente que gestiona procesos automáticos en los tres sistemas mejorado"""
+    def __init__(self, memory_space: MemorySpace, manifold: NonEuclideanManifold, 
+                 quantum_foam: QuantumFoam, mental_laby):
+        self.memory_space = memory_space
+        self.manifold = manifold
+        self.quantum_foam = quantum_foam
+        self.mental_laby = mental_laby
+        
+        # Procesadores especializados
+        self.geometric_processor = GeometricProcessor(manifold)
+        self.quantum_processor = QuantumProcessor(quantum_foam)
+        self.memory_processor = MemoryProcessor(memory_space, mental_laby)
+        
+        # Estado del subsistema
+        self.processing_interval = 1.0
+        self.last_process_time = time.time()
+        self.cycle_counter = 0
+        
+        # Historial para análisis temporal
+        self.cycle_history = []
+        
+    def update(self, julia_pulse: JuliaPulse) -> Dict[str, Any]:
+        """Actualización integrada del subsistema subconsciente"""
+        self.cycle_counter += 1
+        current_time = time.time()
+        
+        results = {
+            'timestamp': current_time,
+            'cycle': self.cycle_counter,
+            'processes': {}
+        }
+        
+        # Procesamiento geométrico
+        if current_time - self.last_process_time > self.processing_interval:
+            results['processes']['geometric'] = self.geometric_processor.process()
+            results['processes']['quantum'] = self.quantum_processor.process(julia_pulse)
+            results['processes']['memory'] = self.memory_processor.process()
+            self.last_process_time = current_time
+        
+        # Sincronización entre sistemas
+        self._synchronize_systems()
+        
+        # Ciclos de sueño periódicos
+        if self.cycle_counter % 100 == 0:
+            results['processes']['dream_cycle'] = self._execute_dream_cycle()
+            
+        # Compresión de memoria periódica
+        if self.cycle_counter % 500 == 0:
+            results['processes']['compression'] = self._compress_memories()
+            
+        # Guardar historial
+        self.cycle_history.append(results)
+        if len(self.cycle_history) > 100:
+            self.cycle_history.pop(0)
+            
+        return results
+    
+    def _synchronize_systems(self):
+        """Sincroniza el estado entre los tres sistemas"""
+        # Actualizar campos de influencia en memory_space
+        self.memory_space.update_memory_influences()
+        
+        # Propagar influencias cuánticas a la geometría
+        quantum_influence = np.abs(self.quantum_foam.field).mean()
+        self.manifold.evolve_metric(external_field=self.quantum_foam.field)
+        
+        # Actualizar acoplamiento entre sistemas
+        for memory in self.memory_space.memories.values():
+            # Acoplar coherencia cuántica con curvatura geométrica
+            memory.quantum_coherence = 0.9 * memory.quantum_coherence + 0.1 * memory.geometric_curvature
+            
+            # Acoplar resonancia fractal con salience del MentalLaby
+            if memory.node_id and hasattr(self.mental_laby, 'nodes'):
+                if memory.node_id in self.mental_laby.nodes:
+                    node = self.mental_laby.nodes[memory.node_id]
+                    memory.fractal_resonance = 0.9 * memory.fractal_resonance + 0.1 * node.salience
+    
+    def _execute_dream_cycle(self) -> Dict[str, Any]:
+        """Ejecuta ciclo de sueño integrado en todos los sistemas"""
+        dream_results = {}
+        
+        # Ciclo de sueño en MentalLaby
+        if hasattr(self.mental_laby, 'dream_cycle'):
+            self.mental_laby.dream_cycle(
+                mode="MIXED",
+                steps_rem=10,
+                T_rem=0.8,
+                replay_k=64,
+                prune_threshold=0.02,
+                compress_similarity=0.985,
+                gen_prob=0.15
+            )
+            dream_results['mental_laby'] = 'executed'
+        
+        # Sueño cuántico - coherencia de campo
+        quantum_coherence_before = np.abs(self.quantum_foam.coherence_field).mean()
+        self.quantum_foam.evolve_field()
+        quantum_coherence_after = np.abs(self.quantum_foam.coherence_field).mean()
+        dream_results['quantum_coherence_change'] = float(quantum_coherence_after - quantum_coherence_before)
+        
+        # Sueño geométrico - evolución de curvatura
+        curvature_before = self.manifold.compute_ricci_scalar()
+        self.manifold.evolve_metric()
+        curvature_after = self.manifold.compute_ricci_scalar()
+        dream_results['geometric_curvature_change'] = float(curvature_after - curvature_before)
+        
+        # Crear memoria de sueño
+        dream_content = f"Dream cycle completed with quantum coherence change: {dream_results['quantum_coherence_change']:.4f}"
+        dream_memory_id = self.memory_space.create_memory(
+            content=dream_content,
+            emotional_state={'valence': 0.1, 'arousal': 0.9, 'dominance': 0.2}
+        )
+        dream_results['dream_memory_id'] = dream_memory_id
+        
+        return dream_results
+    
+    def _compress_memories(self) -> Dict[str, Any]:
+        """Comprime memorias usando estrategias integradas"""
+        before_count = len(self.memory_space.memories)
+        compression_results = {}
+        
+        # Identificar memorias para compresión
+        old_memories = [m for m in self.memory_space.memories.values() if m.age > 1000]
+        weak_memories = [m for m in self.memory_space.memories.values() 
+                        if m.get_unified_state()['unified_value'] < 0.1]
+        
+        # Estrategia 1: Fusión de memorias similares
+        similar_pairs = []
+        memories_list = list(self.memory_space.memories.values())
+        for i, mem1 in enumerate(memories_list):
+            for mem2 in memories_list[i+1:]:
+                if self._calculate_similarity(mem1, mem2) > 0.9:
+                    similar_pairs.append((mem1, mem2))
+        
+        # Fusionar memorias similares
+        fused_memories = 0
+        for mem1, mem2 in similar_pairs[:10]:  # Limitar para evitar pérdida masiva
+            if mem1.id in self.memory_space.memories and mem2.id in self.memory_space.memories:
+                self._fuse_memories(mem1, mem2)
+                fused_memories += 1
+        
+        # Estrategia 2: Eliminación de memorias débiles muy antiguas
+        removed_weak = 0
+        for memory in weak_memories[:5]:  # Conservador
+            if memory.age > 2000 and memory.id in self.memory_space.memories:
+                del self.memory_space.memories[memory.id]
+                removed_weak += 1
+        
+        after_count = len(self.memory_space.memories)
+        
+        compression_results = {
+            'before_count': before_count,
+            'after_count': after_count,
+            'fused_memories': fused_memories,
+            'removed_weak': removed_weak,
+            'compression_ratio': float(after_count / before_count) if before_count > 0 else 1.0
+        }
+        
+        # Crear memoria de compresión
+        compression_content = f"Memory compression completed: {compression_results}"
+        compression_memory_id = self.memory_space.create_memory(
+            content=compression_content,
+            emotional_state={'valence': 0.0, 'arousal': 0.2, 'dominance': 0.9}
+        )
+        compression_results['compression_memory_id'] = compression_memory_id
+        
+        return compression_results
+    
+    def _calculate_similarity(self, mem1: UnifiedMemory, mem2: UnifiedMemory) -> float:
+        """Calcula similitud integrada entre memorias"""
+        # Reutilizar el cálculo del subsistema consciente
+        return self._calculate_unified_similarity_simple(mem1, mem2)
+    
+    def _calculate_unified_similarity_simple(self, mem1: UnifiedMemory, mem2: UnifiedMemory) -> float:
+        """Versión simplificada del cálculo de similitud"""
+        spatial_sim = 1.0 / (1.0 + np.linalg.norm(np.array(mem1.position) - np.array(mem2.position)))
+        emotional_sim = 1.0 - abs(mem1.valence - mem2.valence)
+        content_sim = 0.5  # Simplificado - en producción usaría embedding similarity
+        
+        return float(np.mean([spatial_sim, emotional_sim, content_sim]))
+    
+    def _fuse_memories(self, mem1: UnifiedMemory, mem2: UnifiedMemory):
+        """Fusiona dos memorias similares en una"""
+        # Crear memoria fusionada
+        fused_content = f"Fused: {mem1.content} + {mem2.content}"
+        fused_position = ((mem1.position[0] + mem2.position[0]) // 2,
+                         (mem1.position[1] + mem2.position[1]) // 2)
+        
+        # Promediar propiedades
+        fused_memory = UnifiedMemory(
+            id=f"fused_{mem1.id}_{mem2.id}",
+            content=fused_content,
+            position=fused_position,
+            manifold_position=(mem1.manifold_position + mem2.manifold_position) / 2,
+            valence=(mem1.valence + mem2.valence) / 2,
+            arousal=(mem1.arousal + mem2.arousal) / 2,
+            emotional_charge=(mem1.emotional_charge + mem2.emotional_charge) / 2,
+            importance_score=max(mem1.importance_score, mem2.importance_score),
+            strength=max(mem1.strength, mem2.strength),
+            quantum_coherence=(mem1.quantum_coherence + mem2.quantum_coherence) / 2,
+            connections=mem1.connections.union(mem2.connections)
+        )
+        
+        # Reemplazar memorias originales
+        self.memory_space.memories[fused_memory.id] = fused_memory
+        if mem1.id in self.memory_space.memories:
+            del self.memory_space.memories[mem1.id]
+        if mem2.id in self.memory_space.memories:
+            del self.memory_space.memories[mem2.id]
+
+class GeometricProcessor:
+    """Procesador especializado para la geometría no-euclidiana mejorado"""
+    def __init__(self, manifold: NonEuclideanManifold):
+        self.manifold = manifold
+        
+    def process(self) -> Dict[str, Any]:
+        """Procesamiento geométrico"""
+        # Evolucionar la métrica
+        self.manifold.evolve_metric()
+        
+        # Actualizar curvatura
+        self.manifold.update_curvature()
+        
+        # Calcular propiedades geométricas
+        ricci_scalar = self.manifold.compute_ricci_scalar()
+        metric_det = float(np.linalg.det(self.manifold.metric_tensor))
+        
+        return {
+            'ricci_scalar': ricci_scalar,
+            'metric_determinant': metric_det,
+            'curvature_evolution': 'stable' if abs(ricci_scalar) < 0.1 else 'dynamic',
+            'curvature_field_mean': float(self.manifold.curvature_field.mean()),
+            'curvature_field_std': float(self.manifold.curvature_field.std())
+        }
+
+class QuantumProcessor:
+    """Procesador especializado para la espuma cuántica mejorado"""
+    def __init__(self, quantum_foam: QuantumFoam):
+        self.quantum_foam = quantum_foam
+        
+    def process(self, julia_pulse: JuliaPulse) -> Dict[str, Any]:
+        """Procesamiento cuántico con influencia fractal"""
+        # Obtener influencia del pulso Julia
+        pulse_field = julia_pulse.update()
+        pulse_influence = np.abs(pulse_field).mean()
+        
+        # Evolucionar campo cuántico
+        self.quantum_foam.evolve_field(external_influence=pulse_field * 0.01)
+        
+        # Calcular métricas cuánticas
+        field_energy = float(np.abs(self.quantum_foam.field).mean())
+        coherence_level = float(self.quantum_foam.coherence_field.mean())
+        virtual_pair_density = float(np.abs(self.quantum_foam.virtual_pairs).mean())
+        
+        return {
+            'field_energy': field_energy,
+            'coherence_level': coherence_level,
+            'virtual_pair_density': virtual_pair_density,
+            'pulse_influence': float(pulse_influence),
+            'field_phase': float(np.angle(self.quantum_foam.field).mean())
+        }
+
+class MemoryProcessor:
+    """Procesador especializado para la gestión de memorias mejorado"""
+    def __init__(self, memory_space: MemorySpace, mental_laby):
+        self.memory_space = memory_space
+        self.mental_laby = mental_laby
+        
+    def process(self) -> Dict[str, Any]:
+        """Procesamiento de memorias"""
+        # Actualizar influencias entre sistemas
+        self.memory_space.update_memory_influences()
+        
+        # Estadísticas de memoria
+        total_memories = len(self.memory_space.memories)
+        active_memories = len([m for m in self.memory_space.memories.values() 
+                              if m.get_unified_state()['unified_value'] > 0.5])
+        
+        # Procesar envejecimiento
+        for memory in self.memory_space.memories.values():
+            memory.age += 1
+            if memory.age > 100:
+                # Decaimiento gradual
+                memory.strength *= 0.999
+                memory.importance_score *= 0.999
+        
+        # Calcular estadísticas adicionales
+        if total_memories > 0:
+            avg_integration = np.mean([m.integration_level for m in self.memory_space.memories.values()])
+            avg_coherence = np.mean([m.cross_system_coherence for m in self.memory_space.memories.values()])
+        else:
+            avg_integration = 0.0
+            avg_coherence = 0.0
+            
+        return {
+            'total_memories': total_memories,
+            'active_memories': active_memories,
+            'memory_utilization': float(active_memories / max(1, total_memories)),
+            'avg_integration_level': float(avg_integration),
+            'avg_cross_system_coherence': float(avg_coherence)
+        }
+
+# ==========================================
+# SISTEMA MENTAL MULTIDIMENSIONAL INTEGRADO MEJORADO
+# ==========================================
+
+class IntegratedMindSystem:
+    """Sistema mental que unifica las tres arquitecturas de consciencia mejorado"""
+    def __init__(self, dimensions: int = 128, grid_size: int = 64):
+        logger.info("Inicializando Sistema Mental Multidimensional Integrado Mejorado...")
+        
+        # Dimensiones del sistema
+        self.dimensions = dimensions
+        self.grid_size = grid_size
+        
+        # Núcleo matemático integrado
+        self.manifold = NonEuclideanManifold(dimensions, grid_size)
+        self.quantum_foam = QuantumFoam(self.manifold)
+        self.julia_pulse = JuliaPulse(dimensions=3)
+        
+        # Sistema de memoria unificado
+        self.memory_space = MemorySpace(dimensions)
+        
+        # MentalLaby (real o mock)
+        if HAS_MENTAL_LABY:
+            from mental_laby import MentalLaby
+            self.mental_laby = MentalLaby(d=256, K=8, temp_store=0.7, tau_recency=60.0, max_nodes=100000)
+        else:
+            self.mental_laby = MockMentalLaby()
+            
+        # Subsistemas integrados
+        self.conscious = IntegratedConsciousSubsystem(
+            self.memory_space, self.manifold, self.julia_pulse, self.mental_laby
+        )
+        self.subconscious = IntegratedSubconsciousSubsystem(
+            self.memory_space, self.manifold, self.quantum_foam, self.mental_laby
+        )
+        
+        # Campo unificado (del sistema v2)
+        self.living_field = np.zeros((dimensions, dimensions), dtype=np.complex64)
+        self.breath_phase = 0.0
+        self.breath_speed = 0.05
+        
+        # Estado del sistema
+        self.running = False
+        self.cycle_count = 0
+        self.last_cycle_time = time.time()
+        
+        # Executor para procesamiento paralelo
+        self.executor = ThreadPoolExecutor(max_workers=6)
+        
+        # Métricas del sistema
+        self.system_metrics = {
+            'cycle_times': [],
+            'conscious_functions': [],
+            'subconscious_processes': [],
+            'integration_levels': [],
+            'system_coherence': []
+        }
+        
+        logger.info("Sistema Mental Multidimensional Integrado Mejorado inicializado correctamente")
+        
+    def start(self):
+        """Inicia el funcionamiento del sistema mental integrado"""
+        self.running = True
+        logger.info("Sistema mental multidimensional iniciado")
+        
+        try:
+            while self.running:
+                self._integrated_cycle()
+                time.sleep(0.1)  # 10 ciclos por segundo
+        except KeyboardInterrupt:
+            logger.info("Interrupción por teclado detectada")
+        except Exception as e:
+            logger.error(f"Error en el ciclo principal: {e}")
+        finally:
+            self.stop()
+            
+    def stop(self):
+        """Detiene el sistema mental"""
+        self.running = False
+        self.executor.shutdown(wait=True)
+        logger.info("Sistema mental multidimensional detenido")
+        
+    def _integrated_cycle(self):
+        """Ejecuta un ciclo integrado de todos los sistemas"""
+        self.cycle_count += 1
+        cycle_start = time.time()
+        
+        # Respiración fractal multiescala (del sistema v3)
+        self._breathe_multiscale()
+        
+        # Ejecutar subsistemas en paralelo
+        conscious_future = self.executor.submit(self.conscious.update)
+        subconscious_future = self.executor.submit(self.subconscious.update, self.julia_pulse)
+        
+        # Procesamiento matemático paralelo
+        geometric_future = self.executor.submit(self._process_geometric_core)
+        quantum_future = self.executor.submit(self._process_quantum_core)
+        
+        # Recopilar resultados
+        conscious_result = conscious_future.result()
+        subconscious_result = subconscious_future.result()
+        geometric_result = geometric_future.result()
+        quantum_result = quantum_future.result()
+        
+        # Integración de estados
+        self._integrate_all_systems(conscious_result, subconscious_result, 
+                                   geometric_result, quantum_result)
+        
+        # Actualizar métricas del sistema
+        cycle_time = time.time() - cycle_start
+        self._update_system_metrics(cycle_time, conscious_result, subconscious_result)
+        
+        # Logging periódico
+        if self.cycle_count % 50 == 0:
+            self._log_system_state(conscious_result, subconscious_result, cycle_time)
+            
+    def _breathe_multiscale(self):
+        """Respiración fractal multiescala integrada"""
+        self.breath_phase += self.breath_speed
+        scales = [8, 16, 32, 64]
+        
+        z = self.living_field.copy()
+        for s in scales:
+            step = max(1, self.dimensions // s)
+            if step < self.dimensions:
+                subgrid = z[::step, ::step]
+                subgrid = subgrid**2 + (-0.7 + 0.27015j)  # Constante de Julia
+                
+                # Expansión e influencia
+                expanded = np.kron(subgrid, np.ones((step, step)))
+                if expanded.shape[0] > z.shape[0]:
+                    expanded = expanded[:z.shape[0], :z.shape[1]]
+                elif expanded.shape[0] < z.shape[0]:
+                    padded = np.zeros_like(z)
+                    padded[:expanded.shape[0], :expanded.shape[1]] = expanded
+                    expanded = padded
+                    
+                factor = 0.05 * math.sin(self.breath_phase * (s/8))
+                z += expanded * factor
+                
+        self.living_field = z
+        
+        # Actualizar campo de memoria con influencia de la respiración
+        self.memory_space.living_field = 0.95 * self.memory_space.living_field + 0.05 * self.living_field
+        
+    def _process_geometric_core(self) -> Dict[str, Any]:
+        """Procesamiento del núcleo geométrico"""
+        # Evolucionar métrica
+        self.manifold.evolve_metric()
+        
+        # Actualizar curvatura
+        self.manifold.update_curvature()
+        
+        # Calcular propiedades
+        ricci_scalar = self.manifold.compute_ricci_scalar()
+        metric_det = float(np.linalg.det(self.manifold.metric_tensor))
+        
+        # Actualizar campo de acoplamiento
+        self.manifold.consciousness_coupling = 0.95 * self.manifold.consciousness_coupling + \
+                                              0.05 * np.abs(self.living_field)
+        
+        return {
+            'ricci_scalar': ricci_scalar,
+            'metric_determinant': metric_det,
+            'curvature_field_mean': float(self.manifold.curvature_field.mean()),
+            'coupling_mean': float(self.manifold.consciousness_coupling.mean())
+        }
+        
+    def _process_quantum_core(self) -> Dict[str, Any]:
+        """Procesamiento del núcleo cuántico"""
+        # Evolucionar campo cuántico
+        self.quantum_foam.evolve_field(external_influence=self.living_field * 0.01)
+        
+        # Calcular propiedades
+        field_energy = float(np.abs(self.quantum_foam.field).mean())
+        coherence_level = float(self.quantum_foam.coherence_field.mean())
+        virtual_pair_density = float(np.abs(self.quantum_foam.virtual_pairs).mean())
+        
+        # Actualizar campo de acoplamiento
+        self.manifold.memory_coupling = 0.95 * self.manifold.memory_coupling + \
+                                        0.05 * self.quantum_foam.coherence_field
+        
+        return {
+            'field_energy': field_energy,
+            'coherence_level': coherence_level,
+            'virtual_pair_density': virtual_pair_density,
+            'memory_coupling_mean': float(self.manifold.memory_coupling.mean())
+        }
+        
+    def _integrate_all_systems(self, conscious_result, subconscious_result, 
+                              geometric_result, quantum_result):
+        """Integra los resultados de todos los sistemas"""
+        # Actualizar campos de memoria con resultados geométricos y cuánticos
+        self.memory_space.manifold_field = 0.95 * self.memory_space.manifold_field + \
+                                          0.05 * np.random.random(self.memory_space.manifold_field.shape) * geometric_result['ricci_scalar']
+        
+        # Actualizar campo mental_laby con resultados cuánticos
+        self.memory_space.mental_laby_field = 0.95 * self.memory_space.mental_laby_field + \
+                                             0.05 * np.abs(self.quantum_foam.field).mean()
+        
+        # Sincronizar sistemas
+        self.memory_space.update_memory_influences()
+        
+    def _update_system_metrics(self, cycle_time, conscious_result, subconscious_result):
+        """Actualiza las métricas del sistema"""
+        # Tiempos de ciclo
+        self.system_metrics['cycle_times'].append(cycle_time)
+        if len(self.system_metrics['cycle_times']) > 100:
+            self.system_metrics['cycle_times'] = self.system_metrics['cycle_times'][-50:]
+            
+        # Funciones conscientes
+        self.system_metrics['conscious_functions'].append(conscious_result['function'])
+        if len(self.system_metrics['conscious_functions']) > 100:
+            self.system_metrics['conscious_functions'] = self.system_metrics['conscious_functions'][-50:]
+            
+        # Procesos subconscientes
+        processes = list(subconscious_result['processes'].keys())
+        self.system_metrics['subconscious_processes'].append(processes)
+        if len(self.system_metrics['subconscious_processes']) > 100:
+            self.system_metrics['subconscious_processes'] = self.system_metrics['subconscious_processes'][-50:]
+            
+        # Niveles de integración
+        if self.memory_space.memories:
+            avg_integration = np.mean([m.integration_level for m in self.memory_space.memories.values()])
+            self.system_metrics['integration_levels'].append(avg_integration)
+            if len(self.system_metrics['integration_levels']) > 100:
+                self.system_metrics['integration_levels'] = self.system_metrics['integration_levels'][-50:]
+                
+        # Coherencia del sistema
+        system_coherence = np.mean(np.abs(self.memory_space.sync_matrix))
+        self.system_metrics['system_coherence'].append(system_coherence)
+        if len(self.system_metrics['system_coherence']) > 100:
+            self.system_metrics['system_coherence'] = self.system_metrics['system_coherence'][-50:]
+            
+    def _log_system_state(self, conscious_result, subconscious_result, cycle_time):
+        """Registra el estado del sistema"""
+        # Calcular estadísticas
+        avg_cycle_time = np.mean(self.system_metrics['cycle_times'])
+        memory_count = len(self.memory_space.memories)
+        active_memories = len([m for m in self.memory_space.memories.values() 
+                              if m.get_unified_state()['unified_value'] > 0.5])
+        
+        # Función consciente más común
+        if self.system_metrics['conscious_functions']:
+            most_common_function = max(set(self.system_metrics['conscious_functions']), 
+                                     key=self.system_metrics['conscious_functions'].count)
+        else:
+            most_common_function = "N/A"
+            
+        # Procesos subconscientes más comunes
+        if self.system_metrics['subconscious_processes']:
+            all_processes = [p for processes in self.system_metrics['subconscious_processes'] for p in processes]
+            most_common_process = max(set(all_processes), key=all_processes.count) if all_processes else "N/A"
+        else:
+            most_common_process = "N/A"
+            
+        # Niveles de integración y coherencia
+        avg_integration = np.mean(self.system_metrics['integration_levels']) if self.system_metrics['integration_levels'] else 0.0
+        avg_coherence = np.mean(self.system_metrics['system_coherence']) if self.system_metrics['system_coherence'] else 0.0
+        
+        logger.info(f"Ciclo {self.cycle_count}: Tiempo={cycle_time:.4f}s (avg={avg_cycle_time:.4f}s), "
+                   f"Memorias={memory_count} (activas={active_memories}), "
+                   f"Función consciente={most_common_function}, "
+                   f"Proceso subconsciente={most_common_process}, "
+                   f"Integración={avg_integration:.4f}, Coherencia={avg_coherence:.4f}")
+        
+    def get_system_state(self) -> Dict[str, Any]:
+        """Devuelve el estado actual del sistema"""
+        return {
+            'cycle_count': self.cycle_count,
+            'memory_count': len(self.memory_space.memories),
+            'active_memories': len([m for m in self.memory_space.memories.values() 
+                                   if m.get_unified_state()['unified_value'] > 0.5]),
+            'conscious_function': self.conscious.current_function,
+            'subconscious_cycle': self.subconscious.cycle_counter,
+            'system_metrics': {
+                'avg_cycle_time': np.mean(self.system_metrics['cycle_times']) if self.system_metrics['cycle_times'] else 0.0,
+                'most_common_function': max(set(self.system_metrics['conscious_functions']), 
+                                          key=self.system_metrics['conscious_functions'].count) 
+                                          if self.system_metrics['conscious_functions'] else "N/A",
+                'avg_integration': np.mean(self.system_metrics['integration_levels']) 
+                                  if self.system_metrics['integration_levels'] else 0.0,
+                'avg_coherence': np.mean(self.system_metrics['system_coherence']) 
+                                if self.system_metrics['system_coherence'] else 0.0
+            },
+            'sync_matrix': self.memory_space.sync_matrix.tolist()
+        }
+        
+    def create_input_memory(self, content: Any, emotional_state: Optional[Dict[str, float]] = None) -> str:
+        """Crea una memoria a partir de una entrada externa"""
+        return self.memory_space.create_memory(content, emotional_state=emotional_state)
+        
+    def query_memories(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """Consulta memorias basadas en contenido simplificado"""
+        # En una implementación real, esto usaría embeddings y búsqueda semántica
+        # Aquí usamos una búsqueda simple por coincidencia de texto
+        results = []
+        
+        for memory in self.memory_space.memories.values():
+            if isinstance(memory.content, str) and query.lower() in memory.content.lower():
+                results.append({
+                    'id': memory.id,
+                    'content': memory.content,
+                    'unified_state': memory.get_unified_state(),
+                    'age': memory.age,
+                    'access_frequency': memory.access_frequency
+                })
+                
+        # Ordenar por relevancia (frecuencia de acceso y estado unificado)
+        results.sort(key=lambda x: (x['access_frequency'], x['unified_state']['unified_value']), 
+                    reverse=True)
+        
+        return results[:limit]
+
+# ==========================================
+# FUNCIÓN PRINCIPAL
+# ==========================================
+
+def main():
+    """Función principal para ejecutar el sistema"""
+    # Crear sistema
+    mind_system = IntegratedMindSystem(dimensions=64, grid_size=32)
+    
+    # Crear algunas memorias iniciales
+    initial_memories = [
+        "Consciencia de sí mismo",
+        "Percepción del entorno",
+        "Memoria a corto plazo",
+        "Procesamiento emocional",
+        "Razonamiento lógico"
+    ]
+    
+    for content in initial_memories:
+        emotional_state = {
+            'valence': random.uniform(-1, 1),
+            'arousal': random.uniform(0, 1),
+            'dominance': random.uniform(0, 1)
+        }
+        mind_system.create_input_memory(content, emotional_state)
+    
+    # Iniciar sistema
+    try:
+        mind_system.start()
+    except KeyboardInterrupt:
+        print("\nSistema detenido por el usuario")
+    finally:
+        # Mostrar estado final
+        final_state = mind_system.get_system_state()
+        print("\nEstado final del sistema:")
+        print(f"Ciclos ejecutados: {final_state['cycle_count']}")
+        print(f"Memorias creadas: {final_state['memory_count']}")
+        print(f"Memorias activas: {final_state['active_memories']}")
+        print(f"Tiempo promedio por ciclo: {final_state['system_metrics']['avg_cycle_time']:.4f}s")
+        print(f"Coherencia del sistema: {final_state['system_metrics']['avg_coherence']:.4f}")
+
+if __name__ == "__main__":
+    main()
