@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@qualia-tempo/eslint-plugin-qualia-code": "file:eslint-plugin-qualia-code",
+    "inversify": "^7.10.0",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}
