@@ -160,7 +160,7 @@ describe('ErrorReportingService - GOLD.CODE IoC Testing', () => {
       await errorReportingService.reportError(error, 'high', { context: 'test' });
       
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        '� [ErrorReportingService] Error queued for processing',
+        '�� [ErrorReportingService] Error queued for processing',
         expect.objectContaining({
           message: 'Test error',
           severity: 'high'

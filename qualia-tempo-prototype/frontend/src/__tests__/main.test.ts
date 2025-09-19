@@ -8,12 +8,8 @@ import { describe, test, expect, beforeEach, afterEach, afterAll, it, vi, type M
 // Mock electron module completely
 const appEventHandlers = new Map<string, (...args: any[]) => any>();
 const mockApp = {
-  whenReady: vi.fn().mockImplementation((...args: any[]) => {
-    const callback = args[0];
-    if (typeof callback === 'function') {
-      // Store the callback for later access and call it
-      setTimeout(callback, 0);
-    }
+  whenReady: vi.fn().mockImplementation(() => {
+    // Return a resolved promise and store any callback
     return Promise.resolve();
   }),
   on: vi.fn().mockImplementation((...args: any[]) => {
@@ -27,7 +23,7 @@ const mockApp = {
   getEventHandler: (event: string) => appEventHandlers.get(event)
 };
 
-const mockBrowserWindow = vi.fn().mockImplementation(() => ({
+const mockWindowInstance = {
   loadURL: vi.fn(),
   loadFile: vi.fn(),
   on: vi.fn(),
@@ -38,7 +34,9 @@ const mockBrowserWindow = vi.fn().mockImplementation(() => ({
   setFullScreen: vi.fn(),
   minimize: vi.fn(),
   close: vi.fn()
-})) as MockedFunction<any> & { getAllWindows: MockedFunction<any> };
+};
+
+const mockBrowserWindow = vi.fn().mockImplementation(() => mockWindowInstance) as MockedFunction<any> & { getAllWindows: MockedFunction<any> };
 
 mockBrowserWindow.getAllWindows = vi.fn().mockReturnValue([]);
 
@@ -79,10 +77,11 @@ vi.mock('url', () => ({
   fileURLToPath: vi.fn((url: string) => url.replace('file://', ''))
 }));
 
-// Mock environment utils
-vi.mock('../utils/env', () => ({
+// Mock environment utils with mutable value
+const envMock = {
   isDev: false
-}));
+};
+vi.mock('../utils/env', () => envMock);
 
 // Mock console.log
 const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -122,16 +121,11 @@ describe('Electron Main Process', () => {
 
   describe('Window Creation', () => {
     it('should create BrowserWindow with correct configuration', async () => {
+      // Import the module to trigger initialization
       await import('../main');
       
-      // Trigger app ready callback
-      const readyCallback = mockApp.whenReady.mock.calls[0][0];
-      if (typeof readyCallback === 'function') {
-        readyCallback();
-      } else {
-        // whenReady returns a promise, so we need to await it
-        await mockApp.whenReady();
-      }
+      // Wait for any async operations
+      await new Promise(resolve => setTimeout(resolve, 0));
       
       // Verify BrowserWindow was created with correct options
       expect(mockBrowserWindow).toHaveBeenCalledWith({
@@ -151,15 +145,13 @@ describe('Electron Main Process', () => {
     });
 
     it('should load production file when not in dev mode', async () => {
-      const { isDev } = await import('../utils/env');
-      (isDev as any) = false;
+      envMock.isDev = false;
       
       await import('../main');
       
       // Get the window instance
-      const windowInstance = mockBrowserWindow.mock.results[0]?.value;
-      if (windowInstance) {
-        expect(windowInstance.loadFile).toHaveBeenCalledWith(
+      if (mockWindowInstance) {
+        expect(mockWindowInstance.loadFile).toHaveBeenCalledWith(
           expect.stringContaining('index.html')
         );
       }
@@ -168,9 +160,9 @@ describe('Electron Main Process', () => {
     it('should register window event handlers', async () => {
       await import('../main');
       
-      const windowInstance = mockBrowserWindow.mock.results[0]?.value;
-      if (windowInstance) {
-        expect(windowInstance.on).toHaveBeenCalledWith('closed', expect.any(Function));
+      // Use mockWindowInstance directly
+      if (mockWindowInstance) {
+        expect(mockWindowInstance.on).toHaveBeenCalledWith('closed', expect.any(Function));
       }
     });
   });
@@ -200,17 +192,17 @@ describe('Electron Main Process', () => {
       const fullscreenHandler = mockIpcMain.getHandler('toggle-fullscreen');
       
       if (fullscreenHandler) {
-        const windowInstance = mockBrowserWindow.mock.results[0]?.value;
+        // Use mockWindowInstance directly
         
         // Test entering fullscreen
-        windowInstance.isFullScreen.mockReturnValue(false);
+        mockWindowInstance.isFullScreen.mockReturnValue(false);
         fullscreenHandler();
-        expect(windowInstance.setFullScreen).toHaveBeenCalledWith(true);
+        expect(mockWindowInstance.setFullScreen).toHaveBeenCalledWith(true);
         
         // Test exiting fullscreen
-        windowInstance.isFullScreen.mockReturnValue(true);
+        mockWindowInstance.isFullScreen.mockReturnValue(true);
         fullscreenHandler();
-        expect(windowInstance.setFullScreen).toHaveBeenCalledWith(false);
+        expect(mockWindowInstance.setFullScreen).toHaveBeenCalledWith(false);
       }
     });
 
@@ -220,9 +212,9 @@ describe('Electron Main Process', () => {
       const minimizeHandler = mockIpcMain.getHandler('minimize-window');
       
       if (minimizeHandler) {
-        const windowInstance = mockBrowserWindow.mock.results[0]?.value;
+        // Use mockWindowInstance directly
         minimizeHandler();
-        expect(windowInstance.minimize).toHaveBeenCalled();
+        expect(mockWindowInstance.minimize).toHaveBeenCalled();
       }
     });
 
@@ -232,9 +224,9 @@ describe('Electron Main Process', () => {
       const closeHandler = mockIpcMain.getHandler('close-window');
       
       if (closeHandler) {
-        const windowInstance = mockBrowserWindow.mock.results[0]?.value;
+        // Use mockWindowInstance directly
         closeHandler();
-        expect(windowInstance.close).toHaveBeenCalled();
+        expect(mockWindowInstance.close).toHaveBeenCalled();
       }
     });
   });
@@ -338,10 +330,10 @@ describe('Electron Main Process', () => {
       vi.resetModules();
       await import('../main');
       
-      const windowInstance = mockBrowserWindow.mock.results[0]?.value;
-      if (windowInstance) {
-        expect(windowInstance.loadURL).toHaveBeenCalledWith('http://localhost:5173');
-        expect(windowInstance.webContents.openDevTools).toHaveBeenCalled();
+      // Use mockWindowInstance directly
+      if (mockWindowInstance) {
+        expect(mockWindowInstance.loadURL).toHaveBeenCalledWith('http://localhost:5173');
+        expect(mockWindowInstance.webContents.openDevTools).toHaveBeenCalled();
       }
     });
   });

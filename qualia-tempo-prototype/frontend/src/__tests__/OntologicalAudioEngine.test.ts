@@ -12,54 +12,107 @@ import type { IOntologicalAudioEngine, EmergentBehavior } from "../audio/IOntolo
 import { QualiaLogger, LogLevel } from '../services/Logger';
 import { QualiaState } from "../types/contracts";
 
-// Mock Tone.js completely
-vi.mock('tone', () => ({
-  Reverb: vi.fn().mockImplementation(() => ({
-    connect: vi.fn(),
-    decay: 1.5,
-    wet: 0.45
-  })),
-  FeedbackDelay: vi.fn().mockImplementation(() => ({
-    connect: vi.fn(),
-    delayTime: "8n",
-    feedback: 0.28,
-    wet: 0.18
-  })),
-  Volume: vi.fn().mockImplementation(() => ({
-    connect: vi.fn(),
-    toDestination: vi.fn()
-  })),
-  PolySynth: vi.fn().mockImplementation(() => ({
-    connect: vi.fn(),
-    triggerAttackRelease: vi.fn(),
-    dispose: vi.fn()
-  })),
-  Synth: vi.fn().mockImplementation(() => ({
-    connect: vi.fn(),
-    triggerAttackRelease: vi.fn(),
-    triggerAttack: vi.fn(),
-    triggerRelease: vi.fn(),
-    dispose: vi.fn(),
-    set: vi.fn(),
-    volume: { value: 0 },
-    envelope: {
-      attack: 0.1,
-      decay: 0.2,
-      sustain: 0.5,
-      release: 1.0
-    }
-  })),
-  Frequency: vi.fn().mockImplementation((_freq) => ({
-    toNote: vi.fn().mockReturnValue('C4')
-  })),
-  start: vi.fn(),
-  Transport: {
+// Mock Tone.js completely - EXPLICIT DEBUG VERSION
+vi.mock('tone', () => {
+  console.log('🔧 [MOCK] Setting up Tone.js mock');
+  
+  // Create the mock object that will be returned by constructors
+  const createMockSynth = () => {
+    const mockSynth = {
+      connect: vi.fn().mockReturnThis(),
+      triggerAttackRelease: vi.fn(),
+      triggerAttack: vi.fn(),
+      triggerRelease: vi.fn(),
+      dispose: vi.fn(),
+      set: vi.fn(),
+      volume: { value: 0 },
+      envelope: {
+        attack: 0.1,
+        decay: 0.2,
+        sustain: 0.5,
+        release: 1.0
+      }
+    };
+    console.log('🔧 [MOCK] Created mock synth:', Object.keys(mockSynth));
+    return mockSynth;
+  };
+
+  const createMockFrequency = (freq: any) => {
+    const mockFreq = {
+      toNote: vi.fn().mockReturnValue('C4'),
+      valueOf: vi.fn().mockReturnValue(typeof freq === 'number' ? freq : 440),
+      toFrequency: vi.fn().mockReturnValue(typeof freq === 'number' ? freq : 440)
+    };
+    console.log('🔧 [MOCK] Created mock frequency:', freq, Object.keys(mockFreq));
+    return mockFreq;
+  };
+
+  // Mock constructors
+  const MockPolySynth = vi.fn().mockImplementation((synthClass, options) => {
+    console.log('🔧 [MOCK] PolySynth constructor called with:', synthClass, options);
+    const mockSynth = createMockSynth();
+    console.log('🔧 [MOCK] PolySynth returning:', Object.keys(mockSynth));
+    return mockSynth;
+  });
+
+  const MockSynth = vi.fn().mockImplementation((options) => {
+    console.log('🔧 [MOCK] Synth constructor called with:', options);
+    const mockSynth = createMockSynth();
+    console.log('🔧 [MOCK] Synth returning:', Object.keys(mockSynth));
+    return mockSynth;
+  });
+
+  const MockFrequency = vi.fn().mockImplementation((freq) => {
+    console.log('🔧 [MOCK] Frequency constructor called with:', freq);
+    return createMockFrequency(freq);
+  });
+
+  const MockReverb = vi.fn().mockImplementation((options) => {
+    console.log('🔧 [MOCK] Reverb constructor called with:', options);
+    return {
+      connect: vi.fn().mockReturnThis(),
+      decay: 1.5,
+      wet: 0.45
+    };
+  });
+
+  const MockFeedbackDelay = vi.fn().mockImplementation((options) => {
+    console.log('🔧 [MOCK] FeedbackDelay constructor called with:', options);
+    return {
+      connect: vi.fn().mockReturnThis(),
+      delayTime: "8n",
+      feedback: 0.28,
+      wet: 0.18
+    };
+  });
+
+  const MockVolume = vi.fn().mockImplementation((volume) => {
+    console.log('🔧 [MOCK] Volume constructor called with:', volume);
+    return {
+      connect: vi.fn().mockReturnThis(),
+      toDestination: vi.fn()
+    };
+  });
+
+  const mockExports = {
+    PolySynth: MockPolySynth,
+    Synth: MockSynth,
+    Frequency: MockFrequency,
+    Reverb: MockReverb,
+    FeedbackDelay: MockFeedbackDelay,
+    Volume: MockVolume,
     start: vi.fn(),
-    stop: vi.fn(),
-    pause: vi.fn(),
-    bpm: { value: 120 }
-  }
-}));
+    Transport: {
+      start: vi.fn(),
+      stop: vi.fn(),
+      pause: vi.fn(),
+      bpm: { value: 120 }
+    }
+  };
+
+  console.log('🔧 [MOCK] Tone.js mock setup complete, exports:', Object.keys(mockExports));
+  return mockExports;
+});
 
 describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
   let engine: IOntologicalAudioEngine;

@@ -8,25 +8,47 @@ if (typeof window === 'undefined') {
   global.window = {} as any;
 }
 
-// Mock browser timing APIs
+// Mock browser timing APIs with enhanced stability
+const mockSetInterval = vi.fn(() => 123); // Return a mock timer ID
+const mockClearInterval = vi.fn(); // No-op function
+const mockSetTimeout = vi.fn(() => 456); // Return a mock timer ID
+const mockClearTimeout = vi.fn(); // No-op function
+
 Object.defineProperty(window, 'setInterval', {
   writable: true,
-  value: vi.fn(() => 123), // Return a mock timer ID
+  configurable: true,
+  value: mockSetInterval,
 });
 
 Object.defineProperty(window, 'clearInterval', {
   writable: true,
-  value: vi.fn(), // No-op function
+  configurable: true,
+  value: mockClearInterval,
 });
 
 Object.defineProperty(window, 'setTimeout', {
   writable: true,
-  value: vi.fn(() => 456), // Return a mock timer ID
+  configurable: true,
+  value: mockSetTimeout,
 });
 
 Object.defineProperty(window, 'clearTimeout', {
   writable: true,
-  value: vi.fn(), // No-op function
+  configurable: true,
+  value: mockClearTimeout,
+});
+
+// Also mock on global for maximum compatibility
+Object.defineProperty(global, 'setInterval', {
+  writable: true,
+  configurable: true,
+  value: mockSetInterval,
+});
+
+Object.defineProperty(global, 'clearInterval', {
+  writable: true,
+  configurable: true,
+  value: mockClearInterval,
 });
 
 // Mock performance API
