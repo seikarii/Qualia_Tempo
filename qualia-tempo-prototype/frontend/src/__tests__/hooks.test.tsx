@@ -1,11 +1,23 @@
 import { renderHook } from "@testing-library/react";
-import { Container } from "inversify";
 import { useService } from "../services/hooks";
 import { TYPES } from "../services/inversify.types";
 import { IEventBus } from "../services/interfaces/IEventBus";
 
 // Mock the container
-let container: Container;
+jest.mock('../services/inversify.container', () => ({
+  container: {
+    get: jest.fn(),
+  },
+}));
+
+// Mock the inversify config to avoid actual container setup
+jest.mock('../services/inversify.config', () => ({
+  container: {
+    get: jest.fn(),
+  },
+}));
+
+const mockContainer = require('../services/inversify.container').container;
 
 // Complete mock EventBus implementation
 const mockEventBus: IEventBus = {
@@ -22,24 +34,16 @@ const mockEventBus: IEventBus = {
   }),
 };
 
-// Mock the actual container module
-jest.mock('../services/inversify.config', () => {
-  const mockContainer = {
-    get: jest.fn().mockImplementation((type: symbol) => {
+describe('useService Hook', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Configure the mock container to return the mock EventBus
+    mockContainer.get.mockImplementation((type: symbol) => {
       if (type === TYPES.IEventBus) {
         return mockEventBus;
       }
       throw new Error(`Unmocked service type: ${type.toString()}`);
-    }),
-  };
-  return { container: mockContainer };
-});
-
-describe('useService Hook', () => {
-  beforeEach(() => {
-    container = new Container();
-    container.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
-    jest.clearAllMocks();
+    });
   });
 
   it('should resolve service from IoC container', () => {

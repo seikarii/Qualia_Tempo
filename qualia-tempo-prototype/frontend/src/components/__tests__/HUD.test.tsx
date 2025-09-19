@@ -6,6 +6,11 @@ import {
   useGameStats,
 } from "../../state/useGameStore";
 
+// Mock the services hooks
+jest.mock("../../services/hooks", () => ({
+  useConfiguration: jest.fn(),
+}));
+
 // Mock the store hooks
 jest.mock("../../state/useGameStore", () => ({
   useGameStore: jest.fn(),
@@ -13,6 +18,7 @@ jest.mock("../../state/useGameStore", () => ({
   useGameStats: jest.fn(),
 }));
 
+const mockUseConfiguration = require("../../services/hooks").useConfiguration;
 const mockUseGameStore = useGameStore as jest.MockedFunction<
   typeof useGameStore
 >;
@@ -37,6 +43,24 @@ describe("HUD Component", () => {
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
+
+    // Mock configuration service
+    mockUseConfiguration.mockReturnValue({
+      getGameConfig: jest.fn(() => ({
+        maxCombo: 100,
+        scoreMultiplier: 1.0,
+        timeLimit: 300,
+      })),
+      getQualiaConfig: jest.fn(() => ({
+        intensityThreshold: 0.5,
+        focusMultiplier: 1.2,
+      })),
+      getBackendConfig: jest.fn(() => ({
+        endpoint: 'http://localhost:8000',
+        timeout: 5000,
+      })),
+      isLoaded: jest.fn(() => true),
+    });
 
     // Default mock state
     const defaultState = {
