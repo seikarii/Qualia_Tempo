@@ -117,7 +117,15 @@ const DEFAULT_ERROR_REPORTING_CONFIG: ExtendedErrorReportingConfig = {
 
 // Error fingerprinting for deduplication
 export class ErrorFingerprinter {
-  static generateFingerprint(error: Error, context?: Record<string, any>): string {
+  static generateFingerprint(error: Error | null | undefined, context?: Record<string, any>): string {
+    // Handle null/undefined errors gracefully
+    if (!error) {
+      const message = 'Unknown error (null/undefined)';
+      const stack = '';
+      const contextString = context ? JSON.stringify(context) : '';
+      return btoa(`${message}:${stack}:${contextString}`).slice(0, 16);
+    }
+
     const message = error.message || 'Unknown error';
     const stack = error.stack?.split('\n')[0] || '';
     const contextString = context ? JSON.stringify(context) : '';
@@ -284,7 +292,8 @@ export class ErrorReportingService implements IErrorReportingService {
       return;
     }
 
-    const errorReport = this.createErrorReport(error, severity, context);
+    // Handle the case where error might be null/undefined at runtime (despite interface contract)
+    const errorReport = this.createErrorReport(error as Error | null | undefined, severity, context);
     await this.processErrorReport(errorReport);
   }
 
@@ -460,25 +469,28 @@ export class ErrorReportingService implements IErrorReportingService {
   }
 
   private createErrorReport(
-    error: Error,
+    error: Error | null | undefined,
     severity: ErrorSeverity,
     context?: Record<string, any>
   ): ExtendedErrorReport {
     const fingerprint = ErrorFingerprinter.generateFingerprint(error, context);
+    
+    // Handle null/undefined errors gracefully
+    const safeError = error || new Error('Unknown error (null/undefined)');
     
     return {
       id: `error_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`,
       timestamp: new Date(),
       sessionId: this.sessionId,
       error: {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
+        name: safeError.name || 'UnknownError',
+        message: safeError.message || 'Unknown error occurred',
+        stack: safeError.stack
       },
       severity,
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',
       url: typeof window !== 'undefined' ? window.location.href : 'Unknown',
-      stackTrace: error.stack,
+      stackTrace: safeError.stack,
       context,
       fingerprint,
       attempts: 0

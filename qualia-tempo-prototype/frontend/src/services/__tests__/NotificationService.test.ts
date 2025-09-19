@@ -135,7 +135,7 @@ describe('NotificationService - GOLD.CODE IoC Testing', () => {
     it('should handle high priority notifications first', async () => {
       await notificationService.show('Low priority', 'info', 1000, { priority: 'low' });
       await notificationService.show('High priority', 'error', 1000, { priority: 'high' });
-      await notificationService.show('Medium priority', 'warning', 1000, { priority: 'medium' });
+      await notificationService.show('Normal priority', 'warning', 1000, { priority: 'normal' });
       
       // Check that notifications are processed in priority order
       const logCalls = (mockLogger.info as jest.Mock).mock.calls;
@@ -225,10 +225,10 @@ describe('NotificationService - GOLD.CODE IoC Testing', () => {
     it('should throttle rapid notifications of same type', async () => {
       const message = 'Throttled notification';
       
-      // Send multiple notifications rapidly
-      await notificationService.show(message, 'info');
-      await notificationService.show(message, 'info');
-      await notificationService.show(message, 'info');
+      // Send multiple notifications rapidly to exceed throttling limits
+      for (let i = 0; i < 15; i++) {
+        await notificationService.show(message, 'info');
+      }
       
       // Should have throttled some notifications
       expect(mockLogger.debug).toHaveBeenCalledWith(

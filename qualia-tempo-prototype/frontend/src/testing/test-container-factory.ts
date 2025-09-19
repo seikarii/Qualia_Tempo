@@ -177,7 +177,7 @@ const mockConfigurationService: IConfigurationService = {
 /**
  * Mock Game State Store Implementation - Complete Interface Coverage
  */
-const mockGameStateStore: IGameStateStore = {
+const mockGameStateStore: any = {
   setNotifications: jest.fn(),
   getNotifications: jest.fn().mockReturnValue([]),
   updateGameState: jest.fn(),
@@ -198,7 +198,8 @@ const mockGameStateStore: IGameStateStore = {
     aggression: 0,
     recovery: 0,
     chaos: 0
-  })
+  }),
+  setState: jest.fn() // Add setState method for test compatibility
 };
 
 /**

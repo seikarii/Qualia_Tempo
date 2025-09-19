@@ -319,6 +319,67 @@ const MyComponent = () => {
   const eventBus = useService<IEventBus>(TYPES.EventBus);
   const qualiaService = useService<IQualiaService>(TYPES.IQualiaService);
 
+---
+
+## 9. Testing & Debugging Philosophy
+
+### 9.1. Principios Fundamentales
+- **Pirámide de Testing:** Adoptamos el modelo de la pirámide de testing. La base son los tests unitarios rápidos, seguidos por tests de integración de servicios, y finalmente, un número reducido de tests E2E.
+- **Tolerancia Cero:** Un test roto es un `build` roto. No se integra código que rompa los tests existentes. Los tests son la especificación; el código se adapta a ellos.
+- **Aislamiento es Clave:** Los tests no deben tener efectos secundarios. Cada test debe poder ejecutarse de forma independiente y en cualquier orden.
+
+### 9.2. Tests Unitarios y de Integración: `test-container-factory.ts`
+El pilar de nuestro testing de servicios es el `test-container-factory.ts`.
+
+- **Propósito:** Proporciona un contenedor de InversifyJS pre-configurado y aislado para cada test. Esto nos permite testear un servicio (Service Under Test - SUT) en un entorno controlado donde todas sus dependencias están mockeadas.
+- **Regla de Oro:** Está **PROHIBIDO** instanciar servicios manualmente con `new` dentro de los archivos de test. Todos los servicios deben ser resueltos a través del contenedor de test para garantizar que se inyectan los mocks correctos.
+
+#### Ejemplo de Uso:
+```typescript
+import { createTestContainer, getMocksFromContainer } from '../testing/test-container-factory';
+import { INotificationService } from '../services/interfaces/INotificationService';
+import { ILogger } from '../services/interfaces/ILogger';
+import { TYPES } from '../services/inversify.types';
+
+describe('NotificationService', () => {
+  let container: Container;
+  let notificationService: INotificationService;
+  let mockLogger: jest.Mocked<ILogger>;
+
+  beforeEach(() => {
+    container = createTestContainer();
+    notificationService = container.get<INotificationService>(TYPES.INotificationService);
+    const mocks = getMocksFromContainer(container);
+    mockLogger = mocks.mockLogger as jest.Mocked<ILogger>;
+  });
+
+  it('should do something correctly', () => {
+    // Arrange
+    const message = 'Test';
+
+    // Act
+    notificationService.show(message);
+
+    // Assert
+    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(message));
+  });
+});
+```
+
+### 9.3. Mocking de Dependencias y Decoradores
+- **Dependencias:** Todas las dependencias externas (`ILogger`, `IEventBus`, `IConfigurationService`, etc.) son reemplazadas por mocks en el `test-container-factory`. Esto nos permite afirmar que un servicio llama a sus dependencias correctamente (p. ej., `expect(mockLogger.info).toHaveBeenCalled()`).
+- **Decoradores:** Los decoradores como `@logMethod` o `@catchError` se mockean globalmente en la configuración de Jest (`test-container-factory.ts`) para que no interfieran con la lógica del test.
+
+### 9.4. Debugging E2E: `debug-full-system.sh`
+- **Propósito:** Este script sirve como una prueba de humo (smoke test) para verificar la integración completa entre el frontend y el backend. Es útil para detectar problemas de configuración, de entorno o de comunicación entre los dos sistemas.
+- **Limitaciones:** No debe usarse para el desarrollo iterativo de componentes. Su ciclo de feedback es demasiado largo. Es una herramienta de validación, no de desarrollo rápido.
+
+### 9.5. Visión Futura: Mejorando el Ecosistema
+Estamos investigando activamente herramientas de testing más avanzadas para acelerar nuestros ciclos de desarrollo, incluyendo:
+- **Vitest:** Para un corredor de tests nativo de Vite con HMR.
+- **Playwright/Cypress Component Testing:** Para testear componentes de React en aislamiento, pero con la potencia de un navegador real.
+- **Storybook:** Para el desarrollo y la documentación visual de componentes de UI.
+
   const handleAction = () => {
     eventBus.emit({ type: 'PlayerAction', data: { action: 'dash' } });
     qualiaService.processQualiaState(currentState);
