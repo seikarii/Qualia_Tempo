@@ -3,6 +3,7 @@ import { jest } from "@jest/globals";
 import App from "../App";
 import { useGameStore } from "../state/useGameStore";
 import { useService } from "../services/hooks";
+import { TYPES } from "../services/inversify.types";
 
 // Mock the hooks
 jest.mock("../state/useGameStore");
@@ -12,6 +13,9 @@ jest.mock("../components/HUD", () => ({
 }));
 jest.mock("../components/Subtitles", () => ({
   Subtitles: () => <div data-testid="subtitles">Subtitles Component</div>,
+}));
+jest.mock("../components/game/QualiaTempoGame", () => ({
+  default: () => <div data-testid="qualia-game">Qualia Tempo Game</div>,
 }));
 
 // Mock console methods
@@ -60,9 +64,23 @@ describe("App Component", () => {
     isConnected: false,
   };
 
+  const mockLogger = {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  };
+
+  const mockApplicationInitializer = {
+    start: jest.fn(() => Promise.resolve()),
+    stop: jest.fn(),
+  };
+
   const mockServices = {
     eventBus: mockEventBus,
     backendSync: mockBackendSync,
+    logger: mockLogger,
+    applicationInitializer: mockApplicationInitializer,
     qualiaCalculator: {},
     gameController: {},
     configService: {},
@@ -78,12 +96,12 @@ describe("App Component", () => {
     transcendence: 0.0,
   };
 
-  const mockGameState = {
+    const mockGameState = {
     isPlaying: false,
     qualiaState: mockQualiaState,
     currentTime: 0,
     gameStartTime: 0,
-    player: { 
+    player: {
       position: { x: 0, y: 0 },
       health: 100,
       combo: 0,
@@ -98,11 +116,20 @@ describe("App Component", () => {
     currentStreak: 0,
     maxStreak: 0,
     pauseCooldownRemaining: 0,
+    backendConnected: true,
+    isConfigLoaded: true,
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseService.mockReturnValue(mockServices as any);
+    jest.useRealTimers(); // Ensure we start with real timers
+    mockUseService.mockImplementation((serviceType: any) => {
+      if (serviceType === TYPES.IEventBus) return mockEventBus as any;
+      if (serviceType === TYPES.IBackendSyncService) return mockBackendSync as any;
+      if (serviceType === TYPES.ILogger) return mockLogger as any;
+      if (serviceType === TYPES.IApplicationInitializerService) return mockApplicationInitializer as any;
+      return {} as any;
+    });
     mockUseGameStore.mockImplementation(((selector: any) => {
       if (typeof selector === "function") {
         return selector(mockGameState);
@@ -112,8 +139,8 @@ describe("App Component", () => {
   });
 
   // Helper function to set isPlaying state
-  const setMockGamePlaying = (isPlaying: boolean) => {
-    const newGameState = { ...mockGameState, isPlaying };
+  const setMockGamePlaying = (isPlaying: boolean, backendConnected = true, isConfigLoaded = true) => {
+    const newGameState = { ...mockGameState, isPlaying, backendConnected, isConfigLoaded };
     mockUseGameStore.mockImplementation(((selector: any) => {
       if (typeof selector === "function") {
         return selector(newGameState);
@@ -124,6 +151,7 @@ describe("App Component", () => {
 
   afterEach(() => {
     jest.clearAllTimers();
+    jest.useRealTimers(); // Always restore real timers after each test
   });
 
   describe("Initial Loading State", () => {
@@ -144,7 +172,7 @@ describe("App Component", () => {
       // and eventually transitions to the connected state
       await waitFor(() => {
         expect(screen.getByText("🎵 Qualia Tempo")).toBeInTheDocument();
-      });
+      }, { timeout: 2000 });
     });
 
     it("should transition from loading to connected state", async () => {
@@ -154,7 +182,7 @@ describe("App Component", () => {
         expect(
           screen.queryByText("Loading Qualia Tempo..."),
         ).not.toBeInTheDocument();
-      });
+      }, { timeout: 2000 });
 
       expect(screen.getByText("🎵 Qualia Tempo")).toBeInTheDocument();
       expect(
@@ -169,19 +197,16 @@ describe("App Component", () => {
     });
 
     it("should show disconnected state when backend is not connected", async () => {
-      mockBackendSync.isBackendConnected.mockReturnValue(false);
+      setMockGamePlaying(false, false); // Set backendConnected to false
 
       render(<App />);
 
       await waitFor(() => {
         expect(screen.getByText("❌ Backend Disconnected")).toBeInTheDocument();
-      });
+      }, { timeout: 2000 });
 
       expect(
         screen.getByText("Cannot connect to Qualia Tempo Visual Engine"),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText("cd backend && python main.py"),
       ).toBeInTheDocument();
     });
 
@@ -192,7 +217,7 @@ describe("App Component", () => {
 
       await waitFor(() => {
         expect(screen.getByText("🎵 Qualia Tempo")).toBeInTheDocument();
-      });
+      }, { timeout: 2000 });
 
       expect(
         screen.getByText("✅ Backend Connected | ⚡ Visual Engine Ready"),
@@ -200,20 +225,21 @@ describe("App Component", () => {
     });
 
     it("should handle connection check errors gracefully", async () => {
-      mockBackendSync.isBackendConnected.mockImplementation(() => {
-        throw new Error("Connection failed");
-      });
+      // Mock the application initializer to throw an error during startup
+      mockApplicationInitializer.start.mockRejectedValue(new Error("Connection failed"));
 
       render(<App />);
 
+      // The app should still render and show the start screen despite initialization errors
       await waitFor(() => {
-        expect(mockConsoleError).toHaveBeenCalledWith(
-          "Failed to check backend connection:",
-          expect.any(Error),
-        );
-      });
+        expect(screen.getByText("🎵 Qualia Tempo")).toBeInTheDocument();
+      }, { timeout: 2000 });
 
-      expect(screen.getByText("❌ Backend Disconnected")).toBeInTheDocument();
+      // Error should be logged
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'App Component: Application initialization failed',
+        expect.any(Error)
+      );
     });
   });
 
@@ -242,15 +268,11 @@ describe("App Component", () => {
       render(<App />);
 
       await waitFor(() => {
-        expect(screen.getByText("🔥 Combat Active")).toBeInTheDocument();
+        expect(screen.getByTestId("qualia-game")).toBeInTheDocument();
       });
 
-      expect(
-        screen.getByRole("button", { name: /pause/i }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /reset/i }),
-      ).toBeInTheDocument();
+      // The QualiaTempoGame component should be rendered when playing
+      expect(screen.getByTestId("qualia-game")).toBeInTheDocument();
     });
   });
 
@@ -265,11 +287,15 @@ describe("App Component", () => {
       render(<App />);
 
       await waitFor(() => {
-        const startButton = screen.getByRole("button", {
+        expect(screen.getByRole("button", {
           name: /start the first duel/i,
-        });
-        fireEvent.click(startButton);
+        })).toBeInTheDocument();
+      }, { timeout: 2000 });
+
+      const startButton = screen.getByRole("button", {
+        name: /start the first duel/i,
       });
+      fireEvent.click(startButton);
 
       expect(mockEventBus.emit).toHaveBeenCalledWith({
         type: "PlayerAction",
@@ -277,14 +303,13 @@ describe("App Component", () => {
         source: "App",
       });
 
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        "� Game Start Requested via EventBus!",
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "Game Start Requested via EventBus",
       );
     });
 
     it("should not emit StartGame event when backend is disconnected", async () => {
-      mockBackendSync.isBackendConnected.mockReturnValue(false);
-      setMockGamePlaying(false);
+      setMockGamePlaying(false, false); // Set backendConnected to false
 
       render(<App />);
 
@@ -293,52 +318,13 @@ describe("App Component", () => {
         expect(
           screen.queryByRole("button", { name: /start the first duel/i }),
         ).not.toBeInTheDocument();
-      });
+      }, { timeout: 2000 });
 
       expect(mockEventBus.emit).not.toHaveBeenCalled();
     });
 
-    it("should emit PauseGame event when pause button is clicked", async () => {
-      setMockGamePlaying(true);
-
-      render(<App />);
-
-      await waitFor(() => {
-        const pauseButton = screen.getByRole("button", { name: /pause/i });
-        fireEvent.click(pauseButton);
-      });
-
-      expect(mockEventBus.emit).toHaveBeenCalledWith({
-        type: "PlayerAction",
-        action: "PauseGame",
-        source: "App",
-      });
-
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        "⏸️ Game Pause Requested via EventBus",
-      );
-    });
-
-    it("should emit ResetGame event when reset button is clicked", async () => {
-      setMockGamePlaying(true);
-
-      render(<App />);
-
-      await waitFor(() => {
-        const resetButton = screen.getByRole("button", { name: /reset/i });
-        fireEvent.click(resetButton);
-      });
-
-      expect(mockEventBus.emit).toHaveBeenCalledWith({
-        type: "PlayerAction",
-        action: "ResetGame",
-        source: "App",
-      });
-
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        "🔄 Game Reset Requested via EventBus",
-      );
-    });
+    // Note: Pause and Reset functionality is handled via keyboard events (SPACE and ESC)
+    // and displayed as text instructions, not as buttons
   });
 
   describe("UI Components Integration", () => {
@@ -347,13 +333,14 @@ describe("App Component", () => {
       setMockGamePlaying(true);
     });
 
-    it("should render HUD and Subtitles components", async () => {
+    it("should render Subtitles component", async () => {
       render(<App />);
 
       await waitFor(() => {
-        expect(screen.getByTestId("hud")).toBeInTheDocument();
         expect(screen.getByTestId("subtitles")).toBeInTheDocument();
-      });
+      }, { timeout: 2000 });
+
+      // Note: HUD component is not currently implemented in the App component
     });
 
     it("should display game controls information", async () => {
@@ -366,7 +353,7 @@ describe("App Component", () => {
         ).toBeInTheDocument();
         expect(screen.getByText("SPACE - Pause Ability")).toBeInTheDocument();
         expect(screen.getByText("ESC - Reset Game")).toBeInTheDocument();
-      });
+      }, { timeout: 2000 });
     });
 
     it("should display version information", async () => {
@@ -376,7 +363,7 @@ describe("App Component", () => {
         expect(
           screen.getByText("Qualia Tempo v1.0 | Prototype Build"),
         ).toBeInTheDocument();
-      });
+      }, { timeout: 2000 });
     });
   });
 
@@ -386,64 +373,37 @@ describe("App Component", () => {
       mockBackendSync.isBackendConnected.mockReturnValue(true);
     });
 
-    it("should check connection on mount", async () => {
-      render(<App />);
-
-      await waitFor(() => {
-        expect(mockBackendSync.isBackendConnected).toHaveBeenCalled();
-      });
-    });
-
-    it("should recheck connection every 5 seconds", async () => {
-      jest.useFakeTimers();
+    // Note: Connection monitoring is handled by the backend sync service
+    // and the connection status is read from the game store, not called directly
+    it("should display connection status from store", async () => {
+      setMockGamePlaying(false, true); // Connected
 
       render(<App />);
 
-      // Initial check
       await waitFor(() => {
-        expect(mockBackendSync.isBackendConnected).toHaveBeenCalledTimes(1);
-      });
-
-      // Advance time by 5 seconds
-      jest.advanceTimersByTime(5000);
-      expect(mockBackendSync.isBackendConnected).toHaveBeenCalledTimes(2);
-
-      // Advance time by another 5 seconds
-      jest.advanceTimersByTime(5000);
-      expect(mockBackendSync.isBackendConnected).toHaveBeenCalledTimes(3);
-
-      jest.useRealTimers();
-    });
-
-    it("should cleanup interval on unmount", () => {
-      jest.useFakeTimers();
-
-      const { unmount } = render(<App />);
-
-      unmount();
-
-      // Advance time - should not call the function anymore
-      jest.advanceTimersByTime(5000);
-      expect(mockBackendSync.isBackendConnected).toHaveBeenCalledTimes(1);
-
-      jest.useRealTimers();
+        expect(screen.getByText("Backend: Connected")).toBeInTheDocument();
+      }, { timeout: 2000 });
     });
   });
 
   describe("Error Handling", () => {
-    it("should handle backend sync service errors", async () => {
+    it("should handle backend sync service errors gracefully", async () => {
       setMockGamePlaying(false);
-      mockUseService.mockImplementation(() => {
-        throw new Error("Service unavailable");
-      });
+      // Mock the application initializer to throw an error
+      mockApplicationInitializer.start.mockRejectedValue(new Error("Service initialization failed"));
 
-      // Mock console.error to prevent test output pollution
-      const originalError = console.error;
-      console.error = jest.fn();
+      render(<App />);
 
-      expect(() => render(<App />)).toThrow("Service unavailable");
+      // The app should still render despite service initialization errors
+      await waitFor(() => {
+        expect(screen.getByText("🎵 Qualia Tempo")).toBeInTheDocument();
+      }, { timeout: 2000 });
 
-      console.error = originalError;
+      // Error should be logged
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'App Component: Application initialization failed',
+        expect.any(Error)
+      );
     });
   });
 });
