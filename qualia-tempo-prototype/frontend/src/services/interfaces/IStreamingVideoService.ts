@@ -1,7 +1,10 @@
 /**
  * QUALIA.CODE v1.1 - IStreamingVideoService Interface
  * Defines contract for WebSocket video streaming from backend.
+ * CRISALIDA.CODE v1.1 - SINGLETON REFERENCE COUNTING ARCHITECTURE
  */
+
+export type ConnectionStateType = 'IDLE' | 'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'RECONNECTING' | 'ERROR';
 
 export interface IStreamingVideoService {
   /**
@@ -12,9 +15,9 @@ export interface IStreamingVideoService {
 
   /**
    * Disconnect from backend WebSocket video stream
-   * @returns Promise that resolves when disconnection is complete
+   * Uses reference counting and debounce for safe disconnection
    */
-  disconnect(): Promise<void>;
+  disconnect(): void;
 
   /**
    * Subscribe to video frame updates
@@ -78,12 +81,13 @@ export interface VideoFrame {
 
 /**
  * WebSocket connection status
+ * CRISALIDA.CODE v1.1 - Enhanced state management
  */
 export interface ConnectionStatus {
   /** Whether WebSocket is connected */
   connected: boolean;
-  /** Current connection state */
-  state: 'disconnected' | 'connecting' | 'connected' | 'error';
+  /** Current connection state with detailed lifecycle */
+  state: ConnectionStateType;
   /** Last error message if any */
   lastError?: string;
   /** Connection URL */

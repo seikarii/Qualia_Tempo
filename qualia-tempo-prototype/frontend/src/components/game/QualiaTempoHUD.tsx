@@ -99,7 +99,8 @@ const ComboStreak: React.FC<{
   maxCombo: number; 
   isActive: boolean 
 }> = ({ combo, maxCombo, isActive }) => {
-  const progress = Math.min(combo / maxCombo, 1);
+  // Ensure progress is always a valid number between 0 and 1
+  const progress = Math.min(Math.max((combo || 0) / (maxCombo || 1), 0), 1);
   
   return (
     <div className="relative">
@@ -141,8 +142,11 @@ const ComboStreak: React.FC<{
           strokeWidth="3"
           strokeLinecap="round"
           strokeDasharray="251.2"
+          initial={{
+            strokeDashoffset: 251.2 * (1 - (progress || 0))
+          }}
           animate={{
-            strokeDashoffset: 251.2 * (1 - progress),
+            strokeDashoffset: 251.2 * (1 - (progress || 0)),
           }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         />
@@ -411,8 +415,11 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
                 strokeWidth="8"
                 strokeLinecap="round"
                 strokeDasharray="251.2"
+                initial={{
+                  strokeDashoffset: 251.2 * (1 - Math.max(0, Math.min(100, playerHealth || 0)) / 100)
+                }}
                 animate={{
-                  strokeDashoffset: 251.2 * (1 - playerHealth / 100),
+                  strokeDashoffset: 251.2 * (1 - Math.max(0, Math.min(100, playerHealth || 0)) / 100),
                 }}
                 transition={{ duration: 0.5 }}
               />

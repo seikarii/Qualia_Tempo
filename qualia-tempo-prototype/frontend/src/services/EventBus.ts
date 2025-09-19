@@ -87,6 +87,11 @@ export interface MetronomeTickEvent extends BaseEvent {
   bpm: number;
 }
 
+export interface StreamingStatusChangedEvent extends BaseEvent {
+  type: "StreamingStatusChanged";
+  status: import('./interfaces/IStreamingVideoService').ConnectionStatus;
+}
+
 // Union type for all events
 export type EventTypes =
   | QualiaStateUpdatedEvent
@@ -96,7 +101,8 @@ export type EventTypes =
   | ErrorEvent
   | BackendSyncEvent
   | RhythmicDashEvent
-  | MetronomeTickEvent;
+  | MetronomeTickEvent
+  | StreamingStatusChangedEvent;
 
 // Event handler types
 export type EventHandler<T extends BaseEvent = BaseEvent> = (

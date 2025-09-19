@@ -1,9 +1,9 @@
+/* Import Google Fonts for enhanced typography - MUST be first */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Google Fonts for enhanced typography */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;600;700&display=swap');
 
 /* QUALIA.CODE v7 - Next-Generation Visual Engine */
 /* Global foundation with enhanced performance and modern aesthetics */

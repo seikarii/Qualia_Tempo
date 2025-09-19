@@ -14,6 +14,7 @@ import { container } from './services/inversify.container';
 import { TYPES } from './services/inversify.types';
 import type { IApplicationInitializerService } from './services/interfaces/IApplicationInitializerService';
 import type { ILogger } from './services/interfaces/ILogger';
+import { LoggerProvider, QualiaLogger } from './services/Logger';
 
 import App from "./App";
 
@@ -21,6 +22,10 @@ const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("CRITICAL: Root element not found in DOM.");
 const root = ReactDOM.createRoot(rootElement);
 const logger = container.get<ILogger>(TYPES.ILogger);
+
+// CRITICAL: Register logger with LoggerProvider for decorator access
+// This fixes the "[LoggerProvider] Logger not registered" warnings
+LoggerProvider.register(logger as QualiaLogger);
 
 // Application Bootstrap Sequence
 const initializeAndRender = async () => {
