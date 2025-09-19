@@ -16,6 +16,8 @@ import type { ILogger } from './interfaces/ILogger';
 import type { IEventBus } from './interfaces/IEventBus';
 import { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from '../utils/decorators';
+// ✅ CORRECT: Importing from the central contracts file
+import type { ConnectionStatus } from './contracts/events.contracts';
 
 // Event type definitions following QUALIA.CODE contracts
 export interface BaseEvent {
@@ -89,7 +91,8 @@ export interface MetronomeTickEvent extends BaseEvent {
 
 export interface StreamingStatusChangedEvent extends BaseEvent {
   type: "StreamingStatusChanged";
-  status: import('./interfaces/IStreamingVideoService').ConnectionStatus;
+  // ✅ CORRECT: Using the clean, direct import
+  status: ConnectionStatus;
 }
 
 // Union type for all events
@@ -100,6 +103,8 @@ export type EventTypes =
   | GameStateChangedEvent
   | ErrorEvent
   | BackendSyncEvent
+  | MetronomeTickEvent
+  | StreamingStatusChangedEvent
   | RhythmicDashEvent
   | MetronomeTickEvent
   | StreamingStatusChangedEvent;

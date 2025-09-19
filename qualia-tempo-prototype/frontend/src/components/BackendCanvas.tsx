@@ -51,7 +51,7 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
   // Component state
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
     connected: false,
-    state: 'disconnected',
+    state: 'DISCONNECTED',
     reconnectAttempts: 0
   });
   const [lastFrame, setLastFrame] = useState<VideoFrame | null>(null);
@@ -277,8 +277,8 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
           <div className="text-cyan-400 text-center">
             <div className="mb-2">🎨 Connecting to Qualia Engine...</div>
             <div className="text-sm opacity-75">
-              {connectionStatus.state === 'connecting' ? 'Establishing connection...' : 
-               connectionStatus.state === 'error' ? 'Connection failed, retrying...' : 
+              {connectionStatus.state === 'CONNECTING' ? 'Establishing connection...' : 
+               connectionStatus.state === 'ERROR' ? 'Connection failed, retrying...' : 
                'Initializing...'}
             </div>
           </div>

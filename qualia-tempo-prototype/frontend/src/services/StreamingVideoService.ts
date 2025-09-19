@@ -6,10 +6,11 @@
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
-import type { IStreamingVideoService, VideoFrame, ConnectionStatus, StreamingStatistics, ConnectionStateType } from './interfaces/IStreamingVideoService';
+import type { IStreamingVideoService, StreamingStatistics } from './interfaces/IStreamingVideoService';
+import type { VideoFrame, ConnectionStatus, ConnectionStateType } from './contracts/events.contracts';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { ILogger } from './interfaces/ILogger';
-import type { IConfigurationService } from './interfaces/IConfigurationService';
+import type { StreamingStatusChangedEvent } from './EventBus';
 import { logMethod, catchError } from '../utils/decorators';
 
 type FrameCallback = (frame: VideoFrame) => void;
@@ -18,7 +19,6 @@ type FrameCallback = (frame: VideoFrame) => void;
 export class StreamingVideoService implements IStreamingVideoService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
-  private readonly config: IConfigurationService;
   
   // WebSocket connection with singleton management
   private websocket: WebSocket | null = null;
@@ -69,12 +69,10 @@ export class StreamingVideoService implements IStreamingVideoService {
 
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IConfigurationService) config: IConfigurationService
+    @inject(TYPES.ILogger) logger: ILogger
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
-    this.config = config;
     
     // Get WebSocket URL from configuration - using hardcoded for now
     // TODO: Add streaming configuration to config service
@@ -110,11 +108,11 @@ export class StreamingVideoService implements IStreamingVideoService {
     this.logger.info('State changed to CONNECTING. Initiating WebSocket connection.');
 
     // Emitir evento para la UI
-    this.eventBus.emit({
+    this.eventBus.emit<StreamingStatusChangedEvent>({
       type: 'StreamingStatusChanged', 
       status: this.getConnectionStatus(),
       source: 'StreamingVideoService'
-    } as import('./EventBus').StreamingStatusChangedEvent);
+    });
 
     try {
       this.websocket = new WebSocket(this.connectionUrl);
@@ -147,11 +145,11 @@ export class StreamingVideoService implements IStreamingVideoService {
       this.state = 'ERROR';
       this.connectionStatus.state = 'ERROR';
       this.connectionStatus.lastError = String(error);
-      this.eventBus.emit({
+      this.eventBus.emit<StreamingStatusChangedEvent>({
         type: 'StreamingStatusChanged', 
         status: this.getConnectionStatus(),
         source: 'StreamingVideoService'
-      } as import('./EventBus').StreamingStatusChangedEvent);
+      });
       throw error;
     }
   }
@@ -191,11 +189,11 @@ export class StreamingVideoService implements IStreamingVideoService {
     this.connectionStatus.state = 'IDLE';
     this.connectionStatus.connectedAt = undefined;
     
-    this.eventBus.emit({
+    this.eventBus.emit<StreamingStatusChangedEvent>({
       type: 'StreamingStatusChanged', 
       status: this.getConnectionStatus(),
       source: 'StreamingVideoService'
-    } as import('./EventBus').StreamingStatusChangedEvent);
+    });
     
     this.logger.info('Disconnected from video stream');
   }
@@ -325,11 +323,11 @@ export class StreamingVideoService implements IStreamingVideoService {
     });
     
     // Emit event for UI updates
-    this.eventBus.emit({
+    this.eventBus.emit<StreamingStatusChangedEvent>({
       type: 'StreamingStatusChanged', 
       status: this.getConnectionStatus(),
       source: 'StreamingVideoService'
-    } as import('./EventBus').StreamingStatusChangedEvent);
+    });
   }
 
   @catchError()
@@ -369,11 +367,11 @@ export class StreamingVideoService implements IStreamingVideoService {
     });
     
     // Emit event for UI updates  
-    this.eventBus.emit({
+    this.eventBus.emit<StreamingStatusChangedEvent>({
       type: 'StreamingStatusChanged', 
       status: this.getConnectionStatus(),
       source: 'StreamingVideoService'
-    } as import('./EventBus').StreamingStatusChangedEvent);
+    });
     
     // Auto-reconnect only if connection was not intentionally closed
     // and if we haven't exceeded retry limit and we still have references
@@ -396,11 +394,11 @@ export class StreamingVideoService implements IStreamingVideoService {
     this.logger.error('WebSocket error', { event });
     
     // Emit event for UI updates
-    this.eventBus.emit({
+    this.eventBus.emit<StreamingStatusChangedEvent>({
       type: 'StreamingStatusChanged', 
       status: this.getConnectionStatus(),
       source: 'StreamingVideoService'
-    } as import('./EventBus').StreamingStatusChangedEvent);
+    });
   }
 
   @catchError()
@@ -490,11 +488,11 @@ export class StreamingVideoService implements IStreamingVideoService {
     });
     
     // Emit status change event
-    this.eventBus.emit({
+    this.eventBus.emit<StreamingStatusChangedEvent>({
       type: 'StreamingStatusChanged',
       status: this.getConnectionStatus(),
       source: 'StreamingVideoService'
-    } as import('./EventBus').StreamingStatusChangedEvent);
+    });
     
     this.reconnectTimer = setTimeout(() => {
       this.connect().catch(error => {

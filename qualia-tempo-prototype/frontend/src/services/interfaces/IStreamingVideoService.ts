@@ -4,7 +4,11 @@
  * CRISALIDA.CODE v1.1 - SINGLETON REFERENCE COUNTING ARCHITECTURE
  */
 
-export type ConnectionStateType = 'IDLE' | 'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'RECONNECTING' | 'ERROR';
+// ✅ CORRECT: Importing from the central contracts file
+import type { ConnectionStatus, VideoFrame } from '../contracts/events.contracts';
+
+// ✅ CORRECT: Re-exporting for backward compatibility
+export type { ConnectionStatus, VideoFrame } from '../contracts/events.contracts';
 
 export interface IStreamingVideoService {
   /**
@@ -61,41 +65,6 @@ export interface IStreamingVideoService {
    * @returns Promise that resolves with round-trip time in milliseconds
    */
   ping(): Promise<number>;
-}
-
-/**
- * Video frame data received from backend
- */
-export interface VideoFrame {
-  /** Base64 encoded JPEG image data */
-  data: string;
-  /** Timestamp when frame was generated */
-  timestamp: number;
-  /** Sequential frame number */
-  frameNumber: number;
-  /** Frame width in pixels */
-  width?: number;
-  /** Frame height in pixels */
-  height?: number;
-}
-
-/**
- * WebSocket connection status
- * CRISALIDA.CODE v1.1 - Enhanced state management
- */
-export interface ConnectionStatus {
-  /** Whether WebSocket is connected */
-  connected: boolean;
-  /** Current connection state with detailed lifecycle */
-  state: ConnectionStateType;
-  /** Last error message if any */
-  lastError?: string;
-  /** Connection URL */
-  url?: string;
-  /** Time when connection was established */
-  connectedAt?: Date;
-  /** Number of reconnection attempts */
-  reconnectAttempts: number;
 }
 
 /**
