@@ -6,7 +6,17 @@ api:
   baseUrl: "http://localhost:8000"
   qualiaEndpoint: "/update_qualia"
   healthEndpoint: "/health"
-  timeout: 5000  # 5 seconds
+  timeout: 10000  # 10 seconds - increased for stability
+
+# WebSocket streaming configuration
+streaming:
+  websocket:
+    url: "ws://localhost:8000/ws/video_stream"
+    maxReconnectAttempts: 10
+    reconnectDelay: 2000  # 2 seconds
+    pingInterval: 8000    # 8 seconds (increased from 5s for stability)
+    pingTimeout: 6000     # 6 seconds (increased from 3s for stability)
+    connectionTimeout: 10000  # 10 seconds
 
 # Synchronization settings
 sync:

@@ -10,6 +10,7 @@ import type { IStreamingVideoService, StreamingStatistics } from './interfaces/I
 import type { VideoFrame, ConnectionStatus, ConnectionStateType } from './contracts/events.contracts';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { ILogger } from './interfaces/ILogger';
+import type { IConfigurationService } from './interfaces/IConfigurationService';
 import type { StreamingStatusChangedEvent } from './EventBus';
 import { logMethod, catchError } from '../utils/decorators';
 
@@ -63,23 +64,31 @@ export class StreamingVideoService implements IStreamingVideoService {
   private nextPingId = 1;
   
   // Configuration
-  private readonly maxReconnectAttempts = 10;
-  private readonly reconnectDelay = 2000; // 2 seconds
-  private readonly pingInterval = 5000; // 5 seconds
+  private readonly maxReconnectAttempts: number;
+  private readonly reconnectDelay: number;
+  private readonly pingInterval: number;
+  private readonly pingTimeout: number;
 
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
-    @inject(TYPES.ILogger) logger: ILogger
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     
-    // Get WebSocket URL from configuration - using hardcoded for now
-    // TODO: Add streaming configuration to config service
-    this.connectionUrl = 'ws://localhost:8000/ws/video_stream';
+    // Load streaming configuration from config service
+    const streamingConfig = configService.getConfig().streaming?.websocket || {};
+    this.connectionUrl = streamingConfig.url || 'ws://localhost:8000/ws/video_stream';
+    this.maxReconnectAttempts = streamingConfig.maxReconnectAttempts || 10;
+    this.reconnectDelay = streamingConfig.reconnectDelay || 2000;
+    this.pingInterval = streamingConfig.pingInterval || 8000;
+    this.pingTimeout = streamingConfig.pingTimeout || 6000;
     
     this.logger.info('StreamingVideoService initialized with Reference Counting architecture', {
-      url: this.connectionUrl
+      url: this.connectionUrl,
+      pingInterval: this.pingInterval,
+      pingTimeout: this.pingTimeout
     });
   }
 
@@ -283,7 +292,7 @@ export class StreamingVideoService implements IStreamingVideoService {
       const timeoutId = setTimeout(() => {
         this.pendingPings.delete(pingId);
         reject(new Error('Ping timeout'));
-      }, 3000); // Reduced timeout to 3 seconds
+      }, this.pingTimeout); // Use configurable timeout
       
       // Store resolver for this ping to be called by handlePong
       const checkInterval = setInterval(() => {

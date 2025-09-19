@@ -2,7 +2,7 @@
 # Configuration-First principle: All server settings externalized
 
 server:
-  host: "127.0.0.1"
+  host: "0.0.0.0"  # Listen on all interfaces for cross-origin access
   port: 8000
   reload: true
   log_level: "info"

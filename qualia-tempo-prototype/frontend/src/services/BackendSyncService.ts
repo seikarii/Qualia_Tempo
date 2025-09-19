@@ -432,20 +432,29 @@ export class BackendSyncService implements IBackendSyncService {
 
     try {
       const url = `${config.api.baseUrl}${config.api.healthEndpoint}`;
-      await this.makeRequest<any>(url, { method: "GET" });
+      this.logger.debug(`[BackendSync] Health check URL: ${url}`);
+      
+      const response = await this.makeRequest<any>(url, { 
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        }
+      });
 
       this.isConnected = true;
 
       const duration = performance.now() - startTime;
       this.logger.info(
         `✅ [BackendSync] Backend healthy - ${duration.toFixed(2)}ms`,
+        { response }
       );
     } catch (error) {
       this.isConnected = false;
       const duration = performance.now() - startTime;
       this.logger.error(
         `🚨 [BackendSync] Health check failed - ${duration.toFixed(2)}ms:`,
-        { error },
+        { error, url: `${config.api.baseUrl}${config.api.healthEndpoint}` },
       );
       throw error;
     }
@@ -477,36 +486,64 @@ export class BackendSyncService implements IBackendSyncService {
   }
 
   private async makeRequest<T>(url: string, options: any): Promise<T> {
-    // Add timeout to fetch
+    // Add timeout to fetch - QUALIA.CODE v1.1 Enhanced Error Diagnostics
     const config = this.ensureConfigLoaded();
     const controller = new AbortController();
+    const startTime = performance.now();
+    
     const timeoutId = setTimeout(
-      () => controller.abort(),
+      () => {
+        this.logger.error(`[BackendSync] Request timeout triggered after ${config.api.timeout}ms for URL: ${url}`);
+        controller.abort();
+      },
       config.api.timeout,
     );
 
     try {
+      this.logger.debug(`[BackendSync] Making request to: ${url}`, { options });
+      
       const response = await fetch(url, {
         ...options,
-        credentials: 'include', // FIX: Required for CORS credentials
+        credentials: 'include', // Required for CORS credentials
         signal: controller.signal,
+        mode: 'cors', // Explicit CORS mode
       });
 
       clearTimeout(timeoutId);
+      const duration = performance.now() - startTime;
 
       if (!response.ok) {
+        this.logger.error(`[BackendSync] HTTP Error ${response.status}:`, { 
+          url, 
+          status: response.status, 
+          statusText: response.statusText,
+          duration: `${duration.toFixed(2)}ms`
+        });
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
+      this.logger.debug(`[BackendSync] Request successful - ${duration.toFixed(2)}ms:`, { url, data });
       return data;
     } catch (error) {
       clearTimeout(timeoutId);
+      const duration = performance.now() - startTime;
 
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error(`Request timeout after ${config.api.timeout}ms`);
+        const timeoutError = new Error(`Request timeout after ${config.api.timeout}ms`);
+        this.logger.error(`[BackendSync] Request aborted due to timeout:`, { 
+          url, 
+          timeout: config.api.timeout,
+          duration: `${duration.toFixed(2)}ms`
+        });
+        throw timeoutError;
       }
 
+      this.logger.error(`[BackendSync] Request failed:`, { 
+        url, 
+        error: error instanceof Error ? error.message : String(error),
+        duration: `${duration.toFixed(2)}ms`
+      });
       throw error;
     }
   }
@@ -573,7 +610,9 @@ export class BackendSyncService implements IBackendSyncService {
   @catchError()
   public async testConnection(): Promise<boolean> {
     try {
-      await this.makeRequest<any>('/api/health', 'GET');
+      const config = this.ensureConfigLoaded();
+      const url = `${config.api.baseUrl}${config.api.healthEndpoint}`;
+      await this.makeRequest<any>(url, { method: 'GET' });
       return true;
     } catch {
       return false;
