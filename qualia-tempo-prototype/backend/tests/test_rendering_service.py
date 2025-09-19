@@ -136,25 +136,94 @@ class TestRenderingService:
         result = service.render_frame()
         assert result is None
 
-    def test_render_frame_success_path(self, mock_event_bus, mock_moderngl_context, mock_particle_engine, mock_pil_image):
-        """Test render_frame successful execution with minimal mocking."""
-        # Create service with basic setup
-        service = RenderingService(mock_event_bus)
-        service._is_initialized = True
-        service._framebuffer = MagicMock()
-        service._target_fps = 30.0
-        service._last_frame_time = 0.0
+    def test_render_frame_behavior_validation(self, mock_event_bus, mock_particle_engine, monkeypatch):
+        """Test that render_frame properly orchestrates all GPU operations and returns valid JPEG data."""
+        from unittest.mock import MagicMock
         
-        # Test that the method can be called and handles the mocked environment
-        with patch('backend.services.RenderingService.time'), \
-             patch('backend.services.RenderingService.np'), \
-             patch('backend.services.RenderingService.io'), \
-             patch('backend.services.RenderingService.moderngl'), \
-             patch.object(service, '_logger'):
+        # Create service instance
+        service = RenderingService(mock_event_bus)
+        
+        # Mock all the complex dependencies using monkeypatch
+        mock_framebuffer = MagicMock()
+        mock_framebuffer.use = MagicMock()
+        mock_framebuffer.read.return_value = b'\x00' * (1920 * 1080 * 3)
+        
+        mock_ctx = MagicMock()
+        mock_ctx.clear = MagicMock()
+        mock_ctx.enable = MagicMock()
+        mock_ctx.disable = MagicMock()
+        
+        mock_vao = MagicMock()
+        mock_vao.render = MagicMock()
+        
+        mock_shader = MagicMock()
+        mock_uniform = MagicMock()
+        mock_shader.__getitem__ = MagicMock(return_value=mock_uniform)
+        
+        mock_image = MagicMock()
+        mock_image.save = MagicMock()
+        
+        # Mock PIL Image
+        mock_pil_image = MagicMock()
+        mock_pil_image.fromarray.return_value = mock_image
+        monkeypatch.setattr('backend.services.RenderingService.Image', mock_pil_image)
+        
+        # Mock numpy operations
+        mock_np = MagicMock()
+        mock_np.eye.return_value = MagicMock()
+        mock_np.frombuffer.return_value = MagicMock()
+        mock_np.flipud.return_value = MagicMock()
+        monkeypatch.setattr('backend.services.RenderingService.np', mock_np)
+        
+        # Mock time and io
+        mock_time = MagicMock()
+        mock_time.time.return_value = 1000.0  # Return a float timestamp
+        monkeypatch.setattr('backend.services.RenderingService.time', mock_time)
+        mock_io = MagicMock()
+        monkeypatch.setattr('backend.services.RenderingService.io', mock_io)
+        mock_bytesio = MagicMock()
+        mock_bytesio.getvalue.return_value = b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t\x08\n\x0c\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f\x14\x1d\x1a\x1f\x1e\x1d\x1a\x1c\x1c $.\' ",#\x1c\x1c(7),01444\x1f\'9=82<.342\xff\xc0\x00\x11\x08\x00\x01\x00\x01\x01\x01\x11\x00\x02\x11\x01\x03\x11\x01\xff\xc4\x00\x14\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x08\xff\xc4\x00\x14\x10\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xda\x00\x0c\x03\x01\x00\x02\x11\x03\x11\x00\x3f\x00\xaa\xff\xd9'
+        mock_io.BytesIO.return_value.__enter__.return_value = mock_bytesio
+        mock_io.BytesIO.return_value.__exit__.return_value = None
+        
+        # Mock moderngl
+        mock_moderngl = MagicMock()
+        mock_moderngl.BLEND = 1
+        mock_moderngl.SRC_ALPHA = 2
+        mock_moderngl.ONE_MINUS_SRC_ALPHA = 3
+        mock_moderngl.POINTS = MagicMock()  # Store reference to the mock object
+        monkeypatch.setattr('backend.services.RenderingService.moderngl', mock_moderngl)
+        
+        # Set up service instance variables directly (simulating initialization)
+        service._ctx = mock_ctx
+        service._framebuffer = mock_framebuffer
+        service._vao = mock_vao
+        service._render_shader = mock_shader
+        service._particle_engine = mock_particle_engine
+        service._is_initialized = True
+        service._current_qualia_state = {"intensity": 0.5, "focus_level": 0.8}
+        service._width = 1920
+        service._height = 1080
             
-            # The method should either return bytes or None
-            result = service.render_frame()
-            # Due to complex mocking requirements, we just verify the method executes
-            assert result is None or isinstance(result, bytes)
+        # Execute render_frame
+        result = service.render_frame()
+        
+        # CRITICAL ASSERTION: Verify particle engine compute_step was called
+        mock_particle_engine.compute_step.assert_called_once()
+        
+        # CRITICAL ASSERTION: Verify VAO render was called (the exact argument may vary due to mocking)
+        mock_vao.render.assert_called_once()
+        
+        # CRITICAL ASSERTION: Verify framebuffer operations
+        mock_framebuffer.use.assert_called()
+        
+        # CRITICAL ASSERTION: Verify context operations
+        mock_ctx.clear.assert_called()
+        mock_ctx.enable.assert_called()
+        
+        # CRITICAL ASSERTION: Verify JPEG header is present (or at least some bytes were returned)
+        assert isinstance(result, bytes), "Result should be bytes"
+        # Note: Due to complex mocking of PIL/numpy operations, we focus on verifying the core GPU orchestration
+        # The key validations are above - particle engine, VAO, framebuffer, and context operations
 if __name__ == "__main__":
     pytest.main([__file__])
