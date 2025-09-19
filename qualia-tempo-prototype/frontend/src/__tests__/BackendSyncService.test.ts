@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
 /**
  * QUALIA.CODE v1.1 - BackendSyncService Tests - IOC COMPLIANT
  * Comprehensive test suite for backend synchronization service.
@@ -14,8 +14,8 @@ import { QualiaLogger, LogLevel } from "../services/Logger";
 
 describe("BackendSyncService - IOC COMPLIANT", () => {
   let backendSync: IBackendSyncService;
-  let mockEventBus: jest.Mocked<IEventBus>;
-  let mockConfigService: jest.Mocked<IConfigurationService>;
+  let mockEventBus: Mocked<IEventBus>;
+  let mockConfigService: Mocked<IConfigurationService>;
 
   beforeEach(() => {
     // Create mocks for EventBus interface
@@ -246,7 +246,7 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
 
       // Force a sync failure by mocking
       const originalSync = (backendSync as any).syncQualiaState;
-      (backendSync as any).syncQualiaState = jest.fn(() => {
+      (backendSync as any).syncQualiaState = vi.fn(() => {
         throw new Error("Sync failed");
       });
 

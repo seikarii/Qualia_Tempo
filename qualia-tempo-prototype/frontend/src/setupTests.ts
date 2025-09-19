@@ -1,9 +1,10 @@
 import "@testing-library/jest-dom";
 import "whatwg-fetch";
 import React from 'react';
+import { vi } from 'vitest';
 
 // Mock decorators globally for all tests
-jest.mock('./utils/decorators', () => ({
+vi.mock('./utils/decorators', () => ({
   logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   validate: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
@@ -12,106 +13,96 @@ jest.mock('./utils/decorators', () => ({
 }));
 
 // Mock WebGL context
-(global.HTMLCanvasElement.prototype as any).getContext = jest.fn(() => ({
-  getExtension: jest.fn(),
-  getShaderPrecisionFormat: jest.fn(() => ({
+(global.HTMLCanvasElement.prototype as any).getContext = vi.fn(() => ({
+  getExtension: vi.fn(),
+  getShaderPrecisionFormat: vi.fn(() => ({
     precision: 1,
     rangeMin: 1,
     rangeMax: 1,
   })),
-  getParameter: jest.fn(),
+  getParameter: vi.fn(),
 }));
 
 // Mock ResizeObserver
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
 }));
 
 // Mock window methods
 Object.defineProperty(window, 'requestAnimationFrame', {
   writable: true,
-  value: jest.fn(cb => setTimeout(cb, 16))
+  value: vi.fn(cb => setTimeout(cb, 16))
 });
 
 Object.defineProperty(window, 'cancelAnimationFrame', {
   writable: true,
-  value: jest.fn()
+  value: vi.fn()
 });
 
 // Mock React Three Fiber components
-jest.mock('@react-three/fiber', () => ({
+vi.mock('@react-three/fiber', () => ({
   Canvas: ({ children }: any) => React.createElement('div', { 'data-testid': 'canvas' }, children),
-  useFrame: jest.fn(),
-  useThree: jest.fn(() => ({ gl: {}, scene: {}, camera: {} })),
+  useFrame: vi.fn(),
+  useThree: vi.fn(() => ({ gl: {}, scene: {}, camera: {} })),
 }));
 
-jest.mock('@react-three/drei', () => ({
+vi.mock('@react-three/drei', () => ({
   OrbitControls: () => React.createElement('div', { 'data-testid': 'orbit-controls' }),
   Text: ({ children }: any) => React.createElement('div', { 'data-testid': 'text' }, children),
 }));
 
-jest.mock('@react-three/postprocessing', () => ({
+vi.mock('@react-three/postprocessing', () => ({
   EffectComposer: ({ children }: any) => React.createElement('div', { 'data-testid': 'effect-composer' }, children),
   Bloom: () => React.createElement('div', { 'data-testid': 'bloom' }),
   ChromaticAberration: () => React.createElement('div', { 'data-testid': 'chromatic-aberration' }),
 }));
 
 // Mock Tone.js to avoid audio context issues in tests
-jest.mock('tone', () => ({
+vi.mock('tone', () => ({
   __esModule: true,
   default: {},
-  Synth: jest.fn().mockImplementation(() => ({
-    connect: jest.fn(),
-    triggerAttackRelease: jest.fn(),
-    dispose: jest.fn(),
+  Synth: vi.fn().mockImplementation(() => ({
+    connect: vi.fn().mockReturnThis(),
+    triggerAttackRelease: vi.fn(),
+    dispose: vi.fn(),
+    toDestination: vi.fn().mockReturnThis(),
   })),
-  Destination: {},
+  Destination: {
+    connect: vi.fn(),
+  },
   Transport: {
-    start: jest.fn(),
-    stop: jest.fn(),
-    pause: jest.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+    pause: vi.fn(),
     position: '0:0:0',
   },
-  getContext: jest.fn().mockReturnValue({
+  getContext: vi.fn().mockReturnValue({
     state: 'running',
-    resume: jest.fn(),
+    resume: vi.fn(),
   }),
-}));
-
-// Mock Tone.js completely
-jest.mock('tone', () => ({
-  __esModule: true,
-  default: {
-    Transport: {
-      start: jest.fn(),
-      stop: jest.fn(),
-      pause: jest.fn(),
-      bpm: { value: 120 },
-      position: '0:0:0'
-    },
-    context: {
-      state: 'running',
-      resume: jest.fn().mockResolvedValue(undefined),
-    }
-  },
-  Oscillator: jest.fn().mockImplementation(() => ({
-    toDestination: jest.fn().mockReturnThis(),
-    start: jest.fn(),
-    stop: jest.fn(),
-    frequency: { value: 440 }
+  Frequency: vi.fn().mockImplementation((freq) => ({
+    toNote: vi.fn().mockReturnValue(`C${Math.floor(freq / 100)}`),
+    valueOf: vi.fn().mockReturnValue(freq),
   })),
-  Reverb: jest.fn().mockImplementation(() => ({
-    toDestination: jest.fn().mockReturnThis(),
-    wet: { value: 0.3 }
+  Oscillator: vi.fn().mockImplementation(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    start: vi.fn(),
+    stop: vi.fn(),
+    connect: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
   })),
-  Filter: jest.fn().mockImplementation(() => ({
-    toDestination: jest.fn().mockReturnThis(),
-    frequency: { value: 440 }
+  Reverb: vi.fn().mockImplementation(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    connect: vi.fn().mockReturnThis(),
   })),
-  Gain: jest.fn().mockImplementation(() => ({
-    toDestination: jest.fn().mockReturnThis(),
-    gain: { value: 0.5 }
+  Filter: vi.fn().mockImplementation(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    connect: vi.fn().mockReturnThis(),
+  })),
+  Gain: vi.fn().mockImplementation(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    connect: vi.fn().mockReturnThis(),
   })),
 }));

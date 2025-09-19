@@ -6,7 +6,7 @@ import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import '@testing-library/vi-dom';
 
 // Mock the hooks and services
 vi.mock('../../../services/hooks');
@@ -16,7 +16,7 @@ vi.mock('../../../state/useGameStore');
 vi.mock('@react-three/fiber', () => ({
   Canvas: ({ children, ...props }: any) => React.createElement('div', { 'data-testid': 'canvas', ...props }, children),
   useFrame: vi.fn(),
-  useThree: jest.fn(() => ({})),
+  useThree: vi.fn(() => ({})),
   extend: vi.fn(),
 }));
 
@@ -172,7 +172,7 @@ vi.mock('../GridRenderer', () => {
 
 // Mock services
 vi.mock('../../../services/hooks', () => ({
-  useService: jest.fn(() => ({
+  useService: vi.fn(() => ({
     emit: vi.fn(),
     subscribe: vi.fn(),
     unsubscribe: vi.fn(),
@@ -183,7 +183,7 @@ vi.mock('../../../services/hooks', () => ({
 
 // Mock store
 vi.mock('../../../state/useGameStore', () => ({
-  useGameStore: jest.fn(() => ({
+  useGameStore: vi.fn(() => ({
     gameState: 'idle',
     qualiaState: {
       consciousness: 0,

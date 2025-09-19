@@ -1,10 +1,9 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, afterAll, it, vi, type MockedFunction } from 'vitest';
 /**
  * main.test.ts - Electron Main Process Tests
  * Tests for electron main process, window management, and IPC handlers
  */
 
-import { jest } from '@jest/globals';
 
 // Mock electron module completely
 const appEventHandlers = new Map<string, (...args: any[]) => any>();
@@ -62,15 +61,22 @@ vi.mock('electron', () => ({
   ipcMain: mockIpcMain
 }));
 
-// Mock path functions
+// Mock path functions with proper default export
 vi.mock('path', () => ({
-  join: jest.fn((...args: string[]) => args.join('/')),
-  dirname: jest.fn((path: string) => path.replace(/\/[^/]*$/, ''))
+  default: {
+    join: (...args: string[]) => args.join('/'),
+    dirname: (path: string) => path.replace(/\/[^/]*$/, ''),
+  },
+  join: vi.fn((...args: string[]) => args.join('/')),
+  dirname: vi.fn((path: string) => path.replace(/\/[^/]*$/, ''))
 }));
 
-// Mock URL utilities
+// Mock URL utilities with proper default export
 vi.mock('url', () => ({
-  fileURLToPath: jest.fn((url: string) => url.replace('file://', ''))
+  default: {
+    fileURLToPath: (url: string) => url.replace('file://', ''),
+  },
+  fileURLToPath: vi.fn((url: string) => url.replace('file://', ''))
 }));
 
 // Mock environment utils

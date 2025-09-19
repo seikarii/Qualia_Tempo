@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
 /**
  * Tests for GameStateStoreService - GOLD.CODE IoC Compliance
  * Bridge service between EventBus and Zustand store for passive state management
@@ -19,8 +19,8 @@ vi.mock('../../utils/decorators', () => ({
 describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
   let gameStateStoreService: GameStateStoreService;
   let container: Container;
-  let mockEventBus: jest.Mocked<IEventBus>;
-  let mockLogger: jest.Mocked<QualiaLogger>;
+  let mockEventBus: Mocked<IEventBus>;
+  let mockLogger: Mocked<QualiaLogger>;
   let mockSetStore: MockedFunction<(_state: any) => void>;
 
   beforeEach(() => {
@@ -32,8 +32,8 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
 
     // Get mock instances for assertions - use the same mocks that are injected
     const mocks = getMocksFromContainer(container);
-    mockEventBus = mocks.mockEventBus as jest.Mocked<IEventBus>;
-    mockLogger = mocks.mockLogger as jest.Mocked<QualiaLogger>;
+    mockEventBus = mocks.mockEventBus as Mocked<IEventBus>;
+    mockLogger = mocks.mockLogger as Mocked<QualiaLogger>;
     mockSetStore = mocks.mockStoreSetter as MockedFunction<(_state: any) => void>;
 
     // GOLD.CODE COMPLIANCE: Resolve service from IoC container

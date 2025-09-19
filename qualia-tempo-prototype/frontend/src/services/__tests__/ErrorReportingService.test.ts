@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
 /**
  * Tests for Err      expect(mockLogger.debug).toHaveBeenCalledWith(
         '💎💎 [ErrorReportingService] Error queued for proces                      await errorReportingService.reportError(error, 'high', { context: 'test' });
@@ -76,9 +76,9 @@ global.fetch = vi.fn();
 describe('ErrorReportingService - GOLD.CODE IoC Testing', () => {
   let errorReportingService: IErrorReportingService;
   let container: Container;
-  let mockEventBus: jest.Mocked<IEventBus>;
-  let mockConfigService: jest.Mocked<IConfigurationService>;
-  let mockLogger: jest.Mocked<QualiaLogger>;
+  let mockEventBus: Mocked<IEventBus>;
+  let mockConfigService: Mocked<IConfigurationService>;
+  let mockLogger: Mocked<QualiaLogger>;
   let mockFetch: MockedFunction<typeof fetch>;
 
   beforeEach(() => {
@@ -99,9 +99,9 @@ describe('ErrorReportingService - GOLD.CODE IoC Testing', () => {
 
     // Get mock instances for assertions
     const mocks = getMocksFromContainer(container);
-    mockEventBus = mocks.mockEventBus as jest.Mocked<IEventBus>;
-    mockConfigService = mocks.mockConfigurationService as jest.Mocked<IConfigurationService>;
-    mockLogger = mocks.mockLogger as jest.Mocked<QualiaLogger>;
+    mockEventBus = mocks.mockEventBus as Mocked<IEventBus>;
+    mockConfigService = mocks.mockConfigurationService as Mocked<IConfigurationService>;
+    mockLogger = mocks.mockLogger as Mocked<QualiaLogger>;
 
     // Configure mock configuration service with error reporting config
     mockConfigService.getConfig.mockReturnValue({
@@ -240,7 +240,7 @@ describe('ErrorReportingService - GOLD.CODE IoC Testing', () => {
       await errorReportingService.reportError(new Error('Timeout test'), 'low');
       
       // Fast-forward time to trigger batch timeout
-      jest.advanceTimersByTime(2000);
+      vi.advanceTimersByTime(2000);
       
       expect(mockFetch).toHaveBeenCalled();
     });
@@ -296,7 +296,7 @@ describe('ErrorReportingService - GOLD.CODE IoC Testing', () => {
       await errorReportingService.reportError(new Error('Error 1'), 'low');
       
       // Advance time past window
-      jest.advanceTimersByTime(1500);
+      vi.advanceTimersByTime(1500);
       
       // Should be able to report again
       await errorReportingService.reportError(new Error('Error after reset'), 'low');

@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, type MockedFunction } from 'vitest';
 import { render, screen } from "@testing-library/react";
 import { HUD } from "../HUD";
 import {
@@ -6,6 +6,7 @@ import {
   useQualiaState,
   useGameStats,
 } from "../../state/useGameStore";
+import { useConfiguration } from "../../services/hooks";
 
 // Mock the services hooks
 vi.mock("../../services/hooks", () => ({
@@ -19,16 +20,15 @@ vi.mock("../../state/useGameStore", () => ({
   useGameStats: vi.fn(),
 }));
 
-const mockUseConfiguration = require("../../services/hooks").useConfiguration;
-const mockUseGameStore = useGameStore as MockedFunction<
-  typeof useGameStore
->;
-const mockUseQualiaState = useQualiaState as MockedFunction<
-  typeof useQualiaState
->;
-const mockUseGameStats = useGameStats as MockedFunction<
-  typeof useGameStats
->;
+// Mock services hooks
+vi.mock("../../services/hooks", () => ({
+  useConfiguration: vi.fn(),
+}));
+
+const mockUseConfiguration = vi.mocked(useConfiguration);
+const mockUseGameStore = vi.mocked(useGameStore);
+const mockUseQualiaState = vi.mocked(useQualiaState);
+const mockUseGameStats = vi.mocked(useGameStats);
 
 // Helper to create a mock store that handles selectors
 const createMockStore = (state: any) => {
@@ -47,20 +47,150 @@ describe("HUD Component", () => {
 
     // Mock configuration service
     mockUseConfiguration.mockReturnValue({
-      getGameConfig: jest.fn(() => ({
+      loadConfig: vi.fn().mockResolvedValue(undefined),
+      getConfig: vi.fn(() => ({})),
+      getGameConfig: vi.fn(() => ({
         maxCombo: 100,
         scoreMultiplier: 1.0,
         timeLimit: 300,
       })),
-      getQualiaConfig: jest.fn(() => ({
-        intensityThreshold: 0.5,
-        focusMultiplier: 1.2,
+      getQualiaConfig: vi.fn(() => ({
+        baseQualiaState: {
+          intensity: 0.5,
+          focus_level: 0.5,
+          aggression: 0.5,
+          flow: 0.5,
+          chaos: 0.5,
+          recovery: 0.5,
+          transcendence: 0.5,
+        },
+        performanceMultipliers: {
+          perfectHit: 1.5,
+          goodHit: 1.0,
+          missHit: -0.5,
+          comboBonus: 0.1,
+        },
+        decayRates: {
+          intensity: 0.02,
+          focus_level: 0.02,
+          aggression: 0.02,
+          flow: 0.02,
+          chaos: 0.02,
+          recovery: 0.02,
+          transcendence: 0.02,
+        },
+        thresholds: {
+          highIntensity: 0.8,
+          lowPrecision: 0.3,
+          chaosThreshold: 0.7,
+          transcendenceThreshold: 0.9,
+        },
+        comboSystem: {
+          maxComboMultiplier: 3.0,
+          comboDecayTime: 1000,
+          perfectComboBonus: 0.2,
+        },
+        recoveryMechanics: {
+          recoveryRate: 0.05,
+          maxRecovery: 1.0,
+          recoveryCooldown: 2000,
+        },
+        updateIntervalMs: 16,
+        historySize: 100,
+        hitNoteMultipliers: { intensity: 0.1, focus_level: 0.1, flow: 0.1 },
+        missNoteMultipliers: { chaos: 0.2, focus_level: -0.1, flow: -0.1 },
+        dashMultipliers: { aggression: 0.15, intensity: 0.1 },
+        fastForwardMultipliers: { aggression: 0.1, intensity: 0.05 },
+        rewindMultipliers: { recovery: 0.1, focus_level: 0.05 },
+        updateInterval: 16,
+        intensityDecay: 0.02,
+        focusDecay: 0.02,
+        aggressionDecay: 0.02,
+        flowDecay: 0.02,
+        chaosDecay: 0.02,
+        recoveryDecay: 0.02,
+        transcendenceDecay: 0.02,
+        transcendenceThresholds: { intensity: 0.8, focus_level: 0.8, flow: 0.8 },
+        minValue: 0.0,
+        maxValue: 1.0,
       })),
-      getBackendConfig: jest.fn(() => ({
-        endpoint: 'http://localhost:8000',
-        timeout: 5000,
+      getBackendConfig: vi.fn(() => ({
+        api: {
+          baseUrl: "http://localhost:8000",
+          qualiaEndpoint: "/api/qualia",
+          healthEndpoint: "/api/health",
+          timeout: 5000,
+        },
+        sync: {
+          throttleDelay: 250,
+          batchSize: 10,
+          maxRetries: 3,
+          retryDelay: 1000,
+        },
+        connection: {
+          healthCheckInterval: 10000,
+          connectionTimeout: 5000,
+          maxFailedAttempts: 3,
+        },
+        validation: {
+          enableSchemaValidation: true,
+          strictMode: false,
+          logValidationErrors: true,
+        },
+        performance: {
+          enableCompression: true,
+          maxPayloadSize: 1048576,
+          enableBuffering: true,
+          bufferFlushInterval: 1000,
+        },
+        errorHandling: {
+          enableCircuitBreaker: true,
+          circuitBreakerThreshold: 5,
+          circuitBreakerTimeout: 30000,
+          enableFallbackMode: true,
+        },
+        messages: {
+          backendNotConnected: "Backend not connected",
+          serviceAlreadyRunning: "Service already running",
+          serviceNotRunning: "Service not running",
+          syncScheduled: "Sync scheduled",
+          sendingQualiaState: "Sending qualia state",
+          backendResponse: "Backend response",
+          syncCompleted: "Sync completed",
+          syncFailed: "Sync failed",
+          healthCheck: "Health check",
+          backendHealthy: "Backend healthy",
+          backendUnhealthy: "Backend unhealthy",
+          healthCheckFailed: "Health check failed",
+          periodicHealthCheckFailed: "Periodic health check failed",
+          serviceStarted: "Service started",
+          serviceStopped: "Service stopped",
+          startFailed: "Start failed",
+          stopFailed: "Stop failed",
+          updateConfig: "Update config",
+          updateConfigFailed: "Update config failed",
+          forceSync: "Force sync",
+          forceSyncCompleted: "Force sync completed",
+          forceSyncFailed: "Force sync failed",
+          circuitBreakerOpen: "Circuit breaker open",
+          circuitBreakerClosed: "Circuit breaker closed",
+          fallbackMode: "Fallback mode",
+          fallbackModeDisabled: "Fallback mode disabled",
+          connectionRestored: "Connection restored",
+          connectionLost: "Connection lost",
+          retryAttempt: "Retry attempt",
+          maxRetriesExceeded: "Max retries exceeded",
+          throttleActive: "Throttle active",
+          throttleInactive: "Throttle inactive",
+        },
       })),
-      isLoaded: jest.fn(() => true),
+      getAudioConfig: vi.fn(() => ({} as any)),
+      getErrorReportingConfig: vi.fn(() => ({} as any)),
+      getRhythmicMovementConfig: vi.fn(() => ({} as any)),
+      getNotificationConfig: vi.fn(() => ({} as any)),
+      getConfigSection: vi.fn(() => ({} as any)),
+      isLoaded: vi.fn(() => true),
+      reload: vi.fn().mockResolvedValue(undefined),
     });
 
     // Default mock state

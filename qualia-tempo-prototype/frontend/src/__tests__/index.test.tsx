@@ -19,7 +19,7 @@ vi.mock('react-dom/client', () => ({
 
 // Mock React
 vi.mock('react', () => ({
-  ...jest.requireActual<typeof React>('react'),
+  ...vi.requireActual<typeof React>('react'),
   StrictMode: ({ children }: any) => children
 }));
 

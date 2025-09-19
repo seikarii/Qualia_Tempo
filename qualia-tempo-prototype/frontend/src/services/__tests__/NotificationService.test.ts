@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
 /**
  * Tests for NotificationService - GOLD.CODE IoC Compliance
  * Event-driven notification bridge between EventBus and Zustand store
@@ -22,9 +22,9 @@ vi.mock('../../utils/decorators', () => ({
 describe('NotificationService - GOLD.CODE IoC Testing', () => {
   let notificationService: INotificationService;
   let container: Container;
-  let mockEventBus: jest.Mocked<IEventBus>;
-  let mockGameStateStore: jest.Mocked<IGameStateStore>;
-  let mockLogger: jest.Mocked<QualiaLogger>;
+  let mockEventBus: Mocked<IEventBus>;
+  let mockGameStateStore: Mocked<IGameStateStore>;
+  let mockLogger: Mocked<QualiaLogger>;
 
   beforeEach(() => {
     // Reset all mocks to clean state
@@ -35,9 +35,9 @@ describe('NotificationService - GOLD.CODE IoC Testing', () => {
 
     // Get mock instances for assertions
     const mocks = getMocksFromContainer(container);
-    mockEventBus = mocks.mockEventBus as jest.Mocked<IEventBus>;
-    mockGameStateStore = mocks.mockGameStateStore as jest.Mocked<IGameStateStore>;
-    mockLogger = mocks.mockLogger as jest.Mocked<QualiaLogger>;
+    mockEventBus = mocks.mockEventBus as Mocked<IEventBus>;
+    mockGameStateStore = mocks.mockGameStateStore as Mocked<IGameStateStore>;
+    mockLogger = mocks.mockLogger as Mocked<QualiaLogger>;
 
     // GOLD.CODE COMPLIANCE: Resolve service from IoC container
     notificationService = container.get<INotificationService>(TYPES.INotificationService);
@@ -139,7 +139,7 @@ describe('NotificationService - GOLD.CODE IoC Testing', () => {
       await notificationService.show('Normal priority', 'warning', 1000, { priority: 'normal' });
       
       // Check that notifications are processed in priority order
-      const logCalls = (mockLogger.info as jest.Mock).mock.calls;
+      const logCalls = (mockLogger.info as Mock).mock.calls;
       const notificationCalls = logCalls.filter(call => call[0] === 'Showing notification');
       
       expect(notificationCalls.length).toBeGreaterThanOrEqual(3);
@@ -169,14 +169,14 @@ describe('NotificationService - GOLD.CODE IoC Testing', () => {
       expect(mockEventBus.subscribe).toHaveBeenCalled();
       
       // Get the subscription callback
-      const subscribeCall = (mockEventBus.subscribe as jest.Mock).mock.calls[0];
+      const subscribeCall = (mockEventBus.subscribe as Mock).mock.calls[0];
       expect(subscribeCall).toBeDefined();
       expect(typeof subscribeCall[1]).toBe('function'); // callback function
     });
 
     it('should handle game events and show appropriate notifications', async () => {
       // Simulate the subscription callback being called
-      const subscribeCall = (mockEventBus.subscribe as jest.Mock).mock.calls[0];
+      const subscribeCall = (mockEventBus.subscribe as Mock).mock.calls[0];
       const eventHandler = subscribeCall[1];
       
       // Simulate a game event
@@ -241,7 +241,7 @@ describe('NotificationService - GOLD.CODE IoC Testing', () => {
       await notificationService.show('Throttle test', 'info');
       
       // Advance time past throttle window
-      jest.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(5000);
       
       await notificationService.show('Throttle test', 'info');
       
@@ -321,7 +321,7 @@ describe('NotificationService - GOLD.CODE IoC Testing', () => {
       await notificationService.show('Auto-dismiss test', 'info', 1000);
       
       // Fast-forward time past duration
-      jest.advanceTimersByTime(1500);
+      vi.advanceTimersByTime(1500);
       
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Auto-dismissed')
@@ -332,7 +332,7 @@ describe('NotificationService - GOLD.CODE IoC Testing', () => {
       await notificationService.show('Persistent notification', 'error', 0); // 0 = persistent
       
       // Fast-forward time
-      jest.advanceTimersByTime(10000);
+      vi.advanceTimersByTime(10000);
       
       // Should not be auto-dismissed
       expect(mockLogger.debug).not.toHaveBeenCalledWith(

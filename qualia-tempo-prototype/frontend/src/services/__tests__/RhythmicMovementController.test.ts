@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
 /**
  * Tests for RhythmicMovementController - GOLD.CODE IoC Compliance
  * Rhythmic movement pattern controller with beat synchronization
@@ -22,9 +22,9 @@ vi.mock('../../utils/decorators', () => ({
 describe('RhythmicMovementController - GOLD.CODE IoC Testing', () => {
   let rhythmicController: IRhythmicMovementController;
   let container: Container;
-  let mockEventBus: jest.Mocked<IEventBus>;
-  let mockConfigService: jest.Mocked<IConfigurationService>;
-  let mockLogger: jest.Mocked<QualiaLogger>;
+  let mockEventBus: Mocked<IEventBus>;
+  let mockConfigService: Mocked<IConfigurationService>;
+  let mockLogger: Mocked<QualiaLogger>;
 
   beforeEach(() => {
     // Reset all mocks to clean state
@@ -35,9 +35,9 @@ describe('RhythmicMovementController - GOLD.CODE IoC Testing', () => {
 
     // Get mock instances for assertions
     const mocks = getMocksFromContainer(container);
-    mockEventBus = mocks.mockEventBus as jest.Mocked<IEventBus>;
-    mockConfigService = mocks.mockConfigurationService as jest.Mocked<IConfigurationService>;
-    mockLogger = mocks.mockLogger as jest.Mocked<QualiaLogger>;
+    mockEventBus = mocks.mockEventBus as Mocked<IEventBus>;
+    mockConfigService = mocks.mockConfigurationService as Mocked<IConfigurationService>;
+    mockLogger = mocks.mockLogger as Mocked<QualiaLogger>;
 
     // Configure mock configuration service with rhythm settings
     mockConfigService.getConfig.mockReturnValue({
@@ -299,7 +299,7 @@ describe('RhythmicMovementController - GOLD.CODE IoC Testing', () => {
       await rhythmicController.startBeatTracking();
       
       // Advance time to simulate beat intervals
-      jest.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(1000);
       
       const beatCount = rhythmicController.getBeatCount();
       expect(beatCount).toBeGreaterThan(0);

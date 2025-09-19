@@ -1,6 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { jest } from "@jest/globals";
 import App from "../App";
 import { useGameStore } from "../state/useGameStore";
 import { useService } from "../services/hooks";
@@ -21,7 +20,7 @@ vi.mock("../components/game/QualiaTempoGame", () => ({
 
 // Mock console methods
 const mockConsoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
-const mockConsoleError = jest
+const mockConsoleError = vi
   .spyOn(console, "error")
   .mockImplementation(() => {});
 
@@ -73,7 +72,7 @@ describe("App Component", () => {
   };
 
   const mockApplicationInitializer = {
-    start: jest.fn(() => Promise.resolve()),
+    start: vi.fn(() => Promise.resolve()),
     stop: vi.fn(),
   };
 
@@ -151,7 +150,7 @@ describe("App Component", () => {
   };
 
   afterEach(() => {
-    jest.clearAllTimers();
+    vi.clearAllTimers();
     vi.useRealTimers(); // Always restore real timers after each test
   });
 

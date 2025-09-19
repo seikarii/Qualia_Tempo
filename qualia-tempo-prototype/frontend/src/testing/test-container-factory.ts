@@ -10,7 +10,7 @@
  */
 
 // Mock decorators BEFORE importing any services - Using Vitest
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 
 vi.mock('../utils/decorators', () => ({
   logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
@@ -257,17 +257,17 @@ export function resetAllMocks() {
   vi.clearAllMocks();
   
   // Reset mock return values to defaults
-  (mockLogger.getLevel as jest.Mock).mockReturnValue('info');
-  (mockEventBus.subscribe as jest.Mock).mockReturnValue('mock-listener-id');
-  (mockEventBus.unsubscribe as jest.Mock).mockReturnValue(true);
-  (mockEventBus.getStats as jest.Mock).mockReturnValue({
+  (mockLogger.getLevel as Mock).mockReturnValue('info');
+  (mockEventBus.subscribe as Mock).mockReturnValue('mock-listener-id');
+  (mockEventBus.unsubscribe as Mock).mockReturnValue(true);
+  (mockEventBus.getStats as Mock).mockReturnValue({
     totalListeners: 0,
     eventTypes: [],
     historySize: 0,
     isDestroyed: false
   });
-  (mockConfigurationService.isLoaded as jest.Mock).mockReturnValue(true);
-  (mockConfigurationService.getBackendConfig as jest.Mock).mockReturnValue({ 
+  (mockConfigurationService.isLoaded as Mock).mockReturnValue(true);
+  (mockConfigurationService.getBackendConfig as Mock).mockReturnValue({ 
     url: 'http://localhost:8000',
     timeout: 5000,
     retryAttempts: 3

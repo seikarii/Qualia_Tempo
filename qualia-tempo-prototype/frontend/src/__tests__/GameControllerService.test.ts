@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
 /**
  * QUALIA.CODE v1.1 - GameControllerService Tests - IOC COMPLIANT
  * Comprehensive test suite for game state management service.
@@ -15,8 +15,8 @@ import { PlayerActionEvent } from "../services/EventBus";
 
 describe("GameControllerService - IOC COMPLIANT", () => {
   let gameController: IGameControllerService;
-  let mockEventBus: jest.Mocked<IEventBus>;
-  let mockConfigService: jest.Mocked<IConfigurationService>;
+  let mockEventBus: Mocked<IEventBus>;
+  let mockConfigService: Mocked<IConfigurationService>;
 
   beforeEach(() => {
     // Create mocks for EventBus interface
@@ -282,7 +282,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     test("should handle start failures gracefully", async () => {
       // Mock a failure scenario
       const originalSubscribe = mockEventBus.subscribe;
-      (mockEventBus.subscribe as any) = jest.fn(() => {
+      (mockEventBus.subscribe as any) = vi.fn(() => {
         throw new Error("Subscription failed");
       });
 

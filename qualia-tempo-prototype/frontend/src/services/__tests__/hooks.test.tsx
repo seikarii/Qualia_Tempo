@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
 import { renderHook } from "@testing-library/react";
 import { useService } from "../hooks";
 import { TYPES } from "../inversify.types";
@@ -16,16 +16,16 @@ vi.mock('../inversify.container', () => ({
 }));
 
 describe('Service Hooks Integration', () => {
-  let mockEventBus: jest.Mocked<IEventBus>;
-  let mockLogger: jest.Mocked<ILogger>;
+  let mockEventBus: Mocked<IEventBus>;
+  let mockLogger: Mocked<ILogger>;
 
   beforeEach(() => {
     resetAllMocks();
     testContainer = createTestContainer();
     
     const mocks = getMocksFromContainer(testContainer);
-    mockEventBus = mocks.mockEventBus as jest.Mocked<IEventBus>;
-    mockLogger = mocks.mockLogger as jest.Mocked<ILogger>;
+    mockEventBus = mocks.mockEventBus as Mocked<IEventBus>;
+    mockLogger = mocks.mockLogger as Mocked<ILogger>;
   });
 
   describe('useService Hook', () => {

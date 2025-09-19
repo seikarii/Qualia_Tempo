@@ -1,8 +1,7 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
 // AudioService.test.ts - IoC-compliant test suite for QUALIA.CODE audio management service
 // Tests: Service lifecycle, event handling, rhythmic feedback, metronome functionality, entity voice management
 
-import { jest } from "@jest/globals";
 import { container } from '../inversify.config';
 import { TYPES } from '../inversify.types';
 import type { IEventBus } from '../interfaces/IEventBus';
@@ -47,8 +46,8 @@ const mockGainNode = {
 };
 
 const mockAudioContext = {
-  createOscillator: jest.fn(() => mockOscillator),
-  createGain: jest.fn(() => mockGainNode),
+  createOscillator: vi.fn(() => mockOscillator),
+  createGain: vi.fn(() => mockGainNode),
   destination: {},
   currentTime: 0,
   state: "running" as any, // Simplified for testing
@@ -59,20 +58,20 @@ const mockAudioContext = {
 // Mock AudioContext constructor
 Object.defineProperty(window, "AudioContext", {
   writable: true,
-  value: jest.fn(() => mockAudioContext),
+  value: vi.fn(() => mockAudioContext),
 });
 
 Object.defineProperty(window, "webkitAudioContext", {
   writable: true,
-  value: jest.fn(() => mockAudioContext),
+  value: vi.fn(() => mockAudioContext),
 });
 
 describe("AudioService", () => {
   let audioService: any; // Using any to test extended methods not in interface
-  let mockEventBus: jest.Mocked<IEventBus>;
-  let mockConfigService: jest.Mocked<IConfigurationService>;
-  let consoleLogSpy: jest.SpiedFunction<typeof console.log>;
-  let consoleWarnSpy: jest.SpiedFunction<typeof console.warn>;
+  let mockEventBus: Mocked<IEventBus>;
+  let mockConfigService: Mocked<IConfigurationService>;
+  let consoleLogSpy: vi.SpiedFunction<typeof console.log>;
+  let consoleWarnSpy: vi.SpiedFunction<typeof console.warn>;
 
   beforeEach(() => {
     vi.clearAllMocks();

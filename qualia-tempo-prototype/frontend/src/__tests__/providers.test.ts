@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, it, vi } from 'vitest';
 /**
  * Test for providers.ts - Re-export module
  * 
@@ -9,31 +9,31 @@ import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Mock the CompositionRoot.provider to avoid Tone.js import issues
 vi.mock('../services/CompositionRoot.provider', () => ({
-  CompositionRootProvider: jest.fn(({ children }) => children)
+  CompositionRootProvider: vi.fn(({ children }) => children)
 }));
 
 describe('providers.ts - Re-export Module', () => {
-  it('should re-export CompositionRootProvider', () => {
-    // Import the re-exported provider
-    const { CompositionRootProvider } = require('../providers');
+  it('should re-export CompositionRootProvider', async () => {
+    // Import the re-exported provider using dynamic import
+    const { CompositionRootProvider } = await import('../providers');
     
     // Verify that the provider is properly re-exported
     expect(CompositionRootProvider).toBeDefined();
     expect(typeof CompositionRootProvider).toBe('function');
   });
 
-  it('should provide the same reference as direct import', () => {
-    // Import from both locations
-    const { CompositionRootProvider: ReExported } = require('../providers');
-    const { CompositionRootProvider: Direct } = require('../services/CompositionRoot.provider');
+  it('should provide the same reference as direct import', async () => {
+    // Import from both locations using dynamic import
+    const { CompositionRootProvider: ReExported } = await import('../providers');
+    const { CompositionRootProvider: Direct } = await import('../services/CompositionRoot.provider');
     
     // Verify they are the same reference
     expect(ReExported).toBe(Direct);
   });
 
-  it('should follow QUALIA.CODE re-export pattern', () => {
-    // Verify the module exports exist
-    const providers = require('../providers');
+  it('should follow QUALIA.CODE re-export pattern', async () => {
+    // Verify the module exports exist using dynamic import
+    const providers = await import('../providers');
     
     // Should have CompositionRootProvider export
     expect(providers).toHaveProperty('CompositionRootProvider');
@@ -42,8 +42,8 @@ describe('providers.ts - Re-export Module', () => {
     expect(typeof providers.CompositionRootProvider).toBe('function');
   });
 
-  it('should only export expected components', () => {
-    const providers = require('../providers');
+  it('should only export expected components', async () => {
+    const providers = await import('../providers');
     const keys = Object.keys(providers);
     
     // Should only export CompositionRootProvider

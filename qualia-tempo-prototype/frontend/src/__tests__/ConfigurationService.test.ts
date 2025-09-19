@@ -4,7 +4,6 @@ import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
  * Tests for YAML configuration loading, validation, and management
  */
 
-import { jest } from '@jest/globals';
 import yaml from 'js-yaml';
 import { QualiaLogger } from '../services/Logger';
 

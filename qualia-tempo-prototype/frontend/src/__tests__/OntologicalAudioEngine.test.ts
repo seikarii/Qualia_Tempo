@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, it, vi } from 'vitest';
 /**
  * QUALIA.CODE v1.1 - OntologicalAudioEngine Tests - IOC COMPLIANT
  * Comprehensive test suite for the ontological audio processing engine.
@@ -6,7 +6,6 @@ import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
  * Uses InversifyJS container for dependency injection.
  */
 
-import { jest } from "@jest/globals";
 import { container } from '../services/inversify.config';
 import { TYPES } from '../services/inversify.types';
 import type { IOntologicalAudioEngine, EmergentBehavior } from "../audio/IOntologicalAudioEngine";
@@ -35,7 +34,21 @@ vi.mock('tone', () => ({
     triggerAttackRelease: vi.fn(),
     dispose: vi.fn()
   })),
-  Synth: vi.fn(),
+  Synth: vi.fn().mockImplementation(() => ({
+    connect: vi.fn(),
+    triggerAttackRelease: vi.fn(),
+    triggerAttack: vi.fn(),
+    triggerRelease: vi.fn(),
+    dispose: vi.fn(),
+    set: vi.fn(),
+    volume: { value: 0 },
+    envelope: {
+      attack: 0.1,
+      decay: 0.2,
+      sustain: 0.5,
+      release: 1.0
+    }
+  })),
   Frequency: vi.fn().mockImplementation((_freq) => ({
     toNote: vi.fn().mockReturnValue('C4')
   })),
@@ -76,7 +89,7 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe('Engine Initialization', () => {

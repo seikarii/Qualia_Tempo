@@ -1,10 +1,10 @@
-/* eslint-env jest */
+import { vi } from 'vitest';
 
 export class OntologicalAudioEngine {
-  updateEntitySound = jest.fn();
-  playEmergentPattern = jest.fn();
-  createEntityVoice = jest.fn();
-  removeEntityVoice = jest.fn();
+  updateEntitySound = vi.fn();
+  playEmergentPattern = vi.fn();
+  createEntityVoice = vi.fn();
+  removeEntityVoice = vi.fn();
 }
 
 export interface EmergentBehavior {

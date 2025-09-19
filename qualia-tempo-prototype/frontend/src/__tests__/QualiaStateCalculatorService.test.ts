@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
 /**
  * QUALIA.CODE v1.1 - QualiaStateCalculatorService Tests
  * IoC COMPLIANT - Uses container.rebind() for dependency injection
@@ -14,8 +14,8 @@ import { QualiaLogger, LogLevel } from "../services/Logger";
 
 describe("QualiaStateCalculatorService - REFACTORED", () => {
   let qualiaService: IQualiaStateCalculatorService;
-  let mockEventBus: jest.Mocked<IEventBus>;
-  let mockConfigService: jest.Mocked<IConfigurationService>;
+  let mockEventBus: Mocked<IEventBus>;
+  let mockConfigService: Mocked<IConfigurationService>;
 
   beforeEach(() => {
     // Create mocks for EventBus interface

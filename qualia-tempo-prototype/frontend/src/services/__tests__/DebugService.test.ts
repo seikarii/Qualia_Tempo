@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
 /**
  * Tests for DebugService - GOLD.CODE IoC Compliance
  * AI-powered debugging with session management and performance monitoring
@@ -23,9 +23,9 @@ vi.mock('../../utils/decorators', () => ({
 describe('DebugService - GOLD.CODE IoC Testing', () => {
   let debugService: IDebugService;
   let container: Container;
-  let mockEventBus: jest.Mocked<IEventBus>;
-  let mockConfigService: jest.Mocked<IConfigurationService>;
-  let mockLogger: jest.Mocked<QualiaLogger>;
+  let mockEventBus: Mocked<IEventBus>;
+  let mockConfigService: Mocked<IConfigurationService>;
+  let mockLogger: Mocked<QualiaLogger>;
 
   beforeEach(() => {
     // Reset all mocks to clean state
@@ -36,9 +36,9 @@ describe('DebugService - GOLD.CODE IoC Testing', () => {
 
     // Get mock instances for assertions
     const mocks = getMocksFromContainer(container);
-    mockEventBus = mocks.mockEventBus as jest.Mocked<IEventBus>;
-    mockConfigService = mocks.mockConfigurationService as jest.Mocked<IConfigurationService>;
-    mockLogger = mocks.mockLogger as jest.Mocked<QualiaLogger>;
+    mockEventBus = mocks.mockEventBus as Mocked<IEventBus>;
+    mockConfigService = mocks.mockConfigurationService as Mocked<IConfigurationService>;
+    mockLogger = mocks.mockLogger as Mocked<QualiaLogger>;
 
     // GOLD.CODE COMPLIANCE: Resolve service from IoC container
     debugService = container.get<IDebugService>(TYPES.IDebugService);
@@ -209,7 +209,7 @@ describe('DebugService - GOLD.CODE IoC Testing', () => {
       expect(mockEventBus.subscribe).toHaveBeenCalled();
       
       // The debug service should be listening for all events
-      const subscribeCall = (mockEventBus.subscribe as jest.Mock).mock.calls[0];
+      const subscribeCall = (mockEventBus.subscribe as Mock).mock.calls[0];
       expect(subscribeCall).toBeDefined();
     });
 
@@ -224,7 +224,7 @@ describe('DebugService - GOLD.CODE IoC Testing', () => {
       debugService.start();
       
       // Clear previous logger calls
-      (mockLogger.debug as jest.Mock).mockClear();
+      (mockLogger.debug as Mock).mockClear();
       
       debugService.logEvent(mockEvent);
       
