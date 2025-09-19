@@ -4,6 +4,7 @@
 import logging
 import io
 import time
+import asyncio
 from typing import Dict, Any, Optional, Tuple
 
 try:
@@ -315,6 +316,21 @@ class RenderingService:
             
         except Exception as e:
             self._logger.error(f"🚨 Error during RenderingService shutdown: {e}")
+
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
+    async def graceful_shutdown(self) -> None:
+        """Gracefully stop the rendering loop."""
+        self._logger.info("Shutting down RenderingService...")
+        # Assuming _render_task is the asyncio task for the rendering loop
+        if hasattr(self, '_render_task') and self._render_task and not self._render_task.done():
+            self._render_task.cancel()
+            try:
+                await self._render_task
+            except asyncio.CancelledError:
+                self._logger.info("Rendering loop cancelled successfully.")
+        self._is_initialized = False
+        self._logger.info("RenderingService shut down.")
 
     @property
     def is_initialized(self) -> bool:

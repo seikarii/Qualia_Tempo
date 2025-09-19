@@ -1,5 +1,6 @@
 {
   "name": "qualia-tempo-frontend",
+  "type": "module",
   "version": "1.0.0",
   "description": "Qualia Tempo - Rhythm Action Game Frontend",
   "main": "main.js",

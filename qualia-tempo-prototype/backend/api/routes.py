@@ -51,6 +51,21 @@ async def startup_event():
         raise
 
 
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    QUALIA.CODE compliant shutdown handler.
+    Ensures all background services are gracefully terminated.
+    """
+    logger.info("🚨 Shutting down QUALIA.CODE services...")
+    try:
+        composition_root = get_composition_root()
+        await composition_root.shutdown()
+        logger.info("✅ All services terminated gracefully.")
+    except Exception as e:
+        logger.error(f"🔥 Error during service shutdown: {e}")
+
+
 @app.get("/")
 async def root():
     return {
@@ -115,6 +130,7 @@ async def websocket_video_stream(websocket: WebSocket, services: CompositionRoot
     QUALIA.CODE WebSocket endpoint for video streaming.
     Streams rendered frames from RenderingService to frontend clients.
     """
+    logger.info("ENTERING /ws/video_stream ENDPOINT")
     streaming_service = services.get_streaming_web_service()
     
     try:
@@ -220,16 +236,3 @@ async def get_engine_stats(services: CompositionRoot = Depends(get_services)):
     except Exception as e:
         logger.error(f"🚨 Error getting stats: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
-def _log_qualia_state_detailed(state_dict: dict) -> None:
-    """Enhanced logging for QualiaState updates."""
-    print("=== QUALIA STATE UPDATE (QUALIA.CODE) ===")
-    print(f"🔥 Intensity: {state_dict.get('intensity', 0):.3f}")
-    print(f"🎯 Precision: {state_dict.get('precision', 0):.3f}")
-    print(f"⚡ Aggression: {state_dict.get('aggression', 0):.3f}")
-    print(f"🌊 Flow: {state_dict.get('flow', 0):.3f}")
-    print(f"🌪️ Chaos: {state_dict.get('chaos', 0):.3f}")
-    print(f"💊 Recovery: {state_dict.get('recovery', 0):.3f}")
-    print(f"🌟 Transcendence: {state_dict.get('transcendence', 0):.3f}")
-    print("==========================================")

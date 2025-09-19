@@ -204,25 +204,16 @@ class StreamingWebService:
     @log_execution(level="INFO") 
     @handle_errors(fallback_return_value=None)
     async def shutdown(self) -> None:
-        """Shutdown streaming service and close all connections."""
-        try:
-            # Stop streaming
-            await self._stop_streaming()
-            
-            # Close all connections
-            for websocket in self._connections.copy():
-                try:
-                    await websocket.close()
-                except Exception:
-                    pass
-                    
-            self._connections.clear()
-            self._connected_clients = 0
-            
-            self._logger.info("✅ StreamingWebService shutdown complete")
-            
-        except Exception as e:
-            self._logger.error(f"🚨 Error during StreamingWebService shutdown: {e}")
+        """Gracefully stop the streaming loop and disconnect clients."""
+        self._logger.info("Shutting down StreamingWebService...")
+        await self._stop_streaming()
+        
+        # Create a copy of connections to iterate over
+        connections = list(self._connections)
+        for websocket in connections:
+            await self.disconnect_client(websocket)
+        
+        self._logger.info("StreamingWebService shut down.")
 
     def get_status(self) -> Dict[str, Any]:
         """Get current streaming service status."""

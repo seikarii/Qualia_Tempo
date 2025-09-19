@@ -202,8 +202,29 @@ class CompositionRoot:
         """Get StreamingWebService instance.""" 
         return self.get_service("streaming_web_service")
 
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
     async def shutdown(self) -> None:
-        """Gracefully shutdown all services."""
+        """Gracefully shut down all background services."""
+        if not self._initialized:
+            self._logger.warning("⚠️  CompositionRoot not initialized, nothing to shut down.")
+            return
+
+        self._logger.info("🔥 Shutting down QUALIA.CODE services...")
+
+        # Shutdown services that run background tasks
+        streaming_service = self.get_streaming_web_service()
+        if streaming_service:
+            await streaming_service.shutdown()
+
+        rendering_service = self.get_rendering_service()
+        if rendering_service:
+            await rendering_service.shutdown()
+
+        self._initialized = False
+        self._logger.info("✅ All services terminated gracefully.")
+
+        # Gracefully shutdown all services
         self._logger.info("🛑 Shutting down CompositionRoot...")
 
         # Shutdown services in reverse order
