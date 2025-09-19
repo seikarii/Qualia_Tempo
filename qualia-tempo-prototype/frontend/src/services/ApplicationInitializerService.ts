@@ -28,6 +28,7 @@ export class ApplicationInitializerService implements IApplicationInitializerSer
   private readonly errorReportingService: IErrorReportingService;
   private readonly debugService: IDebugService;
   private readonly logger: ILogger;
+  private isStarted = false;
 
   constructor(
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
@@ -55,6 +56,11 @@ export class ApplicationInitializerService implements IApplicationInitializerSer
   @logMethod()
   @catchError()
   public async start(): Promise<void> {
+    if (this.isStarted) {
+      this.logger.warn('⚠️ [ApplicationInitializerService] Service already running');
+      return;
+    }
+
     this.logger.info('Starting application initialization sequence');
 
     try {
@@ -96,6 +102,7 @@ export class ApplicationInitializerService implements IApplicationInitializerSer
       const isConnected = this.backendSyncService.isBackendConnected();
       this.gameStateStoreService.updateGameState({ backendConnected: isConnected });
       
+      this.isStarted = true;
       this.logger.info('Application initialization completed successfully', {
         configLoaded: true,
         backendConnected: isConnected,

@@ -1,1427 +1,569 @@
 {
-  "timestamp": "2025-09-19T00:00:26.188Z",
+  "timestamp": "2025-09-19T00:09:32.233Z",
   "url": "http://localhost:5173",
   "success": true,
   "hasRoot": true,
   "stats": {
-    "totalLogs": 236,
+    "totalLogs": 93,
     "errors": 0,
-    "warnings": 123,
-    "configErrors": 22
+    "warnings": 4,
+    "configErrors": 12
   },
   "logs": [
     {
-      "timestamp": "2025-09-19T00:00:10.296Z",
+      "timestamp": "2025-09-19T00:09:16.377Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST SCRIPT LOADED ===",
       "entry": "[LOG] === RACE CONDITION TEST SCRIPT LOADED ==="
     },
     {
-      "timestamp": "2025-09-19T00:00:10.389Z",
+      "timestamp": "2025-09-19T00:09:16.461Z",
       "type": "debug",
       "text": "[vite] connecting...",
       "entry": "[DEBUG] [vite] connecting..."
     },
     {
-      "timestamp": "2025-09-19T00:00:10.405Z",
+      "timestamp": "2025-09-19T00:09:16.474Z",
       "type": "debug",
       "text": "[vite] connected.",
       "entry": "[DEBUG] [vite] connected."
     },
     {
-      "timestamp": "2025-09-19T00:00:10.661Z",
+      "timestamp": "2025-09-19T00:09:16.725Z",
       "type": "info",
       "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
       "entry": "[INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.710Z",
+      "timestamp": "2025-09-19T00:09:16.777Z",
       "type": "log",
       "text": "%c * Tone.js v14.9.17 *  background: #000; color: #fff",
       "entry": "[LOG] %c * Tone.js v14.9.17 *  background: #000; color: #fff"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.762Z",
+      "timestamp": "2025-09-19T00:09:16.825Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.763Z",
+      "timestamp": "2025-09-19T00:09:16.826Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.949Z",
+      "timestamp": "2025-09-19T00:09:17.021Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.952Z",
+      "timestamp": "2025-09-19T00:09:17.024Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: BackendSyncService constructed - configuration will be loaded when start() is called {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendSyncService constructed - configuration will be loaded when start() is called {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.953Z",
+      "timestamp": "2025-09-19T00:09:17.025Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔄 [BackendSync] Service initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔄 [BackendSync] Service initialized {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.953Z",
+      "timestamp": "2025-09-19T00:09:17.025Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.953Z",
+      "timestamp": "2025-09-19T00:09:17.025Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service initialized {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.957Z",
+      "timestamp": "2025-09-19T00:09:17.028Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: RhythmicMovementController initialized - configuration will be loaded on start() {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: RhythmicMovementController initialized - configuration will be loaded on start() {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.957Z",
+      "timestamp": "2025-09-19T00:09:17.029Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔧 [NotificationService] Service initialized with event-driven architecture and Zustand store bridging {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [NotificationService] Service initialized with event-driven architecture and Zustand store bridging {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.957Z",
+      "timestamp": "2025-09-19T00:09:17.029Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📊 [NotificationService] Current Configuration: {enabled: true, maxHistorySize: 1000, defaultTtl: 30000ms, enablePriorityQueuing: true, enableThrottling: true}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [NotificationService] Current Configuration: {enabled: true, maxHistorySize: 1000, defaultTtl: 30000ms, enablePriorityQueuing: true, enableThrottling: true}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.958Z",
+      "timestamp": "2025-09-19T00:09:17.029Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔧 [ErrorReportingService] Service initialized with production-grade error handling and pure DI {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [ErrorReportingService] Service initialized with production-grade error handling and pure DI {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.958Z",
+      "timestamp": "2025-09-19T00:09:17.029Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📊 [ErrorReportingService] Current Configuration: {enabled: true, maxBatchSize: 50, batchFlushInterval: 30000ms, maxRetries: 3, retryDelay: 1000ms}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [ErrorReportingService] Current Configuration: {enabled: true, maxBatchSize: 50, batchFlushInterval: 30000ms, maxRetries: 3, retryDelay: 1000ms}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.958Z",
+      "timestamp": "2025-09-19T00:09:17.030Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.958Z",
+      "timestamp": "2025-09-19T00:09:17.030Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.959Z",
+      "timestamp": "2025-09-19T00:09:17.030Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🌐 [DebugService] Global debugging interface exposed as window.QA_DEBUG {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🌐 [DebugService] Global debugging interface exposed as window.QA_DEBUG {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.959Z",
+      "timestamp": "2025-09-19T00:09:17.030Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ApplicationInitializerService initialized with all core services {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ApplicationInitializerService initialized with all core services {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.959Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.965Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.965Z",
+      "timestamp": "2025-09-19T00:09:17.034Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.965Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.966Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.966Z",
+      "timestamp": "2025-09-19T00:09:17.034Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.966Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.966Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.967Z",
+      "timestamp": "2025-09-19T00:09:17.034Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.967Z",
+      "timestamp": "2025-09-19T00:09:17.035Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758240010953_d54iru49g) - 0.40ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758240010953_d54iru49g) - 0.40ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758240557025_qy6bbwz0j) - 0.50ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758240557025_qy6bbwz0j) - 0.50ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.967Z",
+      "timestamp": "2025-09-19T00:09:17.035Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.967Z",
+      "timestamp": "2025-09-19T00:09:17.035Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.967Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.968Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.968Z",
+      "timestamp": "2025-09-19T00:09:17.035Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Starting AI debugging service... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Starting AI debugging service... {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.968Z",
+      "timestamp": "2025-09-19T00:09:17.035Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1758240010954_n0ioxvud {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1758240010954_n0ioxvud {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1758240557027_mssjzymj {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1758240557027_mssjzymj {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.968Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.968Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.969Z",
+      "timestamp": "2025-09-19T00:09:17.036Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for * {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for * {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.969Z",
+      "timestamp": "2025-09-19T00:09:17.036Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: listener_1758240010955_00tkee0br) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: listener_1758240010955_00tkee0br) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: listener_1758240557027_rg6atffi7) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: listener_1758240557027_rg6atffi7) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.969Z",
+      "timestamp": "2025-09-19T00:09:17.036Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [DebugService] Subscribed to all event types {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [DebugService] Subscribed to all event types {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.969Z",
+      "timestamp": "2025-09-19T00:09:17.036Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Service started - AI debugging active {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Service started - AI debugging active {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.970Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.970Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.970Z",
+      "timestamp": "2025-09-19T00:09:17.044Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Starting notification processing... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Starting notification processing... {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.970Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.970Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.971Z",
+      "timestamp": "2025-09-19T00:09:17.044Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.971Z",
+      "timestamp": "2025-09-19T00:09:17.044Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758240010956_vcfrrnajd) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758240010956_vcfrrnajd) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758240557028_bzy91ba1x) - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758240557028_bzy91ba1x) - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.977Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.977Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.977Z",
+      "timestamp": "2025-09-19T00:09:17.045Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.978Z",
+      "timestamp": "2025-09-19T00:09:17.045Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240010956_7tif2qa5k) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240010956_7tif2qa5k) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240557029_64rmumjow) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240557029_64rmumjow) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.978Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.978Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.978Z",
+      "timestamp": "2025-09-19T00:09:17.045Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.978Z",
+      "timestamp": "2025-09-19T00:09:17.045Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758240010956_j5yit3v9s) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758240010956_j5yit3v9s) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758240557029_lwy70c6nm) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758240557029_lwy70c6nm) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.979Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.979Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.979Z",
+      "timestamp": "2025-09-19T00:09:17.046Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for BackendSync {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for BackendSync {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.979Z",
+      "timestamp": "2025-09-19T00:09:17.046Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: listener_1758240010957_n4xtcopni) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: listener_1758240010957_n4xtcopni) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: listener_1758240557029_as1g08wa0) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: listener_1758240557029_as1g08wa0) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.979Z",
+      "timestamp": "2025-09-19T00:09:17.046Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [NotificationService] Subscribed to notification events {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [NotificationService] Subscribed to notification events {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.980Z",
+      "timestamp": "2025-09-19T00:09:17.046Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Service started - Event-driven notifications active {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Service started - Event-driven notifications active {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.980Z",
+      "timestamp": "2025-09-19T00:09:17.047Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Transversal services started successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Transversal services started successfully {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.980Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.980Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.980Z",
+      "timestamp": "2025-09-19T00:09:17.047Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.981Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.981Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.981Z",
+      "timestamp": "2025-09-19T00:09:17.047Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.981Z",
+      "timestamp": "2025-09-19T00:09:17.047Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240010958_34w0nqily) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240010958_34w0nqily) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240557030_lhutmo93t) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240557030_lhutmo93t) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.981Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.982Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.982Z",
+      "timestamp": "2025-09-19T00:09:17.047Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.982Z",
+      "timestamp": "2025-09-19T00:09:17.048Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758240010958_07t1r23pq) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758240010958_07t1r23pq) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758240557030_gcny6zc6e) - 0.00ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758240557030_gcny6zc6e) - 0.00ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.982Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.982Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.991Z",
+      "timestamp": "2025-09-19T00:09:17.048Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.991Z",
+      "timestamp": "2025-09-19T00:09:17.048Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758240010959_9spb0qbk1) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758240010959_9spb0qbk1) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758240557030_dcn6id9uo) - 0.00ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758240557030_dcn6id9uo) - 0.00ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.992Z",
+      "timestamp": "2025-09-19T00:09:17.048Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.992Z",
+      "timestamp": "2025-09-19T00:09:17.049Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:10.992Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.992Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:10.993Z",
+      "timestamp": "2025-09-19T00:09:17.049Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.001Z",
+      "timestamp": "2025-09-19T00:09:17.062Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.001Z",
+      "timestamp": "2025-09-19T00:09:17.062Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.001Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.002Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.002Z",
+      "timestamp": "2025-09-19T00:09:17.062Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.002Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.002Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.002Z",
+      "timestamp": "2025-09-19T00:09:17.062Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.003Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.003Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.003Z",
+      "timestamp": "2025-09-19T00:09:17.063Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.003Z",
+      "timestamp": "2025-09-19T00:09:17.066Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758240010984_yw0r3wm0m) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758240010984_yw0r3wm0m) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758240557057_jo1conepv) - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758240557057_jo1conepv) - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.003Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.004Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.004Z",
+      "timestamp": "2025-09-19T00:09:17.067Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.004Z",
+      "timestamp": "2025-09-19T00:09:17.067Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240010984_dsx7qnuae) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240010984_dsx7qnuae) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240557057_d4qtxjiyh) - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240557057_d4qtxjiyh) - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.004Z",
+      "timestamp": "2025-09-19T00:09:17.067Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [GameController] Subscribed to PlayerAction and GameStateChanged events {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [GameController] Subscribed to PlayerAction and GameStateChanged events {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.004Z",
+      "timestamp": "2025-09-19T00:09:17.067Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 1.00ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 1.00ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.90ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.90ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.005Z",
+      "timestamp": "2025-09-19T00:09:17.068Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Game controller service started successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Game controller service started successfully {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.005Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.005Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.005Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.006Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.006Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.012Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.013Z",
+      "timestamp": "2025-09-19T00:09:17.068Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {config: Object}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {config: Object}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.013Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.013Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.013Z",
+      "timestamp": "2025-09-19T00:09:17.068Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerInput {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerInput {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.013Z",
+      "timestamp": "2025-09-19T00:09:17.068Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: listener_1758240010985_vmjmxuj5s) - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: listener_1758240010985_vmjmxuj5s) - 0.30ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: listener_1758240557058_d842usa6d) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: listener_1758240557058_d842usa6d) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.014Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.014Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.014Z",
+      "timestamp": "2025-09-19T00:09:17.069Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.014Z",
+      "timestamp": "2025-09-19T00:09:17.069Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240010986_gfsrubd8u) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240010986_gfsrubd8u) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240557058_tk734owlq) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758240557058_tk734owlq) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.014Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.015Z",
+      "timestamp": "2025-09-19T00:09:17.069Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎵 RhythmicMovementController started with configuration loaded {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎵 RhythmicMovementController started with configuration loaded {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.015Z",
+      "timestamp": "2025-09-19T00:09:17.070Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Rhythmic movement controller started successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Rhythmic movement controller started successfully {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.015Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.015Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.015Z",
+      "timestamp": "2025-09-19T00:09:17.070Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.015Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.015Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.016Z",
+      "timestamp": "2025-09-19T00:09:17.070Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 1/3... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 1/3... {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.016Z",
+      "timestamp": "2025-09-19T00:09:17.071Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.016Z",
+      "timestamp": "2025-09-19T00:09:17.074Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Backend healthy - 5.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Backend healthy - 5.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Backend healthy - 4.40ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Backend healthy - 4.40ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.016Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.016Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.016Z",
+      "timestamp": "2025-09-19T00:09:17.075Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.017Z",
+      "timestamp": "2025-09-19T00:09:17.075Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758240010992_f9877rxdl) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758240010992_f9877rxdl) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758240557064_pa5n92nad) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758240557064_pa5n92nad) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.017Z",
+      "timestamp": "2025-09-19T00:09:17.075Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [BackendSync] Subscribed to events {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [BackendSync] Subscribed to events {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.017Z",
+      "timestamp": "2025-09-19T00:09:17.076Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Service started successfully after 1 attempts - 6.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Service started successfully after 1 attempts - 6.30ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Service started successfully after 1 attempts - 5.50ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Service started successfully after 1 attempts - 5.50ms {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.017Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.017Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.018Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.018Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.018Z",
+      "timestamp": "2025-09-19T00:09:17.076Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.019Z",
+      "timestamp": "2025-09-19T00:09:17.076Z",
       "type": "log",
       "text": "🎯 Application initialization completed successfully",
       "entry": "[LOG] 🎯 Application initialization completed successfully"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.109Z",
+      "timestamp": "2025-09-19T00:09:17.186Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: App Component: Starting application initialization {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: App Component: Starting application initialization {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.109Z",
+      "timestamp": "2025-09-19T00:09:17.186Z",
       "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [ApplicationInitializerService] Service already running {}",
+      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [ApplicationInitializerService] Service already running {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.109Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.111Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.111Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.111Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.112Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [ErrorReportingService] Service already running {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [ErrorReportingService] Service already running {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.114Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.114Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.115Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [DebugService] Service already running {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [DebugService] Service already running {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.115Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.115Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.115Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [NotificationService] Service already running {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [NotificationService] Service already running {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.115Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Transversal services started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Transversal services started successfully {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.116Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.116Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.118Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [GameStateStoreService] Service already started {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [GameStateStoreService] Service already started {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.118Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.118Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.118Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.118Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.124Z",
+      "timestamp": "2025-09-19T00:09:17.187Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: App Component: Starting application initialization {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: App Component: Starting application initialization {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.124Z",
+      "timestamp": "2025-09-19T00:09:17.188Z",
       "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [ApplicationInitializerService] Service already running {}",
+      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [ApplicationInitializerService] Service already running {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.124Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.125Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.125Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.125Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.125Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [ErrorReportingService] Service already running {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [ErrorReportingService] Service already running {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.126Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.126Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.126Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [DebugService] Service already running {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [DebugService] Service already running {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.126Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.126Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.127Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [NotificationService] Service already running {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [NotificationService] Service already running {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.127Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Transversal services started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Transversal services started successfully {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.127Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.127Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.128Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [GameStateStoreService] Service already started {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [GameStateStoreService] Service already started {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.132Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.132Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.132Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.132Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.140Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.140Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.140Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.140Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.141Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.141Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.141Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.141Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.141Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [GameController] Service already running {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [GameController] Service already running {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.142Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Game controller service started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Game controller service started successfully {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.142Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.142Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.142Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: RhythmicMovementController already started {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: RhythmicMovementController already started {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.143Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Rhythmic movement controller started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Rhythmic movement controller started successfully {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.143Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.143Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.143Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.143Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [BackendSync] Service already running {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [BackendSync] Service already running {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.144Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.144Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.144Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.147Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.147Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.147Z",
+      "timestamp": "2025-09-19T00:09:17.188Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: App Component: Application initialization completed {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: App Component: Application initialization completed {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:11.152Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.152Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.152Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.152Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.152Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.153Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.153Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.153Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.153Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [GameController] Service already running {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [GameController] Service already running {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.153Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Game controller service started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Game controller service started successfully {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.154Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.154Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.154Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: RhythmicMovementController already started {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: RhythmicMovementController already started {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.154Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Rhythmic movement controller started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Rhythmic movement controller started successfully {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.154Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.154Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.155Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.155Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: ⚠️ [BackendSync] Service already running {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [BackendSync] Service already running {}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.155Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.155Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.155Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.155Z",
-      "type": "warning",
-      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
-      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.156Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}"
-    },
-    {
-      "timestamp": "2025-09-19T00:00:11.156Z",
+      "timestamp": "2025-09-19T00:09:17.189Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: App Component: Application initialization completed {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: App Component: Application initialization completed {}"
     },
     {
-      "timestamp": "2025-09-19T00:00:13.295Z",
+      "timestamp": "2025-09-19T00:09:19.376Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST RESULTS ===",
       "entry": "[LOG] === RACE CONDITION TEST RESULTS ==="
     },
     {
-      "timestamp": "2025-09-19T00:00:13.296Z",
+      "timestamp": "2025-09-19T00:09:19.376Z",
       "type": "log",
       "text": "✅ NO CONFIGURATION ERRORS DETECTED",
       "entry": "[LOG] ✅ NO CONFIGURATION ERRORS DETECTED"
     },
     {
-      "timestamp": "2025-09-19T00:00:13.296Z",
+      "timestamp": "2025-09-19T00:09:19.377Z",
       "type": "log",
       "text": "✅ NO SERVICE INITIALIZATION ERRORS DETECTED",
       "entry": "[LOG] ✅ NO SERVICE INITIALIZATION ERRORS DETECTED"
     },
     {
-      "timestamp": "2025-09-19T00:00:13.296Z",
+      "timestamp": "2025-09-19T00:09:19.377Z",
       "type": "log",
       "text": "=== TEST COMPLETE ===",
       "entry": "[LOG] === TEST COMPLETE ==="
@@ -1431,127 +573,8 @@
   "warnings": [
     "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
     "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [ErrorReportingService] Service already running {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [DebugService] Service already running {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [NotificationService] Service already running {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [GameStateStoreService] Service already started {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [ErrorReportingService] Service already running {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [DebugService] Service already running {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [NotificationService] Service already running {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [GameStateStoreService] Service already started {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [GameController] Service already running {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: RhythmicMovementController already started {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [BackendSync] Service already running {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [GameController] Service already running {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: RhythmicMovementController already started {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [BackendSync] Service already running {}",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
-    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [ApplicationInitializerService] Service already running {}",
+    "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ [ApplicationInitializerService] Service already running {}"
   ],
   "configErrors": [
     "[INFO] ℹ️ [QualiaLogger] INFO: BackendSyncService constructed - configuration will be loaded when start() is called {}",
@@ -1565,16 +588,6 @@
     "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
     "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {config: Object}",
     "[INFO] ℹ️ [QualiaLogger] INFO: 🎵 RhythmicMovementController started with configuration loaded {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
     "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}"
   ]
 }

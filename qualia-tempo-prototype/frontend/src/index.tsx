@@ -16,12 +16,19 @@ import './services/inversify.config';
 import { container } from './services/inversify.container';
 import { TYPES } from './services/inversify.types';
 import type { IApplicationInitializerService } from './services/interfaces/IApplicationInitializerService';
+import type { ILogger } from './services/interfaces/ILogger';
+import { LoggerProvider } from './services/Logger';
 
 import App from "./App";
 
 // Initialize application before rendering
 const initializeApplication = async () => {
   try {
+    // CRITICAL: Register logger with LoggerProvider BEFORE any service instantiation
+    // This eliminates "Logger not registered, creating temporary logger" warnings
+    const logger = container.get<ILogger>(TYPES.ILogger);
+    LoggerProvider.register(logger as any); // Type assertion needed due to interface/implementation mismatch
+    
     // Get ApplicationInitializerService from container
     const applicationInitializer = container.get<IApplicationInitializerService>(TYPES.IApplicationInitializerService);
     
