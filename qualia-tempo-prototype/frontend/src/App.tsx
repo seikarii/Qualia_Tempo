@@ -11,6 +11,7 @@ import { TYPES } from "./services/inversify.types";
 import type { IEventBus } from "./services/interfaces/IEventBus";
 import type { ILogger } from "./services/interfaces/ILogger";
 import type { IApplicationInitializerService } from "./services/interfaces/IApplicationInitializerService";
+import type { IStreamingVideoService } from "./services/interfaces/IStreamingVideoService";
 import type { PlayerActionEvent, PlayerInputEvent } from "./services/EventBus";
 import { shallow } from 'zustand/shallow';
 
@@ -116,10 +117,12 @@ const App: React.FC = () => {
   const eventBus = useService<IEventBus>(TYPES.IEventBus);
   const logger = useService<ILogger>(TYPES.ILogger);
   const applicationInitializer = useService<IApplicationInitializerService>(TYPES.IApplicationInitializerService);
+  const streamingService = useService<IStreamingVideoService>(TYPES.IStreamingVideoService);
 
   // Enhanced UI state
   const [titleGlitch, setTitleGlitch] = useState(false);
   const [audioVisualization, setAudioVisualization] = useState<number[]>([]);
+  const [connectionStatus, setConnectionStatus] = useState(streamingService.getConnectionStatus());
   const controls = useAnimation();
 
   // Health-based visual effects with enhanced vignette
@@ -200,6 +203,15 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [eventBus]);
 
+  // Update connection status periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setConnectionStatus(streamingService.getConnectionStatus());
+    }, 1000); // Update every second
+
+    return () => clearInterval(interval);
+  }, [streamingService]);
+
   const handleStartGame = () => {
     if (backendConnected) {
       eventBus.emit<PlayerActionEvent>({
@@ -266,6 +278,20 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Loading indicator when not connected */}
+      {!connectionStatus.connected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="text-cyan-400 text-center">
+            <div className="mb-2">🎨 Connecting to Qualia Engine...</div>
+            <div className="text-sm opacity-75">
+              {connectionStatus.state === 'CONNECTING' ? 'Establishing connection...' : 
+               connectionStatus.state === 'ERROR' ? 'Connection failed, retrying...' : 
+               'Initializing...'}
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* QUALIA.CODE v1.1: GPU-accelerated backend rendering replaces DOM simulation */}
       <BackendCanvas 
         className="fixed inset-0 z-0"

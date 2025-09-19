@@ -78,8 +78,8 @@ export class StreamingVideoService implements IStreamingVideoService {
     this.logger = logger;
     
     // Load streaming configuration from config service
-    const streamingConfig = configService.getConfig().streaming?.websocket || {};
-    this.connectionUrl = streamingConfig.url || 'ws://localhost:8000/ws/video_stream';
+    const streamingConfig = configService.getConfig().backendSync.streaming?.websocket || {};
+    this.connectionUrl = streamingConfig.url || 'ws://127.0.0.1:8000/ws/video_stream';
     this.maxReconnectAttempts = streamingConfig.maxReconnectAttempts || 10;
     this.reconnectDelay = streamingConfig.reconnectDelay || 2000;
     this.pingInterval = streamingConfig.pingInterval || 8000;

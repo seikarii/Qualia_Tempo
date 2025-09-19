@@ -165,6 +165,16 @@ export interface BackendSyncConfig {
     healthEndpoint: string;
     timeout: number;
   };
+  streaming: {
+    websocket: {
+      url: string;
+      maxReconnectAttempts: number;
+      reconnectDelay: number;
+      pingInterval: number;
+      pingTimeout: number;
+      connectionTimeout: number;
+    };
+  };
   sync: {
     throttleDelay: number;
     batchSize: number;

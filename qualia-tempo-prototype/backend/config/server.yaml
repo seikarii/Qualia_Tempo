@@ -2,9 +2,9 @@
 # Configuration-First principle: All server settings externalized
 
 server:
-  host: "0.0.0.0"  # Listen on all interfaces for cross-origin access
+  host: "127.0.0.1"  # Changed from 0.0.0.0 to 127.0.0.1 for WebSocket compatibility
   port: 8000
-  reload: true
+  reload: false
   log_level: "info"
   workers: 1
   

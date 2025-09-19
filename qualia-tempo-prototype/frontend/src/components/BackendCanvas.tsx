@@ -270,20 +270,6 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
           )}
         </div>
       )}
-      
-      {/* Loading indicator when not connected */}
-      {!connectionStatus.connected && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="text-cyan-400 text-center">
-            <div className="mb-2">🎨 Connecting to Qualia Engine...</div>
-            <div className="text-sm opacity-75">
-              {connectionStatus.state === 'CONNECTING' ? 'Establishing connection...' : 
-               connectionStatus.state === 'ERROR' ? 'Connection failed, retrying...' : 
-               'Initializing...'}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
