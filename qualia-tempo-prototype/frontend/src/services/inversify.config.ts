@@ -26,6 +26,7 @@ import type { IRhythmicMovementController } from './interfaces/IRhythmicMovement
 import type { IOntologicalAudioEngine } from '../audio/IOntologicalAudioEngine';
 import type { IApplicationInitializerService } from './interfaces/IApplicationInitializerService';
 import type { IWebAudioAPIService } from './interfaces/IWebAudioAPIService';
+import type { IGameStateStore } from './interfaces/IGameStateStore';
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { EventBus } from './EventBus';
@@ -44,6 +45,7 @@ import { RhythmicMovementController } from './RhythmicMovementController';
 import { OntologicalAudioEngine } from '../audio/OntologicalAudioEngine';
 import { ApplicationInitializerService } from './ApplicationInitializerService';
 import { WebAudioAPIService } from './WebAudioAPIService';
+import { GameStateStore } from './GameStateStore';
 
 // ===== IMPORT ZUSTAND STORE =====
 import { useGameStore } from '../state/useGameStore';
@@ -57,6 +59,9 @@ container.bind<IConfigurationService>(TYPES.IConfigurationService).to(Configurat
 // ===== SPECIAL BINDINGS =====
 // Bind Zustand store setter for GameStateStoreService
 container.bind(TYPES.StoreSetter).toConstantValue(useGameStore.setState);
+
+// Bind GameStateStore for services that need store access
+container.bind<IGameStateStore>(TYPES.IGameStateStore).to(GameStateStore).inSingletonScope();
 
 // ===== FEATURE SERVICE BINDINGS =====
 // These services depend on core services and will be injected automatically

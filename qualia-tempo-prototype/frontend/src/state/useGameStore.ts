@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { subscribeWithSelector } from "zustand/middleware";
 import { shallow } from "zustand/shallow";
 import { QualiaState, PlayerState, CombatData } from "../types/contracts";
@@ -93,7 +93,7 @@ const initialState: GameState = {
 };
 
 // Create the store
-export const useGameStore = create<GameState>()(
+export const useGameStore = createWithEqualityFn<GameState>()(
   subscribeWithSelector(() => initialState),
 );
 
