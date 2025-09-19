@@ -4,6 +4,7 @@
 import logging
 from typing import Dict, Any, Optional
 from .services.EventBus import EventBus, get_event_bus
+from .services.StreamingWebService import force_kill_all_streaming_tasks
 from .utils.decorators import log_execution, handle_errors
 import asyncio
 
@@ -205,44 +206,38 @@ class CompositionRoot:
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
     async def shutdown(self) -> None:
-        """Gracefully shut down all background services."""
+        """
+        Gracefully shut down all background services using a generic, extensible pattern.
+        """
         if not self._initialized:
             self._logger.warning("⚠️  CompositionRoot not initialized, nothing to shut down.")
             return
 
-        self._logger.info("🔥 Shutting down QUALIA.CODE services...")
+        self._logger.critical("🔥 NUCLEAR SHUTDOWN: Terminating ALL QUALIA.CODE services...")
+        
+        # NUCLEAR OPTION: Force kill ALL streaming tasks FIRST
+        self._logger.critical("💀 EXECUTING GLOBAL TASK TERMINATION...")
+        force_kill_all_streaming_tasks()
 
-        # Shutdown services that run background tasks
-        streaming_service = self.get_streaming_web_service()
-        if streaming_service:
-            await streaming_service.shutdown()
-
-        rendering_service = self.get_rendering_service()
-        if rendering_service:
-            await rendering_service.shutdown()
-
-        self._initialized = False
-        self._logger.info("✅ All services terminated gracefully.")
-
-        # Gracefully shutdown all services
-        self._logger.info("🛑 Shutting down CompositionRoot...")
-
-        # Shutdown services in reverse order
+        # Shutdown services in reverse order to respect dependencies.
         for service_name in reversed(list(self._services.keys())):
-            service = self._services[service_name]
-            if hasattr(service, "shutdown"):
+            service = self._services.get(service_name)
+            if service and hasattr(service, "shutdown") and callable(service.shutdown):
                 try:
-                    if asyncio.iscoroutinefunction(service.shutdown):
+                    self._logger.critical(f"💀 Terminating {service_name}...")
+                    # Use try/await approach to handle decorated async methods
+                    try:
                         await service.shutdown()
-                    else:
+                    except TypeError:
+                        # If await fails, it's a sync method
                         service.shutdown()
-                    self._logger.debug(f"✅ {service_name} shutdown complete")
+                    self._logger.critical(f"💀 {service_name} TERMINATED.")
                 except Exception as e:
-                    self._logger.error(f"🚨 Error shutting down {service_name}: {e}")
+                    self._logger.error(f"🚨 Error during shutdown of {service_name}: {e}", exc_info=True)
 
         self._services.clear()
         self._initialized = False
-        self._logger.info("✅ CompositionRoot shutdown complete")
+        self._logger.critical("💀 ALL SERVICES TERMINATED. CompositionRoot shutdown is complete.")
 
 
 # Global CompositionRoot instance

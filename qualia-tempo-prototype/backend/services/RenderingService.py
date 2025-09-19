@@ -294,43 +294,42 @@ class RenderingService:
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
     async def shutdown(self) -> None:
-        """Clean shutdown of rendering service."""
-        try:
-            if self._particle_engine:
-                await self._particle_engine.shutdown()
-                
-            if self._vao:
-                self._vao.release()
-                
-            if self._framebuffer:
-                self._framebuffer.release()
-                
-            if self._color_texture:
-                self._color_texture.release()
-                
-            if self._ctx:
-                self._ctx.release()
-                
-            self._is_initialized = False
-            self._logger.info("✅ RenderingService shutdown complete")
-            
-        except Exception as e:
-            self._logger.error(f"🚨 Error during RenderingService shutdown: {e}")
-
-    @log_execution(level="INFO")
-    @handle_errors(fallback_return_value=None)
-    async def graceful_shutdown(self) -> None:
-        """Gracefully stop the rendering loop."""
+        """
+        Unified shutdown method. Cancels background tasks and releases all GPU resources.
+        """
         self._logger.info("Shutting down RenderingService...")
-        # Assuming _render_task is the asyncio task for the rendering loop
+        self._is_initialized = False
+
+        # Cancel any running background tasks (assuming one might be added later)
         if hasattr(self, '_render_task') and self._render_task and not self._render_task.done():
             self._render_task.cancel()
             try:
                 await self._render_task
             except asyncio.CancelledError:
                 self._logger.info("Rendering loop cancelled successfully.")
-        self._is_initialized = False
-        self._logger.info("RenderingService shut down.")
+
+        # Release all graphics resources
+        try:
+            if self._particle_engine:
+                # Assuming particle_engine has its own shutdown
+                if hasattr(self._particle_engine, 'shutdown') and asyncio.iscoroutinefunction(self._particle_engine.shutdown):
+                    await self._particle_engine.shutdown()
+                elif hasattr(self._particle_engine, 'release'):
+                     self._particle_engine.release() # For objects with release()
+
+            if self._vao:
+                self._vao.release()
+            if self._framebuffer:
+                self._framebuffer.release()
+            if self._color_texture:
+                self._color_texture.release()
+            if self._ctx:
+                self._ctx.release()
+
+            self._logger.info("✅ All RenderingService graphics resources released.")
+
+        except Exception as e:
+            self._logger.error(f"🚨 Error during RenderingService resource cleanup: {e}")
 
     @property
     def is_initialized(self) -> bool:

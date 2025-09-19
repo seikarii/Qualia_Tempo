@@ -130,7 +130,9 @@ async def websocket_video_stream(websocket: WebSocket, services: CompositionRoot
     QUALIA.CODE WebSocket endpoint for video streaming.
     Streams rendered frames from RenderingService to frontend clients.
     """
-    logger.info("ENTERING /ws/video_stream ENDPOINT")
+    logger.info("🎥 ENTERING /ws/video_stream ENDPOINT")
+    logger.info(f"🔌 WebSocket client attempting connection from: {websocket.client}")
+    
     streaming_service = services.get_streaming_web_service()
     
     try:
@@ -183,6 +185,16 @@ async def get_stream_status(services: CompositionRoot = Depends(get_services)):
     except Exception as e:
         logger.error(f"Stream status check failed: {e}")
         return {"status": "error", "error": str(e)}
+
+
+@app.websocket("/ws/test")
+async def websocket_test(websocket: WebSocket):
+    """Simple WebSocket test endpoint to verify WebSocket infrastructure."""
+    logger.info("🧪 ENTERING /ws/test ENDPOINT - WebSocket infrastructure test")
+    await websocket.accept()
+    await websocket.send_text("WebSocket test connection successful!")
+    await websocket.close()
+    logger.info("✅ WebSocket test completed successfully")
 
 
 def _log_qualia_state_detailed(state_dict: dict) -> None:
