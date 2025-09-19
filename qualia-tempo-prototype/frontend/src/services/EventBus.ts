@@ -40,8 +40,10 @@ export interface PlayerActionEvent extends BaseEvent {
     | "Rewind"
     | "StartGame"
     | "PauseGame"
-    | "ResetGame";
+    | "ResetGame"
+    | "scoreIncrease";
   context?: Record<string, any>;
+  value?: number; // For scoreIncrease and other actions that need a value
 }
 
 export interface PlayerInputEvent extends BaseEvent {

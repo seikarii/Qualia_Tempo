@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useState, useMemo } from "react";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { Subtitles } from "./components/Subtitles";
 import QualiaTempoGame from "./components/game/QualiaTempoGame";
+import QualiaTempoHUD from "./components/game/QualiaTempoHUD";
 import { RhythmVisualizer } from "./components/RhythmVisualizer";
 import { useGameStore } from "./state/useGameStore";
 import { useService } from "./services/hooks";
@@ -12,62 +13,212 @@ import type { IApplicationInitializerService } from "./services/interfaces/IAppl
 import type { PlayerActionEvent, PlayerInputEvent } from "./services/EventBus";
 import { shallow } from 'zustand/shallow';
 
+// Particle system for ambient effects
+const AmbientParticles: React.FC = () => {
+  const particles = useMemo(() => 
+    Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      delay: Math.random() * 20,
+      duration: 15 + Math.random() * 10,
+      scale: 0.1 + Math.random() * 0.3,
+    }))
+  , []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-5">
+      {particles.map((particle) => (
+        <motion.div
+          key={particle.id}
+          className="absolute w-1 h-1 bg-cyan-400 rounded-full opacity-60"
+          style={{
+            left: `${particle.x}%`,
+            top: `${particle.y}%`,
+            filter: 'blur(0.5px)',
+          }}
+          animate={{
+            y: [-20, -100],
+            opacity: [0, 0.8, 0],
+            scale: [particle.scale, particle.scale * 2, 0],
+          }}
+          transition={{
+            duration: particle.duration,
+            delay: particle.delay,
+            repeat: Infinity,
+            ease: "easeOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+// Enhanced loading component
+const QualiaLoader: React.FC = () => {
+  const [loadingText, setLoadingText] = useState("INITIALIZING");
+  const texts = ["INITIALIZING", "SYNCHRONIZING", "CALIBRATING", "READY"];
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLoadingText(prev => {
+        const currentIndex = texts.indexOf(prev);
+        return texts[(currentIndex + 1) % texts.length];
+      });
+    }, 800);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
+      {/* Animated grid background */}
+      <div className="absolute inset-0">
+        <div 
+          className="w-full h-full opacity-20"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(0,255,255,0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0,255,255,0.1) 1px, transparent 1px),
+              radial-gradient(circle at 50% 50%, rgba(255,0,255,0.05) 0%, transparent 70%)
+            `,
+            backgroundSize: '60px 60px, 60px 60px, 100% 100%',
+            animation: 'gridPulse 4s ease-in-out infinite',
+          }}
+        />
+      </div>
+
+      {/* Central loading interface */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative z-10"
+      >
+        <div className="cyber-gradient p-12 rounded-2xl border-2 border-cyan-500 backdrop-blur-sm">
+          {/* Rotating orb */}
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            className="w-24 h-24 mx-auto mb-8 relative"
+          >
+            <div className="absolute inset-0 rounded-full border-4 border-cyan-500 border-t-transparent" />
+            <div className="absolute inset-2 rounded-full border-2 border-purple-500 border-r-transparent" 
+                 style={{ animation: 'spin 2s linear infinite reverse' }} />
+            <div className="absolute inset-4 rounded-full bg-gradient-to-r from-cyan-400 to-purple-400 opacity-60" 
+                 style={{ animation: 'pulse 2s ease-in-out infinite' }} />
+          </motion.div>
+
+          {/* Loading text with glitch effect */}
+          <motion.h2
+            key={loadingText}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-3xl font-bold text-cyan-400 neon-glow text-center font-['Orbitron'] mb-4"
+          >
+            {loadingText} QUALIA SYSTEM
+          </motion.h2>
+
+          {/* Progress bar */}
+          <div className="w-80 h-2 bg-gray-800 rounded-full overflow-hidden mb-4">
+            <motion.div
+              className="h-full bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400"
+              animate={{ width: ["0%", "100%"] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </div>
+
+          <p className="text-cyan-300 text-center">Neural pathways synchronizing...</p>
+        </div>
+      </motion.div>
+
+      <style>{`
+        @keyframes gridPulse {
+          0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.2; }
+          50% { transform: scale(1.05) rotate(1deg); opacity: 0.4; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
-  const { backendConnected, isConfigLoaded, isPlaying, player } = useGameStore(
+  const { backendConnected, isConfigLoaded, isPlaying, player, qualiaState } = useGameStore(
     (state) => ({
       backendConnected: state.backendConnected,
       isConfigLoaded: state.isConfigLoaded,
       isPlaying: state.isPlaying,
       player: state.player,
+      qualiaState: state.qualiaState,
     }),
     shallow
   );
   
-  // Get services via InversifyJS - MANDATORY QUALIA.CODE PATTERN
+  // Get services via InversifyJS
   const eventBus = useService<IEventBus>(TYPES.IEventBus);
   const logger = useService<ILogger>(TYPES.ILogger);
   const applicationInitializer = useService<IApplicationInitializerService>(TYPES.IApplicationInitializerService);
 
-  // UI State for dynamic effects
-  // const [_buttonHover, setButtonHover] = useState(false); // Future: Add button interaction feedback
+  // Enhanced UI state
   const [titleGlitch, setTitleGlitch] = useState(false);
+  const [audioVisualization, setAudioVisualization] = useState<number[]>([]);
+  const controls = useAnimation();
 
-  // Health-based visual effects
+  // Health-based visual effects with enhanced vignette
   useEffect(() => {
     const healthVignette = document.getElementById('health-vignette');
     if (healthVignette && player) {
       const healthPercentage = player.health;
       const damageIntensity = (100 - healthPercentage) / 100;
-      healthVignette.style.opacity = `${damageIntensity * 0.6}`;
+      const pulseIntensity = damageIntensity > 0.5 ? 'animate-pulse' : '';
+      
+      healthVignette.style.opacity = `${damageIntensity * 0.8}`;
+      healthVignette.className = `health-vignette ${pulseIntensity}`;
+      
+      // Add screen shake on low health
+      if (damageIntensity > 0.7) {
+        document.body.style.animation = 'screenShake 0.1s infinite';
+      } else {
+        document.body.style.animation = '';
+      }
     }
   }, [player]);
 
-  // Periodic title glitch effect
+  // Enhanced glitch effect with more variety
   useEffect(() => {
     const glitchInterval = setInterval(() => {
       setTitleGlitch(true);
-      setTimeout(() => setTitleGlitch(false), 200);
-    }, 5000 + Math.random() * 10000); // Random glitch every 5-15 seconds
+      setTimeout(() => setTitleGlitch(false), 300);
+    }, 3000 + Math.random() * 7000);
 
     return () => clearInterval(glitchInterval);
   }, []);
 
-  // CRITICAL: Application Initialization on Mount
+  // Audio visualization mock (would connect to real audio analysis)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAudioVisualization(
+        Array.from({ length: 16 }, () => Math.random() * 100)
+      );
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Application initialization
   useEffect(() => {
     const initializeApplication = async () => {
       try {
         logger.info('App Component: Starting application initialization');
         await applicationInitializer.start();
         logger.info('App Component: Application initialization completed');
+        controls.start({ opacity: 1, scale: 1 });
       } catch (error) {
         logger.error('App Component: Application initialization failed', error);
       }
     };
 
     initializeApplication();
-  }, [applicationInitializer, logger]);
+  }, [applicationInitializer, logger, controls]);
 
-  // Keyboard Event Handling
+  // Keyboard handling with enhanced feedback
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       eventBus.emit<PlayerInputEvent>({
@@ -75,18 +226,22 @@ const App: React.FC = () => {
         key: event.key,
         source: 'App',
       });
+
+      // Visual feedback for keypresses
+      if (['q', 'w', 'e', 'r', 't'].includes(event.key.toLowerCase())) {
+        const flashElement = document.createElement('div');
+        flashElement.className = 'fixed inset-0 bg-cyan-400 opacity-20 pointer-events-none z-50';
+        document.body.appendChild(flashElement);
+        setTimeout(() => document.body.removeChild(flashElement), 100);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [eventBus]);
 
   const handleStartGame = () => {
     if (backendConnected) {
-      // Emit PlayerAction event for start game
       eventBus.emit<PlayerActionEvent>({
         type: "PlayerAction",
         action: "StartGame",
@@ -97,7 +252,6 @@ const App: React.FC = () => {
   };
 
   const handleStopGame = () => {
-    // Emit PlayerAction event for pause game
     eventBus.emit<PlayerActionEvent>({
       type: "PlayerAction",
       action: "PauseGame",
@@ -107,7 +261,6 @@ const App: React.FC = () => {
   };
 
   const handleResetGame = () => {
-    // Emit PlayerAction event for reset game
     eventBus.emit<PlayerActionEvent>({
       type: "PlayerAction",
       action: "ResetGame",
@@ -117,7 +270,6 @@ const App: React.FC = () => {
   };
 
   const handleGameAction = (action: string, data: any) => {
-    // Handle actions from QualiaTempoGame
     logger.debug(`Game Action: ${action}`, data);
     
     switch (action) {
@@ -146,72 +298,108 @@ const App: React.FC = () => {
       default:
         logger.warn(`Unknown game action: ${action}`, { action, data });
     }
-  };  // Show loading while configuration is being loaded
+  };
+
   if (!isConfigLoaded) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="cyber-gradient p-8 rounded-lg border border-cyan-500">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"
-            />
-            <h2 className="text-2xl font-bold text-cyan-400 neon-glow">
-              INITIALIZING QUALIA SYSTEM
-            </h2>
-            <p className="text-cyan-300 mt-2">Loading configuration matrices...</p>
-          </div>
-        </motion.div>
-      </div>
-    );
+    return <QualiaLoader />;
   }
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* Cyber Grid Background is now in index.html */}
+      {/* Enhanced background layers */}
+      <div className="cyber-grid"></div>
+      <AmbientParticles />
       
-      {/* Dynamic Particle Effects */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(0,255,255,0.1),transparent_70%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,0,255,0.1),transparent_70%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_80%,rgba(255,255,0,0.1),transparent_70%)]" />
+      {/* Multiple dynamic gradient overlays */}
+      <div className="absolute inset-0 opacity-40">
+        <motion.div 
+          className="absolute inset-0"
+          animate={{
+            background: [
+              'radial-gradient(circle at 20% 80%, rgba(0,255,255,0.15) 0%, transparent 50%)',
+              'radial-gradient(circle at 80% 20%, rgba(255,0,255,0.15) 0%, transparent 50%)',
+              'radial-gradient(circle at 40% 60%, rgba(255,255,0,0.15) 0%, transparent 50%)',
+            ]
+          }}
+          transition={{ duration: 8, repeat: Infinity }}
+        />
+        <motion.div 
+          className="absolute inset-0"
+          animate={{
+            background: [
+              'radial-gradient(circle at 60% 40%, rgba(255,0,255,0.1) 0%, transparent 60%)',
+              'radial-gradient(circle at 30% 70%, rgba(0,255,255,0.1) 0%, transparent 60%)',
+              'radial-gradient(circle at 70% 30%, rgba(255,255,0,0.1) 0%, transparent 60%)',
+            ]
+          }}
+          transition={{ duration: 12, repeat: Infinity, delay: 2 }}
+        />
       </div>
 
-      {/* Subtitles Component */}
+      {/* Audio visualization bars */}
+      <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-10">
+        <div className="flex space-x-1">
+          {audioVisualization.map((height, index) => (
+            <motion.div
+              key={index}
+              className="w-2 bg-gradient-to-t from-cyan-400 to-purple-400 rounded-full opacity-70"
+              style={{ height: `${height}px` }}
+              animate={{ height: `${height}px` }}
+              transition={{ duration: 0.1 }}
+            />
+          ))}
+        </div>
+      </div>
+
       <Subtitles />
 
-      {/* Game Content Area */}
+      {/* Main content area */}
       <div className="relative z-10 h-screen w-full">
         <AnimatePresence mode="wait">
           {!backendConnected ? (
             <motion.div
               key="disconnected"
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -50 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.1 }}
               className="h-full flex items-center justify-center"
             >
-              <div className="text-center p-8 cyber-gradient rounded-lg border border-red-500 max-w-md">
-                <motion.h1
-                  animate={{ color: ["#ff0000", "#ff6666", "#ff0000"] }}
+              <div className="text-center p-12 cyber-gradient rounded-2xl border-2 border-red-500 max-w-2xl backdrop-blur-sm">
+                <motion.div
+                  animate={{ 
+                    boxShadow: [
+                      '0 0 20px rgba(255,0,0,0.5)',
+                      '0 0 40px rgba(255,0,0,0.8)',
+                      '0 0 20px rgba(255,0,0,0.5)'
+                    ] 
+                  }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="text-4xl font-bold mb-4 font-['Orbitron']"
+                  className="mb-6"
                 >
-                  ⚠️ SYSTEM OFFLINE
-                </motion.h1>
-                <p className="text-red-300 text-lg mb-4">Visual Engine Disconnected</p>
-                <p className="text-gray-300 text-sm mb-4">
-                  Backend server unreachable at localhost:8000
-                </p>
-                <div className="text-xs text-gray-400 space-y-1">
-                  <p>EventBus: {eventBus ? "✅" : "❌"}</p>
-                  <p>Logger: {logger ? "✅" : "❌"}</p>
-                  <p>ApplicationInitializer: {applicationInitializer ? "✅" : "❌"}</p>
+                  <h1 className="text-5xl font-bold mb-4 font-['Orbitron'] text-red-400">
+                    ⚠️ NEURAL LINK SEVERED
+                  </h1>
+                </motion.div>
+                
+                <div className="text-red-300 text-xl mb-6">Visual Cortex Disconnected</div>
+                <div className="text-gray-300 mb-6">
+                  Backend quantum processor unreachable at localhost:8000
+                </div>
+                
+                {/* System diagnostics with enhanced styling */}
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div className="cyber-gradient border border-gray-600 p-3 rounded-lg">
+                    <div className="text-gray-400">EventBus</div>
+                    <div className="text-lg">{eventBus ? "✅" : "❌"}</div>
+                  </div>
+                  <div className="cyber-gradient border border-gray-600 p-3 rounded-lg">
+                    <div className="text-gray-400">Logger</div>
+                    <div className="text-lg">{logger ? "✅" : "❌"}</div>
+                  </div>
+                  <div className="cyber-gradient border border-gray-600 p-3 rounded-lg">
+                    <div className="text-gray-400">Init Service</div>
+                    <div className="text-lg">{applicationInitializer ? "✅" : "❌"}</div>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -221,34 +409,47 @@ const App: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="h-full flex"
+              className="fixed inset-0 flex"
             >
-              {/* Asymmetric Layout - Left Side Title */}
-              <div className="flex-1 flex flex-col justify-center pl-16 pr-8">
-                <motion.h1
-                  initial={{ x: -100, opacity: 0 }}
+              {/* Left side - Enhanced title */}
+              <div className="flex-1 flex flex-col justify-center pl-20 pr-8 min-w-0">
+                <motion.div
+                  initial={{ x: -200, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
-                  className={`text-cyber-xl font-black text-white font-['Orbitron'] mb-4 ${
-                    titleGlitch ? 'glitch-text' : ''
-                  }`}
-                  style={{
-                    background: 'linear-gradient(45deg, #00ffff, #ff00ff, #ffff00)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                  }}
+                  transition={{ delay: 0.3, type: "spring", stiffness: 80 }}
+                  className="relative"
                 >
-                  QUALIA
-                  <br />
-                  TEMPO
-                </motion.h1>
+                  {/* Glowing background for title */}
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 opacity-20 blur-3xl transform scale-110"
+                    style={{ animation: 'colorShift 6s ease-in-out infinite' }}
+                  />
+                  
+                  <h1
+                    className={`relative text-6xl xl:text-7xl 2xl:text-8xl font-black font-['Orbitron'] mb-4 leading-tight ${
+                      titleGlitch ? 'glitch-text-enhanced' : ''
+                    }`}
+                    style={{
+                      background: 'linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ffff)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      backgroundSize: '200% 200%',
+                      animation: 'gradientShift 4s ease infinite',
+                    }}
+                  >
+                    QUALIA
+                    <br />
+                    TEMPO
+                  </h1>
+                </motion.div>
                 
                 <motion.p
-                  initial={{ x: -100, opacity: 0 }}
+                  initial={{ x: -150, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.5 }}
-                  className="text-cyber-lg text-cyan-300 mb-2 font-['Orbitron'] font-light"
+                  className="text-2xl xl:text-3xl text-cyan-300 mb-3 font-['Orbitron'] font-light"
+                  style={{ textShadow: '0 0 10px rgba(0,255,255,0.5)' }}
                 >
                   A Charlie Hellsinger Story
                 </motion.p>
@@ -257,50 +458,69 @@ const App: React.FC = () => {
                   initial={{ x: -100, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.7 }}
-                  className="text-sm text-gray-400 mb-8 max-w-md"
+                  className="text-lg text-gray-300 mb-8 max-w-2xl leading-relaxed"
                 >
-                  <p>Enter a synesthetic battlefield where music becomes weapon,</p>
-                  <p>rhythm defines reality, and visual chaos rewards precision.</p>
+                  <p className="mb-2">Enter a synesthetic battlefield where <span className="text-cyan-400">music becomes weapon</span>,</p>
+                  <p className="mb-2"><span className="text-purple-400">rhythm defines reality</span>, and <span className="text-pink-400">visual chaos rewards precision</span>.</p>
+                  <p className="text-yellow-400">Experience the fusion of sound and light in perfect harmony.</p>
                 </motion.div>
               </div>
 
-              {/* Right Side - Interactive Panel */}
-              <div className="flex-1 flex flex-col justify-center items-center pr-16">
+              {/* Right side - Enhanced interactive panel */}
+              <div className="flex-1 flex flex-col justify-center items-center pr-20 min-w-0">
                 <motion.div
-                  initial={{ x: 100, opacity: 0 }}
+                  initial={{ x: 200, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.9 }}
-                  className="text-center space-y-8"
+                  className="text-center space-y-10"
                 >
-                  {/* Main Action Button */}
+                  {/* Enhanced main button */}
                   <motion.button
                     onClick={handleStartGame}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="cyber-button relative px-12 py-6 text-xl font-bold text-white rounded-lg overflow-hidden"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="cyber-button-enhanced relative px-16 py-8 text-2xl font-bold text-white rounded-xl overflow-hidden group"
                   >
-                    <span className="relative z-10">⚔️ START THE FIRST DUEL</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-80" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform translate-x-[-100%] group-hover:translate-x-[100%] transition-all duration-1000" />
+                    <span className="relative z-10 flex items-center justify-center space-x-3">
+                      <span>⚡</span>
+                      <span>INITIATE NEURAL SYNC</span>
+                      <span>🎵</span>
+                    </span>
                   </motion.button>
 
-                  {/* System Status */}
+                  {/* Enhanced system status */}
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.1 }}
-                    className="space-y-2 text-sm"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.2 }}
+                    className="space-y-4"
                   >
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      <span className="text-green-400">VISUAL ENGINE ONLINE</span>
-                    </div>
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-                      <span className="text-cyan-400">NEURAL LINK ESTABLISHED</span>
-                    </div>
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                      <span className="text-purple-400">QUALIA MATRIX READY</span>
-                    </div>
+                    {[
+                      { label: "VISUAL ENGINE", color: "green", icon: "🔥" },
+                      { label: "NEURAL LINK", color: "cyan", icon: "🧠" },
+                      { label: "QUALIA MATRIX", color: "purple", icon: "✨" },
+                      { label: "AUDIO CORTEX", color: "pink", icon: "🎶" }
+                    ].map((system, index) => (
+                      <motion.div
+                        key={system.label}
+                        className="flex items-center justify-center space-x-3"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 1.3 + index * 0.1 }}
+                      >
+                        <motion.div 
+                          className={`w-3 h-3 bg-${system.color}-400 rounded-full`}
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 2, repeat: Infinity, delay: index * 0.3 }}
+                        />
+                        <span className="text-lg">{system.icon}</span>
+                        <span className={`text-${system.color}-400 text-lg font-['Orbitron']`}>
+                          {system.label} ONLINE
+                        </span>
+                      </motion.div>
+                    ))}
                   </motion.div>
                 </motion.div>
               </div>
@@ -308,9 +528,10 @@ const App: React.FC = () => {
           ) : (
             <motion.div
               key="game"
-              initial={{ opacity: 0, scale: 1.1 }}
+              initial={{ opacity: 0, scale: 1.05 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.5 }}
             >
               <QualiaTempoGame 
                 isActive={true}
@@ -321,40 +542,187 @@ const App: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      {/* QUALIA.CODE v1.1: Rhythm Visualizer - Interactive Game Feature */}
       <RhythmVisualizer />
 
-      {/* Modern Controls Panel */}
+      {/* Enhanced HUD - ALWAYS VISIBLE FOR DEMONSTRATION */}
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <QualiaTempoHUD
+            qualiaState={qualiaState}
+            playerHealth={player.health}
+            score={player.score}
+            music_data={{ bpm: 120 }}
+          />
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Enhanced control panels */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.5 }}
-        className="absolute bottom-4 left-4 cyber-gradient border border-cyan-500 p-4 rounded-lg text-sm max-w-xs"
+        className="absolute bottom-6 left-6 cyber-gradient border-2 border-cyan-500 p-6 rounded-xl text-sm max-w-sm backdrop-blur-sm"
       >
-        <div className="font-bold mb-2 text-cyan-400 font-['Orbitron']">⌨️ NEURAL INTERFACE:</div>
-        <div className="space-y-1 text-gray-300">
-          <div><span className="text-cyan-400">WASD</span> - Rhythmic Movement</div>
-          <div><span className="text-purple-400">SPACE</span> - Temporal Pause</div>
-          <div><span className="text-yellow-400">ESC</span> - Reality Reset</div>
+        <div className="font-bold mb-3 text-cyan-400 font-['Orbitron'] text-lg flex items-center space-x-2">
+          <span>⌨️</span>
+          <span>NEURAL INTERFACE</span>
+        </div>
+        <div className="space-y-2 text-gray-300">
+          <div className="flex justify-between"><span className="text-cyan-400 font-mono">QWERT</span><span>Sound Synthesis</span></div>
+          <div className="flex justify-between"><span className="text-purple-400 font-mono">SPACE</span><span>Temporal Dash</span></div>
+          <div className="flex justify-between"><span className="text-pink-400 font-mono">CTRL</span><span>Ultimate Sync</span></div>
+          <div className="flex justify-between"><span className="text-yellow-400 font-mono">ESC</span><span>Reality Reset</span></div>
         </div>
       </motion.div>
 
-      {/* System Status Panel */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.7 }}
-        className="absolute bottom-4 right-4 cyber-gradient border border-cyan-500 p-3 rounded-lg text-xs"
+        className="absolute bottom-6 right-6 cyber-gradient border-2 border-purple-500 p-6 rounded-xl text-sm backdrop-blur-sm"
       >
-        <div className="font-['Orbitron'] font-bold text-cyan-400 mb-1">SYSTEM STATUS</div>
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${backendConnected ? 'bg-green-400' : 'bg-red-400'} animate-pulse`}></div>
-            <span className="text-gray-300">Visual Engine: {backendConnected ? "ONLINE" : "OFFLINE"}</span>
+        <div className="font-['Orbitron'] font-bold text-purple-400 mb-3 text-lg flex items-center space-x-2">
+          <span>📊</span>
+          <span>SYSTEM STATUS</span>
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-3">
+            <motion.div 
+              className={`w-3 h-3 rounded-full ${backendConnected ? 'bg-green-400' : 'bg-red-400'}`}
+              animate={{ opacity: [0.7, 1, 0.7] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+            <span className="text-gray-300">Visual Engine: </span>
+            <span className={backendConnected ? 'text-green-400' : 'text-red-400'}>
+              {backendConnected ? "ONLINE" : "OFFLINE"}
+            </span>
           </div>
-          <div className="text-gray-400">Qualia Tempo v1.0 | Prototype Build</div>
+          <div className="text-gray-400 text-xs pt-2 border-t border-gray-700">
+            Qualia Tempo v2.0 | Neural Prototype Build
+          </div>
         </div>
       </motion.div>
+
+      {/* Custom enhanced styles */}
+      <style>{`
+        @keyframes screenShake {
+          0%, 100% { transform: translate(0, 0); }
+          10% { transform: translate(-1px, -1px); }
+          20% { transform: translate(1px, -1px); }
+          30% { transform: translate(-1px, 1px); }
+          40% { transform: translate(1px, 1px); }
+          50% { transform: translate(-1px, -1px); }
+          60% { transform: translate(1px, -1px); }
+          70% { transform: translate(-1px, 1px); }
+          80% { transform: translate(1px, 1px); }
+          90% { transform: translate(-1px, -1px); }
+        }
+
+        @keyframes gradientShift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+
+        @keyframes colorShift {
+          0% { filter: hue-rotate(0deg); }
+          33% { filter: hue-rotate(120deg); }
+          66% { filter: hue-rotate(240deg); }
+          100% { filter: hue-rotate(360deg); }
+        }
+
+        .glitch-text-enhanced {
+          animation: glitchEnhanced 0.4s ease-in-out infinite;
+        }
+
+        @keyframes glitchEnhanced {
+          0% { 
+            transform: translate(0);
+            filter: hue-rotate(0deg) contrast(1);
+            text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+          }
+          10% { 
+            transform: translate(-2px, 2px);
+            filter: hue-rotate(90deg) contrast(1.2);
+            text-shadow: 4px 0 #ff00ff, -4px 0 #00ffff;
+          }
+          20% { 
+            transform: translate(-2px, -2px);
+            filter: hue-rotate(180deg) contrast(0.8);
+            text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff;
+          }
+          30% { 
+            transform: translate(2px, 2px);
+            filter: hue-rotate(270deg) contrast(1.5);
+          }
+          40% { 
+            transform: translate(2px, -2px);
+            filter: hue-rotate(180deg) contrast(1);
+          }
+          50% { 
+            transform: translate(-1px, 2px);
+            filter: hue-rotate(90deg) contrast(1.2);
+            text-shadow: 3px 0 #ffff00, -1px 0 #ff00ff;
+          }
+          60% { 
+            transform: translate(-1px, -1px);
+            filter: hue-rotate(45deg) contrast(1);
+          }
+          70% { 
+            transform: translate(1px, 1px);
+            filter: hue-rotate(315deg) contrast(1.3);
+          }
+          80% { 
+            transform: translate(1px, -1px);
+            filter: hue-rotate(180deg) contrast(0.9);
+          }
+          90% { 
+            transform: translate(-1px, 1px);
+            filter: hue-rotate(270deg) contrast(1.1);
+          }
+          100% { 
+            transform: translate(0);
+            filter: hue-rotate(360deg) contrast(1);
+            text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+          }
+        }
+
+        .cyber-button-enhanced {
+          position: relative;
+          border: 2px solid transparent;
+          background: linear-gradient(45deg, #1a1a2e, #16213e) padding-box,
+                      linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ffff) border-box;
+          transition: all 0.3s ease;
+          overflow: hidden;
+        }
+
+        .cyber-button-enhanced:hover {
+          transform: translateY(-2px);
+          box-shadow: 
+            0 10px 30px rgba(0, 255, 255, 0.3),
+            0 0 50px rgba(255, 0, 255, 0.2),
+            inset 0 0 30px rgba(0, 255, 255, 0.1);
+          animation: buttonPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes buttonPulse {
+          0%, 100% { 
+            box-shadow: 
+              0 10px 30px rgba(0, 255, 255, 0.3),
+              0 0 50px rgba(255, 0, 255, 0.2);
+          }
+          50% { 
+            box-shadow: 
+              0 15px 40px rgba(0, 255, 255, 0.5),
+              0 0 70px rgba(255, 0, 255, 0.4);
+          }
+        }
+      `}</style>
     </div>
   );
 };

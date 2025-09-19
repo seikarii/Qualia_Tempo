@@ -1,9 +1,6 @@
 /**
- * QUALIA.CODE v1.1 - Application Entry Point
+ * QUALIA.CODE v1.1 - Application Entry Point (GOLD.CODE STANDARD)
  * InversifyJS IoC Bootstrap - PURE DEPENDENCY INJECTION
- * 
- * CRITICAL: This imports InversifyJS configuration which sets up the container.
- * NO manual service instantiation happens here.
  */
 
 import 'reflect-metadata'; // MUST be first import for InversifyJS decorators
@@ -11,47 +8,46 @@ import React from 'react';
 import ReactDOM from "react-dom/client";
 import "./index.css";
 
-// Import the InversifyJS configuration (executes container bindings)
+// Import the InversifyJS configuration which sets up the container.
 import './services/inversify.config';
 import { container } from './services/inversify.container';
 import { TYPES } from './services/inversify.types';
 import type { IApplicationInitializerService } from './services/interfaces/IApplicationInitializerService';
 import type { ILogger } from './services/interfaces/ILogger';
-import { LoggerProvider } from './services/Logger';
 
 import App from "./App";
 
-// Initialize application before rendering
-const initializeApplication = async () => {
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("CRITICAL: Root element not found in DOM.");
+const root = ReactDOM.createRoot(rootElement);
+const logger = container.get<ILogger>(TYPES.ILogger);
+
+// Application Bootstrap Sequence
+const initializeAndRender = async () => {
   try {
-    // CRITICAL: Register logger with LoggerProvider BEFORE any service instantiation
-    // This eliminates "Logger not registered, creating temporary logger" warnings
-    const logger = container.get<ILogger>(TYPES.ILogger);
-    LoggerProvider.register(logger as any); // Type assertion needed due to interface/implementation mismatch
-    
-    // Get ApplicationInitializerService from container
-    const applicationInitializer = container.get<IApplicationInitializerService>(TYPES.IApplicationInitializerService);
-    
-    // Start application initialization sequence
-    await applicationInitializer.start();
-    
-    console.log('🎯 Application initialization completed successfully');
+    logger.info('Application Bootstrap: Initializing services...');
+    const appInitializer = container.get<IApplicationInitializerService>(TYPES.IApplicationInitializerService);
+    await appInitializer.start();
+    logger.info('Application Bootstrap: Initialization complete. Rendering application.');
+
+    root.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
   } catch (error) {
-    console.error('❌ Application initialization failed:', error);
-    // Continue with rendering even if initialization fails
+    logger.error('Application Bootstrap: CRITICAL FAILURE during initialization.', error);
+    // Render a fallback UI in case of catastrophic failure
+    root.render(
+      <div style={{
+        backgroundColor: 'black', color: 'red', height: '100vh',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'monospace', fontSize: '24px', border: '2px solid red', margin: '20px'
+      }}>
+        FATAL: NEURAL CORE OFFLINE. CHECK CONSOLE.
+      </div>
+    );
   }
 };
 
-// Get root element and create React root
-const rootElement = document.getElementById("root");
-if (!rootElement) throw new Error("Root element not found");
-const root = ReactDOM.createRoot(rootElement);
-
-// Initialize application and then render
-initializeApplication().then(() => {
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-});
+initializeAndRender();
