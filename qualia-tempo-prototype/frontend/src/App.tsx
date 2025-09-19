@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { Subtitles } from "./components/Subtitles";
+import QualiaBackground from './components/QualiaBackground';
 import QualiaTempoGame from "./components/game/QualiaTempoGame";
 import QualiaTempoHUD from "./components/game/QualiaTempoHUD";
 import { RhythmVisualizer } from "./components/RhythmVisualizer";
@@ -306,46 +307,30 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* Enhanced background layers */}
-      <div className="cyber-grid"></div>
+      {/* EXTREME synesthetic Qualia background preview */}
+      <QualiaBackground />
+      {/* Retain ambient particles for additional sparkle layer */}
       <AmbientParticles />
       
-      {/* Multiple dynamic gradient overlays */}
-      <div className="absolute inset-0 opacity-40">
-        <motion.div 
-          className="absolute inset-0"
-          animate={{
-            background: [
-              'radial-gradient(circle at 20% 80%, rgba(0,255,255,0.15) 0%, transparent 50%)',
-              'radial-gradient(circle at 80% 20%, rgba(255,0,255,0.15) 0%, transparent 50%)',
-              'radial-gradient(circle at 40% 60%, rgba(255,255,0,0.15) 0%, transparent 50%)',
-            ]
-          }}
-          transition={{ duration: 8, repeat: Infinity }}
-        />
-        <motion.div 
-          className="absolute inset-0"
-          animate={{
-            background: [
-              'radial-gradient(circle at 60% 40%, rgba(255,0,255,0.1) 0%, transparent 60%)',
-              'radial-gradient(circle at 30% 70%, rgba(0,255,255,0.1) 0%, transparent 60%)',
-              'radial-gradient(circle at 70% 30%, rgba(255,255,0,0.1) 0%, transparent 60%)',
-            ]
-          }}
-          transition={{ duration: 12, repeat: Infinity, delay: 2 }}
-        />
-      </div>
-
-      {/* Audio visualization bars */}
-      <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-10">
+      {/* Enhanced audio visualization bars - now integrated */}
+      <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-10 mix-blend-screen">
         <div className="flex space-x-1">
           {audioVisualization.map((height, index) => (
             <motion.div
               key={index}
-              className="w-2 bg-gradient-to-t from-cyan-400 to-purple-400 rounded-full opacity-70"
-              style={{ height: `${height}px` }}
-              animate={{ height: `${height}px` }}
-              transition={{ duration: 0.1 }}
+              className="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80"
+              style={{ 
+                height: `${height}px`,
+                filter: `blur(0.5px) drop-shadow(0 0 ${height / 10}px currentColor)`
+              }}
+              animate={{ 
+                height: `${height}px`,
+                opacity: [0.6, 1, 0.7]
+              }}
+              transition={{ 
+                height: { duration: 0.1 },
+                opacity: { duration: 0.3, repeat: Infinity }
+              }}
             />
           ))}
         </div>

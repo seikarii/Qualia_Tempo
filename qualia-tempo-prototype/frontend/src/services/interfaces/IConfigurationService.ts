@@ -68,6 +68,12 @@ export interface IConfigurationService {
   getNotificationConfig(): NotificationServiceConfig;
 
   /**
+   * Get visual effects configuration (qualia landing background, particles, bloom, etc.).
+   * @returns Visual effects configuration
+   */
+  getVisualEffectsConfig(): any; // Use any here to avoid circular import; concrete typing done in implementation
+
+  /**
    * Get a specific configuration section by name.
    * @param section The name of the configuration section
    * @returns The configuration section

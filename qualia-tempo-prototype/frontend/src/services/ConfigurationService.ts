@@ -396,6 +396,38 @@ export interface FullGameConfig {
   debugService: DebugServiceConfig;
   notificationService: NotificationServiceConfig;
   rhythmicMovement: RhythmicMovementConfig;
+  visualEffects?: VisualEffectsConfig; // NEW: Optional visual effects config (loaded if provided)
+}
+
+// === VISUAL EFFECTS CONFIGURATION (NEW) ===
+export interface VisualEffectsConfig {
+  particles: {
+    count: number;
+    minSize: number;
+    maxSize: number;
+    speed: number; // base speed magnitude
+    drift: number; // directional drift factor
+  };
+  bloom: {
+    intensity: number; // overall additive blending multiplier
+    pulseSpeed: number; // seconds per bloom pulse cycle
+  };
+  gradients: {
+    cycleDuration: number; // seconds for full gradient cycle
+    layers: string[]; // CSS gradient definitions
+  };
+  noise: {
+    enabled: boolean;
+    opacity: number; // overlay opacity
+    scale: number; // noise pattern scale
+    speed: number; // animation speed
+  };
+  palette: string[]; // Qualia color palette
+  aura: {
+    rings: number; // number of concentric reactive rings
+    rotationSpeed: number; // seconds per full rotation
+    pulseDuration: number; // seconds per pulse
+  };
 }
 
 /**
@@ -438,6 +470,7 @@ export class ConfigurationService implements IConfigurationService {
       debugService: '/config/debug-service.yaml',
       notificationService: '/config/notification-service.yaml',
       rhythmicMovement: '/config/rhythmic-movement.yaml', // NEW: Specific config file
+      visualEffects: '/config/visual-effects.yaml', // NEW: Visual effects configuration (optional)
     };
   }
 
@@ -646,6 +679,41 @@ export class ConfigurationService implements IConfigurationService {
   @catchError()
   public getNotificationConfig(): NotificationServiceConfig {
     return this.getConfigSection<NotificationServiceConfig>('notificationService');
+  }
+
+  /**
+   * Get visual effects configuration (qualia background & landing visuals).
+   * @returns Visual effects configuration or default fallback if not defined
+   */
+  @logMethod()
+  @catchError()
+  public getVisualEffectsConfig(): VisualEffectsConfig {
+    // Provide a resilient fallback to avoid runtime failure if file missing
+    const defaults: VisualEffectsConfig = {
+      particles: { count: 120, minSize: 1, maxSize: 4, speed: 0.35, drift: 0.5 },
+      bloom: { intensity: 1.0, pulseSpeed: 6 },
+      gradients: {
+        cycleDuration: 16,
+        layers: [
+          'radial-gradient(circle at 20% 30%, rgba(0,255,255,0.15), transparent 60%)',
+          'radial-gradient(circle at 80% 70%, rgba(255,0,255,0.12), transparent 65%)',
+          'radial-gradient(circle at 50% 50%, rgba(255,255,0,0.08), transparent 70%)'
+        ]
+      },
+      noise: { enabled: true, opacity: 0.06, scale: 2, speed: 0.25 },
+      palette: ['#00ffff', '#ff00ff', '#ffff00', '#ff0080', '#00ff80'],
+      aura: { rings: 4, rotationSpeed: 22, pulseDuration: 9 }
+    };
+
+    try {
+      const cfg = this.getConfigSection<VisualEffectsConfig>('visualEffects');
+      if (!cfg) return defaults;
+      // Minimal validation for required subsections
+      if (!cfg.particles?.count || !cfg.palette?.length) return { ...defaults, ...cfg };
+      return cfg;
+    } catch {
+      return defaults;
+    }
   }
 
   /**

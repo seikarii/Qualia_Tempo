@@ -159,6 +159,20 @@ const mockConfigurationService: IConfigurationService = {
     maxConcurrent: 5,
     defaultDuration: 3000
   }),
+  getVisualEffectsConfig: vi.fn().mockReturnValue({
+    particles: { count: 120, minSize: 1, maxSize: 4, speed: 0.35, drift: 0.5 },
+    bloom: { intensity: 1.0, pulseSpeed: 6 },
+    gradients: {
+      cycleDuration: 16,
+      layers: [
+        'radial-gradient(circle at 20% 30%, rgba(0,255,255,0.15), transparent 60%)',
+        'radial-gradient(circle at 80% 70%, rgba(255,0,255,0.12), transparent 65%)'
+      ]
+    },
+    noise: { enabled: true, opacity: 0.06, scale: 2, speed: 0.25 },
+    palette: ['#00ffff', '#ff00ff', '#ffff00', '#ff0080', '#00ff80'],
+    aura: { rings: 4, rotationSpeed: 22, pulseDuration: 9 }
+  }),
   getConfigSection: vi.fn().mockImplementation((section: string) => {
     const defaultConfig: any = {
       gameController: { maxHealth: 100, initialScore: 0, tickRate: 60 },

@@ -1,8 +1,81 @@
-# Qualia Tempo - Prototype
+# Qualia Tempo - Prototype v2.0
 
-**A Charlie Hellsinger Story**
+**A Charlie Hellsinger Story** - EXTREME Visual Preview System
 
 Un juego de ritmo donde el rendimiento del jugador genera efectos visuales procedurales en tiempo real a través del revolucionario sistema **QualiaState**.
+
+## 🌟 NUEVO: Sistema de Preview Visual Extremo
+
+La página principal ahora cuenta con un **sistema de preview visual EXTREMO** que demuestra el potencial sinestésico completo de Qualia Tempo. No es solo un fondo - es una **preview funcional** del lenguaje visual del juego.
+
+### ✨ Efectos Visuales Implementados
+
+#### 1. **Iluminación Volumétrica (God Rays)**
+- 12 rayos de luz dinámicos desde el centro
+- Reactivos a frecuencias de audio simuladas
+- Crean profundidad atmosférica y sensación de energía "divina"
+- Colores rotan por la paleta Qualia (cyan, magenta, amarillo, etc.)
+
+#### 2. **Simulación FFT de Audio**
+- Simulación en tiempo real de espectro de audio de 32 bandas
+- Las partículas reaccionan a bandas de frecuencia específicas (graves, medios, agudos)
+- Tamaño, opacidad y velocidad de movimiento modulados por "audio"
+- Barras de visualización de espectro en la parte inferior muestran estado de audio actual
+
+#### 3. **Rayos de Energía (Lightning)**
+- Activados por picos de audio sobre umbral (intensidad 80+)
+- Lightning basado en SVG con sub-rayos ramificados
+- Duración de flash breve (800ms) con decaimiento realista
+- Demuestra retroalimentación visual instantánea de eventos de audio
+
+#### 4. **Campo de Partículas Mejorado**
+- 220+ partículas (configurable vía YAML)
+- Cada partícula responde a banda de frecuencia de audio específica
+- Mezcla aditiva con efectos de bloom
+- Movimiento caótico con escalado reactivo al audio
+
+#### 5. **Anillos de Aura Concéntricos**
+- 7 anillos de energía con rotación independiente
+- Frecuencias graves afectan tamaño/opacidad del anillo
+- Frecuencias agudas modulan grosor del borde y resplandor
+- Demuestra concepto de visualización de "nivel de poder" del jugador
+
+#### 6. **Bloom Extremo y Post-Procesado**
+- Morfing de gradientes multi-capa (6 gradientes simultáneos)
+- Simulación de aberración cromática
+- Grano de película mejorado con intensidad reactiva al audio
+- Múltiples modos de mezcla: screen, overlay, difference
+
+### 🎛️ Diseño Basado en Configuración
+
+Todos los parámetros visuales están externalizados en `visual-effects.yaml`:
+
+```yaml
+visualEffects:
+  particles:
+    count: 220          # Densidad de partículas
+    speed: 0.65         # Velocidad de movimiento
+    drift: 0.85         # Factor de caos
+  bloom:
+    intensity: 1.8      # Multiplicador de bloom
+    pulseSpeed: 3       # Frecuencia de pulso
+  palette:              # Colores de energía Qualia
+    - '#00ffff'         # Precisión/claridad
+    - '#ff00ff'         # Intensidad/poder
+    - '#ffff00'         # Energía/activación
+    # ... 8 colores totales
+```
+
+### 🎯 El Preview Demuestra
+
+1. **Gameplay Sinestésico**: Efectos visuales responden al audio en tiempo real
+2. **Memoria Qualia**: Colores representan diferentes estados emocionales/de rendimiento
+3. **Sobrecarga Sensorial**: Caos controlado que recompensa el reconocimiento de patrones
+4. **Escalado de Combo/Intensidad**: Más actividad de audio = más intensidad visual
+5. **Simulación de Audio 8D**: Posicionamiento espacial de elementos visuales
+6. **Preview de Telegraph del Boss**: Los rayos muestran retroalimentación de acción instantánea
+
+---
 
 ## 🎯 Prototipo Vertical - Fase 1
 

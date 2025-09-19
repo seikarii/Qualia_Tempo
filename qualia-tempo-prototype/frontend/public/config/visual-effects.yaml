@@ -1,0 +1,63 @@
+## Qualia Tempo Visual Effects Configuration - EXTREME PREVIEW MODE
+## Externalized parameters controlling FULL synesthetic experience preview
+
+visualEffects:
+  particles:
+    count: 220          # More particles for density
+    minSize: 1          # px  
+    maxSize: 8          # Larger max for impact
+    speed: 0.65         # Faster base movement
+    drift: 0.85         # Higher drift for chaos
+  bloom:
+    intensity: 1.8      # Extreme bloom for preview
+    pulseSpeed: 3       # Faster pulsing for energy
+  gradients:
+    cycleDuration: 12   # Faster cycle for preview demo
+    layers:
+      - 'radial-gradient(circle at 15% 25%, rgba(0,255,255,0.25) 0%, transparent 55%)'
+      - 'radial-gradient(circle at 85% 75%, rgba(255,0,255,0.22) 0%, transparent 60%)'
+      - 'radial-gradient(circle at 50% 50%, rgba(255,255,0,0.18) 0%, transparent 65%)'
+      - 'conic-gradient(from 0deg at 50% 50%, rgba(0,255,200,0.12), rgba(255,0,200,0.12), rgba(255,255,0,0.12), rgba(0,255,200,0.12))'
+      - 'radial-gradient(circle at 30% 80%, rgba(255,0,128,0.15) 0%, transparent 50%)'
+      - 'radial-gradient(circle at 70% 20%, rgba(128,255,0,0.15) 0%, transparent 50%)'
+  noise:
+    enabled: true
+    opacity: 0.12       # Higher grain for texture
+    scale: 2.5          # Larger noise pattern
+    speed: 0.55         # Faster animation
+  palette:              # Extended Qualia energy palette
+    - '#00ffff'         # Cyan - precision/clarity
+    - '#ff00ff'         # Magenta - intensity/power  
+    - '#ffff00'         # Yellow - energy/activation
+    - '#ff0080'         # Hot pink - aggression/chaos
+    - '#00ff80'         # Bright green - recovery/flow
+    - '#8000ff'         # Purple - transcendence
+    - '#ff8000'         # Orange - warmth/combo
+    - '#0080ff'         # Blue - focus/calm
+  aura:
+    rings: 7            # More rings for complexity
+    rotationSpeed: 15   # Faster rotation for energy
+    pulseDuration: 5    # Faster pulsing for preview
+  # NEW: Audio simulation settings
+  audioSimulation:
+    enabled: true
+    fftBands: 32        # Simulated FFT spectrum bands
+    bassRange: [0, 7]   # Low frequency indices
+    midRange: [8, 23]   # Mid frequency indices  
+    trebleRange: [24, 31] # High frequency indices
+    updateRate: 120     # ms between audio updates (8fps)
+  # NEW: Lightning effects
+  lightning:
+    enabled: true
+    threshold: 80       # Audio level threshold for generation
+    maxBolts: 3         # Maximum concurrent bolts
+    duration: 800       # Bolt duration in ms
+    branchProbability: 0.7 # Chance of sub-bolt generation
+  # NEW: God rays (volumetric lighting)
+  godRays:
+    enabled: true
+    count: 12           # Number of light rays
+    maxWidth: 8         # Maximum ray width in px
+    maxLength: 100      # Maximum ray length in vh
+    rotationRange: 10   # Degrees of rotation variance
+    baseOpacity: 0.4    # Base opacity multiplier
