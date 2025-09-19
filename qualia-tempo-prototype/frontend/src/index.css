@@ -2,13 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* QUALIA.CODE v6 - Global Styles */
-/* Externalized configuration should be used for theme values */
+/* QUALIA.CODE v6 - Enhanced Global Styles */
+/* Configuration externalized to YAML - these are base visual foundations */
 
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -17,14 +17,115 @@ body {
   color: #00ffff;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Orbitron", monospace;
+  font-weight: 700;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
 
-/* Loading animation keyframes */
+/* Enhanced Loading Animation */
 @keyframes loading {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(0%); }
-  100% { transform: translateX(100%); }
+  0% { 
+    transform: translateX(-100%) scale(0.8); 
+    opacity: 0;
+  }
+  50% { 
+    transform: translateX(0%) scale(1); 
+    opacity: 1;
+  }
+  100% { 
+    transform: translateX(100%) scale(0.8); 
+    opacity: 0;
+  }
+}
+
+/* Utility Classes for Dynamic Effects */
+.glitch-text {
+  animation: glitch 0.5s ease-in-out infinite;
+}
+
+.neon-pulse {
+  animation: neonPulse 2s ease-in-out infinite;
+}
+
+.score-punch {
+  animation: scorePunch 0.3s ease-out;
+}
+
+.qualia-intensity {
+  animation: qualiaIntensity 1s ease-in-out infinite;
+}
+
+.qualia-flow {
+  animation: qualiaFlow 3s linear infinite;
+}
+
+.qualia-chaos {
+  animation: qualiaChaos 0.8s ease-in-out infinite;
+}
+
+/* Modern Gradient Backgrounds */
+.cyber-gradient {
+  background: linear-gradient(135deg, 
+    rgba(16, 185, 129, 0.1) 0%, 
+    rgba(139, 92, 246, 0.1) 25%,
+    rgba(59, 130, 246, 0.1) 50%,
+    rgba(236, 72, 153, 0.1) 75%,
+    rgba(245, 101, 101, 0.1) 100%);
+}
+
+.cyber-border {
+  border-image: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ffff) 1;
+}
+
+/* Responsive Typography Scale */
+.text-cyber-xl {
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1.1;
+}
+
+.text-cyber-lg {
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  line-height: 1.2;
+}
+
+/* Interactive Element States */
+.interactive-element {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive-element:hover {
+  transform: translateY(-2px);
+}
+
+.interactive-element:active {
+  transform: translateY(0);
+}
+
+/* Accessibility Enhancements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  body {
+    background-color: #000;
+    color: #fff;
+  }
+  
+  .neon-glow {
+    text-shadow: none;
+    border: 2px solid #fff;
+  }
 }
