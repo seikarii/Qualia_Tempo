@@ -44,7 +44,7 @@ class TestRoutesExtended:
         # Test complete QualiaState
         complete_qualia_data = {
             "intensity": 0.8,
-            "precision": 0.5,
+            "focus_level": 0.5,
             "aggression": 0.7,
             "flow": 0.9,
             "chaos": 0.1,
@@ -65,7 +65,7 @@ class TestRoutesExtended:
         # Note: QualiaState requires all fields, so we send complete data
         complete_data = {
             "intensity": 0.6,
-            "precision": 0.5,
+            "focus_level": 0.5,
             "aggression": 0.4,
             "flow": 0.4,
             "chaos": 0.2,
@@ -84,7 +84,7 @@ class TestRoutesExtended:
         # Test with zero values
         zero_data = {
             "intensity": 0.0,
-            "precision": 0.0,
+            "focus_level": 0.0,
             "aggression": 0.0,
             "flow": 0.0,
             "chaos": 0.0,
@@ -171,7 +171,7 @@ class TestRoutesExtended:
 
         qualia_data = {
             "intensity": 0.5,
-            "precision": 0.5,
+            "focus_level": 0.5,
             "aggression": 0.5,
             "flow": 0.5,
             "chaos": 0.5,
@@ -194,7 +194,7 @@ class TestRoutesExtended:
                 "/update_qualia",
                 json={
                     "intensity": 0.5,
-                    "precision": 0.5,
+                    "focus_level": 0.5,
                     "aggression": 0.5,
                     "flow": 0.5,
                     "chaos": 0.5,
@@ -224,7 +224,7 @@ class TestRoutesExtended:
         # Create a large but valid payload
         large_data = {
             "intensity": 0.8,
-            "precision": 0.5,
+            "focus_level": 0.5,
             "aggression": 0.7,
             "flow": 0.9,
             "chaos": 0.1,

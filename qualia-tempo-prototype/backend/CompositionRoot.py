@@ -40,6 +40,8 @@ class CompositionRoot:
         await self._initialize_event_bus()
         await self._initialize_particle_system()
         await self._initialize_qualia_processor()
+        await self._initialize_rendering_service()
+        await self._initialize_streaming_web_service()
 
         # Register event handlers
         await self._register_event_handlers()
@@ -70,21 +72,36 @@ class CompositionRoot:
             raise
 
     async def _initialize_qualia_processor(self) -> None:
-        """Initialize the QualiaProcessor service."""
-        # Import here to avoid circular dependencies
+        """Initialize QualiaProcessor service with EventBus dependency."""
         from .services.QualiaProcessor import QualiaProcessor
 
-        try:
-            qualia_processor = QualiaProcessor(self._event_bus)
-            self._services["qualia_processor"] = qualia_processor
-            self._logger.debug("🧠 QualiaProcessor service registered")
-        except Exception as e:
-            self._logger.error(f"🚨 Failed to initialize QualiaProcessor: {e}")
-            # Create a minimal fallback processor
-            from .services.QualiaProcessor import MinimalQualiaProcessor
+        processor = QualiaProcessor(event_bus=self._event_bus)
+        self._services["qualia_processor"] = processor
+        self._logger.debug("✅ QualiaProcessor initialized")
 
-            self._services["qualia_processor"] = MinimalQualiaProcessor(self._event_bus)
-            self._logger.warning("⚠️  Using minimal QualiaProcessor fallback")
+    async def _initialize_rendering_service(self) -> None:
+        """Initialize RenderingService for GPU-based frame rendering."""
+        from .services.RenderingService import RenderingService
+
+        rendering_service = RenderingService(
+            event_bus=self._event_bus,
+            width=1920,
+            height=1080
+        )
+        self._services["rendering_service"] = rendering_service
+        self._logger.debug("✅ RenderingService initialized")
+
+    async def _initialize_streaming_web_service(self) -> None:
+        """Initialize StreamingWebService for WebSocket video streaming."""
+        from .services.StreamingWebService import StreamingWebService
+
+        rendering_service = self._services["rendering_service"]
+        streaming_service = StreamingWebService(
+            event_bus=self._event_bus,
+            rendering_service=rendering_service
+        )
+        self._services["streaming_web_service"] = streaming_service
+        self._logger.debug("✅ StreamingWebService initialized")
 
     async def _register_event_handlers(self) -> None:
         """Register event handlers for cross-service communication."""
@@ -176,6 +193,14 @@ class CompositionRoot:
     def get_qualia_processor(self) -> Any:
         """Get the QualiaProcessor service."""
         return self.get_service("qualia_processor")
+
+    def get_rendering_service(self) -> Any:
+        """Get RenderingService instance."""
+        return self.get_service("rendering_service")
+
+    def get_streaming_web_service(self) -> Any:
+        """Get StreamingWebService instance.""" 
+        return self.get_service("streaming_web_service")
 
     async def shutdown(self) -> None:
         """Gracefully shutdown all services."""

@@ -1,11 +1,12 @@
 # QUALIA.CODE v1.0 - Backend API Routes
 # FastAPI endpoints with dependency injection and event-driven architecture
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from .models import QualiaState, QualiaUpdateResponse
 from ..CompositionRoot import get_composition_root, CompositionRoot
 import logging
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -101,10 +102,83 @@ async def update_qualia_visuals(
         )
 
     except Exception as e:
-        logger.error(f"🚨 Error updating qualia visuals: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to update visuals: {str(e)}"
-        )
+        logger.error(f"🚨 Error processing QualiaState: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.websocket("/ws/video_stream")
+async def websocket_video_stream(websocket: WebSocket, services: CompositionRoot = Depends(get_services)):
+    """
+    QUALIA.CODE WebSocket endpoint for video streaming.
+    Streams rendered frames from RenderingService to frontend clients.
+    """
+    streaming_service = services.get_streaming_web_service()
+    
+    try:
+        # Connect client
+        await streaming_service.connect_client(websocket)
+        
+        logger.info("🎥 Client connected to video stream")
+        
+        # Handle incoming messages
+        while True:
+            try:
+                # Receive message from client
+                message_text = await websocket.receive_text()
+                message = json.loads(message_text)
+                
+                # Handle client message
+                await streaming_service.handle_client_message(websocket, message)
+                
+            except WebSocketDisconnect:
+                break
+                
+            except json.JSONDecodeError as e:
+                logger.error(f"🚨 Invalid JSON from client: {e}")
+                await websocket.send_json({"type": "error", "message": "Invalid JSON format"})
+                
+            except Exception as e:
+                logger.error(f"🚨 Error handling WebSocket message: {e}")
+                break
+                
+    except Exception as e:
+        logger.error(f"🚨 WebSocket connection error: {e}")
+        
+    finally:
+        # Ensure client is properly disconnected
+        await streaming_service.disconnect_client(websocket)
+        logger.info("🔌 Client disconnected from video stream")
+
+
+@app.get("/stream_status")
+async def get_stream_status(services: CompositionRoot = Depends(get_services)):
+    """Get current streaming service status."""
+    try:
+        streaming_service = services.get_streaming_web_service()
+        rendering_service = services.get_rendering_service()
+        
+        return {
+            "streaming": streaming_service.get_status(),
+            "rendering": rendering_service.get_status(),
+        }
+    except Exception as e:
+        logger.error(f"Stream status check failed: {e}")
+        return {"status": "error", "error": str(e)}
+
+
+def _log_qualia_state_detailed(state_dict: dict) -> None:
+    """Enhanced logging for QualiaState with visual representation."""
+    print("")
+    print("=== QUALIA STATE UPDATE (QUALIA.CODE) ===")
+    print(f"🔥 Intensity: {state_dict.get('intensity', 0):.3f}")
+    print(f"🎯 Precision: {state_dict.get('precision', 0):.3f}")
+    print(f"⚡ Aggression: {state_dict.get('aggression', 0):.3f}")
+    print(f"🌊 Flow: {state_dict.get('flow', 0):.3f}")
+    print(f"🌪️ Chaos: {state_dict.get('chaos', 0):.3f}")
+    print(f"💊 Recovery: {state_dict.get('recovery', 0):.3f}")
+    print(f"🌟 Transcendence: {state_dict.get('transcendence', 0):.3f}")
+    print("==========================================")
+    print("")
 
 
 @app.post("/reset_engine")

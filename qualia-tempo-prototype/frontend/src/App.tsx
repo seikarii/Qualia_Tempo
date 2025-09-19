@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { Subtitles } from "./components/Subtitles";
-import QualiaBackground from './components/QualiaBackground';
+import BackendCanvas from './components/BackendCanvas';
 import QualiaTempoGame from "./components/game/QualiaTempoGame";
 import QualiaTempoHUD from "./components/game/QualiaTempoHUD";
 import { RhythmVisualizer } from "./components/RhythmVisualizer";
@@ -13,47 +13,6 @@ import type { ILogger } from "./services/interfaces/ILogger";
 import type { IApplicationInitializerService } from "./services/interfaces/IApplicationInitializerService";
 import type { PlayerActionEvent, PlayerInputEvent } from "./services/EventBus";
 import { shallow } from 'zustand/shallow';
-
-// Particle system for ambient effects
-const AmbientParticles: React.FC = () => {
-  const particles = useMemo(() => 
-    Array.from({ length: 50 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      delay: Math.random() * 20,
-      duration: 15 + Math.random() * 10,
-      scale: 0.1 + Math.random() * 0.3,
-    }))
-  , []);
-
-  return (
-    <div className="fixed inset-0 pointer-events-none z-5">
-      {particles.map((particle) => (
-        <motion.div
-          key={particle.id}
-          className="absolute w-1 h-1 bg-cyan-400 rounded-full opacity-60"
-          style={{
-            left: `${particle.x}%`,
-            top: `${particle.y}%`,
-            filter: 'blur(0.5px)',
-          }}
-          animate={{
-            y: [-20, -100],
-            opacity: [0, 0.8, 0],
-            scale: [particle.scale, particle.scale * 2, 0],
-          }}
-          transition={{
-            duration: particle.duration,
-            delay: particle.delay,
-            repeat: Infinity,
-            ease: "easeOut",
-          }}
-        />
-      ))}
-    </div>
-  );
-};
 
 // Enhanced loading component
 const QualiaLoader: React.FC = () => {
@@ -307,10 +266,11 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* EXTREME synesthetic Qualia background preview */}
-      <QualiaBackground />
-      {/* Retain ambient particles for additional sparkle layer */}
-      <AmbientParticles />
+      {/* QUALIA.CODE v1.1: GPU-accelerated backend rendering replaces DOM simulation */}
+      <BackendCanvas 
+        className="fixed inset-0 z-0"
+        showStatus={false} // Set to true for debugging
+      />
       
       {/* Enhanced audio visualization bars - now integrated */}
       <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-10 mix-blend-screen">

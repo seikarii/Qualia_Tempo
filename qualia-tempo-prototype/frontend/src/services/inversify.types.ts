@@ -26,6 +26,9 @@ export const TYPES = {
   IApplicationInitializerService: Symbol.for('IApplicationInitializerService'),
   IWebAudioAPIService: Symbol.for('IWebAudioAPIService'),
 
+  // ===== STREAMING SERVICES =====
+  IStreamingVideoService: Symbol.for('IStreamingVideoService'),
+
   // ===== SPECIAL TYPES =====
   // Used for injecting Zustand store setter function
   StoreSetter: Symbol.for('StoreSetter'),

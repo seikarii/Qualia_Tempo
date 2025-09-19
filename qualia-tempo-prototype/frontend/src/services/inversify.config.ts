@@ -27,6 +27,7 @@ import type { IOntologicalAudioEngine } from '../audio/IOntologicalAudioEngine';
 import type { IApplicationInitializerService } from './interfaces/IApplicationInitializerService';
 import type { IWebAudioAPIService } from './interfaces/IWebAudioAPIService';
 import type { IGameStateStore } from './interfaces/IGameStateStore';
+import type { IStreamingVideoService } from './interfaces/IStreamingVideoService';
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { EventBus } from './EventBus';
@@ -46,6 +47,7 @@ import { OntologicalAudioEngine } from '../audio/OntologicalAudioEngine';
 import { ApplicationInitializerService } from './ApplicationInitializerService';
 import { WebAudioAPIService } from './WebAudioAPIService';
 import { GameStateStore } from './GameStateStore';
+import { StreamingVideoService } from './StreamingVideoService';
 
 // ===== IMPORT ZUSTAND STORE =====
 import { useGameStore } from '../state/useGameStore';
@@ -78,6 +80,9 @@ container.bind<IRhythmicMovementController>(TYPES.IRhythmicMovementController).t
 container.bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).to(OntologicalAudioEngine).inSingletonScope();
 container.bind<IApplicationInitializerService>(TYPES.IApplicationInitializerService).to(ApplicationInitializerService).inSingletonScope();
 container.bind<IWebAudioAPIService>(TYPES.IWebAudioAPIService).to(WebAudioAPIService).inSingletonScope();
+
+// ===== STREAMING SERVICE BINDINGS =====
+container.bind<IStreamingVideoService>(TYPES.IStreamingVideoService).to(StreamingVideoService).inSingletonScope();
 
 // ===== CONTAINER VERIFICATION =====
 // Container is configured and ready
