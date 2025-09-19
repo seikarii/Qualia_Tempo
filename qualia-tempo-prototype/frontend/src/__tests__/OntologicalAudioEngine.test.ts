@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 /**
  * QUALIA.CODE v1.1 - OntologicalAudioEngine Tests - IOC COMPLIANT
  * Comprehensive test suite for the ontological audio processing engine.
@@ -13,36 +14,36 @@ import { QualiaLogger, LogLevel } from '../services/Logger';
 import { QualiaState } from "../types/contracts";
 
 // Mock Tone.js completely
-jest.mock('tone', () => ({
-  Reverb: jest.fn().mockImplementation(() => ({
-    connect: jest.fn(),
+vi.mock('tone', () => ({
+  Reverb: vi.fn().mockImplementation(() => ({
+    connect: vi.fn(),
     decay: 1.5,
     wet: 0.45
   })),
-  FeedbackDelay: jest.fn().mockImplementation(() => ({
-    connect: jest.fn(),
+  FeedbackDelay: vi.fn().mockImplementation(() => ({
+    connect: vi.fn(),
     delayTime: "8n",
     feedback: 0.28,
     wet: 0.18
   })),
-  Volume: jest.fn().mockImplementation(() => ({
-    connect: jest.fn(),
-    toDestination: jest.fn()
+  Volume: vi.fn().mockImplementation(() => ({
+    connect: vi.fn(),
+    toDestination: vi.fn()
   })),
-  PolySynth: jest.fn().mockImplementation(() => ({
-    connect: jest.fn(),
-    triggerAttackRelease: jest.fn(),
-    dispose: jest.fn()
+  PolySynth: vi.fn().mockImplementation(() => ({
+    connect: vi.fn(),
+    triggerAttackRelease: vi.fn(),
+    dispose: vi.fn()
   })),
-  Synth: jest.fn(),
-  Frequency: jest.fn().mockImplementation((_freq) => ({
-    toNote: jest.fn().mockReturnValue('C4')
+  Synth: vi.fn(),
+  Frequency: vi.fn().mockImplementation((_freq) => ({
+    toNote: vi.fn().mockReturnValue('C4')
   })),
-  start: jest.fn(),
+  start: vi.fn(),
   Transport: {
-    start: jest.fn(),
-    stop: jest.fn(),
-    pause: jest.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+    pause: vi.fn(),
     bpm: { value: 120 }
   }
 }));
@@ -52,9 +53,9 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
   let mockQualiaState: QualiaState;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Mock console.log to avoid test output pollution
-    jest.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
     
     // Inject logger into IoC container
     container.unbind(TYPES.ILogger);

@@ -1,19 +1,20 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook } from "@testing-library/react";
 import { useService } from "../services/hooks";
 import { TYPES } from "../services/inversify.types";
 import { IEventBus } from "../services/interfaces/IEventBus";
 
 // Mock the container
-jest.mock('../services/inversify.container', () => ({
+vi.mock('../services/inversify.container', () => ({
   container: {
-    get: jest.fn(),
+    get: vi.fn(),
   },
 }));
 
 // Mock the inversify config to avoid actual container setup
-jest.mock('../services/inversify.config', () => ({
+vi.mock('../services/inversify.config', () => ({
   container: {
-    get: jest.fn(),
+    get: vi.fn(),
   },
 }));
 
@@ -21,12 +22,12 @@ const mockContainer = require('../services/inversify.container').container;
 
 // Complete mock EventBus implementation
 const mockEventBus: IEventBus = {
-  emit: jest.fn(),
-  subscribe: jest.fn().mockReturnValue('listener-id'),
-  unsubscribe: jest.fn(),
-  clear: jest.fn(),
-  destroy: jest.fn(),
-  getStats: jest.fn().mockReturnValue({
+  emit: vi.fn(),
+  subscribe: vi.fn().mockReturnValue('listener-id'),
+  unsubscribe: vi.fn(),
+  clear: vi.fn(),
+  destroy: vi.fn(),
+  getStats: vi.fn().mockReturnValue({
     totalListeners: 0,
     eventTypes: [],
     historySize: 0,
@@ -36,7 +37,7 @@ const mockEventBus: IEventBus = {
 
 describe('useService Hook', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Configure the mock container to return the mock EventBus
     mockContainer.get.mockImplementation((type: symbol) => {
       if (type === TYPES.IEventBus) {

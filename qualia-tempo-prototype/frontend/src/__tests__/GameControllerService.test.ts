@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 /**
  * QUALIA.CODE v1.1 - GameControllerService Tests - IOC COMPLIANT
  * Comprehensive test suite for game state management service.
@@ -20,12 +21,12 @@ describe("GameControllerService - IOC COMPLIANT", () => {
   beforeEach(() => {
     // Create mocks for EventBus interface
     mockEventBus = {
-      emit: jest.fn(),
-      subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
-      clear: jest.fn(),
-      destroy: jest.fn(),
-      getStats: jest.fn().mockReturnValue({
+      emit: vi.fn(),
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+      clear: vi.fn(),
+      destroy: vi.fn(),
+      getStats: vi.fn().mockReturnValue({
         totalListeners: 0,
         eventTypes: [],
         historySize: 0,
@@ -35,9 +36,9 @@ describe("GameControllerService - IOC COMPLIANT", () => {
 
     // Create mocks for ConfigurationService interface
     mockConfigService = {
-      loadConfig: jest.fn(),
-      getConfig: jest.fn(),
-      getGameConfig: jest.fn().mockReturnValue({
+      loadConfig: vi.fn(),
+      getConfig: vi.fn(),
+      getGameConfig: vi.fn().mockReturnValue({
         pauseCooldown: 1000,
         rhythmTolerance: 0.2,
         comboResetTime: 2000,
@@ -49,15 +50,15 @@ describe("GameControllerService - IOC COMPLIANT", () => {
           miss: 0
         }
       }),
-      getQualiaConfig: jest.fn(),
-      getBackendConfig: jest.fn(),
-      getAudioConfig: jest.fn(),
-      getErrorReportingConfig: jest.fn(),
-      getRhythmicMovementConfig: jest.fn(),
-      getNotificationConfig: jest.fn(),
-      getConfigSection: jest.fn(),
-      isLoaded: jest.fn().mockReturnValue(true),
-      reload: jest.fn()
+      getQualiaConfig: vi.fn(),
+      getBackendConfig: vi.fn(),
+      getAudioConfig: vi.fn(),
+      getErrorReportingConfig: vi.fn(),
+      getRhythmicMovementConfig: vi.fn(),
+      getNotificationConfig: vi.fn(),
+      getConfigSection: vi.fn(),
+      isLoaded: vi.fn().mockReturnValue(true),
+      reload: vi.fn()
     };
 
     // Inject mocks into IoC container using QUALIA.CODE LAW
@@ -87,7 +88,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     });
 
     test("should start and stop service idempotently", async () => {
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation();
 
       await gameController.start();
       await gameController.start(); // Should warn about already running
@@ -111,7 +112,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     test("should handle event-driven architecture", async () => {
       await gameController.start();
 
-      const mockCallback = jest.fn();
+      const mockCallback = vi.fn();
       mockEventBus.subscribe("GameStateChanged", mockCallback);
 
       // Emit StartGame event
@@ -143,7 +144,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
       gameController = container.get<IGameControllerService>(TYPES.IGameControllerService);
       await gameController.start();
 
-      const mockCallback = jest.fn();
+      const mockCallback = vi.fn();
       mockEventBus.subscribe("GameStateChanged", mockCallback);
 
       mockEventBus.emit({
@@ -164,7 +165,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     });
 
     test("should handle PauseGame action", async () => {
-      const mockCallback = jest.fn();
+      const mockCallback = vi.fn();
       mockEventBus.subscribe("GameStateChanged", mockCallback);
 
       // Start game first
@@ -194,7 +195,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     });
 
     test("should handle ResetGame action", async () => {
-      const mockCallback = jest.fn();
+      const mockCallback = vi.fn();
       mockEventBus.subscribe("GameStateChanged", mockCallback);
 
       mockEventBus.emit({
@@ -214,7 +215,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     });
 
     test("should handle gameplay actions only when playing", async () => {
-      const mockCallback = jest.fn();
+      const mockCallback = vi.fn();
       mockEventBus.subscribe("GameStateChanged", mockCallback);
 
       // Try to perform action when not playing
@@ -238,7 +239,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     });
 
     test("should subscribe to PlayerAction events on start", async () => {
-      const subscribeSpy = jest.spyOn(mockEventBus as any, "subscribe");
+      const subscribeSpy = vi.spyOn(mockEventBus as any, "subscribe");
 
       await gameController.stop();
       await gameController.start();
@@ -251,7 +252,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     });
 
     test("should unsubscribe from events on stop", async () => {
-      const unsubscribeSpy = jest.spyOn(mockEventBus as any, "unsubscribe");
+      const unsubscribeSpy = vi.spyOn(mockEventBus as any, "unsubscribe");
 
       await gameController.stop();
 
@@ -259,7 +260,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     });
 
     test("should handle unknown actions gracefully", async () => {
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation();
 
       mockEventBus.emit({
         type: "PlayerAction",
@@ -285,7 +286,7 @@ describe("GameControllerService - IOC COMPLIANT", () => {
         throw new Error("Subscription failed");
       });
 
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation();
 
       await expect(gameController.start()).rejects.toThrow(
         "Subscription failed",

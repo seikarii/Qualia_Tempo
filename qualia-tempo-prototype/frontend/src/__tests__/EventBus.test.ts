@@ -3,6 +3,7 @@
  * Basic test suite for the EventBus service.
  */
 
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { EventBus, createQualiaEvents } from "../services/EventBus";
 import { QualiaLogger, LogLevel } from "../services/Logger";
 
@@ -31,7 +32,7 @@ describe("EventBus", () => {
     });
 
     test("should subscribe and unsubscribe", () => {
-      const mockHandler = jest.fn();
+      const mockHandler = vi.fn();
 
       const listenerId = eventBus.subscribe("PlayerAction", mockHandler);
       expect(typeof listenerId).toBe("string");
@@ -41,7 +42,7 @@ describe("EventBus", () => {
     });
 
     test("should emit events using QualiaEvents helpers", async () => {
-      const mockHandler = jest.fn();
+      const mockHandler = vi.fn();
       eventBus.subscribe("PlayerAction", mockHandler);
 
       await QualiaEvents.playerAction("HitNote", { combo: 5 });
@@ -59,7 +60,7 @@ describe("EventBus", () => {
     });
 
     test("should handle QualiaStateUpdated events", async () => {
-      const mockHandler = jest.fn();
+      const mockHandler = vi.fn();
       eventBus.subscribe("QualiaStateUpdated", mockHandler);
 
       const testQualiaState = {
@@ -84,7 +85,7 @@ describe("EventBus", () => {
     });
 
     test("should handle error events", async () => {
-      const mockHandler = jest.fn();
+      const mockHandler = vi.fn();
       eventBus.subscribe("Error", mockHandler);
 
       const testError = new Error("Test error");
@@ -101,7 +102,7 @@ describe("EventBus", () => {
     });
 
     test("should clear all listeners and history", async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       eventBus.subscribe("PlayerAction", handler);
 
       await QualiaEvents.playerAction("HitNote");
@@ -117,7 +118,7 @@ describe("EventBus", () => {
       eventBus.destroy();
 
       expect(() => {
-        eventBus.subscribe("PlayerAction", jest.fn());
+        eventBus.subscribe("PlayerAction", vi.fn());
       }).toThrow("EventBus has been destroyed");
 
       const stats = eventBus.getStats();
@@ -148,8 +149,8 @@ describe("EventBus", () => {
 
   describe("Performance", () => {
     test("should handle multiple subscribers", async () => {
-      const handler1 = jest.fn();
-      const handler2 = jest.fn();
+      const handler1 = vi.fn();
+      const handler2 = vi.fn();
 
       eventBus.subscribe("PlayerAction", handler1);
       eventBus.subscribe("PlayerAction", handler2);
@@ -161,7 +162,7 @@ describe("EventBus", () => {
     });
 
     test("should handle rapid events", async () => {
-      const handler = jest.fn();
+      const handler = vi.fn();
       eventBus.subscribe("PlayerAction", handler);
 
       // Emit multiple events rapidly

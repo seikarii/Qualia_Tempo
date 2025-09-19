@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen } from "@testing-library/react";
 import { HUD } from "../HUD";
 import {
@@ -7,25 +8,25 @@ import {
 } from "../../state/useGameStore";
 
 // Mock the services hooks
-jest.mock("../../services/hooks", () => ({
-  useConfiguration: jest.fn(),
+vi.mock("../../services/hooks", () => ({
+  useConfiguration: vi.fn(),
 }));
 
 // Mock the store hooks
-jest.mock("../../state/useGameStore", () => ({
-  useGameStore: jest.fn(),
-  useQualiaState: jest.fn(),
-  useGameStats: jest.fn(),
+vi.mock("../../state/useGameStore", () => ({
+  useGameStore: vi.fn(),
+  useQualiaState: vi.fn(),
+  useGameStats: vi.fn(),
 }));
 
 const mockUseConfiguration = require("../../services/hooks").useConfiguration;
-const mockUseGameStore = useGameStore as jest.MockedFunction<
+const mockUseGameStore = useGameStore as MockedFunction<
   typeof useGameStore
 >;
-const mockUseQualiaState = useQualiaState as jest.MockedFunction<
+const mockUseQualiaState = useQualiaState as MockedFunction<
   typeof useQualiaState
 >;
-const mockUseGameStats = useGameStats as jest.MockedFunction<
+const mockUseGameStats = useGameStats as MockedFunction<
   typeof useGameStats
 >;
 
@@ -42,7 +43,7 @@ const createMockStore = (state: any) => {
 describe("HUD Component", () => {
   beforeEach(() => {
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Mock configuration service
     mockUseConfiguration.mockReturnValue({

@@ -9,8 +9,10 @@
  * OBLIGATION: All Service Under Test (SUT) must be resolved from container.
  */
 
-// Mock decorators BEFORE importing any services
-jest.mock('../utils/decorators', () => ({
+// Mock decorators BEFORE importing any services - Using Vitest
+import { vi } from 'vitest';
+
+vi.mock('../utils/decorators', () => ({
   logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   validate: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
@@ -42,20 +44,20 @@ import { RhythmicMovementController } from '../services/RhythmicMovementControll
  * Mock Logger Implementation - Complete Interface Coverage
  */
 const mockLogger: ILogger = {
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-  setLevel: jest.fn(),
-  getLevel: jest.fn().mockReturnValue('info'),
-  child: jest.fn().mockImplementation((_prefix: string) => ({
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    setLevel: jest.fn(),
-    getLevel: jest.fn().mockReturnValue('info'),
-    child: jest.fn()
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
+  setLevel: vi.fn(),
+  getLevel: vi.fn().mockReturnValue('info'),
+  child: vi.fn().mockImplementation((_prefix: string) => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+    setLevel: vi.fn(),
+    getLevel: vi.fn().mockReturnValue('info'),
+    child: vi.fn()
   }))
 };
 
@@ -63,12 +65,12 @@ const mockLogger: ILogger = {
  * Mock EventBus Implementation - Complete Interface Coverage
  */
 const mockEventBus: IEventBus = {
-  subscribe: jest.fn().mockReturnValue('mock-listener-id'),
-  unsubscribe: jest.fn().mockReturnValue(true),
-  emit: jest.fn().mockResolvedValue(undefined),
-  clear: jest.fn(),
-  destroy: jest.fn(),
-  getStats: jest.fn().mockReturnValue({
+  subscribe: vi.fn().mockReturnValue('mock-listener-id'),
+  unsubscribe: vi.fn().mockReturnValue(true),
+  emit: vi.fn().mockResolvedValue(undefined),
+  clear: vi.fn(),
+  destroy: vi.fn(),
+  getStats: vi.fn().mockReturnValue({
     totalListeners: 0,
     eventTypes: [],
     historySize: 0,
@@ -80,8 +82,8 @@ const mockEventBus: IEventBus = {
  * Mock Configuration Service Implementation - Complete with Default Config Structure
  */
 const mockConfigurationService: IConfigurationService = {
-  loadConfig: jest.fn().mockResolvedValue(undefined),
-  getConfig: jest.fn().mockReturnValue({
+  loadConfig: vi.fn().mockResolvedValue(undefined),
+  getConfig: vi.fn().mockReturnValue({
     gameController: { 
       maxHealth: 100, 
       initialScore: 0,
@@ -121,43 +123,43 @@ const mockConfigurationService: IConfigurationService = {
       defaultDuration: 3000
     }
   }),
-  getGameConfig: jest.fn().mockReturnValue({
+  getGameConfig: vi.fn().mockReturnValue({
     maxHealth: 100,
     initialScore: 0,
     tickRate: 60
   }),
-  getQualiaConfig: jest.fn().mockReturnValue({
+  getQualiaConfig: vi.fn().mockReturnValue({
     decayRate: 0.01,
     intensityMultiplier: 1.2,
     flowThreshold: 0.7
   }),
-  getBackendConfig: jest.fn().mockReturnValue({ 
+  getBackendConfig: vi.fn().mockReturnValue({ 
     url: 'http://localhost:8000',
     timeout: 5000,
     retryAttempts: 3
   }),
-  getAudioConfig: jest.fn().mockReturnValue({
+  getAudioConfig: vi.fn().mockReturnValue({
     masterVolume: 0.7,
     enableSpatialAudio: true,
     bufferSize: 2048
   }),
-  getErrorReportingConfig: jest.fn().mockReturnValue({
+  getErrorReportingConfig: vi.fn().mockReturnValue({
     enabled: true,
     batchSize: 5,
     batchTimeout: 1000,
     maxRetries: 3
   }),
-  getRhythmicMovementConfig: jest.fn().mockReturnValue({
+  getRhythmicMovementConfig: vi.fn().mockReturnValue({
     bpm: 120,
     syncTolerance: 100,
     adaptive: true
   }),
-  getNotificationConfig: jest.fn().mockReturnValue({
+  getNotificationConfig: vi.fn().mockReturnValue({
     enabled: true,
     maxConcurrent: 5,
     defaultDuration: 3000
   }),
-  getConfigSection: jest.fn().mockImplementation((section: string) => {
+  getConfigSection: vi.fn().mockImplementation((section: string) => {
     const defaultConfig: any = {
       gameController: { maxHealth: 100, initialScore: 0, tickRate: 60 },
       errorReporting: { enabled: true, batchSize: 5, batchTimeout: 1000, maxRetries: 3 },
@@ -170,25 +172,25 @@ const mockConfigurationService: IConfigurationService = {
     };
     return defaultConfig[section] || {};
   }),
-  isLoaded: jest.fn().mockReturnValue(true),
-  reload: jest.fn().mockResolvedValue(undefined)
+  isLoaded: vi.fn().mockReturnValue(true),
+  reload: vi.fn().mockResolvedValue(undefined)
 };
 
 /**
  * Mock Game State Store Implementation - Complete Interface Coverage
  */
 const mockGameStateStore: any = {
-  setNotifications: jest.fn(),
-  getNotifications: jest.fn().mockReturnValue([]),
-  updateGameState: jest.fn(),
-  getGameState: jest.fn().mockReturnValue({
+  setNotifications: vi.fn(),
+  getNotifications: vi.fn().mockReturnValue([]),
+  updateGameState: vi.fn(),
+  getGameState: vi.fn().mockReturnValue({
     gameState: 'idle',
     isPlaying: false,
     score: 0,
     health: 100
   }),
-  updateQualiaState: jest.fn(),
-  getQualiaState: jest.fn().mockReturnValue({
+  updateQualiaState: vi.fn(),
+  getQualiaState: vi.fn().mockReturnValue({
     consciousness: 0,
     attention: 0,
     clarity: 0,
@@ -199,7 +201,7 @@ const mockGameStateStore: any = {
     recovery: 0,
     chaos: 0
   }),
-  setState: jest.fn() // Add setState method for test compatibility
+  setState: vi.fn() // Add setState method for test compatibility
 };
 
 /**
@@ -221,7 +223,7 @@ export function createTestContainer(): Container {
   container.bind<IGameStateStore>(TYPES.IGameStateStore).toConstantValue(mockGameStateStore);
 
   // Mock StoreSetter (Zustand store setter function)
-  const mockStoreSetter = jest.fn();
+  const mockStoreSetter = vi.fn();
   container.bind<(_state: any) => void>(TYPES.StoreSetter).toConstantValue(mockStoreSetter);
 
   // Bind concrete service implementations (Services Under Test)
@@ -248,10 +250,11 @@ export function getMocksFromContainer(container: Container) {
 }
 
 /**
- * Reset all mocks between tests
+ * QUALIA.CODE v1.0 - Test Reset Utility
+ * Centralized mock reset functionality for consistent test isolation.
  */
 export function resetAllMocks() {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   
   // Reset mock return values to defaults
   (mockLogger.getLevel as jest.Mock).mockReturnValue('info');

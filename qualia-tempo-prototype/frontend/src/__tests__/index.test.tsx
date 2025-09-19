@@ -1,51 +1,52 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import React from 'react';
 
 // Mock console methods globally
-const mockConsoleLog = jest.fn();
-const mockConsoleError = jest.fn();
-jest.spyOn(console, 'log').mockImplementation(mockConsoleLog);
-jest.spyOn(console, 'error').mockImplementation(mockConsoleError);
+const mockConsoleLog = vi.fn();
+const mockConsoleError = vi.fn();
+vi.spyOn(console, 'log').mockImplementation(mockConsoleLog);
+vi.spyOn(console, 'error').mockImplementation(mockConsoleError);
 
 // Mock ReactDOM createRoot
-const mockRender = jest.fn();
-const mockCreateRoot = jest.fn().mockReturnValue({
+const mockRender = vi.fn();
+const mockCreateRoot = vi.fn().mockReturnValue({
   render: mockRender
 });
 
-jest.mock('react-dom/client', () => ({
+vi.mock('react-dom/client', () => ({
   createRoot: mockCreateRoot
 }));
 
 // Mock React
-jest.mock('react', () => ({
+vi.mock('react', () => ({
   ...jest.requireActual<typeof React>('react'),
   StrictMode: ({ children }: any) => children
 }));
 
 // Mock App component
-jest.mock('../App', () => {
+vi.mock('../App', () => {
   return function MockApp() {
     return React.createElement('div', { 'data-testid': 'mock-app' }, 'Mock App');
   };
 });
 
 // Mock providers
-jest.mock('../providers', () => ({
+vi.mock('../providers', () => ({
   CompositionRootProvider: ({ children }: any) => children
 }));
 
 // Mock DOM methods
-const mockGetElementById = jest.fn().mockReturnValue({
+const mockGetElementById = vi.fn().mockReturnValue({
   id: 'root',
   innerHTML: ''
 });
 
-const mockDocumentAddEventListener = jest.fn();
-const mockWindowAddEventListener = jest.fn();
+const mockDocumentAddEventListener = vi.fn();
+const mockWindowAddEventListener = vi.fn();
 
 // Mock electronAPI
 const mockElectronAPI = {
-  toggleFullscreen: jest.fn()
+  toggleFullscreen: vi.fn()
 };
 
 describe('Index.tsx - Application Entry Point', () => {
@@ -63,7 +64,7 @@ describe('Index.tsx - Application Entry Point', () => {
     });
 
     // Clear all mocks before loading the module
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Load the index module - this will execute all the code
     require('../index');
@@ -184,7 +185,7 @@ describe('Index.tsx - Application Entry Point', () => {
         // Clear previous calls and test F11 key
         mockElectronAPI.toggleFullscreen.mockClear();
         
-        const f11Event = { key: "F11", preventDefault: jest.fn() };
+        const f11Event = { key: "F11", preventDefault: vi.fn() };
         keydownHandler(f11Event);
         
         expect(f11Event.preventDefault).toHaveBeenCalled();
@@ -198,7 +199,7 @@ describe('Index.tsx - Application Entry Point', () => {
         const originalElectronAPI = window.electronAPI;
         delete (window as any).electronAPI;
         
-        const f11Event = { key: "F11", preventDefault: jest.fn() };
+        const f11Event = { key: "F11", preventDefault: vi.fn() };
         
         expect(() => {
           keydownHandler!(f11Event);

@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 /**
  * QUALIA.CODE v1.1 - QualiaStateCalculatorService Tests
  * IoC COMPLIANT - Uses container.rebind() for dependency injection
@@ -19,12 +20,12 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
   beforeEach(() => {
     // Create mocks for EventBus interface
     mockEventBus = {
-      emit: jest.fn(),
-      subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
-      clear: jest.fn(),
-      destroy: jest.fn(),
-      getStats: jest.fn().mockReturnValue({
+      emit: vi.fn(),
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+      clear: vi.fn(),
+      destroy: vi.fn(),
+      getStats: vi.fn().mockReturnValue({
         totalListeners: 0,
         eventTypes: [],
         historySize: 0,
@@ -34,16 +35,16 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
 
     // Create mocks for ConfigurationService interface
     mockConfigService = {
-      loadConfig: jest.fn(),
-      getConfig: jest.fn(),
-      getGameConfig: jest.fn(),
-      getQualiaConfig: jest.fn(),
-      getBackendConfig: jest.fn(),
-      getAudioConfig: jest.fn(),
-      getErrorReportingConfig: jest.fn(),
-      getRhythmicMovementConfig: jest.fn(),
-      getNotificationConfig: jest.fn(),
-      getConfigSection: jest.fn().mockReturnValue({
+      loadConfig: vi.fn(),
+      getConfig: vi.fn(),
+      getGameConfig: vi.fn(),
+      getQualiaConfig: vi.fn(),
+      getBackendConfig: vi.fn(),
+      getAudioConfig: vi.fn(),
+      getErrorReportingConfig: vi.fn(),
+      getRhythmicMovementConfig: vi.fn(),
+      getNotificationConfig: vi.fn(),
+      getConfigSection: vi.fn().mockReturnValue({
         decayRate: 0.001,
         transcendenceThreshold: 0.8,
         flowBaseMultiplier: 1.2,
@@ -55,8 +56,8 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
         fastForwardBonus: 0.03,
         rewindBonus: 0.02
       }),
-      isLoaded: jest.fn().mockReturnValue(true),
-      reload: jest.fn()
+      isLoaded: vi.fn().mockReturnValue(true),
+      reload: vi.fn()
     };
 
     // Inject mocks into IoC container using QUALIA.CODE LAW
@@ -110,7 +111,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
 
   describe("Service Lifecycle", () => {
     test("should start and stop correctly", () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation();
 
       qualiaService.start();
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -126,7 +127,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     });
 
     test("should handle multiple start/stop calls gracefully", () => {
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation();
 
       qualiaService.start();
       qualiaService.start(); // Second start should warn
@@ -317,7 +318,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     });
 
     test("should handle unknown actions gracefully", async () => {
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation();
 
       await mockEventBus.emit({
         type: "PlayerAction",
@@ -386,7 +387,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     });
 
     test("should activate transcendence when thresholds are met", async () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation();
 
       // Emit enough HitNote events to trigger transcendence
       for (let i = 0; i < 15; i++) {

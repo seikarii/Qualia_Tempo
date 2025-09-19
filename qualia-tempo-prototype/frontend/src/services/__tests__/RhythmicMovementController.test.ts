@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 /**
  * Tests for RhythmicMovementController - GOLD.CODE IoC Compliance
  * Rhythmic movement pattern controller with beat synchronization
@@ -13,7 +14,7 @@ import { Container } from 'inversify';
 import { TYPES } from '../inversify.types';
 
 // Mock decorators
-jest.mock('../../utils/decorators', () => ({
+vi.mock('../../utils/decorators', () => ({
   logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
 }));
@@ -57,7 +58,7 @@ describe('RhythmicMovementController - GOLD.CODE IoC Testing', () => {
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('Service Initialization', () => {
@@ -87,12 +88,12 @@ describe('RhythmicMovementController - GOLD.CODE IoC Testing', () => {
 
   describe('Beat Synchronization', () => {
     beforeEach(async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       await rhythmicController.start();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should initialize with configured BPM', () => {
@@ -265,12 +266,12 @@ describe('RhythmicMovementController - GOLD.CODE IoC Testing', () => {
 
   describe('Beat Detection and Audio Sync', () => {
     beforeEach(async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       await rhythmicController.start();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should sync with external audio source', async () => {
@@ -471,7 +472,7 @@ describe('RhythmicMovementController - GOLD.CODE IoC Testing', () => {
     it('should recover from timing calculation errors', async () => {
       // Mock Date.now to return invalid values
       const originalNow = Date.now;
-      Date.now = jest.fn().mockReturnValue(NaN);
+      Date.now = vi.fn().mockReturnValue(NaN);
       
       const accuracy = await rhythmicController.checkSyncAccuracy(Date.now());
       

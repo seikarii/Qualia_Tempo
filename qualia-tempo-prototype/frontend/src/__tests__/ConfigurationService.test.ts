@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 /**
  * ConfigurationService.test.ts - Configuration Management Tests
  * Tests for YAML configuration loading, validation, and management
@@ -8,37 +9,37 @@ import yaml from 'js-yaml';
 import { QualiaLogger } from '../services/Logger';
 
 // Mock js-yaml module
-jest.mock('js-yaml', () => ({
-  load: jest.fn()
+vi.mock('js-yaml', () => ({
+  load: vi.fn()
 }));
 
 // Mock decorators
-jest.mock('../utils/decorators', () => ({
+vi.mock('../utils/decorators', () => ({
   logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor
 }));
 
-const mockYamlLoad = yaml.load as jest.MockedFunction<typeof yaml.load>;
+const mockYamlLoad = yaml.load as MockedFunction<typeof yaml.load>;
 
 // Mock console methods
-const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
-const mockConsoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+const mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 // Mock fetch with proper typing
-const mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
+const mockFetch = vi.fn() as MockedFunction<typeof fetch>;
 global.fetch = mockFetch;
 
 // Create mock logger
 const mockLogger: Partial<QualiaLogger> = {
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  debug: jest.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
 };
 
 // Helper function to create mock Response objects
 const createMockResponse = (options: { ok: boolean; text?: string; statusText?: string }): Response => {
-  const textMock = jest.fn() as jest.MockedFunction<() => Promise<string>>;
+  const textMock = vi.fn() as MockedFunction<() => Promise<string>>;
   textMock.mockResolvedValue(options.text || '');
   return {
     ok: options.ok,
@@ -59,7 +60,7 @@ describe('ConfigurationService', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Create instance for testing (bypassing QUALIA.CODE restrictions in tests)
     configService = new ConfigurationService('/test-config.yaml', mockLogger as QualiaLogger);

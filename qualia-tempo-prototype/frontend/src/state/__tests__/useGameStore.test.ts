@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { act, renderHook } from "@testing-library/react";
 import { useGameStore } from "../useGameStore";
 import { QualiaState } from "../../types/contracts";

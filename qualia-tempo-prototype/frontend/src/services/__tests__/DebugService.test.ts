@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 /**
  * Tests for DebugService - GOLD.CODE IoC Compliance
  * AI-powered debugging with session management and performance monitoring
@@ -13,7 +14,7 @@ import { Container } from 'inversify';
 import { TYPES } from '../inversify.types';
 
 // Mock decorators
-jest.mock('../../utils/decorators', () => ({
+vi.mock('../../utils/decorators', () => ({
   logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   validateEventProperty: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,

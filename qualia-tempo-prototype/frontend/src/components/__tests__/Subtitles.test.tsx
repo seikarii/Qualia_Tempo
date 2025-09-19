@@ -1,13 +1,14 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen } from "@testing-library/react";
 import { Subtitles } from "../Subtitles";
 import { useGameStore } from "../../state/useGameStore";
 
 // Mock the Zustand store
-jest.mock("../../state/useGameStore", () => ({
-  useGameStore: jest.fn(),
+vi.mock("../../state/useGameStore", () => ({
+  useGameStore: vi.fn(),
 }));
 
-const mockUseGameStore = useGameStore as jest.MockedFunction<
+const mockUseGameStore = useGameStore as MockedFunction<
   typeof useGameStore
 >;
 
@@ -23,7 +24,7 @@ const createMockStore = (state: any) => {
 
 describe("Subtitles Component", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("renders nothing when no combat data", () => {

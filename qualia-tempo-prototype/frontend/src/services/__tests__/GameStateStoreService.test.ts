@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 /**
  * Tests for GameStateStoreService - GOLD.CODE IoC Compliance
  * Bridge service between EventBus and Zustand store for passive state management
@@ -10,7 +11,7 @@ import { QualiaLogger } from '../Logger';
 import { Container } from 'inversify';
 
 // Mock decorators
-jest.mock('../../utils/decorators', () => ({
+vi.mock('../../utils/decorators', () => ({
   logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
 }));
@@ -20,7 +21,7 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
   let container: Container;
   let mockEventBus: jest.Mocked<IEventBus>;
   let mockLogger: jest.Mocked<QualiaLogger>;
-  let mockSetStore: jest.MockedFunction<(_state: any) => void>;
+  let mockSetStore: MockedFunction<(_state: any) => void>;
 
   beforeEach(() => {
     // Reset all mocks to clean state
@@ -33,14 +34,14 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
     const mocks = getMocksFromContainer(container);
     mockEventBus = mocks.mockEventBus as jest.Mocked<IEventBus>;
     mockLogger = mocks.mockLogger as jest.Mocked<QualiaLogger>;
-    mockSetStore = mocks.mockStoreSetter as jest.MockedFunction<(_state: any) => void>;
+    mockSetStore = mocks.mockStoreSetter as MockedFunction<(_state: any) => void>;
 
     // GOLD.CODE COMPLIANCE: Resolve service from IoC container
     gameStateStoreService = container.get<GameStateStoreService>(GameStateStoreService);
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Constructor', () => {
@@ -153,7 +154,7 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
       };
 
       // Clear previous logger calls before testing handler
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       
       gameStateHandler(gameStateChangedEvent);
 

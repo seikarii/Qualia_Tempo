@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 /**
  * QualiaTempoGame Component Tests
  * QUALIA.CODE v1.1 compliant testing
@@ -8,61 +9,61 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 // Mock the hooks and services
-jest.mock('../../../services/hooks');
-jest.mock('../../../state/useGameStore');
+vi.mock('../../../services/hooks');
+vi.mock('../../../state/useGameStore');
 
 // Mock React Three Fiber
-jest.mock('@react-three/fiber', () => ({
+vi.mock('@react-three/fiber', () => ({
   Canvas: ({ children, ...props }: any) => React.createElement('div', { 'data-testid': 'canvas', ...props }, children),
-  useFrame: jest.fn(),
+  useFrame: vi.fn(),
   useThree: jest.fn(() => ({})),
-  extend: jest.fn(),
+  extend: vi.fn(),
 }));
 
-jest.mock('@react-three/drei', () => ({
+vi.mock('@react-three/drei', () => ({
   OrbitControls: (props: any) => React.createElement('div', { 'data-testid': 'orbit-controls', ...props }),
 }));
 
-jest.mock('@react-three/postprocessing', () => ({
+vi.mock('@react-three/postprocessing', () => ({
   EffectComposer: ({ children, ...props }: any) => React.createElement('div', { 'data-testid': 'effect-composer', ...props }, children),
   Bloom: (props: any) => React.createElement('div', { 'data-testid': 'bloom', ...props }),
   ChromaticAberration: (props: any) => React.createElement('div', { 'data-testid': 'chromatic-aberration', ...props }),
 }));
 
 // Mock sub-components
-jest.mock('../QualiaTempoHUD', () => ({
+vi.mock('../QualiaTempoHUD', () => ({
   default: () => React.createElement('div', { 'data-testid': 'qualia-tempo-hud' })
 }));
 
-jest.mock('../PlayerAvatar', () => ({
+vi.mock('../PlayerAvatar', () => ({
   default: () => React.createElement('div', { 'data-testid': 'player-avatar' })
 }));
 
-jest.mock('../QualiaFieldRenderer', () => ({
+vi.mock('../QualiaFieldRenderer', () => ({
   default: () => React.createElement('div', { 'data-testid': 'qualia-field' })
 }));
 
-jest.mock('../MusicalNotesRenderer', () => ({
+vi.mock('../MusicalNotesRenderer', () => ({
   default: () => React.createElement('div', { 'data-testid': 'musical-notes' })
 }));
 
-jest.mock('../BossRenderer', () => ({
+vi.mock('../BossRenderer', () => ({
   default: () => React.createElement('div', { 'data-testid': 'boss-renderer' })
 }));
 
-jest.mock('../PlayerRenderer', () => ({
+vi.mock('../PlayerRenderer', () => ({
   default: () => React.createElement('div', { 'data-testid': 'player-renderer' })
 }));
 
-jest.mock('../GridRenderer', () => ({
+vi.mock('../GridRenderer', () => ({
   default: () => React.createElement('div', { 'data-testid': 'grid-renderer' })
 }));
 
 // Mock ResizeObserver for three.js compatibility
-(global as any).ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
+(global as any).ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
 }));
 
 // Mock the hooks
@@ -70,11 +71,11 @@ const mockUseService = require('../../../services/hooks').useService;
 const mockUseGameStore = require('../../../state/useGameStore').useGameStore;
 
 const mockEventBus = {
-  emit: jest.fn(),
-  subscribe: jest.fn(),
-  unsubscribe: jest.fn(),
-  once: jest.fn(),
-  clear: jest.fn(),
+  emit: vi.fn(),
+  subscribe: vi.fn(),
+  unsubscribe: vi.fn(),
+  once: vi.fn(),
+  clear: vi.fn(),
 };
 
 const mockGameState = {
@@ -115,7 +116,7 @@ import QualiaTempoGame from '../QualiaTempoGame';
 
 describe('QualiaTempoGame', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders main game canvas', () => {
@@ -132,57 +133,56 @@ describe('QualiaTempoGame', () => {
     expect(screen.getByTestId('qualia-tempo-hud')).toBeInTheDocument();
   });
 });
-});
 
-jest.mock('../PlayerAvatar', () => {
+vi.mock('../PlayerAvatar', () => {
   return function MockPlayerAvatar(props: any) {
     return React.createElement('div', { 'data-testid': 'player-avatar', ...props });
   };
 });
 
-jest.mock('../QualiaFieldRenderer', () => {
+vi.mock('../QualiaFieldRenderer', () => {
   return function MockQualiaFieldRenderer(props: any) {
     return React.createElement('div', { 'data-testid': 'qualia-field-renderer', ...props });
   };
 });
 
-jest.mock('../MusicalNotesRenderer', () => {
+vi.mock('../MusicalNotesRenderer', () => {
   return function MockMusicalNotesRenderer(props: any) {
     return React.createElement('div', { 'data-testid': 'musical-notes-renderer', ...props });
   };
 });
 
-jest.mock('../BossRenderer', () => {
+vi.mock('../BossRenderer', () => {
   return function MockBossRenderer(props: any) {
     return React.createElement('div', { 'data-testid': 'boss-renderer', ...props });
   };
 });
 
-jest.mock('../PlayerRenderer', () => {
+vi.mock('../PlayerRenderer', () => {
   return function MockPlayerRenderer(props: any) {
     return React.createElement('div', { 'data-testid': 'player-renderer', ...props });
   };
 });
 
-jest.mock('../GridRenderer', () => {
+vi.mock('../GridRenderer', () => {
   return function MockGridRenderer(props: any) {
     return React.createElement('div', { 'data-testid': 'grid-renderer', ...props });
   };
 });
 
 // Mock services
-jest.mock('../../../services/hooks', () => ({
+vi.mock('../../../services/hooks', () => ({
   useService: jest.fn(() => ({
-    emit: jest.fn(),
-    subscribe: jest.fn(),
-    unsubscribe: jest.fn(),
-    start: jest.fn(),
-    stop: jest.fn(),
+    emit: vi.fn(),
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
   })),
 }));
 
 // Mock store
-jest.mock('../../../state/useGameStore', () => ({
+vi.mock('../../../state/useGameStore', () => ({
   useGameStore: jest.fn(() => ({
     gameState: 'idle',
     qualiaState: {
@@ -208,7 +208,7 @@ import QualiaTempoGame from '../QualiaTempoGame';
 
 describe('QualiaTempoGame', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders main game canvas', () => {

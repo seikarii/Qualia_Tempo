@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook } from "@testing-library/react";
 import { useService } from "../hooks";
 import { TYPES } from "../inversify.types";
@@ -8,7 +9,7 @@ import { Container } from "inversify";
 
 // Mock the inversify.container to use our test container
 let testContainer: Container;
-jest.mock('../inversify.container', () => ({
+vi.mock('../inversify.container', () => ({
   get container() {
     return testContainer;
   }

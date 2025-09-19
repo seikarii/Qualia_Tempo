@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 /**
  * Tests for Err      expect(mockLogger.debug).toHaveBeenCalledWith(
         '💎💎 [ErrorReportingService] Error queued for proces                      await errorReportingService.reportError(error, 'high', { context: 'test' });
@@ -64,13 +65,13 @@ import { Container } from 'inversify';
 import { TYPES } from '../inversify.types';
 
 // Mock decorators
-jest.mock('../../utils/decorators', () => ({
+vi.mock('../../utils/decorators', () => ({
   logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
 }));
 
 // Mock fetch for external service testing
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 describe('ErrorReportingService - GOLD.CODE IoC Testing', () => {
   let errorReportingService: IErrorReportingService;
@@ -78,15 +79,15 @@ describe('ErrorReportingService - GOLD.CODE IoC Testing', () => {
   let mockEventBus: jest.Mocked<IEventBus>;
   let mockConfigService: jest.Mocked<IConfigurationService>;
   let mockLogger: jest.Mocked<QualiaLogger>;
-  let mockFetch: jest.MockedFunction<typeof fetch>;
+  let mockFetch: MockedFunction<typeof fetch>;
 
   beforeEach(() => {
     // Reset all mocks to clean state
     resetAllMocks();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Setup fetch mock
-    mockFetch = global.fetch as jest.MockedFunction<typeof fetch>;
+    mockFetch = global.fetch as MockedFunction<typeof fetch>;
     mockFetch.mockResolvedValue({
       ok: true,
       status: 200,
@@ -121,7 +122,7 @@ describe('ErrorReportingService - GOLD.CODE IoC Testing', () => {
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('Service Initialization', () => {
@@ -199,12 +200,12 @@ describe('ErrorReportingService - GOLD.CODE IoC Testing', () => {
 
   describe('Batching System', () => {
     beforeEach(async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       await errorReportingService.start();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should batch errors and send when batch size is reached', async () => {
@@ -247,12 +248,12 @@ describe('ErrorReportingService - GOLD.CODE IoC Testing', () => {
 
   describe('Rate Limiting', () => {
     beforeEach(async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       await errorReportingService.start();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should respect rate limits', async () => {

@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 // AudioService.test.ts - IoC-compliant test suite for QUALIA.CODE audio management service
 // Tests: Service lifecycle, event handling, rhythmic feedback, metronome functionality, entity voice management
 
@@ -10,24 +11,24 @@ import type { QualiaState } from "../../types/contracts";
 import type { QualiaStateUpdatedEvent } from "../EventBus";
 
 // Mock decorators before importing
-jest.mock("../../utils/decorators", () => ({
+vi.mock("../../utils/decorators", () => ({
   logMethod: () => (_target: any, _propertyName: string, descriptor: PropertyDescriptor) => descriptor,
   catchError: () => (_target: any, _propertyName: string, descriptor: PropertyDescriptor) => descriptor,
   measureTime: () => (_target: any, _propertyName: string, descriptor: PropertyDescriptor) => descriptor,
 }));
 
 // Use the existing mock for OntologicalAudioEngine
-jest.mock("../../audio/OntologicalAudioEngine", () => ({
-  OntologicalAudioEngine: jest.fn().mockImplementation(() => ({
-    initialize: jest.fn(),
-    destroy: jest.fn(),
-    updateEntitySound: jest.fn(),
-    createEntityVoice: jest.fn(),
-    removeEntityVoice: jest.fn(),
-    playEmergentPattern: jest.fn(),
-    playRhythmicFeedback: jest.fn(),
-    playMetronomeTick: jest.fn(),
-    setEntityPosition: jest.fn(),
+vi.mock("../../audio/OntologicalAudioEngine", () => ({
+  OntologicalAudioEngine: vi.fn().mockImplementation(() => ({
+    initialize: vi.fn(),
+    destroy: vi.fn(),
+    updateEntitySound: vi.fn(),
+    createEntityVoice: vi.fn(),
+    removeEntityVoice: vi.fn(),
+    playEmergentPattern: vi.fn(),
+    playRhythmicFeedback: vi.fn(),
+    playMetronomeTick: vi.fn(),
+    setEntityPosition: vi.fn(),
   })),
 }));
 
@@ -35,14 +36,14 @@ jest.mock("../../audio/OntologicalAudioEngine", () => ({
 const mockOscillator = {
   frequency: { value: 440 },
   type: "sine" as any, // Simplified for testing
-  connect: jest.fn(),
-  start: jest.fn(),
-  stop: jest.fn(),
+  connect: vi.fn(),
+  start: vi.fn(),
+  stop: vi.fn(),
 };
 
 const mockGainNode = {
   gain: { value: 1 },
-  connect: jest.fn(),
+  connect: vi.fn(),
 };
 
 const mockAudioContext = {
@@ -51,8 +52,8 @@ const mockAudioContext = {
   destination: {},
   currentTime: 0,
   state: "running" as any, // Simplified for testing
-  resume: jest.fn(),
-  close: jest.fn(),
+  resume: vi.fn(),
+  close: vi.fn(),
 };
 
 // Mock AudioContext constructor
@@ -74,7 +75,7 @@ describe("AudioService", () => {
   let consoleWarnSpy: jest.SpiedFunction<typeof console.warn>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Clear the Audio mocks specifically
     mockOscillator.connect.mockClear();
@@ -86,27 +87,27 @@ describe("AudioService", () => {
     
     // Create mock EventBus
     mockEventBus = {
-      subscribe: jest.fn().mockReturnValue("listener-id"),
-      unsubscribe: jest.fn(),
-      emit: jest.fn(),
-      destroy: jest.fn(),
-      getStats: jest.fn().mockReturnValue({ subscriberCount: 0, eventCount: 0 }),
-      clear: jest.fn(),
+      subscribe: vi.fn().mockReturnValue("listener-id"),
+      unsubscribe: vi.fn(),
+      emit: vi.fn(),
+      destroy: vi.fn(),
+      getStats: vi.fn().mockReturnValue({ subscriberCount: 0, eventCount: 0 }),
+      clear: vi.fn(),
     } as any;
 
     // Fix promise resolution for mock methods
     mockConfigService = {
-      getConfig: jest.fn().mockReturnValue({}),
-      getGameConfig: jest.fn().mockReturnValue({}),
-      getQualiaConfig: jest.fn().mockReturnValue({}),
-      getBackendConfig: jest.fn().mockReturnValue({}),
-      getAudioConfig: jest.fn().mockReturnValue({}),
-      getErrorReportingConfig: jest.fn().mockReturnValue({}),
-      getRhythmicMovementConfig: jest.fn().mockReturnValue({}),
-      getNotificationConfig: jest.fn().mockReturnValue({}),
-      isLoaded: jest.fn().mockReturnValue(true),
-      loadConfig: jest.fn(),
-      reload: jest.fn(),
+      getConfig: vi.fn().mockReturnValue({}),
+      getGameConfig: vi.fn().mockReturnValue({}),
+      getQualiaConfig: vi.fn().mockReturnValue({}),
+      getBackendConfig: vi.fn().mockReturnValue({}),
+      getAudioConfig: vi.fn().mockReturnValue({}),
+      getErrorReportingConfig: vi.fn().mockReturnValue({}),
+      getRhythmicMovementConfig: vi.fn().mockReturnValue({}),
+      getNotificationConfig: vi.fn().mockReturnValue({}),
+      isLoaded: vi.fn().mockReturnValue(true),
+      loadConfig: vi.fn(),
+      reload: vi.fn(),
     } as any;
 
     // Bind mocks to IoC container
@@ -114,8 +115,8 @@ describe("AudioService", () => {
     (container as any).rebind(TYPES.IConfigurationService).toConstantValue(mockConfigService);
 
     // Spy on console methods
-    consoleLogSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
-    consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+    consoleLogSpy = vi.spyOn(console, "log").mockImplementation(vi.fn());
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(vi.fn());
 
     // Get service from container (cast to any to access extended methods not in interface)
     audioService = (container as any).get(TYPES.IAudioService);

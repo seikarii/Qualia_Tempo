@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 /**
  * Tests for NotificationService - GOLD.CODE IoC Compliance
  * Event-driven notification bridge between EventBus and Zustand store
@@ -13,7 +14,7 @@ import { Container } from 'inversify';
 import { TYPES } from '../inversify.types';
 
 // Mock decorators
-jest.mock('../../utils/decorators', () => ({
+vi.mock('../../utils/decorators', () => ({
   logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
 }));
@@ -43,7 +44,7 @@ describe('NotificationService - GOLD.CODE IoC Testing', () => {
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe('Service Initialization', () => {
@@ -124,12 +125,12 @@ describe('NotificationService - GOLD.CODE IoC Testing', () => {
 
   describe('Priority Queue System', () => {
     beforeEach(async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       await notificationService.start();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should handle high priority notifications first', async () => {
@@ -214,12 +215,12 @@ describe('NotificationService - GOLD.CODE IoC Testing', () => {
 
   describe('Throttling and Rate Limiting', () => {
     beforeEach(async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       await notificationService.start();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should throttle rapid notifications of same type', async () => {
@@ -308,12 +309,12 @@ describe('NotificationService - GOLD.CODE IoC Testing', () => {
 
   describe('Auto-dismiss Functionality', () => {
     beforeEach(async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       await notificationService.start();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should auto-dismiss notifications after duration', async () => {

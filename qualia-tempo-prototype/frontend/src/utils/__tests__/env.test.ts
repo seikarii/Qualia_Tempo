@@ -1,5 +1,6 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 // Mock Electron app
-jest.mock("electron", () => ({
+vi.mock("electron", () => ({
   app: {
     isPackaged: false,
   },
@@ -10,7 +11,7 @@ const originalEnv = process.env;
 
 describe("env utilities", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     // Reset process.env before each test
     process.env = { ...originalEnv };
   });
@@ -24,7 +25,7 @@ describe("env utilities", () => {
     process.env.NODE_ENV = "development";
 
     // Re-evaluate the module to get updated value
-    jest.resetModules();
+    vi.resetModules();
     const { isDev: isDevDev } = require("../env");
 
     expect(isDevDev).toBe(true);
@@ -34,7 +35,7 @@ describe("env utilities", () => {
     process.env.NODE_ENV = "production";
 
     // Re-evaluate the module to get updated value
-    jest.resetModules();
+    vi.resetModules();
     const { isDev: isDevProd } = require("../env");
 
     expect(isDevProd).toBe(true);
@@ -42,7 +43,7 @@ describe("env utilities", () => {
 
   test("isDev returns false in production when app is packaged", () => {
     // Mock app as packaged for this test
-    jest.doMock("electron", () => ({
+    vi.doMock("electron", () => ({
       app: {
         isPackaged: true,
       },
@@ -51,7 +52,7 @@ describe("env utilities", () => {
     process.env.NODE_ENV = "production";
 
     // Re-evaluate the module to get updated value
-    jest.resetModules();
+    vi.resetModules();
     const { isDev: isDevPackaged } = require("../env");
 
     expect(isDevPackaged).toBe(false);

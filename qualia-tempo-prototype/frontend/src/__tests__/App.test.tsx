@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { jest } from "@jest/globals";
 import App from "../App";
@@ -6,45 +7,45 @@ import { useService } from "../services/hooks";
 import { TYPES } from "../services/inversify.types";
 
 // Mock the hooks
-jest.mock("../state/useGameStore");
-jest.mock("../services/hooks");
-jest.mock("../components/HUD", () => ({
+vi.mock("../state/useGameStore");
+vi.mock("../services/hooks");
+vi.mock("../components/HUD", () => ({
   HUD: () => <div data-testid="hud">HUD Component</div>,
 }));
-jest.mock("../components/Subtitles", () => ({
+vi.mock("../components/Subtitles", () => ({
   Subtitles: () => <div data-testid="subtitles">Subtitles Component</div>,
 }));
-jest.mock("../components/game/QualiaTempoGame", () => ({
+vi.mock("../components/game/QualiaTempoGame", () => ({
   default: () => <div data-testid="qualia-game">Qualia Tempo Game</div>,
 }));
 
 // Mock console methods
-const mockConsoleLog = jest.spyOn(console, "log").mockImplementation(() => {});
+const mockConsoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
 const mockConsoleError = jest
   .spyOn(console, "error")
   .mockImplementation(() => {});
 
 // Mock ResizeObserver for three.js compatibility
-(global as any).ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
+(global as any).ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
 }));
 
 describe("App Component", () => {
-  const mockUseGameStore = useGameStore as jest.MockedFunction<
+  const mockUseGameStore = useGameStore as MockedFunction<
     typeof useGameStore
   >;
-  const mockUseService = useService as jest.MockedFunction<
+  const mockUseService = useService as MockedFunction<
     typeof useService
   >;
 
   const mockEventBus = {
-    emit: jest.fn(),
-    subscribe: jest.fn(),
-    unsubscribe: jest.fn(),
-    once: jest.fn(),
-    clear: jest.fn(),
+    emit: vi.fn(),
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+    once: vi.fn(),
+    clear: vi.fn(),
     listeners: new Map(),
     eventHistory: [],
     maxHistorySize: 1000,
@@ -52,12 +53,12 @@ describe("App Component", () => {
   };
 
   const mockBackendSync = {
-    start: jest.fn(),
-    stop: jest.fn(),
-    isBackendConnected: jest.fn(),
-    forceSync: jest.fn(),
-    getConfig: jest.fn(),
-    updateConfig: jest.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+    isBackendConnected: vi.fn(),
+    forceSync: vi.fn(),
+    getConfig: vi.fn(),
+    updateConfig: vi.fn(),
     config: {},
     eventListenerIds: [],
     isRunning: false,
@@ -65,15 +66,15 @@ describe("App Component", () => {
   };
 
   const mockLogger = {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
   };
 
   const mockApplicationInitializer = {
     start: jest.fn(() => Promise.resolve()),
-    stop: jest.fn(),
+    stop: vi.fn(),
   };
 
   const mockServices = {
@@ -121,8 +122,8 @@ describe("App Component", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useRealTimers(); // Ensure we start with real timers
+    vi.clearAllMocks();
+    vi.useRealTimers(); // Ensure we start with real timers
     mockUseService.mockImplementation((serviceType: any) => {
       if (serviceType === TYPES.IEventBus) return mockEventBus as any;
       if (serviceType === TYPES.IBackendSyncService) return mockBackendSync as any;
@@ -151,7 +152,7 @@ describe("App Component", () => {
 
   afterEach(() => {
     jest.clearAllTimers();
-    jest.useRealTimers(); // Always restore real timers after each test
+    vi.useRealTimers(); // Always restore real timers after each test
   });
 
   describe("Initial Loading State", () => {

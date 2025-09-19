@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 /**
  * Test for providers.ts - Re-export module
  * 
@@ -7,7 +8,7 @@
  */
 
 // Mock the CompositionRoot.provider to avoid Tone.js import issues
-jest.mock('../services/CompositionRoot.provider', () => ({
+vi.mock('../services/CompositionRoot.provider', () => ({
   CompositionRootProvider: jest.fn(({ children }) => children)
 }));
 

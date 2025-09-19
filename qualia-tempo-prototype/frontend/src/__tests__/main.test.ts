@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 /**
  * main.test.ts - Electron Main Process Tests
  * Tests for electron main process, window management, and IPC handlers
@@ -8,7 +9,7 @@ import { jest } from '@jest/globals';
 // Mock electron module completely
 const appEventHandlers = new Map<string, (...args: any[]) => any>();
 const mockApp = {
-  whenReady: jest.fn().mockImplementation((...args: any[]) => {
+  whenReady: vi.fn().mockImplementation((...args: any[]) => {
     const callback = args[0];
     if (typeof callback === 'function') {
       // Store the callback for later access and call it
@@ -16,36 +17,36 @@ const mockApp = {
     }
     return Promise.resolve();
   }),
-  on: jest.fn().mockImplementation((...args: any[]) => {
+  on: vi.fn().mockImplementation((...args: any[]) => {
     const [event, handler] = args;
     if (typeof event === 'string' && typeof handler === 'function') {
       appEventHandlers.set(event, handler);
     }
   }),
-  quit: jest.fn(),
+  quit: vi.fn(),
   // Helper to get stored handlers for testing
   getEventHandler: (event: string) => appEventHandlers.get(event)
 };
 
-const mockBrowserWindow = jest.fn().mockImplementation(() => ({
-  loadURL: jest.fn(),
-  loadFile: jest.fn(),
-  on: jest.fn(),
+const mockBrowserWindow = vi.fn().mockImplementation(() => ({
+  loadURL: vi.fn(),
+  loadFile: vi.fn(),
+  on: vi.fn(),
   webContents: {
-    openDevTools: jest.fn()
+    openDevTools: vi.fn()
   },
-  isFullScreen: jest.fn().mockReturnValue(false),
-  setFullScreen: jest.fn(),
-  minimize: jest.fn(),
-  close: jest.fn()
-})) as jest.MockedFunction<any> & { getAllWindows: jest.MockedFunction<any> };
+  isFullScreen: vi.fn().mockReturnValue(false),
+  setFullScreen: vi.fn(),
+  minimize: vi.fn(),
+  close: vi.fn()
+})) as MockedFunction<any> & { getAllWindows: MockedFunction<any> };
 
-mockBrowserWindow.getAllWindows = jest.fn().mockReturnValue([]);
+mockBrowserWindow.getAllWindows = vi.fn().mockReturnValue([]);
 
 // Enhanced IPC Main mock that stores handlers
 const ipcHandlers = new Map<string, (...args: any[]) => any>();
 const mockIpcMain = {
-  handle: jest.fn().mockImplementation((...args: any[]) => {
+  handle: vi.fn().mockImplementation((...args: any[]) => {
     const [channel, handler] = args;
     if (typeof channel === 'string' && typeof handler === 'function') {
       ipcHandlers.set(channel, handler);
@@ -55,34 +56,34 @@ const mockIpcMain = {
   getHandler: (channel: string) => ipcHandlers.get(channel)
 };
 
-jest.mock('electron', () => ({
+vi.mock('electron', () => ({
   app: mockApp,
   BrowserWindow: mockBrowserWindow,
   ipcMain: mockIpcMain
 }));
 
 // Mock path functions
-jest.mock('path', () => ({
+vi.mock('path', () => ({
   join: jest.fn((...args: string[]) => args.join('/')),
   dirname: jest.fn((path: string) => path.replace(/\/[^/]*$/, ''))
 }));
 
 // Mock URL utilities
-jest.mock('url', () => ({
+vi.mock('url', () => ({
   fileURLToPath: jest.fn((url: string) => url.replace('file://', ''))
 }));
 
 // Mock environment utils
-jest.mock('../utils/env', () => ({
+vi.mock('../utils/env', () => ({
   isDev: false
 }));
 
 // Mock console.log
-const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
+const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 describe('Electron Main Process', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterAll(() => {
@@ -271,7 +272,7 @@ describe('Electron Main Process', () => {
       
       if (webContentsHandler) {
         const mockContents = {
-          on: jest.fn()
+          on: vi.fn()
         };
         
         webContentsHandler({}, mockContents);
@@ -290,7 +291,7 @@ describe('Electron Main Process', () => {
       if (webContentsHandler) {
         const contentsHandlers = new Map<string, (...args: any[]) => any>();
         const mockContents = { 
-          on: jest.fn().mockImplementation((...args: any[]) => {
+          on: vi.fn().mockImplementation((...args: any[]) => {
             const [event, handler] = args;
             if (typeof event === 'string' && typeof handler === 'function') {
               contentsHandlers.set(event, handler);
@@ -303,7 +304,7 @@ describe('Electron Main Process', () => {
         const navigationHandler = mockContents.getHandler('will-navigate');
         
         if (navigationHandler) {
-          const mockEvent = { preventDefault: jest.fn() };
+          const mockEvent = { preventDefault: vi.fn() };
           
           // Test external URL - should be prevented
           navigationHandler(mockEvent, 'https://evil-site.com');
@@ -328,7 +329,7 @@ describe('Electron Main Process', () => {
       (globalThis as any).process = { env: { ELECTRON_RENDERER_URL: 'http://localhost:5173' } };
       
       // Re-import to test dev behavior
-      jest.resetModules();
+      vi.resetModules();
       await import('../main');
       
       const windowInstance = mockBrowserWindow.mock.results[0]?.value;

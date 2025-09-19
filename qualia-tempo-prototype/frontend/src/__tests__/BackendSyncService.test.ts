@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 /**
  * QUALIA.CODE v1.1 - BackendSyncService Tests - IOC COMPLIANT
  * Comprehensive test suite for backend synchronization service.
@@ -19,12 +20,12 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
   beforeEach(() => {
     // Create mocks for EventBus interface
     mockEventBus = {
-      emit: jest.fn(),
-      subscribe: jest.fn(),
-      unsubscribe: jest.fn(),
-      clear: jest.fn(),
-      destroy: jest.fn(),
-      getStats: jest.fn().mockReturnValue({
+      emit: vi.fn(),
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+      clear: vi.fn(),
+      destroy: vi.fn(),
+      getStats: vi.fn().mockReturnValue({
         totalListeners: 0,
         eventTypes: [],
         historySize: 0,
@@ -34,11 +35,11 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
 
     // Create mocks for ConfigurationService interface
     mockConfigService = {
-      loadConfig: jest.fn(),
-      getConfig: jest.fn(),
-      getGameConfig: jest.fn(),
-      getQualiaConfig: jest.fn(),
-      getBackendConfig: jest.fn().mockReturnValue({
+      loadConfig: vi.fn(),
+      getConfig: vi.fn(),
+      getGameConfig: vi.fn(),
+      getQualiaConfig: vi.fn(),
+      getBackendConfig: vi.fn().mockReturnValue({
         baseUrl: 'http://localhost:8000',
         timeout: 5000,
         retryAttempts: 3,
@@ -50,13 +51,13 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
           health: '/api/health'
         }
       }),
-      getAudioConfig: jest.fn(),
-      getErrorReportingConfig: jest.fn(),
-      getRhythmicMovementConfig: jest.fn(),
-      getNotificationConfig: jest.fn(),
-      getConfigSection: jest.fn(),
-      isLoaded: jest.fn().mockReturnValue(true),
-      reload: jest.fn()
+      getAudioConfig: vi.fn(),
+      getErrorReportingConfig: vi.fn(),
+      getRhythmicMovementConfig: vi.fn(),
+      getNotificationConfig: vi.fn(),
+      getConfigSection: vi.fn(),
+      isLoaded: vi.fn().mockReturnValue(true),
+      reload: vi.fn()
     };
 
     // Inject mocks into IoC container using QUALIA.CODE LAW
@@ -85,7 +86,7 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
     });
 
     test("should start and stop service idempotently", async () => {
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation();
 
       await backendSync.start();
       await backendSync.start(); // Should be idempotent
@@ -110,7 +111,7 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
     });
 
     test("should subscribe to QualiaStateUpdated events on start", async () => {
-      const subscribeSpy = jest.spyOn(mockEventBus as any, "subscribe");
+      const subscribeSpy = vi.spyOn(mockEventBus as any, "subscribe");
 
       await backendSync.stop();
       await backendSync.start();
@@ -123,7 +124,7 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
     });
 
     test("should unsubscribe from events on stop", async () => {
-      const unsubscribeSpy = jest.spyOn(mockEventBus as any, "unsubscribe");
+      const unsubscribeSpy = vi.spyOn(mockEventBus as any, "unsubscribe");
 
       await backendSync.stop();
 
@@ -133,7 +134,7 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
 
   describe("Health Checking", () => {
     test("should perform health checks when started", async () => {
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation();
 
       await backendSync.start();
 
@@ -172,7 +173,7 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
         transcendence: 0.1,
       };
 
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation();
 
       mockEventBus.emit({
         type: "QualiaStateUpdated",
@@ -201,7 +202,7 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
         transcendence: 0.1,
       };
 
-      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation();
 
       // Emit multiple rapid updates
       for (let i = 0; i < 5; i++) {
@@ -241,7 +242,7 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
     test("should handle sync failures gracefully", async () => {
       await backendSync.start();
 
-      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation();
 
       // Force a sync failure by mocking
       const originalSync = (backendSync as any).syncQualiaState;
