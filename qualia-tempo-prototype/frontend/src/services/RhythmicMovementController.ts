@@ -46,7 +46,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   
   // Pause and slowdown settings - will be loaded from injected config
   private isPaused: boolean = false;
-  private isPlaying: boolean = false;
+  private gameIsPlaying: boolean = false;
   private slowdownFactor!: number;
   private slowdownTimeout: number | null = null;
   private gameStateListenerId: string | null = null;
@@ -159,7 +159,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     const newState = event.newState;
     
     // Update playing state
-    this.isPlaying = (newState === 'Playing');
+    this.gameIsPlaying = (newState === 'Playing');
     
     if (newState === 'Paused') {
       this.activatePauseWithSlowdown();
@@ -366,7 +366,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
    * Check if the game is currently active (playing and not paused)
    */
   private isGameActive(): boolean {
-    return this.isPlaying && !this.isPaused;
+    return this.gameIsPlaying && !this.isPaused;
   }
 
   // ==================== IRhythmicMovementController INTERFACE IMPLEMENTATION ====================
@@ -447,5 +447,26 @@ export class RhythmicMovementController implements IRhythmicMovementController {
       updatesPerformed: this.updatesPerformed,
       averageUpdateTime: this.updatesPerformed > 0 ? this.totalUpdateTime / this.updatesPerformed : 0
     };
+  }
+
+  /**
+   * Get current BPM value
+   */
+  public getCurrentBPM(): number {
+    return this.bpm;
+  }
+
+  /**
+   * Get current beat number
+   */
+  public getCurrentBeat(): number {
+    return this.beatNumber;
+  }
+
+  /**
+   * Check if the system is currently playing (not paused)
+   */
+  public isPlaying(): boolean {
+    return this.gameIsPlaying;
   }
 }

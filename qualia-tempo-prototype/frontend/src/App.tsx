@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Subtitles } from "./components/Subtitles";
 import QualiaTempoGame from "./components/game/QualiaTempoGame";
+import { RhythmVisualizer } from "./components/RhythmVisualizer";
 import { useGameStore } from "./state/useGameStore";
 import { useService } from "./services/hooks";
 import { TYPES } from "./services/inversify.types";
@@ -173,6 +174,9 @@ const App: React.FC = () => {
           />
         )}
       </div>
+
+      {/* QUALIA.CODE v1.1: Rhythm Visualizer - Interactive Game Feature */}
+      <RhythmVisualizer />
 
       {/* Game Instructions */}
       <div className="absolute bottom-4 left-4 text-white text-sm bg-black bg-opacity-50 p-4 rounded-lg">

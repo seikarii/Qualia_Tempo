@@ -56,4 +56,22 @@ export interface IRhythmicMovementController {
     updatesPerformed: number;
     averageUpdateTime: number;
   };
+
+  /**
+   * Get current BPM value
+   * @returns Current beats per minute
+   */
+  getCurrentBPM(): number;
+
+  /**
+   * Get current beat number
+   * @returns Current beat count
+   */
+  getCurrentBeat(): number;
+
+  /**
+   * Check if the system is currently playing (not paused)
+   * @returns True if playing, false if paused/stopped
+   */
+  isPlaying(): boolean;
 }
