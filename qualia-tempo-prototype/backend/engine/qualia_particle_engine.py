@@ -21,6 +21,12 @@ except ImportError:
 
 from ..utils.decorators import log_execution, handle_errors, time_execution
 
+# QUALIA.CODE: Import Pydantic QualiaState model for type safety
+try:
+    from ..api.models import QualiaState
+except ImportError:
+    QualiaState = None  # Fallback for when models are not available
+
 logger = logging.getLogger(__name__)
 
 # Availability flag
@@ -117,10 +123,12 @@ class QualiaParticleEngine:
         ctx: Any = None,
         max_particles: int = 10000,
         enable_metrics: bool = True,
+        event_bus: Any = None,  # QUALIA.CODE: EventBus injection for EDA compliance
     ):
         self.ctx = ctx
         self.max_particles = max_particles
         self.enable_metrics = enable_metrics
+        self.event_bus = event_bus  # QUALIA.CODE: Store EventBus reference
 
         # Ping-pong buffer pairs for particles
         self.particle_buffers = PingPongBufferPair()
@@ -250,30 +258,73 @@ class QualiaParticleEngine:
 
         return particles
 
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
+    def start(self) -> None:
+        """Start the QualiaParticleEngine and subscribe to QualiaState events."""
+        if not self.event_bus:
+            logger.warning("⚠️ No EventBus provided, cannot start event-driven operation")
+            return
+
+        # QUALIA.CODE: Subscribe to QualiaStateUpdated events for EDA compliance
+        self.event_bus.subscribe("QualiaStateUpdated", self._on_qualia_state_updated)
+        self.status = "running"
+        logger.info("🎆 QualiaParticleEngine started and subscribed to QualiaState events")
+
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
-    def update_uniform_buffer(self, qualia_state: Dict[str, Any]) -> None:
+    def _on_qualia_state_updated(self, event: Any) -> None:
+        """Handle QualiaStateUpdated events and update uniform buffer."""
+        try:
+            # Extract QualiaState from event data
+            # QUALIA.CODE: EventBus passes Event object with data attribute
+            qualia_state = event.data if hasattr(event, 'data') else event
+
+            if not qualia_state:
+                logger.warning("⚠️ QualiaStateUpdated event missing qualia_state data")
+                return
+
+            # Update uniform buffer with new state
+            self.update_uniform_buffer(qualia_state)
+
+            # Execute compute step for particle simulation
+            # QUALIA.CODE: Maintain particle system responsiveness to state changes
+            self.compute_step()
+
+            logger.debug("✅ Particle system updated and computed from QualiaState event")
+
+        except Exception as e:
+            logger.error(f"🚨 Failed to handle QualiaStateUpdated event: {e}")
+
+    @log_execution(level="DEBUG")
+    @handle_errors(fallback_return_value=None)
+    def update_uniform_buffer(self, qualia_state: Any) -> None:  # QUALIA.CODE: Accepts Pydantic QualiaState model
         """Update uniform buffer with QualiaState parameters, respecting std140 layout."""
         if not self.ctx:
             return
 
+        # QUALIA.CODE: Convert Dict to Pydantic model if necessary for type safety
+        if isinstance(qualia_state, dict) and QualiaState:
+            try:
+                qualia_state = QualiaState(**qualia_state)
+                logger.debug("✅ Converted Dict to Pydantic QualiaState model")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to convert Dict to QualiaState model: {e}")
+                # Continue with dict, using getattr as fallback
+
         current_time = time.time() - self.start_time
 
-        # Pack QualiaState data according to std140 shader UBO layout.
-        # The struct must be padded to a multiple of 16 bytes.
-        # Original: 8 floats (32 bytes) + 1 uint (4 bytes) = 36 bytes.
-        # Padded size: 48 bytes (next multiple of 16).
-        # Padding needed: 48 - 36 = 12 bytes.
-        # Format: 8 floats, 1 unsigned int, 12 padding bytes ('x').
+        # QUALIA.CODE: Use Pydantic QualiaState model with proper validation
+        # Extract values from the model with getattr for safety
         uniform_data = struct.pack(
             "ffffffffI12x",  # 8 floats + 1 unsigned int + 12 bytes padding
-            float(qualia_state.get("intensity", 0.0)),
-            float(qualia_state.get("focus_level", 0.0)),
-            float(qualia_state.get("aggression", 0.0)),
-            float(qualia_state.get("flow", 0.0)),
-            float(qualia_state.get("chaos", 0.0)),
-            float(qualia_state.get("recovery", 0.0)),
-            float(qualia_state.get("transcendence", 0.0)),
+            float(getattr(qualia_state, "intensity", 0.0)),
+            float(getattr(qualia_state, "focus_level", 0.0)),
+            float(getattr(qualia_state, "aggression", 0.0)),
+            float(getattr(qualia_state, "flow", 0.0)),
+            float(getattr(qualia_state, "chaos", 0.0)),
+            float(getattr(qualia_state, "recovery", 0.0)),
+            float(getattr(qualia_state, "transcendence", 0.0)),
             float(current_time),
             self.max_particles,
         )
@@ -423,6 +474,7 @@ def create_qualia_particle_engine(
     max_particles: int = 10000,
     enable_metrics: bool = True,
     standalone: bool = False,
+    event_bus: Any = None,  # QUALIA.CODE: EventBus parameter for DI
 ) -> QualiaParticleEngine:
     """
     Factory function to create a Qualia particle engine.
@@ -439,8 +491,19 @@ def create_qualia_particle_engine(
 
     if moderngl and standalone:
         try:
-            ctx = moderngl.create_context(standalone=True)
-            logger.info("✅ Created standalone context for Qualia particle engine")
+            # Try EGL first, fallback to software if not available
+            try:
+                ctx = moderngl.create_standalone_context(backend='egl')
+                logger.info("✅ Created standalone EGL context for Qualia particle engine")
+            except Exception as egl_error:
+                logger.warning(f"⚠️ EGL not available ({egl_error}), trying software context")
+                try:
+                    ctx = moderngl.create_standalone_context(backend='software')
+                    logger.info("✅ Created standalone software context for Qualia particle engine")
+                except Exception as sw_error:
+                    logger.warning(f"⚠️ Software context failed ({sw_error}), trying default context")
+                    ctx = moderngl.create_standalone_context()
+                    logger.info("✅ Created default standalone context for Qualia particle engine")
         except Exception as e:
             logger.warning(f"⚠️ Failed to create standalone context: {e}")
 
@@ -448,4 +511,5 @@ def create_qualia_particle_engine(
         ctx=ctx,
         max_particles=max_particles,
         enable_metrics=enable_metrics,
+        event_bus=event_bus,  # QUALIA.CODE: Pass EventBus to constructor
     )

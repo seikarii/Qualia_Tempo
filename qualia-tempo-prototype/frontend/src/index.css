@@ -94,7 +94,7 @@ body {
   text-rendering: optimizeLegibility;
   background: #000;
   color: #00ffff;
-  overflow: auto; /* CRITICAL FIX: Enable scrolling */
+  overflow: hidden; /* ANTES: auto */
   height: 100vh;
   width: 100vw;
   position: relative;

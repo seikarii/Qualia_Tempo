@@ -39,15 +39,17 @@ class RenderingService:
     Renders particle systems to off-screen framebuffer for streaming.
     """
 
-    def __init__(self, event_bus: EventBus, width: int = 1920, height: int = 1080):
+    def __init__(self, event_bus: EventBus, particle_engine: QualiaParticleEngine, width: int = 1920, height: int = 1080):
         self._event_bus = event_bus
         self._logger = logging.getLogger(__name__)
         self._width = width
         self._height = height
         
+        # QUALIA.CODE: Receive particle engine via dependency injection
+        self._particle_engine = particle_engine
+        
         # Rendering components
         self._ctx: Optional[Any] = None
-        self._particle_engine: Optional[QualiaParticleEngine] = None
         self._framebuffer: Optional[Any] = None
         self._color_texture: Optional[Any] = None
         self._render_shader: Optional[Any] = None
@@ -77,27 +79,27 @@ class RenderingService:
     def _initialize_graphics(self) -> bool:
         """Initialize OpenGL context and rendering pipeline with safe fallback."""
         try:
-            # Attempt to create standalone OpenGL context with extensive error handling
+            # Attempt to create standalone OpenGL context with robust fallback
             try:
-                self._ctx = moderngl.create_context(standalone=True, require=33)
-                self._logger.info(f"✅ Created OpenGL context: {self._ctx}")
-            except Exception as ctx_error:
-                self._logger.warning(f"⚠️ Failed to create standalone OpenGL context: {ctx_error}")
-                # Try creating with minimal requirements
+                self._ctx = moderngl.create_standalone_context(require=330, backend='egl')
+                self._logger.info(f"✅ Created EGL OpenGL context: {self._ctx}")
+            except Exception as egl_error:
+                self._logger.warning(f"⚠️ EGL context failed ({egl_error}), trying software")
                 try:
-                    self._ctx = moderngl.create_context(standalone=True, require=21)
-                    self._logger.info(f"✅ Created OpenGL context with legacy support: {self._ctx}")
-                except Exception as legacy_error:
-                    self._logger.error(f"🚨 Failed to create any OpenGL context: {legacy_error}")
-                    return self._initialize_software_fallback()
+                    self._ctx = moderngl.create_standalone_context(require=330, backend='software')
+                    self._logger.info(f"✅ Created software OpenGL context: {self._ctx}")
+                except Exception as sw_error:
+                    self._logger.warning(f"⚠️ Software context failed ({sw_error}), trying default")
+                    try:
+                        self._ctx = moderngl.create_standalone_context(require=330)
+                        self._logger.info(f"✅ Created default OpenGL context: {self._ctx}")
+                    except Exception as default_error:
+                        self._logger.error(f"🚨 Failed to create any OpenGL context: {default_error}")
+                        return self._initialize_software_fallback()
             
-            # Create particle engine with safe initialization
+            # QUALIA.CODE: Use injected particle engine instead of creating new one
             try:
-                self._particle_engine = create_qualia_particle_engine(
-                    max_particles=10000,
-                    enable_metrics=True,
-                    standalone=False  # Use our context
-                )
+                # Assign our OpenGL context to the injected particle engine
                 self._particle_engine.ctx = self._ctx
                 self._particle_engine._initialize_shader()
                 
@@ -253,10 +255,15 @@ class RenderingService:
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
-    async def _on_qualia_state_updated(self, data: Dict[str, Any]) -> None:
+    async def _on_qualia_state_updated(self, event: Any) -> None:
         """Handle QualiaState updates from EventBus."""
-        self._current_qualia_state = data
-        self._logger.debug(f"🎨 RenderingService received QualiaState update: intensity={data.get('intensity', 0):.2f}")
+        try:
+            # Extract data from event object
+            data = event.data if hasattr(event, 'data') else event
+            self._current_qualia_state = data
+            self._logger.debug(f"🎨 RenderingService received QualiaState update: intensity={data.get('intensity', 0):.2f}")
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to handle QualiaStateUpdated event: {e}")
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
@@ -285,10 +292,8 @@ class RenderingService:
             time.sleep(min_frame_time - time_since_last_frame)
             
         try:
-            # Update particle engine with current QualiaState
-            if self._particle_engine and self._current_qualia_state:
-                self._particle_engine.update_uniform_buffer(self._current_qualia_state)
-                self._particle_engine.compute_step()
+            # QUALIA.CODE: Particle engine updates autonomously via EventBus
+            # No need for imperative calls - engine responds to QualiaStateUpdated events
             
             # Bind framebuffer for off-screen rendering
             self._framebuffer.use()

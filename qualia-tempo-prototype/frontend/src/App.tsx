@@ -277,7 +277,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-black relative overflow-hidden">
+    <div className="h-screen w-screen bg-black relative overflow-hidden flex flex-col items-center justify-center text-center">
       {/* Loading indicator when not connected */}
       {!connectionStatus.connected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -380,13 +380,14 @@ const App: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 flex"
+              className="z-10 flex flex-col items-center"
             >
               {/* Left side - Enhanced title */}
-              <div className="flex-1 flex flex-col justify-center pl-20 pr-8 min-w-0">
+                            {/* Centered main menu */}
+              <div className="text-center space-y-8">
                 <motion.div
-                  initial={{ x: -200, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
+                  initial={{ y: -50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, type: "spring", stiffness: 80 }}
                   className="relative"
                 >
@@ -416,24 +417,73 @@ const App: React.FC = () => {
                 </motion.div>
                 
                 <motion.p
-                  initial={{ x: -150, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.5 }}
-                  className="text-2xl xl:text-3xl text-cyan-300 mb-3 font-['Orbitron'] font-light"
+                  className="text-2xl xl:text-3xl text-cyan-300 mb-6 font-['Orbitron'] font-light"
                   style={{ textShadow: '0 0 10px rgba(0,255,255,0.5)' }}
                 >
                   A Charlie Hellsinger Story
                 </motion.p>
                 
                 <motion.div
-                  initial={{ x: -100, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.7 }}
-                  className="text-lg text-gray-300 mb-8 max-w-2xl leading-relaxed"
+                  className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed"
                 >
                   <p className="mb-2">Enter a synesthetic battlefield where <span className="text-cyan-400">music becomes weapon</span>,</p>
                   <p className="mb-2"><span className="text-purple-400">rhythm defines reality</span>, and <span className="text-pink-400">visual chaos rewards precision</span>.</p>
                   <p className="text-yellow-400">Experience the fusion of sound and light in perfect harmony.</p>
+                </motion.div>
+
+                {/* Enhanced main button */}
+                <motion.button
+                  onClick={handleStartGame}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="cyber-button-enhanced relative px-16 py-8 text-2xl font-bold text-white rounded-xl overflow-hidden group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-80" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform translate-x-[-100%] group-hover:translate-x-[100%] transition-all duration-1000" />
+                  <span className="relative z-10 flex items-center justify-center space-x-3">
+                    <span>⚡</span>
+                    <span>INITIATE NEURAL SYNC</span>
+                    <span>🎵</span>
+                  </span>
+                </motion.button>
+
+                {/* Enhanced system status */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.0 }}
+                  className="space-y-4 mt-8"
+                >
+                  {[
+                    { label: "VISUAL ENGINE", color: "green", icon: "🔥" },
+                    { label: "NEURAL LINK", color: "cyan", icon: "🧠" },
+                    { label: "QUALIA MATRIX", color: "purple", icon: "✨" },
+                    { label: "AUDIO CORTEX", color: "pink", icon: "🎶" }
+                  ].map((system, index) => (
+                    <motion.div
+                      key={system.label}
+                      className="flex items-center justify-center space-x-3"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.1 + index * 0.1 }}
+                    >
+                      <motion.div 
+                        className={`w-3 h-3 bg-${system.color}-400 rounded-full`}
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity, delay: index * 0.3 }}
+                      />
+                      <span className="text-lg">{system.icon}</span>
+                      <span className={`text-${system.color}-400 text-lg font-['Orbitron']`}>
+                        {system.label} ONLINE
+                      </span>
+                    </motion.div>
+                  ))}
                 </motion.div>
               </div>
 

@@ -59,14 +59,19 @@ class CompositionRoot:
         try:
             from .engine.qualia_particle_engine import create_qualia_particle_engine
 
-            # ✅ FIXED: Use factory function with standalone context
+            # ✅ QUALIA.CODE: Pass EventBus for EDA compliance
             particle_engine = create_qualia_particle_engine(
                 max_particles=10000,
                 enable_metrics=True,
                 standalone=True,  # Creates OpenGL context for headless operation
+                event_bus=self._event_bus,  # QUALIA.CODE: Inject EventBus dependency
             )
             self._services["particle_system"] = particle_engine
-            self._logger.debug("🎆 QualiaParticleEngine service registered")
+            
+            # QUALIA.CODE: Start the engine to subscribe to events
+            particle_engine.start()
+            
+            self._logger.debug("🎆 QualiaParticleEngine service registered and started")
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize QualiaParticleEngine: {e}")
             raise
@@ -83,8 +88,12 @@ class CompositionRoot:
         """Initialize RenderingService for GPU-based frame rendering."""
         from .services.RenderingService import RenderingService
 
+        # QUALIA.CODE: Get particle engine from services and inject it
+        particle_engine = self._services["particle_system"]
+        
         rendering_service = RenderingService(
             event_bus=self._event_bus,
+            particle_engine=particle_engine,  # QUALIA.CODE: Inject particle engine dependency
             width=1920,
             height=1080
         )
@@ -105,34 +114,10 @@ class CompositionRoot:
 
     async def _register_event_handlers(self) -> None:
         """Register event handlers for cross-service communication."""
-        # Particle system listens for QualiaState updates
+        # QUALIA.CODE: QualiaParticleEngine now handles its own events autonomously
+        # No need for external ParticleEventHandler - engine subscribes directly to EventBus
         if "particle_system" in self._services:
-            from .services.EventBus import QualiaEventHandler
-
-            class ParticleEventHandler(QualiaEventHandler):
-                def __init__(self, particle_engine):
-                    super().__init__("QualiaParticleEngine")
-                    self.particle_engine = particle_engine
-
-                async def _process_qualia_state(self, qualia_state):
-                    """Update particle engine based on QualiaState."""
-                    # Convert QualiaState to dict format if needed
-                    if hasattr(qualia_state, "dict"):
-                        qualia_dict = qualia_state.dict()
-                    elif hasattr(qualia_state, "__dict__"):
-                        qualia_dict = qualia_state.__dict__
-                    else:
-                        qualia_dict = qualia_state
-
-                    # Update uniform buffer with QualiaState
-                    self.particle_engine.update_uniform_buffer(qualia_dict)
-
-                    # Trigger compute step
-                    self.particle_engine.compute_step()
-
-            handler = ParticleEventHandler(self._services["particle_system"])
-            self._event_bus.subscribe("QualiaStateUpdated", handler)
-            self._logger.debug("🎆 Registered QualiaParticleEngine event handler")
+            self._logger.debug("🎆 QualiaParticleEngine registered for autonomous event handling")
 
             # Add handler for EngineReset event
             from .services.EventBus import QualiaEventHandler
