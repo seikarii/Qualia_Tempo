@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { Subtitles } from "./components/Subtitles";
+import { Atmosphere } from './components/Atmosphere';
 import BackendCanvas from './components/BackendCanvas';
 import QualiaTempoGame from "./components/game/QualiaTempoGame";
 import QualiaTempoHUD from "./components/game/QualiaTempoHUD";
@@ -277,7 +278,8 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="h-screen w-screen bg-black relative overflow-hidden flex flex-col items-center justify-center text-center">
+    <div className="h-screen w-screen bg-black relative overflow-hidden">
+      <Atmosphere />
       {/* Loading indicator when not connected */}
       {!connectionStatus.connected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -294,7 +296,7 @@ const App: React.FC = () => {
       
       {/* QUALIA.CODE v1.1: GPU-accelerated backend rendering replaces DOM simulation */}
       <BackendCanvas 
-        className="fixed inset-0 z-0"
+        className="fixed inset-0 z-10 mix-blend-screen"
         showStatus={false} // Set to true for debugging
       />
       
@@ -376,11 +378,11 @@ const App: React.FC = () => {
             </motion.div>
           ) : !isPlaying ? (
             <motion.div
-              key="menu"
+              key="menu-container"
+              className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="z-10 flex flex-col items-center"
             >
               {/* Left side - Enhanced title */}
                             {/* Centered main menu */}
@@ -549,6 +551,7 @@ const App: React.FC = () => {
           ) : (
             <motion.div
               key="game"
+              className="absolute inset-0 z-10"
               initial={{ opacity: 0, scale: 1.05 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
