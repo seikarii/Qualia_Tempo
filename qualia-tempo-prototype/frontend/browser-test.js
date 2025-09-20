@@ -1,12 +1,18 @@
-const { chromium } = require('playwright');
-const fs = require('fs');
+import { chromium } from 'playwright';
+import fs from 'fs';
 
 async function comprehensiveTest() {
     console.log('🌐 Starting comprehensive browser test...');
     
     const browser = await chromium.launch({ 
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: [
+            '--no-sandbox', 
+            '--disable-setuid-sandbox',
+            '--disable-web-security',
+            '--allow-running-insecure-content',
+            '--disable-features=VizDisplayCompositor'
+        ]
     });
     const page = await browser.newPage();
     
@@ -58,6 +64,17 @@ async function comprehensiveTest() {
     
     try {
         console.log('📡 Navigating to http://localhost:5173...');
+        
+        // Disable caching to ensure fresh code
+        await page.route('**/*', (route) => {
+            route.continue({
+                headers: {
+                    ...route.request().headers(),
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            });
+        });
         
         await page.goto('http://localhost:5173', { 
             waitUntil: 'domcontentloaded',

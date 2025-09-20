@@ -1,0 +1,38 @@
+rhythmicFeedback:
+  perfect:
+    frequency: 800
+    duration: 200
+    volume: 0.8
+  good:
+    frequency: 600
+    duration: 150
+    volume: 0.6
+  miss:
+    frequency: 200
+    duration: 300
+    volume: 0.4
+
+backgroundMusic:
+  enabled: true
+  volume: 0.3
+  fadeInTime: 2000
+  fadeOutTime: 1000
+
+soundEffects:
+  enabled: true
+  masterVolume: 0.7
+  spatialAudio: false
+
+qualiaAudio:
+  precision:
+    frequency: 1000
+    modulation: 0.2
+  flow:
+    frequency: 400
+    modulation: 0.1
+  chaos:
+    frequency: 150
+    modulation: 0.5
+  aggression:
+    frequency: 80
+    modulation: 0.3

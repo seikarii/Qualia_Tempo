@@ -1,0 +1,68 @@
+enabled: true
+maxHistorySize: 1000
+defaultTtl: 30000
+enablePriorityQueuing: true
+enableThrottling: true
+
+display:
+  enableNotifications: true
+  maxVisibleNotifications: 5
+  notificationDuration: 3000
+  enableAnimations: true
+  animationDuration: 300
+
+positioning:
+  position: "top-right"
+  offsetX: 20
+  offsetY: 20
+  zIndex: 1000
+
+styling:
+  enableThemes: true
+  defaultTheme: "default"
+  enableCustomStyling: true
+  borderRadius: 8
+  shadowEnabled: true
+
+sound:
+  enableNotificationSounds: true
+  defaultSoundVolume: 0.7
+  enableSoundVariations: true
+
+types:
+  success:
+    duration: 3000
+    soundEnabled: true
+    color: "#00ff00"
+  error:
+    duration: 5000
+    soundEnabled: true
+    color: "#ff0000"
+  warning:
+    duration: 4000
+    soundEnabled: false
+    color: "#ffff00"
+  info:
+    duration: 2500
+    soundEnabled: false
+    color: "#0080ff"
+
+queue:
+  enableQueueing: true
+  maxQueueSize: 20
+  queueProcessingInterval: 100
+
+accessibility:
+  enableScreenReader: true
+  enableHighContrast: false
+  enableReducedMotion: false
+  enableKeyboardNavigation: true
+
+performance:
+  enablePooling: true
+  maxPoolSize: 50
+  enableGarbageCollection: true
+  gcInterval: 60000
+
+maxNotifications: 5
+defaultDuration: 3000

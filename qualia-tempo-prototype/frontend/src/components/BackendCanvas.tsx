@@ -169,10 +169,13 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
         // Setup status monitoring
         statusInterval = setInterval(updateConnectionStatus, 1000);
         
-        // Connect to stream
-        await streamingService.connect();
-        
-        logger.info('BackendCanvas connected to video stream');
+        // Connect to stream (don't fail if connection fails)
+        try {
+          await streamingService.connect();
+          logger.info('BackendCanvas connected to video stream');
+        } catch (error) {
+          logger.warn('BackendCanvas failed to connect to video stream - continuing in offline mode', { error });
+        }
         
       } catch (error) {
         logger.error('Failed to setup video streaming', { error });

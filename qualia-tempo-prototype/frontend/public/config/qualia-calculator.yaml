@@ -1,0 +1,42 @@
+baseQualiaState:
+  precision: 0.5
+  flow: 0.5
+  chaos: 0.0
+  aggression: 0.0
+
+precision:
+  hitBonus: 0.1
+  missPenalty: 0.05
+  maxValue: 1.0
+  minValue: 0.0
+  decayRate: 0.95
+
+flow:
+  perfectHitBonus: 0.15
+  goodHitBonus: 0.1
+  missPenalty: 0.1
+  maxValue: 1.0
+  minValue: 0.0
+  decayRate: 0.98
+
+chaos:
+  missIncrease: 0.2
+  maxValue: 1.0
+  minValue: 0.0
+  decayRate: 0.95
+
+aggression:
+  comboMultiplier: 0.05
+  maxCombo: 50
+  maxValue: 1.0
+  minValue: 0.0
+  decayRate: 0.97
+
+rhythm:
+  perfectWindow: 50
+  goodWindow: 150
+  missThreshold: 300
+
+combo:
+  resetTime: 2000
+  multiplierCap: 5.0

@@ -250,8 +250,12 @@ class StreamingWebService:
         message_type = message.get("type")
         
         if message_type == "ping":
-            # Respond to ping with pong
-            await websocket.send_json({"type": "pong", "timestamp": message.get("timestamp")})
+            # Respond to ping with pong, including the mandatory pingId for contract compliance
+            await websocket.send_json({
+                "type": "pong",
+                "timestamp": message.get("timestamp"),
+                "pingId": message.get("pingId")
+            })
             
         elif message_type == "quality_change":
             # Handle quality change requests

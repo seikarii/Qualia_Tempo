@@ -1,0 +1,28 @@
+enabled: true
+updateInterval: 16
+smoothingFactor: 0.8
+deadzone: 0.05
+
+movement:
+  speed: 5.0
+  acceleration: 2.0
+  friction: 0.9
+  maxVelocity: 10.0
+
+rhythm:
+  beatDetection: true
+  tempo: 120
+  beatWindow: 100
+  syncThreshold: 0.8
+
+visualization:
+  trailLength: 20
+  trailFade: 0.95
+  particleCount: 50
+  colorIntensity: 1.0
+
+input:
+  mouseSensitivity: 1.0
+  keyboardSpeed: 200
+  gamepadDeadzone: 0.1
+  touchSensitivity: 1.2

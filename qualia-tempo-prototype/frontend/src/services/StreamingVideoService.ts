@@ -132,10 +132,19 @@ export class StreamingVideoService implements IStreamingVideoService {
       this.websocket.onclose = this.onWebSocketClose.bind(this);
       this.websocket.onerror = this.onWebSocketError.bind(this);
       
-      // Wait for connection to open
-      await new Promise<void>((resolve, reject) => {
+      // Wait for connection to open (never reject - handle errors internally)
+      await new Promise<void>((resolve) => {
         const timeoutId = setTimeout(() => {
-          reject(new Error('Connection timeout'));
+          this.logger.warn('WebSocket connection timeout - operating in offline mode');
+          this.state = 'ERROR';
+          this.connectionStatus.state = 'ERROR';
+          this.connectionStatus.lastError = 'Connection timeout';
+          this.eventBus.emit<StreamingStatusChangedEvent>({
+            type: 'StreamingStatusChanged', 
+            status: this.getConnectionStatus(),
+            source: 'StreamingVideoService'
+          });
+          resolve(); // Resolve instead of reject
         }, 10000);
         
         this.websocket!.addEventListener('open', () => {
@@ -145,12 +154,21 @@ export class StreamingVideoService implements IStreamingVideoService {
         
         this.websocket!.addEventListener('error', () => {
           clearTimeout(timeoutId);
-          reject(new Error('Connection failed'));
+          this.logger.warn('WebSocket connection failed - operating in offline mode');
+          this.state = 'ERROR';
+          this.connectionStatus.state = 'ERROR';
+          this.connectionStatus.lastError = 'Connection failed';
+          this.eventBus.emit<StreamingStatusChangedEvent>({
+            type: 'StreamingStatusChanged', 
+            status: this.getConnectionStatus(),
+            source: 'StreamingVideoService'
+          });
+          resolve(); // Resolve instead of reject
         });
       });
       
     } catch (error) {
-      this.logger.error('Failed to connect to video stream', { error });
+      this.logger.warn('Failed to connect to video stream - operating in offline mode', { error });
       this.state = 'ERROR';
       this.connectionStatus.state = 'ERROR';
       this.connectionStatus.lastError = String(error);
@@ -159,7 +177,8 @@ export class StreamingVideoService implements IStreamingVideoService {
         status: this.getConnectionStatus(),
         source: 'StreamingVideoService'
       });
-      throw error;
+      // Don't throw error - allow application to continue in offline mode
+      return;
     }
   }
 

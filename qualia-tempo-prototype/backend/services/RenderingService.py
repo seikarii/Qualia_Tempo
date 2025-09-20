@@ -75,34 +75,56 @@ class RenderingService:
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=False)
     def _initialize_graphics(self) -> bool:
-        """Initialize OpenGL context and rendering pipeline."""
+        """Initialize OpenGL context and rendering pipeline with safe fallback."""
         try:
-            # Create standalone OpenGL context
-            self._ctx = moderngl.create_context(standalone=True)
-            self._logger.info(f"✅ Created OpenGL context: {self._ctx}")
+            # Attempt to create standalone OpenGL context with extensive error handling
+            try:
+                self._ctx = moderngl.create_context(standalone=True, require=33)
+                self._logger.info(f"✅ Created OpenGL context: {self._ctx}")
+            except Exception as ctx_error:
+                self._logger.warning(f"⚠️ Failed to create standalone OpenGL context: {ctx_error}")
+                # Try creating with minimal requirements
+                try:
+                    self._ctx = moderngl.create_context(standalone=True, require=21)
+                    self._logger.info(f"✅ Created OpenGL context with legacy support: {self._ctx}")
+                except Exception as legacy_error:
+                    self._logger.error(f"🚨 Failed to create any OpenGL context: {legacy_error}")
+                    return self._initialize_software_fallback()
             
-            # Create particle engine
-            self._particle_engine = create_qualia_particle_engine(
-                max_particles=10000,
-                enable_metrics=True,
-                standalone=False  # Use our context
-            )
-            self._particle_engine.ctx = self._ctx
-            self._particle_engine._initialize_shader()
-            
-            # Initialize particle buffers
-            if not self._particle_engine.initialize_buffers():
-                self._logger.error("🚨 Failed to initialize particle buffers")
-                return False
+            # Create particle engine with safe initialization
+            try:
+                self._particle_engine = create_qualia_particle_engine(
+                    max_particles=10000,
+                    enable_metrics=True,
+                    standalone=False  # Use our context
+                )
+                self._particle_engine.ctx = self._ctx
+                self._particle_engine._initialize_shader()
+                
+                # Initialize particle buffers
+                if not self._particle_engine.initialize_buffers():
+                    self._logger.error("🚨 Failed to initialize particle buffers")
+                    return self._initialize_software_fallback()
+            except Exception as engine_error:
+                self._logger.error(f"🚨 Failed to initialize particle engine: {engine_error}")
+                return self._initialize_software_fallback()
             
             # Create off-screen framebuffer
             self._create_framebuffer()
             
             # Create particle rendering shader
-            self._create_render_shader()
+            try:
+                self._create_render_shader()
+            except Exception as shader_error:
+                self._logger.error(f"🚨 Failed to create render shader: {shader_error}")
+                return self._initialize_software_fallback()
             
             # Create VAO for particle rendering
-            self._create_particle_vao()
+            try:
+                self._create_particle_vao()
+            except Exception as vao_error:
+                self._logger.error(f"🚨 Failed to create particle VAO: {vao_error}")
+                return self._initialize_software_fallback()
             
             self._is_initialized = True
             self._logger.info("✅ RenderingService graphics pipeline initialized")
@@ -110,7 +132,24 @@ class RenderingService:
             
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize graphics: {e}")
-            return False
+            return self._initialize_software_fallback()
+
+    @log_execution(level="INFO")
+    def _initialize_software_fallback(self) -> bool:
+        """Initialize software rendering fallback when OpenGL fails."""
+        self._logger.warning("🔄 Initializing software rendering fallback...")
+        
+        # Set fallback state
+        self._ctx = None
+        self._particle_engine = None
+        self._framebuffer = None
+        self._color_texture = None
+        self._render_shader = None
+        self._vao = None
+        self._is_initialized = True  # Mark as initialized in fallback mode
+        
+        self._logger.info("✅ Software rendering fallback initialized")
+        return True
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
@@ -229,8 +268,12 @@ class RenderingService:
         Returns:
             JPEG image data as bytes, or None if rendering failed
         """
-        if not self._is_initialized or not self._framebuffer:
-            return None
+        if not self._is_initialized:
+            return self._render_software_fallback()
+            
+        # If no OpenGL context, use software fallback
+        if not self._framebuffer or not self._ctx:
+            return self._render_software_fallback()
             
         current_time = time.time()
         
@@ -289,6 +332,37 @@ class RenderingService:
             
         except Exception as e:
             self._logger.error(f"🚨 Frame rendering failed: {e}")
+            return self._render_software_fallback()
+
+    @log_execution(level="DEBUG")
+    def _render_software_fallback(self) -> Optional[bytes]:
+        """Generate fallback frame data when GPU rendering is unavailable."""
+        try:
+            if not PIL_AVAILABLE:
+                self._logger.warning("⚠️ PIL not available for software fallback")
+                return None
+                
+            # Create a simple colored frame based on current qualia state
+            intensity = self._current_qualia_state.get('intensity', 0.5)
+            
+            # Generate RGB values based on intensity
+            r = int(255 * min(intensity * 2, 1.0))
+            g = int(255 * min(intensity * 1.5, 1.0))
+            b = int(255 * intensity)
+            
+            # Create PIL image with solid color
+            pil_image = Image.new('RGB', (self._width, self._height), (r, g, b))
+            
+            # Encode as JPEG
+            with io.BytesIO() as output:
+                pil_image.save(output, format='JPEG', quality=85, optimize=True)
+                jpeg_data = output.getvalue()
+            
+            self._last_frame_time = time.time()
+            return jpeg_data
+            
+        except Exception as e:
+            self._logger.error(f"🚨 Software fallback rendering failed: {e}")
             return None
 
     @log_execution(level="INFO")

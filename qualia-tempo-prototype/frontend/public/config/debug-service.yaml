@@ -1,0 +1,46 @@
+logging:
+  enableConsoleOutput: true
+  enableFileOutput: false
+  logLevel: "INFO"
+  maxLogFiles: 5
+  maxLogSize: 10485760
+
+eventMonitoring:
+  enableEventLogging: true
+  enableEventMetrics: true
+  maxEventHistory: 500
+  eventLogThrottle: 100
+
+performance:
+  enablePerformanceTracking: true
+  enableMemoryMonitoring: true
+  enableFrameRateTracking: true
+  metricsUpdateInterval: 5000
+
+development:
+  enableDebugOverlay: false
+  enableCheats: false
+  enableHotReload: true
+  enableBreakpoints: false
+
+profiling:
+  enableProfiling: false
+  profileUpdateInterval: 1000
+  maxProfileSamples: 1000
+
+errorTracking:
+  enableErrorStackTraces: true
+  enableErrorReporting: true
+  maxErrorHistory: 100
+
+network:
+  enableNetworkLogging: false
+  enableRequestMetrics: false
+  logRequestHeaders: false
+  logRequestBodies: false
+
+maxSessionHistory: 10
+maxEventHistory: 500
+performanceMonitoringInterval: 5000
+aiAnalysisInterval: 30000
+enableAIAnalysis: true

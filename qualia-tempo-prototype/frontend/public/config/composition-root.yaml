@@ -1,0 +1,10 @@
+autoStart: true
+enableBackendSync: true
+enableHealthMonitoring: true
+healthCheckIntervalMs: 30000
+retryInitializationOnError: true
+maxInitializationRetries: 3
+serviceInitializationTimeoutMs: 10000
+serviceShutdownTimeoutMs: 5000
+enableServiceLifecycleLogging: true
+enablePerformanceMonitoring: true

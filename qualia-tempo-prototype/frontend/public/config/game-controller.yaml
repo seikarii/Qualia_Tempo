@@ -1,0 +1,53 @@
+gameLifecycle:
+  autoStart: true
+  enablePause: true
+  enableReset: true
+  saveStateOnExit: true
+
+performance:
+  updateIntervalMs: 16
+  maxFrameSkip: 5
+  enableFrameRateLimiting: true
+
+stateManagement:
+  enableStateValidation: true
+  enableStatePersistence: true
+  stateSaveInterval: 5000
+  maxSaveSlots: 10
+
+inputHandling:
+  enableInputBuffering: true
+  inputBufferSize: 10
+  enableInputFiltering: true
+  inputDebounceMs: 50
+
+scoring:
+  baseScorePerHit: 100
+  comboMultiplier: 1.5
+  maxComboMultiplier: 10.0
+  scoreDecayRate: 0.95
+
+health:
+  maxHealth: 100
+  healthRegenRate: 1.0
+  damageOnMiss: 10
+  enableInvincibilityFrames: true
+  invincibilityDuration: 500
+
+difficulty:
+  adaptiveDifficulty: true
+  difficultyIncreaseRate: 0.1
+  maxDifficulty: 5.0
+  minDifficulty: 0.5
+
+events:
+  enableEventBuffering: true
+  maxEventQueueSize: 100
+  eventProcessingInterval: 16
+
+maxPlayers: 1
+enablePauseResume: true
+enableGameStateValidation: true
+enablePerformanceMonitoring: true
+autoSaveEnabled: true
+autoSaveIntervalMs: 30000

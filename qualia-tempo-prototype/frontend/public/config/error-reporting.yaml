@@ -1,0 +1,14 @@
+rateLimitWindow: 60000
+maxErrorsPerWindow: 100
+batchSize: 50
+batchTimeout: 30000
+maxRetentionTime: 86400000
+externalServiceUrl: ""
+retryAttempts: 3
+enableCompression: true
+maxBatchSizeBytes: 1048576
+enableErrorFiltering: true
+filterSensitiveData: true
+allowedDomains:
+  - "localhost"
+  - "127.0.0.1"

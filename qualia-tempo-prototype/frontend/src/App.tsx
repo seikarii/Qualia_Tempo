@@ -4,7 +4,7 @@ import { Subtitles } from "./components/Subtitles";
 import BackendCanvas from './components/BackendCanvas';
 import QualiaTempoGame from "./components/game/QualiaTempoGame";
 import QualiaTempoHUD from "./components/game/QualiaTempoHUD";
-import { RhythmVisualizer } from "./components/RhythmVisualizer";
+// import { RhythmVisualizer } from "./components/RhythmVisualizer"; // Temporarily disabled to fix viewport
 import { useGameStore } from "./state/useGameStore";
 import { useService } from "./services/hooks";
 import { TYPES } from "./services/inversify.types";
@@ -31,7 +31,7 @@ const QualiaLoader: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
+    <div className="h-screen bg-black flex items-center justify-center relative overflow-hidden">
       {/* Animated grid background */}
       <div className="absolute inset-0">
         <div 
@@ -277,7 +277,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden">
+    <div className="h-screen bg-black relative overflow-hidden">
       {/* Loading indicator when not connected */}
       {!connectionStatus.connected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -513,7 +513,8 @@ const App: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      <RhythmVisualizer />
+      {/* RhythmVisualizer temporarily disabled to fix viewport overflow */}
+      {/* <RhythmVisualizer /> */}
 
       {/* Enhanced HUD - ALWAYS VISIBLE FOR DEMONSTRATION */}
       <AnimatePresence>

@@ -130,38 +130,40 @@ async def websocket_video_stream(websocket: WebSocket, services: CompositionRoot
     QUALIA.CODE WebSocket endpoint for video streaming.
     Streams rendered frames from RenderingService to frontend clients.
     """
+    logger.info("🔌 WebSocket connection attempt to /ws/video_stream")
     streaming_service = services.get_streaming_web_service()
-    
+
     try:
         # Connect client
+        logger.info("🔗 Calling connect_client...")
         await streaming_service.connect_client(websocket)
-        
-        logger.info("Client connected to video stream")
-        
+
+        logger.info("✅ Client connected to video stream")
+
         # Handle incoming messages
         while True:
             try:
                 # Receive message from client
                 message_text = await websocket.receive_text()
                 message = json.loads(message_text)
-                
+
                 # Handle client message
                 await streaming_service.handle_client_message(websocket, message)
-                
+
             except WebSocketDisconnect:
                 break
-                
+
             except json.JSONDecodeError as e:
                 logger.error(f"🚨 Invalid JSON from client: {e}")
                 await websocket.send_json({"type": "error", "message": "Invalid JSON format"})
-                
+
             except Exception as e:
                 logger.error(f"🚨 Error handling WebSocket message: {e}")
                 break
-                
+
     except Exception as e:
         logger.error(f"🚨 WebSocket connection error: {e}")
-        
+
     finally:
         # Ensure client is properly disconnected
         await streaming_service.disconnect_client(websocket)
@@ -187,12 +189,17 @@ async def get_stream_status(services: CompositionRoot = Depends(get_services)):
 @app.websocket("/ws/test")
 async def websocket_test(websocket: WebSocket):
     """Simple WebSocket test endpoint to verify WebSocket infrastructure."""
+    logger.info("🔌 WebSocket connection attempt to /ws/test")
     try:
+        logger.info("🔗 Accepting test WebSocket connection...")
         await websocket.accept()
+        logger.info("✅ Test WebSocket connection accepted")
         await websocket.send_text("WebSocket test connection successful!")
+        logger.info("📤 Sent test message")
         await websocket.close()
+        logger.info("🔌 Test WebSocket connection closed")
     except Exception as e:
-        logger.error(f"WebSocket test failed: {e}")
+        logger.error(f"🚨 WebSocket test failed: {e}")
         raise
 
 

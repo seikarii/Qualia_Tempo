@@ -1,0 +1,28 @@
+api:
+  baseUrl: "http://127.0.0.1:8000"
+  qualiaEndpoint: "/qualia"
+  healthEndpoint: "/health"
+  timeout: 5000
+
+streaming:
+  websocket:
+    url: "ws://127.0.0.1:8000/ws/video_stream"
+    maxReconnectAttempts: 10
+    reconnectDelay: 2000
+    pingInterval: 8000
+    pingTimeout: 6000
+    connectionTimeout: 10000
+
+sync:
+  throttleDelay: 100
+  batchSize: 10
+  maxRetries: 3
+  retryDelay: 1000
+
+connection:
+  healthCheckInterval: 30000
+  connectionTimeout: 5000
+  maxFailedAttempts: 5
+
+validation:
+  enableSchemaValidation: true
