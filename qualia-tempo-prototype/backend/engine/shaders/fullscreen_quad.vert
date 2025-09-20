@@ -1,19 +1,26 @@
 #version 330 core
 
-// QUALIA.CODE v1.2 - Optimized Fullscreen Quad Vertex Shader
-// Memory-efficient approach without vertex buffer for UV coordinates
-
-layout (location = 0) in vec2 position;
+// QUALIA.CODE v1.3 - Optimized Fullscreen Quad (No VBO)
+// Genera un triángulo a pantalla completa sin necesidad de buffers.
 
 out vec2 uv;
 
+// Vértices de un triángulo que cubre toda la pantalla en clip-space
+const vec2 positions[3] = vec2[](
+    vec2(-1.0, -1.0),
+    vec2( 3.0, -1.0),
+    vec2(-1.0,  3.0)
+);
+
+// UVs correspondientes para el triángulo
+const vec2 uvs[3] = vec2[](
+    vec2(0.0, 0.0),
+    vec2(2.0, 0.0),
+    vec2(0.0, 2.0)
+);
+
 void main() {
-    // Calculate UV coordinates directly from vertex position
-    // This eliminates the need for a separate UV vertex buffer
-    uv = position * 0.5 + 0.5;
-    
-    // Flip Y coordinate for proper texture sampling
-    uv.y = 1.0 - uv.y;
-    
-    gl_Position = vec4(position, 0.0, 1.0);
+    // Asigna la posición y UV basándose en el índice del vértice
+    gl_Position = vec4(positions[gl_VertexID], 0.0, 1.0);
+    uv = uvs[gl_VertexID];
 }

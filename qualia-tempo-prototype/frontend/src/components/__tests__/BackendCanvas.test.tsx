@@ -3,10 +3,10 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { container } from '../services/inversify.container';
-import { TYPES } from '../services/inversify.types';
-import BackendCanvas from './BackendCanvas';
-import type { IStreamingVideoService, VideoFrame } from '../services/interfaces/IStreamingVideoService';
+import { container } from '../../services/inversify.container';
+import { TYPES } from '../../services/inversify.types';
+import BackendCanvas from '../BackendCanvas';
+import type { IStreamingVideoService, VideoFrame } from '../../services/interfaces/IStreamingVideoService';
 
 // Mock the useService hook
 vi.mock('../services/hooks', () => ({

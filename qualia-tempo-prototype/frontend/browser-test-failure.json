@@ -1,26 +1,32 @@
 {
-  "timestamp": "2025-09-20T07:34:36.141Z",
+  "timestamp": "2025-09-20T07:46:50.777Z",
   "success": false,
   "error": "page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"domcontentloaded\"\u001b[22m\n",
   "stack": "page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"domcontentloaded\"\u001b[22m\n\n    at comprehensiveTest (/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/browser-test.js:79:20)",
   "logs": [
     {
-      "timestamp": "2025-09-20T07:34:35.776Z",
+      "timestamp": "2025-09-20T07:46:50.357Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST SCRIPT LOADED ===",
       "entry": "[LOG] === RACE CONDITION TEST SCRIPT LOADED ==="
     },
     {
-      "timestamp": "2025-09-20T07:34:35.931Z",
+      "timestamp": "2025-09-20T07:46:50.494Z",
       "type": "debug",
       "text": "[vite] connecting...",
       "entry": "[DEBUG] [vite] connecting..."
     },
     {
-      "timestamp": "2025-09-20T07:34:35.943Z",
+      "timestamp": "2025-09-20T07:46:50.501Z",
       "type": "debug",
       "text": "[vite] connected.",
       "entry": "[DEBUG] [vite] connected."
+    },
+    {
+      "timestamp": "2025-09-20T07:46:50.735Z",
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+      "entry": "[INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
     }
   ],
   "errors": []

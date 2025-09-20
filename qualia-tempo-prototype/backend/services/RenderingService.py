@@ -238,13 +238,13 @@ class RenderingService:
         try:
             # Create HDR framebuffers with 16-bit float precision
             self._scene_fbo = self._ctx.framebuffer(
-                color_attachments=[self._ctx.texture((self._width, self._height), 4)],
+                color_attachments=[self._ctx.texture((self._width, self._height), 4, dtype='f2')],
                 depth_attachment=self._ctx.depth_texture((self._width, self._height))
             )
             
             # Bright pass extraction framebuffer
             self._bright_pass_fbo = self._ctx.framebuffer(
-                color_attachments=[self._ctx.texture((self._width, self._height), 4)]
+                color_attachments=[self._ctx.texture((self._width, self._height), 4, dtype='f2')]
             )
             
             # Blur framebuffers (reduced resolution for performance)
@@ -252,10 +252,10 @@ class RenderingService:
             blur_width, blur_height = self._width // blur_scale, self._height // blur_scale
             
             self._blur_fbo_a = self._ctx.framebuffer(
-                color_attachments=[self._ctx.texture((blur_width, blur_height), 4)]
+                color_attachments=[self._ctx.texture((blur_width, blur_height), 4, dtype='f2')]
             )
             self._blur_fbo_b = self._ctx.framebuffer(
-                color_attachments=[self._ctx.texture((blur_width, blur_height), 4)]
+                color_attachments=[self._ctx.texture((blur_width, blur_height), 4, dtype='f2')]
             )
             
             # Final composition framebuffer (8-bit for output)
@@ -311,58 +311,15 @@ class RenderingService:
     @handle_errors(fallback_return_value=None)
     def _create_fullscreen_quad(self) -> None:
         """
-        Creates an optimized VAO for fullscreen quad rendering.
+        Creates a buffer-less VAO for fullscreen triangle rendering.
         QUALIA.CODE: High-performance post-processing geometry.
         """
         if not self._ctx:
             return
-            
-        # Optimized fullscreen quad vertices (triangle strip)
-        # Position (x,y) + TexCoords (u,v)
-        quad_vertices = np.array([
-            # First triangle
-            -1.0, -1.0,  0.0, 0.0,  # Bottom-left
-             1.0, -1.0,  1.0, 0.0,  # Bottom-right
-            -1.0,  1.0,  0.0, 1.0,  # Top-left
-             1.0,  1.0,  1.0, 1.0,  # Top-right
-        ], dtype=np.float32)
-        
-        quad_buffer = self._ctx.buffer(quad_vertices)
-        
-        # Create a temporary shader program for VAO creation
-        # This will be replaced by actual post-processing shaders
-        temp_vertex_shader = """
-        #version 330 core
-        layout(location = 0) in vec2 position;
-        layout(location = 1) in vec2 texCoords;
-        out vec2 uv;
-        void main() {
-            gl_Position = vec4(position, 0.0, 1.0);
-            uv = texCoords;
-        }
-        """
-        
-        temp_fragment_shader = """
-        #version 330 core
-        in vec2 uv;
-        out vec4 fragColor;
-        void main() {
-            fragColor = vec4(1.0);
-        }
-        """
-        
-        temp_program = self._ctx.program(
-            vertex_shader=temp_vertex_shader,
-            fragment_shader=temp_fragment_shader
-        )
-        
-        # Create VAO for triangle strip rendering
-        self._quad_vao = self._ctx.vertex_array(
-            temp_program,
-            [(quad_buffer, '2f 2f', 'position', 'texCoords')]
-        )
-        
-        self._logger.debug("✅ Created fullscreen quad VAO for post-processing")
+
+        # Un VAO vacío es suficiente, ya que los vértices se generan en el shader.
+        self._quad_vao = self._ctx.vertex_array(self._bright_pass_shader, [])
+        self._logger.debug("✅ Created buffer-less fullscreen VAO for post-processing")
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
@@ -515,7 +472,28 @@ class RenderingService:
             self._ctx.enable(moderngl.DEPTH_TEST)
             
             # Set up enhanced uniforms for particle shader (with safety checks)
-            mvp_matrix = self._create_projection_matrix()
+            # --- Inicio de la modificación ---
+            # Crear una matriz de vista (cámara) simple
+            eye = np.array([0, 0, 80]) # Posición de la cámara
+            target = np.array([0, 0, 0]) # Hacia dónde mira
+            up = np.array([0, 1, 0]) # Vector "arriba"
+
+            z = eye - target
+            z = z / np.linalg.norm(z)
+            x = np.cross(up, z)
+            x = x / np.linalg.norm(x)
+            y = np.cross(z, x)
+
+            view_matrix = np.array([
+                [x[0], y[0], z[0], 0],
+                [x[1], y[1], z[1], 0],
+                [x[2], y[2], z[2], 0],
+                [-np.dot(x, eye), -np.dot(y, eye), -np.dot(z, eye), 1]
+            ], dtype='f4')
+
+            projection_matrix = self._create_projection_matrix()
+            mvp_matrix = np.dot(view_matrix, projection_matrix)
+            # --- Fin de la modificación ---
             
             # Set uniforms safely - use try/except since ModernGL doesn't have 'in' for Programs
             try:
@@ -577,7 +555,7 @@ class RenderingService:
             except KeyError:
                 pass  # Shader uniform not available
             
-            self._quad_vao.render(moderngl.TRIANGLE_STRIP)
+            self._quad_vao.render(moderngl.TRIANGLES, vertices=3)
             
             # === PASS 3: MULTI-PASS GAUSSIAN BLUR (PING-PONG) ===
             horizontal = True
@@ -609,7 +587,7 @@ class RenderingService:
                 except KeyError:
                     pass  # Fallback for missing uniforms
                 
-                self._quad_vao.render(moderngl.TRIANGLE_STRIP)
+                self._quad_vao.render(moderngl.TRIANGLES, vertices=3)
                 horizontal = not horizontal  # Toggle direction
             
             # Determine final blur texture
@@ -637,7 +615,7 @@ class RenderingService:
             except KeyError:
                 pass  # Fallback for missing uniforms
             
-            self._quad_vao.render(moderngl.TRIANGLE_STRIP)
+            self._quad_vao.render(moderngl.TRIANGLES, vertices=3)
             
             # === FINAL: READ PIXELS AND ENCODE ===
             raw_data = self._final_fbo.read(components=3, alignment=1)
@@ -665,19 +643,22 @@ class RenderingService:
 
     def _create_projection_matrix(self) -> Any:
         """
-        Create optimized projection matrix for particle rendering.
-        QUALIA.CODE: Efficient matrix generation for 3D to 2D projection.
+        Create a proper perspective projection matrix.
+        QUALIA.CODE: Correct 3D perspective projection.
         """
-        # Orthographic projection matrix for 2D particle rendering
-        mvp_matrix = np.eye(4, dtype=np.float32)
-        
-        # Scale and translate to normalize coordinates
-        mvp_matrix[0, 0] = 2.0 / self._width   # X scale
-        mvp_matrix[1, 1] = 2.0 / self._height  # Y scale  
-        mvp_matrix[3, 0] = -1.0                # X translate
-        mvp_matrix[3, 1] = -1.0                # Y translate
-        
-        return mvp_matrix
+        aspect_ratio = self._width / self._height
+        fov_rad = np.radians(60.0)  # Campo de visión de 60 grados
+        near_plane = 0.1
+        far_plane = 200.0
+
+        f = 1.0 / np.tan(fov_rad / 2.0)
+
+        return np.array([
+            [f / aspect_ratio, 0, 0, 0],
+            [0, f, 0, 0],
+            [0, 0, (far_plane + near_plane) / (near_plane - far_plane), -1],
+            [0, 0, (2 * far_plane * near_plane) / (near_plane - far_plane), 0]
+        ], dtype='f4')
 
     @log_execution(level="DEBUG")
     def _render_software_fallback(self) -> Optional[bytes]:
