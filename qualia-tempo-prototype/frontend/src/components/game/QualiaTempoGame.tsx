@@ -223,13 +223,13 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
           qualiaField={{
             alpha: zustandState.qualiaState.intensity,
             beta: zustandState.qualiaState.flow,
-            coherence: zustandState.qualiaState.focus_level
+            coherence: zustandState.qualiaState.precision
           }}
           musicData={{
             intensity: zustandState.qualiaState.intensity,
             harmony: zustandState.qualiaState.flow,
             emotional_valence: zustandState.qualiaState.recovery,
-            order_influence: zustandState.qualiaState.focus_level,
+            order_influence: zustandState.qualiaState.precision,
             chaos_influence: zustandState.qualiaState.chaos
           }}
         />
@@ -244,13 +244,13 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
             qualia_state: {
               emotional_valence: zustandState.qualiaState.recovery,
               arousal: zustandState.qualiaState.intensity,
-              coherence: zustandState.qualiaState.focus_level
+              coherence: zustandState.qualiaState.precision
             }
           }}
           performance={{
             accuracy: zustandState.notesHit / Math.max(1, zustandState.totalNotes),
             rhythm_sync: zustandState.qualiaState.flow,
-            qualia_coherence: zustandState.qualiaState.focus_level
+            qualia_coherence: zustandState.qualiaState.precision
           }}
         />
         
@@ -307,7 +307,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
       <QualiaTempoHUD 
         qualiaState={{
           intensity: zustandState.qualiaState.intensity,
-          focus_level: zustandState.notesHit / Math.max(1, zustandState.totalNotes),
+          precision: zustandState.notesHit / Math.max(1, zustandState.totalNotes),
           aggression: 0,
           flow: zustandState.qualiaState.flow,
           chaos: zustandState.qualiaState.chaos,
@@ -327,7 +327,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
         position={[zustandState.player.position.x, 0, zustandState.player.position.y]}
         qualiaState={{
           intensity: zustandState.qualiaState.intensity,
-          focus_level: zustandState.notesHit / Math.max(1, zustandState.totalNotes),
+          precision: zustandState.notesHit / Math.max(1, zustandState.totalNotes),
           aggression: 0,
           flow: zustandState.qualiaState.flow,
           chaos: zustandState.qualiaState.chaos,

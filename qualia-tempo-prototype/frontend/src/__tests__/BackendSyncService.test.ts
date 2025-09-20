@@ -165,7 +165,7 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
     test("should handle QualiaStateUpdated events", async () => {
       const mockQualiaState = {
         intensity: 0.8,
-        focus_level: 0.7,
+        precision: 0.7,
         aggression: 0.5,
         flow: 0.9,
         chaos: 0.2,
@@ -194,7 +194,7 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
     test("should throttle rapid QualiaState updates", async () => {
       const mockQualiaState = {
         intensity: 0.8,
-        focus_level: 0.7,
+        precision: 0.7,
         aggression: 0.5,
         flow: 0.9,
         chaos: 0.2,
@@ -254,7 +254,7 @@ describe("BackendSyncService - IOC COMPLIANT", () => {
         type: "QualiaStateUpdated",
         qualiaState: {
           intensity: 0.5,
-          focus_level: 0.5,
+          precision: 0.5,
           aggression: 0.5,
           flow: 0.5,
           chaos: 0.5,

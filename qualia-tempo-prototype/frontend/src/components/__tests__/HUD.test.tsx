@@ -57,7 +57,7 @@ describe("HUD Component", () => {
       getQualiaConfig: vi.fn(() => ({
         baseQualiaState: {
           intensity: 0.5,
-          focus_level: 0.5,
+          precision: 0.5,
           aggression: 0.5,
           flow: 0.5,
           chaos: 0.5,
@@ -72,7 +72,7 @@ describe("HUD Component", () => {
         },
         decayRates: {
           intensity: 0.02,
-          focus_level: 0.02,
+          precision: 0.02,
           aggression: 0.02,
           flow: 0.02,
           chaos: 0.02,
@@ -97,11 +97,11 @@ describe("HUD Component", () => {
         },
         updateIntervalMs: 16,
         historySize: 100,
-        hitNoteMultipliers: { intensity: 0.1, focus_level: 0.1, flow: 0.1 },
-        missNoteMultipliers: { chaos: 0.2, focus_level: -0.1, flow: -0.1 },
+        hitNoteMultipliers: { intensity: 0.1, precision: 0.1, flow: 0.1 },
+        missNoteMultipliers: { chaos: 0.2, precision: -0.1, flow: -0.1 },
         dashMultipliers: { aggression: 0.15, intensity: 0.1 },
         fastForwardMultipliers: { aggression: 0.1, intensity: 0.05 },
-        rewindMultipliers: { recovery: 0.1, focus_level: 0.05 },
+        rewindMultipliers: { recovery: 0.1, precision: 0.05 },
         updateInterval: 16,
         intensityDecay: 0.02,
         focusDecay: 0.02,
@@ -110,7 +110,7 @@ describe("HUD Component", () => {
         chaosDecay: 0.02,
         recoveryDecay: 0.02,
         transcendenceDecay: 0.02,
-        transcendenceThresholds: { intensity: 0.8, focus_level: 0.8, flow: 0.8 },
+        transcendenceThresholds: { intensity: 0.8, precision: 0.8, flow: 0.8 },
         minValue: 0.0,
         maxValue: 1.0,
       })),
@@ -209,7 +209,7 @@ describe("HUD Component", () => {
       combatData: null,
       qualiaState: {
         intensity: 0.8,
-        focus_level: 0.9,
+        precision: 0.9,
         aggression: 0.3,
         flow: 0.7,
         chaos: 0.1,
@@ -260,7 +260,7 @@ describe("HUD Component", () => {
       combatData: null,
       qualiaState: {
         intensity: 0.0,
-        focus_level: 0.0,
+        precision: 0.0,
         aggression: 0.0,
         flow: 0.0,
         chaos: 0.0,
@@ -312,7 +312,7 @@ describe("HUD Component", () => {
       combatData: null,
       qualiaState: {
         intensity: 0.6,
-        focus_level: 0.8,
+        precision: 0.8,
         aggression: 0.4,
         flow: 0.9,
         chaos: 0.2,

@@ -88,7 +88,7 @@ describe("App Component", () => {
 
   const mockQualiaState = {
     intensity: 0.5,
-    focus_level: 0.7,
+    precision: 0.7,
     aggression: 0.3,
     flow: 0.8,
     chaos: 0.1,

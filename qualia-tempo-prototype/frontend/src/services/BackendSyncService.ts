@@ -28,7 +28,7 @@ import type { QualiaState } from '../types/contracts';
 // API request/response types
 export interface QualiaStateRequest {
   intensity: number;
-  focus_level: number;
+  precision: number;
   aggression: number;
   flow: number;
   chaos: number;
@@ -313,7 +313,7 @@ export class BackendSyncService implements IBackendSyncService {
 
     const qualiaRequest: QualiaStateRequest = {
       intensity: event.qualiaState.intensity || 0,
-      focus_level: event.qualiaState.focus_level || 0,
+      precision: event.qualiaState.precision || 0,
       aggression: event.qualiaState.aggression || 0,
       flow: event.qualiaState.flow || 0,
       chaos: event.qualiaState.chaos || 0,
@@ -560,7 +560,7 @@ export class BackendSyncService implements IBackendSyncService {
   public async syncQualiaState(state: QualiaState): Promise<void> {
     const qualiaRequest: QualiaStateRequest = {
       intensity: state.intensity || 0,
-      focus_level: state.focus_level || 0,
+      precision: state.precision || 0,
       aggression: state.aggression || 0,
       flow: state.flow || 0,
       chaos: state.chaos || 0,

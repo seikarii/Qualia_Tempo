@@ -274,7 +274,7 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
       const qualiaStateUpdatedEvent = {
         qualiaState: {
           intensity: 0.8,
-          focus_level: 0.9,
+          precision: 0.9,
           aggression: 0.5,
           flow: 0.7,
           chaos: 0.2,
@@ -306,7 +306,7 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
     it('should create a copy of qualia state to avoid mutations', () => {
       const originalQualiaState = {
         intensity: 0.8,
-        focus_level: 0.9,
+        precision: 0.9,
         aggression: 0.5,
         flow: 0.7,
         chaos: 0.2,
@@ -359,7 +359,7 @@ describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
 
       qualiaStateHandler({
         type: 'QualiaStateUpdated',
-        qualiaState: { intensity: 0.8, focus_level: 0.9, aggression: 0.5, flow: 0.7, chaos: 0.2, recovery: 0.3, transcendence: 0.1 },
+        qualiaState: { intensity: 0.8, precision: 0.9, aggression: 0.5, flow: 0.7, chaos: 0.2, recovery: 0.3, transcendence: 0.1 },
         timestamp: new Date()
       });
       expect(mockSetStore).toHaveBeenCalledTimes(2);

@@ -347,14 +347,14 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
       <motion.div 
         className="absolute top-8 right-8 z-50 space-y-4"
         animate={{ 
-          boxShadow: qualiaState.focus_level > 0.5 ? 
+          boxShadow: qualiaState.precision > 0.5 ? 
             `0 0 30px ${flowColor}` : 'none'
         }}
       >
         {/* Precision Meter */}
         <div className="cyber-gradient border-2 border-purple-400 px-6 py-4 rounded-xl text-right backdrop-blur-md">
           <div className="text-2xl font-bold text-purple-400 font-['Orbitron'] mb-1">
-            {(qualiaState.focus_level * 100).toFixed(0)}%
+            {(qualiaState.precision * 100).toFixed(0)}%
           </div>
           <div className="text-sm text-purple-300 font-['Orbitron'] uppercase tracking-wider mb-2">
             Precision
@@ -364,7 +364,7 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
           <div className="w-32 h-2 bg-gray-800 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-purple-600 to-pink-400"
-              animate={{ width: `${qualiaState.focus_level * 100}%` }}
+              animate={{ width: `${qualiaState.precision * 100}%` }}
               transition={{ duration: 0.3 }}
             />
           </div>

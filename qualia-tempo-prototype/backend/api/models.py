@@ -69,7 +69,7 @@ class QualiaState(BaseModel):
     """
     Overall energy level (0-1)
     """
-    focus_level: Annotated[float, Field(ge=0.0, le=1.0)]
+    precision: Annotated[float, Field(ge=0.0, le=1.0)]
     """
     Accuracy streaks (0-1)
     """

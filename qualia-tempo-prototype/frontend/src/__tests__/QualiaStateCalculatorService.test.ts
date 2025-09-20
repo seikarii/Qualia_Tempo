@@ -149,7 +149,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
 
       expect(state).toEqual({
         intensity: 0.3,
-        focus_level: 0.5,
+        precision: 0.5,
         aggression: 0.0,
         flow: 0.4,
         chaos: 0.0,
@@ -179,7 +179,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
 
       // State should have changed due to HitNote
       expect(newState.intensity).toBeGreaterThan(initialState.intensity);
-      expect(newState.focus_level).toBeGreaterThan(initialState.focus_level);
+      expect(newState.precision).toBeGreaterThan(initialState.precision);
       expect(newState.flow).toBeGreaterThan(initialState.flow);
     });
 
@@ -247,7 +247,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
       const newState = qualiaService.getCurrentState();
 
       expect(newState.intensity).toBeGreaterThan(initialState.intensity);
-      expect(newState.focus_level).toBeGreaterThan(initialState.focus_level);
+      expect(newState.precision).toBeGreaterThan(initialState.precision);
       expect(newState.flow).toBeGreaterThan(initialState.flow);
       expect(newState.chaos).toBeLessThanOrEqual(initialState.chaos); // Chaos stays at 0 or decreases
     });
@@ -264,7 +264,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
 
       const newState = qualiaService.getCurrentState();
 
-      expect(newState.focus_level).toBeLessThan(initialState.focus_level);
+      expect(newState.precision).toBeLessThan(initialState.precision);
       expect(newState.chaos).toBeGreaterThan(initialState.chaos);
       expect(newState.flow).toBeLessThan(initialState.flow);
     });
@@ -314,7 +314,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
       const newState = qualiaService.getCurrentState();
 
       expect(newState.recovery).toBeGreaterThan(initialState.recovery);
-      expect(newState.focus_level).toBeGreaterThan(initialState.focus_level);
+      expect(newState.precision).toBeGreaterThan(initialState.precision);
     });
 
     test("should handle unknown actions gracefully", async () => {
@@ -418,7 +418,7 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
         intensityDecay: 0.2,
         hitNoteMultipliers: {
           intensity: 0.3,
-          focus_level: 0.4,
+          precision: 0.4,
           flow: 0.2,
         },
       };

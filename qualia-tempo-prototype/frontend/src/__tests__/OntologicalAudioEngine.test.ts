@@ -132,7 +132,7 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
     
     mockQualiaState = {
       intensity: 0.5,
-      focus_level: 0.7,
+      precision: 0.7,
       aggression: 0.3,
       flow: 0.8,
       chaos: 0.1,
@@ -188,7 +188,7 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
       const aggressiveState: QualiaState = {
         ...mockQualiaState,
         aggression: 0.8, // Above threshold for sound trigger
-        focus_level: 0.9
+        precision: 0.9
       };
       
       engine.updateEntitySound(entityId, aggressiveState);
@@ -348,7 +348,7 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
     it('should handle extreme qualia values without errors', () => {
       const extremeState: QualiaState = {
         intensity: 1.0,
-        focus_level: 1.0,
+        precision: 1.0,
         aggression: 1.0,
         flow: 1.0,
         chaos: 1.0,
@@ -365,7 +365,7 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
     it('should handle zero qualia values without errors', () => {
       const zeroState: QualiaState = {
         intensity: 0.0,
-        focus_level: 0.0,
+        precision: 0.0,
         aggression: 0.0,
         flow: 0.0,
         chaos: 0.0,

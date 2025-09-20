@@ -23,7 +23,7 @@ def test_health_endpoint(client):
 def test_update_qualia_endpoint(client):
     qualia_data = {
         "intensity": 0.8,
-        "focus_level": 0.5,
+        "precision": 0.5,
         "aggression": 0.7,
         "flow": 0.9,
         "chaos": 0.1,

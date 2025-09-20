@@ -173,7 +173,7 @@ describe("AudioService", () => {
     it("should handle QualiaStateUpdated events", () => {
       const mockQualiaState: QualiaState = {
         intensity: 0.8,
-        focus_level: 0.7,
+        precision: 0.7,
         aggression: 0.5,
         flow: 0.9,
         chaos: 0.1,
@@ -203,7 +203,7 @@ describe("AudioService", () => {
     it("should trigger emergent pattern for high transcendence", () => {
       const mockQualiaState: QualiaState = {
         intensity: 0.9,
-        focus_level: 0.7,
+        precision: 0.7,
         aggression: 0.5,
         flow: 0.9,
         chaos: 0.1,
@@ -237,7 +237,7 @@ describe("AudioService", () => {
     it("should not trigger emergent pattern for low transcendence", () => {
       const mockQualiaState: QualiaState = {
         intensity: 0.9,
-        focus_level: 0.7,
+        precision: 0.7,
         aggression: 0.5,
         flow: 0.9,
         chaos: 0.1,
@@ -346,7 +346,7 @@ describe("AudioService", () => {
   describe("Entity Voice Management", () => {
     const mockQualiaState: QualiaState = {
       intensity: 0.5,
-      focus_level: 0.5,
+      precision: 0.5,
       aggression: 0.0,
       flow: 0.5,
       chaos: 0.0,
@@ -409,7 +409,7 @@ describe("AudioService", () => {
         type: "QualiaStateUpdated",
         qualiaState: {
           intensity: 0.5,
-          focus_level: 0.5,
+          precision: 0.5,
           aggression: 0.0,
           flow: 0.5,
           chaos: 0.0,

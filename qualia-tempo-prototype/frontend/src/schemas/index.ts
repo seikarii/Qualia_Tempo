@@ -8,7 +8,7 @@ import { z } from 'zod';
  */
 export const QualiaStateSchema = z.object({
   intensity: z.number().min(0).max(1).describe('Overall energy level (0-1)'),
-  focus_level: z.number().min(0).max(1).describe('Accuracy streaks (0-1)'),
+  precision: z.number().min(0).max(1).describe('Accuracy streaks (0-1)'),
   aggression: z.number().min(0).max(1).describe('Fast Forward usage (0-1)'),
   flow: z.number().min(0).max(1).describe('Rhythmic consistency (0-1)'),
   chaos: z.number().min(0).max(1).describe('Rhythm failures (0-1)'),

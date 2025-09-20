@@ -319,7 +319,7 @@ class QualiaParticleEngine:
         uniform_data = struct.pack(
             "ffffffffI12x",  # 8 floats + 1 unsigned int + 12 bytes padding
             float(getattr(qualia_state, "intensity", 0.0)),
-            float(getattr(qualia_state, "focus_level", 0.0)),
+            float(getattr(qualia_state, "precision", 0.0)),
             float(getattr(qualia_state, "aggression", 0.0)),
             float(getattr(qualia_state, "flow", 0.0)),
             float(getattr(qualia_state, "chaos", 0.0)),

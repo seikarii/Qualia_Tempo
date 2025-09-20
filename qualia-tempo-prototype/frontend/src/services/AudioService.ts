@@ -124,7 +124,7 @@ export class AudioService implements IAudioService {
     // Crear voces para entidades del juego con estado base
     const baseState: QualiaState = {
       intensity: 0.5,
-      focus_level: 0.5,
+      precision: 0.5,
       aggression: 0.0,
       flow: 0.5,
       chaos: 0.0,

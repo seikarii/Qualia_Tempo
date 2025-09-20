@@ -98,7 +98,7 @@ export interface RhythmicMovementConfig {
 export interface QualiaCalculatorConfig {
   baseQualiaState: {
     intensity: number;
-    focus_level: number;
+    precision: number;
     aggression: number;
     flow: number;
     chaos: number;
@@ -113,7 +113,7 @@ export interface QualiaCalculatorConfig {
   };
   decayRates: {
     intensity: number;
-    focus_level: number;
+    precision: number;
     aggression: number;
     flow: number;
     chaos: number;
@@ -139,20 +139,20 @@ export interface QualiaCalculatorConfig {
   updateIntervalMs: number;
   historySize: number;
   // Additional properties used by QualiaStateCalculatorService
-  hitNoteMultipliers: { intensity: number; focus_level: number; flow: number };
-  missNoteMultipliers: { chaos: number; focus_level: number; flow: number };
+  hitNoteMultipliers: { intensity: number; precision: number; flow: number };
+  missNoteMultipliers: { chaos: number; precision: number; flow: number };
   dashMultipliers: { aggression: number; intensity: number };
   fastForwardMultipliers: { aggression: number; intensity: number };
-  rewindMultipliers: { recovery: number; focus_level: number };
+  rewindMultipliers: { recovery: number; precision: number };
   updateInterval: number; // Legacy property - mapped to updateIntervalMs
   intensityDecay: number;
-  focusDecay: number;
+  precisionDecay: number;
   aggressionDecay: number;
   flowDecay: number;
   chaosDecay: number;
   recoveryDecay: number;
   transcendenceDecay: number;
-  transcendenceThresholds: { intensity: number; focus_level: number; flow: number };
+  transcendenceThresholds: { intensity: number; precision: number; flow: number };
   minValue: number;
   maxValue: number;
 }

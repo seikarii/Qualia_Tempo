@@ -15,7 +15,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   // Map QualiaState to visual properties
   const intensityHue = qualiaState.intensity * 360;
   // const flowOpacity = 0.3 + (qualiaState.flow * 0.7); // Reserved for future use
-  const precisionSize = 30 + (qualiaState.focus_level * 20);
+  const precisionSize = 30 + (qualiaState.precision * 20);
   const chaosRotation = qualiaState.chaos * 180;
   const transcendenceGlow = qualiaState.transcendence * 20;
   

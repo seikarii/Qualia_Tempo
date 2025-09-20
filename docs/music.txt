@@ -96,7 +96,7 @@ DIRECTIVA ARQUITECTÓNICA MAESTRA: "PROYECTO KAIROS"
    2. Shaders (GLSL):
        * El shader de Iluminación Volumétrica debe leer el QualiaState desde el uniform buffer.
            * uniform float intensity: Controla la intensidad y alcance de los rayos.
-           * uniform float focus_level: Puede aumentar la definición y nitidez de los rayos.
+           * uniform float precision: Puede aumentar la definición y nitidez de los rayos.
        * El shader de Bloom también leerá el QualiaState.
            * uniform float intensity: Controla el umbral de brillo (qué tan brillante debe ser un píxel para que "florezca").
            * uniform float transcendence: Puede añadir un tinte de color o un efecto de destello al bloom.
@@ -178,7 +178,7 @@ DIRECTIVA ARQUITECTÓNICA MAESTRA: "PROYECTO KAIROS"
        * Dentro de este shader, definir las Signed Distance Functions (SDFs) para el jugador y el boss.
        * Estas funciones SDF deben estar fuertemente parametrizadas por el QualiaState.
            * sdf_boss(pos, chaos, aggression)
-           * sdf_player(pos, flow, focus_level, transcendence)
+           * sdf_player(pos, flow, precision, transcendence)
        * La función de transcendence debe alterar la SDF del jugador para que se convierta en un fractal (ej. un Mandelbulb o un Julia set).
 
   ---
@@ -193,7 +193,7 @@ DIRECTIVA ARQUITECTÓNICA MAESTRA: "PROYECTO KAIROS"
     5 **FASE 1: Atmósfera y Presencia**
     6 1.  En el backend de Python, modifica el bucle de `moderngl` para añadir un paso de post-procesado.
     7 2.  Implementa shaders para Iluminación Volumétrica y Bloom.
-    8 3.  Haz que los parámetros de estos shaders (intensidad, color, alcance) sean controlados por los valores del `QualiaState` (`intensity`, `focus_level`,
+    8 3.  Haz que los parámetros de estos shaders (intensidad, color, alcance) sean controlados por los valores del `QualiaState` (`intensity`, `precision`,
       `transcendence`) leídos desde el uniform buffer existente.
     9 
    10 **FASE 2: Synesthesia Profunda (FFT)**

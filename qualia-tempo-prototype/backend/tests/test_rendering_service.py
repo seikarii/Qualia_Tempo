@@ -201,7 +201,7 @@ class TestRenderingService:
         service._render_shader = mock_shader
         service._particle_engine = mock_particle_engine
         service._is_initialized = True
-        service._current_qualia_state = {"intensity": 0.5, "focus_level": 0.8}
+        service._current_qualia_state = {"intensity": 0.5, "precision": 0.8}
         service._width = 1920
         service._height = 1080
             

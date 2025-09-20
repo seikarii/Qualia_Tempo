@@ -274,7 +274,7 @@ class TestQualiaParticleEngineComprehensive:
         engine = QualiaParticleEngine(ctx=mock_ctx)
         engine.start_time = 2.0
 
-        qualia_state = {"intensity": 0.8, "focus_level": 0.6, "flow": 0.9, "chaos": 0.1}
+        qualia_state = {"intensity": 0.8, "precision": 0.6, "flow": 0.9, "chaos": 0.1}
 
         engine.update_uniform_buffer(qualia_state)
 

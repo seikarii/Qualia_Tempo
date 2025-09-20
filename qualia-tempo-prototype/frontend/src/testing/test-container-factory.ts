@@ -210,7 +210,7 @@ const mockGameStateStore: any = {
     clarity: 0,
     flow: 0,
     intensity: 0,
-    focus_level: 0,
+    precision: 0,
     aggression: 0,
     recovery: 0,
     chaos: 0

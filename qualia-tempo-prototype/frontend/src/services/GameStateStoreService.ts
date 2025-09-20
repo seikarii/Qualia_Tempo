@@ -180,7 +180,7 @@ export class GameStateStoreService implements IGameStateStoreService {
             },
             qualiaState: {
               intensity: 0,
-              focus_level: 0, // Updated to match QualiaState schema
+              precision: 0, // Updated to match QualiaState schema
               aggression: 0,
               flow: 0,
               chaos: 0,
@@ -216,7 +216,7 @@ export class GameStateStoreService implements IGameStateStoreService {
           },
           qualiaState: {
             intensity: 0,
-            focus_level: 0, // Updated to match QualiaState schema
+            precision: 0, // Updated to match QualiaState schema
             aggression: 0,
             flow: 0,
             chaos: 0,

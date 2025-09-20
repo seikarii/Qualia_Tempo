@@ -82,7 +82,7 @@ const mockGameState = {
   isPlaying: true,
   backendConnected: true,
   isConfigLoaded: true,
-  qualiaState: { intensity: 0.5, focus_level: 0.7 },
+  qualiaState: { intensity: 0.5, precision: 0.7 },
   player: { position: { x: 0, y: 0 }, health: 100 },
   combatData: null,
   totalNotes: 10,

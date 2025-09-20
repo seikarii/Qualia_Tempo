@@ -65,7 +65,7 @@ describe("EventBus", () => {
 
       const testQualiaState = {
         intensity: 0.8,
-        focus_level: 0.5,
+        precision: 0.5,
         aggression: 0.3,
         flow: 0.9,
         chaos: 0.1,

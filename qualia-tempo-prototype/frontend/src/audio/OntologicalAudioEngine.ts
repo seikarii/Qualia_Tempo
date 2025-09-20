@@ -63,7 +63,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
         sustain: 0.32 + qualiaState.intensity * 0.5,
         release: 0.5 + qualiaState.flow * 1.3
       },
-      volume: -7 + qualiaState.focus_level * 7
+      volume: -7 + qualiaState.precision * 7
     });
 
     synth.connect(this.globalDelay);
@@ -85,7 +85,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
 
     if (qualiaState.aggression > 0.2) {
       const note = Tone.Frequency(baseFreq * harmonic).toNote();
-      const velocity = Math.min(qualiaState.aggression + qualiaState.focus_level * 0.25, 1.0);
+      const velocity = Math.min(qualiaState.aggression + qualiaState.precision * 0.25, 1.0);
       const duration = rhythm;
 
       synth.triggerAttackRelease(note, duration, undefined, velocity);

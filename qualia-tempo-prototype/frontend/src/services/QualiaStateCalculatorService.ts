@@ -101,7 +101,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   private createInitialStateWithDefaults(): QualiaState {
     return {
       intensity: 0,
-      focus_level: 0,
+      precision: 0,
       aggression: 0,
       flow: 0,
       chaos: 0,
@@ -185,7 +185,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   private createInitialState(): QualiaState {
     return {
       intensity: 0.3,
-      focus_level: 0.5,
+      precision: 0.5,
       aggression: 0.0,
       flow: 0.4,
       chaos: 0.0,
@@ -268,8 +268,8 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     this.currentState.intensity = this.clamp(
       this.currentState.intensity + multipliers.intensity,
     );
-    this.currentState.focus_level = this.clamp(
-      this.currentState.focus_level + multipliers.focus_level,
+    this.currentState.precision = this.clamp(
+      this.currentState.precision + multipliers.precision,
     );
     this.currentState.flow = this.clamp(
       this.currentState.flow + multipliers.flow,
@@ -279,7 +279,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     this.currentState.chaos = this.clamp(this.currentState.chaos - 0.1);
 
     this.logger.info(
-      "🎯 [QualiaCalculator] Note Hit! Intensity+, Focus+, Flow+, Chaos-",
+      "🎯 [QualiaCalculator] Note Hit! Intensity+, Precision+, Flow+, Chaos-",
     );
     this.checkTranscendenceActivation();
   }
@@ -288,8 +288,8 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     const config = this.ensureConfigLoaded();
     const multipliers = config.missNoteMultipliers;
 
-    this.currentState.focus_level = this.clamp(
-      this.currentState.focus_level + multipliers.focus_level, // negative value
+    this.currentState.precision = this.clamp(
+      this.currentState.precision + multipliers.precision, // negative value
     );
     this.currentState.chaos = this.clamp(
       this.currentState.chaos + multipliers.chaos,
@@ -336,8 +336,8 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     this.currentState.recovery = this.clamp(
       this.currentState.recovery + multipliers.recovery,
     );
-    this.currentState.focus_level = this.clamp(
-      this.currentState.focus_level + multipliers.focus_level,
+    this.currentState.precision = this.clamp(
+      this.currentState.precision + multipliers.precision,
     );
 
     this.logger.info("⏪ [QualiaCalculator] Rewind! Recovery+, Focus+");
@@ -375,8 +375,8 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     this.currentState.intensity = this.clamp(
       this.currentState.intensity - config.intensityDecay * deltaTime,
     );
-    this.currentState.focus_level = this.clamp(
-      this.currentState.focus_level - config.focusDecay * deltaTime,
+    this.currentState.precision = this.clamp(
+      this.currentState.precision - config.precisionDecay * deltaTime,
     );
     this.currentState.aggression = this.clamp(
       this.currentState.aggression - config.aggressionDecay * deltaTime,
@@ -407,7 +407,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
 
     if (
       this.currentState.intensity >= thresholds.intensity &&
-      this.currentState.focus_level >= thresholds.focus_level &&
+      this.currentState.precision >= thresholds.precision &&
       this.currentState.flow >= thresholds.flow &&
       this.currentState.transcendence === 0
     ) {
@@ -446,7 +446,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   private logCurrentState(): void {
     this.logger.info("📊 [QualiaCalculator] Current State:", {
       intensity: this.currentState.intensity.toFixed(3),
-      focus_level: this.currentState.focus_level.toFixed(3),
+      precision: this.currentState.precision.toFixed(3),
       aggression: this.currentState.aggression.toFixed(3),
       flow: this.currentState.flow.toFixed(3),
       chaos: this.currentState.chaos.toFixed(3),
@@ -505,7 +505,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     
     // Apply exponential decay to all values using individual decay rates
     this.currentState.intensity *= Math.exp(-decayRates.intensity * deltaTime);
-    this.currentState.focus_level *= Math.exp(-decayRates.focus_level * deltaTime);
+    this.currentState.precision *= Math.exp(-decayRates.precision * deltaTime);
     this.currentState.aggression *= Math.exp(-decayRates.aggression * deltaTime);
     this.currentState.flow *= Math.exp(-decayRates.flow * deltaTime);
     this.currentState.chaos *= Math.exp(-decayRates.chaos * deltaTime);
