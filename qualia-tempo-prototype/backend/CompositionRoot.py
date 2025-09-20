@@ -4,7 +4,6 @@
 import logging
 from typing import Dict, Any, Optional
 from .services.EventBus import EventBus, get_event_bus
-from .services.StreamingWebService import force_kill_all_streaming_tasks
 from .utils.decorators import log_execution, handle_errors
 import asyncio
 
@@ -213,18 +212,14 @@ class CompositionRoot:
             self._logger.warning("⚠️  CompositionRoot not initialized, nothing to shut down.")
             return
 
-        self._logger.critical("🔥 NUCLEAR SHUTDOWN: Terminating ALL QUALIA.CODE services...")
-        
-        # NUCLEAR OPTION: Force kill ALL streaming tasks FIRST
-        self._logger.critical("💀 EXECUTING GLOBAL TASK TERMINATION...")
-        force_kill_all_streaming_tasks()
+        self._logger.info("� Gracefully shutting down QUALIA.CODE services...")
 
         # Shutdown services in reverse order to respect dependencies.
         for service_name in reversed(list(self._services.keys())):
             service = self._services.get(service_name)
             if service and hasattr(service, "shutdown") and callable(service.shutdown):
                 try:
-                    self._logger.critical(f"💀 Terminating {service_name}...")
+                    self._logger.info(f"� Shutting down {service_name}...")
                     # Use try/await approach to handle decorated async methods
                     try:
                         await service.shutdown()

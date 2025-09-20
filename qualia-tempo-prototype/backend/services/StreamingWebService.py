@@ -6,7 +6,6 @@ import logging
 import base64
 import signal
 import os
-import threading
 from typing import Dict, Any, Set, List
 from fastapi import WebSocket, WebSocketDisconnect
 from .EventBus import EventBus
@@ -17,26 +16,6 @@ from ..utils.decorators import (
 )
 
 logger = logging.getLogger(__name__)
-
-# GLOBAL TASK REGISTRY FOR ZOMBIE ELIMINATION
-_global_streaming_tasks: List[asyncio.Task] = []
-_task_registry_lock = threading.Lock()
-
-def register_streaming_task(task: asyncio.Task):
-    """Register a streaming task for shutdown tracking."""
-    with _task_registry_lock:
-        _global_streaming_tasks.append(task)
-        logger.debug(f"🎯 Registered streaming task: {id(task)}")
-
-def force_kill_all_streaming_tasks():
-    """NUCLEAR OPTION: Force cancel all registered streaming tasks."""
-    with _task_registry_lock:
-        logger.critical(f"🚨 FORCE KILLING {len(_global_streaming_tasks)} streaming tasks")
-        for task in _global_streaming_tasks:
-            if not task.done():
-                task.cancel()
-                logger.critical(f"💀 FORCE CANCELLED TASK: {id(task)}")
-        _global_streaming_tasks.clear()
 
 
 class StreamingWebService:
@@ -103,36 +82,45 @@ class StreamingWebService:
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
     async def _start_streaming(self) -> None:
-        """Start the video streaming loop."""
+        """Starts the video streaming loop, ensuring any previous task is stopped."""
         if self._is_streaming:
+            self._logger.warning("Start streaming called, but it is already running.")
             return
-            
+
+        # Ensure any lingering task is robustly stopped before starting a new one.
+        await self._stop_streaming()
+
         self._is_streaming = True
         self._stream_task = asyncio.create_task(self._streaming_loop())
-        
-        # REGISTER TASK FOR ZOMBIE ELIMINATION
-        register_streaming_task(self._stream_task)
-        
-        self._logger.info(f"� Started video streaming (Task ID: {id(self._stream_task)})")
+        self._logger.info(f"🚀 Started new video streaming task: {id(self._stream_task)}")
 
-    @log_execution(level="INFO")  
+    @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
     async def _stop_streaming(self) -> None:
-        """Stop the video streaming loop."""
-        if not self._is_streaming:
+        """Stops the video streaming loop robustly and waits for termination."""
+        if not self._is_streaming or not self._stream_task:
+            self._logger.info("Streaming is already stopped.")
             return
-            
+
         self._is_streaming = False
-        
-        if self._stream_task and not self._stream_task.done():
-            self._logger.critical(f"💀 FORCE CANCELLING STREAMING TASK: {id(self._stream_task)}")
-            self._stream_task.cancel()
+        task = self._stream_task
+        self._stream_task = None
+
+        self._logger.info(f"Attempting to cancel streaming task: {id(task)}")
+
+        if not task.done():
+            task.cancel()
             try:
-                await asyncio.wait_for(self._stream_task, timeout=1.0)
-            except (asyncio.CancelledError, asyncio.TimeoutError):
-                self._logger.critical(f"🔥 TASK TERMINATED: {id(self._stream_task)}")
-                
-        self._logger.info("🛑 Stopped video streaming")
+                await asyncio.wait_for(task, timeout=1.0)
+                self._logger.info(f"Streaming task {id(task)} cancelled and terminated successfully.")
+            except asyncio.CancelledError:
+                self._logger.info(f"Streaming task {id(task)} confirmed cancelled.")
+            except asyncio.TimeoutError:
+                self._logger.error(f"Timeout waiting for task {id(task)} to cancel. It may become a zombie.")
+            except Exception as e:
+                self._logger.error(f"Error during task cancellation for {id(task)}: {e}")
+        else:
+            self._logger.info(f"Streaming task {id(task)} was already done.")
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
@@ -277,40 +265,20 @@ class StreamingWebService:
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
     async def shutdown(self) -> None:
-        """Gracefully stop the streaming loop and disconnect clients."""
-        self._logger.critical("🚨 NUCLEAR SHUTDOWN: Forcing termination of StreamingWebService...")
-        
-        # NUCLEAR OPTION: Force kill ALL streaming tasks globally
-        force_kill_all_streaming_tasks()
-        
-        # Force stop streaming immediately
-        self._is_streaming = False
-        
-        # Cancel the streaming task with maximum force
-        if hasattr(self, '_stream_task') and self._stream_task and not self._stream_task.done():
-            self._logger.critical(f"� MURDERING STREAMING TASK: {id(self._stream_task)}")
-            self._stream_task.cancel()
-            try:
-                await asyncio.wait_for(self._stream_task, timeout=0.5)  # Reduced timeout
-            except (asyncio.CancelledError, asyncio.TimeoutError):
-                self._logger.critical("💀 TASK EXECUTION TERMINATED")
-        
-        # Stop streaming properly
+        """Gracefully stop the streaming loop and disconnect all clients."""
+        self._logger.info("Shutting down StreamingWebService...")
+
+        # Stop the streaming task robustly.
         await self._stop_streaming()
-        
-        # Force disconnect all clients
+
+        # Gracefully close all active connections.
         if self._connections:
-            self._logger.critical(f"🔌 SEVERING {len(self._connections)} client connections...")
-            connections = list(self._connections)
-            for websocket in connections:
-                try:
-                    if websocket.state == websocket.OPEN:
-                        await websocket.close()
-                except:
-                    pass  # Ignore errors during force close
+            self._logger.info(f"Closing {len(self._connections)} client connections...")
+            tasks = [ws.close() for ws in self._connections]
+            await asyncio.gather(*tasks, return_exceptions=True)
             self._connections.clear()
-        
-        self._logger.critical("💀 StreamingWebService TERMINATED.")
+
+        self._logger.info("✅ StreamingWebService shutdown complete.")
 
     def get_status(self) -> Dict[str, Any]:
         """Get current streaming service status."""
