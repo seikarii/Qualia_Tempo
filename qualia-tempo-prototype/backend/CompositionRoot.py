@@ -206,29 +206,37 @@ class CompositionRoot:
     @handle_errors(fallback_return_value=None)
     async def shutdown(self) -> None:
         """
-        Gracefully shut down all background services using a generic, extensible pattern.
+        Gracefully shut down all background services using proper async introspection.
         """
         if not self._initialized:
             self._logger.warning("⚠️  CompositionRoot not initialized, nothing to shut down.")
             return
 
-        self._logger.info("� Gracefully shutting down QUALIA.CODE services...")
+        self._logger.info("🔌 Gracefully shutting down QUALIA.CODE services...")
 
         # Shutdown services in reverse order to respect dependencies.
         for service_name in reversed(list(self._services.keys())):
             service = self._services.get(service_name)
-            if service and hasattr(service, "shutdown") and callable(service.shutdown):
-                try:
-                    self._logger.info(f"� Shutting down {service_name}...")
-                    # Use try/await approach to handle decorated async methods
-                    try:
-                        await service.shutdown()
-                    except TypeError:
-                        # If await fails, it's a sync method
-                        service.shutdown()
-                    self._logger.critical(f"💀 {service_name} TERMINATED.")
-                except Exception as e:
-                    self._logger.error(f"🚨 Error during shutdown of {service_name}: {e}", exc_info=True)
+
+            if not (service and hasattr(service, "shutdown") and callable(service.shutdown)):
+                continue
+
+            try:
+                self._logger.info(f"🛑 Shutting down {service_name}...")
+
+                # CORRECT WAY: Call shutdown and check if result is a coroutine
+                result = service.shutdown()
+                if asyncio.iscoroutine(result):
+                    await result
+                elif asyncio.iscoroutinefunction(service.shutdown):
+                    await service.shutdown()
+                else:
+                    # Synchronous shutdown, result is already the return value
+                    pass
+
+                self._logger.critical(f"✅ {service_name} TERMINATED.")
+            except Exception as e:
+                self._logger.error(f"🚨 Error during shutdown of {service_name}: {e}", exc_info=True)
 
         self._services.clear()
         self._initialized = False

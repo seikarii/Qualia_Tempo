@@ -153,6 +153,8 @@ class QualiaParticleEngine:
             return
 
         try:
+            logger.info("🔧 Compiling and linking GLSL shaders...")
+
             shader_path = os.path.join(
                 os.path.dirname(__file__), "shaders", "qualia_particles.glsl"
             )
@@ -165,11 +167,20 @@ class QualiaParticleEngine:
                 shader_source = f.read()
 
             self.compute_shader = self.ctx.compute_shader(shader_source)
-            logger.info("✅ Qualia compute shader initialized successfully")
+            logger.info("✅ Shaders compiled and linked successfully.")
+
+            # Loguear los uniforms esperados por el programa de shaders
+            uniforms = {name: uniform for name, uniform in self.compute_shader._members.items() if isinstance(uniform, moderngl.Uniform)}
+            logger.info(f"🔍 Detected uniforms in shader program: {list(uniforms.keys())}")
 
         except Exception as e:
-            logger.error(f"🚨 Failed to initialize Qualia shader: {e}")
-            self.compute_shader = None
+            logger.error("�🔥🔥 CATASTROPHIC SHADER FAILURE 🔥🔥🔥", exc_info=True)
+            if hasattr(e, 'stdout'):
+                # Si es un error de compilación de moderngl, stdout puede tener info del driver
+                logger.error(f"📢 GLSL Compiler/Linker Output:\n{e.stdout.decode(errors='ignore')}")
+
+            # Forzar un crash si los shaders fallan, para evitar un estado de 'falso positivo'
+            raise RuntimeError("Shader initialization failed, cannot continue.") from e
 
     def _create_qualia_shader(self, shader_path: str) -> None:
         """Create optimized compute shader for Qualia particle operations."""
@@ -242,16 +253,20 @@ class QualiaParticleEngine:
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
     def update_uniform_buffer(self, qualia_state: Dict[str, Any]) -> None:
-        """Update uniform buffer with QualiaState parameters."""
+        """Update uniform buffer with QualiaState parameters, respecting std140 layout."""
         if not self.ctx:
             return
 
         current_time = time.time() - self.start_time
 
-        # Pack QualiaState data according to shader UBO layout
-        # Format: 8 floats + 1 uint = 32 bytes + 4 bytes = 36 bytes total
+        # Pack QualiaState data according to std140 shader UBO layout.
+        # The struct must be padded to a multiple of 16 bytes.
+        # Original: 8 floats (32 bytes) + 1 uint (4 bytes) = 36 bytes.
+        # Padded size: 48 bytes (next multiple of 16).
+        # Padding needed: 48 - 36 = 12 bytes.
+        # Format: 8 floats, 1 unsigned int, 12 padding bytes ('x').
         uniform_data = struct.pack(
-            "ffffffffI",  # 8 floats + 1 unsigned int
+            "ffffffffI12x",  # 8 floats + 1 unsigned int + 12 bytes padding
             float(qualia_state.get("intensity", 0.0)),
             float(qualia_state.get("focus_level", 0.0)),
             float(qualia_state.get("aggression", 0.0)),
@@ -260,12 +275,13 @@ class QualiaParticleEngine:
             float(qualia_state.get("recovery", 0.0)),
             float(qualia_state.get("transcendence", 0.0)),
             float(current_time),
-            self.max_particles,  # Pass actual particle count for Fibonacci distribution
+            self.max_particles,
         )
 
         if self.uniform_buffer:
             self.uniform_buffer.write(uniform_data)
         else:
+            # Ensure buffer is created with the correct, padded size.
             self.uniform_buffer = self.ctx.buffer(uniform_data)
 
     @log_execution(level="DEBUG")
