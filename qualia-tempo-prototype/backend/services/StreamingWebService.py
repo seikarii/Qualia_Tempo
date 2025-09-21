@@ -4,7 +4,7 @@
 import asyncio
 import logging
 import base64
-from typing import Dict, Any, Set
+from typing import Dict, Any, Set, Optional
 from fastapi import WebSocket, WebSocketDisconnect
 from .EventBus import EventBus
 from .RenderingService import RenderingService
@@ -30,7 +30,7 @@ class StreamingWebService:
         # Connection management
         self._connections: Set[WebSocket] = set()
         self._is_streaming = False
-        self._stream_task: asyncio.Task = None
+        self._stream_task: Optional[asyncio.Task[Any]] = None
 
         # Streaming configuration
         self._target_fps = 30.0  # Lower FPS for WebSocket streaming

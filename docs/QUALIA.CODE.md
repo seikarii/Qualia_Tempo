@@ -328,13 +328,48 @@ const MyComponent = () => {
 - **Tolerancia Cero:** Un test roto es un `build` roto. No se integra código que rompa los tests existentes. Los tests son la especificación; el código se adapta a ellos.
 - **Aislamiento es Clave:** Los tests no deben tener efectos secundarios. Cada test debe poder ejecutarse de forma independiente y en cualquier orden.
 
-### 9.2. Tests Unitarios y de Integración: `test-container-factory.ts`
-El pilar de nuestro testing de servicios es el `test-container-factory.ts`.
+### 9.2. Backend Testing Factory: `TestCompositionRootFactory`
+El pilar de nuestro testing de servicios backend es el `TestCompositionRootFactory`.
+
+- **Propósito:** Proporciona un CompositionRoot pre-configurado y aislado para cada test. Esto nos permite testear un servicio (Service Under Test - SUT) en un entorno controlado donde todas sus dependencias están mockeadas.
+- **Regla de Oro:** Está **PROHIBIDO** instanciar servicios manualmente con `new` o llamadas directas al constructor dentro de los archivos de test. Todos los servicios deben ser resueltos a través del CompositionRoot de test para garantizar que se inyectan los mocks correctos.
+
+#### Ejemplo de Uso (Backend):
+```python
+import pytest
+from backend.tests.test_composition_root import TestCompositionRootFactory
+
+class TestMyService:
+    @pytest.fixture
+    def mocked_composition_root(self):
+        return TestCompositionRootFactory.create_mocked_composition_root()
+    
+    def test_my_service_functionality(self, mocked_composition_root):
+        # Arrange: Extract dependency mocks
+        mocks = TestCompositionRootFactory.get_service_mocks(mocked_composition_root)
+        event_bus_mock = mocks["event_bus"]
+        
+        # Act: Resolve Service Under Test from container
+        my_service = mocked_composition_root.get_service("my_service")
+        
+        # Configure mock behavior
+        event_bus_mock.publish.return_value = asyncio.create_task(asyncio.sleep(0))
+        
+        # Exercise the service
+        result = my_service.do_something()
+        
+        # Assert
+        assert result is not None
+        event_bus_mock.publish.assert_called_once()
+```
+
+### 9.3. Frontend Testing Factory: `test-container-factory.ts`
+El pilar de nuestro testing de servicios frontend es el `test-container-factory.ts`.
 
 - **Propósito:** Proporciona un contenedor de InversifyJS pre-configurado y aislado para cada test. Esto nos permite testear un servicio (Service Under Test - SUT) en un entorno controlado donde todas sus dependencias están mockeadas.
 - **Regla de Oro:** Está **PROHIBIDO** instanciar servicios manualmente con `new` dentro de los archivos de test. Todos los servicios deben ser resueltos a través del contenedor de test para garantizar que se inyectan los mocks correctos.
 
-#### Ejemplo de Uso:
+#### Ejemplo de Uso (Frontend):
 ```typescript
 import { createTestContainer, getMocksFromContainer } from '../testing/test-container-factory';
 import { INotificationService } from '../services/interfaces/INotificationService';
@@ -366,19 +401,80 @@ describe('NotificationService', () => {
 });
 ```
 
-### 9.3. Mocking de Dependencias y Decoradores
-- **Dependencias:** Todas las dependencias externas (`ILogger`, `IEventBus`, `IConfigurationService`, etc.) son reemplazadas por mocks en el `test-container-factory`. Esto nos permite afirmar que un servicio llama a sus dependencias correctamente (p. ej., `expect(mockLogger.info).toHaveBeenCalled()`).
-- **Decoradores:** Los decoradores como `@logMethod` o `@catchError` se mockean globalmente en la configuración de Jest (`test-container-factory.ts`) para que no interfieran con la lógica del test.
+### 9.4. Mocking de Dependencias y Decoradores
+- **Dependencias:** Todas las dependencias externas (`ILogger`, `IEventBus`, `IConfigurationService`, etc.) son reemplazadas por mocks en las factories de test. Esto nos permite afirmar que un servicio llama a sus dependencias correctamente (p. ej., `expect(mockLogger.info).toHaveBeenCalled()`).
+- **Decoradores:** Los decoradores como `@logMethod` o `@catchError` se mockean globalmente en la configuración de Jest/Vitest para que no interfieran con la lógica del test.
 
-### 9.4. Debugging E2E: `debug-full-system.sh`
+### 9.5. Testing Strategy Execution Protocol
+
+#### STEP 1: Identify Service Under Test (SUT)
+- **MANDATE:** Choose ONE service to test in isolation
+- **LOCATION:** The service being tested should be bound to its concrete implementation
+- **DEPENDENCIES:** ALL dependencies of the SUT must be mocked
+
+#### STEP 2: Create Test Container/CompositionRoot
+- **Backend:** Use `TestCompositionRootFactory.create_mocked_composition_root()`
+- **Frontend:** Use `createTestContainer()` from test-container-factory
+- **CRITICAL:** Never instantiate the SUT directly with `new`
+
+#### STEP 3: Configure Mock Behaviors
+- **Extract mocks:** Get dependency mocks from the factory
+- **Configure returns:** Set up mock return values for expected behavior
+- **Setup spies:** Configure mocks to track method calls
+
+#### STEP 4: Exercise the SUT
+- **Resolve from container:** Get the SUT instance from the test container/root
+- **Call methods:** Execute the functionality being tested
+- **Use real parameters:** Pass realistic data to the SUT methods
+
+#### STEP 5: Assert Results and Interactions
+- **Verify outputs:** Assert that the SUT returns expected results
+- **Check interactions:** Verify the SUT called its dependencies correctly
+- **Validate state:** Ensure the SUT's internal state is as expected
+
+### 9.6. Debugging E2E: `debug-full-system.sh`
 - **Propósito:** Este script sirve como una prueba de humo (smoke test) para verificar la integración completa entre el frontend y el backend. Es útil para detectar problemas de configuración, de entorno o de comunicación entre los dos sistemas.
 - **Limitaciones:** No debe usarse para el desarrollo iterativo de componentes. Su ciclo de feedback es demasiado largo. Es una herramienta de validación, no de desarrollo rápido.
 
-### 9.5. Visión Futura: Mejorando el Ecosistema
+### 9.7. Visión Futura: Mejorando el Ecosistema
 Estamos investigando activamente herramientas de testing más avanzadas para acelerar nuestros ciclos de desarrollo, incluyendo:
 - **Vitest:** Para un corredor de tests nativo de Vite con HMR.
 - **Playwright/Cypress Component Testing:** Para testear componentes de React en aislamiento, pero con la potencia de un navegador real.
 - **Storybook:** Para el desarrollo y la documentación visual de componentes de UI.
+
+### 9.8. Testing Anti-Patterns (FORBIDDEN)
+
+#### Backend Anti-Patterns:
+```python
+# FORBIDDEN: Direct service instantiation
+from backend.services.MyService import MyService
+service = MyService(dependency)  # CRITICAL VIOLATION
+
+# FORBIDDEN: Mock patches that bypass the container
+@patch('backend.services.MyService.dependency')
+def test_with_patch(mock_dep):
+    service = MyService()  # STILL VIOLATES IoC
+
+# CORRECT: Use the factory
+def test_with_factory(mocked_composition_root):
+    service = mocked_composition_root.get_service("my_service")
+```
+
+#### Frontend Anti-Patterns:
+```typescript
+// FORBIDDEN: Direct service instantiation
+import { MyService } from '../services/MyService';
+const service = new MyService(mockDep);  // CRITICAL VIOLATION
+
+// FORBIDDEN: Direct container access in tests
+import { container } from '../services/inversify.config';
+const service = container.get<IMyService>(TYPES.IMyService);  // VIOLATION
+
+// CORRECT: Use the test factory
+import { createTestContainer } from '../testing/test-container-factory';
+const testContainer = createTestContainer();
+const service = testContainer.get<IMyService>(TYPES.IMyService);
+```
 
   const handleAction = () => {
     eventBus.emit({ type: 'PlayerAction', data: { action: 'dash' } });

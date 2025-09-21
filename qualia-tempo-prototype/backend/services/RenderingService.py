@@ -6,13 +6,13 @@ import io
 import os
 import time
 import asyncio
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, Union, TYPE_CHECKING
 
 try:
     from PIL import Image
-
     PIL_AVAILABLE = True
 except ImportError:
+    Image = None  # type: ignore
     PIL_AVAILABLE = False
 
 from .EventBus import EventBus
@@ -25,15 +25,19 @@ from ..utils.decorators import (
     time_execution,
 )
 
-try:
+if TYPE_CHECKING:
     import moderngl
     import numpy as np
-
     MODERNGL_AVAILABLE = True
-except ImportError:
-    moderngl = None
-    np = None
-    MODERNGL_AVAILABLE = False
+else:
+    try:
+        import moderngl
+        import numpy as np
+        MODERNGL_AVAILABLE = True
+    except ImportError:
+        moderngl = None  # type: ignore
+        np = None  # type: ignore
+        MODERNGL_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +59,9 @@ class Camera:
         near: float = 0.1,
         far: float = 1000.0,
     ):
+        if not MODERNGL_AVAILABLE or np is None:
+            raise RuntimeError("NumPy is required for Camera operations")
+        
         self.position = np.array(position, dtype=np.float32)
         self.target = np.array(target, dtype=np.float32)
         self.up = np.array(up, dtype=np.float32)
@@ -65,6 +72,9 @@ class Camera:
 
     def get_view_matrix(self) -> Any:
         """Calculate view matrix from camera parameters."""
+        if np is None:
+            raise RuntimeError("NumPy is required for matrix calculations")
+            
         z = self.position - self.target
         z = z / np.linalg.norm(z)
         x = np.cross(self.up, z)
@@ -88,6 +98,9 @@ class Camera:
 
     def get_projection_matrix(self) -> Any:
         """Calculate perspective projection matrix."""
+        if np is None:
+            raise RuntimeError("NumPy is required for matrix calculations")
+            
         fov_rad = np.radians(self.fov)
         f = 1.0 / np.tan(fov_rad / 2.0)
 
@@ -180,7 +193,7 @@ class RenderingService:
     def __init__(
         self,
         event_bus: EventBus,
-        particle_engine: QualiaParticleEngine,
+        particle_engine: Optional[QualiaParticleEngine],
         width: int = 1920,
         height: int = 1080,
     ):
@@ -190,7 +203,7 @@ class RenderingService:
         self._height = height
 
         # QUALIA.CODE: Receive particle engine via dependency injection
-        self._particle_engine = particle_engine
+        self._particle_engine: Optional[QualiaParticleEngine] = particle_engine
 
         # QUALIA.CODE: Camera decoupled from rendering logic
         self._camera = Camera(aspect=width / height)
@@ -250,39 +263,46 @@ class RenderingService:
         Initialize complete HDR rendering pipeline with post-processing.
         QUALIA.CODE v1.2: Professional multi-pass bloom implementation.
         """
+        if not MODERNGL_AVAILABLE or moderngl is None:
+            self._logger.error("ModernGL is not available")
+            return False
+            
         try:
             # Create OpenGL context with fallback strategy
-            context_backends = ["egl", "glx", None]  # None = default
+            context_backends = [{"backend": "egl"}, {"backend": "glx"}, {}]  # {} = default
 
-            for backend in context_backends:
+            for backend_config in context_backends:
                 try:
-                    if backend:
+                    if backend_config:
                         self._ctx = moderngl.create_standalone_context(
-                            require=330, backend=backend
-                        )
-                        self._logger.info(
-                            f"✅ Created {backend.upper()} OpenGL context"
+                            require=330, backend=backend_config["backend"]
                         )
                     else:
                         self._ctx = moderngl.create_standalone_context(require=330)
-                        self._logger.info("✅ Created default OpenGL context")
+                    backend_name = backend_config.get("backend", "default")
+                    self._logger.info(
+                        f"✅ Created {backend_name.upper()} OpenGL context"
+                    )
                     break
                 except Exception as e:
+                    backend_name = backend_config.get("backend", "default")
                     self._logger.warning(
-                        f"⚠️ {backend or 'default'} context failed: {e}"
+                        f"⚠️ Failed to create {backend_name} context: {e}"
                     )
                     continue
             else:
+                # If all backends failed
                 self._logger.error("🚨 All OpenGL context creation attempts failed")
                 return self._initialize_software_fallback()
 
             # Initialize particle engine with our context
-            self._particle_engine.ctx = self._ctx
-            self._particle_engine._initialize_shader()
+            if self._particle_engine is not None:
+                self._particle_engine.ctx = self._ctx
+                self._particle_engine._initialize_shader()
 
-            if not self._particle_engine.initialize_buffers():
-                self._logger.error("🚨 Failed to initialize particle buffers")
-                return self._initialize_software_fallback()
+                if not self._particle_engine.initialize_buffers():
+                    self._logger.error("🚨 Failed to initialize particle buffers")
+                    return self._initialize_software_fallback()
 
             # Initialize rendering pipelines
             self._create_particle_render_pipeline()
@@ -883,7 +903,11 @@ class RenderingService:
 
             # Convert to PIL Image with proper orientation
             image = Image.frombytes("RGB", self._final_fbo.size, raw_data)
-            image = image.transpose(Image.FLIP_TOP_BOTTOM)  # Correct OpenGL orientation
+            if hasattr(Image, 'FLIP_TOP_BOTTOM'):
+                image = image.transpose(Image.FLIP_TOP_BOTTOM)  # Correct OpenGL orientation
+            else:
+                # Fallback for older PIL versions
+                image = image.transpose(2)  # FLIP_TOP_BOTTOM = 2
 
             # High-quality JPEG encoding
             with io.BytesIO() as output:

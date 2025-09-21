@@ -23,9 +23,13 @@ from ..utils.decorators import log_execution, handle_errors, time_execution
 
 # QUALIA.CODE: Import Pydantic QualiaState model for type safety
 try:
-    from ..api.models import QualiaState
+    from ..api.models import QualiaState as _QualiaStateModel
+    QualiaState = _QualiaStateModel
+    QUALIA_STATE_AVAILABLE = True
 except ImportError:
-    QualiaState = None  # Fallback for when models are not available
+    from typing import Any
+    QualiaState = Any  # type: ignore[misc]
+    QUALIA_STATE_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -374,7 +378,7 @@ class QualiaParticleEngine:
             return
 
         # QUALIA.CODE: Convert Dict to Pydantic model if necessary for type safety
-        if isinstance(qualia_state, dict) and QualiaState:
+        if isinstance(qualia_state, dict) and QUALIA_STATE_AVAILABLE:
             try:
                 qualia_state = QualiaState(**qualia_state)
                 logger.debug("✅ Converted Dict to Pydantic QualiaState model")
