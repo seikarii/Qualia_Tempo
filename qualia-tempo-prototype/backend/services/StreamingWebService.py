@@ -4,9 +4,7 @@
 import asyncio
 import logging
 import base64
-import signal
-import os
-from typing import Dict, Any, Set, List
+from typing import Dict, Any, Set
 from fastapi import WebSocket, WebSocketDisconnect
 from .EventBus import EventBus
 from .RenderingService import RenderingService
@@ -28,16 +26,16 @@ class StreamingWebService:
         self._event_bus = event_bus
         self._rendering_service = rendering_service
         self._logger = logging.getLogger(__name__)
-        
+
         # Connection management
         self._connections: Set[WebSocket] = set()
         self._is_streaming = False
         self._stream_task: asyncio.Task = None
-        
+
         # Streaming configuration
         self._target_fps = 30.0  # Lower FPS for WebSocket streaming
         self._compression_quality = 70  # JPEG quality (0-100)
-        
+
         # Statistics
         self._frames_sent = 0
         self._bytes_sent = 0
@@ -51,13 +49,15 @@ class StreamingWebService:
             await websocket.accept()
             self._connections.add(websocket)
             self._connected_clients = len(self._connections)
-            
-            self._logger.info(f"🔗 Client connected. Total connections: {self._connected_clients}")
-            
+
+            self._logger.info(
+                f"🔗 Client connected. Total connections: {self._connected_clients}"
+            )
+
             # Start streaming if this is the first connection
             if not self._is_streaming and self._connected_clients > 0:
                 await self._start_streaming()
-                
+
         except Exception as e:
             self._logger.error(f"🚨 Failed to connect client: {e}")
 
@@ -69,13 +69,15 @@ class StreamingWebService:
             if websocket in self._connections:
                 self._connections.remove(websocket)
                 self._connected_clients = len(self._connections)
-                
-                self._logger.info(f"🔌 Client disconnected. Total connections: {self._connected_clients}")
-                
+
+                self._logger.info(
+                    f"🔌 Client disconnected. Total connections: {self._connected_clients}"
+                )
+
                 # Stop streaming if no connections remain
                 if self._connected_clients == 0 and self._is_streaming:
                     await self._stop_streaming()
-                    
+
         except Exception as e:
             self._logger.error(f"🚨 Error disconnecting client: {e}")
 
@@ -92,7 +94,9 @@ class StreamingWebService:
 
         self._is_streaming = True
         self._stream_task = asyncio.create_task(self._streaming_loop())
-        self._logger.info(f"🚀 Started new video streaming task: {id(self._stream_task)}")
+        self._logger.info(
+            f"🚀 Started new video streaming task: {id(self._stream_task)}"
+        )
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
@@ -112,13 +116,19 @@ class StreamingWebService:
             task.cancel()
             try:
                 await asyncio.wait_for(task, timeout=1.0)
-                self._logger.info(f"Streaming task {id(task)} cancelled and terminated successfully.")
+                self._logger.info(
+                    f"Streaming task {id(task)} cancelled and terminated successfully."
+                )
             except asyncio.CancelledError:
                 self._logger.info(f"Streaming task {id(task)} confirmed cancelled.")
             except asyncio.TimeoutError:
-                self._logger.error(f"Timeout waiting for task {id(task)} to cancel. It may become a zombie.")
+                self._logger.error(
+                    f"Timeout waiting for task {id(task)} to cancel. It may become a zombie."
+                )
             except Exception as e:
-                self._logger.error(f"Error during task cancellation for {id(task)}: {e}")
+                self._logger.error(
+                    f"Error during task cancellation for {id(task)}: {e}"
+                )
         else:
             self._logger.info(f"Streaming task {id(task)} was already done.")
 
@@ -128,76 +138,84 @@ class StreamingWebService:
         """Main streaming loop that generates and sends frames to all connected clients."""
         frame_time = 1.0 / self._target_fps
         task_id = id(asyncio.current_task())
-        
+
         try:
             while self._is_streaming:  # Check streaming state
                 # IMMEDIATE CANCELLATION CHECK
                 if not self._is_streaming:
-                    logger.critical(f"💀 STREAMING TERMINATED - EXITING LOOP: {task_id}")
+                    logger.critical(
+                        f"💀 STREAMING TERMINATED - EXITING LOOP: {task_id}"
+                    )
                     break
-                    
+
                 if not self._connections:  # If no connections, just wait
                     await asyncio.sleep(0.1)
                     continue
-                    
+
                 loop_start = asyncio.get_event_loop().time()
-                
+
                 try:
                     # SECOND CANCELLATION CHECK BEFORE EXPENSIVE OPERATION
                     if not self._is_streaming:
-                        logger.critical(f"💀 STREAMING CANCELLED - ABORTING RENDER: {task_id}")
+                        logger.critical(
+                            f"💀 STREAMING CANCELLED - ABORTING RENDER: {task_id}"
+                        )
                         break
-                        
+
                     # Generate frame from rendering service - MAKE IT CANCELLABLE!
                     # Run the blocking render_frame() in a thread pool to make it cancellable
                     loop = asyncio.get_event_loop()
                     try:
                         frame_bytes = await asyncio.wait_for(
-                            loop.run_in_executor(None, self._rendering_service.render_frame),
-                            timeout=0.1  # 100ms timeout for frame rendering
+                            loop.run_in_executor(
+                                None, self._rendering_service.render_frame
+                            ),
+                            timeout=0.1,  # 100ms timeout for frame rendering
                         )
                     except asyncio.TimeoutError:
-                        logger.warning(f"⚠️ Frame rendering timed out - skipping frame")
+                        logger.warning("⚠️ Frame rendering timed out - skipping frame")
                         frame_bytes = None
                     except asyncio.CancelledError:
                         logger.critical(f"💀 FRAME RENDERING CANCELLED: {task_id}")
                         break
-                
+
                     if frame_bytes:
                         # THIRD CANCELLATION CHECK BEFORE TRANSMISSION
                         if not self._is_streaming:
-                            logger.critical(f"💀 STREAMING CANCELLED - ABORTING TRANSMISSION: {task_id}")
+                            logger.critical(
+                                f"💀 STREAMING CANCELLED - ABORTING TRANSMISSION: {task_id}"
+                            )
                             break
-                            
+
                         # Encode frame as base64 for WebSocket transmission
-                        frame_b64 = base64.b64encode(frame_bytes).decode('utf-8')
-                        
+                        frame_b64 = base64.b64encode(frame_bytes).decode("utf-8")
+
                         # Create WebSocket message
                         message = {
                             "type": "video_frame",
                             "data": frame_b64,
                             "timestamp": loop_start,
-                            "frame_number": self._frames_sent
+                            "frame_number": self._frames_sent,
                         }
-                        
+
                         # Send frame to all connected clients
                         await self._broadcast_frame(message)
-                        
+
                         # Update statistics
                         self._frames_sent += 1
                         self._bytes_sent += len(frame_bytes)
-                    
+
                     # Frame rate limiting
                     elapsed = asyncio.get_event_loop().time() - loop_start
                     sleep_time = max(0, frame_time - elapsed)
-                    
+
                     if sleep_time > 0:
                         await asyncio.sleep(sleep_time)
-                        
+
                 except Exception as e:
                     self._logger.error(f"🚨 Error in frame generation: {e}")
                     await asyncio.sleep(0.1)  # Brief pause before retry
-                    
+
         except asyncio.CancelledError:
             self._logger.info("🛑 Streaming loop cancelled successfully")
             raise
@@ -212,53 +230,57 @@ class StreamingWebService:
         """Send frame message to all connected clients, removing dead connections."""
         if not self._connections:
             return
-            
+
         # Send to all connections simultaneously
         disconnected = set()
-        
+
         for websocket in self._connections.copy():
             try:
                 await websocket.send_json(message)
-                
+
             except WebSocketDisconnect:
                 disconnected.add(websocket)
-                
+
             except Exception as e:
                 self._logger.error(f"🚨 Error sending frame to client: {e}")
                 disconnected.add(websocket)
-        
+
         # Remove disconnected clients
         for websocket in disconnected:
             await self.disconnect_client(websocket)
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
-    async def handle_client_message(self, websocket: WebSocket, message: Dict[str, Any]) -> None:
+    async def handle_client_message(
+        self, websocket: WebSocket, message: Dict[str, Any]
+    ) -> None:
         """Handle incoming messages from WebSocket clients."""
         message_type = message.get("type")
-        
+
         if message_type == "ping":
             # Respond to ping with pong, including the mandatory pingId for contract compliance
-            await websocket.send_json({
-                "type": "pong",
-                "timestamp": message.get("timestamp"),
-                "pingId": message.get("pingId")
-            })
-            
+            await websocket.send_json(
+                {
+                    "type": "pong",
+                    "timestamp": message.get("timestamp"),
+                    "pingId": message.get("pingId"),
+                }
+            )
+
         elif message_type == "quality_change":
             # Handle quality change requests
             new_quality = message.get("quality", self._compression_quality)
             if 10 <= new_quality <= 100:
                 self._compression_quality = new_quality
                 self._logger.info(f"🎛️ Changed streaming quality to {new_quality}")
-                
+
         elif message_type == "fps_change":
             # Handle FPS change requests
             new_fps = message.get("fps", self._target_fps)
             if 1.0 <= new_fps <= 60.0:
                 self._target_fps = new_fps
                 self._logger.info(f"🎛️ Changed streaming FPS to {new_fps}")
-                
+
         else:
             self._logger.warning(f"⚠️ Unknown message type: {message_type}")
 

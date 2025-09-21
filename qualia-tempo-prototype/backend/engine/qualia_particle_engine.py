@@ -133,7 +133,9 @@ class QualiaParticleEngine:
         # Ping-pong buffer pairs for particles
         self.particle_buffers = PingPongBufferPair()
         self.uniform_buffer: Any = None
-        self.force_fields_buffer: Any = None  # CRITICAL: ForceFieldsBuffer for binding = 2
+        self.force_fields_buffer: Any = (
+            None  # CRITICAL: ForceFieldsBuffer for binding = 2
+        )
 
         # State tracking
         self.simulation_tick = 0
@@ -179,14 +181,22 @@ class QualiaParticleEngine:
             logger.info("✅ Shaders compiled and linked successfully.")
 
             # Loguear los uniforms esperados por el programa de shaders
-            uniforms = {name: uniform for name, uniform in self.compute_shader._members.items() if isinstance(uniform, moderngl.Uniform)}
-            logger.info(f"🔍 Detected uniforms in shader program: {list(uniforms.keys())}")
+            uniforms = {
+                name: uniform
+                for name, uniform in self.compute_shader._members.items()
+                if isinstance(uniform, moderngl.Uniform)
+            }
+            logger.info(
+                f"🔍 Detected uniforms in shader program: {list(uniforms.keys())}"
+            )
 
         except Exception as e:
             logger.error("�🔥🔥 CATASTROPHIC SHADER FAILURE 🔥🔥🔥", exc_info=True)
-            if hasattr(e, 'stdout'):
+            if hasattr(e, "stdout"):
                 # Si es un error de compilación de moderngl, stdout puede tener info del driver
-                logger.error(f"📢 GLSL Compiler/Linker Output:\n{e.stdout.decode(errors='ignore')}")
+                logger.error(
+                    f"📢 GLSL Compiler/Linker Output:\n{e.stdout.decode(errors='ignore')}"
+                )
 
             # Forzar un crash si los shaders fallan, para evitar un estado de 'falso positivo'
             raise RuntimeError("Shader initialization failed, cannot continue.") from e
@@ -234,7 +244,9 @@ class QualiaParticleEngine:
             logger.info(
                 f"✅ Ping-pong particle buffers initialized: {len(particles_data)} particles"
             )
-            logger.info(f"✅ ForceFieldsBuffer initialized with {len(force_fields_data)} force fields")
+            logger.info(
+                f"✅ ForceFieldsBuffer initialized with {len(force_fields_data)} force fields"
+            )
             return True
 
         except Exception as e:
@@ -313,13 +325,17 @@ class QualiaParticleEngine:
     def start(self) -> None:
         """Start the QualiaParticleEngine and subscribe to QualiaState events."""
         if not self.event_bus:
-            logger.warning("⚠️ No EventBus provided, cannot start event-driven operation")
+            logger.warning(
+                "⚠️ No EventBus provided, cannot start event-driven operation"
+            )
             return
 
         # QUALIA.CODE: Subscribe to QualiaStateUpdated events for EDA compliance
         self.event_bus.subscribe("QualiaStateUpdated", self._on_qualia_state_updated)
         self.status = "running"
-        logger.info("🎆 QualiaParticleEngine started and subscribed to QualiaState events")
+        logger.info(
+            "🎆 QualiaParticleEngine started and subscribed to QualiaState events"
+        )
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
@@ -328,7 +344,7 @@ class QualiaParticleEngine:
         try:
             # Extract QualiaState from event data
             # QUALIA.CODE: EventBus passes Event object with data attribute
-            qualia_state = event.data if hasattr(event, 'data') else event
+            qualia_state = event.data if hasattr(event, "data") else event
 
             if not qualia_state:
                 logger.warning("⚠️ QualiaStateUpdated event missing qualia_state data")
@@ -341,14 +357,18 @@ class QualiaParticleEngine:
             # QUALIA.CODE: Maintain particle system responsiveness to state changes
             self.compute_step()
 
-            logger.debug("✅ Particle system updated and computed from QualiaState event")
+            logger.debug(
+                "✅ Particle system updated and computed from QualiaState event"
+            )
 
         except Exception as e:
             logger.error(f"🚨 Failed to handle QualiaStateUpdated event: {e}")
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
-    def update_uniform_buffer(self, qualia_state: Any) -> None:  # QUALIA.CODE: Accepts Pydantic QualiaState model
+    def update_uniform_buffer(
+        self, qualia_state: Any
+    ) -> None:  # QUALIA.CODE: Accepts Pydantic QualiaState model
         """Update uniform buffer with QualiaState parameters, respecting std140 layout."""
         if not self.ctx:
             return
@@ -369,7 +389,9 @@ class QualiaParticleEngine:
         uniform_data = struct.pack(
             "ffffffffI3f3f",  # 8 floats + 1 unsigned int + 3 floats + 3 floats (attractor position)
             float(getattr(qualia_state, "intensity", 0.0)),
-            float(getattr(qualia_state, "accuracy", 0.0)),  # CRITICAL: Use accuracy to match shader uniform
+            float(
+                getattr(qualia_state, "accuracy", 0.0)
+            ),  # CRITICAL: Use accuracy to match shader uniform
             float(getattr(qualia_state, "aggression", 0.0)),
             float(getattr(qualia_state, "flow", 0.0)),
             float(getattr(qualia_state, "chaos", 0.0)),
@@ -378,7 +400,9 @@ class QualiaParticleEngine:
             float(current_time),
             self.max_particles,
             # Enhanced parameters for advanced physics
-            0.0, 0.0, 0.0,  # attractor_position (x, y, z)
+            0.0,
+            0.0,
+            0.0,  # attractor_position (x, y, z)
             2.0,  # interaction_radius
             0.98,  # damping_factor
             1.0,  # force_field_strength
@@ -552,17 +576,27 @@ def create_qualia_particle_engine(
         try:
             # Try EGL first, fallback to software if not available
             try:
-                ctx = moderngl.create_standalone_context(backend='egl')
-                logger.info("✅ Created standalone EGL context for Qualia particle engine")
+                ctx = moderngl.create_standalone_context(backend="egl")
+                logger.info(
+                    "✅ Created standalone EGL context for Qualia particle engine"
+                )
             except Exception as egl_error:
-                logger.warning(f"⚠️ EGL not available ({egl_error}), trying software context")
+                logger.warning(
+                    f"⚠️ EGL not available ({egl_error}), trying software context"
+                )
                 try:
-                    ctx = moderngl.create_standalone_context(backend='software')
-                    logger.info("✅ Created standalone software context for Qualia particle engine")
+                    ctx = moderngl.create_standalone_context(backend="software")
+                    logger.info(
+                        "✅ Created standalone software context for Qualia particle engine"
+                    )
                 except Exception as sw_error:
-                    logger.warning(f"⚠️ Software context failed ({sw_error}), trying default context")
+                    logger.warning(
+                        f"⚠️ Software context failed ({sw_error}), trying default context"
+                    )
                     ctx = moderngl.create_standalone_context()
-                    logger.info("✅ Created default standalone context for Qualia particle engine")
+                    logger.info(
+                        "✅ Created default standalone context for Qualia particle engine"
+                    )
         except Exception as e:
             logger.warning(f"⚠️ Failed to create standalone context: {e}")
 

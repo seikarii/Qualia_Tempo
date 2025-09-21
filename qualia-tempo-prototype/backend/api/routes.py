@@ -125,7 +125,9 @@ async def update_qualia_visuals(
 
 
 @app.websocket("/ws/video_stream")
-async def websocket_video_stream(websocket: WebSocket, services: CompositionRoot = Depends(get_services)):
+async def websocket_video_stream(
+    websocket: WebSocket, services: CompositionRoot = Depends(get_services)
+):
     """
     QUALIA.CODE WebSocket endpoint for video streaming.
     Streams rendered frames from RenderingService to frontend clients.
@@ -155,7 +157,9 @@ async def websocket_video_stream(websocket: WebSocket, services: CompositionRoot
 
             except json.JSONDecodeError as e:
                 logger.error(f"🚨 Invalid JSON from client: {e}")
-                await websocket.send_json({"type": "error", "message": "Invalid JSON format"})
+                await websocket.send_json(
+                    {"type": "error", "message": "Invalid JSON format"}
+                )
 
             except Exception as e:
                 logger.error(f"🚨 Error handling WebSocket message: {e}")
@@ -176,7 +180,7 @@ async def get_stream_status(services: CompositionRoot = Depends(get_services)):
     try:
         streaming_service = services.get_streaming_web_service()
         rendering_service = services.get_rendering_service()
-        
+
         return {
             "streaming": streaming_service.get_status(),
             "rendering": rendering_service.get_status(),

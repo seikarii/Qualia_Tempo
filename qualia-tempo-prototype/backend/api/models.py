@@ -4,16 +4,14 @@
 # Run `scripts/generate_contracts.sh` to regenerate
 
 from __future__ import annotations
-from pydantic import BaseModel, Field, Extra, ConfigDict
-from typing import List, Optional, Annotated
+from pydantic import BaseModel, Field, ConfigDict
+from typing import List, Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Annotated
-from typing import Annotated, List
+
 
 class Position(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     x: float
     """
@@ -25,14 +23,13 @@ class Position(BaseModel):
     """
 
 
-
 class PlayerState(BaseModel):
     """
     Player state data structure
     """
 
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     position: Position
     health: Annotated[float, Field(ge=0.0, le=100.0)]
@@ -63,7 +60,7 @@ class QualiaState(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     intensity: Annotated[float, Field(ge=0.0, le=1.0)]
     """
@@ -97,7 +94,7 @@ class QualiaState(BaseModel):
 
 class NoteData(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     timestamp: Annotated[float, Field(ge=0.0)]
     """
@@ -110,10 +107,9 @@ class NoteData(BaseModel):
     """
 
 
-
 class LyricData(BaseModel):
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     timestamp: Annotated[float, Field(ge=0.0)]
     """
@@ -125,14 +121,13 @@ class LyricData(BaseModel):
     """
 
 
-
 class CombatData(BaseModel):
     """
     Combat scenario data structure for Qualia Tempo
     """
 
     model_config = ConfigDict(
-        extra='forbid',
+        extra="forbid",
     )
     id: str
     """
@@ -166,7 +161,6 @@ class CombatData(BaseModel):
     """
     Array of all lyrics in the song
     """
-
 
 
 # Additional response models for API endpoints

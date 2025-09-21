@@ -67,10 +67,10 @@ class CompositionRoot:
                 event_bus=self._event_bus,  # QUALIA.CODE: Inject EventBus dependency
             )
             self._services["particle_system"] = particle_engine
-            
+
             # QUALIA.CODE: Start the engine to subscribe to events
             particle_engine.start()
-            
+
             self._logger.debug("🎆 QualiaParticleEngine service registered and started")
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize QualiaParticleEngine: {e}")
@@ -90,12 +90,12 @@ class CompositionRoot:
 
         # QUALIA.CODE: Get particle engine from services and inject it
         particle_engine = self._services["particle_system"]
-        
+
         rendering_service = RenderingService(
             event_bus=self._event_bus,
             particle_engine=particle_engine,  # QUALIA.CODE: Inject particle engine dependency
             width=1920,
-            height=1080
+            height=1080,
         )
         self._services["rendering_service"] = rendering_service
         self._logger.debug("✅ RenderingService initialized")
@@ -106,8 +106,7 @@ class CompositionRoot:
 
         rendering_service = self._services["rendering_service"]
         streaming_service = StreamingWebService(
-            event_bus=self._event_bus,
-            rendering_service=rendering_service
+            event_bus=self._event_bus, rendering_service=rendering_service
         )
         self._services["streaming_web_service"] = streaming_service
         self._logger.debug("✅ StreamingWebService initialized")
@@ -117,7 +116,9 @@ class CompositionRoot:
         # QUALIA.CODE: QualiaParticleEngine now handles its own events autonomously
         # No need for external ParticleEventHandler - engine subscribes directly to EventBus
         if "particle_system" in self._services:
-            self._logger.debug("🎆 QualiaParticleEngine registered for autonomous event handling")
+            self._logger.debug(
+                "🎆 QualiaParticleEngine registered for autonomous event handling"
+            )
 
             # Add handler for EngineReset event
             from .services.EventBus import QualiaEventHandler
@@ -184,7 +185,7 @@ class CompositionRoot:
         return self.get_service("rendering_service")
 
     def get_streaming_web_service(self) -> Any:
-        """Get StreamingWebService instance.""" 
+        """Get StreamingWebService instance."""
         return self.get_service("streaming_web_service")
 
     @log_execution(level="INFO")
@@ -194,7 +195,9 @@ class CompositionRoot:
         Gracefully shut down all background services using proper async introspection.
         """
         if not self._initialized:
-            self._logger.warning("⚠️  CompositionRoot not initialized, nothing to shut down.")
+            self._logger.warning(
+                "⚠️  CompositionRoot not initialized, nothing to shut down."
+            )
             return
 
         self._logger.info("🔌 Gracefully shutting down QUALIA.CODE services...")
@@ -203,7 +206,9 @@ class CompositionRoot:
         for service_name in reversed(list(self._services.keys())):
             service = self._services.get(service_name)
 
-            if not (service and hasattr(service, "shutdown") and callable(service.shutdown)):
+            if not (
+                service and hasattr(service, "shutdown") and callable(service.shutdown)
+            ):
                 continue
 
             try:
@@ -221,11 +226,15 @@ class CompositionRoot:
 
                 self._logger.critical(f"✅ {service_name} TERMINATED.")
             except Exception as e:
-                self._logger.error(f"🚨 Error during shutdown of {service_name}: {e}", exc_info=True)
+                self._logger.error(
+                    f"🚨 Error during shutdown of {service_name}: {e}", exc_info=True
+                )
 
         self._services.clear()
         self._initialized = False
-        self._logger.critical("💀 ALL SERVICES TERMINATED. CompositionRoot shutdown is complete.")
+        self._logger.critical(
+            "💀 ALL SERVICES TERMINATED. CompositionRoot shutdown is complete."
+        )
 
 
 # Global CompositionRoot instance
