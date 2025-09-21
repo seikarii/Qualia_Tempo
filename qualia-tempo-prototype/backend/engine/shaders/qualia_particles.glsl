@@ -6,14 +6,18 @@
 
 layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
-// QualiaParticle structure optimized for visual effects
+// Enhanced QualiaParticle structure with additional physics properties
 struct QualiaParticle {
     vec3 position;          // x, y, z coordinates
     vec3 velocity;          // velocity vector
+    vec3 acceleration;      // acceleration vector for advanced physics
     vec4 color;             // RGBA color
     float lifetime;         // remaining lifetime
     float size;             // particle size
     float resonance;        // accumulated player performance resonance (0-1)
+    float mass;             // particle mass for gravitational effects
+    float charge;           // particle charge for electromagnetic effects
+    vec3 force_accumulator; // accumulated forces for integration
 };
 
 // Input and output buffers for ping-pong operation
@@ -25,17 +29,31 @@ layout(std430, binding = 1) restrict writeonly buffer ParticleOutputBuffer {
     QualiaParticle particles_output[];
 };
 
-// QualiaState uniform buffer
+// Force field structure for advanced physics simulation
+struct ForceField {
+    vec3 position;
+    vec3 force_direction;
+    float strength;
+    float radius;
+    int field_type; // 0=gravitational, 1=electromagnetic, 2=vortex, 3=repulsor
+};
+
+// Force fields buffer for advanced physics
+layout(std430, binding = 2) restrict readonly buffer ForceFieldsBuffer {
+    ForceField force_fields[];
+};
+
+// QualiaState uniform buffer with enhanced parameters
 layout(std140, binding = 1) uniform QualiaState {
     float intensity;        // Overall energy level (0-1)
-    float precision;        // Accuracy and focus (0-1)  
+    float accuracy;         // Accuracy and focus (0-1) (renamed from precision to avoid GLSL keyword conflict)
     float aggression;       // Fast, aggressive actions (0-1)
     float flow;            // Rhythmic consistency (0-1)
     float chaos;           // Chaotic, unpredictable actions (0-1)
     float recovery;        // Recovery and healing (0-1)
     float transcendence;   // Ultimate state (0-1)
     float time;            // Global time for animations
-    uint max_particles;    // Total number of particles for Fibonacci distribution
+    uint max_particles;    // Total number of particles for physics calculations
 };
 
 // Constants for particle physics and world boundaries
@@ -135,7 +153,7 @@ vec3 calculate_enhanced_velocity(vec3 position, vec3 current_velocity, float par
     qualia_force += normalize(-position) * aggression * 0.1;
     
     // Movimiento orbital con precisión: patrones matemáticos elegantes
-    qualia_force += vec3(sin(time), cos(time), sin(time*0.5)) * precision * 0.05;
+    qualia_force += vec3(sin(time), cos(time), sin(time*0.5)) * accuracy * 0.05;
     
     // Caos añade turbulencia usando smoothNoise mejorado
     if(chaos > 0.2) {
@@ -192,6 +210,84 @@ void respawnParticle(inout QualiaParticle p, uint index) {
     p.resonance = 0.0; // La resonancia se gana, no se nace con ella
 }
 
+// Advanced force field calculations for complex physics
+vec3 calculateForceFieldEffect(vec3 position, QualiaParticle particle) {
+    vec3 total_force = vec3(0.0);
+    
+    for(int i = 0; i < 4; i++) {
+        vec3 force_dir = force_fields[i].position - position;
+        float distance = length(force_dir);
+        
+        if(distance < force_fields[i].radius && distance > 0.01) {
+            vec3 normalized_dir = normalize(force_dir);
+            float force_magnitude = force_fields[i].strength / (distance * distance + 1.0);
+            
+            // Apply different force types
+            if(force_fields[i].field_type == 0) {
+                // Gravitational: mass-dependent attraction
+                total_force += normalized_dir * force_magnitude * particle.mass;
+            } else if(force_fields[i].field_type == 1) {
+                // Electromagnetic: charge-dependent force
+                total_force += normalized_dir * force_magnitude * particle.charge;
+            } else if(force_fields[i].field_type == 2) {
+                // Vortex: tangential force
+                vec3 tangent = cross(normalized_dir, vec3(0.0, 1.0, 0.0));
+                total_force += tangent * force_magnitude;
+            } else if(force_fields[i].field_type == 3) {
+                // Repulsor: reverse direction
+                total_force -= normalized_dir * force_magnitude;
+            }
+        }
+    }
+    
+    return total_force;
+}
+
+// Particle-to-particle interactions for emergent behavior
+vec3 calculateParticleInteractions(vec3 position, vec3 velocity, int self_index) {
+    vec3 interaction_force = vec3(0.0);
+    float interaction_radius = 5.0;
+    
+    // Sample a subset of particles for performance
+    for(int i = 0; i < int(max_particles); i += 8) {
+        if(i == self_index) continue;
+        
+        vec3 other_pos = particles_input[i].position;
+        vec3 direction = position - other_pos;
+        float distance = length(direction);
+        
+        if(distance < interaction_radius && distance > 0.01) {
+            vec3 normalized_dir = normalize(direction);
+            
+            // Repulsion at close range
+            if(distance < 2.0) {
+                interaction_force += normalized_dir * (2.0 - distance) * 0.1;
+            }
+            // Weak attraction at medium range for clustering
+            else if(distance < 4.0) {
+                interaction_force -= normalized_dir * (distance - 2.0) * 0.02;
+            }
+        }
+    }
+    
+    return interaction_force;
+}
+
+// Advanced physics integration using Verlet integration
+void integrateParticlePhysics(inout QualiaParticle particle, vec3 total_force, float dt) {
+    // Update acceleration based on forces and mass
+    particle.acceleration = total_force / max(particle.mass, 0.1);
+    
+    // Verlet integration for more stable physics
+    vec3 new_velocity = particle.velocity + particle.acceleration * dt;
+    particle.position += new_velocity * dt;
+    particle.velocity = new_velocity;
+    
+    // Apply damping based on chaos level
+    float damping = 0.98 - chaos * 0.05;
+    particle.velocity *= damping;
+}
+
 // Enhanced main compute function with integrated improvements
 void main() {
     uint index = gl_GlobalInvocationID.x;
@@ -207,13 +303,22 @@ void main() {
         particle.resonance *= 0.995; // Decaimiento suave
     }
 
-    // --- Simulación de Físicas ---
+    // --- ADVANCED PHYSICS SIMULATION ---
+    vec3 total_force = vec3(0.0);
+
+    // Calculate force field effects using advanced physics
+    total_force += calculateForceFieldEffect(particle.position, particle);
+
+    // Calculate particle interactions for emergent behavior
+    total_force += calculateParticleInteractions(particle.position, particle.velocity, int(index));
+
+    // Apply enhanced velocity calculation from existing function
     particle.velocity = calculate_enhanced_velocity(particle.position, particle.velocity, particle.resonance);
-    
-    // La posición se actualiza después de calcular la velocidad
-    particle.position += particle.velocity * TIME_DELTA;
-    
-    // Aplicar distorsión espacial solo durante la trascendencia
+
+    // Integrate physics using advanced method
+    integrateParticlePhysics(particle, total_force, TIME_DELTA);
+
+    // Apply space distortion during transcendence
     particle.position = applySpaceDistortion(particle.position, transcendence);
     
     // --- Colisiones y Límites del Mundo ---

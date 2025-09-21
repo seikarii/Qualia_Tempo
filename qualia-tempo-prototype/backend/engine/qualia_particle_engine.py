@@ -133,6 +133,7 @@ class QualiaParticleEngine:
         # Ping-pong buffer pairs for particles
         self.particle_buffers = PingPongBufferPair()
         self.uniform_buffer: Any = None
+        self.force_fields_buffer: Any = None  # CRITICAL: ForceFieldsBuffer for binding = 2
 
         # State tracking
         self.simulation_tick = 0
@@ -222,11 +223,18 @@ class QualiaParticleEngine:
             self.particle_buffers.size = particle_size
             self.particle_buffers.element_count = len(particles_data)
 
+            # CRITICAL: Create ForceFieldsBuffer for binding = 2
+            # Create placeholder force fields data (empty for now)
+            force_fields_data = self._create_initial_force_fields()
+            force_fields_bytes = force_fields_data.astype(np.float32).tobytes()
+            self.force_fields_buffer = self.ctx.buffer(force_fields_bytes)
+
             self.particles_initialized = True
 
             logger.info(
                 f"✅ Ping-pong particle buffers initialized: {len(particles_data)} particles"
             )
+            logger.info(f"✅ ForceFieldsBuffer initialized with {len(force_fields_data)} force fields")
             return True
 
         except Exception as e:
@@ -234,12 +242,13 @@ class QualiaParticleEngine:
             return False
 
     def _create_initial_particles(self) -> Any:
-        """Create initial particle data with random positions and properties."""
+        """Create initial particle data with enhanced physics properties."""
         if not np:
             raise ImportError("NumPy is required for particle data generation")
 
-        # QualiaParticle structure: position(3) + velocity(3) + color(4) + lifetime(1) + size(1) = 12 floats
-        particles = np.zeros((self.max_particles, 12), dtype=np.float32)
+        # CRITICAL: Must match QualiaParticle struct in qualia_particles.glsl
+        # position(3) + velocity(3) + acceleration(3) + color(4) + lifetime(1) + size(1) + resonance(1) + mass(1) + charge(1) + force_accumulator(3) = 21 components
+        particles = np.zeros((self.max_particles, 21), dtype=np.float32)
 
         # Random positions in a cube around origin
         particles[:, 0:3] = np.random.uniform(-10.0, 10.0, (self.max_particles, 3))
@@ -247,16 +256,57 @@ class QualiaParticleEngine:
         # Small random velocities
         particles[:, 3:6] = np.random.uniform(-1.0, 1.0, (self.max_particles, 3))
 
+        # Zero initial acceleration
+        particles[:, 6:9] = 0.0
+
         # Initial colors (white with alpha)
-        particles[:, 6:10] = [1.0, 1.0, 1.0, 1.0]
+        particles[:, 9:13] = [1.0, 1.0, 1.0, 1.0]
 
         # Random lifetimes (0.5 to 2.0 seconds)
-        particles[:, 10] = np.random.uniform(0.5, 2.0, self.max_particles)
+        particles[:, 13] = np.random.uniform(0.5, 2.0, self.max_particles)
 
         # Random sizes (0.1 to 1.0)
-        particles[:, 11] = np.random.uniform(0.1, 1.0, self.max_particles)
+        particles[:, 14] = np.random.uniform(0.1, 1.0, self.max_particles)
+
+        # Initial resonance (0.0)
+        particles[:, 15] = 0.0
+
+        # Random mass (0.5 to 2.0)
+        particles[:, 16] = np.random.uniform(0.5, 2.0, self.max_particles)
+
+        # Random charge (-1.0 to 1.0)
+        particles[:, 17] = np.random.uniform(-1.0, 1.0, self.max_particles)
+
+        # Zero initial force accumulator
+        particles[:, 18:21] = 0.0
 
         return particles
+
+    def _create_initial_force_fields(self) -> Any:
+        """Create initial force fields data for physics simulation."""
+        if not np:
+            raise ImportError("NumPy is required for force field data generation")
+
+        # CRITICAL: Must match ForceField struct in qualia_particles.glsl
+        # position(3) + force_direction(3) + strength(1) + radius(1) + field_type(1) = 9 components
+        # Create 4 placeholder force fields for now
+        num_force_fields = 4
+        force_fields = np.zeros((num_force_fields, 9), dtype=np.float32)
+
+        # Placeholder force fields (will be populated dynamically later)
+        for i in range(num_force_fields):
+            # Position
+            force_fields[i, 0:3] = [0.0, 0.0, 0.0]
+            # Force direction
+            force_fields[i, 3:6] = [0.0, 1.0, 0.0]  # Upward force
+            # Strength
+            force_fields[i, 6] = 0.0  # No force initially
+            # Radius
+            force_fields[i, 7] = 10.0
+            # Field type (0=gravitational)
+            force_fields[i, 8] = 0.0
+
+        return force_fields
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
@@ -317,9 +367,9 @@ class QualiaParticleEngine:
         # QUALIA.CODE: Use Pydantic QualiaState model with proper validation
         # Extract values from the model with getattr for safety
         uniform_data = struct.pack(
-            "ffffffffI12x",  # 8 floats + 1 unsigned int + 12 bytes padding
+            "ffffffffI3f3f",  # 8 floats + 1 unsigned int + 3 floats + 3 floats (attractor position)
             float(getattr(qualia_state, "intensity", 0.0)),
-            float(getattr(qualia_state, "precision", 0.0)),
+            float(getattr(qualia_state, "accuracy", 0.0)),  # CRITICAL: Use accuracy to match shader uniform
             float(getattr(qualia_state, "aggression", 0.0)),
             float(getattr(qualia_state, "flow", 0.0)),
             float(getattr(qualia_state, "chaos", 0.0)),
@@ -327,6 +377,11 @@ class QualiaParticleEngine:
             float(getattr(qualia_state, "transcendence", 0.0)),
             float(current_time),
             self.max_particles,
+            # Enhanced parameters for advanced physics
+            0.0, 0.0, 0.0,  # attractor_position (x, y, z)
+            2.0,  # interaction_radius
+            0.98,  # damping_factor
+            1.0,  # force_field_strength
         )
 
         if self.uniform_buffer:
@@ -354,6 +409,10 @@ class QualiaParticleEngine:
             self.particle_buffers.output_buffer.bind_to_storage_buffer(
                 1
             )  # Output particles
+
+            # CRITICAL: Bind ForceFieldsBuffer at binding = 2
+            if self.force_fields_buffer:
+                self.force_fields_buffer.bind_to_storage_buffer(2)  # Force fields
 
             if self.uniform_buffer:
                 self.uniform_buffer.bind_to_uniform_buffer(1)  # QualiaState

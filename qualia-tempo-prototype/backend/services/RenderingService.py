@@ -34,6 +34,65 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+# Camera service for decoupled camera management
+class Camera:
+    """
+    Decoupled camera management service following QUALIA.CODE IoC principles.
+    Handles view and projection matrix calculations separately from rendering.
+    """
+    
+    def __init__(
+        self, 
+        position: Tuple[float, float, float] = (0, 0, 80),
+        target: Tuple[float, float, float] = (0, 0, 0),
+        up: Tuple[float, float, float] = (0, 1, 0),
+        fov: float = 45.0,
+        aspect: float = 16.0/9.0,
+        near: float = 0.1,
+        far: float = 1000.0
+    ):
+        self.position = np.array(position, dtype=np.float32)
+        self.target = np.array(target, dtype=np.float32)
+        self.up = np.array(up, dtype=np.float32)
+        self.fov = fov
+        self.aspect = aspect
+        self.near = near
+        self.far = far
+        
+    def get_view_matrix(self) -> Any:
+        """Calculate view matrix from camera parameters."""
+        z = self.position - self.target
+        z = z / np.linalg.norm(z)
+        x = np.cross(self.up, z)
+        x = x / np.linalg.norm(x)
+        y = np.cross(z, x)
+
+        return np.array([
+            [x[0], y[0], z[0], 0],
+            [x[1], y[1], z[1], 0],
+            [x[2], y[2], z[2], 0],
+            [-np.dot(x, self.position), -np.dot(y, self.position), -np.dot(z, self.position), 1]
+        ], dtype=np.float32)
+        
+    def get_projection_matrix(self) -> Any:
+        """Calculate perspective projection matrix."""
+        fov_rad = np.radians(self.fov)
+        f = 1.0 / np.tan(fov_rad / 2.0)
+        
+        return np.array([
+            [f / self.aspect, 0, 0, 0],
+            [0, f, 0, 0],
+            [0, 0, (self.far + self.near) / (self.near - self.far), (2 * self.far * self.near) / (self.near - self.far)],
+            [0, 0, -1, 0]
+        ], dtype=np.float32)
+        
+    def get_mvp_matrix(self) -> Any:
+        """Calculate combined model-view-projection matrix."""
+        view = self.get_view_matrix()
+        projection = self.get_projection_matrix()
+        return np.dot(view, projection)
+
+
 def load_shader_source(shader_filename: str) -> str:
     """
     Enhanced shader loading with caching and error handling.
@@ -98,6 +157,9 @@ class RenderingService:
         
         # QUALIA.CODE: Receive particle engine via dependency injection
         self._particle_engine = particle_engine
+        
+        # QUALIA.CODE: Camera decoupled from rendering logic
+        self._camera = Camera(aspect=width/height)
         
         # Core rendering context
         self._ctx: Optional[Any] = None
@@ -216,10 +278,13 @@ class RenderingService:
             particle_buffer = self._particle_engine.particle_buffers.input_buffer
             
             # Create VAO with particle buffer layout
-            # Layout: position(3f) velocity(3f) color(4f) lifetime(1f) size(1f)
+            # CRITICAL: Layout MUST match QualiaParticle struct in qualia_particles.glsl (21 components)
+            # position(3f) velocity(3f) acceleration(3f) color(4f) lifetime(1f) size(1f) resonance(1f) mass(1f) charge(1f) force_accumulator(3f)
+            # Total: 21 components
             self._particle_vao = self._ctx.vertex_array(
                 self._particle_render_shader,
-                [(particle_buffer, '3f 3f 4f 1f 1f', 'position', 'velocity', 'color', 'lifetime', 'size')]
+                [(particle_buffer, '3f 3f 3f 4f 1f 1f 1f 1f 1f 3f', 
+                  'position', 'velocity', 'acceleration', 'color', 'lifetime', 'size', 'resonance', 'mass', 'charge', 'force_accumulator')]
             )
             
             self._logger.info("✅ Particle render pipeline created with HDR support")
@@ -455,6 +520,10 @@ class RenderingService:
         chaos = self._current_qualia_state.get('chaos', 0.0)
         transcendence = self._current_qualia_state.get('transcendence', 0.0)
         precision = self._current_qualia_state.get('precision', 0.5)
+        flow = self._current_qualia_state.get('flow', 0.5)  # CRITICAL: Define missing variable
+        
+        # Calculate velocity magnitude from current state dynamics
+        velocity_magnitude = (intensity + chaos + abs(flow - 0.5)) / 3.0  # CRITICAL: Define missing variable
         
         # Adaptive bloom strength based on game state
         dynamic_bloom_strength = self._bloom_strength * (1.0 + intensity * 0.5 + transcendence * 0.3)
@@ -472,28 +541,8 @@ class RenderingService:
             self._ctx.enable(moderngl.DEPTH_TEST)
             
             # Set up enhanced uniforms for particle shader (with safety checks)
-            # --- Inicio de la modificación ---
-            # Crear una matriz de vista (cámara) simple
-            eye = np.array([0, 0, 80]) # Posición de la cámara
-            target = np.array([0, 0, 0]) # Hacia dónde mira
-            up = np.array([0, 1, 0]) # Vector "arriba"
-
-            z = eye - target
-            z = z / np.linalg.norm(z)
-            x = np.cross(up, z)
-            x = x / np.linalg.norm(x)
-            y = np.cross(z, x)
-
-            view_matrix = np.array([
-                [x[0], y[0], z[0], 0],
-                [x[1], y[1], z[1], 0],
-                [x[2], y[2], z[2], 0],
-                [-np.dot(x, eye), -np.dot(y, eye), -np.dot(z, eye), 1]
-            ], dtype='f4')
-
-            projection_matrix = self._create_projection_matrix()
-            mvp_matrix = np.dot(view_matrix, projection_matrix)
-            # --- Fin de la modificación ---
+            # QUALIA.CODE: Use decoupled Camera service for view/projection matrices
+            mvp_matrix = self._camera.get_mvp_matrix()
             
             # Set uniforms safely - use try/except since ModernGL doesn't have 'in' for Programs
             try:
@@ -520,15 +569,82 @@ class RenderingService:
                 self._particle_render_shader['global_particle_scale'].value = self._particle_scale
             except KeyError:
                 pass
+
+            # Enhanced vertex shader uniforms for advanced animation
+            try:
+                self._particle_render_shader['animation_speed'].value = 1.0 + intensity * 0.5
+            except KeyError:
+                pass
+
+            try:
+                self._particle_render_shader['billboard_rotation_speed'].value = 0.5 + chaos * 2.0
+            except KeyError:
+                pass
+
+            try:
+                self._particle_render_shader['size_pulse_frequency'].value = 2.0 + flow * 3.0
+            except KeyError:
+                pass
+
+            try:
+                self._particle_render_shader['motion_blur_strength'].value = 0.3 + velocity_magnitude * 0.5
+            except KeyError:
+                pass
             
             # Enhanced fragment shader uniforms (with safety checks)
             try:
                 self._particle_render_shader['bloom_threshold'].value = dynamic_threshold
             except KeyError:
                 pass
-                
+
             try:
                 self._particle_render_shader['particle_glow_intensity'].value = 2.0 + transcendence * 3.0
+            except KeyError:
+                pass
+
+            # New enhanced shader uniforms for advanced effects
+            try:
+                self._particle_render_shader['camera_position'].value = (0.0, 0.0, 80.0)
+            except KeyError:
+                pass
+
+            try:
+                self._particle_render_shader['camera_near'].value = 0.1
+            except KeyError:
+                pass
+
+            try:
+                self._particle_render_shader['camera_far'].value = 200.0
+            except KeyError:
+                pass
+
+            try:
+                self._particle_render_shader['fog_color'].value = (0.1, 0.15, 0.2)
+            except KeyError:
+                pass
+
+            try:
+                self._particle_render_shader['fog_density'].value = 0.02 + chaos * 0.05
+            except KeyError:
+                pass
+
+            try:
+                self._particle_render_shader['chromatic_aberration_strength'].value = chaos * 0.01
+            except KeyError:
+                pass
+
+            try:
+                self._particle_render_shader['color_temperature'].value = (0.8 + intensity * 0.4, 0.9, 1.0 - chaos * 0.2)
+            except KeyError:
+                pass
+
+            try:
+                self._particle_render_shader['saturation_boost'].value = 0.2 + intensity * 0.3
+            except KeyError:
+                pass
+
+            try:
+                self._particle_render_shader['contrast_enhance'].value = 0.1 + precision * 0.2
             except KeyError:
                 pass
             
