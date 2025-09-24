@@ -123,6 +123,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   src: url('/fonts/inter/inter-v12-latin-700.woff2') format('woff2'),
        url('/fonts/inter/inter-v12-latin-700.woff') format('woff');
 }
+.pointer-events-auto {
+  pointer-events: auto;
+}
 .pointer-events-none {
   pointer-events: none;
 }
@@ -140,6 +143,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
 }
 .static {
   position: static;
+}
+.inset-\[3px\] {
+  inset: 3px;
 }
 .top-1\/2 {
   top: calc(1/2 * 100%);
@@ -177,6 +183,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
 .mx-auto {
   margin-inline: auto;
 }
+.block {
+  display: block;
+}
 .flex {
   display: flex;
 }
@@ -211,13 +220,15 @@ window.$RefreshSig$ = () => (type) => type;</script>
   --tw-translate-x: calc(calc(1/2 * 100%) * -1);
   translate: var(--tw-translate-x) var(--tw-translate-y);
 }
-.translate-x-\[-100\%\] {
-  --tw-translate-x: -100%;
-  translate: var(--tw-translate-x) var(--tw-translate-y);
-}
 .-translate-y-1\/2 {
   --tw-translate-y: calc(calc(1/2 * 100%) * -1);
   translate: var(--tw-translate-x) var(--tw-translate-y);
+}
+.scale-95 {
+  --tw-scale-x: 95%;
+  --tw-scale-y: 95%;
+  --tw-scale-z: 95%;
+  scale: var(--tw-scale-x) var(--tw-scale-y);
 }
 .scale-110 {
   --tw-scale-x: 110%;
@@ -277,6 +288,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
   border-top-style: var(--tw-border-style);
   border-top-width: 1px;
 }
+.border-transparent {
+  border-color: transparent;
+}
 .border-t-transparent {
   border-top-color: transparent;
 }
@@ -303,6 +317,10 @@ window.$RefreshSig$ = () => (type) => type;</script>
   --tw-gradient-to: transparent;
   --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
 }
+.bg-clip-text {
+  -webkit-background-clip: text;
+          background-clip: text;
+}
 .object-contain {
   -o-object-fit: contain;
      object-fit: contain;
@@ -316,6 +334,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
 .font-\[\'Orbitron\'\] {
   font-family: 'Orbitron';
 }
+.text-transparent {
+  color: transparent;
+}
 .uppercase {
   text-transform: uppercase;
 }
@@ -327,6 +348,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
 }
 .opacity-30 {
   opacity: 30%;
+}
+.opacity-50 {
+  opacity: 50%;
 }
 .opacity-60 {
   opacity: 60%;
@@ -350,6 +374,11 @@ window.$RefreshSig$ = () => (type) => type;</script>
 .outline {
   outline-style: var(--tw-outline-style);
   outline-width: 1px;
+}
+.drop-shadow-\[0_0_10px_rgba\(56\,189\,248\,0\.8\)\] {
+  --tw-drop-shadow-size: drop-shadow(0 0 10px var(--tw-drop-shadow-color, rgba(56,189,248,0.8)));
+  --tw-drop-shadow: var(--tw-drop-shadow-size);
+  filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
 }
 .filter {
   filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
@@ -376,27 +405,16 @@ window.$RefreshSig$ = () => (type) => type;</script>
   --tw-duration: 200ms;
   transition-duration: 200ms;
 }
+.duration-300 {
+  --tw-duration: 300ms;
+  transition-duration: 300ms;
+}
 .duration-1000 {
   --tw-duration: 1000ms;
   transition-duration: 1000ms;
 }
 .will-change-transform {
   will-change: transform;
-}
-.group-hover\:translate-x-\[100\%\] {
-  &:is(:where(.group):hover *) {
-    @media (hover: hover) {
-      --tw-translate-x: 100%;
-      translate: var(--tw-translate-x) var(--tw-translate-y);
-    }
-  }
-}
-.group-hover\:opacity-20 {
-  &:is(:where(.group):hover *) {
-    @media (hover: hover) {
-      opacity: 20%;
-    }
-  }
 }
 * {
   box-sizing: border-box;
@@ -443,8 +461,8 @@ code {
   position: fixed;
   top: 0;
   left: 0;
-  width: 120%;
-  height: 120%;
+  width: 100%;
+  height: 100%;
   opacity: 1;
   z-index: -10;
   background-image: linear-gradient(rgba(0, 255, 255, 0.08) 1px, transparent 1px),
@@ -1293,132 +1311,16 @@ textarea:focus {
   }
 }</style></head>
   <body>
-    <div id="root"><div class="h-screen w-screen bg-black relative overflow-hidden"><div class="cyber-grid fixed inset-0 z-0"></div><div class="fixed inset-0 z-0 qualia-bloom-extreme mix-blend-screen opacity-70" style="background: radial-gradient(rgba(0, 255, 255, 0.15) 0%, rgba(128, 0, 255, 0.1) 40%, rgba(0, 0, 0, 0.8) 80%);"></div><div class="relative fixed inset-0 z-10 mix-blend-screen" style="width: 1280px; height: 720px; background-color: rgb(0, 0, 0);"><canvas class="absolute inset-0 w-full h-full" aria-label="Qualia Tempo Visual Effects Canvas" width="1280" height="720" style="background-color: rgb(0, 0, 0); width: 1280px; height: 720px;"></canvas></div><div class="fixed left-4 top-1/2 transform -translate-y-1/2 z-10 mix-blend-screen"><div class="flex space-x-1"><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 88.2773px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 6.49113px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 64.5298px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 1.23334px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 96.1613px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 9.32059px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 59.6059px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 2.9149px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 78.1028px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 8.7106px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 40.3272px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 1.26884px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 62.3116px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 9.86138px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 34.026px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 5.96036px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 8.40969px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 9.96177px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 1.99929px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 9.01729px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 1.86626px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 7.26874px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 11.8153px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 9.6463px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 94.8877px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 0.942953px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 24.617px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 9.04513px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 46.9382px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 5.41365px);"></div><div class="w-2 bg-gradient-to-t from-cyan-400 via-purple-400 to-pink-400 rounded-full opacity-80" style="height: 16.1916px; filter: blur(0.5px) drop-shadow(currentcolor 0px 0px 7.0864px);"></div></div></div><div class="relative z-10 h-screen w-full"><div class="absolute inset-0 z-20 flex flex-col items-center justify-center text-center" style="opacity: 1;"><div class="text-center space-y-8"><div class="relative" style="opacity: 1; transform: none;"><div class="absolute inset-0 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 opacity-20 blur-3xl transform scale-110" style="animation: 6s ease-in-out 0s infinite normal none running colorShift;"></div><h1 class="relative text-6xl xl:text-7xl 2xl:text-8xl font-black font-['Orbitron'] mb-4 leading-tight " style="background: linear-gradient(45deg, rgb(0, 255, 255), rgb(255, 0, 255), rgb(255, 255, 0), rgb(0, 255, 255)) 0% 0% / 200% 200% text; -webkit-text-fill-color: transparent; animation: 4s ease 0s infinite normal none running gradientShift;">QUALIA<br>TEMPO</h1></div><p class="text-2xl xl:text-3xl text-cyan-300 mb-6 font-['Orbitron'] font-light" style="text-shadow: rgba(0, 255, 255, 0.5) 0px 0px 10px; opacity: 1; transform: none;">A Charlie Hellsinger Story</p><div class="text-lg text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed" style="opacity: 1; transform: none;"><p class="mb-2">Enter a synesthetic battlefield where <span class="text-cyan-400">music becomes weapon</span>,</p><p class="mb-2"><span class="text-purple-400">rhythm defines reality</span>, and <span class="text-pink-400">visual chaos rewards precision</span>.</p><p class="text-yellow-400">Experience the fusion of sound and light in perfect harmony.</p></div><button class="cyber-button-enhanced relative px-16 py-8 text-2xl font-bold text-white rounded-xl overflow-hidden group" tabindex="0"><div class="absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-80"></div><div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform translate-x-[-100%] group-hover:translate-x-[100%] transition-all duration-1000"></div><span class="relative z-10 flex items-center justify-center space-x-3"><span>⚡</span><span>INITIATE NEURAL SYNC</span><span>🎵</span></span></button><div class="space-y-4 mt-8" style="opacity: 1; transform: none;"><div class="flex items-center justify-center space-x-3" style="opacity: 1; transform: none;"><div class="w-3 h-3 bg-green-400 rounded-full"></div><span class="text-lg">🔥</span><span class="text-green-400 text-lg font-['Orbitron']">VISUAL ENGINE ONLINE</span></div><div class="flex items-center justify-center space-x-3" style="opacity: 1; transform: none;"><div class="w-3 h-3 bg-cyan-400 rounded-full"></div><span class="text-lg">🧠</span><span class="text-cyan-400 text-lg font-['Orbitron']">NEURAL LINK ONLINE</span></div><div class="flex items-center justify-center space-x-3" style="opacity: 1; transform: none;"><div class="w-3 h-3 bg-purple-400 rounded-full"></div><span class="text-lg">✨</span><span class="text-purple-400 text-lg font-['Orbitron']">QUALIA MATRIX ONLINE</span></div><div class="flex items-center justify-center space-x-3" style="opacity: 1; transform: none;"><div class="w-3 h-3 bg-pink-400 rounded-full"></div><span class="text-lg">🎶</span><span class="text-pink-400 text-lg font-['Orbitron']">AUDIO CORTEX ONLINE</span></div></div></div><div class="flex-1 flex flex-col justify-center items-center pr-20 min-w-0"><div class="text-center space-y-10" style="opacity: 1; transform: none;"><button class="cyber-button-enhanced relative px-16 py-8 text-2xl font-bold text-white rounded-xl overflow-hidden group" tabindex="0"><div class="absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-80"></div><div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform translate-x-[-100%] group-hover:translate-x-[100%] transition-all duration-1000"></div><span class="relative z-10 flex items-center justify-center space-x-3"><span>⚡</span><span>INITIATE NEURAL SYNC</span><span>🎵</span></span></button><div class="space-y-4" style="opacity: 1; transform: none;"><div class="flex items-center justify-center space-x-3" style="opacity: 1; transform: none;"><div class="w-3 h-3 bg-green-400 rounded-full"></div><span class="text-lg">🔥</span><span class="text-green-400 text-lg font-['Orbitron']">VISUAL ENGINE ONLINE</span></div><div class="flex items-center justify-center space-x-3" style="opacity: 1; transform: none;"><div class="w-3 h-3 bg-cyan-400 rounded-full"></div><span class="text-lg">🧠</span><span class="text-cyan-400 text-lg font-['Orbitron']">NEURAL LINK ONLINE</span></div><div class="flex items-center justify-center space-x-3" style="opacity: 1; transform: none;"><div class="w-3 h-3 bg-purple-400 rounded-full"></div><span class="text-lg">✨</span><span class="text-purple-400 text-lg font-['Orbitron']">QUALIA MATRIX ONLINE</span></div><div class="flex items-center justify-center space-x-3" style="opacity: 1; transform: none;"><div class="w-3 h-3 bg-pink-400 rounded-full"></div><span class="text-lg">🎶</span><span class="text-pink-400 text-lg font-['Orbitron']">AUDIO CORTEX ONLINE</span></div></div></div></div></div></div><div style="opacity: 1;"><div class="absolute top-8 left-8 z-50 flex items-center space-x-6"><div class="cyber-gradient border-2 border-cyan-400 px-6 py-4 rounded-xl backdrop-blur-md"><div class="text-3xl font-bold font-['Orbitron'] neon-glow-strong" style="color: rgb(238, 43, 43);">0</div><div class="text-sm text-cyan-300 font-['Orbitron'] uppercase tracking-wider">Neural Score</div></div><div class="cyber-gradient border border-cyan-300 px-4 py-2 rounded-lg"><div class="flex items-end space-x-1 h-16"><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 14.3397px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 11.2198px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 10.2497px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 11.6667px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 15.124px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 19.7752px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 24.4814px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 28.0904px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 29.7185px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 28.9673px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 26.0206px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 21.5998px;"></div></div></div></div><div class="absolute top-8 right-8 z-50 space-y-4" style="box-shadow: none;"><div class="cyber-gradient border-2 border-purple-400 px-6 py-4 rounded-xl text-right backdrop-blur-md"><div class="text-2xl font-bold text-purple-400 font-['Orbitron'] mb-1">0%</div><div class="text-sm text-purple-300 font-['Orbitron'] uppercase tracking-wider mb-2">Precision</div><div class="w-32 h-2 bg-gray-800 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-purple-600 to-pink-400" style="width: 0px;"></div></div></div><div class="cyber-gradient border-2 border-cyan-400 px-6 py-4 rounded-xl text-right backdrop-blur-md"><div class="text-2xl font-bold font-['Orbitron'] mb-1" style="color: rgb(99, 233, 233);">LOCK</div><div class="text-sm text-cyan-300 font-['Orbitron'] uppercase tracking-wider">Neural State</div></div></div><div class="absolute bottom-8 left-8 z-50"><div class="cyber-gradient border-2 border-red-400 px-6 py-4 rounded-xl backdrop-blur-md"><div class="text-lg font-bold text-red-400 font-['Orbitron'] mb-2">VITALS: 100%</div><div class="relative w-16 h-16 mx-auto"><svg class="w-full h-full -rotate-90" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,0,0,0.2)" stroke-width="8"></circle><circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" stroke-width="8" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="0"></circle></svg></div></div></div><div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50" style="transform: scale(0.923777);"><div class="cyber-gradient border-2 border-yellow-400 p-4 rounded-full backdrop-blur-md"><div class="w-12 h-12 rounded-full border-2 border-yellow-400 flex items-center justify-center" style="box-shadow: rgb(238, 43, 43) 0px 0px 20px;"><div class="text-yellow-400 font-bold text-xs">120</div></div></div></div><div class="fixed inset-0 pointer-events-none z-30"></div><canvas class="fixed inset-0 pointer-events-none z-20 opacity-30" width="1280" height="720"></canvas><div class="fixed inset-0 pointer-events-none z-25"></div><style>
-        @keyframes transcendencePulse {
-          0%, 100% { 
-            filter: blur(1px) brightness(1) contrast(1);
-            transform: scale(1);
-          }
-          50% { 
-            filter: blur(2px) brightness(1.5) contrast(1.2);
-            transform: scale(1.02);
-          }
-        }
-      </style></div><div class="absolute bottom-6 left-6 cyber-gradient border-2 border-cyan-500 p-6 rounded-xl text-sm max-w-sm backdrop-blur-sm" style="opacity: 1; transform: none;"><div class="font-bold mb-3 text-cyan-400 font-['Orbitron'] text-lg flex items-center space-x-2"><span>⌨️</span><span>NEURAL INTERFACE</span></div><div class="space-y-2 text-gray-300"><div class="flex justify-between"><span class="text-cyan-400 font-mono">QWERT</span><span>Sound Synthesis</span></div><div class="flex justify-between"><span class="text-purple-400 font-mono">SPACE</span><span>Temporal Dash</span></div><div class="flex justify-between"><span class="text-pink-400 font-mono">CTRL</span><span>Ultimate Sync</span></div><div class="flex justify-between"><span class="text-yellow-400 font-mono">ESC</span><span>Reality Reset</span></div></div></div><div class="absolute bottom-6 right-6 cyber-gradient border-2 border-purple-500 p-6 rounded-xl text-sm backdrop-blur-sm" style="opacity: 1; transform: none;"><div class="font-['Orbitron'] font-bold text-purple-400 mb-3 text-lg flex items-center space-x-2"><span>📊</span><span>SYSTEM STATUS</span></div><div class="space-y-2"><div class="flex items-center space-x-3"><div class="w-3 h-3 rounded-full bg-green-400"></div><span class="text-gray-300">Visual Engine: </span><span class="text-green-400">ONLINE</span></div><div class="text-gray-400 text-xs pt-2 border-t border-gray-700">Qualia Tempo v2.0 | Neural Prototype Build</div></div></div><style>
-        @keyframes screenShake {
-          0%, 100% { transform: translate(0, 0); }
-          10% { transform: translate(-1px, -1px); }
-          20% { transform: translate(1px, -1px); }
-          30% { transform: translate(-1px, 1px); }
-          40% { transform: translate(1px, 1px); }
-          50% { transform: translate(-1px, -1px); }
-          60% { transform: translate(1px, -1px); }
-          70% { transform: translate(-1px, 1px); }
-          80% { transform: translate(1px, 1px); }
-          90% { transform: translate(-1px, -1px); }
-        }
-
-        @keyframes gradientShift {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-
-        @keyframes colorShift {
-          0% { filter: hue-rotate(0deg); }
-          33% { filter: hue-rotate(120deg); }
-          66% { filter: hue-rotate(240deg); }
-          100% { filter: hue-rotate(360deg); }
-        }
-
-        .glitch-text-enhanced {
-          animation: glitchEnhanced 0.4s ease-in-out infinite;
-        }
-
-        @keyframes glitchEnhanced {
-          0% { 
-            transform: translate(0);
-            filter: hue-rotate(0deg) contrast(1);
-            text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
-          }
-          10% { 
-            transform: translate(-2px, 2px);
-            filter: hue-rotate(90deg) contrast(1.2);
-            text-shadow: 4px 0 #ff00ff, -4px 0 #00ffff;
-          }
-          20% { 
-            transform: translate(-2px, -2px);
-            filter: hue-rotate(180deg) contrast(0.8);
-            text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff;
-          }
-          30% { 
-            transform: translate(2px, 2px);
-            filter: hue-rotate(270deg) contrast(1.5);
-          }
-          40% { 
-            transform: translate(2px, -2px);
-            filter: hue-rotate(180deg) contrast(1);
-          }
-          50% { 
-            transform: translate(-1px, 2px);
-            filter: hue-rotate(90deg) contrast(1.2);
-            text-shadow: 3px 0 #ffff00, -1px 0 #ff00ff;
-          }
-          60% { 
-            transform: translate(-1px, -1px);
-            filter: hue-rotate(45deg) contrast(1);
-          }
-          70% { 
-            transform: translate(1px, 1px);
-            filter: hue-rotate(315deg) contrast(1.3);
-          }
-          80% { 
-            transform: translate(1px, -1px);
-            filter: hue-rotate(180deg) contrast(0.9);
-          }
-          90% { 
-            transform: translate(-1px, 1px);
-            filter: hue-rotate(270deg) contrast(1.1);
-          }
-          100% { 
-            transform: translate(0);
-            filter: hue-rotate(360deg) contrast(1);
-            text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
-          }
-        }
-
-        .cyber-button-enhanced {
-          position: relative;
-          border: 2px solid transparent;
-          background: linear-gradient(45deg, #1a1a2e, #16213e) padding-box,
-                      linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ffff) border-box;
-          transition: all 0.3s ease;
-          overflow: hidden;
-        }
-
-        .cyber-button-enhanced:hover {
-          transform: translateY(-2px);
-          box-shadow: 
-            0 10px 30px rgba(0, 255, 255, 0.3),
-            0 0 50px rgba(255, 0, 255, 0.2),
-            inset 0 0 30px rgba(0, 255, 255, 0.1);
-          animation: buttonPulse 1s ease-in-out infinite;
-        }
-
-        @keyframes buttonPulse {
-          0%, 100% { 
-            box-shadow: 
-              0 10px 30px rgba(0, 255, 255, 0.3),
-              0 0 50px rgba(255, 0, 255, 0.2);
-          }
-          50% { 
-            box-shadow: 
-              0 15px 40px rgba(0, 255, 255, 0.5),
-              0 0 70px rgba(255, 0, 255, 0.4);
-          }
-        }
-      </style></div></div>
-    <script type="module" src="/src/index.tsx?t=1758353019906"></script>
+    <div id="root"><div class="h-screen w-screen bg-black relative overflow-hidden"><div class="absolute inset-0 z-0"><div class="w-full h-full "><canvas class="w-full h-full block" aria-label="Qualia Tempo Visual Effects Canvas" width="1280" height="720" style="width: 1280px; height: 720px;"></canvas></div></div><div class="fixed inset-0 z-10 pointer-events-none"><div class="cyber-grid fixed inset-0 z-0"></div><div class="fixed inset-0 z-0 qualia-bloom-extreme mix-blend-screen opacity-70" style="background: radial-gradient(rgba(0, 255, 255, 0.15) 0%, rgba(128, 0, 255, 0.1) 40%, rgba(0, 0, 0, 0.8) 80%);"></div></div><div class="fixed inset-0 z-20 flex items-center justify-center pointer-events-none"><div class="flex flex-col items-center justify-center gap-12 p-8 pointer-events-auto"><div class="text-center pointer-events-auto" style="opacity: 1; transform: none;"><h1 class="text-6xl md:text-8xl lg:text-9xl font-orbitron font-black tracking-wider"><span class="relative"><span class="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x">QUALIA</span><span class="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 bg-clip-text text-transparent animate-gradient-x opacity-50 blur-sm"></span><span class="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-cyan-400/10 to-purple-500/10 bg-clip-text text-transparent animate-gradient-x opacity-30 blur-md" style="animation-delay: 0.5s;"></span></span><br><span class="relative"><span class="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x" style="animation-delay: 0.25s;">TEMPO</span><span class="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 bg-clip-text text-transparent animate-gradient-x opacity-50 blur-sm" style="animation-delay: 0.25s;"></span><span class="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-cyan-400/10 to-purple-500/10 bg-clip-text text-transparent animate-gradient-x opacity-30 blur-md" style="animation-delay: 0.75s;"></span></span></h1><div class="absolute inset-0 pointer-events-none"><div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div></div></div><div class="text-center relative pointer-events-auto" style="opacity: 1; transform: none;"><h2 class="text-xl md:text-2xl lg:text-3xl font-orbitron font-medium tracking-widest text-cyan-300/90">A CHARLIE HELLSINGER STORY</h2><div class="absolute inset-0 pointer-events-none"><div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-8 bg-cyan-400/30 rounded-full blur-lg"></div></div></div><p class="text-lg text-white/60 mb-12 font-light tracking-wide text-center" style="opacity: 1;">IMMERSE IN GPU-RENDERED QUALIA</p><div class="relative pointer-events-auto" style="opacity: 1; transform: none;"><button class="
+              relative px-12 py-6 font-orbitron font-bold text-lg md:text-xl tracking-wider
+              border-2 border-transparent rounded-lg
+              bg-gradient-to-r from-gray-900 to-black
+              text-cyan-300
+              overflow-hidden
+              transition-all duration-300
+              
+            " tabindex="0"><div class="absolute inset-0 rounded-lg p-0.5 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500" style="background-size: 200% 200%; background-position: 0% 50%; opacity: 0.8;"></div><div class="absolute inset-[3px] rounded-lg bg-gradient-to-br from-gray-900 to-black"></div><div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent" style="width: 100%; transform: translateX(-100%);"></div><span class="relative z-10 text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.8)]">INITIATE NEURAL SYNC</span><div class="absolute inset-0 rounded-lg bg-cyan-400/20 blur-xl" style="transform: none; opacity: 0.3;"></div><div class="absolute inset-0 rounded-lg bg-purple-500/15 blur-2xl" style="transform: none; opacity: 0.2;"></div><div class="absolute inset-0 rounded-lg bg-black/40" style="opacity: 0;"></div></button></div></div></div></div></div>
+    <script type="module" src="/src/index.tsx?t=1758695941679"></script>
   
 
 </body></html>

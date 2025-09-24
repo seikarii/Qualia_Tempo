@@ -95,9 +95,8 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     
-    // Clear with black background
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    // QUALIA.CODE v1.1 COMPLIANCE: Canvas remains transparent for atmosphere visibility
+    // Backend engine will provide content; no black background needed
     
     setIsCanvasReady(true);
     logger.info('BackendCanvas initialized', {
@@ -119,9 +118,8 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
       const img = new Image();
       
       img.onload = () => {
-        // Clear canvas
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        // QUALIA.CODE v1.1 COMPLIANCE: No canvas clearing to preserve transparency
+        // Backend engine frames will render over atmosphere layer
         
         // Draw frame to canvas (scaled to fit)
         ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
@@ -216,18 +214,14 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
   }, [width, height, initializeCanvas]);
 
   return (
-    <div className={`relative ${className}`} style={{ 
-      width: canvasWidth, 
-      height: canvasHeight,
-      backgroundColor: '#000000' // Fallback background
-    }}>
+    <div className={`w-full h-full ${className}`}>
       {/* Main canvas for backend-rendered frames */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full"
+        className="w-full h-full block"
         style={{
-          imageRendering: 'crisp-edges', // Sharp pixel rendering
-          backgroundColor: '#000000'
+          imageRendering: 'crisp-edges' // Sharp pixel rendering
+          // QUALIA.CODE v1.1 COMPLIANCE: Removed backgroundColor for atmosphere visibility
         }}
         aria-label="Qualia Tempo Visual Effects Canvas"
       />

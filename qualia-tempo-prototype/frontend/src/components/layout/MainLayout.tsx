@@ -1,0 +1,48 @@
+/**
+ * QUALIA.CODE v1.1 - MainLayout Component
+ * Architectural orchestrator for the definitive visual layering system.
+ * 
+ * This component establishes the sacred hierarchy of visual layers:
+ * Layer 0: BackendCanvas (z-0) - GPU-rendered backend engine visuals
+ * Layer 1: Atmosphere (z-10) - CSS complementary effects (grid, bloom)  
+ * Layer 2: UI (z-20) - Interactive menu elements
+ * 
+ * Eliminates DOM-based particle violations and establishes backend engine
+ * as the single source of visual truth.
+ */
+
+import React from 'react';
+import { Atmosphere } from '../Atmosphere';
+import BackendCanvas from '../BackendCanvas';
+import QualiaMainMenu from '../QualiaMainMenu';
+
+const MainLayout: React.FC = () => {
+  return (
+    <div className="h-screen w-screen bg-black relative overflow-hidden">
+      {/* 
+        LAYER 0: BACKEND CANVAS (Z-0)
+        La fuente de verdad para los visuales del motor.
+        Debe llenar toda la pantalla.
+      */}
+      <div className="absolute inset-0 z-0">
+        <BackendCanvas />
+      </div>
+
+      {/* 
+        LAYER 1: ATMOSPHERE (Z-10)
+        Para efectos CSS complementarios como grids y bloom global.
+      */}
+      <Atmosphere />
+
+      {/* 
+        LAYER 2: UI (Z-20)
+        El menú principal y otros elementos de UI interactivos.
+      */}
+      <div className="fixed inset-0 z-20 flex items-center justify-center pointer-events-none">
+        <QualiaMainMenu />
+      </div>
+    </div>
+  );
+};
+
+export default MainLayout;

@@ -1,262 +1,37 @@
-'use client'
+/**
+ * QUALIA.CODE v1.1 - QualiaMainMenu Component
+ * Purified UI-only menu component following architectural purity principles.
+ * 
+ * ARCHITECTURAL COMPLIANCE:
+ * - ELIMINATED: All DOM-based particle simulation logic
+ * - ELIMINATED: Local visual effects (qualiaParticles, audioWaves)
+ * - RETAINED: Pure UI elements (title, button, event emission)
+ * 
+ * Visual effects are now the exclusive domain of BackendCanvas.
+ */
 
-import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
+import { useState } from 'react'
 import { useService } from '../services/hooks'
 import { TYPES } from '../services/inversify.types'
 import type { IEventBus } from '../services/interfaces/IEventBus'
-import type { IConfigurationService } from '../services/interfaces/IConfigurationService'
-
-interface QualiaParticle {
-  id: number
-  x: number
-  y: number
-  size: number
-  color: string
-  vx: number
-  vy: number
-  life: number
-  maxLife: number
-  frequency: number
-}
 
 export default function QualiaMainMenu() {
   // Services
   const eventBus = useService<IEventBus>(TYPES.IEventBus)
-  const configService = useService<IConfigurationService>(TYPES.IConfigurationService)
   
-  // Load configuration (externalized as per QUALIA.CODE)
-  const mainMenuConfig = configService.getConfig().mainMenu || {
-    particles: { generation_interval_ms: 800, colors: ['#22d3ee', '#a855f7', '#ec4899'] },
-    animations: { button_hover: { scale: 1.05 } }
-  }
-
-  // Local state for UI animations (justified as pure visual state)
+  // Local state for UI interactions only
   const [isHovered, setIsHovered] = useState(false)
   const [isPressed, setIsPressed] = useState(false)
-  const [qualiaParticles, setQualiaParticles] = useState<QualiaParticle[]>([])
-  const [audioWaves, setAudioWaves] = useState<{id: number, x: number, y: number, radius: number, opacity: number}[]>([])
-  const containerRef = useRef<HTMLDivElement>(null)
-  const particleId = useRef(0)
-  const waveId = useRef(0)
 
-  // Generate qualia particles
-  useEffect(() => {
-    const generateQualia = () => {
-      if (!containerRef.current) return
-      
-      const container = containerRef.current
-      const newParticle: QualiaParticle = {
-        id: particleId.current++,
-        x: Math.random() * container.clientWidth,
-        y: Math.random() * container.clientHeight,
-        size: Math.random() * 8 + 4,
-        color: (mainMenuConfig.particles?.colors || ['cyan', 'purple', 'pink'])[Math.floor(Math.random() * 3)],
-        vx: (Math.random() - 0.5) * 2,
-        vy: (Math.random() - 0.5) * 2,
-        life: 1,
-        maxLife: Math.random() * 3 + 2,
-        frequency: Math.random() * 0.02 + 0.01
-      }
-      
-      setQualiaParticles(prev => [...prev, newParticle])
-    }
 
-    const interval = setInterval(generateQualia, mainMenuConfig.particles?.generation_interval_ms || 800)
-    return () => clearInterval(interval)
-  }, [])
-
-  // Update particles
-  useEffect(() => {
-    const updateParticles = () => {
-      setQualiaParticles(prev => 
-        prev
-          .map(p => ({
-            ...p,
-            x: p.x + p.vx,
-            y: p.y + p.vy,
-            life: p.life - 0.01,
-            size: p.size * (1 - p.frequency)
-          }))
-          .filter(p => p.life > 0 && p.size > 0.5)
-      )
-      
-      setAudioWaves(prev => 
-        prev
-          .map(w => ({
-            ...w,
-            radius: w.radius + 3,
-            opacity: w.opacity - 0.02
-          }))
-          .filter(w => w.opacity > 0)
-      )
-    }
-
-    let animationId = requestAnimationFrame(function animate() {
-      updateParticles()
-      animationId = requestAnimationFrame(animate)
-    })
-    
-    return () => cancelAnimationFrame(animationId)
-  }, [])
-
-  const handleQualiaClick = (particle: QualiaParticle, e: React.MouseEvent) => {
-    // Create audio wave effect
-    const rect = e.currentTarget.getBoundingClientRect()
-    const newWave = {
-      id: waveId.current++,
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-      radius: 0,
-      opacity: 1
-    }
-    setAudioWaves(prev => [...prev, newWave])
-    
-    // Create burst of smaller particles
-    const burstParticles: QualiaParticle[] = []
-    for (let i = 0; i < 8; i++) {
-      burstParticles.push({
-        id: particleId.current++,
-        x: particle.x,
-        y: particle.y,
-        size: Math.random() * 4 + 2,
-        color: particle.color,
-        vx: (Math.random() - 0.5) * 8,
-        vy: (Math.random() - 0.5) * 8,
-        life: 1,
-        maxLife: 1,
-        frequency: 0.05
-      })
-    }
-    setQualiaParticles(prev => [...prev, ...burstParticles])
-    
-    // Remove the clicked particle
-    setQualiaParticles(prev => prev.filter(p => p.id !== particle.id))
-  }
-
-  const handleBackgroundClick = (e: React.MouseEvent) => {
-    if (!containerRef.current) return
-    
-    const rect = containerRef.current.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    
-    // Create larger qualia burst on background click
-    const burstParticles: QualiaParticle[] = []
-    for (let i = 0; i < 12; i++) {
-      burstParticles.push({
-        id: particleId.current++,
-        x: x,
-        y: y,
-        size: Math.random() * 12 + 6,
-        color: ['cyan', 'purple', 'pink'][Math.floor(Math.random() * 3)],
-        vx: (Math.random() - 0.5) * 10,
-        vy: (Math.random() - 0.5) * 10,
-        life: 1,
-        maxLife: Math.random() * 2 + 1,
-        frequency: 0.03
-      })
-    }
-    setQualiaParticles(prev => [...prev, ...burstParticles])
-    
-    // Create audio wave
-    const newWave = {
-      id: waveId.current++,
-      x: x,
-      y: y,
-      radius: 0,
-      opacity: 1
-    }
-    setAudioWaves(prev => [...prev, newWave])
-  }
 
   return (
-    <div 
-      ref={containerRef}
-      className="fixed inset-0 flex items-center justify-center z-50 cursor-crosshair"
-      onClick={handleBackgroundClick}
-    >
-      {/* Background overlay with blur and radial gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/30 to-transparent backdrop-blur-sm" />
+    <div className="flex flex-col items-center justify-center gap-12 p-8 pointer-events-auto">
+      {/* PURIFIED: All particle and visual effects removed - now handled by BackendCanvas */}
       
-      {/* Interactive Qualia Particles */}
-      <AnimatePresence>
-        {qualiaParticles.map(particle => (
-          <motion.div
-            key={particle.id}
-            className="absolute rounded-full cursor-pointer"
-            style={{
-              left: particle.x,
-              top: particle.y,
-              width: particle.size,
-              height: particle.size,
-              background: `radial-gradient(circle, ${particle.color === 'cyan' ? '#22d3ee' : particle.color === 'purple' ? '#a855f7' : '#ec4899'} 0%, transparent 70%)`,
-              boxShadow: `0 0 ${particle.size * 2}px ${particle.color === 'cyan' ? '#22d3ee' : particle.color === 'purple' ? '#a855f7' : '#ec4899'}40`,
-              opacity: particle.life,
-            }}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0 }}
-            onClick={(e) => {
-              e.stopPropagation()
-              handleQualiaClick(particle, e)
-            }}
-            whileHover={{ scale: 1.5 }}
-            whileTap={{ scale: 0.8 }}
-          />
-        ))}
-      </AnimatePresence>
-      
-      {/* Audio Wave Effects */}
-      {audioWaves.map(wave => (
-        <motion.div
-          key={wave.id}
-          className="absolute rounded-full border-2 pointer-events-none"
-          style={{
-            left: wave.x,
-            top: wave.y,
-            width: wave.radius * 2,
-            height: wave.radius * 2,
-            borderColor: wave.opacity > 0.5 ? '#22d3ee' : wave.opacity > 0.3 ? '#a855f7' : '#ec4899',
-            opacity: wave.opacity,
-            transform: 'translate(-50%, -50%)',
-          }}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-        />
-      ))}
-      
-      {/* Floating Qualia Orbs */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full"
-            style={{
-              width: Math.random() * 20 + 10,
-              height: Math.random() * 20 + 10,
-              background: `radial-gradient(circle, ${['#22d3ee', '#a855f7', '#ec4899'][i % 3]}40 0%, transparent 70%)`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              x: [0, Math.random() * 100 - 50],
-              y: [0, Math.random() * 100 - 50],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: Math.random() * 4 + 3,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </div>
-      
-      {/* Menu container */}
-      <div className="relative z-10 flex flex-col items-center justify-center gap-12 p-8 pointer-events-none">
-        {/* Main Title */}
-        <motion.div
+      {/* Main Title */}
+      <motion.div
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
@@ -307,14 +82,14 @@ export default function QualiaMainMenu() {
         </motion.div>
 
         {/* Interactive Instructions */}
-        <motion.div
+        <motion.p
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.7 }}
-          transition={{ duration: 1.5, delay: 1.5 }}
-          className="text-center text-sm font-orbitron text-cyan-300/60 pointer-events-auto"
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 1.2 }}
+          className="text-lg text-white/60 mb-12 font-light tracking-wide text-center"
         >
-          CLICK ANYWHERE TO GENERATE QUALIA
-        </motion.div>
+          IMMERSE IN GPU-RENDERED QUALIA
+        </motion.p>
 
         {/* Start Button */}
         <motion.div
@@ -418,7 +193,6 @@ export default function QualiaMainMenu() {
             />
           </motion.button>
         </motion.div>
-      </div>
     </div>
   )
 }
