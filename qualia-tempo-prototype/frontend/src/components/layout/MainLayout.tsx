@@ -37,8 +37,9 @@ const MainLayout: React.FC = () => {
       {/* 
         LAYER 2: UI (Z-20)
         El menú principal y otros elementos de UI interactivos.
+        CORRECTED FIX: Absolute center positioning with proper pointer events
       */}
-      <div className="fixed inset-0 z-20 flex items-center justify-center pointer-events-none">
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
         <QualiaMainMenu />
       </div>
     </div>
