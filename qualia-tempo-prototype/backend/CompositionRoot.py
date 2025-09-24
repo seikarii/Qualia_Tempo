@@ -36,6 +36,9 @@ class CompositionRoot:
 
         self._logger.info("🚀 Initializing QUALIA.CODE CompositionRoot...")
 
+        # GOLD.CODE: Initialize shared OpenGL context FIRST
+        await self._initialize_shared_context()
+
         # Initialize core services
         await self._initialize_event_bus()
         await self._initialize_particle_system()
@@ -49,21 +52,68 @@ class CompositionRoot:
         self._initialized = True
         self._logger.info("✅ CompositionRoot initialization complete")
 
+    async def _initialize_shared_context(self) -> None:
+        """Initialize shared OpenGL context - GOLD.CODE: Single source of truth."""
+        try:
+            import moderngl
+
+            # GOLD.CODE: Try EGL first, fallback to software if not available
+            context_backends = [
+                {"backend": "egl", "name": "EGL"},
+                {"backend": "glx", "name": "GLX"},
+                {"name": "Default"}  # Empty dict = default
+            ]
+
+            shared_ctx = None
+            for backend_config in context_backends:
+                try:
+                    if "backend" in backend_config:
+                        shared_ctx = moderngl.create_standalone_context(
+                            require=330, backend=backend_config["backend"]
+                        )
+                    else:
+                        shared_ctx = moderngl.create_standalone_context(require=330)
+
+                    backend_name = backend_config.get("name", "Default")
+                    self._logger.info(f"✅ Created shared {backend_name} OpenGL context")
+                    break
+
+                except Exception as e:
+                    backend_name = backend_config.get("name", "Default")
+                    self._logger.warning(f"⚠️ Failed to create {backend_name} context: {e}")
+                    continue
+
+            if shared_ctx is None:
+                raise RuntimeError("GOLD.CODE VIOLATION: Failed to create any OpenGL context")
+
+            self._services["shared_opengl_context"] = shared_ctx
+            self._logger.debug("🔗 Shared OpenGL context initialized and registered")
+
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize shared OpenGL context: {e}")
+            raise
+
     async def _initialize_event_bus(self) -> None:
         """Initialize the EventBus service."""
         self._services["event_bus"] = self._event_bus
         self._logger.debug("📡 EventBus service registered")
 
     async def _initialize_particle_system(self) -> None:
-        """Initialize the QualiaParticleEngine service."""
+        """Initialize the QualiaParticleEngine service with shared context."""
         try:
             from .engine.qualia_particle_engine import create_qualia_particle_engine
 
-            # ✅ QUALIA.CODE: Pass EventBus for EDA compliance
+            # GOLD.CODE: Get shared context and pass to particle engine
+            shared_ctx = self._services.get("shared_opengl_context")
+            if shared_ctx is None:
+                raise RuntimeError("GOLD.CODE VIOLATION: Shared context not available for particle engine")
+
+            # ✅ QUALIA.CODE: Pass shared context instead of standalone=True
             particle_engine = create_qualia_particle_engine(
                 max_particles=10000,
                 enable_metrics=True,
-                standalone=True,  # Creates OpenGL context for headless operation
+                standalone=False,  # GOLD.CODE: Use shared context
+                ctx=shared_ctx,    # GOLD.CODE: Inject shared OpenGL context
                 event_bus=self._event_bus,  # QUALIA.CODE: Inject EventBus dependency
             )
             self._services["particle_system"] = particle_engine
@@ -71,7 +121,7 @@ class CompositionRoot:
             # QUALIA.CODE: Start the engine to subscribe to events
             particle_engine.start()
 
-            self._logger.debug("🎆 QualiaParticleEngine service registered and started")
+            self._logger.debug("🎆 QualiaParticleEngine service registered with shared context")
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize QualiaParticleEngine: {e}")
             raise
@@ -85,28 +135,36 @@ class CompositionRoot:
         self._logger.debug("✅ QualiaProcessor initialized")
 
     async def _initialize_rendering_service(self) -> None:
-        """Initialize RenderingService for GPU-based frame rendering."""
+        """Initialize RenderingService with shared OpenGL context."""
         from .services.RenderingService import RenderingService
 
-        # QUALIA.CODE: Get particle engine from services and inject it
+        # GOLD.CODE: Get shared context and particle engine from services
+        shared_ctx = self._services.get("shared_opengl_context")
+        if shared_ctx is None:
+            raise RuntimeError("GOLD.CODE VIOLATION: Shared context not available for rendering service")
+
         particle_engine = self._services["particle_system"]
 
         rendering_service = RenderingService(
             event_bus=self._event_bus,
             particle_engine=particle_engine,  # QUALIA.CODE: Inject particle engine dependency
+            ctx=shared_ctx,                  # GOLD.CODE: Inject shared OpenGL context
             width=1920,
             height=1080,
         )
         self._services["rendering_service"] = rendering_service
-        self._logger.debug("✅ RenderingService initialized")
+        self._logger.debug("✅ RenderingService initialized with shared context")
 
     async def _initialize_streaming_web_service(self) -> None:
         """Initialize StreamingWebService for WebSocket video streaming."""
         from .services.StreamingWebService import StreamingWebService
 
         rendering_service = self._services["rendering_service"]
+        particle_engine = self._services["particle_system"]  # QUALIA.CODE: Inject particle engine dependency
         streaming_service = StreamingWebService(
-            event_bus=self._event_bus, rendering_service=rendering_service
+            event_bus=self._event_bus, 
+            rendering_service=rendering_service,
+            particle_engine=particle_engine  # QUALIA.CODE: Pass particle engine for simulation control
         )
         self._services["streaming_web_service"] = streaming_service
         self._logger.debug("✅ StreamingWebService initialized")

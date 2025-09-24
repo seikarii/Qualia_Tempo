@@ -194,6 +194,7 @@ class RenderingService:
         self,
         event_bus: EventBus,
         particle_engine: Optional[QualiaParticleEngine],
+        ctx: Optional[Any] = None,  # GOLD.CODE: Receive shared OpenGL context via DI
         width: int = 1920,
         height: int = 1080,
     ):
@@ -205,11 +206,12 @@ class RenderingService:
         # QUALIA.CODE: Receive particle engine via dependency injection
         self._particle_engine: Optional[QualiaParticleEngine] = particle_engine
 
+        # GOLD.CODE: Receive shared OpenGL context via dependency injection
+        self._ctx: Optional[Any] = ctx
+
         # QUALIA.CODE: Camera decoupled from rendering logic
         self._camera = Camera(aspect=width / height)
 
-        # Core rendering context
-        self._ctx: Optional[Any] = None
         self._is_initialized = False
 
         # Particle rendering pipeline
@@ -261,45 +263,24 @@ class RenderingService:
     def _initialize_graphics(self) -> bool:
         """
         Initialize complete HDR rendering pipeline with post-processing.
-        QUALIA.CODE v1.2: Professional multi-pass bloom implementation.
+        GOLD.CODE: Use shared OpenGL context instead of creating new one.
         """
         if not MODERNGL_AVAILABLE or moderngl is None:
             self._logger.error("ModernGL is not available")
             return False
-            
+
         try:
-            # Create OpenGL context with fallback strategy
-            context_backends = [{"backend": "egl"}, {"backend": "glx"}, {}]  # {} = default
+            # GOLD.CODE: Use injected context instead of creating new one
+            if self._ctx is None:
+                self._logger.error("GOLD.CODE VIOLATION: No OpenGL context provided via DI")
+                return False
 
-            for backend_config in context_backends:
-                try:
-                    if backend_config:
-                        self._ctx = moderngl.create_standalone_context(
-                            require=330, backend=backend_config["backend"]
-                        )
-                    else:
-                        self._ctx = moderngl.create_standalone_context(require=330)
-                    backend_name = backend_config.get("backend", "default")
-                    self._logger.info(
-                        f"✅ Created {backend_name.upper()} OpenGL context"
-                    )
-                    break
-                except Exception as e:
-                    backend_name = backend_config.get("backend", "default")
-                    self._logger.warning(
-                        f"⚠️ Failed to create {backend_name} context: {e}"
-                    )
-                    continue
-            else:
-                # If all backends failed
-                self._logger.error("🚨 All OpenGL context creation attempts failed")
-                return self._initialize_software_fallback()
+            self._logger.info("✅ Using shared OpenGL context for rendering pipeline")
 
-            # Initialize particle engine with our context
+            # GOLD.CODE: Remove the context override hack - context is now shared properly
+            # Initialize particle engine with shared context (no override needed)
             if self._particle_engine is not None:
-                self._particle_engine.ctx = self._ctx
-                self._particle_engine._initialize_shader()
-
+                # Particle engine should already have the shared context from factory
                 if not self._particle_engine.initialize_buffers():
                     self._logger.error("🚨 Failed to initialize particle buffers")
                     return self._initialize_software_fallback()
@@ -790,8 +771,9 @@ class RenderingService:
                 pass
 
             # Render particles with advanced effects
-            particle_count = getattr(self._particle_engine, "particle_count", 1000)
-            self._particle_vao.render(moderngl.POINTS, particle_count)
+            # QUALIA.CODE FIX: Use the correct attribute 'max_particles' from the injected engine.
+            particle_count = self._particle_engine.max_particles if self._particle_engine else 0
+            self._particle_vao.render(moderngl.POINTS, vertices=particle_count)
 
             # === PASS 2: BRIGHT PASS EXTRACTION ===
             self._bright_pass_fbo.use()

@@ -394,8 +394,8 @@ class QualiaParticleEngine:
             "ffffffffI3f3f",  # 8 floats + 1 unsigned int + 3 floats + 3 floats (attractor position)
             float(getattr(qualia_state, "intensity", 0.0)),
             float(
-                getattr(qualia_state, "accuracy", 0.0)
-            ),  # CRITICAL: Use accuracy to match shader uniform
+                getattr(qualia_state, "precision", 0.0)
+            ),  # QUALIA.CODE FIX: Use precision from data model (was accuracy)
             float(getattr(qualia_state, "aggression", 0.0)),
             float(getattr(qualia_state, "flow", 0.0)),
             float(getattr(qualia_state, "chaos", 0.0)),
@@ -562,6 +562,7 @@ def create_qualia_particle_engine(
     enable_metrics: bool = True,
     standalone: bool = False,
     event_bus: Any = None,  # QUALIA.CODE: EventBus parameter for DI
+    ctx: Any = None,  # GOLD.CODE: Accept existing context for shared OpenGL context
 ) -> QualiaParticleEngine:
     """
     Factory function to create a Qualia particle engine.
@@ -569,14 +570,14 @@ def create_qualia_particle_engine(
     Args:
         max_particles: Maximum number of particles to simulate
         enable_metrics: Whether to track performance metrics
-        standalone: Whether to create a standalone context
+        standalone: Whether to create a standalone context (ignored if ctx provided)
+        ctx: Existing OpenGL context to use (GOLD.CODE: Shared context pattern)
 
     Returns:
         Configured QualiaParticleEngine instance
     """
-    ctx = None
-
-    if moderngl and standalone:
+    # GOLD.CODE: Use provided context, only create standalone if none provided
+    if ctx is None and moderngl and standalone:
         try:
             # Try EGL first, fallback to software if not available
             try:

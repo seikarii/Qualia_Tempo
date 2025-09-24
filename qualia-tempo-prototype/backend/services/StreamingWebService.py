@@ -22,9 +22,10 @@ class StreamingWebService:
     Manages connections and coordinates with RenderingService for frame generation.
     """
 
-    def __init__(self, event_bus: EventBus, rendering_service: RenderingService):
+    def __init__(self, event_bus: EventBus, rendering_service: RenderingService, particle_engine):
         self._event_bus = event_bus
         self._rendering_service = rendering_service
+        self._particle_engine = particle_engine  # QUALIA.CODE: Inject particle engine for simulation
         self._logger = logging.getLogger(__name__)
 
         # Connection management
@@ -161,6 +162,9 @@ class StreamingWebService:
                             f"💀 STREAMING CANCELLED - ABORTING RENDER: {task_id}"
                         )
                         break
+
+                    # QUALIA.CODE CRITICAL FIX: Run particle simulation step BEFORE rendering
+                    self._particle_engine.compute_step()
 
                     # Generate frame from rendering service - MAKE IT CANCELLABLE!
                     # Run the blocking render_frame() in a thread pool to make it cancellable
