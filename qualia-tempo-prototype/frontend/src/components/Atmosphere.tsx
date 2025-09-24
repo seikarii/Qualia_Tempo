@@ -2,7 +2,7 @@ import React from 'react';
 
 export const Atmosphere: React.FC = () => {
   return (
-    <div className="fixed inset-0 z-10 pointer-events-none">
+    <div>
       {/* Capa de Grid Procedural */}
       <div className="cyber-grid fixed inset-0 z-0" />
 

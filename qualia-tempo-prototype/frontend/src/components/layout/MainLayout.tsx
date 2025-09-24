@@ -18,7 +18,7 @@ import QualiaMainMenu from '../QualiaMainMenu';
 
 const MainLayout: React.FC = () => {
   return (
-    <div className="h-screen w-screen bg-black relative overflow-hidden">
+    <div className="h-screen w-screen relative overflow-hidden">
       {/* 
         LAYER 0: BACKEND CANVAS (Z-0)
         La fuente de verdad para los visuales del motor.
@@ -32,7 +32,9 @@ const MainLayout: React.FC = () => {
         LAYER 1: ATMOSPHERE (Z-10)
         Para efectos CSS complementarios como grids y bloom global.
       */}
-      <Atmosphere />
+      <div className="absolute inset-0 z-10 pointer-events-none">
+        <Atmosphere />
+      </div>
 
       {/* 
         LAYER 2: UI (Z-20)

@@ -71,7 +71,7 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
 
     // Get 2D rendering context
     const ctx = canvas.getContext('2d', {
-      alpha: false, // Better performance for opaque content
+      alpha: true, // CRITICAL: Enable transparency for atmosphere visibility
       desynchronized: true // Allow asynchronous rendering
     });
 
@@ -118,8 +118,11 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
       const img = new Image();
       
       img.onload = () => {
-        // QUALIA.CODE v1.1 COMPLIANCE: No canvas clearing to preserve transparency
-        // Backend engine frames will render over atmosphere layer
+        // CRITICAL: Clear canvas for frame-to-frame transparency
+        const canvas = canvasRef.current;
+        if (canvas) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
         
         // Draw frame to canvas (scaled to fit)
         ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);

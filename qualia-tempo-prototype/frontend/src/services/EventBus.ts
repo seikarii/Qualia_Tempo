@@ -76,6 +76,15 @@ export interface BackendSyncEvent extends BaseEvent {
   error?: any;
 }
 
+export interface VisualImpactRequestedEvent extends BaseEvent {
+  type: "VisualImpactRequested";
+  payload: {
+    x: number; // Normalized coordinates (0 to 1)
+    y: number; // Normalized coordinates (0 to 1)
+    intensity: number; // Impact intensity (0 to 1)
+  };
+}
+
 export interface RhythmicDashEvent extends BaseEvent {
   type: "RhythmicDash";
   direction: "north" | "south" | "east" | "west";
@@ -105,6 +114,7 @@ export type EventTypes =
   | BackendSyncEvent
   | MetronomeTickEvent
   | StreamingStatusChangedEvent
+  | VisualImpactRequestedEvent
   | RhythmicDashEvent
   | MetronomeTickEvent
   | StreamingStatusChangedEvent;

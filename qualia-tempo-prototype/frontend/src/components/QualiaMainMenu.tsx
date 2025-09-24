@@ -24,10 +24,27 @@ export default function QualiaMainMenu() {
   const [isHovered, setIsHovered] = useState(false)
   const [isPressed, setIsPressed] = useState(false)
 
+  /**
+   * Handle background clicks for visual impact effects
+   * QUALIA.CODE v1.1 Compliance: Architecture-pure visual event emission
+   */
+  const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
 
+    eventBus.emit({
+      type: 'VisualImpactRequested',
+      payload: { x, y, intensity: 0.8 }
+    } as any); // Type assertion for event system compatibility
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-12 p-8 pointer-events-auto">
+    <div
+      className="relative w-full h-full flex items-center justify-center"
+      onClick={handleBackgroundClick}
+    >
+      <div className="flex flex-col items-center justify-center gap-12 p-8 pointer-events-auto">
       {/* PURIFIED: All particle and visual effects removed - now handled by BackendCanvas */}
       
       {/* Main Title */}
@@ -193,6 +210,7 @@ export default function QualiaMainMenu() {
             />
           </motion.button>
         </motion.div>
+      </div>
     </div>
   )
 }
