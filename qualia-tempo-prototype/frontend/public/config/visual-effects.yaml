@@ -3,28 +3,28 @@
 
 visualEffects:
   particles:
-    count: 220          # More particles for density
-    minSize: 1          # px  
-    maxSize: 8          # Larger max for impact
-    speed: 0.65         # Faster base movement
-    drift: 0.85         # Higher drift for chaos
+    count: 500          # Much more particles for visibility
+    minSize: 4          # Larger minimum size  
+    maxSize: 16         # Much larger max for visibility
+    speed: 1.5          # Faster movement for visibility
+    drift: 1.2          # Higher drift for dynamic effect
   bloom:
-    intensity: 1.8      # Extreme bloom for preview
-    pulseSpeed: 3       # Faster pulsing for energy
+    intensity: 3.5      # Much stronger bloom for visibility
+    pulseSpeed: 2       # Noticeable pulsing
   gradients:
-    cycleDuration: 12   # Faster cycle for preview demo
+    cycleDuration: 8    # Faster cycle for more dynamic effect
     layers:
-      - 'radial-gradient(circle at 15% 25%, rgba(0,255,255,0.25) 0%, transparent 55%)'
-      - 'radial-gradient(circle at 85% 75%, rgba(255,0,255,0.22) 0%, transparent 60%)'
-      - 'radial-gradient(circle at 50% 50%, rgba(255,255,0,0.18) 0%, transparent 65%)'
-      - 'conic-gradient(from 0deg at 50% 50%, rgba(0,255,200,0.12), rgba(255,0,200,0.12), rgba(255,255,0,0.12), rgba(0,255,200,0.12))'
-      - 'radial-gradient(circle at 30% 80%, rgba(255,0,128,0.15) 0%, transparent 50%)'
-      - 'radial-gradient(circle at 70% 20%, rgba(128,255,0,0.15) 0%, transparent 50%)'
+      - 'radial-gradient(circle at 15% 25%, rgba(0,255,255,0.7) 0%, transparent 55%)'
+      - 'radial-gradient(circle at 85% 75%, rgba(255,0,255,0.6) 0%, transparent 60%)'
+      - 'radial-gradient(circle at 50% 50%, rgba(255,255,0,0.5) 0%, transparent 65%)'
+      - 'conic-gradient(from 0deg at 50% 50%, rgba(0,255,200,0.4), rgba(255,0,200,0.4), rgba(255,255,0,0.4), rgba(0,255,200,0.4))'
+      - 'radial-gradient(circle at 30% 80%, rgba(255,0,128,0.4) 0%, transparent 50%)'
+      - 'radial-gradient(circle at 70% 20%, rgba(128,255,0,0.4) 0%, transparent 50%)'
   noise:
     enabled: true
-    opacity: 0.12       # Higher grain for texture
-    scale: 2.5          # Larger noise pattern
-    speed: 0.55         # Faster animation
+    opacity: 0.3        # Much more visible grain
+    scale: 1.8          # Tighter noise for better visibility
+    speed: 1.0          # Faster animation for movement
   palette:              # Extended Qualia energy palette
     - '#00ffff'         # Cyan - precision/clarity
     - '#ff00ff'         # Magenta - intensity/power  
