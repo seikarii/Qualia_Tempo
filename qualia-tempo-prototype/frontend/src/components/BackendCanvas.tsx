@@ -57,6 +57,7 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
   const [lastFrame, setLastFrame] = useState<VideoFrame | null>(null);
   const [frameCount, setFrameCount] = useState(0);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
 
   // Canvas dimensions
   const canvasWidth = width || window.innerWidth;
@@ -71,7 +72,7 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
 
     // Get 2D rendering context
     const ctx = canvas.getContext('2d', {
-      alpha: true, // CRITICAL: Enable transparency for atmosphere visibility
+      alpha: false, // QUALIA.CODE v1.1 FIX: Disable alpha for better particle visibility
       desynchronized: true // Allow asynchronous rendering
     });
 
@@ -95,8 +96,9 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     
-    // QUALIA.CODE v1.1 COMPLIANCE: Canvas remains transparent for atmosphere visibility
-    // Backend engine will provide content; no black background needed
+    // QUALIA.CODE v1.1 FIX: Initialize with dark base for particle visibility
+    ctx.fillStyle = 'rgba(5, 5, 15, 1.0)';
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     
     setIsCanvasReady(true);
     logger.info('BackendCanvas initialized', {
@@ -118,18 +120,37 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
       const img = new Image();
       
       img.onload = () => {
-        // CRITICAL: Clear canvas for frame-to-frame transparency
         const canvas = canvasRef.current;
-        if (canvas) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
+        if (!canvas) return;
+        
+        // QUALIA.CODE v1.1 FIX: Provide subtle base for GPU particle visibility
+        ctx.fillStyle = 'rgba(5, 5, 15, 0.95)'; // Very dark blue-black base
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        
+        // Set enhanced blending for particle visibility
+        ctx.globalCompositeOperation = 'screen'; // Additive blending for particles
         
         // Draw frame to canvas (scaled to fit)
         ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
         
+        // Reset composite operation
+        ctx.globalCompositeOperation = 'source-over';
+        
         // Update frame tracking
         setLastFrame(frame);
-        setFrameCount(prev => prev + 1);
+        setFrameCount(prev => {
+          const newCount = prev + 1;
+          // Debug logging every 30 frames (roughly once per second at 30 FPS)
+          if (newCount % 30 === 0) {
+            logger.info('BackendCanvas rendering frames', { 
+              frameCount: newCount, 
+              frameSize: `${img.width}x${img.height}`,
+              timestamp: frame.timestamp,
+              dataSize: frame.data.length
+            });
+          }
+          return newCount;
+        });
       };
       
       img.onerror = () => {
@@ -150,7 +171,58 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
   const updateConnectionStatus = useCallback(() => {
     const status = streamingService.getConnectionStatus();
     setConnectionStatus(status);
+    
+    // Activate fallback if disconnected for too long
+    if (!status.connected && status.reconnectAttempts > 3) {
+      setShowFallback(true);
+    } else if (status.connected) {
+      setShowFallback(false);
+    }
   }, [streamingService]);
+
+  /**
+   * Fallback animation when backend is unavailable
+   */
+  const startFallbackAnimation = useCallback(() => {
+    const ctx = contextRef.current;
+    if (!ctx || !isCanvasReady) return;
+
+    let animationId: number;
+    
+    const animate = (time: number) => {
+      // Simple particle-like fallback animation
+      ctx.fillStyle = 'rgba(5, 5, 15, 0.1)';
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      
+      // Draw some animated particles as fallback
+      for (let i = 0; i < 20; i++) {
+        const x = (Math.sin(time * 0.001 + i) * 0.3 + 0.5) * canvasWidth;
+        const y = (Math.cos(time * 0.0007 + i * 2) * 0.3 + 0.5) * canvasHeight;
+        const size = Math.sin(time * 0.002 + i) * 3 + 5;
+        
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, size);
+        gradient.addColorStop(0, `rgba(0, 255, 255, ${0.8 * Math.sin(time * 0.003 + i) + 0.2})`);
+        gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      if (showFallback) {
+        animationId = requestAnimationFrame(animate);
+      }
+    };
+    
+    animationId = requestAnimationFrame(animate);
+    
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, [canvasWidth, canvasHeight, isCanvasReady, showFallback]);
 
   // Initialize canvas on mount
   useEffect(() => {
@@ -174,8 +246,11 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
         try {
           await streamingService.connect();
           logger.info('BackendCanvas connected to video stream');
+          setShowFallback(false);
         } catch (error) {
-          logger.warn('BackendCanvas failed to connect to video stream - continuing in offline mode', { error });
+          logger.warn('BackendCanvas failed to connect to video stream - activating fallback mode', { error });
+          setShowFallback(true);
+          startFallbackAnimation();
         }
         
       } catch (error) {
@@ -223,8 +298,8 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
         ref={canvasRef}
         className="w-full h-full block"
         style={{
-          imageRendering: 'crisp-edges' // Sharp pixel rendering
-          // QUALIA.CODE v1.1 COMPLIANCE: Removed backgroundColor for atmosphere visibility
+          imageRendering: 'crisp-edges', // Sharp pixel rendering
+          backgroundColor: 'rgba(5, 5, 15, 1.0)' // QUALIA.CODE v1.1 FIX: Dark base for visibility
         }}
         aria-label="Qualia Tempo Visual Effects Canvas"
       />
@@ -268,6 +343,25 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
               {connectionStatus.lastError}
             </div>
           )}
+          {showFallback && (
+            <div className="text-yellow-400 text-xs mt-1 flex items-center gap-1">
+              <span className="animate-pulse">⚠</span>
+              Fallback Mode - GPU Effects Unavailable
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Fallback notification when backend unavailable */}
+      {showFallback && !showStatus && (
+        <div className="absolute bottom-4 right-4 z-50 bg-yellow-900 bg-opacity-90 text-yellow-200 p-3 rounded text-sm font-mono border border-yellow-600">
+          <div className="flex items-center gap-2">
+            <span className="animate-pulse text-yellow-400">⚠</span>
+            <div>
+              <div className="font-semibold">Backend GPU Engine Offline</div>
+              <div className="text-xs opacity-75">Running CSS fallback visuals</div>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -1,46 +1,12 @@
 # QUALIA.CODE v1.1 - Main Menu Configuration
-# Externalized configuration for QualiaMainMenu component
+# ARCHITECTURAL COMPLIANCE: DOM particles REMOVED - all visuals via BackendCanvas
 
-# Particle System Configuration
-particles:
-  # Generation settings
-  generation_interval_ms: 800
-  max_particles: 50
-  burst_particles_on_click: 8
-  background_burst_particles: 12
-  
-  # Physics properties
-  velocity:
-    min: -2.5
-    max: 2.5
-  
-  size:
-    min: 4
-    max: 12
-    burst_min: 2
-    burst_max: 6
-    background_min: 6
-    background_max: 18
-  
-  # Lifecycle
-  life_decay_rate: 0.01
-  frequency:
-    min: 0.01
-    max: 0.03
-    burst: 0.05
-    background: 0.03
-  
-  # Visual properties
-  colors:
-    - "#22d3ee"  # cyan
-    - "#a855f7"  # purple
-    - "#ec4899"  # pink
+# DOM particle system DEPRECATED - using GPU particles via BackendCanvas
+# All visual effects are now handled by:
+# 1. BackendCanvas (GPU particles via WebSocket)
+# 2. Atmosphere (CSS effects)
 
-# Audio Wave Effects
-audio_waves:
-  expansion_rate: 3
-  opacity_decay_rate: 0.02
-  max_radius: 200
+# UI Element Configurations only:
 
 # Animations
 animations:

@@ -235,11 +235,11 @@ class RenderingService:
         self._target_fps = 60.0
         self._frame_count = 0
 
-        # HDR and bloom parameters
-        self._bloom_threshold = 0.7
-        self._bloom_strength = 1.2
-        self._global_intensity = 1.0
-        self._particle_scale = 1.0
+        # HDR and bloom parameters - ENHANCED for visibility
+        self._bloom_threshold = 0.4  # Lower threshold for more bloom
+        self._bloom_strength = 2.5   # Stronger bloom effect
+        self._global_intensity = 2.0 # Increased base intensity
+        self._particle_scale = 1.5   # Larger particles
 
         # Subscribe to QualiaState updates
         self._event_bus.subscribe("QualiaStateUpdated", self._on_qualia_state_updated)
@@ -669,7 +669,7 @@ class RenderingService:
 
             try:
                 self._particle_render_shader["intensity_multiplier"].value = (
-                    1.0 + intensity * 2.0
+                    2.0 + intensity * 4.0  # Enhanced visibility multiplier
                 )
             except KeyError:
                 pass
@@ -684,7 +684,7 @@ class RenderingService:
 
             try:
                 self._particle_render_shader["global_particle_scale"].value = (
-                    self._particle_scale
+                    self._particle_scale * 2.0  # Double particle scale for visibility
                 )
             except KeyError:
                 pass
