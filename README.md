@@ -4,7 +4,42 @@
 
 Un juego de ritmo donde el rendimiento del jugador genera efectos visuales procedurales en tiempo real a través del revolucionario sistema **QualiaState**.
 
-## 🌟 NUEVO: Sistema de Preview Visual Extremo
+## � **MIGRACIÓN COMPLETADA: MainMenu como App Principal**
+
+**✅ MISSION ACCOMPLISHED** - La migración del MainMenu a la aplicación principal ha sido completada exitosamente siguiendo la arquitectura **QUALIA.CODE**.
+
+### 📋 Estado de la Migración
+
+- **✅ Arquitectura QUALIA.CODE**: 100% compliance implementado
+- **✅ InversifyJS IoC Container**: Servicios inyectados correctamente
+- **✅ EventBus Integration**: Comunicación desacoplada funcional
+- **✅ Configuración Externalizada**: Parámetros en YAML (no hardcoded)
+- **✅ Tests Unitarios**: Principales tests implementados y pasando
+- **✅ Build & Deploy**: Producción lista (784KB gzipped)
+
+### 🏗️ Arquitectura Implementada
+
+#### **Componente Principal: QualiaMainMenu**
+- **Ubicación**: `frontend/src/components/QualiaMainMenu.tsx`
+- **Función**: Interfaz principal con animaciones de partículas y emisión de eventos
+- **Integración**: EventBus para comunicación, ConfigurationService para parámetros
+
+#### **Sistema de Eventos**
+- **StartGame Event**: Emitido al hacer click en "INITIATE NEURAL SYNC"
+- **Arquitectura EventBus**: Comunicación tipo-safe y desacoplada
+- **IoC Container**: Servicios resueltos vía InversifyJS
+
+#### **Configuración Externalizada**
+```yaml
+mainMenu:
+  particles:
+    generation_interval_ms: 800
+    colors: ['#22d3ee', '#a855f7', '#ec4899']
+  animations:
+    button_hover: { scale: 1.05 }
+```
+
+## �🌟 NUEVO: Sistema de Preview Visual Extremo
 
 La página principal ahora cuenta con un **sistema de preview visual EXTREMO** que demuestra el potencial sinestésico completo de Qualia Tempo. No es solo un fondo - es una **preview funcional** del lenguaje visual del juego.
 

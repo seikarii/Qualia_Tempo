@@ -1,0 +1,120 @@
+# QUALIA.CODE v1.1 - Main Menu Configuration
+# Externalized configuration for QualiaMainMenu component
+
+# Particle System Configuration
+particles:
+  # Generation settings
+  generation_interval_ms: 800
+  max_particles: 50
+  burst_particles_on_click: 8
+  background_burst_particles: 12
+  
+  # Physics properties
+  velocity:
+    min: -2.5
+    max: 2.5
+  
+  size:
+    min: 4
+    max: 12
+    burst_min: 2
+    burst_max: 6
+    background_min: 6
+    background_max: 18
+  
+  # Lifecycle
+  life_decay_rate: 0.01
+  frequency:
+    min: 0.01
+    max: 0.03
+    burst: 0.05
+    background: 0.03
+  
+  # Visual properties
+  colors:
+    - "#22d3ee"  # cyan
+    - "#a855f7"  # purple
+    - "#ec4899"  # pink
+
+# Audio Wave Effects
+audio_waves:
+  expansion_rate: 3
+  opacity_decay_rate: 0.02
+  max_radius: 200
+
+# Animations
+animations:
+  # Title animations
+  title_entry:
+    duration: 1.5
+    ease: "easeOut"
+    delay: 0
+    y_offset: -50
+  
+  subtitle_entry:
+    duration: 1.5
+    ease: "easeOut"
+    delay: 0.5
+    y_offset: -30
+  
+  instructions_entry:
+    duration: 1.5
+    delay: 1.5
+  
+  button_entry:
+    duration: 1.5
+    ease: "easeOut"
+    delay: 1.0
+    y_offset: 50
+  
+  # Button interactions
+  button_hover:
+    scale: 1.05
+    transition_duration: 0.3
+  
+  button_press:
+    scale: 0.95
+    transition_duration: 0.1
+  
+  # Shimmer effect
+  shimmer:
+    duration: 1.5
+    repeat: true
+  
+  # Border animation
+  border_gradient:
+    duration: 2.0
+    repeat: true
+    ease: "linear"
+
+# Floating orbs
+floating_orbs:
+  count: 6
+  size:
+    min: 10
+    max: 30
+  animation:
+    duration_min: 3
+    duration_max: 7
+    movement_range: 100
+    scale_range: [1, 1.2, 1]
+
+# Performance settings
+performance:
+  max_frame_rate: 60
+  particle_cleanup_threshold: 100
+  animation_optimization: true
+  reduce_motion_support: true
+
+# Accessibility
+accessibility:
+  keyboard_navigation: true
+  screen_reader_support: true
+  high_contrast_mode: false
+  reduced_motion_respect: true
+
+# Debug settings (development only)
+debug:
+  show_particle_count: false
+  show_fps: false
+  log_interactions: false
