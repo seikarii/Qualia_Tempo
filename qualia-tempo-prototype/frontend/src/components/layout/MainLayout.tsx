@@ -25,7 +25,7 @@ const MainLayout: React.FC = () => {
         Debe llenar toda la pantalla.
       */}
       <div className="absolute inset-0 z-0">
-        <BackendCanvas />
+        <BackendCanvas showStatus={true} />
       </div>
 
       {/* 
