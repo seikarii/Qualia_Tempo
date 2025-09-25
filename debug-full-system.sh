@@ -333,19 +333,21 @@ async function comprehensiveTest() {
             console.log('❌ Root element not found');
         }
         
-        // Take screenshot
-        await page.screenshot({ path: 'debug-screenshot.png', fullPage: true });
-        console.log('📸 Screenshot saved: debug-screenshot.png');
+        // Phase 1: Capture main menu state
+        console.log('📸 Phase 1: Capturing main menu screenshot...');
+        await page.screenshot({ path: 'debug-screenshot-main-menu.png', fullPage: true });
+        console.log('📸 Screenshot saved: debug-screenshot-main-menu.png');
         
-        // Get page content
+        // Get page content for main menu
         const content = await page.content();
-        fs.writeFileSync('debug-page-content.html', content);
-        console.log('📄 Page content saved: debug-page-content.html');
+        fs.writeFileSync('debug-page-content-main-menu.html', content);
+        console.log('📄 Page content saved: debug-page-content-main-menu.html');
         
-        // Generate detailed report
-        const report = {
+        // Generate detailed report for main menu
+        const report1 = {
             timestamp: new Date().toISOString(),
             url: 'http://localhost:5173',
+            phase: 'main-menu',
             success: errors.length === 0,
             hasRoot: hasRoot,
             stats: {
@@ -360,8 +362,47 @@ async function comprehensiveTest() {
             configErrors: configErrors
         };
         
-        fs.writeFileSync('browser-test-report.json', JSON.stringify(report, null, 2));
-        console.log('📊 Detailed report saved: browser-test-report.json');
+        fs.writeFileSync('browser-test-report-main-menu.json', JSON.stringify(report1, null, 2));
+        console.log('📊 Main menu report saved: browser-test-report-main-menu.json');
+        
+        // Phase 2: Interact with "INITIATE NEURAL SYNC" button
+        console.log('🚀 Clicking "INITIATE NEURAL SYNC" button...');
+        await page.getByText('INITIATE NEURAL SYNC').click();
+        
+        console.log('⏱️ Waiting 2 seconds for game state to initialize...');
+        await page.waitForTimeout(2000);
+        
+        // Phase 2: Capture game view state
+        console.log('📸 Phase 2: Capturing game view screenshot...');
+        await page.screenshot({ path: 'debug-screenshot-game-view.png', fullPage: true });
+        console.log('📸 Screenshot saved: debug-screenshot-game-view.png');
+        
+        // Get page content for game view
+        const gameContent = await page.content();
+        fs.writeFileSync('debug-page-content-game-view.html', gameContent);
+        console.log('📄 Page content saved: debug-page-content-game-view.html');
+        
+        // Generate detailed report for game view
+        const report2 = {
+            timestamp: new Date().toISOString(),
+            url: 'http://localhost:5173',
+            phase: 'game-view',
+            success: errors.length === 0,
+            hasRoot: hasRoot,
+            stats: {
+                totalLogs: logs.length,
+                errors: errors.length,
+                warnings: warnings.length,
+                configErrors: configErrors.length
+            },
+            logs: logs,
+            errors: errors,
+            warnings: warnings,
+            configErrors: configErrors
+        };
+        
+        fs.writeFileSync('browser-test-report-game-view.json', JSON.stringify(report2, null, 2));
+        console.log('📊 Game view report saved: browser-test-report-game-view.json');
         
         // Console summary
         console.log('\n📊 BROWSER TEST SUMMARY:');
@@ -417,10 +458,13 @@ EOF
     fi
     
     # Copy test results to debug directory
-    [ -f "browser-test-report.json" ] && cp browser-test-report.json "$LOG_DIR/"
+    [ -f "browser-test-report-main-menu.json" ] && cp browser-test-report-main-menu.json "$LOG_DIR/"
+    [ -f "browser-test-report-game-view.json" ] && cp browser-test-report-game-view.json "$LOG_DIR/"
     [ -f "browser-test-failure.json" ] && cp browser-test-failure.json "$LOG_DIR/"
-    [ -f "debug-screenshot.png" ] && cp debug-screenshot.png "$LOG_DIR/"
-    [ -f "debug-page-content.html" ] && cp debug-page-content.html "$LOG_DIR/"
+    [ -f "debug-screenshot-main-menu.png" ] && cp debug-screenshot-main-menu.png "$LOG_DIR/"
+    [ -f "debug-screenshot-game-view.png" ] && cp debug-screenshot-game-view.png "$LOG_DIR/"
+    [ -f "debug-page-content-main-menu.html" ] && cp debug-page-content-main-menu.html "$LOG_DIR/"
+    [ -f "debug-page-content-game-view.html" ] && cp debug-page-content-game-view.html "$LOG_DIR/"
 }
 
 # Generate comprehensive debug report
@@ -453,20 +497,34 @@ $(tail -20 "$FRONTEND_LOG" 2>/dev/null || echo "No frontend log available")
 ## Browser Test Results
 EOF
 
-    if [ -f "$LOG_DIR/browser-test-report.json" ]; then
-        echo "Browser test report available: browser-test-report.json" >> "$DEBUG_REPORT"
+    if [ -f "$LOG_DIR/browser-test-report-main-menu.json" ] || [ -f "$LOG_DIR/browser-test-report-game-view.json" ]; then
+        echo "Browser test reports available: browser-test-report-main-menu.json, browser-test-report-game-view.json" >> "$DEBUG_REPORT"
         
-        # Extract key info from JSON report
+        # Extract key info from JSON reports
         if command -v jq &> /dev/null; then
-            cat >> "$DEBUG_REPORT" << EOF
+            if [ -f "$LOG_DIR/browser-test-report-main-menu.json" ]; then
+                cat >> "$DEBUG_REPORT" << EOF
 
-### Browser Test Summary
-- **Success:** $(jq -r '.success' "$LOG_DIR/browser-test-report.json")
-- **Total Logs:** $(jq -r '.stats.totalLogs' "$LOG_DIR/browser-test-report.json")
-- **Errors:** $(jq -r '.stats.errors' "$LOG_DIR/browser-test-report.json")
-- **Config Errors:** $(jq -r '.stats.configErrors' "$LOG_DIR/browser-test-report.json")
-- **Root Element:** $(jq -r '.hasRoot' "$LOG_DIR/browser-test-report.json")
+### Main Menu Browser Test Summary
+- **Success:** $(jq -r '.success' "$LOG_DIR/browser-test-report-main-menu.json")
+- **Total Logs:** $(jq -r '.stats.totalLogs' "$LOG_DIR/browser-test-report-main-menu.json")
+- **Errors:** $(jq -r '.stats.errors' "$LOG_DIR/browser-test-report-main-menu.json")
+- **Config Errors:** $(jq -r '.stats.configErrors' "$LOG_DIR/browser-test-report-main-menu.json")
+- **Root Element:** $(jq -r '.hasRoot' "$LOG_DIR/browser-test-report-main-menu.json")
 EOF
+            fi
+            
+            if [ -f "$LOG_DIR/browser-test-report-game-view.json" ]; then
+                cat >> "$DEBUG_REPORT" << EOF
+
+### Game View Browser Test Summary
+- **Success:** $(jq -r '.success' "$LOG_DIR/browser-test-report-game-view.json")
+- **Total Logs:** $(jq -r '.stats.totalLogs' "$LOG_DIR/browser-test-report-game-view.json")
+- **Errors:** $(jq -r '.stats.errors' "$LOG_DIR/browser-test-report-game-view.json")
+- **Config Errors:** $(jq -r '.stats.configErrors' "$LOG_DIR/browser-test-report-game-view.json")
+- **Root Element:** $(jq -r '.hasRoot' "$LOG_DIR/browser-test-report-game-view.json")
+EOF
+            fi
         fi
     fi
     
