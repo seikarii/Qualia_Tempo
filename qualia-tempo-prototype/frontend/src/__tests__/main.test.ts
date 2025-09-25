@@ -254,12 +254,16 @@ describe('Electron Main Process', () => {
       const windowsClosedHandler = mockApp.getEventHandler('window-all-closed');
       
       if (windowsClosedHandler) {
-        // Mock non-macOS platform
-        (globalThis as any).process = { platform: 'win32' };
+        // Mock non-macOS platform by modifying the property instead of replacing the object
+        const originalPlatform = (globalThis as any).process.platform;
+        (globalThis as any).process.platform = 'win32';
         
         windowsClosedHandler();
         
         expect(mockApp.quit).toHaveBeenCalled();
+        
+        // Restore original platform
+        (globalThis as any).process.platform = originalPlatform;
       }
     });
 
@@ -324,7 +328,10 @@ describe('Electron Main Process', () => {
       // Mock development environment
       const envModule = await import('../utils/env');
       (envModule.isDev as any) = true;
-      (globalThis as any).process = { env: { ELECTRON_RENDERER_URL: 'http://localhost:5173' } };
+      
+      // Mock ELECTRON_RENDERER_URL by modifying env instead of replacing process
+      const originalEnv = (globalThis as any).process.env;
+      (globalThis as any).process.env = { ...originalEnv, ELECTRON_RENDERER_URL: 'http://localhost:5173' };
       
       // Re-import to test dev behavior
       vi.resetModules();
@@ -335,6 +342,9 @@ describe('Electron Main Process', () => {
         expect(mockWindowInstance.loadURL).toHaveBeenCalledWith('http://localhost:5173');
         expect(mockWindowInstance.webContents.openDevTools).toHaveBeenCalled();
       }
+      
+      // Restore original env
+      (globalThis as any).process.env = originalEnv;
     });
   });
 });
