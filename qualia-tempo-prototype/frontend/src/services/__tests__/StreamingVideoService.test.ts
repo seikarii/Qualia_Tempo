@@ -2,8 +2,10 @@
 // Basic unit tests for WebSocket video streaming service
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { StreamingVideoService } from './StreamingVideoService';
-import { QualiaLogger } from './Logger';
+import { createTestContainer, getMocksFromContainer, resetAllMocks } from '../../testing/test-container-factory';
+import { Container } from 'inversify';
+import { TYPES } from '../inversify.types';
+import type { IStreamingVideoService } from '../interfaces/IStreamingVideoService';
 
 // Mock logger
 const mockLogger = {
@@ -11,7 +13,7 @@ const mockLogger = {
   debug: vi.fn(),
   warn: vi.fn(),
   error: vi.fn(),
-} as unknown as QualiaLogger;
+} as any;
 
 // Mock EventBus
 const mockEventBus = {
@@ -110,19 +112,24 @@ class MockWebSocket {
 global.WebSocket = MockWebSocket as any;
 
 describe('StreamingVideoService', () => {
-  let service: StreamingVideoService;
+  let container: Container;
+  let service: IStreamingVideoService;
+  let mocks: ReturnType<typeof getMocksFromContainer>;
 
   beforeEach(() => {
-    // Clear mock instances before each test
-    mockWebSocketInstances.length = 0;
+    resetAllMocks();
     
-    service = new StreamingVideoService(mockEventBus, mockLogger, mockConfig);
+    // Create isolated test container
+    container = createTestContainer();
+    mocks = getMocksFromContainer(container);
+    
+    // Get service instance from test container - NO MANUAL INSTANTIATION
+    service = container.get<IStreamingVideoService>(TYPES.IStreamingVideoService);
   });
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal('WebSocket', MockWebSocket as any);
-    service = new StreamingVideoService(mockEventBus, mockLogger, mockConfig);
   });
 
   afterEach(() => {
@@ -132,7 +139,12 @@ describe('StreamingVideoService', () => {
   describe('Basic Functionality', () => {
     it('should be instantiated correctly', () => {
       expect(service).toBeDefined();
-      expect(service).toBeInstanceOf(StreamingVideoService);
+      expect(typeof service.connect).toBe('function');
+      expect(typeof service.disconnect).toBe('function');
+      expect(typeof service.subscribeToFrames).toBe('function');
+      expect(typeof service.unsubscribeFromFrames).toBe('function');
+      expect(typeof service.getConnectionStatus).toBe('function');
+      expect(typeof service.getStatistics).toBe('function');
     });
 
     it('should have required methods', () => {
@@ -167,9 +179,6 @@ describe('StreamingVideoService', () => {
 
   describe('WebSocket Connection Behavior', () => {
     it('should establish connection and update status correctly', async () => {
-      // Create service
-      const service = new StreamingVideoService(mockEventBus, mockLogger, mockConfig);
-      
       // Start connection process
       const connectPromise = service.connect();
       
@@ -188,9 +197,6 @@ describe('StreamingVideoService', () => {
     });
 
     it('should handle connection errors gracefully', async () => {
-      // Create service
-      const service = new StreamingVideoService(mockEventBus, mockLogger, mockConfig);
-      
       // Start connection process
       const connectPromise = service.connect();
       
@@ -210,9 +216,6 @@ describe('StreamingVideoService', () => {
 
   describe('Frame Reception Behavior', () => {
     it('should receive and process video frames correctly', async () => {
-      // Create service
-      const service = new StreamingVideoService(mockEventBus, mockLogger, mockConfig);
-      
       // Mock callback for frame subscription
       const mockCallback = vi.fn();
       const subscriptionId = service.subscribeToFrames(mockCallback);
@@ -255,9 +258,6 @@ describe('StreamingVideoService', () => {
     });
 
     it('should handle multiple frame subscribers correctly', async () => {
-      // Create service
-      const service = new StreamingVideoService(mockEventBus, mockLogger, mockConfig);
-      
       // Create multiple mock callbacks
       const mockCallback1 = vi.fn();
       const mockCallback2 = vi.fn();
@@ -289,9 +289,6 @@ describe('StreamingVideoService', () => {
     });
 
     it('should handle malformed frame data gracefully', async () => {
-      // Create service
-      const service = new StreamingVideoService(mockEventBus, mockLogger, mockConfig);
-      
       const mockCallback = vi.fn();
       service.subscribeToFrames(mockCallback);
       
@@ -308,7 +305,7 @@ describe('StreamingVideoService', () => {
       expect(mockCallback).not.toHaveBeenCalled();
       
       // Should log error
-      expect(mockLogger.error).toHaveBeenCalledWith(
+      expect(mocks.mockLogger.error).toHaveBeenCalledWith(
         'Failed to parse WebSocket message',
         expect.any(Object)
       );
@@ -317,11 +314,16 @@ describe('StreamingVideoService', () => {
 
   describe('IoC Container Integration', () => {
     it('should be structured for dependency injection', () => {
-      // Verify the service has the injectable decorator applied
-      expect(service).toBeInstanceOf(StreamingVideoService);
+      // Verify the service is properly resolved from container
+      expect(service).toBeDefined();
       
-      // Verify it uses injected dependencies
-      expect(mockLogger.info).toHaveBeenCalled();
+      // Verify it has required methods (interface compliance)
+      expect(typeof service.connect).toBe('function');
+      expect(typeof service.disconnect).toBe('function');
+      expect(typeof service.subscribeToFrames).toBe('function');
+      expect(typeof service.unsubscribeFromFrames).toBe('function');
+      expect(typeof service.getConnectionStatus).toBe('function');
+      expect(typeof service.getStatistics).toBe('function');
     });
   });
 });

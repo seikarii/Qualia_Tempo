@@ -35,6 +35,8 @@ import type { INotificationService } from '../services/interfaces/INotificationS
 import type { IRhythmicMovementController } from '../services/interfaces/IRhythmicMovementController';
 import type { IHttpService } from '../services/interfaces/IHttpService';
 import type { ITimerService } from '../services/interfaces/ITimerService';
+import type { IOntologicalAudioEngine } from '../audio/IOntologicalAudioEngine';
+import type { IStreamingVideoService } from '../services/interfaces/IStreamingVideoService';
 
 // Import concrete service classes for binding
 import { DebugService } from '../services/DebugService';
@@ -42,6 +44,8 @@ import { ErrorReportingService } from '../services/ErrorReportingService';
 import { NotificationService } from '../services/NotificationService';
 import { GameStateStoreService } from '../services/GameStateStoreService';
 import { RhythmicMovementController } from '../services/RhythmicMovementController';
+import { OntologicalAudioEngine } from '../audio/OntologicalAudioEngine';
+import { StreamingVideoService } from '../services/StreamingVideoService';
 
 /**
  * Mock Logger Implementation - Complete Interface Coverage
@@ -337,6 +341,8 @@ export function createTestContainer(): Container {
   container.bind<INotificationService>(TYPES.INotificationService).to(NotificationService).inSingletonScope();
   container.bind<GameStateStoreService>(GameStateStoreService).toSelf().inSingletonScope();
   container.bind<IRhythmicMovementController>(TYPES.IRhythmicMovementController).to(RhythmicMovementController).inSingletonScope();
+  container.bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).to(OntologicalAudioEngine).inSingletonScope();
+  container.bind<IStreamingVideoService>(TYPES.IStreamingVideoService).to(StreamingVideoService).inSingletonScope();
 
   return container;
 }
