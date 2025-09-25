@@ -52,28 +52,51 @@
 
   * Genera combo.
   * Tiene **5s de cooldown**, reducido por la velocidad de la música.
-* **Macro-combos musicales**: combinaciones de 3–5 notas generan efectos emergentes (ej.:
+* **Sistema de Combos Emergentes:** Los combos no solo vienen de pulsar teclas, sino de la **armonía contextual** entre múltiples fuentes de input musical:
 
-  * `Q+E+R` → remolino.
-  * `Q+R+F` → atractor.
-  * `T+E+R` → repulsor.
-  * Escala completa → curación.
-    )
-* **Habilidad Especial:** disponible con combo x40.Actica efecto coro mientras se mantenga.
+  * **Fuentes de Combo:**
+    * **Input Activo:** Pulsar teclas musicales (Q, E, R, T, F, G, C)
+    * **Recolección de Qualia:** Cada Qualia recolectado contribuye al combo según su color/sonido
+    * **Sincronización Rítmica:** Precisión temporal con los beats del metrónomo
+    * **Armonía Musical:** Comparación entre input del jugador y notas sonando en la canción
+  
+  * **Macro-combos musicales**: combinaciones emergentes de 3–5 elementos generan efectos basados en la **armonía contextual**:
+
+  * **Combos Beneficiosos (Armónicos):**
+    * `Q+E+R` → remolino (control de área).
+    * `Q+R+F` → atractor (recolección masiva de Qualia).
+    * `T+E+R` → repulsor (defensa contra ataques).
+    * Escala completa (`Q+E+R+T+F+G+C`) → curación completa + escudo.
+  
+  * **Combos Maliciosos (Caóticos):**
+    * `Q+T+G` → muro de sonido (bloquea movimiento).
+    * `E+F+C` → zona de daño por segundo (DoT area).
+    * `R+G+T` → repulsor inverso (empuja al jugador).
+    * Secuencias disonantes → atractores hostiles (atraen al boss).
+* **Sistema de Armonía Dinámica:** Los efectos dependen de cómo de "armónicas" sean las combinaciones comparadas con las notas musicales sonando en ese momento. Cada pelea es única debido a la interacción entre:
+  * Notas de la canción (do-re-mi-fa-sol-la-si).
+  * Qualia recolectado del suelo.
+  * Habilidades del boss que generan Qualia adicional.
+* **Prevención de Spam:** Los combos maliciosos evitan que el jugador simplemente "recoga todo" sin pensar en la armonía musical.
+
+* **Habilidad Especial:** disponible con combo x40. Activa efecto coro mientras se mantenga.
 
   * Activa modo **Sonido 8D total**.
-  * Duplica la generación de Qualia.Efecto orquesta musical.
+  * Duplica la generación de Qualia. Efecto orquesta musical.
 
 ### 3.4. Sistema de Combo Musical
 
-* El combo depende de:
+* El combo depende de **múltiples fuentes de input musical** que se combinan dinámicamente:
 
-  * **Recolección precisa de Qualia.**
-  * **Notas acertadas** en sincronía con la pista.
-  * **Armonía vs. Caos:**
-
-    * Armonías → bonificaciones (curas, control de área, multiplicadores).
-    * Caos → penalizaciones (muros, zonas dañinas, repulsores).
+  * **Recolección precisa de Qualia:** Cada Qualia recolectado contribuye según su color/sonido y timing.
+  * **Input Activo del Jugador:** Pulsar teclas musicales (Q, E, R, T, F, G, C) en secuencias.
+  * **Sincronización Rítmica:** Precisión temporal con beats del metrónomo y notas de la canción.
+  * **Armonía vs. Caos Contextual:**
+    * **Análisis en Tiempo Real:** El sistema compara TODAS las fuentes de input musical del jugador con las notas musicales sonando en ese momento exacto de la canción.
+    * **Armonías Perfectas** → bonificaciones emergentes (curas, control de área, multiplicadores de Qualia).
+    * **Caos Disonante** → penalizaciones automáticas (muros sonoros, zonas dañinas, repulsores que complican el movimiento).
+* **Dinámica de Cada Pelea:** Como la canción tiene sus propios do-re-mi-fa-sol-la-si, más el Qualia del suelo, más el generado por habilidades del boss, cada combate es totalmente único. El mismo input puede generar combos beneficiosos en un momento y caóticos en otro.
+* **Prevención de Optimización:** Los efectos caóticos evitan que el jugador simplemente "recoga todo" - deben pensar musicalmente y adaptarse a la armonía del momento.
 * A mayor combo:
 
   * El jugador brilla más.
@@ -90,7 +113,32 @@
   * Siempre tienen **telegraph visual**, más corto en fases intensas.
 * El jugador puede neutralizar ataques con **combos armónicos**.Cuando los ejecuta cerca de estos.
 
-### 3.6. Progresión y Dificultad
+### 3.7. Lista de Combos Musicales
+
+Los combos son **emergentes** y pueden activarse a través de múltiples fuentes de input musical (teclas + recolección de Qualia + timing rítmico). Los efectos dependen del contexto armónico del momento.
+
+#### Combos Beneficiosos (Armónicos)
+* `Q+E+R` → Remolino (control de área, atrae Qualia cercano)
+* `Q+R+F` → Atractor (recolección masiva de Qualia en radio)
+* `T+E+R` → Repulsor (defensa, repele ataques del boss)
+* `Q+E+T` → Multiplicador de combo (+50% puntuación temporal)
+* `F+G+C` → Curación (restaura vida gradualmente)
+* `Q+E+R+T+F+G+C` → Escala completa (curación completa + escudo temporal)
+* **Combos de Recolección:** Secuencias de Qualia del mismo color recolectadas en timing perfecto
+* **Combos Rítmicos:** Dash + recolección de Qualia en beats del metrónomo
+
+#### Combos Maliciosos (Caóticos)
+* `Q+T+G` → Muro sonoro (bloquea movimiento en área)
+* `E+F+C` → Zona de daño (Daño por segundo en área circular)
+* `R+G+T` → Repulsor inverso (empuja al jugador hacia el boss)
+* `Q+G+C` → Atractor hostil (atrae al boss hacia el jugador)
+* `T+F+R` → Interferencia auditiva (reduce precisión de recolección)
+* Secuencias disonantes aleatorias → Efectos caóticos variables (basados en la entropía musical del momento)
+* **Combos de Caos:** Recolección desincronizada + input disonante con la música actual
+
+**Nota:** Los efectos específicos pueden variar según la armonía contextual con la música sonando en ese momento. Un mismo patrón de input puede ser beneficioso en un contexto armónico y malicioso en uno caótico.
+
+### 3.8. Progresión y Dificultad
 
 * La dificultad está directamente ligada al **volumen de la canción**:
 
@@ -98,7 +146,7 @@
   * Volumen 80–100% → dificultad estándar–extrema.
 * Escala natural: cuanto más combo y más Qualia, más rápido y denso se vuelve todo.
 
-### 3.7. Metajuego
+### 3.9. Metajuego
 
 * **Marcador de Puntos Online:** para competición y viralidad en redes.
 * **Soporte de Música Personalizada:** los jugadores pueden subir cualquier pista (sin copyright propio) → cada boss fight se adapta dinámicamente.
@@ -144,7 +192,7 @@ La experiencia visual sigue una **hoja de ruta en 4 fases**, todas controladas p
   * Dash rítmico funcional.
   * Generación/recolección de Qualia con eco sonoro.
   * Habilidades básicas (ñas 7 notas).
-  * Sistema de combo musical (nota, el caos no penaliza al combo, solo hace mas dificil el gameplay del player).
+  * Sistema de combo musical (el caos no penaliza al combo, solo hace más difícil el gameplay del player mediante efectos emergentes negativos).
   * Boss complejo con ataques morado + telegraph que hace mas ataques y mas grandes y precisos dependiendo de la intensidad de la musica.
   * Visuales Fase 1 (God Rays + Bloom).
   * Música del boss con subtítulos en pantalla.
