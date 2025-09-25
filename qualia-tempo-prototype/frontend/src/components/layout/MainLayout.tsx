@@ -5,18 +5,25 @@
  * This component establishes the sacred hierarchy of visual layers:
  * Layer 0: BackendCanvas (z-0) - GPU-rendered backend engine visuals
  * Layer 1: Atmosphere (z-10) - CSS complementary effects (grid, bloom)  
- * Layer 2: UI (z-20) - Interactive menu elements
+ * Layer 2: UI (z-20) - Interactive menu/game elements based on game state
  * 
- * Eliminates DOM-based particle violations and establishes backend engine
- * as the single source of visual truth.
+ * QUALIA.CODE Compliance:
+ * - Uses Zustand store for state-driven UI rendering
+ * - Conditionally renders Menu vs Game based on isPlaying state
+ * - Maintains proper visual layer separation
  */
 
 import React from 'react';
 import { Atmosphere } from '../Atmosphere';
 import BackendCanvas from '../BackendCanvas';
 import QualiaMainMenu from '../QualiaMainMenu';
+import QualiaTempoGame from '../game/QualiaTempoGame';
+import { useGameStore } from '../../state/useGameStore';
 
 const MainLayout: React.FC = () => {
+  // QUALIA.CODE: State-driven UI rendering via Zustand store
+  const isPlaying = useGameStore((state) => state.isPlaying);
+
   return (
     <div className="h-screen w-screen relative overflow-hidden">
       {/* 
@@ -38,11 +45,17 @@ const MainLayout: React.FC = () => {
 
       {/* 
         LAYER 2: UI (Z-20)
-        El menú principal y otros elementos de UI interactivos.
-        CORRECTED FIX: Absolute center positioning with proper pointer events
+        State-driven conditional rendering: Menu OR Game view
+        QUALIA.CODE: Pure UI layer that reacts to service-managed state
       */}
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-        <QualiaMainMenu />
+      <div className="absolute inset-0 z-20">
+        {isPlaying ? (
+          <QualiaTempoGame isActive={true} />
+        ) : (
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <QualiaMainMenu />
+          </div>
+        )}
       </div>
     </div>
   );
