@@ -1,1638 +1,747 @@
 {
-  "timestamp": "2025-09-25T04:02:53.842Z",
+  "timestamp": "2025-09-25T04:47:18.881Z",
   "success": false,
-  "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('INITIATE NEURAL SYNC')\u001b[22m\n\u001b[2m    - waiting for\" http://localhost:5173/\" navigation to finish...\u001b[22m\n\u001b[2m    - navigated to \"http://localhost:5173/\"\u001b[22m\n",
-  "stack": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('INITIATE NEURAL SYNC')\u001b[22m\n\u001b[2m    - waiting for\" http://localhost:5173/\" navigation to finish...\u001b[22m\n\u001b[2m    - navigated to \"http://localhost:5173/\"\u001b[22m\n\n    at comprehensiveTest (/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/browser-test.js:132:54)",
+  "error": "page.waitForTimeout: Target page, context or browser has been closed",
+  "stack": "page.waitForTimeout: Target page, context or browser has been closed\n    at comprehensiveTest (/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/browser-test.js:85:20)",
   "logs": [
     {
-      "timestamp": "2025-09-25T04:02:07.810Z",
+      "timestamp": "2025-09-25T04:47:08.199Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST SCRIPT LOADED ===",
       "entry": "[LOG] === RACE CONDITION TEST SCRIPT LOADED ==="
     },
     {
-      "timestamp": "2025-09-25T04:02:07.943Z",
+      "timestamp": "2025-09-25T04:47:08.329Z",
       "type": "debug",
       "text": "[vite] connecting...",
       "entry": "[DEBUG] [vite] connecting..."
     },
     {
-      "timestamp": "2025-09-25T04:02:07.947Z",
+      "timestamp": "2025-09-25T04:47:08.336Z",
       "type": "debug",
       "text": "[vite] connected.",
       "entry": "[DEBUG] [vite] connected."
     },
     {
-      "timestamp": "2025-09-25T04:02:08.253Z",
+      "timestamp": "2025-09-25T04:47:08.653Z",
       "type": "info",
       "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
       "entry": "[INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.303Z",
+      "timestamp": "2025-09-25T04:47:08.709Z",
       "type": "log",
       "text": "%c * Tone.js v14.9.17 *  background: #000; color: #fff",
       "entry": "[LOG] %c * Tone.js v14.9.17 *  background: #000; color: #fff"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.353Z",
+      "timestamp": "2025-09-25T04:47:08.763Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.354Z",
+      "timestamp": "2025-09-25T04:47:08.764Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.550Z",
+      "timestamp": "2025-09-25T04:47:08.974Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.553Z",
+      "timestamp": "2025-09-25T04:47:08.976Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.553Z",
+      "timestamp": "2025-09-25T04:47:08.978Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.555Z",
+      "timestamp": "2025-09-25T04:47:08.978Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.555Z",
+      "timestamp": "2025-09-25T04:47:08.979Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: BackendSyncService constructed - configuration will be loaded when start() is called {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendSyncService constructed - configuration will be loaded when start() is called {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.555Z",
+      "timestamp": "2025-09-25T04:47:08.979Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔄 [BackendSync] Service initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔄 [BackendSync] Service initialized {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.557Z",
+      "timestamp": "2025-09-25T04:47:08.982Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.557Z",
+      "timestamp": "2025-09-25T04:47:08.982Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service initialized {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.557Z",
+      "timestamp": "2025-09-25T04:47:08.982Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: RhythmicMovementController initialized - configuration will be loaded on start() {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: RhythmicMovementController initialized - configuration will be loaded on start() {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.558Z",
+      "timestamp": "2025-09-25T04:47:08.982Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔧 [NotificationService] Service initialized with event-driven architecture and Zustand store bridging {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [NotificationService] Service initialized with event-driven architecture and Zustand store bridging {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.559Z",
+      "timestamp": "2025-09-25T04:47:08.983Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📊 [NotificationService] Current Configuration: {enabled: true, maxHistorySize: 1000, defaultTtl: 30000ms, enablePriorityQueuing: true, enableThrottling: true}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [NotificationService] Current Configuration: {enabled: true, maxHistorySize: 1000, defaultTtl: 30000ms, enablePriorityQueuing: true, enableThrottling: true}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.559Z",
+      "timestamp": "2025-09-25T04:47:08.983Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔧 [ErrorReportingService] Service initialized with production-grade error handling and pure DI {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [ErrorReportingService] Service initialized with production-grade error handling and pure DI {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.560Z",
+      "timestamp": "2025-09-25T04:47:08.983Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📊 [ErrorReportingService] Current Configuration: {enabled: true, maxBatchSize: 50, batchFlushInterval: 30000ms, maxRetries: 3, retryDelay: 1000ms}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [ErrorReportingService] Current Configuration: {enabled: true, maxBatchSize: 50, batchFlushInterval: 30000ms, maxRetries: 3, retryDelay: 1000ms}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.560Z",
+      "timestamp": "2025-09-25T04:47:08.985Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.560Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.561Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🌐 [DebugService] Global debugging interface exposed as window.QA_DEBUG {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🌐 [DebugService] Global debugging interface exposed as window.QA_DEBUG {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.562Z",
+      "timestamp": "2025-09-25T04:47:08.985Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ApplicationInitializerService initialized with all core services {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ApplicationInitializerService initialized with all core services {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.563Z",
+      "timestamp": "2025-09-25T04:47:08.985Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.563Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.563Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.565Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758772928561_gi1s9s31l) - 0.50ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758772928561_gi1s9s31l) - 0.50ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.565Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.565Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.565Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Starting AI debugging service... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Starting AI debugging service... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.567Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1758772928562_579p3s1h {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1758772928562_579p3s1h {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.567Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for * {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for * {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.567Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: listener_1758772928563_fkq09udmw) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: listener_1758772928563_fkq09udmw) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.567Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📡 [DebugService] Subscribed to all event types {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [DebugService] Subscribed to all event types {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.568Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Service started - AI debugging active {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Service started - AI debugging active {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.570Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Starting notification processing... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Starting notification processing... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.570Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.571Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758772928565_nnjpi9z7s) - 0.40ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758772928565_nnjpi9z7s) - 0.40ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.571Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.571Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772928565_29d83rwxp) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772928565_29d83rwxp) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.571Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.571Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758772928566_aznkxkdzq) - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758772928566_aznkxkdzq) - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.572Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for BackendSync {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for BackendSync {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.572Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: listener_1758772928566_lpgug3q5j) - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: listener_1758772928566_lpgug3q5j) - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.575Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📡 [NotificationService] Subscribed to notification events {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [NotificationService] Subscribed to notification events {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.575Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: NotificationService started {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: NotificationService started {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.575Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Transversal services started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Transversal services started successfully {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.576Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.576Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.576Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772928568_orpqiucif) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772928568_orpqiucif) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.576Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.576Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758772928568_aee1xnj9b) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758772928568_aee1xnj9b) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.577Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.577Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758772928568_0iybi0bqq) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758772928568_0iybi0bqq) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.577Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.577Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.580Z",
+      "timestamp": "2025-09-25T04:47:08.985Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.617Z",
+      "timestamp": "2025-09-25T04:47:09.022Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.618Z",
+      "timestamp": "2025-09-25T04:47:09.022Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.619Z",
+      "timestamp": "2025-09-25T04:47:09.023Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.619Z",
+      "timestamp": "2025-09-25T04:47:09.024Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.620Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.620Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758772928618_l87t1sq13) - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758772928618_l87t1sq13) - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.620Z",
+      "timestamp": "2025-09-25T04:47:09.024Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.622Z",
+      "timestamp": "2025-09-25T04:47:09.027Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772928618_ga0zzrmmq) - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772928618_ga0zzrmmq) - 0.30ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758775629021_p482rt8kj) - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758775629021_p482rt8kj) - 0.30ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.622Z",
+      "timestamp": "2025-09-25T04:47:09.027Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📡 [GameController] Subscribed to PlayerAction and GameStateChanged events {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [GameController] Subscribed to PlayerAction and GameStateChanged events {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.622Z",
+      "timestamp": "2025-09-25T04:47:09.027Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 1.50ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 1.50ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758775629022_ophzp6a6b) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758775629022_ophzp6a6b) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.623Z",
+      "timestamp": "2025-09-25T04:47:09.028Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Game controller service started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Game controller service started successfully {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.623Z",
+      "timestamp": "2025-09-25T04:47:09.028Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {config: Object}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {config: Object}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758775629022_21o8i798l) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758775629022_21o8i798l) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.625Z",
+      "timestamp": "2025-09-25T04:47:09.029Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerInput {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerInput {}"
+      "text": "ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.625Z",
+      "timestamp": "2025-09-25T04:47:09.029Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: listener_1758772928620_od7uieax7) - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: listener_1758772928620_od7uieax7) - 0.30ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.625Z",
+      "timestamp": "2025-09-25T04:47:09.029Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.625Z",
+      "timestamp": "2025-09-25T04:47:09.029Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772928620_v0cpt1n3g) - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772928620_v0cpt1n3g) - 0.30ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.625Z",
+      "timestamp": "2025-09-25T04:47:09.030Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🎵 RhythmicMovementController started with configuration loaded {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎵 RhythmicMovementController started with configuration loaded {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758775629023_j3f5gb4pj) - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758775629023_j3f5gb4pj) - 0.30ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.626Z",
+      "timestamp": "2025-09-25T04:47:09.030Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Rhythmic movement controller started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Rhythmic movement controller started successfully {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.626Z",
+      "timestamp": "2025-09-25T04:47:09.034Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.626Z",
+      "timestamp": "2025-09-25T04:47:09.034Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 1/3... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 1/3... {}"
+      "text": "ℹ️ [QualiaLogger] INFO: DebugService configuration loaded successfully. {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: DebugService configuration loaded successfully. {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:08.626Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.631Z",
-      "type": "error",
-      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)",
-      "entry": "[ERROR] Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.633Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 8.10ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 8.10ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.633Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 9.20ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 9.20ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.634Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: HttpService.post: [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: HttpService.post: [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.634Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:08.632Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:08.632Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.634Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.635Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:08.632Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:08.632Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.635Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 10.60ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 10.60ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.635Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 11.40ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 11.40ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:08.635Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: [BackendSync] Connection attempt 1 failed. Retrying in 1000ms... {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: [BackendSync] Connection attempt 1 failed. Retrying in 1000ms... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:09.637Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 2/3... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 2/3... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:09.638Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:09.645Z",
-      "type": "error",
-      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)",
-      "entry": "[ERROR] Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:09.648Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 8.60ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 8.60ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:09.649Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 9.90ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 9.90ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:09.650Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: HttpService.post: [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: HttpService.post: [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:09.651Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:09.646Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:09.646Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:09.651Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:09.651Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:09.646Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:09.646Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:09.652Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 12.40ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 12.40ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:09.653Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 13.20ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 13.20ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:09.653Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: [BackendSync] Connection attempt 2 failed. Retrying in 1000ms... {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: [BackendSync] Connection attempt 2 failed. Retrying in 1000ms... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.652Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 3/3... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 3/3... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.652Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.660Z",
-      "type": "error",
-      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)",
-      "entry": "[ERROR] Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.663Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 8.80ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 8.80ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.663Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 10.10ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 10.10ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.666Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: HttpService.post: [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: HttpService.post: [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.667Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:10.660Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:10.660Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.667Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.668Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:10.661Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:10.661Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.670Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 12.40ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 12.40ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.671Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 13.30ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 13.30ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.671Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: [BackendSync] Connection attempt 3 failed. Retrying in 1000ms... {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: [BackendSync] Connection attempt 3 failed. Retrying in 1000ms... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.672Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Start failed after 3 attempts - 2042.30ms {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Start failed after 3 attempts - 2042.30ms {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.672Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting Error to 2 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting Error to 2 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.676Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Showing notification {message: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, type: error, duration: 29997, metadata: Object}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Showing notification {message: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, type: error, duration: 29997, metadata: Object}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.677Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [NotificationService] Notification displayed {id: notification_1758772930666_si0j6h28, type: error, message: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [NotificationService] Notification displayed {id: notification_1758772930666_si0j6h28, type: error, message: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.677Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: BackendSyncService.start: [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: BackendSyncService.start: [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.678Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: BackendSyncService.start: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(0), timestamp: 2025-09-25T04:02:10.671Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: BackendSyncService.start: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(0), timestamp: 2025-09-25T04:02:10.671Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.678Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for Error - 7.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for Error - 7.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.678Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR BackendSyncService.start [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR BackendSyncService.start [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.683Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR BackendSyncService.start {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:10.672Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR BackendSyncService.start {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:10.672Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.683Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: Application initialization failed Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (http://localhost:5173/src/services/HttpService.ts:59:15)\n    at async BackendSyncService.makeRequest (http://localhost:5173/src/services/BackendSyncService.ts:357:24)\n    at async BackendSyncService.checkHealth (http://localhost:5173/src/services/BackendSyncService.ts:300:24)\n    at async BackendSyncService.start (http://localhost:5173/src/services/BackendSyncService.ts:78:9)\n    at async ApplicationInitializerService.start (http://localhost:5173/src/services/ApplicationInitializerService.ts:64:7)\n    at async initializeAndRender (http://localhost:5173/src/index.tsx?t=1758772927039:20:5)",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: Application initialization failed Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (http://localhost:5173/src/services/HttpService.ts:59:15)\n    at async BackendSyncService.makeRequest (http://localhost:5173/src/services/BackendSyncService.ts:357:24)\n    at async BackendSyncService.checkHealth (http://localhost:5173/src/services/BackendSyncService.ts:300:24)\n    at async BackendSyncService.start (http://localhost:5173/src/services/BackendSyncService.ts:78:9)\n    at async ApplicationInitializerService.start (http://localhost:5173/src/services/ApplicationInitializerService.ts:64:7)\n    at async initializeAndRender (http://localhost:5173/src/index.tsx?t=1758772927039:20:5)"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.684Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ApplicationInitializerService.start: [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ApplicationInitializerService.start: [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.684Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ApplicationInitializerService.start: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(0), timestamp: 2025-09-25T04:02:10.673Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ApplicationInitializerService.start: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(0), timestamp: 2025-09-25T04:02:10.673Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.685Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ApplicationInitializerService.start [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ApplicationInitializerService.start [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.685Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR ApplicationInitializerService.start {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:10.674Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ApplicationInitializerService.start {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:10.674Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.686Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: Application Bootstrap: CRITICAL FAILURE during initialization. Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (http://localhost:5173/src/services/HttpService.ts:59:15)\n    at async BackendSyncService.makeRequest (http://localhost:5173/src/services/BackendSyncService.ts:357:24)\n    at async BackendSyncService.checkHealth (http://localhost:5173/src/services/BackendSyncService.ts:300:24)\n    at async BackendSyncService.start (http://localhost:5173/src/services/BackendSyncService.ts:78:9)\n    at async ApplicationInitializerService.start (http://localhost:5173/src/services/ApplicationInitializerService.ts:64:7)\n    at async initializeAndRender (http://localhost:5173/src/index.tsx?t=1758772927039:20:5)",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: Application Bootstrap: CRITICAL FAILURE during initialization. Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (http://localhost:5173/src/services/HttpService.ts:59:15)\n    at async BackendSyncService.makeRequest (http://localhost:5173/src/services/BackendSyncService.ts:357:24)\n    at async BackendSyncService.checkHealth (http://localhost:5173/src/services/BackendSyncService.ts:300:24)\n    at async BackendSyncService.start (http://localhost:5173/src/services/BackendSyncService.ts:78:9)\n    at async ApplicationInitializerService.start (http://localhost:5173/src/services/ApplicationInitializerService.ts:64:7)\n    at async initializeAndRender (http://localhost:5173/src/index.tsx?t=1758772927039:20:5)"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.802Z",
-      "type": "log",
-      "text": "=== RACE CONDITION TEST RESULTS ===",
-      "entry": "[LOG] === RACE CONDITION TEST RESULTS ==="
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.803Z",
-      "type": "log",
-      "text": "✅ NO CONFIGURATION ERRORS DETECTED",
-      "entry": "[LOG] ✅ NO CONFIGURATION ERRORS DETECTED"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.803Z",
-      "type": "log",
-      "text": "❌ SERVICE INITIALIZATION ERRORS FOUND: [Object, Object, Object, Object, Object, Object, Object, Object, Object, Object]",
-      "entry": "[LOG] ❌ SERVICE INITIALIZATION ERRORS FOUND: [Object, Object, Object, Object, Object, Object, Object, Object, Object, Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:10.803Z",
-      "type": "log",
-      "text": "=== TEST COMPLETE ===",
-      "entry": "[LOG] === TEST COMPLETE ==="
-    },
-    {
-      "timestamp": "2025-09-25T04:02:23.945Z",
-      "type": "log",
-      "text": "=== RACE CONDITION TEST SCRIPT LOADED ===",
-      "entry": "[LOG] === RACE CONDITION TEST SCRIPT LOADED ==="
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.108Z",
-      "type": "debug",
-      "text": "[vite] connecting...",
-      "entry": "[DEBUG] [vite] connecting..."
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.115Z",
-      "type": "debug",
-      "text": "[vite] connected.",
-      "entry": "[DEBUG] [vite] connected."
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.324Z",
-      "type": "info",
-      "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
-      "entry": "[INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.343Z",
-      "type": "log",
-      "text": "%c * Tone.js v14.9.17 *  background: #000; color: #fff",
-      "entry": "[LOG] %c * Tone.js v14.9.17 *  background: #000; color: #fff"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.419Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.420Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.421Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.421Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.421Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: BackendSyncService constructed - configuration will be loaded when start() is called {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendSyncService constructed - configuration will be loaded when start() is called {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.422Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔄 [BackendSync] Service initialized {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔄 [BackendSync] Service initialized {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.423Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.423Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service initialized {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service initialized {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.424Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: RhythmicMovementController initialized - configuration will be loaded on start() {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: RhythmicMovementController initialized - configuration will be loaded on start() {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.424Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔧 [NotificationService] Service initialized with event-driven architecture and Zustand store bridging {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [NotificationService] Service initialized with event-driven architecture and Zustand store bridging {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.424Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📊 [NotificationService] Current Configuration: {enabled: true, maxHistorySize: 1000, defaultTtl: 30000ms, enablePriorityQueuing: true, enableThrottling: true}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [NotificationService] Current Configuration: {enabled: true, maxHistorySize: 1000, defaultTtl: 30000ms, enablePriorityQueuing: true, enableThrottling: true}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.424Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔧 [ErrorReportingService] Service initialized with production-grade error handling and pure DI {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [ErrorReportingService] Service initialized with production-grade error handling and pure DI {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.427Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📊 [ErrorReportingService] Current Configuration: {enabled: true, maxBatchSize: 50, batchFlushInterval: 30000ms, maxRetries: 3, retryDelay: 1000ms}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [ErrorReportingService] Current Configuration: {enabled: true, maxBatchSize: 50, batchFlushInterval: 30000ms, maxRetries: 3, retryDelay: 1000ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.427Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.427Z",
+      "timestamp": "2025-09-25T04:47:09.035Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.427Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🌐 [DebugService] Global debugging interface exposed as window.QA_DEBUG {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🌐 [DebugService] Global debugging interface exposed as window.QA_DEBUG {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.428Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: ApplicationInitializerService initialized with all core services {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ApplicationInitializerService initialized with all core services {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.428Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.428Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.428Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.428Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758772944422_ufr7tpsf2) - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758772944422_ufr7tpsf2) - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.428Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.428Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.429Z",
+      "timestamp": "2025-09-25T04:47:09.035Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Starting AI debugging service... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Starting AI debugging service... {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.433Z",
+      "timestamp": "2025-09-25T04:47:09.035Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1758772944423_1s3q699z {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1758772944423_1s3q699z {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1758775629024_8fny7rpf {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1758775629024_8fny7rpf {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.433Z",
+      "timestamp": "2025-09-25T04:47:09.035Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for * {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for * {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.433Z",
+      "timestamp": "2025-09-25T04:47:09.036Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: listener_1758772944423_vlyqmwtfm) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: listener_1758772944423_vlyqmwtfm) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: listener_1758775629024_hcwnst92s) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: listener_1758775629024_hcwnst92s) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.433Z",
+      "timestamp": "2025-09-25T04:47:09.036Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [DebugService] Subscribed to all event types {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [DebugService] Subscribed to all event types {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.433Z",
+      "timestamp": "2025-09-25T04:47:09.036Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Service started - AI debugging active {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Service started - AI debugging active {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.433Z",
+      "timestamp": "2025-09-25T04:47:09.036Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Starting notification processing... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Starting notification processing... {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.433Z",
+      "timestamp": "2025-09-25T04:47:09.036Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.433Z",
+      "timestamp": "2025-09-25T04:47:09.036Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758772944424_cpkuljuzv) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758772944424_cpkuljuzv) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758775629025_dkwxoouk0) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758775629025_dkwxoouk0) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.434Z",
+      "timestamp": "2025-09-25T04:47:09.037Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.434Z",
+      "timestamp": "2025-09-25T04:47:09.037Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772944424_dcvpamnov) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772944424_dcvpamnov) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758775629025_o4fwkaqst) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758775629025_o4fwkaqst) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.434Z",
+      "timestamp": "2025-09-25T04:47:09.037Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.434Z",
+      "timestamp": "2025-09-25T04:47:09.037Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758772944424_0t0v8578l) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758772944424_0t0v8578l) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758775629026_vqmsnhza3) - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758775629026_vqmsnhza3) - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.434Z",
+      "timestamp": "2025-09-25T04:47:09.037Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for BackendSync {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for BackendSync {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.434Z",
+      "timestamp": "2025-09-25T04:47:09.038Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: listener_1758772944425_t3o54kegt) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: listener_1758772944425_t3o54kegt) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: listener_1758775629026_t6z4jmxx9) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: listener_1758775629026_t6z4jmxx9) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.434Z",
+      "timestamp": "2025-09-25T04:47:09.038Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [NotificationService] Subscribed to notification events {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [NotificationService] Subscribed to notification events {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.434Z",
+      "timestamp": "2025-09-25T04:47:09.042Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: NotificationService started {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: NotificationService started {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.434Z",
+      "timestamp": "2025-09-25T04:47:09.042Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Transversal services started successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Transversal services started successfully {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.434Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.434Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.434Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772944425_mb75q4h7w) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772944425_mb75q4h7w) - 0.10ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.435Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.435Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758772944426_8vssy4kkc) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758772944426_8vssy4kkc) - 0.10ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.435Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.435Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758772944426_thc69xe4i) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758772944426_thc69xe4i) - 0.10ms {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.435Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.437Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.437Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.465Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.466Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.467Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.467Z",
+      "timestamp": "2025-09-25T04:47:09.042Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.469Z",
+      "timestamp": "2025-09-25T04:47:09.043Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.469Z",
+      "timestamp": "2025-09-25T04:47:09.043Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758772944465_8oa61c0kb) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758772944465_8oa61c0kb) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758775629027_nx2dcin1r) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758775629027_nx2dcin1r) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.469Z",
+      "timestamp": "2025-09-25T04:47:09.043Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.469Z",
+      "timestamp": "2025-09-25T04:47:09.043Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772944465_xlxal0lny) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772944465_xlxal0lny) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758775629027_d4fc03no0) - 0.00ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758775629027_d4fc03no0) - 0.00ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.469Z",
+      "timestamp": "2025-09-25T04:47:09.044Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [GameController] Subscribed to PlayerAction and GameStateChanged events {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [GameController] Subscribed to PlayerAction and GameStateChanged events {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.470Z",
+      "timestamp": "2025-09-25T04:47:09.044Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.90ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.90ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.80ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.80ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.470Z",
+      "timestamp": "2025-09-25T04:47:09.044Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Game controller service started successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Game controller service started successfully {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.470Z",
+      "timestamp": "2025-09-25T04:47:09.044Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {config: Object}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {config: Object}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.472Z",
+      "timestamp": "2025-09-25T04:47:09.044Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerInput {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerInput {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.472Z",
+      "timestamp": "2025-09-25T04:47:09.044Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: listener_1758772944466_v1mgoamu9) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: listener_1758772944466_v1mgoamu9) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: listener_1758775629028_nshd7v393) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: listener_1758775629028_nshd7v393) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.472Z",
+      "timestamp": "2025-09-25T04:47:09.045Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.473Z",
+      "timestamp": "2025-09-25T04:47:09.045Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772944466_1sngr3d1l) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758772944466_1sngr3d1l) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758775629028_ppt8jd6fg) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758775629028_ppt8jd6fg) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.473Z",
+      "timestamp": "2025-09-25T04:47:09.045Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎵 RhythmicMovementController started with configuration loaded {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎵 RhythmicMovementController started with configuration loaded {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.473Z",
+      "timestamp": "2025-09-25T04:47:09.045Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Rhythmic movement controller started successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Rhythmic movement controller started successfully {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.473Z",
+      "timestamp": "2025-09-25T04:47:09.045Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.473Z",
+      "timestamp": "2025-09-25T04:47:09.045Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 1/3... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 1/3... {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.473Z",
+      "timestamp": "2025-09-25T04:47:09.046Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:24.479Z",
-      "type": "error",
-      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)",
-      "entry": "[ERROR] Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.480Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 10.80ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 10.80ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.481Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 11.30ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 11.30ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.481Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: HttpService.post: [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: HttpService.post: [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.481Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:24.479Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:24.479Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.482Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.482Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:24.479Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:24.479Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.482Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 12.00ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 12.00ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.483Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 12.40ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 12.40ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:24.483Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: [BackendSync] Connection attempt 1 failed. Retrying in 1000ms... {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: [BackendSync] Connection attempt 1 failed. Retrying in 1000ms... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:25.482Z",
+      "timestamp": "2025-09-25T04:47:09.054Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 2/3... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 2/3... {}"
+      "text": "ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Backend healthy - 22.30ms {response: Object}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Backend healthy - 22.30ms {response: Object}"
     },
     {
-      "timestamp": "2025-09-25T04:02:25.483Z",
+      "timestamp": "2025-09-25T04:47:09.055Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:25.492Z",
-      "type": "error",
-      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)",
-      "entry": "[ERROR] Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:25.494Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 7.90ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 7.90ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:25.495Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 8.90ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 8.90ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:25.495Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: HttpService.post: [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: HttpService.post: [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:25.495Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:25.490Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:25.490Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:25.495Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:25.496Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:25.490Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:25.490Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:25.496Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 10.10ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 10.10ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:25.496Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 10.60ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 10.60ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:25.496Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: [BackendSync] Connection attempt 2 failed. Retrying in 1000ms... {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: [BackendSync] Connection attempt 2 failed. Retrying in 1000ms... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.493Z",
+      "timestamp": "2025-09-25T04:47:09.055Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 3/3... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 3/3... {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758775629052_lyg8bsi70) - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758775629052_lyg8bsi70) - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.494Z",
+      "timestamp": "2025-09-25T04:47:09.056Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 📡 [BackendSync] Subscribed to events {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [BackendSync] Subscribed to events {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.502Z",
-      "type": "error",
-      "text": "Failed to load resource: the server responded with a status of 405 (Method Not Allowed)",
-      "entry": "[ERROR] Failed to load resource: the server responded with a status of 405 (Method Not Allowed)"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.504Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 8.10ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 8.10ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.504Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 9.10ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 9.10ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.504Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: HttpService.post: [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: HttpService.post: [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.506Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:26.502Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:26.502Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.507Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.507Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:26.502Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:26.502Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.507Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 10.40ms}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 10.40ms}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.507Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 10.90ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 10.90ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.510Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: [BackendSync] Connection attempt 3 failed. Retrying in 1000ms... {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: [BackendSync] Connection attempt 3 failed. Retrying in 1000ms... {}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.510Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Start failed after 3 attempts - 2036.50ms {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Start failed after 3 attempts - 2036.50ms {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.511Z",
+      "timestamp": "2025-09-25T04:47:09.056Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting Error to 2 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting Error to 2 listeners {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Service started successfully after 1 attempts - 23.60ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Service started successfully after 1 attempts - 23.60ms {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.511Z",
+      "timestamp": "2025-09-25T04:47:09.056Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Showing notification {message: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, type: error, duration: 30000, metadata: Object}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Showing notification {message: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, type: error, duration: 30000, metadata: Object}"
+      "text": "ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.511Z",
+      "timestamp": "2025-09-25T04:47:09.056Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [NotificationService] Notification displayed {id: notification_1758772946504_2lh9u3g1, type: error, message: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [NotificationService] Notification displayed {id: notification_1758772946504_2lh9u3g1, type: error, message: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}}"
+      "text": "ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initialization complete. Rendering application. {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initialization complete. Rendering application. {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.511Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: BackendSyncService.start: [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: BackendSyncService.start: [object Object]"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.512Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: BackendSyncService.start: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(0), timestamp: 2025-09-25T04:02:26.505Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: BackendSyncService.start: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(0), timestamp: 2025-09-25T04:02:26.505Z}"
-    },
-    {
-      "timestamp": "2025-09-25T04:02:26.512Z",
+      "timestamp": "2025-09-25T04:47:09.063Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for Error - 1.80ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for Error - 1.80ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: StreamingVideoService initialized with Reference Counting architecture {url: ws://127.0.0.1:8000/ws/video_stream, pingInterval: 8000, pingTimeout: 6000}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: StreamingVideoService initialized with Reference Counting architecture {url: ws://127.0.0.1:8000/ws/video_stream, pingInterval: 8000, pingTimeout: 6000}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.512Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR BackendSyncService.start [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR BackendSyncService.start [object Object]"
+      "timestamp": "2025-09-25T04:47:09.120Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas initialized {width: 1280, height: 720, quality: 1}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas initialized {width: 1280, height: 720, quality: 1}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.514Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR BackendSyncService.start {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:26.505Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR BackendSyncService.start {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:26.505Z}"
+      "timestamp": "2025-09-25T04:47:09.121Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: State changed to CONNECTING. Initiating WebSocket connection. {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: State changed to CONNECTING. Initiating WebSocket connection. {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.514Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: Application initialization failed Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (http://localhost:5173/src/services/HttpService.ts:59:15)\n    at async BackendSyncService.makeRequest (http://localhost:5173/src/services/BackendSyncService.ts:357:24)\n    at async BackendSyncService.checkHealth (http://localhost:5173/src/services/BackendSyncService.ts:300:24)\n    at async BackendSyncService.start (http://localhost:5173/src/services/BackendSyncService.ts:78:9)\n    at async ApplicationInitializerService.start (http://localhost:5173/src/services/ApplicationInitializerService.ts:64:7)\n    at async initializeAndRender (http://localhost:5173/src/index.tsx?t=1758772943843:20:5)",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: Application initialization failed Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (http://localhost:5173/src/services/HttpService.ts:59:15)\n    at async BackendSyncService.makeRequest (http://localhost:5173/src/services/BackendSyncService.ts:357:24)\n    at async BackendSyncService.checkHealth (http://localhost:5173/src/services/BackendSyncService.ts:300:24)\n    at async BackendSyncService.start (http://localhost:5173/src/services/BackendSyncService.ts:78:9)\n    at async ApplicationInitializerService.start (http://localhost:5173/src/services/ApplicationInitializerService.ts:64:7)\n    at async initializeAndRender (http://localhost:5173/src/index.tsx?t=1758772943843:20:5)"
+      "timestamp": "2025-09-25T04:47:09.126Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Reference count is zero. Debouncing disconnection. {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Reference count is zero. Debouncing disconnection. {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.515Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ApplicationInitializerService.start: [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ApplicationInitializerService.start: [object Object]"
+      "timestamp": "2025-09-25T04:47:09.126Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas initialized {width: 1280, height: 720, quality: 1}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas initialized {width: 1280, height: 720, quality: 1}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.515Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ApplicationInitializerService.start: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(0), timestamp: 2025-09-25T04:02:26.506Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ApplicationInitializerService.start: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(0), timestamp: 2025-09-25T04:02:26.506Z}"
+      "timestamp": "2025-09-25T04:47:09.127Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Cancelled pending disconnect due to new connection request. {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Cancelled pending disconnect due to new connection request. {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.515Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ApplicationInitializerService.start [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ApplicationInitializerService.start [object Object]"
+      "timestamp": "2025-09-25T04:47:09.127Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Connect called but already in state: CONNECTING. {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Connect called but already in state: CONNECTING. {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.515Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR ApplicationInitializerService.start {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:26.507Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ApplicationInitializerService.start {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:26.507Z}"
+      "timestamp": "2025-09-25T04:47:09.128Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas connected to video stream {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas connected to video stream {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.516Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: Application Bootstrap: CRITICAL FAILURE during initialization. Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (http://localhost:5173/src/services/HttpService.ts:59:15)\n    at async BackendSyncService.makeRequest (http://localhost:5173/src/services/BackendSyncService.ts:357:24)\n    at async BackendSyncService.checkHealth (http://localhost:5173/src/services/BackendSyncService.ts:300:24)\n    at async BackendSyncService.start (http://localhost:5173/src/services/BackendSyncService.ts:78:9)\n    at async ApplicationInitializerService.start (http://localhost:5173/src/services/ApplicationInitializerService.ts:64:7)\n    at async initializeAndRender (http://localhost:5173/src/index.tsx?t=1758772943843:20:5)",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: Application Bootstrap: CRITICAL FAILURE during initialization. Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (http://localhost:5173/src/services/HttpService.ts:59:15)\n    at async BackendSyncService.makeRequest (http://localhost:5173/src/services/BackendSyncService.ts:357:24)\n    at async BackendSyncService.checkHealth (http://localhost:5173/src/services/BackendSyncService.ts:300:24)\n    at async BackendSyncService.start (http://localhost:5173/src/services/BackendSyncService.ts:78:9)\n    at async ApplicationInitializerService.start (http://localhost:5173/src/services/ApplicationInitializerService.ts:64:7)\n    at async initializeAndRender (http://localhost:5173/src/index.tsx?t=1758772943843:20:5)"
+      "timestamp": "2025-09-25T04:47:09.148Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Reference count is zero. Debouncing disconnection. {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Reference count is zero. Debouncing disconnection. {}"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.937Z",
+      "timestamp": "2025-09-25T04:47:09.149Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Cancelled pending disconnect due to new connection request. {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Cancelled pending disconnect due to new connection request. {}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:09.149Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Connect called but already in state: CONNECTING. {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Connect called but already in state: CONNECTING. {}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:09.149Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas connected to video stream {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas connected to video stream {}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:09.223Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: WebSocket connection established. {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: WebSocket connection established. {}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:09.224Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Connected to video stream {url: ws://127.0.0.1:8000/ws/video_stream}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Connected to video stream {url: ws://127.0.0.1:8000/ws/video_stream}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:09.224Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas connected to video stream {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas connected to video stream {}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:10.151Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 30, frameSize: 1920x1080, timestamp: 27544.489, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 30, frameSize: 1920x1080, timestamp: 27544.489, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:10.151Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 30, frameSize: 1920x1080, timestamp: 27544.489, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 30, frameSize: 1920x1080, timestamp: 27544.489, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:11.149Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 60, frameSize: 1920x1080, timestamp: 27545.489, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 60, frameSize: 1920x1080, timestamp: 27545.489, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:11.150Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 60, frameSize: 1920x1080, timestamp: 27545.489, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 60, frameSize: 1920x1080, timestamp: 27545.489, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:11.190Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST RESULTS ===",
       "entry": "[LOG] === RACE CONDITION TEST RESULTS ==="
     },
     {
-      "timestamp": "2025-09-25T04:02:26.937Z",
+      "timestamp": "2025-09-25T04:47:11.190Z",
       "type": "log",
       "text": "✅ NO CONFIGURATION ERRORS DETECTED",
       "entry": "[LOG] ✅ NO CONFIGURATION ERRORS DETECTED"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.939Z",
+      "timestamp": "2025-09-25T04:47:11.190Z",
       "type": "log",
-      "text": "❌ SERVICE INITIALIZATION ERRORS FOUND: [Object, Object, Object, Object, Object, Object, Object, Object, Object, Object]",
-      "entry": "[LOG] ❌ SERVICE INITIALIZATION ERRORS FOUND: [Object, Object, Object, Object, Object, Object, Object, Object, Object, Object]"
+      "text": "✅ NO SERVICE INITIALIZATION ERRORS DETECTED",
+      "entry": "[LOG] ✅ NO SERVICE INITIALIZATION ERRORS DETECTED"
     },
     {
-      "timestamp": "2025-09-25T04:02:26.939Z",
+      "timestamp": "2025-09-25T04:47:11.191Z",
       "type": "log",
       "text": "=== TEST COMPLETE ===",
       "entry": "[LOG] === TEST COMPLETE ==="
+    },
+    {
+      "timestamp": "2025-09-25T04:47:12.140Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 90, frameSize: 1920x1080, timestamp: 27546.48, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 90, frameSize: 1920x1080, timestamp: 27546.48, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:12.140Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 90, frameSize: 1920x1080, timestamp: 27546.48, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 90, frameSize: 1920x1080, timestamp: 27546.48, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:13.131Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 120, frameSize: 1920x1080, timestamp: 27547.474, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 120, frameSize: 1920x1080, timestamp: 27547.474, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:13.132Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 120, frameSize: 1920x1080, timestamp: 27547.474, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 120, frameSize: 1920x1080, timestamp: 27547.474, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:14.128Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 150, frameSize: 1920x1080, timestamp: 27548.469, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 150, frameSize: 1920x1080, timestamp: 27548.469, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:14.129Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 150, frameSize: 1920x1080, timestamp: 27548.469, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 150, frameSize: 1920x1080, timestamp: 27548.469, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:15.122Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 180, frameSize: 1920x1080, timestamp: 27549.462, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 180, frameSize: 1920x1080, timestamp: 27549.462, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:15.123Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 180, frameSize: 1920x1080, timestamp: 27549.462, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 180, frameSize: 1920x1080, timestamp: 27549.462, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:16.117Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 210, frameSize: 1920x1080, timestamp: 27550.458, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 210, frameSize: 1920x1080, timestamp: 27550.458, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:16.118Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 210, frameSize: 1920x1080, timestamp: 27550.458, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 210, frameSize: 1920x1080, timestamp: 27550.458, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:17.116Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 240, frameSize: 1920x1080, timestamp: 27551.454, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 240, frameSize: 1920x1080, timestamp: 27551.454, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:17.117Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 240, frameSize: 1920x1080, timestamp: 27551.454, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 240, frameSize: 1920x1080, timestamp: 27551.454, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:18.112Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 270, frameSize: 1920x1080, timestamp: 27552.45, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 270, frameSize: 1920x1080, timestamp: 27552.45, dataSize: 17604}"
+    },
+    {
+      "timestamp": "2025-09-25T04:47:18.113Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 270, frameSize: 1920x1080, timestamp: 27552.45, dataSize: 17604}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 270, frameSize: 1920x1080, timestamp: 27552.45, dataSize: 17604}"
     }
   ],
-  "errors": [
-    "[ERROR] Failed to load resource: the server responded with a status of 405 (Method Not Allowed)",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 8.10ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 9.20ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:08.632Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:08.632Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 10.60ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 11.40ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}",
-    "[ERROR] Failed to load resource: the server responded with a status of 405 (Method Not Allowed)",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 8.60ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 9.90ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:09.646Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:09.646Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 12.40ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 13.20ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}",
-    "[ERROR] Failed to load resource: the server responded with a status of 405 (Method Not Allowed)",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 8.80ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 10.10ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:10.660Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:10.661Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 12.40ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 13.30ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Start failed after 3 attempts - 2042.30ms {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: BackendSyncService.start: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(0), timestamp: 2025-09-25T04:02:10.671Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR BackendSyncService.start {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:10.672Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: Application initialization failed Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (http://localhost:5173/src/services/HttpService.ts:59:15)\n    at async BackendSyncService.makeRequest (http://localhost:5173/src/services/BackendSyncService.ts:357:24)\n    at async BackendSyncService.checkHealth (http://localhost:5173/src/services/BackendSyncService.ts:300:24)\n    at async BackendSyncService.start (http://localhost:5173/src/services/BackendSyncService.ts:78:9)\n    at async ApplicationInitializerService.start (http://localhost:5173/src/services/ApplicationInitializerService.ts:64:7)\n    at async initializeAndRender (http://localhost:5173/src/index.tsx?t=1758772927039:20:5)",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ApplicationInitializerService.start: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772927039:20:5), arguments: Array(0), timestamp: 2025-09-25T04:02:10.673Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ApplicationInitializerService.start {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:10.674Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: Application Bootstrap: CRITICAL FAILURE during initialization. Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (http://localhost:5173/src/services/HttpService.ts:59:15)\n    at async BackendSyncService.makeRequest (http://localhost:5173/src/services/BackendSyncService.ts:357:24)\n    at async BackendSyncService.checkHealth (http://localhost:5173/src/services/BackendSyncService.ts:300:24)\n    at async BackendSyncService.start (http://localhost:5173/src/services/BackendSyncService.ts:78:9)\n    at async ApplicationInitializerService.start (http://localhost:5173/src/services/ApplicationInitializerService.ts:64:7)\n    at async initializeAndRender (http://localhost:5173/src/index.tsx?t=1758772927039:20:5)",
-    "[ERROR] Failed to load resource: the server responded with a status of 405 (Method Not Allowed)",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 10.80ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 11.30ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:24.479Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:24.479Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 12.00ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 12.40ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}",
-    "[ERROR] Failed to load resource: the server responded with a status of 405 (Method Not Allowed)",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 7.90ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 8.90ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:25.490Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:25.490Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 10.10ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 10.60ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}",
-    "[ERROR] Failed to load resource: the server responded with a status of 405 (Method Not Allowed)",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST failed: 405 Method Not Allowed {url: http://127.0.0.1:8000/health, status: 405, statusText: Method Not Allowed, error: {\"detail\":\"Method Not Allowed\"}, duration: 8.10ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HTTP POST request failed {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 9.10ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: HttpService.post: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(2), timestamp: 2025-09-25T04:02:26.502Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR HttpService.post {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:26.502Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: [BackendSync] Request failed: {url: http://127.0.0.1:8000/health, error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, duration: 10.40ms}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Health check failed - 10.90ms: {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…, url: http://127.0.0.1:8000/health}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: 🚨 [BackendSync] Start failed after 3 attempts - 2036.50ms {error: Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (h…}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: BackendSyncService.start: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(0), timestamp: 2025-09-25T04:02:26.505Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR BackendSyncService.start {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:26.505Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: Application initialization failed Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (http://localhost:5173/src/services/HttpService.ts:59:15)\n    at async BackendSyncService.makeRequest (http://localhost:5173/src/services/BackendSyncService.ts:357:24)\n    at async BackendSyncService.checkHealth (http://localhost:5173/src/services/BackendSyncService.ts:300:24)\n    at async BackendSyncService.start (http://localhost:5173/src/services/BackendSyncService.ts:78:9)\n    at async ApplicationInitializerService.start (http://localhost:5173/src/services/ApplicationInitializerService.ts:64:7)\n    at async initializeAndRender (http://localhost:5173/src/index.tsx?t=1758772943843:20:5)",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ApplicationInitializerService.start: {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, stack: Error: HTTP 405: Method Not Allowed - {\"detail\":\"M…ocalhost:5173/src/index.tsx?t=1758772943843:20:5), arguments: Array(0), timestamp: 2025-09-25T04:02:26.506Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ApplicationInitializerService.start {error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}, timestamp: 2025-09-25T04:02:26.507Z}",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: Application Bootstrap: CRITICAL FAILURE during initialization. Error: HTTP 405: Method Not Allowed - {\"detail\":\"Method Not Allowed\"}\n    at HttpService.request (http://localhost:5173/src/services/HttpService.ts:59:15)\n    at async BackendSyncService.makeRequest (http://localhost:5173/src/services/BackendSyncService.ts:357:24)\n    at async BackendSyncService.checkHealth (http://localhost:5173/src/services/BackendSyncService.ts:300:24)\n    at async BackendSyncService.start (http://localhost:5173/src/services/BackendSyncService.ts:78:9)\n    at async ApplicationInitializerService.start (http://localhost:5173/src/services/ApplicationInitializerService.ts:64:7)\n    at async initializeAndRender (http://localhost:5173/src/index.tsx?t=1758772943843:20:5)"
-  ]
+  "errors": []
 }

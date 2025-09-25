@@ -64,25 +64,25 @@ export class ApplicationInitializerService implements IApplicationInitializerSer
     this.logger.info('Starting application initialization sequence');
 
     try {
-      // Step 0: Start transversal services FIRST
-      this.logger.debug('Starting transversal services');
-      this.errorReportingService.start();
-      this.debugService.start();
-      this.notificationService.start();
-      this.logger.info('Transversal services started successfully');
+      // Step 0: Load configuration FIRST - Services need config to start properly
+      this.logger.debug('Loading application configuration');
+      await this.configService.loadConfig();
+      this.logger.info('Configuration loaded successfully');
 
       // Step 1: Start GameStateStoreService - it must listen to all events
       this.logger.debug('Starting GameStateStoreService');
       this.gameStateStoreService.start();
       this.logger.info('GameStateStoreService started - now listening to events');
 
-      // Step 2: Load configuration
-      this.logger.debug('Loading application configuration');
-      await this.configService.loadConfig();
-      
-      // Step 3: Update store with config loaded state
+      // Step 2: Update store with config loaded state
       this.gameStateStoreService.updateGameState({ isConfigLoaded: true });
-      this.logger.info('Configuration loaded successfully');
+
+      // Step 3: Start transversal services (now that config is loaded)
+      this.logger.debug('Starting transversal services');
+      this.errorReportingService.start();
+      this.debugService.start();
+      this.notificationService.start();
+      this.logger.info('Transversal services started successfully');
 
       // Step 4: Start game controller service
       this.logger.debug('Starting game controller service');

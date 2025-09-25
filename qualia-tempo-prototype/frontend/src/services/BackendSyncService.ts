@@ -512,14 +512,35 @@ export class BackendSyncService implements IBackendSyncService {
     try {
       this.logger.debug(`[BackendSync] Making request to: ${url}`, { options });
 
-      const response = await this.httpService.post<T>(url, {
+      // QUALIA.CODE FIX: Use correct HTTP method based on options
+      const method = options.method || 'POST';
+      const requestOptions = {
         ...options,
         headers: {
           ...options.headers,
           'Content-Type': 'application/json',
         },
         signal: controller.signal,
-      });
+      };
+
+      let response: T;
+      
+      switch (method.toUpperCase()) {
+        case 'GET':
+          response = await this.httpService.get<T>(url, requestOptions);
+          break;
+        case 'POST':
+          response = await this.httpService.post<T>(url, requestOptions);
+          break;
+        case 'PUT':
+          response = await this.httpService.put<T>(url, requestOptions);
+          break;
+        case 'DELETE':
+          response = await this.httpService.delete<T>(url, requestOptions);
+          break;
+        default:
+          throw new Error(`Unsupported HTTP method: ${method}`);
+      }
 
       this.timerService.clearTimeout(timeoutId);
       const duration = performance.now() - startTime;
