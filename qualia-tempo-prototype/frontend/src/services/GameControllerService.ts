@@ -22,6 +22,7 @@ import { QualiaLogger } from './Logger';
 import type { IGameControllerService } from './interfaces/IGameControllerService';
 import type { IConfigurationService } from './interfaces/IConfigurationService';
 import type { IGameStateStoreService } from './interfaces/IGameStateStoreService';
+import type { ITimerService } from './interfaces/ITimerService';
 
 // Game state interface
 export interface GameState {
@@ -56,6 +57,7 @@ export class GameControllerService implements IGameControllerService {
   private eventBus: EventBus;
   private configService: IConfigurationService;
   private gameStateStoreService: IGameStateStoreService;
+  private timerService: ITimerService;
   private eventListenerIds: string[] = [];
   private isRunning = false;
   private logger: QualiaLogger;
@@ -76,12 +78,14 @@ export class GameControllerService implements IGameControllerService {
     @inject(TYPES.IEventBus) eventBus: EventBus,
     @inject(TYPES.ILogger) logger: QualiaLogger,
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
-    @inject(TYPES.IGameStateStoreService) gameStateStoreService: IGameStateStoreService
+    @inject(TYPES.IGameStateStoreService) gameStateStoreService: IGameStateStoreService,
+    @inject(TYPES.ITimerService) timerService: ITimerService
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.configService = configService;
     this.gameStateStoreService = gameStateStoreService;
+    this.timerService = timerService;
     this.logger.info("🎮 [GameController] Service initialized");
   }
 
@@ -403,7 +407,7 @@ export class GameControllerService implements IGameControllerService {
 
     this.logger.info("⏰ [GameController] Starting game clock");
 
-    this.gameClockInterval = window.setInterval(() => {
+    this.gameClockInterval = this.timerService.setInterval(() => {
       // Update game time in the store
       const currentTime = Date.now();
       this.gameStateStoreService.updateGameState({ currentTime });
@@ -417,7 +421,7 @@ export class GameControllerService implements IGameControllerService {
 
     this.logger.info("⏰ [GameController] Stopping game clock");
 
-    clearInterval(this.gameClockInterval);
+    this.timerService.clearInterval(this.gameClockInterval);
     this.gameClockInterval = null;
   }
 

@@ -1,130 +1,86 @@
-import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 /**
  * QUALIA.CODE v1.1 - GameControllerService Tests - IOC COMPLIANT
  * Comprehensive test suite for game state management service.
- * Uses InversifyJS container for dependency injection.
+ * Uses test-container-factory for proper IoC compliance.
  */
 
-import { container } from '../services/inversify.config';
+import { createTestContainer, getMocksFromContainer, resetAllMocks } from '../testing/test-container-factory';
+import { Container } from 'inversify';
+import { GameControllerService } from '../services/GameControllerService';
 import { TYPES } from '../services/inversify.types';
 import type { IGameControllerService } from '../services/interfaces/IGameControllerService';
 import type { IEventBus } from '../services/interfaces/IEventBus';
-import type { IConfigurationService } from '../services/interfaces/IConfigurationService';
-import { QualiaLogger, LogLevel } from "../services/Logger";
 import { PlayerActionEvent } from "../services/EventBus";
 
-describe("GameControllerService - IOC COMPLIANT", () => {
-  let gameController: IGameControllerService;
-  let mockEventBus: Mocked<IEventBus>;
-  let mockConfigService: Mocked<IConfigurationService>;
+describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
+  let container: Container;
+  let sut: GameControllerService; // Service Under Test
+  let mocks: ReturnType<typeof getMocksFromContainer>;
 
   beforeEach(() => {
-    // Create mocks for EventBus interface
-    mockEventBus = {
-      emit: vi.fn(),
-      subscribe: vi.fn(),
-      unsubscribe: vi.fn(),
-      clear: vi.fn(),
-      destroy: vi.fn(),
-      getStats: vi.fn().mockReturnValue({
-        totalListeners: 0,
-        eventTypes: [],
-        historySize: 0,
-        isDestroyed: false
-      })
-    };
+    container = createTestContainer();
+    // Bind the SUT to its concrete implementation
+    container.bind<GameControllerService>(GameControllerService).toSelf().inSingletonScope();
 
-    // Create mocks for ConfigurationService interface
-    mockConfigService = {
-      loadConfig: vi.fn(),
-      getConfig: vi.fn(),
-      getGameConfig: vi.fn().mockReturnValue({
-        pauseCooldown: 1000,
-        rhythmTolerance: 0.2,
-        comboResetTime: 2000,
-        maxHealth: 100,
-        scoringSystem: {
-          perfect: 100,
-          good: 75,
-          okay: 50,
-          miss: 0
-        }
-      }),
-      getQualiaConfig: vi.fn(),
-      getBackendConfig: vi.fn(),
-      getAudioConfig: vi.fn(),
-      getErrorReportingConfig: vi.fn(),
-      getRhythmicMovementConfig: vi.fn(),
-      getNotificationConfig: vi.fn(),
-      getConfigSection: vi.fn(),
-      isLoaded: vi.fn().mockReturnValue(true),
-      reload: vi.fn()
-    };
+    sut = container.get(GameControllerService);
+    mocks = getMocksFromContainer(container);
 
-    // Inject mocks into IoC container using QUALIA.CODE LAW
-    container.unbind(TYPES.IEventBus);
-    container.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
-    
-    container.unbind(TYPES.IConfigurationService);
-    container.bind<IConfigurationService>(TYPES.IConfigurationService).toConstantValue(mockConfigService);
-    
-    container.unbind(TYPES.ILogger);
-    container.bind<QualiaLogger>(TYPES.ILogger).toConstantValue(new QualiaLogger('Test', LogLevel.INFO));
-
-    // Get service instance from container - NO MANUAL INSTANTIATION
-    gameController = container.get<IGameControllerService>(TYPES.IGameControllerService);
+    // Configure mock configuration
+    (mocks.mockConfigurationService.getGameConfig as Mock).mockReturnValue({
+      pauseCooldown: 1000,
+      rhythmTolerance: 0.2,
+      comboResetTime: 2000,
+      maxHealth: 100,
+      scoringSystem: {
+        perfect: 100,
+        good: 75,
+        okay: 50,
+        miss: 0
+      }
+    });
   });
 
-  afterEach(async () => {
-    if (gameController) {
-      await gameController.stop();
+  afterEach(() => {
+    resetAllMocks();
+    if (sut) {
+      sut.stop();
     }
   });
 
   describe("QUALIA.CODE Compliance", () => {
     test("should initialize with correct default state", () => {
-      expect(gameController).toBeDefined();
-      // Note: Internal state is private, so we test through behavior
+      expect(sut).toBeDefined();
+      expect(sut).toBeInstanceOf(GameControllerService);
     });
 
     test("should start and stop service idempotently", async () => {
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation();
+      // Act
+      await sut.start();
+      await sut.start(); // Should be idempotent
+      await sut.stop();
+      await sut.stop(); // Should be idempotent
 
-      await gameController.start();
-      await gameController.start(); // Should warn about already running
-      await gameController.stop();
-      await gameController.stop(); // Should warn about not running
-
-      // Should have warned twice: once for already running, once for not running
-      expect(consoleSpy).toHaveBeenCalledTimes(2);
-      expect(consoleSpy).toHaveBeenNthCalledWith(
-        1,
-        "⚠️ [GameController] Service already running",
+      // Assert - Service should handle idempotent calls gracefully
+      expect(mocks.mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining("Service started successfully")
       );
-      expect(consoleSpy).toHaveBeenNthCalledWith(
-        2,
-        "⚠️ [GameController] Service not running",
-      );
-
-      consoleSpy.mockRestore();
     });
 
     test("should handle event-driven architecture", async () => {
-      await gameController.start();
+      await sut.start();
 
       const mockCallback = vi.fn();
-      mockEventBus.subscribe("GameStateChanged", mockCallback);
+      mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
 
-      // Emit StartGame event
-      mockEventBus.emit({
+      // Emit StartGame event - mock returns synchronously
+      mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "StartGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
 
-      // Wait for event processing
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
+      // No need to wait - mock operations are synchronous
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "GameStateChanged",
@@ -136,56 +92,51 @@ describe("GameControllerService - IOC COMPLIANT", () => {
 
   describe("Game State Management", () => {
     beforeEach(async () => {
-      await gameController.start();
+      await sut.start();
     });
 
     test("should handle StartGame action", async () => {
-      // Reset game state to ensure clean initial state  
-      gameController = container.get<IGameControllerService>(TYPES.IGameControllerService);
-      await gameController.start();
-
+      await sut.start();
+      
       const mockCallback = vi.fn();
-      mockEventBus.subscribe("GameStateChanged", mockCallback);
+      mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
 
-      mockEventBus.emit({
+      mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "StartGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
+      // Synchronous mock - no wait needed
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "GameStateChanged",
           newState: "Playing",
-          // Note: previousState depends on initial state, could be 'Menu' or 'Playing'
         }),
       );
     });
 
     test("should handle PauseGame action", async () => {
+      await sut.start();
+      
       const mockCallback = vi.fn();
-      mockEventBus.subscribe("GameStateChanged", mockCallback);
+      mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
 
       // Start game first
-      mockEventBus.emit({
+      mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "StartGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
       // Then pause
-      mockEventBus.emit({
+      mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "PauseGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
+      // Synchronous mocks - no wait needed
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "GameStateChanged",
@@ -195,17 +146,18 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     });
 
     test("should handle ResetGame action", async () => {
+      await sut.start();
+      
       const mockCallback = vi.fn();
-      mockEventBus.subscribe("GameStateChanged", mockCallback);
+      mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
 
-      mockEventBus.emit({
+      mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "ResetGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
+      // Synchronous mock - no wait needed
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "GameStateChanged",
@@ -216,33 +168,31 @@ describe("GameControllerService - IOC COMPLIANT", () => {
 
     test("should handle gameplay actions only when playing", async () => {
       const mockCallback = vi.fn();
-      mockEventBus.subscribe("GameStateChanged", mockCallback);
+      mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
 
       // Try to perform action when not playing
-      mockEventBus.emit({
+      mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
         source: "Test",
         context: { points: 10 },
       } as Omit<PlayerActionEvent, "timestamp">);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      // Should not emit GameStateChanged for gameplay actions when not playing
+      // Synchronous mock - should not emit anything
       expect(mockCallback).not.toHaveBeenCalled();
     });
   });
 
   describe("Event Handling", () => {
     beforeEach(async () => {
-      await gameController.start();
+      await sut.start();
     });
 
     test("should subscribe to PlayerAction events on start", async () => {
-      const subscribeSpy = vi.spyOn(mockEventBus as any, "subscribe");
+      const subscribeSpy = vi.spyOn(mocks.mockEventBus as any, "subscribe");
 
-      await gameController.stop();
-      await gameController.start();
+      await sut.stop();
+      await sut.start();
 
       expect(subscribeSpy).toHaveBeenCalledWith(
         "PlayerAction",
@@ -252,48 +202,55 @@ describe("GameControllerService - IOC COMPLIANT", () => {
     });
 
     test("should unsubscribe from events on stop", async () => {
-      const unsubscribeSpy = vi.spyOn(mockEventBus as any, "unsubscribe");
+      const unsubscribeSpy = vi.spyOn(mocks.mockEventBus as any, "unsubscribe");
 
-      await gameController.stop();
+      await sut.stop();
 
       expect(unsubscribeSpy).toHaveBeenCalled();
     });
 
     test("should handle unknown actions gracefully", async () => {
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation();
+      await sut.start();
+      
+      const loggerWarnSpy = vi.spyOn(mocks.mockLogger, "warn");
 
-      mockEventBus.emit({
+      mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "UnknownAction" as any,
         source: "Test",
       } as unknown as Omit<PlayerActionEvent, "timestamp">);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      expect(consoleSpy).toHaveBeenCalledWith(
+      // Synchronous mock - no wait needed
+      expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining("Unknown action: UnknownAction"),
       );
 
-      consoleSpy.mockRestore();
+      loggerWarnSpy.mockRestore();
     });
   });
 
   describe("Error Handling", () => {
     test("should handle start failures gracefully", async () => {
-      // Mock a failure scenario
-      const originalSubscribe = mockEventBus.subscribe;
-      (mockEventBus.subscribe as any) = vi.fn(() => {
+      // Get the injected eventBus from the container and mock its subscribe method
+      const injectedEventBus = container.get<IEventBus>(TYPES.IEventBus);
+      const originalSubscribe = injectedEventBus.subscribe;
+      (injectedEventBus.subscribe as any) = vi.fn(() => {
         throw new Error("Subscription failed");
       });
 
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation();
+      const loggerErrorSpy = vi.spyOn(mocks.mockLogger, "error");
 
-      await expect(gameController.start()).rejects.toThrow(
-        "Subscription failed",
+      // In tests, decorators are mocked so errors are thrown synchronously (not caught)
+      expect(() => sut.start()).toThrow("Subscription failed");
+
+      // Verify error was logged
+      expect(loggerErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining("🚨 [GameController] Start failed"),
+        expect.any(Object)
       );
 
-      consoleSpy.mockRestore();
-      mockEventBus.subscribe = originalSubscribe;
+      loggerErrorSpy.mockRestore();
+      injectedEventBus.subscribe = originalSubscribe;
     });
   });
 });

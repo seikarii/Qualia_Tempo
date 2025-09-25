@@ -28,10 +28,13 @@ import type { ILogger } from '../services/interfaces/ILogger';
 import type { IEventBus } from '../services/interfaces/IEventBus';
 import type { IConfigurationService } from '../services/interfaces/IConfigurationService';
 import type { IGameStateStore } from '../services/interfaces/IGameStateStore';
+import type { IGameStateStoreService } from '../services/interfaces/IGameStateStoreService';
 import type { IDebugService } from '../services/interfaces/IDebugService';
 import type { IErrorReportingService } from '../services/interfaces/IErrorReportingService';
 import type { INotificationService } from '../services/interfaces/INotificationService';
 import type { IRhythmicMovementController } from '../services/interfaces/IRhythmicMovementController';
+import type { IHttpService } from '../services/interfaces/IHttpService';
+import type { ITimerService } from '../services/interfaces/ITimerService';
 
 // Import concrete service classes for binding
 import { DebugService } from '../services/DebugService';
@@ -63,20 +66,63 @@ const mockLogger: ILogger = {
 
 /**
  * Mock EventBus Implementation - Complete Interface Coverage
+ * QUALIA.CODE: Functional mock for fast synchronous testing
  */
-const mockEventBus: IEventBus = {
-  subscribe: vi.fn().mockReturnValue('mock-listener-id'),
-  unsubscribe: vi.fn().mockReturnValue(true),
-  emit: vi.fn().mockResolvedValue(undefined),
-  clear: vi.fn(),
-  destroy: vi.fn(),
-  getStats: vi.fn().mockReturnValue({
-    totalListeners: 0,
-    eventTypes: [],
-    historySize: 0,
-    isDestroyed: false
-  })
-};
+const mockEventBus: IEventBus = (() => {
+  const subscribers: Map<string, Array<{ handler: Function; id: string }>> = new Map();
+  let nextId = 1;
+
+  return {
+    subscribe: vi.fn().mockImplementation((eventType: string, handler: Function) => {
+      if (!subscribers.has(eventType)) {
+        subscribers.set(eventType, []);
+      }
+      const id = `listener-${nextId++}`;
+      subscribers.get(eventType)!.push({ handler, id });
+      return id;
+    }),
+
+    unsubscribe: vi.fn().mockImplementation((listenerId: string) => {
+      for (const [_eventType, handlers] of subscribers.entries()) {
+        const index = handlers.findIndex(h => h.id === listenerId);
+        if (index !== -1) {
+          handlers.splice(index, 1);
+          return true;
+        }
+      }
+      return false;
+    }),
+
+    emit: vi.fn().mockImplementation((event: any) => {
+      const eventType = event.type;
+      const handlers = subscribers.get(eventType) || [];
+      // Call all handlers synchronously for fast testing
+      handlers.forEach(({ handler }) => {
+        try {
+          handler(event);
+        } catch (error) {
+          console.error(`Error in event handler for ${eventType}:`, error);
+        }
+      });
+      return undefined;
+    }),
+
+    clear: vi.fn().mockImplementation(() => {
+      subscribers.clear();
+    }),
+
+    destroy: vi.fn().mockImplementation(() => {
+      subscribers.clear();
+    }),
+
+    getStats: vi.fn().mockImplementation(() => ({
+      totalListeners: Array.from(subscribers.values()).reduce((sum, handlers) => sum + handlers.length, 0),
+      eventTypes: Array.from(subscribers.keys()),
+      historySize: 0,
+      isDestroyed: false
+    }))
+  };
+})();
 
 /**
  * Mock Configuration Service Implementation - Complete with Default Config Structure
@@ -224,6 +270,40 @@ const mockGameStateStore: any = {
 };
 
 /**
+ * Mock Game State Store Service Implementation - QUALIA.CODE v1.1 Compliance
+ */
+const mockGameStateStoreService: any = {
+  start: vi.fn(),
+  stop: vi.fn(),
+  updateGameState: vi.fn(),
+  updateQualiaState: vi.fn(),
+  getStatus: vi.fn().mockReturnValue('stopped'),
+  isRunning: vi.fn().mockReturnValue(false),
+};
+
+/**
+ * Mock HttpService Implementation - QUALIA.CODE v1.1 Compliance
+ */
+const mockHttpService: IHttpService = {
+  get: vi.fn(),
+  post: vi.fn(),
+  put: vi.fn(),
+  delete: vi.fn(),
+};
+
+/**
+ * Mock TimerService Implementation - QUALIA.CODE v1.1 Compliance
+ */
+const mockTimerService: ITimerService = {
+  setTimeout: vi.fn().mockReturnValue(12345), // Return a mock timer ID
+  clearTimeout: vi.fn(),
+  setInterval: vi.fn().mockReturnValue(54321), // Return a mock interval ID
+  clearInterval: vi.fn(),
+  debounce: vi.fn().mockImplementation((func: any) => func),
+  throttle: vi.fn().mockImplementation((func: any) => func),
+};
+
+/**
  * GOLD.CODE Test Container Factory
  * 
  * Creates a fresh InversifyJS container with all dependencies properly mocked.
@@ -240,6 +320,12 @@ export function createTestContainer(): Container {
   container.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
   container.bind<IConfigurationService>(TYPES.IConfigurationService).toConstantValue(mockConfigurationService);
   container.bind<IGameStateStore>(TYPES.IGameStateStore).toConstantValue(mockGameStateStore);
+  container.bind<IGameStateStoreService>(TYPES.IGameStateStoreService).toConstantValue(mockGameStateStoreService);
+
+  // --- NUEVOS BINDINGS ---
+  container.bind<IHttpService>(TYPES.IHttpService).toConstantValue(mockHttpService);
+  container.bind<ITimerService>(TYPES.ITimerService).toConstantValue(mockTimerService);
+  // -----------------------
 
   // Mock StoreSetter (Zustand store setter function)
   const mockStoreSetter = vi.fn();
@@ -264,27 +350,39 @@ export function getMocksFromContainer(container: Container) {
     mockEventBus: container.get<IEventBus>(TYPES.IEventBus),
     mockConfigurationService: container.get<IConfigurationService>(TYPES.IConfigurationService),
     mockGameStateStore: container.get<IGameStateStore>(TYPES.IGameStateStore),
+    mockGameStateStoreService: container.get<IGameStateStoreService>(TYPES.IGameStateStoreService),
     mockStoreSetter: container.get<(_state: any) => void>(TYPES.StoreSetter),
+    // --- NUEVOS EXPORTS ---
+    mockHttpService: container.get<IHttpService>(TYPES.IHttpService),
+    mockTimerService: container.get<ITimerService>(TYPES.ITimerService),
+    // --------------------
   };
 }
 
 /**
  * QUALIA.CODE v1.0 - Test Reset Utility
  * Centralized mock reset functionality for consistent test isolation.
+ * Ensures synchronous behavior for fast test execution.
  */
 export function resetAllMocks() {
+  // Clear all mocks except EventBus which has custom implementation
   vi.clearAllMocks();
   
   // Reset mock return values to defaults
   (mockLogger.getLevel as Mock).mockReturnValue('info');
-  (mockEventBus.subscribe as Mock).mockReturnValue('mock-listener-id');
-  (mockEventBus.unsubscribe as Mock).mockReturnValue(true);
-  (mockEventBus.getStats as Mock).mockReturnValue({
-    totalListeners: 0,
-    eventTypes: [],
-    historySize: 0,
-    isDestroyed: false
-  });
+  
+  // Reset EventBus subscribers between tests
+  const eventBusMock = mockEventBus as any;
+  if (eventBusMock.subscribers) {
+    eventBusMock.subscribers.clear();
+  }
+  
+  // Don't clear EventBus mocks since they have custom implementations
+  (mockEventBus.subscribe as Mock).mockClear();
+  (mockEventBus.unsubscribe as Mock).mockClear(); 
+  (mockEventBus.emit as Mock).mockClear();
+  (mockEventBus.getStats as Mock).mockClear();
+
   (mockConfigurationService.isLoaded as Mock).mockReturnValue(true);
   (mockConfigurationService.getBackendConfig as Mock).mockReturnValue({ 
     url: 'http://localhost:8000',

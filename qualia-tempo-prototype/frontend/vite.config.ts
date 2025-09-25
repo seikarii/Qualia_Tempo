@@ -12,6 +12,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/testing/setup.ts',
+    // QUALIA.CODE: Fast test execution - max 1 second per test
+    testTimeout: 1000, // 1 second max per test
+    hookTimeout: 500,  // 500ms max for hooks
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
