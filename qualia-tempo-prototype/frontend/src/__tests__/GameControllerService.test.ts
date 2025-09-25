@@ -7,7 +7,6 @@ import { describe, test, expect, beforeEach, afterEach, vi, type Mock } from 'vi
 
 import { createTestContainer, getMocksFromContainer, resetAllMocks } from '../testing/test-container-factory';
 import { Container } from 'inversify';
-import { GameControllerService } from '../services/GameControllerService';
 import { TYPES } from '../services/inversify.types';
 import type { IGameControllerService } from '../services/interfaces/IGameControllerService';
 import type { IEventBus } from '../services/interfaces/IEventBus';
@@ -15,15 +14,13 @@ import { PlayerActionEvent } from "../services/EventBus";
 
 describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
   let container: Container;
-  let sut: GameControllerService; // Service Under Test
+  let sut: IGameControllerService; // Service Under Test - Interface for IoC compliance
   let mocks: ReturnType<typeof getMocksFromContainer>;
 
   beforeEach(() => {
     container = createTestContainer();
-    // Bind the SUT to its concrete implementation
-    container.bind<GameControllerService>(GameControllerService).toSelf().inSingletonScope();
-
-    sut = container.get(GameControllerService);
+    // QUALIA.CODE COMPLIANCE: Service resolved from central factory, NO local bindings
+    sut = container.get<IGameControllerService>(TYPES.IGameControllerService);
     mocks = getMocksFromContainer(container);
 
     // Configure mock configuration
@@ -51,7 +48,8 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
   describe("QUALIA.CODE Compliance", () => {
     test("should initialize with correct default state", () => {
       expect(sut).toBeDefined();
-      expect(sut).toBeInstanceOf(GameControllerService);
+      expect(sut).toBeDefined();
+      expect(typeof sut.startGame).toBe('function');
     });
 
     test("should start and stop service idempotently", async () => {

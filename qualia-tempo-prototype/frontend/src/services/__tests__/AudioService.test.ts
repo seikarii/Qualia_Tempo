@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi, it, type Mocked } from 'vitest';
 // AudioService.test.ts - IoC-compliant test suite for QUALIA.CODE audio management service
 // Tests: Service lifecycle, event handling, rhythmic feedback, metronome functionality, entity voice management
 
@@ -9,12 +9,7 @@ import type { IConfigurationService } from '../interfaces/IConfigurationService'
 import type { QualiaState } from "../../types/contracts";
 import type { QualiaStateUpdatedEvent } from "../EventBus";
 
-// Mock decorators before importing
-vi.mock("../../utils/decorators", () => ({
-  logMethod: () => (_target: any, _propertyName: string, descriptor: PropertyDescriptor) => descriptor,
-  catchError: () => (_target: any, _propertyName: string, descriptor: PropertyDescriptor) => descriptor,
-  measureTime: () => (_target: any, _propertyName: string, descriptor: PropertyDescriptor) => descriptor,
-}));
+// Decorators are globally mocked in setup.ts
 
 // Use the existing mock for OntologicalAudioEngine
 vi.mock("../../audio/OntologicalAudioEngine", () => ({

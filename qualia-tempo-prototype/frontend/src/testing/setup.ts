@@ -2,6 +2,65 @@ import '@testing-library/jest-dom/vitest';
 import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
+// QUALIA.CODE Global Decorator Mocks - CRITICAL FOR IOC TEST INTEGRITY
+// Mock decorators GLOBALLY to prevent import resolution issues
+vi.mock('../utils/decorators', () => ({
+  logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  validate: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  throttle: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  validateEventProperty: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  measureTime: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+}));
+
+// QUALIA.CODE Global Tone.js Mock - Prevent audio module import errors in tests
+vi.mock('tone', () => ({
+  PolySynth: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    triggerAttackRelease: vi.fn(),
+    set: vi.fn(),
+  })),
+  Synth: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    triggerAttackRelease: vi.fn(),
+    set: vi.fn(),
+  })),
+  Frequency: vi.fn(() => ({ toFrequency: vi.fn().mockReturnValue(440) })),
+  Reverb: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    connect: vi.fn().mockReturnThis(),
+  })),
+  FeedbackDelay: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    connect: vi.fn().mockReturnThis(),
+  })),
+  Volume: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    connect: vi.fn().mockReturnThis(),
+  })),
+  start: vi.fn(),
+  Transport: {
+    start: vi.fn(),
+    stop: vi.fn(),
+    pause: vi.fn(),
+    bpm: { value: 120 },
+  },
+  default: {
+    start: vi.fn(),
+    Transport: {
+      start: vi.fn(),
+      stop: vi.fn(),
+      pause: vi.fn(),
+      bpm: { value: 120 },
+    },
+  },
+}));
+
 // Comprehensive browser APIs mocking for test environment
 // Ensure global window object exists
 if (typeof window === 'undefined') {
@@ -94,6 +153,34 @@ Object.defineProperty(window, 'localStorage', {
     length: 0,
     key: vi.fn(),
   },
+});
+
+// Mock AudioContext for WebAudioAPIService
+Object.defineProperty(window, 'AudioContext', {
+  writable: true,
+  value: vi.fn().mockImplementation(() => ({
+    createGain: vi.fn(() => ({
+      connect: vi.fn(),
+      gain: { value: 1 },
+    })),
+    createOscillator: vi.fn(() => ({
+      connect: vi.fn(),
+      frequency: { value: 440 },
+      start: vi.fn(),
+      stop: vi.fn(),
+    })),
+    destination: {},
+    state: 'running',
+    resume: vi.fn(),
+    suspend: vi.fn(),
+    close: vi.fn(),
+  })),
+});
+
+// Also add webkitAudioContext fallback
+Object.defineProperty(window, 'webkitAudioContext', {
+  writable: true,
+  value: window.AudioContext,
 });
 
 afterEach(() => {

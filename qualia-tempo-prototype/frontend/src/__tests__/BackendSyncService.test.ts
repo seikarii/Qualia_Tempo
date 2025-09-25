@@ -7,21 +7,18 @@ import { describe, test, expect, beforeEach, afterEach, vi, type Mock } from 'vi
 
 import { createTestContainer, getMocksFromContainer, resetAllMocks } from '../testing/test-container-factory';
 import { Container } from 'inversify';
-import { BackendSyncService } from '../services/BackendSyncService';
 import { TYPES } from '../services/inversify.types';
 import type { IBackendSyncService } from '../services/interfaces/IBackendSyncService';
 
 describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
   let container: Container;
-  let sut: BackendSyncService; // Service Under Test
+  let sut: IBackendSyncService; // Service Under Test - Interface for IoC compliance
   let mocks: ReturnType<typeof getMocksFromContainer>;
 
   beforeEach(() => {
     container = createTestContainer();
-    // Bind the SUT to its concrete implementation
-    container.bind<BackendSyncService>(BackendSyncService).toSelf().inSingletonScope();
-
-    sut = container.get(BackendSyncService);
+    // QUALIA.CODE COMPLIANCE: Service resolved from central factory, NO local bindings
+    sut = container.get<IBackendSyncService>(TYPES.IBackendSyncService);
     mocks = getMocksFromContainer(container);
 
     // Configure backend configuration mock

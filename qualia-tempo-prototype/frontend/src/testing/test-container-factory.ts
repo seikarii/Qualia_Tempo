@@ -9,16 +9,8 @@
  * OBLIGATION: All Service Under Test (SUT) must be resolved from container.
  */
 
-// Mock decorators BEFORE importing any services - Using Vitest
+// Vitest imports for mock functions
 import { vi, type Mock } from 'vitest';
-
-vi.mock('../utils/decorators', () => ({
-  logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  validate: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  throttle: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  validateEventProperty: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-}));
 
 import { Container } from 'inversify';
 import { TYPES } from '../services/inversify.types';
@@ -37,6 +29,11 @@ import type { IHttpService } from '../services/interfaces/IHttpService';
 import type { ITimerService } from '../services/interfaces/ITimerService';
 import type { IOntologicalAudioEngine } from '../audio/IOntologicalAudioEngine';
 import type { IStreamingVideoService } from '../services/interfaces/IStreamingVideoService';
+import type { IGameControllerService } from '../services/interfaces/IGameControllerService';
+import type { IBackendSyncService } from '../services/interfaces/IBackendSyncService';
+import type { IAudioService } from '../services/interfaces/IAudioService';
+import type { IQualiaStateCalculatorService } from '../services/interfaces/IQualiaStateCalculatorService';
+import type { IWebAudioAPIService } from '../services/interfaces/IWebAudioAPIService';
 
 // Import concrete service classes for binding
 import { DebugService } from '../services/DebugService';
@@ -46,6 +43,11 @@ import { GameStateStoreService } from '../services/GameStateStoreService';
 import { RhythmicMovementController } from '../services/RhythmicMovementController';
 import { OntologicalAudioEngine } from '../audio/OntologicalAudioEngine';
 import { StreamingVideoService } from '../services/StreamingVideoService';
+import { GameControllerService } from '../services/GameControllerService';
+import { BackendSyncService } from '../services/BackendSyncService';
+import { AudioService } from '../services/AudioService';
+import { QualiaStateCalculatorService } from '../services/QualiaStateCalculatorService';
+import { WebAudioAPIService } from '../services/WebAudioAPIService';
 
 /**
  * Mock Logger Implementation - Complete Interface Coverage
@@ -344,6 +346,15 @@ export function createTestContainer(): Container {
   container.bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).to(OntologicalAudioEngine).inSingletonScope();
   container.bind<IStreamingVideoService>(TYPES.IStreamingVideoService).to(StreamingVideoService).inSingletonScope();
 
+  // === CRITICAL MISSING BINDINGS RESTORATION ===
+  // QUALIA.CODE M-2024-3-FE-TEST-INFRA COMPLIANCE
+  container.bind<IGameControllerService>(TYPES.IGameControllerService).to(GameControllerService).inSingletonScope();
+  container.bind<IBackendSyncService>(TYPES.IBackendSyncService).to(BackendSyncService).inSingletonScope();
+  container.bind<IAudioService>(TYPES.IAudioService).to(AudioService).inSingletonScope();
+  container.bind<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService).to(QualiaStateCalculatorService).inSingletonScope();
+  container.bind<IWebAudioAPIService>(TYPES.IWebAudioAPIService).to(WebAudioAPIService).inSingletonScope();
+  // === END CRITICAL RESTORATION ===
+
   return container;
 }
 
@@ -358,9 +369,14 @@ export function getMocksFromContainer(container: Container) {
     mockGameStateStore: container.get<IGameStateStore>(TYPES.IGameStateStore),
     mockGameStateStoreService: container.get<IGameStateStoreService>(TYPES.IGameStateStoreService),
     mockStoreSetter: container.get<(_state: any) => void>(TYPES.StoreSetter),
-    // --- NUEVOS EXPORTS ---
+    // --- CORE SERVICE MOCKS ---
     mockHttpService: container.get<IHttpService>(TYPES.IHttpService),
     mockTimerService: container.get<ITimerService>(TYPES.ITimerService),
+    // --- RESTORED CRITICAL SERVICE INSTANCES ---
+    gameControllerService: container.get<IGameControllerService>(TYPES.IGameControllerService),
+    backendSyncService: container.get<IBackendSyncService>(TYPES.IBackendSyncService),
+    audioService: container.get<IAudioService>(TYPES.IAudioService),
+    qualiaStateCalculatorService: container.get<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService),
     // --------------------
   };
 }
