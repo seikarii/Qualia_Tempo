@@ -10,6 +10,7 @@ export interface DebugConfig {
   debugLevel: 'minimal' | 'normal' | 'verbose';
   enableAIAnalysis?: boolean;
   enablePerformanceMonitoring?: boolean;
+  memoryCleanupInterval?: number;
 }
 
 export interface DebugStats {

@@ -1,4 +1,4 @@
-# Qualia.CODE v1.0 - AI Execution Manual
+# Qualia.CODE v1.1 - AI Execution Manual
 # TARGET: Qualia Tempo Prototype
 # COMPLIANCE: MANDATORY
 
@@ -8,6 +8,7 @@
 - **No Prototypes:** We build definitive systems. Every component must be production-grade from inception.
 - **Decoupling is Law:** Components must not have direct knowledge of each other. Communication occurs via contracts and messaging.
 - **Automation First:** Repetitive tasks (code generation, validation) must be scripted.
+- **Platform Abstraction is Mandatory:** Direct use of platform-specific or global APIs (e.g., `fetch`, `setTimeout`) is strictly forbidden. All such operations MUST be channeled through a dedicated, injectable service (`HttpService`, `TimerService`).
 
 ---
 
@@ -33,6 +34,8 @@ export const TYPES = {
   Logger: Symbol.for("Logger"),
   EventBus: Symbol.for("EventBus"),
   ConfigurationService: Symbol.for("ConfigurationService"),
+  IHttpService: Symbol.for("IHttpService"),
+  ITimerService: Symbol.for("ITimerService"),
 
   // --- Feature Services ---
   IQualiaService: Symbol.for("IQualiaService"),
@@ -297,27 +300,46 @@ const [eventBus, configService] = useServices<IEventBus, IConfigurationService>(
 ```
 
 ### 8.9. ConfigurationService (`frontend/src/services/ConfigurationService.ts`)
-**Purpose:** React hooks for type-safe service access.
+**Purpose:** External configuration management and loading.
 **Responsibilities:**
-- Provide granular access to individual services from React components
-- Ensure services are used within proper context
-- Type-safe service method access
-- Follow React hooks conventions and rules
+- Load configuration from YAML files at runtime
+- Provide type-safe configuration access to all services
+- Validate configuration structure and values
+- Support configuration updates without code changes
+- Integrate with BackendSyncService for dynamic configuration
+**Key Methods:**
+- `loadConfig()`: Load configuration from external YAML files
+- `getConfig()`: Return complete configuration object
+- `getGameConfig()`: Return game-specific configuration
+- `getQualiaConfig()`: Return qualia calculation parameters
+- `getBackendConfig()`: Return backend synchronization settings
+- `isLoaded()`: Check if configuration has been loaded
 
-**Available Hook:**
-- `useService<T>(identifier: symbol): T`: Access a specific service by its interface type
+### 8.10. HttpService (`frontend/src/services/HttpService.ts`)
+**Purpose:** Centralized and abstracted handler for all HTTP communications.
+**Responsibilities:**
+- Encapsulate the global `fetch` API, providing a single point of control.
+- Provide consistent, structured error handling for network and HTTP errors.
+- Centralize request/response logging for improved diagnostics.
+- Manage request timeouts and cancellation via `AbortSignal`.
+**Key Methods:**
+- `get<T>(url, options?)`: Perform a GET request.
+- `post<T>(url, options?)`: Perform a POST request.
+- `put<T>(url, options?)`: Perform a PUT request.
+- `delete<T>(url, options?)`: Perform a DELETE request.
 
-#### Ejemplo: Uso en Componentes
-```typescript
-import { useService } from '../services/hooks';
-import { TYPES } from '../services/inversify.types';
-import { IEventBus } from '../services/interfaces/IEventBus';
-import { IQualiaService } from '../services/interfaces/IQualiaService';
-
-const MyComponent = () => {
-  // Resolver servicios individuales según necesidad
-  const eventBus = useService<IEventBus>(TYPES.EventBus);
-  const qualiaService = useService<IQualiaService>(TYPES.IQualiaService);
+### 8.11. TimerService (`frontend/src/services/TimerService.ts`)
+**Purpose:** Centralized and abstracted handler for all asynchronous timer operations.
+**Responsibilities:**
+- Encapsulate global timer functions (`setTimeout`, `setInterval`, etc.).
+- Provide a testable, mock-able interface for all time-based logic.
+- Prevent memory leaks by tracking active timers and providing cleanup utilities.
+- Offer higher-level time-based utilities like `debounce` and `throttle`.
+**Key Methods:**
+- `setTimeout(callback, ms)`: Execute a callback after a delay.
+- `clearTimeout(id)`: Cancel a scheduled timeout.
+- `setInterval(callback, ms)`: Execute a callback repeatedly.
+- `clearInterval(id)`: Cancel a scheduled interval.
 
 ---
 
@@ -476,27 +498,32 @@ const testContainer = createTestContainer();
 const service = testContainer.get<IMyService>(TYPES.IMyService);
 ```
 
-  const handleAction = () => {
-    eventBus.emit({ type: 'PlayerAction', data: { action: 'dash' } });
-    qualiaService.processQualiaState(currentState);
-  };
+## 10. Forbidden Practices: Global API Usage
 
-  return <button onClick={handleAction}>Execute Action</button>;
-};
-```
+To maintain architectural integrity, testability, and control, the direct use of the following global APIs within the services layer (`src/services`) is **STRICTLY FORBIDDEN**.
 
-### 8.9. ConfigurationService (`frontend/src/services/ConfigurationService.ts`)
-**Purpose:** External configuration management and loading.
-**Responsibilities:**
-- Load configuration from YAML files at runtime
-- Provide type-safe configuration access to all services
-- Validate configuration structure and values
-- Support configuration updates without code changes
-- Integrate with BackendSyncService for dynamic configuration
-**Key Methods:**
-- `loadConfig()`: Load configuration from external YAML files
-- `getConfig()`: Return complete configuration object
-- `getGameConfig()`: Return game-specific configuration
-- `getQualiaConfig()`: Return qualia calculation parameters
-- `getBackendConfig()`: Return backend synchronization settings
-- `isLoaded()`: Check if configuration has been loaded
+### 10.1. Network Requests
+- **FORBIDDEN:** `fetch()`
+- **REQUIRED:** Use the injected `IHttpService`.
+- **Example:**
+  ```typescript
+  // INCORRECT - VIOLATION
+  const response = await fetch('/api/data');
+
+  // CORRECT - USE THIS
+  const data = await this.httpService.get('/api/data');
+  ```
+
+### 10.2. Timer Operations
+- **FORBIDDEN:** `setTimeout()`, `setInterval()`, `clearTimeout()`, `clearInterval()`
+- **REQUIRED:** Use the injected `ITimerService`.
+- **Example:**
+  ```typescript
+  // INCORRECT - VIOLATION
+  const timerId = setTimeout(() => { /* ... */ }, 1000);
+  clearTimeout(timerId);
+
+  // CORRECT - USE THIS
+  const timerId = this.timerService.setTimeout(() => { /* ... */ }, 1000);
+  this.timerService.clearTimeout(timerId);
+  ```

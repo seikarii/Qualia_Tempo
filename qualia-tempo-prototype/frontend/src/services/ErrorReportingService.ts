@@ -18,6 +18,8 @@ import { logMethod, catchError } from '../utils/decorators';
 import type { IErrorReportingService, ErrorReportingConfig, ErrorReport, ErrorBatch, ErrorStatistics } from './interfaces/IErrorReportingService';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { ILogger } from './interfaces/ILogger';
+import type { IHttpService } from './interfaces/IHttpService';
+import type { ITimerService } from './interfaces/ITimerService';
 import type { IConfigurationService } from './interfaces/IConfigurationService';
 import type { ErrorEvent } from './EventBus';
 
@@ -145,6 +147,8 @@ export type { ErrorReportingConfig, ErrorReport, ErrorBatch, ErrorStatistics } f
 export class ErrorReportingService implements IErrorReportingService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
+  private readonly httpService: IHttpService;
+  private readonly timerService: ITimerService;
   // Configuration service for future extensibility
   // @ts-ignore - Unused parameter for future configuration features
   private readonly _configService: IConfigurationService;
@@ -188,6 +192,8 @@ export class ErrorReportingService implements IErrorReportingService {
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.IHttpService) httpService: IHttpService,
+    @inject(TYPES.ITimerService) timerService: ITimerService,
     @inject(TYPES.IConfigurationService) _configService: IConfigurationService,
     @unmanaged() config?: Partial<ExtendedErrorReportingConfig>
   ) {
@@ -199,6 +205,8 @@ export class ErrorReportingService implements IErrorReportingService {
 
     this.eventBus = eventBus;
     this.logger = logger;
+    this.httpService = httpService;
+    this.timerService = timerService;
     this._configService = _configService;
     this.config = { ...DEFAULT_ERROR_REPORTING_CONFIG, ...config };
     this.sessionId = this.generateSessionId();
@@ -529,47 +537,47 @@ export class ErrorReportingService implements IErrorReportingService {
   }
 
   private startBatchProcessing(): void {
-    this.batchProcessingInterval = window.setInterval(() => {
+    this.batchProcessingInterval = this.timerService.setInterval(() => {
       this.processBatchQueue();
     }, this.config.batchFlushInterval);
   }
 
   private startRetryProcessing(): void {
-    this.retryProcessingInterval = window.setInterval(() => {
+    this.retryProcessingInterval = this.timerService.setInterval(() => {
       this.retryFailedBatches();
     }, this.config.retryDelay * 2);
   }
 
   private startMemoryCleanup(): void {
-    this.memoryCleanupInterval = window.setInterval(() => {
+    this.memoryCleanupInterval = this.timerService.setInterval(() => {
       this.performMemoryCleanup();
     }, 60000); // Every minute
   }
 
   private startRateLimitRefill(): void {
-    this.rateLimitRefillInterval = window.setInterval(() => {
+    this.rateLimitRefillInterval = this.timerService.setInterval(() => {
       this.refillRateLimitTokens();
     }, 1000); // Every second
   }
 
   private stopAllIntervals(): void {
     if (this.batchProcessingInterval) {
-      clearInterval(this.batchProcessingInterval);
+      this.timerService.clearInterval(this.batchProcessingInterval);
       this.batchProcessingInterval = null;
     }
 
     if (this.retryProcessingInterval) {
-      clearInterval(this.retryProcessingInterval);
+      this.timerService.clearInterval(this.retryProcessingInterval);
       this.retryProcessingInterval = null;
     }
 
     if (this.memoryCleanupInterval) {
-      clearInterval(this.memoryCleanupInterval);
+      this.timerService.clearInterval(this.memoryCleanupInterval);
       this.memoryCleanupInterval = null;
     }
 
     if (this.rateLimitRefillInterval) {
-      clearInterval(this.rateLimitRefillInterval);
+      this.timerService.clearInterval(this.rateLimitRefillInterval);
       this.rateLimitRefillInterval = null;
     }
   }
@@ -665,17 +673,15 @@ export class ErrorReportingService implements IErrorReportingService {
         }))
       };
 
-      const response = await fetch(this.config.externalService.endpoint, {
-        method: 'POST',
+      await this.httpService.post(this.config.externalService.endpoint, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${this.config.externalService.apiKey}`,
         },
-        body: JSON.stringify(payload),
+        body: payload,
         signal: AbortSignal.timeout(this.config.externalService.timeout)
       });
 
-      return response.ok;
+      return true; // If no exception, consider it successful
     } catch (error) {
       this.logger.error("🌐 [ErrorReportingService] External service submission failed:", { error });
       return false;

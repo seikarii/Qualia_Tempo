@@ -11,6 +11,8 @@ export const TYPES = {
   IEventBus: Symbol.for('IEventBus'),
   ILogger: Symbol.for('ILogger'),
   IConfigurationService: Symbol.for('IConfigurationService'),
+  IHttpService: Symbol.for('IHttpService'),
+  ITimerService: Symbol.for('ITimerService'),
 
   // ===== FEATURE SERVICES =====
   IQualiaStateCalculatorService: Symbol.for('IQualiaStateCalculatorService'),

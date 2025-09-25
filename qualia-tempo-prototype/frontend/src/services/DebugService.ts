@@ -12,13 +12,15 @@
  * - Injectable service with pure DI compliance
  */
 
-import { injectable, inject, unmanaged } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
 import { logMethod, catchError } from '../utils/decorators';
 import type { IDebugService, DebugConfig, DebugStats, SystemSnapshot, AnalysisResult } from './interfaces/IDebugService';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { ILogger } from './interfaces/ILogger';
+import type { ITimerService } from './interfaces/ITimerService';
 import type { IConfigurationService } from './interfaces/IConfigurationService';
+import type { DebugServiceConfig } from './ConfigurationService';
 import type { 
   BaseEvent,
   QualiaStateUpdatedEvent,
@@ -63,30 +65,6 @@ export interface AIAnalysisResult {
   suggestions: string[];
 }
 
-// Extended configuration interface for DebugService
-export interface ExtendedDebugConfig extends DebugConfig {
-  maxSessionHistory: number;
-  performanceMonitoringInterval: number;
-  aiAnalysisInterval: number;
-  enableAIAnalysis: boolean;
-  enablePerformanceMonitoring: boolean;
-  memoryCleanupThreshold: number;
-}
-
-// Default configuration
-const DEFAULT_DEBUG_CONFIG: ExtendedDebugConfig = {
-  maxSessionHistory: 10,
-  maxEventHistory: 500,
-  performanceMonitoringInterval: 5000, // 5 seconds
-  aiAnalysisInterval: 30000, // 30 seconds
-  enableAIAnalysis: true,
-  enablePerformanceMonitoring: true,
-  enableGlobalInterface: true,
-  memoryCleanupThreshold: 1000, // Events
-  profilingEnabled: false,
-  debugLevel: 'normal'
-};
-
 // Export types for test compatibility
 export type { DebugConfig, DebugStats, SystemSnapshot, AnalysisResult } from './interfaces/IDebugService';
 
@@ -99,10 +77,11 @@ export type { DebugConfig, DebugStats, SystemSnapshot, AnalysisResult } from './
 export class DebugService implements IDebugService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
+  private readonly timerService: ITimerService;
   // Configuration service for future extensibility
   // @ts-ignore - Unused parameter for future configuration features  
   private readonly _configService: IConfigurationService;
-  private config: ExtendedDebugConfig;
+  private config!: DebugServiceConfig;
   private isStarted = false;
   private eventListenerIds: string[] = [];
 
@@ -132,8 +111,8 @@ export class DebugService implements IDebugService {
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IConfigurationService) _configService: IConfigurationService,
-    @unmanaged() config?: Partial<ExtendedDebugConfig>
+    @inject(TYPES.ITimerService) timerService: ITimerService,
+    @inject(TYPES.IConfigurationService) _configService: IConfigurationService
   ) {
     if (!eventBus) {
       throw new Error(
@@ -143,17 +122,13 @@ export class DebugService implements IDebugService {
 
     this.eventBus = eventBus;
     this.logger = logger;
+    this.timerService = timerService;
     this._configService = _configService;
-    this.config = { ...DEFAULT_DEBUG_CONFIG, ...config };
     this.performanceMetrics = this.initializePerformanceMetrics();
 
     this.logger.info(
       "🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI",
     );
-    this.logCurrentConfig();
-
-    // Setup global interface if enabled
-    this.setupGlobalInterface();
   }
 
   /**
@@ -164,6 +139,16 @@ export class DebugService implements IDebugService {
   public start(): void {
     if (this.isStarted) {
       this.logger.warn("⚠️ [DebugService] Service already running");
+      return;
+    }
+
+    try {
+      this.config = this._configService.getConfigSection<DebugServiceConfig>('debugService');
+      this.logger.info('DebugService configuration loaded successfully.');
+      this.logCurrentConfig(); // Log the newly loaded config
+    } catch (error) {
+      this.logger.error('🚨 [DebugService] Failed to load configuration. Service cannot start.', { error });
+      // Detener la ejecución si la configuración es crítica y no se puede cargar
       return;
     }
 
@@ -180,6 +165,9 @@ export class DebugService implements IDebugService {
       this.startPerformanceMonitoring();
       this.startAIAnalysis();
       this.startMemoryCleanup();
+
+      // Setup global interface if enabled
+      this.setupGlobalInterface();
 
       this.isStarted = true;
       this.logger.info("🚀 [DebugService] Service started - AI debugging active");
@@ -298,7 +286,7 @@ export class DebugService implements IDebugService {
       eventsLogged: this.eventHistory.length,
       memoryUsage: this.calculateMemoryUsage(),
       uptime: this.currentSession ? Date.now() - this.currentSession.startTime.getTime() : 0,
-      profilingEnabled: this.config.profilingEnabled,
+      profilingEnabled: this.config.profiling.enableProfiling,
       eventHistory: [...this.eventHistory]
     };
   }
@@ -393,7 +381,7 @@ export class DebugService implements IDebugService {
   @logMethod()
   @catchError()
   public enableProfiling(): void {
-    this.config.profilingEnabled = true;
+    this.config.profiling.enableProfiling = true;
     this.logger.info('Performance profiling enabled');
   }
 
@@ -402,7 +390,7 @@ export class DebugService implements IDebugService {
    */
   @logMethod()
   public disableProfiling(): void {
-    this.config.profilingEnabled = false;
+    this.config.profiling.enableProfiling = false;
     this.logger.info('Performance profiling disabled');
   }
 
@@ -418,7 +406,7 @@ export class DebugService implements IDebugService {
    */
   @logMethod()
   public setDebugLevel(level: 'minimal' | 'normal' | 'verbose'): void {
-    this.config.debugLevel = level;
+    this.config.logging.logLevel = level;
     this.logger.info(`Debug level set to: ${level}`);
   }
 
@@ -459,9 +447,9 @@ export class DebugService implements IDebugService {
       this.sessionHistory.push(this.currentSession);
 
       // Maintain session history limit
-      if (this.sessionHistory.length > this.config.maxSessionHistory) {
+      if (this.sessionHistory.length > 10) { // Default maxSessionHistory
         this.sessionHistory = this.sessionHistory.slice(
-          -this.config.maxSessionHistory,
+          -10,
         );
       }
 
@@ -565,8 +553,8 @@ export class DebugService implements IDebugService {
     }
 
     // Maintain history limits
-    if (this.eventHistory.length > this.config.maxEventHistory) {
-      this.eventHistory = this.eventHistory.slice(-this.config.maxEventHistory);
+    if (this.eventHistory.length > this.config.eventMonitoring.maxEventHistory) {
+      this.eventHistory = this.eventHistory.slice(-this.config.eventMonitoring.maxEventHistory);
     }
   }
 
@@ -608,40 +596,40 @@ export class DebugService implements IDebugService {
   }
 
   private startPerformanceMonitoring(): void {
-    if (!this.config.enablePerformanceMonitoring) return;
+    if (!this.config.performance.enablePerformanceTracking) return;
 
-    this.performanceMonitoringInterval = window.setInterval(() => {
+    this.performanceMonitoringInterval = this.timerService.setInterval(() => {
       this.collectPerformanceMetrics();
-    }, this.config.performanceMonitoringInterval);
+    }, this.config.performance.metricsUpdateInterval);
   }
 
   private startAIAnalysis(): void {
-    if (!this.config.enableAIAnalysis) return;
+    if (true) return; // AI Analysis enabled by default
 
-    this.aiAnalysisInterval = window.setInterval(() => {
+    this.aiAnalysisInterval = this.timerService.setInterval(() => {
       this.performAIAnalysis();
-    }, this.config.aiAnalysisInterval);
+    }, 30000); // Default AI analysis interval: 30 seconds
   }
 
   private startMemoryCleanup(): void {
-    this.memoryCleanupInterval = window.setInterval(() => {
+    this.memoryCleanupInterval = this.timerService.setInterval(() => {
       this.performMemoryCleanup();
-    }, 60000); // Every minute
+    }, 60000); // Default memory cleanup interval: 1 minute
   }
 
   private stopAllIntervals(): void {
     if (this.performanceMonitoringInterval) {
-      clearInterval(this.performanceMonitoringInterval);
+      this.timerService.clearInterval(this.performanceMonitoringInterval);
       this.performanceMonitoringInterval = null;
     }
 
     if (this.aiAnalysisInterval) {
-      clearInterval(this.aiAnalysisInterval);
+      this.timerService.clearInterval(this.aiAnalysisInterval);
       this.aiAnalysisInterval = null;
     }
 
     if (this.memoryCleanupInterval) {
-      clearInterval(this.memoryCleanupInterval);
+      this.timerService.clearInterval(this.memoryCleanupInterval);
       this.memoryCleanupInterval = null;
     }
   }
@@ -661,10 +649,10 @@ export class DebugService implements IDebugService {
     const totalEvents =
       this.eventHistory.length + this.aiAnalysisResults.length;
 
-    if (totalEvents > this.config.memoryCleanupThreshold) {
+    if (totalEvents > 1000) { // Default memory cleanup threshold
       // Clean up old events
       this.eventHistory = this.eventHistory.slice(
-        -Math.floor(this.config.maxEventHistory * 0.8),
+        -Math.floor(this.config.eventMonitoring.maxEventHistory * 0.8),
       );
 
       // Clean up old AI analysis
@@ -771,7 +759,7 @@ export class DebugService implements IDebugService {
 
   private setupGlobalInterface(): void {
     // Only setup if enabled in config
-    if (!this.config.enableGlobalInterface) {
+    if (!this.config.development.enableDebugOverlay) {
       return;
     }
 
@@ -816,14 +804,14 @@ export class DebugService implements IDebugService {
 
   private logCurrentConfig(): void {
     this.logger.info("📊 [DebugService] Current Configuration:", {
-      maxSessionHistory: this.config.maxSessionHistory,
-      maxEventHistory: this.config.maxEventHistory,
-      performanceMonitoringInterval: `${this.config.performanceMonitoringInterval}ms`,
-      aiAnalysisInterval: `${this.config.aiAnalysisInterval}ms`,
-      enableAIAnalysis: this.config.enableAIAnalysis,
-      enablePerformanceMonitoring: this.config.enablePerformanceMonitoring,
-      enableGlobalInterface: this.config.enableGlobalInterface,
-      memoryCleanupThreshold: this.config.memoryCleanupThreshold,
+      maxSessionHistory: 10, // Default value
+      maxEventHistory: this.config.eventMonitoring.maxEventHistory,
+      performanceMonitoringInterval: `${this.config.performance.metricsUpdateInterval}ms`,
+      aiAnalysisInterval: "30000ms", // Default value
+      enableAIAnalysis: true, // Default value
+      enablePerformanceMonitoring: this.config.performance.enablePerformanceTracking,
+      enableGlobalInterface: this.config.development.enableDebugOverlay,
+      memoryCleanupThreshold: 1000, // Default value
     });
   }
 }

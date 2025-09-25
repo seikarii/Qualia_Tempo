@@ -13,6 +13,8 @@ import { TYPES } from './inversify.types';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { ILogger } from './interfaces/ILogger';
 import type { IConfigurationService } from './interfaces/IConfigurationService';
+import type { IHttpService } from './interfaces/IHttpService';
+import type { ITimerService } from './interfaces/ITimerService';
 import type { IQualiaStateCalculatorService } from './interfaces/IQualiaStateCalculatorService';
 import type { IBackendSyncService } from './interfaces/IBackendSyncService';
 import type { IAudioService } from './interfaces/IAudioService';
@@ -33,6 +35,8 @@ import type { IStreamingVideoService } from './interfaces/IStreamingVideoService
 import { EventBus } from './EventBus';
 import { QualiaLogger } from './Logger';
 import { ConfigurationService } from './ConfigurationService';
+import { HttpService } from './HttpService';
+import { TimerService } from './TimerService';
 import { QualiaStateCalculatorService } from './QualiaStateCalculatorService';
 import { BackendSyncService } from './BackendSyncService';
 import { AudioService } from './AudioService';
@@ -57,6 +61,8 @@ import { useGameStore } from '../state/useGameStore';
 container.bind<IEventBus>(TYPES.IEventBus).to(EventBus).inSingletonScope();
 container.bind<ILogger>(TYPES.ILogger).to(QualiaLogger).inSingletonScope();
 container.bind<IConfigurationService>(TYPES.IConfigurationService).to(ConfigurationService).inSingletonScope();
+container.bind<IHttpService>(TYPES.IHttpService).to(HttpService).inSingletonScope();
+container.bind<ITimerService>(TYPES.ITimerService).to(TimerService).inSingletonScope();
 
 // ===== SPECIAL BINDINGS =====
 // Bind Zustand store setter for GameStateStoreService

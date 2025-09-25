@@ -16,6 +16,8 @@ import type { BackendSyncConfig } from './ConfigurationService';
 import type { IBackendSyncService } from './interfaces/IBackendSyncService';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { ILogger } from './interfaces/ILogger';
+import type { IHttpService } from './interfaces/IHttpService';
+import type { ITimerService } from './interfaces/ITimerService';
 import type { IConfigurationService } from './interfaces/IConfigurationService';
 import type { QualiaState } from '../types/contracts';
 
@@ -56,6 +58,8 @@ export class BackendSyncService implements IBackendSyncService {
   private eventBus: IEventBus;
   private logger: ILogger;
   private configService: IConfigurationService;
+  private httpService: IHttpService;
+  private timerService: ITimerService;
 
   // Throttling state
   private lastSyncTime = 0;
@@ -75,11 +79,15 @@ export class BackendSyncService implements IBackendSyncService {
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
+    @inject(TYPES.IHttpService) httpService: IHttpService,
+    @inject(TYPES.ITimerService) timerService: ITimerService
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.configService = configService;
+    this.httpService = httpService;
+    this.timerService = timerService;
 
     // QUALIA.CODE FIX: Do NOT access configuration in constructor
     // Configuration will be loaded lazily when needed
@@ -159,7 +167,9 @@ export class BackendSyncService implements IBackendSyncService {
           });
           throw error; // Re-throw the final error
         }
-        await new Promise(resolve => setTimeout(resolve, retryDelay)); // Wait before retrying
+        await new Promise<void>(resolve => {
+          this.timerService.setTimeout(() => resolve(), retryDelay);
+        }); // Wait before retrying
       }
     }
   }
@@ -341,7 +351,7 @@ export class BackendSyncService implements IBackendSyncService {
       this.clearPendingSync();
       const delay = config.sync.throttleDelay - timeSinceLastSync;
 
-      this.syncTimeoutId = window.setTimeout(() => {
+      this.syncTimeoutId = this.timerService.setTimeout(() => {
         if (this.pendingSync) {
           this.performSyncSafe(this.pendingSync);
           this.pendingSync = null;
@@ -463,7 +473,7 @@ export class BackendSyncService implements IBackendSyncService {
   private startHealthChecking(): void {
     this.stopHealthChecking(); // Ensure no duplicate intervals
 
-    this.healthCheckIntervalId = window.setInterval(() => {
+    this.healthCheckIntervalId = this.timerService.setInterval(() => {
       this.checkHealth().catch((error) => {
         this.logger.error("🚨 [BackendSync] Periodic health check failed:", { error });
         this.isConnected = false;
@@ -473,14 +483,14 @@ export class BackendSyncService implements IBackendSyncService {
 
   private stopHealthChecking(): void {
     if (this.healthCheckIntervalId !== null) {
-      clearInterval(this.healthCheckIntervalId);
+      this.timerService.clearInterval(this.healthCheckIntervalId);
       this.healthCheckIntervalId = null;
     }
   }
 
   private clearPendingSync(): void {
     if (this.syncTimeoutId !== null) {
-      clearTimeout(this.syncTimeoutId);
+      this.timerService.clearTimeout(this.syncTimeoutId);
       this.syncTimeoutId = null;
     }
   }
@@ -490,8 +500,8 @@ export class BackendSyncService implements IBackendSyncService {
     const config = this.ensureConfigLoaded();
     const controller = new AbortController();
     const startTime = performance.now();
-    
-    const timeoutId = setTimeout(
+
+    const timeoutId = this.timerService.setTimeout(
       () => {
         this.logger.error(`[BackendSync] Request timeout triggered after ${config.api.timeout}ms for URL: ${url}`);
         controller.abort();
@@ -501,46 +511,37 @@ export class BackendSyncService implements IBackendSyncService {
 
     try {
       this.logger.debug(`[BackendSync] Making request to: ${url}`, { options });
-      
-      const response = await fetch(url, {
+
+      const response = await this.httpService.post<T>(url, {
         ...options,
-        credentials: 'include', // Required for CORS credentials
+        headers: {
+          ...options.headers,
+          'Content-Type': 'application/json',
+        },
         signal: controller.signal,
-        mode: 'cors', // Explicit CORS mode
       });
 
-      clearTimeout(timeoutId);
+      this.timerService.clearTimeout(timeoutId);
       const duration = performance.now() - startTime;
 
-      if (!response.ok) {
-        this.logger.error(`[BackendSync] HTTP Error ${response.status}:`, { 
-          url, 
-          status: response.status, 
-          statusText: response.statusText,
-          duration: `${duration.toFixed(2)}ms`
-        });
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      this.logger.debug(`[BackendSync] Request successful - ${duration.toFixed(2)}ms:`, { url, data });
-      return data;
+      this.logger.debug(`[BackendSync] Request successful - ${duration.toFixed(2)}ms:`, { url, response });
+      return response;
     } catch (error) {
-      clearTimeout(timeoutId);
+      this.timerService.clearTimeout(timeoutId);
       const duration = performance.now() - startTime;
 
       if (error instanceof Error && error.name === "AbortError") {
         const timeoutError = new Error(`Request timeout after ${config.api.timeout}ms`);
-        this.logger.error(`[BackendSync] Request aborted due to timeout:`, { 
-          url, 
+        this.logger.error(`[BackendSync] Request aborted due to timeout:`, {
+          url,
           timeout: config.api.timeout,
           duration: `${duration.toFixed(2)}ms`
         });
         throw timeoutError;
       }
 
-      this.logger.error(`[BackendSync] Request failed:`, { 
-        url, 
+      this.logger.error(`[BackendSync] Request failed:`, {
+        url,
         error: error instanceof Error ? error.message : String(error),
         duration: `${duration.toFixed(2)}ms`
       });

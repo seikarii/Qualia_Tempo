@@ -13,6 +13,7 @@
 
 import { injectable, inject } from 'inversify';
 import type { IConfigurationService } from './interfaces/IConfigurationService';
+import type { IHttpService } from './interfaces/IHttpService';
 import type { ILogger } from './interfaces/ILogger';
 import { TYPES } from './inversify.types';
 import * as yaml from 'js-yaml';
@@ -449,16 +450,19 @@ export class ConfigurationService implements IConfigurationService {
   private configBasePath: string;
   private loadedConfig: FullGameConfig | null = null;
   private logger: ILogger;
+  private httpService: IHttpService;
 
   // Configuration files discovery - NO HARDCODING
   private configFileManifest: Record<string, string> = {};
 
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
-    configBasePath: string = '', 
+    @inject(TYPES.IHttpService) httpService: IHttpService,
+    configBasePath: string = '',
     configManifest?: Record<string, string>
   ) {
     this.logger = logger;
+    this.httpService = httpService;
     this.configBasePath = configBasePath;
     
     // Accept configuration file manifest externally or discover them
@@ -513,12 +517,7 @@ export class ConfigurationService implements IConfigurationService {
         const fullPath = this.configBasePath + path;
         this.logger.debug(`Loading ${key} from ${fullPath}`);
 
-        const response = await fetch(fullPath);
-        if (!response.ok) {
-          throw new Error(`Failed to load ${key} config: ${response.statusText}`);
-        }
-
-        const yamlText = await response.text();
+        const yamlText = await this.httpService.get<string>(fullPath);
         return { key, config: yaml.load(yamlText) };
       });
 
