@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach, vi, it, type Mocked } fr
 // AudioService.test.ts - IoC-compliant test suite for QUALIA.CODE audio management service
 // Tests: Service lifecycle, event handling, rhythmic feedback, metronome functionality, entity voice management
 
-import { container } from '../inversify.config';
+import { createTestContainer, getMocksFromContainer } from '../../testing/test-container-factory';
 import { TYPES } from '../inversify.types';
 import type { IEventBus } from '../interfaces/IEventBus';
 import type { IConfigurationService } from '../interfaces/IConfigurationService';
@@ -61,64 +61,27 @@ Object.defineProperty(window, "webkitAudioContext", {
   value: vi.fn(() => mockAudioContext),
 });
 
-describe("AudioService", () => {
-  let audioService: any; // Using any to test extended methods not in interface
+describe('AudioService', () => {
+  let container: any;
+  let audioService: any;
   let mockEventBus: Mocked<IEventBus>;
   let mockConfigService: Mocked<IConfigurationService>;
-  let consoleLogSpy: vi.SpiedFunction<typeof console.log>;
-  let consoleWarnSpy: vi.SpiedFunction<typeof console.warn>;
+  let consoleLogSpy: any;
+  let consoleWarnSpy: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    
-    // Clear the Audio mocks specifically
-    mockOscillator.connect.mockClear();
-    mockOscillator.start.mockClear();
-    mockOscillator.stop.mockClear();
-    mockGainNode.connect.mockClear();
-    mockAudioContext.createOscillator.mockClear();
-    mockAudioContext.createGain.mockClear();
-    
-    // Create mock EventBus
-    mockEventBus = {
-      subscribe: vi.fn().mockReturnValue("listener-id"),
-      unsubscribe: vi.fn(),
-      emit: vi.fn(),
-      destroy: vi.fn(),
-      getStats: vi.fn().mockReturnValue({ subscriberCount: 0, eventCount: 0 }),
-      clear: vi.fn(),
-    } as any;
-
-    // Fix promise resolution for mock methods
-    mockConfigService = {
-      getConfig: vi.fn().mockReturnValue({}),
-      getGameConfig: vi.fn().mockReturnValue({}),
-      getQualiaConfig: vi.fn().mockReturnValue({}),
-      getBackendConfig: vi.fn().mockReturnValue({}),
-      getAudioConfig: vi.fn().mockReturnValue({}),
-      getErrorReportingConfig: vi.fn().mockReturnValue({}),
-      getRhythmicMovementConfig: vi.fn().mockReturnValue({}),
-      getNotificationConfig: vi.fn().mockReturnValue({}),
-      isLoaded: vi.fn().mockReturnValue(true),
-      loadConfig: vi.fn(),
-      reload: vi.fn(),
-    } as any;
-
-    // Bind mocks to IoC container
-    (container as any).rebind(TYPES.IEventBus).toConstantValue(mockEventBus);
-    (container as any).rebind(TYPES.IConfigurationService).toConstantValue(mockConfigService);
+    // Create fresh test container for each test
+    container = createTestContainer();
+    const mocks = getMocksFromContainer(container);
+    mockEventBus = mocks.mockEventBus as any;
+    mockConfigService = mocks.mockConfigurationService as any;
 
     // Spy on console methods
     consoleLogSpy = vi.spyOn(console, "log").mockImplementation(vi.fn());
     consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(vi.fn());
 
     // Get service from container (cast to any to access extended methods not in interface)
-    audioService = (container as any).get(TYPES.IAudioService);
-  });
-
-  afterEach(() => {
-    consoleLogSpy.mockRestore();
-    consoleWarnSpy.mockRestore();
+    audioService = container.get(TYPES.IAudioService);
   });
 
   describe("Service Lifecycle", () => {
@@ -300,7 +263,7 @@ describe("AudioService", () => {
     });
 
     it("should handle rhythmic feedback when not initialized", () => {
-      const newAudioService = (container as any).get(TYPES.IAudioService);
+      const newAudioService = container.get(TYPES.IAudioService);
 
       newAudioService.playRhythmicFeedback("perfect");
 
@@ -329,7 +292,7 @@ describe("AudioService", () => {
     });
 
     it("should handle metronome tick when not initialized", () => {
-      const newAudioService = (container as any).get(TYPES.IAudioService);
+      const newAudioService = container.get(TYPES.IAudioService);
 
       newAudioService.playMetronomeTick();
 
@@ -361,7 +324,7 @@ describe("AudioService", () => {
     });
 
     it("should not create entity voice when not initialized", () => {
-      const newAudioService = (container as any).get(TYPES.IAudioService);
+      const newAudioService = container.get(TYPES.IAudioService);
 
       newAudioService.createEntityVoice("test-entity", mockQualiaState);
 
@@ -385,7 +348,7 @@ describe("AudioService", () => {
     });
 
     it("should not remove entity voice when not initialized", () => {
-      const newAudioService = (container as any).get(TYPES.IAudioService);
+      const newAudioService = container.get(TYPES.IAudioService);
 
       newAudioService.removeEntityVoice("test-entity");
 

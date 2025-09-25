@@ -61,6 +61,129 @@ vi.mock('tone', () => ({
   },
 }));
 
+// Mock the specific Tone.js ESM modules that might be imported
+vi.mock('tone/build/esm/core/Global', () => ({
+  default: {
+    start: vi.fn(),
+    Transport: {
+      start: vi.fn(),
+      stop: vi.fn(),
+      pause: vi.fn(),
+      bpm: { value: 120 },
+    },
+  },
+}));
+
+vi.mock('tone/build/esm/index', () => ({
+  PolySynth: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    triggerAttackRelease: vi.fn(),
+    set: vi.fn(),
+  })),
+  Synth: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    triggerAttackRelease: vi.fn(),
+    set: vi.fn(),
+  })),
+  Reverb: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    connect: vi.fn().mockReturnThis(),
+  })),
+  FeedbackDelay: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    connect: vi.fn().mockReturnThis(),
+  })),
+  Volume: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    connect: vi.fn().mockReturnThis(),
+  })),
+  Frequency: vi.fn(() => ({ toFrequency: vi.fn().mockReturnValue(440) })),
+  start: vi.fn(),
+  Transport: {
+    start: vi.fn(),
+    stop: vi.fn(),
+    pause: vi.fn(),
+    bpm: { value: 120 },
+  },
+}));
+
+// QUALIA.CODE Global Electron Mock - Prevent electron module import errors in tests
+vi.mock('electron', () => ({
+  app: {
+    requestSingleInstanceLock: vi.fn(() => true),
+    on: vi.fn(),
+    quit: vi.fn(),
+    getVersion: vi.fn(() => '1.0.0'),
+    getName: vi.fn(() => 'Qualia Tempo'),
+    getPath: vi.fn(() => '/tmp'),
+    setAppUserModelId: vi.fn(),
+    commandLine: {
+      appendSwitch: vi.fn(),
+    },
+  },
+  BrowserWindow: vi.fn().mockImplementation(() => ({
+    loadURL: vi.fn(),
+    loadFile: vi.fn(),
+    on: vi.fn(),
+    once: vi.fn(),
+    show: vi.fn(),
+    hide: vi.fn(),
+    close: vi.fn(),
+    destroy: vi.fn(),
+    isDestroyed: vi.fn(() => false),
+    webContents: {
+      on: vi.fn(),
+      once: vi.fn(),
+      send: vi.fn(),
+      openDevTools: vi.fn(),
+      closeDevTools: vi.fn(),
+      setWindowOpenHandler: vi.fn(),
+    },
+    setMenuBarVisibility: vi.fn(),
+    setFullScreen: vi.fn(),
+    isFullScreen: vi.fn(() => false),
+    getBounds: vi.fn(() => ({ x: 0, y: 0, width: 1920, height: 1080 })),
+    setBounds: vi.fn(),
+  })),
+  ipcMain: {
+    on: vi.fn(),
+    handle: vi.fn(),
+    removeHandler: vi.fn(),
+  },
+  Menu: {
+    setApplicationMenu: vi.fn(),
+    buildFromTemplate: vi.fn(() => ({})),
+  },
+  dialog: {
+    showMessageBox: vi.fn(),
+    showOpenDialog: vi.fn(),
+    showSaveDialog: vi.fn(),
+  },
+  screen: {
+    getPrimaryDisplay: vi.fn(() => ({
+      workAreaSize: { width: 1920, height: 1080 },
+      size: { width: 1920, height: 1080 },
+    })),
+    getAllDisplays: vi.fn(() => [{
+      workAreaSize: { width: 1920, height: 1080 },
+      size: { width: 1920, height: 1080 },
+    }]),
+  },
+  shell: {
+    openExternal: vi.fn(),
+  },
+  globalShortcut: {
+    register: vi.fn(() => true),
+    unregister: vi.fn(),
+    isRegistered: vi.fn(() => false),
+  },
+}));
+
 // Comprehensive browser APIs mocking for test environment
 // Ensure global window object exists
 if (typeof window === 'undefined') {

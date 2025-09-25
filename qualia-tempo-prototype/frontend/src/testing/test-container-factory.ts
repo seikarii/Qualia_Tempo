@@ -42,7 +42,6 @@ import { NotificationService } from '../services/NotificationService';
 import { GameStateStoreService } from '../services/GameStateStoreService';
 import { RhythmicMovementController } from '../services/RhythmicMovementController';
 import { OntologicalAudioEngine } from '../audio/OntologicalAudioEngine';
-import { StreamingVideoService } from '../services/StreamingVideoService';
 import { GameControllerService } from '../services/GameControllerService';
 import { BackendSyncService } from '../services/BackendSyncService';
 import { AudioService } from '../services/AudioService';
@@ -159,6 +158,44 @@ const mockConfigurationService: IConfigurationService = {
       timeout: 5000,
       retryAttempts: 3
     },
+    backendSync: {
+      api: {
+        baseUrl: 'http://localhost:8000',
+        qualiaEndpoint: '/api/qualia',
+        healthEndpoint: '/api/health',
+        timeout: 5000
+      },
+      streaming: {
+        websocket: {
+          url: 'ws://127.0.0.1:8000/ws/video_stream',
+          maxReconnectAttempts: 10,
+          reconnectDelay: 1000,
+          pingInterval: 30000,
+          pingTimeout: 5000,
+          connectionTimeout: 10000
+        }
+      },
+      sync: {
+        throttleDelay: 100,
+        batchSize: 10,
+        maxRetries: 3,
+        retryDelay: 1000
+      },
+      connection: {
+        healthCheckInterval: 30000,
+        connectionTimeout: 10000,
+        maxFailedAttempts: 5
+      },
+      validation: {
+        enableSchemaValidation: true,
+        strictMode: false,
+        logValidationErrors: true
+      },
+      performance: {
+        enableMetrics: true,
+        metricsInterval: 5000
+      }
+    },
     audio: {
       masterVolume: 0.7,
       enableSpatialAudio: true,
@@ -236,6 +273,44 @@ const mockConfigurationService: IConfigurationService = {
       errorReporting: { enabled: true, batchSize: 5, batchTimeout: 1000, maxRetries: 3 },
       debug: { enableAIAnalysis: false, logLevel: 'info', performanceTracking: true },
       backend: { url: 'http://localhost:8000', timeout: 5000, retryAttempts: 3 },
+      backendSync: {
+        api: {
+          baseUrl: 'http://localhost:8000',
+          qualiaEndpoint: '/api/qualia',
+          healthEndpoint: '/api/health',
+          timeout: 5000
+        },
+        streaming: {
+          websocket: {
+            url: 'ws://127.0.0.1:8000/ws/video_stream',
+            maxReconnectAttempts: 10,
+            reconnectDelay: 1000,
+            pingInterval: 30000,
+            pingTimeout: 5000,
+            connectionTimeout: 10000
+          }
+        },
+        sync: {
+          throttleDelay: 100,
+          batchSize: 10,
+          maxRetries: 3,
+          retryDelay: 1000
+        },
+        connection: {
+          healthCheckInterval: 30000,
+          connectionTimeout: 10000,
+          maxFailedAttempts: 5
+        },
+        validation: {
+          enableSchemaValidation: true,
+          strictMode: false,
+          logValidationErrors: true
+        },
+        performance: {
+          enableMetrics: true,
+          metricsInterval: 5000
+        }
+      },
       audio: { masterVolume: 0.7, enableSpatialAudio: true, bufferSize: 2048 },
       rhythm: { bpm: 120, syncTolerance: 100, adaptive: true },
       notifications: { enabled: true, maxConcurrent: 5, defaultDuration: 3000 },
@@ -310,6 +385,38 @@ const mockTimerService: ITimerService = {
 };
 
 /**
+ * Mock StreamingVideoService Implementation
+ */
+const mockStreamingVideoService: IStreamingVideoService = {
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn(),
+  subscribeToFrames: vi.fn().mockReturnValue('mock-subscription-id'),
+  unsubscribeFromFrames: vi.fn(),
+  getConnectionStatus: vi.fn().mockReturnValue({
+    connected: false,
+    url: 'ws://127.0.0.1:8000/ws/video_stream',
+    lastConnected: null,
+    reconnectAttempts: 0,
+    error: null,
+  }),
+  getStatistics: vi.fn().mockReturnValue({
+    framesReceived: 0,
+    framesPerSecond: 0,
+    bytesReceived: 0,
+    connectionUptime: 0,
+    averageLatency: 0,
+    currentFps: 0,
+    averageFrameSize: 0,
+    lastFrameTimestamp: 0,
+    latency: 0,
+    droppedFrames: 0,
+  }),
+  requestQualityChange: vi.fn(),
+  requestFpsChange: vi.fn(),
+  ping: vi.fn().mockResolvedValue(50),
+};
+
+/**
  * GOLD.CODE Test Container Factory
  * 
  * Creates a fresh InversifyJS container with all dependencies properly mocked.
@@ -344,7 +451,7 @@ export function createTestContainer(): Container {
   container.bind<GameStateStoreService>(GameStateStoreService).toSelf().inSingletonScope();
   container.bind<IRhythmicMovementController>(TYPES.IRhythmicMovementController).to(RhythmicMovementController).inSingletonScope();
   container.bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).to(OntologicalAudioEngine).inSingletonScope();
-  container.bind<IStreamingVideoService>(TYPES.IStreamingVideoService).to(StreamingVideoService).inSingletonScope();
+  container.bind<IStreamingVideoService>(TYPES.IStreamingVideoService).toConstantValue(mockStreamingVideoService);
 
   // === CRITICAL MISSING BINDINGS RESTORATION ===
   // QUALIA.CODE M-2024-3-FE-TEST-INFRA COMPLIANCE
@@ -372,6 +479,7 @@ export function getMocksFromContainer(container: Container) {
     // --- CORE SERVICE MOCKS ---
     mockHttpService: container.get<IHttpService>(TYPES.IHttpService),
     mockTimerService: container.get<ITimerService>(TYPES.ITimerService),
+    mockStreamingVideoService: container.get<IStreamingVideoService>(TYPES.IStreamingVideoService),
     // --- RESTORED CRITICAL SERVICE INSTANCES ---
     gameControllerService: container.get<IGameControllerService>(TYPES.IGameControllerService),
     backendSyncService: container.get<IBackendSyncService>(TYPES.IBackendSyncService),
