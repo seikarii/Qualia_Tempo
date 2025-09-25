@@ -1,64 +1,159 @@
 # GDD: Qualia Tempo
 
-**Versión:** 1.0
-**Fecha:** 5 de Agosto de 2025
+**Versión:** 2.0
+**Fecha:** 25 de Septiembre de 2025
+
+---
 
 ## 1. Ficha Técnica
 
-- **Título Comercial:** Qualia Tempo
-- **Subtítulo (Lore):** A Charlie Hellsinger Story
-- **Protagonista:** Charlie Hellsinger, una celestial exiliada usando su música para redimir un infierno procedural.
-- **Género:** Rhythm-Action / Boss Rush
-- **Plataforma Objetivo:** PC/Escritorio (con posible adaptación a móvil en el futuro)
-- **Logline:** Un juego de ritmo brutal donde debes mantener un tempo constante para sobrevivir a duelos musicales contra bosses épicos, mientras tu propia habilidad pinta un cataclismo visual en la pantalla.
-- **Propuesta Única de Venta (USP):** El primer juego donde el "Game Feel" es procedural: la estética visual y sonora es generada en tiempo real por el rendimiento y las decisiones del jugador a través del sistema "QualiaState".
+* **Título Comercial:** Qualia Tempo
+* **Subtítulo (Lore):** A Charlie Hellsinger Story
+* **Protagonista:** Charlie Hellsinger, una celestial exiliada que usa la música para redimir un infierno procedural.
+* **Género:** Rhythm-Action / Music Boss Rush
+* **Plataforma Objetivo:** PC (futuro soporte a móvil y VR)
+* **Logline:** Un juego de ritmo brutal donde el mundo entero es música: cada dash, nota y acción genera Qualia, que transforma la arena en un organismo vivo sincronizado con la canción.
+* **Propuesta Única de Venta (USP):** El primer juego donde **todo es Qualia**: sonido, luz, gameplay y dificultad emergen en tiempo real de la armonía (o caos) entre el jugador, la música y el boss.
+
+---
 
 ## 2. Filosofía de Diseño
 
-- **Confianza Absoluta en el Jugador:** No hay tutoriales. El aprendizaje es orgánico a través de la experiencia directa.
-- **Profundidad Emergente, no Complejidad Impuesta:** Mecánicas simples (4 habilidades + movimiento rítmico) que interactúan para crear un techo de habilidad ilimitado.
-- **La Recompensa es la Sobrecarga Sensorial:** La maestría se recompensa con una experiencia audiovisual trascendente, generada por el propio jugador.
-- **La Narrativa es la Música:** La historia se cuenta exclusivamente a través de las letras de las canciones durante los combates.
+* **Confianza Absoluta en el Jugador:** Aprendizaje orgánico, sin tutoriales explícitos.
+* **Profundidad Emergente:** Mecánicas simples (dash + notas musicales) que combinadas generan interacciones complejas.
+* **Sobrecarga Sensorial como Recompensa:** El dominio rítmico amplifica música, luz y dificultad hasta niveles trascendentes.
+* **La Narrativa es Sonora:** Las canciones y sus letras cuentan la historia.
+* **Kairos:** El instante perfecto donde música, acción y visuales se alinean.
+
+---
 
 ## 3. Mecánicas Fundamentales
 
-### 3.1. Movimiento: Dash Rítmico
-- El jugador debe moverse constantemente al tempo de la percusión de la música.
-- Mantener el ritmo activa el **Qualia de Fluidez**.
-- Fallar el ritmo activa el **Qualia de Caos**.
+### 3.1. Qualia (Recurso Central)
 
-### 3.2. Habilidades (Control del Reproductor)
-- **Pause:** Micro-ralentización defensiva (0.1s). Aumenta **Qualia de Precisión**.
-- **Fast Forward:** Aceleración de riesgo/recompensa. Otorga un multiplicador de combo (x4). Aumenta **Qualia de Agresión**.
-- **Rewind:** Curación y reducción de cooldowns. Activa **Qualia de Recuperación**.
-- **Ultimate (8D Mayhem):** Activa un modo de 8D audio durante 20 segundos. Aumenta el daño, la dificultad, y la velocidad y movimiento de las casillas de combo. Activa **Qualia de Trascendencia**.
+* Se genera en cada **dash**, cada **habilidad** (jugador o boss), y en cada **tic del metrónomo**.
+* Al recogerse (<1s de margen):
 
-### 3.3. Sistema de Combo y Dificultad
-- El suelo del escenario está compuesto por casillas de colores.
-- El jugador debe pisar las casillas para aumentar su combo.
-- A mayor combo:
-    - Más daño inflige el jugador.
-    - El boss utiliza más habilidades.
-    - La música se acelera y se añaden más capas de coros.
-    - Las casillas de combo se mueven más rápido y de forma más errática.
+  * Produce un **eco sonoro 8D** (direccional según posición en la arena).
+  * Incrementa el **combo**.
+  * Emite un destello visual ligado al color/sonido original.
+* **Nunca es aleatorio:** siempre responde a la música, volumen e interacción jugador–boss.
 
-### 3.4. Barra de Vida del Boss
-- La "vida" del boss es la duración restante de la canción.
-- El daño del jugador reduce la duración de la canción, acortando el combate.
+### 3.2. Movimiento: Dash Sincronizado
 
-## 4. Tecnología y Estética
+* Dash en el **clic izquierdo**.
+* Se **recarga en cada tic** del metrónomo.
+* Usarlo en el tiempo exacto potencia la generación de Qualia.
 
-- **Backend (de 'Crisalida'):** Backend de crisalida, preparado para generar decenas de miles de particulas por segundo.
-- **QualiaState:** El cerebro del juego. Traduce las acciones del jugador (aciertos, rachas, uso de habilidades) en un estado (Precisión, Fluidez, Caos, etc.) que dirige al motor de partículas en tiempo real. No hay dos partidas visualmente idénticas.
-- **Coro Infinito:** Sistema de audio dinámico que acumula capas de la misma sección musical para crear una intensidad sonora creciente y exponencial.
+### 3.3. Habilidades Sonoras
+
+* Teclas **Q, E, R, T, F, G, C** → reproducen notas de la pista actual como escala musical.
+* Cada nota:
+
+  * Genera combo.
+  * Tiene **5s de cooldown**, reducido por la velocidad de la música.
+* **Macro-combos musicales**: combinaciones de 3–5 notas generan efectos emergentes (ej.:
+
+  * `Q+E+R` → remolino.
+  * `Q+R+F` → atractor.
+  * `T+E+R` → repulsor.
+  * Escala completa → curación.
+    )
+* **Habilidad Especial:** disponible con combo x40.Actica efecto coro mientras se mantenga.
+
+  * Activa modo **Sonido 8D total**.
+  * Duplica la generación de Qualia.Efecto orquesta musical.
+
+### 3.4. Sistema de Combo Musical
+
+* El combo depende de:
+
+  * **Recolección precisa de Qualia.**
+  * **Notas acertadas** en sincronía con la pista.
+  * **Armonía vs. Caos:**
+
+    * Armonías → bonificaciones (curas, control de área, multiplicadores).
+    * Caos → penalizaciones (muros, zonas dañinas, repulsores).
+* A mayor combo:
+
+  * El jugador brilla más.
+  * La canción acelera y sube volumen.
+  * El boss despliega más habilidades con menos telegraph.
+
+### 3.5. Enemigos y Bosses
+
+* **Boss = la canción.** Su vida es la duración restante del track.
+* Ataques del boss:
+
+  * Siempre **morados/negros**.
+  * Generan Qualia hostil y zonas de peligro (muros, DoTs, atractores).
+  * Siempre tienen **telegraph visual**, más corto en fases intensas.
+* El jugador puede neutralizar ataques con **combos armónicos**.Cuando los ejecuta cerca de estos.
+
+### 3.6. Progresión y Dificultad
+
+* La dificultad está directamente ligada al **volumen de la canción**:
+
+  * Volumen 0% → modo ultra fácil.
+  * Volumen 80–100% → dificultad estándar–extrema.
+* Escala natural: cuanto más combo y más Qualia, más rápido y denso se vuelve todo.
+
+### 3.7. Metajuego
+
+* **Marcador de Puntos Online:** para competición y viralidad en redes.
+* **Soporte de Música Personalizada:** los jugadores pueden subir cualquier pista (sin copyright propio) → cada boss fight se adapta dinámicamente.
+
+---
+
+## 4. Tecnología y Estética: Proyecto Kairos
+
+La experiencia visual sigue una **hoja de ruta en 4 fases**, todas controladas por el **QualiaState** y/o análisis FFT en tiempo real.
+
+### Fase 1: Atmósfera y Presencia
+
+* Shaders de **Iluminación Volumétrica (God Rays)** y **Bloom**.
+* Parametrizados por Qualia (intensidad, precisión, trascendencia).
+
+### Fase 2: Synesthesia Profunda
+
+* **FFT en tiempo real**: graves, medios y agudos afectan tamaño, color y brillo de partículas.
+* Cada sonido se convierte en visual puro.
+
+### Fase 3: El Mundo Viviente
+
+* **Reaction-Diffusion Shader** aplicado al suelo.
+* El tablero se convierte en un lienzo orgánico:
+
+  * **Caos** → patrones frenéticos.
+  * **Flow** → corrientes suaves.
+
+### Fase 4: Avatares Procedurales
+
+* Jugador y Boss representados como **entidades SDF mutables via Raymarching**.
+* Formas cristalinas (Precisión/Flow) → fractales caóticos (Caos/Agresión).
+* En trascendencia: fractal luminoso (ej. Mandelbulb).
+
+---
 
 ## 5. Prototipo Vertical (Misión Inmediata)
 
-- **Objetivo:** Crear un prototipo de una sola fase.
-- **Entregable:** Un vídeo de gameplay de 60 segundos.
-- **Contenido Mínimo:
-    - Un combate de boss completo.
-    - Mecánica de Dash Rítmico funcional.
-    - Una habilidad implementada (Pause).
-    - El sistema QualiaState reaccionando visiblemente a las acciones del jugador.
-    - Música del boss con letras subtituladas.
+* **Objetivo:** Probar el loop de Qualia + dash + notas musicales.
+* **Entregable:** 90s de gameplay en 2D.
+* **Contenido mínimo:**
+
+  * Dash rítmico funcional.
+  * Generación/recolección de Qualia con eco sonoro.
+  * Habilidades básicas (ñas 7 notas).
+  * Sistema de combo musical (nota, el caos no penaliza al combo, solo hace mas dificil el gameplay del player).
+  * Boss complejo con ataques morado + telegraph que hace mas ataques y mas grandes y precisos dependiendo de la intensidad de la musica.
+  * Visuales Fase 1 (God Rays + Bloom).
+  * Música del boss con subtítulos en pantalla.
+
+---
+
+## 6. Futuras Expansiones
+
+* Migración de 2D a **combate 3D procedural**.
+* Nuevos bosses diseñados como **arquitecturas sonoras**.
+* Integración de VR para inmersión total en el espacio 8D.
+
