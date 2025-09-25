@@ -2,6 +2,7 @@ export interface HttpRequestOptions {
   headers?: Record<string, string>;
   body?: any;
   signal?: AbortSignal;
+  timeout?: number; // Timeout in milliseconds - QUALIA.CODE v1.1 Platform Abstraction
 }
 
 export interface IHttpService {

@@ -393,12 +393,12 @@ export class BackendSyncService implements IBackendSyncService {
     const url = `${config.api.baseUrl}${config.api.qualiaEndpoint}`;
 
     try {
-      const response = await this.makeRequest<any>(url, {
-        method: "POST",
+      const response = await this.httpService.post<any>(url, {
+        timeout: config.api.timeout,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(qualiaRequest),
+        body: qualiaRequest,
       });
 
       this.lastSyncTime = performance.now();
@@ -444,8 +444,8 @@ export class BackendSyncService implements IBackendSyncService {
       const url = `${config.api.baseUrl}${config.api.healthEndpoint}`;
       this.logger.debug(`[BackendSync] Health check URL: ${url}`);
       
-      const response = await this.makeRequest<any>(url, { 
-        method: "GET",
+      const response = await this.httpService.get<any>(url, { 
+        timeout: config.api.timeout,
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json"
@@ -495,81 +495,6 @@ export class BackendSyncService implements IBackendSyncService {
     }
   }
 
-  private async makeRequest<T>(url: string, options: any): Promise<T> {
-    // Add timeout to fetch - QUALIA.CODE v1.1 Enhanced Error Diagnostics
-    const config = this.ensureConfigLoaded();
-    const controller = new AbortController();
-    const startTime = performance.now();
-
-    const timeoutId = this.timerService.setTimeout(
-      () => {
-        this.logger.error(`[BackendSync] Request timeout triggered after ${config.api.timeout}ms for URL: ${url}`);
-        controller.abort();
-      },
-      config.api.timeout,
-    );
-
-    try {
-      this.logger.debug(`[BackendSync] Making request to: ${url}`, { options });
-
-      // QUALIA.CODE FIX: Use correct HTTP method based on options
-      const method = options.method || 'POST';
-      const requestOptions = {
-        ...options,
-        headers: {
-          ...options.headers,
-          'Content-Type': 'application/json',
-        },
-        signal: controller.signal,
-      };
-
-      let response: T;
-      
-      switch (method.toUpperCase()) {
-        case 'GET':
-          response = await this.httpService.get<T>(url, requestOptions);
-          break;
-        case 'POST':
-          response = await this.httpService.post<T>(url, requestOptions);
-          break;
-        case 'PUT':
-          response = await this.httpService.put<T>(url, requestOptions);
-          break;
-        case 'DELETE':
-          response = await this.httpService.delete<T>(url, requestOptions);
-          break;
-        default:
-          throw new Error(`Unsupported HTTP method: ${method}`);
-      }
-
-      this.timerService.clearTimeout(timeoutId);
-      const duration = performance.now() - startTime;
-
-      this.logger.debug(`[BackendSync] Request successful - ${duration.toFixed(2)}ms:`, { url, response });
-      return response;
-    } catch (error) {
-      this.timerService.clearTimeout(timeoutId);
-      const duration = performance.now() - startTime;
-
-      if (error instanceof Error && error.name === "AbortError") {
-        const timeoutError = new Error(`Request timeout after ${config.api.timeout}ms`);
-        this.logger.error(`[BackendSync] Request aborted due to timeout:`, {
-          url,
-          timeout: config.api.timeout,
-          duration: `${duration.toFixed(2)}ms`
-        });
-        throw timeoutError;
-      }
-
-      this.logger.error(`[BackendSync] Request failed:`, {
-        url,
-        error: error instanceof Error ? error.message : String(error),
-        duration: `${duration.toFixed(2)}ms`
-      });
-      throw error;
-    }
-  }
-
   // ===== INTERFACE COMPLIANCE METHODS =====
 
   /**
@@ -580,6 +505,7 @@ export class BackendSyncService implements IBackendSyncService {
   @logMethod()
   @catchError()
   public async syncQualiaState(state: QualiaState): Promise<void> {
+    const config = this.ensureConfigLoaded();
     const qualiaRequest: QualiaStateRequest = {
       intensity: state.intensity || 0,
       precision: state.precision || 0,
@@ -590,9 +516,10 @@ export class BackendSyncService implements IBackendSyncService {
       transcendence: state.transcendence || 0,
     };
 
-    await this.makeRequest<any>('/api/qualia/state', {
-      method: 'POST',
-      body: JSON.stringify(qualiaRequest),
+    const url = `${config.api.baseUrl}${config.api.qualiaEndpoint}`;
+    await this.httpService.post<any>(url, {
+      timeout: config.api.timeout,
+      body: qualiaRequest,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -634,7 +561,13 @@ export class BackendSyncService implements IBackendSyncService {
     try {
       const config = this.ensureConfigLoaded();
       const url = `${config.api.baseUrl}${config.api.healthEndpoint}`;
-      await this.makeRequest<any>(url, { method: 'GET' });
+      await this.httpService.get<any>(url, { 
+        timeout: config.api.timeout,
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        }
+      });
       return true;
     } catch {
       return false;

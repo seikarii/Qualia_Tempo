@@ -33,6 +33,11 @@ export interface CompositionRootConfig {
   serviceShutdownTimeoutMs: number;
   enableServiceLifecycleLogging: boolean;
   enablePerformanceMonitoring: boolean;
+  http: {
+    defaultTimeout: number;
+    maxRetries: number;
+    retryDelay: number;
+  };
 }
 
 // ErrorReporting Configuration
@@ -688,6 +693,15 @@ export class ConfigurationService implements IConfigurationService {
   @catchError()
   public getNotificationConfig(): NotificationServiceConfig {
     return this.getConfigSection<NotificationServiceConfig>('notificationService');
+  }
+
+  /**
+   * Get HTTP service configuration
+   */
+  @logMethod()
+  @catchError()
+  public getHttpConfig(): { defaultTimeout: number; maxRetries: number; retryDelay: number } {
+    return this.getConfigSection<CompositionRootConfig>('compositionRoot').http;
   }
 
   /**

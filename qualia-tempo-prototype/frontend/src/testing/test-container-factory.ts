@@ -159,6 +159,11 @@ const mockConfigurationService: IConfigurationService = {
     maxConcurrent: 5,
     defaultDuration: 3000
   }),
+  getHttpConfig: vi.fn().mockReturnValue({
+    defaultTimeout: 30000,
+    maxRetries: 3,
+    retryDelay: 1000
+  }),
   getVisualEffectsConfig: vi.fn().mockReturnValue({
     particles: { count: 120, minSize: 1, maxSize: 4, speed: 0.35, drift: 0.5 },
     bloom: { intensity: 1.0, pulseSpeed: 6 },

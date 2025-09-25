@@ -68,6 +68,12 @@ export interface IConfigurationService {
   getNotificationConfig(): NotificationServiceConfig;
 
   /**
+   * Get HTTP service configuration.
+   * @returns HTTP service configuration
+   */
+  getHttpConfig(): { defaultTimeout: number; maxRetries: number; retryDelay: number };
+
+  /**
    * Get visual effects configuration (qualia landing background, particles, bloom, etc.).
    * @returns Visual effects configuration
    */

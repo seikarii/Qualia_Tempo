@@ -8,3 +8,8 @@ serviceInitializationTimeoutMs: 10000
 serviceShutdownTimeoutMs: 5000
 enableServiceLifecycleLogging: true
 enablePerformanceMonitoring: true
+
+http:
+  defaultTimeout: 30000
+  maxRetries: 3
+  retryDelay: 1000

@@ -2,16 +2,32 @@ import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
 import { logMethod, catchError } from '../utils/decorators';
 import type { ILogger } from './interfaces/ILogger';
+import type { ITimerService } from './interfaces/ITimerService';
+import type { IConfigurationService } from './interfaces/IConfigurationService';
 import type { IHttpService, HttpRequestOptions } from './interfaces/IHttpService';
+
+// QUALIA.CODE v1.1: Platform Abstraction - Custom error for timeout handling
+export class RequestTimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RequestTimeoutError';
+  }
+}
 
 @injectable()
 export class HttpService implements IHttpService {
   private readonly logger: ILogger;
+  private readonly timerService: ITimerService;
+  private readonly configService: IConfigurationService;
 
   constructor(
-    @inject(TYPES.ILogger) logger: ILogger
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.ITimerService) timerService: ITimerService,
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService
   ) {
     this.logger = logger;
+    this.timerService = timerService;
+    this.configService = configService;
     this.logger.info('HttpService initialized with fetch abstraction');
   }
 
@@ -42,26 +58,39 @@ export class HttpService implements IHttpService {
   private async request<T>(method: string, url: string, options?: HttpRequestOptions): Promise<T> {
     const startTime = performance.now();
 
+    // QUALIA.CODE v1.1: Platform Abstraction - Timeout management encapsulated in HttpService
+    const { timeout, ...fetchOptions } = options || {};
+    const effectiveTimeout = timeout ?? this.configService.getHttpConfig().defaultTimeout; // 30s default - QUALIA.CODE: No hardcoded values in services
+
+    const controller = new AbortController();
+    const timeoutId = this.timerService.setTimeout(() => {
+      this.logger.error(`HTTP ${method} request timeout triggered after ${effectiveTimeout}ms for URL: ${url}`);
+      controller.abort();
+    }, effectiveTimeout);
+
     try {
       const requestInit: RequestInit = {
         method,
         headers: {
           'Content-Type': 'application/json',
-          ...options?.headers,
+          ...fetchOptions.headers,
         },
-        signal: options?.signal,
+        signal: controller.signal,
       };
 
-      if (options?.body && method !== 'GET' && method !== 'HEAD') {
-        requestInit.body = typeof options.body === 'string'
-          ? options.body
-          : JSON.stringify(options.body);
+      if (fetchOptions.body && method !== 'GET' && method !== 'HEAD') {
+        requestInit.body = typeof fetchOptions.body === 'string'
+          ? fetchOptions.body
+          : JSON.stringify(fetchOptions.body);
       }
 
       this.logger.debug(`HTTP ${method} request to ${url}`, { options: requestInit });
 
       const response = await fetch(url, requestInit);
       const duration = performance.now() - startTime;
+
+      // Clear timeout on successful response
+      this.timerService.clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => 'Unknown error');
@@ -92,7 +121,22 @@ export class HttpService implements IHttpService {
 
       return data;
     } catch (error) {
+      // Clear timeout on error
+      this.timerService.clearTimeout(timeoutId);
+
       const duration = performance.now() - startTime;
+
+      // QUALIA.CODE v1.1: Platform Abstraction - Handle timeout errors specifically
+      if (error instanceof Error && error.name === 'AbortError') {
+        const timeoutError = new RequestTimeoutError(`HTTP ${method} request timed out after ${effectiveTimeout}ms`);
+        this.logger.error(`HTTP ${method} request failed`, {
+          url,
+          error: timeoutError.message,
+          duration: `${duration.toFixed(2)}ms`
+        });
+        throw timeoutError;
+      }
+
       this.logger.error(`HTTP ${method} request failed`, {
         url,
         error: error instanceof Error ? error.message : String(error),
