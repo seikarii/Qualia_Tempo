@@ -530,7 +530,7 @@ class QualiaParticleEngine:
                 float(getattr(qualia_state, "intensity", 0.0)),
                 float(
                     getattr(qualia_state, "precision", 0.0)
-                ),  # QUALIA.CODE FIX: Use precision from data model (was accuracy)
+                ),  # QUALIA.CODE ARCHITECTURAL FIX: Use 'precision' from data model, 'accuracy' is a shader-only name
                 float(getattr(qualia_state, "aggression", 0.0)),
                 float(getattr(qualia_state, "flow", 0.0)),
                 float(getattr(qualia_state, "chaos", 0.0)),

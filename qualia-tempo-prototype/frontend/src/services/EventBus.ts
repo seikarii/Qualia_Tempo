@@ -598,7 +598,3 @@ export class QualiaEvents {
     } as Omit<BackendSyncEvent, "timestamp">);
   }
 }
-
-// Legacy function maintained for backward compatibility during migration
-export const createQualiaEvents = (targetEventBus: EventBus) => 
-  QualiaEvents.create(targetEventBus as IEventBus);

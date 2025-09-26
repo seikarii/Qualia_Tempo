@@ -116,7 +116,7 @@ class TestQualiaParticleEngineLogic:
 
         qualia_state = {
             "intensity": 0.8,
-            "precision": 0.6,
+            "precision": 0.6,  # Test with canonical 'precision' field from QualiaState contract
             "aggression": 0.4,
             "flow": 0.9,
             "chaos": 0.2,

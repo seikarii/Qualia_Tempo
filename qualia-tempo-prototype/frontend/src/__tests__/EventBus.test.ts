@@ -4,19 +4,27 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
-import { EventBus, createQualiaEvents } from "../services/EventBus";
+import { EventBus, QualiaEvents } from "../services/EventBus";
 import { QualiaLogger, LogLevel } from "../services/Logger";
 
-// Mock logger for tests
+// Mock services for tests
 const mockLogger: QualiaLogger = new QualiaLogger("Test", LogLevel.INFO);
+const mockTimerService = {
+  setTimeout: vi.fn(),
+  clearTimeout: vi.fn(),
+  setInterval: vi.fn(),
+  clearInterval: vi.fn(),
+  debounce: vi.fn(),
+  throttle: vi.fn(),
+};
 
 describe("EventBus", () => {
   let eventBus: EventBus;
-  let QualiaEvents: ReturnType<typeof createQualiaEvents>;
+  let qualiaEvents: QualiaEvents;
 
   beforeEach(() => {
-    eventBus = new EventBus(mockLogger);
-    QualiaEvents = createQualiaEvents(eventBus);
+    eventBus = new EventBus(mockLogger, mockTimerService);
+    qualiaEvents = QualiaEvents.create(eventBus);
   });
 
   afterEach(() => {
@@ -45,7 +53,7 @@ describe("EventBus", () => {
       const mockHandler = vi.fn();
       eventBus.subscribe("PlayerAction", mockHandler);
 
-      await QualiaEvents.playerAction("HitNote", { combo: 5 });
+      await qualiaEvents.playerAction("HitNote", { combo: 5 });
 
       expect(mockHandler).toHaveBeenCalledTimes(1);
       expect(mockHandler).toHaveBeenCalledWith(
@@ -73,7 +81,7 @@ describe("EventBus", () => {
         transcendence: 0.0,
       };
 
-      await QualiaEvents.qualiaStateUpdated(testQualiaState);
+      await qualiaEvents.qualiaStateUpdated(testQualiaState);
 
       expect(mockHandler).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -89,7 +97,7 @@ describe("EventBus", () => {
       eventBus.subscribe("Error", mockHandler);
 
       const testError = new Error("Test error");
-      await QualiaEvents.error(testError, "high", "TestService");
+      await qualiaEvents.error(testError, "high", "TestService");
 
       expect(mockHandler).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -105,7 +113,7 @@ describe("EventBus", () => {
       const handler = vi.fn();
       eventBus.subscribe("PlayerAction", handler);
 
-      await QualiaEvents.playerAction("HitNote");
+      await qualiaEvents.playerAction("HitNote");
 
       eventBus.clear();
 
@@ -128,8 +136,8 @@ describe("EventBus", () => {
 
   describe("Event History", () => {
     test("should maintain event history", async () => {
-      await QualiaEvents.playerAction("HitNote");
-      await QualiaEvents.playerAction("Dash");
+      await qualiaEvents.playerAction("HitNote");
+      await qualiaEvents.playerAction("Dash");
 
       const history = eventBus.getEventHistory();
       expect(history).toHaveLength(2);
@@ -138,8 +146,8 @@ describe("EventBus", () => {
     });
 
     test("should filter history by event type", async () => {
-      await QualiaEvents.playerAction("HitNote");
-      await QualiaEvents.error(new Error("Test"), "low");
+      await qualiaEvents.playerAction("HitNote");
+      await qualiaEvents.error(new Error("Test"), "low");
 
       const playerActionHistory = eventBus.getEventHistory("PlayerAction");
       expect(playerActionHistory).toHaveLength(1);
@@ -155,7 +163,7 @@ describe("EventBus", () => {
       eventBus.subscribe("PlayerAction", handler1);
       eventBus.subscribe("PlayerAction", handler2);
 
-      await QualiaEvents.playerAction("Dash");
+      await qualiaEvents.playerAction("Dash");
 
       expect(handler1).toHaveBeenCalledTimes(1);
       expect(handler2).toHaveBeenCalledTimes(1);
@@ -167,9 +175,9 @@ describe("EventBus", () => {
 
       // Emit multiple events rapidly
       const promises = [
-        QualiaEvents.playerAction("HitNote"),
-        QualiaEvents.playerAction("Dash"),
-        QualiaEvents.playerAction("HitNote"),
+        qualiaEvents.playerAction("HitNote"),
+        qualiaEvents.playerAction("Dash"),
+        qualiaEvents.playerAction("HitNote"),
       ];
 
       await Promise.all(promises);
