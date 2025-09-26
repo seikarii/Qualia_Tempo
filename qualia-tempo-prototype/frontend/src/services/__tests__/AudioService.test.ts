@@ -363,11 +363,13 @@ describe('AudioService', () => {
     it("should not remove entity voice when not initialized", () => {
       // Create a fresh container to get an uninitialized service
       const freshContainer = createTestContainer();
+      const freshMocks = getMocksFromContainer(freshContainer);
+      const freshMockLogger = freshMocks.mockLogger as any;
       const uninitializedAudioService = freshContainer.get<IAudioService>(TYPES.IAudioService) as any;
 
       uninitializedAudioService.removeEntityVoice("test-entity");
 
-      expect(mockLogger.warn).toHaveBeenCalledWith("AudioService not initialized, cannot remove entity voice");
+      expect(freshMockLogger.warn).toHaveBeenCalledWith("AudioService not initialized, cannot remove entity voice");
     });
   });
 

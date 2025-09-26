@@ -4,14 +4,23 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { createTestContainer, getMocksFromContainer } from '../../testing/test-container-factory';
 import BackendCanvas from '../BackendCanvas';
 import type { IStreamingVideoService, VideoFrame } from '../../services/interfaces/IStreamingVideoService';
 
-// Mock the container in hooks to use test container
-vi.mock('../../services/inversify.container', () => ({
-  container: null as any, // Will be set in beforeEach
-}));
+// 1. Importe el hook y el tipo necesarios
+import { useService } from '../../services/hooks';
+import { TYPES } from '../../services/inversify.types';
+
+// 2. Mockee el módulo de hooks
+vi.mock('../../services/hooks');
+
+// Mock logger service
+const mockLogger = {
+  info: vi.fn(),
+  debug: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+};
 
 // Mock canvas context
 const mockCanvasContext = {
@@ -23,11 +32,112 @@ const mockCanvasContext = {
   }
 };
 
-// Mock HTMLCanvasElement
+// Mock HTMLCanvasElement with all necessary DOM properties
 const mockCanvas = {
   getContext: vi.fn().mockReturnValue(mockCanvasContext),
   width: 1920,
-  height: 1080
+  height: 1080,
+  setAttribute: vi.fn(),
+  getAttribute: vi.fn(),
+  removeAttribute: vi.fn(),
+  hasAttribute: vi.fn(),
+  tagName: 'CANVAS',
+  nodeType: 1,
+  ownerDocument: document,
+  parentNode: null,
+  nextSibling: null,
+  previousSibling: null,
+  firstChild: null,
+  lastChild: null,
+  childNodes: [],
+  children: [],
+  appendChild: vi.fn(),
+  removeChild: vi.fn(),
+  insertBefore: vi.fn(),
+  replaceChild: vi.fn(),
+  cloneNode: vi.fn(),
+  contains: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  dispatchEvent: vi.fn(),
+  style: {
+    setProperty: vi.fn(),
+    getPropertyValue: vi.fn(),
+    removeProperty: vi.fn(),
+    cssText: '',
+    imageRendering: '',
+  },
+  className: '',
+  classList: {
+    add: vi.fn(),
+    remove: vi.fn(),
+    contains: vi.fn(),
+    toggle: vi.fn(),
+  },
+  id: '',
+  innerHTML: '',
+  outerHTML: '',
+  textContent: '',
+  innerText: '',
+  // Canvas-specific properties
+  toDataURL: vi.fn(),
+  toBlob: vi.fn(),
+  captureStream: vi.fn(),
+  getImageData: vi.fn(),
+  putImageData: vi.fn(),
+  createImageData: vi.fn(),
+  drawImage: vi.fn(),
+  fillRect: vi.fn(),
+  strokeRect: vi.fn(),
+  clearRect: vi.fn(),
+  fill: vi.fn(),
+  stroke: vi.fn(),
+  beginPath: vi.fn(),
+  closePath: vi.fn(),
+  moveTo: vi.fn(),
+  lineTo: vi.fn(),
+  bezierCurveTo: vi.fn(),
+  quadraticCurveTo: vi.fn(),
+  arc: vi.fn(),
+  arcTo: vi.fn(),
+  rect: vi.fn(),
+  fillText: vi.fn(),
+  strokeText: vi.fn(),
+  measureText: vi.fn(),
+  isPointInPath: vi.fn(),
+  isPointInStroke: vi.fn(),
+  getLineDash: vi.fn(),
+  setLineDash: vi.fn(),
+  createLinearGradient: vi.fn(),
+  createRadialGradient: vi.fn(),
+  createPattern: vi.fn(),
+  save: vi.fn(),
+  restore: vi.fn(),
+  scale: vi.fn(),
+  rotate: vi.fn(),
+  translate: vi.fn(),
+  transform: vi.fn(),
+  setTransform: vi.fn(),
+  resetTransform: vi.fn(),
+  globalAlpha: 1,
+  globalCompositeOperation: 'source-over',
+  imageSmoothingEnabled: true,
+  imageSmoothingQuality: 'low',
+  fillStyle: '#000000',
+  strokeStyle: '#000000',
+  shadowOffsetX: 0,
+  shadowOffsetY: 0,
+  shadowBlur: 0,
+  shadowColor: 'rgba(0, 0, 0, 0)',
+  lineWidth: 1,
+  lineCap: 'butt',
+  lineJoin: 'miter',
+  miterLimit: 10,
+  lineDashOffset: 0,
+  font: '10px sans-serif',
+  textAlign: 'start',
+  textBaseline: 'alphabetic',
+  direction: 'ltr',
 };
 
 // Mock Image constructor
@@ -40,21 +150,33 @@ global.Image = vi.fn().mockImplementation(() => ({
 })) as any;
 
 describe('BackendCanvas', () => {
-  let container: any;
   let mockStreamingService: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Create test container and get mocks
-    container = createTestContainer();
-    const mocks = getMocksFromContainer(container);
-    mockStreamingService = mocks.mockStreamingVideoService;
-    
-    // Mock the container import to use our test container
-    const containerModule = require('../../services/inversify.container');
-    containerModule.container = container;
-    
+
+    // 3. Cree el mock del servicio
+    mockStreamingService = {
+      connect: vi.fn().mockResolvedValue(undefined),
+      disconnect: vi.fn(),
+      subscribeToFrames: vi.fn().mockReturnValue('subscription-1'),
+      unsubscribeFromFrames: vi.fn(),
+      getConnectionStatus: vi.fn().mockReturnValue({ connected: true, state: 'connected' }),
+      getStatistics: vi.fn().mockReturnValue({ currentFps: 60 }),
+    };
+
+    // 4. Configure el mock de useService para que devuelva el servicio mockeado
+    (useService as vi.Mock).mockImplementation((type: symbol) => {
+      if (type === TYPES.IStreamingVideoService) {
+        return mockStreamingService;
+      }
+      if (type === TYPES.ILogger) {
+        return mockLogger;
+      }
+      throw new Error(`Servicio no mockeado en el test: ${type.toString()}`);
+    });
+
+    // ... (mantenga el mock de document.createElement)
     // Mock canvas element creation - avoid recursion
     const originalCreateElement = document.createElement;
     vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
