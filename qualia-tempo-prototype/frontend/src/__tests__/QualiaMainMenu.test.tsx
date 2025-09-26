@@ -72,13 +72,15 @@ describe('QualiaMainMenu Component', () => {
     
     fireEvent.click(startButton);
 
-    // Since emit is synchronous, we can check immediately
-    expect(mockEventBus.emit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'PlayerAction',
-        action: 'StartGame',
-        source: 'QualiaMainMenu'
-      })
-    );
+    // Wait for the emit call to be made
+    await waitFor(() => {
+      expect(mockEventBus.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'PlayerAction',
+          action: 'StartGame',
+          source: 'QualiaMainMenu'
+        })
+      );
+    }, { timeout: 1000 });
   });
 });

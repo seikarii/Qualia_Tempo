@@ -9,8 +9,7 @@ import { describe, test, expect, beforeEach, afterEach, afterAll, it, vi, type M
 const appEventHandlers = new Map<string, (...args: any[]) => any>();
 const mockApp = {
   whenReady: vi.fn().mockImplementation(async () => {
-    // Simulate the whenReady behavior - return a resolved promise
-    // The .then() callback will execute after this promise resolves
+    // Return a resolved promise - the .then() callback will execute after await
     return Promise.resolve();
   }),
   on: vi.fn().mockImplementation((...args: any[]) => {
@@ -91,6 +90,11 @@ const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
 describe('Electron Main Process', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   afterAll(() => {
@@ -114,8 +118,8 @@ describe('Electron Main Process', () => {
     it('should register app event listeners', async () => {
       await import('../main');
       
-      // Wait for the whenReady promise to resolve and event handlers to be registered
-      await new Promise(resolve => setTimeout(resolve, 0));
+      // Wait for the whenReady promise chain to complete
+      await vi.runAllTimersAsync();
       
       // Verify app event listeners are registered
       expect(mockApp.on).toHaveBeenCalledWith('activate', expect.any(Function));

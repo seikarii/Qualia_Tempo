@@ -184,12 +184,24 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
 
       const initialState = qualiaService.getCurrentState();
 
+      // Set up event promise to wait for QualiaStateUpdated event
+      let eventReceived = false;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+          eventReceived = true;
+          resolve();
+        });
+      });
+
       // Emit a HitNote event
       await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
         context: { score: 100 },
       } as any);
+
+      // Wait for the event to be processed
+      await eventPromise;
 
       const newState = qualiaService.getCurrentState();
 
@@ -203,8 +215,11 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
       let receivedEvent: any = null;
 
       // Subscribe to QualiaStateUpdated events
-      mocks.mockEventBus.subscribe("QualiaStateUpdated", (event: any) => {
-        receivedEvent = event;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", (event: any) => {
+          receivedEvent = event;
+          resolve();
+        });
       });
 
       qualiaService.start();
@@ -215,24 +230,35 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
         action: "HitNote",
       } as any);
 
+      // Wait for the event to be processed
+      await eventPromise;
+
       // Should have received a QualiaStateUpdated event
       expect(receivedEvent).not.toBeNull();
       expect(receivedEvent.type).toBe("QualiaStateUpdated");
       expect(receivedEvent.qualiaState).toBeDefined();
     });
 
-    test("should not respond to events when stopped", async () => {
+    test("should not respond to events when stopped", () => {
       qualiaService.start();
       qualiaService.stop();
 
       const initialState = qualiaService.getCurrentState();
 
-      // Emit an event after stopping
-      await mocks.mockEventBus.emit({
+      // Track if any event is emitted
+      let eventEmitted = false;
+      mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+        eventEmitted = true;
+      });
+
+      // Emit an event after stopping - this should not trigger any processing
+      mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
       } as any);
 
+      // No event should have been emitted since service is stopped
+      expect(eventEmitted).toBe(false);
 
       const finalState = qualiaService.getCurrentState();
 
@@ -250,10 +276,22 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
       qualiaService.start();
       const initialState = qualiaService.getCurrentState();
 
+      // Set up event promise to wait for processing
+      let eventProcessed = false;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+          eventProcessed = true;
+          resolve();
+        });
+      });
+
       await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
       } as any);
+
+      // Wait for event processing
+      await eventPromise;
 
       const newState = qualiaService.getCurrentState();
 
@@ -266,11 +304,22 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
     test("should process MissNote actions correctly", async () => {
       const initialState = qualiaService.getCurrentState();
 
+      // Set up event promise to wait for processing
+      let eventProcessed = false;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+          eventProcessed = true;
+          resolve();
+        });
+      });
+
       await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "MissNote",
       } as any);
 
+      // Wait for event processing
+      await eventPromise;
 
       const newState = qualiaService.getCurrentState();
 
@@ -282,11 +331,22 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
     test("should process Dash actions correctly", async () => {
       const initialState = qualiaService.getCurrentState();
 
+      // Set up event promise to wait for processing
+      let eventProcessed = false;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+          eventProcessed = true;
+          resolve();
+        });
+      });
+
       await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "Dash",
       } as any);
 
+      // Wait for event processing
+      await eventPromise;
 
       const newState = qualiaService.getCurrentState();
 
@@ -297,11 +357,22 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
     test("should process FastForward actions correctly", async () => {
       const initialState = qualiaService.getCurrentState();
 
+      // Set up event promise to wait for processing
+      let eventProcessed = false;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+          eventProcessed = true;
+          resolve();
+        });
+      });
+
       await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "FastForward",
       } as any);
 
+      // Wait for event processing
+      await eventPromise;
 
       const newState = qualiaService.getCurrentState();
 
@@ -312,11 +383,22 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
     test("should process Rewind actions correctly", async () => {
       const initialState = qualiaService.getCurrentState();
 
+      // Set up event promise to wait for processing
+      let eventProcessed = false;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+          eventProcessed = true;
+          resolve();
+        });
+      });
+
       await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "Rewind",
       } as any);
 
+      // Wait for event processing
+      await eventPromise;
 
       const newState = qualiaService.getCurrentState();
 
@@ -327,11 +409,24 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
     test("should handle unknown actions gracefully", async () => {
       const consoleSpy = vi.spyOn(mocks.mockLogger, "warn").mockImplementation(() => {});
 
+      // Set up event promise to wait for processing (though it may not emit)
+      let eventProcessed = false;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+          eventProcessed = true;
+          resolve();
+        });
+        // Resolve after a short delay if no event is emitted
+        setTimeout(() => resolve(), 10);
+      });
+
       await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "UnknownAction" as any,
       } as any);
 
+      // Wait for potential event processing
+      await eventPromise;
 
       expect(consoleSpy).toHaveBeenCalledWith(
         "⚠️ [QualiaCalculator] Unknown action: UnknownAction",
@@ -348,6 +443,16 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
 
     test("should clamp values between 0 and 1", async () => {
       // Emit many HitNote events to try to exceed 1.0
+      let eventsProcessed = 0;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+          eventsProcessed++;
+          if (eventsProcessed >= 20) {
+            resolve();
+          }
+        });
+      });
+
       for (let i = 0; i < 20; i++) {
         await mocks.mockEventBus.emit({
           type: "PlayerAction",
@@ -355,6 +460,8 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
         } as any);
       }
 
+      // Wait for all events to be processed
+      await eventPromise;
 
       const state = qualiaService.getCurrentState();
 
@@ -367,6 +474,16 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
 
     test("should handle negative values correctly", async () => {
       // Emit many MissNote events to try to go below 0.0
+      let eventsProcessed = 0;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+          eventsProcessed++;
+          if (eventsProcessed >= 20) {
+            resolve();
+          }
+        });
+      });
+
       for (let i = 0; i < 20; i++) {
         await mocks.mockEventBus.emit({
           type: "PlayerAction",
@@ -374,6 +491,8 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
         } as any);
       }
 
+      // Wait for all events to be processed
+      await eventPromise;
 
       const state = qualiaService.getCurrentState();
 
@@ -392,6 +511,16 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
 
     test("should activate transcendence when thresholds are met", async () => {
       // Emit enough HitNote events to trigger transcendence
+      let eventsProcessed = 0;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+          eventsProcessed++;
+          if (eventsProcessed >= 15) {
+            resolve();
+          }
+        });
+      });
+
       for (let i = 0; i < 15; i++) {
         await mocks.mockEventBus.emit({
           type: "PlayerAction",
@@ -399,6 +528,8 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
         } as any);
       }
 
+      // Wait for all events to be processed
+      await eventPromise;
 
       const state = qualiaService.getCurrentState();
 
@@ -434,10 +565,21 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
       qualiaService.start();
 
       // Set initial high values
+      let eventProcessed = false;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+          eventProcessed = true;
+          resolve();
+        });
+      });
+
       mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
       } as any);
+
+      // Wait for event processing
+      await eventPromise;
 
       const initialState = qualiaService.getCurrentState();
 

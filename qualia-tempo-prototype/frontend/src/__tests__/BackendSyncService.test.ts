@@ -145,13 +145,24 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
 
       (mocks.mockHttpService.post as Mock).mockResolvedValue({ success: true });
 
-      // Act
+      // Act - Set up event promise to wait for processing
+      let eventProcessed = false;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+          eventProcessed = true;
+          resolve();
+        });
+      });
+
       await mocks.mockEventBus.emit({
         type: "QualiaStateUpdated",
         qualiaState: mockQualiaState,
         timestamp: new Date(),
         source: "Test",
       } as any);
+
+      // Wait for event processing to complete
+      await eventPromise;
 
       // Assert
       expect(mocks.mockLogger.info).toHaveBeenCalledWith(
@@ -174,6 +185,17 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
       (mocks.mockHttpService.post as Mock).mockResolvedValue({ success: true });
 
       // Act - Emit multiple rapid updates
+      const eventsProcessed: boolean[] = [];
+      let eventCount = 0;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("QualiaStateUpdated", () => {
+          eventCount++;
+          if (eventCount >= 5) {
+            resolve();
+          }
+        });
+      });
+
       for (let i = 0; i < 5; i++) {
         await mocks.mockEventBus.emit({
           type: "QualiaStateUpdated",
@@ -182,6 +204,9 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
           source: "Test",
         } as any);
       }
+
+      // Wait for all events to be processed
+      await eventPromise;
 
       // Assert - Should have throttled the updates
       const debugCalls = (mocks.mockLogger.debug as Mock).mock.calls.filter((call) =>
