@@ -1,21 +1,22 @@
 # @qualia-tempo/eslint-plugin-qualia-code
 
-ESLint plugin to enforce QUALIA.CODE v1.0 architectural principles in the Qualia Tempo project.
+**ESLint plugin enforcing QUALIA.CODE v1.1 architectural principles** in the Qualia Tempo project.
 
 ## Overview
 
-This plugin automatically validates compliance with the architectural patterns defined in QUALIA.CODE.md, ensuring:
+This plugin automatically validates compliance with the architectural patterns defined in QUALIA.CODE v1.1, ensuring:
 
-- IoC/DI patterns with CompositionRoot
-- Event-driven architecture via EventBus  
-- Configuration externalization
-- Proper service usage patterns
-- Contract generation enforcement
+- ✅ **InversifyJS IoC/DI patterns** with CompositionRoot
+- ✅ **Event-driven architecture** via EventBus
+- ✅ **Configuration externalization** (no hardcoded values)
+- ✅ **Proper service usage patterns** with hooks
+- ✅ **Contract generation enforcement** from shared schemas
+- ✅ **Method decorator compliance** for transversal logic
 
 ## Installation
 
 ```bash
-npm install @qualia-tempo/eslint-plugin-qualia-code --save-dev
+pnpm add -D @qualia-tempo/eslint-plugin-qualia-code
 ```
 
 ## Configuration
@@ -41,7 +42,8 @@ module.exports = {
     '@qualia-tempo/qualia-code/no-hardcoded-config': 'error',
     '@qualia-tempo/qualia-code/no-manual-contract-edit': 'error',
     '@qualia-tempo/qualia-code/deprecate-api-client': 'error',
-    '@qualia-tempo/qualia-code/enforce-method-decorators': 'error'
+    '@qualia-tempo/qualia-code/enforce-method-decorators': 'error',
+    '@qualia-tempo/qualia-code/enforce-inversify-conventions': 'error'
   }
 };
 ```
