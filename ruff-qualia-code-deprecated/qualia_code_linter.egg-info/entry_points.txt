@@ -1,2 +1,0 @@
-[console_scripts]
-qualia-code-linter = qualia_code_linter.main:main
