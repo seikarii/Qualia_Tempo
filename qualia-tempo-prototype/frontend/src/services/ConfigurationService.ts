@@ -11,13 +11,13 @@
  * - InversifyJS dependency injection support
  */
 
-import { injectable, inject } from 'inversify';
-import type { IConfigurationService } from './interfaces/IConfigurationService';
-import type { IHttpService } from './interfaces/IHttpService';
-import type { ILogger } from './interfaces/ILogger';
-import { TYPES } from './inversify.types';
-import * as yaml from 'js-yaml';
-import { logMethod, catchError } from '../utils/decorators';
+import { injectable, inject } from "inversify";
+import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { IHttpService } from "./interfaces/IHttpService";
+import type { ILogger } from "./interfaces/ILogger";
+import { TYPES } from "./inversify.types";
+import * as yaml from "js-yaml";
+import { logMethod, catchError } from "../utils/decorators";
 
 // === CONFIGURATION INTERFACES ===
 
@@ -158,7 +158,11 @@ export interface QualiaCalculatorConfig {
   chaosDecay: number;
   recoveryDecay: number;
   transcendenceDecay: number;
-  transcendenceThresholds: { intensity: number; precision: number; flow: number };
+  transcendenceThresholds: {
+    intensity: number;
+    precision: number;
+    flow: number;
+  };
   minValue: number;
   maxValue: number;
 }
@@ -463,13 +467,13 @@ export class ConfigurationService implements IConfigurationService {
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IHttpService) httpService: IHttpService,
-    configBasePath: string = '',
-    configManifest?: Record<string, string>
+    configBasePath: string = "",
+    configManifest?: Record<string, string>,
   ) {
     this.logger = logger;
     this.httpService = httpService;
     this.configBasePath = configBasePath;
-    
+
     // Accept configuration file manifest externally or discover them
     this.configFileManifest = configManifest || this.discoverConfigFiles();
   }
@@ -480,16 +484,16 @@ export class ConfigurationService implements IConfigurationService {
   private discoverConfigFiles(): Record<string, string> {
     // Default discovery pattern - can be overridden via constructor
     return {
-      compositionRoot: '/config/composition-root.yaml',
-      errorReporting: '/config/error-reporting.yaml',
-      audioService: '/config/audio-service.yaml',
-      qualiaCalculator: '/config/qualia-calculator.yaml',
-      backendSync: '/config/backend-sync.yaml',
-      gameController: '/config/game-controller.yaml',
-      debugService: '/config/debug-service.yaml',
-      notificationService: '/config/notification-service.yaml',
-      rhythmicMovement: '/config/rhythmic-movement.yaml', // NEW: Specific config file
-      visualEffects: '/config/visual-effects.yaml', // NEW: Visual effects configuration (optional)
+      compositionRoot: "/config/composition-root.yaml",
+      errorReporting: "/config/error-reporting.yaml",
+      audioService: "/config/audio-service.yaml",
+      qualiaCalculator: "/config/qualia-calculator.yaml",
+      backendSync: "/config/backend-sync.yaml",
+      gameController: "/config/game-controller.yaml",
+      debugService: "/config/debug-service.yaml",
+      notificationService: "/config/notification-service.yaml",
+      rhythmicMovement: "/config/rhythmic-movement.yaml", // NEW: Specific config file
+      visualEffects: "/config/visual-effects.yaml", // NEW: Visual effects configuration (optional)
     };
   }
 
@@ -501,13 +505,13 @@ export class ConfigurationService implements IConfigurationService {
    * @returns Promise that resolves when configuration is loaded
    */
   public async loadConfig(): Promise<void>;
-  
+
   /**
    * Load configuration from external YAML files (implementation).
    * @returns Promise that resolves with the loaded configuration
    */
   public async loadConfig(): Promise<FullGameConfig>;
-  
+
   /**
    * Load configuration implementation.
    */
@@ -515,16 +519,18 @@ export class ConfigurationService implements IConfigurationService {
   @catchError()
   public async loadConfig(): Promise<FullGameConfig | void> {
     try {
-      this.logger.info('Loading configuration from multiple YAML files...');
+      this.logger.info("Loading configuration from multiple YAML files...");
 
       // Load all configuration files in parallel
-      const configPromises = Object.entries(this.configFileManifest).map(async ([key, path]) => {
-        const fullPath = this.configBasePath + path;
-        this.logger.debug(`Loading ${key} from ${fullPath}`);
+      const configPromises = Object.entries(this.configFileManifest).map(
+        async ([key, path]) => {
+          const fullPath = this.configBasePath + path;
+          this.logger.debug(`Loading ${key} from ${fullPath}`);
 
-        const yamlText = await this.httpService.get<string>(fullPath);
-        return { key, config: yaml.load(yamlText) };
-      });
+          const yamlText = await this.httpService.get<string>(fullPath);
+          return { key, config: yaml.load(yamlText) };
+        },
+      );
 
       const loadedConfigs = await Promise.all(configPromises);
 
@@ -538,11 +544,11 @@ export class ConfigurationService implements IConfigurationService {
       this.validateConfig(mergedConfig as FullGameConfig);
 
       this.loadedConfig = mergedConfig as FullGameConfig;
-      this.logger.info('All configurations loaded successfully');
+      this.logger.info("All configurations loaded successfully");
 
       return this.loadedConfig;
     } catch (error) {
-      this.logger.error('Failed to load configuration:', { error });
+      this.logger.error("Failed to load configuration:", { error });
       throw error;
     }
   }
@@ -554,7 +560,7 @@ export class ConfigurationService implements IConfigurationService {
   @catchError()
   public getConfig(): FullGameConfig {
     if (!this.loadedConfig) {
-      throw new Error('Configuration not loaded. Call loadConfig() first.');
+      throw new Error("Configuration not loaded. Call loadConfig() first.");
     }
     return this.loadedConfig;
   }
@@ -567,7 +573,7 @@ export class ConfigurationService implements IConfigurationService {
   @catchError()
   public getConfigSection<T>(sectionKey: keyof FullGameConfig): T {
     if (!this.loadedConfig) {
-      throw new Error('Configuration not loaded. Call loadConfig() first.');
+      throw new Error("Configuration not loaded. Call loadConfig() first.");
     }
 
     const section = this.loadedConfig[sectionKey];
@@ -583,46 +589,49 @@ export class ConfigurationService implements IConfigurationService {
    */
   private validateConfig(config: FullGameConfig): void {
     // Validate CompositionRoot config
-    if (typeof config.compositionRoot?.autoStart !== 'boolean') {
-      throw new Error('Invalid compositionRoot.autoStart configuration');
+    if (typeof config.compositionRoot?.autoStart !== "boolean") {
+      throw new Error("Invalid compositionRoot.autoStart configuration");
     }
 
     // Validate ErrorReporting config
-    if (typeof config.errorReporting?.rateLimitWindow !== 'number') {
-      throw new Error('Invalid errorReporting.rateLimitWindow configuration');
+    if (typeof config.errorReporting?.rateLimitWindow !== "number") {
+      throw new Error("Invalid errorReporting.rateLimitWindow configuration");
     }
 
     // Validate AudioService config
     if (!config.audioService?.rhythmicFeedback?.perfect?.frequency) {
-      throw new Error('Invalid audioService.rhythmicFeedback configuration');
+      throw new Error("Invalid audioService.rhythmicFeedback configuration");
     }
 
     // Validate QualiaCalculator config
     if (!config.qualiaCalculator?.baseQualiaState) {
-      throw new Error('Invalid qualiaCalculator.baseQualiaState configuration');
+      throw new Error("Invalid qualiaCalculator.baseQualiaState configuration");
     }
 
     // Validate BackendSync config
     if (!config.backendSync?.api?.baseUrl) {
-      throw new Error('Invalid backendSync.api.baseUrl configuration');
+      throw new Error("Invalid backendSync.api.baseUrl configuration");
     }
 
     // Validate GameController config
-    if (typeof config.gameController?.gameLifecycle?.autoStart !== 'boolean') {
-      throw new Error('Invalid gameController.gameLifecycle configuration');
+    if (typeof config.gameController?.gameLifecycle?.autoStart !== "boolean") {
+      throw new Error("Invalid gameController.gameLifecycle configuration");
     }
 
     // Validate DebugService config
     if (!config.debugService?.logging?.logLevel) {
-      throw new Error('Invalid debugService.logging configuration');
+      throw new Error("Invalid debugService.logging configuration");
     }
 
     // Validate NotificationService config
-    if (typeof config.notificationService?.display?.enableNotifications !== 'boolean') {
-      throw new Error('Invalid notificationService.display configuration');
+    if (
+      typeof config.notificationService?.display?.enableNotifications !==
+      "boolean"
+    ) {
+      throw new Error("Invalid notificationService.display configuration");
     }
 
-    this.logger.info('✅ [Config] Configuration validation passed');
+    this.logger.info("✅ [Config] Configuration validation passed");
   }
 
   /**
@@ -632,7 +641,7 @@ export class ConfigurationService implements IConfigurationService {
   @logMethod()
   @catchError()
   public getGameConfig(): any {
-    return this.getConfigSection('gameController');
+    return this.getConfigSection("gameController");
   }
 
   /**
@@ -642,7 +651,7 @@ export class ConfigurationService implements IConfigurationService {
   @logMethod()
   @catchError()
   public getQualiaConfig(): QualiaCalculatorConfig {
-    return this.getConfigSection<QualiaCalculatorConfig>('qualiaCalculator');
+    return this.getConfigSection<QualiaCalculatorConfig>("qualiaCalculator");
   }
 
   /**
@@ -652,7 +661,7 @@ export class ConfigurationService implements IConfigurationService {
   @logMethod()
   @catchError()
   public getBackendConfig(): BackendSyncConfig {
-    return this.getConfigSection<BackendSyncConfig>('backendSync');
+    return this.getConfigSection<BackendSyncConfig>("backendSync");
   }
 
   /**
@@ -662,7 +671,7 @@ export class ConfigurationService implements IConfigurationService {
   @logMethod()
   @catchError()
   public getAudioConfig(): AudioServiceConfig {
-    return this.getConfigSection<AudioServiceConfig>('audioService');
+    return this.getConfigSection<AudioServiceConfig>("audioService");
   }
 
   /**
@@ -672,7 +681,7 @@ export class ConfigurationService implements IConfigurationService {
   @logMethod()
   @catchError()
   public getErrorReportingConfig(): ErrorReportingConfig {
-    return this.getConfigSection<ErrorReportingConfig>('errorReporting');
+    return this.getConfigSection<ErrorReportingConfig>("errorReporting");
   }
 
   /**
@@ -682,7 +691,7 @@ export class ConfigurationService implements IConfigurationService {
   @logMethod()
   @catchError()
   public getRhythmicMovementConfig(): RhythmicMovementConfig {
-    return this.getConfigSection<RhythmicMovementConfig>('rhythmicMovement');
+    return this.getConfigSection<RhythmicMovementConfig>("rhythmicMovement");
   }
 
   /**
@@ -692,7 +701,9 @@ export class ConfigurationService implements IConfigurationService {
   @logMethod()
   @catchError()
   public getNotificationConfig(): NotificationServiceConfig {
-    return this.getConfigSection<NotificationServiceConfig>('notificationService');
+    return this.getConfigSection<NotificationServiceConfig>(
+      "notificationService",
+    );
   }
 
   /**
@@ -700,8 +711,12 @@ export class ConfigurationService implements IConfigurationService {
    */
   @logMethod()
   @catchError()
-  public getHttpConfig(): { defaultTimeout: number; maxRetries: number; retryDelay: number } {
-    return this.getConfigSection<CompositionRootConfig>('compositionRoot').http;
+  public getHttpConfig(): {
+    defaultTimeout: number;
+    maxRetries: number;
+    retryDelay: number;
+  } {
+    return this.getConfigSection<CompositionRootConfig>("compositionRoot").http;
   }
 
   /**
@@ -713,26 +728,33 @@ export class ConfigurationService implements IConfigurationService {
   public getVisualEffectsConfig(): VisualEffectsConfig {
     // Provide a resilient fallback to avoid runtime failure if file missing
     const defaults: VisualEffectsConfig = {
-      particles: { count: 120, minSize: 1, maxSize: 4, speed: 0.35, drift: 0.5 },
+      particles: {
+        count: 120,
+        minSize: 1,
+        maxSize: 4,
+        speed: 0.35,
+        drift: 0.5,
+      },
       bloom: { intensity: 1.0, pulseSpeed: 6 },
       gradients: {
         cycleDuration: 16,
         layers: [
-          'radial-gradient(circle at 20% 30%, rgba(0,255,255,0.15), transparent 60%)',
-          'radial-gradient(circle at 80% 70%, rgba(255,0,255,0.12), transparent 65%)',
-          'radial-gradient(circle at 50% 50%, rgba(255,255,0,0.08), transparent 70%)'
-        ]
+          "radial-gradient(circle at 20% 30%, rgba(0,255,255,0.15), transparent 60%)",
+          "radial-gradient(circle at 80% 70%, rgba(255,0,255,0.12), transparent 65%)",
+          "radial-gradient(circle at 50% 50%, rgba(255,255,0,0.08), transparent 70%)",
+        ],
       },
       noise: { enabled: true, opacity: 0.06, scale: 2, speed: 0.25 },
-      palette: ['#00ffff', '#ff00ff', '#ffff00', '#ff0080', '#00ff80'],
-      aura: { rings: 4, rotationSpeed: 22, pulseDuration: 9 }
+      palette: ["#00ffff", "#ff00ff", "#ffff00", "#ff0080", "#00ff80"],
+      aura: { rings: 4, rotationSpeed: 22, pulseDuration: 9 },
     };
 
     try {
-      const cfg = this.getConfigSection<VisualEffectsConfig>('visualEffects');
+      const cfg = this.getConfigSection<VisualEffectsConfig>("visualEffects");
       if (!cfg) return defaults;
       // Minimal validation for required subsections
-      if (!cfg.particles?.count || !cfg.palette?.length) return { ...defaults, ...cfg };
+      if (!cfg.particles?.count || !cfg.palette?.length)
+        return { ...defaults, ...cfg };
       return cfg;
     } catch {
       return defaults;

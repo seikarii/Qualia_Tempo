@@ -16,37 +16,37 @@ animations:
     ease: "easeOut"
     delay: 0
     y_offset: -50
-  
+
   subtitle_entry:
     duration: 1.5
     ease: "easeOut"
     delay: 0.5
     y_offset: -30
-  
+
   instructions_entry:
     duration: 1.5
     delay: 1.5
-  
+
   button_entry:
     duration: 1.5
     ease: "easeOut"
     delay: 1.0
     y_offset: 50
-  
+
   # Button interactions
   button_hover:
     scale: 1.05
     transition_duration: 0.3
-  
+
   button_press:
     scale: 0.95
     transition_duration: 0.1
-  
+
   # Shimmer effect
   shimmer:
     duration: 1.5
     repeat: true
-  
+
   # Border animation
   border_gradient:
     duration: 2.0

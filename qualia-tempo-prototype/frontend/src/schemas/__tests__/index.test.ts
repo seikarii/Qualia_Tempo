@@ -3,8 +3,8 @@
  * Comprehensive test suite for Zod schema validation and type definitions
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { z } from 'zod';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { z } from "zod";
 import {
   QualiaStateSchema,
   PlayerStateSchema,
@@ -12,12 +12,12 @@ import {
   schemaRegistry,
   type QualiaState,
   type PlayerState,
-  type CombatData
-} from '../index';
+  type CombatData,
+} from "../index";
 
-describe('Schema Definitions', () => {
-  describe('QualiaStateSchema', () => {
-    it('should validate a valid QualiaState object', () => {
+describe("Schema Definitions", () => {
+  describe("QualiaStateSchema", () => {
+    it("should validate a valid QualiaState object", () => {
       const validQualiaState = {
         intensity: 0.8,
         precision: 0.9,
@@ -25,7 +25,7 @@ describe('Schema Definitions', () => {
         flow: 0.7,
         chaos: 0.3,
         recovery: 0.4,
-        transcendence: 0.2
+        transcendence: 0.2,
       };
 
       const result = QualiaStateSchema.safeParse(validQualiaState);
@@ -33,7 +33,7 @@ describe('Schema Definitions', () => {
       expect(result.data).toEqual(validQualiaState);
     });
 
-    it('should reject QualiaState with values outside 0-1 range', () => {
+    it("should reject QualiaState with values outside 0-1 range", () => {
       const invalidQualiaState = {
         intensity: 1.5, // > 1
         precision: -0.1, // < 0
@@ -41,7 +41,7 @@ describe('Schema Definitions', () => {
         flow: 0.7,
         chaos: 0.3,
         recovery: 0.4,
-        transcendence: 0.2
+        transcendence: 0.2,
       };
 
       const result = QualiaStateSchema.safeParse(invalidQualiaState);
@@ -51,14 +51,14 @@ describe('Schema Definitions', () => {
       }
     });
 
-    it('should reject QualiaState with missing required properties', () => {
+    it("should reject QualiaState with missing required properties", () => {
       const incompleteQualiaState = {
         intensity: 0.8,
         precision: 0.9,
         aggression: 0.6,
         flow: 0.7,
         chaos: 0.3,
-        recovery: 0.4
+        recovery: 0.4,
         // Missing transcendence
       };
 
@@ -69,7 +69,7 @@ describe('Schema Definitions', () => {
       }
     });
 
-    it('should reject QualiaState with extra properties', () => {
+    it("should reject QualiaState with extra properties", () => {
       const extraPropertiesQualiaState = {
         intensity: 0.8,
         precision: 0.9,
@@ -78,7 +78,7 @@ describe('Schema Definitions', () => {
         chaos: 0.3,
         recovery: 0.4,
         transcendence: 0.2,
-        extraProperty: 'should not be here'
+        extraProperty: "should not be here",
       };
 
       const result = QualiaStateSchema.safeParse(extraPropertiesQualiaState);
@@ -88,7 +88,7 @@ describe('Schema Definitions', () => {
       }
     });
 
-    it('should validate boundary values (0 and 1)', () => {
+    it("should validate boundary values (0 and 1)", () => {
       const boundaryQualiaState = {
         intensity: 0,
         precision: 1,
@@ -96,7 +96,7 @@ describe('Schema Definitions', () => {
         flow: 1,
         chaos: 0,
         recovery: 1,
-        transcendence: 0
+        transcendence: 0,
       };
 
       const result = QualiaStateSchema.safeParse(boundaryQualiaState);
@@ -104,7 +104,7 @@ describe('Schema Definitions', () => {
       expect(result.data).toEqual(boundaryQualiaState);
     });
 
-    it('should handle floating point precision correctly', () => {
+    it("should handle floating point precision correctly", () => {
       const floatQualiaState = {
         intensity: 0.123456789,
         precision: 0.987654321,
@@ -112,41 +112,41 @@ describe('Schema Definitions', () => {
         flow: 0.111111111,
         chaos: 0.999999999,
         recovery: 0.000000001,
-        transcendence: 0.500000000
+        transcendence: 0.5,
       };
 
       const result = QualiaStateSchema.safeParse(floatQualiaState);
       expect(result.success).toBe(true);
     });
 
-    it('should provide helpful error messages', () => {
+    it("should provide helpful error messages", () => {
       const invalidQualiaState = {
-        intensity: 'not a number',
+        intensity: "not a number",
         precision: 0.9,
         aggression: 0.6,
         flow: 0.7,
         chaos: 0.3,
         recovery: 0.4,
-        transcendence: 0.2
+        transcendence: 0.2,
       };
 
       const result = QualiaStateSchema.safeParse(invalidQualiaState);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain('Expected number');
+        expect(result.error.issues[0].message).toContain("Expected number");
       }
     });
   });
 
-  describe('PlayerStateSchema', () => {
-    it('should validate a valid PlayerState object', () => {
+  describe("PlayerStateSchema", () => {
+    it("should validate a valid PlayerState object", () => {
       const validPlayerState = {
         position: { x: 10, y: 20 },
         health: 85,
         combo: 5,
         score: 1250,
         isMoving: true,
-        lastRhythmHit: 1234567890
+        lastRhythmHit: 1234567890,
       };
 
       const result = PlayerStateSchema.safeParse(validPlayerState);
@@ -154,11 +154,11 @@ describe('Schema Definitions', () => {
       expect(result.data).toEqual(validPlayerState);
     });
 
-    it('should reject PlayerState with invalid health values', () => {
+    it("should reject PlayerState with invalid health values", () => {
       const invalidHealthStates = [
         { health: -1 },
         { health: 101 },
-        { health: 50.5 } // Should be integer
+        { health: 50.5 }, // Should be integer
       ];
 
       invalidHealthStates.forEach((invalidState) => {
@@ -168,17 +168,14 @@ describe('Schema Definitions', () => {
           score: 1250,
           isMoving: true,
           lastRhythmHit: 1234567890,
-          ...invalidState
+          ...invalidState,
         });
         expect(result.success).toBe(false);
       });
     });
 
-    it('should reject PlayerState with negative combo or score', () => {
-      const invalidStates = [
-        { combo: -1 },
-        { score: -100 }
-      ];
+    it("should reject PlayerState with negative combo or score", () => {
+      const invalidStates = [{ combo: -1 }, { score: -100 }];
 
       invalidStates.forEach((invalidState) => {
         const result = PlayerStateSchema.safeParse({
@@ -186,18 +183,18 @@ describe('Schema Definitions', () => {
           health: 85,
           isMoving: true,
           lastRhythmHit: 1234567890,
-          ...invalidState
+          ...invalidState,
         });
         expect(result.success).toBe(false);
       });
     });
 
-    it('should validate position coordinates correctly', () => {
+    it("should validate position coordinates correctly", () => {
       const validPositions = [
         { x: 0, y: 0 },
         { x: 100, y: 200 },
         { x: -50, y: 75 },
-        { x: 0.5, y: 0.5 } // Should accept floats
+        { x: 0.5, y: 0.5 }, // Should accept floats
       ];
 
       validPositions.forEach((position) => {
@@ -207,40 +204,40 @@ describe('Schema Definitions', () => {
           combo: 5,
           score: 1250,
           isMoving: true,
-          lastRhythmHit: 1234567890
+          lastRhythmHit: 1234567890,
         });
         expect(result.success).toBe(true);
       });
     });
   });
 
-  describe('CombatDataSchema', () => {
-    it('should validate a valid CombatData object', () => {
+  describe("CombatDataSchema", () => {
+    it("should validate a valid CombatData object", () => {
       const validCombatData = {
-        id: 'combat_001',
-        title: 'Epic Battle',
-        artist: 'Game Composer',
-        audioPath: '/audio/track1.mp3',
+        id: "combat_001",
+        title: "Epic Battle",
+        artist: "Game Composer",
+        audioPath: "/audio/track1.mp3",
         bpm: 120,
         duration: 180,
         noteMap: [
           {
             timestamp: 1.5,
             position: { x: 10, y: 20 },
-            duration: 0.5
+            duration: 0.5,
           },
           {
             timestamp: 3.0,
             position: { x: 30, y: 40 },
-            duration: 0.3
-          }
+            duration: 0.3,
+          },
         ],
         lyrics: [
           {
             timestamp: 5.0,
-            text: 'This is a lyric line'
-          }
-        ]
+            text: "This is a lyric line",
+          },
+        ],
       };
 
       const result = CombatDataSchema.safeParse(validCombatData);
@@ -248,79 +245,79 @@ describe('Schema Definitions', () => {
       expect(result.data).toEqual(validCombatData);
     });
 
-    it('should reject CombatData with invalid BPM', () => {
+    it("should reject CombatData with invalid BPM", () => {
       const invalidBPMData = {
-        id: 'combat_001',
-        title: 'Epic Battle',
-        artist: 'Game Composer',
-        audioPath: '/audio/track1.mp3',
+        id: "combat_001",
+        title: "Epic Battle",
+        artist: "Game Composer",
+        audioPath: "/audio/track1.mp3",
         bpm: 0, // Invalid: must be >= 1
         duration: 180,
         noteMap: [],
-        lyrics: []
+        lyrics: [],
       };
 
       const result = CombatDataSchema.safeParse(invalidBPMData);
       expect(result.success).toBe(false);
     });
 
-    it('should reject CombatData with negative duration', () => {
+    it("should reject CombatData with negative duration", () => {
       const invalidDurationData = {
-        id: 'combat_001',
-        title: 'Epic Battle',
-        artist: 'Game Composer',
-        audioPath: '/audio/track1.mp3',
+        id: "combat_001",
+        title: "Epic Battle",
+        artist: "Game Composer",
+        audioPath: "/audio/track1.mp3",
         bpm: 120,
         duration: -10, // Invalid: must be >= 0
         noteMap: [],
-        lyrics: []
+        lyrics: [],
       };
 
       const result = CombatDataSchema.safeParse(invalidDurationData);
       expect(result.success).toBe(false);
     });
 
-    it('should validate noteMap structure correctly', () => {
+    it("should validate noteMap structure correctly", () => {
       const validNoteMapData = {
-        id: 'combat_001',
-        title: 'Epic Battle',
-        artist: 'Game Composer',
-        audioPath: '/audio/track1.mp3',
+        id: "combat_001",
+        title: "Epic Battle",
+        artist: "Game Composer",
+        audioPath: "/audio/track1.mp3",
         bpm: 120,
         duration: 180,
         noteMap: [
           {
             timestamp: 0,
             position: { x: 0, y: 0 },
-            duration: 0
-          }
+            duration: 0,
+          },
         ],
-        lyrics: []
+        lyrics: [],
       };
 
       const result = CombatDataSchema.safeParse(validNoteMapData);
       expect(result.success).toBe(true);
     });
 
-    it('should validate lyrics structure correctly', () => {
+    it("should validate lyrics structure correctly", () => {
       const validLyricsData = {
-        id: 'combat_001',
-        title: 'Epic Battle',
-        artist: 'Game Composer',
-        audioPath: '/audio/track1.mp3',
+        id: "combat_001",
+        title: "Epic Battle",
+        artist: "Game Composer",
+        audioPath: "/audio/track1.mp3",
         bpm: 120,
         duration: 180,
         noteMap: [],
         lyrics: [
           {
             timestamp: 0,
-            text: ''
+            text: "",
           },
           {
             timestamp: 10,
-            text: 'Multi\nline\nlyrics'
-          }
-        ]
+            text: "Multi\nline\nlyrics",
+          },
+        ],
       };
 
       const result = CombatDataSchema.safeParse(validLyricsData);
@@ -328,23 +325,23 @@ describe('Schema Definitions', () => {
     });
   });
 
-  describe('Schema Registry', () => {
-    it('should contain all required schemas', () => {
-      expect(schemaRegistry).toHaveProperty('QualiaState');
-      expect(schemaRegistry).toHaveProperty('PlayerState');
-      expect(schemaRegistry).toHaveProperty('CombatData');
+  describe("Schema Registry", () => {
+    it("should contain all required schemas", () => {
+      expect(schemaRegistry).toHaveProperty("QualiaState");
+      expect(schemaRegistry).toHaveProperty("PlayerState");
+      expect(schemaRegistry).toHaveProperty("CombatData");
 
       expect(schemaRegistry.QualiaState).toBe(QualiaStateSchema);
       expect(schemaRegistry.PlayerState).toBe(PlayerStateSchema);
       expect(schemaRegistry.CombatData).toBe(CombatDataSchema);
     });
 
-    it('should be immutable', () => {
+    it("should be immutable", () => {
       const originalRegistry = { ...schemaRegistry };
 
       // Attempt to modify registry
       try {
-        (schemaRegistry as any).newSchema = 'test';
+        (schemaRegistry as any).newSchema = "test";
       } catch (error) {
         // Expected in strict mode
       }
@@ -352,7 +349,7 @@ describe('Schema Definitions', () => {
       expect(schemaRegistry).toEqual(originalRegistry);
     });
 
-    it('should provide consistent schema instances', () => {
+    it("should provide consistent schema instances", () => {
       const registry1 = schemaRegistry;
       const registry2 = schemaRegistry;
 
@@ -362,8 +359,8 @@ describe('Schema Definitions', () => {
     });
   });
 
-  describe('TypeScript Types', () => {
-    it('should correctly infer QualiaState type', () => {
+  describe("TypeScript Types", () => {
+    it("should correctly infer QualiaState type", () => {
       const qualiaState: QualiaState = {
         intensity: 0.8,
         precision: 0.9,
@@ -371,21 +368,21 @@ describe('Schema Definitions', () => {
         flow: 0.7,
         chaos: 0.3,
         recovery: 0.4,
-        transcendence: 0.2
+        transcendence: 0.2,
       };
 
       expect(qualiaState.intensity).toBe(0.8);
-      expect(typeof qualiaState.intensity).toBe('number');
+      expect(typeof qualiaState.intensity).toBe("number");
     });
 
-    it('should correctly infer PlayerState type', () => {
+    it("should correctly infer PlayerState type", () => {
       const playerState: PlayerState = {
         position: { x: 10, y: 20 },
         health: 85,
         combo: 5,
         score: 1250,
         isMoving: true,
-        lastRhythmHit: 1234567890
+        lastRhythmHit: 1234567890,
       };
 
       expect(playerState.position.x).toBe(10);
@@ -393,31 +390,31 @@ describe('Schema Definitions', () => {
       expect(playerState.isMoving).toBe(true);
     });
 
-    it('should correctly infer CombatData type', () => {
+    it("should correctly infer CombatData type", () => {
       const combatData: CombatData = {
-        id: 'combat_001',
-        title: 'Epic Battle',
-        artist: 'Game Composer',
-        audioPath: '/audio/track1.mp3',
+        id: "combat_001",
+        title: "Epic Battle",
+        artist: "Game Composer",
+        audioPath: "/audio/track1.mp3",
         bpm: 120,
         duration: 180,
         noteMap: [],
-        lyrics: []
+        lyrics: [],
       };
 
-      expect(combatData.id).toBe('combat_001');
+      expect(combatData.id).toBe("combat_001");
       expect(combatData.bpm).toBe(120);
       expect(Array.isArray(combatData.noteMap)).toBe(true);
       expect(Array.isArray(combatData.lyrics)).toBe(true);
     });
   });
 
-  describe('Schema Validation Edge Cases', () => {
-    it('should handle null values correctly', () => {
+  describe("Schema Validation Edge Cases", () => {
+    it("should handle null values correctly", () => {
       const nullValueTests = [
         { intensity: null },
         { precision: null },
-        { aggression: null }
+        { aggression: null },
       ];
 
       nullValueTests.forEach((testCase) => {
@@ -429,17 +426,17 @@ describe('Schema Definitions', () => {
           chaos: 0.5,
           recovery: 0.5,
           transcendence: 0.5,
-          ...testCase
+          ...testCase,
         });
         expect(result.success).toBe(false);
       });
     });
 
-    it('should handle undefined values correctly', () => {
+    it("should handle undefined values correctly", () => {
       const undefinedValueTests = [
         { intensity: undefined },
         { precision: undefined },
-        { aggression: undefined }
+        { aggression: undefined },
       ];
 
       undefinedValueTests.forEach((testCase) => {
@@ -451,17 +448,17 @@ describe('Schema Definitions', () => {
           chaos: 0.5,
           recovery: 0.5,
           transcendence: 0.5,
-          ...testCase
+          ...testCase,
         });
         expect(result.success).toBe(false);
       });
     });
 
-    it('should handle NaN values correctly', () => {
+    it("should handle NaN values correctly", () => {
       const nanValueTests = [
         { intensity: NaN },
         { precision: NaN },
-        { aggression: NaN }
+        { aggression: NaN },
       ];
 
       nanValueTests.forEach((testCase) => {
@@ -473,17 +470,17 @@ describe('Schema Definitions', () => {
           chaos: 0.5,
           recovery: 0.5,
           transcendence: 0.5,
-          ...testCase
+          ...testCase,
         });
         expect(result.success).toBe(false);
       });
     });
 
-    it('should handle Infinity values correctly', () => {
+    it("should handle Infinity values correctly", () => {
       const infinityValueTests = [
         { intensity: Infinity },
         { precision: -Infinity },
-        { aggression: Infinity }
+        { aggression: Infinity },
       ];
 
       infinityValueTests.forEach((testCase) => {
@@ -495,15 +492,15 @@ describe('Schema Definitions', () => {
           chaos: 0.5,
           recovery: 0.5,
           transcendence: 0.5,
-          ...testCase
+          ...testCase,
         });
         expect(result.success).toBe(false);
       });
     });
   });
 
-  describe('Schema Performance', () => {
-    it('should validate large datasets efficiently', () => {
+  describe("Schema Performance", () => {
+    it("should validate large datasets efficiently", () => {
       const largeQualiaState = {
         intensity: 0.5,
         precision: 0.7,
@@ -511,7 +508,7 @@ describe('Schema Definitions', () => {
         flow: 0.8,
         chaos: 0.2,
         recovery: 0.6,
-        transcendence: 0.4
+        transcendence: 0.4,
       };
 
       // Test multiple validations don't cause performance issues

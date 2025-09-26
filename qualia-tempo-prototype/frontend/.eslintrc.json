@@ -1,9 +1,7 @@
 {
   "root": true,
   "env": { "browser": true, "es2020": true, "node": true },
-  "extends": [
-    "plugin:@qualia-tempo/qualia-code/recommended"
-  ],
+  "extends": ["plugin:@qualia-tempo/qualia-code/recommended"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": "latest",

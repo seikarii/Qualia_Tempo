@@ -3,14 +3,14 @@
  * External configuration management and loading interface.
  */
 
-import type { 
+import type {
   QualiaCalculatorConfig,
   BackendSyncConfig,
   AudioServiceConfig,
   ErrorReportingConfig,
   RhythmicMovementConfig,
-  NotificationServiceConfig
-} from '../ConfigurationService';
+  NotificationServiceConfig,
+} from "../ConfigurationService";
 
 export interface IConfigurationService {
   /**
@@ -71,7 +71,11 @@ export interface IConfigurationService {
    * Get HTTP service configuration.
    * @returns HTTP service configuration
    */
-  getHttpConfig(): { defaultTimeout: number; maxRetries: number; retryDelay: number };
+  getHttpConfig(): {
+    defaultTimeout: number;
+    maxRetries: number;
+    retryDelay: number;
+  };
 
   /**
    * Get visual effects configuration (qualia landing background, particles, bloom, etc.).

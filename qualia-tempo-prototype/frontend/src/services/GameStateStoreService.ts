@@ -9,13 +9,20 @@
  * - Decoupled from UI components: No direct component knowledge
  */
 
-import { injectable, inject } from 'inversify';
-import { TYPES } from './inversify.types';
-import type { GameStateChangedEvent, QualiaStateUpdatedEvent } from "./EventBus";
-import { logMethod, catchError, validateEventProperty } from '../utils/decorators';
-import type { IGameStateStoreService } from './interfaces/IGameStateStoreService';
-import type { IEventBus } from './interfaces/IEventBus';
-import type { ILogger } from './interfaces/ILogger';
+import { injectable, inject } from "inversify";
+import { TYPES } from "./inversify.types";
+import type {
+  GameStateChangedEvent,
+  QualiaStateUpdatedEvent,
+} from "./EventBus";
+import {
+  logMethod,
+  catchError,
+  validateEventProperty,
+} from "../utils/decorators";
+import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
+import type { IEventBus } from "./interfaces/IEventBus";
+import type { ILogger } from "./interfaces/ILogger";
 
 // Store setter type (from Zustand)
 type StoreSetter = (_state: any) => void;
@@ -43,7 +50,7 @@ export class GameStateStoreService implements IGameStateStoreService {
   constructor(
     @inject(TYPES.IEventBus) private readonly eventBus: IEventBus,
     @inject(TYPES.ILogger) private readonly logger: ILogger,
-    @inject(TYPES.StoreSetter) private readonly setStore: StoreSetter
+    @inject(TYPES.StoreSetter) private readonly setStore: StoreSetter,
   ) {
     this.logger.info("🔗 [GameStateStoreService] Bridge service initialized");
   }
@@ -79,7 +86,7 @@ export class GameStateStoreService implements IGameStateStoreService {
 
     // Subscribe to RhythmicDash events to update player position
     const rhythmicDashListenerId = this.eventBus.subscribe(
-      'RhythmicDash',
+      "RhythmicDash",
       this.handleRhythmicDash.bind(this),
     );
     this.listenerIds.push(rhythmicDashListenerId);
@@ -131,7 +138,7 @@ export class GameStateStoreService implements IGameStateStoreService {
 
   @logMethod()
   @catchError()
-  getStatus(): 'running' | 'stopped' {
+  getStatus(): "running" | "stopped" {
     return this.isStarted ? "running" : "stopped";
   }
 
@@ -196,7 +203,9 @@ export class GameStateStoreService implements IGameStateStoreService {
           }),
         }));
         if (event.newState === "GameOver") {
-          this.logger.info("💀 [GameStateStoreService] Game Over - State reset");
+          this.logger.info(
+            "💀 [GameStateStoreService] Game Over - State reset",
+          );
         }
         break;
 
@@ -243,7 +252,7 @@ export class GameStateStoreService implements IGameStateStoreService {
   /**
    * Handle QualiaStateUpdated events
    */
-  @validateEventProperty('qualiaState', 'QualiaState')
+  @validateEventProperty("qualiaState", "QualiaState")
   private handleQualiaStateUpdate(event: QualiaStateUpdatedEvent): void {
     this.logger.info(
       "🌟 [GameStateStoreService] Processing QualiaStateUpdated:",
@@ -260,10 +269,11 @@ export class GameStateStoreService implements IGameStateStoreService {
    * Handle RhythmicDash events to update player position
    */
   private handleRhythmicDash(event: any): void {
-    this.logger.info(
-      "🏃 [GameStateStoreService] Processing RhythmicDash:",
-      { direction: event.direction, newPosition: event.newPosition, timing: event.timing },
-    );
+    this.logger.info("🏃 [GameStateStoreService] Processing RhythmicDash:", {
+      direction: event.direction,
+      newPosition: event.newPosition,
+      timing: event.timing,
+    });
 
     this.setStore((state: any) => ({
       ...state,

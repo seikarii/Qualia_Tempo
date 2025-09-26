@@ -12,19 +12,17 @@
  * REFACTORED: Eliminates UI coupling, follows single responsibility, uses pure event architecture
  */
 
-import { injectable, inject } from 'inversify';
-import { TYPES } from './inversify.types';
-import type { IEventBus } from './interfaces/IEventBus';
-import type { ILogger } from './interfaces/ILogger';
-import type { IConfigurationService } from './interfaces/IConfigurationService';
-import type { IQualiaStateCalculatorService } from './interfaces/IQualiaStateCalculatorService';
-import {
-  QualiaStateUpdatedEvent,
-} from "./EventBus";
+import { injectable, inject } from "inversify";
+import { TYPES } from "./inversify.types";
+import type { IEventBus } from "./interfaces/IEventBus";
+import type { ILogger } from "./interfaces/ILogger";
+import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
+import { QualiaStateUpdatedEvent } from "./EventBus";
 import type { PlayerActionEvent } from "./EventBus";
 import type { QualiaState } from "../types/contracts";
-import { logMethod, catchError } from '../utils/decorators';
-import type { QualiaCalculatorConfig } from './ConfigurationService';
+import { logMethod, catchError } from "../utils/decorators";
+import type { QualiaCalculatorConfig } from "./ConfigurationService";
 
 // Configuration interface - REMOVED: Using ConfigurationService interface
 
@@ -41,7 +39,9 @@ import type { QualiaCalculatorConfig } from './ConfigurationService';
  * - Dependency Injection: Receives EventBus via InversifyJS
  */
 @injectable()
-export class QualiaStateCalculatorService implements IQualiaStateCalculatorService {
+export class QualiaStateCalculatorService
+  implements IQualiaStateCalculatorService
+{
   private currentState!: QualiaState;
   private config: QualiaCalculatorConfig | null = null; // QUALIA.CODE: Lazy initialization
   private lastUpdateTime: number;
@@ -59,7 +59,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
@@ -81,17 +81,27 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   private ensureConfigLoaded(): QualiaCalculatorConfig {
     if (!this.config) {
       try {
-        this.config = this.configService.getConfigSection<QualiaCalculatorConfig>('qualiaCalculator');
-        this.logger.debug('QualiaStateCalculatorService configuration loaded successfully');
+        this.config =
+          this.configService.getConfigSection<QualiaCalculatorConfig>(
+            "qualiaCalculator",
+          );
+        this.logger.debug(
+          "QualiaStateCalculatorService configuration loaded successfully",
+        );
       } catch (error) {
-        this.logger.error('Failed to load QualiaStateCalculatorService configuration', error);
-        throw new Error('QualiaStateCalculatorService configuration not available');
+        this.logger.error(
+          "Failed to load QualiaStateCalculatorService configuration",
+          error,
+        );
+        throw new Error(
+          "QualiaStateCalculatorService configuration not available",
+        );
       }
     }
     // Always ensure currentState is initialized
     if (!this.currentState) {
       this.currentState = this.createInitialState();
-      this.logger.debug('QualiaStateCalculatorService state initialized');
+      this.logger.debug("QualiaStateCalculatorService state initialized");
     }
     return this.config;
   }
@@ -155,13 +165,13 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
       // Ensure baseQualiaState is never undefined
       baseQualiaState: {
         ...(this.config?.baseQualiaState || {}),
-        ...(newConfig.baseQualiaState || {})
+        ...(newConfig.baseQualiaState || {}),
       },
       // Ensure performanceMultipliers is never undefined
       performanceMultipliers: {
         ...(this.config?.performanceMultipliers || {}),
-        ...(newConfig.performanceMultipliers || {})
-      }
+        ...(newConfig.performanceMultipliers || {}),
+      },
     } as QualiaCalculatorConfig;
     this.logger.info("⚙️ [QualiaCalculator] Configuration updated");
   }
@@ -192,7 +202,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     const listenerId = this.eventBus.subscribe(
       "PlayerAction",
       playerActionHandler.bind(this),
-      { priority: 'high' },
+      { priority: "high" },
     );
     this.eventListenerIds.push(listenerId);
 
@@ -252,7 +262,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     const multipliers = config.hitNoteMultipliers;
 
     const currentState = this.currentState;
-    
+
     currentState.intensity = this.clamp(
       currentState.intensity + multipliers.intensity,
     );
@@ -314,7 +324,9 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
       this.currentState.intensity + multipliers.intensity,
     );
 
-    this.logger.info("⏩ [QualiaCalculator] FastForward! Aggression+, Intensity+");
+    this.logger.info(
+      "⏩ [QualiaCalculator] FastForward! Aggression+, Intensity+",
+    );
   }
 
   private onRewind(_context?: Record<string, any>): void {
@@ -379,8 +391,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
       this.currentState.recovery - config.recoveryDecay * deltaTime,
     );
     this.currentState.transcendence = this.clamp(
-      this.currentState.transcendence -
-        config.transcendenceDecay * deltaTime,
+      this.currentState.transcendence - config.transcendenceDecay * deltaTime,
     );
 
     // Only emit state update if there's significant change
@@ -408,10 +419,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
 
   private clamp(value: number): number {
     const config = this.ensureConfigLoaded();
-    return Math.max(
-      config.minValue,
-      Math.min(config.maxValue, value),
-    );
+    return Math.max(config.minValue, Math.min(config.maxValue, value));
   }
 
   private hasSignificantChange(): boolean {
@@ -465,7 +473,7 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   @catchError()
   public resetState(): void {
     this.currentState = this.createInitialState();
-    this.logger.info('🔄 [QualiaCalculator] State reset to initial values');
+    this.logger.info("🔄 [QualiaCalculator] State reset to initial values");
   }
 
   /**
@@ -490,17 +498,21 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
   private applyDecayToAllValues(deltaTime: number): void {
     const config = this.ensureConfigLoaded();
     const decayRates = config.decayRates;
-    
+
     // Apply exponential decay to all values using individual decay rates
     this.currentState.intensity *= Math.exp(-decayRates.intensity * deltaTime);
     this.currentState.precision *= Math.exp(-decayRates.precision * deltaTime);
-    this.currentState.aggression *= Math.exp(-decayRates.aggression * deltaTime);
+    this.currentState.aggression *= Math.exp(
+      -decayRates.aggression * deltaTime,
+    );
     this.currentState.flow *= Math.exp(-decayRates.flow * deltaTime);
     this.currentState.chaos *= Math.exp(-decayRates.chaos * deltaTime);
     this.currentState.recovery *= Math.exp(-decayRates.recovery * deltaTime);
-    this.currentState.transcendence *= Math.exp(-decayRates.transcendence * deltaTime);
+    this.currentState.transcendence *= Math.exp(
+      -decayRates.transcendence * deltaTime,
+    );
 
-    this.logger.debug('Applied temporal decay', { deltaTime, decayRates });
+    this.logger.debug("Applied temporal decay", { deltaTime, decayRates });
   }
 
   /**
@@ -523,15 +535,16 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     averageCalculationTime: number;
     currentState: QualiaState;
   } {
-    const averageCalculationTime = this.calculationsPerformed > 0
-      ? this.totalCalculationTime / this.calculationsPerformed
-      : 0;
+    const averageCalculationTime =
+      this.calculationsPerformed > 0
+        ? this.totalCalculationTime / this.calculationsPerformed
+        : 0;
 
     return {
       isRunning: this._isRunning,
       calculationsPerformed: this.calculationsPerformed,
       averageCalculationTime: averageCalculationTime,
-      currentState: { ...this.currentState }
+      currentState: { ...this.currentState },
     };
   }
 }

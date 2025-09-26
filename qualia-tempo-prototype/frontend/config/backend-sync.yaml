@@ -6,29 +6,29 @@ api:
   baseUrl: "http://127.0.0.1:8000"
   qualiaEndpoint: "/update_qualia"
   healthEndpoint: "/health"
-  timeout: 10000  # 10 seconds - increased for stability
+  timeout: 10000 # 10 seconds - increased for stability
 
 # WebSocket streaming configuration
 streaming:
   websocket:
     url: "ws://127.0.0.1:8000/ws/video_stream"
     maxReconnectAttempts: 10
-    reconnectDelay: 2000  # 2 seconds
-    pingInterval: 8000    # 8 seconds (increased from 5s for stability)
-    pingTimeout: 6000     # 6 seconds (increased from 3s for stability)
-    connectionTimeout: 10000  # 10 seconds
+    reconnectDelay: 2000 # 2 seconds
+    pingInterval: 8000 # 8 seconds (increased from 5s for stability)
+    pingTimeout: 6000 # 6 seconds (increased from 3s for stability)
+    connectionTimeout: 10000 # 10 seconds
 
 # Synchronization settings
 sync:
-  throttleDelay: 250     # Throttle updates to 250ms
-  batchSize: 5          # Send in batches of 5
-  maxRetries: 3         # Max retry attempts
-  retryDelay: 1000      # 1 second between retries
+  throttleDelay: 250 # Throttle updates to 250ms
+  batchSize: 5 # Send in batches of 5
+  maxRetries: 3 # Max retry attempts
+  retryDelay: 1000 # 1 second between retries
 
 # Connection monitoring
 connection:
-  healthCheckInterval: 30000  # 30 seconds
-  connectionTimeout: 10000    # 10 seconds
+  healthCheckInterval: 30000 # 30 seconds
+  connectionTimeout: 10000 # 10 seconds
   maxFailedAttempts: 5
 
 # Data validation
@@ -40,15 +40,15 @@ validation:
 # Performance settings
 performance:
   enableCompression: true
-  maxPayloadSize: 1048576  # 1MB
+  maxPayloadSize: 1048576 # 1MB
   enableBuffering: true
-  bufferFlushInterval: 1000  # 1 second
+  bufferFlushInterval: 1000 # 1 second
 
 # Error handling
 errorHandling:
   enableCircuitBreaker: true
   circuitBreakerThreshold: 10
-  circuitBreakerTimeout: 60000  # 1 minute
+  circuitBreakerTimeout: 60000 # 1 minute
   enableFallbackMode: true
 
 # Messages (QUALIA.CODE: Externalize all user-facing messages)

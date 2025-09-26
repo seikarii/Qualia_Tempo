@@ -5,13 +5,13 @@
 // Last generated: 2025-09-20T21:26:17Z
 
 // Re-export from CombatData.d.ts
-export type { CombatData } from './CombatData.d.ts';
+export type { CombatData } from "./CombatData.d.ts";
 
 // Re-export from PlayerState.d.ts
-export type { PlayerState } from './PlayerState.d.ts';
+export type { PlayerState } from "./PlayerState.d.ts";
 
 // Re-export from QualiaState.d.ts
-export type { QualiaState } from './QualiaState.d.ts';
+export type { QualiaState } from "./QualiaState.d.ts";
 
 // Re-export nested types for convenience
-export type { NoteData, LyricData } from './CombatData.d.ts';
+export type { NoteData, LyricData } from "./CombatData.d.ts";

@@ -6,7 +6,7 @@
  * decoupled access to Zustand store functionality for services.
  */
 
-import type { ExtendedNotification } from '../NotificationService';
+import type { ExtendedNotification } from "../NotificationService";
 
 export interface IGameStateStore {
   /**

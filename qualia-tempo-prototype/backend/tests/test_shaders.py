@@ -5,9 +5,8 @@ Tests enhanced particle shaders for compilation and basic functionality.
 """
 
 import os
-import sys
 import pytest
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 
 class TestShaderValidation:
@@ -51,29 +50,25 @@ class TestShaderValidation:
 
     def test_shader_files_exist(self, shader_dir):
         """Test that all required shader files exist."""
-        shaders = [
-            "particle.vert",
-            "particle.frag",
-            "qualia_particles.glsl"
-        ]
+        shaders = ["particle.vert", "particle.frag", "qualia_particles.glsl"]
 
         for shader in shaders:
             shader_path = os.path.join(shader_dir, shader)
-            assert os.path.exists(shader_path), f"Shader file {shader} not found at {shader_path}"
+            assert os.path.exists(
+                shader_path
+            ), f"Shader file {shader} not found at {shader_path}"
 
     def test_shader_syntax_validation(self, shader_dir):
         """Test shader syntax validation for all shader files."""
-        shaders = [
-            "particle.vert",
-            "particle.frag",
-            "qualia_particles.glsl"
-        ]
+        shaders = ["particle.vert", "particle.frag", "qualia_particles.glsl"]
 
         for shader in shaders:
             shader_path = os.path.join(shader_dir, shader)
-            assert self.validate_shader_syntax(shader_path), f"Shader {shader} failed syntax validation"
+            assert self.validate_shader_syntax(
+                shader_path
+            ), f"Shader {shader} failed syntax validation"
 
-    @patch('moderngl.create_standalone_context')
+    @patch("moderngl.create_standalone_context")
     def test_shader_compilation_with_moderngl(self, mock_create_context, shader_dir):
         """Test shader compilation when moderngl is available."""
         # Mock the context
@@ -96,20 +91,21 @@ class TestShaderValidation:
         mock_create_context.assert_called_once()
 
         # Test program creation
-        program = ctx.program(vertex_shader="#version 330\nvoid main() {}", fragment_shader="#version 330\nvoid main() {}")
+        program = ctx.program(
+            vertex_shader="#version 330\nvoid main() {}",
+            fragment_shader="#version 330\nvoid main() {}",
+        )
         assert program is not None
         mock_ctx.program.assert_called_once()
 
     def test_fallback_syntax_validation(self, shader_dir):
         """Test fallback syntax validation when moderngl is not available."""
-        with patch.dict('sys.modules', {'moderngl': None}):
+        with patch.dict("sys.modules", {"moderngl": None}):
             # This should work without moderngl
-            shaders = [
-                "particle.vert",
-                "particle.frag",
-                "qualia_particles.glsl"
-            ]
+            shaders = ["particle.vert", "particle.frag", "qualia_particles.glsl"]
 
             for shader in shaders:
                 shader_path = os.path.join(shader_dir, shader)
-                assert self.validate_shader_syntax(shader_path), f"Shader {shader} failed syntax validation"
+                assert self.validate_shader_syntax(
+                    shader_path
+                ), f"Shader {shader} failed syntax validation"

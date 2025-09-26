@@ -22,10 +22,14 @@ class StreamingWebService:
     Manages connections and coordinates with RenderingService for frame generation.
     """
 
-    def __init__(self, event_bus: EventBus, rendering_service: RenderingService, particle_engine):
+    def __init__(
+        self, event_bus: EventBus, rendering_service: RenderingService, particle_engine
+    ):
         self._event_bus = event_bus
         self._rendering_service = rendering_service
-        self._particle_engine = particle_engine  # QUALIA.CODE: Inject particle engine for simulation
+        self._particle_engine = (
+            particle_engine  # QUALIA.CODE: Inject particle engine for simulation
+        )
         self._logger = logging.getLogger(__name__)
 
         # Connection management

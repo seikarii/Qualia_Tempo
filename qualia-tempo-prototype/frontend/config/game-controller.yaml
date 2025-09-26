@@ -10,7 +10,7 @@ gameLifecycle:
 
 # Performance settings
 performance:
-  updateIntervalMs: 16  # ~60 FPS
+  updateIntervalMs: 16 # ~60 FPS
   maxFrameSkip: 5
   enableFrameRateLimiting: true
 
@@ -18,7 +18,7 @@ performance:
 stateManagement:
   enableStateValidation: true
   enableStatePersistence: true
-  stateSaveInterval: 5000  # Save every 5 seconds
+  stateSaveInterval: 5000 # Save every 5 seconds
   maxSaveSlots: 10
 
 # Input handling
@@ -38,10 +38,10 @@ scoring:
 # Health system
 health:
   maxHealth: 100
-  healthRegenRate: 1.0  # per second
+  healthRegenRate: 1.0 # per second
   damageOnMiss: 5
   enableInvincibilityFrames: true
-  invincibilityDuration: 1000  # 1 second
+  invincibilityDuration: 1000 # 1 second
 
 # Difficulty settings
 difficulty:
@@ -54,4 +54,4 @@ difficulty:
 events:
   enableEventBuffering: true
   maxEventQueueSize: 100
-  eventProcessingInterval: 10  # Process events every 10ms
+  eventProcessingInterval: 10 # Process events every 10ms

@@ -9,24 +9,28 @@ The frontend module is a React/TypeScript application that provides the user int
 ## 🎯 Core Features
 
 ### 🎮 Game Engine
+
 - **React Three Fiber**: 3D rendering with Three.js integration
 - **WebGL Shaders**: Custom GLSL shaders for advanced visual effects
 - **Rhythmic Movement**: Real-time player movement with audio synchronization
 - **Particle Systems**: 220+ GPU-accelerated particles with audio reactivity
 
 ### 🎵 Audio System
+
 - **Tone.js Integration**: Advanced audio processing and synthesis
 - **FFT Analysis**: Real-time frequency analysis for visual effects
 - **8D Audio**: Spatial audio positioning and effects
 - **Musical Combos**: 7-note musical input system (Q, E, R, T, F, G, C)
 
 ### 🏗️ Architecture
+
 - **InversifyJS IoC**: Dependency injection container for service management
 - **EventBus**: Type-safe event-driven communication
 - **Zustand**: Reactive state management with slices
 - **Configuration System**: YAML-based externalized parameters
 
 ### 🎨 Visual Effects
+
 - **God Rays**: Volumetric lighting from center point
 - **Bloom**: HDR post-processing effects
 - **Lightning**: Dynamic energy discharges on audio peaks
@@ -36,6 +40,7 @@ The frontend module is a React/TypeScript application that provides the user int
 ## 🛠️ Technology Stack
 
 ### Core Dependencies
+
 - **React 18**: Modern React with concurrent features
 - **TypeScript 5**: Strict type checking and advanced features
 - **Three.js**: 3D graphics and WebGL rendering
@@ -45,6 +50,7 @@ The frontend module is a React/TypeScript application that provides the user int
 - **Tone.js**: Web audio framework for music applications
 
 ### Development Tools
+
 - **Vite**: Fast build tool and development server
 - **Vitest**: Unit testing framework
 - **Playwright**: E2E testing framework
@@ -80,10 +86,12 @@ frontend/
 ## 🚀 Development Setup
 
 ### Prerequisites
+
 - **Node.js 18+**
 - **PNPM** (install globally: `npm install -g pnpm`)
 
 ### Installation
+
 ```bash
 # Install dependencies
 pnpm install
@@ -94,6 +102,7 @@ pnpm run dev
 ```
 
 ### Development Commands
+
 ```bash
 # Development
 pnpm run dev              # Start development server
@@ -123,6 +132,7 @@ pnpm run test:connection  # Test backend connection
 ## 🎮 Game Development
 
 ### Service Architecture
+
 The frontend follows **QUALIA.CODE v1.1** standards with:
 
 - **EventBus Service**: Central communication hub
@@ -132,6 +142,7 @@ The frontend follows **QUALIA.CODE v1.1** standards with:
 - **AudioService**: Sound processing and synthesis
 
 ### Configuration System
+
 All parameters are externalized in YAML files:
 
 ```yaml
@@ -146,7 +157,7 @@ visual_effects:
   particles:
     count: 220
     speed: 0.65
-    colors: ['#00ffff', '#ff00ff', '#ffff00']
+    colors: ["#00ffff", "#ff00ff", "#ffff00"]
 
 # Audio settings
 audio:
@@ -156,6 +167,7 @@ audio:
 ```
 
 ### Component Development
+
 Components follow React best practices:
 
 - **Functional Components**: With TypeScript interfaces
@@ -166,18 +178,21 @@ Components follow React best practices:
 ## 🧪 Testing Strategy
 
 ### Unit Testing (Vitest)
+
 - **Service Testing**: Isolated service functionality
 - **Component Testing**: React component behavior
 - **Hook Testing**: Custom hook logic
 - **Utility Testing**: Pure function validation
 
 ### E2E Testing (Playwright)
+
 - **User Workflows**: Complete user journey testing
 - **Visual Regression**: Screenshot-based testing
 - **Performance Testing**: Load and stress testing
 - **Cross-browser**: Multi-browser compatibility
 
 ### Integration Testing
+
 - **Service Interaction**: Multi-service workflows
 - **EventBus Flow**: Event emission and handling
 - **State Management**: Zustand store integration
@@ -186,6 +201,7 @@ Components follow React best practices:
 ## 🎨 Visual Development
 
 ### Shader Development
+
 Custom GLSL shaders for advanced effects:
 
 ```glsl
@@ -201,12 +217,14 @@ void main() {
 ```
 
 ### 3D Scene Management
+
 - **Scene Graph**: Hierarchical object management
 - **Material System**: Custom materials with uniforms
 - **Animation System**: Keyframe and procedural animations
 - **Lighting**: Dynamic lighting with shadows
 
 ### Performance Optimization
+
 - **LOD System**: Level-of-detail rendering
 - **Frustum Culling**: Viewport-based culling
 - **Texture Atlasing**: Efficient texture management
@@ -215,6 +233,7 @@ void main() {
 ## 🔧 Configuration
 
 ### Environment Variables
+
 Create `.env` file in frontend directory:
 
 ```env
@@ -224,6 +243,7 @@ VITE_ENVIRONMENT=development
 ```
 
 ### Build Configuration
+
 Vite configuration optimized for game development:
 
 ```typescript
@@ -232,31 +252,34 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    host: true
+    host: true,
   },
   build: {
-    target: 'esnext',
-    minify: 'esbuild',
-    sourcemap: true
-  }
-})
+    target: "esnext",
+    minify: "esbuild",
+    sourcemap: true,
+  },
+});
 ```
 
 ## 🚀 Deployment
 
 ### Production Build
+
 ```bash
 pnpm run build
 # Outputs to dist/ directory
 ```
 
 ### Electron Application
+
 ```bash
 pnpm run build:electron
 # Creates desktop application packages
 ```
 
 ### Docker Deployment
+
 ```dockerfile
 FROM node:18-alpine
 WORKDIR /app
@@ -271,6 +294,7 @@ CMD ["pnpm", "run", "preview"]
 ## 🤝 Contributing
 
 ### Development Workflow
+
 1. **Create Feature Branch**: `git checkout -b feature/your-feature`
 2. **Follow QUALIA.CODE**: Ensure architectural compliance
 3. **Write Tests**: Add comprehensive test coverage
@@ -278,6 +302,7 @@ CMD ["pnpm", "run", "preview"]
 5. **CI Validation**: Automated testing and linting
 
 ### Code Standards
+
 - **TypeScript**: Strict typing with interfaces
 - **ESLint**: All QUALIA.CODE rules must pass
 - **Testing**: 100% coverage for new features
@@ -285,6 +310,7 @@ CMD ["pnpm", "run", "preview"]
 - **Performance**: Optimize for 60fps gameplay
 
 ### Architecture Compliance
+
 - **InversifyJS**: Use IoC container for all services
 - **EventBus**: Communicate via events, not direct calls
 - **Configuration**: Externalize all parameters
@@ -294,12 +320,14 @@ CMD ["pnpm", "run", "preview"]
 ## 📊 Performance Metrics
 
 ### Target Specifications
+
 - **Frame Rate**: 60fps minimum
 - **Load Time**: <2s for initial load
 - **Memory Usage**: <200MB baseline
 - **Bundle Size**: <5MB gzipped
 
 ### Optimization Features
+
 - **Code Splitting**: Route-based and component-based
 - **Tree Shaking**: Unused code elimination
 - **Compression**: Gzip and brotli compression

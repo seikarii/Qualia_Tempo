@@ -10,8 +10,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const createWindow = (): BrowserWindow => {
   // Get primary display dimensions
   const primaryDisplay = screen.getPrimaryDisplay();
-  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
-  
+  const { width: screenWidth, height: screenHeight } =
+    primaryDisplay.workAreaSize;
+
   // Calculate optimal window size (80% of screen, minimum 1200x800)
   const windowWidth = Math.max(Math.floor(screenWidth * 0.8), 1200);
   const windowHeight = Math.max(Math.floor(screenHeight * 0.8), 800);
@@ -23,70 +24,70 @@ const createWindow = (): BrowserWindow => {
     minWidth: 1024,
     minHeight: 720,
     center: true,
-    
+
     // Enhanced visual settings
     titleBarStyle: "hidden",
     titleBarOverlay: {
-      color: '#000000',
-      symbolColor: '#00ffff',
-      height: 30
+      color: "#000000",
+      symbolColor: "#00ffff",
+      height: 30,
     },
-    
+
     // Window behavior
     resizable: true,
     maximizable: true,
     fullscreenable: true,
-    
+
     // Visual enhancements
     transparent: false,
     opacity: 1.0,
-    backgroundColor: '#000000',
-    
+    backgroundColor: "#000000",
+
     // Performance optimizations
     show: false, // Show only when ready to prevent flash
-    
+
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       nodeIntegration: false,
       contextIsolation: true,
-      
+
       // Enhanced security and performance
       sandbox: false,
       webSecurity: true,
       allowRunningInsecureContent: false,
-      
+
       // Graphics acceleration
       experimentalFeatures: true,
-      
+
       // Audio enhancements - removed deprecated enableRemoteModule
       // enableRemoteModule: false, // DEPRECATED in newer Electron versions
-      
+
       // Additional flags for better performance
       additionalArguments: [
-        '--enable-features=VaapiVideoDecoder',
-        '--disable-features=VizDisplayCompositor',
-        '--enable-gpu-rasterization',
-        '--enable-zero-copy',
-        '--ignore-gpu-blocklist'
-      ]
+        "--enable-features=VaapiVideoDecoder",
+        "--disable-features=VizDisplayCompositor",
+        "--enable-gpu-rasterization",
+        "--enable-zero-copy",
+        "--ignore-gpu-blocklist",
+      ],
     },
-    
+
     // Window styling
     icon: join(__dirname, "../assets/icon.png"),
     title: "Qualia Tempo - A Charlie Hellsinger Story",
-    
+
     // macOS specific - use valid vibrancy value
-    vibrancy: 'fullscreen-ui' as any, // Type assertion for compatibility
-    visualEffectState: 'active'
+    vibrancy: "fullscreen-ui" as any, // Type assertion for compatibility
+    visualEffectState: "active",
   });
 
   // Enhanced window loading with splash effect
-  mainWindow.once('ready-to-show', () => {
+  mainWindow.once("ready-to-show", () => {
     mainWindow.show();
-    
+
     // Smooth fade-in effect
     mainWindow.setOpacity(0);
-    
+
     let opacity = 0;
     const fadeIn = setInterval(() => {
       opacity += 0.05;
@@ -96,7 +97,7 @@ const createWindow = (): BrowserWindow => {
       }
       mainWindow.setOpacity(opacity);
     }, 16); // ~60fps
-    
+
     console.log("🎮 Qualia Tempo Window Ready - Neural Interface Activated");
   });
 
@@ -112,13 +113,13 @@ const createWindow = (): BrowserWindow => {
   // Enhanced development tools
   if (env.isDev) {
     mainWindow.webContents.openDevTools({
-      mode: 'detach',
-      activate: false
+      mode: "detach",
+      activate: false,
     });
-    
+
     // Hot reload support
-    mainWindow.webContents.on('before-input-event', (_, input) => {
-      if (input.control && input.key === 'r') {
+    mainWindow.webContents.on("before-input-event", (_, input) => {
+      if (input.control && input.key === "r") {
         mainWindow.reload();
       }
     });
@@ -130,10 +131,10 @@ const createWindow = (): BrowserWindow => {
   });
 
   // Prevent navigation to external sites (security)
-  mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+  mainWindow.webContents.on("will-navigate", (event, navigationUrl) => {
     const parsedUrl = new URL(navigationUrl);
     const currentUrl = new URL(mainWindow.webContents.getURL());
-    
+
     if (parsedUrl.origin !== currentUrl.origin) {
       event.preventDefault();
       shell.openExternal(navigationUrl);
@@ -143,7 +144,7 @@ const createWindow = (): BrowserWindow => {
   // Enhanced fullscreen handling with smooth transitions
   ipcMain.handle("toggle-fullscreen", () => {
     const isFullScreen = mainWindow.isFullScreen();
-    
+
     if (isFullScreen) {
       // Exit fullscreen with fade effect
       mainWindow.setFullScreen(false);
@@ -151,10 +152,10 @@ const createWindow = (): BrowserWindow => {
       // Enter fullscreen with preparation
       mainWindow.setFullScreen(true);
     }
-    
+
     // Notify renderer of fullscreen state change
-    mainWindow.webContents.send('fullscreen-changed', !isFullScreen);
-    
+    mainWindow.webContents.send("fullscreen-changed", !isFullScreen);
+
     return !isFullScreen;
   });
 
@@ -177,7 +178,7 @@ const createWindow = (): BrowserWindow => {
       isFullScreen: mainWindow.isFullScreen(),
       bounds: mainWindow.getBounds(),
       isVisible: mainWindow.isVisible(),
-      isFocused: mainWindow.isFocused()
+      isFocused: mainWindow.isFocused(),
     };
   });
 
@@ -188,18 +189,18 @@ const createWindow = (): BrowserWindow => {
       memory: process.memoryUsage(),
       cpu: process.cpuUsage(),
       gpu: webContents.getProcessId(),
-      zoom: webContents.getZoomLevel()
+      zoom: webContents.getZoomLevel(),
     };
   });
 
   // Audio session management (Windows)
-  if (process.platform === 'win32') {
+  if (process.platform === "win32") {
     ipcMain.handle("set-audio-session", (_, _options) => {
       // Enhanced audio session handling for Windows
       try {
         return { success: true };
       } catch (error) {
-        console.error('Audio session error:', error);
+        console.error("Audio session error:", error);
         return { success: false, error: (error as Error).message };
       }
     });
@@ -211,22 +212,22 @@ const createWindow = (): BrowserWindow => {
 // Application event handlers
 app.whenReady().then(() => {
   console.log("⚡ Qualia Tempo Engine Initializing...");
-  
+
   // Set app user model ID (Windows)
-  if (process.platform === 'win32') {
-    app.setAppUserModelId('com.qualiatempo.app');
+  if (process.platform === "win32") {
+    app.setAppUserModelId("com.qualiatempo.app");
   }
-  
+
   // Enhanced security settings
-  app.on('web-contents-created', (_, contents) => {
+  app.on("web-contents-created", (_, contents) => {
     // Block navigation to external URLs
-    contents.on('will-navigate', (event, navigationUrl) => {
+    contents.on("will-navigate", (event, navigationUrl) => {
       const parsedUrl = new URL(navigationUrl);
-      
+
       if (
         parsedUrl.origin !== "http://localhost:5173" &&
         parsedUrl.origin !== "http://localhost:8000" &&
-        !navigationUrl.startsWith('file://')
+        !navigationUrl.startsWith("file://")
       ) {
         event.preventDefault();
         console.warn(`🚫 Blocked navigation to: ${navigationUrl}`);
@@ -236,7 +237,7 @@ app.whenReady().then(() => {
     // Block new window creation
     contents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url);
-      return { action: 'deny' };
+      return { action: "deny" };
     });
   });
 
@@ -253,10 +254,10 @@ app.whenReady().then(() => {
   });
 
   // Performance optimizations
-  app.commandLine.appendSwitch('--enable-features', 'VaapiVideoDecoder');
-  app.commandLine.appendSwitch('--ignore-gpu-blocklist');
-  app.commandLine.appendSwitch('--enable-gpu-rasterization');
-  
+  app.commandLine.appendSwitch("--enable-features", "VaapiVideoDecoder");
+  app.commandLine.appendSwitch("--ignore-gpu-blocklist");
+  app.commandLine.appendSwitch("--enable-gpu-rasterization");
+
   console.log("🎯 Neural Interface Online - Ready for Synchronization");
 });
 
@@ -273,7 +274,7 @@ const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.quit();
 } else {
-  app.on('second-instance', () => {
+  app.on("second-instance", () => {
     // Someone tried to run a second instance, focus our window instead
     const windows = BrowserWindow.getAllWindows();
     if (windows.length > 0) {
@@ -285,22 +286,24 @@ if (!gotTheLock) {
 }
 
 // Enhanced error handling
-process.on('uncaughtException', (error) => {
-  console.error('🚨 Uncaught Exception:', error);
+process.on("uncaughtException", (error) => {
+  console.error("🚨 Uncaught Exception:", error);
   // Don't exit in development
   if (!env.isDev) {
     app.quit();
   }
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('🚨 Unhandled Rejection at:', promise, 'reason:', reason);
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("🚨 Unhandled Rejection at:", promise, "reason:", reason);
 });
 
 // Graceful shutdown
-app.on('before-quit', (_) => {
+app.on("before-quit", (_) => {
   console.log("🔄 Initiating Neural Interface Shutdown...");
   // Perform cleanup operations here
 });
 
-console.log("🚀 Qualia Tempo Electron Main Process Started - Neural Core Active");
+console.log(
+  "🚀 Qualia Tempo Electron Main Process Started - Neural Core Active",
+);

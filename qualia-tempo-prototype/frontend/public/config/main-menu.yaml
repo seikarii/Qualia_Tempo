@@ -8,12 +8,12 @@ particles:
   max_particles: 50
   burst_particles_on_click: 8
   background_burst_particles: 12
-  
+
   # Physics properties
   velocity:
     min: -2.5
     max: 2.5
-  
+
   size:
     min: 4
     max: 12
@@ -21,7 +21,7 @@ particles:
     burst_max: 6
     background_min: 6
     background_max: 18
-  
+
   # Lifecycle
   life_decay_rate: 0.01
   frequency:
@@ -29,12 +29,12 @@ particles:
     max: 0.03
     burst: 0.05
     background: 0.03
-  
+
   # Visual properties
   colors:
-    - "#22d3ee"  # cyan
-    - "#a855f7"  # purple
-    - "#ec4899"  # pink
+    - "#22d3ee" # cyan
+    - "#a855f7" # purple
+    - "#ec4899" # pink
 
 # Audio Wave Effects
 audio_waves:
@@ -50,37 +50,37 @@ animations:
     ease: "easeOut"
     delay: 0
     y_offset: -50
-  
+
   subtitle_entry:
     duration: 1.5
     ease: "easeOut"
     delay: 0.5
     y_offset: -30
-  
+
   instructions_entry:
     duration: 1.5
     delay: 1.5
-  
+
   button_entry:
     duration: 1.5
     ease: "easeOut"
     delay: 1.0
     y_offset: 50
-  
+
   # Button interactions
   button_hover:
     scale: 1.05
     transition_duration: 0.3
-  
+
   button_press:
     scale: 0.95
     transition_duration: 0.1
-  
+
   # Shimmer effect
   shimmer:
     duration: 1.5
     repeat: true
-  
+
   # Border animation
   border_gradient:
     duration: 2.0

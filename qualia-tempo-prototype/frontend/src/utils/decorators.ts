@@ -1,22 +1,26 @@
 // QUALIA.CODE v1.0 - Frontend Decorators
 // Mandatory transversal logic implementation for TypeScript
 
-import { LoggerProvider } from '../services/Logger';
-import { schemaRegistry } from '../schemas';
+import { LoggerProvider } from "../services/Logger";
+import { schemaRegistry } from "../schemas";
 
 // ==================== UNIVERSAL DECORATOR FACTORY ====================
 // Resolves dual signature problem ONCE. No more repetition.
 
 type UniversalDecorator = {
   // eslint-disable-next-line no-unused-vars
-  (target: any, propertyKey?: string | symbol, descriptor?: PropertyDescriptor): PropertyDescriptor | void;
+  (
+    target: any,
+    propertyKey?: string | symbol,
+    descriptor?: PropertyDescriptor,
+  ): PropertyDescriptor | void;
 };
 
 type DecoratorLogic = (
   // eslint-disable-next-line no-unused-vars
-  originalMethod: Function, 
+  originalMethod: Function,
   // eslint-disable-next-line no-unused-vars
-  context: { target: any, propertyKey: string }
+  context: { target: any; propertyKey: string },
 ) => Function;
 
 /**
@@ -24,7 +28,11 @@ type DecoratorLogic = (
  * All decorators use this pattern. Zero exceptions.
  */
 function createUniversalDecorator(logic: DecoratorLogic): UniversalDecorator {
-  return function (target: any, propertyKey?: string | symbol, descriptor?: PropertyDescriptor): PropertyDescriptor | void {
+  return function (
+    target: any,
+    propertyKey?: string | symbol,
+    descriptor?: PropertyDescriptor,
+  ): PropertyDescriptor | void {
     if (!descriptor && propertyKey) {
       descriptor = Object.getOwnPropertyDescriptor(target, propertyKey) || {
         value: target[propertyKey],
@@ -34,14 +42,17 @@ function createUniversalDecorator(logic: DecoratorLogic): UniversalDecorator {
       };
     }
 
-    if (!descriptor || typeof descriptor.value !== 'function') {
+    if (!descriptor || typeof descriptor.value !== "function") {
       return descriptor;
     }
 
     const originalMethod = descriptor.value;
-    const methodName = String(propertyKey || 'unknown');
+    const methodName = String(propertyKey || "unknown");
 
-    descriptor.value = logic(originalMethod, { target, propertyKey: methodName });
+    descriptor.value = logic(originalMethod, {
+      target,
+      propertyKey: methodName,
+    });
 
     return descriptor;
   };
@@ -58,7 +69,7 @@ export function logMethod(): UniversalDecorator {
     return function (this: any, ...args: any[]) {
       const className = context.target.constructor.name;
       const methodName = `${className}.${context.propertyKey}`;
-      
+
       // Safe logger access with fallback
       let logger: any;
       try {
@@ -68,7 +79,7 @@ export function logMethod(): UniversalDecorator {
         console.debug(`→ ENTER ${methodName}`, {
           arguments: args.length > 0 ? args : "no arguments",
           timestamp: new Date().toISOString(),
-          note: "Logger not yet available, using console fallback"
+          note: "Logger not yet available, using console fallback",
         });
         return originalMethod.apply(this, args);
       }
@@ -129,7 +140,7 @@ export function throttle(milliseconds: number): UniversalDecorator {
       const methodKey = `${className}.${context.propertyKey}`;
       const now = Date.now();
       const lastCall = throttleMap.get(methodKey) || 0;
-      
+
       // Safe logger access with fallback
       let logger: any;
       try {
@@ -171,7 +182,7 @@ export function catchError(fallbackValue?: any): UniversalDecorator {
     return function (this: any, ...args: any[]) {
       const className = context.target.constructor.name;
       const methodName = `${className}.${context.propertyKey}`;
-      
+
       // Safe logger access with fallback
       let logger: any;
       try {
@@ -182,13 +193,19 @@ export function catchError(fallbackValue?: any): UniversalDecorator {
           return originalMethod.apply(this, args);
         } catch (methodError) {
           console.error(`${methodName}:`, {
-            error: methodError instanceof Error ? methodError.message : String(methodError),
-            stack: methodError instanceof Error ? methodError.stack : "No stack trace",
+            error:
+              methodError instanceof Error
+                ? methodError.message
+                : String(methodError),
+            stack:
+              methodError instanceof Error
+                ? methodError.stack
+                : "No stack trace",
             arguments: args,
             timestamp: new Date().toISOString(),
-            note: "Logger not yet available, using console fallback"
+            note: "Logger not yet available, using console fallback",
           });
-          
+
           if (fallbackValue !== undefined) {
             return fallbackValue;
           }
@@ -210,10 +227,9 @@ export function catchError(fallbackValue?: any): UniversalDecorator {
             });
 
             if (fallbackValue !== undefined) {
-              logger.info(
-                `Returning fallback value for ${methodName}:`,
-                { fallbackValue },
-              );
+              logger.info(`Returning fallback value for ${methodName}:`, {
+                fallbackValue,
+              });
               return fallbackValue;
             }
 
@@ -231,10 +247,9 @@ export function catchError(fallbackValue?: any): UniversalDecorator {
         });
 
         if (fallbackValue !== undefined) {
-          logger.info(
-            `Returning fallback value for ${methodName}:`,
-            { fallbackValue },
-          );
+          logger.info(`Returning fallback value for ${methodName}:`, {
+            fallbackValue,
+          });
           return fallbackValue;
         }
 
@@ -338,10 +353,14 @@ export function validate(schemaName: string): UniversalDecorator {
       if (args.length > 0) {
         try {
           // Use statically imported schema registry
-          const schema = schemaRegistry[schemaName as keyof typeof schemaRegistry];
+          const schema =
+            schemaRegistry[schemaName as keyof typeof schemaRegistry];
           if (!schema) {
             const errorMessage = `Schema '${schemaName}' not found in registry`;
-            logger.error(`Schema validation failed for ${schemaName} in ${methodName}:`, { error: errorMessage });
+            logger.error(
+              `Schema validation failed for ${schemaName} in ${methodName}:`,
+              { error: errorMessage },
+            );
             throw new Error(errorMessage);
           }
 
@@ -350,19 +369,27 @@ export function validate(schemaName: string): UniversalDecorator {
 
           if (!validationResult.success) {
             const errorMessage = `Schema validation failed: ${validationResult.error.message}`;
-            logger.error(`Schema validation failed for ${schemaName} in ${methodName}:`, {
-              error: errorMessage,
-              issues: validationResult.error.issues,
-              receivedData: args[0]
-            });
+            logger.error(
+              `Schema validation failed for ${schemaName} in ${methodName}:`,
+              {
+                error: errorMessage,
+                issues: validationResult.error.issues,
+                receivedData: args[0],
+              },
+            );
             throw new Error(errorMessage);
           }
 
-          logger.debug(`✅ Schema validation passed for ${schemaName} in ${methodName}`);
-
+          logger.debug(
+            `✅ Schema validation passed for ${schemaName} in ${methodName}`,
+          );
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          logger.error(`Schema validation failed for ${schemaName} in ${methodName}:`, { error: errorMessage });
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          logger.error(
+            `Schema validation failed for ${schemaName} in ${methodName}:`,
+            { error: errorMessage },
+          );
           throw new Error(`Schema validation failed: ${errorMessage}`);
         }
       }
@@ -377,7 +404,10 @@ export function validate(schemaName: string): UniversalDecorator {
  * Usage: @validateEventProperty('qualiaState', 'QualiaState')
  * Validates a specific property of an event object against a schema.
  */
-export function validateEventProperty(propertyName: string, schemaName: string): UniversalDecorator {
+export function validateEventProperty(
+  propertyName: string,
+  schemaName: string,
+): UniversalDecorator {
   return createUniversalDecorator((originalMethod, context) => {
     return function (this: any, ...args: any[]) {
       const className = context.target.constructor.name;
@@ -385,13 +415,17 @@ export function validateEventProperty(propertyName: string, schemaName: string):
       const logger = LoggerProvider.getLogger();
 
       // Validate property of first argument if present
-      if (args.length > 0 && args[0] && typeof args[0] === 'object') {
+      if (args.length > 0 && args[0] && typeof args[0] === "object") {
         try {
           // Use statically imported schema registry
-          const schema = schemaRegistry[schemaName as keyof typeof schemaRegistry];
+          const schema =
+            schemaRegistry[schemaName as keyof typeof schemaRegistry];
           if (!schema) {
             const errorMessage = `Schema '${schemaName}' not found in registry`;
-            logger.error(`Schema validation failed for ${schemaName} in ${methodName}:`, { error: errorMessage });
+            logger.error(
+              `Schema validation failed for ${schemaName} in ${methodName}:`,
+              { error: errorMessage },
+            );
             throw new Error(errorMessage);
           }
 
@@ -399,7 +433,10 @@ export function validateEventProperty(propertyName: string, schemaName: string):
           const propertyValue = args[0][propertyName];
           if (propertyValue === undefined) {
             const errorMessage = `Property '${propertyName}' not found in event object`;
-            logger.error(`Event property validation failed for ${propertyName} in ${methodName}:`, { error: errorMessage });
+            logger.error(
+              `Event property validation failed for ${propertyName} in ${methodName}:`,
+              { error: errorMessage },
+            );
             throw new Error(errorMessage);
           }
 
@@ -408,19 +445,27 @@ export function validateEventProperty(propertyName: string, schemaName: string):
 
           if (!validationResult.success) {
             const errorMessage = `Schema validation failed: ${validationResult.error.message}`;
-            logger.error(`Event property validation failed for ${propertyName}.${schemaName} in ${methodName}:`, {
-              error: errorMessage,
-              issues: validationResult.error.issues,
-              receivedPropertyData: propertyValue
-            });
+            logger.error(
+              `Event property validation failed for ${propertyName}.${schemaName} in ${methodName}:`,
+              {
+                error: errorMessage,
+                issues: validationResult.error.issues,
+                receivedPropertyData: propertyValue,
+              },
+            );
             throw new Error(errorMessage);
           }
 
-          logger.debug(`✅ Event property validation passed for ${propertyName}.${schemaName} in ${methodName}`);
-
+          logger.debug(
+            `✅ Event property validation passed for ${propertyName}.${schemaName} in ${methodName}`,
+          );
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          logger.error(`Event property validation failed for ${propertyName}.${schemaName} in ${methodName}:`, { error: errorMessage });
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          logger.error(
+            `Event property validation failed for ${propertyName}.${schemaName} in ${methodName}:`,
+            { error: errorMessage },
+          );
           throw new Error(`Event property validation failed: ${errorMessage}`);
         }
       }
@@ -449,43 +494,88 @@ export function qualiaMethod(
     // Apply decorators in reverse order (they wrap outward)
     if (options.throttleMs) {
       const throttleDecorator = throttle(options.throttleMs);
-      const tempDescriptor = { value: decoratedMethod, writable: true, enumerable: true, configurable: true };
-      const result = throttleDecorator(context.target, context.propertyKey, tempDescriptor);
-      if (result && typeof result.value === 'function') {
+      const tempDescriptor = {
+        value: decoratedMethod,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      };
+      const result = throttleDecorator(
+        context.target,
+        context.propertyKey,
+        tempDescriptor,
+      );
+      if (result && typeof result.value === "function") {
         decoratedMethod = result.value;
       }
     }
 
     if (options.schema) {
       const validateDecorator = validate(options.schema);
-      const tempDescriptor = { value: decoratedMethod, writable: true, enumerable: true, configurable: true };
-      const result = validateDecorator(context.target, context.propertyKey, tempDescriptor);
-      if (result && typeof result.value === 'function') {
+      const tempDescriptor = {
+        value: decoratedMethod,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      };
+      const result = validateDecorator(
+        context.target,
+        context.propertyKey,
+        tempDescriptor,
+      );
+      if (result && typeof result.value === "function") {
         decoratedMethod = result.value;
       }
     }
 
     const catchErrorDecorator = catchError(options.fallbackValue);
-    let tempDescriptor = { value: decoratedMethod, writable: true, enumerable: true, configurable: true };
-    let result = catchErrorDecorator(context.target, context.propertyKey, tempDescriptor);
-    if (result && typeof result.value === 'function') {
+    let tempDescriptor = {
+      value: decoratedMethod,
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    };
+    let result = catchErrorDecorator(
+      context.target,
+      context.propertyKey,
+      tempDescriptor,
+    );
+    if (result && typeof result.value === "function") {
       decoratedMethod = result.value;
     }
 
     if (!options.skipLogging) {
       const logDecorator = logMethod();
-      tempDescriptor = { value: decoratedMethod, writable: true, enumerable: true, configurable: true };
-      result = logDecorator(context.target, context.propertyKey, tempDescriptor);
-      if (result && typeof result.value === 'function') {
+      tempDescriptor = {
+        value: decoratedMethod,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      };
+      result = logDecorator(
+        context.target,
+        context.propertyKey,
+        tempDescriptor,
+      );
+      if (result && typeof result.value === "function") {
         decoratedMethod = result.value;
       }
     }
 
     if (!options.skipTiming) {
       const measureDecorator = measureTime();
-      tempDescriptor = { value: decoratedMethod, writable: true, enumerable: true, configurable: true };
-      result = measureDecorator(context.target, context.propertyKey, tempDescriptor);
-      if (result && typeof result.value === 'function') {
+      tempDescriptor = {
+        value: decoratedMethod,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      };
+      result = measureDecorator(
+        context.target,
+        context.propertyKey,
+        tempDescriptor,
+      );
+      if (result && typeof result.value === "function") {
         decoratedMethod = result.value;
       }
     }

@@ -1,9 +1,9 @@
-import '@testing-library/jest-dom/vitest';
-import { afterEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import "@testing-library/jest-dom/vitest";
+import { afterEach, vi } from "vitest";
+import { cleanup } from "@testing-library/react";
 
 // ÚNICA FUENTE DE VERDAD PARA MOCKS DE DECORADORES
-vi.mock('../utils/decorators', () => ({
+vi.mock("../utils/decorators", () => ({
   logMethod: vi.fn().mockImplementation(() => (d: any) => d),
   catchError: vi.fn().mockImplementation(() => (d: any) => d),
   validate: vi.fn().mockImplementation(() => (d: any) => d),
@@ -14,7 +14,7 @@ vi.mock('../utils/decorators', () => ({
 }));
 
 // QUALIA.CODE Global Tone.js Mock - Prevent audio module import errors in tests
-vi.mock('tone', () => ({
+vi.mock("tone", () => ({
   PolySynth: vi.fn(() => ({
     toDestination: vi.fn().mockReturnThis(),
     dispose: vi.fn(),
@@ -62,7 +62,7 @@ vi.mock('tone', () => ({
 }));
 
 // Mock the specific Tone.js ESM modules that might be imported
-vi.mock('tone/build/esm/core/Global', () => ({
+vi.mock("tone/build/esm/core/Global", () => ({
   default: {
     start: vi.fn(),
     Transport: {
@@ -74,7 +74,7 @@ vi.mock('tone/build/esm/core/Global', () => ({
   },
 }));
 
-vi.mock('tone/build/esm/core/Tone', () => ({
+vi.mock("tone/build/esm/core/Tone", () => ({
   default: {
     start: vi.fn(),
     Transport: {
@@ -86,7 +86,7 @@ vi.mock('tone/build/esm/core/Tone', () => ({
   },
 }));
 
-vi.mock('tone/build/esm/core/AudioContext', () => ({
+vi.mock("tone/build/esm/core/AudioContext", () => ({
   default: vi.fn().mockImplementation(() => ({
     createGain: vi.fn(() => ({
       connect: vi.fn(),
@@ -99,25 +99,25 @@ vi.mock('tone/build/esm/core/AudioContext', () => ({
       stop: vi.fn(),
     })),
     destination: {},
-    state: 'running',
+    state: "running",
     resume: vi.fn(),
     suspend: vi.fn(),
     close: vi.fn(),
   })),
 }));
 
-vi.mock('tone/build/esm/source/Oscillator', () => ({
+vi.mock("tone/build/esm/source/Oscillator", () => ({
   default: vi.fn(() => ({
     toDestination: vi.fn().mockReturnThis(),
     dispose: vi.fn(),
     start: vi.fn(),
     stop: vi.fn(),
     frequency: { value: 440 },
-    type: 'sine',
+    type: "sine",
   })),
 }));
 
-vi.mock('tone/build/esm/component/Filter', () => ({
+vi.mock("tone/build/esm/component/Filter", () => ({
   default: vi.fn(() => ({
     toDestination: vi.fn().mockReturnThis(),
     dispose: vi.fn(),
@@ -127,7 +127,7 @@ vi.mock('tone/build/esm/component/Filter', () => ({
   })),
 }));
 
-vi.mock('tone/build/esm/component/Envelope', () => ({
+vi.mock("tone/build/esm/component/Envelope", () => ({
   default: vi.fn(() => ({
     connect: vi.fn().mockReturnThis(),
     dispose: vi.fn(),
@@ -136,7 +136,7 @@ vi.mock('tone/build/esm/component/Envelope', () => ({
   })),
 }));
 
-vi.mock('tone/build/esm/effect/Reverb', () => ({
+vi.mock("tone/build/esm/effect/Reverb", () => ({
   default: vi.fn(() => ({
     toDestination: vi.fn().mockReturnThis(),
     dispose: vi.fn(),
@@ -144,7 +144,7 @@ vi.mock('tone/build/esm/effect/Reverb', () => ({
   })),
 }));
 
-vi.mock('tone/build/esm/effect/Distortion', () => ({
+vi.mock("tone/build/esm/effect/Distortion", () => ({
   default: vi.fn(() => ({
     toDestination: vi.fn().mockReturnThis(),
     dispose: vi.fn(),
@@ -152,7 +152,7 @@ vi.mock('tone/build/esm/effect/Distortion', () => ({
   })),
 }));
 
-vi.mock('tone/build/esm/instrument/MonoSynth', () => ({
+vi.mock("tone/build/esm/instrument/MonoSynth", () => ({
   default: vi.fn(() => ({
     toDestination: vi.fn().mockReturnThis(),
     dispose: vi.fn(),
@@ -161,7 +161,7 @@ vi.mock('tone/build/esm/instrument/MonoSynth', () => ({
   })),
 }));
 
-vi.mock('tone/build/esm/instrument/FMSynth', () => ({
+vi.mock("tone/build/esm/instrument/FMSynth", () => ({
   default: vi.fn(() => ({
     toDestination: vi.fn().mockReturnThis(),
     dispose: vi.fn(),
@@ -170,7 +170,7 @@ vi.mock('tone/build/esm/instrument/FMSynth', () => ({
   })),
 }));
 
-vi.mock('tone/build/esm/index', () => ({
+vi.mock("tone/build/esm/index", () => ({
   PolySynth: vi.fn(() => ({
     toDestination: vi.fn().mockReturnThis(),
     dispose: vi.fn(),
@@ -209,14 +209,14 @@ vi.mock('tone/build/esm/index', () => ({
 }));
 
 // QUALIA.CODE Global Electron Mock - Prevent electron module import errors in tests
-vi.mock('electron', () => ({
+vi.mock("electron", () => ({
   app: {
     requestSingleInstanceLock: vi.fn(() => true),
     on: vi.fn(),
     quit: vi.fn(),
-    getVersion: vi.fn(() => '1.0.0'),
-    getName: vi.fn(() => 'Qualia Tempo'),
-    getPath: vi.fn(() => '/tmp'),
+    getVersion: vi.fn(() => "1.0.0"),
+    getName: vi.fn(() => "Qualia Tempo"),
+    getPath: vi.fn(() => "/tmp"),
     setAppUserModelId: vi.fn(),
     commandLine: {
       appendSwitch: vi.fn(),
@@ -265,10 +265,12 @@ vi.mock('electron', () => ({
       workAreaSize: { width: 1920, height: 1080 },
       size: { width: 1920, height: 1080 },
     })),
-    getAllDisplays: vi.fn(() => [{
-      workAreaSize: { width: 1920, height: 1080 },
-      size: { width: 1920, height: 1080 },
-    }]),
+    getAllDisplays: vi.fn(() => [
+      {
+        workAreaSize: { width: 1920, height: 1080 },
+        size: { width: 1920, height: 1080 },
+      },
+    ]),
   },
   shell: {
     openExternal: vi.fn(),
@@ -282,7 +284,7 @@ vi.mock('electron', () => ({
 
 // Comprehensive browser APIs mocking for test environment
 // Ensure global window object exists
-if (typeof window === 'undefined') {
+if (typeof window === "undefined") {
   global.window = {} as any;
 }
 
@@ -292,45 +294,45 @@ const mockClearInterval = vi.fn(); // No-op function
 const mockSetTimeout = vi.fn(() => 456); // Return a mock timer ID
 const mockClearTimeout = vi.fn(); // No-op function
 
-Object.defineProperty(window, 'setInterval', {
+Object.defineProperty(window, "setInterval", {
   writable: true,
   configurable: true,
   value: mockSetInterval,
 });
 
-Object.defineProperty(window, 'clearInterval', {
+Object.defineProperty(window, "clearInterval", {
   writable: true,
   configurable: true,
   value: mockClearInterval,
 });
 
-Object.defineProperty(window, 'setTimeout', {
+Object.defineProperty(window, "setTimeout", {
   writable: true,
   configurable: true,
   value: mockSetTimeout,
 });
 
-Object.defineProperty(window, 'clearTimeout', {
+Object.defineProperty(window, "clearTimeout", {
   writable: true,
   configurable: true,
   value: mockClearTimeout,
 });
 
 // Also mock on global for maximum compatibility
-Object.defineProperty(global, 'setInterval', {
+Object.defineProperty(global, "setInterval", {
   writable: true,
   configurable: true,
   value: mockSetInterval,
 });
 
-Object.defineProperty(global, 'clearInterval', {
+Object.defineProperty(global, "clearInterval", {
   writable: true,
   configurable: true,
   value: mockClearInterval,
 });
 
 // Mock performance API
-Object.defineProperty(window, 'performance', {
+Object.defineProperty(window, "performance", {
   writable: true,
   value: {
     now: vi.fn(() => Date.now()),
@@ -347,14 +349,14 @@ Object.defineProperty(window, 'performance', {
 });
 
 // Mock requestAnimationFrame/cancelAnimationFrame
-Object.defineProperty(window, 'requestAnimationFrame', {
+Object.defineProperty(window, "requestAnimationFrame", {
   writable: true,
   value: vi.fn((callback: FrameRequestCallback) => {
     return globalThis.setTimeout(callback, 16); // ~60fps
   }),
 });
 
-Object.defineProperty(window, 'cancelAnimationFrame', {
+Object.defineProperty(window, "cancelAnimationFrame", {
   writable: true,
   value: vi.fn((id: number) => {
     globalThis.clearTimeout(id as any);
@@ -362,7 +364,7 @@ Object.defineProperty(window, 'cancelAnimationFrame', {
 });
 
 // Mock localStorage
-Object.defineProperty(window, 'localStorage', {
+Object.defineProperty(window, "localStorage", {
   writable: true,
   value: {
     getItem: vi.fn(),
@@ -375,7 +377,7 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 // Mock AudioContext for WebAudioAPIService
-Object.defineProperty(window, 'AudioContext', {
+Object.defineProperty(window, "AudioContext", {
   writable: true,
   value: vi.fn().mockImplementation(() => ({
     createGain: vi.fn(() => ({
@@ -389,7 +391,7 @@ Object.defineProperty(window, 'AudioContext', {
       stop: vi.fn(),
     })),
     destination: {},
-    state: 'running',
+    state: "running",
     resume: vi.fn(),
     suspend: vi.fn(),
     close: vi.fn(),
@@ -397,7 +399,7 @@ Object.defineProperty(window, 'AudioContext', {
 });
 
 // Also add webkitAudioContext fallback
-Object.defineProperty(window, 'webkitAudioContext', {
+Object.defineProperty(window, "webkitAudioContext", {
   writable: true,
   value: window.AudioContext,
 });

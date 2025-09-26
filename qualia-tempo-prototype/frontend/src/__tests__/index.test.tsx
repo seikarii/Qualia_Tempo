@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
-import React from 'react';
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import React from "react";
 
 // Mock logger service
 const mockLogger = {
@@ -10,15 +10,15 @@ const mockLogger = {
 };
 
 // Mock the services
-vi.mock('../services/inversify.container', () => ({
+vi.mock("../services/inversify.container", () => ({
   container: {
     get: vi.fn((type: symbol) => {
-      if (type.toString().includes('ILogger')) {
+      if (type.toString().includes("ILogger")) {
         return mockLogger;
       }
-      if (type.toString().includes('IApplicationInitializerService')) {
+      if (type.toString().includes("IApplicationInitializerService")) {
         return {
-          start: vi.fn().mockResolvedValue(undefined)
+          start: vi.fn().mockResolvedValue(undefined),
         };
       }
       return {};
@@ -27,52 +27,56 @@ vi.mock('../services/inversify.container', () => ({
     to: vi.fn().mockReturnThis(),
     toConstantValue: vi.fn().mockReturnThis(),
     inSingletonScope: vi.fn().mockReturnThis(),
-  }
+  },
 }));
 
-vi.mock('../services/Logger', () => ({
+vi.mock("../services/Logger", () => ({
   LoggerProvider: {
-    register: vi.fn()
+    register: vi.fn(),
   },
-  QualiaLogger: vi.fn()
+  QualiaLogger: vi.fn(),
 }));
 
 // Mock ReactDOM createRoot
 const mockRender = vi.fn();
 const mockCreateRoot = vi.fn().mockReturnValue({
-  render: mockRender
+  render: mockRender,
 });
 
-vi.mock('react-dom/client', () => ({
+vi.mock("react-dom/client", () => ({
   default: {
-    createRoot: mockCreateRoot
-  }
+    createRoot: mockCreateRoot,
+  },
 }));
 
 // Mock React
-vi.mock('react', async () => ({
-  ...(await vi.importActual<typeof React>('react')),
-  StrictMode: ({ children }: any) => children
+vi.mock("react", async () => ({
+  ...(await vi.importActual<typeof React>("react")),
+  StrictMode: ({ children }: any) => children,
 }));
 
 // Mock App component
-vi.mock('../App', () => {
+vi.mock("../App", () => {
   return {
     default: function MockApp() {
-      return React.createElement('div', { 'data-testid': 'mock-app' }, 'Mock App');
-    }
+      return React.createElement(
+        "div",
+        { "data-testid": "mock-app" },
+        "Mock App",
+      );
+    },
   };
 });
 
 // Mock providers
-vi.mock('../providers', () => ({
-  CompositionRootProvider: ({ children }: any) => children
+vi.mock("../providers", () => ({
+  CompositionRootProvider: ({ children }: any) => children,
 }));
 
 // Mock DOM methods
 const mockGetElementById = vi.fn().mockReturnValue({
-  id: 'root',
-  innerHTML: ''
+  id: "root",
+  innerHTML: "",
 });
 
 const mockDocumentAddEventListener = vi.fn();
@@ -80,33 +84,46 @@ const mockWindowAddEventListener = vi.fn();
 
 // Mock electronAPI
 const mockElectronAPI = {
-  toggleFullscreen: vi.fn()
+  toggleFullscreen: vi.fn(),
 };
 
-describe('Index.tsx - Application Entry Point', () => {
+describe("Index.tsx - Application Entry Point", () => {
   // NUEVO: Test de inicialización asíncrono
-  it('should run the full initialization script on import', async () => {
+  it("should run the full initialization script on import", async () => {
     // Configure los mocks globales aquí, justo antes de la importación
     (document.getElementById as any) = mockGetElementById;
     (document.addEventListener as any) = mockDocumentAddEventListener;
     (window.addEventListener as any) = mockWindowAddEventListener;
-    Object.defineProperty(window, 'electronAPI', {
+    Object.defineProperty(window, "electronAPI", {
       value: mockElectronAPI,
       writable: true,
       configurable: true,
     });
 
     // Importe dinámicamente el módulo para ejecutarlo
-    await import('../index');
+    await import("../index");
 
     // Now, make the assertions that were in the separate tests
-    expect(mockLogger.info).toHaveBeenCalledWith('Application Bootstrap: Initializing services...');
-    expect(mockLogger.info).toHaveBeenCalledWith('Application Bootstrap: Initialization complete. Rendering application.');
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      "Application Bootstrap: Initializing services...",
+    );
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      "Application Bootstrap: Initialization complete. Rendering application.",
+    );
     expect(mockGetElementById).toHaveBeenCalledWith("root");
     expect(mockCreateRoot).toHaveBeenCalled();
     expect(mockRender).toHaveBeenCalled();
-    expect(mockWindowAddEventListener).toHaveBeenCalledWith("error", expect.any(Function));
-    expect(mockWindowAddEventListener).toHaveBeenCalledWith("unhandledrejection", expect.any(Function));
-    expect(mockDocumentAddEventListener).toHaveBeenCalledWith("keydown", expect.any(Function));
+    expect(mockWindowAddEventListener).toHaveBeenCalledWith(
+      "error",
+      expect.any(Function),
+    );
+    expect(mockWindowAddEventListener).toHaveBeenCalledWith(
+      "unhandledrejection",
+      expect.any(Function),
+    );
+    expect(mockDocumentAddEventListener).toHaveBeenCalledWith(
+      "keydown",
+      expect.any(Function),
+    );
   });
 });

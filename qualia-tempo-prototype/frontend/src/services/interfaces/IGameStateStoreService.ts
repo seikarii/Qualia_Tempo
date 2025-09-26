@@ -30,7 +30,7 @@ export interface IGameStateStoreService {
    * Get current service status.
    * @returns Service status (running/stopped)
    */
-  getStatus(): 'running' | 'stopped';
+  getStatus(): "running" | "stopped";
 
   /**
    * Check if the service is currently running.

@@ -1,53 +1,52 @@
 /**
  * GOLD.CODE: IoC Testing Infrastructure
  * Supreme Guardian Directive Compliance
- * 
+ *
  * This factory creates pre-configured InversifyJS containers for testing,
  * ensuring all services are resolved with properly mocked dependencies.
- * 
+ *
  * MANDATE: NO manual service instantiation in tests.
  * OBLIGATION: All Service Under Test (SUT) must be resolved from container.
  */
 
 // Vitest imports for mock functions
-import { vi, type Mock } from 'vitest';
-import { merge } from 'lodash-es';
+import { vi, type Mock } from "vitest";
+import { merge } from "lodash-es";
 
-import { Container } from 'inversify';
-import { TYPES } from '../services/inversify.types';
-
+import { Container } from "inversify";
+import { TYPES } from "../services/inversify.types";
 
 // Import all interfaces for proper typing
-import type { ILogger } from '../services/interfaces/ILogger';
-import type { IEventBus } from '../services/interfaces/IEventBus';
-import type { IConfigurationService } from '../services/interfaces/IConfigurationService';
-import type { IGameStateStore } from '../services/interfaces/IGameStateStore';
-import type { IGameStateStoreService } from '../services/interfaces/IGameStateStoreService';
-import type { IDebugService } from '../services/interfaces/IDebugService';
-import type { IErrorReportingService } from '../services/interfaces/IErrorReportingService';
-import type { INotificationService } from '../services/interfaces/INotificationService';
-import type { IRhythmicMovementController } from '../services/interfaces/IRhythmicMovementController';
-import type { IHttpService } from '../services/interfaces/IHttpService';
-import type { ITimerService } from '../services/interfaces/ITimerService';
-import type { IOntologicalAudioEngine } from '../audio/IOntologicalAudioEngine';
-import type { IStreamingVideoService } from '../services/interfaces/IStreamingVideoService';
-import type { IGameControllerService } from '../services/interfaces/IGameControllerService';
-import type { IBackendSyncService } from '../services/interfaces/IBackendSyncService';
-import type { IAudioService } from '../services/interfaces/IAudioService';
-import type { IQualiaStateCalculatorService } from '../services/interfaces/IQualiaStateCalculatorService';
-import type { IWebAudioAPIService } from '../services/interfaces/IWebAudioAPIService';
+import type { ILogger } from "../services/interfaces/ILogger";
+import type { IEventBus } from "../services/interfaces/IEventBus";
+import type { IConfigurationService } from "../services/interfaces/IConfigurationService";
+import type { IGameStateStore } from "../services/interfaces/IGameStateStore";
+import type { IGameStateStoreService } from "../services/interfaces/IGameStateStoreService";
+import type { IDebugService } from "../services/interfaces/IDebugService";
+import type { IErrorReportingService } from "../services/interfaces/IErrorReportingService";
+import type { INotificationService } from "../services/interfaces/INotificationService";
+import type { IRhythmicMovementController } from "../services/interfaces/IRhythmicMovementController";
+import type { IHttpService } from "../services/interfaces/IHttpService";
+import type { ITimerService } from "../services/interfaces/ITimerService";
+import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
+import type { IStreamingVideoService } from "../services/interfaces/IStreamingVideoService";
+import type { IGameControllerService } from "../services/interfaces/IGameControllerService";
+import type { IBackendSyncService } from "../services/interfaces/IBackendSyncService";
+import type { IAudioService } from "../services/interfaces/IAudioService";
+import type { IQualiaStateCalculatorService } from "../services/interfaces/IQualiaStateCalculatorService";
+import type { IWebAudioAPIService } from "../services/interfaces/IWebAudioAPIService";
 
 // Import concrete service classes for binding
-import { DebugService } from '../services/DebugService';
-import { ErrorReportingService } from '../services/ErrorReportingService';
-import { NotificationService } from '../services/NotificationService';
-import { GameStateStoreService } from '../services/GameStateStoreService';
-import { RhythmicMovementController } from '../services/RhythmicMovementController';
-import { GameControllerService } from '../services/GameControllerService';
-import { BackendSyncService } from '../services/BackendSyncService';
-import { AudioService } from '../services/AudioService';
-import { QualiaStateCalculatorService } from '../services/QualiaStateCalculatorService';
-import { WebAudioAPIService } from '../services/WebAudioAPIService';
+import { DebugService } from "../services/DebugService";
+import { ErrorReportingService } from "../services/ErrorReportingService";
+import { NotificationService } from "../services/NotificationService";
+import { GameStateStoreService } from "../services/GameStateStoreService";
+import { RhythmicMovementController } from "../services/RhythmicMovementController";
+import { GameControllerService } from "../services/GameControllerService";
+import { BackendSyncService } from "../services/BackendSyncService";
+import { AudioService } from "../services/AudioService";
+import { QualiaStateCalculatorService } from "../services/QualiaStateCalculatorService";
+import { WebAudioAPIService } from "../services/WebAudioAPIService";
 
 /**
  * Mock Logger Implementation - Complete Interface Coverage
@@ -58,16 +57,16 @@ const mockLogger: ILogger = {
   error: vi.fn(),
   debug: vi.fn(),
   setLevel: vi.fn(),
-  getLevel: vi.fn().mockReturnValue('info'),
+  getLevel: vi.fn().mockReturnValue("info"),
   child: vi.fn().mockImplementation((_prefix: string) => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
     debug: vi.fn(),
     setLevel: vi.fn(),
-    getLevel: vi.fn().mockReturnValue('info'),
-    child: vi.fn()
-  }))
+    getLevel: vi.fn().mockReturnValue("info"),
+    child: vi.fn(),
+  })),
 };
 
 /**
@@ -75,22 +74,27 @@ const mockLogger: ILogger = {
  * QUALIA.CODE: Functional mock for fast synchronous testing
  */
 const mockEventBus: IEventBus = (() => {
-  const subscribers: Map<string, Array<{ handler: Function; id: string }>> = new Map();
+  const subscribers: Map<
+    string,
+    Array<{ handler: Function; id: string }>
+  > = new Map();
   let nextId = 1;
 
   return {
-    subscribe: vi.fn().mockImplementation((eventType: string, handler: Function) => {
-      if (!subscribers.has(eventType)) {
-        subscribers.set(eventType, []);
-      }
-      const id = `listener-${nextId++}`;
-      subscribers.get(eventType)!.push({ handler, id });
-      return id;
-    }),
+    subscribe: vi
+      .fn()
+      .mockImplementation((eventType: string, handler: Function) => {
+        if (!subscribers.has(eventType)) {
+          subscribers.set(eventType, []);
+        }
+        const id = `listener-${nextId++}`;
+        subscribers.get(eventType)!.push({ handler, id });
+        return id;
+      }),
 
     unsubscribe: vi.fn().mockImplementation((listenerId: string) => {
       for (const [_eventType, handlers] of subscribers.entries()) {
-        const index = handlers.findIndex(h => h.id === listenerId);
+        const index = handlers.findIndex((h) => h.id === listenerId);
         if (index !== -1) {
           handlers.splice(index, 1);
           return true;
@@ -111,7 +115,10 @@ const mockEventBus: IEventBus = (() => {
           // LOS HANDLERS PUEDEN SER ASÍNCRONOS, POR ESO EL AWAIT
           await handler(event);
         } catch (error) {
-          console.error(`Error in async event handler for ${eventType}:`, error);
+          console.error(
+            `Error in async event handler for ${eventType}:`,
+            error,
+          );
         }
       }
     }),
@@ -125,11 +132,14 @@ const mockEventBus: IEventBus = (() => {
     }),
 
     getStats: vi.fn().mockImplementation(() => ({
-      totalListeners: Array.from(subscribers.values()).reduce((sum, handlers) => sum + handlers.length, 0),
+      totalListeners: Array.from(subscribers.values()).reduce(
+        (sum, handlers) => sum + handlers.length,
+        0,
+      ),
       eventTypes: Array.from(subscribers.keys()),
       historySize: 0,
-      isDestroyed: false
-    }))
+      isDestroyed: false,
+    })),
   };
 })();
 
@@ -142,7 +152,7 @@ const mockConfigurationService: IConfigurationService = {
     gameController: {
       maxHealth: 100,
       initialScore: 0,
-      tickRate: 60
+      tickRate: 60,
     },
     errorReporting: {
       enabled: true,
@@ -150,150 +160,150 @@ const mockConfigurationService: IConfigurationService = {
       batchTimeout: 1000,
       maxRetries: 3,
       rateLimitWindow: 60000,
-      rateLimitMax: 100
+      rateLimitMax: 100,
     },
     debugService: {
       logging: {
         enableConsoleOutput: true,
         enableFileOutput: false,
-        logLevel: 'info',
+        logLevel: "info",
         maxLogFiles: 10,
-        maxLogSize: 1000000
+        maxLogSize: 1000000,
       },
       eventMonitoring: {
         enableEventLogging: true,
         enableEventMetrics: true,
         maxEventHistory: 1000,
-        eventLogThrottle: 100
+        eventLogThrottle: 100,
       },
       performance: {
         enablePerformanceTracking: true,
         enableMemoryMonitoring: true,
         enableFrameRateTracking: true,
-        metricsUpdateInterval: 5000
+        metricsUpdateInterval: 5000,
       },
       development: {
         enableDebugOverlay: false,
         enableCheats: false,
         enableHotReload: false,
-        enableBreakpoints: false
+        enableBreakpoints: false,
       },
       profiling: {
         enableProfiling: true,
         profileUpdateInterval: 1000,
-        maxProfileSamples: 1000
+        maxProfileSamples: 1000,
       },
       errorTracking: {
         enableErrorStackTraces: true,
         enableErrorReporting: true,
-        maxErrorHistory: 100
+        maxErrorHistory: 100,
       },
       network: {
         enableNetworkLogging: false,
         enableRequestMetrics: false,
         logRequestHeaders: false,
-        logRequestBodies: false
-      }
+        logRequestBodies: false,
+      },
     },
     backend: {
-      url: 'http://localhost:8000',
+      url: "http://localhost:8000",
       timeout: 5000,
-      retryAttempts: 3
+      retryAttempts: 3,
     },
     backendSync: {
       api: {
-        baseUrl: 'http://localhost:8000',
-        qualiaEndpoint: '/api/qualia',
-        healthEndpoint: '/api/health',
-        timeout: 5000
+        baseUrl: "http://localhost:8000",
+        qualiaEndpoint: "/api/qualia",
+        healthEndpoint: "/api/health",
+        timeout: 5000,
       },
       streaming: {
         websocket: {
-          url: 'ws://127.0.0.1:8000/ws/video_stream',
+          url: "ws://127.0.0.1:8000/ws/video_stream",
           maxReconnectAttempts: 10,
           reconnectDelay: 1000,
           pingInterval: 30000,
           pingTimeout: 5000,
-          connectionTimeout: 10000
-        }
+          connectionTimeout: 10000,
+        },
       },
       sync: {
         throttleDelay: 100,
         batchSize: 10,
         maxRetries: 3,
-        retryDelay: 1000
+        retryDelay: 1000,
       },
       connection: {
         healthCheckInterval: 30000,
         connectionTimeout: 10000,
-        maxFailedAttempts: 5
+        maxFailedAttempts: 5,
       },
       validation: {
         enableSchemaValidation: true,
         strictMode: false,
-        logValidationErrors: true
+        logValidationErrors: true,
       },
       performance: {
         enableMetrics: true,
-        metricsInterval: 5000
-      }
+        metricsInterval: 5000,
+      },
     },
     audio: {
       masterVolume: 0.7,
       enableSpatialAudio: true,
-      bufferSize: 2048
+      bufferSize: 2048,
     },
     rhythm: {
       bpm: 120,
       syncTolerance: 100,
-      adaptive: true
+      adaptive: true,
     },
     notifications: {
       enabled: true,
       maxConcurrent: 5,
-      defaultDuration: 3000
-    }
+      defaultDuration: 3000,
+    },
   }),
   getGameConfig: vi.fn().mockReturnValue({
     maxHealth: 100,
     initialScore: 0,
-    tickRate: 60
+    tickRate: 60,
   }),
   getQualiaConfig: vi.fn().mockReturnValue({
     decayRate: 0.01,
     intensityMultiplier: 1.2,
-    flowThreshold: 0.7
+    flowThreshold: 0.7,
   }),
-  getBackendConfig: vi.fn().mockReturnValue({ 
-    url: 'http://localhost:8000',
+  getBackendConfig: vi.fn().mockReturnValue({
+    url: "http://localhost:8000",
     timeout: 5000,
-    retryAttempts: 3
+    retryAttempts: 3,
   }),
   getAudioConfig: vi.fn().mockReturnValue({
     masterVolume: 0.7,
     enableSpatialAudio: true,
-    bufferSize: 2048
+    bufferSize: 2048,
   }),
   getErrorReportingConfig: vi.fn().mockReturnValue({
     enabled: true,
     batchSize: 5,
     batchTimeout: 1000,
-    maxRetries: 3
+    maxRetries: 3,
   }),
   getRhythmicMovementConfig: vi.fn().mockReturnValue({
     bpm: 120,
     syncTolerance: 100,
-    adaptive: true
+    adaptive: true,
   }),
   getNotificationConfig: vi.fn().mockReturnValue({
     enabled: true,
     maxConcurrent: 5,
-    defaultDuration: 3000
+    defaultDuration: 3000,
   }),
   getHttpConfig: vi.fn().mockReturnValue({
     defaultTimeout: 30000,
     maxRetries: 3,
-    retryDelay: 1000
+    retryDelay: 1000,
   }),
   getVisualEffectsConfig: vi.fn().mockReturnValue({
     particles: { count: 120, minSize: 1, maxSize: 4, speed: 0.35, drift: 0.5 },
@@ -301,77 +311,82 @@ const mockConfigurationService: IConfigurationService = {
     gradients: {
       cycleDuration: 16,
       layers: [
-        'radial-gradient(circle at 20% 30%, rgba(0,255,255,0.15), transparent 60%)',
-        'radial-gradient(circle at 80% 70%, rgba(255,0,255,0.12), transparent 65%)'
-      ]
+        "radial-gradient(circle at 20% 30%, rgba(0,255,255,0.15), transparent 60%)",
+        "radial-gradient(circle at 80% 70%, rgba(255,0,255,0.12), transparent 65%)",
+      ],
     },
     noise: { enabled: true, opacity: 0.06, scale: 2, speed: 0.25 },
-    palette: ['#00ffff', '#ff00ff', '#ffff00', '#ff0080', '#00ff80'],
-    aura: { rings: 4, rotationSpeed: 22, pulseDuration: 9 }
+    palette: ["#00ffff", "#ff00ff", "#ffff00", "#ff0080", "#00ff80"],
+    aura: { rings: 4, rotationSpeed: 22, pulseDuration: 9 },
   }),
   getConfigSection: vi.fn().mockImplementation((section: string) => {
-    if (section === 'debugService') {
+    if (section === "debugService") {
       return {
         logging: {
           enableConsoleOutput: true,
           enableFileOutput: false,
-          logLevel: 'info',
+          logLevel: "info",
           maxLogFiles: 10,
-          maxLogSize: 1000000
+          maxLogSize: 1000000,
         },
         eventMonitoring: {
           enableEventLogging: true,
           enableEventMetrics: true,
           maxEventHistory: 1000,
-          eventLogThrottle: 100
+          eventLogThrottle: 100,
         },
         performance: {
           enablePerformanceTracking: true,
           enableMemoryMonitoring: true,
           enableFrameRateTracking: true,
-          metricsUpdateInterval: 5000
+          metricsUpdateInterval: 5000,
         },
         development: {
           enableDebugOverlay: false,
           enableCheats: false,
           enableHotReload: false,
-          enableBreakpoints: false
+          enableBreakpoints: false,
         },
         profiling: {
           enableProfiling: true,
           profileUpdateInterval: 1000,
-          maxProfileSamples: 1000
+          maxProfileSamples: 1000,
         },
         errorTracking: {
           enableErrorStackTraces: true,
           enableErrorReporting: true,
-          maxErrorHistory: 100
+          maxErrorHistory: 100,
         },
         network: {
           enableNetworkLogging: false,
           enableRequestMetrics: false,
           logRequestHeaders: false,
-          logRequestBodies: false
-        }
+          logRequestBodies: false,
+        },
       };
     }
     // Fallback for other sections
     const defaultConfig: any = {
       gameController: { maxHealth: 100, initialScore: 0, tickRate: 60 },
-      errorReporting: { enabled: true, batchSize: 5, batchTimeout: 1000, maxRetries: 3 },
+      errorReporting: {
+        enabled: true,
+        batchSize: 5,
+        batchTimeout: 1000,
+        maxRetries: 3,
+      },
       backendSync: {
         api: {
-          baseUrl: 'http://localhost:8000',
-          qualiaEndpoint: '/api/qualia',
-          healthEndpoint: '/api/health',
-          timeout: 5000
-        }
-      }
+          baseUrl: "http://localhost:8000",
+          qualiaEndpoint: "/api/qualia",
+          healthEndpoint: "/api/health",
+          timeout: 5000,
+        },
+      },
     };
     return defaultConfig[section] || {};
   }),
   isLoaded: vi.fn().mockReturnValue(true),
-  reload: vi.fn().mockResolvedValue(undefined)
+  reload: vi.fn().mockResolvedValue(undefined),
 };
 
 /**
@@ -383,7 +398,7 @@ const mockOntologicalAudioEngine: IOntologicalAudioEngine = {
   removeEntityVoice: vi.fn().mockResolvedValue(undefined),
   playEmergentPattern: vi.fn().mockResolvedValue(undefined),
   getMasterVolume: vi.fn().mockReturnValue(0.7),
-  setMasterVolume: vi.fn().mockResolvedValue(undefined)
+  setMasterVolume: vi.fn().mockResolvedValue(undefined),
 };
 
 /**
@@ -394,10 +409,10 @@ const mockGameStateStore: any = {
   getNotifications: vi.fn().mockReturnValue([]),
   updateGameState: vi.fn(),
   getGameState: vi.fn().mockReturnValue({
-    gameState: 'idle',
+    gameState: "idle",
     isPlaying: false,
     score: 0,
-    health: 100
+    health: 100,
   }),
   updateQualiaState: vi.fn(),
   getQualiaState: vi.fn().mockReturnValue({
@@ -409,9 +424,9 @@ const mockGameStateStore: any = {
     precision: 0,
     aggression: 0,
     recovery: 0,
-    chaos: 0
+    chaos: 0,
   }),
-  setState: vi.fn() // Add setState method for test compatibility
+  setState: vi.fn(), // Add setState method for test compatibility
 };
 
 /**
@@ -422,7 +437,7 @@ const mockGameStateStoreService: any = {
   stop: vi.fn(),
   updateGameState: vi.fn(),
   updateQualiaState: vi.fn(),
-  getStatus: vi.fn().mockReturnValue('stopped'),
+  getStatus: vi.fn().mockReturnValue("stopped"),
   isRunning: vi.fn().mockReturnValue(false),
 };
 
@@ -455,11 +470,11 @@ const mockTimerService: ITimerService = {
 const mockStreamingVideoService: IStreamingVideoService = {
   connect: vi.fn().mockResolvedValue(undefined),
   disconnect: vi.fn(),
-  subscribeToFrames: vi.fn().mockReturnValue('mock-subscription-id'),
+  subscribeToFrames: vi.fn().mockReturnValue("mock-subscription-id"),
   unsubscribeFromFrames: vi.fn(),
   getConnectionStatus: vi.fn().mockReturnValue({
     connected: false,
-    url: 'ws://127.0.0.1:8000/ws/video_stream',
+    url: "ws://127.0.0.1:8000/ws/video_stream",
     lastConnected: null,
     reconnectAttempts: 0,
     error: null,
@@ -483,14 +498,16 @@ const mockStreamingVideoService: IStreamingVideoService = {
 
 /**
  * GOLD.CODE Test Container Factory
- * 
+ *
  * Creates a fresh InversifyJS container with all dependencies properly mocked.
  * Services Under Test are bound to their concrete implementations.
  * All dependencies are bound to mock implementations for isolation.
  */
-export function createTestContainer(configOverrides?: Partial<IConfigurationService>): Container {
-  const container = new Container({ 
-    defaultScope: 'Singleton' 
+export function createTestContainer(
+  configOverrides?: Partial<IConfigurationService>,
+): Container {
+  const container = new Container({
+    defaultScope: "Singleton",
   });
 
   // 1. Cree una copia profunda del mock base
@@ -502,39 +519,85 @@ export function createTestContainer(configOverrides?: Partial<IConfigurationServ
   }
 
   // 3. Vincule el mock fusionado
-  container.bind<IConfigurationService>(TYPES.IConfigurationService).toConstantValue(localMockConfig);
+  container
+    .bind<IConfigurationService>(TYPES.IConfigurationService)
+    .toConstantValue(localMockConfig);
 
   // Bind mock dependencies first (these will be injected into services)
   container.bind<ILogger>(TYPES.ILogger).toConstantValue(mockLogger);
   container.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
-  container.bind<IGameStateStore>(TYPES.IGameStateStore).toConstantValue(mockGameStateStore);
-  container.bind<IGameStateStoreService>(TYPES.IGameStateStoreService).toConstantValue(mockGameStateStoreService);
+  container
+    .bind<IGameStateStore>(TYPES.IGameStateStore)
+    .toConstantValue(mockGameStateStore);
+  container
+    .bind<IGameStateStoreService>(TYPES.IGameStateStoreService)
+    .toConstantValue(mockGameStateStoreService);
 
   // --- NUEVOS BINDINGS ---
-  container.bind<IHttpService>(TYPES.IHttpService).toConstantValue(mockHttpService);
-  container.bind<ITimerService>(TYPES.ITimerService).toConstantValue(mockTimerService);
+  container
+    .bind<IHttpService>(TYPES.IHttpService)
+    .toConstantValue(mockHttpService);
+  container
+    .bind<ITimerService>(TYPES.ITimerService)
+    .toConstantValue(mockTimerService);
   // -----------------------
 
   // Mock StoreSetter (Zustand store setter function)
   const mockStoreSetter = vi.fn();
-  container.bind<(_state: any) => void>(TYPES.StoreSetter).toConstantValue(mockStoreSetter);
+  container
+    .bind<(_state: any) => void>(TYPES.StoreSetter)
+    .toConstantValue(mockStoreSetter);
 
   // Bind concrete service implementations (Services Under Test)
-  container.bind<IDebugService>(TYPES.IDebugService).to(DebugService).inSingletonScope();
-  container.bind<IErrorReportingService>(TYPES.IErrorReportingService).to(ErrorReportingService).inSingletonScope();
-  container.bind<INotificationService>(TYPES.INotificationService).to(NotificationService).inSingletonScope();
-  container.bind<GameStateStoreService>(GameStateStoreService).toSelf().inSingletonScope();
-  container.bind<IRhythmicMovementController>(TYPES.IRhythmicMovementController).to(RhythmicMovementController).inSingletonScope();
-  container.bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).toConstantValue(mockOntologicalAudioEngine);
-  container.bind<IStreamingVideoService>(TYPES.IStreamingVideoService).toConstantValue(mockStreamingVideoService);
+  container
+    .bind<IDebugService>(TYPES.IDebugService)
+    .to(DebugService)
+    .inSingletonScope();
+  container
+    .bind<IErrorReportingService>(TYPES.IErrorReportingService)
+    .to(ErrorReportingService)
+    .inSingletonScope();
+  container
+    .bind<INotificationService>(TYPES.INotificationService)
+    .to(NotificationService)
+    .inSingletonScope();
+  container
+    .bind<GameStateStoreService>(GameStateStoreService)
+    .toSelf()
+    .inSingletonScope();
+  container
+    .bind<IRhythmicMovementController>(TYPES.IRhythmicMovementController)
+    .to(RhythmicMovementController)
+    .inSingletonScope();
+  container
+    .bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine)
+    .toConstantValue(mockOntologicalAudioEngine);
+  container
+    .bind<IStreamingVideoService>(TYPES.IStreamingVideoService)
+    .toConstantValue(mockStreamingVideoService);
 
   // === CRITICAL MISSING BINDINGS RESTORATION ===
   // QUALIA.CODE M-2024-3-FE-TEST-INFRA COMPLIANCE
-  container.bind<IGameControllerService>(TYPES.IGameControllerService).to(GameControllerService).inSingletonScope();
-  container.bind<IBackendSyncService>(TYPES.IBackendSyncService).to(BackendSyncService).inSingletonScope();
-  container.bind<IAudioService>(TYPES.IAudioService).to(AudioService).inSingletonScope();
-  container.bind<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService).to(QualiaStateCalculatorService).inSingletonScope();
-  container.bind<IWebAudioAPIService>(TYPES.IWebAudioAPIService).to(WebAudioAPIService).inSingletonScope();
+  container
+    .bind<IGameControllerService>(TYPES.IGameControllerService)
+    .to(GameControllerService)
+    .inSingletonScope();
+  container
+    .bind<IBackendSyncService>(TYPES.IBackendSyncService)
+    .to(BackendSyncService)
+    .inSingletonScope();
+  container
+    .bind<IAudioService>(TYPES.IAudioService)
+    .to(AudioService)
+    .inSingletonScope();
+  container
+    .bind<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService)
+    .to(QualiaStateCalculatorService)
+    .inSingletonScope();
+  container
+    .bind<IWebAudioAPIService>(TYPES.IWebAudioAPIService)
+    .to(WebAudioAPIService)
+    .inSingletonScope();
   // === END CRITICAL RESTORATION ===
 
   return container;
@@ -547,14 +610,20 @@ export function getMocksFromContainer(container: Container) {
   return {
     mockLogger: container.get<ILogger>(TYPES.ILogger),
     mockEventBus: container.get<IEventBus>(TYPES.IEventBus),
-    mockConfigurationService: container.get<IConfigurationService>(TYPES.IConfigurationService),
+    mockConfigurationService: container.get<IConfigurationService>(
+      TYPES.IConfigurationService,
+    ),
     mockGameStateStore: container.get<IGameStateStore>(TYPES.IGameStateStore),
-    mockGameStateStoreService: container.get<IGameStateStoreService>(TYPES.IGameStateStoreService),
+    mockGameStateStoreService: container.get<IGameStateStoreService>(
+      TYPES.IGameStateStoreService,
+    ),
     mockStoreSetter: container.get<(_state: any) => void>(TYPES.StoreSetter),
     // --- CORE SERVICE MOCKS ---
     mockHttpService: container.get<IHttpService>(TYPES.IHttpService),
     mockTimerService: container.get<ITimerService>(TYPES.ITimerService),
-    mockStreamingVideoService: container.get<IStreamingVideoService>(TYPES.IStreamingVideoService),
+    mockStreamingVideoService: container.get<IStreamingVideoService>(
+      TYPES.IStreamingVideoService,
+    ),
   };
 }
 
@@ -566,26 +635,26 @@ export function getMocksFromContainer(container: Container) {
 export function resetAllMocks() {
   // Clear all mocks except EventBus which has custom implementation
   vi.clearAllMocks();
-  
+
   // Reset mock return values to defaults
-  (mockLogger.getLevel as Mock).mockReturnValue('info');
-  
+  (mockLogger.getLevel as Mock).mockReturnValue("info");
+
   // Reset EventBus subscribers between tests
   const eventBusMock = mockEventBus as any;
   if (eventBusMock.subscribers) {
     eventBusMock.subscribers.clear();
   }
-  
+
   // Don't clear EventBus mocks since they have custom implementations
   (mockEventBus.subscribe as Mock).mockClear();
-  (mockEventBus.unsubscribe as Mock).mockClear(); 
+  (mockEventBus.unsubscribe as Mock).mockClear();
   (mockEventBus.emit as Mock).mockClear();
   (mockEventBus.getStats as Mock).mockClear();
 
   (mockConfigurationService.isLoaded as Mock).mockReturnValue(true);
-  (mockConfigurationService.getBackendConfig as Mock).mockReturnValue({ 
-    url: 'http://localhost:8000',
+  (mockConfigurationService.getBackendConfig as Mock).mockReturnValue({
+    url: "http://localhost:8000",
     timeout: 5000,
-    retryAttempts: 3
+    retryAttempts: 3,
   });
 }

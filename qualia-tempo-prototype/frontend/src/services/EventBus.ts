@@ -10,14 +10,14 @@
  * - InversifyJS dependency injection
  */
 
-import { injectable, inject } from 'inversify';
-import { TYPES } from './inversify.types';
-import type { ILogger } from './interfaces/ILogger';
-import type { IEventBus } from './interfaces/IEventBus';
+import { injectable, inject } from "inversify";
+import { TYPES } from "./inversify.types";
+import type { ILogger } from "./interfaces/ILogger";
+import type { IEventBus } from "./interfaces/IEventBus";
 import { QualiaState } from "../types/contracts";
-import { logMethod, catchError } from '../utils/decorators';
+import { logMethod, catchError } from "../utils/decorators";
 // ✅ CORRECT: Importing from the central contracts file
-import type { ConnectionStatus } from './contracts/events.contracts';
+import type { ConnectionStatus } from "./contracts/events.contracts";
 
 // Event type definitions following QUALIA.CODE contracts
 export interface BaseEvent {
@@ -142,9 +142,7 @@ export class EventBus implements IEventBus {
   private isDestroyed = false;
   private logger: ILogger;
 
-  constructor(
-    @inject(TYPES.ILogger) logger: ILogger
-  ) {
+  constructor(@inject(TYPES.ILogger) logger: ILogger) {
     this.logger = logger;
     this.setupErrorHandling();
     this.setupPerformanceMonitoring();
@@ -162,7 +160,7 @@ export class EventBus implements IEventBus {
   public subscribe<T extends EventTypes>(
     eventType: T["type"],
     handler: EventHandler<T>,
-    options: { once?: boolean; priority?: 'low' | 'normal' | 'high' } = {},
+    options: { once?: boolean; priority?: "low" | "normal" | "high" } = {},
   ): string {
     const startTime = performance.now();
     this.logger.info(`🔗 [EventBus] Subscribe called for ${eventType}`);
@@ -199,7 +197,7 @@ export class EventBus implements IEventBus {
       const duration = performance.now() - startTime;
       this.logger.error(
         `🚨 [EventBus] Subscribe failed - ${duration.toFixed(2)}ms: ${error}`,
-        { error }
+        { error },
       );
       throw error;
     }
@@ -237,7 +235,9 @@ export class EventBus implements IEventBus {
     }
 
     try {
-      for (const [eventType, listeners] of Array.from(this.listeners.entries())) {
+      for (const [eventType, listeners] of Array.from(
+        this.listeners.entries(),
+      )) {
         const index = listeners.findIndex(
           (listener) => listener.id === listenerId,
         );
@@ -314,7 +314,7 @@ export class EventBus implements IEventBus {
         ).catch((error) => {
           this.logger.error(
             `🚨 [EventBus] Handler error for ${completeEvent.type}: ${error}`,
-            { error, eventType: completeEvent.type }
+            { error, eventType: completeEvent.type },
           );
           // Emit error event (async to avoid recursion)
           setTimeout(() => {
@@ -355,7 +355,7 @@ export class EventBus implements IEventBus {
       const duration = performance.now() - startTime;
       this.logger.error(
         `🚨 [EventBus] Emit failed - ${duration.toFixed(2)}ms: ${error}`,
-        { error }
+        { error },
       );
       throw error;
     }
@@ -457,12 +457,16 @@ export class EventBus implements IEventBus {
 
   // Private helper methods
 
-  private convertPriority(priority?: 'low' | 'normal' | 'high'): number {
+  private convertPriority(priority?: "low" | "normal" | "high"): number {
     switch (priority) {
-      case 'high': return 100;
-      case 'normal': return 50;
-      case 'low': return 0;
-      default: return 50; // default to normal
+      case "high":
+        return 100;
+      case "normal":
+        return 50;
+      case "low":
+        return 0;
+      default:
+        return 50; // default to normal
     }
   }
 

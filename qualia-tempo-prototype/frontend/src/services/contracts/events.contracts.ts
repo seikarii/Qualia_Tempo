@@ -5,7 +5,13 @@
  */
 
 // Moved from IStreamingVideoService.ts
-export type ConnectionStateType = 'IDLE' | 'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'RECONNECTING' | 'ERROR';
+export type ConnectionStateType =
+  | "IDLE"
+  | "CONNECTING"
+  | "CONNECTED"
+  | "DISCONNECTED"
+  | "RECONNECTING"
+  | "ERROR";
 
 // Moved from IStreamingVideoService.ts
 export interface ConnectionStatus {

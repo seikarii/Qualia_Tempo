@@ -9,20 +9,20 @@
  * - Integrates with EventBus for decoupled communication
  */
 
-import { injectable, inject } from 'inversify';
-import { TYPES } from './inversify.types';
+import { injectable, inject } from "inversify";
+import { TYPES } from "./inversify.types";
 import {
   EventBus,
   EventHandler,
   PlayerActionEvent,
   GameStateChangedEvent,
 } from "./EventBus";
-import { logMethod, catchError } from '../utils/decorators';
-import { QualiaLogger } from './Logger';
-import type { IGameControllerService } from './interfaces/IGameControllerService';
-import type { IConfigurationService } from './interfaces/IConfigurationService';
-import type { IGameStateStoreService } from './interfaces/IGameStateStoreService';
-import type { ITimerService } from './interfaces/ITimerService';
+import { logMethod, catchError } from "../utils/decorators";
+import { QualiaLogger } from "./Logger";
+import type { IGameControllerService } from "./interfaces/IGameControllerService";
+import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
+import type { ITimerService } from "./interfaces/ITimerService";
 
 // Game state interface
 export interface GameState {
@@ -78,8 +78,9 @@ export class GameControllerService implements IGameControllerService {
     @inject(TYPES.IEventBus) eventBus: EventBus,
     @inject(TYPES.ILogger) logger: QualiaLogger,
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
-    @inject(TYPES.IGameStateStoreService) gameStateStoreService: IGameStateStoreService,
-    @inject(TYPES.ITimerService) timerService: ITimerService
+    @inject(TYPES.IGameStateStoreService)
+    gameStateStoreService: IGameStateStoreService,
+    @inject(TYPES.ITimerService) timerService: ITimerService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
@@ -93,7 +94,9 @@ export class GameControllerService implements IGameControllerService {
    * Get current configuration from ConfigurationService
    */
   private get config(): GameControllerConfig {
-    return this.configService.getConfigSection<GameControllerConfig>('gameController');
+    return this.configService.getConfigSection<GameControllerConfig>(
+      "gameController",
+    );
   }
 
   /**
@@ -248,23 +251,27 @@ export class GameControllerService implements IGameControllerService {
     const playerActionListenerId = this.eventBus.subscribe(
       "PlayerAction",
       playerActionHandler,
-      { priority: 'high' },
+      { priority: "high" },
     );
     this.eventListenerIds.push(playerActionListenerId);
 
     // Subscribe to GameStateChanged events for game clock management
-    const gameStateChangedHandler: EventHandler<GameStateChangedEvent> = (event) => {
+    const gameStateChangedHandler: EventHandler<GameStateChangedEvent> = (
+      event,
+    ) => {
       this.handleGameStateChanged(event);
     };
 
     const gameStateListenerId = this.eventBus.subscribe(
       "GameStateChanged",
       gameStateChangedHandler,
-      { priority: 'normal' },
+      { priority: "normal" },
     );
     this.eventListenerIds.push(gameStateListenerId);
 
-    this.logger.info("📡 [GameController] Subscribed to PlayerAction and GameStateChanged events");
+    this.logger.info(
+      "📡 [GameController] Subscribed to PlayerAction and GameStateChanged events",
+    );
   }
 
   private unsubscribeFromEvents(): void {
@@ -277,7 +284,9 @@ export class GameControllerService implements IGameControllerService {
   }
 
   private handlePlayerAction(event: PlayerActionEvent): void {
-    this.logger.info(`🎮 [GameController] Handling PlayerAction: ${event.action}`);
+    this.logger.info(
+      `🎮 [GameController] Handling PlayerAction: ${event.action}`,
+    );
 
     switch (event.action) {
       case "StartGame":
@@ -389,7 +398,9 @@ export class GameControllerService implements IGameControllerService {
   }
 
   private handleGameStateChanged(event: GameStateChangedEvent): void {
-    this.logger.debug(`🎮 [GameController] Game state changed: ${event.previousState} -> ${event.newState}`);
+    this.logger.debug(
+      `🎮 [GameController] Game state changed: ${event.previousState} -> ${event.newState}`,
+    );
 
     // Manage game clock based on state changes
     if (event.newState === "Playing") {

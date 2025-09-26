@@ -24,10 +24,12 @@ from ..utils.decorators import log_execution, handle_errors, time_execution
 # QUALIA.CODE: Import Pydantic QualiaState model for type safety
 try:
     from ..api.models import QualiaState as _QualiaStateModel
+
     QualiaState = _QualiaStateModel
     QUALIA_STATE_AVAILABLE = True
 except ImportError:
     from typing import Any
+
     QualiaState = Any  # type: ignore[misc]
     QUALIA_STATE_AVAILABLE = False
 
@@ -134,7 +136,9 @@ class QualiaParticleEngine:
         self.max_particles = max_particles
         self.enable_metrics = enable_metrics
         self.event_bus = event_bus  # QUALIA.CODE: Store EventBus reference
-        self.shader_inspector = shader_inspector  # QUALIA.CODE: Store ShaderIntrospectionService reference
+        self.shader_inspector = (
+            shader_inspector  # QUALIA.CODE: Store ShaderIntrospectionService reference
+        )
 
         # Ping-pong buffer pairs for particles
         self.particle_buffers = PingPongBufferPair()
@@ -186,10 +190,14 @@ class QualiaParticleEngine:
             # QUALIA.CODE: Use ShaderIntrospectionService to parse shader
             if self.shader_inspector:
                 self.ubo_info = self.shader_inspector.introspect(shader_source)
-                logger.info(f"🔍 Shader introspection complete: {len(self.ubo_info['uniforms'])} uniforms, format: {self.ubo_info['struct_format']}")
+                logger.info(
+                    f"🔍 Shader introspection complete: {len(self.ubo_info['uniforms'])} uniforms, format: {self.ubo_info['struct_format']}"
+                )
             else:
-                logger.warning("⚠️ ShaderIntrospectionService not available, using fallback")
-                self.ubo_info = {'uniforms': [], 'struct_format': '', 'total_size': 0}
+                logger.warning(
+                    "⚠️ ShaderIntrospectionService not available, using fallback"
+                )
+                self.ubo_info = {"uniforms": [], "struct_format": "", "total_size": 0}
 
             self.compute_shader = self.ctx.compute_shader(shader_source)
             logger.info("✅ Shaders compiled and linked successfully.")
@@ -399,32 +407,40 @@ class QualiaParticleEngine:
         current_time = time.time() - self.start_time
 
         # QUALIA.CODE: Use ShaderIntrospectionService for dynamic uniform packing
-        if hasattr(self, 'ubo_info') and self.ubo_info['uniforms']:
+        if hasattr(self, "ubo_info") and self.ubo_info["uniforms"]:
             # Build uniform values list based on introspected uniforms
             uniform_values = []
-            for name, type_name, offset in self.ubo_info['uniforms']:
-                if name == 'time':
+            for name, type_name, offset in self.ubo_info["uniforms"]:
+                if name == "time":
                     uniform_values.append(float(current_time))
-                elif name == 'particle_count':
+                elif name == "particle_count":
                     uniform_values.append(self.max_particles)
-                elif name == 'intensity':
-                    uniform_values.append(float(getattr(qualia_state, "intensity", 0.0)))
-                elif name == 'precision':
-                    uniform_values.append(float(getattr(qualia_state, "precision", 0.0)))
-                elif name == 'aggression':
-                    uniform_values.append(float(getattr(qualia_state, "aggression", 0.0)))
-                elif name == 'flow':
+                elif name == "intensity":
+                    uniform_values.append(
+                        float(getattr(qualia_state, "intensity", 0.0))
+                    )
+                elif name == "precision":
+                    uniform_values.append(
+                        float(getattr(qualia_state, "precision", 0.0))
+                    )
+                elif name == "aggression":
+                    uniform_values.append(
+                        float(getattr(qualia_state, "aggression", 0.0))
+                    )
+                elif name == "flow":
                     uniform_values.append(float(getattr(qualia_state, "flow", 0.0)))
-                elif name == 'chaos':
+                elif name == "chaos":
                     uniform_values.append(float(getattr(qualia_state, "chaos", 0.0)))
-                elif name == 'recovery':
+                elif name == "recovery":
                     uniform_values.append(float(getattr(qualia_state, "recovery", 0.0)))
-                elif name == 'transcendence':
-                    uniform_values.append(float(getattr(qualia_state, "transcendence", 0.0)))
+                elif name == "transcendence":
+                    uniform_values.append(
+                        float(getattr(qualia_state, "transcendence", 0.0))
+                    )
                 else:
                     uniform_values.append(0.0)  # Default value for unknown uniforms
-            
-            uniform_data = struct.pack(self.ubo_info['struct_format'], *uniform_values)
+
+            uniform_data = struct.pack(self.ubo_info["struct_format"], *uniform_values)
         else:
             # Fallback to hardcoded format if introspection failed
             logger.warning("⚠️ Using hardcoded uniform format as fallback")

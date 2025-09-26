@@ -7,7 +7,7 @@ export interface DebugConfig {
   maxEventHistory: number;
   enableGlobalInterface: boolean;
   profilingEnabled: boolean;
-  debugLevel: 'minimal' | 'normal' | 'verbose';
+  debugLevel: "minimal" | "normal" | "verbose";
   enableAIAnalysis?: boolean;
   enablePerformanceMonitoring?: boolean;
   memoryCleanupInterval?: number;
@@ -33,8 +33,8 @@ export interface SystemSnapshot {
 }
 
 export interface AnalysisResult {
-  type: 'error_pattern' | 'state_anomaly' | 'recommendation';
-  severity: 'low' | 'medium' | 'high';
+  type: "error_pattern" | "state_anomaly" | "recommendation";
+  severity: "low" | "medium" | "high";
   message: string;
   metadata?: any;
 }
@@ -59,7 +59,7 @@ export interface IDebugService {
    * Log EventBus activity for debugging.
    * @param event The event to log - must be BaseEvent compliant
    */
-  logEvent(event: import('../EventBus').BaseEvent): void;
+  logEvent(event: import("../EventBus").BaseEvent): void;
 
   /**
    * Get performance metrics.
@@ -118,5 +118,5 @@ export interface IDebugService {
    * Set debug level for filtering debug output.
    * @param level The debug level to set
    */
-  setDebugLevel(level: 'minimal' | 'normal' | 'verbose'): void;
+  setDebugLevel(level: "minimal" | "normal" | "verbose"): void;
 }

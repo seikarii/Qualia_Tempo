@@ -1,14 +1,26 @@
-import { describe, test, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
+import {
+  describe,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  vi,
+  type Mock,
+} from "vitest";
 /**
  * QUALIA.CODE v1.1 - BackendSyncService Tests - IOC COMPLIANT
  * Comprehensive test suite for backend synchronization service.
  * Uses test-container-factory for proper IoC compliance.
  */
 
-import { createTestContainer, getMocksFromContainer, resetAllMocks } from '../testing/test-container-factory';
-import { Container } from 'inversify';
-import { TYPES } from '../services/inversify.types';
-import type { IBackendSyncService } from '../services/interfaces/IBackendSyncService';
+import {
+  createTestContainer,
+  getMocksFromContainer,
+  resetAllMocks,
+} from "../testing/test-container-factory";
+import { Container } from "inversify";
+import { TYPES } from "../services/inversify.types";
+import type { IBackendSyncService } from "../services/interfaces/IBackendSyncService";
 
 describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
   let container: Container;
@@ -23,16 +35,16 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
 
     // Configure backend configuration mock
     (mocks.mockConfigurationService.getBackendConfig as Mock).mockReturnValue({
-      baseUrl: 'http://localhost:8000',
+      baseUrl: "http://localhost:8000",
       timeout: 5000,
       retryAttempts: 3,
       retryDelay: 1000,
       throttleMs: 250,
       healthCheckInterval: 30000,
       endpoints: {
-        qualiaState: '/api/qualia-state',
-        health: '/api/health'
-      }
+        qualiaState: "/api/qualia-state",
+        health: "/api/health",
+      },
     });
   });
 
@@ -166,7 +178,7 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
 
       // Assert
       expect(mocks.mockLogger.info).toHaveBeenCalledWith(
-        "📊 [BackendSync] QualiaState update received"
+        "📊 [BackendSync] QualiaState update received",
       );
     });
 
@@ -209,8 +221,8 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
       await eventPromise;
 
       // Assert - Should have throttled the updates
-      const debugCalls = (mocks.mockLogger.debug as Mock).mock.calls.filter((call) =>
-        call[0].includes("Received QualiaState update"),
+      const debugCalls = (mocks.mockLogger.debug as Mock).mock.calls.filter(
+        (call) => call[0].includes("Received QualiaState update"),
       );
 
       expect(debugCalls.length).toBeLessThan(5); // Should be throttled
@@ -232,7 +244,9 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
     test("should handle sync failures gracefully", async () => {
       // Arrange
       await sut.start();
-      (mocks.mockHttpService.post as Mock).mockRejectedValue(new Error("Sync failed"));
+      (mocks.mockHttpService.post as Mock).mockRejectedValue(
+        new Error("Sync failed"),
+      );
 
       // Act
       await mocks.mockEventBus.emit({
@@ -253,7 +267,7 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
       // Assert
       expect(mocks.mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining("🚨 [BackendSync] Sync failed"),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });

@@ -3,23 +3,23 @@
  * Service responsible for synchronizing frontend state with backend via EventBus.
  */
 
-import { injectable, inject } from 'inversify';
-import { TYPES } from './inversify.types';
+import { injectable, inject } from "inversify";
+import { TYPES } from "./inversify.types";
+import { EventHandler, BackendSyncEvent, ErrorEvent } from "./EventBus";
+import type { QualiaStateUpdatedEvent } from "./EventBus";
 import {
-  EventHandler,
-  BackendSyncEvent,
-  ErrorEvent,
-} from './EventBus';
-import type { QualiaStateUpdatedEvent } from './EventBus';
-import { logMethod, catchError, validateEventProperty } from '../utils/decorators';
-import type { BackendSyncConfig } from './ConfigurationService';
-import type { IBackendSyncService } from './interfaces/IBackendSyncService';
-import type { IEventBus } from './interfaces/IEventBus';
-import type { ILogger } from './interfaces/ILogger';
-import type { IHttpService } from './interfaces/IHttpService';
-import type { ITimerService } from './interfaces/ITimerService';
-import type { IConfigurationService } from './interfaces/IConfigurationService';
-import type { QualiaState } from '../types/contracts';
+  logMethod,
+  catchError,
+  validateEventProperty,
+} from "../utils/decorators";
+import type { BackendSyncConfig } from "./ConfigurationService";
+import type { IBackendSyncService } from "./interfaces/IBackendSyncService";
+import type { IEventBus } from "./interfaces/IEventBus";
+import type { ILogger } from "./interfaces/ILogger";
+import type { IHttpService } from "./interfaces/IHttpService";
+import type { ITimerService } from "./interfaces/ITimerService";
+import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { QualiaState } from "../types/contracts";
 
 // Backend synchronization event interface - REMOVED: Using EventBus definition
 
@@ -81,7 +81,7 @@ export class BackendSyncService implements IBackendSyncService {
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
     @inject(TYPES.IHttpService) httpService: IHttpService,
-    @inject(TYPES.ITimerService) timerService: ITimerService
+    @inject(TYPES.ITimerService) timerService: ITimerService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
@@ -91,7 +91,9 @@ export class BackendSyncService implements IBackendSyncService {
 
     // QUALIA.CODE FIX: Do NOT access configuration in constructor
     // Configuration will be loaded lazily when needed
-    this.logger.info('BackendSyncService constructed - configuration will be loaded when start() is called');
+    this.logger.info(
+      "BackendSyncService constructed - configuration will be loaded when start() is called",
+    );
 
     this.logger.info("🔄 [BackendSync] Service initialized");
   }
@@ -102,12 +104,18 @@ export class BackendSyncService implements IBackendSyncService {
   private ensureConfigLoaded(): BackendSyncConfig {
     if (!this.config) {
       try {
-        this.config = this.configService.getConfigSection<BackendSyncConfig>('backendSync');
+        this.config =
+          this.configService.getConfigSection<BackendSyncConfig>("backendSync");
         this.healthCheckInterval = this.config.connection.healthCheckInterval;
-        this.logger.debug('BackendSyncService configuration loaded successfully');
+        this.logger.debug(
+          "BackendSyncService configuration loaded successfully",
+        );
       } catch (error) {
-        this.logger.error('Failed to load BackendSyncService configuration', error);
-        throw new Error('BackendSyncService configuration not available');
+        this.logger.error(
+          "Failed to load BackendSyncService configuration",
+          error,
+        );
+        throw new Error("BackendSyncService configuration not available");
       }
     }
     return this.config;
@@ -136,9 +144,11 @@ export class BackendSyncService implements IBackendSyncService {
 
     for (let i = 0; i < maxRetries; i++) {
       try {
-        this.logger.info(`[BackendSync] Connection attempt ${i + 1}/${maxRetries}...`);
+        this.logger.info(
+          `[BackendSync] Connection attempt ${i + 1}/${maxRetries}...`,
+        );
         await this.checkHealth(); // Attempt to connect
-        
+
         // If checkHealth succeeds, we're connected
         this.subscribeToEvents();
         this.startHealthChecking();
@@ -148,7 +158,6 @@ export class BackendSyncService implements IBackendSyncService {
           `🚀 [BackendSync] Service started successfully after ${i + 1} attempts - ${duration.toFixed(2)}ms`,
         );
         return; // Exit the function successfully
-
       } catch (error) {
         this.logger.warn(
           `[BackendSync] Connection attempt ${i + 1} failed. Retrying in ${retryDelay}ms...`,
@@ -167,7 +176,7 @@ export class BackendSyncService implements IBackendSyncService {
           });
           throw error; // Re-throw the final error
         }
-        await new Promise<void>(resolve => {
+        await new Promise<void>((resolve) => {
           this.timerService.setTimeout(() => resolve(), retryDelay);
         }); // Wait before retrying
       }
@@ -295,7 +304,7 @@ export class BackendSyncService implements IBackendSyncService {
     const listenerId = this.eventBus.subscribe(
       "QualiaStateUpdated",
       qualiaStateListener,
-      { priority: 'high' },
+      { priority: "high" },
     );
     this.eventListenerIds.push(listenerId);
 
@@ -311,13 +320,15 @@ export class BackendSyncService implements IBackendSyncService {
     this.logger.info("📡 [BackendSync] Unsubscribed from events");
   }
 
-  @validateEventProperty('qualiaState', 'QualiaState')
+  @validateEventProperty("qualiaState", "QualiaState")
   private handleQualiaStateUpdate(event: QualiaStateUpdatedEvent): void {
     this.logger.info("📊 [BackendSync] QualiaState update received");
 
     if (!this.isConnected) {
       const config = this.ensureConfigLoaded();
-      this.logger.warn(`⚠️ [BackendSync] ${config.messages.backendNotConnected}`);
+      this.logger.warn(
+        `⚠️ [BackendSync] ${config.messages.backendNotConnected}`,
+      );
       return;
     }
 
@@ -358,7 +369,9 @@ export class BackendSyncService implements IBackendSyncService {
         }
       }, delay);
 
-      this.logger.info(`⏱️ [BackendSync] Sync scheduled in ${delay.toFixed(0)}ms`);
+      this.logger.info(
+        `⏱️ [BackendSync] Sync scheduled in ${delay.toFixed(0)}ms`,
+      );
     }
   }
 
@@ -384,10 +397,9 @@ export class BackendSyncService implements IBackendSyncService {
     const config = this.ensureConfigLoaded();
 
     if (config.validation.logValidationErrors) {
-      this.logger.info(
-        "🌐 [BackendSync] Sending QualiaState to backend:",
-        { qualiaRequest },
-      );
+      this.logger.info("🌐 [BackendSync] Sending QualiaState to backend:", {
+        qualiaRequest,
+      });
     }
 
     const url = `${config.api.baseUrl}${config.api.qualiaEndpoint}`;
@@ -415,7 +427,9 @@ export class BackendSyncService implements IBackendSyncService {
       });
 
       const duration = performance.now() - startTime;
-      this.logger.info(`✅ [BackendSync] Sync completed - ${duration.toFixed(2)}ms`);
+      this.logger.info(
+        `✅ [BackendSync] Sync completed - ${duration.toFixed(2)}ms`,
+      );
 
       // Update statistics
       this.syncCount++;
@@ -443,13 +457,13 @@ export class BackendSyncService implements IBackendSyncService {
     try {
       const url = `${config.api.baseUrl}${config.api.healthEndpoint}`;
       this.logger.debug(`[BackendSync] Health check URL: ${url}`);
-      
-      const response = await this.httpService.get<any>(url, { 
+
+      const response = await this.httpService.get<any>(url, {
         timeout: config.api.timeout,
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json"
-        }
+          Accept: "application/json",
+        },
       });
 
       this.isConnected = true;
@@ -457,7 +471,7 @@ export class BackendSyncService implements IBackendSyncService {
       const duration = performance.now() - startTime;
       this.logger.info(
         `✅ [BackendSync] Backend healthy - ${duration.toFixed(2)}ms`,
-        { response }
+        { response },
       );
     } catch (error) {
       this.isConnected = false;
@@ -475,7 +489,9 @@ export class BackendSyncService implements IBackendSyncService {
 
     this.healthCheckIntervalId = this.timerService.setInterval(() => {
       this.checkHealth().catch((error) => {
-        this.logger.error("🚨 [BackendSync] Periodic health check failed:", { error });
+        this.logger.error("🚨 [BackendSync] Periodic health check failed:", {
+          error,
+        });
         this.isConnected = false;
       });
     }, this.healthCheckInterval); // Check every configured interval
@@ -521,7 +537,7 @@ export class BackendSyncService implements IBackendSyncService {
       timeout: config.api.timeout,
       body: qualiaRequest,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
   }
@@ -539,7 +555,8 @@ export class BackendSyncService implements IBackendSyncService {
     errorCount: number;
     avgSyncTime: number;
   } {
-    const avgSyncTime = this.syncCount > 0 ? this.totalSyncTime / this.syncCount : 0;
+    const avgSyncTime =
+      this.syncCount > 0 ? this.totalSyncTime / this.syncCount : 0;
 
     return {
       isRunning: this.isRunning,
@@ -561,12 +578,12 @@ export class BackendSyncService implements IBackendSyncService {
     try {
       const config = this.ensureConfigLoaded();
       const url = `${config.api.baseUrl}${config.api.healthEndpoint}`;
-      await this.httpService.get<any>(url, { 
+      await this.httpService.get<any>(url, {
         timeout: config.api.timeout,
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json"
-        }
+          Accept: "application/json",
+        },
       });
       return true;
     } catch {

@@ -5,13 +5,13 @@
 display:
   enableNotifications: true
   maxVisibleNotifications: 5
-  notificationDuration: 3000  # 3 seconds
+  notificationDuration: 3000 # 3 seconds
   enableAnimations: true
-  animationDuration: 300  # 300ms
+  animationDuration: 300 # 300ms
 
 # Positioning
 positioning:
-  position: "top-right"  # top-left, top-right, bottom-left, bottom-right, center
+  position: "top-right" # top-left, top-right, bottom-left, bottom-right, center
   offsetX: 20
   offsetY: 20
   zIndex: 1000
@@ -53,7 +53,7 @@ types:
 queue:
   enableQueueing: true
   maxQueueSize: 20
-  queueProcessingInterval: 100  # Process every 100ms
+  queueProcessingInterval: 100 # Process every 100ms
 
 # Accessibility
 accessibility:
@@ -67,4 +67,4 @@ performance:
   enablePooling: true
   maxPoolSize: 10
   enableGarbageCollection: true
-  gcInterval: 30000  # 30 seconds
+  gcInterval: 30000 # 30 seconds

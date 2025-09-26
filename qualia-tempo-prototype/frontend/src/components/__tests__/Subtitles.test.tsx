@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { Subtitles } from "../Subtitles";
 import { useGameStore } from "../../state/useGameStore";
@@ -8,9 +8,7 @@ vi.mock("../../state/useGameStore", () => ({
   useGameStore: vi.fn(),
 }));
 
-const mockUseGameStore = useGameStore as MockedFunction<
-  typeof useGameStore
->;
+const mockUseGameStore = useGameStore as MockedFunction<typeof useGameStore>;
 
 // Helper to create a mock store that handles selectors
 const createMockStore = (state: any) => {

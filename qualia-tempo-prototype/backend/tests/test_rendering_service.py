@@ -3,7 +3,6 @@
 # Comprehensive unit tests for GPU rendering service
 
 import pytest
-import asyncio
 from unittest.mock import Mock, MagicMock, patch, AsyncMock
 from backend.tests.test_composition_root import TestCompositionRootFactory
 from backend.engine.qualia_particle_engine import QualiaParticleEngine
@@ -96,7 +95,7 @@ class TestRenderingService:
         """
         # Act: Call initialize on the mocked service
         result = rendering_service.initialize()
-        
+
         # Assert: Verify the service returns expected result (already configured in mock)
         assert result is True
         rendering_service.initialize.assert_called_once()
@@ -108,7 +107,7 @@ class TestRenderingService:
         """
         # Act: Call render_frame (already configured in TestCompositionRootFactory)
         result = rendering_service.render_frame()
-        
+
         # Assert: Verify service interface compliance
         assert result == b"fake_frame_data"
         rendering_service.render_frame.assert_called_once()
@@ -121,7 +120,7 @@ class TestRenderingService:
         # Act: Multiple calls to render_frame to test behavior consistency
         result1 = rendering_service.render_frame()
         result2 = rendering_service.render_frame()
-        
+
         # Assert: Verify consistent behavior and call tracking
         assert result1 == b"fake_frame_data"
         assert result2 == b"fake_frame_data"
@@ -134,14 +133,12 @@ class TestRenderingService:
         """
         # Assert: Verify service is properly resolved from container
         assert rendering_service is not None
-        assert hasattr(rendering_service, 'initialize')
-        assert hasattr(rendering_service, 'render_frame')
-        assert hasattr(rendering_service, 'shutdown')
-        
+        assert hasattr(rendering_service, "initialize")
+        assert hasattr(rendering_service, "render_frame")
+        assert hasattr(rendering_service, "shutdown")
+
         # Assert: Verify service is the same mock instance from factory
         assert rendering_service is service_mocks["rendering_service"]
-
-
 
     @pytest.fixture
     def mock_particle_engine(self):
@@ -178,15 +175,17 @@ class TestRenderingService:
             mock_image.save = mock_save
             yield mock_image_class
 
-    def test_initialization_with_dependencies_available(self, rendering_service, mock_event_bus):
+    def test_initialization_with_dependencies_available(
+        self, rendering_service, mock_event_bus
+    ):
         """Test RenderingService initialization using IoC fixture."""
         # The service is already resolved from the IoC container
         assert rendering_service is not None
-        
+
         # Test calling the initialization method
         result = rendering_service.initialize()
         assert result is True
-        
+
         # Verify the mock was called
         rendering_service.initialize.assert_called_once()
 
@@ -194,7 +193,7 @@ class TestRenderingService:
         """Test that render_frame returns valid JPEG bytes using IoC fixture."""
         # Call the mock method - it's configured to return frame data
         result = rendering_service.render_frame()
-        
+
         # Verify mock behavior from factory (returns fake frame data)
         assert result == b"fake_frame_data"
         rendering_service.render_frame.assert_called_once()
@@ -202,10 +201,10 @@ class TestRenderingService:
     def test_render_frame_behavior_validation(self, rendering_service):
         """Test that render_frame properly orchestrates GPU operations using IoC fixture."""
         # Use the service from IoC container (already mocked with proper behavior)
-        
+
         # Call the mock method (configured in factory to return frame data)
         result = rendering_service.render_frame()
-        
+
         # Verify the mock was called and returns expected data
         assert result == b"fake_frame_data"
         rendering_service.render_frame.assert_called_once()
@@ -213,9 +212,9 @@ class TestRenderingService:
     def test_rendering_service_interface(self, rendering_service):
         """Test that RenderingService mock has expected interface."""
         # Verify the mock has the expected methods
-        assert hasattr(rendering_service, 'initialize')
-        assert hasattr(rendering_service, 'render_frame')
-        
+        assert hasattr(rendering_service, "initialize")
+        assert hasattr(rendering_service, "render_frame")
+
         # Test that methods are callable mocks
         assert callable(rendering_service.initialize)
         assert callable(rendering_service.render_frame)

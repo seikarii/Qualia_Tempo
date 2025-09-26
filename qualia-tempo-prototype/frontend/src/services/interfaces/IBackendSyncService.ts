@@ -3,7 +3,7 @@
  * Synchronized communication with backend API interface.
  */
 
-import type { QualiaState } from '../../types/contracts';
+import type { QualiaState } from "../../types/contracts";
 
 export interface IBackendSyncService {
   /**

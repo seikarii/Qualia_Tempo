@@ -5,7 +5,6 @@ import pytest
 from unittest.mock import Mock, patch
 from backend.tests.test_composition_root import TestCompositionRootFactory
 from backend.engine.qualia_particle_engine import (
-    QualiaParticleEngine,
     PingPongBufferPair,
     BufferState,
     QUALIA_GPU_AVAILABLE,
@@ -23,7 +22,7 @@ def particle_engine(mocked_composition_root):
     return mocked_composition_root.get_service("particle_system")
 
 
-@pytest.fixture  
+@pytest.fixture
 def service_mocks(mocked_composition_root):
     """Extracts service mocks from the container for assertions."""
     return TestCompositionRootFactory.get_service_mocks(mocked_composition_root)
@@ -144,7 +143,9 @@ class TestQualiaParticleEngineExtended:
         assert "max_particles" in params
 
     @patch("backend.engine.qualia_particle_engine.moderngl")
-    def test_graphics_initialization_with_mock_context(self, mock_moderngl, particle_engine):
+    def test_graphics_initialization_with_mock_context(
+        self, mock_moderngl, particle_engine
+    ):
         """Test graphics initialization with mocked context."""
         mock_ctx = Mock()
         mock_moderngl.create_context.return_value = mock_ctx
@@ -181,7 +182,8 @@ class TestQualiaParticleEngineExtended:
 
         # Verify cleanup was called
         assert (
-            not hasattr(particle_engine, "_compute_program") or particle_engine._compute_program is None
+            not hasattr(particle_engine, "_compute_program")
+            or particle_engine._compute_program is None
         )
 
     def test_error_handling_in_compute_step(self, particle_engine):

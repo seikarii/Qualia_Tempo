@@ -1,12 +1,20 @@
-import * as Tone from 'tone';
-import { injectable, inject } from 'inversify';
-import { TYPES } from '../services/inversify.types';
-import type { ILogger } from '../services/interfaces/ILogger';
-import type { QualiaState } from '../types/contracts';
-import type { IOntologicalAudioEngine, EmergentBehavior } from './IOntologicalAudioEngine';
-import { logMethod, catchError } from '../utils/decorators';
+import * as Tone from "tone";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../services/inversify.types";
+import type { ILogger } from "../services/interfaces/ILogger";
+import type { QualiaState } from "../types/contracts";
+import type {
+  IOntologicalAudioEngine,
+  EmergentBehavior,
+} from "./IOntologicalAudioEngine";
+import { logMethod, catchError } from "../utils/decorators";
 
-export type OscillatorType = 'sine' | 'triangle' | 'sawtooth' | 'square' | 'pulse';
+export type OscillatorType =
+  | "sine"
+  | "triangle"
+  | "sawtooth"
+  | "square"
+  | "pulse";
 
 /**
  * QUALIA.CODE v1.1 - OntologicalAudioEngine Service
@@ -20,19 +28,17 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   private globalDelay: Tone.FeedbackDelay;
   private masterVolume: Tone.Volume;
 
-  constructor(
-    @inject(TYPES.ILogger) logger: ILogger
-  ) {
+  constructor(@inject(TYPES.ILogger) logger: ILogger) {
     this.logger = logger;
     this.globalReverb = new Tone.Reverb({
       decay: 1.5,
-      wet: 0.45
+      wet: 0.45,
     });
 
     this.globalDelay = new Tone.FeedbackDelay({
       delayTime: "8n",
       feedback: 0.28,
-      wet: 0.18
+      wet: 0.18,
     });
 
     this.masterVolume = new Tone.Volume(-8);
@@ -42,7 +48,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
     this.globalReverb.connect(this.masterVolume);
     this.masterVolume.toDestination();
 
-    this.logger.info('OntologicalAudioEngine initialized');
+    this.logger.info("OntologicalAudioEngine initialized");
   }
 
   /**
@@ -61,9 +67,9 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
         attack: 0.07 + qualiaState.flow * 0.35,
         decay: 0.16,
         sustain: 0.32 + qualiaState.intensity * 0.5,
-        release: 0.5 + qualiaState.flow * 1.3
+        release: 0.5 + qualiaState.flow * 1.3,
       },
-      volume: -7 + qualiaState.precision * 7
+      volume: -7 + qualiaState.precision * 7,
     });
 
     synth.connect(this.globalDelay);
@@ -80,12 +86,17 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
     if (!synth) return;
 
     const baseFreq = this.mapConsciousnessToFrequency(qualiaState.intensity);
-    const harmonic = this.mapValenceToHarmonic(qualiaState.flow - qualiaState.chaos);
+    const harmonic = this.mapValenceToHarmonic(
+      qualiaState.flow - qualiaState.chaos,
+    );
     const rhythm = this.mapArousalToRhythm(qualiaState.aggression);
 
     if (qualiaState.aggression > 0.2) {
       const note = Tone.Frequency(baseFreq * harmonic).toNote();
-      const velocity = Math.min(qualiaState.aggression + qualiaState.precision * 0.25, 1.0);
+      const velocity = Math.min(
+        qualiaState.aggression + qualiaState.precision * 0.25,
+        1.0,
+      );
       const duration = rhythm;
 
       synth.triggerAttackRelease(note, duration, undefined, velocity);
@@ -127,8 +138,8 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
    */
   private mapArousalToRhythm(aggression: number): string {
     if (aggression > 0.8) return "16n"; // Muy agresivo: notas rápidas
-    if (aggression > 0.5) return "8n";  // Medianamente agresivo: notas medias
-    if (aggression > 0.2) return "4n";  // Poco agresivo: notas largas
+    if (aggression > 0.5) return "8n"; // Medianamente agresivo: notas medias
+    if (aggression > 0.2) return "4n"; // Poco agresivo: notas largas
     return "2n"; // Muy calmado: notas muy largas
   }
 
@@ -139,16 +150,16 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   @catchError()
   public playEmergentPattern(behavior: EmergentBehavior): void {
     switch (behavior.type) {
-      case 'CLUSTERING':
+      case "CLUSTERING":
         this.playClusterHarmony(behavior);
         break;
-      case 'SYNCHRONIZATION':
+      case "SYNCHRONIZATION":
         this.playSynchronizationChord(behavior);
         break;
-      case 'STATE_PROPAGATOR':
+      case "STATE_PROPAGATOR":
         this.playPropagationArpeggio(behavior);
         break;
-      case 'NARRATIVE_EVENT':
+      case "NARRATIVE_EVENT":
         this.playNarrativeEvent(behavior);
         break;
     }
@@ -156,9 +167,9 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
 
   private playClusterHarmony(behavior: EmergentBehavior): void {
     // Crear acorde basado en las entidades del cluster
-    const chord = behavior.entities.slice(0, 4).map((_entity, index) =>
-      Tone.Frequency(200 + index * 100).toNote()
-    );
+    const chord = behavior.entities
+      .slice(0, 4)
+      .map((_entity, index) => Tone.Frequency(200 + index * 100).toNote());
 
     const clusteredSynth = new Tone.PolySynth();
     clusteredSynth.connect(this.globalReverb);
@@ -171,9 +182,9 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
 
   private playSynchronizationChord(behavior: EmergentBehavior): void {
     // Crear acorde de sincronización
-    const chord = behavior.entities.slice(0, 5).map((_entity, idx) =>
-      Tone.Frequency(320 + idx * 70).toNote()
-    );
+    const chord = behavior.entities
+      .slice(0, 5)
+      .map((_entity, idx) => Tone.Frequency(320 + idx * 70).toNote());
 
     const syncSynth = new Tone.PolySynth();
     syncSynth.connect(this.globalReverb);
@@ -187,7 +198,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   private playPropagationArpeggio(behavior: EmergentBehavior): void {
     // Crear arpegio propagador
     const arpeggioNotes = behavior.entities.map((_entity, idx) =>
-      Tone.Frequency(160 + idx * 90).toNote()
+      Tone.Frequency(160 + idx * 90).toNote(),
     );
 
     const arpeggioSynth = new Tone.PolySynth();
@@ -204,9 +215,9 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
 
   private playNarrativeEvent(behavior: EmergentBehavior): void {
     // Evento narrativo: acorde especial con modulación de fuerza y descripción
-    const chord = behavior.entities.slice(0, 3).map((_entity, idx) =>
-      Tone.Frequency(400 + idx * 150).toNote()
-    );
+    const chord = behavior.entities
+      .slice(0, 3)
+      .map((_entity, idx) => Tone.Frequency(400 + idx * 150).toNote());
 
     const eventSynth = new Tone.PolySynth();
     eventSynth.connect(this.globalReverb);

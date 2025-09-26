@@ -1,8 +1,8 @@
-import { injectable, inject } from 'inversify';
-import { TYPES } from './inversify.types';
-import { logMethod, catchError } from '../utils/decorators';
-import type { ILogger } from './interfaces/ILogger';
-import type { ITimerService } from './interfaces/ITimerService';
+import { injectable, inject } from "inversify";
+import { TYPES } from "./inversify.types";
+import { logMethod, catchError } from "../utils/decorators";
+import type { ILogger } from "./interfaces/ILogger";
+import type { ITimerService } from "./interfaces/ITimerService";
 
 @injectable()
 export class TimerService implements ITimerService {
@@ -10,24 +10,22 @@ export class TimerService implements ITimerService {
   private readonly activeTimeouts = new Set<number>();
   private readonly activeIntervals = new Set<number>();
 
-  constructor(
-    @inject(TYPES.ILogger) logger: ILogger
-  ) {
+  constructor(@inject(TYPES.ILogger) logger: ILogger) {
     this.logger = logger;
-    this.logger.info('TimerService initialized with timer abstraction');
+    this.logger.info("TimerService initialized with timer abstraction");
   }
 
   @logMethod()
   @catchError()
   public setTimeout(callback: () => void, delay: number): number {
-    this.logger.debug('Setting timeout', { delay });
+    this.logger.debug("Setting timeout", { delay });
 
     const id = window.setTimeout(() => {
       this.activeTimeouts.delete(id);
       try {
         callback();
       } catch (error) {
-        this.logger.error('Timeout callback failed', { error });
+        this.logger.error("Timeout callback failed", { error });
       }
     }, delay);
 
@@ -39,7 +37,7 @@ export class TimerService implements ITimerService {
   @catchError()
   public clearTimeout(id: number): void {
     if (this.activeTimeouts.has(id)) {
-      this.logger.debug('Clearing timeout', { id });
+      this.logger.debug("Clearing timeout", { id });
       window.clearTimeout(id);
       this.activeTimeouts.delete(id);
     }
@@ -48,13 +46,13 @@ export class TimerService implements ITimerService {
   @logMethod()
   @catchError()
   public setInterval(callback: () => void, interval: number): number {
-    this.logger.debug('Setting interval', { interval });
+    this.logger.debug("Setting interval", { interval });
 
     const id = window.setInterval(() => {
       try {
         callback();
       } catch (error) {
-        this.logger.error('Interval callback failed', { error });
+        this.logger.error("Interval callback failed", { error });
       }
     }, interval);
 
@@ -66,7 +64,7 @@ export class TimerService implements ITimerService {
   @catchError()
   public clearInterval(id: number): void {
     if (this.activeIntervals.has(id)) {
-      this.logger.debug('Clearing interval', { id });
+      this.logger.debug("Clearing interval", { id });
       window.clearInterval(id);
       this.activeIntervals.delete(id);
     }
@@ -75,7 +73,7 @@ export class TimerService implements ITimerService {
   @logMethod()
   @catchError()
   public debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
-    this.logger.debug('Creating debounced function', { wait });
+    this.logger.debug("Creating debounced function", { wait });
 
     let timeoutId: number | undefined;
 
@@ -96,7 +94,7 @@ export class TimerService implements ITimerService {
   @logMethod()
   @catchError()
   public throttle<T extends (...args: any[]) => any>(func: T, wait: number): T {
-    this.logger.debug('Creating throttled function', { wait });
+    this.logger.debug("Creating throttled function", { wait });
 
     let lastCallTime = 0;
 
@@ -118,7 +116,7 @@ export class TimerService implements ITimerService {
    */
   @logMethod()
   public cleanup(): void {
-    this.logger.info('Cleaning up all active timers');
+    this.logger.info("Cleaning up all active timers");
 
     // Clear all timeouts
     for (const id of this.activeTimeouts) {

@@ -3,7 +3,7 @@
 # Comprehensive unit tests for WebSocket streaming service
 
 import pytest
-from unittest.mock import Mock, MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, patch, AsyncMock
 from backend.tests.test_composition_root import TestCompositionRootFactory
 
 
@@ -46,11 +46,11 @@ class TestStreamingWebService:
         """Test StreamingWebService initialization using IoC fixture."""
         # The service is already resolved from the IoC container
         assert streaming_service is not None
-        
+
         # Verify the mock has the expected interface
-        assert hasattr(streaming_service, 'start_streaming')
-        assert hasattr(streaming_service, 'stop_streaming')
-        
+        assert hasattr(streaming_service, "start_streaming")
+        assert hasattr(streaming_service, "stop_streaming")
+
         # Test that methods are callable mocks
         assert callable(streaming_service.start_streaming)
         assert callable(streaming_service.stop_streaming)
@@ -60,16 +60,16 @@ class TestStreamingWebService:
         """Test starting streaming service using IoC fixture."""
         # Call the mock method
         streaming_service.start_streaming()
-        
+
         # Verify the mock was called
         streaming_service.start_streaming.assert_called_once()
 
-    @pytest.mark.asyncio  
+    @pytest.mark.asyncio
     async def test_stop_streaming(self, streaming_service):
         """Test stopping streaming service using IoC fixture."""
         # Call the mock method
         streaming_service.stop_streaming()
-        
+
         # Verify the mock was called
         streaming_service.stop_streaming.assert_called_once()
         mock_websocket = MagicMock()
@@ -85,11 +85,11 @@ class TestStreamingWebService:
     async def test_disconnect_client(self, streaming_service):
         """Test client disconnection."""
         mock_websocket = MagicMock()
-        
+
         # Set up side_effect for disconnect_client
         async def disconnect_side_effect(websocket):
             streaming_service._connections.discard(websocket)
-        
+
         streaming_service.disconnect_client.side_effect = disconnect_side_effect
         streaming_service._connections.add(mock_websocket)
 
@@ -98,7 +98,9 @@ class TestStreamingWebService:
         assert mock_websocket not in streaming_service._connections
 
     @pytest.mark.asyncio
-    async def test_connect_client_starts_streaming_on_first_connection(self, streaming_service):
+    async def test_connect_client_starts_streaming_on_first_connection(
+        self, streaming_service
+    ):
         """
         QUALIA.CODE Phase 2 Test: Verify that connect_client manages connection state correctly.
         Test connection management and state tracking.
@@ -116,7 +118,9 @@ class TestStreamingWebService:
         assert streaming_service._connected_clients == 1
 
     @pytest.mark.asyncio
-    async def test_disconnect_client_stops_streaming_on_last_connection(self, streaming_service):
+    async def test_disconnect_client_stops_streaming_on_last_connection(
+        self, streaming_service
+    ):
         """
         QUALIA.CODE Phase 2 Test: Connect two clients, disconnect one (connections remain),
         disconnect the last and verify connection state is cleared.
@@ -150,7 +154,9 @@ class TestStreamingWebService:
         assert streaming_service._connected_clients == 0
 
     @pytest.mark.asyncio
-    async def test_disconnect_client_stops_streaming_on_last_connection(self, streaming_service):
+    async def test_disconnect_client_stops_streaming_on_last_connection(
+        self, streaming_service
+    ):
         """
         QUALIA.CODE Phase 2 Test: Connect two clients, disconnect one (streaming continues),
         disconnect the last and verify that _stop_streaming is called.
@@ -190,21 +196,25 @@ class TestStreamingWebService:
         streaming_service._stop_streaming.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_streaming_loop_logic(self, streaming_service, mock_rendering_service, service_mocks):
+    async def test_streaming_loop_logic(
+        self, streaming_service, mock_rendering_service, service_mocks
+    ):
         """
         QUALIA.CODE Phase 2 Test: Mock _rendering_service.render_frame to return bytes.
         Verify that the loop calls _particle_engine.compute_step(), render_frame(), and _broadcast_frame().
         """
         # Arrange: Mock dependencies
         mock_particle_engine = service_mocks["particle_engine"]
-        streaming_service._rendering_service.render_frame = AsyncMock(return_value=b"fake_frame_data")
+        streaming_service._rendering_service.render_frame = AsyncMock(
+            return_value=b"fake_frame_data"
+        )
         streaming_service._broadcast_frame = AsyncMock()
 
         # Set streaming state
         streaming_service._is_streaming = True
 
         # Act: Run a single iteration of the streaming loop (mocked to exit immediately)
-        with patch('asyncio.sleep', AsyncMock()) as mock_sleep:
+        with patch("asyncio.sleep", AsyncMock()) as mock_sleep:
             # Mock the loop to run only once
             original_loop = streaming_service._streaming_loop
 
@@ -222,7 +232,9 @@ class TestStreamingWebService:
             # Assert: Verify all methods were called in correct sequence
             mock_particle_engine.compute_step.assert_called_once()
             streaming_service._rendering_service.render_frame.assert_called_once()
-            streaming_service._broadcast_frame.assert_called_once_with(b"fake_frame_data")
+            streaming_service._broadcast_frame.assert_called_once_with(
+                b"fake_frame_data"
+            )
 
     @pytest.mark.asyncio
     async def test_broadcast_frame_handles_disconnects(self, streaming_service):
@@ -232,7 +244,9 @@ class TestStreamingWebService:
         """
         # Arrange: Two mock WebSockets - one that disconnects, one that stays
         mock_websocket1 = MagicMock()
-        mock_websocket1.send_json = AsyncMock(side_effect=Exception("WebSocketDisconnect"))
+        mock_websocket1.send_json = AsyncMock(
+            side_effect=Exception("WebSocketDisconnect")
+        )
         mock_websocket1.closed = True
 
         mock_websocket2 = MagicMock()
@@ -267,27 +281,22 @@ class TestStreamingWebService:
         ping_message = {
             "type": "ping",
             "timestamp": 1234567890,
-            "pingId": "test-ping-123"
+            "pingId": "test-ping-123",
         }
 
         # Act: Handle ping message
         await streaming_service.handle_client_message(mock_websocket, ping_message)
 
         # Assert: Pong response sent with correct data
-        mock_websocket.send_json.assert_called_once_with({
-            "type": "pong",
-            "timestamp": 1234567890,
-            "pingId": "test-ping-123"
-        })
+        mock_websocket.send_json.assert_called_once_with(
+            {"type": "pong", "timestamp": 1234567890, "pingId": "test-ping-123"}
+        )
 
         # Reset mock for next test
         mock_websocket.send_json.reset_mock()
 
         # Test quality_change message
-        quality_message = {
-            "type": "quality_change",
-            "quality": 85
-        }
+        quality_message = {"type": "quality_change", "quality": 85}
 
         # Act: Handle quality change
         await streaming_service.handle_client_message(mock_websocket, quality_message)
@@ -296,10 +305,7 @@ class TestStreamingWebService:
         assert streaming_service._compression_quality == 85
 
         # Test fps_change message
-        fps_message = {
-            "type": "fps_change",
-            "fps": 45.0
-        }
+        fps_message = {"type": "fps_change", "fps": 45.0}
 
         # Act: Handle fps change
         await streaming_service.handle_client_message(mock_websocket, fps_message)
@@ -355,11 +361,11 @@ class TestStreamingWebService:
         streaming_service._streaming_loop = mock_streaming_loop
 
         # Make sure render_frame is async
-        streaming_service._rendering_service.render_frame = AsyncMock(return_value=b"fake_frame_data")
+        streaming_service._rendering_service.render_frame = AsyncMock(
+            return_value=b"fake_frame_data"
+        )
 
-        with patch(
-            "asyncio.sleep", new_callable=AsyncMock
-        ) as mock_sleep:
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
             await streaming_service._streaming_loop()
 
             # Verify render_frame was called
@@ -449,7 +455,7 @@ class TestStreamingWebService:
         # Set up the side_effect to change _is_streaming
         async def stop_streaming_side_effect():
             streaming_service._is_streaming = False
-        
+
         streaming_service._stop_streaming.side_effect = stop_streaming_side_effect
 
         await streaming_service._stop_streaming()

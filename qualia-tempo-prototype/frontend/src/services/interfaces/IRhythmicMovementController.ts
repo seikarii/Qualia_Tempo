@@ -3,7 +3,7 @@
  * Rhythmic movement and visual effects interface.
  */
 
-import type { QualiaState } from '../../types/contracts';
+import type { QualiaState } from "../../types/contracts";
 
 export interface IRhythmicMovementController {
   /**

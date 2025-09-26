@@ -5,7 +5,7 @@
 # Composition Root configuration
 compositionRoot:
   enableHealthChecks: true
-  initializationTimeout: 10000  # milliseconds
+  initializationTimeout: 10000 # milliseconds
   enableServiceValidation: true
   enableConfigValidation: true
 
@@ -16,59 +16,59 @@ audio:
 
 # Gameplay configuration
 gameplay:
-  rhythmTolerance: 150  # milliseconds - window for rhythm accuracy
-  comboResetTime: 2.0   # seconds - time before combo resets
-  pauseCooldown: 1.0    # seconds - cooldown for Pause ability
+  rhythmTolerance: 150 # milliseconds - window for rhythm accuracy
+  comboResetTime: 2.0 # seconds - time before combo resets
+  pauseCooldown: 1.0 # seconds - cooldown for Pause ability
 
 # Visual configuration
 visual:
-  updateFrequency: 100  # milliseconds - how often to send QualiaState to backend
-  debugMode: true       # show debug information
+  updateFrequency: 100 # milliseconds - how often to send QualiaState to backend
+  debugMode: true # show debug information
 
 # QualiaState calculation constants
 qualia:
   # Precision settings
   precision:
-    maxStreak: 20      # max consecutive hits for full precision
-    decayRate: 0.95    # how fast precision decays when not hitting
-    pauseBonus: 0.2    # bonus precision for using Pause ability
+    maxStreak: 20 # max consecutive hits for full precision
+    decayRate: 0.95 # how fast precision decays when not hitting
+    pauseBonus: 0.2 # bonus precision for using Pause ability
 
   # Flow settings
   flow:
-    rhythmWindow: 100  # milliseconds - perfect rhythm window
-    maxFlow: 1.0       # maximum flow value
-    decayRate: 0.98    # how fast flow decays
-    buildRate: 0.1     # how fast flow builds up
+    rhythmWindow: 100 # milliseconds - perfect rhythm window
+    maxFlow: 1.0 # maximum flow value
+    decayRate: 0.98 # how fast flow decays
+    buildRate: 0.1 # how fast flow builds up
 
   # Chaos settings
   chaos:
-    missMultiplier: 0.3  # how much chaos increases per miss
-    maxChaos: 1.0        # maximum chaos value
-    decayRate: 0.95      # how fast chaos decays
+    missMultiplier: 0.3 # how much chaos increases per miss
+    maxChaos: 1.0 # maximum chaos value
+    decayRate: 0.95 # how fast chaos decays
 
   # Aggression settings
   aggression:
-    comboThreshold: 5    # combo required to start building aggression
-    maxAggression: 1.0   # maximum aggression value
-    comboMultiplier: 0.05  # aggression per combo point
+    comboThreshold: 5 # combo required to start building aggression
+    maxAggression: 1.0 # maximum aggression value
+    comboMultiplier: 0.05 # aggression per combo point
 
   # Recovery settings
   recovery:
-    duration: 2.0      # seconds recovery effect lasts
-    maxRecovery: 1.0   # maximum recovery value
-    decayRate: 0.9    # how fast recovery decays
+    duration: 2.0 # seconds recovery effect lasts
+    maxRecovery: 1.0 # maximum recovery value
+    decayRate: 0.9 # how fast recovery decays
 
   # Intensity (overall) settings
   intensity:
-    baseMultiplier: 0.3  # base intensity from other qualia
-    precisionWeight: 0.2  # how much precision contributes
-    flowWeight: 0.3       # how much flow contributes
-    aggressionWeight: 0.2  # how much aggression contributes
-    chaosWeight: -0.1      # chaos reduces intensity (negative)
+    baseMultiplier: 0.3 # base intensity from other qualia
+    precisionWeight: 0.2 # how much precision contributes
+    flowWeight: 0.3 # how much flow contributes
+    aggressionWeight: 0.2 # how much aggression contributes
+    chaosWeight: -0.1 # chaos reduces intensity (negative)
 
 # Backend synchronization settings
 backend:
-  throttleMs: 250      # Maximum one sync every 250ms
+  throttleMs: 250 # Maximum one sync every 250ms
   maxBatchSize: 10
   baseUrl: "http://localhost:8000"
   endpoints:
@@ -85,46 +85,46 @@ backend:
 services:
   # Error reporting configuration
   errorReporting:
-    rateLimitWindow: 60000  # 1 minute
-    maxErrorsPerWindow: 10  # Max 10 errors per minute
-    batchSize: 5  # Send in batches of 5
-    batchTimeout: 30000  # Send batch every 30 seconds max
-    maxRetentionTime: 3600000  # Keep errors for 1 hour
+    rateLimitWindow: 60000 # 1 minute
+    maxErrorsPerWindow: 10 # Max 10 errors per minute
+    batchSize: 5 # Send in batches of 5
+    batchTimeout: 30000 # Send batch every 30 seconds max
+    maxRetentionTime: 3600000 # Keep errors for 1 hour
     externalServiceUrl: "https://api.error-reporting.service/reports"
     retryAttempts: 3
     maxBatchSize: 10
-    batchInterval: 5000  # milliseconds
+    batchInterval: 5000 # milliseconds
     maxRetries: 3
-    retryDelay: 1000     # milliseconds
+    retryDelay: 1000 # milliseconds
     enableConsoleOutput: true
-    
-  # Debug service configuration  
+
+  # Debug service configuration
   debug:
     enableProfiling: false
     maxEventHistory: 500
     logLevel: "INFO"
-    performanceThreshold: 1000  # milliseconds
-    performanceMonitoringInterval: 5000  # 5 seconds
-    
+    performanceThreshold: 1000 # milliseconds
+    performanceMonitoringInterval: 5000 # 5 seconds
+
   # Backend sync service configuration
   backendSync:
     connection:
-      healthCheckInterval: 30000  # milliseconds - check backend health every 30 seconds
-      connectionTimeout: 5000  # milliseconds
+      healthCheckInterval: 30000 # milliseconds - check backend health every 30 seconds
+      connectionTimeout: 5000 # milliseconds
     sync:
       maxRetries: 3
-      retryDelay: 1000  # milliseconds
-      throttleDelay: 250  # milliseconds - from backend config
-      batchSize: 10  # from backend config
-    aiAnalysisInterval: 30000  # 30 seconds
+      retryDelay: 1000 # milliseconds
+      throttleDelay: 250 # milliseconds - from backend config
+      batchSize: 10 # from backend config
+    aiAnalysisInterval: 30000 # 30 seconds
     enableAIAnalysis: true
     enablePerformanceMonitoring: true
     enableGlobalInterface: true
-    sessionIdLength: 8  # for debug session ID generation
-    recentEventsLimit: 20  # number of recent events to show in snapshot
-    memoryCleanupInterval: 300000  # 5 minutes
-    defaultGameStateValue: "Unknown"  # default value for unknown game state
-    
+    sessionIdLength: 8 # for debug session ID generation
+    recentEventsLimit: 20 # number of recent events to show in snapshot
+    memoryCleanupInterval: 300000 # 5 minutes
+    defaultGameStateValue: "Unknown" # default value for unknown game state
+
   # EventBus configuration
   eventBus:
     maxListeners: 100
@@ -135,33 +135,33 @@ services:
       error: "Error"
       gameStateChanged: "GameStateChanged"
       backendSync: "BackendSync"
-    
+
   # Game controller configuration
   gameController:
-    pauseCooldown: 1000  # milliseconds
-    
+    pauseCooldown: 1000 # milliseconds
+
   # Rhythmic movement configuration
   rhythmicMovement:
-    bpm: 120  # beats per minute
-    perfectTiming: 100  # perfect timing window in ms
-    goodTiming: 200  # good timing window in ms
-    gridSize: 8  # size of the game grid
-    slowdownFactor: 0.1  # slowdown factor when paused (10% speed)
-    slowdownDuration: 100  # slowdown duration in ms
-    keyThrottleMs: 100  # throttle for key presses to prevent spam
+    bpm: 120 # beats per minute
+    perfectTiming: 100 # perfect timing window in ms
+    goodTiming: 200 # good timing window in ms
+    gridSize: 8 # size of the game grid
+    slowdownFactor: 0.1 # slowdown factor when paused (10% speed)
+    slowdownDuration: 100 # slowdown duration in ms
+    keyThrottleMs: 100 # throttle for key presses to prevent spam
     enabled: true
-    beatThreshold: 0.1        # Threshold for beat detection
-    movementSensitivity: 0.8  # Movement response sensitivity
-    smoothingFactor: 0.9      # Movement smoothing
-    debugMode: false          # Enable debug visualization
+    beatThreshold: 0.1 # Threshold for beat detection
+    movementSensitivity: 0.8 # Movement response sensitivity
+    smoothingFactor: 0.9 # Movement smoothing
+    debugMode: false # Enable debug visualization
 
   # Notification Service configuration
   notificationService:
     enabled: true
-    defaultDuration: 3000     # milliseconds
-    maxNotifications: 5       # Maximum concurrent notifications
-    animationDuration: 300    # milliseconds
-    position: "top-right"     # top-left, top-right, bottom-left, bottom-right
+    defaultDuration: 3000 # milliseconds
+    maxNotifications: 5 # Maximum concurrent notifications
+    animationDuration: 300 # milliseconds
+    position: "top-right" # top-left, top-right, bottom-left, bottom-right
 
 # Logging configuration
 logging:

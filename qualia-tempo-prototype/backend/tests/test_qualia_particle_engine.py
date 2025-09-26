@@ -4,14 +4,14 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from backend.tests.test_composition_root import TestCompositionRootFactory
-from backend.engine.qualia_particle_engine import QualiaParticleEngine, BufferState
+from backend.engine.qualia_particle_engine import BufferState
 
 
 # QUALIA.CODE: Use a class to group related tests for the SUT
 class TestQualiaParticleEngineLogic:
     """
     CORRECTED QUALIA.CODE COMPLIANT TESTS
-    
+
     These tests validate the REAL QualiaParticleEngine logic with mocked dependencies.
     The SUT is instantiated by the IoC container with controlled mocks.
     """
@@ -23,7 +23,9 @@ class TestQualiaParticleEngineLogic:
         - Creates a new, isolated container for EACH test function.
         - Resolves the REAL SUT and its MOCKED dependencies.
         """
-        mocked_composition_root = TestCompositionRootFactory.create_mocked_composition_root()
+        mocked_composition_root = (
+            TestCompositionRootFactory.create_mocked_composition_root()
+        )
 
         # 1. Resolve the REAL Service Under Test (SUT)
         sut = mocked_composition_root.get_service("particle_system")
@@ -43,16 +45,20 @@ class TestQualiaParticleEngineLogic:
         sut, mocks = setup
         sut.particles_initialized = True  # Manually set state for the test
         sut.compute_shader = MagicMock()
-        sut.particle_buffers.swap = MagicMock()  # Mock the swap method on the buffer pair
+        sut.particle_buffers.swap = (
+            MagicMock()
+        )  # Mock the swap method on the buffer pair
         sut.particle_buffers.element_count = 128
-        
+
         # Mock the input and output buffers
         mock_input_buffer = MagicMock()
         mock_output_buffer = MagicMock()
         sut.particle_buffers.buffer_a = mock_input_buffer
         sut.particle_buffers.buffer_b = mock_output_buffer
-        sut.particle_buffers.current_input = BufferState.INPUT  # So input_buffer = buffer_a
-        
+        sut.particle_buffers.current_input = (
+            BufferState.INPUT
+        )  # So input_buffer = buffer_a
+
         # Mock ctx for finish()
         sut.ctx = mocks["ctx"]
 
@@ -64,7 +70,9 @@ class TestQualiaParticleEngineLogic:
         # Assert that the REAL logic called the mocked dependencies correctly
         mock_input_buffer.bind_to_storage_buffer.assert_called_once_with(0)
         mock_output_buffer.bind_to_storage_buffer.assert_called_once_with(1)
-        sut.compute_shader.run.assert_called_once_with(group_x=2)  # (128 + 63) // 64 = 2
+        sut.compute_shader.run.assert_called_once_with(
+            group_x=2
+        )  # (128 + 63) // 64 = 2
         mocks["ctx"].finish.assert_called_once()
         sut.particle_buffers.swap.assert_called_once()
         assert sut.simulation_tick == 1
@@ -89,7 +97,7 @@ class TestQualiaParticleEngineLogic:
             "QualiaStateUpdated", sut._on_qualia_state_updated
         )
 
-    @patch('backend.engine.qualia_particle_engine.struct.pack')
+    @patch("backend.engine.qualia_particle_engine.struct.pack")
     def test_update_uniform_buffer_packs_correct_data(self, mock_struct_pack, setup):
         """
         GIVEN a valid QualiaState dictionary
@@ -100,11 +108,20 @@ class TestQualiaParticleEngineLogic:
         sut, mocks = setup
         sut.ctx = mocks["ctx"]  # Set ctx so the method doesn't return early
         sut.uniform_buffer = MagicMock()  # Mock the buffer itself
-        sut.ubo_info = {'uniforms': [], 'struct_format': '', 'total_size': 0}  # Force fallback for simplicity
+        sut.ubo_info = {
+            "uniforms": [],
+            "struct_format": "",
+            "total_size": 0,
+        }  # Force fallback for simplicity
 
         qualia_state = {
-            "intensity": 0.8, "precision": 0.6, "aggression": 0.4,
-            "flow": 0.9, "chaos": 0.2, "recovery": 0.1, "transcendence": 0.05
+            "intensity": 0.8,
+            "precision": 0.6,
+            "aggression": 0.4,
+            "flow": 0.9,
+            "chaos": 0.2,
+            "recovery": 0.1,
+            "transcendence": 0.05,
         }
 
         # ACT
@@ -159,8 +176,8 @@ class TestQualiaParticleEngineLogic:
         assert sut.event_bus == mocks["event_bus"]  # Injected mock
         assert sut.shader_inspector == mocks["shader_inspector"]  # Injected mock
 
-    @patch('backend.engine.qualia_particle_engine.os.path.exists')
-    @patch('backend.engine.qualia_particle_engine.open')
+    @patch("backend.engine.qualia_particle_engine.os.path.exists")
+    @patch("backend.engine.qualia_particle_engine.open")
     def test_initialize_shader_success(self, mock_open, mock_exists, setup):
         """
         GIVEN shader file exists

@@ -4,17 +4,17 @@
  */
 
 // Notification types with specific handling
-export type NotificationType = 
-  | 'info' 
-  | 'success' 
-  | 'warning' 
-  | 'error' 
-  | 'achievement' 
-  | 'system' 
-  | 'debug';
+export type NotificationType =
+  | "info"
+  | "success"
+  | "warning"
+  | "error"
+  | "achievement"
+  | "system"
+  | "debug";
 
 // Notification priority levels
-export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
+export type NotificationPriority = "low" | "normal" | "high" | "urgent";
 
 // Base notification interface
 export interface Notification {
@@ -54,13 +54,13 @@ export interface INotificationService {
   start(): void;
   stop(): void;
   showNotification(
-    message: string, 
-    type: NotificationType, 
+    message: string,
+    type: NotificationType,
     options?: {
       duration?: number;
       persistent?: boolean;
-      actions?: { label: string; action: () => void; }[];
-    }
+      actions?: { label: string; action: () => void }[];
+    },
   ): string;
   dismissNotification(id: string): void;
   clearAllNotifications(): void;
@@ -69,7 +69,7 @@ export interface INotificationService {
   getActiveNotifications(): Notification[];
   updateConfig(newConfig: Partial<NotificationConfig>): void;
   getStatistics(): NotificationStatistics;
-  getStatus(): { isRunning: boolean; queueSize: number; };
+  getStatus(): { isRunning: boolean; queueSize: number };
   exportNotificationData(): any;
   isEnabled(): boolean;
 }

@@ -7,15 +7,15 @@ enableBackendSync: true
 enableHealthMonitoring: true
 
 # Health monitoring configuration
-healthCheckIntervalMs: 10000  # 10 seconds
+healthCheckIntervalMs: 10000 # 10 seconds
 
 # Error handling and retries
 retryInitializationOnError: true
 maxInitializationRetries: 3
 
 # Service-specific timeouts (ms)
-serviceInitializationTimeoutMs: 30000  # 30 seconds
-serviceShutdownTimeoutMs: 10000       # 10 seconds
+serviceInitializationTimeoutMs: 30000 # 30 seconds
+serviceShutdownTimeoutMs: 10000 # 10 seconds
 
 # Logging configuration
 enableServiceLifecycleLogging: true

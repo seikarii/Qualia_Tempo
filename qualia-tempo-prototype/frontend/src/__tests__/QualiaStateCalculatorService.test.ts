@@ -1,15 +1,26 @@
-import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
+import {
+  describe,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  vi,
+  type Mocked,
+} from "vitest";
 /**
  * QUALIA.CODE v1.1 - QualiaStateCalculatorService Tests
  * IoC COMPLIANT - Uses centralized test container factory with config overrides
  * Tests event-driven architecture, state calculations, and QUALIA.CODE compliance.
  */
 
-import { createTestContainer, getMocksFromContainer } from '../testing/test-container-factory';
-import { TYPES } from '../services/inversify.types';
-import type { IEventBus } from '../services/interfaces/IEventBus';
-import type { IQualiaStateCalculatorService } from '../services/interfaces/IQualiaStateCalculatorService';
-import type { IConfigurationService } from '../services/interfaces/IConfigurationService';
+import {
+  createTestContainer,
+  getMocksFromContainer,
+} from "../testing/test-container-factory";
+import { TYPES } from "../services/inversify.types";
+import type { IEventBus } from "../services/interfaces/IEventBus";
+import type { IQualiaStateCalculatorService } from "../services/interfaces/IQualiaStateCalculatorService";
+import type { IConfigurationService } from "../services/interfaces/IConfigurationService";
 
 describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
   let qualiaService: IQualiaStateCalculatorService;
@@ -29,7 +40,7 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
         missNotePenalty: 0.2,
         dashBonus: 0.05,
         fastForwardBonus: 0.03,
-        rewindBonus: 0.02
+        rewindBonus: 0.02,
       }),
       getConfigSection: vi.fn().mockReturnValue({
         baseQualiaState: {
@@ -90,14 +101,16 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
         transcendenceThresholds: { intensity: 0.8, precision: 0.7, flow: 0.6 },
         minValue: 0.0,
         maxValue: 1.0,
-      })
+      }),
     };
 
     // Inject configuration overrides into the test container
     container = createTestContainer(testSpecificConfig);
 
     // Get service instance and mocks from the container - NO MANUAL INSTANTIATION
-    qualiaService = container.get<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService);
+    qualiaService = container.get<IQualiaStateCalculatorService>(
+      TYPES.IQualiaStateCalculatorService,
+    );
     mocks = getMocksFromContainer(container);
   });
 
@@ -407,7 +420,9 @@ describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
     });
 
     test("should handle unknown actions gracefully", async () => {
-      const consoleSpy = vi.spyOn(mocks.mockLogger, "warn").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(mocks.mockLogger, "warn")
+        .mockImplementation(() => {});
 
       // Set up event promise to wait for processing (though it may not emit)
       let eventProcessed = false;

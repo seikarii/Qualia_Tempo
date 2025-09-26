@@ -5,7 +5,6 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from backend.tests.test_composition_root import TestCompositionRootFactory
 from backend.engine.qualia_particle_engine import (
-    QualiaParticleEngine,
     PingPongBufferPair,
     BufferState,
     QualiaMetrics,
@@ -147,8 +146,12 @@ class TestQualiaParticleEngineComprehensive:
 
     @patch("backend.engine.qualia_particle_engine.os.path.exists")
     @patch("backend.engine.qualia_particle_engine.open")
-    @patch("backend.engine.qualia_particle_engine.QualiaParticleEngine._initialize_shader")
-    def test_initialize_shader_success(self, mock_init_shader, mock_open, mock_exists, particle_engine):
+    @patch(
+        "backend.engine.qualia_particle_engine.QualiaParticleEngine._initialize_shader"
+    )
+    def test_initialize_shader_success(
+        self, mock_init_shader, mock_open, mock_exists, particle_engine
+    ):
         """Test successful shader initialization."""
         mock_exists.return_value = True
         mock_open.return_value.__enter__.return_value.read.return_value = (
@@ -161,8 +164,8 @@ class TestQualiaParticleEngineComprehensive:
         mock_uniform = MagicMock()
         # Make _members behave like a dictionary with .items()
         mock_compute_shader._members = {
-            'particle_count': mock_uniform,
-            'time': mock_uniform
+            "particle_count": mock_uniform,
+            "time": mock_uniform,
         }
         mock_ctx.compute_shader.return_value = mock_compute_shader
 
@@ -211,8 +214,8 @@ class TestQualiaParticleEngineComprehensive:
         mock_uniform = MagicMock()
         # Make _members behave like a dictionary with .items()
         mock_compute_shader._members = {
-            'particle_count': mock_uniform,
-            'time': mock_uniform
+            "particle_count": mock_uniform,
+            "time": mock_uniform,
         }
 
         # Create mock particles data with proper methods
@@ -253,7 +256,9 @@ class TestQualiaParticleEngineComprehensive:
 
     @patch("backend.engine.qualia_particle_engine.struct.pack")
     @patch("backend.engine.qualia_particle_engine.time.time")
-    def test_update_uniform_buffer_new_buffer(self, mock_time, mock_pack, particle_engine):
+    def test_update_uniform_buffer_new_buffer(
+        self, mock_time, mock_pack, particle_engine
+    ):
         """Test updating uniform buffer when creating new buffer."""
         mock_time.return_value = 5.0
         mock_pack.return_value = b"packed_data"
@@ -303,8 +308,8 @@ class TestQualiaParticleEngineComprehensive:
         mock_uniform = MagicMock()
         # Make _members behave like a dictionary with .items()
         mock_compute_shader._members = {
-            'particle_count': mock_uniform,
-            'time': mock_uniform
+            "particle_count": mock_uniform,
+            "time": mock_uniform,
         }
         mock_input_buffer = Mock()
         mock_output_buffer = Mock()
@@ -363,8 +368,8 @@ class TestQualiaParticleEngineComprehensive:
         mock_uniform = MagicMock()
         # Make _members behave like a dictionary with .items()
         mock_compute_shader._members = {
-            'particle_count': mock_uniform,
-            'time': mock_uniform
+            "particle_count": mock_uniform,
+            "time": mock_uniform,
         }
         mock_input_buffer = Mock()
         mock_output_buffer = Mock()
@@ -394,8 +399,8 @@ class TestQualiaParticleEngineComprehensive:
         mock_uniform = MagicMock()
         # Make _members behave like a dictionary with .items()
         mock_compute_shader._members = {
-            'particle_count': mock_uniform,
-            'time': mock_uniform
+            "particle_count": mock_uniform,
+            "time": mock_uniform,
         }
         mock_input_buffer = Mock()
         mock_input_buffer.bind_to_storage_buffer.side_effect = Exception(
@@ -477,8 +482,8 @@ class TestQualiaParticleEngineComprehensive:
         mock_uniform = MagicMock()
         # Make _members behave like a dictionary with .items()
         mock_compute_shader._members = {
-            'particle_count': mock_uniform,
-            'time': mock_uniform
+            "particle_count": mock_uniform,
+            "time": mock_uniform,
         }
         mock_buffer_a = Mock()
         mock_buffer_b = Mock()
@@ -506,8 +511,8 @@ class TestQualiaParticleEngineComprehensive:
         mock_uniform = MagicMock()
         # Make _members behave like a dictionary with .items()
         mock_compute_shader._members = {
-            'particle_count': mock_uniform,
-            'time': mock_uniform
+            "particle_count": mock_uniform,
+            "time": mock_uniform,
         }
 
         particle_engine.ctx = mock_ctx
@@ -530,8 +535,8 @@ class TestQualiaParticleEngineComprehensive:
         mock_uniform = MagicMock()
         # Make _members behave like a dictionary with .items()
         mock_compute_shader._members = {
-            'particle_count': mock_uniform,
-            'time': mock_uniform
+            "particle_count": mock_uniform,
+            "time": mock_uniform,
         }
 
         particle_engine.ctx = mock_ctx
@@ -558,8 +563,8 @@ class TestQualiaParticleEngineComprehensive:
         mock_uniform = MagicMock()
         # Make _members behave like a dictionary with .items()
         mock_compute_shader._members = {
-            'particle_count': mock_uniform,
-            'time': mock_uniform
+            "particle_count": mock_uniform,
+            "time": mock_uniform,
         }
 
         particle_engine.ctx = mock_ctx

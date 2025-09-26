@@ -1,15 +1,27 @@
-import { describe, test, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
+import {
+  describe,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  vi,
+  type Mock,
+} from "vitest";
 /**
  * QUALIA.CODE v1.1 - GameControllerService Tests - IOC COMPLIANT
  * Comprehensive test suite for game state management service.
  * Uses test-container-factory for proper IoC compliance.
  */
 
-import { createTestContainer, getMocksFromContainer, resetAllMocks } from '../testing/test-container-factory';
-import { Container } from 'inversify';
-import { TYPES } from '../services/inversify.types';
-import type { IGameControllerService } from '../services/interfaces/IGameControllerService';
-import type { IEventBus } from '../services/interfaces/IEventBus';
+import {
+  createTestContainer,
+  getMocksFromContainer,
+  resetAllMocks,
+} from "../testing/test-container-factory";
+import { Container } from "inversify";
+import { TYPES } from "../services/inversify.types";
+import type { IGameControllerService } from "../services/interfaces/IGameControllerService";
+import type { IEventBus } from "../services/interfaces/IEventBus";
 import { PlayerActionEvent } from "../services/EventBus";
 
 describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
@@ -33,8 +45,8 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
         perfect: 100,
         good: 75,
         okay: 50,
-        miss: 0
-      }
+        miss: 0,
+      },
     });
   });
 
@@ -49,7 +61,7 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
     test("should initialize with correct default state", () => {
       expect(sut).toBeDefined();
       expect(sut).toBeDefined();
-      expect(typeof sut.startGame).toBe('function');
+      expect(typeof sut.startGame).toBe("function");
     });
 
     test("should start and stop service idempotently", async () => {
@@ -61,7 +73,7 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
 
       // Assert - Service should handle idempotent calls gracefully
       expect(mocks.mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Service started successfully")
+        expect.stringContaining("Service started successfully"),
       );
     });
 
@@ -77,7 +89,7 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
         action: "StartGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
-      
+
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "GameStateChanged",
@@ -94,7 +106,7 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
 
     test("should handle StartGame action", async () => {
       await sut.start();
-      
+
       let receivedEvent: any = null;
       const eventPromise = new Promise<void>((resolve) => {
         mocks.mockEventBus.subscribe("GameStateChanged", (event: any) => {
@@ -122,14 +134,15 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
 
     test("should handle PauseGame action", async () => {
       await sut.start();
-      
+
       let eventCount = 0;
       let lastEvent: any = null;
       const eventPromise = new Promise<void>((resolve) => {
         mocks.mockEventBus.subscribe("GameStateChanged", (event: any) => {
           eventCount++;
           lastEvent = event;
-          if (eventCount === 2) { // Wait for both StartGame and PauseGame events
+          if (eventCount === 2) {
+            // Wait for both StartGame and PauseGame events
             resolve();
           }
         });
@@ -162,7 +175,7 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
 
     test("should handle ResetGame action", async () => {
       await sut.start();
-      
+
       let receivedEvent: any = null;
       const eventPromise = new Promise<void>((resolve) => {
         mocks.mockEventBus.subscribe("GameStateChanged", (event: any) => {
@@ -233,7 +246,7 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
 
     test("should handle unknown actions gracefully", async () => {
       await sut.start();
-      
+
       const loggerWarnSpy = vi.spyOn(mocks.mockLogger, "warn");
 
       await mocks.mockEventBus.emit({
@@ -268,7 +281,7 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
       // Verify error was logged
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining("🚨 [GameController] Start failed"),
-        expect.any(Object)
+        expect.any(Object),
       );
 
       loggerErrorSpy.mockRestore();

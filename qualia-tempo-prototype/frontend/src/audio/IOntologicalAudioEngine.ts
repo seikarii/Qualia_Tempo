@@ -3,10 +3,14 @@
  * Ontological audio engine interface for sound generation.
  */
 
-import type { QualiaState } from '../types/contracts';
+import type { QualiaState } from "../types/contracts";
 
 export interface EmergentBehavior {
-  type: 'CLUSTERING' | 'SYNCHRONIZATION' | 'STATE_PROPAGATOR' | 'NARRATIVE_EVENT';
+  type:
+    | "CLUSTERING"
+    | "SYNCHRONIZATION"
+    | "STATE_PROPAGATOR"
+    | "NARRATIVE_EVENT";
   entities: any[];
   strength?: number;
   description?: string;

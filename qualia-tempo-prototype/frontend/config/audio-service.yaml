@@ -4,23 +4,23 @@
 # Rhythmic feedback audio settings
 rhythmicFeedback:
   perfect:
-    frequency: 880    # A5 - bright, positive (Hz)
-    gain: 0.3        # Volume level (0-1)
-    duration: 0.1    # Duration in seconds
+    frequency: 880 # A5 - bright, positive (Hz)
+    gain: 0.3 # Volume level (0-1)
+    duration: 0.1 # Duration in seconds
   good:
-    frequency: 660    # E5 - neutral (Hz)
-    gain: 0.2        # Volume level (0-1)
-    duration: 0.15   # Duration in seconds
+    frequency: 660 # E5 - neutral (Hz)
+    gain: 0.2 # Volume level (0-1)
+    duration: 0.15 # Duration in seconds
   miss:
-    frequency: 220    # A3 - low, negative (Hz)
-    gain: 0.1        # Volume level (0-1)
-    duration: 0.2    # Duration in seconds
+    frequency: 220 # A3 - low, negative (Hz)
+    gain: 0.1 # Volume level (0-1)
+    duration: 0.2 # Duration in seconds
 
 # Metronome settings
 metronome:
-  frequency: 1000     # 1kHz beep
-  gain: 0.2          # Volume level
-  duration: 0.05     # Short beep duration
+  frequency: 1000 # 1kHz beep
+  gain: 0.2 # Volume level
+  duration: 0.05 # Short beep duration
 
 # Audio engine settings
 audioEngine:

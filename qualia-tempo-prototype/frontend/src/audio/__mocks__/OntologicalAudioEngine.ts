@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 export class OntologicalAudioEngine {
   updateEntitySound = vi.fn();
@@ -8,7 +8,11 @@ export class OntologicalAudioEngine {
 }
 
 export interface EmergentBehavior {
-  type: "CLUSTERING" | "SYNCHRONIZATION" | "STATE_PROPAGATOR" | "NARRATIVE_EVENT";
+  type:
+    | "CLUSTERING"
+    | "SYNCHRONIZATION"
+    | "STATE_PROPAGATOR"
+    | "NARRATIVE_EVENT";
   entities: any[];
   strength?: number;
   description?: string;

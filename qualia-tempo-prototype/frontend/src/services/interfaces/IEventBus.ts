@@ -3,7 +3,7 @@
  * Central communication hub interface for decoupled component interaction.
  */
 
-import type { EventTypes } from '../EventBus';
+import type { EventTypes } from "../EventBus";
 
 export interface IEventBus {
   /**
@@ -18,8 +18,8 @@ export interface IEventBus {
     handler: (event: T) => void | Promise<void>,
     options?: {
       once?: boolean;
-      priority?: 'low' | 'normal' | 'high';
-    }
+      priority?: "low" | "normal" | "high";
+    },
   ): string;
 
   /**

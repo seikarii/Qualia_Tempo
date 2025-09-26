@@ -4,7 +4,7 @@
  */
 
 // Error severity levels
-export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type ErrorSeverity = "low" | "medium" | "high" | "critical";
 
 // Base error report interface
 export interface ErrorReport {
@@ -53,7 +53,11 @@ export interface ErrorReportingConfig {
 export interface IErrorReportingService {
   start(): void;
   stop(): void;
-  reportError(error: Error, severity?: ErrorSeverity, context?: Record<string, any>): Promise<void>;
+  reportError(
+    error: Error,
+    severity?: ErrorSeverity,
+    context?: Record<string, any>,
+  ): Promise<void>;
   updateConfig(newConfig: Partial<ErrorReportingConfig>): void;
   getStatistics(): ErrorStatistics;
   exportErrorData(): any;

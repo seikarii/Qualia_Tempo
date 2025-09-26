@@ -6,10 +6,11 @@ import io
 import os
 import time
 import asyncio
-from typing import Dict, Any, Optional, Tuple, Union, TYPE_CHECKING
+from typing import Dict, Any, Optional, Tuple, TYPE_CHECKING
 
 try:
     from PIL import Image
+
     PIL_AVAILABLE = True
 except ImportError:
     Image = None  # type: ignore
@@ -28,11 +29,13 @@ from ..utils.decorators import (
 if TYPE_CHECKING:
     import moderngl
     import numpy as np
+
     MODERNGL_AVAILABLE = True
 else:
     try:
         import moderngl
         import numpy as np
+
         MODERNGL_AVAILABLE = True
     except ImportError:
         moderngl = None  # type: ignore
@@ -61,7 +64,7 @@ class Camera:
     ):
         if not MODERNGL_AVAILABLE or np is None:
             raise RuntimeError("NumPy is required for Camera operations")
-        
+
         self.position = np.array(position, dtype=np.float32)
         self.target = np.array(target, dtype=np.float32)
         self.up = np.array(up, dtype=np.float32)
@@ -74,7 +77,7 @@ class Camera:
         """Calculate view matrix from camera parameters."""
         if np is None:
             raise RuntimeError("NumPy is required for matrix calculations")
-            
+
         z = self.position - self.target
         z = z / np.linalg.norm(z)
         x = np.cross(self.up, z)
@@ -100,7 +103,7 @@ class Camera:
         """Calculate perspective projection matrix."""
         if np is None:
             raise RuntimeError("NumPy is required for matrix calculations")
-            
+
         fov_rad = np.radians(self.fov)
         f = 1.0 / np.tan(fov_rad / 2.0)
 
@@ -239,9 +242,9 @@ class RenderingService:
 
         # HDR and bloom parameters - ENHANCED for visibility
         self._bloom_threshold = 0.4  # Lower threshold for more bloom
-        self._bloom_strength = 2.5   # Stronger bloom effect
-        self._global_intensity = 2.0 # Increased base intensity
-        self._particle_scale = 1.5   # Larger particles
+        self._bloom_strength = 2.5  # Stronger bloom effect
+        self._global_intensity = 2.0  # Increased base intensity
+        self._particle_scale = 1.5  # Larger particles
 
         # Subscribe to QualiaState updates
         self._event_bus.subscribe("QualiaStateUpdated", self._on_qualia_state_updated)
@@ -272,7 +275,9 @@ class RenderingService:
         try:
             # GOLD.CODE: Use injected context instead of creating new one
             if self._ctx is None:
-                self._logger.error("GOLD.CODE VIOLATION: No OpenGL context provided via DI")
+                self._logger.error(
+                    "GOLD.CODE VIOLATION: No OpenGL context provided via DI"
+                )
                 return False
 
             self._logger.info("✅ Using shared OpenGL context for rendering pipeline")
@@ -772,7 +777,9 @@ class RenderingService:
 
             # Render particles with advanced effects
             # QUALIA.CODE FIX: Use the correct attribute 'max_particles' from the injected engine.
-            particle_count = self._particle_engine.max_particles if self._particle_engine else 0
+            particle_count = (
+                self._particle_engine.max_particles if self._particle_engine else 0
+            )
             self._particle_vao.render(moderngl.POINTS, vertices=particle_count)
 
             # === PASS 2: BRIGHT PASS EXTRACTION ===
@@ -885,8 +892,10 @@ class RenderingService:
 
             # Convert to PIL Image with proper orientation
             image = Image.frombytes("RGB", self._final_fbo.size, raw_data)
-            if hasattr(Image, 'FLIP_TOP_BOTTOM'):
-                image = image.transpose(Image.FLIP_TOP_BOTTOM)  # Correct OpenGL orientation
+            if hasattr(Image, "FLIP_TOP_BOTTOM"):
+                image = image.transpose(
+                    Image.FLIP_TOP_BOTTOM
+                )  # Correct OpenGL orientation
             else:
                 # Fallback for older PIL versions
                 image = image.transpose(2)  # FLIP_TOP_BOTTOM = 2

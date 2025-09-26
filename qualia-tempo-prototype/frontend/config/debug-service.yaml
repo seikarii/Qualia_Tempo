@@ -5,23 +5,23 @@
 logging:
   enableConsoleOutput: true
   enableFileOutput: false
-  logLevel: "INFO"  # DEBUG, INFO, WARN, ERROR
+  logLevel: "INFO" # DEBUG, INFO, WARN, ERROR
   maxLogFiles: 5
-  maxLogSize: 10485760  # 10MB per file
+  maxLogSize: 10485760 # 10MB per file
 
 # Event monitoring
 eventMonitoring:
   enableEventLogging: true
   enableEventMetrics: true
   maxEventHistory: 1000
-  eventLogThrottle: 100  # Log every 100ms max
+  eventLogThrottle: 100 # Log every 100ms max
 
 # Performance monitoring
 performance:
   enablePerformanceTracking: true
   enableMemoryMonitoring: true
   enableFrameRateTracking: true
-  metricsUpdateInterval: 1000  # 1 second
+  metricsUpdateInterval: 1000 # 1 second
 
 # Development features
 development:
@@ -33,7 +33,7 @@ development:
 # Profiling
 profiling:
   enableProfiling: false
-  profileUpdateInterval: 5000  # 5 seconds
+  profileUpdateInterval: 5000 # 5 seconds
   maxProfileSamples: 1000
 
 # Error tracking

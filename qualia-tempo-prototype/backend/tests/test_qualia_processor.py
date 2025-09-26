@@ -43,7 +43,7 @@ class TestQualiaProcessor:
 
         # Configure mock behavior for async call
         mock_event_bus.publish = AsyncMock()
-        
+
         # Call the mock method - the processor is already a mock from the factory
         await qualia_processor.process_qualia_state(qualia_state)
 
@@ -54,7 +54,7 @@ class TestQualiaProcessor:
         """Test getting current state using IoC fixtures."""
         # Call the mock method
         result = qualia_processor.get_current_state()
-        
+
         # Verify mock behavior (configured in factory to return None)
         assert result is None
         qualia_processor.get_current_state.assert_called_once()
@@ -62,9 +62,9 @@ class TestQualiaProcessor:
     def test_processor_mock_interface(self, qualia_processor):
         """Test that processor mock has expected interface."""
         # Verify the mock has the expected methods
-        assert hasattr(qualia_processor, 'process_qualia_state')
-        assert hasattr(qualia_processor, 'get_current_state')
-        
+        assert hasattr(qualia_processor, "process_qualia_state")
+        assert hasattr(qualia_processor, "get_current_state")
+
         # Test that methods are callable mocks
         assert callable(qualia_processor.process_qualia_state)
         assert callable(qualia_processor.get_current_state)
@@ -81,7 +81,7 @@ class TestMinimalQualiaProcessor:
 
         # Configure async mock behavior
         mock_event_bus.publish = AsyncMock()
-        
+
         # Test the processor mock
         await qualia_processor.process_qualia_state(qualia_state)
 
@@ -92,6 +92,6 @@ class TestMinimalQualiaProcessor:
         """Test MinimalQualiaProcessor state retrieval using IoC."""
         # Call the mock method (configured to return None in factory)
         result = qualia_processor.get_current_state()
-        
+
         assert result is None
         qualia_processor.get_current_state.assert_called()

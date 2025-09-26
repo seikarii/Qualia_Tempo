@@ -12,23 +12,29 @@
  * - Injectable service with pure DI compliance
  */
 
-import { injectable, inject } from 'inversify';
-import { TYPES } from './inversify.types';
-import { logMethod, catchError } from '../utils/decorators';
-import type { IDebugService, DebugConfig, DebugStats, SystemSnapshot, AnalysisResult } from './interfaces/IDebugService';
-import type { IEventBus } from './interfaces/IEventBus';
-import type { ILogger } from './interfaces/ILogger';
-import type { ITimerService } from './interfaces/ITimerService';
-import type { IConfigurationService } from './interfaces/IConfigurationService';
-import type { DebugServiceConfig } from './ConfigurationService';
-import type { 
+import { injectable, inject } from "inversify";
+import { TYPES } from "./inversify.types";
+import { logMethod, catchError } from "../utils/decorators";
+import type {
+  IDebugService,
+  DebugConfig,
+  DebugStats,
+  SystemSnapshot,
+  AnalysisResult,
+} from "./interfaces/IDebugService";
+import type { IEventBus } from "./interfaces/IEventBus";
+import type { ILogger } from "./interfaces/ILogger";
+import type { ITimerService } from "./interfaces/ITimerService";
+import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { DebugServiceConfig } from "./ConfigurationService";
+import type {
   BaseEvent,
   QualiaStateUpdatedEvent,
   GameStateChangedEvent,
   PlayerActionEvent,
   ErrorEvent,
-  BackendSyncEvent
-} from './EventBus';
+  BackendSyncEvent,
+} from "./EventBus";
 import { QualiaState } from "../types/contracts";
 
 // Debug session interface for tracking debugging activities
@@ -66,7 +72,12 @@ export interface AIAnalysisResult {
 }
 
 // Export types for test compatibility
-export type { DebugConfig, DebugStats, SystemSnapshot, AnalysisResult } from './interfaces/IDebugService';
+export type {
+  DebugConfig,
+  DebugStats,
+  SystemSnapshot,
+  AnalysisResult,
+} from "./interfaces/IDebugService";
 
 /**
  * QUALIA.CODE v1.1 Compliant DebugService
@@ -79,7 +90,7 @@ export class DebugService implements IDebugService {
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
   // Configuration service for future extensibility
-  // @ts-ignore - Unused parameter for future configuration features  
+  // @ts-ignore - Unused parameter for future configuration features
   private readonly _configService: IConfigurationService;
   private config!: DebugServiceConfig;
   private isStarted = false;
@@ -112,7 +123,7 @@ export class DebugService implements IDebugService {
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IConfigurationService) _configService: IConfigurationService
+    @inject(TYPES.IConfigurationService) _configService: IConfigurationService,
   ) {
     if (!eventBus) {
       throw new Error(
@@ -143,11 +154,17 @@ export class DebugService implements IDebugService {
     }
 
     try {
-      this.config = this._configService.getConfigSection<DebugServiceConfig>('debugService');
-      this.logger.info('DebugService configuration loaded successfully.');
+      this.config =
+        this._configService.getConfigSection<DebugServiceConfig>(
+          "debugService",
+        );
+      this.logger.info("DebugService configuration loaded successfully.");
       this.logCurrentConfig(); // Log the newly loaded config
     } catch (error) {
-      this.logger.error('🚨 [DebugService] Failed to load configuration. Service cannot start.', { error });
+      this.logger.error(
+        "🚨 [DebugService] Failed to load configuration. Service cannot start.",
+        { error },
+      );
       // Detener la ejecución si la configuración es crítica y no se puede cargar
       return;
     }
@@ -170,9 +187,13 @@ export class DebugService implements IDebugService {
       this.setupGlobalInterface();
 
       this.isStarted = true;
-      this.logger.info("🚀 [DebugService] Service started - AI debugging active");
+      this.logger.info(
+        "🚀 [DebugService] Service started - AI debugging active",
+      );
     } catch (error) {
-      this.logger.error("🚨 [DebugService] Failed to start service:", { error });
+      this.logger.error("🚨 [DebugService] Failed to start service:", {
+        error,
+      });
       throw error;
     }
   }
@@ -221,10 +242,12 @@ export class DebugService implements IDebugService {
       eventHistory: this.eventHistory.length,
       errorHistory: this.errorHistory.length,
       aiAnalysisResults: this.aiAnalysisResults.length,
-      uptime: this.currentSession ? Date.now() - this.currentSession.startTime.getTime() : 0
+      uptime: this.currentSession
+        ? Date.now() - this.currentSession.startTime.getTime()
+        : 0,
     };
 
-    this.logger.debug('DebugService status', status);
+    this.logger.debug("DebugService status", status);
   }
 
   /**
@@ -247,12 +270,19 @@ export class DebugService implements IDebugService {
    */
   @logMethod()
   @catchError()
-  public getMetrics(): { isRunning: boolean; eventsLogged: number; memoryUsage: number; uptime: number } {
+  public getMetrics(): {
+    isRunning: boolean;
+    eventsLogged: number;
+    memoryUsage: number;
+    uptime: number;
+  } {
     return {
       isRunning: this.isStarted,
       eventsLogged: this.eventHistory.length,
       memoryUsage: this.calculateMemoryUsage(),
-      uptime: this.currentSession ? Date.now() - this.currentSession.startTime.getTime() : 0
+      uptime: this.currentSession
+        ? Date.now() - this.currentSession.startTime.getTime()
+        : 0,
     };
   }
 
@@ -285,9 +315,11 @@ export class DebugService implements IDebugService {
       isRunning: this.isStarted,
       eventsLogged: this.eventHistory.length,
       memoryUsage: this.calculateMemoryUsage(),
-      uptime: this.currentSession ? Date.now() - this.currentSession.startTime.getTime() : 0,
+      uptime: this.currentSession
+        ? Date.now() - this.currentSession.startTime.getTime()
+        : 0,
       profilingEnabled: this.config.profiling.enableProfiling,
-      eventHistory: [...this.eventHistory]
+      eventHistory: [...this.eventHistory],
     };
   }
 
@@ -303,14 +335,16 @@ export class DebugService implements IDebugService {
         debugService: {
           isRunning: this.isStarted,
           eventsLogged: this.eventHistory.length,
-          config: this.config
-        }
+          config: this.config,
+        },
       },
       performance: {
         memoryUsage: this.calculateMemoryUsage(),
-        uptime: this.currentSession ? Date.now() - this.currentSession.startTime.getTime() : 0
+        uptime: this.currentSession
+          ? Date.now() - this.currentSession.startTime.getTime()
+          : 0,
       },
-      eventHistory: [...this.eventHistory]
+      eventHistory: [...this.eventHistory],
     };
   }
 
@@ -338,11 +372,11 @@ export class DebugService implements IDebugService {
       analysis.push(...this.generateRecommendations());
 
       // Store results (convert to AnalysisResult format)
-      const convertedResults = analysis.map(result => ({
+      const convertedResults = analysis.map((result) => ({
         type: result.type,
         severity: result.severity,
         message: result.message,
-        metadata: result.metadata
+        metadata: result.metadata,
       }));
 
       this.logger.info(
@@ -371,7 +405,7 @@ export class DebugService implements IDebugService {
       config: this.config,
       debugStats: this.getDebugStats(),
       systemSnapshot: this.getSystemSnapshot(),
-      analysis: this.performAIAnalysis()
+      analysis: this.performAIAnalysis(),
     };
   }
 
@@ -382,7 +416,7 @@ export class DebugService implements IDebugService {
   @catchError()
   public enableProfiling(): void {
     this.config.profiling.enableProfiling = true;
-    this.logger.info('Performance profiling enabled');
+    this.logger.info("Performance profiling enabled");
   }
 
   /**
@@ -391,7 +425,7 @@ export class DebugService implements IDebugService {
   @logMethod()
   public disableProfiling(): void {
     this.config.profiling.enableProfiling = false;
-    this.logger.info('Performance profiling disabled');
+    this.logger.info("Performance profiling disabled");
   }
 
   /**
@@ -405,7 +439,7 @@ export class DebugService implements IDebugService {
    * Set debug level for filtering debug output.
    */
   @logMethod()
-  public setDebugLevel(level: 'minimal' | 'normal' | 'verbose'): void {
+  public setDebugLevel(level: "minimal" | "normal" | "verbose"): void {
     this.config.logging.logLevel = level;
     this.logger.info(`Debug level set to: ${level}`);
   }
@@ -442,15 +476,14 @@ export class DebugService implements IDebugService {
     if (this.currentSession) {
       // Perform final AI analysis for this session
       this.performAIAnalysis();
-      
+
       // Add to session history
       this.sessionHistory.push(this.currentSession);
 
       // Maintain session history limit
-      if (this.sessionHistory.length > 10) { // Default maxSessionHistory
-        this.sessionHistory = this.sessionHistory.slice(
-          -10,
-        );
+      if (this.sessionHistory.length > 10) {
+        // Default maxSessionHistory
+        this.sessionHistory = this.sessionHistory.slice(-10);
       }
 
       this.logger.info(
@@ -462,14 +495,12 @@ export class DebugService implements IDebugService {
 
   private subscribeToAllEvents(): void {
     // Subscribe to all event types for comprehensive monitoring
-    const listenerId = this.eventBus.subscribe('*', (event: BaseEvent) => {
+    const listenerId = this.eventBus.subscribe("*", (event: BaseEvent) => {
       this.handleGenericEvent(event);
     });
     this.eventListenerIds.push(listenerId);
 
-    this.logger.info(
-      `📡 [DebugService] Subscribed to all event types`,
-    );
+    this.logger.info(`📡 [DebugService] Subscribed to all event types`);
   }
 
   private unsubscribeFromAllEvents(): void {
@@ -487,19 +518,19 @@ export class DebugService implements IDebugService {
 
     // Type-specific handling
     switch (event.type) {
-      case 'QualiaStateUpdated':
+      case "QualiaStateUpdated":
         this.handleQualiaStateEvent(event as QualiaStateUpdatedEvent);
         break;
-      case 'Error':
+      case "Error":
         this.handleErrorEvent(event as ErrorEvent);
         break;
-      case 'GameStateChanged':
+      case "GameStateChanged":
         this.handleGameStateEvent(event as GameStateChangedEvent);
         break;
-      case 'PlayerAction':
+      case "PlayerAction":
         this.handlePlayerActionEvent(event as PlayerActionEvent);
         break;
-      case 'BackendSync':
+      case "BackendSync":
         this.handleBackendSyncEvent(event as BackendSyncEvent);
         break;
     }
@@ -553,8 +584,12 @@ export class DebugService implements IDebugService {
     }
 
     // Maintain history limits
-    if (this.eventHistory.length > this.config.eventMonitoring.maxEventHistory) {
-      this.eventHistory = this.eventHistory.slice(-this.config.eventMonitoring.maxEventHistory);
+    if (
+      this.eventHistory.length > this.config.eventMonitoring.maxEventHistory
+    ) {
+      this.eventHistory = this.eventHistory.slice(
+        -this.config.eventMonitoring.maxEventHistory,
+      );
     }
   }
 
@@ -649,7 +684,8 @@ export class DebugService implements IDebugService {
     const totalEvents =
       this.eventHistory.length + this.aiAnalysisResults.length;
 
-    if (totalEvents > 1000) { // Default memory cleanup threshold
+    if (totalEvents > 1000) {
+      // Default memory cleanup threshold
       // Clean up old events
       this.eventHistory = this.eventHistory.slice(
         -Math.floor(this.config.eventMonitoring.maxEventHistory * 0.8),
@@ -666,10 +702,14 @@ export class DebugService implements IDebugService {
   }
 
   private calculateMemoryUsage(): number {
-    if (typeof window !== 'undefined' && (performance as any).memory) {
+    if (typeof window !== "undefined" && (performance as any).memory) {
       return (performance as any).memory.usedJSHeapSize;
     }
-    return this.eventHistory.length + this.errorHistory.length + this.aiAnalysisResults.length;
+    return (
+      this.eventHistory.length +
+      this.errorHistory.length +
+      this.aiAnalysisResults.length
+    );
   }
 
   // AI Analysis Methods
@@ -713,7 +753,11 @@ export class DebugService implements IDebugService {
           type: "performance_issue" as any,
           severity: avgTime > 100 ? "high" : "medium",
           message: `Slow event processing detected for ${eventType}`,
-          metadata: { eventType, averageTime: avgTime, measurements: times.length },
+          metadata: {
+            eventType,
+            averageTime: avgTime,
+            measurements: times.length,
+          },
         });
       }
     });
@@ -778,7 +822,9 @@ export class DebugService implements IDebugService {
         this.eventHistory = [];
         this.errorHistory = [];
         this.aiAnalysisResults = [];
-        this.logger.info("🧹 [DebugService] History cleared via global interface");
+        this.logger.info(
+          "🧹 [DebugService] History cleared via global interface",
+        );
       },
 
       enableAI: () => {
@@ -809,7 +855,8 @@ export class DebugService implements IDebugService {
       performanceMonitoringInterval: `${this.config.performance.metricsUpdateInterval}ms`,
       aiAnalysisInterval: "30000ms", // Default value
       enableAIAnalysis: true, // Default value
-      enablePerformanceMonitoring: this.config.performance.enablePerformanceTracking,
+      enablePerformanceMonitoring:
+        this.config.performance.enablePerformanceTracking,
       enableGlobalInterface: this.config.development.enableDebugOverlay,
       memoryCleanupThreshold: 1000, // Default value
     });

@@ -1,28 +1,28 @@
 /**
  * QUALIA.CODE v1.1 - QualiaMainMenu Component
  * Purified UI-only menu component following architectural purity principles.
- * 
+ *
  * ARCHITECTURAL COMPLIANCE:
  * - ELIMINATED: All DOM-based particle simulation logic
  * - ELIMINATED: Local visual effects (qualiaParticles, audioWaves)
  * - RETAINED: Pure UI elements (title, button, event emission)
- * 
+ *
  * Visual effects are now the exclusive domain of BackendCanvas.
  */
 
-import { motion } from 'framer-motion'
-import { useState } from 'react'
-import { useService } from '../services/hooks'
-import { TYPES } from '../services/inversify.types'
-import type { IEventBus } from '../services/interfaces/IEventBus'
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { useService } from "../services/hooks";
+import { TYPES } from "../services/inversify.types";
+import type { IEventBus } from "../services/interfaces/IEventBus";
 
 export default function QualiaMainMenu() {
   // Services
-  const eventBus = useService<IEventBus>(TYPES.IEventBus)
-  
+  const eventBus = useService<IEventBus>(TYPES.IEventBus);
+
   // Local state for UI interactions only
-  const [isHovered, setIsHovered] = useState(false)
-  const [isPressed, setIsPressed] = useState(false)
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
 
   /**
    * Handle background clicks for visual impact effects
@@ -34,8 +34,8 @@ export default function QualiaMainMenu() {
     const y = (e.clientY - rect.top) / rect.height;
 
     eventBus.emit({
-      type: 'VisualImpactRequested',
-      payload: { x, y, intensity: 0.8 }
+      type: "VisualImpactRequested",
+      payload: { x, y, intensity: 0.8 },
     } as any); // Type assertion for event system compatibility
   };
 
@@ -45,10 +45,10 @@ export default function QualiaMainMenu() {
       onClick={handleBackgroundClick}
     >
       <div className="flex flex-col items-center justify-center gap-12 p-8 pointer-events-auto">
-      {/* PURIFIED: All particle and visual effects removed - now handled by BackendCanvas */}
-      
-      {/* Main Title */}
-      <motion.div
+        {/* PURIFIED: All particle and visual effects removed - now handled by BackendCanvas */}
+
+        {/* Main Title */}
+        <motion.div
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
@@ -62,20 +62,32 @@ export default function QualiaMainMenu() {
               </span>
               {/* Holographic glitch effect */}
               <span className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 bg-clip-text text-transparent animate-gradient-x opacity-50 blur-sm"></span>
-              <span className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-cyan-400/10 to-purple-500/10 bg-clip-text text-transparent animate-gradient-x opacity-30 blur-md" style={{ animationDelay: '0.5s' }}></span>
+              <span
+                className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-cyan-400/10 to-purple-500/10 bg-clip-text text-transparent animate-gradient-x opacity-30 blur-md"
+                style={{ animationDelay: "0.5s" }}
+              ></span>
             </span>
             <br />
             <span className="relative">
               {/* TEMPO */}
-              <span className="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x" style={{ animationDelay: '0.25s' }}>
+              <span
+                className="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x"
+                style={{ animationDelay: "0.25s" }}
+              >
                 TEMPO
               </span>
               {/* Holographic glitch effect */}
-              <span className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 bg-clip-text text-transparent animate-gradient-x opacity-50 blur-sm" style={{ animationDelay: '0.25s' }}></span>
-              <span className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-cyan-400/10 to-purple-500/10 bg-clip-text text-transparent animate-gradient-x opacity-30 blur-md" style={{ animationDelay: '0.75s' }}></span>
+              <span
+                className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 bg-clip-text text-transparent animate-gradient-x opacity-50 blur-sm"
+                style={{ animationDelay: "0.25s" }}
+              ></span>
+              <span
+                className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-cyan-400/10 to-purple-500/10 bg-clip-text text-transparent animate-gradient-x opacity-30 blur-md"
+                style={{ animationDelay: "0.75s" }}
+              ></span>
             </span>
           </h1>
-          
+
           {/* Enhanced glow effect */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -117,13 +129,13 @@ export default function QualiaMainMenu() {
         >
           <motion.button
             onClick={(e) => {
-              e.stopPropagation()
+              e.stopPropagation();
               // Emit StartGame event via EventBus following QUALIA.CODE architecture
               eventBus.emit({
                 type: "PlayerAction",
                 action: "StartGame",
-                source: "QualiaMainMenu"
-              } as any)
+                source: "QualiaMainMenu",
+              } as any);
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -138,7 +150,7 @@ export default function QualiaMainMenu() {
               text-cyan-300
               overflow-hidden
               transition-all duration-300
-              ${isPressed ? 'scale-95' : ''}
+              ${isPressed ? "scale-95" : ""}
             `}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -147,39 +159,41 @@ export default function QualiaMainMenu() {
             <motion.div
               className="absolute inset-0 rounded-lg p-0.5 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500"
               animate={{
-                backgroundPosition: isHovered ? ['0% 50%', '100% 50%', '0% 50%'] : '0% 50%',
+                backgroundPosition: isHovered
+                  ? ["0% 50%", "100% 50%", "0% 50%"]
+                  : "0% 50%",
                 opacity: isHovered ? 1 : 0.8,
               }}
               transition={{
                 duration: isHovered ? 2 : 0,
                 repeat: isHovered ? Infinity : 0,
-                ease: "linear"
+                ease: "linear",
               }}
-              style={{ backgroundSize: '200% 200%' }}
+              style={{ backgroundSize: "200% 200%" }}
             />
-            
+
             {/* Inner border */}
             <div className="absolute inset-[3px] rounded-lg bg-gradient-to-br from-gray-900 to-black" />
-            
+
             {/* Shimmer effect */}
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-              style={{ width: '100%' }}
+              style={{ width: "100%" }}
               animate={{
-                x: isHovered ? ['-100%', '100%'] : '-100%',
+                x: isHovered ? ["-100%", "100%"] : "-100%",
               }}
               transition={{
                 duration: isHovered ? 1.5 : 0,
                 repeat: isHovered ? Infinity : 0,
-                ease: "linear"
+                ease: "linear",
               }}
             />
-            
+
             {/* Button text */}
             <span className="relative z-10 text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.8)]">
               INITIATE NEURAL SYNC
             </span>
-            
+
             {/* Hover glow effects */}
             <motion.div
               className="absolute inset-0 rounded-lg bg-cyan-400/20 blur-xl"
@@ -189,7 +203,7 @@ export default function QualiaMainMenu() {
               }}
               transition={{ duration: 0.3 }}
             />
-            
+
             {/* Additional hover glow */}
             <motion.div
               className="absolute inset-0 rounded-lg bg-purple-500/15 blur-2xl"
@@ -199,7 +213,7 @@ export default function QualiaMainMenu() {
               }}
               transition={{ duration: 0.4, delay: 0.1 }}
             />
-            
+
             {/* Press effect */}
             <motion.div
               className="absolute inset-0 rounded-lg bg-black/40"
@@ -212,5 +226,5 @@ export default function QualiaMainMenu() {
         </motion.div>
       </div>
     </div>
-  )
+  );
 }

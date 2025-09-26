@@ -1,8 +1,8 @@
 // QUALIA.CODE v1.1 - Logging Service
 // Centralized logging system for Qualia Tempo with InversifyJS support
 
-import { injectable } from 'inversify';
-import type { ILogger } from './interfaces/ILogger';
+import { injectable } from "inversify";
+import type { ILogger } from "./interfaces/ILogger";
 
 export enum LogLevel {
   // eslint-disable-next-line no-unused-vars
@@ -34,7 +34,10 @@ export class QualiaLogger implements ILogger {
   private level: LogLevel;
   private source: string;
 
-  constructor(source: string = 'QualiaLogger', level: LogLevel = LogLevel.INFO) {
+  constructor(
+    source: string = "QualiaLogger",
+    level: LogLevel = LogLevel.INFO,
+  ) {
     this.source = source;
     this.level = level;
   }
@@ -67,7 +70,11 @@ export class QualiaLogger implements ILogger {
     this.log(LogLevel.ERROR, message, context);
   }
 
-  private log(level: LogLevel, message: string, context?: Record<string, any>): void {
+  private log(
+    level: LogLevel,
+    message: string,
+    context?: Record<string, any>,
+  ): void {
     if (level < this.level) return;
 
     const entry: LogEntry = {
@@ -114,7 +121,7 @@ export class LoggerProvider {
   public static register(logger: QualiaLogger): void {
     if (this.loggerInstance && !this.isRegistering) {
       // Opcional: Prevenir doble registro
-      console.warn('[LoggerProvider] Logger already registered.');
+      console.warn("[LoggerProvider] Logger already registered.");
       return;
     }
     this.isRegistering = true;
@@ -126,12 +133,14 @@ export class LoggerProvider {
     if (!this.loggerInstance) {
       // Durante la inicialización, usar un logger temporal con fallback
       if (this.isRegistering) {
-        return new QualiaLogger('Fallback', LogLevel.WARN);
+        return new QualiaLogger("Fallback", LogLevel.WARN);
       }
-      
+
       // Crear un logger temporal en lugar de fallar
-      console.warn('[LoggerProvider] Logger not registered, creating temporary logger');
-      return new QualiaLogger('Temporary', LogLevel.INFO);
+      console.warn(
+        "[LoggerProvider] Logger not registered, creating temporary logger",
+      );
+      return new QualiaLogger("Temporary", LogLevel.INFO);
     }
     return this.loggerInstance;
   }

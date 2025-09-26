@@ -3,7 +3,7 @@
 // Su única responsabilidad es renderizar los efectos.
 // El layout es controlado EXCLUSIVAMENTE por su padre, MainLayout.tsx.
 
-import React from 'react';
+import React from "react";
 
 export const Atmosphere: React.FC = () => {
   return (

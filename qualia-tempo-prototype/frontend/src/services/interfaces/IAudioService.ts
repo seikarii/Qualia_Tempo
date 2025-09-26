@@ -21,11 +21,14 @@ export interface IAudioService {
    * @param soundId The unique identifier for the sound
    * @param options Optional playback configuration
    */
-  playSound(soundId: string, options?: {
-    volume?: number;
-    loop?: boolean;
-    delay?: number;
-  }): void;
+  playSound(
+    soundId: string,
+    options?: {
+      volume?: number;
+      loop?: boolean;
+      delay?: number;
+    },
+  ): void;
 
   /**
    * Stop a currently playing sound.

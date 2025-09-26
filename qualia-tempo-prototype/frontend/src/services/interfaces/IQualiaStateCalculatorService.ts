@@ -3,8 +3,8 @@
  * Real-time calculation of player performance metrics interface.
  */
 
-import type { QualiaState } from '../../types/contracts';
-import type { PlayerActionEvent } from '../EventBus';
+import type { QualiaState } from "../../types/contracts";
+import type { PlayerActionEvent } from "../EventBus";
 
 export interface IQualiaStateCalculatorService {
   /**

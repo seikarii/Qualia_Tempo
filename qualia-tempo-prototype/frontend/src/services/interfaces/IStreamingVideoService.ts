@@ -5,10 +5,16 @@
  */
 
 // ✅ CORRECT: Importing from the central contracts file
-import type { ConnectionStatus, VideoFrame } from '../contracts/events.contracts';
+import type {
+  ConnectionStatus,
+  VideoFrame,
+} from "../contracts/events.contracts";
 
 // ✅ CORRECT: Re-exporting for backward compatibility
-export type { ConnectionStatus, VideoFrame } from '../contracts/events.contracts';
+export type {
+  ConnectionStatus,
+  VideoFrame,
+} from "../contracts/events.contracts";
 
 export interface IStreamingVideoService {
   /**

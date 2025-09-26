@@ -1,19 +1,18 @@
 /**
  * QUALIA.CODE v1.1 - GameStateStore
  * Concrete implementation of IGameStateStore interface.
- * 
+ *
  * This class provides a bridge between the IoC container and the Zustand store,
  * allowing services to access store functionality in a decoupled manner.
  */
 
-import { injectable } from 'inversify';
-import type { IGameStateStore } from './interfaces/IGameStateStore';
-import type { ExtendedNotification } from './NotificationService';
-import { useGameStore, type Notification } from '../state/useGameStore';
+import { injectable } from "inversify";
+import type { IGameStateStore } from "./interfaces/IGameStateStore";
+import type { ExtendedNotification } from "./NotificationService";
+import { useGameStore, type Notification } from "../state/useGameStore";
 
 @injectable()
 export class GameStateStore implements IGameStateStore {
-  
   /**
    * Set notifications in the store.
    * Used by NotificationService to update the UI with current notifications.
@@ -21,10 +20,12 @@ export class GameStateStore implements IGameStateStore {
   setNotifications(notifications: ExtendedNotification[]): void {
     // Convert ExtendedNotification to store-compatible Notification format
     const storeNotifications: Notification[] = notifications
-      .filter(notification => ['info', 'success', 'warning', 'error'].includes(notification.type))
-      .map(notification => ({
+      .filter((notification) =>
+        ["info", "success", "warning", "error"].includes(notification.type),
+      )
+      .map((notification) => ({
         id: notification.id,
-        type: notification.type as 'info' | 'success' | 'warning' | 'error',
+        type: notification.type as "info" | "success" | "warning" | "error",
         title: notification.message, // Use message as title since ExtendedNotification doesn't have title
         message: notification.message,
         timestamp: notification.timestamp.getTime(),
@@ -43,14 +44,14 @@ export class GameStateStore implements IGameStateStore {
    */
   getNotifications(): ExtendedNotification[] {
     const state = useGameStore.getState();
-    return state.notifications.map(notification => ({
+    return state.notifications.map((notification) => ({
       id: notification.id,
       type: notification.type,
       message: notification.message,
       timestamp: new Date(notification.timestamp),
-      priority: 'normal' as const,
-      category: 'general',
-      source: 'GameStateStore',
+      priority: "normal" as const,
+      category: "general",
+      source: "GameStateStore",
       displayed: true,
       dismissed: false,
       retryCount: 0,

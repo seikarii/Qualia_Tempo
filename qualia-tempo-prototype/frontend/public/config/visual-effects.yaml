@@ -3,61 +3,61 @@
 
 visualEffects:
   particles:
-    count: 500          # Much more particles for visibility
-    minSize: 4          # Larger minimum size  
-    maxSize: 16         # Much larger max for visibility
-    speed: 1.5          # Faster movement for visibility
-    drift: 1.2          # Higher drift for dynamic effect
+    count: 500 # Much more particles for visibility
+    minSize: 4 # Larger minimum size
+    maxSize: 16 # Much larger max for visibility
+    speed: 1.5 # Faster movement for visibility
+    drift: 1.2 # Higher drift for dynamic effect
   bloom:
-    intensity: 3.5      # Much stronger bloom for visibility
-    pulseSpeed: 2       # Noticeable pulsing
+    intensity: 3.5 # Much stronger bloom for visibility
+    pulseSpeed: 2 # Noticeable pulsing
   gradients:
-    cycleDuration: 8    # Faster cycle for more dynamic effect
+    cycleDuration: 8 # Faster cycle for more dynamic effect
     layers:
-      - 'radial-gradient(circle at 15% 25%, rgba(0,255,255,0.7) 0%, transparent 55%)'
-      - 'radial-gradient(circle at 85% 75%, rgba(255,0,255,0.6) 0%, transparent 60%)'
-      - 'radial-gradient(circle at 50% 50%, rgba(255,255,0,0.5) 0%, transparent 65%)'
-      - 'conic-gradient(from 0deg at 50% 50%, rgba(0,255,200,0.4), rgba(255,0,200,0.4), rgba(255,255,0,0.4), rgba(0,255,200,0.4))'
-      - 'radial-gradient(circle at 30% 80%, rgba(255,0,128,0.4) 0%, transparent 50%)'
-      - 'radial-gradient(circle at 70% 20%, rgba(128,255,0,0.4) 0%, transparent 50%)'
+      - "radial-gradient(circle at 15% 25%, rgba(0,255,255,0.7) 0%, transparent 55%)"
+      - "radial-gradient(circle at 85% 75%, rgba(255,0,255,0.6) 0%, transparent 60%)"
+      - "radial-gradient(circle at 50% 50%, rgba(255,255,0,0.5) 0%, transparent 65%)"
+      - "conic-gradient(from 0deg at 50% 50%, rgba(0,255,200,0.4), rgba(255,0,200,0.4), rgba(255,255,0,0.4), rgba(0,255,200,0.4))"
+      - "radial-gradient(circle at 30% 80%, rgba(255,0,128,0.4) 0%, transparent 50%)"
+      - "radial-gradient(circle at 70% 20%, rgba(128,255,0,0.4) 0%, transparent 50%)"
   noise:
     enabled: true
-    opacity: 0.3        # Much more visible grain
-    scale: 1.8          # Tighter noise for better visibility
-    speed: 1.0          # Faster animation for movement
-  palette:              # Extended Qualia energy palette
-    - '#00ffff'         # Cyan - precision/clarity
-    - '#ff00ff'         # Magenta - intensity/power  
-    - '#ffff00'         # Yellow - energy/activation
-    - '#ff0080'         # Hot pink - aggression/chaos
-    - '#00ff80'         # Bright green - recovery/flow
-    - '#8000ff'         # Purple - transcendence
-    - '#ff8000'         # Orange - warmth/combo
-    - '#0080ff'         # Blue - focus/calm
+    opacity: 0.3 # Much more visible grain
+    scale: 1.8 # Tighter noise for better visibility
+    speed: 1.0 # Faster animation for movement
+  palette: # Extended Qualia energy palette
+    - "#00ffff" # Cyan - precision/clarity
+    - "#ff00ff" # Magenta - intensity/power
+    - "#ffff00" # Yellow - energy/activation
+    - "#ff0080" # Hot pink - aggression/chaos
+    - "#00ff80" # Bright green - recovery/flow
+    - "#8000ff" # Purple - transcendence
+    - "#ff8000" # Orange - warmth/combo
+    - "#0080ff" # Blue - focus/calm
   aura:
-    rings: 7            # More rings for complexity
-    rotationSpeed: 15   # Faster rotation for energy
-    pulseDuration: 5    # Faster pulsing for preview
+    rings: 7 # More rings for complexity
+    rotationSpeed: 15 # Faster rotation for energy
+    pulseDuration: 5 # Faster pulsing for preview
   # NEW: Audio simulation settings
   audioSimulation:
     enabled: true
-    fftBands: 32        # Simulated FFT spectrum bands
-    bassRange: [0, 7]   # Low frequency indices
-    midRange: [8, 23]   # Mid frequency indices  
+    fftBands: 32 # Simulated FFT spectrum bands
+    bassRange: [0, 7] # Low frequency indices
+    midRange: [8, 23] # Mid frequency indices
     trebleRange: [24, 31] # High frequency indices
-    updateRate: 120     # ms between audio updates (8fps)
+    updateRate: 120 # ms between audio updates (8fps)
   # NEW: Lightning effects
   lightning:
     enabled: true
-    threshold: 80       # Audio level threshold for generation
-    maxBolts: 3         # Maximum concurrent bolts
-    duration: 800       # Bolt duration in ms
+    threshold: 80 # Audio level threshold for generation
+    maxBolts: 3 # Maximum concurrent bolts
+    duration: 800 # Bolt duration in ms
     branchProbability: 0.7 # Chance of sub-bolt generation
   # NEW: God rays (volumetric lighting)
   godRays:
     enabled: true
-    count: 12           # Number of light rays
-    maxWidth: 8         # Maximum ray width in px
-    maxLength: 100      # Maximum ray length in vh
-    rotationRange: 10   # Degrees of rotation variance
-    baseOpacity: 0.4    # Base opacity multiplier
+    count: 12 # Number of light rays
+    maxWidth: 8 # Maximum ray width in px
+    maxLength: 100 # Maximum ray length in vh
+    rotationRange: 10 # Degrees of rotation variance
+    baseOpacity: 0.4 # Base opacity multiplier

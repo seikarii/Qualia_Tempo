@@ -38,7 +38,7 @@ thresholds:
 # Combo system
 comboSystem:
   maxComboMultiplier: 2.0
-  comboDecayTime: 2.0  # seconds
+  comboDecayTime: 2.0 # seconds
   perfectComboBonus: 0.1
 
 # Recovery mechanics
@@ -48,5 +48,5 @@ recoveryMechanics:
   recoveryCooldown: 1.0
 
 # Calculation intervals
-updateIntervalMs: 100  # 10 FPS update rate
-historySize: 100      # Keep last 100 states for analysis
+updateIntervalMs: 100 # 10 FPS update rate
+historySize: 100 # Keep last 100 states for analysis

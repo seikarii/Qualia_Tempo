@@ -3,11 +3,8 @@
 # ARCHITECTURAL COMPLIANCE: ZERO MANUAL INSTANTIATION
 
 import pytest
-import asyncio
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
-from fastapi import WebSocketDisconnect
-import json
 from backend.tests.test_composition_root import TestCompositionRootFactory
 from backend.api.routes import app, get_services
 from backend.CompositionRoot import reset_composition_root
@@ -22,6 +19,7 @@ def mocked_composition_root():
 @pytest.fixture
 def client(mocked_composition_root):
     """Creates a TestClient with mocked dependencies injected."""
+
     # Override the get_services dependency
     def override_get_services():
         return mocked_composition_root
@@ -40,7 +38,9 @@ class TestRoutesExtended:
     """QUALIA.CODE v1.1 Extended tests for API routes using IoC container."""
 
     @pytest.mark.asyncio
-    async def test_startup_event_initializes_composition_root(self, mocked_composition_root):
+    async def test_startup_event_initializes_composition_root(
+        self, mocked_composition_root
+    ):
         """
         QUALIA.CODE Phase 2 Test: Verify that composition_root.initialize() is called during startup.
         Test eager initialization of all services.
@@ -49,7 +49,10 @@ class TestRoutesExtended:
         mocked_composition_root.initialize = AsyncMock()
 
         # Patch get_composition_root to return our mocked instance
-        with patch('backend.api.routes.get_composition_root', return_value=mocked_composition_root):
+        with patch(
+            "backend.api.routes.get_composition_root",
+            return_value=mocked_composition_root,
+        ):
             # Import and call the startup event directly
             from backend.api.routes import startup_event
 
@@ -59,7 +62,9 @@ class TestRoutesExtended:
             mocked_composition_root.initialize.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_shutdown_event_terminates_composition_root(self, mocked_composition_root):
+    async def test_shutdown_event_terminates_composition_root(
+        self, mocked_composition_root
+    ):
         """
         QUALIA.CODE Phase 2 Test: Verify that composition_root.shutdown() is called during shutdown.
         Test proper cleanup of all services.
@@ -68,7 +73,10 @@ class TestRoutesExtended:
         mocked_composition_root.shutdown = AsyncMock()
 
         # Patch get_composition_root to return our mocked instance
-        with patch('backend.api.routes.get_composition_root', return_value=mocked_composition_root):
+        with patch(
+            "backend.api.routes.get_composition_root",
+            return_value=mocked_composition_root,
+        ):
             # Import and call the shutdown event directly
             from backend.api.routes import shutdown_event
 
@@ -80,10 +88,14 @@ class TestRoutesExtended:
     def test_update_qualia_error_500(self, client, mocked_composition_root):
         """Test error handling for invalid qualia data."""
         # Get the mocked qualia processor from TestCompositionRootFactory
-        mock_qualia_processor = TestCompositionRootFactory.get_service_mocks(mocked_composition_root)["qualia_processor"]
+        mock_qualia_processor = TestCompositionRootFactory.get_service_mocks(
+            mocked_composition_root
+        )["qualia_processor"]
 
         # Configure processor to raise an exception
-        mock_qualia_processor.process_qualia_state.side_effect = Exception("Processing failed")
+        mock_qualia_processor.process_qualia_state.side_effect = Exception(
+            "Processing failed"
+        )
 
         qualia_data = {
             "intensity": 0.5,
@@ -110,9 +122,14 @@ class TestRoutesExtended:
         """
         # Test that WebSocket endpoint exists by checking app routes
         from backend.api.routes import app
-        websocket_routes = [route for route in app.routes if hasattr(route, 'path') and 'ws' in str(route.path)]
+
+        websocket_routes = [
+            route
+            for route in app.routes
+            if hasattr(route, "path") and "ws" in str(route.path)
+        ]
         assert len(websocket_routes) > 0
-        assert any('/ws/video_stream' in str(route.path) for route in websocket_routes)
+        assert any("/ws/video_stream" in str(route.path) for route in websocket_routes)
 
     def test_health_endpoint_with_service_status(self, client):
         """Test health endpoint returns correct architecture version."""
@@ -190,10 +207,14 @@ class TestRoutesExtended:
     def test_service_error_handling(self, client, mocked_composition_root):
         """Test error handling when services fail."""
         # Get the mocked qualia processor from TestCompositionRootFactory
-        mock_qualia_processor = TestCompositionRootFactory.get_service_mocks(mocked_composition_root)["qualia_processor"]
+        mock_qualia_processor = TestCompositionRootFactory.get_service_mocks(
+            mocked_composition_root
+        )["qualia_processor"]
 
         # Simulate service error
-        mock_qualia_processor.process_qualia_state.side_effect = Exception("Service error")
+        mock_qualia_processor.process_qualia_state.side_effect = Exception(
+            "Service error"
+        )
 
         qualia_data = {
             "intensity": 0.5,

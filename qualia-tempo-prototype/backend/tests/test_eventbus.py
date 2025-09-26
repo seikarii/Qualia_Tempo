@@ -7,7 +7,6 @@ import asyncio
 import logging
 import sys
 import os
-from unittest.mock import Mock
 
 # Add project root to path for imports
 sys.path.insert(
@@ -155,15 +154,15 @@ class TestEventBus:
         # Verify the mock was called correctly
         event_bus.subscribe.assert_any_call("TestEvent", handler1)
         event_bus.subscribe.assert_any_call("TestEvent", handler2)
-        event_bus.publish.assert_called_with("TestEvent", {"test": "data"}, source="TestSource")
+        event_bus.publish.assert_called_with(
+            "TestEvent", {"test": "data"}, source="TestSource"
+        )
 
     @pytest.mark.asyncio
     async def test_publish_no_handlers(self, event_bus):
         """Test event publishing with no registered handlers using IoC fixture."""
         # Call the mock method
-        await event_bus.publish(
-            "UnhandledEvent", {"test": "data"}, source="TestSource"
-        )
+        await event_bus.publish("UnhandledEvent", {"test": "data"}, source="TestSource")
 
         # Verify the mock was called correctly
         event_bus.publish.assert_called_with(

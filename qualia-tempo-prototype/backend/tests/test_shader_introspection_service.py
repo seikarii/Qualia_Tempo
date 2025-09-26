@@ -29,7 +29,7 @@ class TestShaderIntrospectionService:
 
     def test_introspect_simple_uniforms(self, shader_introspection_service):
         """Test introspection of simple uniform types using IoC fixture."""
-        
+
         shader_source = """
         #version 430
         uniform ParticleUniforms {
@@ -38,24 +38,24 @@ class TestShaderIntrospectionService:
         };
         void main() {}
         """
-        
+
         # Call the mock method (configured in factory to return structured data)
         result = shader_introspection_service.introspect(shader_source)
-        
+
         # Verify mock behavior from factory configuration
-        assert 'uniforms' in result
-        assert 'struct_format' in result
-        assert 'total_size' in result
-        
+        assert "uniforms" in result
+        assert "struct_format" in result
+        assert "total_size" in result
+
         # These values come from the mock configuration in TestCompositionRootFactory
-        uniforms = result['uniforms']
+        uniforms = result["uniforms"]
         assert len(uniforms) == 2
-        assert uniforms[0] == ('time', 'float', 0)
-        assert uniforms[1] == ('particle_count', 'int', 4)
-        
-        assert result['struct_format'] == 'fi'
-        assert result['total_size'] == 8
-        
+        assert uniforms[0] == ("time", "float", 0)
+        assert uniforms[1] == ("particle_count", "int", 4)
+
+        assert result["struct_format"] == "fi"
+        assert result["total_size"] == 8
+
         # Verify the mock was called
         shader_introspection_service.introspect.assert_called_with(shader_source)
 
@@ -69,15 +69,15 @@ class TestShaderIntrospectionService:
         };
         void main() {}
         """
-        
+
         # Call the mock method - it returns the same configured data
         result = shader_introspection_service.introspect(shader_source)
-        
+
         # Verify mock behavior (returns configured data from factory)
-        assert 'uniforms' in result
-        assert 'struct_format' in result 
-        assert 'total_size' in result
-        
+        assert "uniforms" in result
+        assert "struct_format" in result
+        assert "total_size" in result
+
         # Verify the mock was called
         shader_introspection_service.introspect.assert_called_with(shader_source)
 
@@ -87,21 +87,21 @@ class TestShaderIntrospectionService:
         #version 430
         void main() {}
         """
-        
+
         # Call the mock method
         result = shader_introspection_service.introspect(shader_source)
-        
-        # Verify mock returns expected structure 
+
+        # Verify mock returns expected structure
         assert result is not None
-        
+
         # Verify the mock was called
         shader_introspection_service.introspect.assert_called_with(shader_source)
-        
+
         # Verify mock returns expected structure
         assert result is not None
 
     def test_introspect_malformed_uniforms(self, shader_introspection_service):
-        """Test introspection with malformed uniform declarations using IoC fixture."""        
+        """Test introspection with malformed uniform declarations using IoC fixture."""
         shader_source = """
         #version 430
         uniform ParticleUniforms {
@@ -111,17 +111,17 @@ class TestShaderIntrospectionService:
         };
         void main() {}
         """
-        
+
         # Call the mock method
         result = shader_introspection_service.introspect(shader_source)
-        
+
         # Verify mock returns expected structure
         assert result is not None
-        
+
         # Verify the mock was called
         shader_introspection_service.introspect.assert_called_with(shader_source)
-        
+
         # Should only parse valid uniforms
-        uniforms = result['uniforms']
+        uniforms = result["uniforms"]
         assert len(uniforms) == 1
-        assert uniforms[0] == ('position', 'vec2', 0)
+        assert uniforms[0] == ("position", "vec2", 0)

@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import QualiaMainMenu from "../components/QualiaMainMenu";
 import { useService } from "../services/hooks";
@@ -9,11 +9,13 @@ import type { IEventBus } from "../services/interfaces/IEventBus";
 vi.mock("../services/hooks");
 
 // Mock framer-motion to avoid animation complexities in tests
-vi.mock('framer-motion', () => ({
+vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+    button: ({ children, ...props }: any) => (
+      <button {...props}>{children}</button>
+    ),
     span: ({ children, ...props }: any) => <span {...props}>{children}</span>,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
@@ -22,7 +24,7 @@ vi.mock('framer-motion', () => ({
 // Mock services
 const mockEventBus = {
   emit: vi.fn().mockReturnValue(Promise.resolve()), // Make it return a resolved promise immediately
-  subscribe: vi.fn().mockReturnValue('listener-id'),
+  subscribe: vi.fn().mockReturnValue("listener-id"),
   unsubscribe: vi.fn(),
   clear: vi.fn(),
   destroy: vi.fn(),
@@ -34,7 +36,7 @@ const mockEventBus = {
   }),
 };
 
-describe('QualiaMainMenu Component', () => {
+describe("QualiaMainMenu Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -47,37 +49,37 @@ describe('QualiaMainMenu Component', () => {
     });
   });
 
-  test('renders main menu with title and start button', () => {
+  test("renders main menu with title and start button", () => {
     render(<QualiaMainMenu />);
 
     // Check for QUALIA and TEMPO separately since they're in separate spans
-    expect(screen.getByText('QUALIA')).toBeTruthy();
-    expect(screen.getByText('TEMPO')).toBeTruthy();
-    expect(screen.getByText('INITIATE NEURAL SYNC')).toBeTruthy();
-    expect(screen.getByText('IMMERSE IN GPU-RENDERED QUALIA')).toBeTruthy();
+    expect(screen.getByText("QUALIA")).toBeTruthy();
+    expect(screen.getByText("TEMPO")).toBeTruthy();
+    expect(screen.getByText("INITIATE NEURAL SYNC")).toBeTruthy();
+    expect(screen.getByText("IMMERSE IN GPU-RENDERED QUALIA")).toBeTruthy();
   });
 
-  test('uses IoC container services instead of direct instantiation', () => {
+  test("uses IoC container services instead of direct instantiation", () => {
     render(<QualiaMainMenu />);
 
     // Verify that services are resolved via useService hook
     expect(useService).toHaveBeenCalledWith(TYPES.IEventBus);
   });
 
-  test('integrates with EventBus for game state management', async () => {
+  test("integrates with EventBus for game state management", async () => {
     render(<QualiaMainMenu />);
 
-    const startButton = screen.getByText('INITIATE NEURAL SYNC');
+    const startButton = screen.getByText("INITIATE NEURAL SYNC");
     fireEvent.click(startButton);
 
     // Wait for the asynchronous event emission
     await waitFor(() => {
       expect(mockEventBus.emit).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'PlayerAction',
-          action: 'StartGame',
-          source: 'QualiaMainMenu'
-        })
+          type: "PlayerAction",
+          action: "StartGame",
+          source: "QualiaMainMenu",
+        }),
       );
     });
   });

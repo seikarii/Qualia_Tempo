@@ -1,18 +1,25 @@
 /**
- * QUALIA.CODE v1.1 - StreamingVideoService Implementation  
+ * QUALIA.CODE v1.1 - StreamingVideoService Implementation
  * CRISALIDA.CODE v1.1 - SINGLETON REFERENCE COUNTING ARCHITECTURE
  * WebSocket-based video streaming service with reference counting and debounced disconnection.
  */
 
-import { injectable, inject } from 'inversify';
-import { TYPES } from './inversify.types';
-import type { IStreamingVideoService, StreamingStatistics } from './interfaces/IStreamingVideoService';
-import type { VideoFrame, ConnectionStatus, ConnectionStateType } from './contracts/events.contracts';
-import type { IEventBus } from './interfaces/IEventBus';
-import type { ILogger } from './interfaces/ILogger';
-import type { IConfigurationService } from './interfaces/IConfigurationService';
-import type { StreamingStatusChangedEvent } from './EventBus';
-import { logMethod, catchError } from '../utils/decorators';
+import { injectable, inject } from "inversify";
+import { TYPES } from "./inversify.types";
+import type {
+  IStreamingVideoService,
+  StreamingStatistics,
+} from "./interfaces/IStreamingVideoService";
+import type {
+  VideoFrame,
+  ConnectionStatus,
+  ConnectionStateType,
+} from "./contracts/events.contracts";
+import type { IEventBus } from "./interfaces/IEventBus";
+import type { ILogger } from "./interfaces/ILogger";
+import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { StreamingStatusChangedEvent } from "./EventBus";
+import { logMethod, catchError } from "../utils/decorators";
 
 type FrameCallback = (frame: VideoFrame) => void;
 
@@ -20,32 +27,32 @@ type FrameCallback = (frame: VideoFrame) => void;
 export class StreamingVideoService implements IStreamingVideoService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
-  
+
   // WebSocket connection with singleton management
   private websocket: WebSocket | null = null;
   private connectionUrl: string;
-  private state: ConnectionStateType = 'IDLE';
-  
+  private state: ConnectionStateType = "IDLE";
+
   // Reference counting architecture
   private referenceCount = 0;
   private disconnectDebounceTimer: NodeJS.Timeout | null = null;
   private readonly DEBOUNCE_DELAY = 500; // ms
-  
+
   // Reconnection management
   private reconnectTimer: NodeJS.Timeout | null = null;
   private pingTimer: NodeJS.Timeout | null = null;
-  
+
   // Subscription management
   private frameSubscriptions: Map<string, FrameCallback> = new Map();
   private nextSubscriptionId = 1;
-  
+
   // Connection status
   private connectionStatus: ConnectionStatus = {
     connected: false,
-    state: 'IDLE',
-    reconnectAttempts: 0
+    state: "IDLE",
+    reconnectAttempts: 0,
   };
-  
+
   // Statistics tracking
   private statistics: StreamingStatistics = {
     framesReceived: 0,
@@ -54,15 +61,15 @@ export class StreamingVideoService implements IStreamingVideoService {
     averageFrameSize: 0,
     lastFrameTimestamp: 0,
     latency: 0,
-    droppedFrames: 0
+    droppedFrames: 0,
   };
-  
+
   // Performance monitoring
   private fpsCounter = 0;
   private fpsTimestamp = 0;
   private pendingPings: Map<number, number> = new Map();
   private nextPingId = 1;
-  
+
   // Configuration
   private readonly maxReconnectAttempts: number;
   private readonly reconnectDelay: number;
@@ -72,110 +79,127 @@ export class StreamingVideoService implements IStreamingVideoService {
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
-    
+
     // Load streaming configuration from config service
-    const streamingConfig = configService.getConfig().backendSync.streaming?.websocket || {};
-    this.connectionUrl = streamingConfig.url || 'ws://127.0.0.1:8000/ws/video_stream';
+    const streamingConfig =
+      configService.getConfig().backendSync.streaming?.websocket || {};
+    this.connectionUrl =
+      streamingConfig.url || "ws://127.0.0.1:8000/ws/video_stream";
     this.maxReconnectAttempts = streamingConfig.maxReconnectAttempts || 10;
     this.reconnectDelay = streamingConfig.reconnectDelay || 2000;
     this.pingInterval = streamingConfig.pingInterval || 8000;
     this.pingTimeout = streamingConfig.pingTimeout || 6000;
-    
-    this.logger.info('StreamingVideoService initialized with Reference Counting architecture', {
-      url: this.connectionUrl,
-      pingInterval: this.pingInterval,
-      pingTimeout: this.pingTimeout
-    });
+
+    this.logger.info(
+      "StreamingVideoService initialized with Reference Counting architecture",
+      {
+        url: this.connectionUrl,
+        pingInterval: this.pingInterval,
+        pingTimeout: this.pingTimeout,
+      },
+    );
   }
 
   @logMethod()
   @catchError()
   public async connect(): Promise<void> {
     this.referenceCount++;
-    this.logger.debug(`Connection reference count increased to ${this.referenceCount}`);
+    this.logger.debug(
+      `Connection reference count increased to ${this.referenceCount}`,
+    );
 
     // Si hay un debounce de desconexión pendiente, cancelarlo.
     if (this.disconnectDebounceTimer) {
       clearTimeout(this.disconnectDebounceTimer);
       this.disconnectDebounceTimer = null;
-      this.logger.info('Cancelled pending disconnect due to new connection request.');
+      this.logger.info(
+        "Cancelled pending disconnect due to new connection request.",
+      );
     }
 
     // Si ya estamos conectados o conectando, no hacer nada más.
-    if (this.state === 'CONNECTED' || this.state === 'CONNECTING') {
+    if (this.state === "CONNECTED" || this.state === "CONNECTING") {
       this.logger.info(`Connect called but already in state: ${this.state}.`);
       return;
     }
 
     // Iniciar el proceso de conexión.
-    this.state = 'CONNECTING';
-    this.connectionStatus.state = 'CONNECTING';
-    this.logger.info('State changed to CONNECTING. Initiating WebSocket connection.');
+    this.state = "CONNECTING";
+    this.connectionStatus.state = "CONNECTING";
+    this.logger.info(
+      "State changed to CONNECTING. Initiating WebSocket connection.",
+    );
 
     // Emitir evento para la UI
     this.eventBus.emit<StreamingStatusChangedEvent>({
-      type: 'StreamingStatusChanged', 
+      type: "StreamingStatusChanged",
       status: this.getConnectionStatus(),
-      source: 'StreamingVideoService'
+      source: "StreamingVideoService",
     });
 
     try {
       this.websocket = new WebSocket(this.connectionUrl);
-      
+
       // Setup event handlers
       this.websocket.onopen = this.onWebSocketOpen.bind(this);
       this.websocket.onmessage = this.onWebSocketMessage.bind(this);
       this.websocket.onclose = this.onWebSocketClose.bind(this);
       this.websocket.onerror = this.onWebSocketError.bind(this);
-      
+
       // Wait for connection to open (never reject - handle errors internally)
       await new Promise<void>((resolve) => {
         const timeoutId = setTimeout(() => {
-          this.logger.warn('WebSocket connection timeout - operating in offline mode');
-          this.state = 'ERROR';
-          this.connectionStatus.state = 'ERROR';
-          this.connectionStatus.lastError = 'Connection timeout';
+          this.logger.warn(
+            "WebSocket connection timeout - operating in offline mode",
+          );
+          this.state = "ERROR";
+          this.connectionStatus.state = "ERROR";
+          this.connectionStatus.lastError = "Connection timeout";
           this.eventBus.emit<StreamingStatusChangedEvent>({
-            type: 'StreamingStatusChanged', 
+            type: "StreamingStatusChanged",
             status: this.getConnectionStatus(),
-            source: 'StreamingVideoService'
+            source: "StreamingVideoService",
           });
           resolve(); // Resolve instead of reject
         }, 10000);
-        
-        this.websocket!.addEventListener('open', () => {
+
+        this.websocket!.addEventListener("open", () => {
           clearTimeout(timeoutId);
           resolve();
         });
-        
-        this.websocket!.addEventListener('error', () => {
+
+        this.websocket!.addEventListener("error", () => {
           clearTimeout(timeoutId);
-          this.logger.warn('WebSocket connection failed - operating in offline mode');
-          this.state = 'ERROR';
-          this.connectionStatus.state = 'ERROR';
-          this.connectionStatus.lastError = 'Connection failed';
+          this.logger.warn(
+            "WebSocket connection failed - operating in offline mode",
+          );
+          this.state = "ERROR";
+          this.connectionStatus.state = "ERROR";
+          this.connectionStatus.lastError = "Connection failed";
           this.eventBus.emit<StreamingStatusChangedEvent>({
-            type: 'StreamingStatusChanged', 
+            type: "StreamingStatusChanged",
             status: this.getConnectionStatus(),
-            source: 'StreamingVideoService'
+            source: "StreamingVideoService",
           });
           resolve(); // Resolve instead of reject
         });
       });
-      
     } catch (error) {
-      this.logger.warn('Failed to connect to video stream - operating in offline mode', { error });
-      this.state = 'ERROR';
-      this.connectionStatus.state = 'ERROR';
+      this.logger.warn(
+        "Failed to connect to video stream - operating in offline mode",
+        { error },
+      );
+      this.state = "ERROR";
+      this.connectionStatus.state = "ERROR";
       this.connectionStatus.lastError = String(error);
       this.eventBus.emit<StreamingStatusChangedEvent>({
-        type: 'StreamingStatusChanged', 
+        type: "StreamingStatusChanged",
         status: this.getConnectionStatus(),
-        source: 'StreamingVideoService'
+        source: "StreamingVideoService",
       });
       // Don't throw error - allow application to continue in offline mode
       return;
@@ -186,11 +210,13 @@ export class StreamingVideoService implements IStreamingVideoService {
   public disconnect(): void {
     if (this.referenceCount > 0) {
       this.referenceCount--;
-      this.logger.debug(`Connection reference count decreased to ${this.referenceCount}`);
+      this.logger.debug(
+        `Connection reference count decreased to ${this.referenceCount}`,
+      );
     }
 
     if (this.referenceCount === 0) {
-      this.logger.info('Reference count is zero. Debouncing disconnection.');
+      this.logger.info("Reference count is zero. Debouncing disconnection.");
       // Iniciar debounce para cerrar la conexión.
       this.disconnectDebounceTimer = setTimeout(() => {
         this.forceDisconnect();
@@ -200,45 +226,45 @@ export class StreamingVideoService implements IStreamingVideoService {
 
   private forceDisconnect(): void {
     if (this.websocket) {
-      this.logger.info('Forcing WebSocket disconnection now.');
-      this.websocket.close(1000, 'Client initiated disconnect');
+      this.logger.info("Forcing WebSocket disconnection now.");
+      this.websocket.close(1000, "Client initiated disconnect");
       this.websocket = null;
     }
-    
+
     this.clearReconnectTimer();
-    
+
     if (this.pingTimer) {
       clearInterval(this.pingTimer);
       this.pingTimer = null;
     }
-    
-    this.state = 'IDLE';
+
+    this.state = "IDLE";
     this.connectionStatus.connected = false;
-    this.connectionStatus.state = 'IDLE';
+    this.connectionStatus.state = "IDLE";
     this.connectionStatus.connectedAt = undefined;
-    
+
     this.eventBus.emit<StreamingStatusChangedEvent>({
-      type: 'StreamingStatusChanged', 
+      type: "StreamingStatusChanged",
       status: this.getConnectionStatus(),
-      source: 'StreamingVideoService'
+      source: "StreamingVideoService",
     });
-    
-    this.logger.info('Disconnected from video stream');
+
+    this.logger.info("Disconnected from video stream");
   }
 
   @logMethod()
   public subscribeToFrames(callback: FrameCallback): string {
     const subscriptionId = `frame_sub_${this.nextSubscriptionId++}`;
     this.frameSubscriptions.set(subscriptionId, callback);
-    
-    this.logger.debug('Frame subscription created', { subscriptionId });
+
+    this.logger.debug("Frame subscription created", { subscriptionId });
     return subscriptionId;
   }
 
   @logMethod()
   public unsubscribeFromFrames(subscriptionId: string): void {
     this.frameSubscriptions.delete(subscriptionId);
-    this.logger.debug('Frame subscription removed', { subscriptionId });
+    this.logger.debug("Frame subscription removed", { subscriptionId });
   }
 
   public getConnectionStatus(): ConnectionStatus {
@@ -252,67 +278,73 @@ export class StreamingVideoService implements IStreamingVideoService {
   @logMethod()
   public requestQualityChange(quality: number): void {
     if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
-      this.logger.warn('Cannot change quality: not connected');
+      this.logger.warn("Cannot change quality: not connected");
       return;
     }
-    
+
     if (quality < 10 || quality > 100) {
-      this.logger.warn('Invalid quality value', { quality });
+      this.logger.warn("Invalid quality value", { quality });
       return;
     }
-    
-    this.websocket.send(JSON.stringify({
-      type: 'quality_change',
-      quality
-    }));
-    
-    this.logger.info('Requested quality change', { quality });
+
+    this.websocket.send(
+      JSON.stringify({
+        type: "quality_change",
+        quality,
+      }),
+    );
+
+    this.logger.info("Requested quality change", { quality });
   }
 
   @logMethod()
   public requestFpsChange(fps: number): void {
     if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
-      this.logger.warn('Cannot change FPS: not connected');
+      this.logger.warn("Cannot change FPS: not connected");
       return;
     }
-    
+
     if (fps < 1 || fps > 60) {
-      this.logger.warn('Invalid FPS value', { fps });
+      this.logger.warn("Invalid FPS value", { fps });
       return;
     }
-    
-    this.websocket.send(JSON.stringify({
-      type: 'fps_change',
-      fps
-    }));
-    
-    this.logger.info('Requested FPS change', { fps });
+
+    this.websocket.send(
+      JSON.stringify({
+        type: "fps_change",
+        fps,
+      }),
+    );
+
+    this.logger.info("Requested FPS change", { fps });
   }
 
   @logMethod()
   public async ping(): Promise<number> {
     if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
-      throw new Error('Not connected');
+      throw new Error("Not connected");
     }
-    
+
     const pingId = this.nextPingId++;
     const startTime = Date.now();
-    
+
     this.pendingPings.set(pingId, startTime);
-    
-    this.websocket.send(JSON.stringify({
-      type: 'ping',
-      timestamp: startTime,
-      pingId
-    }));
-    
+
+    this.websocket.send(
+      JSON.stringify({
+        type: "ping",
+        timestamp: startTime,
+        pingId,
+      }),
+    );
+
     // Wait for pong response (with timeout)
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         this.pendingPings.delete(pingId);
-        reject(new Error('Ping timeout'));
+        reject(new Error("Ping timeout"));
       }, this.pingTimeout); // Use configurable timeout
-      
+
       // Store resolver for this ping to be called by handlePong
       const checkInterval = setInterval(() => {
         if (!this.pendingPings.has(pingId)) {
@@ -327,34 +359,36 @@ export class StreamingVideoService implements IStreamingVideoService {
 
   @catchError()
   private onWebSocketOpen(): void {
-    this.logger.info('WebSocket connection established.');
-    this.state = 'CONNECTED';
+    this.logger.info("WebSocket connection established.");
+    this.state = "CONNECTED";
     this.connectionStatus.connected = true;
-    this.connectionStatus.state = 'CONNECTED';
+    this.connectionStatus.state = "CONNECTED";
     this.connectionStatus.connectedAt = new Date();
     this.connectionStatus.reconnectAttempts = 0;
     this.connectionStatus.lastError = undefined;
-    
+
     // Clear any pending reconnect timer since we're now connected
     this.clearReconnectTimer();
-    
+
     // Start ping timer - increased interval for stability
     this.pingTimer = setInterval(() => {
       this.ping().catch((error) => {
         // Ping failed, but don't disconnect immediately - just log it
-        this.logger.debug('Ping failed, monitoring connection stability', { error: String(error) });
+        this.logger.debug("Ping failed, monitoring connection stability", {
+          error: String(error),
+        });
       });
     }, this.pingInterval);
-    
-    this.logger.info('Connected to video stream', {
-      url: this.connectionUrl
+
+    this.logger.info("Connected to video stream", {
+      url: this.connectionUrl,
     });
-    
+
     // Emit event for UI updates
     this.eventBus.emit<StreamingStatusChangedEvent>({
-      type: 'StreamingStatusChanged', 
+      type: "StreamingStatusChanged",
       status: this.getConnectionStatus(),
-      source: 'StreamingVideoService'
+      source: "StreamingVideoService",
     });
   }
 
@@ -362,70 +396,79 @@ export class StreamingVideoService implements IStreamingVideoService {
   private onWebSocketMessage(event: MessageEvent): void {
     try {
       const message = JSON.parse(event.data);
-      
-      if (message.type === 'video_frame') {
+
+      if (message.type === "video_frame") {
         this.handleVideoFrame(message);
-      } else if (message.type === 'pong') {
+      } else if (message.type === "pong") {
         this.handlePong(message);
       } else {
-        this.logger.debug('Unknown WebSocket message type', { type: message.type });
+        this.logger.debug("Unknown WebSocket message type", {
+          type: message.type,
+        });
       }
-      
     } catch (error) {
-      this.logger.error('Failed to parse WebSocket message', { error });
+      this.logger.error("Failed to parse WebSocket message", { error });
     }
   }
 
   @catchError()
   private onWebSocketClose(event: CloseEvent): void {
-    this.logger.warn(`WebSocket closed. Code: ${event.code}, Clean: ${event.wasClean}`);
-    this.state = 'DISCONNECTED';
+    this.logger.warn(
+      `WebSocket closed. Code: ${event.code}, Clean: ${event.wasClean}`,
+    );
+    this.state = "DISCONNECTED";
     this.connectionStatus.connected = false;
-    this.connectionStatus.state = 'DISCONNECTED';
-    
+    this.connectionStatus.state = "DISCONNECTED";
+
     if (this.pingTimer) {
       clearInterval(this.pingTimer);
       this.pingTimer = null;
     }
-    
-    this.logger.info('WebSocket connection closed', {
+
+    this.logger.info("WebSocket connection closed", {
       code: event.code,
       reason: event.reason,
-      wasClean: event.wasClean
+      wasClean: event.wasClean,
     });
-    
-    // Emit event for UI updates  
+
+    // Emit event for UI updates
     this.eventBus.emit<StreamingStatusChangedEvent>({
-      type: 'StreamingStatusChanged', 
+      type: "StreamingStatusChanged",
       status: this.getConnectionStatus(),
-      source: 'StreamingVideoService'
+      source: "StreamingVideoService",
     });
-    
+
     // Auto-reconnect only if connection was not intentionally closed
     // and if we haven't exceeded retry limit and we still have references
-    if (event.code !== 1000 && // 1000 = normal closure
-        event.code !== 1001 && // 1001 = going away
-        this.connectionStatus.reconnectAttempts < this.maxReconnectAttempts &&
-        this.referenceCount > 0) {
+    if (
+      event.code !== 1000 && // 1000 = normal closure
+      event.code !== 1001 && // 1001 = going away
+      this.connectionStatus.reconnectAttempts < this.maxReconnectAttempts &&
+      this.referenceCount > 0
+    ) {
       this.scheduleReconnect();
-    } else if (this.connectionStatus.reconnectAttempts >= this.maxReconnectAttempts) {
-      this.logger.warn('Max reconnection attempts reached, stopping auto-reconnect');
+    } else if (
+      this.connectionStatus.reconnectAttempts >= this.maxReconnectAttempts
+    ) {
+      this.logger.warn(
+        "Max reconnection attempts reached, stopping auto-reconnect",
+      );
     }
   }
 
   @catchError()
   private onWebSocketError(event: Event): void {
-    this.state = 'ERROR';
-    this.connectionStatus.state = 'ERROR';
-    this.connectionStatus.lastError = 'WebSocket error occurred';
-    
-    this.logger.error('WebSocket error', { event });
-    
+    this.state = "ERROR";
+    this.connectionStatus.state = "ERROR";
+    this.connectionStatus.lastError = "WebSocket error occurred";
+
+    this.logger.error("WebSocket error", { event });
+
     // Emit event for UI updates
     this.eventBus.emit<StreamingStatusChangedEvent>({
-      type: 'StreamingStatusChanged', 
+      type: "StreamingStatusChanged",
       status: this.getConnectionStatus(),
-      source: 'StreamingVideoService'
+      source: "StreamingVideoService",
     });
   }
 
@@ -436,26 +479,27 @@ export class StreamingVideoService implements IStreamingVideoService {
       timestamp: message.timestamp,
       frameNumber: message.frame_number,
       width: message.width,
-      height: message.height
+      height: message.height,
     };
-    
+
     // Update statistics
     this.statistics.framesReceived++;
     this.statistics.bytesReceived += message.data.length;
     this.statistics.lastFrameTimestamp = Date.now();
-    
+
     // Calculate FPS
     this.updateFpsCounter();
-    
+
     // Calculate average frame size
-    this.statistics.averageFrameSize = this.statistics.bytesReceived / this.statistics.framesReceived;
-    
+    this.statistics.averageFrameSize =
+      this.statistics.bytesReceived / this.statistics.framesReceived;
+
     // Notify all frame subscribers
     for (const callback of this.frameSubscriptions.values()) {
       try {
         callback(frame);
       } catch (error) {
-        this.logger.error('Error in frame callback', { error });
+        this.logger.error("Error in frame callback", { error });
       }
     }
   }
@@ -463,22 +507,22 @@ export class StreamingVideoService implements IStreamingVideoService {
   @catchError()
   private handlePong(message: any): void {
     const pingId = message.pingId;
-    
+
     if (this.pendingPings.has(pingId)) {
       const startTime = this.pendingPings.get(pingId)!;
       const roundTripTime = Date.now() - startTime;
-      
+
       this.statistics.latency = roundTripTime;
       this.pendingPings.delete(pingId);
-      
-      this.logger.debug('Received pong', { latency: roundTripTime });
+
+      this.logger.debug("Received pong", { latency: roundTripTime });
     }
   }
 
   private updateFpsCounter(): void {
     const now = Date.now();
     this.fpsCounter++;
-    
+
     // Calculate FPS every second
     if (now - this.fpsTimestamp >= 1000) {
       this.statistics.currentFps = this.fpsCounter;
@@ -491,10 +535,10 @@ export class StreamingVideoService implements IStreamingVideoService {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
-      this.logger.debug('Cleared reconnect timer');
-      
+      this.logger.debug("Cleared reconnect timer");
+
       // Only reset reconnect attempts if we're transitioning away from reconnecting
-      if (this.state === 'RECONNECTING') {
+      if (this.state === "RECONNECTING") {
         this.connectionStatus.reconnectAttempts = 0;
       }
     }
@@ -502,29 +546,30 @@ export class StreamingVideoService implements IStreamingVideoService {
 
   private scheduleReconnect(): void {
     this.connectionStatus.reconnectAttempts++;
-    this.state = 'RECONNECTING';
-    this.connectionStatus.state = 'RECONNECTING';
-    
+    this.state = "RECONNECTING";
+    this.connectionStatus.state = "RECONNECTING";
+
     const delay = Math.min(
-      this.reconnectDelay * Math.pow(2, this.connectionStatus.reconnectAttempts - 1),
-      30000 // Max 30 seconds
+      this.reconnectDelay *
+        Math.pow(2, this.connectionStatus.reconnectAttempts - 1),
+      30000, // Max 30 seconds
     );
-    
-    this.logger.info('Scheduling reconnect', {
+
+    this.logger.info("Scheduling reconnect", {
       attempt: this.connectionStatus.reconnectAttempts,
-      delay
+      delay,
     });
-    
+
     // Emit status change event
     this.eventBus.emit<StreamingStatusChangedEvent>({
-      type: 'StreamingStatusChanged',
+      type: "StreamingStatusChanged",
       status: this.getConnectionStatus(),
-      source: 'StreamingVideoService'
+      source: "StreamingVideoService",
     });
-    
+
     this.reconnectTimer = setTimeout(() => {
-      this.connect().catch(error => {
-        this.logger.error('Reconnection failed', { error });
+      this.connect().catch((error) => {
+        this.logger.error("Reconnection failed", { error });
       });
     }, delay);
   }

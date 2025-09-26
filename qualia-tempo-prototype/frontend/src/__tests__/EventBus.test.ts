@@ -3,12 +3,12 @@
  * Basic test suite for the EventBus service.
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { EventBus, createQualiaEvents } from "../services/EventBus";
 import { QualiaLogger, LogLevel } from "../services/Logger";
 
-// Mock logger for tests  
-const mockLogger: QualiaLogger = new QualiaLogger('Test', LogLevel.INFO);
+// Mock logger for tests
+const mockLogger: QualiaLogger = new QualiaLogger("Test", LogLevel.INFO);
 
 describe("EventBus", () => {
   let eventBus: EventBus;

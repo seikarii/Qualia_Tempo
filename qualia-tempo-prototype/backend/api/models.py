@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Annotated
 
 
-
 class Position(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
