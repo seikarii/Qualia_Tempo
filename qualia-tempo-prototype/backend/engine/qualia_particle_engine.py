@@ -637,16 +637,16 @@ def create_qualia_particle_engine(
         try:
             # Try EGL first, fallback to software if not available
             try:
-                ctx = moderngl.create_standalone_context(backend="egl")
+                ctx = moderngl.create_standalone_context(require=330)
                 logger.info(
-                    "✅ Created standalone EGL context for Qualia particle engine"
+                    "✅ Created standalone OpenGL context for Qualia particle engine"
                 )
-            except Exception as egl_error:
+            except Exception as gl_error:
                 logger.warning(
-                    f"⚠️ EGL not available ({egl_error}), trying software context"
+                    f"⚠️ OpenGL context creation failed ({gl_error}), trying fallback"
                 )
                 try:
-                    ctx = moderngl.create_standalone_context(backend="software")
+                    ctx = moderngl.create_standalone_context()
                     logger.info(
                         "✅ Created standalone software context for Qualia particle engine"
                     )

@@ -2,7 +2,7 @@
 # Defines the contract for GLSL shader introspection
 
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Dict, Any
 
 
 class IShaderIntrospectionService(ABC):
@@ -15,7 +15,7 @@ class IShaderIntrospectionService(ABC):
     """
 
     @abstractmethod
-    def introspect(self, shader_source: str) -> Dict[str, any]:
+    def introspect(self, shader_source: str) -> Dict[str, Any]:
         """
         Parse GLSL shader source and extract UBO uniform information.
 

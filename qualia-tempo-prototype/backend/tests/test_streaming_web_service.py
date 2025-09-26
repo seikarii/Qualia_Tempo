@@ -214,9 +214,8 @@ class TestStreamingWebService:
         streaming_service._is_streaming = True
 
         # Act: Run a single iteration of the streaming loop (mocked to exit immediately)
-        with patch("asyncio.sleep", AsyncMock()) as mock_sleep:
+        with patch("asyncio.sleep", AsyncMock()):
             # Mock the loop to run only once
-            original_loop = streaming_service._streaming_loop
 
             async def mock_loop_once():
                 # Simulate one iteration
@@ -365,7 +364,7 @@ class TestStreamingWebService:
             return_value=b"fake_frame_data"
         )
 
-        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        with patch("asyncio.sleep", new_callable=AsyncMock):
             await streaming_service._streaming_loop()
 
             # Verify render_frame was called

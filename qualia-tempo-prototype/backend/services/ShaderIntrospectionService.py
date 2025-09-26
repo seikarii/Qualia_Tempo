@@ -2,7 +2,7 @@
 # Dynamically parses GLSL shaders to extract uniform information
 
 import re
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 from backend.services.interfaces.IShaderIntrospectionService import (
     IShaderIntrospectionService,
 )
@@ -39,7 +39,7 @@ class ShaderIntrospectionService(IShaderIntrospectionService):
             "mat4": 64,
         }
 
-    def introspect(self, shader_source: str) -> Dict[str, any]:
+    def introspect(self, shader_source: str) -> Dict[str, Any]:
         """
         Parse GLSL shader source and extract UBO uniform information.
 

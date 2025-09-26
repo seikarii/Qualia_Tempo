@@ -152,7 +152,6 @@ testRaceConditionFix();
       } else {
         console.log('❌ NO SE ENCONTRÓ ELEMENTO #root');
       }
-    }
     
   } catch (error) {
     console.log('❌ ERROR AL NAVEGAR:', error.message);

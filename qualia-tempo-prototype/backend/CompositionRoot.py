@@ -69,12 +69,8 @@ class CompositionRoot:
             shared_ctx = None
             for backend_config in context_backends:
                 try:
-                    if "backend" in backend_config:
-                        shared_ctx = moderngl.create_standalone_context(
-                            require=330, backend=backend_config["backend"]
-                        )
-                    else:
-                        shared_ctx = moderngl.create_standalone_context(require=330)
+                    # Try creating context with OpenGL 3.30 requirement
+                    shared_ctx = moderngl.create_standalone_context(require=330)
 
                     backend_name = backend_config.get("name", "Default")
                     self._logger.info(

@@ -289,7 +289,7 @@ class TestCompositionRoot:
         """
         # Arrange: Get service mocks and real SUT
         mocks = TestCompositionRootFactory.get_service_mocks(mocked_composition_root)
-        dependency_mocks = mocked_composition_root.get_all_mocks()
+        mocked_composition_root.get_all_mocks()
 
         event_bus_mock = mocks["event_bus"]
         qualia_processor_mock = mocks["qualia_processor"]
@@ -335,7 +335,7 @@ class TestCompositionRoot:
 
         # Step 2: Extract dependency mocks for the SUT
         dependency_mocks = mocked_composition_root.get_all_mocks()
-        event_bus_mock = dependency_mocks["event_bus"]
+        dependency_mocks["event_bus"]
 
         # Step 3: Resolve REAL Service Under Test
         sut = mocked_composition_root.get_service("particle_system")
