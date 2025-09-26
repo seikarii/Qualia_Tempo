@@ -220,6 +220,7 @@ class RenderingService:
         # Particle rendering pipeline
         self._particle_render_shader: Optional[Any] = None
         self._particle_vao: Optional[Any] = None
+        self._vao: Optional[Any] = None  # Main particle VAO
 
         # Multi-pass post-processing pipeline framebuffers
         self._scene_fbo: Optional[Any] = None  # HDR scene rendering

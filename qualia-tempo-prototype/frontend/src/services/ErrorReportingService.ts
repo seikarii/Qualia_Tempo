@@ -227,9 +227,31 @@ export class ErrorReportingService implements IErrorReportingService {
     this.timerService = timerService;
     this._configService = _configService;
     
-    // QUALIA.CODE: Load configuration from YAML instead of hardcoded defaults
-    const baseConfig = createErrorReportingConfig(_configService);
-    this.config = { ...baseConfig, ...config };
+    // QUALIA.CODE: NO HARDCODED CONFIG - Load in start() method only
+    // Use minimal defaults for constructor, will be updated in start()
+    this.config = {
+      enabled: true,
+      maxBatchSize: 50,
+      batchFlushInterval: 30000,
+      maxRetries: 3,
+      retryDelay: 1000,
+      rateLimitTokens: 10,
+      rateLimitRefillRate: 1,
+      circuitBreakerThreshold: 5,
+      circuitBreakerTimeout: 60000,
+      enableDeduplication: true,
+      memoryCleanupThreshold: 1000,
+      externalService: {
+        endpoint: "https://api.example.com/errors",
+        apiKey: "",
+        timeout: 5000,
+        maxRetries: 3,
+        retryDelay: 2000,
+        batchSize: 20,
+        enabled: false,
+      },
+      ...config, // Override with provided unmanaged config
+    };
     this.sessionId = this.generateSessionId();
 
     // Initialize rate limiting and circuit breaker
@@ -237,9 +259,8 @@ export class ErrorReportingService implements IErrorReportingService {
     this.circuitBreakerState = this.initializeCircuitBreakerState();
 
     this.logger.info(
-      "🔧 [ErrorReportingService] Service initialized with production-grade error handling and pure DI",
+      "🔧 [ErrorReportingService] Service initialized - configuration will be loaded in start()",
     );
-    this.logCurrentConfig();
   }
 
   /**
@@ -253,14 +274,20 @@ export class ErrorReportingService implements IErrorReportingService {
       return;
     }
 
-    if (!this.config.enabled) {
-      this.logger.info(
-        "⚠️ [ErrorReportingService] Service disabled in configuration",
-      );
-      return;
-    }
-
     try {
+      // QUALIA.CODE: Load configuration from YAML in start() method
+      this.logger.debug("Loading ErrorReporting configuration from YAML");
+      const yamlConfig = createErrorReportingConfig(this._configService);
+      this.config = { ...this.config, ...yamlConfig };
+      this.logger.info("ErrorReporting configuration loaded from YAML");
+
+      if (!this.config.enabled) {
+        this.logger.info(
+          "⚠️ [ErrorReportingService] Service disabled in configuration",
+        );
+        return;
+      }
+
       this.logger.info(
         "🚀 [ErrorReportingService] Starting production error reporting...",
       );
@@ -278,6 +305,7 @@ export class ErrorReportingService implements IErrorReportingService {
       this.logger.info(
         "🚀 [ErrorReportingService] Service started - Production error handling active",
       );
+      this.logCurrentConfig();
     } catch (error) {
       this.logger.error("🚨 [ErrorReportingService] Failed to start service:", {
         error,
