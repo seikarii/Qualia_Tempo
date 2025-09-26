@@ -123,6 +123,7 @@ class CompositionRoot:
                 standalone=False,  # GOLD.CODE: Use shared context
                 ctx=shared_ctx,    # GOLD.CODE: Inject shared OpenGL context
                 event_bus=self._event_bus,  # QUALIA.CODE: Inject EventBus dependency
+                shader_inspector=self._services.get("shader_introspection_service"),  # QUALIA.CODE: Inject ShaderIntrospectionService
             )
             self._services["particle_system"] = particle_engine
 

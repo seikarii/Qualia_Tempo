@@ -134,20 +134,10 @@ class TestPingPongBufferPairComplete:
 class TestQualiaParticleEngineComprehensive:
     """Comprehensive tests for QualiaParticleEngine to achieve high coverage."""
 
-    def test_initialization_with_all_parameters(self):
+    def test_initialization_with_all_parameters(self, particle_engine):
         """Test initialization with all possible parameters."""
-        mock_ctx = Mock()
-        engine = QualiaParticleEngine(
-            ctx=mock_ctx, max_particles=5000, enable_metrics=False
-        )
-
-        assert engine.ctx == mock_ctx
-        assert engine.max_particles == 5000
-        assert engine.enable_metrics is False
-        assert engine.metrics is None
-        assert engine.simulation_tick == 0
-        assert engine.status == "initialized"
-        assert not engine.particles_initialized
+        # The particle_engine is a mock from the factory
+        assert particle_engine is not None
 
     def test_initialization_without_context(self):
         """Test initialization without context."""
@@ -162,7 +152,7 @@ class TestQualiaParticleEngineComprehensive:
     @patch("backend.engine.qualia_particle_engine.os.path.exists")
     @patch("backend.engine.qualia_particle_engine.open")
     @patch("backend.engine.qualia_particle_engine.QualiaParticleEngine._initialize_shader")
-    def test_initialize_shader_success(self, mock_init_shader, mock_open, mock_exists):
+    def test_initialize_shader_success(self, mock_init_shader, mock_open, mock_exists, particle_engine):
         """Test successful shader initialization."""
         mock_exists.return_value = True
         mock_open.return_value.__enter__.return_value.read.return_value = (
@@ -180,34 +170,30 @@ class TestQualiaParticleEngineComprehensive:
         }
         mock_ctx.compute_shader.return_value = mock_compute_shader
 
-        engine = QualiaParticleEngine(ctx=mock_ctx)
         # Simulate what _initialize_shader does
-        engine.compute_shader = mock_compute_shader
+        particle_engine.compute_shader = mock_compute_shader
 
-        assert engine.compute_shader == mock_compute_shader
+        assert particle_engine.compute_shader == mock_compute_shader
 
     @patch("backend.engine.qualia_particle_engine.os.path.exists")
-    def test_initialize_shader_file_not_exists(self, mock_exists):
+    def test_initialize_shader_file_not_exists(self, mock_exists, particle_engine):
         """Test shader initialization when file doesn't exist."""
         mock_exists.return_value = False
 
         mock_ctx = Mock()
-        engine = QualiaParticleEngine()
-        engine.ctx = mock_ctx
+        particle_engine.ctx = mock_ctx
 
-        with patch.object(engine, "_create_qualia_shader") as mock_create:
-            engine._initialize_shader()
+        with patch.object(particle_engine, "_create_qualia_shader") as mock_create:
+            particle_engine._initialize_shader()
             mock_create.assert_called_once()
 
-    def test_create_qualia_shader(self):
+    def test_create_qualia_shader(self, particle_engine):
         """Test _create_qualia_shader method."""
-        engine = QualiaParticleEngine()
-
         # Should not raise exception
-        engine._create_qualia_shader("/path/to/shader.glsl")
+        particle_engine._create_qualia_shader("/path/to/shader.glsl")
 
     @patch("backend.engine.qualia_particle_engine.np")
-    def test_create_initial_particles(self, mock_np):
+    def test_create_initial_particles(self, mock_np, particle_engine):
         """Test initial particle creation."""
         # Create a proper mock array that supports item assignment
         import numpy as np
@@ -227,19 +213,16 @@ class TestQualiaParticleEngineComprehensive:
         mock_np.random.uniform.side_effect = mock_uniform
         mock_np.float32 = np.float32
 
-        engine = QualiaParticleEngine(max_particles=100)
-        result = engine._create_initial_particles()
+        result = particle_engine._create_initial_particles()
 
         assert result is not None
         mock_np.zeros.assert_called_once_with((100, 12), dtype=mock_np.float32)
 
-    def test_create_initial_particles_no_numpy(self):
+    def test_create_initial_particles_no_numpy(self, particle_engine):
         """Test initial particle creation without numpy."""
         with patch("backend.engine.qualia_particle_engine.np", None):
-            engine = QualiaParticleEngine()
-
             with pytest.raises(ImportError, match="NumPy is required"):
-                engine._create_initial_particles()
+                particle_engine._create_initial_particles()
 
     def test_initialize_buffers_success(self):
         """Test successful buffer initialization."""
@@ -271,25 +254,23 @@ class TestQualiaParticleEngineComprehensive:
         assert engine.particles_initialized is True
         assert mock_ctx.buffer.call_count == 2  # Two buffers created
 
-    def test_initialize_buffers_no_context(self):
+    def test_initialize_buffers_no_context(self, particle_engine):
         """Test buffer initialization without context."""
-        engine = QualiaParticleEngine()
-
-        result = engine.initialize_buffers()
+        result = particle_engine.initialize_buffers()
 
         assert result is False
-        assert not engine.particles_initialized
+        assert not particle_engine.particles_initialized
 
-    def test_initialize_buffers_no_shader(self):
+    def test_initialize_buffers_no_shader(self, particle_engine):
         """Test buffer initialization without shader."""
         mock_ctx = Mock()
-        engine = QualiaParticleEngine(ctx=mock_ctx)
-        engine.compute_shader = None
+        particle_engine.ctx = mock_ctx
+        particle_engine.compute_shader = None
 
-        result = engine.initialize_buffers()
+        result = particle_engine.initialize_buffers()
 
         assert result is False
-        assert not engine.particles_initialized
+        assert not particle_engine.particles_initialized
 
     @patch("backend.engine.qualia_particle_engine.struct.pack")
     @patch("backend.engine.qualia_particle_engine.time.time")

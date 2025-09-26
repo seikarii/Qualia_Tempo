@@ -128,11 +128,13 @@ class QualiaParticleEngine:
         max_particles: int = 10000,
         enable_metrics: bool = True,
         event_bus: Any = None,  # QUALIA.CODE: EventBus injection for EDA compliance
+        shader_inspector: Any = None,  # QUALIA.CODE: ShaderIntrospectionService injection
     ):
         self.ctx = ctx
         self.max_particles = max_particles
         self.enable_metrics = enable_metrics
         self.event_bus = event_bus  # QUALIA.CODE: Store EventBus reference
+        self.shader_inspector = shader_inspector  # QUALIA.CODE: Store ShaderIntrospectionService reference
 
         # Ping-pong buffer pairs for particles
         self.particle_buffers = PingPongBufferPair()
@@ -180,6 +182,14 @@ class QualiaParticleEngine:
 
             with open(shader_path, "r") as f:
                 shader_source = f.read()
+
+            # QUALIA.CODE: Use ShaderIntrospectionService to parse shader
+            if self.shader_inspector:
+                self.ubo_info = self.shader_inspector.introspect(shader_source)
+                logger.info(f"🔍 Shader introspection complete: {len(self.ubo_info['uniforms'])} uniforms, format: {self.ubo_info['struct_format']}")
+            else:
+                logger.warning("⚠️ ShaderIntrospectionService not available, using fallback")
+                self.ubo_info = {'uniforms': [], 'struct_format': '', 'total_size': 0}
 
             self.compute_shader = self.ctx.compute_shader(shader_source)
             logger.info("✅ Shaders compiled and linked successfully.")
@@ -388,29 +398,57 @@ class QualiaParticleEngine:
 
         current_time = time.time() - self.start_time
 
-        # QUALIA.CODE: Use Pydantic QualiaState model with proper validation
-        # Extract values from the model with getattr for safety
-        uniform_data = struct.pack(
-            "ffffffffI3f3f",  # 8 floats + 1 unsigned int + 3 floats + 3 floats (attractor position)
-            float(getattr(qualia_state, "intensity", 0.0)),
-            float(
-                getattr(qualia_state, "precision", 0.0)
-            ),  # QUALIA.CODE FIX: Use precision from data model (was accuracy)
-            float(getattr(qualia_state, "aggression", 0.0)),
-            float(getattr(qualia_state, "flow", 0.0)),
-            float(getattr(qualia_state, "chaos", 0.0)),
-            float(getattr(qualia_state, "recovery", 0.0)),
-            float(getattr(qualia_state, "transcendence", 0.0)),
-            float(current_time),
-            self.max_particles,
-            # Enhanced parameters for advanced physics
-            0.0,
-            0.0,
-            0.0,  # attractor_position (x, y, z)
-            2.0,  # interaction_radius
-            0.98,  # damping_factor
-            1.0,  # force_field_strength
-        )
+        # QUALIA.CODE: Use ShaderIntrospectionService for dynamic uniform packing
+        if hasattr(self, 'ubo_info') and self.ubo_info['uniforms']:
+            # Build uniform values list based on introspected uniforms
+            uniform_values = []
+            for name, type_name, offset in self.ubo_info['uniforms']:
+                if name == 'time':
+                    uniform_values.append(float(current_time))
+                elif name == 'particle_count':
+                    uniform_values.append(self.max_particles)
+                elif name == 'intensity':
+                    uniform_values.append(float(getattr(qualia_state, "intensity", 0.0)))
+                elif name == 'precision':
+                    uniform_values.append(float(getattr(qualia_state, "precision", 0.0)))
+                elif name == 'aggression':
+                    uniform_values.append(float(getattr(qualia_state, "aggression", 0.0)))
+                elif name == 'flow':
+                    uniform_values.append(float(getattr(qualia_state, "flow", 0.0)))
+                elif name == 'chaos':
+                    uniform_values.append(float(getattr(qualia_state, "chaos", 0.0)))
+                elif name == 'recovery':
+                    uniform_values.append(float(getattr(qualia_state, "recovery", 0.0)))
+                elif name == 'transcendence':
+                    uniform_values.append(float(getattr(qualia_state, "transcendence", 0.0)))
+                else:
+                    uniform_values.append(0.0)  # Default value for unknown uniforms
+            
+            uniform_data = struct.pack(self.ubo_info['struct_format'], *uniform_values)
+        else:
+            # Fallback to hardcoded format if introspection failed
+            logger.warning("⚠️ Using hardcoded uniform format as fallback")
+            uniform_data = struct.pack(
+                "ffffffffI3f3f",  # 8 floats + 1 unsigned int + 3 floats + 3 floats (attractor position)
+                float(getattr(qualia_state, "intensity", 0.0)),
+                float(
+                    getattr(qualia_state, "precision", 0.0)
+                ),  # QUALIA.CODE FIX: Use precision from data model (was accuracy)
+                float(getattr(qualia_state, "aggression", 0.0)),
+                float(getattr(qualia_state, "flow", 0.0)),
+                float(getattr(qualia_state, "chaos", 0.0)),
+                float(getattr(qualia_state, "recovery", 0.0)),
+                float(getattr(qualia_state, "transcendence", 0.0)),
+                float(current_time),
+                self.max_particles,
+                # Enhanced parameters for advanced physics
+                0.0,
+                0.0,
+                0.0,  # attractor_position (x, y, z)
+                2.0,  # interaction_radius
+                0.98,  # damping_factor
+                1.0,  # force_field_strength
+            )
 
         if self.uniform_buffer:
             self.uniform_buffer.write(uniform_data)
@@ -563,6 +601,7 @@ def create_qualia_particle_engine(
     standalone: bool = False,
     event_bus: Any = None,  # QUALIA.CODE: EventBus parameter for DI
     ctx: Any = None,  # GOLD.CODE: Accept existing context for shared OpenGL context
+    shader_inspector: Any = None,  # QUALIA.CODE: ShaderIntrospectionService parameter
 ) -> QualiaParticleEngine:
     """
     Factory function to create a Qualia particle engine.
@@ -572,6 +611,7 @@ def create_qualia_particle_engine(
         enable_metrics: Whether to track performance metrics
         standalone: Whether to create a standalone context (ignored if ctx provided)
         ctx: Existing OpenGL context to use (GOLD.CODE: Shared context pattern)
+        shader_inspector: ShaderIntrospectionService for dynamic uniform handling
 
     Returns:
         Configured QualiaParticleEngine instance
@@ -610,4 +650,5 @@ def create_qualia_particle_engine(
         max_particles=max_particles,
         enable_metrics=enable_metrics,
         event_bus=event_bus,  # QUALIA.CODE: Pass EventBus to constructor
+        shader_inspector=shader_inspector,  # QUALIA.CODE: Pass ShaderIntrospectionService
     )
