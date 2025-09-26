@@ -40,10 +40,11 @@ Qualia Tempo is a rhythm-action boss rush game that transforms music into a livi
 
 ### Quality Assurance
 - **QUALIA.CODE v1.1 Compliance**: Strict architectural standards enforcement
-- **Integrated Linting Suite**: ESLint + Ruff + QUALIA.CODE custom rules
+- **Integrated Linting Suite**: ESLint + Python AST analysis + QUALIA.CODE custom rules
 - **Unified Command**: `./scripts/lint-architecture.sh` runs all linting tools
-- **ESLint Plugin**: Custom rules for frontend architectural compliance
-- **Ruff Integration**: Python linting with external QUALIA.CODE rules
+- **ESLint Plugin**: Custom rules for frontend architectural compliance (@qualia-tempo/qualia-code)
+- **Python AST Analysis**: Backend QUALIA.CODE rule enforcement via AST parsing
+- **Ruff Plugin Development**: Native Rust plugin in progress (ruff-qualia-code-rust/)
 - **Comprehensive Testing**: 56+ unit tests with 100% service coverage
 - **TypeScript**: Strict type checking with zero errors
 

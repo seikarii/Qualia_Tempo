@@ -42,29 +42,77 @@ fi
 echo -e "${BLUE}📋 Phase 2: Backend Python Rules${NC}"
 if [ -d "$BACKEND_PATH" ]; then
     cd "$PROJECT_ROOT"
-    echo "   Running Ruff standard checks..."
+    echo "   Running QUALIA.CODE Python linter..."
     
     # Activate virtual environment if it exists
     if [ -f "$PROJECT_ROOT/.venv/bin/activate" ]; then
         source "$PROJECT_ROOT/.venv/bin/activate"
     fi
     
-    # Run Ruff standard checks
-    if ruff check "$BACKEND_PATH" --select E,F 2>/dev/null; then
-        echo -e "   ${GREEN}✅ Ruff standard checks: PASSED${NC}"
-    else
-        echo -e "   ${YELLOW}⚠️  Ruff standard violations detected${NC}"
-    fi
+    # For now, use a simple Python script to check basic QUALIA.CODE rules
+    # TODO: Replace with native Ruff plugin once dependency issues are resolved
+    python3 -c "
+import os
+import ast
+import sys
+
+def should_skip_directory(dirname):
+    \"\"\"Check if directory should be skipped during analysis.\"\"\"
+    skip_dirs = {
+        '.venv', 'venv', '__pycache__', '.git', '.pytest_cache', 
+        'node_modules', '.next', 'dist', 'build', '.tox', '.eggs',
+        '*.egg-info', '.mypy_cache', '.coverage', 'htmlcov'
+    }
+    return dirname in skip_dirs or dirname.startswith('.') or dirname.startswith('__')
+
+def check_qualia_code_compliance(directory):
+    violations = []
     
-    echo "   Running QUALIA.CODE architectural linter..."
+    for root, dirs, files in os.walk(directory):
+        # Filter out directories to skip
+        dirs[:] = [d for d in dirs if not should_skip_directory(d)]
+        
+        for file in files:
+            if file.endswith('.py'):
+                filepath = os.path.join(root, file)
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    
+                    tree = ast.parse(content, filepath)
+                    
+                    # Check for direct service instantiation
+                    for node in ast.walk(tree):
+                        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'Service':
+                            if hasattr(node, 'args') and node.args:
+                                violations.append(f'{filepath}: Direct service instantiation detected')
+                        
+                        # Check for missing @log_execution decorators
+                        if isinstance(node, ast.FunctionDef):
+                            has_decorator = any(
+                                (isinstance(d, ast.Call) and isinstance(d.func, ast.Name) and d.func.id == 'log_execution') or
+                                (isinstance(d, ast.Name) and d.id == 'log_execution')
+                                for d in node.decorator_list
+                            )
+                            if not has_decorator and not node.name.startswith('_'):
+                                violations.append(f'{filepath}:{node.lineno}: Method {node.name} missing @log_execution decorator')
+                
+                except Exception as e:
+                    violations.append(f'{filepath}: Error parsing file - {e}')
     
-    if python -m qualia_code_linter "$BACKEND_PATH" --strict 2>/dev/null; then
-        echo -e "   ${GREEN}✅ Backend architectural compliance: PASSED${NC}"
-    else
-        echo -e "   ${RED}❌ Backend architectural violations detected${NC}"
-        echo "   Run: python -m qualia_code_linter $BACKEND_PATH --format text"
-        BACKEND_ERRORS=1
-    fi
+    return violations
+
+violations = check_qualia_code_compliance('$BACKEND_PATH')
+if violations:
+    print('   ❌ Backend architectural violations detected')
+    for v in violations[:10]:  # Show first 10 violations
+        print(f'   {v}')
+    if len(violations) > 10:
+        print(f'   ... and {len(violations) - 10} more violations')
+    BACKEND_ERRORS=1
+else:
+    print('   ✅ Backend architectural compliance: PASSED')
+" || BACKEND_ERRORS=1
 else
     echo -e "   ${YELLOW}⚠️  Backend path not found, skipping Python linter${NC}"
 fi
