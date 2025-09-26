@@ -64,7 +64,7 @@ describe('QualiaMainMenu Component', () => {
     expect(useService).toHaveBeenCalledWith(TYPES.IEventBus);
   });
 
-  test('integrates with EventBus for game state management', async () => {
+  test('integrates with EventBus for game state management', () => {
     render(<QualiaMainMenu />);
 
     const startButton = screen.getByText('INITIATE NEURAL SYNC');
@@ -72,15 +72,13 @@ describe('QualiaMainMenu Component', () => {
     
     fireEvent.click(startButton);
 
-    // Wait for the emit call to be made
-    await waitFor(() => {
-      expect(mockEventBus.emit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'PlayerAction',
-          action: 'StartGame',
-          source: 'QualiaMainMenu'
-        })
-      );
-    }, { timeout: 1000 });
+    // Event should be emitted synchronously
+    expect(mockEventBus.emit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'PlayerAction',
+        action: 'StartGame',
+        source: 'QualiaMainMenu'
+      })
+    );
   });
 });

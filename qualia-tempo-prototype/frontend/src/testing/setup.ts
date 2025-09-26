@@ -11,6 +11,7 @@ vi.mock('../utils/decorators', () => ({
   throttle: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   validateEventProperty: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
   measureTime: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  qualiaMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
 }));
 
 // QUALIA.CODE Global Tone.js Mock - Prevent audio module import errors in tests

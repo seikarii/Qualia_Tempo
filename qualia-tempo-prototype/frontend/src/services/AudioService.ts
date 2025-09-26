@@ -91,7 +91,7 @@ export class AudioService implements IAudioService {
   public getStatus(): { running: boolean; engine: boolean } {
     return {
       running: this.isInitialized,
-      engine: true
+      engine: this.isInitialized && this.audioEngine !== null
     };
   }
 

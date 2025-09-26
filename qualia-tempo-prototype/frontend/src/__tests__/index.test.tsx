@@ -18,8 +18,8 @@ vi.mock('react-dom/client', () => ({
 }));
 
 // Mock React
-vi.mock('react', () => ({
-  ...vi.requireActual<typeof React>('react'),
+vi.mock('react', async () => ({
+  ...(await vi.importActual<typeof React>('react')),
   StrictMode: ({ children }: any) => children
 }));
 

@@ -42,7 +42,6 @@ import { ErrorReportingService } from '../services/ErrorReportingService';
 import { NotificationService } from '../services/NotificationService';
 import { GameStateStoreService } from '../services/GameStateStoreService';
 import { RhythmicMovementController } from '../services/RhythmicMovementController';
-import { OntologicalAudioEngine } from '../audio/OntologicalAudioEngine';
 import { GameControllerService } from '../services/GameControllerService';
 import { BackendSyncService } from '../services/BackendSyncService';
 import { AudioService } from '../services/AudioService';
@@ -315,6 +314,36 @@ const mockConfigurationService: IConfigurationService = {
           metricsInterval: 5000
         }
       },
+      audioService: {
+        rhythmicFeedback: {
+          perfect: { frequency: 880, gain: 0.3, duration: 0.2 },
+          good: { frequency: 660, gain: 0.2, duration: 0.2 },
+          miss: { frequency: 220, gain: 0.1, duration: 0.2 }
+        },
+        metronome: {
+          frequency: 800,
+          gain: 0.05,
+          duration: 0.1
+        },
+        audioEngine: {
+          sampleRate: 44100,
+          channels: 2,
+          bufferSize: 2048
+        },
+        entityVoices: {
+          player: { baseFrequency: 440, modulationRange: 100 },
+          boss: { baseFrequency: 220, modulationRange: 50 },
+          environment: { baseFrequency: 110, modulationRange: 25 }
+        },
+        enableAudioPooling: true,
+        maxConcurrentSounds: 10,
+        audioFadeTime: 0.5,
+        volume: 0.7,
+        enableSubtitles: false,
+        soundEnabled: true,
+        musicEnabled: true,
+        muteDuringDevelopment: false
+      },
       audio: { masterVolume: 0.7, enableSpatialAudio: true, bufferSize: 2048 },
       rhythm: { bpm: 120, syncTolerance: 100, adaptive: true },
       notifications: { enabled: true, maxConcurrent: 5, defaultDuration: 3000 },
@@ -381,6 +410,18 @@ const mockConfigurationService: IConfigurationService = {
   }),
   isLoaded: vi.fn().mockReturnValue(true),
   reload: vi.fn().mockResolvedValue(undefined)
+};
+
+/**
+ * Mock Ontological Audio Engine Implementation - Complete Interface Coverage
+ */
+const mockOntologicalAudioEngine: IOntologicalAudioEngine = {
+  createEntityVoice: vi.fn().mockResolvedValue(undefined),
+  updateEntitySound: vi.fn().mockResolvedValue(undefined),
+  removeEntityVoice: vi.fn().mockResolvedValue(undefined),
+  playEmergentPattern: vi.fn().mockResolvedValue(undefined),
+  getMasterVolume: vi.fn().mockReturnValue(0.7),
+  setMasterVolume: vi.fn().mockResolvedValue(undefined)
 };
 
 /**
@@ -521,7 +562,7 @@ export function createTestContainer(configOverrides?: Partial<IConfigurationServ
   container.bind<INotificationService>(TYPES.INotificationService).to(NotificationService).inSingletonScope();
   container.bind<GameStateStoreService>(GameStateStoreService).toSelf().inSingletonScope();
   container.bind<IRhythmicMovementController>(TYPES.IRhythmicMovementController).to(RhythmicMovementController).inSingletonScope();
-  container.bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).to(OntologicalAudioEngine).inSingletonScope();
+  container.bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).toConstantValue(mockOntologicalAudioEngine);
   container.bind<IStreamingVideoService>(TYPES.IStreamingVideoService).toConstantValue(mockStreamingVideoService);
 
   // === CRITICAL MISSING BINDINGS RESTORATION ===

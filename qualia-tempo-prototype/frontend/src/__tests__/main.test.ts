@@ -20,6 +20,9 @@ const mockApp = {
   }),
   quit: vi.fn(),
   requestSingleInstanceLock: vi.fn(() => true),
+  commandLine: {
+    appendSwitch: vi.fn()
+  },
   // Helper to get stored handlers for testing
   getEventHandler: (event: string) => appEventHandlers.get(event)
 };
@@ -28,8 +31,20 @@ const mockWindowInstance = {
   loadURL: vi.fn(),
   loadFile: vi.fn(),
   on: vi.fn(),
+  once: vi.fn(),
+  show: vi.fn(),
+  setOpacity: vi.fn(),
+  reload: vi.fn(),
+  isMaximized: vi.fn().mockReturnValue(false),
+  isMinimized: vi.fn().mockReturnValue(false),
   webContents: {
-    openDevTools: vi.fn()
+    openDevTools: vi.fn(),
+    on: vi.fn(),
+    getURL: vi.fn().mockReturnValue('http://localhost:5173'),
+    send: vi.fn(),
+    getProcessId: vi.fn().mockReturnValue(12345),
+    getZoomLevel: vi.fn().mockReturnValue(1.0),
+    setWindowOpenHandler: vi.fn()
   },
   isFullScreen: vi.fn().mockReturnValue(false),
   setFullScreen: vi.fn(),
@@ -57,7 +72,15 @@ const mockIpcMain = {
 vi.mock('electron', () => ({
   app: mockApp,
   BrowserWindow: mockBrowserWindow,
-  ipcMain: mockIpcMain
+  ipcMain: mockIpcMain,
+  screen: {
+    getPrimaryDisplay: vi.fn().mockReturnValue({
+      workAreaSize: { width: 1920, height: 1080 }
+    })
+  },
+  shell: {
+    openExternal: vi.fn()
+  }
 }));
 
 // Mock path functions with proper default export

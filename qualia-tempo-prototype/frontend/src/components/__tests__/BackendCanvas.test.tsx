@@ -3,48 +3,15 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { container } from '../../services/inversify.container';
-import { TYPES } from '../../services/inversify.types';
+import '@testing-library/jest-dom';
+import { createTestContainer, getMocksFromContainer } from '../../testing/test-container-factory';
 import BackendCanvas from '../BackendCanvas';
 import type { IStreamingVideoService, VideoFrame } from '../../services/interfaces/IStreamingVideoService';
 
-// Mock the useService hook
-vi.mock('../services/hooks', () => ({
-  useService: vi.fn((type) => {
-    if (type === TYPES.IStreamingVideoService) {
-      return mockStreamingService;
-    }
-    return null;
-  })
+// Mock the container in hooks to use test container
+vi.mock('../../services/inversify.container', () => ({
+  container: null as any, // Will be set in beforeEach
 }));
-
-// Mock streaming service
-const mockStreamingService: IStreamingVideoService = {
-  connect: vi.fn().mockResolvedValue(undefined),
-  disconnect: vi.fn(),
-  subscribeToFrames: vi.fn().mockReturnValue('subscription-1'),
-  unsubscribeFromFrames: vi.fn(),
-  getConnectionStatus: vi.fn().mockReturnValue({
-    connected: true,
-    state: 'connected',
-    reconnectAttempts: 0,
-    url: 'ws://127.0.0.1:8000/ws/video_stream',
-    lastConnected: new Date(),
-    error: null
-  }),
-  getStatistics: vi.fn().mockReturnValue({
-    framesReceived: 100,
-    bytesReceived: 5000,
-    currentFps: 60,
-    averageFrameSize: 50,
-    lastFrameTimestamp: Date.now(),
-    latency: 10,
-    droppedFrames: 0
-  }),
-  requestQualityChange: vi.fn(),
-  requestFpsChange: vi.fn(),
-  ping: vi.fn().mockResolvedValue(50)
-};
 
 // Mock canvas context
 const mockCanvasContext = {
@@ -73,8 +40,20 @@ global.Image = vi.fn().mockImplementation(() => ({
 })) as any;
 
 describe('BackendCanvas', () => {
+  let container: any;
+  let mockStreamingService: any;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Create test container and get mocks
+    container = createTestContainer();
+    const mocks = getMocksFromContainer(container);
+    mockStreamingService = mocks.mockStreamingVideoService;
+    
+    // Mock the container import to use our test container
+    const containerModule = require('../../services/inversify.container');
+    containerModule.container = container;
     
     // Mock canvas element creation - avoid recursion
     const originalCreateElement = document.createElement;
@@ -146,7 +125,7 @@ describe('BackendCanvas', () => {
       
       // Create mock video frame
       const mockFrame: VideoFrame = {
-        data: new ArrayBuffer(100),
+        data: 'base64-encoded-jpeg-data',
         timestamp: Date.now(),
         frameNumber: 1
       };
@@ -173,7 +152,7 @@ describe('BackendCanvas', () => {
       const frameCallback = vi.mocked(mockStreamingService.subscribeToFrames).mock.calls[0][0];
       
       const mockFrame: VideoFrame = {
-        data: new ArrayBuffer(100),
+        data: 'base64-encoded-jpeg-data',
         timestamp: Date.now(),
         frameNumber: 1
       };

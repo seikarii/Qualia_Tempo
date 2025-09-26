@@ -6,25 +6,11 @@ import { createTestContainer, getMocksFromContainer } from '../../testing/test-c
 import { TYPES } from '../inversify.types';
 import type { IEventBus } from '../interfaces/IEventBus';
 import type { IConfigurationService } from '../interfaces/IConfigurationService';
+import type { IAudioService } from '../interfaces/IAudioService';
 import type { QualiaState } from "../../types/contracts";
 import type { QualiaStateUpdatedEvent } from "../EventBus";
 
 // Decorators are globally mocked in setup.ts
-
-// Use the existing mock for OntologicalAudioEngine
-vi.mock("../../audio/OntologicalAudioEngine", () => ({
-  OntologicalAudioEngine: vi.fn().mockImplementation(() => ({
-    initialize: vi.fn(),
-    destroy: vi.fn(),
-    updateEntitySound: vi.fn(),
-    createEntityVoice: vi.fn(),
-    removeEntityVoice: vi.fn(),
-    playEmergentPattern: vi.fn(),
-    playRhythmicFeedback: vi.fn(),
-    playMetronomeTick: vi.fn(),
-    setEntityPosition: vi.fn(),
-  })),
-}));
 
 // Mock Web Audio API for rhythmic feedback and metronome
 const mockOscillator = {
@@ -66,8 +52,7 @@ describe('AudioService', () => {
   let audioService: any;
   let mockEventBus: Mocked<IEventBus>;
   let mockConfigService: Mocked<IConfigurationService>;
-  let consoleLogSpy: any;
-  let consoleWarnSpy: any;
+  let mockLogger: any;
 
   beforeEach(() => {
     // Create fresh test container for each test
@@ -75,10 +60,7 @@ describe('AudioService', () => {
     const mocks = getMocksFromContainer(container);
     mockEventBus = mocks.mockEventBus as any;
     mockConfigService = mocks.mockConfigurationService as any;
-
-    // Spy on console methods
-    consoleLogSpy = vi.spyOn(console, "log").mockImplementation(vi.fn());
-    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(vi.fn());
+    mockLogger = mocks.mockLogger as any;
 
     // Get service from container (cast to any to access extended methods not in interface)
     audioService = container.get(TYPES.IAudioService);
@@ -92,14 +74,14 @@ describe('AudioService', () => {
       const status = audioService.getStatus();
       expect(status.running).toBe(true);
       expect(status.engine).toBe(true);
-      expect(consoleLogSpy).toHaveBeenCalledWith("✅ AudioService initialized successfully");
+      expect(mockLogger.info).toHaveBeenCalledWith("✅ AudioService initialized successfully");
     });
 
     it("should not initialize twice", async () => {
       await audioService.start();
       await audioService.start();
       
-      expect(consoleWarnSpy).toHaveBeenCalledWith("AudioService already initialized");
+      expect(mockLogger.warn).toHaveBeenCalledWith("AudioService already initialized");
     });
 
     it("should stop correctly", async () => {
@@ -113,7 +95,7 @@ describe('AudioService', () => {
 
     it("should handle stop when not running", async () => {
       await audioService.stop();
-      expect(consoleWarnSpy).toHaveBeenCalledWith("AudioService not initialized, nothing to stop");
+      expect(mockLogger.warn).toHaveBeenCalledWith("AudioService not initialized, nothing to stop");
     });
 
     it("should return correct status when stopped", () => {
@@ -126,6 +108,12 @@ describe('AudioService', () => {
   describe("Event Handling", () => {
     beforeEach(async () => {
       await audioService.start();
+      // Clear only the audio engine mocks, not the event bus subscriptions
+      const audioEngineInstance = (audioService as any).audioEngine;
+      audioEngineInstance.updateEntitySound.mockClear();
+      audioEngineInstance.playEmergentPattern.mockClear();
+      audioEngineInstance.createEntityVoice.mockClear();
+      audioEngineInstance.removeEntityVoice.mockClear();
     });
 
     it("should handle QualiaStateUpdated events", () => {
@@ -228,6 +216,13 @@ describe('AudioService', () => {
   describe("Rhythmic Feedback", () => {
     beforeEach(async () => {
       await audioService.start();
+      // Clear mocks
+      mockAudioContext.createOscillator.mockClear();
+      mockAudioContext.createGain.mockClear();
+      mockOscillator.connect.mockClear();
+      mockGainNode.connect.mockClear();
+      mockLogger.info.mockClear();
+      mockLogger.warn.mockClear();
     });
 
     it("should handle perfect timing feedback", () => {
@@ -241,7 +236,7 @@ describe('AudioService', () => {
       expect(mockGainNode.gain.value).toBe(0.3);
       expect(mockOscillator.start).toHaveBeenCalled();
       expect(mockOscillator.stop).toHaveBeenCalled();
-      expect(consoleLogSpy).toHaveBeenCalledWith("🔊 Rhythmic feedback: perfect");
+      expect(mockLogger.info).toHaveBeenCalledWith("🔊 Rhythmic feedback: perfect");
     });
 
     it("should handle good timing feedback", () => {
@@ -250,7 +245,7 @@ describe('AudioService', () => {
       expect(mockAudioContext.createOscillator).toHaveBeenCalled();
       expect(mockOscillator.frequency.value).toBe(660); // Good timing frequency
       expect(mockGainNode.gain.value).toBe(0.2);
-      expect(consoleLogSpy).toHaveBeenCalledWith("🔊 Rhythmic feedback: good");
+      expect(mockLogger.info).toHaveBeenCalledWith("🔊 Rhythmic feedback: good");
     });
 
     it("should handle miss timing feedback", () => {
@@ -259,15 +254,17 @@ describe('AudioService', () => {
       expect(mockAudioContext.createOscillator).toHaveBeenCalled();
       expect(mockOscillator.frequency.value).toBe(220); // Miss timing frequency
       expect(mockGainNode.gain.value).toBe(0.1);
-      expect(consoleLogSpy).toHaveBeenCalledWith("🔊 Rhythmic feedback: miss");
+      expect(mockLogger.info).toHaveBeenCalledWith("🔊 Rhythmic feedback: miss");
     });
 
     it("should handle rhythmic feedback when not initialized", () => {
-      const newAudioService = container.get(TYPES.IAudioService);
+      // Create a fresh container to get an uninitialized service
+      const freshContainer = createTestContainer();
+      const uninitializedAudioService = freshContainer.get<IAudioService>(TYPES.IAudioService) as any;
 
-      newAudioService.playRhythmicFeedback("perfect");
+      uninitializedAudioService.playRhythmicFeedback("perfect");
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith("AudioService not initialized, cannot play rhythmic feedback");
+      expect(mockLogger.warn).toHaveBeenCalledWith("AudioService not initialized, cannot play rhythmic feedback");
       expect(mockAudioContext.createOscillator).not.toHaveBeenCalled();
     });
   });
@@ -275,6 +272,13 @@ describe('AudioService', () => {
   describe("Metronome Functionality", () => {
     beforeEach(async () => {
       await audioService.start();
+      // Clear mocks
+      mockAudioContext.createOscillator.mockClear();
+      mockAudioContext.createGain.mockClear();
+      mockOscillator.connect.mockClear();
+      mockGainNode.connect.mockClear();
+      mockLogger.info.mockClear();
+      mockLogger.warn.mockClear();
     });
 
     it("should handle metronome tick", () => {
@@ -292,9 +296,11 @@ describe('AudioService', () => {
     });
 
     it("should handle metronome tick when not initialized", () => {
-      const newAudioService = container.get(TYPES.IAudioService);
+      // Create a fresh container to get an uninitialized service
+      const freshContainer = createTestContainer();
+      const uninitializedAudioService = freshContainer.get<IAudioService>(TYPES.IAudioService) as any;
 
-      newAudioService.playMetronomeTick();
+      uninitializedAudioService.playMetronomeTick();
 
       // Should fail silently for metronome - no warning logged
       expect(mockAudioContext.createOscillator).not.toHaveBeenCalled();
@@ -314,6 +320,11 @@ describe('AudioService', () => {
 
     beforeEach(async () => {
       await audioService.start();
+      // Clear mocks
+      const audioEngineInstance = (audioService as any).audioEngine;
+      audioEngineInstance.createEntityVoice.mockClear();
+      audioEngineInstance.removeEntityVoice.mockClear();
+      mockLogger.warn.mockClear();
     });
 
     it("should create entity voice when initialized", () => {
@@ -324,11 +335,13 @@ describe('AudioService', () => {
     });
 
     it("should not create entity voice when not initialized", () => {
-      const newAudioService = container.get(TYPES.IAudioService);
+      // Create a fresh container to get an uninitialized service
+      const freshContainer = createTestContainer();
+      const uninitializedAudioService = freshContainer.get<IAudioService>(TYPES.IAudioService) as any;
 
-      newAudioService.createEntityVoice("test-entity", mockQualiaState);
+      uninitializedAudioService.createEntityVoice("test-entity", mockQualiaState);
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith("AudioService not initialized, cannot create entity voice");
+      expect(mockLogger.warn).toHaveBeenCalledWith("AudioService not initialized, cannot create entity voice");
     });
 
     it("should remove entity voice when initialized", () => {
@@ -348,11 +361,13 @@ describe('AudioService', () => {
     });
 
     it("should not remove entity voice when not initialized", () => {
-      const newAudioService = container.get(TYPES.IAudioService);
+      // Create a fresh container to get an uninitialized service
+      const freshContainer = createTestContainer();
+      const uninitializedAudioService = freshContainer.get<IAudioService>(TYPES.IAudioService) as any;
 
-      newAudioService.removeEntityVoice("test-entity");
+      uninitializedAudioService.removeEntityVoice("test-entity");
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith("AudioService not initialized, cannot remove entity voice");
+      expect(mockLogger.warn).toHaveBeenCalledWith("AudioService not initialized, cannot remove entity voice");
     });
   });
 
