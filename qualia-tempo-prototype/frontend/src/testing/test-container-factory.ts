@@ -11,6 +11,7 @@
 
 // Vitest imports for mock functions
 import { vi, type Mock } from 'vitest';
+import { merge } from 'lodash-es';
 
 import { Container } from 'inversify';
 import { TYPES } from '../services/inversify.types';
@@ -101,15 +102,13 @@ const mockEventBus: IEventBus = (() => {
     emit: vi.fn().mockImplementation((event: any) => {
       const eventType = event.type;
       const handlers = subscribers.get(eventType) || [];
-      // Call all handlers synchronously for fast testing
-      handlers.forEach(({ handler }) => {
+      for (const { handler } of handlers) {
         try {
           handler(event);
         } catch (error) {
           console.error(`Error in event handler for ${eventType}:`, error);
         }
-      });
-      return undefined;
+      }
     }),
 
     clear: vi.fn().mockImplementation(() => {
@@ -314,7 +313,64 @@ const mockConfigurationService: IConfigurationService = {
       audio: { masterVolume: 0.7, enableSpatialAudio: true, bufferSize: 2048 },
       rhythm: { bpm: 120, syncTolerance: 100, adaptive: true },
       notifications: { enabled: true, maxConcurrent: 5, defaultDuration: 3000 },
-      qualia: { decayRate: 0.01, intensityMultiplier: 1.2, flowThreshold: 0.7 }
+      qualia: { decayRate: 0.01, intensityMultiplier: 1.2, flowThreshold: 0.7 },
+      qualiaCalculator: {
+        baseQualiaState: {
+          intensity: 0.3,
+          precision: 0.5,
+          aggression: 0.0,
+          flow: 0.4,
+          chaos: 0.0,
+          recovery: 0.0,
+          transcendence: 0.0,
+        },
+        performanceMultipliers: {
+          perfectHit: 1.2,
+          goodHit: 1.0,
+          missHit: 0.8,
+          comboBonus: 1.5,
+        },
+        decayRates: {
+          intensity: 0.001,
+          precision: 0.001,
+          aggression: 0.001,
+          flow: 0.001,
+          chaos: 0.001,
+          recovery: 0.001,
+          transcendence: 0.001,
+        },
+        thresholds: {
+          highIntensity: 0.8,
+          lowPrecision: 0.2,
+          chaosThreshold: 0.7,
+          transcendenceThreshold: 0.9,
+        },
+        comboSystem: {
+          maxComboMultiplier: 2.0,
+          comboDecayTime: 5000,
+          perfectComboBonus: 1.1,
+        },
+        recoveryMechanics: {
+          recoveryRate: 0.01,
+          maxRecovery: 1.0,
+          recoveryCooldown: 1000,
+        },
+        updateIntervalMs: 100,
+        historySize: 100,
+        hitNoteMultipliers: { intensity: 0.1, precision: 0.05, flow: 0.08 },
+        missNoteMultipliers: { chaos: 0.1, precision: -0.05, flow: -0.03 },
+        dashMultipliers: { aggression: 0.1, intensity: 0.05 },
+        fastForwardMultipliers: { aggression: 0.15, intensity: 0.08 },
+        rewindMultipliers: { recovery: 0.1, precision: 0.05 },
+        updateInterval: 100,
+        intensityDecay: 0.001,
+        precisionDecay: 0.001,
+        aggressionDecay: 0.001,
+        flowDecay: 0.001,
+        chaosDecay: 0.001,
+        recoveryDecay: 0.001,
+        transcendenceDecay: 0.001,
+      },
     };
     return defaultConfig[section] || {};
   }),
@@ -423,15 +479,25 @@ const mockStreamingVideoService: IStreamingVideoService = {
  * Services Under Test are bound to their concrete implementations.
  * All dependencies are bound to mock implementations for isolation.
  */
-export function createTestContainer(): Container {
+export function createTestContainer(configOverrides?: Partial<IConfigurationService>): Container {
   const container = new Container({ 
     defaultScope: 'Singleton' 
   });
 
+  // 1. Cree una copia profunda del mock base
+  const localMockConfig = merge({}, mockConfigurationService);
+
+  // 2. Fusione las sobreescrituras de forma profunda
+  if (configOverrides) {
+    merge(localMockConfig, configOverrides);
+  }
+
+  // 3. Vincule el mock fusionado
+  container.bind<IConfigurationService>(TYPES.IConfigurationService).toConstantValue(localMockConfig);
+
   // Bind mock dependencies first (these will be injected into services)
   container.bind<ILogger>(TYPES.ILogger).toConstantValue(mockLogger);
   container.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
-  container.bind<IConfigurationService>(TYPES.IConfigurationService).toConstantValue(mockConfigurationService);
   container.bind<IGameStateStore>(TYPES.IGameStateStore).toConstantValue(mockGameStateStore);
   container.bind<IGameStateStoreService>(TYPES.IGameStateStoreService).toConstantValue(mockGameStateStoreService);
 
@@ -480,12 +546,6 @@ export function getMocksFromContainer(container: Container) {
     mockHttpService: container.get<IHttpService>(TYPES.IHttpService),
     mockTimerService: container.get<ITimerService>(TYPES.ITimerService),
     mockStreamingVideoService: container.get<IStreamingVideoService>(TYPES.IStreamingVideoService),
-    // --- RESTORED CRITICAL SERVICE INSTANCES ---
-    gameControllerService: container.get<IGameControllerService>(TYPES.IGameControllerService),
-    backendSyncService: container.get<IBackendSyncService>(TYPES.IBackendSyncService),
-    audioService: container.get<IAudioService>(TYPES.IAudioService),
-    qualiaStateCalculatorService: container.get<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService),
-    // --------------------
   };
 }
 

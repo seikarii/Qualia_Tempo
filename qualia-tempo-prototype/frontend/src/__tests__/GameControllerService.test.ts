@@ -1,6 +1,22 @@
 import { describe, test, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 /**
- * QUALIA.CODE v1.1 - GameControllerService Tests - IOC COMPLIANT
+ * QUALIA.CODE v1.1 - GameContro      // Start game first
+      await mocks.mockEventBus.emit({
+        type: "PlayerAction",
+        action: "StartGame",
+        source: "Test",
+      } as Omit<PlayerActionEvent, "timestamp">);
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Now pause the game
+      await mocks.mockEventBus.emit({
+        type: "PlayerAction",
+        action: "PauseGame",
+        source: "Test",
+      } as Omit<PlayerActionEvent, "timestamp">);
+
+      await new Promise((resolve) => setTimeout(resolve, 10));ests - IOC COMPLIANT
  * Comprehensive test suite for game state management service.
  * Uses test-container-factory for proper IoC compliance.
  */
@@ -71,14 +87,15 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
       const mockCallback = vi.fn();
       mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
 
-      // Emit StartGame event - mock returns synchronously
-      mocks.mockEventBus.emit({
+      // Emit StartGame event - mock returns asynchronously
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "StartGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
 
-      // No need to wait - mock operations are synchronous
+      // Wait for async event processing
+      await new Promise((resolve) => setTimeout(resolve, 10));
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "GameStateChanged",
@@ -99,7 +116,7 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
       const mockCallback = vi.fn();
       mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
 
-      mocks.mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "StartGame",
         source: "Test",
@@ -121,20 +138,21 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
       mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
 
       // Start game first
-      mocks.mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "StartGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
 
       // Then pause
-      mocks.mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "PauseGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
 
-      // Synchronous mocks - no wait needed
+      // Synchronous mocks - wait needed for async processing
+      await new Promise((resolve) => setTimeout(resolve, 10));
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "GameStateChanged",
@@ -149,13 +167,14 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
       const mockCallback = vi.fn();
       mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
 
-      mocks.mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "ResetGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
 
-      // Synchronous mock - no wait needed
+      // Synchronous mock - wait needed for async processing
+      await new Promise((resolve) => setTimeout(resolve, 10));
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "GameStateChanged",
@@ -169,14 +188,17 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
       mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
 
       // Try to perform action when not playing
-      mocks.mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
         source: "Test",
         context: { points: 10 },
       } as Omit<PlayerActionEvent, "timestamp">);
 
-      // Synchronous mock - should not emit anything
+      // Wait for async processing
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // Should not emit anything
       expect(mockCallback).not.toHaveBeenCalled();
     });
   });
@@ -212,7 +234,7 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
       
       const loggerWarnSpy = vi.spyOn(mocks.mockLogger, "warn");
 
-      mocks.mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "UnknownAction" as any,
         source: "Test",

@@ -149,7 +149,7 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
       (mocks.mockHttpService.post as Mock).mockResolvedValue({ success: true });
 
       // Act
-      mocks.mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "QualiaStateUpdated",
         qualiaState: mockQualiaState,
         timestamp: new Date(),
@@ -181,7 +181,7 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
 
       // Act - Emit multiple rapid updates
       for (let i = 0; i < 5; i++) {
-        mocks.mockEventBus.emit({
+        await mocks.mockEventBus.emit({
           type: "QualiaStateUpdated",
           qualiaState: { ...mockQualiaState, intensity: i * 0.1 },
           timestamp: new Date(),
@@ -218,7 +218,7 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
       (mocks.mockHttpService.post as Mock).mockRejectedValue(new Error("Sync failed"));
 
       // Act
-      mocks.mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "QualiaStateUpdated",
         qualiaState: {
           intensity: 0.5,

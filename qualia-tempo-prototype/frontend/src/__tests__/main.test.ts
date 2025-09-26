@@ -19,6 +19,7 @@ const mockApp = {
     }
   }),
   quit: vi.fn(),
+  requestSingleInstanceLock: vi.fn(() => true),
   // Helper to get stored handlers for testing
   getEventHandler: (event: string) => appEventHandlers.get(event)
 };

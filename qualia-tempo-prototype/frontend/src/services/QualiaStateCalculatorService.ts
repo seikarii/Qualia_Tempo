@@ -19,7 +19,6 @@ import type { ILogger } from './interfaces/ILogger';
 import type { IConfigurationService } from './interfaces/IConfigurationService';
 import type { IQualiaStateCalculatorService } from './interfaces/IQualiaStateCalculatorService';
 import {
-  EventHandler,
   QualiaStateUpdatedEvent,
 } from "./EventBus";
 import type { PlayerActionEvent } from "./EventBus";
@@ -43,7 +42,7 @@ import type { QualiaCalculatorConfig } from './ConfigurationService';
  */
 @injectable()
 export class QualiaStateCalculatorService implements IQualiaStateCalculatorService {
-  private currentState: QualiaState;
+  private currentState!: QualiaState;
   private config: QualiaCalculatorConfig | null = null; // QUALIA.CODE: Lazy initialization
   private lastUpdateTime: number;
   private updateIntervalId: number | null = null;
@@ -66,13 +65,12 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     this.logger = logger;
     this.configService = configService;
 
-    // QUALIA.CODE FIX: Do NOT access configuration in constructor
-    // Initialize with basic state, configuration will be loaded when start() is called
-    this.currentState = this.createInitialStateWithDefaults();
+    // QUALIA.CODE: Load configuration immediately for proper initialization
+    this.ensureConfigLoaded();
     this.lastUpdateTime = performance.now();
 
     this.logger.info(
-      "🧮 [QualiaCalculator] Service constructed - configuration will be loaded when start() is called",
+      "🧮 [QualiaCalculator] Service constructed - configuration loaded",
     );
     this.logCurrentState();
   }
@@ -84,30 +82,18 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     if (!this.config) {
       try {
         this.config = this.configService.getConfigSection<QualiaCalculatorConfig>('qualiaCalculator');
-        // Reinitialize state with proper configuration
-        this.currentState = this.createInitialState();
         this.logger.debug('QualiaStateCalculatorService configuration loaded successfully');
       } catch (error) {
         this.logger.error('Failed to load QualiaStateCalculatorService configuration', error);
         throw new Error('QualiaStateCalculatorService configuration not available');
       }
     }
+    // Always ensure currentState is initialized
+    if (!this.currentState) {
+      this.currentState = this.createInitialState();
+      this.logger.debug('QualiaStateCalculatorService state initialized');
+    }
     return this.config;
-  }
-
-  /**
-   * Create initial state with default values (used before config is loaded)
-   */
-  private createInitialStateWithDefaults(): QualiaState {
-    return {
-      intensity: 0,
-      precision: 0,
-      aggression: 0,
-      flow: 0,
-      chaos: 0,
-      recovery: 0,
-      transcendence: 0
-    };
   }
 
   /**
@@ -199,13 +185,13 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
    * ARCHITECTURE: This is the ONLY input to this service.
    */
   private subscribeToPlayerActionEvents(): void {
-    const playerActionHandler: EventHandler<PlayerActionEvent> = (event) => {
+    const playerActionHandler = (event: PlayerActionEvent) => {
       this.handlePlayerAction(event);
     };
 
     const listenerId = this.eventBus.subscribe(
       "PlayerAction",
-      playerActionHandler,
+      playerActionHandler.bind(this),
       { priority: 'high' },
     );
     this.eventListenerIds.push(listenerId);
@@ -265,8 +251,10 @@ export class QualiaStateCalculatorService implements IQualiaStateCalculatorServi
     const config = this.ensureConfigLoaded();
     const multipliers = config.hitNoteMultipliers;
 
-    this.currentState.intensity = this.clamp(
-      this.currentState.intensity + multipliers.intensity,
+    const currentState = this.currentState;
+    
+    currentState.intensity = this.clamp(
+      currentState.intensity + multipliers.intensity,
     );
     this.currentState.precision = this.clamp(
       this.currentState.precision + multipliers.precision,

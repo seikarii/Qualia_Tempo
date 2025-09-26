@@ -1,50 +1,25 @@
 import { describe, test, expect, beforeEach, afterEach, vi, type Mocked } from 'vitest';
 /**
  * QUALIA.CODE v1.1 - QualiaStateCalculatorService Tests
- * IoC COMPLIANT - Uses container.rebind() for dependency injection
+ * IoC COMPLIANT - Uses centralized test container factory with config overrides
  * Tests event-driven architecture, state calculations, and QUALIA.CODE compliance.
  */
 
-import { container } from '../services/inversify.config';
+import { createTestContainer, getMocksFromContainer } from '../testing/test-container-factory';
 import { TYPES } from '../services/inversify.types';
 import type { IEventBus } from '../services/interfaces/IEventBus';
 import type { IQualiaStateCalculatorService } from '../services/interfaces/IQualiaStateCalculatorService';
 import type { IConfigurationService } from '../services/interfaces/IConfigurationService';
-import { QualiaLogger, LogLevel } from "../services/Logger";
 
-describe("QualiaStateCalculatorService - REFACTORED", () => {
+describe("QualiaStateCalculatorService - GOLD.CODE STANDARD", () => {
   let qualiaService: IQualiaStateCalculatorService;
-  let mockEventBus: Mocked<IEventBus>;
-  let mockConfigService: Mocked<IConfigurationService>;
+  let mocks: ReturnType<typeof getMocksFromContainer>;
+  let container: ReturnType<typeof createTestContainer>;
 
   beforeEach(() => {
-    // Create mocks for EventBus interface
-    mockEventBus = {
-      emit: vi.fn(),
-      subscribe: vi.fn(),
-      unsubscribe: vi.fn(),
-      clear: vi.fn(),
-      destroy: vi.fn(),
-      getStats: vi.fn().mockReturnValue({
-        totalListeners: 0,
-        eventTypes: [],
-        historySize: 0,
-        isDestroyed: false
-      })
-    };
-
-    // Create mocks for ConfigurationService interface
-    mockConfigService = {
-      loadConfig: vi.fn(),
-      getConfig: vi.fn(),
-      getGameConfig: vi.fn(),
-      getQualiaConfig: vi.fn(),
-      getBackendConfig: vi.fn(),
-      getAudioConfig: vi.fn(),
-      getErrorReportingConfig: vi.fn(),
-      getRhythmicMovementConfig: vi.fn(),
-      getNotificationConfig: vi.fn(),
-      getConfigSection: vi.fn().mockReturnValue({
+    // Define test-specific configuration overrides
+    const testSpecificConfig = {
+      getQualiaConfig: vi.fn().mockReturnValue({
         decayRate: 0.001,
         transcendenceThreshold: 0.8,
         flowBaseMultiplier: 1.2,
@@ -56,22 +31,74 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
         fastForwardBonus: 0.03,
         rewindBonus: 0.02
       }),
-      isLoaded: vi.fn().mockReturnValue(true),
-      reload: vi.fn()
+      getConfigSection: vi.fn().mockReturnValue({
+        baseQualiaState: {
+          intensity: 0.3,
+          precision: 0.5,
+          aggression: 0.0,
+          flow: 0.4,
+          chaos: 0.0,
+          recovery: 0.0,
+          transcendence: 0.0,
+        },
+        performanceMultipliers: {
+          perfectHit: 1.5,
+          goodHit: 1.0,
+          missHit: 0.5,
+          comboBonus: 0.1,
+        },
+        decayRates: {
+          intensity: 0.001,
+          precision: 0.001,
+          aggression: 0.001,
+          flow: 0.001,
+          chaos: 0.001,
+          recovery: 0.001,
+          transcendence: 0.001,
+        },
+        thresholds: {
+          highIntensity: 0.8,
+          lowPrecision: 0.2,
+          chaosThreshold: 0.7,
+          transcendenceThreshold: 0.8,
+        },
+        comboSystem: {
+          maxComboMultiplier: 5.0,
+          comboDecayTime: 2000,
+          perfectComboBonus: 0.2,
+        },
+        recoveryMechanics: {
+          recoveryRate: 0.01,
+          maxRecovery: 1.0,
+          recoveryCooldown: 1000,
+        },
+        updateIntervalMs: 100,
+        historySize: 100,
+        hitNoteMultipliers: { intensity: 0.1, precision: 0.05, flow: 0.08 },
+        missNoteMultipliers: { chaos: 0.1, precision: -0.05, flow: -0.03 },
+        dashMultipliers: { aggression: 0.05, intensity: 0.03 },
+        fastForwardMultipliers: { aggression: 0.02, intensity: 0.01 },
+        rewindMultipliers: { recovery: 0.05, precision: 0.02 },
+        updateInterval: 100,
+        intensityDecay: 0.001,
+        precisionDecay: 0.001,
+        aggressionDecay: 0.001,
+        flowDecay: 0.001,
+        chaosDecay: 0.001,
+        recoveryDecay: 0.001,
+        transcendenceDecay: 0.001,
+        transcendenceThresholds: { intensity: 0.8, precision: 0.7, flow: 0.6 },
+        minValue: 0.0,
+        maxValue: 1.0,
+      })
     };
 
-    // Inject mocks into IoC container using QUALIA.CODE LAW
-    container.unbind(TYPES.IEventBus);
-    container.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
-    
-    container.unbind(TYPES.IConfigurationService);
-    container.bind<IConfigurationService>(TYPES.IConfigurationService).toConstantValue(mockConfigService);
-    
-    container.unbind(TYPES.ILogger);
-    container.bind<QualiaLogger>(TYPES.ILogger).toConstantValue(new QualiaLogger('Test', LogLevel.INFO));
+    // Inject configuration overrides into the test container
+    container = createTestContainer(testSpecificConfig);
 
-    // Get service instance from container - NO MANUAL INSTANTIATION
+    // Get service instance and mocks from the container - NO MANUAL INSTANTIATION
     qualiaService = container.get<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService);
+    mocks = getMocksFromContainer(container);
   });
 
   afterEach(() => {
@@ -111,37 +138,29 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
 
   describe("Service Lifecycle", () => {
     test("should start and stop correctly", () => {
-      const consoleSpy = vi.spyOn(console, "log").mockImplementation();
-
       qualiaService.start();
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(mocks.mockLogger.info).toHaveBeenCalledWith(
         "🚀 [QualiaCalculator] Service started - pure event architecture",
       );
 
       qualiaService.stop();
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(mocks.mockLogger.info).toHaveBeenCalledWith(
         "🛑 [QualiaCalculator] Service stopped",
       );
-
-      consoleSpy.mockRestore();
     });
 
     test("should handle multiple start/stop calls gracefully", () => {
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation();
-
       qualiaService.start();
       qualiaService.start(); // Second start should warn
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(mocks.mockLogger.warn).toHaveBeenCalledWith(
         "⚠️ [QualiaCalculator] Service already running",
       );
 
       qualiaService.stop();
       qualiaService.stop(); // Second stop should warn
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(mocks.mockLogger.warn).toHaveBeenCalledWith(
         "⚠️ [QualiaCalculator] Service not running",
       );
-
-      consoleSpy.mockRestore();
     });
 
     test("should provide initial state", () => {
@@ -166,14 +185,11 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
       const initialState = qualiaService.getCurrentState();
 
       // Emit a HitNote event
-      await mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
         context: { score: 100 },
       } as any);
-
-      // Allow some time for event processing
-      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const newState = qualiaService.getCurrentState();
 
@@ -187,20 +203,17 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
       let receivedEvent: any = null;
 
       // Subscribe to QualiaStateUpdated events
-      mockEventBus.subscribe("QualiaStateUpdated", (event: any) => {
+      mocks.mockEventBus.subscribe("QualiaStateUpdated", (event: any) => {
         receivedEvent = event;
       });
 
       qualiaService.start();
 
       // Emit a PlayerAction event
-      await mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
       } as any);
-
-      // Allow some time for event processing
-      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should have received a QualiaStateUpdated event
       expect(receivedEvent).not.toBeNull();
@@ -215,12 +228,11 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
       const initialState = qualiaService.getCurrentState();
 
       // Emit an event after stopping
-      await mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
       } as any);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const finalState = qualiaService.getCurrentState();
 
@@ -235,14 +247,13 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     });
 
     test("should process HitNote actions correctly", async () => {
+      qualiaService.start();
       const initialState = qualiaService.getCurrentState();
 
-      await mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "HitNote",
       } as any);
-
-      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const newState = qualiaService.getCurrentState();
 
@@ -255,12 +266,11 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should process MissNote actions correctly", async () => {
       const initialState = qualiaService.getCurrentState();
 
-      await mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "MissNote",
       } as any);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const newState = qualiaService.getCurrentState();
 
@@ -272,12 +282,11 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should process Dash actions correctly", async () => {
       const initialState = qualiaService.getCurrentState();
 
-      await mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "Dash",
       } as any);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const newState = qualiaService.getCurrentState();
 
@@ -288,12 +297,11 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should process FastForward actions correctly", async () => {
       const initialState = qualiaService.getCurrentState();
 
-      await mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "FastForward",
       } as any);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const newState = qualiaService.getCurrentState();
 
@@ -304,12 +312,11 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should process Rewind actions correctly", async () => {
       const initialState = qualiaService.getCurrentState();
 
-      await mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "Rewind",
       } as any);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const newState = qualiaService.getCurrentState();
 
@@ -318,14 +325,13 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     });
 
     test("should handle unknown actions gracefully", async () => {
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation();
+      const consoleSpy = vi.spyOn(mocks.mockLogger, "warn").mockImplementation(() => {});
 
-      await mockEventBus.emit({
+      await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "UnknownAction" as any,
       } as any);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(consoleSpy).toHaveBeenCalledWith(
         "⚠️ [QualiaCalculator] Unknown action: UnknownAction",
@@ -343,13 +349,12 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should clamp values between 0 and 1", async () => {
       // Emit many HitNote events to try to exceed 1.0
       for (let i = 0; i < 20; i++) {
-        await mockEventBus.emit({
+        await mocks.mockEventBus.emit({
           type: "PlayerAction",
           action: "HitNote",
         } as any);
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 50));
 
       const state = qualiaService.getCurrentState();
 
@@ -363,13 +368,12 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     test("should handle negative values correctly", async () => {
       // Emit many MissNote events to try to go below 0.0
       for (let i = 0; i < 20; i++) {
-        await mockEventBus.emit({
+        await mocks.mockEventBus.emit({
           type: "PlayerAction",
           action: "MissNote",
         } as any);
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 50));
 
       const state = qualiaService.getCurrentState();
 
@@ -387,28 +391,23 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
     });
 
     test("should activate transcendence when thresholds are met", async () => {
-      const consoleSpy = vi.spyOn(console, "log").mockImplementation();
-
       // Emit enough HitNote events to trigger transcendence
       for (let i = 0; i < 15; i++) {
-        await mockEventBus.emit({
+        await mocks.mockEventBus.emit({
           type: "PlayerAction",
           action: "HitNote",
         } as any);
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 50));
 
       const state = qualiaService.getCurrentState();
 
       // Check if transcendence was activated
       if (state.transcendence > 0) {
-        expect(consoleSpy).toHaveBeenCalledWith(
+        expect(mocks.mockLogger.info).toHaveBeenCalledWith(
           "🌟 [QualiaCalculator] TRANSCENDENCE ACTIVATED! Ultimate mode triggered!",
         );
       }
-
-      consoleSpy.mockRestore();
     });
   });
 
@@ -431,27 +430,29 @@ describe("QualiaStateCalculatorService - REFACTORED", () => {
   });
 
   describe("State Decay", () => {
-    test("should apply time-based decay", (done) => {
+    test("should apply time-based decay", async () => {
       qualiaService.start();
 
       // Set initial high values
-      mockEventBus
-        .emit({
-          type: "PlayerAction",
-          action: "HitNote",
-        } as any)
-        .then(() => {
-          // Wait for decay to occur
-          setTimeout(() => {
-            const decayedState = qualiaService.getCurrentState();
+      mocks.mockEventBus.emit({
+        type: "PlayerAction",
+        action: "HitNote",
+      } as any);
 
-            // Some values should have decayed (become lower)
-            // Note: This test is time-sensitive and may be flaky
-            // In a real implementation, we might want to make decay more predictable for testing
-            expect(decayedState).toBeDefined();
-            done();
-          }, 200);
-        });
+      const initialState = qualiaService.getCurrentState();
+
+      // Simulate time passage by setting lastUpdateTime to past
+      (qualiaService as any).lastUpdateTime = Date.now() - 1000; // 1 second ago
+
+      // Manually apply decay
+      qualiaService.applyTimeDecay();
+
+      const decayedState = qualiaService.getCurrentState();
+
+      // Some values should have decayed (become lower)
+      expect(decayedState.intensity).toBeLessThan(initialState.intensity);
+      expect(decayedState.precision).toBeLessThan(initialState.precision);
+      expect(decayedState.flow).toBeLessThan(initialState.flow);
     });
   });
 });

@@ -74,6 +74,102 @@ vi.mock('tone/build/esm/core/Global', () => ({
   },
 }));
 
+vi.mock('tone/build/esm/core/Tone', () => ({
+  default: {
+    start: vi.fn(),
+    Transport: {
+      start: vi.fn(),
+      stop: vi.fn(),
+      pause: vi.fn(),
+      bpm: { value: 120 },
+    },
+  },
+}));
+
+vi.mock('tone/build/esm/core/AudioContext', () => ({
+  default: vi.fn().mockImplementation(() => ({
+    createGain: vi.fn(() => ({
+      connect: vi.fn(),
+      gain: { value: 1 },
+    })),
+    createOscillator: vi.fn(() => ({
+      connect: vi.fn(),
+      frequency: { value: 440 },
+      start: vi.fn(),
+      stop: vi.fn(),
+    })),
+    destination: {},
+    state: 'running',
+    resume: vi.fn(),
+    suspend: vi.fn(),
+    close: vi.fn(),
+  })),
+}));
+
+vi.mock('tone/build/esm/source/Oscillator', () => ({
+  default: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+    frequency: { value: 440 },
+    type: 'sine',
+  })),
+}));
+
+vi.mock('tone/build/esm/component/Filter', () => ({
+  default: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    connect: vi.fn().mockReturnThis(),
+    frequency: { value: 1000 },
+    Q: { value: 1 },
+  })),
+}));
+
+vi.mock('tone/build/esm/component/Envelope', () => ({
+  default: vi.fn(() => ({
+    connect: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    triggerAttack: vi.fn(),
+    triggerRelease: vi.fn(),
+  })),
+}));
+
+vi.mock('tone/build/esm/effect/Reverb', () => ({
+  default: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    connect: vi.fn().mockReturnThis(),
+  })),
+}));
+
+vi.mock('tone/build/esm/effect/Distortion', () => ({
+  default: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    connect: vi.fn().mockReturnThis(),
+  })),
+}));
+
+vi.mock('tone/build/esm/instrument/MonoSynth', () => ({
+  default: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    triggerAttackRelease: vi.fn(),
+    set: vi.fn(),
+  })),
+}));
+
+vi.mock('tone/build/esm/instrument/FMSynth', () => ({
+  default: vi.fn(() => ({
+    toDestination: vi.fn().mockReturnThis(),
+    dispose: vi.fn(),
+    triggerAttackRelease: vi.fn(),
+    set: vi.fn(),
+  })),
+}));
+
 vi.mock('tone/build/esm/index', () => ({
   PolySynth: vi.fn(() => ({
     toDestination: vi.fn().mockReturnThis(),

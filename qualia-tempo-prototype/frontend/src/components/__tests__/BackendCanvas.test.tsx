@@ -19,7 +19,7 @@ vi.mock('../services/hooks', () => ({
 }));
 
 // Mock streaming service
-const mockStreamingService: Partial<IStreamingVideoService> = {
+const mockStreamingService: IStreamingVideoService = {
   connect: vi.fn().mockResolvedValue(undefined),
   disconnect: vi.fn(),
   subscribeToFrames: vi.fn().mockReturnValue('subscription-1'),
@@ -27,7 +27,10 @@ const mockStreamingService: Partial<IStreamingVideoService> = {
   getConnectionStatus: vi.fn().mockReturnValue({
     connected: true,
     state: 'connected',
-    reconnectAttempts: 0
+    reconnectAttempts: 0,
+    url: 'ws://127.0.0.1:8000/ws/video_stream',
+    lastConnected: new Date(),
+    error: null
   }),
   getStatistics: vi.fn().mockReturnValue({
     framesReceived: 100,
@@ -37,7 +40,10 @@ const mockStreamingService: Partial<IStreamingVideoService> = {
     lastFrameTimestamp: Date.now(),
     latency: 10,
     droppedFrames: 0
-  })
+  }),
+  requestQualityChange: vi.fn(),
+  requestFpsChange: vi.fn(),
+  ping: vi.fn().mockResolvedValue(50)
 };
 
 // Mock canvas context
@@ -70,12 +76,14 @@ describe('BackendCanvas', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    // Mock canvas element creation
+    // Mock canvas element creation - avoid recursion
+    const originalCreateElement = document.createElement;
     vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
       if (tagName === 'canvas') {
         return mockCanvas as any;
       }
-      return document.createElement(tagName);
+      // Use original implementation for other elements to avoid recursion
+      return originalCreateElement.call(document, tagName);
     });
   });
 
