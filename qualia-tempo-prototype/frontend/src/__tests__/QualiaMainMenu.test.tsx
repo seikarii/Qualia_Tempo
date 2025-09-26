@@ -21,7 +21,7 @@ vi.mock('framer-motion', () => ({
 
 // Mock services
 const mockEventBus = {
-  emit: vi.fn().mockResolvedValue(undefined),
+  emit: vi.fn().mockReturnValue(Promise.resolve()), // Make it return a resolved promise immediately
   subscribe: vi.fn().mockReturnValue('listener-id'),
   unsubscribe: vi.fn(),
   clear: vi.fn(),
@@ -64,21 +64,21 @@ describe('QualiaMainMenu Component', () => {
     expect(useService).toHaveBeenCalledWith(TYPES.IEventBus);
   });
 
-  test('integrates with EventBus for game state management', () => {
+  test('integrates with EventBus for game state management', async () => {
     render(<QualiaMainMenu />);
 
     const startButton = screen.getByText('INITIATE NEURAL SYNC');
-    expect(startButton).toBeTruthy();
-    
     fireEvent.click(startButton);
 
-    // Event should be emitted synchronously
-    expect(mockEventBus.emit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'PlayerAction',
-        action: 'StartGame',
-        source: 'QualiaMainMenu'
-      })
-    );
+    // Wait for the asynchronous event emission
+    await waitFor(() => {
+      expect(mockEventBus.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'PlayerAction',
+          action: 'StartGame',
+          source: 'QualiaMainMenu'
+        })
+      );
+    });
   });
 });
