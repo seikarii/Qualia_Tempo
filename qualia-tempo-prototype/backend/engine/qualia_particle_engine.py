@@ -323,24 +323,105 @@ class QualiaParticleEngine:
 
         # CRITICAL: Must match ForceField struct in qualia_particles.glsl
         # position(3) + force_direction(3) + strength(1) + radius(1) + field_type(1) = 9 components
-        # Create 4 placeholder force fields for now
-        num_force_fields = 4
-        force_fields = np.zeros((num_force_fields, 9), dtype=np.float32)
+        # Initialize with maximum capacity for dynamic force fields
+        max_force_fields = 16  # Increased capacity for dynamic gameplay
+        force_fields = np.zeros((max_force_fields, 9), dtype=np.float32)
 
-        # Placeholder force fields (will be populated dynamically later)
-        for i in range(num_force_fields):
-            # Position
+        # Initialize all fields as inactive (zero strength)
+        for i in range(max_force_fields):
+            # Position (inactive)
             force_fields[i, 0:3] = [0.0, 0.0, 0.0]
-            # Force direction
-            force_fields[i, 3:6] = [0.0, 1.0, 0.0]  # Upward force
-            # Strength
-            force_fields[i, 6] = 0.0  # No force initially
+            # Force direction (default upward)
+            force_fields[i, 3:6] = [0.0, 1.0, 0.0]
+            # Strength (inactive)
+            force_fields[i, 6] = 0.0
             # Radius
             force_fields[i, 7] = 10.0
-            # Field type (0=gravitational)
+            # Field type (0=attractor, 1=repulsor)
             force_fields[i, 8] = 0.0
 
         return force_fields
+
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
+    def update_force_fields(self, fields: list) -> None:
+        """
+        Update dynamic force fields from gameplay events.
+        
+        Args:
+            fields: List of force field dictionaries with structure:
+                {
+                    "type": "attractor" | "repulsor",
+                    "position": (x, y, z),
+                    "strength": float,
+                    "radius": float,
+                    "duration": float  # Optional for future lifecycle management
+                }
+        """
+        if not self.ctx or not self.force_fields_buffer:
+            logger.warning("Cannot update force fields: OpenGL context or buffer not initialized")
+            return
+            
+        if not np:
+            logger.error("NumPy is required for force field operations")
+            return
+
+        # Validate input
+        if not isinstance(fields, list):
+            logger.error("Force fields must be provided as a list")
+            return
+
+        # Limit to maximum capacity
+        max_fields = 16
+        active_fields = fields[:max_fields]
+        
+        # Create new force fields array
+        force_fields_data = np.zeros((max_fields, 9), dtype=np.float32)
+        
+        for i, field in enumerate(active_fields):
+            try:
+                # Validate required fields
+                if not all(key in field for key in ["type", "position", "strength", "radius"]):
+                    logger.warning(f"Force field {i} missing required keys, skipping")
+                    continue
+                
+                # Position
+                position = field["position"]
+                if len(position) >= 3:
+                    force_fields_data[i, 0:3] = position[0:3]
+                else:
+                    logger.warning(f"Force field {i} position incomplete, using defaults")
+                    force_fields_data[i, 0:3] = [0.0, 0.0, 0.0]
+                
+                # Force direction (normalized from position for attractors/repulsors)
+                force_fields_data[i, 3:6] = [0.0, 1.0, 0.0]  # Default upward
+                
+                # Strength
+                strength = float(field["strength"])
+                force_fields_data[i, 6] = strength
+                
+                # Radius
+                radius = float(field["radius"])
+                force_fields_data[i, 7] = max(radius, 0.1)  # Minimum radius to prevent division issues
+                
+                # Field type: 0=attractor, 1=repulsor
+                field_type = 0 if field["type"] == "attractor" else 1
+                force_fields_data[i, 8] = float(field_type)
+                
+            except (KeyError, ValueError, TypeError) as e:
+                logger.warning(f"Error processing force field {i}: {e}")
+                continue
+        
+        # Update GPU buffer with new data
+        try:
+            force_fields_bytes = force_fields_data.astype(np.float32).tobytes()
+            self.force_fields_buffer.write(force_fields_bytes)
+            
+            active_count = len([f for f in active_fields if f.get("strength", 0) != 0])
+            logger.debug(f"✅ Updated {active_count} active force fields on GPU")
+            
+        except Exception as e:
+            logger.error(f"🚨 Failed to update force fields buffer: {e}")
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)

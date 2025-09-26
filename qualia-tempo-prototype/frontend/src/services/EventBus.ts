@@ -532,57 +532,73 @@ export class EventBus implements IEventBus {
   }
 }
 
-// Type-safe event emission helpers that can use a specific EventBus instance
-export const createQualiaEvents = (targetEventBus: EventBus) => ({
-  playerAction: (
+// Type-safe event emission helpers class with sealed constructor
+export class QualiaEvents {
+  private constructor(private eventBus: IEventBus) {}
+
+  /**
+   * Factory method to create QualiaEvents instance.
+   * This is the ONLY way to instantiate QualiaEvents.
+   */
+  public static create(eventBus: IEventBus): QualiaEvents {
+    return new QualiaEvents(eventBus);
+  }
+
+  public playerAction(
     action: PlayerActionEvent["action"],
     context?: Record<string, any>,
-  ) =>
-    targetEventBus.emit({
+  ): void {
+    this.eventBus.emit({
       type: "PlayerAction",
       action,
       context,
       source: "PlayerInput",
-    } as Omit<PlayerActionEvent, "timestamp">),
+    } as Omit<PlayerActionEvent, "timestamp">);
+  }
 
-  qualiaStateUpdated: (qualiaState: QualiaState) =>
-    targetEventBus.emit({
+  public qualiaStateUpdated(qualiaState: QualiaState): void {
+    this.eventBus.emit({
       type: "QualiaStateUpdated",
       qualiaState,
       source: "QualiaCalculator",
-    } as Omit<QualiaStateUpdatedEvent, "timestamp">),
+    } as Omit<QualiaStateUpdatedEvent, "timestamp">);
+  }
 
-  gameStateChanged: (
+  public gameStateChanged(
     newState: GameStateChangedEvent["newState"],
     previousState: string,
-  ) =>
-    targetEventBus.emit({
+  ): void {
+    this.eventBus.emit({
       type: "GameStateChanged",
       newState,
       previousState,
       source: "GameController",
-    } as Omit<GameStateChangedEvent, "timestamp">),
+    } as Omit<GameStateChangedEvent, "timestamp">);
+  }
 
-  error: (
+  public error(
     error: Error,
     severity: ErrorEvent["severity"] = "medium",
     source = "Unknown",
-  ) =>
-    targetEventBus.emit({
+  ): void {
+    this.eventBus.emit({
       type: "Error",
       error,
       severity,
       source,
-    } as Omit<ErrorEvent, "timestamp">),
+    } as Omit<ErrorEvent, "timestamp">);
+  }
 
-  backendSync: (data: any, syncType: BackendSyncEvent["syncType"]) =>
-    targetEventBus.emit({
+  public backendSync(data: any, syncType: BackendSyncEvent["syncType"]): void {
+    this.eventBus.emit({
       type: "BackendSync",
       data,
       syncType,
       source: "BackendSync",
-    } as Omit<BackendSyncEvent, "timestamp">),
-});
+    } as Omit<BackendSyncEvent, "timestamp">);
+  }
+}
 
-// Note: QualiaEvents should be created using createQualiaEvents(eventBusInstance)
-// from the CompositionRoot where the EventBus instance is available
+// Legacy function maintained for backward compatibility during migration
+export const createQualiaEvents = (targetEventBus: EventBus) => 
+  QualiaEvents.create(targetEventBus as IEventBus);

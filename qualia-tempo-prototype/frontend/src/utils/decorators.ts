@@ -62,6 +62,7 @@ function createUniversalDecorator(logic: DecoratorLogic): UniversalDecorator {
 
 /**
  * Decorator to log method calls and arguments.
+ * Uses instance logger if available, falls back to console only when necessary.
  * Usage: @logMethod()
  */
 export function logMethod(): UniversalDecorator {
@@ -70,18 +71,25 @@ export function logMethod(): UniversalDecorator {
       const className = context.target.constructor.name;
       const methodName = `${className}.${context.propertyKey}`;
 
-      // Safe logger access with fallback
+      // Access logger from instance (this) at runtime
+      const instanceLogger = (this as any).logger;
       let logger: any;
-      try {
-        logger = LoggerProvider.getLogger();
-      } catch (error) {
-        // Fallback to console during initialization
-        console.debug(`→ ENTER ${methodName}`, {
-          arguments: args.length > 0 ? args : "no arguments",
-          timestamp: new Date().toISOString(),
-          note: "Logger not yet available, using console fallback",
-        });
-        return originalMethod.apply(this, args);
+
+      if (instanceLogger && typeof instanceLogger.debug === 'function') {
+        logger = instanceLogger;
+      } else {
+        // Try global logger as secondary option
+        try {
+          logger = LoggerProvider.getLogger();
+        } catch (error) {
+          // Final fallback: console (only when no instance logger available)
+          console.debug(`→ ENTER ${methodName}`, {
+            arguments: args.length > 0 ? args : "no arguments",
+            timestamp: new Date().toISOString(),
+            note: "Logger not found on instance, using console fallback",
+          });
+          return originalMethod.apply(this, args);
+        }
       }
 
       logger.debug(`→ ENTER ${methodName}`, {
@@ -183,15 +191,70 @@ export function catchError(fallbackValue?: any): UniversalDecorator {
       const className = context.target.constructor.name;
       const methodName = `${className}.${context.propertyKey}`;
 
-      // Safe logger access with fallback
+      // Access logger from instance (this) at runtime
+      const instanceLogger = (this as any).logger;
       let logger: any;
-      try {
-        logger = LoggerProvider.getLogger();
-      } catch (error) {
-        // Fallback: just execute the original method without logging
+
+      if (instanceLogger && typeof instanceLogger.error === 'function') {
+        logger = instanceLogger;
+      } else {
+        // Try global logger as secondary option
         try {
-          return originalMethod.apply(this, args);
-        } catch (methodError) {
+          logger = LoggerProvider.getLogger();
+        } catch (error) {
+          // Logger not available, proceed with execution and use console fallback if needed
+          logger = null;
+        }
+      }
+
+      try {
+        const result = originalMethod.apply(this, args);
+
+        // Handle async methods
+        if (result instanceof Promise) {
+          return result.catch((error: any) => {
+            if (logger) {
+              logger.error(`${methodName}:`, {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : "No stack trace",
+                arguments: args,
+                timestamp: new Date().toISOString(),
+              });
+            } else {
+              console.error(`${methodName}:`, {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : "No stack trace",
+                arguments: args,
+                timestamp: new Date().toISOString(),
+                note: "Logger not found on instance, using console fallback",
+              });
+            }
+
+            if (fallbackValue !== undefined) {
+              return fallbackValue;
+            }
+
+            throw error;
+          });
+        }
+
+        return result;
+      } catch (methodError) {
+        if (logger) {
+          logger.error(`${methodName}:`, {
+            error:
+              methodError instanceof Error
+                ? methodError.message
+                : String(methodError),
+            stack:
+              methodError instanceof Error
+                ? methodError.stack
+                : "No stack trace",
+            arguments: args,
+            timestamp: new Date().toISOString(),
+          });
+        } else {
+          // Final fallback to console only when no logger available
           console.error(`${methodName}:`, {
             error:
               methodError instanceof Error
@@ -203,57 +266,15 @@ export function catchError(fallbackValue?: any): UniversalDecorator {
                 : "No stack trace",
             arguments: args,
             timestamp: new Date().toISOString(),
-            note: "Logger not yet available, using console fallback",
-          });
-
-          if (fallbackValue !== undefined) {
-            return fallbackValue;
-          }
-          throw methodError;
-        }
-      }
-
-      try {
-        const result = originalMethod.apply(this, args);
-
-        // Handle async methods
-        if (result instanceof Promise) {
-          return result.catch((error) => {
-            logger.error(`${methodName}:`, {
-              error: error.message,
-              stack: error.stack,
-              arguments: args,
-              timestamp: new Date().toISOString(),
-            });
-
-            if (fallbackValue !== undefined) {
-              logger.info(`Returning fallback value for ${methodName}:`, {
-                fallbackValue,
-              });
-              return fallbackValue;
-            }
-
-            throw error;
+            note: "Logger not found on instance, using console fallback",
           });
         }
-
-        return result;
-      } catch (error) {
-        logger.error(`${methodName}:`, {
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : "No stack trace",
-          arguments: args,
-          timestamp: new Date().toISOString(),
-        });
 
         if (fallbackValue !== undefined) {
-          logger.info(`Returning fallback value for ${methodName}:`, {
-            fallbackValue,
-          });
           return fallbackValue;
         }
 
-        throw error;
+        throw methodError;
       }
     };
   });

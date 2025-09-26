@@ -210,32 +210,39 @@ void respawnParticle(inout QualiaParticle p, uint index) {
     p.resonance = 0.0; // La resonancia se gana, no se nace con ella
 }
 
-// Advanced force field calculations for complex physics
+// Enhanced dynamic force field calculations for combat and musical interactions
 vec3 calculateForceFieldEffect(vec3 position, QualiaParticle particle) {
     vec3 total_force = vec3(0.0);
     
-    for(int i = 0; i < 4; i++) {
+    // Iterate through all possible force fields (increased from 4 to 16)
+    for(int i = 0; i < 16; i++) {
+        // Skip inactive force fields (zero strength)
+        if(abs(force_fields[i].strength) < 0.001) {
+            continue;
+        }
+        
+        // Calculate direction vector from particle to force field center
         vec3 force_dir = force_fields[i].position - position;
         float distance = length(force_dir);
         
-        if(distance < force_fields[i].radius && distance > 0.01) {
+        // Apply force only within radius and avoid singularities
+        if(distance < force_fields[i].radius && distance > 0.1) {
             vec3 normalized_dir = normalize(force_dir);
-            float force_magnitude = force_fields[i].strength / (distance * distance + 1.0);
             
-            // Apply different force types
+            // Inverse square law with smoothing to prevent singularities
+            float distance_sq = distance * distance + 0.5; // Smoothing factor
+            float force_magnitude = force_fields[i].strength / distance_sq;
+            
+            // Limit maximum force to prevent extreme accelerations
+            force_magnitude = clamp(force_magnitude, -50.0, 50.0);
+            
+            // Apply force type: 0=attractor, 1=repulsor
             if(force_fields[i].field_type == 0) {
-                // Gravitational: mass-dependent attraction
+                // Attractor: pull towards center, weighted by mass
                 total_force += normalized_dir * force_magnitude * particle.mass;
             } else if(force_fields[i].field_type == 1) {
-                // Electromagnetic: charge-dependent force
-                total_force += normalized_dir * force_magnitude * particle.charge;
-            } else if(force_fields[i].field_type == 2) {
-                // Vortex: tangential force
-                vec3 tangent = cross(normalized_dir, vec3(0.0, 1.0, 0.0));
-                total_force += tangent * force_magnitude;
-            } else if(force_fields[i].field_type == 3) {
-                // Repulsor: reverse direction
-                total_force -= normalized_dir * force_magnitude;
+                // Repulsor: push away from center, weighted by mass
+                total_force -= normalized_dir * force_magnitude * particle.mass;
             }
         }
     }
