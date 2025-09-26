@@ -1,845 +1,312 @@
 {
-  "timestamp": "2025-09-26T10:03:55.746Z",
+  "timestamp": "2025-09-26T11:54:47.261Z",
   "url": "http://localhost:5173",
   "phase": "main-menu",
   "success": false,
   "hasRoot": true,
   "stats": {
-    "totalLogs": 132,
-    "errors": 8,
-    "warnings": 10,
-    "configErrors": 14
+    "totalLogs": 43,
+    "errors": 6,
+    "warnings": 8,
+    "configErrors": 19
   },
   "logs": [
     {
-      "timestamp": "2025-09-26T10:03:39.567Z",
+      "timestamp": "2025-09-26T11:54:31.279Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST SCRIPT LOADED ===",
       "entry": "[LOG] === RACE CONDITION TEST SCRIPT LOADED ==="
     },
     {
-      "timestamp": "2025-09-26T10:03:39.681Z",
+      "timestamp": "2025-09-26T11:54:31.418Z",
       "type": "debug",
       "text": "[vite] connecting...",
       "entry": "[DEBUG] [vite] connecting..."
     },
     {
-      "timestamp": "2025-09-26T10:03:39.690Z",
+      "timestamp": "2025-09-26T11:54:31.426Z",
       "type": "debug",
       "text": "[vite] connected.",
       "entry": "[DEBUG] [vite] connected."
     },
     {
-      "timestamp": "2025-09-26T10:03:39.981Z",
+      "timestamp": "2025-09-26T11:54:31.734Z",
       "type": "info",
       "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
       "entry": "[INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.028Z",
+      "timestamp": "2025-09-26T11:54:31.782Z",
       "type": "log",
       "text": "%c * Tone.js v14.9.17 *  background: #000; color: #fff",
       "entry": "[LOG] %c * Tone.js v14.9.17 *  background: #000; color: #fff"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.081Z",
+      "timestamp": "2025-09-26T11:54:31.832Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.082Z",
+      "timestamp": "2025-09-26T11:54:31.833Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.278Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.283Z",
+      "timestamp": "2025-09-26T11:54:32.053Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.285Z",
+      "timestamp": "2025-09-26T11:54:32.055Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {}"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.286Z",
+      "timestamp": "2025-09-26T11:54:32.056Z",
+      "type": "warning",
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.058Z",
+      "type": "warning",
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.058Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.286Z",
+      "timestamp": "2025-09-26T11:54:32.059Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: BackendSyncService constructed - configuration will be loaded when start() is called {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendSyncService constructed - configuration will be loaded when start() is called {}"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.286Z",
+      "timestamp": "2025-09-26T11:54:32.059Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔄 [BackendSync] Service initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔄 [BackendSync] Service initialized {}"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.288Z",
+      "timestamp": "2025-09-26T11:54:32.059Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.289Z",
+      "timestamp": "2025-09-26T11:54:32.059Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service initialized {}"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.289Z",
+      "timestamp": "2025-09-26T11:54:32.062Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: RhythmicMovementController initialized - configuration will be loaded on start() {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: RhythmicMovementController initialized - configuration will be loaded on start() {}"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.289Z",
+      "timestamp": "2025-09-26T11:54:32.063Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔧 [NotificationService] Service initialized with event-driven architecture and Zustand store bridging {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [NotificationService] Service initialized with event-driven architecture and Zustand store bridging {}"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.289Z",
+      "timestamp": "2025-09-26T11:54:32.063Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📊 [NotificationService] Current Configuration: {enabled: true, maxHistorySize: 1000, defaultTtl: 30000ms, enablePriorityQueuing: true, enableThrottling: true}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [NotificationService] Current Configuration: {enabled: true, maxHistorySize: 1000, defaultTtl: 30000ms, enablePriorityQueuing: true, enableThrottling: true}"
     },
     {
-      "timestamp": "2025-09-26T10:03:40.291Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔧 [ErrorReportingService] Service initialized with production-grade error handling and pure DI {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [ErrorReportingService] Service initialized with production-grade error handling and pure DI {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.291Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📊 [ErrorReportingService] Current Configuration: {enabled: true, maxBatchSize: 50, batchFlushInterval: 30000ms, maxRetries: 3, retryDelay: 1000ms}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [ErrorReportingService] Current Configuration: {enabled: true, maxBatchSize: 50, batchFlushInterval: 30000ms, maxRetries: 3, retryDelay: 1000ms}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.292Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.292Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: ApplicationInitializerService initialized with all core services {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ApplicationInitializerService initialized with all core services {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.292Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Starting application initialization sequence {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.292Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.334Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.336Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.336Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.336Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: HttpService configured successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: HttpService configured successfully {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.339Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.339Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.339Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758881020334_imrq5t18v) - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758881020334_imrq5t18v) - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.340Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.340Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758881020335_60sffer1h) - 0.00ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758881020335_60sffer1h) - 0.00ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.340Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.340Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758881020335_g5upa6mxp) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: listener_1758881020335_g5upa6mxp) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.340Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.341Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: GameStateStoreService started - now listening to events {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.344Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.344Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.345Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758881020336_qkxxkhp5z) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758881020336_qkxxkhp5z) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.345Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.345Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.345Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: DebugService configuration loaded successfully. {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: DebugService configuration loaded successfully. {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.346Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.346Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Starting AI debugging service... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Starting AI debugging service... {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.346Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1758881020337_5gpfihjn {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1758881020337_5gpfihjn {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.346Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for * {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for * {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.346Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: listener_1758881020337_9uk51jma4) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: listener_1758881020337_9uk51jma4) - 0.10ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.347Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📡 [DebugService] Subscribed to all event types {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [DebugService] Subscribed to all event types {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.347Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Service started - AI debugging active {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Service started - AI debugging active {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.347Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Starting notification processing... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Starting notification processing... {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.347Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.348Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758881020338_e0gnsg8p9) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: listener_1758881020338_e0gnsg8p9) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.353Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.354Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758881020338_t1d1mbmdq) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758881020338_t1d1mbmdq) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.354Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.354Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758881020338_uas1pvck9) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758881020338_uas1pvck9) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.354Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for BackendSync {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for BackendSync {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.355Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: listener_1758881020339_ojjxnq2ex) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: listener_1758881020339_ojjxnq2ex) - 0.10ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.355Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📡 [NotificationService] Subscribed to notification events {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [NotificationService] Subscribed to notification events {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.355Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: NotificationService started {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: NotificationService started {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.355Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Transversal services started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Transversal services started successfully {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.355Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.356Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.356Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758881020340_5cjlq0r07) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: listener_1758881020340_5cjlq0r07) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.356Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.356Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758881020340_8tmwn1vd4) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758881020340_8tmwn1vd4) - 0.10ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.357Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📡 [GameController] Subscribed to PlayerAction and GameStateChanged events {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [GameController] Subscribed to PlayerAction and GameStateChanged events {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.357Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.80ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.80ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.357Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Game controller service started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Game controller service started successfully {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.357Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {config: Object}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {config: Object}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.357Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerInput {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerInput {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.357Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: listener_1758881020341_ie5hlvo26) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: listener_1758881020341_ie5hlvo26) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.358Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.358Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758881020341_gud1anfiy) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: listener_1758881020341_gud1anfiy) - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.358Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🎵 RhythmicMovementController started with configuration loaded {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎵 RhythmicMovementController started with configuration loaded {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.358Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Rhythmic movement controller started successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Rhythmic movement controller started successfully {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.358Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Start called {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.358Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 1/3... {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: [BackendSync] Connection attempt 1/3... {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.359Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🏥 [BackendSync] Health check {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.366Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Backend healthy - 21.90ms {response: Object}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Backend healthy - 21.90ms {response: Object}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.366Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.367Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758881020364_2x72y19u3) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: listener_1758881020364_2x72y19u3) - 0.10ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.368Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📡 [BackendSync] Subscribed to events {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [BackendSync] Subscribed to events {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.368Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Service started successfully after 1 attempts - 23.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Service started successfully after 1 attempts - 23.10ms {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.368Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.368Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initialization complete. Rendering application. {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initialization complete. Rendering application. {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.375Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: StreamingVideoService initialized with Reference Counting architecture {url: ws://127.0.0.1:8000/ws/video_stream, pingInterval: 8000, pingTimeout: 6000}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: StreamingVideoService initialized with Reference Counting architecture {url: ws://127.0.0.1:8000/ws/video_stream, pingInterval: 8000, pingTimeout: 6000}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.458Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas initialized {width: 1280, height: 720, quality: 1}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas initialized {width: 1280, height: 720, quality: 1}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.459Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: State changed to CONNECTING. Initiating WebSocket connection. {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: State changed to CONNECTING. Initiating WebSocket connection. {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.467Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Reference count is zero. Debouncing disconnection. {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Reference count is zero. Debouncing disconnection. {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.468Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas initialized {width: 1280, height: 720, quality: 1}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas initialized {width: 1280, height: 720, quality: 1}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.469Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Cancelled pending disconnect due to new connection request. {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Cancelled pending disconnect due to new connection request. {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.469Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Connect called but already in state: CONNECTING. {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Connect called but already in state: CONNECTING. {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.470Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas connected to video stream {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas connected to video stream {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.495Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Reference count is zero. Debouncing disconnection. {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Reference count is zero. Debouncing disconnection. {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.496Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Cancelled pending disconnect due to new connection request. {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Cancelled pending disconnect due to new connection request. {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.496Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Connect called but already in state: CONNECTING. {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Connect called but already in state: CONNECTING. {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:40.497Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas connected to video stream {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas connected to video stream {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:41.658Z",
-      "type": "error",
-      "text": "WebSocket connection to 'ws://127.0.0.1:8000/ws/video_stream' failed: Connection closed before receiving a handshake response",
-      "entry": "[ERROR] WebSocket connection to 'ws://127.0.0.1:8000/ws/video_stream' failed: Connection closed before receiving a handshake response"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:41.659Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: WebSocket error {event: Event}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: WebSocket error {event: Event}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:41.660Z",
+      "timestamp": "2025-09-26T11:54:32.063Z",
       "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: WebSocket connection failed - operating in offline mode {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket connection failed - operating in offline mode {}"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-26T10:03:41.660Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas connected to video stream {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas connected to video stream {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:41.661Z",
+      "timestamp": "2025-09-26T11:54:32.063Z",
       "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: WebSocket closed. Code: 1006, Clean: false {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket closed. Code: 1006, Clean: false {}"
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
     },
     {
-      "timestamp": "2025-09-26T10:03:41.661Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: WebSocket connection closed {code: 1006, reason: , wasClean: false}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: WebSocket connection closed {code: 1006, reason: , wasClean: false}"
+      "timestamp": "2025-09-26T11:54:32.063Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [Temporary] ERROR: ConfigurationService.getConfig: [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [Temporary] ERROR: ConfigurationService.getConfig: [object Object]"
     },
     {
-      "timestamp": "2025-09-26T10:03:41.662Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Scheduling reconnect {attempt: 1, delay: 2000}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Scheduling reconnect {attempt: 1, delay: 2000}"
+      "timestamp": "2025-09-26T11:54:32.063Z",
+      "type": "log",
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [Temporary] ERROR: ConfigurationService.getConfig: [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [Temporary] ERROR: ConfigurationService.getConfig: [object Object]"
     },
     {
-      "timestamp": "2025-09-26T10:03:42.559Z",
+      "timestamp": "2025-09-26T11:54:32.063Z",
+      "type": "error",
+      "text": "🚨 [Temporary] ERROR: ConfigurationService.getConfig: {error: Configuration not loaded. Call loadConfig() first., stack: Error: Configuration not loaded. Call loadConfig()…odules/.vite/deps/inversify.js?v=8fa9317f:1613:12, arguments: Array(0), timestamp: 2025-09-26T11:54:32.056Z}",
+      "entry": "[ERROR] 🚨 [Temporary] ERROR: ConfigurationService.getConfig: {error: Configuration not loaded. Call loadConfig() first., stack: Error: Configuration not loaded. Call loadConfig()…odules/.vite/deps/inversify.js?v=8fa9317f:1613:12, arguments: Array(0), timestamp: 2025-09-26T11:54:32.056Z}"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.063Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig [object Object]"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.064Z",
+      "type": "log",
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig [object Object]"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.064Z",
+      "type": "error",
+      "text": "🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig {error: Configuration not loaded. Call loadConfig() first., timestamp: 2025-09-26T11:54:32.057Z}",
+      "entry": "[ERROR] 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig {error: Configuration not loaded. Call loadConfig() first., timestamp: 2025-09-26T11:54:32.057Z}"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.064Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first.",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first."
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.064Z",
+      "type": "error",
+      "text": "[BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first.\n    at ConfigurationService.getConfig (http://localhost:5173/src/services/ConfigurationService.ts:75:13)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:138:39)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:46:39)\n    at createErrorReportingConfig (http://localhost:5173/src/services/ErrorReportingService.ts:16:36)\n    at new ErrorReportingService (http://localhost:5173/src/services/ErrorReportingService.ts:104:24)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1613:12",
+      "entry": "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first.\n    at ConfigurationService.getConfig (http://localhost:5173/src/services/ConfigurationService.ts:75:13)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:138:39)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:46:39)\n    at createErrorReportingConfig (http://localhost:5173/src/services/ErrorReportingService.ts:16:36)\n    at new ErrorReportingService (http://localhost:5173/src/services/ErrorReportingService.ts:104:24)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1613:12"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.065Z",
+      "type": "warning",
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.066Z",
+      "type": "warning",
+      "text": "[LoggerProvider] Logger not registered, creating temporary logger",
+      "entry": "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.066Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [Temporary] ERROR: ConfigurationService.getConfig: [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [Temporary] ERROR: ConfigurationService.getConfig: [object Object]"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.066Z",
+      "type": "log",
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [Temporary] ERROR: ConfigurationService.getConfig: [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [Temporary] ERROR: ConfigurationService.getConfig: [object Object]"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.066Z",
+      "type": "error",
+      "text": "🚨 [Temporary] ERROR: ConfigurationService.getConfig: {error: Configuration not loaded. Call loadConfig() first., stack: Error: Configuration not loaded. Call loadConfig()…odules/.vite/deps/inversify.js?v=8fa9317f:1613:12, arguments: Array(0), timestamp: 2025-09-26T11:54:32.058Z}",
+      "entry": "[ERROR] 🚨 [Temporary] ERROR: ConfigurationService.getConfig: {error: Configuration not loaded. Call loadConfig() first., stack: Error: Configuration not loaded. Call loadConfig()…odules/.vite/deps/inversify.js?v=8fa9317f:1613:12, arguments: Array(0), timestamp: 2025-09-26T11:54:32.058Z}"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.066Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig [object Object]"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.066Z",
+      "type": "log",
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig [object Object]"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.066Z",
+      "type": "error",
+      "text": "🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig {error: Configuration not loaded. Call loadConfig() first., timestamp: 2025-09-26T11:54:32.059Z}",
+      "entry": "[ERROR] 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig {error: Configuration not loaded. Call loadConfig() first., timestamp: 2025-09-26T11:54:32.059Z}"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.066Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first.",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first."
+    },
+    {
+      "timestamp": "2025-09-26T11:54:32.067Z",
+      "type": "error",
+      "text": "[BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first.\n    at ConfigurationService.getConfig (http://localhost:5173/src/services/ConfigurationService.ts:75:13)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:138:39)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:46:39)\n    at createErrorReportingConfig (http://localhost:5173/src/services/ErrorReportingService.ts:16:36)\n    at new ErrorReportingService (http://localhost:5173/src/services/ErrorReportingService.ts:104:24)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1613:12",
+      "entry": "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first.\n    at ConfigurationService.getConfig (http://localhost:5173/src/services/ConfigurationService.ts:75:13)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:138:39)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:46:39)\n    at createErrorReportingConfig (http://localhost:5173/src/services/ErrorReportingService.ts:16:36)\n    at new ErrorReportingService (http://localhost:5173/src/services/ErrorReportingService.ts:104:24)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1613:12"
+    },
+    {
+      "timestamp": "2025-09-26T11:54:34.273Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST RESULTS ===",
       "entry": "[LOG] === RACE CONDITION TEST RESULTS ==="
     },
     {
-      "timestamp": "2025-09-26T10:03:42.559Z",
+      "timestamp": "2025-09-26T11:54:34.275Z",
       "type": "log",
-      "text": "✅ NO CONFIGURATION ERRORS DETECTED",
-      "entry": "[LOG] ✅ NO CONFIGURATION ERRORS DETECTED"
+      "text": "❌ CONFIGURATION ERRORS FOUND: [Object, Object, Object, Object, Object, Object]",
+      "entry": "[LOG] ❌ CONFIGURATION ERRORS FOUND: [Object, Object, Object, Object, Object, Object]"
     },
     {
-      "timestamp": "2025-09-26T10:03:42.559Z",
+      "timestamp": "2025-09-26T11:54:34.275Z",
       "type": "log",
-      "text": "✅ NO SERVICE INITIALIZATION ERRORS DETECTED",
-      "entry": "[LOG] ✅ NO SERVICE INITIALIZATION ERRORS DETECTED"
+      "text": "❌ SERVICE INITIALIZATION ERRORS FOUND: [Object, Object, Object, Object]",
+      "entry": "[LOG] ❌ SERVICE INITIALIZATION ERRORS FOUND: [Object, Object, Object, Object]"
     },
     {
-      "timestamp": "2025-09-26T10:03:42.559Z",
+      "timestamp": "2025-09-26T11:54:34.275Z",
       "type": "log",
       "text": "=== TEST COMPLETE ===",
       "entry": "[LOG] === TEST COMPLETE ==="
-    },
-    {
-      "timestamp": "2025-09-26T10:03:43.660Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: State changed to CONNECTING. Initiating WebSocket connection. {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: State changed to CONNECTING. Initiating WebSocket connection. {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:43.661Z",
-      "type": "error",
-      "text": "WebSocket connection to 'ws://127.0.0.1:8000/ws/video_stream' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED",
-      "entry": "[ERROR] WebSocket connection to 'ws://127.0.0.1:8000/ws/video_stream' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:43.662Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: WebSocket error {event: Event}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: WebSocket error {event: Event}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:43.662Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: WebSocket connection failed - operating in offline mode {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket connection failed - operating in offline mode {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:43.663Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: WebSocket closed. Code: 1006, Clean: false {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket closed. Code: 1006, Clean: false {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:43.664Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: WebSocket connection closed {code: 1006, reason: , wasClean: false}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: WebSocket connection closed {code: 1006, reason: , wasClean: false}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:43.664Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Scheduling reconnect {attempt: 2, delay: 4000}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Scheduling reconnect {attempt: 2, delay: 4000}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:47.664Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: State changed to CONNECTING. Initiating WebSocket connection. {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: State changed to CONNECTING. Initiating WebSocket connection. {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:47.665Z",
-      "type": "error",
-      "text": "WebSocket connection to 'ws://127.0.0.1:8000/ws/video_stream' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED",
-      "entry": "[ERROR] WebSocket connection to 'ws://127.0.0.1:8000/ws/video_stream' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:47.665Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: WebSocket error {event: Event}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: WebSocket error {event: Event}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:47.666Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: WebSocket connection failed - operating in offline mode {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket connection failed - operating in offline mode {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:47.666Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: WebSocket closed. Code: 1006, Clean: false {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket closed. Code: 1006, Clean: false {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:47.667Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: WebSocket connection closed {code: 1006, reason: , wasClean: false}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: WebSocket connection closed {code: 1006, reason: , wasClean: false}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:47.667Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Scheduling reconnect {attempt: 3, delay: 8000}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Scheduling reconnect {attempt: 3, delay: 8000}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:55.447Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas initialized {width: 1280, height: 720, quality: 1}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas initialized {width: 1280, height: 720, quality: 1}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:55.732Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: State changed to CONNECTING. Initiating WebSocket connection. {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: State changed to CONNECTING. Initiating WebSocket connection. {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:55.734Z",
-      "type": "error",
-      "text": "WebSocket connection to 'ws://127.0.0.1:8000/ws/video_stream' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED",
-      "entry": "[ERROR] WebSocket connection to 'ws://127.0.0.1:8000/ws/video_stream' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:55.735Z",
-      "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: WebSocket error {event: Event}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: WebSocket error {event: Event}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:55.735Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: WebSocket connection failed - operating in offline mode {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket connection failed - operating in offline mode {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:55.735Z",
-      "type": "warning",
-      "text": "⚠️ [QualiaLogger] WARN: WebSocket closed. Code: 1006, Clean: false {}",
-      "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket closed. Code: 1006, Clean: false {}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:55.737Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: WebSocket connection closed {code: 1006, reason: , wasClean: false}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: WebSocket connection closed {code: 1006, reason: , wasClean: false}"
-    },
-    {
-      "timestamp": "2025-09-26T10:03:55.738Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Scheduling reconnect {attempt: 4, delay: 16000}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Scheduling reconnect {attempt: 4, delay: 16000}"
     }
   ],
   "errors": [
-    "[ERROR] WebSocket connection to 'ws://127.0.0.1:8000/ws/video_stream' failed: Connection closed before receiving a handshake response",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: WebSocket error {event: Event}",
-    "[ERROR] WebSocket connection to 'ws://127.0.0.1:8000/ws/video_stream' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: WebSocket error {event: Event}",
-    "[ERROR] WebSocket connection to 'ws://127.0.0.1:8000/ws/video_stream' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: WebSocket error {event: Event}",
-    "[ERROR] WebSocket connection to 'ws://127.0.0.1:8000/ws/video_stream' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: WebSocket error {event: Event}"
+    "[ERROR] 🚨 [Temporary] ERROR: ConfigurationService.getConfig: {error: Configuration not loaded. Call loadConfig() first., stack: Error: Configuration not loaded. Call loadConfig()…odules/.vite/deps/inversify.js?v=8fa9317f:1613:12, arguments: Array(0), timestamp: 2025-09-26T11:54:32.056Z}",
+    "[ERROR] 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig {error: Configuration not loaded. Call loadConfig() first., timestamp: 2025-09-26T11:54:32.057Z}",
+    "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first.\n    at ConfigurationService.getConfig (http://localhost:5173/src/services/ConfigurationService.ts:75:13)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:138:39)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:46:39)\n    at createErrorReportingConfig (http://localhost:5173/src/services/ErrorReportingService.ts:16:36)\n    at new ErrorReportingService (http://localhost:5173/src/services/ErrorReportingService.ts:104:24)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1613:12",
+    "[ERROR] 🚨 [Temporary] ERROR: ConfigurationService.getConfig: {error: Configuration not loaded. Call loadConfig() first., stack: Error: Configuration not loaded. Call loadConfig()…odules/.vite/deps/inversify.js?v=8fa9317f:1613:12, arguments: Array(0), timestamp: 2025-09-26T11:54:32.058Z}",
+    "[ERROR] 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig {error: Configuration not loaded. Call loadConfig() first., timestamp: 2025-09-26T11:54:32.059Z}",
+    "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first.\n    at ConfigurationService.getConfig (http://localhost:5173/src/services/ConfigurationService.ts:75:13)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:138:39)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:46:39)\n    at createErrorReportingConfig (http://localhost:5173/src/services/ErrorReportingService.ts:16:36)\n    at new ErrorReportingService (http://localhost:5173/src/services/ErrorReportingService.ts:104:24)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1613:12"
   ],
   "warnings": [
     "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
     "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket connection failed - operating in offline mode {}",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket closed. Code: 1006, Clean: false {}",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket connection failed - operating in offline mode {}",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket closed. Code: 1006, Clean: false {}",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket connection failed - operating in offline mode {}",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket closed. Code: 1006, Clean: false {}",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket connection failed - operating in offline mode {}",
-    "[WARNING] ⚠️ [QualiaLogger] WARN: WebSocket closed. Code: 1006, Clean: false {}"
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger",
+    "[WARNING] [LoggerProvider] Logger not registered, creating temporary logger"
   ],
   "configErrors": [
     "[INFO] ℹ️ [QualiaLogger] INFO: BackendSyncService constructed - configuration will be loaded when start() is called {}",
     "[INFO] ℹ️ [QualiaLogger] INFO: RhythmicMovementController initialized - configuration will be loaded on start() {}",
     "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [NotificationService] Current Configuration: {enabled: true, maxHistorySize: 1000, defaultTtl: 30000ms, enablePriorityQueuing: true, enableThrottling: true}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [ErrorReportingService] Current Configuration: {enabled: true, maxBatchSize: 50, batchFlushInterval: 30000ms, maxRetries: 3, retryDelay: 1000ms}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: HttpService configured successfully {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: DebugService configuration loaded successfully. {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: Configuration loaded successfully {config: Object}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: 🎵 RhythmicMovementController started with configuration loaded {}",
-    "[INFO] ℹ️ [QualiaLogger] INFO: Application initialization completed successfully {configLoaded: true, backendConnected: true, allServicesStarted: true}"
+    "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [Temporary] ERROR: ConfigurationService.getConfig: [object Object]",
+    "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [Temporary] ERROR: ConfigurationService.getConfig: [object Object]",
+    "[ERROR] 🚨 [Temporary] ERROR: ConfigurationService.getConfig: {error: Configuration not loaded. Call loadConfig() first., stack: Error: Configuration not loaded. Call loadConfig()…odules/.vite/deps/inversify.js?v=8fa9317f:1613:12, arguments: Array(0), timestamp: 2025-09-26T11:54:32.056Z}",
+    "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig [object Object]",
+    "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig [object Object]",
+    "[ERROR] 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig {error: Configuration not loaded. Call loadConfig() first., timestamp: 2025-09-26T11:54:32.057Z}",
+    "[LOG] 🔴 CONFIGURATION ERROR DETECTED: [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first.",
+    "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first.\n    at ConfigurationService.getConfig (http://localhost:5173/src/services/ConfigurationService.ts:75:13)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:138:39)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:46:39)\n    at createErrorReportingConfig (http://localhost:5173/src/services/ErrorReportingService.ts:16:36)\n    at new ErrorReportingService (http://localhost:5173/src/services/ErrorReportingService.ts:104:24)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1613:12",
+    "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [Temporary] ERROR: ConfigurationService.getConfig: [object Object]",
+    "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [Temporary] ERROR: ConfigurationService.getConfig: [object Object]",
+    "[ERROR] 🚨 [Temporary] ERROR: ConfigurationService.getConfig: {error: Configuration not loaded. Call loadConfig() first., stack: Error: Configuration not loaded. Call loadConfig()…odules/.vite/deps/inversify.js?v=8fa9317f:1613:12, arguments: Array(0), timestamp: 2025-09-26T11:54:32.058Z}",
+    "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig [object Object]",
+    "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig [object Object]",
+    "[ERROR] 🚨 [Temporary] ERROR: ✗ ERROR ConfigurationService.getConfig {error: Configuration not loaded. Call loadConfig() first., timestamp: 2025-09-26T11:54:32.059Z}",
+    "[LOG] 🔴 CONFIGURATION ERROR DETECTED: [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first.",
+    "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration not loaded. Call loadConfig() first.\n    at ConfigurationService.getConfig (http://localhost:5173/src/services/ConfigurationService.ts:75:13)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:138:39)\n    at ConfigurationService.<anonymous> (http://localhost:5173/src/utils/decorators.ts:46:39)\n    at createErrorReportingConfig (http://localhost:5173/src/services/ErrorReportingService.ts:16:36)\n    at new ErrorReportingService (http://localhost:5173/src/services/ErrorReportingService.ts:104:24)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=8fa9317f:1613:12"
   ]
 }

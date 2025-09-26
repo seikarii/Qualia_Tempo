@@ -41,8 +41,8 @@ export class StreamingVideoService implements IStreamingVideoService {
   private readonly DEBOUNCE_DELAY = 500; // ms
 
   // Reconnection management
-  private reconnectTimer: NodeJS.Timeout | null = null;
-  private pingTimer: NodeJS.Timeout | null = null;
+  private reconnectTimer: number | null = null;
+  private pingTimer: number | null = null;
 
   // Subscription management
   private frameSubscriptions: Map<string, FrameCallback> = new Map();
@@ -156,7 +156,7 @@ export class StreamingVideoService implements IStreamingVideoService {
 
       // Wait for connection to open (never reject - handle errors internally)
       await new Promise<void>((resolve) => {
-        const timeoutId = setTimeout(() => {
+        const timeoutId = this.timerService.setTimeout(() => {
           this.logger.warn(
             "WebSocket connection timeout - operating in offline mode",
           );
@@ -172,12 +172,12 @@ export class StreamingVideoService implements IStreamingVideoService {
         }, 10000);
 
         this.websocket!.addEventListener("open", () => {
-          clearTimeout(timeoutId);
+          this.timerService.clearTimeout(timeoutId);
           resolve();
         });
 
         this.websocket!.addEventListener("error", () => {
-          clearTimeout(timeoutId);
+          this.timerService.clearTimeout(timeoutId);
           this.logger.warn(
             "WebSocket connection failed - operating in offline mode",
           );
@@ -238,7 +238,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     this.clearReconnectTimer();
 
     if (this.pingTimer) {
-      clearInterval(this.pingTimer);
+      this.timerService.clearInterval(this.pingTimer);
       this.pingTimer = null;
     }
 
@@ -344,16 +344,16 @@ export class StreamingVideoService implements IStreamingVideoService {
 
     // Wait for pong response (with timeout)
     return new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
+      const timeoutId = this.timerService.setTimeout(() => {
         this.pendingPings.delete(pingId);
         reject(new Error("Ping timeout"));
       }, this.pingTimeout); // Use configurable timeout
 
       // Store resolver for this ping to be called by handlePong
-      const checkInterval = setInterval(() => {
+      const checkInterval = this.timerService.setInterval(() => {
         if (!this.pendingPings.has(pingId)) {
-          clearTimeout(timeoutId);
-          clearInterval(checkInterval);
+          this.timerService.clearTimeout(timeoutId);
+          this.timerService.clearInterval(checkInterval);
           const roundTripTime = Date.now() - startTime;
           resolve(roundTripTime);
         }
@@ -375,7 +375,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     this.clearReconnectTimer();
 
     // Start ping timer - increased interval for stability
-    this.pingTimer = setInterval(() => {
+    this.pingTimer = this.timerService.setInterval(() => {
       this.ping().catch((error) => {
         // Ping failed, but don't disconnect immediately - just log it
         this.logger.debug("Ping failed, monitoring connection stability", {
@@ -425,7 +425,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     this.connectionStatus.state = "DISCONNECTED";
 
     if (this.pingTimer) {
-      clearInterval(this.pingTimer);
+      this.timerService.clearInterval(this.pingTimer);
       this.pingTimer = null;
     }
 
@@ -537,7 +537,7 @@ export class StreamingVideoService implements IStreamingVideoService {
 
   private clearReconnectTimer(): void {
     if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
+      this.timerService.clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
       this.logger.debug("Cleared reconnect timer");
 
@@ -571,7 +571,7 @@ export class StreamingVideoService implements IStreamingVideoService {
       source: "StreamingVideoService",
     });
 
-    this.reconnectTimer = setTimeout(() => {
+    this.reconnectTimer = this.timerService.setTimeout(() => {
       this.connect().catch((error) => {
         this.logger.error("Reconnection failed", { error });
       });
