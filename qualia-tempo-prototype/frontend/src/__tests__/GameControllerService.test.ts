@@ -95,8 +95,13 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
     test("should handle StartGame action", async () => {
       await sut.start();
       
-      const mockCallback = vi.fn();
-      mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
+      let receivedEvent: any = null;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("GameStateChanged", (event: any) => {
+          receivedEvent = event;
+          resolve();
+        });
+      });
 
       await mocks.mockEventBus.emit({
         type: "PlayerAction",
@@ -104,8 +109,10 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
 
-      // Synchronous mock - no wait needed
-      expect(mockCallback).toHaveBeenCalledWith(
+      // Wait for the event to be received
+      await eventPromise;
+
+      expect(receivedEvent).toEqual(
         expect.objectContaining({
           type: "GameStateChanged",
           newState: "Playing",
@@ -116,8 +123,17 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
     test("should handle PauseGame action", async () => {
       await sut.start();
       
-      const mockCallback = vi.fn();
-      mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
+      let eventCount = 0;
+      let lastEvent: any = null;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("GameStateChanged", (event: any) => {
+          eventCount++;
+          lastEvent = event;
+          if (eventCount === 2) { // Wait for both StartGame and PauseGame events
+            resolve();
+          }
+        });
+      });
 
       // Start game first
       await mocks.mockEventBus.emit({
@@ -132,7 +148,11 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
         action: "PauseGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
-      expect(mockCallback).toHaveBeenCalledWith(
+
+      // Wait for both events to be received
+      await eventPromise;
+
+      expect(lastEvent).toEqual(
         expect.objectContaining({
           type: "GameStateChanged",
           newState: "Paused",
@@ -143,15 +163,24 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
     test("should handle ResetGame action", async () => {
       await sut.start();
       
-      const mockCallback = vi.fn();
-      mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
+      let receivedEvent: any = null;
+      const eventPromise = new Promise<void>((resolve) => {
+        mocks.mockEventBus.subscribe("GameStateChanged", (event: any) => {
+          receivedEvent = event;
+          resolve();
+        });
+      });
 
       await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "ResetGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
-      expect(mockCallback).toHaveBeenCalledWith(
+
+      // Wait for the event to be received
+      await eventPromise;
+
+      expect(receivedEvent).toEqual(
         expect.objectContaining({
           type: "GameStateChanged",
           newState: "Menu",

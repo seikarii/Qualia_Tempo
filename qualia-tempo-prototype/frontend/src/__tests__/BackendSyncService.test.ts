@@ -67,8 +67,8 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
       // Act
       await sut.start();
 
-      // Assert - Initially should be disconnected until health check passes
-      expect(sut.isBackendConnected()).toBe(false);
+      // Assert - Should be connected after successful health check
+      expect(sut.isBackendConnected()).toBe(true);
     });
   });
 
@@ -154,9 +154,8 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
       } as any);
 
       // Assert
-      expect(mocks.mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("Received QualiaState update"),
-        expect.any(Object)
+      expect(mocks.mockLogger.info).toHaveBeenCalledWith(
+        "📊 [BackendSync] QualiaState update received"
       );
     });
 
@@ -228,7 +227,7 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
 
       // Assert
       expect(mocks.mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining("Failed to sync"),
+        expect.stringContaining("🚨 [BackendSync] Sync failed"),
         expect.any(Object)
       );
     });

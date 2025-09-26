@@ -8,8 +8,9 @@ import { describe, test, expect, beforeEach, afterEach, afterAll, it, vi, type M
 // Mock electron module completely
 const appEventHandlers = new Map<string, (...args: any[]) => any>();
 const mockApp = {
-  whenReady: vi.fn().mockImplementation(() => {
-    // Return a resolved promise and store any callback
+  whenReady: vi.fn().mockImplementation(async () => {
+    // Simulate the whenReady behavior - return a resolved promise
+    // The .then() callback will execute after this promise resolves
     return Promise.resolve();
   }),
   on: vi.fn().mockImplementation((...args: any[]) => {
@@ -106,12 +107,15 @@ describe('Electron Main Process', () => {
       
       // Verify console log was called
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        '🚀 Qualia Tempo Electron Main Process Started'
+        '🚀 Qualia Tempo Electron Main Process Started - Neural Core Active'
       );
     });
 
     it('should register app event listeners', async () => {
       await import('../main');
+      
+      // Wait for the whenReady promise to resolve and event handlers to be registered
+      await new Promise(resolve => setTimeout(resolve, 0));
       
       // Verify app event listeners are registered
       expect(mockApp.on).toHaveBeenCalledWith('activate', expect.any(Function));

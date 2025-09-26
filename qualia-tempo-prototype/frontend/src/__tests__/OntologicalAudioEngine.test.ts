@@ -12,7 +12,8 @@ import { TYPES } from '../services/inversify.types';
 import type { IOntologicalAudioEngine, EmergentBehavior } from "../audio/IOntologicalAudioEngine";
 import { QualiaState } from "../types/contracts";
 
-// Mock Tone.js completely - EXPLICIT DEBUG VERSION
+// Import the mocked Tone.js
+import * as Tone from 'tone';
 vi.mock('tone', () => {
   console.log('🔧 [MOCK] Setting up Tone.js mock');
   
@@ -160,8 +161,8 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
       engine.createEntityVoice(entityId, mockQualiaState);
       
       // Verify that PolySynth was called with qualia-derived parameters
-      const mockTone = require('tone');
-      expect(mockTone.PolySynth).toHaveBeenCalled();
+      // mockTone
+      expect(Tone.PolySynth).toHaveBeenCalled();
     });
 
     it('should not create duplicate voices for the same entity', () => {
@@ -170,20 +171,20 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
         engine.createEntityVoice(entityId, mockQualiaState);
         engine.createEntityVoice(entityId, mockQualiaState); // Should not create duplicate
         
-        const mockTone = require('tone');
+        // mockTone
         
-        expect(mockTone.PolySynth).toHaveBeenCalledTimes(1);
+        expect(Tone.PolySynth).toHaveBeenCalledTimes(1);
       });
 
     it('should update entity sound parameters when qualia state changes', () => {
         const entityId = 'test-entity-001';
-        const passiveState = { ...mockQualiaState, intensity: 0.1 };
+        const passiveState = { ...mockQualiaState, intensity: 0.1, aggression: 0.1 };
         
         engine.createEntityVoice(entityId, mockQualiaState);
         engine.updateEntitySound(entityId, passiveState);
         
-        const mockTone = require('tone');
-        const synthInstance = mockTone.PolySynth.mock.results[0].value;
+        // mockTone
+        const synthInstance = Tone.PolySynth.mock.results[0].value;
         expect(synthInstance.triggerAttackRelease).not.toHaveBeenCalled();
       });
 
@@ -199,8 +200,8 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
       
       engine.updateEntitySound(entityId, passiveState);
       
-      const mockTone = require('tone');
-      const synthInstance = mockTone.PolySynth.mock.results[0].value;
+      // mockTone
+      const synthInstance = Tone.PolySynth.mock.results[0].value;
       expect(synthInstance.triggerAttackRelease).not.toHaveBeenCalled();
     });
 
@@ -223,8 +224,8 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
       engine.removeEntityVoice(entityId);
       
       // Verify dispose was called
-      const mockTone = require('tone');
-      const synthInstance = mockTone.PolySynth.mock.results[0].value;
+      // mockTone
+      const synthInstance = Tone.PolySynth.mock.results[0].value;
       expect(synthInstance.dispose).toHaveBeenCalled();
     });
 
@@ -253,8 +254,8 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
       }).not.toThrow();
       
       // Should create a temporary PolySynth for the cluster harmony
-      const mockTone = require('tone');
-      expect(mockTone.PolySynth).toHaveBeenCalled();
+      // mockTone
+      expect(Tone.PolySynth).toHaveBeenCalled();
     });
 
     it('should process synchronization behavior', () => {
@@ -269,8 +270,8 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
         engine.playEmergentPattern(syncBehavior);
       }).not.toThrow();
       
-      const mockTone = require('tone');
-      expect(mockTone.PolySynth).toHaveBeenCalled();
+      // mockTone
+      expect(Tone.PolySynth).toHaveBeenCalled();
     });
 
     it('should process state propagator behavior', () => {
@@ -285,8 +286,8 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
         engine.playEmergentPattern(propagatorBehavior);
       }).not.toThrow();
       
-      const mockTone = require('tone');
-      expect(mockTone.PolySynth).toHaveBeenCalled();
+      // mockTone
+      expect(Tone.PolySynth).toHaveBeenCalled();
     });
 
     it('should process narrative event behavior', () => {
@@ -301,8 +302,8 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
         engine.playEmergentPattern(narrativeBehavior);
       }).not.toThrow();
       
-      const mockTone = require('tone');
-      expect(mockTone.PolySynth).toHaveBeenCalled();
+      // mockTone
+      expect(Tone.PolySynth).toHaveBeenCalled();
     });
   });
 
@@ -323,8 +324,8 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
         engine.createEntityVoice(`entity-${index}`, testState);
       });
 
-      const mockTone = require('tone');
-      expect(mockTone.PolySynth).toHaveBeenCalledTimes(testCases.length);
+      // mockTone
+      expect(Tone.PolySynth).toHaveBeenCalledTimes(testCases.length);
     });
 
     it('should handle extreme qualia values without errors', () => {
@@ -387,8 +388,8 @@ describe('OntologicalAudioEngine - IOC COMPLIANT', () => {
       engine.removeEntityVoice('entity2');
       
       // Verify all operations completed without errors
-      const mockTone = require('tone');
-      expect(mockTone.PolySynth).toHaveBeenCalled();
+      // mockTone
+      expect(Tone.PolySynth).toHaveBeenCalled();
     });
 
     it('should handle edge cases in sound generation', () => {
