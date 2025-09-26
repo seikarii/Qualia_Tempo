@@ -2,16 +2,15 @@ import '@testing-library/jest-dom/vitest';
 import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
-// QUALIA.CODE Global Decorator Mocks - CRITICAL FOR IOC TEST INTEGRITY
-// Mock decorators GLOBALLY to prevent import resolution issues
+// ÚNICA FUENTE DE VERDAD PARA MOCKS DE DECORADORES
 vi.mock('../utils/decorators', () => ({
-  logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  validate: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  throttle: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  validateEventProperty: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  measureTime: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  qualiaMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
+  logMethod: vi.fn().mockImplementation(() => (d: any) => d),
+  catchError: vi.fn().mockImplementation(() => (d: any) => d),
+  validate: vi.fn().mockImplementation(() => (d: any) => d),
+  throttle: vi.fn().mockImplementation(() => (d: any) => d),
+  validateEventProperty: vi.fn().mockImplementation(() => (d: any) => d),
+  measureTime: vi.fn().mockImplementation(() => (d: any) => d),
+  qualiaMethod: vi.fn().mockImplementation(() => (d: any) => d),
 }));
 
 // QUALIA.CODE Global Tone.js Mock - Prevent audio module import errors in tests

@@ -13,13 +13,6 @@ import { QualiaLogger } from '../Logger';
 import { Container } from 'inversify';
 import { TYPES } from '../inversify.types';
 
-// Mock decorators
-vi.mock('../../utils/decorators', () => ({
-  logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  validateEventProperty: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-}));
-
 describe('DebugService - GOLD.CODE IoC Testing', () => {
   let debugService: IDebugService;
   let container: Container;

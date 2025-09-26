@@ -16,6 +16,7 @@ import { merge } from 'lodash-es';
 import { Container } from 'inversify';
 import { TYPES } from '../services/inversify.types';
 
+
 // Import all interfaces for proper typing
 import type { ILogger } from '../services/interfaces/ILogger';
 import type { IEventBus } from '../services/interfaces/IEventBus';
@@ -138,23 +139,61 @@ const mockEventBus: IEventBus = (() => {
 const mockConfigurationService: IConfigurationService = {
   loadConfig: vi.fn().mockResolvedValue(undefined),
   getConfig: vi.fn().mockReturnValue({
-    gameController: { 
-      maxHealth: 100, 
+    gameController: {
+      maxHealth: 100,
       initialScore: 0,
       tickRate: 60
     },
-    errorReporting: { 
-      enabled: true, 
+    errorReporting: {
+      enabled: true,
       batchSize: 5,
       batchTimeout: 1000,
       maxRetries: 3,
       rateLimitWindow: 60000,
       rateLimitMax: 100
     },
-    debug: { 
-      enableAIAnalysis: false,
-      logLevel: 'info',
-      performanceTracking: true
+    debugService: {
+      logging: {
+        enableConsoleOutput: true,
+        enableFileOutput: false,
+        logLevel: 'info',
+        maxLogFiles: 10,
+        maxLogSize: 1000000
+      },
+      eventMonitoring: {
+        enableEventLogging: true,
+        enableEventMetrics: true,
+        maxEventHistory: 1000,
+        eventLogThrottle: 100
+      },
+      performance: {
+        enablePerformanceTracking: true,
+        enableMemoryMonitoring: true,
+        enableFrameRateTracking: true,
+        metricsUpdateInterval: 5000
+      },
+      development: {
+        enableDebugOverlay: false,
+        enableCheats: false,
+        enableHotReload: false,
+        enableBreakpoints: false
+      },
+      profiling: {
+        enableProfiling: true,
+        profileUpdateInterval: 1000,
+        maxProfileSamples: 1000
+      },
+      errorTracking: {
+        enableErrorStackTraces: true,
+        enableErrorReporting: true,
+        maxErrorHistory: 100
+      },
+      network: {
+        enableNetworkLogging: false,
+        enableRequestMetrics: false,
+        logRequestHeaders: false,
+        logRequestBodies: false
+      }
     },
     backend: {
       url: 'http://localhost:8000',
@@ -271,140 +310,63 @@ const mockConfigurationService: IConfigurationService = {
     aura: { rings: 4, rotationSpeed: 22, pulseDuration: 9 }
   }),
   getConfigSection: vi.fn().mockImplementation((section: string) => {
+    if (section === 'debugService') {
+      return {
+        logging: {
+          enableConsoleOutput: true,
+          enableFileOutput: false,
+          logLevel: 'info',
+          maxLogFiles: 10,
+          maxLogSize: 1000000
+        },
+        eventMonitoring: {
+          enableEventLogging: true,
+          enableEventMetrics: true,
+          maxEventHistory: 1000,
+          eventLogThrottle: 100
+        },
+        performance: {
+          enablePerformanceTracking: true,
+          enableMemoryMonitoring: true,
+          enableFrameRateTracking: true,
+          metricsUpdateInterval: 5000
+        },
+        development: {
+          enableDebugOverlay: false,
+          enableCheats: false,
+          enableHotReload: false,
+          enableBreakpoints: false
+        },
+        profiling: {
+          enableProfiling: true,
+          profileUpdateInterval: 1000,
+          maxProfileSamples: 1000
+        },
+        errorTracking: {
+          enableErrorStackTraces: true,
+          enableErrorReporting: true,
+          maxErrorHistory: 100
+        },
+        network: {
+          enableNetworkLogging: false,
+          enableRequestMetrics: false,
+          logRequestHeaders: false,
+          logRequestBodies: false
+        }
+      };
+    }
+    // Fallback for other sections
     const defaultConfig: any = {
       gameController: { maxHealth: 100, initialScore: 0, tickRate: 60 },
       errorReporting: { enabled: true, batchSize: 5, batchTimeout: 1000, maxRetries: 3 },
-      debug: { enableAIAnalysis: false, logLevel: 'info', performanceTracking: true },
-      backend: { url: 'http://localhost:8000', timeout: 5000, retryAttempts: 3 },
       backendSync: {
         api: {
           baseUrl: 'http://localhost:8000',
           qualiaEndpoint: '/api/qualia',
           healthEndpoint: '/api/health',
           timeout: 5000
-        },
-        streaming: {
-          websocket: {
-            url: 'ws://127.0.0.1:8000/ws/video_stream',
-            maxReconnectAttempts: 10,
-            reconnectDelay: 1000,
-            pingInterval: 30000,
-            pingTimeout: 5000,
-            connectionTimeout: 10000
-          }
-        },
-        sync: {
-          throttleDelay: 100,
-          batchSize: 10,
-          maxRetries: 3,
-          retryDelay: 1000
-        },
-        connection: {
-          healthCheckInterval: 30000,
-          connectionTimeout: 10000,
-          maxFailedAttempts: 5
-        },
-        validation: {
-          enableSchemaValidation: true,
-          strictMode: false,
-          logValidationErrors: true
-        },
-        performance: {
-          enableMetrics: true,
-          metricsInterval: 5000
         }
-      },
-      audioService: {
-        rhythmicFeedback: {
-          perfect: { frequency: 880, gain: 0.3, duration: 0.2 },
-          good: { frequency: 660, gain: 0.2, duration: 0.2 },
-          miss: { frequency: 220, gain: 0.1, duration: 0.2 }
-        },
-        metronome: {
-          frequency: 800,
-          gain: 0.05,
-          duration: 0.1
-        },
-        audioEngine: {
-          sampleRate: 44100,
-          channels: 2,
-          bufferSize: 2048
-        },
-        entityVoices: {
-          player: { baseFrequency: 440, modulationRange: 100 },
-          boss: { baseFrequency: 220, modulationRange: 50 },
-          environment: { baseFrequency: 110, modulationRange: 25 }
-        },
-        enableAudioPooling: true,
-        maxConcurrentSounds: 10,
-        audioFadeTime: 0.5,
-        volume: 0.7,
-        enableSubtitles: false,
-        soundEnabled: true,
-        musicEnabled: true,
-        muteDuringDevelopment: false
-      },
-      audio: { masterVolume: 0.7, enableSpatialAudio: true, bufferSize: 2048 },
-      rhythm: { bpm: 120, syncTolerance: 100, adaptive: true },
-      notifications: { enabled: true, maxConcurrent: 5, defaultDuration: 3000 },
-      qualia: { decayRate: 0.01, intensityMultiplier: 1.2, flowThreshold: 0.7 },
-      qualiaCalculator: {
-        baseQualiaState: {
-          intensity: 0.3,
-          precision: 0.5,
-          aggression: 0.0,
-          flow: 0.4,
-          chaos: 0.0,
-          recovery: 0.0,
-          transcendence: 0.0,
-        },
-        performanceMultipliers: {
-          perfectHit: 1.2,
-          goodHit: 1.0,
-          missHit: 0.8,
-          comboBonus: 1.5,
-        },
-        decayRates: {
-          intensity: 0.001,
-          precision: 0.001,
-          aggression: 0.001,
-          flow: 0.001,
-          chaos: 0.001,
-          recovery: 0.001,
-          transcendence: 0.001,
-        },
-        thresholds: {
-          highIntensity: 0.8,
-          lowPrecision: 0.2,
-          chaosThreshold: 0.7,
-          transcendenceThreshold: 0.9,
-        },
-        comboSystem: {
-          maxComboMultiplier: 2.0,
-          comboDecayTime: 5000,
-          perfectComboBonus: 1.1,
-        },
-        recoveryMechanics: {
-          recoveryRate: 0.01,
-          maxRecovery: 1.0,
-          recoveryCooldown: 1000,
-        },
-        updateIntervalMs: 100,
-        historySize: 100,
-        hitNoteMultipliers: { intensity: 0.1, precision: 0.05, flow: 0.08 },
-        missNoteMultipliers: { chaos: 0.1, precision: -0.05, flow: -0.03 },
-        dashMultipliers: { aggression: 0.1, intensity: 0.05 },
-        fastForwardMultipliers: { aggression: 0.15, intensity: 0.08 },
-        rewindMultipliers: { recovery: 0.1, precision: 0.05 },
-        updateInterval: 100,
-        intensityDecay: 0.001,
-        precisionDecay: 0.001,
-        aggressionDecay: 0.001,
-        flowDecay: 0.001,
-        chaosDecay: 0.001,
-        recoveryDecay: 0.001,
-        transcendenceDecay: 0.001,
-      },
+      }
     };
     return defaultConfig[section] || {};
   }),

@@ -10,12 +10,6 @@ import { IEventBus } from '../interfaces/IEventBus';
 import { QualiaLogger } from '../Logger';
 import { Container } from 'inversify';
 
-// Mock decorators
-vi.mock('../../utils/decorators', () => ({
-  logMethod: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-  catchError: () => (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) => descriptor,
-}));
-
 describe('GameStateStoreService - GOLD.CODE IoC Testing', () => {
   let gameStateStoreService: GameStateStoreService;
   let container: Container;

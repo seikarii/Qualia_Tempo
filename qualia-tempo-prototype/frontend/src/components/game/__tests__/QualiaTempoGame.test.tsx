@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 /**
  * QualiaTempoGame Component Tests
  * QUALIA.CODE v1.1 compliant testing
@@ -6,7 +6,6 @@ import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import '@testing-library/vi-dom';
 
 // Mock the hooks and services
 vi.mock('../../../services/hooks');
@@ -131,98 +130,5 @@ describe('QualiaTempoGame', () => {
 
     expect(screen.getByTestId('canvas')).toBeInTheDocument();
     expect(screen.getByTestId('qualia-tempo-hud')).toBeInTheDocument();
-  });
-});
-
-vi.mock('../PlayerAvatar', () => {
-  return function MockPlayerAvatar(props: any) {
-    return React.createElement('div', { 'data-testid': 'player-avatar', ...props });
-  };
-});
-
-vi.mock('../QualiaFieldRenderer', () => {
-  return function MockQualiaFieldRenderer(props: any) {
-    return React.createElement('div', { 'data-testid': 'qualia-field-renderer', ...props });
-  };
-});
-
-vi.mock('../MusicalNotesRenderer', () => {
-  return function MockMusicalNotesRenderer(props: any) {
-    return React.createElement('div', { 'data-testid': 'musical-notes-renderer', ...props });
-  };
-});
-
-vi.mock('../BossRenderer', () => {
-  return function MockBossRenderer(props: any) {
-    return React.createElement('div', { 'data-testid': 'boss-renderer', ...props });
-  };
-});
-
-vi.mock('../PlayerRenderer', () => {
-  return function MockPlayerRenderer(props: any) {
-    return React.createElement('div', { 'data-testid': 'player-renderer', ...props });
-  };
-});
-
-vi.mock('../GridRenderer', () => {
-  return function MockGridRenderer(props: any) {
-    return React.createElement('div', { 'data-testid': 'grid-renderer', ...props });
-  };
-});
-
-// Mock services
-vi.mock('../../../services/hooks', () => ({
-  useService: vi.fn(() => ({
-    emit: vi.fn(),
-    subscribe: vi.fn(),
-    unsubscribe: vi.fn(),
-    start: vi.fn(),
-    stop: vi.fn(),
-  })),
-}));
-
-// Mock store
-vi.mock('../../../state/useGameStore', () => ({
-  useGameStore: vi.fn(() => ({
-    gameState: 'idle',
-    qualiaState: {
-      consciousness: 0,
-      attention: 0,
-      clarity: 0,
-      flow: 0,
-      intensity: 50,
-      transcendence: 0
-    },
-    player: {
-      position: { x: 0, y: 0 },
-      health: 100,
-      score: 0
-    },
-    isPlaying: false,
-    score: 0
-  })),
-}));
-
-// Import the component under test AFTER mocks
-import QualiaTempoGame from '../QualiaTempoGame';
-
-describe('QualiaTempoGame', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('renders main game canvas', () => {
-    render(<QualiaTempoGame />);
-    
-    const canvas = screen.getByTestId('canvas');
-    expect(canvas).toBeInTheDocument();
-  });
-
-  it('renders all game components', () => {
-    render(<QualiaTempoGame />);
-    
-    expect(screen.getByTestId('canvas')).toBeInTheDocument();
-    expect(screen.getByTestId('qualia-tempo-hud')).toBeInTheDocument();
-    expect(screen.getByTestId('player-avatar')).toBeInTheDocument();
   });
 });
