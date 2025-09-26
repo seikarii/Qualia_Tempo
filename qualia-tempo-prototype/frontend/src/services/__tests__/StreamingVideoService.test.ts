@@ -31,80 +31,62 @@ const mockConfig = {
 const mockWebSocketInstances: MockWebSocket[] = [];
 
 class MockWebSocket {
+  static instances = mockWebSocketInstances;
   url: string;
   readyState: number = WebSocket.CONNECTING;
   onopen: ((event: Event) => void) | null = null;
   onmessage: ((event: MessageEvent) => void) | null = null;
   onclose: ((event: CloseEvent) => void) | null = null;
   onerror: ((event: Event) => void) | null = null;
-  
+
+  private listeners: { [key: string]: Function[] } = {};
+
   constructor(url: string) {
     this.url = url;
     mockWebSocketInstances.push(this);
+    MockWebSocket.instances.push(this);
   }
-  
+
   send = vi.fn();
-  close = vi.fn();
-  addEventListener = vi.fn();
-  removeEventListener = vi.fn();
-  
-  // Simulation methods for testing
+  close = vi.fn().mockImplementation(() => {
+    this._simulateClose(1000, 'Client closed');
+  });
+
+  addEventListener = vi.fn((type: string, listener: Function) => {
+    if (!this.listeners[type]) this.listeners[type] = [];
+    this.listeners[type].push(listener);
+  });
+
+  removeEventListener = vi.fn((type: string, listener: Function) => {
+    if (this.listeners[type]) {
+      this.listeners[type] = this.listeners[type].filter(l => l !== listener);
+    }
+  });
+
+  private _dispatchEvent(type: string, event: Event) {
+    if (typeof (this as any)[`on${type}`] === 'function') {
+      (this as any)[`on${type}`](event);
+    }
+    (this.listeners[type] || []).forEach(listener => listener(event));
+  }
+
   _simulateOpen() {
     this.readyState = WebSocket.OPEN;
-    const event = new Event('open');
-    if (this.onopen) {
-      this.onopen(event);
-    }
-    // Also trigger addEventListener listeners
-    this.addEventListener.mock.calls.forEach((call: any[]) => {
-      const [type, listener] = call;
-      if (type === 'open') {
-        listener(event);
-      }
-    });
+    this._dispatchEvent('open', new Event('open'));
   }
-  
-  _simulateMessage(data: string) {
-    const event = new MessageEvent('message', { data });
-    if (this.onmessage) {
-      this.onmessage(event);
-    }
-    // Also trigger addEventListener listeners
-    this.addEventListener.mock.calls.forEach((call: any[]) => {
-      const [type, listener] = call;
-      if (type === 'message') {
-        listener(event);
-      }
-    });
+
+  _simulateMessage(data: any) {
+    this._dispatchEvent('message', new MessageEvent('message', { data }));
   }
-  
-  _simulateClose(code: number = 1000, reason: string = '') {
+
+  _simulateClose(code = 1000, reason = 'Closed') {
     this.readyState = WebSocket.CLOSED;
-    const event = new CloseEvent('close', { code, reason });
-    if (this.onclose) {
-      this.onclose(event);
-    }
-    // Also trigger addEventListener listeners
-    this.addEventListener.mock.calls.forEach((call: any[]) => {
-      const [type, listener] = call;
-      if (type === 'close') {
-        listener(event);
-      }
-    });
+    this._dispatchEvent('close', new CloseEvent('close', { code, reason }));
   }
-  
+
   _simulateError() {
-    const event = new Event('error');
-    if (this.onerror) {
-      this.onerror(event);
-    }
-    // Also trigger addEventListener listeners
-    this.addEventListener.mock.calls.forEach((call: any[]) => {
-      const [type, listener] = call;
-      if (type === 'error') {
-        listener(event);
-      }
-    });
+    this.readyState = WebSocket.CLOSED;
+    this._dispatchEvent('error', new Event('error'));
   }
 }
 
@@ -118,17 +100,19 @@ describe('StreamingVideoService', () => {
 
   beforeEach(() => {
     resetAllMocks();
-    
+    vi.clearAllMocks();
+
+    // Clear mock instances between tests
+    mockWebSocketInstances.length = 0;
+
     // Create isolated test container
     container = createTestContainer();
     mocks = getMocksFromContainer(container);
-    
+
     // Get service instance from test container - NO MANUAL INSTANTIATION
     service = container.get<IStreamingVideoService>(TYPES.IStreamingVideoService);
-  });
 
-  beforeEach(() => {
-    vi.clearAllMocks();
+    // Mock WebSocket globally
     vi.stubGlobal('WebSocket', MockWebSocket as any);
   });
 
@@ -159,7 +143,7 @@ describe('StreamingVideoService', () => {
     it('should return initial connection status', () => {
       const status = service.getConnectionStatus();
       expect(status).toBeDefined();
-      expect(status.state).toBe('disconnected');
+      expect(status.state).toBe('IDLE');
       expect(status.connected).toBe(false);
     });
 
@@ -173,7 +157,7 @@ describe('StreamingVideoService', () => {
     it('should handle disconnection', () => {
       service.disconnect();
       const status = service.getConnectionStatus();
-      expect(status.state).toBe('disconnected');
+      expect(status.state).toBe('IDLE');
     });
   });
 
@@ -197,19 +181,21 @@ describe('StreamingVideoService', () => {
     });
 
     it('should handle connection errors gracefully', async () => {
-      // Start connection process
+      // El método connect() está diseñado para NO rechazar la promesa.
+      // En su lugar, maneja el error internamente y actualiza el estado.
       const connectPromise = service.connect();
-      
-      // Simulate connection error
-      const mockWS = mockWebSocketInstances[0];
+
+      // Simula un error de conexión
+      const mockWS = mockWebSocketInstances[mockWebSocketInstances.length - 1];
       mockWS._simulateError();
-      
-      // Should handle error without throwing
-      await expect(connectPromise).rejects.toThrow();
-      
-      // Verify error status
+
+      // Esperamos a que la lógica interna de connect() termine
+      await connectPromise;
+
+      // Verificamos que el estado del servicio refleje el error
       const status = service.getConnectionStatus();
-      expect(status.state).toBe('error');
+      expect(status.state).toBe('ERROR');
+      expect(status.connected).toBe(false);
       expect(status.lastError).toBeDefined();
     });
   });
