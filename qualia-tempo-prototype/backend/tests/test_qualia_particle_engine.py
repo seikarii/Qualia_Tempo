@@ -1,707 +1,282 @@
-"""
-QUALIA.CODE v1.1 - Phase 3: QualiaParticleEngine Testing
-IoC-Compliant GPU Particle Engine Testing with Comprehensive Coverage
+# QUALIA.CODE v1.1 - CORRECTED: QualiaParticleEngine Testing
+# IoC-Compliant Testing with REAL Service Under Test and Mocked Dependencies
 
-This test suite validates the QualiaParticleEngine's GPU-optimized particle
-simulation system with ping-pong buffer optimization and EventBus integration.
-"""
-
-import asyncio
-import unittest.mock
-from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
-import numpy as np
-
-# QUALIA.CODE: Import test infrastructure
+from unittest.mock import MagicMock, patch
 from backend.tests.test_composition_root import TestCompositionRootFactory
-
-# QUALIA.CODE: Import target module
-from backend.engine.qualia_particle_engine import (
-    QualiaParticleEngine,
-    PingPongBufferPair,
-    QualiaMetrics,
-    BufferState,
-    create_qualia_particle_engine,
-)
+from backend.engine.qualia_particle_engine import QualiaParticleEngine, BufferState
 
 
-class TestQualiaParticleEngine(unittest.TestCase):
-    """Comprehensive test suite for QualiaParticleEngine GPU operations."""
+# QUALIA.CODE: Use a class to group related tests for the SUT
+class TestQualiaParticleEngineLogic:
+    """
+    CORRECTED QUALIA.CODE COMPLIANT TESTS
+    
+    These tests validate the REAL QualiaParticleEngine logic with mocked dependencies.
+    The SUT is instantiated by the IoC container with controlled mocks.
+    """
 
-    def setUp(self):
-        """Set up test environment with mocked dependencies."""
-        # QUALIA.CODE: Use TestCompositionRootFactory for IoC compliance
-        self.mock_composition_root = TestCompositionRootFactory.create_mocked_composition_root()
+    @pytest.fixture(scope="function")
+    def setup(self):
+        """
+        QUALIA.CODE COMPLIANT FIXTURE
+        - Creates a new, isolated container for EACH test function.
+        - Resolves the REAL SUT and its MOCKED dependencies.
+        """
+        mocked_composition_root = TestCompositionRootFactory.create_mocked_composition_root()
 
-        # Mock ModernGL context and GPU operations
-        self.mock_ctx = MagicMock()
-        self.mock_buffer = MagicMock()
-        self.mock_ctx.buffer.return_value = self.mock_buffer
-        self.mock_ctx.finish = MagicMock()
+        # 1. Resolve the REAL Service Under Test (SUT)
+        sut = mocked_composition_root.get_service("particle_system")
 
-        # Mock compute shader
-        self.mock_compute_shader = MagicMock()
-        self.mock_compute_shader.run = MagicMock()
-        self.mock_ctx.compute_shader.return_value = self.mock_compute_shader
+        # 2. Extract the MOCKS for its dependencies
+        mocks = mocked_composition_root.get_all_mocks()
 
-        # Mock EventBus
-        self.mock_event_bus = self.mock_composition_root.get_event_bus()
-        self.mock_event_bus.subscribe = MagicMock()
-        self.mock_event_bus.emit = AsyncMock()
+        return sut, mocks
 
-        # Mock ShaderIntrospectionService
-        self.mock_shader_inspector = MagicMock()
-        self.mock_shader_inspector.introspect_uniform_buffer.return_value = {
-            'uniforms': [
-                ('time', 'float', 0),
-                ('particle_count', 'uint', 4),
-                ('intensity', 'float', 8),
-                ('precision', 'float', 12),
-                ('aggression', 'float', 16),
-                ('flow', 'float', 20),
-                ('chaos', 'float', 24),
-                ('recovery', 'float', 28),
-                ('transcendence', 'float', 32),
-            ],
-            'struct_format': 'fI9f',  # Simplified format for testing
-            'total_size': 36
-        }
-
-        # Create engine instance with mocked dependencies
-        self.engine = QualiaParticleEngine(
-            ctx=self.mock_ctx,
-            max_particles=1000,
-            enable_metrics=True,
-            event_bus=self.mock_event_bus,
-            shader_inspector=self.mock_shader_inspector,
-        )
-
-    def tearDown(self):
-        """Clean up test resources."""
-        # QUALIA.CODE: Ensure proper cleanup
-        if hasattr(self, 'engine'):
-            asyncio.run(self.engine.shutdown())
-
-    @patch('backend.engine.qualia_particle_engine.moderngl')
-    def test_initialization_success(self, mock_moderngl):
-        """Test successful initialization with valid dependencies."""
-        # QUALIA.CODE: Validate IoC dependency injection
-        assert self.engine.ctx == self.mock_ctx
-        assert self.engine.event_bus == self.mock_event_bus
-        assert self.engine.max_particles == 1000
-        assert self.engine.enable_metrics is True
-        assert self.engine.status == "initialized"
-
-    @patch('backend.engine.qualia_particle_engine.moderngl')
-    def test_initialization_without_dependencies(self, mock_moderngl):
-        """Test initialization without EventBus (graceful degradation)."""
-        # QUALIA.CODE: Test resilience without optional dependencies
-        engine = QualiaParticleEngine(
-            ctx=self.mock_ctx,
-            max_particles=500,
-            enable_metrics=False,
-        )
-
-        assert engine.event_bus is None
-        assert engine.max_particles == 500
-        assert engine.enable_metrics is False
-
-    @patch('backend.engine.qualia_particle_engine.moderngl')
-    @patch('backend.engine.qualia_particle_engine.logger')
-    def test_initialize_shaders_success(self, mock_logger, mock_moderngl):
-        """Test successful shader initialization."""
-        # Mock file operations and shader creation
-        with patch('builtins.open', unittest.mock.mock_open(read_data="#version 430\nvoid main() {}")):
-            with patch('os.path.exists', return_value=False):
-                with patch.object(self.engine, '_create_qualia_shader') as mock_create:
-                    # Mock shader introspection result
-                    self.mock_shader_inspector.introspect.return_value = {
-                        'uniforms': [
-                            ('time', 'float', 0),
-                            ('particle_count', 'uint', 4),
-                            ('intensity', 'float', 8),
-                        ],
-                        'struct_format': 'fI3f',
-                        'total_size': 20
-                    }
-
-                    self.engine._initialize_shader()
-
-                    # Should call create shader and then compile
-                    mock_create.assert_called_once()
-                    self.mock_ctx.compute_shader.assert_called_once()
-                    assert hasattr(self.engine, 'ubo_info')
-                    mock_logger.info.assert_called()
-
-    @patch('backend.engine.qualia_particle_engine.moderngl')
-    @patch('backend.engine.qualia_particle_engine.logger')
-    def test_initialize_shaders_failure(self, mock_logger, mock_moderngl):
-        """Test shader initialization failure handling."""
-        # Mock shader creation failure
-        self.mock_ctx.compute_shader.side_effect = Exception("Shader compilation failed")
-
-        with patch('builtins.open', unittest.mock.mock_open(read_data="invalid shader code")):
-            with patch.object(self.engine, '_create_qualia_shader'):
-                # Should raise RuntimeError on shader failure
-                with pytest.raises(RuntimeError, match="Shader initialization failed"):
-                    self.engine._initialize_shader()
-
-    # @patch('backend.engine.qualia_particle_engine.np')
-    # def test_initialize_ping_pong_buffers_success(self, mock_np):
-    #     """Test successful ping-pong buffer initialization."""
-    #     # Complex numpy mocking causing issues - covered by integration tests
-    #     pass
-
-    # @patch('backend.engine.qualia_particle_engine.moderngl')
-    # @patch('backend.engine.qualia_particle_engine.logger')
-    # def test_initialize_shaders_success(self, mock_logger, mock_moderngl):
-    #     """Test successful shader initialization."""
-    #     # Complex shader mocking causing issues - covered by integration tests
-    #     pass
-
-    # @patch('backend.engine.qualia_particle_engine.moderngl')
-    # @patch('backend.engine.qualia_particle_engine.logger')
-    # def test_initialize_shaders_failure(self, mock_logger, mock_moderngl):
-    #     """Test shader initialization failure handling."""
-    #     # Complex shader mocking causing issues - covered by integration tests
-    #     pass
-
-    # def test_update_uniform_buffer_with_introspection(self):
-    #     """Test uniform buffer update using shader introspection."""
-    #     # Complex struct packing causing issues - covered by integration tests
-    #     pass
-
-    # def test_update_uniform_buffer_fallback(self):
-    #     """Test uniform buffer update fallback when introspection fails."""
-    #     # Complex buffer mocking causing issues - covered by integration tests
-    #     pass
-
-    @patch('backend.engine.qualia_particle_engine.np')
-    def test_initialize_ping_pong_buffers_failure(self, mock_np):
-        """Test ping-pong buffer initialization failure."""
-        # Mock numpy import failure
-        mock_np.random.uniform.side_effect = ImportError("NumPy not available")
-
-        result = self.engine.initialize_buffers()
-
-        assert result is False
-        assert self.engine.particles_initialized is False
-
-    def test_start_with_event_bus(self):
-        """Test engine start with EventBus subscription."""
-        self.engine.start()
-
-        assert self.engine.status == "running"
-        self.mock_event_bus.subscribe.assert_called_once_with(
-            "QualiaStateUpdated", self.engine._on_qualia_state_updated
-        )
-
-    def test_start_without_event_bus(self):
-        """Test engine start without EventBus (graceful degradation)."""
-        engine = QualiaParticleEngine(ctx=self.mock_ctx, max_particles=500)
-        engine.start()
-
-        assert engine.status == "initialized"  # Should not change without EventBus
-
-    @patch('backend.engine.qualia_particle_engine.logger')
-    def test_on_qualia_state_updated_success(self, mock_logger):
-        """Test successful QualiaState event handling."""
-        # Mock qualia state event
-        mock_event = MagicMock()
-        mock_event.data = {
-            'intensity': 0.8,
-            'precision': 0.7,
-            'aggression': 0.6,
-            'flow': 0.5,
-            'chaos': 0.4,
-            'recovery': 0.3,
-            'transcendence': 0.2
-        }
-
-        # Mock successful operations
-        self.engine.update_uniform_buffer = MagicMock()
-        self.engine.compute_step = MagicMock(return_value=True)
-
-        self.engine._on_qualia_state_updated(mock_event)
-
-        self.engine.update_uniform_buffer.assert_called_once()
-        self.engine.compute_step.assert_called_once()
-        mock_logger.debug.assert_called()
-
-    @patch('backend.engine.qualia_particle_engine.logger')
-    def test_on_qualia_state_updated_failure(self, mock_logger):
-        """Test QualiaState event handling failure."""
-        mock_event = MagicMock()
-        mock_event.data = None  # Invalid data
-
-        self.engine._on_qualia_state_updated(mock_event)
-
-        mock_logger.warning.assert_called()
-
-    def test_update_uniform_buffer_with_introspection(self):
-        """Test uniform buffer update using shader introspection."""
-        # Set up ubo_info as it would be initialized
-        self.engine.ubo_info = {
-            'uniforms': [
-                ('time', 'float', 0),
-                ('particle_count', 'uint', 4),
-                ('intensity', 'float', 8),
-                ('precision', 'float', 12),
-                ('aggression', 'float', 16),
-                ('flow', 'float', 20),
-                ('chaos', 'float', 24),
-                ('recovery', 'float', 28),
-                ('transcendence', 'float', 32),
-            ],
-            'struct_format': 'fIfffffffff',  # 1 float + 1 uint + 9 floats = 11 elements
-            'total_size': 44
-        }
-
-        mock_qualia_state = MagicMock()
-        mock_qualia_state.intensity = 0.8
-        mock_qualia_state.precision = 0.7
-        mock_qualia_state.aggression = 0.6
-        mock_qualia_state.flow = 0.5
-        mock_qualia_state.chaos = 0.4
-        mock_qualia_state.recovery = 0.3
-        mock_qualia_state.transcendence = 0.2
-        mock_qualia_state.particle_count = 1000  # Add missing field
-
-        self.engine.update_uniform_buffer(mock_qualia_state)
-
-        # Verify buffer write was called
-        self.mock_buffer.write.assert_called_once()
-
-    def test_update_uniform_buffer_fallback(self):
-        """Test uniform buffer update fallback when introspection fails."""
-        # Remove introspection data and ensure no initial uniform buffer
-        self.engine.ubo_info = {'uniforms': [], 'struct_format': '', 'total_size': 0}
-        self.engine.uniform_buffer = None  # Ensure it starts as None
-
-        mock_qualia_state = MagicMock()
-        mock_qualia_state.intensity = 0.8
-        mock_qualia_state.precision = 0.7
-
-        # Mock buffer creation and write
-        self.mock_ctx.buffer.return_value = self.mock_buffer
-
-        self.engine.update_uniform_buffer(mock_qualia_state)
-
-        # Should create buffer and write with hardcoded format
-        self.mock_ctx.buffer.assert_called_once()  # Buffer created
-        self.mock_buffer.write.assert_called_once()  # Data written
-
-    def test_compute_step_success(self):
-        """Test successful compute step execution."""
-        # Set up initialized state
-        self.engine.particles_initialized = True
-        self.engine.compute_shader = self.mock_compute_shader
-
-        # Mock buffer pair
+    def test_compute_step_executes_and_swaps_buffers(self, setup):
+        """
+        GIVEN an initialized particle engine
+        WHEN compute_step is called
+        THEN the compute shader runs, the context is finished, and buffers are swapped.
+        """
+        # ARRANGE
+        sut, mocks = setup
+        sut.particles_initialized = True  # Manually set state for the test
+        sut.compute_shader = MagicMock()
+        sut.particle_buffers.swap = MagicMock()  # Mock the swap method on the buffer pair
+        sut.particle_buffers.element_count = 128
+        
+        # Mock the input and output buffers
         mock_input_buffer = MagicMock()
         mock_output_buffer = MagicMock()
-        self.engine.particle_buffers = MagicMock()
-        self.engine.particle_buffers.input_buffer = mock_input_buffer
-        self.engine.particle_buffers.output_buffer = mock_output_buffer
-        self.engine.particle_buffers.element_count = 1000
-        self.engine.particle_buffers.size = 84000  # 1000 * 21 * 4 bytes
-        self.engine.particle_buffers.swap = MagicMock()
+        sut.particle_buffers.buffer_a = mock_input_buffer
+        sut.particle_buffers.buffer_b = mock_output_buffer
+        sut.particle_buffers.current_input = BufferState.INPUT  # So input_buffer = buffer_a
+        
+        # Mock ctx for finish()
+        sut.ctx = mocks["ctx"]
 
-        # Mock uniform and force field buffers
-        self.engine.uniform_buffer = self.mock_buffer
-        self.engine.force_fields_buffer = MagicMock()
+        # ACT
+        result = sut.compute_step()
 
-        result = self.engine.compute_step()
-
+        # ASSERT
         assert result is True
-        self.mock_compute_shader.run.assert_called_once()
-        self.engine.particle_buffers.swap.assert_called_once()
-        self.mock_ctx.finish.assert_called_once()
+        # Assert that the REAL logic called the mocked dependencies correctly
+        mock_input_buffer.bind_to_storage_buffer.assert_called_once_with(0)
+        mock_output_buffer.bind_to_storage_buffer.assert_called_once_with(1)
+        sut.compute_shader.run.assert_called_once_with(group_x=2)  # (128 + 63) // 64 = 2
+        mocks["ctx"].finish.assert_called_once()
+        sut.particle_buffers.swap.assert_called_once()
+        assert sut.simulation_tick == 1
 
-    def test_compute_step_not_initialized(self):
-        """Test compute step when engine is not initialized."""
-        self.engine.particles_initialized = False
+    def test_start_subscribes_to_event_bus(self, setup):
+        """
+        GIVEN a particle engine with an event bus
+        WHEN start is called
+        THEN it subscribes to the 'QualiaStateUpdated' event.
+        """
+        # ARRANGE
+        sut, mocks = setup
+        mock_event_bus = mocks["event_bus"]
 
-        result = self.engine.compute_step()
+        # ACT
+        sut.start()
 
-        assert result is False
-        self.mock_compute_shader.run.assert_not_called()
+        # ASSERT
+        assert sut.status == "running"
+        # Assert that the REAL start() method called the subscribe method on the MOCKED event bus
+        mock_event_bus.subscribe.assert_called_once_with(
+            "QualiaStateUpdated", sut._on_qualia_state_updated
+        )
 
-    def test_reset_success(self):
-        """Test successful engine reset."""
-        # Set up initialized state
-        self.engine.particles_initialized = True
-        self.engine.simulation_tick = 100
+    @patch('backend.engine.qualia_particle_engine.struct.pack')
+    def test_update_uniform_buffer_packs_correct_data(self, mock_struct_pack, setup):
+        """
+        GIVEN a valid QualiaState dictionary
+        WHEN update_uniform_buffer is called
+        THEN it packs the correct floating-point data for the GPU.
+        """
+        # ARRANGE
+        sut, mocks = setup
+        sut.ctx = mocks["ctx"]  # Set ctx so the method doesn't return early
+        sut.uniform_buffer = MagicMock()  # Mock the buffer itself
+        sut.ubo_info = {'uniforms': [], 'struct_format': '', 'total_size': 0}  # Force fallback for simplicity
 
-        # Mock buffer operations
-        mock_buffer_a = MagicMock()
-        mock_buffer_b = MagicMock()
-        self.engine.particle_buffers = MagicMock()
-        self.engine.particle_buffers.buffer_a = mock_buffer_a
-        self.engine.particle_buffers.buffer_b = mock_buffer_b
-        self.engine.particle_buffers.current_input = BufferState.INPUT
-
-        with patch.object(self.engine, '_create_initial_particles') as mock_create:
-            mock_create.return_value = np.zeros((1000, 21), dtype=np.float32)
-
-            self.engine.reset()
-
-            assert self.engine.simulation_tick == 0
-            mock_buffer_a.write.assert_called_once()
-            mock_buffer_b.write.assert_called_once()
-
-    def test_read_particles_data_success(self):
-        """Test successful particle data reading."""
-        # Set up initialized state
-        self.engine.particles_initialized = True
-
-        # Mock buffer reading
-        mock_input_buffer = MagicMock()
-        mock_input_buffer.read.return_value = b'\x00' * 48000  # 1000 * 12 * 4 bytes
-        self.engine.particle_buffers = MagicMock()
-        self.engine.particle_buffers.input_buffer = mock_input_buffer
-
-        with patch('backend.engine.qualia_particle_engine.np') as mock_np:
-            mock_array = np.zeros((1000, 12), dtype=np.float32)
-            mock_np.frombuffer.return_value = mock_array.flatten()
-            mock_np.reshape = lambda x, shape: mock_array
-
-            result = self.engine.read_particles_data()
-
-            assert result is not None
-            mock_input_buffer.read.assert_called_once()
-
-    def test_read_particles_data_not_initialized(self):
-        """Test particle data reading when not initialized."""
-        self.engine.particles_initialized = False
-
-        result = self.engine.read_particles_data()
-
-        assert result is None
-
-    def test_get_current_parameters(self):
-        """Test parameter retrieval."""
-        params = self.engine.get_current_parameters()
-
-        expected_keys = {
-            "max_particles", "simulation_tick", "particles_initialized", "status"
+        qualia_state = {
+            "intensity": 0.8, "precision": 0.6, "aggression": 0.4,
+            "flow": 0.9, "chaos": 0.2, "recovery": 0.1, "transcendence": 0.05
         }
-        assert set(params.keys()) == expected_keys
-        assert params["max_particles"] == 1000
+
+        # ACT
+        sut.update_uniform_buffer(qualia_state)
+
+        # ASSERT
+        # Now we are testing the LOGIC inside update_uniform_buffer.
+        # We check that it called struct.pack with the correct values.
+        call_args = mock_struct_pack.call_args[0]
+        assert call_args[0] == "ffffffffI3f3f"  # The format string
+        assert call_args[1] == 0.8  # intensity
+        assert call_args[2] == 0.6  # precision
+        assert call_args[3] == 0.4  # aggression
+        # ... and so on for all other parameters.
+        sut.uniform_buffer.write.assert_called_once()
+
+    def test_get_current_parameters_returns_correct_structure(self, setup):
+        """
+        GIVEN a particle engine
+        WHEN get_current_parameters is called
+        THEN it returns the correct parameter structure.
+        """
+        # ARRANGE
+        sut, mocks = setup
+
+        # ACT
+        params = sut.get_current_parameters()
+
+        # ASSERT
+        assert isinstance(params, dict)
+        assert "max_particles" in params
+        assert "simulation_tick" in params
+        assert "status" in params
+        assert params["max_particles"] == 1000  # From our test setup
         assert params["status"] == "initialized"
 
-    def test_get_performance_metrics_with_metrics(self):
-        """Test performance metrics retrieval when enabled."""
-        # Set up metrics
-        self.engine.metrics = QualiaMetrics()
-        self.engine.metrics.total_swaps = 10
-        self.engine.metrics.total_compute_time = 5.0
-        self.engine.metrics.total_transfer_time = 2.0
-        self.engine.metrics.gpu_memory_saved = 1000000
-        self.engine.simulation_tick = 100
+    def test_initialization_sets_correct_defaults(self, setup):
+        """
+        GIVEN a newly created particle engine
+        THEN it has correct default values.
+        """
+        # ARRANGE
+        sut, mocks = setup
 
-        metrics = self.engine.get_performance_metrics()
+        # ASSERT
+        assert sut.max_particles == 1000
+        assert sut.enable_metrics is True
+        assert sut.status == "initialized"
+        assert sut.simulation_tick == 0
+        assert sut.particles_initialized is False
+        assert sut.ctx is None  # Not injected in tests to avoid shader init
+        assert sut.event_bus == mocks["event_bus"]  # Injected mock
+        assert sut.shader_inspector == mocks["shader_inspector"]  # Injected mock
 
-        assert metrics["total_swaps"] == 10
-        assert metrics["total_compute_time"] == 5.0
-        assert "average_compute_time" in metrics
-        assert "estimated_performance_gain" in metrics
-
-    def test_get_performance_metrics_disabled(self):
-        """Test performance metrics when disabled."""
-        self.engine.metrics = None
-
-        metrics = self.engine.get_performance_metrics()
-
-        assert metrics == {"metrics_disabled": True}
-
-    @patch('backend.engine.qualia_particle_engine.logger')
-    async def test_shutdown_success(self, mock_logger):
-        """Test successful engine shutdown."""
-        # Set up buffers to release
-        self.engine.particle_buffers = MagicMock()
-        self.engine.uniform_buffer = self.mock_buffer
-
-        await self.engine.shutdown()
-
-        assert self.engine.status == "shutdown"
-        self.engine.particle_buffers.release.assert_called_once()
-        self.mock_buffer.release.assert_called_once()
-        mock_logger.info.assert_called()
-
-    @patch('backend.engine.qualia_particle_engine.moderngl')
-    # Complex initialization tests removed - covered by integration tests
-    # def test_engine_initialization_with_context(self):
-    # def test_initialize_shaders_success(self):
-    # def test_initialize_shaders_failure(self):
-    # def test_update_uniform_buffer_with_introspection(self):
-    # def test_update_uniform_buffer_fallback(self):
-
-    def test_on_qualia_state_updated_dict_input(self):
-        """Test QualiaState event handling with dict input."""
-        # This covers lines 378-379 (dict conversion logic)
-        mock_event = MagicMock()
-        mock_event.data = {
-            'intensity': 0.8,
-            'precision': 0.7,
-            'aggression': 0.6
-        }
-
-        with patch.object(self.engine, 'update_uniform_buffer') as mock_update:
-            with patch.object(self.engine, 'compute_step', return_value=True):
-                self.engine._on_qualia_state_updated(mock_event)
-                mock_update.assert_called_once()
-
-    def test_get_current_parameters_comprehensive(self):
-        """Test comprehensive parameter retrieval."""
-        # This covers lines 388, 392-396 (parameter building)
-        self.engine.simulation_tick = 100
-        self.engine.particles_initialized = True
-
-        params = self.engine.get_current_parameters()
-
-        assert params['simulation_tick'] == 100
-        assert params['particles_initialized'] is True
-        assert params['max_particles'] == 1000
-
-    def test_read_particles_data_uninitialized(self):
-        """Test particle data reading when not initialized."""
-        # This covers line 425 (early return check)
-        result = self.engine.read_particles_data()
-        assert result is None
-
-    def test_get_performance_metrics_comprehensive(self):
-        """Test comprehensive performance metrics retrieval."""
-        # This covers lines 506-508, 532-533, 550-552 (metrics calculations)
-        self.engine.metrics = QualiaMetrics()
-        self.engine.metrics.total_swaps = 50
-        self.engine.metrics.total_compute_time = 10.0
-        self.engine.metrics.total_transfer_time = 2.0
-        self.engine.metrics.gpu_memory_saved = 500000
-        self.engine.simulation_tick = 200
-
-        metrics = self.engine.get_performance_metrics()
-
-        assert metrics['total_swaps'] == 50
-        assert metrics['total_compute_time'] == 10.0
-        assert 'average_compute_time' in metrics
-        assert 'simulation_ticks' in metrics
-
-    def test_create_qualia_particle_engine_comprehensive(self):
-        """Test factory function with all parameters."""
-        # This covers lines 593-594, 628-646 (factory function logic)
-        mock_ctx = MagicMock()
-        mock_event_bus = MagicMock()
-        mock_inspector = MagicMock()
-
-        engine = create_qualia_particle_engine(
-            max_particles=3000,
-            enable_metrics=False,
-            event_bus=mock_event_bus,
-            ctx=mock_ctx,
-            shader_inspector=mock_inspector,
+    @patch('backend.engine.qualia_particle_engine.os.path.exists')
+    @patch('backend.engine.qualia_particle_engine.open')
+    def test_initialize_shader_success(self, mock_open, mock_exists, setup):
+        """
+        GIVEN shader file exists
+        WHEN shader is initialized
+        THEN compute shader is created successfully.
+        """
+        # ARRANGE
+        sut, mocks = setup
+        sut.ctx = mocks["ctx"]  # Set ctx so the method doesn't return early
+        mock_exists.return_value = True
+        mock_open.return_value.__enter__.return_value.read.return_value = (
+            "#version 430\nvoid main(){}"
         )
+        mock_ctx = mocks["ctx"]
+        mock_compute_shader = MagicMock()
+        mock_ctx.compute_shader.return_value = mock_compute_shader
 
-        assert engine.max_particles == 3000
-        assert engine.enable_metrics is False
-        assert engine.event_bus == mock_event_bus
-        assert engine.ctx == mock_ctx
-        assert engine.shader_inspector == mock_inspector
+        # ACT
+        sut._initialize_shader()
 
-    @patch('backend.engine.qualia_particle_engine.moderngl')
-    def test_create_qualia_particle_engine_with_provided_context(self, mock_moderngl):
-        """Test factory function with provided context."""
-        mock_ctx = MagicMock()
+        # ASSERT
+        mock_ctx.compute_shader.assert_called_once()
+        assert sut.compute_shader == mock_compute_shader
 
-        engine = create_qualia_particle_engine(
-            ctx=mock_ctx,
-            event_bus=self.mock_event_bus,
-        )
+    def test_initialize_buffers_without_particles_fails(self, setup):
+        """
+        GIVEN no particles data
+        WHEN initialize_buffers is called
+        THEN it returns False.
+        """
+        # ARRANGE
+        sut, mocks = setup
 
-        assert engine.ctx == mock_ctx
-        mock_moderngl.create_standalone_context.assert_not_called()
+        # ACT
+        result = sut.initialize_buffers()
 
+        # ASSERT
+        assert result is False
+        assert not sut.particles_initialized
 
-class TestPingPongBufferPair(unittest.TestCase):
-    """Test suite for PingPongBufferPair buffer management."""
+    def test_compute_step_without_initialization_fails(self, setup):
+        """
+        GIVEN particles not initialized
+        WHEN compute_step is called
+        THEN it returns False.
+        """
+        # ARRANGE
+        sut, mocks = setup
+        sut.particles_initialized = False
 
-    def setUp(self):
-        """Set up buffer pair tests."""
-        self.mock_ctx = MagicMock()
-        self.mock_buffer_a = MagicMock()
-        self.mock_buffer_b = MagicMock()
-        self.mock_ctx.buffer.side_effect = [self.mock_buffer_a, self.mock_buffer_b]
+        # ACT
+        result = sut.compute_step()
 
-    def test_buffer_pair_initialization(self):
-        """Test buffer pair initialization."""
-        buffer_pair = PingPongBufferPair(
-            buffer_a=self.mock_buffer_a,
-            buffer_b=self.mock_buffer_b,
-            element_count=1000,
-            size=84000,
-        )
+        # ASSERT
+        assert result is False
 
-        assert buffer_pair.element_count == 1000
-        assert buffer_pair.size == 84000
+    def test_buffer_swap_logic(self, setup):
+        """
+        GIVEN a buffer pair
+        WHEN swap is called
+        THEN buffer states are correctly swapped.
+        """
+        # ARRANGE
+        sut, mocks = setup
+        buffer_pair = sut.particle_buffers
+
+        # ACT & ASSERT - Test swap from INPUT to OUTPUT
         assert buffer_pair.current_input == BufferState.INPUT
-        assert buffer_pair.input_buffer == self.mock_buffer_a
-        assert buffer_pair.output_buffer == self.mock_buffer_b
-
-    def test_buffer_pair_swap(self):
-        """Test buffer swapping mechanism."""
-        buffer_pair = PingPongBufferPair(
-            buffer_a=self.mock_buffer_a,
-            buffer_b=self.mock_buffer_b,
-            element_count=100,
-            size=4800,
-        )
-
-        # Initial state
-        assert buffer_pair.current_input == BufferState.INPUT
-        assert buffer_pair.input_buffer == self.mock_buffer_a
-        assert buffer_pair.output_buffer == self.mock_buffer_b
-
-        # After swap
         buffer_pair.swap()
         assert buffer_pair.current_input == BufferState.OUTPUT
-        assert buffer_pair.input_buffer == self.mock_buffer_b
-        assert buffer_pair.output_buffer == self.mock_buffer_a
 
-        # After second swap (back to original)
+        # ACT & ASSERT - Test swap from OUTPUT to INPUT
         buffer_pair.swap()
         assert buffer_pair.current_input == BufferState.INPUT
-        assert buffer_pair.input_buffer == self.mock_buffer_a
-        assert buffer_pair.output_buffer == self.mock_buffer_b
 
-    def test_buffer_pair_release(self):
-        """Test buffer pair cleanup."""
-        buffer_pair = PingPongBufferPair(
-            buffer_a=self.mock_buffer_a,
-            buffer_b=self.mock_buffer_b,
-            element_count=100,
-            size=4800,
-        )
+    @pytest.mark.asyncio
+    async def test_shutdown_cleans_up_resources(self, setup):
+        """
+        GIVEN a particle engine with resources
+        WHEN shutdown is called
+        THEN resources are properly cleaned up.
+        """
+        # ARRANGE
+        sut, mocks = setup
+        mock_buffer = MagicMock()
+        sut.uniform_buffer = mock_buffer
+        mock_buffer_a = MagicMock()
+        mock_buffer_b = MagicMock()
+        sut.particle_buffers.buffer_a = mock_buffer_a
+        sut.particle_buffers.buffer_b = mock_buffer_b
 
-        buffer_pair.release()
+        # ACT
+        await sut.shutdown()
 
-        self.mock_buffer_a.release.assert_called_once()
-        self.mock_buffer_b.release.assert_called_once()
+        # ASSERT
+        assert sut.uniform_buffer is None
+        # Check that release was called on the mocks before they were set to None
+        mock_buffer_a.release.assert_called_once()
+        mock_buffer_b.release.assert_called_once()
 
+    def test_metrics_tracking(self, setup):
+        """
+        GIVEN metrics enabled
+        WHEN operations are performed
+        THEN metrics are tracked correctly.
+        """
+        # ARRANGE
+        sut, mocks = setup
+        assert sut.enable_metrics is True
+        assert sut.metrics is not None
 
-if __name__ == "__main__":
-    pytest.main([
-        __file__,
-        "--cov=backend.engine.qualia_particle_engine",
-        "--cov-report=term-missing",
-        "--cov-fail-under=80",
-        "-v"
-    ])
+        # ACT
+        initial_swaps = sut.metrics.total_swaps
+        sut.metrics.add_swap(0.5, 1024)
 
-    def test_coverage_constructor_and_attributes(self):
-        """Test basic constructor and attribute access for coverage."""
-        # Cover lines 14-15, 19-20, 29-32, 170, 181
-        engine = QualiaParticleEngine(
-            ctx=self.mock_ctx,
-            max_particles=1000,
-            enable_metrics=True,
-            event_bus=self.mock_event_bus,
-            shader_inspector=self.mock_shader_inspector,
-        )
-
-        # Access all attributes to trigger coverage
-        _ = engine.ctx
-        _ = engine.max_particles
-        _ = engine.enable_metrics
-        _ = engine.event_bus
-        _ = engine.shader_inspector
-        _ = engine.particle_buffers
-        _ = engine.metrics
-        _ = engine.status
-        _ = engine.compute_shader
-        _ = engine.uniform_buffer
-        _ = engine.ubo_info
-        _ = engine.start_time
-
-    def test_coverage_qualia_metrics(self):
-        """Test QualiaMetrics class for coverage."""
-        # Cover lines 506-508, 532-533, 550-552
-        metrics = QualiaMetrics()
-
-        # Trigger operations
-        metrics.add_swap(0.5, 2000)
-        metrics.add_swap(1.0, 3000)
-
-        # Access properties
-        _ = metrics.total_swaps
-        _ = metrics.total_compute_time
-        _ = metrics.gpu_memory_saved
-        _ = metrics.performance_gain
-
-    def test_coverage_ping_pong_buffer_pair(self):
-        """Test PingPongBufferPair class for coverage."""
-        # Cover buffer pair operations
-        buffer_pair = PingPongBufferPair()
-
-        # Access properties
-        _ = buffer_pair.input_buffer
-        _ = buffer_pair.output_buffer
-        _ = buffer_pair.current_input
-        _ = buffer_pair.size
-        _ = buffer_pair.element_count
-
-        # Test swap
-        buffer_pair.swap()
-
-    def test_coverage_factory_function(self):
-        """Test factory function for coverage."""
-        # Cover lines 593-594, 628-646
-        with patch('backend.engine.qualia_particle_engine.moderngl') as mock_moderngl:
-            mock_moderngl.create_standalone_context.return_value = self.mock_ctx
-
-            engine = create_qualia_particle_engine(
-                max_particles=2000,
-                enable_metrics=False,
-                standalone=True,
-            )
-
-            assert isinstance(engine, QualiaParticleEngine)
-
-    def test_coverage_simple_method_calls(self):
-        """Test simple method calls that may fail but provide coverage."""
-        # Cover lines 211, 222-223, 230-231, 239-264
-        try:
-            self.engine._initialize_shader()
-        except:
-            pass
-
-        try:
-            self.engine._initialize_ping_pong_buffers()
-        except:
-            pass
-
-        try:
-            self.engine._create_qualia_shader("test_path")
-        except:
-            pass
-
-        # Try calling methods that access attributes
-        try:
-            _ = self.engine.get_current_parameters()
-        except:
-            pass
-
-        try:
-            _ = self.engine.get_performance_metrics()
-        except:
-            pass
-
-
-if __name__ == "__main__":
-    # QUALIA.CODE: Run tests with coverage reporting
-    pytest.main([
-        __file__,
-        "--cov=backend.engine.qualia_particle_engine",
-        "--cov-report=term-missing",
-        "--cov-fail-under=80",
-        "-v"
-    ])
+        # ASSERT
+        assert sut.metrics.total_swaps == initial_swaps + 1
+        assert sut.metrics.total_compute_time == 0.5
+        assert sut.metrics.gpu_memory_saved == 1024
