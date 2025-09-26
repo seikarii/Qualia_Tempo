@@ -107,9 +107,6 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
       // Act
       await sut.start();
 
-      // Wait for health check
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       // Assert
       expect(mocks.mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining("Service started successfully"),
@@ -156,8 +153,6 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
         source: "Test",
       } as any);
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
       // Assert
       expect(mocks.mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining("Received QualiaState update"),
@@ -188,8 +183,6 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
           source: "Test",
         } as any);
       }
-
-      await new Promise((resolve) => setTimeout(resolve, 300));
 
       // Assert - Should have throttled the updates
       const debugCalls = (mocks.mockLogger.debug as Mock).mock.calls.filter((call) =>
@@ -232,8 +225,6 @@ describe("BackendSyncService - QUALIA.CODE v1.1 COMPLIANT", () => {
         timestamp: new Date(),
         source: "Test",
       } as any);
-
-      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Assert
       expect(mocks.mockLogger.error).toHaveBeenCalledWith(

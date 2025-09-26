@@ -99,14 +99,19 @@ const mockEventBus: IEventBus = (() => {
       return false;
     }),
 
-    emit: vi.fn().mockImplementation((event: any) => {
+    emit: vi.fn().mockImplementation(async (event: any) => {
       const eventType = event.type;
       const handlers = subscribers.get(eventType) || [];
+
+      // SIMULA EL EVENT LOOP CON MEJOR SINCRONIZACION PARA NESTED EVENTS
+      await Promise.resolve();
+
       for (const { handler } of handlers) {
         try {
-          handler(event);
+          // LOS HANDLERS PUEDEN SER ASÍNCRONOS, POR ESO EL AWAIT
+          await handler(event);
         } catch (error) {
-          console.error(`Error in event handler for ${eventType}:`, error);
+          console.error(`Error in async event handler for ${eventType}:`, error);
         }
       }
     }),

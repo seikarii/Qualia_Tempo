@@ -1,22 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 /**
- * QUALIA.CODE v1.1 - GameContro      // Start game first
-      await mocks.mockEventBus.emit({
-        type: "PlayerAction",
-        action: "StartGame",
-        source: "Test",
-      } as Omit<PlayerActionEvent, "timestamp">);
-
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      // Now pause the game
-      await mocks.mockEventBus.emit({
-        type: "PlayerAction",
-        action: "PauseGame",
-        source: "Test",
-      } as Omit<PlayerActionEvent, "timestamp">);
-
-      await new Promise((resolve) => setTimeout(resolve, 10));ests - IOC COMPLIANT
+ * QUALIA.CODE v1.1 - GameControllerService Tests - IOC COMPLIANT
  * Comprehensive test suite for game state management service.
  * Uses test-container-factory for proper IoC compliance.
  */
@@ -87,15 +71,13 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
       const mockCallback = vi.fn();
       mocks.mockEventBus.subscribe("GameStateChanged", mockCallback);
 
-      // Emit StartGame event - mock returns asynchronously
+      // Emit StartGame event - async mockEventBus handles proper event loop simulation
       await mocks.mockEventBus.emit({
         type: "PlayerAction",
         action: "StartGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
-
-      // Wait for async event processing
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "GameStateChanged",
@@ -150,9 +132,6 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
         action: "PauseGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
-
-      // Synchronous mocks - wait needed for async processing
-      await new Promise((resolve) => setTimeout(resolve, 10));
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "GameStateChanged",
@@ -172,9 +151,6 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
         action: "ResetGame",
         source: "Test",
       } as Omit<PlayerActionEvent, "timestamp">);
-
-      // Synchronous mock - wait needed for async processing
-      await new Promise((resolve) => setTimeout(resolve, 10));
       expect(mockCallback).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "GameStateChanged",
@@ -194,9 +170,6 @@ describe("GameControllerService - QUALIA.CODE v1.1 COMPLIANT", () => {
         source: "Test",
         context: { points: 10 },
       } as Omit<PlayerActionEvent, "timestamp">);
-
-      // Wait for async processing
-      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should not emit anything
       expect(mockCallback).not.toHaveBeenCalled();

@@ -125,9 +125,6 @@ describe('Electron Main Process', () => {
       // Import the module to trigger initialization
       await import('../main');
       
-      // Wait for any async operations
-      await new Promise(resolve => setTimeout(resolve, 0));
-      
       // Verify BrowserWindow was created with correct options
       expect(mockBrowserWindow).toHaveBeenCalledWith({
         height: 900,
