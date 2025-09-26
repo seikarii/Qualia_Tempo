@@ -1,3 +1,12 @@
-import { app } from "electron";
+// This is the complete and correct content for env.ts
 
-export const isDev = process.env.NODE_ENV === "development" || !app?.isPackaged;
+/**
+ * Determines if the application is running in a development environment.
+ * QUALIA.CODE: This check MUST be strict. Only 'development' is considered dev.
+ * 'test', 'production', or any other value is NOT a development environment.
+ */
+export const env = {
+  get isDev(): boolean {
+    return process.env.NODE_ENV === 'development';
+  }
+};

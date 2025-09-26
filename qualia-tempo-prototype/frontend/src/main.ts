@@ -2,7 +2,7 @@
 import { app, BrowserWindow, ipcMain, screen, shell } from "electron";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { isDev } from "./utils/env";
+import { env } from "./utils/env";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -101,7 +101,7 @@ const createWindow = (): BrowserWindow => {
   });
 
   // Load the application
-  if (isDev && (globalThis as any).process.env["ELECTRON_RENDERER_URL"]) {
+  if (env.isDev && (globalThis as any).process.env["ELECTRON_RENDERER_URL"]) {
     mainWindow.loadURL(
       (globalThis as any).process.env["ELECTRON_RENDERER_URL"],
     );
@@ -110,7 +110,7 @@ const createWindow = (): BrowserWindow => {
   }
 
   // Enhanced development tools
-  if (isDev) {
+  if (env.isDev) {
     mainWindow.webContents.openDevTools({
       mode: 'detach',
       activate: false
@@ -288,7 +288,7 @@ if (!gotTheLock) {
 process.on('uncaughtException', (error) => {
   console.error('🚨 Uncaught Exception:', error);
   // Don't exit in development
-  if (!isDev) {
+  if (!env.isDev) {
     app.quit();
   }
 });

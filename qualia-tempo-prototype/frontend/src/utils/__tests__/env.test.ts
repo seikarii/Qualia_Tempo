@@ -4,18 +4,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { isDev } from '../env';
-
-// Mock electron module
-vi.mock('electron', () => ({
-  app: {
-    isPackaged: false,
-  },
-}));
+import { env } from '../env';
 
 describe('Environment Utilities', () => {
   const originalNodeEnv = process.env.NODE_ENV;
-  const originalElectronApp = (global as any).electron?.app;
 
   beforeEach(() => {
     // Reset environment variables
@@ -26,30 +18,27 @@ describe('Environment Utilities', () => {
   afterEach(() => {
     // Restore original environment
     process.env.NODE_ENV = originalNodeEnv;
-    if (originalElectronApp) {
-      (global as any).electron = { app: originalElectronApp };
-    }
   });
 
-  describe('isDev', () => {
+  describe('env.isDev', () => {
     it('should return true when NODE_ENV is development', () => {
       process.env.NODE_ENV = 'development';
-      expect(isDev).toBe(true);
+      expect(env.isDev).toBe(true);
     });
 
-    it('should return true when NODE_ENV is not set and app is not packaged', () => {
+    it('should return false when NODE_ENV is not set and app is not packaged', () => {
       delete process.env.NODE_ENV;
-      expect(isDev).toBe(true);
+      expect(env.isDev).toBe(false);
     });
 
     it('should return false when NODE_ENV is production', () => {
       process.env.NODE_ENV = 'production';
-      expect(isDev).toBe(false);
+      expect(env.isDev).toBe(false);
     });
 
     it('should return false when NODE_ENV is test', () => {
       process.env.NODE_ENV = 'test';
-      expect(isDev).toBe(false);
+      expect(env.isDev).toBe(false);
     });
 
     it('should handle undefined electron app gracefully', () => {
@@ -57,35 +46,35 @@ describe('Environment Utilities', () => {
       delete (global as any).electron;
 
       process.env.NODE_ENV = 'production';
-      expect(isDev).toBe(false);
+      expect(env.isDev).toBe(false);
     });
 
     it('should handle null electron app gracefully', () => {
       (global as any).electron = { app: null };
 
       process.env.NODE_ENV = 'production';
-      expect(isDev).toBe(false);
+      expect(env.isDev).toBe(false);
     });
 
     it('should handle electron app without isPackaged property', () => {
       (global as any).electron = { app: {} };
 
       process.env.NODE_ENV = 'production';
-      expect(isDev).toBe(false);
+      expect(env.isDev).toBe(false);
     });
 
     it('should return true when app.isPackaged is true but NODE_ENV is development', () => {
       process.env.NODE_ENV = 'development';
       (global as any).electron = { app: { isPackaged: true } };
 
-      expect(isDev).toBe(true);
+      expect(env.isDev).toBe(true);
     });
 
     it('should return false when app.isPackaged is true and NODE_ENV is production', () => {
       process.env.NODE_ENV = 'production';
       (global as any).electron = { app: { isPackaged: true } };
 
-      expect(isDev).toBe(false);
+      expect(env.isDev).toBe(false);
     });
 
     it('should handle various NODE_ENV values correctly', () => {
@@ -96,33 +85,33 @@ describe('Environment Utilities', () => {
         { env: 'prod', expected: false },
         { env: 'test', expected: false },
         { env: 'staging', expected: false },
-        { env: '', expected: true },
-        { env: undefined, expected: true },
+        { env: '', expected: false },
+        { env: undefined, expected: false },
       ];
 
       testCases.forEach(({ env, expected }) => {
         process.env.NODE_ENV = env;
-        expect(isDev).toBe(expected);
+        expect(env.isDev).toBe(expected);
       });
     });
 
     it('should be consistent across multiple calls', () => {
       process.env.NODE_ENV = 'development';
 
-      expect(isDev).toBe(true);
-      expect(isDev).toBe(true);
-      expect(isDev).toBe(true);
+      expect(env.isDev).toBe(true);
+      expect(env.isDev).toBe(true);
+      expect(env.isDev).toBe(true);
     });
 
     it('should handle rapid environment changes', () => {
       process.env.NODE_ENV = 'development';
-      expect(isDev).toBe(true);
+      expect(env.isDev).toBe(true);
 
       process.env.NODE_ENV = 'production';
-      expect(isDev).toBe(false);
+      expect(env.isDev).toBe(false);
 
       process.env.NODE_ENV = 'development';
-      expect(isDev).toBe(true);
+      expect(env.isDev).toBe(true);
     });
   });
 
@@ -132,7 +121,7 @@ describe('Environment Utilities', () => {
       (global as any).process = undefined;
 
       // This should not throw an error
-      expect(() => isDev).not.toThrow();
+      expect(() => env.isDev).not.toThrow();
 
       // Restore process
       (global as any).process = originalProcess;
@@ -140,22 +129,22 @@ describe('Environment Utilities', () => {
 
     it('should handle process.env.NODE_ENV being null', () => {
       process.env.NODE_ENV = null as any;
-      expect(isDev).toBe(true); // null is falsy, so should default to dev
+      expect(env.isDev).toBe(false); // null !== 'development'
     });
 
     it('should handle process.env.NODE_ENV being an empty string', () => {
       process.env.NODE_ENV = '';
-      expect(isDev).toBe(true);
+      expect(env.isDev).toBe(false);
     });
 
     it('should handle process.env.NODE_ENV being a number', () => {
       process.env.NODE_ENV = 123 as any;
-      expect(isDev).toBe(false); // Non-development string
+      expect(env.isDev).toBe(false); // Non-development string
     });
 
     it('should handle process.env.NODE_ENV being an object', () => {
       process.env.NODE_ENV = { env: 'development' } as any;
-      expect(isDev).toBe(false); // Non-development string
+      expect(env.isDev).toBe(false); // Non-development string
     });
   });
 
@@ -174,7 +163,7 @@ describe('Environment Utilities', () => {
         process.env.NODE_ENV = nodeEnv;
         (global as any).electron = { app: { isPackaged } };
 
-        expect(isDev).toBe(expected);
+        expect(env.isDev).toBe(expected);
       });
     });
   });
