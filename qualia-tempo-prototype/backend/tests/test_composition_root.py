@@ -4,7 +4,7 @@
 
 import pytest
 import asyncio
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch, MagicMock, AsyncMock
 import sys
 import os
 from typing import Any, Dict, Optional
@@ -47,6 +47,7 @@ class TestCompositionRootFactory:
         # Mock all services with proper interfaces
         mock_event_bus = Mock(spec=EventBus)
         mock_event_bus.subscribe = Mock()
+        mock_event_bus.unsubscribe = Mock()
         mock_event_bus.publish = Mock()
         mock_event_bus._handlers = {}
         mock_event_bus.get_stats = Mock(return_value={
@@ -63,7 +64,7 @@ class TestCompositionRootFactory:
         })
         
         mock_qualia_processor = Mock()
-        mock_qualia_processor.process_qualia_state = Mock()
+        mock_qualia_processor.process_qualia_state = AsyncMock()
         mock_qualia_processor.get_current_state = Mock(return_value=None)
         
         mock_rendering_service = Mock()

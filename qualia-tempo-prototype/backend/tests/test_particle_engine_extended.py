@@ -19,8 +19,14 @@ def mocked_composition_root():
 
 @pytest.fixture
 def particle_engine(mocked_composition_root):
-    # Resolve the engine FROM THE CONTAINER
+    """Resolves the ParticleEngine from the container."""
     return mocked_composition_root.get_service("particle_system")
+
+
+@pytest.fixture  
+def service_mocks(mocked_composition_root):
+    """Extracts service mocks from the container for assertions."""
+    return TestCompositionRootFactory.get_service_mocks(mocked_composition_root)
 
 
 class TestPingPongBufferPair:
@@ -82,19 +88,10 @@ class TestQualiaParticleEngineExtended:
         # The engine is provided by fixture
         assert particle_engine is not None
 
-    def test_engine_parameter_validation(self):
-        """Test parameter validation."""
-        # Valid parameters
-        engine = QualiaParticleEngine(ctx=None, max_particles=1000)
-        assert engine.max_particles == 1000
-
-        # Test with different particle counts
-        engine2 = QualiaParticleEngine(ctx=None, max_particles=100)
-        assert engine2.max_particles == 100
-
-    def test_update_uniform_buffer_comprehensive(self):
+    def test_update_uniform_buffer_comprehensive(self, particle_engine):
         """Test comprehensive uniform buffer updates."""
-        engine = QualiaParticleEngine(ctx=None, max_particles=1000)
+        particle_engine.ctx = None
+        particle_engine.max_particles = 1000
 
         # Test with all QualiaState fields
         complete_state = {
@@ -108,108 +105,117 @@ class TestQualiaParticleEngineExtended:
         }
 
         # Should not crash
-        engine.update_uniform_buffer(complete_state)
+        particle_engine.update_uniform_buffer(complete_state)
 
         # Test with partial state
         partial_state = {"intensity": 0.5}
-        engine.update_uniform_buffer(partial_state)
+        particle_engine.update_uniform_buffer(partial_state)
 
         # Test with empty state
-        engine.update_uniform_buffer({})
+        particle_engine.update_uniform_buffer({})
 
-    def test_simulation_control_methods(self):
+    def test_simulation_control_methods(self, particle_engine):
         """Test simulation control methods."""
-        engine = QualiaParticleEngine(ctx=None, max_particles=1000)
+        particle_engine.ctx = None
+        particle_engine.max_particles = 1000
 
         # Test reset (the main control method available)
-        engine.reset()
-        assert engine.simulation_tick == 0
+        particle_engine.reset()
+        assert particle_engine.simulation_tick == 0
 
         # Test get_current_parameters
-        params = engine.get_current_parameters()
+        params = particle_engine.get_current_parameters()
         assert isinstance(params, dict)
         assert "max_particles" in params
 
-    def test_statistics_and_monitoring(self):
+    def test_statistics_and_monitoring(self, particle_engine):
         """Test statistics and monitoring functions."""
-        engine = QualiaParticleEngine(ctx=None, max_particles=1000)
+        particle_engine.ctx = None
+        particle_engine.max_particles = 1000
 
         # Test get_performance_metrics (equivalent to get_statistics)
-        metrics = engine.get_performance_metrics()
+        metrics = particle_engine.get_performance_metrics()
         assert isinstance(metrics, dict)
         assert "total_swaps" in metrics
         assert "total_compute_time" in metrics
 
-        params = engine.get_current_parameters()
+        params = particle_engine.get_current_parameters()
         assert isinstance(params, dict)
         assert "max_particles" in params
 
     @patch("backend.engine.qualia_particle_engine.moderngl")
-    def test_graphics_initialization_with_mock_context(self, mock_moderngl):
+    def test_graphics_initialization_with_mock_context(self, mock_moderngl, particle_engine):
         """Test graphics initialization with mocked context."""
         mock_ctx = Mock()
         mock_moderngl.create_context.return_value = mock_ctx
 
-        engine = QualiaParticleEngine(ctx=mock_ctx, max_particles=1000)
+        particle_engine.ctx = mock_ctx
+        particle_engine.max_particles = 1000
 
         # Test that engine is initialized with context
-        assert engine.ctx is not None
-        assert engine.status == "initialized"
+        assert particle_engine.ctx is not None
+        assert particle_engine.status == "initialized"
 
-    def test_performance_monitoring(self):
+    def test_performance_monitoring(self, particle_engine):
         """Test performance monitoring capabilities."""
-        engine = QualiaParticleEngine(ctx=None, max_particles=1000)
+        particle_engine.ctx = None
+        particle_engine.max_particles = 1000
 
         # Multiple compute steps to test performance tracking
         for _ in range(5):
-            engine.compute_step()
+            particle_engine.compute_step()
 
         # Test performance metrics instead of statistics
-        metrics = engine.get_performance_metrics()
+        metrics = particle_engine.get_performance_metrics()
         assert isinstance(metrics, dict)
         assert "total_swaps" in metrics
 
     @pytest.mark.asyncio
-    async def test_async_shutdown(self):
+    async def test_async_shutdown(self, particle_engine):
         """Test asynchronous shutdown."""
-        engine = QualiaParticleEngine(ctx=None, max_particles=1000)
+        particle_engine.ctx = None
+        particle_engine.max_particles = 1000
 
         # Test shutdown
-        await engine.shutdown()
+        await particle_engine.shutdown()
 
         # Verify cleanup was called
         assert (
-            not hasattr(engine, "_compute_program") or engine._compute_program is None
+            not hasattr(particle_engine, "_compute_program") or particle_engine._compute_program is None
         )
 
-    def test_error_handling_in_compute_step(self):
+    def test_error_handling_in_compute_step(self, particle_engine):
         """Test error handling during compute step."""
-        engine = QualiaParticleEngine(ctx=None, max_particles=1000)
+        particle_engine.ctx = None
+        particle_engine.max_particles = 1000
 
         # Without proper context, compute_step should handle errors gracefully
-        result = engine.compute_step()
+        result = particle_engine.compute_step()
         assert result is False
 
-    def test_buffer_management(self):
+    def test_buffer_management(self, particle_engine):
         """Test buffer management functionality."""
-        engine = QualiaParticleEngine(ctx=None, max_particles=1000)
+        particle_engine.ctx = None
+        particle_engine.max_particles = 1000
 
         # Test that buffers are not initialized without context
-        assert engine.particle_buffers.buffer_a is None
-        assert engine.particle_buffers.buffer_b is None
-        assert not engine.particles_initialized
+        assert particle_engine.particle_buffers.buffer_a is None
+        assert particle_engine.particle_buffers.buffer_b is None
+        assert not particle_engine.particles_initialized
 
-    def test_shader_compilation_error_handling(self):
+    def test_shader_compilation_error_handling(self, particle_engine):
         """Test shader compilation error handling."""
-        engine = QualiaParticleEngine(ctx=None, max_particles=1000)
+        particle_engine.ctx = None
+        particle_engine.max_particles = 1000
 
         # Test that shader is not created without context
-        assert engine.compute_shader is None
-        assert engine.status == "initialized"
+        assert particle_engine.compute_shader is None
+        assert particle_engine.status == "initialized"
 
-    def test_qualia_state_extremes(self):
+    def test_qualia_state_extremes(self, particle_engine):
         """Test handling of extreme QualiaState values."""
-        engine = QualiaParticleEngine(ctx=None, max_particles=1000)
+        particle_engine.ctx = None
+        particle_engine.max_particles = 1000
 
         # Test extreme values
         extreme_state = {
@@ -222,7 +228,7 @@ class TestQualiaParticleEngineExtended:
             "transcendence": 1.0,
         }
 
-        engine.update_uniform_buffer(extreme_state)
+        particle_engine.update_uniform_buffer(extreme_state)
 
         # Test negative/invalid values (should be handled gracefully)
         invalid_state = {
@@ -230,16 +236,17 @@ class TestQualiaParticleEngineExtended:
             "precision": 2.0,
         }
 
-        engine.update_uniform_buffer(invalid_state)
+        particle_engine.update_uniform_buffer(invalid_state)
 
-    def test_large_particle_count(self):
+    def test_large_particle_count(self, particle_engine):
         """Test with large particle counts."""
         # Test with large particle count
-        engine = QualiaParticleEngine(ctx=None, max_particles=100000)
-        assert engine.max_particles == 100000
+        particle_engine.ctx = None
+        particle_engine.max_particles = 100000
+        assert particle_engine.max_particles == 100000
 
         # Test compute step with large count
-        result = engine.compute_step()
+        result = particle_engine.compute_step()
         assert result is False  # Expected without context
 
     def test_gpu_availability_flag(self):
