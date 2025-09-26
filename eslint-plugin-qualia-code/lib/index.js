@@ -20,6 +20,7 @@ const noManualContractEdit = require('./rules/no-manual-contract-edit');
 const deprecateApiClient = require('./rules/deprecate-api-client');
 const enforceMethodDecorators = require('./rules/enforce-method-decorators');
 const enforceInversifyConventions = require('./rules/enforce-inversify-conventions');
+const noGlobalApiCalls = require('./rules/no-global-api-calls');
 
 module.exports = {
   rules: {
@@ -30,7 +31,8 @@ module.exports = {
     'no-manual-contract-edit': noManualContractEdit,
     'deprecate-api-client': deprecateApiClient,
     'enforce-method-decorators': enforceMethodDecorators,
-    'enforce-inversify-conventions': enforceInversifyConventions
+    'enforce-inversify-conventions': enforceInversifyConventions,
+    'no-global-api-calls': noGlobalApiCalls
   },
   configs: {
     recommended: {
@@ -43,7 +45,8 @@ module.exports = {
         '@qualia-tempo/qualia-code/no-manual-contract-edit': 'error',
         '@qualia-tempo/qualia-code/deprecate-api-client': 'error',
         '@qualia-tempo/qualia-code/enforce-method-decorators': 'error',
-        '@qualia-tempo/qualia-code/enforce-inversify-conventions': 'error'
+        '@qualia-tempo/qualia-code/enforce-inversify-conventions': 'error',
+        '@qualia-tempo/qualia-code/no-global-api-calls': 'error'
       }
     }
   }

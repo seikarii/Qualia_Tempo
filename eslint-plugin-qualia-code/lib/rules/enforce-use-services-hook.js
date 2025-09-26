@@ -1,5 +1,5 @@
 /**
- * @fileoverview Rule to enforce use of useServices() hook instead of direct service imports
+ * @fileoverview Rule to enforce use of useServices() hook instead of direct service imports or container access
  * @author Qualia Tempo Team
  */
 
@@ -13,7 +13,7 @@ module.exports = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'Enforce use of useServices() hook instead of direct service imports in React components',
+      description: 'Enforce use of useServices() hook instead of direct service imports or container access in React components',
       category: 'Best Practices',
       recommended: true,
       url: null
@@ -21,7 +21,8 @@ module.exports = {
     fixable: null,
     schema: [],
     messages: {
-      useServicesHook: 'Do not import services directly into components. Use the useServices() hook to maintain IoC.'
+      useServicesHook: 'Do not import services directly into components. Use the useServices() hook to maintain IoC.',
+      noDirectContainerAccess: 'Direct container access (container.get()) is forbidden in React components. Use useService() hook instead.'
     }
   },
 
@@ -73,6 +74,46 @@ module.exports = {
             context.report({
               node,
               messageId: 'useServicesHook'
+            });
+          }
+        }
+      },
+
+      // Check for direct container.get() calls
+      CallExpression(node) {
+        const filename = context.getFilename();
+        
+        // Only check .tsx files (React components)
+        if (!filename.endsWith('.tsx')) {
+          return;
+        }
+
+        // Skip service files and hooks
+        if (filename.includes('/services/') || filename.includes('hooks.ts') || filename.includes('hooks.tsx')) {
+          return;
+        }
+
+        // Check for container.get() pattern
+        if (node.callee.type === 'MemberExpression' &&
+            node.callee.object.name === 'container' &&
+            node.callee.property.name === 'get') {
+          context.report({
+            node,
+            messageId: 'noDirectContainerAccess'
+          });
+        }
+
+        // Check for imported container access patterns
+        if (node.callee.type === 'MemberExpression' &&
+            node.callee.property.name === 'get' &&
+            node.callee.object.type === 'Identifier') {
+          
+          // Look for variable names that suggest container usage
+          const containerVariableNames = ['container', 'iocContainer', 'serviceContainer', 'diContainer'];
+          if (containerVariableNames.includes(node.callee.object.name)) {
+            context.report({
+              node,
+              messageId: 'noDirectContainerAccess'
             });
           }
         }
