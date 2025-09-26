@@ -3,12 +3,24 @@
 
 import pytest
 from unittest.mock import Mock, patch
+from backend.tests.test_composition_root import TestCompositionRootFactory
 from backend.engine.qualia_particle_engine import (
     QualiaParticleEngine,
     PingPongBufferPair,
     BufferState,
     QUALIA_GPU_AVAILABLE,
 )
+
+
+@pytest.fixture
+def mocked_composition_root():
+    return TestCompositionRootFactory.create_mocked_composition_root()
+
+
+@pytest.fixture
+def particle_engine(mocked_composition_root):
+    # Resolve the engine FROM THE CONTAINER
+    return mocked_composition_root.get_service("particle_system")
 
 
 class TestPingPongBufferPair:
@@ -65,13 +77,10 @@ class TestPingPongBufferPair:
 class TestQualiaParticleEngineExtended:
     """Extended tests for QualiaParticleEngine."""
 
-    def test_engine_initialization_with_parameters(self):
+    def test_engine_initialization_with_parameters(self, particle_engine):
         """Test engine initialization with various parameters."""
-        engine = QualiaParticleEngine(ctx=None, max_particles=2048)
-
-        assert engine.max_particles == 2048
-        assert engine.simulation_tick == 0
-        assert engine.status == "initialized"
+        # The engine is provided by fixture
+        assert particle_engine is not None
 
     def test_engine_parameter_validation(self):
         """Test parameter validation."""

@@ -4,6 +4,7 @@
 import logging
 from typing import Dict, Any, Optional
 from .services.EventBus import EventBus, get_event_bus
+from .services.ShaderIntrospectionService import ShaderIntrospectionService
 from .utils.decorators import log_execution, handle_errors
 import asyncio
 
@@ -41,6 +42,7 @@ class CompositionRoot:
 
         # Initialize core services
         await self._initialize_event_bus()
+        await self._initialize_shader_introspection_service()
         await self._initialize_particle_system()
         await self._initialize_qualia_processor()
         await self._initialize_rendering_service()
@@ -97,6 +99,12 @@ class CompositionRoot:
         """Initialize the EventBus service."""
         self._services["event_bus"] = self._event_bus
         self._logger.debug("📡 EventBus service registered")
+
+    async def _initialize_shader_introspection_service(self) -> None:
+        """Initialize the ShaderIntrospectionService."""
+        shader_introspection_service = ShaderIntrospectionService()
+        self._services["shader_introspection_service"] = shader_introspection_service
+        self._logger.debug("🔍 ShaderIntrospectionService registered")
 
     async def _initialize_particle_system(self) -> None:
         """Initialize the QualiaParticleEngine service with shared context."""

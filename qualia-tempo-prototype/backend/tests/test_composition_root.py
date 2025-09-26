@@ -74,9 +74,17 @@ class TestCompositionRootFactory:
         mock_streaming_service.start_streaming = Mock()
         mock_streaming_service.stop_streaming = Mock()
         
+        mock_shader_introspection = Mock()
+        mock_shader_introspection.introspect = Mock(return_value={
+            'uniforms': [('time', 'float', 0), ('particle_count', 'int', 4)],
+            'struct_format': 'fi',
+            'total_size': 8
+        })
+        
         # Inject mocks into composition root
         composition_root._services = {
             "event_bus": mock_event_bus,
+            "shader_introspection_service": mock_shader_introspection,
             "particle_system": mock_particle_engine,
             "qualia_processor": mock_qualia_processor,
             "rendering_service": mock_rendering_service,
