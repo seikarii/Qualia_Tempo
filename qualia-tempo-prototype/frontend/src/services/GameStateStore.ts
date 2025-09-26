@@ -6,13 +6,22 @@
  * allowing services to access store functionality in a decoupled manner.
  */
 
-import { injectable } from "inversify";
+import { injectable, inject } from "inversify";
+import { TYPES } from "./inversify.types";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
+import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { ExtendedNotification } from "./NotificationService";
 import { useGameStore, type Notification } from "../state/useGameStore";
 
 @injectable()
 export class GameStateStore implements IGameStateStore {
+  private readonly configService: IConfigurationService;
+
+  constructor(
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService
+  ) {
+    this.configService = configService;
+  }
   /**
    * Set notifications in the store.
    * Used by NotificationService to update the UI with current notifications.
@@ -30,7 +39,7 @@ export class GameStateStore implements IGameStateStore {
         message: notification.message,
         timestamp: notification.timestamp.getTime(),
         autoHide: notification.metadata?.autoHide ?? true,
-        duration: notification.metadata?.duration ?? 3000, // From notification-service.yaml
+        duration: notification.metadata?.duration ?? this.configService.getConfig().notification.display.notificationDuration,
       }));
 
     useGameStore.setState((state) => ({

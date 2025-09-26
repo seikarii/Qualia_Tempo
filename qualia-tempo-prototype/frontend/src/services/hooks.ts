@@ -88,6 +88,13 @@ export const useDebugService = (): IDebugService =>
 export const useErrorReportingService = (): IErrorReportingService => 
   useService<IErrorReportingService>(TYPES.IErrorReportingService);
 
+// Configuration Service (convenience alias)
+export const useConfiguration = (): IConfigurationService => 
+  useService<IConfigurationService>(TYPES.IConfigurationService);
+
+// Aliases for convenience
+export const useErrorReporting = useErrorReportingService;
+
 // Utility Services
 export const useTimerService = (): ITimerService => 
   useService<ITimerService>(TYPES.ITimerService);

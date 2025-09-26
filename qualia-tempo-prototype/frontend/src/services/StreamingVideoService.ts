@@ -37,7 +37,7 @@ export class StreamingVideoService implements IStreamingVideoService {
 
   // Reference counting architecture
   private referenceCount = 0;
-  private disconnectDebounceTimer: NodeJS.Timeout | null = null;
+  private disconnectDebounceTimer: number | null = null;
   private readonly DEBOUNCE_DELAY = 500; // ms
 
   // Reconnection management
@@ -222,7 +222,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     if (this.referenceCount === 0) {
       this.logger.info("Reference count is zero. Debouncing disconnection.");
       // Iniciar debounce para cerrar la conexión.
-      this.disconnectDebounceTimer = setTimeout(() => {
+      this.disconnectDebounceTimer = this.timerService.setTimeout(() => {
         this.forceDisconnect();
       }, this.DEBOUNCE_DELAY);
     }

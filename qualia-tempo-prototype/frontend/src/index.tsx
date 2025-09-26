@@ -19,6 +19,18 @@ import { LoggerProvider, QualiaLogger } from "./services/Logger";
 import App from "./App";
 
 /**
+ * Bootstrap logger for critical failures before IoC container is available
+ * QUALIA.CODE COMPLIANT: Minimal logging for pre-container critical errors only
+ */
+class BootstrapLogger {
+  static error(message: string, error?: any): void {
+    // QUALIA.CODE EXCEPTION: Critical bootstrap failures require direct console access
+    // This is the ONLY allowed use of console methods outside the Logger service
+    console.error(`[BOOTSTRAP ERROR] ${message}`, error);
+  }
+}
+
+/**
  * Factory function for application initialization (not a React component)
  * Keeps container access outside React component tree
  */
@@ -39,7 +51,7 @@ const initializeApplication = async (): Promise<boolean> => {
     );
     return true;
   } catch (error) {
-    console.error(
+    BootstrapLogger.error(
       "Application Bootstrap: CRITICAL FAILURE during initialization.",
       error,
     );

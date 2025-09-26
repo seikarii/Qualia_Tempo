@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { QualiaState } from "../../types/contracts";
 import { useGameStore } from "../../state/useGameStore";
-import { useEventBus } from "../../services/hooks";
+import { useEventBus, useTimerService } from "../../services/hooks";
 import type { PlayerActionEvent } from "../../services/EventBus";
 
 interface MusicData {
@@ -174,6 +174,7 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
   // QUALIA.CODE COMPLIANT: State management via GameStateStore
   const player = useGameStore((state) => state.player);
   const eventBus = useEventBus();
+  const timerService = useTimerService();
 
   // QUALIA.CODE COMPLIANT: Only trivial UI state in useState
   const [scoreChange, setScoreChange] = useState(0);
@@ -230,7 +231,7 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
         });
 
         // Remove orb after animation
-        setTimeout(() => {
+        timerService.setTimeout(() => {
           setQualiaOrbsData((prevData) => {
             const prev = JSON.parse(prevData);
             return JSON.stringify(prev.filter((orb: any) => orb.id !== newOrb.id));
@@ -239,7 +240,7 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
       }
 
       // Reset animation trigger
-      setTimeout(() => setScoreChange(0), 400);
+      timerService.setTimeout(() => setScoreChange(0), 400);
     }
   }, [score, lastScore, eventBus]);
 
