@@ -469,4 +469,203 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   public isPlaying(): boolean {
     return this.gameIsPlaying;
   }
+
+  // ==================== MISSING METHODS IMPLEMENTATION (DIRECTIVA 2) ====================
+
+  /**
+   * Record player performance for a specific action
+   */
+  @logMethod()
+  @catchError()
+  public async recordPlayerPerformance(action: string, timestamp: number, accuracy: number): Promise<void> {
+    this.logger.debug('Recording player performance', { action, timestamp, accuracy });
+    
+    // Implementation: Store performance metrics for analysis
+    const performance = {
+      action,
+      timestamp,
+      accuracy,
+      beatNumber: this.beatNumber,
+      timingDeviation: timestamp - this.lastBeatTime
+    };
+
+    // Emit performance event for other systems to consume
+    this.eventBus.emit({
+      type: 'PlayerAction',
+      action: action,
+      timestamp: new Date(timestamp),
+      data: performance
+    } as PlayerActionEvent);
+  }
+
+  /**
+   * Set custom beat pattern for rhythm gameplay
+   */
+  @logMethod()
+  @catchError()
+  public async setCustomBeatPattern(patternName: string, pattern: number[]): Promise<void> {
+    this.logger.info('Setting custom beat pattern', { patternName, pattern });
+    
+    // Validate pattern array
+    if (!Array.isArray(pattern) || pattern.length === 0) {
+      this.logger.warn('Invalid beat pattern provided', { pattern });
+      return;
+    }
+
+    // Store custom pattern (in production, this would persist to storage)
+    const customPattern = {
+      name: patternName,
+      pattern: pattern.map(beat => Number.isInteger(beat) && beat >= 0 ? beat : 0),
+      bpm: this.bpm
+    };
+
+    this.logger.debug('Custom beat pattern configured', customPattern);
+  }
+
+  /**
+   * Sync with audio context for precise timing
+   */
+  @logMethod()
+  @catchError()
+  public async syncWithAudio(audioContext: AudioContext | null): Promise<void> {
+    if (!audioContext) {
+      this.logger.error('Invalid audio context provided for sync');
+      return;
+    }
+
+    try {
+      // Sync internal timing with audio context current time
+      const audioTime = audioContext.currentTime;
+      const syncOffset = audioTime * 1000; // Convert to milliseconds
+      
+      this.logger.info('Syncing with audio context', { audioTime, syncOffset });
+      
+      // Adjust internal timing if necessary
+      this.lastBeatTime = performance.now() - syncOffset;
+      
+    } catch (error) {
+      this.logger.error('Failed to sync with audio context', { error });
+    }
+  }
+
+  /**
+   * Check synchronization accuracy with current audio timing
+   */
+  @logMethod()
+  @catchError()
+  public async checkSyncAccuracy(currentTime: number): Promise<number> {
+    if (!Number.isFinite(currentTime)) {
+      this.logger.warn('Invalid time provided for sync check, using current time');
+      currentTime = performance.now();
+    }
+
+    const timeSinceLastBeat = currentTime - this.lastBeatTime;
+    const expectedBeatTime = this.beatInterval;
+    const accuracy = Math.max(0, 1 - Math.abs(timeSinceLastBeat - expectedBeatTime) / expectedBeatTime);
+    
+    this.logger.debug('Sync accuracy calculated', { 
+      timeSinceLastBeat, 
+      expectedBeatTime, 
+      accuracy 
+    });
+    
+    return accuracy;
+  }
+
+  /**
+   * Analyze audio data for beat detection
+   */
+  @logMethod()
+  @catchError()
+  public async analyzeAudioForBeat(audioData: Float32Array): Promise<boolean> {
+    if (!audioData || audioData.length === 0) {
+      this.logger.warn('Invalid audio data provided for beat analysis');
+      return false;
+    }
+
+    // Simple beat detection based on amplitude analysis
+    const avgAmplitude = Array.from(audioData).reduce((sum, val) => sum + Math.abs(val), 0) / audioData.length;
+    const threshold = 0.5; // Configuration-driven threshold would be better
+    
+    const beatDetected = avgAmplitude > threshold;
+    
+    this.logger.debug('Audio beat analysis completed', { avgAmplitude, threshold, beatDetected });
+    
+    return beatDetected;
+  }
+
+  /**
+   * Start beat tracking for the current session
+   */
+  @logMethod()
+  @catchError()
+  public async startBeatTracking(): Promise<void> {
+    this.logger.info('Starting beat tracking');
+    
+    // Reset beat tracking state
+    this.beatNumber = 0;
+    this.lastBeatTime = performance.now();
+    
+    // Start metronome if not already running
+    if (!this.metronomeIntervalId) {
+      this.startMetronome();
+    }
+  }
+
+  /**
+   * Get upcoming movement predictions
+   */
+  @logMethod()
+  @catchError()
+  public async getUpcomingMovements(count: number = 4): Promise<string[]> {
+    this.logger.debug('Generating upcoming movement predictions', { count });
+    
+    const movements = ['dash', 'attack', 'defense', 'special'];
+    const upcoming: string[] = [];
+    
+    for (let i = 0; i < count; i++) {
+      // Simple pattern-based prediction (in production, would use AI/ML)
+      const movementIndex = (this.beatNumber + i) % movements.length;
+      upcoming.push(movements[movementIndex]);
+    }
+    
+    return upcoming;
+  }
+
+  /**
+   * Predict optimal timing for a specific action
+   */
+  @logMethod()
+  @catchError()
+  public async predictOptimalTiming(action: string): Promise<{ nextBeat: number; confidence: number }> {
+    this.logger.debug('Predicting optimal timing', { action });
+    
+    const nextBeatTime = this.lastBeatTime + this.beatInterval;
+    const confidence = this.gameIsPlaying ? 0.85 : 0.5;
+    
+    return {
+      nextBeat: nextBeatTime,
+      confidence
+    };
+  }
+
+  /**
+   * Calculate difficulty score for a movement sequence
+   */
+  @logMethod()
+  @catchError()
+  public async calculateSequenceDifficulty(sequence: string[]): Promise<number> {
+    if (!sequence || sequence.length === 0) {
+      return 0;
+    }
+
+    this.logger.debug('Calculating sequence difficulty', { sequence });
+    
+    // Simple difficulty calculation based on sequence complexity
+    const baseComplexity = sequence.length * 0.1;
+    const varietyBonus = new Set(sequence).size * 0.05;
+    const difficultyScore = Math.min(1, baseComplexity + varietyBonus);
+    
+    return difficultyScore;
+  }
 }

@@ -104,7 +104,7 @@ class TestRenderingService:
             mock_image.save = mock_save
             yield mock_image_class
 
-    def test_initialization_with_dependencies_available(self, mock_event_bus):
+    def test_initialization_with_dependencies_available(self, mock_event_bus, mock_particle_engine):
         """Test RenderingService initialization when all dependencies are available."""
         with patch("backend.services.RenderingService.MODERNGL_AVAILABLE", True), patch(
             "backend.services.RenderingService.PIL_AVAILABLE", True
@@ -112,7 +112,7 @@ class TestRenderingService:
             RenderingService, "_initialize_graphics", return_value=True
         ) as mock_init:
 
-            service = RenderingService(mock_event_bus, width=800, height=600)
+            service = RenderingService(mock_event_bus, mock_particle_engine, width=800, height=600)
 
             assert service._width == 800
             assert service._height == 600
@@ -130,7 +130,7 @@ class TestRenderingService:
         mock_pil_image,
     ):
         """Test that render_frame returns valid JPEG bytes."""
-        service = RenderingService(mock_event_bus)
+        service = RenderingService(mock_event_bus, mock_particle_engine)
 
         # Test when service is not initialized
         result = service.render_frame()
@@ -149,7 +149,7 @@ class TestRenderingService:
         from unittest.mock import MagicMock
 
         # Create service instance
-        service = RenderingService(mock_event_bus)
+        service = RenderingService(mock_event_bus, mock_particle_engine)
 
         # Mock all the complex dependencies using monkeypatch
         mock_framebuffer = MagicMock()

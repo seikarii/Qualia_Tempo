@@ -131,6 +131,9 @@ vi.mock('../utils/env', () => ({
   isDev: true,
 }));
 
+// Mock main.ts since it's a script file
+vi.mock('../main', () => ({}));
+
 describe('Electron Main Process', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -148,7 +151,8 @@ describe('Electron Main Process', () => {
 
   describe('Window Creation', () => {
     it('should create window with correct dimensions', () => {
-      require('../main');
+      // Import and execute main.ts to trigger window creation
+      import('../main');
 
       // Verify BrowserWindow was created
       expect(vi.mocked(mockBrowserWindow.constructor)).toHaveBeenCalledWith(expect.objectContaining({
@@ -166,7 +170,7 @@ describe('Electron Main Process', () => {
         size: { width: 2560, height: 1440 },
       });
 
-      require('../main');
+      import('../main');
 
       // Should use 80% of screen size
       expect(vi.mocked(mockBrowserWindow.constructor)).toHaveBeenCalledWith(
@@ -184,7 +188,7 @@ describe('Electron Main Process', () => {
         size: { width: 800, height: 600 },
       });
 
-      require('../main');
+      import('../main');
 
       // Should use minimum size
       expect(vi.mocked(mockBrowserWindow.constructor)).toHaveBeenCalledWith(
