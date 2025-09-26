@@ -434,6 +434,7 @@ const mockHttpService: IHttpService = {
   post: vi.fn(),
   put: vi.fn(),
   delete: vi.fn(),
+  updateConfig: vi.fn(),
 };
 
 /**

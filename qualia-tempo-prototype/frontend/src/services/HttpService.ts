@@ -3,7 +3,6 @@ import { TYPES } from './inversify.types';
 import { logMethod, catchError } from '../utils/decorators';
 import type { ILogger } from './interfaces/ILogger';
 import type { ITimerService } from './interfaces/ITimerService';
-import type { IConfigurationService } from './interfaces/IConfigurationService';
 import type { IHttpService, HttpRequestOptions } from './interfaces/IHttpService';
 
 // QUALIA.CODE v1.1: Platform Abstraction - Custom error for timeout handling
@@ -18,16 +17,16 @@ export class RequestTimeoutError extends Error {
 export class HttpService implements IHttpService {
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
-  private readonly configService: IConfigurationService;
+  private readonly defaultTimeout: number;
 
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService
+    defaultTimeout: number = 30000 // 30 seconds default - QUALIA.CODE: Configuration externalized
   ) {
     this.logger = logger;
     this.timerService = timerService;
-    this.configService = configService;
+    this.defaultTimeout = defaultTimeout;
     this.logger.info('HttpService initialized with fetch abstraction');
   }
 
@@ -60,7 +59,7 @@ export class HttpService implements IHttpService {
 
     // QUALIA.CODE v1.1: Platform Abstraction - Timeout management encapsulated in HttpService
     const { timeout, ...fetchOptions } = options || {};
-    const effectiveTimeout = timeout ?? this.configService.getHttpConfig().defaultTimeout; // 30s default - QUALIA.CODE: No hardcoded values in services
+    const effectiveTimeout = timeout ?? this.defaultTimeout; // QUALIA.CODE: Configuration externalized to avoid circular dependency
 
     const controller = new AbortController();
     const timeoutId = this.timerService.setTimeout(() => {
@@ -144,5 +143,12 @@ export class HttpService implements IHttpService {
       });
       throw error;
     }
+  }
+
+  @logMethod()
+  @catchError()
+  public updateConfig(timeout: number): void {
+    (this as any).defaultTimeout = timeout;
+    this.logger.debug('HttpService configuration updated', { timeout });
   }
 }

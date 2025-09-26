@@ -60,8 +60,19 @@ import { useGameStore } from '../state/useGameStore';
 // These services have no dependencies and can be bound directly
 container.bind<IEventBus>(TYPES.IEventBus).to(EventBus).inSingletonScope();
 container.bind<ILogger>(TYPES.ILogger).to(QualiaLogger).inSingletonScope();
+
+// Bind ConfigurationService first (no dependencies)
 container.bind<IConfigurationService>(TYPES.IConfigurationService).to(ConfigurationService).inSingletonScope();
-container.bind<IHttpService>(TYPES.IHttpService).to(HttpService).inSingletonScope();
+
+// Bind HttpService with default timeout (ConfigurationService will provide actual config at runtime)
+container.bind<IHttpService>(TYPES.IHttpService).toDynamicValue(() => {
+  // Get services from container - this resolves after all services are bound
+  const logger = container.get<ILogger>(TYPES.ILogger);
+  const timerService = container.get<ITimerService>(TYPES.ITimerService);
+  // Use default timeout initially - ConfigurationService will override at runtime
+  return new HttpService(logger, timerService, 30000);
+}).inSingletonScope();
+
 container.bind<ITimerService>(TYPES.ITimerService).to(TimerService).inSingletonScope();
 
 // ===== SPECIAL BINDINGS =====

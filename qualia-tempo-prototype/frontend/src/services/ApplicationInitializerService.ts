@@ -6,6 +6,7 @@
 import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
 import type { IConfigurationService } from './interfaces/IConfigurationService';
+import type { IHttpService } from './interfaces/IHttpService';
 import type { IBackendSyncService } from './interfaces/IBackendSyncService';
 import type { IGameStateStoreService } from './interfaces/IGameStateStoreService';
 import type { IGameControllerService } from './interfaces/IGameControllerService';
@@ -20,6 +21,7 @@ import { logMethod, catchError } from '../utils/decorators';
 @injectable()
 export class ApplicationInitializerService implements IApplicationInitializerService {
   private readonly configService: IConfigurationService;
+  private readonly httpService: IHttpService;
   private readonly backendSyncService: IBackendSyncService;
   private readonly gameStateStoreService: IGameStateStoreService;
   private readonly gameControllerService: IGameControllerService;
@@ -32,6 +34,7 @@ export class ApplicationInitializerService implements IApplicationInitializerSer
 
   constructor(
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
+    @inject(TYPES.IHttpService) httpService: IHttpService,
     @inject(TYPES.IBackendSyncService) backendSyncService: IBackendSyncService,
     @inject(TYPES.IGameStateStoreService) gameStateStoreService: IGameStateStoreService,
     @inject(TYPES.IGameControllerService) gameControllerService: IGameControllerService,
@@ -42,6 +45,7 @@ export class ApplicationInitializerService implements IApplicationInitializerSer
     @inject(TYPES.ILogger) logger: ILogger
   ) {
     this.configService = configService;
+    this.httpService = httpService;
     this.backendSyncService = backendSyncService;
     this.gameStateStoreService = gameStateStoreService;
     this.gameControllerService = gameControllerService;
@@ -68,6 +72,12 @@ export class ApplicationInitializerService implements IApplicationInitializerSer
       this.logger.debug('Loading application configuration');
       await this.configService.loadConfig();
       this.logger.info('Configuration loaded successfully');
+
+      // Step 0.5: Configure HttpService with loaded configuration (breaks circular dependency)
+      this.logger.debug('Configuring HttpService with loaded configuration');
+      const httpConfig = this.configService.getHttpConfig();
+      this.httpService.updateConfig(httpConfig.defaultTimeout);
+      this.logger.info('HttpService configured successfully');
 
       // Step 1: Start GameStateStoreService - it must listen to all events
       this.logger.debug('Starting GameStateStoreService');
