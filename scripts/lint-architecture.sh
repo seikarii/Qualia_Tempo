@@ -39,16 +39,24 @@ else
     echo -e "   ${YELLOW}⚠️  Frontend path not found, skipping ESLint${NC}"
 fi
 
-echo
 echo -e "${BLUE}📋 Phase 2: Backend Python Rules${NC}"
 if [ -d "$BACKEND_PATH" ]; then
     cd "$PROJECT_ROOT"
-    echo "   Running Python architectural linter..."
+    echo "   Running Ruff standard checks..."
     
     # Activate virtual environment if it exists
     if [ -f "$PROJECT_ROOT/.venv/bin/activate" ]; then
         source "$PROJECT_ROOT/.venv/bin/activate"
     fi
+    
+    # Run Ruff standard checks
+    if ruff check "$BACKEND_PATH" --select E,F 2>/dev/null; then
+        echo -e "   ${GREEN}✅ Ruff standard checks: PASSED${NC}"
+    else
+        echo -e "   ${YELLOW}⚠️  Ruff standard violations detected${NC}"
+    fi
+    
+    echo "   Running QUALIA.CODE architectural linter..."
     
     if python -m qualia_code_linter "$BACKEND_PATH" --strict 2>/dev/null; then
         echo -e "   ${GREEN}✅ Backend architectural compliance: PASSED${NC}"

@@ -37,6 +37,8 @@ class LintReporter:
         """Report violations in the specified format."""
         if format == "json":
             self._report_json(violations)
+        elif format == "ruff":
+            self._report_ruff(violations)
         else:
             self._report_text(violations)
     
@@ -81,3 +83,9 @@ class LintReporter:
             }
         }
         print(json.dumps(output, indent=2))
+    
+    def _report_ruff(self, violations: List[Violation]) -> None:
+        """Report violations in Ruff external tool format."""
+        for violation in violations:
+            # Ruff format: filepath:line:col: code message
+            print(f"{violation.filepath}:{violation.line}:{violation.column}: {violation.code} {violation.message}")

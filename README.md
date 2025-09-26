@@ -40,7 +40,10 @@ Qualia Tempo is a rhythm-action boss rush game that transforms music into a livi
 
 ### Quality Assurance
 - **QUALIA.CODE v1.1 Compliance**: Strict architectural standards enforcement
-- **ESLint Plugin**: Custom rules for architectural compliance
+- **Integrated Linting Suite**: ESLint + Ruff + QUALIA.CODE custom rules
+- **Unified Command**: `./scripts/lint-architecture.sh` runs all linting tools
+- **ESLint Plugin**: Custom rules for frontend architectural compliance
+- **Ruff Integration**: Python linting with external QUALIA.CODE rules
 - **Comprehensive Testing**: 56+ unit tests with 100% service coverage
 - **TypeScript**: Strict type checking with zero errors
 
@@ -252,7 +255,40 @@ pnpm run test:connection
 - Advanced visual effects pipeline
 - Performance optimization for 60fps
 
-## 📚 Documentation
+## � Development Workflow
+
+### Architectural Compliance
+
+Qualia Tempo enforces strict architectural standards through an integrated linting suite:
+
+```bash
+# Run all architectural linting tools
+./scripts/lint-architecture.sh
+```
+
+This unified command executes:
+- **Frontend**: ESLint with QUALIA.CODE custom rules
+- **Backend**: Ruff standard linting + QUALIA.CODE Python rules
+- **Integration**: Ruff configured with external QUALIA.CODE linter
+
+#### Linting Tools
+
+- **ESLint Plugin**: `@qualia-tempo/eslint-plugin-qualia-code`
+  - `no-global-api-calls`: Prevents direct use of browser APIs in services
+  - `enforce-use-services-hook`: Enforces IoC container usage
+  - `no-complex-use-state`: Prevents complex state in React components
+
+- **Ruff Integration**: Python linting with external tool support
+  - Standard Ruff rules (E, F) for code quality
+  - QUALIA.CODE rules (QLA001, QLA002, QLA003) for architecture
+  - Configured in `pyproject.toml` with external tool settings
+
+- **QUALIA.CODE Rules**:
+  - **QLA001**: Prohibit direct service instantiation
+  - **QLA002**: Enforce service method decorators
+  - **QLA003**: Forbid concrete FastAPI route dependencies
+
+## �📚 Documentation
 
 - **GDD**: [Game Design Document](docs/GDD.md)
 - **Architecture**: [QUALIA.CODE Standards](docs/QUALIA.CODE.md)

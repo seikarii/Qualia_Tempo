@@ -64,9 +64,42 @@ class QualiaCodeLinter:
             )
             violations.append(violation)
         
+    def lint_stdin(self, filename: str) -> List[Violation]:
+        """Lint code from stdin with given filename."""
+        violations = []
+        
+        try:
+            content = sys.stdin.read()
+            tree = ast.parse(content, filename=filename)
+            
+            # Apply each enabled rule
+            for rule_name in self.enabled_rules:
+                if rule_name in self.rules:
+                    rule_class = self.rules[rule_name]
+                    rule_instance = rule_class(Path(filename), self.config)
+                    rule_violations = rule_instance.check(tree)
+                    violations.extend(rule_violations)
+            
+        except SyntaxError as e:
+            violation = Violation(
+                code="SYNTAX_ERROR",
+                message=f"Syntax error: {e.msg}",
+                filepath=Path(filename),
+                line=e.lineno or 0,
+                column=e.offset or 0
+            )
+            violations.append(violation)
+        except Exception as e:
+            violation = Violation(
+                code="INTERNAL_ERROR", 
+                message=f"Internal linter error: {str(e)}",
+                filepath=Path(filename),
+                line=0,
+                column=0
+            )
+            violations.append(violation)
+        
         return violations
-    
-    def lint_directory(self, directory: Path) -> List[Violation]:
         """Lint all Python files in a directory recursively."""
         violations = []
         exclude_patterns = self.config.get("exclude", [])
@@ -104,6 +137,7 @@ def main() -> int:
     )
     parser.add_argument(
         "target",
+        nargs="?",
         help="Path to file or directory to lint"
     )
     parser.add_argument(
@@ -123,9 +157,13 @@ def main() -> int:
     )
     parser.add_argument(
         "--format",
-        choices=["text", "json"],
+        choices=["text", "json", "ruff"],
         default="text",
         help="Output format"
+    )
+    parser.add_argument(
+        "--stdin-filename",
+        help="Filename when reading from stdin (for Ruff integration)"
     )
     
     args = parser.parse_args()
@@ -141,8 +179,14 @@ def main() -> int:
     linter = QualiaCodeLinter(config)
     
     # Lint target
-    target_path = Path(args.target)
-    violations = linter.lint(target_path)
+    if args.stdin_filename:
+        # Read from stdin for Ruff integration
+        violations = linter.lint_stdin(args.stdin_filename)
+    else:
+        if not args.target:
+            parser.error("target is required when not using --stdin-filename")
+        target_path = Path(args.target)
+        violations = linter.lint(target_path)
     
     # Report results
     linter.reporter.report(violations, format=args.format)
