@@ -1,10 +1,35 @@
+# QUALIA.CODE v1.1 - ErrorReporting Configuration
+# All previously hardcoded values externalized
+enabled: true
+maxBatchSize: 50
+batchFlushInterval: 30000  # 30 seconds
+maxRetries: 3
+retryDelay: 1000  # 1 second
+rateLimitTokens: 10
+rateLimitRefillRate: 1  # 1 token per second
+circuitBreakerThreshold: 5
+circuitBreakerTimeout: 60000  # 1 minute
+enableDeduplication: true
+memoryCleanupThreshold: 1000
+
+# Rate limiting (legacy compatibility)
 rateLimitWindow: 60000
 maxErrorsPerWindow: 100
 batchSize: 50
 batchTimeout: 30000
 maxRetentionTime: 86400000
-externalServiceUrl: ""
-retryAttempts: 3
+
+# External service configuration
+externalService:
+  endpoint: "https://api.example.com/errors"
+  apiKey: ""
+  timeout: 5000
+  maxRetries: 3
+  retryDelay: 2000
+  batchSize: 20
+  enabled: false
+
+# Additional settings
 enableCompression: true
 maxBatchSizeBytes: 1048576
 enableErrorFiltering: true

@@ -10,15 +10,13 @@
  * Visual effects are now the exclusive domain of BackendCanvas.
  */
 
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { useService } from "../services/hooks";
-import { TYPES } from "../services/inversify.types";
-import type { IEventBus } from "../services/interfaces/IEventBus";
+import { useEventBus } from "../services/hooks";
 
 export default function QualiaMainMenu() {
   // Services
-  const eventBus = useService<IEventBus>(TYPES.IEventBus);
+  const eventBus = useEventBus();
 
   // Local state for UI interactions only
   const [isHovered, setIsHovered] = useState(false);

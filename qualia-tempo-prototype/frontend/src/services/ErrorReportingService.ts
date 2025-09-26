@@ -99,29 +99,33 @@ export interface ExtendedErrorReportingConfig extends ErrorReportingConfig {
   externalService: ExternalServiceConfig;
 }
 
-// Default configuration
-const DEFAULT_ERROR_REPORTING_CONFIG: ExtendedErrorReportingConfig = {
-  enabled: true,
-  maxBatchSize: 50,
-  batchFlushInterval: 30000, // 30 seconds
-  maxRetries: 3,
-  retryDelay: 1000, // 1 second
-  rateLimitTokens: 10,
-  rateLimitRefillRate: 1, // 1 token per second
-  circuitBreakerThreshold: 5,
-  circuitBreakerTimeout: 60000, // 1 minute
-  enableDeduplication: true,
-  memoryCleanupThreshold: 1000,
-  externalService: {
-    endpoint: "https://api.example.com/errors",
-    apiKey: "",
-    timeout: 5000,
-    maxRetries: 3,
-    retryDelay: 2000,
-    batchSize: 20,
-    enabled: false,
-  },
-};
+// QUALIA.CODE: NO HARDCODED DEFAULTS - Configuration loaded from YAML
+// This function creates configuration from ConfigurationService
+function createErrorReportingConfig(configService: any): ExtendedErrorReportingConfig {
+  const yamlConfig = configService.getConfig().errorReporting || {};
+  return {
+    enabled: yamlConfig.enabled ?? true,
+    maxBatchSize: yamlConfig.maxBatchSize ?? 50,
+    batchFlushInterval: yamlConfig.batchFlushInterval ?? 30000,
+    maxRetries: yamlConfig.maxRetries ?? 3,
+    retryDelay: yamlConfig.retryDelay ?? 1000,
+    rateLimitTokens: yamlConfig.rateLimitTokens ?? 10,
+    rateLimitRefillRate: yamlConfig.rateLimitRefillRate ?? 1,
+    circuitBreakerThreshold: yamlConfig.circuitBreakerThreshold ?? 5,
+    circuitBreakerTimeout: yamlConfig.circuitBreakerTimeout ?? 60000,
+    enableDeduplication: yamlConfig.enableDeduplication ?? true,
+    memoryCleanupThreshold: yamlConfig.memoryCleanupThreshold ?? 1000,
+    externalService: yamlConfig.externalService ?? {
+      endpoint: "https://api.example.com/errors",
+      apiKey: "",
+      timeout: 5000,
+      maxRetries: 3,
+      retryDelay: 2000,
+      batchSize: 20,
+      enabled: false,
+    },
+  };
+}
 
 // Error fingerprinting for deduplication
 export class ErrorFingerprinter {
@@ -222,7 +226,10 @@ export class ErrorReportingService implements IErrorReportingService {
     this.httpService = httpService;
     this.timerService = timerService;
     this._configService = _configService;
-    this.config = { ...DEFAULT_ERROR_REPORTING_CONFIG, ...config };
+    
+    // QUALIA.CODE: Load configuration from YAML instead of hardcoded defaults
+    const baseConfig = createErrorReportingConfig(_configService);
+    this.config = { ...baseConfig, ...config };
     this.sessionId = this.generateSessionId();
 
     // Initialize rate limiting and circuit breaker

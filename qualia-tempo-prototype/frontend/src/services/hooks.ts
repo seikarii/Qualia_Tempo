@@ -1,116 +1,96 @@
 /**
- * QUALIA.CODE v1.1 - Service Hooks
- * React hooks for accessing services from InversifyJS IoC container.
- *
- * CRITICAL: This replaces the manual CompositionRoot provider pattern.
- * All services are now resolved directly from the InversifyJS container.
+ * QUALIA.CODE v1.1 - Service Hooks for React Components  
+ * Provides IoC container integration through React hooks
+ * Components should NEVER import TYPES directly - use these hooks instead
  */
 
-import { container } from "./inversify.container";
-import type { ServiceTypes } from "./inversify.types";
-import { TYPES } from "./inversify.types";
-import type { IEventBus } from "./interfaces/IEventBus";
-import type { ILogger } from "./interfaces/ILogger";
-import type { IConfigurationService } from "./interfaces/IConfigurationService";
-import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
-import type { IBackendSyncService } from "./interfaces/IBackendSyncService";
-import type { IAudioService } from "./interfaces/IAudioService";
-import type { IGameControllerService } from "./interfaces/IGameControllerService";
-import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
-import type { INotificationService } from "./interfaces/INotificationService";
-import type { IErrorReportingService } from "./interfaces/IErrorReportingService";
-import type { IDebugService } from "./interfaces/IDebugService";
-import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovementController";
+import { useRef } from 'react';
+import { container } from './inversify.container';
+import { TYPES } from './inversify.types';
+import type { IEventBus } from './interfaces/IEventBus';
+import type { ILogger } from './interfaces/ILogger';
+import type { IConfigurationService } from './interfaces/IConfigurationService';
+import type { IQualiaStateCalculatorService } from './interfaces/IQualiaStateCalculatorService';
+import type { IBackendSyncService } from './interfaces/IBackendSyncService';
+import type { IAudioService } from './interfaces/IAudioService';
+import type { IGameControllerService } from './interfaces/IGameControllerService';
+import type { IGameStateStoreService } from './interfaces/IGameStateStoreService';
+import type { INotificationService } from './interfaces/INotificationService';
+import type { IErrorReportingService } from './interfaces/IErrorReportingService';
+import type { IDebugService } from './interfaces/IDebugService';
+import type { IRhythmicMovementController } from './interfaces/IRhythmicMovementController';
+import type { IStreamingVideoService } from './interfaces/IStreamingVideoService';
+import type { IHttpService } from './interfaces/IHttpService';
+import type { ITimerService } from './interfaces/ITimerService';
 
 /**
- * Generic hook for accessing any service from the IoC container.
- * This is the CORE hook that replaces the CompositionRoot provider.
- *
- * @param serviceType The service identifier symbol
+ * Generic hook to resolve a service from the IoC container
+ * @param serviceIdentifier - Symbol identifier for the service
  * @returns The resolved service instance
  */
-export const useService = <T>(serviceType: ServiceTypes): T => {
-  try {
-    return container.get<T>(serviceType);
-  } catch (error) {
-    throw new Error(
-      `Service ${serviceType.toString()} not found in IoC container: ${error}`,
-    );
+export function useService<T>(serviceIdentifier: symbol): T {
+  const serviceRef = useRef<T | null>(null);
+  
+  if (serviceRef.current === null) {
+    serviceRef.current = container.get<T>(serviceIdentifier);
   }
-};
-
-// ===== CONVENIENCE HOOKS =====
-// These provide type-safe access to specific services
+  
+  return serviceRef.current;
+}
 
 /**
- * Hook for accessing EventBus service.
+ * TYPED SERVICE HOOKS
+ * Components should use these instead of importing TYPES directly
+ * Each hook encapsulates both the service type and its TYPES identifier
  */
-export const useEventBus = (): IEventBus =>
+
+// Core Services
+export const useEventBus = (): IEventBus => 
   useService<IEventBus>(TYPES.IEventBus);
 
-/**
- * Hook for accessing Logger service.
- */
-export const useLogger = (): ILogger => useService<ILogger>(TYPES.ILogger);
+export const useLogger = (): ILogger => 
+  useService<ILogger>(TYPES.ILogger);
 
-/**
- * Hook for accessing Configuration service.
- */
-export const useConfiguration = (): IConfigurationService =>
+export const useConfigurationService = (): IConfigurationService => 
   useService<IConfigurationService>(TYPES.IConfigurationService);
 
-/**
- * Hook for accessing QualiaCalculator service.
- */
-export const useQualiaCalculator = (): IQualiaStateCalculatorService =>
-  useService<IQualiaStateCalculatorService>(
-    TYPES.IQualiaStateCalculatorService,
-  );
-
-/**
- * Hook for accessing BackendSync service.
- */
-export const useBackendSync = (): IBackendSyncService =>
-  useService<IBackendSyncService>(TYPES.IBackendSyncService);
-
-/**
- * Hook for accessing Audio service.
- */
-export const useAudioService = (): IAudioService =>
-  useService<IAudioService>(TYPES.IAudioService);
-
-/**
- * Hook for accessing GameController service.
- */
-export const useGameController = (): IGameControllerService =>
+// Game Services  
+export const useGameControllerService = (): IGameControllerService => 
   useService<IGameControllerService>(TYPES.IGameControllerService);
 
-/**
- * Hook for accessing GameStateStore service.
- */
-export const useGameStateStore = (): IGameStateStoreService =>
+export const useGameStateStoreService = (): IGameStateStoreService => 
   useService<IGameStateStoreService>(TYPES.IGameStateStoreService);
 
-/**
- * Hook for accessing Notification service.
- */
-export const useNotificationService = (): INotificationService =>
+export const useQualiaStateCalculatorService = (): IQualiaStateCalculatorService => 
+  useService<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService);
+
+// Media Services
+export const useAudioService = (): IAudioService => 
+  useService<IAudioService>(TYPES.IAudioService);
+
+export const useStreamingVideoService = (): IStreamingVideoService => 
+  useService<IStreamingVideoService>(TYPES.IStreamingVideoService);
+
+// Communication Services
+export const useBackendSyncService = (): IBackendSyncService => 
+  useService<IBackendSyncService>(TYPES.IBackendSyncService);
+
+export const useHttpService = (): IHttpService => 
+  useService<IHttpService>(TYPES.IHttpService);
+
+export const useNotificationService = (): INotificationService => 
   useService<INotificationService>(TYPES.INotificationService);
 
-/**
- * Hook for accessing ErrorReporting service.
- */
-export const useErrorReporting = (): IErrorReportingService =>
-  useService<IErrorReportingService>(TYPES.IErrorReportingService);
-
-/**
- * Hook for accessing Debug service.
- */
-export const useDebugService = (): IDebugService =>
+// Development Services
+export const useDebugService = (): IDebugService => 
   useService<IDebugService>(TYPES.IDebugService);
 
-/**
- * Hook for accessing RhythmicMovement controller.
- */
-export const useRhythmicMovementController = (): IRhythmicMovementController =>
+export const useErrorReportingService = (): IErrorReportingService => 
+  useService<IErrorReportingService>(TYPES.IErrorReportingService);
+
+// Utility Services
+export const useTimerService = (): ITimerService => 
+  useService<ITimerService>(TYPES.ITimerService);
+
+export const useRhythmicMovementController = (): IRhythmicMovementController => 
   useService<IRhythmicMovementController>(TYPES.IRhythmicMovementController);

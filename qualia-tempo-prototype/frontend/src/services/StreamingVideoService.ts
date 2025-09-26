@@ -18,6 +18,7 @@ import type {
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { ITimerService } from "./interfaces/ITimerService";
 import type { StreamingStatusChangedEvent } from "./EventBus";
 import { logMethod, catchError } from "../utils/decorators";
 
@@ -27,6 +28,7 @@ type FrameCallback = (frame: VideoFrame) => void;
 export class StreamingVideoService implements IStreamingVideoService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
+  private readonly timerService: ITimerService;
 
   // WebSocket connection with singleton management
   private websocket: WebSocket | null = null;
@@ -80,9 +82,11 @@ export class StreamingVideoService implements IStreamingVideoService {
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
+    @inject(TYPES.ITimerService) timerService: ITimerService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
+    this.timerService = timerService;
 
     // Load streaming configuration from config service
     const streamingConfig =
@@ -114,7 +118,7 @@ export class StreamingVideoService implements IStreamingVideoService {
 
     // Si hay un debounce de desconexión pendiente, cancelarlo.
     if (this.disconnectDebounceTimer) {
-      clearTimeout(this.disconnectDebounceTimer);
+      this.timerService.clearTimeout(this.disconnectDebounceTimer);
       this.disconnectDebounceTimer = null;
       this.logger.info(
         "Cancelled pending disconnect due to new connection request.",

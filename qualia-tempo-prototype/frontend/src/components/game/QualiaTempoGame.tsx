@@ -8,9 +8,7 @@ import {
 } from "@react-three/postprocessing";
 import { Vector2 } from "three";
 import { useGameStore } from "../../state/useGameStore";
-import { useService } from "../../services/hooks";
-import { TYPES } from "../../services/inversify.types";
-import { IEventBus } from "../../services/interfaces/IEventBus";
+import { useEventBus } from "../../services/hooks";
 import {
   PlayerActionEvent,
   RhythmicDashEvent,
@@ -46,7 +44,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   onGameAction: _onGameAction,
   isActive = false,
 }) => {
-  const eventBus = useService<IEventBus>(TYPES.IEventBus);
+  const eventBus = useEventBus();
 
   // Get real game state from Zustand store
   const zustandState = useGameStore();

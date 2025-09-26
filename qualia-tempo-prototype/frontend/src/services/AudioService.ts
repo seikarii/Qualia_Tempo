@@ -10,6 +10,7 @@ import type { AudioServiceConfig } from "./ConfigurationService";
 import type { IAudioService } from "./interfaces/IAudioService";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { IWebAudioAPIService } from "./interfaces/IWebAudioAPIService";
+import type { ITimerService } from "./interfaces/ITimerService";
 
 /**
  * AudioService - QUALIA.CODE compliant service for audio management
@@ -21,6 +22,7 @@ export class AudioService implements IAudioService {
   private logger: QualiaLogger;
   private configService: IConfigurationService;
   private webAudioAPIService: IWebAudioAPIService;
+  private timerService: ITimerService;
   private qualiaStateListenerId: string | null = null;
   private isInitialized: boolean = false;
 
@@ -30,12 +32,14 @@ export class AudioService implements IAudioService {
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
     @inject(TYPES.IOntologicalAudioEngine) audioEngine: IOntologicalAudioEngine,
     @inject(TYPES.IWebAudioAPIService) webAudioAPIService: IWebAudioAPIService,
+    @inject(TYPES.ITimerService) timerService: ITimerService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.configService = configService;
     this.audioEngine = audioEngine;
     this.webAudioAPIService = webAudioAPIService;
+    this.timerService = timerService;
   }
 
   @logMethod()
@@ -371,7 +375,7 @@ export class AudioService implements IAudioService {
     this.logger.info(`🔊 Preloading sounds: ${soundIds.join(", ")}`);
 
     // Simulate preloading
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => this.timerService.setTimeout(() => resolve(undefined), 100));
 
     this.logger.info(`✅ Sounds preloaded successfully`);
   }

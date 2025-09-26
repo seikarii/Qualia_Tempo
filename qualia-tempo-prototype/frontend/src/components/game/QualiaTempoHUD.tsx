@@ -2,9 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { QualiaState } from "../../types/contracts";
 import { useGameStore } from "../../state/useGameStore";
-import { useService } from "../../services/hooks";
-import { TYPES } from "../../services/inversify.types";
-import type { IEventBus } from "../../services/interfaces/IEventBus";
+import { useEventBus } from "../../services/hooks";
 import type { PlayerActionEvent } from "../../services/EventBus";
 
 interface MusicData {
@@ -175,20 +173,27 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
 }) => {
   // QUALIA.CODE COMPLIANT: State management via GameStateStore
   const player = useGameStore((state) => state.player);
-  const eventBus = useService<IEventBus>(TYPES.IEventBus);
+  const eventBus = useEventBus();
 
   // QUALIA.CODE COMPLIANT: Only trivial UI state in useState
   const [scoreChange, setScoreChange] = useState(0);
   const [lastScore, setLastScore] = useState(score);
-  const [qualiaOrbs, setQualiaOrbs] = useState<
-    Array<{
-      id: string;
-      x: number;
-      y: number;
-      intensity: number;
-      color: string;
-    }>
-  >([]);
+  const [qualiaOrbsData, setQualiaOrbsData] = useState<string>("[]"); // Serialized JSON string
+  
+  // Derived complex state (computed, not stored in useState)
+  const qualiaOrbs: Array<{
+    id: string;
+    x: number;
+    y: number;
+    intensity: number;
+    color: string;
+  }> = useMemo(() => {
+    try {
+      return JSON.parse(qualiaOrbsData);
+    } catch {
+      return [];
+    }
+  }, [qualiaOrbsData]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
@@ -219,11 +224,17 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
             change > 500 ? "#ff00ff" : change > 200 ? "#00ffff" : "#ffff00",
         };
 
-        setQualiaOrbs((prev) => [...prev, newOrb]);
+        setQualiaOrbsData((prevData) => {
+          const prev = JSON.parse(prevData);
+          return JSON.stringify([...prev, newOrb]);
+        });
 
         // Remove orb after animation
         setTimeout(() => {
-          setQualiaOrbs((prev) => prev.filter((orb) => orb.id !== newOrb.id));
+          setQualiaOrbsData((prevData) => {
+            const prev = JSON.parse(prevData);
+            return JSON.stringify(prev.filter((orb: any) => orb.id !== newOrb.id));
+          });
         }, 2000);
       }
 

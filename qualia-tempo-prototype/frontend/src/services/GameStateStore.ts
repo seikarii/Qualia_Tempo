@@ -30,7 +30,7 @@ export class GameStateStore implements IGameStateStore {
         message: notification.message,
         timestamp: notification.timestamp.getTime(),
         autoHide: notification.metadata?.autoHide ?? true,
-        duration: notification.metadata?.duration ?? 5000,
+        duration: notification.metadata?.duration ?? 3000, // From notification-service.yaml
       }));
 
     useGameStore.setState((state) => ({

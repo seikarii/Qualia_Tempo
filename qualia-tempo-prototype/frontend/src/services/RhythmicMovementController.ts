@@ -12,6 +12,7 @@ import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovement
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { ITimerService } from "./interfaces/ITimerService";
 
 // PURE DI: Configuration interface for this service
 export interface RhythmicMovementConfig {
@@ -33,6 +34,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private eventBus: IEventBus;
   private logger: ILogger;
   private configService: IConfigurationService;
+  private timerService: ITimerService;
   private config!: RhythmicMovementConfig; // Will be loaded in constructor
 
   private playerPosition: [number, number] = [4, 4]; // Center of 8x8 grid
@@ -68,10 +70,12 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
+    @inject(TYPES.ITimerService) timerService: ITimerService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.configService = configService;
+    this.timerService = timerService;
 
     this.logger.info(
       "RhythmicMovementController initialized - configuration will be loaded on start()",
@@ -195,7 +199,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.isPaused = true;
 
     // Apply slowdown effect for configured duration, then fully pause
-    this.slowdownTimeout = window.setTimeout(() => {
+    this.slowdownTimeout = this.timerService.setTimeout(() => {
       this.slowdownFactor = 0.0; // Complete pause
       this.stopMetronome();
       this.logger.info("Transitioning to full pause");
@@ -208,7 +212,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
 
     // Clear slowdown timeout if still active
     if (this.slowdownTimeout) {
-      clearTimeout(this.slowdownTimeout);
+      this.timerService.clearTimeout(this.slowdownTimeout);
       this.slowdownTimeout = null;
     }
 
@@ -222,7 +226,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
 
   @logMethod()
   private startMetronome(): void {
-    this.metronomeIntervalId = window.setInterval(() => {
+    this.metronomeIntervalId = this.timerService.setInterval(() => {
       // Skip metronome ticks when completely paused
       if (this.slowdownFactor === 0.0) {
         return;
@@ -243,7 +247,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
 
   private stopMetronome(): void {
     if (this.metronomeIntervalId) {
-      clearInterval(this.metronomeIntervalId);
+      this.timerService.clearInterval(this.metronomeIntervalId);
       this.metronomeIntervalId = null;
     }
   }

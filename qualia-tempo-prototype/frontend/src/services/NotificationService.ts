@@ -25,6 +25,7 @@ import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
+import type { ITimerService } from "./interfaces/ITimerService";
 import type {
   QualiaStateUpdatedEvent,
   GameStateChangedEvent,
@@ -255,6 +256,7 @@ export type {
 export class NotificationService implements INotificationService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
+  private readonly timerService: ITimerService;
   // Configuration service for future extensibility
   // @ts-ignore - Unused parameter for future configuration features
   private readonly _configService: IConfigurationService;
@@ -304,6 +306,7 @@ export class NotificationService implements INotificationService {
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IConfigurationService) _configService: IConfigurationService,
     @inject(TYPES.IGameStateStore) gameStateStore: IGameStateStore,
+    @inject(TYPES.ITimerService) timerService: ITimerService,
     @unmanaged() config?: Partial<ExtendedNotificationConfig>,
   ) {
     if (!eventBus) {
@@ -320,6 +323,7 @@ export class NotificationService implements INotificationService {
 
     this.eventBus = eventBus;
     this.logger = logger;
+    this.timerService = timerService;
     this._configService = _configService;
     this.gameStateStore = gameStateStore;
     this.config = { ...DEFAULT_NOTIFICATION_CONFIG, ...config };
@@ -1094,7 +1098,7 @@ export class NotificationService implements INotificationService {
     if (notification.expiresAt) {
       const timeToExpire = notification.expiresAt.getTime() - Date.now();
       if (timeToExpire > 0) {
-        setTimeout(() => {
+        this.timerService.setTimeout(() => {
           // Only dismiss if notification is still active
           if (this.activeNotifications.has(notification.id)) {
             this.logger.debug(
@@ -1108,30 +1112,30 @@ export class NotificationService implements INotificationService {
   }
 
   private startQueueProcessing(): void {
-    this.queueProcessingInterval = window.setInterval(() => {
+    this.queueProcessingInterval = this.timerService.setInterval(() => {
       this.processQueue();
     }, 100); // Process every 100ms
   }
 
   private startAutoCleanup(): void {
-    this.cleanupInterval = window.setInterval(() => {
+    this.cleanupInterval = this.timerService.setInterval(() => {
       this.performAutoCleanup();
     }, this.config.autoCleanupInterval);
   }
 
   private stopAllIntervals(): void {
     if (this.queueProcessingInterval) {
-      clearInterval(this.queueProcessingInterval);
+      this.timerService.clearInterval(this.queueProcessingInterval);
       this.queueProcessingInterval = null;
     }
 
     if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval);
+      this.timerService.clearInterval(this.cleanupInterval);
       this.cleanupInterval = null;
     }
 
     if (this.storeUpdateThrottleTimeout) {
-      clearTimeout(this.storeUpdateThrottleTimeout);
+      this.timerService.clearTimeout(this.storeUpdateThrottleTimeout);
       this.storeUpdateThrottleTimeout = null;
     }
   }
@@ -1180,7 +1184,7 @@ export class NotificationService implements INotificationService {
     }
 
     this.pendingStoreUpdate = true;
-    this.storeUpdateThrottleTimeout = window.setTimeout(() => {
+    this.storeUpdateThrottleTimeout = this.timerService.setTimeout(() => {
       this.updateStore();
       this.pendingStoreUpdate = false;
     }, this.config.storeUpdateThrottleMs);

@@ -5,14 +5,11 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { useService } from "../services/hooks";
-import { TYPES } from "../services/inversify.types";
+import { useStreamingVideoService, useLogger } from "../services/hooks";
 import type {
-  IStreamingVideoService,
   VideoFrame,
   ConnectionStatus,
 } from "../services/interfaces/IStreamingVideoService";
-import type { ILogger } from "../services/interfaces/ILogger";
 
 interface BackendCanvasProps {
   /** Canvas width (default: full viewport) */
@@ -49,21 +46,24 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
-  const streamingService = useService<IStreamingVideoService>(
-    TYPES.IStreamingVideoService,
-  );
-  const logger = useService<ILogger>(TYPES.ILogger);
+  const streamingService = useStreamingVideoService();
+  const logger = useLogger();
 
-  // Component state
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
-    connected: false,
-    state: "DISCONNECTED",
-    reconnectAttempts: 0,
-  });
+  // Component state - QUALIA.CODE: Only simple primitives in useState
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionState, setConnectionState] = useState<string>("DISCONNECTED");
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const [lastFrame, setLastFrame] = useState<VideoFrame | null>(null);
   const [frameCount, setFrameCount] = useState(0);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
+  
+  // Derived connection status object (computed, not stored in state)
+  const connectionStatus: ConnectionStatus = {
+    connected: isConnected,
+    state: connectionState as ConnectionStatus['state'],
+    reconnectAttempts: reconnectAttempts,
+  };
 
   // Canvas dimensions
   const canvasWidth = width || window.innerWidth;
@@ -178,7 +178,9 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
    */
   const updateConnectionStatus = useCallback(() => {
     const status = streamingService.getConnectionStatus();
-    setConnectionStatus(status);
+    setIsConnected(status.connected);
+    setConnectionState(status.state);
+    setReconnectAttempts(status.reconnectAttempts);
 
     // Activate fallback if disconnected for too long
     if (!status.connected && status.reconnectAttempts > 3) {

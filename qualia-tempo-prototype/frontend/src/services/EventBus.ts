@@ -14,6 +14,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IEventBus } from "./interfaces/IEventBus";
+import type { ITimerService } from "./interfaces/ITimerService";
 import { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from "../utils/decorators";
 // ✅ CORRECT: Importing from the central contracts file
@@ -141,9 +142,14 @@ export class EventBus implements IEventBus {
   private maxHistorySize = 1000;
   private isDestroyed = false;
   private logger: ILogger;
+  private timerService: ITimerService;
 
-  constructor(@inject(TYPES.ILogger) logger: ILogger) {
+  constructor(
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.ITimerService) timerService: ITimerService
+  ) {
     this.logger = logger;
+    this.timerService = timerService;
     this.setupErrorHandling();
     this.setupPerformanceMonitoring();
     this.logger.info("🚀 [EventBus] EventBus initialized via InversifyJS");
@@ -317,7 +323,7 @@ export class EventBus implements IEventBus {
             { error, eventType: completeEvent.type },
           );
           // Emit error event (async to avoid recursion)
-          setTimeout(() => {
+          this.timerService.setTimeout(() => {
             this.emit({
               type: "Error",
               error: error instanceof Error ? error : new Error(String(error)),
@@ -510,7 +516,7 @@ export class EventBus implements IEventBus {
 
   private setupPerformanceMonitoring(): void {
     // Monitor EventBus performance
-    setInterval(() => {
+    this.timerService.setInterval(() => {
       const stats = this.getStats();
       if (stats.totalListeners > 100) {
         this.logger.warn(
