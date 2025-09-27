@@ -1,0 +1,189 @@
+Documento de Diseño Arquitectónico: `QualiaForge Engine`
+
+  1. Visión y Filosofía del Motor
+
+  El QualiaForge Engine no es un motor de juego tradicional. Su propósito es proporcionar una interfaz para visualizar, manipular y simular el QualiaManifold y las
+  entidades que emergen de él. Su filosofía se basa en dos principios clave:
+
+   1. Núcleo Headless, Visualizador Acoplable: El corazón del motor (QualiaForge-Core) es un proceso de servidor sin interfaz gráfica. Se opera exclusivamente a través
+      de una API. El componente visual (ManifoldVisualizer) es un cliente separado que se suscribe al estado del núcleo, permitiendo la observación en tiempo real sin
+      interferir en la simulación.
+   2. Interfaz Programática (API-First): El "usuario" principal de este motor es una IA (GenesisAI). Por lo tanto, la interfaz primaria no es un conjunto de botones y
+      menús, sino una robusta API (ForgeAPI) que permite a los scripts crear, modificar y consultar el estado del universo de forma programática.
+
+  2. Arquitectura de Componentes
+
+  El QualiaForge Engine se compone de tres sistemas principales que trabajan en conjunto.
+
+  ##### 2.1. `QualiaForge-Core` (El Núcleo Headless)
+
+  Este es el servidor de simulación. Es una aplicación de consola que se encarga de:
+
+   * Gestión de Estado: Cargar y guardar el estado completo del QualiaManifold desde/hacia un archivo. Este archivo es nuestro "mapa".
+   * Motor de Simulación: Ejecutar la física del universo (JaxPhysicsEngine) para evolucionar el estado del QualiaManifold a lo largo del tiempo (ticks).
+   * Exposición de la API: Abrir un endpoint (ej. gRPC o un socket TCP) para que otros procesos puedan conectarse y enviar comandos a través de la ForgeAPI.
+   * Publicación de Actualizaciones: Emitir eventos de ManifoldStateDelta a todos los suscriptores (como el visualizador) cada vez que el estado del universo cambia.
+
+  ##### 2.2. `ForgeAPI` (La Interfaz Programática para la IA)
+
+  Esta es la capa de comandos que la GenesisAI utilizará para esculpir el universo. Define un conjunto de funciones claras:
+
+   * setManifoldState(state_data): Carga un universo desde un archivo.
+   * getManifoldState(): Devuelve el estado actual del universo para guardarlo.
+   * perturb(position: vector3, parameters: dict): El comando de creación fundamental. En lugar de "colocar un árbol", la IA llama a perturb con parámetros que definen
+     una modificación local en el QualiaManifold (ej. {type: 'stability', value: 0.9, radius: 10}). El universo entonces hace emerger las consecuencias de esa
+     perturbación.
+   * runSimulation(ticks: int): Avanza la simulación un número determinado de pasos.
+   * queryManifold(area: bounding_box): Devuelve el estado detallado de una región específica del QualiaManifold para que la IA pueda analizar los resultados de sus
+     acciones.
+   * subscribeToUpdates(callback_endpoint): Permite que un cliente (como el visualizador) se suscriba a los deltas de estado en tiempo real.
+
+  ##### 2.3. `ManifoldVisualizer` (El Visualizador Desacoplado)
+
+  Este es un cliente ligero y separado. Puede ser una aplicación simple (Pygame, o incluso una web con Three.js) cuya única función es:
+
+   1. Conectarse al QualiaForge-Core.
+   2. Llamar a ForgeAPI.subscribeToUpdates() para empezar a recibir datos.
+   3. Recibir los eventos ManifoldStateDelta.
+   4. Renderizar el estado del QualiaManifold. La visualización no tiene por qué ser fotorrealista. Puede ser una representación de datos: una nube de puntos, un campo
+      de vóxeles, o un corte 2D, donde el color, el brillo o el tamaño representan los valores del campo.
+
+  3. Flujo de Trabajo Principal: Creación del "Mapa Base"
+
+  Este es el proceso que utilizará la GenesisAI para forjar las condiciones iniciales del universo.
+
+   1. Inicio: Un script de IA (GenesisAI) se ejecuta.
+   2. Conexión: La GenesisAI inicia una instancia del QualiaForge-Core y se conecta a él a través de la ForgeAPI.
+   3. Bucle de Creación: La IA entra en un bucle:
+      a. Análisis: Llama a queryManifold para analizar una región del universo.
+      b. Decisión: Basándose en su análisis y sus objetivos, decide qué "pincelada" dar a continuación.
+      c. Acción: Llama a perturb con los parámetros decididos para modificar una zona del QualiaManifold. Por ejemplo, para crear una "cordillera", no coloca montañas,
+  sino que ejecuta una serie de perturbaciones de "densidad" y "estabilidad" a lo largo de una línea.
+      d. (Opcional) Simulación: Llama a runSimulation para ver cómo sus cambios evolucionan y se asientan.
+   4. Observación (Humana): Mientras la GenesisAI trabaja, un desarrollador puede lanzar el ManifoldVisualizer en cualquier momento para conectarse al Core y observar el
+      proceso de creación en tiempo real.
+   5. Guardado: Una vez que la GenesisAI considera que las condiciones iniciales son correctas, llama a getManifoldState y guarda el resultado en un archivo. Este 
+      archivo es el "mapa base" de `Qualia Mundi`.
+
+  4. Estrategia de Implementación MVP (Fase 1: El "Hola, Universo")
+
+  Para validar esta arquitectura, el primer paso no es construir el motor completo, sino el pipeline de datos fundamental.
+
+   * Objetivo: Demostrar que un script externo puede modificar el QualiaManifold y que un visualizador separado puede renderizar ese cambio.
+   * Componentes a Implementar:
+       1. `QualiaForge-Core` (Mínimo): Debe poder cargar un QualiaManifold vacío, exponer una ForgeAPI con solo dos funciones: perturb() y subscribeToUpdates(), y emitir
+          el estado actualizado a los suscriptores después de una perturbación.
+       2. `ManifoldVisualizer` (Básico): Una aplicación simple que se conecta al Core, se suscribe y renderiza el campo como una cuadrícula 3D de puntos, donde el color
+          de cada punto representa el valor del campo en esa coordenada. No necesita ser interactivo.
+       3. Script de Prueba (`TestGenesis.py`): Un script simple que se conecta al Core y llama a perturb() una sola vez en el centro del universo con parámetros fijos.
+
+   * Resultado Esperado: Al ejecutar el Core, luego el Visualizer (que mostrará un campo vacío/negro), y finalmente el TestGenesis.py, deberíamos ver un punto o una
+     pequeña esfera de color aparecer en el centro del visualizador. Esto validaría toda la arquitectura de comunicación desacoplada y sentaría las bases para los
+     sistemas más complejos.
+
+
+
+Análisis de la Frontera Tecnológica para el `QualiaForge Engine`
+
+  1. Generación de Contenido (El "Forjado"): Más Allá del Ruido Procedural
+
+  La industria ha superado la generación simple basada en ruido (Perlin, etc.). La técnica de vanguardia es PCGML (Procedural Content Generation via Machine 
+  Learning).
+
+   * Tecnología Clave: Redes Generativas Antagónicas (GANs) y otros modelos de Deep Learning.
+   * Cómo Funciona: Se entrena un modelo de IA con datos del mundo real (imágenes de nebulosas, datos geológicos, formaciones de cristales). Luego, la IA puede generar
+     variaciones nuevas e infinitas que son coherentes con los datos de entrenamiento.
+   * Aplicación para `QualiaForge`: Nuestra GenesisAI no solo ejecutará perturb() con parámetros aleatorios. Estará equipada con un módulo PCGML entrenado. Cuando
+     quiera crear una "zona de alta energía", en lugar de generar ruido genérico, le pedirá al módulo PCGML que genere una "forma de energía" coherente y estéticamente
+     compleja, que luego se aplicará como una serie de perturbaciones en el QualiaManifold.
+
+  2. Representación de la Realidad (El "Lienzo"): Neural Radiance Fields (NeRF)
+
+  Esta es la actualización más significativa para nuestra arquitectura. En lugar de pensar en el QualiaManifold como una simple cuadrícula de vóxeles, la tecnología
+  de punta nos ofrece una representación mucho más potente y elegante.
+
+   * Tecnología Clave: Neural Radiance Fields (NeRF).
+   * Cómo Funciona: Un NeRF es una pequeña red neuronal que aprende una representación continua y volumétrica de una escena 3D. En lugar de almacenar millones de
+     puntos, almacena los "pesos" de una red que puede generar el color y la densidad de cualquier punto en el espacio 3D. Es excepcionalmente bueno para representar
+     fenómenos complejos y semitransparentes como humo, nubes y, crucialmente para nosotros, nebulosas y campos de energía.
+   * Aplicación para `QualiaForge`: El QualiaManifold no será una cuadrícula de datos, será un NeRF.
+       * Almacenamiento: El "mapa" que guardamos no es un archivo de vóxeles gigante, sino los pesos de la red neuronal del NeRF, lo cual es increíblemente eficiente.
+       * Renderizado: El ManifoldVisualizer no renderiza puntos, consulta el NeRF para generar imágenes fotorrealistas del campo volumétrico desde cualquier ángulo.
+       * Manipulación: La GenesisAI, al llamar a perturb(), no modifica una cuadrícula, sino que re-entrena localmente una pequeña región del NeRF para alterar su
+         forma, color y densidad.
+
+  3. Visualización y Descubrimiento (El "Ojo de la IA")
+
+  La búsqueda confirma que el visualizador no debe ser una ventana pasiva. La IA debe ser capaz de interpretar lo que ve.
+
+   * Tecnología Clave: AI Cinematographer y Anomaly Detection.
+   * Cómo Funciona:
+       1. AI Cinematographer: Una IA que controla la cámara virtual. Analiza la escena en tiempo real (usando los datos del NeRF) para encontrar ángulos interesantes,
+          crear fly-throughs dramáticos y encuadrar automáticamente los fenómenos emergentes, todo sin intervención humana.
+       2. Anomaly Detection: Algoritmos de IA que pueden analizar un conjunto de datos masivo (como nuestro QualiaManifold) e identificar regiones que son
+          estadísticamente "extrañas" o "interesantes".
+   * Aplicación para `QualiaForge`:
+       * El ManifoldVisualizer incluirá un módulo de AI Cinematographer para que la observación del proceso de génesis sea una experiencia cinematográfica y no un
+         simple volcado de datos.
+       * La GenesisAI tendrá un módulo de Anomaly Detection. Después de realizar una serie de perturbaciones, puede usar este módulo para analizar el resultado y
+         descubrir si ha creado accidentalmente algo único. Esto crea un bucle de retroalimentación creativa: la IA no solo crea, sino que se sorprende a sí misma y
+         puede decidir investigar y expandir estas anomalías.
+
+  ---
+
+  Propuesta Arquitectónica Actualizada: `QualiaForge Engine v1.1`
+
+  Basado en este análisis, la arquitectura de nuestro motor evoluciona:
+
+  Componentes Actualizados:
+
+   1. `QualiaForge-Core`:
+       * Gestiona el QualiaManifold, que ahora se representa internamente como un NeRF.
+       * La ForgeAPI se actualiza con endpoints como getManifoldAsNeRF() y retrainManifoldRegion(perturb_data).
+
+   2. `GenesisAI` (IA de Creación):
+       * Utiliza un módulo PCGML (GAN) para generar patrones de perturbación complejos y coherentes.
+       * Utiliza un módulo de Anomaly Detection para analizar los resultados de sus creaciones y guiar su propio proceso creativo.
+
+   3. `ManifoldVisualizer`:
+       * Su motor de renderizado está optimizado para visualizar NeRFs en tiempo real.
+       * Incorpora un módulo de AI Cinematographer para la navegación y presentación autónoma de la escena.
+
+  Diagrama de Flujo Creativo (Bucle de Retroalimentación):
+
+    1                +-----------------------+
+    2                |      GenesisAI        |
+    3                +-----------+-----------+
+    4                            | 1. Decide la intención
+    5                            |    (usando PCGML)
+    6                            v
+    7 +--------------------------+--------------------------+
+    8 |                     ForgeAPI                        |
+    9 +--------------------------+--------------------------+
+   10 | 2. Llama a               |                          | 6. Llama a
+   11 | retrainManifoldRegion()  |                          | queryManifold()
+   12 v                          |                          ^
+   13 +--------------------------+--------------------------+
+   14 |                  QualiaForge-Core                   |
+   15 | (El Manifold es un NeRF)                            |
+   16 +--------------------------+--------------------------+
+   17 | 3. Re-entrena el NeRF    |                          | 5. Analiza el resultado
+   18 |    en la región          |                          |    con Anomaly Detection
+   19 |    especificada          |                          |
+   20 v                          |                          ^
+   21 +--------------------------+--------------------------+
+   22 |              Estado del Manifold Cambia             |
+   23 +--------------------------+--------------------------+
+   24                            | 4. El Visualizer muestra
+   25                            |    el cambio en tiempo real
+   26                            |    (usando AI Cinematographer)
+   27                            v
+   28                +-----------------------+
+   29                |   ManifoldVisualizer  |
+   30                +-----------------------+
+
+  Esta arquitectura actualizada no solo es más potente y eficiente, sino que crea un verdadero ecosistema creativo. La IA no solo ejecuta instrucciones, sino que
+  tiene las herramientas para generar ideas visuales complejas (PCGML), implementarlas en un formato de datos de última generación (NeRF) y analizar sus propios
+  resultados para descubrir la novedad (Anomaly Detection).
+
+  Estamos listos para definir los siguientes pasos sobre esta base.
