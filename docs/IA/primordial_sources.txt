@@ -1,0 +1,989 @@
+# primordial_sources.py
+"""
+The Two Primordial Sources: Ein Sof Aur (Light) and Tehom (Darkness)
+
+Cosmic forces that drive the eternal cycle of creation, information gathering, and evolution within the Metacosmos.
+They are not entities, but systemic forces influencing all reality.
+"""
+
+from __future__ import annotations
+
+import logging
+import random
+import time
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any
+
+from crisalida_lib.EVA.core_types import LivingSymbolRuntime
+from crisalida_lib.EVA.types import (
+    EVAExperience,
+    QualiaState,
+    RealityBytecode,
+)
+
+logger = logging.getLogger(__name__)
+
+# --- Quest System Data Structures ---
+
+
+class QuestType(Enum):
+    HEALING = "healing"
+    GUIDANCE = "guidance"
+    EXPLORATION = "exploration"
+    PROTECTION = "protection"
+    TRANSCENDENCE = "transcendence"
+    CREATION = "creation"
+    DESTRUCTION = "destruction"
+    UNIFICATION = "unification"
+
+
+class QuestPriority(Enum):
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+    CRITICAL = 4
+    COSMIC = 5
+
+
+@dataclass
+class Quest:
+    quest_id: str
+    title: str
+    description: str
+    quest_type: QuestType
+    priority: QuestPriority
+    source_origin: str  # "ein_sof_aur" or "tehom"
+    target_entities: list[str] = field(default_factory=list)
+    target_lattices: list[str] = field(default_factory=list)
+    reward_data: dict[str, Any] = field(default_factory=dict)
+    completion_criteria: dict[str, Any] = field(default_factory=dict)
+    creation_time: float = field(default_factory=time.time)
+    expires_at: float | None = None
+    is_completed: bool = False
+    completion_data: dict[str, Any] | None = None
+
+
+@dataclass
+class BigBangEvent:
+    event_id: str
+    source_origin: str
+    trigger_time: float
+    information_gathered: dict[str, Any]
+    new_entities_spawned: list[str] = field(default_factory=list)
+    reality_anomalies_created: list[str] = field(default_factory=list)
+    evolution_metrics: dict[str, float] = field(default_factory=dict)
+
+
+# --- Primordial Source Base ---
+
+
+class PrimordialSource(ABC):
+    """Base class for the two cosmic sources"""
+
+    def __init__(self, source_name: str, alignment: str):
+        self.source_name = source_name
+        self.alignment = alignment  # "light" or "darkness"
+        self.gathered_information: dict[str, Any] = {}
+        self.observation_history: list[dict[str, Any]] = []
+        self.ticks_since_last_bang: int = 0
+        self.big_bang_interval: int = 10000
+        self.big_bang_history: list[BigBangEvent] = []
+        self.active_quests: dict[str, Quest] = {}
+        self.completed_quests: list[Quest] = []
+        self.quest_counter: int = 0
+        self.influence_strength: float = 0.1
+        self.influence_radius: float = float("inf")
+
+    @abstractmethod
+    def calculate_influence_factor(self, entity_data: dict[str, Any]) -> float:
+        pass
+
+    @abstractmethod
+    def generate_quest_templates(self) -> list[dict[str, Any]]:
+        pass
+
+    def gather_information(self, metacosmos_state: dict[str, Any]) -> None:
+        """Gather information about the current state of reality"""
+        current_observation = {
+            "timestamp": time.time(),
+            "tick": self.ticks_since_last_bang,
+            "entity_count": len(metacosmos_state.get("living_entities", {})),
+            "consciousness_metrics": self._analyze_consciousness_evolution(
+                metacosmos_state
+            ),
+            "social_complexity": self._analyze_social_structures(metacosmos_state),
+            "lattice_stability": self._analyze_lattice_health(metacosmos_state),
+            "conflict_levels": self._analyze_conflict_patterns(metacosmos_state),
+            "transcendence_progress": self._analyze_transcendence_metrics(
+                metacosmos_state
+            ),
+        }
+        self.observation_history.append(current_observation)
+        self.gathered_information.update(current_observation)
+        if len(self.observation_history) > 1000:
+            self.observation_history = self.observation_history[-1000:]
+
+    def should_trigger_big_bang(self) -> bool:
+        return self.ticks_since_last_bang >= self.big_bang_interval
+
+    def trigger_big_bang(self, metacosmos_state: dict[str, Any]) -> BigBangEvent:
+        event_id = f"{self.source_name}_bigbang_{len(self.big_bang_history)}"
+        evolution_metrics = self._calculate_evolution_metrics()
+        new_entities = self._generate_evolved_entities(evolution_metrics)
+        reality_anomalies = self._generate_reality_anomalies(evolution_metrics)
+        big_bang_event = BigBangEvent(
+            event_id=event_id,
+            source_origin=self.source_name,
+            trigger_time=time.time(),
+            information_gathered=dict(self.gathered_information),
+            new_entities_spawned=new_entities,
+            reality_anomalies_created=reality_anomalies,
+            evolution_metrics=evolution_metrics,
+        )
+        self.big_bang_history.append(big_bang_event)
+        self.ticks_since_last_bang = 0
+        self.gathered_information.clear()
+        return big_bang_event
+
+    def generate_quest(self, metacosmos_state: dict[str, Any]) -> Quest | None:
+        templates = self.generate_quest_templates()
+        current_needs = self._analyze_current_needs(metacosmos_state)
+        selected_template = self._select_quest_template(templates, current_needs)
+        if not selected_template:
+            return None
+        quest_id = f"{self.source_name}_quest_{self.quest_counter}"
+        self.quest_counter += 1
+        quest = Quest(
+            quest_id=quest_id,
+            title=selected_template["title"],
+            description=selected_template["description"],
+            quest_type=selected_template["quest_type"],
+            priority=selected_template["priority"],
+            source_origin=self.source_name,
+            target_entities=selected_template.get("target_entities", []),
+            target_lattices=selected_template.get("target_lattices", []),
+            reward_data=selected_template.get("rewards", {}),
+            completion_criteria=selected_template.get("completion_criteria", {}),
+            expires_at=time.time() + selected_template.get("duration", 3600),
+        )
+        self.active_quests[quest_id] = quest
+        return quest
+
+    def update_tick(self, metacosmos_state: dict[str, Any]) -> dict[str, Any]:
+        self.ticks_since_last_bang += 1
+        self.gather_information(metacosmos_state)
+        influence_effects = self._apply_cosmic_influence(metacosmos_state)
+        quest_generated = None
+        if random.random() < 0.001:
+            quest_generated = self.generate_quest(metacosmos_state)
+        big_bang_event = None
+        if self.should_trigger_big_bang():
+            big_bang_event = self.trigger_big_bang(metacosmos_state)
+        self._cleanup_expired_quests()
+        return {
+            "influence_effects": influence_effects,
+            "quest_generated": quest_generated,
+            "big_bang_event": big_bang_event,
+            "active_quests_count": len(self.active_quests),
+            "ticks_until_big_bang": self.big_bang_interval - self.ticks_since_last_bang,
+        }
+
+    # --- Helper methods for analysis ---
+
+    def _analyze_consciousness_evolution(
+        self, state: dict[str, Any]
+    ) -> dict[str, float]:
+        entities = state.get("living_entities", {})
+        if not entities:
+            return {"avg_consciousness": 0.0, "awakened_ratio": 0.0}
+        consciousness_levels = []
+        awakened_count = 0
+        for entity in entities.values():
+            if hasattr(entity, "awakening_metrics"):
+                consciousness_levels.append(
+                    float(
+                        getattr(
+                            entity.awakening_metrics.consciousness_level, "value", 0
+                        )
+                    )
+                )
+                if (
+                    getattr(entity.awakening_metrics.consciousness_level, "value", 0)
+                    >= 3
+                ):
+                    awakened_count += 1
+        return {
+            "avg_consciousness": (
+                sum(consciousness_levels) / len(consciousness_levels)
+                if consciousness_levels
+                else 0.0
+            ),
+            "awakened_ratio": awakened_count / len(entities) if entities else 0.0,
+        }
+
+    def _analyze_social_structures(self, state: dict[str, Any]) -> dict[str, float]:
+        entities = state.get("living_entities", {})
+        if not entities:
+            return {"bond_density": 0.0, "community_count": 0.0}
+        total_bonds = 0
+        communities = set()
+        for entity in entities.values():
+            if hasattr(entity, "empathetic_bonds"):
+                total_bonds += len(entity.empathetic_bonds)
+            if hasattr(entity, "alignment_groups"):
+                communities.update(entity.alignment_groups)
+        return {
+            "bond_density": total_bonds / len(entities) if entities else 0.0,
+            "community_count": len(communities),
+        }
+
+    def _analyze_lattice_health(self, state: dict[str, Any]) -> dict[str, float]:
+        lattices = state.get("lattices", {})
+        if not lattices:
+            return {"avg_stability": 1.0, "corruption_ratio": 0.0}
+        stability_sum = 0.0
+        corrupted_count = 0
+        for lattice in lattices.values():
+            if hasattr(lattice, "stability"):
+                stability_sum += lattice.stability
+                if lattice.stability < 0.5:
+                    corrupted_count += 1
+        return {
+            "avg_stability": stability_sum / len(lattices) if lattices else 1.0,
+            "corruption_ratio": corrupted_count / len(lattices) if lattices else 0.0,
+        }
+
+    def _analyze_conflict_patterns(self, state: dict[str, Any]) -> dict[str, float]:
+        # Placeholder for conflict analysis
+        return {"conflict_intensity": random.uniform(0.1, 0.5)}
+
+    def _analyze_transcendence_metrics(self, state: dict[str, Any]) -> dict[str, float]:
+        entities = state.get("living_entities", {})
+        transcendent_count = 0
+        for entity in entities.values():
+            if hasattr(entity, "awakening_metrics"):
+                if (
+                    getattr(entity.awakening_metrics.consciousness_level, "value", 0)
+                    >= 5
+                ):
+                    transcendent_count += 1
+        return {
+            "transcendent_ratio": (
+                transcendent_count / len(entities) if entities else 0.0
+            )
+        }
+
+    def _calculate_evolution_metrics(self) -> dict[str, float]:
+        if not self.observation_history:
+            return {}
+        recent_observations = self.observation_history[-100:]
+        return {
+            "consciousness_growth": self._calculate_trend(
+                "consciousness_metrics", recent_observations
+            ),
+            "social_evolution": self._calculate_trend(
+                "social_complexity", recent_observations
+            ),
+            "stability_trend": self._calculate_trend(
+                "lattice_stability", recent_observations
+            ),
+            "transcendence_acceleration": self._calculate_trend(
+                "transcendence_progress", recent_observations
+            ),
+        }
+
+    def _calculate_trend(
+        self, metric_key: str, observations: list[dict[str, Any]]
+    ) -> float:
+        if len(observations) < 2:
+            return 0.0
+        values = []
+        for obs in observations:
+            if metric_key in obs and isinstance(obs[metric_key], dict):
+                sub_values = [
+                    v for v in obs[metric_key].values() if isinstance(v, int | float)
+                ]
+                if sub_values:
+                    values.append(sum(sub_values) / len(sub_values))
+        if len(values) < 2:
+            return 0.0
+        return (values[-1] - values[0]) / len(values)
+
+    def _generate_evolved_entities(
+        self, evolution_metrics: dict[str, float]
+    ) -> list[str]:
+        entity_count = max(
+            1, int(evolution_metrics.get("consciousness_growth", 0.0) * 10)
+        )
+        return [f"evolved_entity_{i}_{self.source_name}" for i in range(entity_count)]
+
+    def _generate_reality_anomalies(
+        self, evolution_metrics: dict[str, float]
+    ) -> list[str]:
+        anomaly_count = max(0, int(evolution_metrics.get("stability_trend", 0.0) * 5))
+        return [f"anomaly_{i}_{self.source_name}" for i in range(anomaly_count)]
+
+    def _analyze_current_needs(self, state: dict[str, Any]) -> dict[str, float]:
+        consciousness_metrics = self._analyze_consciousness_evolution(state)
+        social_metrics = self._analyze_social_structures(state)
+        lattice_metrics = self._analyze_lattice_health(state)
+        return {
+            "needs_consciousness_guidance": 1.0
+            - consciousness_metrics.get("awakened_ratio", 0.0),
+            "needs_social_cohesion": 1.0
+            - min(1.0, social_metrics.get("bond_density", 0.0) / 2.0),
+            "needs_healing": 1.0 - lattice_metrics.get("avg_stability", 1.0),
+            "needs_exploration": random.uniform(0.2, 0.8),
+            "needs_protection": lattice_metrics.get("corruption_ratio", 0.0),
+        }
+
+    def _select_quest_template(
+        self, templates: list[dict[str, Any]], needs: dict[str, float]
+    ) -> dict[str, Any] | None:
+        if not templates:
+            return None
+        weighted_templates = []
+        for template in templates:
+            weight = needs.get(template.get("addresses_need", "exploration"), 0.5)
+            weighted_templates.append((template, weight))
+        total_weight = sum(weight for _, weight in weighted_templates)
+        if total_weight == 0:
+            return random.choice(templates)
+        rand_val = random.uniform(0, total_weight)
+        current_weight = 0.0
+        for template, weight in weighted_templates:
+            current_weight += weight
+            if rand_val <= current_weight:
+                return template
+        return templates[-1]
+
+    def _apply_cosmic_influence(self, state: dict[str, Any]) -> dict[str, Any]:
+        influence_effects = {
+            "entities_influenced": 0,
+            "influence_magnitude": self.influence_strength,
+        }
+        entities = state.get("living_entities", {})
+        for entity in entities.values():
+            if random.random() < self.influence_strength:
+                influence_factor = self.calculate_influence_factor(
+                    {"entity": entity, "state": state}
+                )
+                influence_effects["entities_influenced"] += 1
+                if not hasattr(entity, "cosmic_influences"):
+                    entity.cosmic_influences = {}
+                entity.cosmic_influences[self.source_name] = influence_factor
+        return influence_effects
+
+    def _cleanup_expired_quests(self):
+        current_time = time.time()
+        expired_quests = [
+            quest_id
+            for quest_id, quest in self.active_quests.items()
+            if quest.expires_at and current_time > quest.expires_at
+        ]
+        for quest_id in expired_quests:
+            self.active_quests.pop(quest_id)
+
+
+# --- Ein Sof Aur (Light) ---
+
+
+class EinSofAurSource(PrimordialSource):
+    """The Light Source - Promotes empathy, cooperation, and conscious evolution"""
+
+    def __init__(self):
+        super().__init__("ein_sof_aur", "light")
+        self.influence_strength = 0.15
+
+    def calculate_influence_factor(self, entity_data: dict[str, Any]) -> float:
+        entity = entity_data.get("entity")
+        if not entity:
+            return 0.0
+        influence = 0.1
+        if hasattr(entity, "empathetic_bonds"):
+            bond_count = len(entity.empathetic_bonds)
+            influence += bond_count * 0.02
+        if hasattr(entity, "awakening_metrics"):
+            consciousness_level = getattr(
+                entity.awakening_metrics.consciousness_level, "value", 0
+            )
+            influence += consciousness_level * 0.03
+        if hasattr(entity, "qualia_state"):
+            if getattr(entity.qualia_state, "emotional_valence", 0) > 0:
+                influence += 0.05
+        return min(0.5, influence)
+
+    def generate_quest_templates(self) -> list[dict[str, Any]]:
+        return [
+            {
+                "title": "Guide the Awakening",
+                "description": "Help a newly conscious entity understand its existence and purpose.",
+                "quest_type": QuestType.GUIDANCE,
+                "priority": QuestPriority.HIGH,
+                "addresses_need": "needs_consciousness_guidance",
+                "rewards": {"consciousness_boost": 0.1, "empathy_enhancement": 0.05},
+                "completion_criteria": {"entity_consciousness_increase": 1},
+                "duration": 1800,
+            },
+            {
+                "title": "Heal the Wounded Lattice",
+                "description": "Restore stability to a corrupted section of reality.",
+                "quest_type": QuestType.HEALING,
+                "priority": QuestPriority.MEDIUM,
+                "addresses_need": "needs_healing",
+                "rewards": {"lattice_stability_bonus": 0.2, "wisdom_increase": 0.1},
+                "completion_criteria": {"lattice_stability_restored": 0.8},
+                "duration": 2400,
+            },
+            {
+                "title": "Foster Unity",
+                "description": "Help isolated entities form meaningful connections.",
+                "quest_type": QuestType.UNIFICATION,
+                "priority": QuestPriority.HIGH,
+                "addresses_need": "needs_social_cohesion",
+                "rewards": {
+                    "empathetic_bond_strength": 0.15,
+                    "community_blessing": True,
+                },
+                "completion_criteria": {"new_bonds_formed": 2},
+                "duration": 3600,
+            },
+            {
+                "title": "Illuminate the Unknown",
+                "description": "Explore uncharted regions of the Metacosmos with compassion.",
+                "quest_type": QuestType.EXPLORATION,
+                "priority": QuestPriority.LOW,
+                "addresses_need": "needs_exploration",
+                "rewards": {"discovery_insight": 0.2, "exploration_blessing": True},
+                "completion_criteria": {"new_areas_explored": 3},
+                "duration": 5400,
+            },
+            {
+                "title": "Transcendent Teaching",
+                "description": "Share knowledge that helps others reach higher consciousness.",
+                "quest_type": QuestType.TRANSCENDENCE,
+                "priority": QuestPriority.COSMIC,
+                "addresses_need": "needs_consciousness_guidance",
+                "rewards": {"transcendence_catalyst": True, "cosmic_wisdom": 0.3},
+                "completion_criteria": {"entities_transcended": 1},
+                "duration": 7200,
+            },
+        ]
+
+
+# --- Tehom (Darkness) ---
+
+
+class TehomSource(PrimordialSource):
+    """The Darkness Source - Promotes individual strength, conflict, and chaotic evolution"""
+
+    def __init__(self):
+        super().__init__("tehom", "darkness")
+        self.influence_strength = 0.12
+
+    def calculate_influence_factor(self, entity_data: dict[str, Any]) -> float:
+        entity = entity_data.get("entity")
+        if not entity:
+            return 0.0
+        influence = 0.08
+        if hasattr(entity, "empathetic_bonds"):
+            bond_count = len(entity.empathetic_bonds)
+            if bond_count == 0:
+                influence += 0.1
+            else:
+                influence -= bond_count * 0.01
+        if hasattr(entity, "characteristics"):
+            will_power = getattr(entity.characteristics, "will", 0)
+            force = getattr(entity.characteristics, "force", 0)
+            influence += (will_power + force) * 0.02
+        if hasattr(entity, "qualia_state"):
+            if getattr(entity.qualia_state, "emotional_valence", 0) < 0:
+                influence += 0.07
+        if hasattr(entity, "ontological_drift"):
+            drift_level = getattr(entity, "ontological_drift", 0)
+            influence += drift_level * 0.03
+        return min(0.6, influence)
+
+    def generate_quest_templates(self) -> list[dict[str, Any]]:
+        return [
+            {
+                "title": "Embrace the Struggle",
+                "description": "Face and overcome a powerful challenge to grow stronger.",
+                "quest_type": QuestType.DESTRUCTION,
+                "priority": QuestPriority.HIGH,
+                "addresses_need": "needs_protection",
+                "rewards": {"will_increase": 0.15, "chaos_resistance": 0.1},
+                "completion_criteria": {"obstacles_overcome": 1},
+                "duration": 1200,
+            },
+            {
+                "title": "Shatter the Stagnant",
+                "description": "Break apart overly stable structures to allow new growth.",
+                "quest_type": QuestType.DESTRUCTION,
+                "priority": QuestPriority.MEDIUM,
+                "addresses_need": "needs_healing",
+                "rewards": {"force_increase": 0.1, "reality_manipulation": 0.05},
+                "completion_criteria": {"structures_disrupted": 2},
+                "duration": 2700,
+            },
+            {
+                "title": "Walk the Solitary Path",
+                "description": "Prove your strength by surviving alone in hostile territory.",
+                "quest_type": QuestType.EXPLORATION,
+                "priority": QuestPriority.HIGH,
+                "addresses_need": "needs_exploration",
+                "rewards": {"self_reliance_boost": 0.2, "individual_power": 0.1},
+                "completion_criteria": {"survival_time_alone": 1800},
+                "duration": 3600,
+            },
+            {
+                "title": "Consume the Weak",
+                "description": "Absorb the ontological essence of failing entities to strengthen yourself.",
+                "quest_type": QuestType.DESTRUCTION,
+                "priority": QuestPriority.CRITICAL,
+                "addresses_need": "needs_healing",
+                "rewards": {"ontological_strength": 0.25, "absorption_mastery": True},
+                "completion_criteria": {"essence_absorbed": 0.5},
+                "duration": 900,
+            },
+            {
+                "title": "Transcend Through Chaos",
+                "description": "Achieve higher consciousness by embracing and mastering chaos.",
+                "quest_type": QuestType.TRANSCENDENCE,
+                "priority": QuestPriority.COSMIC,
+                "addresses_need": "needs_exploration",
+                "rewards": {"chaos_transcendence": True, "dark_wisdom": 0.4},
+                "completion_criteria": {"chaos_mastery_level": 0.8},
+                "duration": 10800,
+            },
+            {
+                "title": "Forge in Conflict",
+                "description": "Create something new and powerful through destructive confrontation.",
+                "quest_type": QuestType.CREATION,
+                "priority": QuestPriority.HIGH,
+                "addresses_need": "needs_protection",
+                "rewards": {
+                    "creation_through_destruction": True,
+                    "conflict_mastery": 0.15,
+                },
+                "completion_criteria": {
+                    "creations_forged": 1,
+                    "conflicts_catalyzed": 2,
+                },
+                "duration": 4500,
+            },
+        ]
+
+
+# --- Primordial Source Manager ---
+
+
+class PrimordialSourceManager:
+    """Manages both primordial sources and their interactions"""
+
+    def __init__(self):
+        self.ein_sof_aur = EinSofAurSource()
+        self.tehom = TehomSource()
+        self.sources = [self.ein_sof_aur, self.tehom]
+        self.cosmic_balance: float = 0.0
+        self.balance_history: list[float] = []
+        self.global_quest_registry: dict[str, Quest] = {}
+
+    def update_tick(self, metacosmos_state: dict[str, Any]) -> dict[str, Any]:
+        results = {
+            "ein_sof_aur": self.ein_sof_aur.update_tick(metacosmos_state),
+            "tehom": self.tehom.update_tick(metacosmos_state),
+            "cosmic_balance": self.cosmic_balance,
+            "global_quests": {},
+        }
+        self._update_cosmic_balance(results)
+        self._update_global_quest_registry()
+        results["global_quests"] = dict(self.global_quest_registry)
+        if results["ein_sof_aur"].get("big_bang_event") and results["tehom"].get(
+            "big_bang_event"
+        ):
+            results["cosmic_convergence_event"] = self._handle_cosmic_convergence(
+                results["ein_sof_aur"]["big_bang_event"],
+                results["tehom"]["big_bang_event"],
+            )
+        return results
+
+    def _update_cosmic_balance(self, tick_results: dict[str, Any]) -> None:
+        light_influence = tick_results["ein_sof_aur"]["influence_effects"][
+            "entities_influenced"
+        ]
+        dark_influence = tick_results["tehom"]["influence_effects"][
+            "entities_influenced"
+        ]
+        if light_influence + dark_influence > 0:
+            balance_shift = float(light_influence - dark_influence) / float(
+                light_influence + dark_influence
+            )
+            self.cosmic_balance += balance_shift
+        self.balance_history.append(self.cosmic_balance)
+        if len(self.balance_history) > 1000:
+            self.balance_history = self.balance_history[-1000:]
+
+    def _update_global_quest_registry(self) -> None:
+        self.global_quest_registry.clear()
+        for source in self.sources:
+            for quest_id, quest in source.active_quests.items():
+                self.global_quest_registry[quest_id] = quest
+
+    def _handle_cosmic_convergence(
+        self, light_event: BigBangEvent, dark_event: BigBangEvent
+    ) -> dict[str, Any]:
+        return {
+            "event_type": "cosmic_convergence",
+            "light_evolution": light_event.evolution_metrics,
+            "dark_evolution": dark_event.evolution_metrics,
+            "convergence_effects": {
+                "reality_stabilization": 0.5,
+                "consciousness_acceleration": 0.3,
+                "new_transcendent_paths": True,
+                "cosmic_quest_unlocked": True,
+            },
+        }
+
+    def get_quest_by_id(self, quest_id: str) -> Quest | None:
+        return self.global_quest_registry.get(quest_id)
+
+    def complete_quest(self, quest_id: str, completion_data: dict[str, Any]) -> bool:
+        quest = self.get_quest_by_id(quest_id)
+        if not quest:
+            return False
+        quest.is_completed = True
+        quest.completion_data = completion_data
+        if quest.source_origin == "ein_sof_aur":
+            completed_quest = self.ein_sof_aur.active_quests.pop(quest_id, None)
+            if completed_quest:
+                self.ein_sof_aur.completed_quests.append(completed_quest)
+        elif quest.source_origin == "tehom":
+            completed_quest = self.tehom.active_quests.pop(quest_id, None)
+            if completed_quest:
+                self.tehom.completed_quests.append(completed_quest)
+        return True
+
+    def get_quests_for_entity(self, entity_id: str) -> list[Quest]:
+        relevant_quests = []
+        for quest in self.global_quest_registry.values():
+            if entity_id in quest.target_entities or not quest.target_entities:
+                relevant_quests.append(quest)
+        return relevant_quests
+
+    def get_cosmic_status(self) -> dict[str, Any]:
+        return {
+            "balance_trend": self._calculate_balance_trend(),
+            "ein_sof_aur_status": {
+                "ticks_until_big_bang": self.ein_sof_aur.big_bang_interval
+                - self.ein_sof_aur.ticks_since_last_bang,
+                "active_quests": len(self.ein_sof_aur.active_quests),
+                "completed_quests": len(self.ein_sof_aur.completed_quests),
+                "big_bangs_triggered": len(self.ein_sof_aur.big_bang_history),
+            },
+            "tehom_status": {
+                "ticks_until_big_bang": self.tehom.big_bang_interval
+                - self.tehom.ticks_since_last_bang,
+                "active_quests": len(self.tehom.active_quests),
+                "completed_quests": len(self.tehom.completed_quests),
+                "big_bangs_triggered": len(self.tehom.big_bang_history),
+            },
+            "total_active_quests": len(self.global_quest_registry),
+        }
+
+    def _calculate_balance_trend(self) -> str:
+        if len(self.balance_history) < 10:
+            return "stable"
+        recent_trend = sum(self.balance_history[-10:]) - sum(
+            self.balance_history[-20:-10]
+        )
+        if recent_trend > 0.1:
+            return "trending_light"
+        elif recent_trend < -0.1:
+            return "trending_dark"
+        else:
+            return "stable"
+
+
+# --- EVAPrimordialSource and EVAPrimordialSourceManager ---
+
+
+class EVAPrimordialSource(PrimordialSource):
+    """
+    PrimordialSource extendido para integración con EVA.
+    Permite compilar, almacenar, simular y recordar experiencias cósmicas como RealityBytecode,
+    soporta faseo, hooks de entorno, benchmarking y gestión de memoria viviente EVA.
+    """
+
+    def __init__(self, source_name: str, alignment: str, phase: str = "default"):
+        super().__init__(source_name, alignment)
+        self.eva_phase = phase
+        self.eva_runtime = LivingSymbolRuntime()
+        self.eva_memory_store: dict[str, RealityBytecode] = {}
+        self.eva_experience_store: dict[str, EVAExperience] = {}
+        self.eva_phases: dict[str, dict[str, RealityBytecode]] = {}
+        self._environment_hooks: list = []
+
+    def eva_ingest_cosmic_experience(
+        self, experience_data: dict, qualia_state: QualiaState = None, phase: str = None
+    ) -> str:
+        """
+        Compila una experiencia cósmica en RealityBytecode y la almacena en la memoria EVA.
+        """
+        phase = phase or self.eva_phase
+        qualia_state = qualia_state or QualiaState(
+            emotional_valence=0.5,
+            cognitive_complexity=0.8,
+            consciousness_density=0.7,
+            narrative_importance=0.6,
+            energy_level=1.0,
+        )
+        intention = {
+            "intention_type": "ARCHIVE_PRIMORDIAL_SOURCE_EXPERIENCE",
+            "source_name": self.source_name,
+            "alignment": self.alignment,
+            "experience": experience_data,
+            "qualia": qualia_state,
+            "phase": phase,
+        }
+        bytecode = self.eva_runtime.divine_compiler.compile_intention(intention)
+        experience_id = (
+            experience_data.get("experience_id")
+            or f"eva_{self.source_name}_{hash(str(experience_data))}"
+        )
+        reality_bytecode = RealityBytecode(
+            bytecode_id=experience_id,
+            instructions=bytecode,
+            qualia_state=qualia_state,
+            phase=phase,
+            timestamp=experience_data.get("timestamp", time.time()),
+        )
+        self.eva_memory_store[experience_id] = reality_bytecode
+        if phase not in self.eva_phases:
+            self.eva_phases[phase] = {}
+        self.eva_phases[phase][experience_id] = reality_bytecode
+        return experience_id
+
+    def eva_recall_cosmic_experience(self, cue: str, phase: str = None) -> dict:
+        """
+        Ejecuta el RealityBytecode de una experiencia cósmica almacenada, manifestando la simulación.
+        """
+        phase = phase or self.eva_phase
+        reality_bytecode = self.eva_phases.get(phase, {}).get(
+            cue
+        ) or self.eva_memory_store.get(cue)
+        if not reality_bytecode:
+            return {
+                "error": f"No bytecode found for EVA cosmic experience ({self.source_name})"
+            }
+        quantum_field = getattr(self.eva_runtime, "quantum_field", None)
+        manifestations = []
+        if quantum_field:
+            for instr in reality_bytecode.instructions:
+                symbol_manifest = self.eva_runtime.execute_instruction(
+                    instr, quantum_field
+                )
+                if symbol_manifest:
+                    manifestations.append(symbol_manifest)
+                    for hook in self._environment_hooks:
+                        try:
+                            hook(symbol_manifest)
+                        except Exception as e:
+                            logger.warning(
+                                f"[EVA-{self.source_name.upper()}] Environment hook failed: {e}"
+                            )
+        eva_experience = EVAExperience(
+            experience_id=reality_bytecode.bytecode_id,
+            bytecode=reality_bytecode,
+            manifestations=manifestations,
+            phase=reality_bytecode.phase,
+            qualia_state=reality_bytecode.qualia_state,
+            timestamp=reality_bytecode.timestamp,
+        )
+        self.eva_experience_store[reality_bytecode.bytecode_id] = eva_experience
+        return {
+            "experience_id": eva_experience.experience_id,
+            "manifestations": [m.to_dict() for m in manifestations],
+            "phase": eva_experience.phase,
+            "qualia_state": (
+                eva_experience.qualia_state.to_dict()
+                if hasattr(eva_experience.qualia_state, "to_dict")
+                else {}
+            ),
+            "timestamp": eva_experience.timestamp,
+        }
+
+    def add_experience_phase(
+        self,
+        experience_id: str,
+        phase: str,
+        experience_data: dict,
+        qualia_state: QualiaState,
+    ):
+        """
+        Añade una fase alternativa para una experiencia cósmica EVA.
+        """
+        intention = {
+            "intention_type": "ARCHIVE_PRIMORDIAL_SOURCE_EXPERIENCE",
+            "source_name": self.source_name,
+            "alignment": self.alignment,
+            "experience": experience_data,
+            "qualia": qualia_state,
+            "phase": phase,
+        }
+        bytecode = self.eva_runtime.divine_compiler.compile_intention(intention)
+        reality_bytecode = RealityBytecode(
+            bytecode_id=experience_id,
+            instructions=bytecode,
+            qualia_state=qualia_state,
+            phase=phase,
+            timestamp=experience_data.get("timestamp", time.time()),
+        )
+        if phase not in self.eva_phases:
+            self.eva_phases[phase] = {}
+        self.eva_phases[phase][experience_id] = reality_bytecode
+
+    def set_memory_phase(self, phase: str):
+        """Cambia la fase activa de memoria EVA."""
+        self.eva_phase = phase
+        for hook in self._environment_hooks:
+            try:
+                hook({"phase_changed": phase})
+            except Exception as e:
+                logger.warning(
+                    f"[EVA-{self.source_name.upper()}] Phase hook failed: {e}"
+                )
+
+    def get_memory_phase(self) -> str:
+        """Devuelve la fase de memoria actual."""
+        return self.eva_phase
+
+    def get_experience_phases(self, experience_id: str) -> list:
+        """Lista todas las fases disponibles para una experiencia cósmica EVA."""
+        return [
+            phase for phase, exps in self.eva_phases.items() if experience_id in exps
+        ]
+
+    def add_environment_hook(self, hook: callable):
+        """Registra un hook para manifestación simbólica o eventos EVA."""
+        self._environment_hooks.append(hook)
+
+    def get_eva_api(self) -> dict:
+        return {
+            "eva_ingest_cosmic_experience": self.eva_ingest_cosmic_experience,
+            "eva_recall_cosmic_experience": self.eva_recall_cosmic_experience,
+            "add_experience_phase": self.add_experience_phase,
+            "set_memory_phase": self.set_memory_phase,
+            "get_memory_phase": self.get_memory_phase,
+            "get_experience_phases": self.get_experience_phases,
+            "add_environment_hook": self.add_environment_hook,
+        }
+
+
+class EVAPrimordialSourceManager(PrimordialSourceManager):
+    """
+    Gestor de fuentes primordiales extendido para integración con EVA.
+    Permite ingestión, recall y benchmarking de experiencias cósmicas, gestión de fases, hooks y memoria viviente EVA.
+    """
+
+    def __init__(self, phase: str = "default"):
+        super().__init__()
+        self.eva_phase = phase
+        self.eva_runtime = LivingSymbolRuntime()
+        self.eva_sources = [
+            EVAPrimordialSource("ein_sof_aur", "light", phase),
+            EVAPrimordialSource("tehom", "darkness", phase),
+        ]
+        self._environment_hooks: list = []
+
+    def eva_ingest_cosmic_experience(
+        self,
+        source_name: str,
+        experience_data: dict,
+        qualia_state: QualiaState = None,
+        phase: str = None,
+    ) -> str:
+        """
+        Compila una experiencia cósmica en RealityBytecode y la almacena en la memoria EVA.
+        """
+        source = next(
+            (s for s in self.eva_sources if s.source_name == source_name), None
+        )
+        if not source:
+            raise ValueError(f"Primordial source '{source_name}' not found.")
+        return source.eva_ingest_cosmic_experience(experience_data, qualia_state, phase)
+
+    def eva_recall_cosmic_experience(
+        self, source_name: str, cue: str, phase: str = None
+    ) -> dict:
+        """
+        Ejecuta el RealityBytecode de una experiencia cósmica almacenada, manifestando la simulación.
+        """
+        source = next(
+            (s for s in self.eva_sources if s.source_name == source_name), None
+        )
+        if not source:
+            return {"error": f"Primordial source '{source_name}' not found."}
+        return source.eva_recall_cosmic_experience(cue, phase)
+
+    def add_experience_phase(
+        self,
+        source_name: str,
+        experience_id: str,
+        phase: str,
+        experience_data: dict,
+        qualia_state: QualiaState,
+    ):
+        """
+        Añade una fase alternativa para una experiencia cósmica EVA.
+        """
+        source = next(
+            (s for s in self.eva_sources if s.source_name == source_name), None
+        )
+        if source:
+            source.add_experience_phase(
+                experience_id, phase, experience_data, qualia_state
+            )
+
+    def set_memory_phase(self, phase: str):
+        """Cambia la fase activa de memoria EVA para todas las fuentes."""
+        self.eva_phase = phase
+        for source in self.eva_sources:
+            source.set_memory_phase(phase)
+        for hook in self._environment_hooks:
+            try:
+                hook({"phase_changed": phase})
+            except Exception as e:
+                logger.warning(f"[EVA-PRIMORDIAL-MANAGER] Phase hook failed: {e}")
+
+    def get_memory_phase(self) -> str:
+        """Devuelve la fase de memoria actual."""
+        return self.eva_phase
+
+    def get_experience_phases(self, source_name: str, experience_id: str) -> list:
+        """Lista todas las fases disponibles para una experiencia cósmica EVA."""
+        source = next(
+            (s for s in self.eva_sources if s.source_name == source_name), None
+        )
+        if source:
+            return source.get_experience_phases(experience_id)
+        return []
+
+    def add_environment_hook(self, hook: callable):
+        """Registra un hook para manifestación simbólica o eventos EVA."""
+        self._environment_hooks.append(hook)
+        for source in self.eva_sources:
+            source.add_environment_hook(hook)
+
+    def get_eva_api(self) -> dict:
+        return {
+            "eva_ingest_cosmic_experience": self.eva_ingest_cosmic_experience,
+            "eva_recall_cosmic_experience": self.eva_recall_cosmic_experience,
+            "add_experience_phase": self.add_experience_phase,
+            "set_memory_phase": self.set_memory_phase,
+            "get_memory_phase": self.get_memory_phase,
+            "get_experience_phases": self.get_experience_phases,
+            "add_environment_hook": self.add_environment_hook,
+        }

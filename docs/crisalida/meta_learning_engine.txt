@@ -1,0 +1,1046 @@
+#!/usr/bin/env python3
+"""
+EDEN Meta-Learning and Evolution Engine (Level 9)
+==================================================
+
+This module implements the highest level of EDEN evolution - a meta-learning system
+that observes and learns from all optimization attempts, gradually improving its
+own optimization strategies and discovering new emergent behaviors.
+
+Key Features:
+- Meta-learning from optimization history across all levels
+- Strategy evolution and adaptation over time
+- Emergent behavior discovery and cultivation
+- Self-modifying optimization algorithms
+- Cross-subsystem pattern recognition
+- Automated hypothesis generation and testing
+- Recursive self-improvement capabilities
+
+Philosophy:
+This represents the transition from scripted optimization to truly adaptive,
+emergent intelligence that can discover and implement novel optimization
+strategies beyond what was explicitly programmed.
+"""
+
+import asyncio
+import logging
+import numpy as np
+import time
+import pickle
+import json
+from dataclasses import dataclass, asdict
+from typing import Dict, List, Tuple, Optional, Any, Callable, Union
+from enum import Enum
+from pathlib import Path
+from collections import defaultdict, deque
+
+try:
+    import jax
+    import jax.numpy as jnp
+    from sklearn.cluster import KMeans
+    from sklearn.decomposition import PCA
+    has_ml_libs = True
+except ImportError:
+    has_ml_libs = False
+
+from crisalida_lib.EDEN.homeostatic_system import HomeostasisEngine, SystemHealthSnapshot
+from crisalida_lib.EDEN.ethical_optimization_engine import EthicalOptimizationEngine, EthicalOptimizationResult
+from crisalida_lib.EDEN.engines.enhanced_physics_monitor import EnhancedPhysicsMonitor
+from crisalida_lib.ADAM.eva_integration.eva_hooks import monitor_eva_hooks_performance
+from crisalida_lib.HEAVEN.monitoring.performance_decorators import eva_benchmark, time_execution
+
+logger = logging.getLogger(__name__)
+
+
+class LearningMode(Enum):
+    """Different modes of meta-learning."""
+    OBSERVATION = "observation"        # Passive learning from events
+    EXPLORATION = "exploration"        # Active hypothesis testing
+    EXPLOITATION = "exploitation"      # Using learned strategies
+    INNOVATION = "innovation"          # Creating new strategies
+    SYNTHESIS = "synthesis"           # Combining existing strategies
+
+
+class EvolutionPhase(Enum):
+    """Phases of evolutionary development."""
+    INITIALIZATION = "initialization"
+    PATTERN_DISCOVERY = "pattern_discovery"
+    STRATEGY_FORMATION = "strategy_formation"
+    OPTIMIZATION_REFINEMENT = "optimization_refinement"
+    EMERGENT_BEHAVIOR = "emergent_behavior"
+    TRANSCENDENCE = "transcendence"
+
+
+@dataclass
+class OptimizationPattern:
+    """Represents a discovered optimization pattern."""
+    pattern_id: str
+    pattern_type: str
+    context_conditions: Dict[str, Any]
+    action_sequence: List[Dict[str, Any]]
+    success_rate: float
+    average_improvement: float
+    confidence_level: float
+    discovery_time: float
+    usage_count: int
+    last_success: float
+
+
+@dataclass
+class MetaLearningEvent:
+    """An event for meta-learning analysis."""
+    event_id: str
+    timestamp: float
+    event_type: str  # "optimization", "failure", "success", "anomaly"
+    context: Dict[str, Any]
+    actions_taken: List[str]
+    outcomes: Dict[str, float]
+    patterns_involved: List[str]
+    learning_value: float  # How much this event contributed to learning
+
+
+@dataclass
+class EvolutionaryStrategy:
+    """A learned strategy for system optimization."""
+    strategy_id: str
+    name: str
+    description: str
+    conditions: Dict[str, Any]  # When to apply this strategy
+    actions: List[Dict[str, Any]]  # What actions to take
+    expected_outcomes: Dict[str, float]
+    confidence: float
+    success_history: List[float]
+    evolution_generation: int
+    parent_strategies: List[str]
+    created_time: float
+
+
+class MetaLearningEngine:
+    """
+    Meta-learning engine that learns from all EDEN optimization attempts
+    and evolves increasingly sophisticated optimization strategies.
+    """
+    
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        self.config = config or self._load_default_config()
+        
+        # Core learning state
+        self.learning_mode = LearningMode.OBSERVATION
+        self.evolution_phase = EvolutionPhase.INITIALIZATION
+        self.learning_active = False
+        
+        # Pattern discovery and storage
+        self.discovered_patterns: Dict[str, OptimizationPattern] = {}
+        self.pattern_usage_history: Dict[str, List[float]] = defaultdict(list)
+        
+        # Event history for learning
+        self.learning_events: deque = deque(maxlen=self.config.get("max_learning_events", 1000))
+        self.event_patterns: Dict[str, List[str]] = defaultdict(list)  # event_type -> pattern_ids
+        
+        # Evolutionary strategies
+        self.strategies: Dict[str, EvolutionaryStrategy] = {}
+        self.strategy_lineage: Dict[str, List[str]] = {}  # strategy_id -> descendant_ids
+        self.active_strategies: List[str] = []
+        
+        # Learning metrics
+        self.learning_statistics = {
+            "patterns_discovered": 0,
+            "strategies_evolved": 0,
+            "successful_innovations": 0,
+            "failed_experiments": 0,
+            "total_learning_time": 0.0,
+            "current_learning_rate": 0.0
+        }
+        
+        # Integration points
+        self.homeostasis_engine: Optional[HomeostasisEngine] = None
+        self.ethical_engine: Optional[EthicalOptimizationEngine] = None
+        self.physics_monitor: Optional[EnhancedPhysicsMonitor] = None
+        
+        # Machine learning components (if available)
+        self.ml_available = has_ml_libs
+        if self.ml_available:
+            self.pattern_classifier = None
+            self.strategy_predictor = None
+            self._initialize_ml_components()
+        
+        # Persistence
+        self.data_dir = Path(self.config.get("data_directory", "data/meta_learning"))
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Innovation capabilities
+        self.innovation_engine = InnovationEngine(self.config.get("innovation", {}))
+        
+        logger.info(f"Meta-Learning Engine initialized (ML libraries: {'available' if self.ml_available else 'unavailable'})")
+        self._load_learned_knowledge()
+    
+    def _load_default_config(self) -> Dict[str, Any]:
+        """Load default meta-learning configuration."""
+        return {
+            "learning_rate": 0.05,
+            "pattern_discovery_threshold": 0.7,
+            "strategy_success_threshold": 0.8,
+            "innovation_frequency": 100,  # Every N events
+            "max_learning_events": 1000,
+            "max_patterns": 500,
+            "max_strategies": 100,
+            "evolution_patience": 20,  # Events before advancing phase
+            "data_directory": "data/meta_learning",
+            "enable_strategy_mutation": True,
+            "enable_pattern_synthesis": True,
+            "enable_emergent_detection": True,
+            "learning_modes": {
+                "observation_duration": 50,
+                "exploration_duration": 30,
+                "exploitation_duration": 40,
+                "innovation_duration": 20
+            }
+        }
+    
+    def integrate_with_systems(self, homeostasis: HomeostasisEngine, 
+                             ethical: EthicalOptimizationEngine,
+                             physics_monitor: EnhancedPhysicsMonitor):
+        """Integrate with all EDEN optimization systems for learning."""
+        self.homeostasis_engine = homeostasis
+        self.ethical_engine = ethical
+        self.physics_monitor = physics_monitor
+        
+        logger.info("Meta-learning engine integrated with all EDEN systems")
+    
+    @eva_benchmark
+    def start_meta_learning(self):
+        """Start the meta-learning process."""
+        if self.learning_active:
+            return
+        
+        self.learning_active = True
+        self.evolution_phase = EvolutionPhase.PATTERN_DISCOVERY
+        
+        # Start learning loop
+        asyncio.create_task(self._meta_learning_loop())
+        
+        logger.info("Meta-learning engine started - entering pattern discovery phase")
+    
+    def stop_meta_learning(self):
+        """Stop meta-learning and save knowledge."""
+        self.learning_active = False
+        self._save_learned_knowledge()
+        logger.info("Meta-learning engine stopped - knowledge saved")
+    
+    @time_execution
+    def record_optimization_event(self, event_type: str, context: Dict[str, Any],
+                                actions: List[str], outcomes: Dict[str, float]) -> str:
+        """Record an optimization event for meta-learning."""
+        
+        event_id = f"{event_type}_{int(time.time() * 1000)}"
+        
+        # Calculate learning value of this event
+        learning_value = self._calculate_learning_value(event_type, context, outcomes)
+        
+        # Identify involved patterns
+        involved_patterns = self._identify_patterns_in_event(context, actions, outcomes)
+        
+        event = MetaLearningEvent(
+            event_id=event_id,
+            timestamp=time.time(),
+            event_type=event_type,
+            context=context,
+            actions_taken=actions,
+            outcomes=outcomes,
+            patterns_involved=involved_patterns,
+            learning_value=learning_value
+        )
+        
+        self.learning_events.append(event)
+        
+        # Trigger pattern discovery if in appropriate mode
+        if self.learning_mode in [LearningMode.OBSERVATION, LearningMode.EXPLORATION]:
+            self._discover_patterns_from_event(event)
+        
+        # Update statistics
+        self.learning_statistics["total_learning_time"] += learning_value
+        
+        return event_id
+    
+    @monitor_eva_hooks_performance
+    def suggest_optimization_strategy(self, current_context: Dict[str, Any]) -> Optional[EvolutionaryStrategy]:
+        """Suggest an optimization strategy based on learned knowledge."""
+        
+        if self.learning_mode == LearningMode.EXPLOITATION:
+            # Use best known strategy for this context
+            best_strategy = self._find_best_strategy_for_context(current_context)
+            if best_strategy:
+                logger.info(f"Suggesting proven strategy: {best_strategy.name}")
+                return best_strategy
+        
+        elif self.learning_mode == LearningMode.EXPLORATION:
+            # Try less-used strategies to gather more data
+            experimental_strategy = self._find_experimental_strategy(current_context)
+            if experimental_strategy:
+                logger.info(f"Suggesting experimental strategy: {experimental_strategy.name}")
+                return experimental_strategy
+        
+        elif self.learning_mode == LearningMode.INNOVATION:
+            # Create or suggest novel strategies
+            innovative_strategy = self._create_innovative_strategy(current_context)
+            if innovative_strategy:
+                logger.info(f"Suggesting innovative strategy: {innovative_strategy.name}")
+                return innovative_strategy
+        
+        return None
+    
+    def evolve_strategies(self) -> List[EvolutionaryStrategy]:
+        """Evolve new strategies from existing ones."""
+        if not self.strategies:
+            return []
+        
+        new_strategies = []
+        
+        # Strategy mutation
+        if self.config.get("enable_strategy_mutation", True):
+            mutated = self._mutate_strategies()
+            new_strategies.extend(mutated)
+        
+        # Strategy crossover
+        crossed_over = self._crossover_strategies()
+        new_strategies.extend(crossed_over)
+        
+        # Pattern synthesis into strategies
+        if self.config.get("enable_pattern_synthesis", True):
+            synthesized = self._synthesize_patterns_into_strategies()
+            new_strategies.extend(synthesized)
+        
+        # Add new strategies to collection
+        for strategy in new_strategies:
+            self.strategies[strategy.strategy_id] = strategy
+            self.learning_statistics["strategies_evolved"] += 1
+        
+        # Prune worst-performing strategies if over limit
+        max_strategies = self.config.get("max_strategies", 100)
+        if len(self.strategies) > max_strategies:
+            self._prune_strategies()
+        
+        logger.info(f"Evolved {len(new_strategies)} new optimization strategies")
+        return new_strategies
+    
+    async def _meta_learning_loop(self):
+        """Main meta-learning loop that drives the evolution process."""
+        
+        while self.learning_active:
+            try:
+                # Update learning mode based on evolution phase and data
+                self._update_learning_mode()
+                
+                # Discover new patterns from recent events
+                if len(self.learning_events) >= 10:
+                    await self._analyze_recent_patterns()
+                
+                # Evolve strategies periodically
+                if len(self.learning_events) % self.config.get("evolution_frequency", 50) == 0:
+                    self.evolve_strategies()
+                
+                # Detect emergent behaviors
+                if self.config.get("enable_emergent_detection", True):
+                    await self._detect_emergent_behaviors()
+                
+                # Innovation attempts
+                if self.learning_mode == LearningMode.INNOVATION:
+                    await self._attempt_innovation()
+                
+                # Advance evolution phase if criteria met
+                self._check_phase_advancement()
+                
+                # Update learning rate based on recent success
+                self._update_learning_rate()
+                
+                # Sleep before next iteration
+                await asyncio.sleep(self.config.get("learning_loop_interval", 5.0))
+                
+            except Exception as e:
+                logger.error(f"Error in meta-learning loop: {e}")
+                await asyncio.sleep(1.0)
+    
+    def _discover_patterns_from_event(self, event: MetaLearningEvent):
+        """Discover new optimization patterns from an event."""
+        
+        # Only learn from successful events initially
+        if event.learning_value < 0.3:
+            return
+        
+        # Create pattern signature from context and actions
+        pattern_signature = self._create_pattern_signature(event.context, event.actions_taken)
+        
+        # Check if this pattern already exists
+        existing_pattern = self._find_similar_pattern(pattern_signature)
+        
+        if existing_pattern:
+            # Update existing pattern
+            self._update_pattern_statistics(existing_pattern, event)
+        else:
+            # Create new pattern
+            pattern_id = f"pattern_{len(self.discovered_patterns)}"
+            
+            new_pattern = OptimizationPattern(
+                pattern_id=pattern_id,
+                pattern_type=event.event_type,
+                context_conditions=event.context.copy(),
+                action_sequence=[{"action": action} for action in event.actions_taken],
+                success_rate=1.0 if event.learning_value > 0.7 else 0.5,
+                average_improvement=max(event.outcomes.values()) if event.outcomes else 0.0,
+                confidence_level=event.learning_value,
+                discovery_time=event.timestamp,
+                usage_count=1,
+                last_success=event.timestamp
+            )
+            
+            self.discovered_patterns[pattern_id] = new_pattern
+            self.learning_statistics["patterns_discovered"] += 1
+            
+            logger.debug(f"Discovered new optimization pattern: {pattern_id}")
+    
+    def _find_best_strategy_for_context(self, context: Dict[str, Any]) -> Optional[EvolutionaryStrategy]:
+        """Find the best strategy for a given context."""
+        
+        best_strategy = None
+        best_score = 0.0
+        
+        for strategy in self.strategies.values():
+            # Calculate context match score
+            match_score = self._calculate_context_match(strategy.conditions, context)
+            
+            # Weight by strategy confidence and success history
+            if strategy.success_history:
+                avg_success = np.mean(strategy.success_history)
+                weighted_score = match_score * avg_success * strategy.confidence
+            else:
+                weighted_score = match_score * strategy.confidence * 0.5
+            
+            if weighted_score > best_score:
+                best_score = weighted_score
+                best_strategy = strategy
+        
+        return best_strategy if best_score > 0.6 else None
+    
+    def _create_innovative_strategy(self, context: Dict[str, Any]) -> Optional[EvolutionaryStrategy]:
+        """Create an innovative new strategy using the innovation engine."""
+        return self.innovation_engine.generate_novel_strategy(
+            context, self.discovered_patterns, self.strategies
+        )
+    
+    def _initialize_ml_components(self):
+        """Initialize machine learning components if available."""
+        if not self.ml_available:
+            return
+        
+        try:
+            # Pattern classifier for automatic pattern recognition
+            self.pattern_classifier = KMeans(n_clusters=10, random_state=42)
+            
+            # Dimensionality reduction for pattern analysis
+            self.pattern_pca = PCA(n_components=5)
+            
+            logger.info("Machine learning components initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize ML components: {e}")
+            self.ml_available = False
+    
+    def _calculate_learning_value(self, event_type: str, context: Dict[str, Any], outcomes: Dict[str, float]) -> float:
+        """Calculate how valuable an event is for learning."""
+        
+        # Base value from outcomes
+        outcome_value = np.mean(list(outcomes.values())) if outcomes else 0.0
+        
+        # Bonus for rare or novel contexts
+        context_novelty = self._assess_context_novelty(context)
+        
+        # Event type weights
+        type_weights = {
+            "success": 1.0,
+            "failure": 0.8,  # Failures are valuable for learning
+            "anomaly": 1.2,  # Anomalies are especially valuable
+            "optimization": 0.9,
+            "emergency": 1.1
+        }
+        
+        type_weight = type_weights.get(event_type, 0.5)
+        
+        learning_value = (outcome_value * 0.6 + context_novelty * 0.4) * type_weight
+        return max(0.0, min(1.0, learning_value))
+    
+    def _assess_context_novelty(self, context: Dict[str, Any]) -> float:
+        """Assess how novel a context is compared to previous events."""
+        if not self.learning_events:
+            return 1.0  # First event is maximally novel
+        
+        # Compare with recent contexts
+        recent_contexts = [event.context for event in list(self.learning_events)[-20:]]
+        
+        # Simple novelty measure based on unique keys and value ranges
+        context_keys = set(context.keys())
+        novelty_score = 0.0
+        
+        for recent_context in recent_contexts:
+            recent_keys = set(recent_context.keys())
+            key_overlap = len(context_keys.intersection(recent_keys)) / len(context_keys.union(recent_keys))
+            
+            # Check value similarity for overlapping keys
+            value_similarity = 0.0
+            overlapping_keys = context_keys.intersection(recent_keys)
+            
+            if overlapping_keys:
+                for key in overlapping_keys:
+                    try:
+                        if isinstance(context[key], (int, float)) and isinstance(recent_context[key], (int, float)):
+                            # Numeric similarity
+                            max_val = max(abs(context[key]), abs(recent_context[key]), 1.0)
+                            similarity = 1.0 - abs(context[key] - recent_context[key]) / max_val
+                            value_similarity += similarity
+                    except:
+                        pass
+                
+                if overlapping_keys:
+                    value_similarity /= len(overlapping_keys)
+            
+            overall_similarity = (key_overlap + value_similarity) / 2
+            novelty_score = max(novelty_score, 1.0 - overall_similarity)
+        
+        return min(1.0, novelty_score)
+    
+    def _save_learned_knowledge(self):
+        """Save learned patterns and strategies to disk."""
+        try:
+            # Save patterns
+            patterns_file = self.data_dir / "optimization_patterns.json"
+            with open(patterns_file, 'w') as f:
+                patterns_data = {pid: asdict(pattern) for pid, pattern in self.discovered_patterns.items()}
+                json.dump(patterns_data, f, indent=2)
+            
+            # Save strategies
+            strategies_file = self.data_dir / "evolutionary_strategies.json"  
+            with open(strategies_file, 'w') as f:
+                strategies_data = {sid: asdict(strategy) for sid, strategy in self.strategies.items()}
+                json.dump(strategies_data, f, indent=2)
+            
+            # Save statistics
+            stats_file = self.data_dir / "learning_statistics.json"
+            with open(stats_file, 'w') as f:
+                json.dump(self.learning_statistics, f, indent=2)
+            
+            logger.info(f"Saved {len(self.discovered_patterns)} patterns and {len(self.strategies)} strategies")
+            
+        except Exception as e:
+            logger.error(f"Failed to save learned knowledge: {e}")
+    
+    def _load_learned_knowledge(self):
+        """Load previously learned patterns and strategies from disk."""
+        try:
+            # Load patterns
+            patterns_file = self.data_dir / "optimization_patterns.json"
+            if patterns_file.exists():
+                with open(patterns_file, 'r') as f:
+                    patterns_data = json.load(f)
+                    for pid, pattern_dict in patterns_data.items():
+                        self.discovered_patterns[pid] = OptimizationPattern(**pattern_dict)
+            
+            # Load strategies
+            strategies_file = self.data_dir / "evolutionary_strategies.json"
+            if strategies_file.exists():
+                with open(strategies_file, 'r') as f:
+                    strategies_data = json.load(f)
+                    for sid, strategy_dict in strategies_data.items():
+                        self.strategies[sid] = EvolutionaryStrategy(**strategy_dict)
+            
+            # Load statistics
+            stats_file = self.data_dir / "learning_statistics.json"
+            if stats_file.exists():
+                with open(stats_file, 'r') as f:
+                    self.learning_statistics.update(json.load(f))
+            
+            logger.info(f"Loaded {len(self.discovered_patterns)} patterns and {len(self.strategies)} strategies")
+            
+        except Exception as e:
+            logger.warning(f"Failed to load previous knowledge: {e}")
+    
+    def get_meta_learning_status(self) -> Dict[str, Any]:
+        """Get current meta-learning status and statistics."""
+        return {
+            "learning_active": self.learning_active,
+            "learning_mode": self.learning_mode.value,
+            "evolution_phase": self.evolution_phase.value,
+            "patterns_discovered": len(self.discovered_patterns),
+            "strategies_evolved": len(self.strategies),
+            "learning_events": len(self.learning_events),
+            "statistics": self.learning_statistics.copy(),
+            "ml_available": self.ml_available,
+            "top_patterns": self._get_top_patterns(5),
+            "top_strategies": self._get_top_strategies(5)
+        }
+    
+    def _get_top_patterns(self, n: int) -> List[Dict[str, Any]]:
+        """Get top N patterns by success rate."""
+        sorted_patterns = sorted(
+            self.discovered_patterns.values(),
+            key=lambda p: p.success_rate * p.confidence_level,
+            reverse=True
+        )
+        
+        return [
+            {
+                "pattern_id": p.pattern_id,
+                "pattern_type": p.pattern_type,
+                "success_rate": p.success_rate,
+                "usage_count": p.usage_count,
+                "confidence": p.confidence_level
+            }
+            for p in sorted_patterns[:n]
+        ]
+    
+    def _get_top_strategies(self, n: int) -> List[Dict[str, Any]]:
+        """Get top N strategies by performance."""
+        sorted_strategies = sorted(
+            self.strategies.values(),
+            key=lambda s: (np.mean(s.success_history) if s.success_history else 0) * s.confidence,
+            reverse=True
+        )
+        
+        return [
+            {
+                "strategy_id": s.strategy_id,
+                "name": s.name,
+                "confidence": s.confidence,
+                "avg_success": np.mean(s.success_history) if s.success_history else 0,
+                "generation": s.evolution_generation
+            }
+            for s in sorted_strategies[:n]
+        ]
+
+
+class InnovationEngine:
+    """Sub-engine for generating novel optimization strategies."""
+    
+    def __init__(self, config: Dict[str, Any]):
+        self.config = config
+        self.innovation_attempts = 0
+        self.successful_innovations = 0
+    
+    def generate_novel_strategy(self, context: Dict[str, Any], 
+                             patterns: Dict[str, OptimizationPattern],
+                             existing_strategies: Dict[str, EvolutionaryStrategy]) -> Optional[EvolutionaryStrategy]:
+        """Generate a novel optimization strategy."""
+        
+        self.innovation_attempts += 1
+        
+        # Simple innovation: combine successful pattern elements
+        successful_patterns = [p for p in patterns.values() if p.success_rate > 0.7]
+        
+        if len(successful_patterns) < 2:
+            return None
+        
+        # Randomly combine elements from successful patterns
+        import random
+        selected_patterns = random.sample(successful_patterns, min(3, len(successful_patterns)))
+        
+        # Create hybrid strategy
+        strategy_id = f"innovation_{self.innovation_attempts}"
+        
+        # Combine action sequences
+        combined_actions = []
+        for pattern in selected_patterns:
+            combined_actions.extend(pattern.action_sequence)
+        
+        # Create hybrid conditions
+        combined_conditions = {}
+        for pattern in selected_patterns:
+            combined_conditions.update(pattern.context_conditions)
+        
+        new_strategy = EvolutionaryStrategy(
+            strategy_id=strategy_id,
+            name=f"Innovative Strategy {self.innovation_attempts}",
+            description=f"Hybrid strategy combining {len(selected_patterns)} successful patterns",
+            conditions=combined_conditions,
+            actions=combined_actions,
+            expected_outcomes={"improvement": 0.5},  # Conservative estimate
+            confidence=0.3,  # Low confidence for untested strategy
+            success_history=[],
+            evolution_generation=1,
+            parent_strategies=[p.pattern_id for p in selected_patterns],
+            created_time=time.time()
+        )
+        
+        logger.info(f"Generated innovative strategy: {strategy_id}")
+        return new_strategy
+
+    # Additional methods for MetaLearningEngine
+    def _update_learning_mode(self):
+        """Update learning mode based on current state and progress."""
+        event_count = len(self.learning_events)
+        mode_durations = self.config.get("learning_modes", {})
+        
+        if event_count < mode_durations.get("observation_duration", 50):
+            self.learning_mode = LearningMode.OBSERVATION
+        elif event_count < mode_durations.get("observation_duration", 50) + mode_durations.get("exploration_duration", 30):
+            self.learning_mode = LearningMode.EXPLORATION
+        elif len(self.strategies) > 0:
+            # Alternate between exploitation and innovation
+            if (event_count // 20) % 2 == 0:
+                self.learning_mode = LearningMode.EXPLOITATION
+            else:
+                self.learning_mode = LearningMode.INNOVATION
+        else:
+            self.learning_mode = LearningMode.OBSERVATION
+    
+    async def _analyze_recent_patterns(self):
+        """Analyze recent events for new patterns."""
+        recent_events = list(self.learning_events)[-10:]
+        
+        # Look for recurring sequences
+        for i in range(len(recent_events) - 1):
+            for j in range(i + 1, len(recent_events)):
+                similarity = self._calculate_event_similarity(recent_events[i], recent_events[j])
+                if similarity > 0.8:
+                    # Found similar events - might be a pattern
+                    self._analyze_event_pair_for_pattern(recent_events[i], recent_events[j])
+    
+    async def _detect_emergent_behaviors(self):
+        """Detect emergent optimization behaviors."""
+        if len(self.learning_events) < 20:
+            return
+        
+        # Simple emergent behavior detection: look for unexpected success patterns
+        recent_successes = [e for e in list(self.learning_events)[-20:] if e.learning_value > 0.8]
+        
+        if len(recent_successes) > 5:
+            # Analyze what made these successes unique
+            success_contexts = [e.context for e in recent_successes]
+            success_actions = [e.actions_taken for e in recent_successes]
+            
+            # Look for common elements
+            common_context_keys = set.intersection(*[set(ctx.keys()) for ctx in success_contexts])
+            if common_context_keys:
+                logger.info(f"Detected emergent success pattern with context keys: {common_context_keys}")
+    
+    async def _attempt_innovation(self):
+        """Attempt to create innovative strategies."""
+        innovative_strategy = self.innovation_engine.generate_novel_strategy(
+            {}, self.discovered_patterns, self.strategies
+        )
+        
+        if innovative_strategy:
+            self.strategies[innovative_strategy.strategy_id] = innovative_strategy
+            self.learning_statistics["successful_innovations"] += 1
+    
+    def _check_phase_advancement(self):
+        """Check if criteria are met to advance to next evolution phase."""
+        patterns_count = len(self.discovered_patterns)
+        strategies_count = len(self.strategies)
+        
+        if self.evolution_phase == EvolutionPhase.INITIALIZATION and patterns_count > 5:
+            self.evolution_phase = EvolutionPhase.PATTERN_DISCOVERY
+        elif self.evolution_phase == EvolutionPhase.PATTERN_DISCOVERY and strategies_count > 3:
+            self.evolution_phase = EvolutionPhase.STRATEGY_FORMATION
+        elif self.evolution_phase == EvolutionPhase.STRATEGY_FORMATION and strategies_count > 10:
+            self.evolution_phase = EvolutionPhase.OPTIMIZATION_REFINEMENT
+        elif self.evolution_phase == EvolutionPhase.OPTIMIZATION_REFINEMENT and self.learning_statistics["successful_innovations"] > 2:
+            self.evolution_phase = EvolutionPhase.EMERGENT_BEHAVIOR
+    
+    def _update_learning_rate(self):
+        """Update learning rate based on recent success."""
+        if len(self.learning_events) < 10:
+            return
+        
+        recent_events = list(self.learning_events)[-10:]
+        recent_success_rate = len([e for e in recent_events if e.learning_value > 0.6]) / len(recent_events)
+        
+        # Adaptive learning rate
+        base_rate = self.config.get("learning_rate", 0.05)
+        self.learning_statistics["current_learning_rate"] = base_rate * (0.5 + recent_success_rate)
+    
+    def _identify_patterns_in_event(self, context: Dict[str, Any], actions: List[str], outcomes: Dict[str, float]) -> List[str]:
+        """Identify which patterns are involved in an event."""
+        involved_patterns = []
+        
+        for pattern_id, pattern in self.discovered_patterns.items():
+            # Check context match
+            context_match = self._calculate_context_match(pattern.context_conditions, context)
+            
+            # Check action similarity
+            pattern_actions = [action["action"] for action in pattern.action_sequence if "action" in action]
+            action_match = len(set(actions).intersection(set(pattern_actions))) / max(len(actions), 1)
+            
+            if context_match > 0.6 and action_match > 0.5:
+                involved_patterns.append(pattern_id)
+        
+        return involved_patterns
+    
+    def _create_pattern_signature(self, context: Dict[str, Any], actions: List[str]) -> str:
+        """Create a signature for pattern matching."""
+        # Simple signature based on sorted context keys and actions
+        context_sig = "_".join(sorted(context.keys()))
+        actions_sig = "_".join(sorted(actions))
+        return f"{context_sig}::{actions_sig}"
+    
+    def _find_similar_pattern(self, signature: str) -> Optional[OptimizationPattern]:
+        """Find existing pattern with similar signature."""
+        for pattern in self.discovered_patterns.values():
+            pattern_sig = self._create_pattern_signature(
+                pattern.context_conditions,
+                [action.get("action", "") for action in pattern.action_sequence]
+            )
+            if signature == pattern_sig:
+                return pattern
+        return None
+    
+    def _update_pattern_statistics(self, pattern: OptimizationPattern, event: MetaLearningEvent):
+        """Update statistics for an existing pattern."""
+        pattern.usage_count += 1
+        pattern.last_success = event.timestamp
+        
+        # Update success rate with exponential moving average
+        alpha = 0.1
+        current_success = 1.0 if event.learning_value > 0.7 else 0.0
+        pattern.success_rate = pattern.success_rate * (1 - alpha) + current_success * alpha
+    
+    def _find_experimental_strategy(self, context: Dict[str, Any]) -> Optional[EvolutionaryStrategy]:
+        """Find a strategy to experiment with (less frequently used)."""
+        # Find strategies with low usage or high uncertainty
+        experimental_candidates = [
+            s for s in self.strategies.values()
+            if len(s.success_history) < 5 or s.confidence < 0.8
+        ]
+        
+        if not experimental_candidates:
+            return None
+        
+        # Choose the one with best context match among experimental candidates
+        best_match = None
+        best_score = 0.0
+        
+        for strategy in experimental_candidates:
+            match_score = self._calculate_context_match(strategy.conditions, context)
+            if match_score > best_score:
+                best_score = match_score
+                best_match = strategy
+        
+        return best_match if best_score > 0.4 else None
+    
+    def _mutate_strategies(self) -> List[EvolutionaryStrategy]:
+        """Create mutated versions of existing strategies."""
+        mutations = []
+        
+        for strategy in list(self.strategies.values())[:5]:  # Mutate top 5 strategies
+            if strategy.confidence > 0.7:  # Only mutate successful strategies
+                mutated = self._mutate_single_strategy(strategy)
+                if mutated:
+                    mutations.append(mutated)
+        
+        return mutations
+    
+    def _mutate_single_strategy(self, parent: EvolutionaryStrategy) -> Optional[EvolutionaryStrategy]:
+        """Create a mutated version of a strategy."""
+        import random
+        
+        # Simple mutation: modify conditions slightly
+        mutated_conditions = parent.conditions.copy()
+        for key, value in mutated_conditions.items():
+            if isinstance(value, (int, float)):
+                # Add random noise
+                noise = random.uniform(-0.1, 0.1) * value
+                mutated_conditions[key] = value + noise
+        
+        strategy_id = f"mutation_{parent.strategy_id}_{int(time.time())}"
+        
+        return EvolutionaryStrategy(
+            strategy_id=strategy_id,
+            name=f"Mutation of {parent.name}",
+            description=f"Mutated version of {parent.strategy_id}",
+            conditions=mutated_conditions,
+            actions=parent.actions.copy(),
+            expected_outcomes=parent.expected_outcomes.copy(),
+            confidence=parent.confidence * 0.8,  # Lower confidence for untested mutation
+            success_history=[],
+            evolution_generation=parent.evolution_generation + 1,
+            parent_strategies=[parent.strategy_id],
+            created_time=time.time()
+        )
+    
+    def _crossover_strategies(self) -> List[EvolutionaryStrategy]:
+        """Create crossover strategies from existing ones."""
+        crossovers = []
+        strategies_list = list(self.strategies.values())
+        
+        if len(strategies_list) < 2:
+            return crossovers
+        
+        # Simple crossover: combine conditions from two successful strategies
+        import random
+        for i in range(min(3, len(strategies_list) - 1)):
+            parent1 = strategies_list[i]
+            parent2 = strategies_list[i + 1]
+            
+            if parent1.confidence > 0.6 and parent2.confidence > 0.6:
+                crossover = self._crossover_two_strategies(parent1, parent2)
+                if crossover:
+                    crossovers.append(crossover)
+        
+        return crossovers
+    
+    def _crossover_two_strategies(self, parent1: EvolutionaryStrategy, parent2: EvolutionaryStrategy) -> Optional[EvolutionaryStrategy]:
+        """Create crossover between two strategies."""
+        # Combine conditions and actions from both parents
+        combined_conditions = {}
+        combined_conditions.update(parent1.conditions)
+        combined_conditions.update(parent2.conditions)
+        
+        combined_actions = parent1.actions + parent2.actions
+        
+        strategy_id = f"crossover_{parent1.strategy_id}_{parent2.strategy_id}_{int(time.time())}"
+        
+        return EvolutionaryStrategy(
+            strategy_id=strategy_id,
+            name=f"Crossover of {parent1.name} and {parent2.name}",
+            description=f"Combination of {parent1.strategy_id} and {parent2.strategy_id}",
+            conditions=combined_conditions,
+            actions=combined_actions,
+            expected_outcomes={},
+            confidence=(parent1.confidence + parent2.confidence) / 2 * 0.9,
+            success_history=[],
+            evolution_generation=max(parent1.evolution_generation, parent2.evolution_generation) + 1,
+            parent_strategies=[parent1.strategy_id, parent2.strategy_id],
+            created_time=time.time()
+        )
+    
+    def _synthesize_patterns_into_strategies(self) -> List[EvolutionaryStrategy]:
+        """Synthesize successful patterns into new strategies."""
+        synthesized = []
+        
+        # Find highly successful patterns
+        successful_patterns = [
+            p for p in self.discovered_patterns.values()
+            if p.success_rate > 0.8 and p.usage_count > 3
+        ]
+        
+        for pattern in successful_patterns[:3]:  # Convert top 3 patterns
+            strategy = self._pattern_to_strategy(pattern)
+            if strategy:
+                synthesized.append(strategy)
+        
+        return synthesized
+    
+    def _pattern_to_strategy(self, pattern: OptimizationPattern) -> Optional[EvolutionaryStrategy]:
+        """Convert a successful pattern into a strategy."""
+        strategy_id = f"pattern_strategy_{pattern.pattern_id}"
+        
+        return EvolutionaryStrategy(
+            strategy_id=strategy_id,
+            name=f"Strategy from Pattern {pattern.pattern_id}",
+            description=f"Strategy synthesized from successful pattern {pattern.pattern_id}",
+            conditions=pattern.context_conditions,
+            actions=pattern.action_sequence,
+            expected_outcomes={"improvement": pattern.average_improvement},
+            confidence=pattern.confidence_level,
+            success_history=[pattern.success_rate],
+            evolution_generation=1,
+            parent_strategies=[pattern.pattern_id],
+            created_time=time.time()
+        )
+    
+    def _prune_strategies(self):
+        """Remove worst-performing strategies to maintain collection size."""
+        max_strategies = self.config.get("max_strategies", 100)
+        if len(self.strategies) <= max_strategies:
+            return
+        
+        # Sort by performance (success rate * confidence)
+        sorted_strategies = sorted(
+            self.strategies.values(),
+            key=lambda s: (np.mean(s.success_history) if s.success_history else 0) * s.confidence
+        )
+        
+        # Keep top strategies
+        strategies_to_keep = sorted_strategies[-max_strategies:]
+        
+        # Update collection
+        self.strategies = {s.strategy_id: s for s in strategies_to_keep}
+        
+        logger.info(f"Pruned strategies to {len(self.strategies)} (removed {len(sorted_strategies) - len(strategies_to_keep)})")
+    
+    def _calculate_context_match(self, conditions: Dict[str, Any], context: Dict[str, Any]) -> float:
+        """Calculate how well a context matches given conditions."""
+        if not conditions:
+            return 0.0
+        
+        matching_score = 0.0
+        total_conditions = len(conditions)
+        
+        for key, expected_value in conditions.items():
+            if key in context:
+                actual_value = context[key]
+                
+                if isinstance(expected_value, (int, float)) and isinstance(actual_value, (int, float)):
+                    # Numeric similarity
+                    max_val = max(abs(expected_value), abs(actual_value), 1.0)
+                    similarity = 1.0 - abs(expected_value - actual_value) / max_val
+                    matching_score += max(0.0, similarity)
+                elif expected_value == actual_value:
+                    # Exact match
+                    matching_score += 1.0
+                else:
+                    # Partial credit for having the key
+                    matching_score += 0.3
+        
+        return matching_score / total_conditions
+    
+    def _calculate_event_similarity(self, event1: MetaLearningEvent, event2: MetaLearningEvent) -> float:
+        """Calculate similarity between two events."""
+        # Context similarity
+        context_sim = self._calculate_context_match(event1.context, event2.context)
+        
+        # Action similarity
+        actions1 = set(event1.actions_taken)
+        actions2 = set(event2.actions_taken)
+        if actions1 or actions2:
+            action_sim = len(actions1.intersection(actions2)) / len(actions1.union(actions2))
+        else:
+            action_sim = 1.0
+        
+        # Outcome similarity
+        outcomes1 = event1.outcomes
+        outcomes2 = event2.outcomes
+        outcome_sim = 0.0
+        if outcomes1 and outcomes2:
+            common_keys = set(outcomes1.keys()).intersection(set(outcomes2.keys()))
+            if common_keys:
+                value_diffs = [abs(outcomes1[k] - outcomes2[k]) for k in common_keys]
+                outcome_sim = 1.0 - (sum(value_diffs) / len(value_diffs))
+        
+        return (context_sim + action_sim + outcome_sim) / 3
+    
+    def _analyze_event_pair_for_pattern(self, event1: MetaLearningEvent, event2: MetaLearningEvent):
+        """Analyze a pair of similar events for pattern extraction."""
+        # Simple pattern extraction: find common elements
+        common_context = {}
+        for key in event1.context:
+            if key in event2.context and event1.context[key] == event2.context[key]:
+                common_context[key] = event1.context[key]
+        
+        common_actions = list(set(event1.actions_taken).intersection(set(event2.actions_taken)))
+        
+        if common_context and common_actions:
+            # Create pattern from common elements
+            pattern_id = f"similarity_pattern_{int(time.time())}"
+            
+            new_pattern = OptimizationPattern(
+                pattern_id=pattern_id,
+                pattern_type="similarity_derived",
+                context_conditions=common_context,
+                action_sequence=[{"action": action} for action in common_actions],
+                success_rate=(event1.learning_value + event2.learning_value) / 2,
+                average_improvement=0.0,
+                confidence_level=0.6,
+                discovery_time=time.time(),
+                usage_count=2,
+                last_success=max(event1.timestamp, event2.timestamp)
+            )
+            
+            self.discovered_patterns[pattern_id] = new_pattern
+            logger.debug(f"Discovered similarity pattern: {pattern_id}")

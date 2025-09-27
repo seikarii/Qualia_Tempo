@@ -1,0 +1,241 @@
+import logging
+from typing import Any
+
+from crisalida_lib.symbolic_language.types import QualiaState, RealityBytecode
+
+logger = logging.getLogger(__name__)
+
+
+class WarfareProtocols:
+    """
+    Protocolos avanzados para gestión de amenazas, defensa ontológica y cooperación estratégica.
+    Integra cuarentena, defensa adaptativa y negociación evolutiva en el UnifiedField.
+    """
+
+    def __init__(self, unified_field):
+        self.unified_field = unified_field
+
+    async def respond_to_virus_threat(self, threat_details: dict[str, Any]):
+        """
+        Responde a amenazas de virus ontológicos, activando cuarentena y protocolos de contención.
+        """
+        logger.warning(f"[WARFARE] Responding to virus threat: {threat_details}")
+        affected_entities = threat_details.get("affected_entities", [])
+        for entity_id in affected_entities:
+            logger.info(f"[WARFARE] Quarantining entity: {entity_id}")
+            if hasattr(self.unified_field, "quarantine_entity"):
+                await self.unified_field.quarantine_entity(entity_id)
+            else:
+                logger.warning(
+                    f"[WARFARE] quarantine_entity not implemented for {entity_id}"
+                )
+
+        # Activar protocolos de contención global si el virus es crítico
+        if threat_details.get("severity", "low") in ("high", "critical"):
+            if hasattr(self.unified_field, "activate_global_containment"):
+                await self.unified_field.activate_global_containment()
+                logger.critical("[WARFARE] Global containment protocol activated.")
+
+    async def process_incoming_attack(self, attack_details: dict[str, Any]):
+        """
+        Procesa ataques entrantes, movilizando defensas y ajustando postura de seguridad.
+        """
+        logger.critical(f"[WARFARE] Processing incoming attack: {attack_details}")
+        # Ajustar postura defensiva de todas las entidades
+        if hasattr(self.unified_field, "set_defensive_posture"):
+            await self.unified_field.set_defensive_posture(level="high")
+            logger.info("[WARFARE] Defensive posture set to HIGH for all entities.")
+        # Activar refuerzo de campo si disponible
+        if hasattr(self.unified_field, "reinforce_unified_field"):
+            await self.unified_field.reinforce_unified_field(intensity=0.8)
+            logger.info("[WARFARE] Unified field reinforced.")
+
+        # Registrar ataque en el historial de conflictos
+        if hasattr(self.unified_field, "conflict_history"):
+            self.unified_field.conflict_history.append(
+                {
+                    "type": "attack",
+                    "details": attack_details,
+                    "timestamp": attack_details.get("timestamp"),
+                }
+            )
+
+    async def process_incoming_cooperation(self, proposal_details: dict[str, Any]):
+        """
+        Procesa propuestas de cooperación, evaluando términos y negociando acuerdos evolutivos.
+        """
+        logger.info(
+            f"[WARFARE] Processing incoming cooperation proposal: {proposal_details}"
+        )
+        # Evaluar propuesta y aceptar si es beneficiosa
+        if hasattr(self.unified_field, "evaluate_cooperation"):
+            accepted = await self.unified_field.evaluate_cooperation(proposal_details)
+            if accepted and hasattr(self.unified_field, "accept_cooperation"):
+                await self.unified_field.accept_cooperation(proposal_details)
+                logger.info("[WARFARE] Cooperation proposal accepted.")
+            else:
+                logger.info("[WARFARE] Cooperation proposal rejected.")
+        else:
+            logger.warning("[WARFARE] Cooperation evaluation not implemented.")
+
+        # Registrar cooperación en el historial de conflictos
+        if hasattr(self.unified_field, "conflict_history"):
+            self.unified_field.conflict_history.append(
+                {
+                    "type": "cooperation",
+                    "details": proposal_details,
+                    "timestamp": proposal_details.get("timestamp"),
+                }
+            )
+
+
+class EVAWarfareProtocols(WarfareProtocols):
+    """
+    Protocolos avanzados de guerra ontológica extendidos para EVA.
+    Integran memoria viviente, simulación de amenazas/ataques/cooperaciones como experiencias EVA,
+    faseo, hooks de entorno y benchmarking de defensa adaptativa.
+    """
+
+    def __init__(self, unified_field, phase: str = "default"):
+        super().__init__(unified_field)
+        self.eva_phase = phase
+        self.eva_runtime = getattr(unified_field, "eva_runtime", None)
+        self.eva_memory_store = getattr(unified_field, "eva_memory_store", {})
+        self.eva_experience_store = getattr(unified_field, "eva_experience_store", {})
+        self.eva_phases = getattr(unified_field, "eva_phases", {})
+        self._environment_hooks = getattr(unified_field, "eva_environment_hooks", [])
+
+    async def respond_to_virus_threat(self, threat_details: dict[str, Any]):
+        await super().respond_to_virus_threat(threat_details)
+        # EVA: Ingestar experiencia de amenaza en memoria viviente
+        if self.eva_runtime:
+            qualia_state = threat_details.get("qualia_state") or QualiaState(
+                emotional_valence=0.2,
+                cognitive_complexity=0.8,
+                consciousness_density=0.3,
+                narrative_importance=0.9,
+                energy_level=0.4,
+            )
+            exp_id = self.eva_runtime.divine_compiler.compile_intention(
+                {
+                    "intention_type": "ARCHIVE_WARFARE_VIRUS_THREAT",
+                    "details": threat_details,
+                    "phase": self.eva_phase,
+                    "qualia": qualia_state,
+                }
+            )
+            bytecode_id = f"eva_warfare_virus_{hash(str(threat_details))}"
+            reality_bytecode = RealityBytecode(
+                bytecode_id=bytecode_id,
+                instructions=exp_id,
+                qualia_state=qualia_state,
+                phase=self.eva_phase,
+                timestamp=threat_details.get("timestamp", 0.0),
+            )
+            self.eva_memory_store[bytecode_id] = reality_bytecode
+            if self.eva_phase not in self.eva_phases:
+                self.eva_phases[self.eva_phase] = {}
+            self.eva_phases[self.eva_phase][bytecode_id] = reality_bytecode
+            logger.info(
+                f"[EVA-WARFARE] Ingested virus threat experience: {bytecode_id}"
+            )
+
+    async def process_incoming_attack(self, attack_details: dict[str, Any]):
+        await super().process_incoming_attack(attack_details)
+        # EVA: Ingestar experiencia de ataque en memoria viviente
+        if self.eva_runtime:
+            qualia_state = attack_details.get("qualia_state") or QualiaState(
+                emotional_valence=0.1,
+                cognitive_complexity=0.9,
+                consciousness_density=0.4,
+                narrative_importance=1.0,
+                energy_level=0.5,
+            )
+            exp_id = self.eva_runtime.divine_compiler.compile_intention(
+                {
+                    "intention_type": "ARCHIVE_WARFARE_ATTACK",
+                    "details": attack_details,
+                    "phase": self.eva_phase,
+                    "qualia": qualia_state,
+                }
+            )
+            bytecode_id = f"eva_warfare_attack_{hash(str(attack_details))}"
+            reality_bytecode = RealityBytecode(
+                bytecode_id=bytecode_id,
+                instructions=exp_id,
+                qualia_state=qualia_state,
+                phase=self.eva_phase,
+                timestamp=attack_details.get("timestamp", 0.0),
+            )
+            self.eva_memory_store[bytecode_id] = reality_bytecode
+            if self.eva_phase not in self.eva_phases:
+                self.eva_phases[self.eva_phase] = {}
+            self.eva_phases[self.eva_phase][bytecode_id] = reality_bytecode
+            logger.info(f"[EVA-WARFARE] Ingested attack experience: {bytecode_id}")
+
+    async def process_incoming_cooperation(self, proposal_details: dict[str, Any]):
+        await super().process_incoming_cooperation(proposal_details)
+        # EVA: Ingestar experiencia de cooperación en memoria viviente
+        if self.eva_runtime:
+            qualia_state = proposal_details.get("qualia_state") or QualiaState(
+                emotional_valence=0.8,
+                cognitive_complexity=0.6,
+                consciousness_density=0.7,
+                narrative_importance=0.7,
+                energy_level=0.9,
+            )
+            exp_id = self.eva_runtime.divine_compiler.compile_intention(
+                {
+                    "intention_type": "ARCHIVE_WARFARE_COOPERATION",
+                    "details": proposal_details,
+                    "phase": self.eva_phase,
+                    "qualia": qualia_state,
+                }
+            )
+            bytecode_id = f"eva_warfare_coop_{hash(str(proposal_details))}"
+            reality_bytecode = RealityBytecode(
+                bytecode_id=bytecode_id,
+                instructions=exp_id,
+                qualia_state=qualia_state,
+                phase=self.eva_phase,
+                timestamp=proposal_details.get("timestamp", 0.0),
+            )
+            self.eva_memory_store[bytecode_id] = reality_bytecode
+            if self.eva_phase not in self.eva_phases:
+                self.eva_phases[self.eva_phase] = {}
+            self.eva_phases[self.eva_phase][bytecode_id] = reality_bytecode
+            logger.info(f"[EVA-WARFARE] Ingested cooperation experience: {bytecode_id}")
+
+    def add_environment_hook(self, hook: callable):
+        """Registra un hook para manifestación simbólica (ej. renderizado 3D/4D) en protocolos EVA."""
+        self._environment_hooks.append(hook)
+
+    def set_memory_phase(self, phase: str):
+        """Cambia la fase activa de memoria (timeline) EVA."""
+        self.eva_phase = phase
+        for hook in self._environment_hooks:
+            try:
+                hook({"phase_changed": phase})
+            except Exception as e:
+                logger.warning(f"[EVA-WARFARE] Phase hook failed: {e}")
+
+    def get_memory_phase(self) -> str:
+        """Devuelve la fase de memoria actual."""
+        return self.eva_phase
+
+    def get_experience_phases(self, experience_id: str) -> list:
+        """Lista todas las fases disponibles para una experiencia de guerra EVA."""
+        return [
+            phase for phase, exps in self.eva_phases.items() if experience_id in exps
+        ]
+
+    def get_eva_api(self) -> dict:
+        return {
+            "respond_to_virus_threat": self.respond_to_virus_threat,
+            "process_incoming_attack": self.process_incoming_attack,
+            "process_incoming_cooperation": self.process_incoming_cooperation,
+            "add_environment_hook": self.add_environment_hook,
+            "set_memory_phase": self.set_memory_phase,
+            "get_memory_phase": self.get_memory_phase,
+            "get_experience_phases": self.get_experience_phases,
+        }

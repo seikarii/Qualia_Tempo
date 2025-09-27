@@ -1,0 +1,650 @@
+import logging
+import random
+import uuid
+from typing import Any
+
+from crisalida_lib.consciousness.mente.qualia_state import QualiaState
+
+DEFAULT_ENTITY_ENERGY = 100.0  # Define a default value locally if import fails
+from crisalida_lib.consciousness.mente.conscious_mind import ConsciousMind
+from crisalida_lib.consciousness.mente.intentionality import IntentionalityEngine
+from crisalida_lib.consciousness.ontological_forging import OntologicalForging
+from crisalida_lib.consciousness.soul_kernel import EntitySoulSystem
+from crisalida_lib.core_systems.item_integration_system import ItemIntegrationSystem
+from crisalida_lib.core_systems.power_progression_system import PowerProgressionSystem
+from crisalida_lib.entities.entity_attributes_forging import Attributes
+from crisalida_lib.entities.enums import ArchetypeType
+from crisalida_lib.entities.living_entity_core import LivingEntity
+from crisalida_lib.EVA.core_types import LivingSymbolRuntime
+from crisalida_lib.symbolic_language.types import EVAExperience, RealityBytecode
+
+logger = logging.getLogger(__name__)
+
+
+class IntelligentEntityFactory:
+    """
+    Factory for creating fully intelligent entities with complete Janus Cognitive Core.
+    Ensures every entity is instantiated with all cognitive, soul, and supporting systems.
+    Extensión EVA: Permite compilar, almacenar y simular experiencias de creación de entidades como RealityBytecode,
+    soporta ingestión/recall, faseo, hooks de entorno y gestión avanzada de memoria viviente EVA.
+    """
+
+    def __init__(self, seed: int | None = None, eva_phase: str = "default"):
+        self.creation_count = 0
+        if seed is not None:
+            random.seed(seed)
+        self.eva_phase = eva_phase
+        self.eva_runtime = LivingSymbolRuntime()
+        self.eva_memory_store: dict[str, RealityBytecode] = {}
+        self.eva_experience_store: dict[str, EVAExperience] = {}
+        self.eva_phases: dict[str, dict[str, RealityBytecode]] = {}
+        self._environment_hooks: list = []
+        logger.info("IntelligentEntityFactory initialized (EVA)")
+
+    def create_entity(
+        self,
+        archetype: ArchetypeType,
+        position: tuple[float, float, float],
+        initial_energy: float = DEFAULT_ENTITY_ENERGY,
+        entity_id: str | None = None,
+        consciousness_complexity: float = 0.7,
+        phase: str = None,
+    ) -> LivingEntity:
+        """Create a fully intelligent entity with complete Janus Cognitive Core.
+        Registers the creation as an EVA experience.
+        """
+        if entity_id is None:
+            entity_id = f"entity_{uuid.uuid4().hex[:8]}"
+        logger.info(
+            f"Creating intelligent entity {entity_id} with archetype {archetype.value}"
+        )
+
+        entity = LivingEntity(
+            entity_id=entity_id, primary_archetype=archetype, position=list(position)
+        )
+
+        self._instantiate_consciousness_core(entity, consciousness_complexity)
+        self._instantiate_soul_system(entity, archetype)
+        self._instantiate_qualia_state(entity, archetype, consciousness_complexity)
+        self._instantiate_intentionality_engine(entity, archetype)
+        self._instantiate_supporting_systems(entity)
+        self._wire_cognitive_components(entity)
+        entity.energy = initial_energy
+        entity.position = list(position)
+        self._apply_archetype_specialization(entity, archetype)
+        self.creation_count += 1
+
+        # EVA: Ingesta experiencia de creación de entidad
+        self.eva_ingest_entity_creation_experience(
+            entity=entity,
+            archetype=archetype,
+            position=position,
+            initial_energy=initial_energy,
+            phase=phase or self.eva_phase,
+        )
+
+        logger.info(
+            f"Successfully created intelligent entity {entity_id} (#{self.creation_count})"
+        )
+        return entity
+
+    def _instantiate_consciousness_core(self, entity: LivingEntity, complexity: float):
+        """Create and install the complete ConsciousnessTree."""
+        entity.consciousness_metrics = ConsciousMind()
+        logger.debug(f"Consciousness core instantiated for {entity.entity_id}")
+
+    def _instantiate_soul_system(self, entity: LivingEntity, archetype: ArchetypeType):
+        """Create and configure the complete EntitySoulSystem."""
+        entity.soul = EntitySoulSystem(primary_archetype=archetype)
+        self._configure_soul_attributes(entity.soul, archetype)
+        logger.debug(
+            f"Soul system instantiated for {entity.entity_id} with archetype {archetype.value}"
+        )
+
+    def _instantiate_qualia_state(
+        self, entity: LivingEntity, archetype: ArchetypeType, complexity: float
+    ):
+        """Create a sophisticated QualiaState with archetype-appropriate initial values."""
+        base_valence = self._get_archetype_emotional_bias(archetype)
+        base_arousal = random.uniform(0.3, 0.8)
+        entity.qualia_state = QualiaState(
+            emotional_valence=base_valence + random.uniform(-0.2, 0.2),
+            arousal=base_arousal,
+            cognitive_complexity=complexity + random.uniform(-0.1, 0.1),
+            consciousness_density=random.uniform(0.6, 0.95),
+            temporal_coherence=random.uniform(0.7, 1.0),
+            spiritual_resonance=self._get_archetype_spiritual_resonance(archetype),
+            sensory_clarity=random.uniform(0.5, 0.9),
+            cognitive_focus=random.uniform(0.4, 0.8),
+            temporal_flow=random.uniform(0.6, 1.0),
+            emotional_arousal=base_arousal + random.uniform(-0.1, 0.1),
+            dominant_word=self._get_archetype_dominant_word(archetype),
+            color=self._get_archetype_color(archetype),
+        )
+        entity.qualia_state.clamp_values()
+        logger.debug(f"Qualia state instantiated for {entity.entity_id}")
+
+    def _instantiate_intentionality_engine(
+        self, entity: LivingEntity, archetype: ArchetypeType
+    ):
+        """Create and configure the IntentionalityEngine with archetype-specific biases."""
+        entity.intentionality_engine = IntentionalityEngine()
+        entity.intentionality_engine.behavioral_biases.update(
+            self._get_archetype_behavioral_biases(archetype)
+        )
+        entity.intentionality_engine.base_tendencies.update(
+            self._get_archetype_base_tendencies(archetype)
+        )
+        entity.intentionality_engine.instinctual_biases.update(
+            self._get_archetype_instinctual_biases(archetype)
+        )
+        logger.debug(f"Intentionality engine instantiated for {entity.entity_id}")
+
+    def _instantiate_supporting_systems(self, entity: LivingEntity):
+        """Ensure all supporting systems are properly instantiated."""
+        if not hasattr(entity, "attributes") or entity.attributes is None:
+            entity.attributes = Attributes()
+        if (
+            not hasattr(entity, "power_progression_system")
+            or entity.power_progression_system is None
+        ):
+            entity.power_progression_system = PowerProgressionSystem()
+        if (
+            not hasattr(entity, "ontological_forging")
+            or entity.ontological_forging is None
+        ):
+            entity.ontological_forging = OntologicalForging()
+        if (
+            not hasattr(entity, "item_integration_system")
+            or entity.item_integration_system is None
+        ):
+            entity.item_integration_system = ItemIntegrationSystem()
+        logger.debug(f"Supporting systems instantiated for {entity.entity_id}")
+
+    def _wire_cognitive_components(self, entity: LivingEntity):
+        """Wire all cognitive components together for proper interaction."""
+        entity.intentionality_engine.bind_soul_system(entity.soul)
+        entity.attributes.bind_soul_system(entity.soul)
+        logger.debug(f"Cognitive components wired for {entity.entity_id}")
+
+    def _apply_archetype_specialization(
+        self, entity: LivingEntity, archetype: ArchetypeType
+    ):
+        """Apply archetype-specific specializations and traits."""
+        specializations = {
+            ArchetypeType.INNOCENT: self._specialize_innocent,
+            ArchetypeType.SAGE: self._specialize_sage,
+            ArchetypeType.EXPLORER: self._specialize_explorer,
+            ArchetypeType.HERO: self._specialize_hero,
+            ArchetypeType.REBEL: self._specialize_rebel,
+            ArchetypeType.MAGICIAN: self._specialize_magician,
+            ArchetypeType.LOVER: self._specialize_lover,
+            ArchetypeType.JESTER: self._specialize_jester,
+            ArchetypeType.CAREGIVER: self._specialize_caregiver,
+            ArchetypeType.RULER: self._specialize_ruler,
+            ArchetypeType.CREATOR: self._specialize_creator,
+            ArchetypeType.REGULAR_PERSON: self._specialize_regular_person,
+        }
+        if archetype in specializations:
+            specializations[archetype](entity)
+
+    def _specialize_innocent(self, entity: LivingEntity):
+        entity.special_traits.extend(
+            ["pure_heart", "trust_oriented", "optimistic_worldview"]
+        )
+        entity.attributes.empathy_attribute += 0.2
+        entity.attributes.wisdom_attribute += 0.1
+
+    def _specialize_sage(self, entity: LivingEntity):
+        entity.special_traits.extend(
+            ["knowledge_seeker", "wise_counsel", "truth_oriented"]
+        )
+        entity.attributes.intelligence += 0.3
+        entity.attributes.wisdom += 0.3
+        entity.qualia_state.cognitive_complexity += 0.1
+
+    def _specialize_explorer(self, entity: LivingEntity):
+        entity.special_traits.extend(
+            ["wanderlust", "curious_nature", "boundary_pusher"]
+        )
+        entity.attributes.dexterity += 0.2
+        entity.attributes.adaptability_attribute += 0.3
+
+    def _specialize_hero(self, entity: LivingEntity):
+        entity.special_traits.extend(
+            ["courageous_heart", "protector_instinct", "strength_focus"]
+        )
+        entity.attributes.strength += 0.3
+        entity.attributes.mental_fortitude_attribute += 0.2
+        entity.attributes.courage += 0.3
+
+    def _specialize_rebel(self, entity: LivingEntity):
+        entity.special_traits.extend(
+            ["system_challenger", "independence_focus", "change_catalyst"]
+        )
+        entity.attributes.chaos_resistance_attribute -= 0.1
+        entity.attributes.mental_fortitude_attribute += 0.3
+
+    def _specialize_magician(self, entity: LivingEntity):
+        entity.special_traits.extend(
+            ["reality_shaper", "transformation_focus", "mystical_insight"]
+        )
+        entity.attributes.cosmic_understanding_attribute += 0.4
+        entity.attributes.reality_warping_ability += 0.3
+        entity.attributes.magic_power += 0.3
+
+    def _specialize_lover(self, entity: LivingEntity):
+        entity.special_traits.extend(
+            ["connection_seeker", "empathetic_nature", "harmony_focus"]
+        )
+        entity.attributes.empathy_attribute += 0.4
+        entity.attributes.charisma += 0.3
+
+    def _specialize_jester(self, entity: LivingEntity):
+        entity.special_traits.extend(
+            ["humor_oriented", "joy_bringer", "wisdom_through_laughter"]
+        )
+        entity.attributes.charisma += 0.2
+        entity.attributes.creativity_attribute += 0.3
+        entity.qualia_state.emotional_valence += 0.2
+
+    def _specialize_caregiver(self, entity: LivingEntity):
+        entity.special_traits.extend(
+            ["nurturing_instinct", "self_sacrifice", "protective_nature"]
+        )
+        entity.attributes.empathy_attribute += 0.3
+        entity.attributes.healing_power += 0.4
+        entity.attributes.compassion += 0.3
+
+    def _specialize_ruler(self, entity: LivingEntity):
+        entity.special_traits.extend(
+            ["leadership_focus", "order_bringer", "responsibility_bearer"]
+        )
+        entity.attributes.leadership += 0.4
+        entity.attributes.order_alignment_attribute += 0.3
+
+    def _specialize_creator(self, entity: LivingEntity):
+        entity.special_traits.extend(
+            ["artistic_vision", "innovation_drive", "manifestation_power"]
+        )
+        entity.attributes.creativity_attribute += 0.4
+        entity.attributes.cosmic_understanding_attribute += 0.2
+        entity.attributes.crafting_speed += 0.3
+
+    def _specialize_regular_person(self, entity: LivingEntity):
+        entity.special_traits.extend(
+            ["balanced_nature", "adaptable_core", "relatable_essence"]
+        )
+        entity.attributes.adaptability_attribute += 0.2
+        entity.attributes.social_cohesion_attribute += 0.2
+
+    def _get_archetype_emotional_bias(self, archetype: ArchetypeType) -> float:
+        biases = {
+            ArchetypeType.INNOCENT: 0.3,
+            ArchetypeType.SAGE: 0.1,
+            ArchetypeType.EXPLORER: 0.2,
+            ArchetypeType.HERO: 0.1,
+            ArchetypeType.REBEL: -0.1,
+            ArchetypeType.MAGICIAN: 0.0,
+            ArchetypeType.LOVER: 0.4,
+            ArchetypeType.JESTER: 0.5,
+            ArchetypeType.CAREGIVER: 0.3,
+            ArchetypeType.RULER: 0.0,
+            ArchetypeType.CREATOR: 0.2,
+            ArchetypeType.REGULAR_PERSON: 0.0,
+        }
+        return biases.get(archetype, 0.0)
+
+    def _get_archetype_spiritual_resonance(self, archetype: ArchetypeType) -> float:
+        resonances = {
+            ArchetypeType.INNOCENT: 0.8,
+            ArchetypeType.SAGE: 0.9,
+            ArchetypeType.EXPLORER: 0.6,
+            ArchetypeType.HERO: 0.7,
+            ArchetypeType.REBEL: 0.4,
+            ArchetypeType.MAGICIAN: 0.95,
+            ArchetypeType.LOVER: 0.8,
+            ArchetypeType.CAREGIVER: 0.85,
+            ArchetypeType.RULER: 0.6,
+            ArchetypeType.CREATOR: 0.9,
+            ArchetypeType.REGULAR_PERSON: 0.6,
+        }
+        return resonances.get(archetype, 0.5) + random.uniform(-0.1, 0.1)
+
+    def _get_archetype_dominant_word(self, archetype: ArchetypeType) -> str:
+        words = {
+            ArchetypeType.INNOCENT: "hope",
+            ArchetypeType.SAGE: "wisdom",
+            ArchetypeType.EXPLORER: "discovery",
+            ArchetypeType.HERO: "courage",
+            ArchetypeType.REBEL: "freedom",
+            ArchetypeType.MAGICIAN: "transformation",
+            ArchetypeType.LOVER: "connection",
+            ArchetypeType.JESTER: "joy",
+            ArchetypeType.CAREGIVER: "nurture",
+            ArchetypeType.RULER: "order",
+            ArchetypeType.CREATOR: "manifestation",
+            ArchetypeType.REGULAR_PERSON: "balance",
+        }
+        return words.get(archetype, "existence")
+
+    def _get_archetype_color(self, archetype: ArchetypeType) -> list[float]:
+        colors = {
+            ArchetypeType.INNOCENT: [1.0, 1.0, 0.9],
+            ArchetypeType.SAGE: [0.4, 0.4, 0.8],
+            ArchetypeType.EXPLORER: [0.2, 0.8, 0.2],
+            ArchetypeType.HERO: [0.9, 0.7, 0.1],
+            ArchetypeType.REBEL: [0.8, 0.2, 0.2],
+            ArchetypeType.MAGICIAN: [0.6, 0.2, 0.8],
+            ArchetypeType.LOVER: [0.9, 0.4, 0.6],
+            ArchetypeType.JESTER: [0.9, 0.6, 0.2],
+            ArchetypeType.CAREGIVER: [0.6, 0.9, 0.7],
+            ArchetypeType.RULER: [0.5, 0.3, 0.8],
+            ArchetypeType.CREATOR: [0.8, 0.8, 0.4],
+            ArchetypeType.REGULAR_PERSON: [0.7, 0.7, 0.7],
+        }
+        return colors.get(archetype, [0.5, 0.5, 0.5])
+
+    def _get_archetype_behavioral_biases(
+        self, archetype: ArchetypeType
+    ) -> dict[str, float]:
+        return {
+            "cooperation": (
+                0.3
+                if archetype in [ArchetypeType.CAREGIVER, ArchetypeType.LOVER]
+                else 0.0
+            ),
+            "exploration": 0.4 if archetype == ArchetypeType.EXPLORER else 0.0,
+            "dominance": (
+                0.3 if archetype in [ArchetypeType.RULER, ArchetypeType.HERO] else 0.0
+            ),
+            "creativity": 0.4 if archetype == ArchetypeType.CREATOR else 0.0,
+            "rebellion": 0.5 if archetype == ArchetypeType.REBEL else 0.0,
+        }
+
+    def _get_archetype_base_tendencies(
+        self, archetype: ArchetypeType
+    ) -> dict[str, float]:
+        return {
+            "introspection": 0.4 if archetype == ArchetypeType.SAGE else 0.2,
+            "action_orientation": (
+                0.5
+                if archetype in [ArchetypeType.HERO, ArchetypeType.EXPLORER]
+                else 0.3
+            ),
+            "social_focus": (
+                0.6
+                if archetype in [ArchetypeType.LOVER, ArchetypeType.CAREGIVER]
+                else 0.2
+            ),
+            "order_preference": 0.5 if archetype == ArchetypeType.RULER else 0.3,
+            "chaos_tolerance": (
+                0.6 if archetype in [ArchetypeType.REBEL, ArchetypeType.JESTER] else 0.2
+            ),
+        }
+
+    def _get_archetype_instinctual_biases(
+        self, archetype: ArchetypeType
+    ) -> dict[str, float]:
+        return {
+            "survival": 0.4 if archetype == ArchetypeType.HERO else 0.3,
+            "growth": (
+                0.5 if archetype in [ArchetypeType.SAGE, ArchetypeType.CREATOR] else 0.3
+            ),
+            "connection": (
+                0.6
+                if archetype in [ArchetypeType.LOVER, ArchetypeType.CAREGIVER]
+                else 0.2
+            ),
+            "freedom": 0.6 if archetype == ArchetypeType.REBEL else 0.3,
+            "transcendence": 0.5 if archetype == ArchetypeType.MAGICIAN else 0.2,
+        }
+
+    def _configure_soul_attributes(
+        self, soul: EntitySoulSystem, archetype: ArchetypeType
+    ):
+        archetype_configs = {
+            ArchetypeType.INNOCENT: {
+                "soul_integrity": 0.9,
+                "spiritual_energy": 0.8,
+                "compassion": 0.9,
+                "wisdom_soul": 0.7,
+            },
+            ArchetypeType.SAGE: {
+                "wisdom_soul": 0.95,
+                "spiritual_energy": 0.9,
+                "cosmic_awareness": 0.8,
+                "divine_connection": 0.7,
+            },
+            ArchetypeType.MAGICIAN: {
+                "reality_warping_ability": 0.8,
+                "energy_manipulation_ability": 0.9,
+                "creation_spark": 0.8,
+                "ontological_power": 0.9,
+            },
+        }
+        if archetype in archetype_configs:
+            config = archetype_configs[archetype]
+            for attr_name, value in config.items():
+                if hasattr(soul, attr_name):
+                    setattr(soul, attr_name, value)
+
+    def get_factory_stats(self) -> dict[str, Any]:
+        return {
+            "entities_created": self.creation_count,
+            "factory_type": "IntelligentEntityFactory",
+            "cognitive_components": [
+                "ConsciousMind",
+                "QualiaState",
+                "EntitySoulSystem",
+                "IntentionalityEngine",
+                "Attributes",
+                "PowerProgressionSystem",
+                "OntologicalForging",
+                "ItemIntegrationSystem",
+            ],
+        }
+
+    # === EVA EXTENSION ===
+
+    def eva_ingest_entity_creation_experience(
+        self,
+        entity: LivingEntity,
+        archetype: ArchetypeType,
+        position: tuple[float, float, float],
+        initial_energy: float,
+        phase: str = None,
+        qualia_state: QualiaState = None,
+    ) -> str:
+        """
+        Compila una experiencia de creación de entidad en RealityBytecode y la almacena en la memoria EVA.
+        """
+        import time
+
+        phase = phase or self.eva_phase
+        qualia_state = qualia_state or getattr(entity, "qualia_state", None)
+        experience_id = f"eva_entity_creation_{entity.entity_id}_{int(time.time())}"
+        experience_data = {
+            "entity_id": entity.entity_id,
+            "archetype": archetype.value,
+            "position": list(position),
+            "initial_energy": initial_energy,
+            "attributes": {
+                k: getattr(entity.attributes, k, None)
+                for k in dir(entity.attributes)
+                if not k.startswith("__")
+            },
+            "soul_state": getattr(entity, "soul", None),
+            "intentionality_engine_state": getattr(
+                entity, "intentionality_engine", None
+            ),
+            "qualia_state": (
+                qualia_state.to_dict() if hasattr(qualia_state, "to_dict") else {}
+            ),
+            "creation_count": self.creation_count,
+            "timestamp": time.time(),
+            "phase": phase,
+        }
+        intention = {
+            "intention_type": "ARCHIVE_ENTITY_CREATION_EXPERIENCE",
+            "experience": experience_data,
+            "qualia": qualia_state,
+            "phase": phase,
+        }
+        bytecode = self.eva_runtime.divine_compiler.compile_intention(intention)
+        reality_bytecode = RealityBytecode(
+            bytecode_id=experience_id,
+            instructions=bytecode,
+            qualia_state=qualia_state,
+            phase=phase,
+            timestamp=experience_data["timestamp"],
+        )
+        self.eva_memory_store[experience_id] = reality_bytecode
+        if phase not in self.eva_phases:
+            self.eva_phases[phase] = {}
+        self.eva_phases[phase][experience_id] = reality_bytecode
+        self.eva_experience_store[experience_id] = reality_bytecode
+        for hook in self._environment_hooks:
+            try:
+                hook(reality_bytecode)
+            except Exception as e:
+                logger.warning(f"[EVA-ENTITY-FACTORY] Environment hook failed: {e}")
+        return experience_id
+
+    def eva_recall_entity_creation_experience(
+        self, cue: str, phase: str = None
+    ) -> dict:
+        """
+        Ejecuta el RealityBytecode de una experiencia de creación de entidad almacenada, manifestando la simulación.
+        """
+        phase = phase or self.eva_phase
+        reality_bytecode = self.eva_phases.get(phase, {}).get(
+            cue
+        ) or self.eva_memory_store.get(cue)
+        if not reality_bytecode:
+            return {"error": "No bytecode found for EVA entity creation experience"}
+        quantum_field = getattr(self.eva_runtime, "quantum_field", None)
+        manifestations = []
+        if quantum_field:
+            for instr in reality_bytecode.instructions:
+                symbol_manifest = self.eva_runtime.execute_instruction(
+                    instr, quantum_field
+                )
+                if symbol_manifest:
+                    manifestations.append(symbol_manifest)
+                    for hook in self._environment_hooks:
+                        try:
+                            hook(symbol_manifest)
+                        except Exception as e:
+                            logger.warning(
+                                f"[EVA-ENTITY-FACTORY] Manifestation hook failed: {e}"
+                            )
+        eva_experience = EVAExperience(
+            experience_id=reality_bytecode.bytecode_id,
+            bytecode=reality_bytecode,
+            manifestations=manifestations,
+            phase=reality_bytecode.phase,
+            qualia_state=reality_bytecode.qualia_state,
+            timestamp=reality_bytecode.timestamp,
+        )
+        self.eva_experience_store[reality_bytecode.bytecode_id] = eva_experience
+        return {
+            "experience_id": eva_experience.experience_id,
+            "manifestations": [m.to_dict() for m in manifestations],
+            "phase": eva_experience.phase,
+            "qualia_state": (
+                eva_experience.qualia_state.to_dict()
+                if hasattr(eva_experience.qualia_state, "to_dict")
+                else {}
+            ),
+            "timestamp": eva_experience.timestamp,
+        }
+
+    def add_experience_phase(
+        self,
+        experience_id: str,
+        phase: str,
+        entity: LivingEntity,
+        archetype: ArchetypeType,
+        position: tuple[float, float, float],
+        initial_energy: float,
+        qualia_state: QualiaState = None,
+    ):
+        """
+        Añade una fase alternativa para una experiencia de creación de entidad EVA.
+        """
+        import time
+
+        qualia_state = qualia_state or getattr(entity, "qualia_state", None)
+        experience_data = {
+            "entity_id": entity.entity_id,
+            "archetype": archetype.value,
+            "position": list(position),
+            "initial_energy": initial_energy,
+            "attributes": {
+                k: getattr(entity.attributes, k, None)
+                for k in dir(entity.attributes)
+                if not k.startswith("__")
+            },
+            "soul_state": getattr(entity, "soul", None),
+            "intentionality_engine_state": getattr(
+                entity, "intentionality_engine", None
+            ),
+            "qualia_state": (
+                qualia_state.to_dict() if hasattr(qualia_state, "to_dict") else {}
+            ),
+            "creation_count": self.creation_count,
+            "timestamp": time.time(),
+            "phase": phase,
+        }
+        intention = {
+            "intention_type": "ARCHIVE_ENTITY_CREATION_EXPERIENCE",
+            "experience": experience_data,
+            "qualia": qualia_state,
+            "phase": phase,
+        }
+        bytecode = self.eva_runtime.divine_compiler.compile_intention(intention)
+        reality_bytecode = RealityBytecode(
+            bytecode_id=experience_id,
+            instructions=bytecode,
+            qualia_state=qualia_state,
+            phase=phase,
+            timestamp=experience_data["timestamp"],
+        )
+        if phase not in self.eva_phases:
+            self.eva_phases[phase] = {}
+        self.eva_phases[phase][experience_id] = reality_bytecode
+
+    def set_memory_phase(self, phase: str):
+        """Cambia la fase activa de memoria EVA."""
+        self.eva_phase = phase
+        for hook in self._environment_hooks:
+            try:
+                hook({"phase_changed": phase})
+            except Exception as e:
+                logger.warning(f"[EVA-ENTITY-FACTORY] Phase hook failed: {e}")
+
+    def get_memory_phase(self) -> str:
+        """Devuelve la fase de memoria actual."""
+        return self.eva_phase
+
+    def get_experience_phases(self, experience_id: str) -> list:
+        """Lista todas las fases disponibles para una experiencia de creación de entidad EVA."""
+        return [
+            phase for phase, exps in self.eva_phases.items() if experience_id in exps
+        ]
+
+    def add_environment_hook(self, hook: callable):
+        """Registra un hook para manifestación simbólica o eventos EVA."""
+        self._environment_hooks.append(hook)
+
+    def get_eva_api(self) -> dict:
+        return {
+            "eva_ingest_entity_creation_experience": self.eva_ingest_entity_creation_experience,
+            "eva_recall_entity_creation_experience": self.eva_recall_entity_creation_experience,
+            "add_experience_phase": self.add_experience_phase,
+            "set_memory_phase": self.set_memory_phase,
+            "get_memory_phase": self.get_memory_phase,
+            "get_experience_phases": self.get_experience_phases,
+            "add_environment_hook": self.add_environment_hook,
+        }

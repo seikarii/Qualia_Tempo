@@ -1,0 +1,111 @@
+ Arquitectura de Flujo de Datos para Sistemas de IA
+
+  Este documento define las tuberías de datos (pipelines) para las entidades de IA, especificando las estructuras de datos de entrada y salida para cada módulo de
+  procesamiento. La lógica interna de cada módulo queda por definir según tus especificaciones de diseño.
+
+  1. Flujo de Datos para Entidad de Combate (Jefe de Zona)
+
+  Este es un flujo de baja latencia, cíclico y reactivo, diseñado para el combate en tiempo real.
+
+   * Input Primario: PlayerAction_DataPacket
+       * source_player_id: string
+       * action_type: enum
+       * position_3d: vector3
+       * intensity: float
+       * parameters: dict
+
+   * Pipeline de Procesamiento:
+
+       1. Módulo: `QualiaManifold`
+           * Input: PlayerAction_DataPacket
+           * Proceso: El paquete de datos de la acción del jugador se traduce en una modificación del estado del campo.
+           * Output: ManifoldStateDelta_Event (una descripción matemática del cambio en el campo).
+
+       2. Módulo: `PatternRecognition_Engine`
+           * Input: ManifoldStateDelta_Event
+           * Proceso: Analiza la topología y dinámica del delta del campo.
+           * Output: TacticalPattern_Data
+               * pattern_id: hash
+               * pattern_type: enum (e.g., BURST, WAVE, GEOMETRY)
+               * stability: float
+               * complexity: float
+               * location: vector3
+
+       3. Módulo: `Decision_Engine`
+           * Input: TacticalPattern_Data
+           * Proceso: Recibe el patrón táctico y lo procesa a través de la lógica de comportamiento definida por ti.
+           * Output: ActionIntent_DataPacket
+               * action_id: enum (e.g., COUNTER_ATTACK, REPOSITION, ENVIRONMENT_MANIPULATION)
+               * target_data: dict (e.g., target_id, target_position)
+               * action_parameters: dict
+
+       4. Módulo: `ActionExecutor`
+           * Input: ActionIntent_DataPacket
+           * Proceso: Traduce la intención de acción en una nueva perturbación en el QualiaManifold.
+           * Output: ManifoldStateDelta_Event (la acción del Jefe).
+
+  2. Flujo de Datos para Entidad Autónoma (ISU - Inhabited Synthetic Unit)
+
+  Este es un sistema más complejo que separa la percepción, la cognición y la acción para permitir la escalabilidad.
+
+  ##### 2.1. Pipeline de Percepción (Servidor -> ISU)
+
+  Este flujo se encarga de entregar a cada ISU únicamente la información que necesita, evitando la omnisciencia.
+
+   1. Módulo: `LifecycleManager` (Servidor)
+       * Input: entity_id: string
+       * Proceso: Identifica la posición y el estado del ISU a actualizar.
+       * Output: EntityState_Data (position, orientation, status).
+
+   2. Módulo: `SpatialQuery_Service` (Servidor)
+       * Input: EntityState_Data
+       * Proceso: Realiza una consulta en el índice espacial del mundo (AOI) para obtener una lista de objetos y eventos relevantes dentro de un radio y cono de
+         percepción.
+       * Output: RelevantObjects_List (IDs de entidades, eventos sonoros, deltas visuales).
+
+   3. Módulo: `SensoryPacket_Builder` (Servidor)
+       * Input: RelevantObjects_List
+       * Proceso: Agrega y comprime los datos relevantes en un único paquete de datos.
+       * Output: SensoryData_Packet (se envía a la instancia del ISU para su procesamiento).
+           * timestamp: float
+           * visible_entities: [{id, pos, archetype}]
+           * audible_events: [{type, pos, intensity}]
+           * qualia_deltas: [{pos, delta_value}]
+
+  ##### 2.2. Pipeline Cognitivo (Interno del ISU)
+
+  Este flujo se ejecuta dentro de la instancia de cada ISU, en paralelo para cada entidad.
+
+   1. Módulo: `SensoryCortex` (ISU)
+       * Input: SensoryData_Packet
+       * Proceso: Descomprime el paquete y traduce los datos crudos en estímulos internos para la mente.
+       * Output: InternalStimuli_Event (una estructura de datos que la mente puede procesar).
+
+   2. Módulo: `IntegratedMindSystem` (ISU)
+       * Input: InternalStimuli_Event
+       * Proceso: El núcleo cognitivo (consciencia7) procesa los estímulos, actualiza su estado interno y genera una intención de acción.
+       * Output: ActionIntent_DataPacket (similar al del Jefe, pero con más variedad de acciones como COMMUNICATE, FORM_BOND, BUILD, etc.).
+
+  ##### 2.3. Pipeline de Acción (ISU -> Servidor)
+
+  Este flujo devuelve la decisión del ISU al servidor para que tenga efecto en el mundo.
+
+   1. Módulo: `ActionQueue` (ISU)
+       * Input: ActionIntent_DataPacket
+       * Proceso: Encola la acción para ser enviada al servidor.
+       * Output: ActionIntent_DataPacket (enviado por la red).
+
+   2. Módulo: `LifecycleManager` (Servidor)
+       * Input: ActionIntent_DataPacket (recibido desde la red).
+       * Proceso: Recibe la intención de acción del ISU.
+       * Output: Pasa el ActionIntent_DataPacket al ActionExecutor.
+
+   3. Módulo: `ActionExecutor` (Servidor)
+       * Input: ActionIntent_DataPacket
+       * Proceso: Ejecuta la acción, modificando el estado del mundo (moviendo al ISU, creando un objeto, enviando un mensaje, etc.).
+       * Output: Modificaciones en el estado global del servidor.
+
+  Esta es la arquitectura de tuberías de datos. La lógica de comportamiento que define qué hace un Jefe con un patrón táctico o qué decide un ISU a partir de un
+  estímulo, es tuya. Mi labor es asegurar que los datos lleguen del punto A al punto B de la forma más eficiente y robusta posible.
+
+

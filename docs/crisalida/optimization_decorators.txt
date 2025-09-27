@@ -1,0 +1,507 @@
+"""
+EDEN Optimization Decorators for ADAM/EVA Integration
+===================================================
+Decorators that automatically apply optimization mixins to ADAM and EVA
+methods without code duplication. Provides a clean interface for applying
+multiple optimizations to consciousness and memory operations.
+
+Key Features:
+- @accelerate_consciousness - For ADAM consciousness methods
+- @accelerate_memory - For EVA memory methods  
+- @apply_optimizations - Configurable optimization application
+- Automatic optimization discovery and application
+- Performance monitoring and error handling
+"""
+
+import asyncio
+import functools
+import logging
+import time
+from typing import Any, Dict, List, Optional, Callable, Union
+from dataclasses import dataclass
+
+from crisalida_lib.EDEN.optimization_mixins import (
+    OptimizationType,
+    OptimizationResult,
+    OptimizationConfig,
+    optimization_registry
+)
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class AccelerationResult:
+    """Result of applying acceleration to a method."""
+    original_result: Any
+    optimization_results: List[OptimizationResult]
+    total_performance_gain: float
+    total_execution_time: float
+    errors: List[str]
+
+
+class OptimizationDecorator:
+    """Base class for optimization decorators."""
+    
+    def __init__(self, optimization_types: Optional[List[OptimizationType]] = None, 
+                 auto_discover: bool = True, intensity: float = 1.0):
+        self.optimization_types = optimization_types or []
+        self.auto_discover = auto_discover
+        self.intensity = intensity
+        self.config = OptimizationConfig(
+            enabled_optimizations=self.optimization_types,
+            optimization_intensity=intensity,
+            auto_tune=auto_discover
+        )
+    
+    def _get_enabled_optimizations(self) -> List[OptimizationType]:
+        """Get list of enabled optimization types."""
+        if self.optimization_types:
+            return self.optimization_types
+        elif self.auto_discover:
+            # Return all available optimization types for auto-discovery
+            return list(OptimizationType)
+        else:
+            return []
+        self._optimization_instances = {}
+    
+    def _get_optimization_instances(self, target_class: type) -> List[Any]:
+        """
+        Get optimization instances using pure composition (GOLD.CODE compliant).
+        Replaces dynamic class creation with explicit composition pattern.
+        """
+        optimization_instances = []
+        
+        # Create explicit optimization instances instead of dynamic class creation
+        for opt_type in self._get_enabled_optimizations():
+            try:
+                optimization_instance = self._create_optimization_instance(opt_type)
+                if optimization_instance:
+                    optimization_instances.append(optimization_instance)
+            except Exception as e:
+                logger.warning(f"Failed to create optimization instance for {opt_type}: {e}")
+        
+        return optimization_instances
+    
+    def _create_optimization_instance(self, opt_type: OptimizationType) -> Optional[Any]:
+        """Create a specific optimization instance (pure composition)."""
+        try:
+            if opt_type == OptimizationType.PINGPONG:
+                from crisalida_lib.EDEN.optimization_mixins import PingPongMixin
+                instance = PingPongMixin()
+            elif opt_type == OptimizationType.ETHICAL:
+                from crisalida_lib.EDEN.optimization_mixins import EthicalOptimizationMixin
+                instance = EthicalOptimizationMixin()
+            elif opt_type == OptimizationType.META_LEARNING:
+                from crisalida_lib.EDEN.optimization_mixins import MetaLearningMixin
+                instance = MetaLearningMixin()
+            elif opt_type == OptimizationType.HOMEOSTASIS:
+                from crisalida_lib.EDEN.optimization_mixins import HomeostasisMixin
+                instance = HomeostasisMixin()
+            elif opt_type == OptimizationType.MONITORING:
+                from crisalida_lib.EDEN.optimization_mixins import MonitoringMixin
+                instance = MonitoringMixin()
+            else:
+                logger.warning(f"Unknown optimization type: {opt_type}")
+                return None
+            
+            # Configure the instance
+            instance.configure_optimization(self.config)
+            return instance
+            
+        except Exception as e:
+            logger.error(f"Failed to create {opt_type} optimization instance: {e}")
+            return None
+    
+    def _apply_optimizations(self, target_obj: Any, data: Any, entity_context: Dict[str, Any] = None, 
+                           system_metrics: Dict[str, Any] = None, **kwargs) -> List[OptimizationResult]:
+        """Apply all available optimizations to the data with access to the target object."""
+        instances = self._get_optimization_instances(type(target_obj))
+        results = []
+        
+        # Provide default values for context
+        entity_context = entity_context or {}
+        system_metrics = system_metrics or {}
+        
+        for instance in instances:
+            if hasattr(instance, 'apply_optimization'):
+                try:
+                    # CRITICAL FIX: Pass target_obj as first parameter
+                    result = instance.apply_optimization(target_obj, data, entity_context, system_metrics, **kwargs)
+                    results.append(result)
+                except Exception as e:
+                    error_result = OptimizationResult(
+                        optimization_type=getattr(instance, 'optimization_type', OptimizationType.MONITORING),
+                        success=False,
+                        error_message=str(e)
+                    )
+                    results.append(error_result)
+        
+        return results
+
+
+def configure_optimizations(config: OptimizationConfig):
+    """Configure global optimization settings."""
+    optimization_registry.configure_global_optimizations(config)
+
+
+def _ensure_initialization():
+    """Ensure optimization system is initialized."""
+    try:
+        from crisalida_lib.EDEN.optimization_auto_init import initialize_optimization_system
+        initialize_optimization_system()
+    except ImportError:
+        logger.warning("Auto-initialization not available, manual configuration required")
+    except Exception as e:
+        logger.debug(f"Initialization failed: {e}")
+
+
+def accelerate_consciousness(optimization_types: Optional[List[OptimizationType]] = None,
+                           auto_discover: bool = True, intensity: float = 1.0):
+    """
+    Decorator to accelerate ADAM consciousness methods with optimizations.
+    
+    Usage:
+        @accelerate_consciousness()
+        def debatir_y_sintetizar(self, ...):
+            ...
+    """
+    _ensure_initialization()
+    decorator = OptimizationDecorator(optimization_types, auto_discover, intensity)
+    
+    def wrapper(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def inner(self, *args, **kwargs):
+            start_time = time.time()
+            
+            # Extract consciousness data for optimization
+            consciousness_data = {
+                'method': func.__name__,
+                'args_count': len(args),
+                'kwargs_keys': list(kwargs.keys()),
+                'timestamp': start_time
+            }
+            
+            # Apply optimizations
+            optimization_results = decorator._apply_optimizations(
+                self, consciousness_data,
+                entity_context={'entity_type': 'consciousness', 'method': func.__name__},
+                system_metrics=getattr(self, '_performance_metrics', {}),
+                **kwargs
+            )
+            
+            # Execute original method
+            try:
+                result = func(self, *args, **kwargs)
+            except Exception as e:
+                logger.error(f"Consciousness method {func.__name__} failed: {e}")
+                raise
+            
+            execution_time = time.time() - start_time
+            
+            # Calculate performance gains
+            total_gain = sum(r.performance_gain for r in optimization_results if r.success)
+            errors = [r.error_message for r in optimization_results if not r.success and r.error_message]
+            
+            # Store acceleration metrics if possible
+            if hasattr(self, '_acceleration_metrics'):
+                self._acceleration_metrics[func.__name__] = {
+                    'last_execution_time': execution_time,
+                    'total_performance_gain': total_gain,
+                    'optimization_count': len(optimization_results),
+                    'error_count': len(errors),
+                    'timestamp': time.time()
+                }
+            
+            # Log performance info
+            if total_gain > 0.01:
+                logger.debug(f"Consciousness acceleration for {func.__name__}: {total_gain:.3f} gain")
+            
+            return result
+        
+        # Async version
+        @functools.wraps(func)
+        async def async_inner(self, *args, **kwargs):
+            start_time = time.time()
+            
+            consciousness_data = {
+                'method': func.__name__,
+                'args_count': len(args),
+                'kwargs_keys': list(kwargs.keys()),
+                'timestamp': start_time
+            }
+            
+            optimization_results = decorator._apply_optimizations(
+                self, consciousness_data,
+                entity_context={'entity_type': 'consciousness', 'method': func.__name__},
+                system_metrics=getattr(self, '_performance_metrics', {}),
+                **kwargs
+            )
+            
+            try:
+                if asyncio.iscoroutinefunction(func):
+                    result = await func(self, *args, **kwargs)
+                else:
+                    result = func(self, *args, **kwargs)
+            except Exception as e:
+                logger.error(f"Consciousness method {func.__name__} failed: {e}")
+                raise
+            
+            execution_time = time.time() - start_time
+            total_gain = sum(r.performance_gain for r in optimization_results if r.success)
+            
+            if hasattr(self, '_acceleration_metrics'):
+                self._acceleration_metrics[func.__name__] = {
+                    'last_execution_time': execution_time,
+                    'total_performance_gain': total_gain,
+                    'optimization_count': len(optimization_results),
+                    'timestamp': time.time()
+                }
+            
+            if total_gain > 0.01:
+                logger.debug(f"Consciousness acceleration for {func.__name__}: {total_gain:.3f} gain")
+            
+            return result
+        
+        # Return appropriate version based on function type
+        if asyncio.iscoroutinefunction(func):
+            return async_inner
+        else:
+            return inner
+    
+    return wrapper
+
+
+def accelerate_memory(optimization_types: Optional[List[OptimizationType]] = None,
+                     auto_discover: bool = True, intensity: float = 1.0):
+    """
+    Decorator to accelerate EVA memory methods with optimizations.
+    
+    Usage:
+        @accelerate_memory()
+        async def eva_recall_experience(self, ...):
+            ...
+    """
+    _ensure_initialization()
+    decorator = OptimizationDecorator(optimization_types, auto_discover, intensity)
+    
+    def wrapper(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def inner(self, *args, **kwargs):
+            start_time = time.time()
+            
+            # Extract memory data for optimization
+            memory_data = {
+                'method': func.__name__,
+                'args_count': len(args),
+                'kwargs_keys': list(kwargs.keys()),
+                'memory_store_size': len(getattr(self, 'eva_memory_store', {})),
+                'timestamp': start_time
+            }
+            
+            # Apply optimizations
+            optimization_results = decorator._apply_optimizations(
+                self, memory_data,
+                entity_context={'entity_type': 'memory', 'method': func.__name__},
+                system_metrics=getattr(self, '_performance_metrics', {}),
+                **kwargs
+            )
+            
+            # Execute original method
+            try:
+                result = func(self, *args, **kwargs)
+            except Exception as e:
+                logger.error(f"Memory method {func.__name__} failed: {e}")
+                raise
+            
+            execution_time = time.time() - start_time
+            
+            # Calculate performance gains
+            total_gain = sum(r.performance_gain for r in optimization_results if r.success)
+            errors = [r.error_message for r in optimization_results if not r.success and r.error_message]
+            
+            # Store acceleration metrics
+            if hasattr(self, '_acceleration_metrics'):
+                self._acceleration_metrics[func.__name__] = {
+                    'last_execution_time': execution_time,
+                    'total_performance_gain': total_gain,
+                    'optimization_count': len(optimization_results),
+                    'error_count': len(errors),
+                    'timestamp': time.time()
+                }
+            
+            # Log performance info
+            if total_gain > 0.01:
+                logger.debug(f"Memory acceleration for {func.__name__}: {total_gain:.3f} gain")
+            
+            return result
+        
+        # Async version
+        @functools.wraps(func)
+        async def async_inner(self, *args, **kwargs):
+            start_time = time.time()
+            
+            memory_data = {
+                'method': func.__name__,
+                'args_count': len(args),
+                'kwargs_keys': list(kwargs.keys()),
+                'memory_store_size': len(getattr(self, 'eva_memory_store', {})),
+                'timestamp': start_time
+            }
+            
+            optimization_results = decorator._apply_optimizations(
+                self, memory_data,
+                entity_context={'entity_type': 'memory', 'method': func.__name__},
+                system_metrics=getattr(self, '_performance_metrics', {}),
+                **kwargs
+            )
+            
+            try:
+                if asyncio.iscoroutinefunction(func):
+                    result = await func(self, *args, **kwargs)
+                else:
+                    result = func(self, *args, **kwargs)
+            except Exception as e:
+                logger.error(f"Memory method {func.__name__} failed: {e}")
+                raise
+            
+            execution_time = time.time() - start_time
+            total_gain = sum(r.performance_gain for r in optimization_results if r.success)
+            
+            if hasattr(self, '_acceleration_metrics'):
+                self._acceleration_metrics[func.__name__] = {
+                    'last_execution_time': execution_time,
+                    'total_performance_gain': total_gain,
+                    'optimization_count': len(optimization_results),
+                    'timestamp': time.time()
+                }
+            
+            if total_gain > 0.01:
+                logger.debug(f"Memory acceleration for {func.__name__}: {total_gain:.3f} gain")
+            
+            return result
+        
+        # Return appropriate version based on function type
+        if asyncio.iscoroutinefunction(func):
+            return async_inner
+        else:
+            return inner
+    
+    return wrapper
+
+
+def apply_optimizations(*optimization_types: OptimizationType, intensity: float = 1.0):
+    """
+    Generic decorator to apply specific optimizations to any method.
+    
+    Usage:
+        @apply_optimizations(OptimizationType.PINGPONG, OptimizationType.ETHICAL)
+        def my_method(self, ...):
+            ...
+    """
+    decorator = OptimizationDecorator(list(optimization_types), auto_discover=False, intensity=intensity)
+    
+    def wrapper(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def inner(self, *args, **kwargs):
+            start_time = time.time()
+            
+            # Create data context
+            data_context = {
+                'method': func.__name__,
+                'args_count': len(args),
+                'kwargs_keys': list(kwargs.keys()),
+                'timestamp': start_time
+            }
+            
+            # Apply requested optimizations
+            optimization_results = decorator._apply_optimizations(
+                self, data_context, **kwargs
+            )
+            
+            # Execute original method
+            result = func(self, *args, **kwargs)
+            
+            execution_time = time.time() - start_time
+            total_gain = sum(r.performance_gain for r in optimization_results if r.success)
+            
+            # Log if significant gain
+            if total_gain > 0.01:
+                optimization_names = [opt.value for opt in optimization_types]
+                logger.debug(f"Applied optimizations {optimization_names} to {func.__name__}: {total_gain:.3f} gain")
+            
+            return result
+        
+        return inner
+    
+    return wrapper
+
+
+def enable_all_optimizations(intensity: float = 1.0):
+    """
+    Decorator to enable all available optimizations on a method.
+    
+    Usage:
+        @enable_all_optimizations()
+        def my_method(self, ...):
+            ...
+    """
+    all_optimizations = list(OptimizationType)
+    return apply_optimizations(*all_optimizations, intensity=intensity)
+
+
+def configure_optimizations(config: OptimizationConfig):
+    """Configure global optimization settings."""
+    optimization_registry.configure_global_optimizations(config)
+
+
+def get_optimization_metrics(obj: Any) -> Dict[str, Any]:
+    """Get optimization metrics for an object."""
+    if hasattr(obj, '_acceleration_metrics'):
+        return obj._acceleration_metrics.copy()
+    return {}
+
+
+def reset_optimization_metrics(obj: Any):
+    """Reset optimization metrics for an object."""
+    if hasattr(obj, '_acceleration_metrics'):
+        obj._acceleration_metrics.clear()
+    else:
+        obj._acceleration_metrics = {}
+
+
+# Convenience function to setup ADAM/EVA acceleration
+def setup_consciousness_acceleration(adam_instance: Any, optimizations: Optional[List[OptimizationType]] = None):
+    """Setup acceleration for an ADAM consciousness instance."""
+    if not hasattr(adam_instance, '_acceleration_metrics'):
+        adam_instance._acceleration_metrics = {}
+    
+    config = OptimizationConfig(
+        enabled_optimizations=optimizations or [
+            OptimizationType.PINGPONG,
+            OptimizationType.ETHICAL,
+            OptimizationType.HOMEOSTASIS,
+            OptimizationType.MONITORING
+        ]
+    )
+    configure_optimizations(config)
+    
+    logger.info(f"Setup consciousness acceleration for {type(adam_instance).__name__}")
+
+
+def setup_memory_acceleration(eva_instance: Any, optimizations: Optional[List[OptimizationType]] = None):
+    """Setup acceleration for an EVA memory instance."""
+    if not hasattr(eva_instance, '_acceleration_metrics'):
+        eva_instance._acceleration_metrics = {}
+    
+    config = OptimizationConfig(
+        enabled_optimizations=optimizations or [
+            OptimizationType.PINGPONG,
+            OptimizationType.META_LEARNING,
+            OptimizationType.HOMEOSTASIS,
+            OptimizationType.MONITORING
+        ]
+    )
+    configure_optimizations(config)
+    
+    logger.info(f"Setup memory acceleration for {type(eva_instance).__name__}")

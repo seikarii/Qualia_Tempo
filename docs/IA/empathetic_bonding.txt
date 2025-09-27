@@ -1,0 +1,525 @@
+"""
+Empathetic Bonding System
+=========================
+Gestiona la formación, fortalecimiento y evolución de vínculos empáticos entre entidades vivientes.
+Rastrea la resonancia, facilita la formación de vínculos según proximidad y similitud de qualia,
+e influye en comportamientos como altruismo y reproducción.
+
+Clases:
+    - BondType: Enum para tipos de vínculo empático.
+    - BondStrength: Enum para niveles de fuerza de vínculo.
+    - EmpatheticBond: Dataclass para un vínculo empático individual.
+    - EmpatheticBondingSystem: Sistema central que gestiona todos los vínculos y su dinámica.
+"""
+
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any
+
+import numpy as np
+
+from crisalida_lib.ADAM.adam import LivingEntity
+from crisalida_lib.EVA.eva_memory_mixin import EVAMemoryMixin
+from crisalida_lib.EVA.types import (
+    QualiaState,
+)
+
+
+class BondType(Enum):
+    CURIOSITY = "curiosity"
+    RESONANCE = "resonance"
+    AFFECTION = "affection"
+    LOVE = "love"
+    COSMIC_UNITY = "cosmic_unity"
+
+
+class BondStrength(Enum):
+    MINIMUM = 0.1
+    LOW = 0.3
+    MEDIUM = 0.5
+    HIGH = 0.7
+    MAXIMUM = 1.0
+
+
+@dataclass
+class EmpatheticBond:
+    entity_a_id: str
+    entity_b_id: str
+    bond_strength: float  # 0.0 - 1.0
+    bond_type: BondType
+    formation_tick: float
+    shared_experiences: list[str] = field(default_factory=list)
+    qualia_synchronization: float = 0.0
+    reproduction_readiness: float = 0.0
+    last_resonance_tick: float = 0.0
+    total_resonance_time: float = 0.0
+    altruistic_actions: int = 0
+    reproduction_attempts: int = 0
+
+    def get_partner_id(self, current_entity_id: str) -> str:
+        return (
+            self.entity_b_id
+            if self.entity_a_id == current_entity_id
+            else self.entity_a_id
+        )
+
+    def can_perform_altruism(self) -> bool:
+        return self.bond_strength > 0.6 and self.bond_type in [
+            BondType.AFFECTION,
+            BondType.LOVE,
+            BondType.COSMIC_UNITY,
+        ]
+
+    def is_strong_enough_for_reproduction(self) -> bool:
+        return (
+            self.bond_type in [BondType.LOVE, BondType.COSMIC_UNITY]
+            and self.bond_strength > 0.85
+            and self.qualia_synchronization > 0.9
+            and len(self.shared_experiences) > 10
+        )
+
+
+class EmpatheticBondingSystem:
+    """
+    Sistema central para la gestión de vínculos empáticos entre entidades vivientes.
+    """
+
+    def __init__(
+        self,
+        resonance_threshold: float = 1.5,
+        bond_formation_time: float = 100,
+        max_bonds_per_entity: int = 5,
+    ):
+        self.bonds: dict[str, EmpatheticBond] = {}
+        self.entity_bonds: dict[str, dict[str, EmpatheticBond]] = {}
+        self.resonance_tracking: dict[str, dict[str, float]] = {}
+        self.resonance_threshold = resonance_threshold
+        self.bond_formation_time = bond_formation_time
+        self.max_bonds_per_entity = max_bonds_per_entity
+
+    def get_state(self) -> dict[str, Any]:
+        return {
+            "bonds": {k: bond.__dict__ for k, bond in self.bonds.items()},
+            "resonance_threshold": self.resonance_threshold,
+            "bond_formation_time": self.bond_formation_time,
+            "max_bonds_per_entity": self.max_bonds_per_entity,
+        }
+
+    def set_state(self, state: dict[str, Any]):
+        self.bonds = {}
+        for k, v in state.get("bonds", {}).items():
+            if "bond_type" in v and isinstance(v["bond_type"], str):
+                v["bond_type"] = BondType[v["bond_type"]]
+            if "formation_tick" in v and not isinstance(v["formation_tick"], float):
+                v["formation_tick"] = float(v["formation_tick"])
+            self.bonds[k] = EmpatheticBond(**v)
+        self.resonance_threshold = state.get("resonance_threshold", 1.5)
+        self.bond_formation_time = state.get("bond_formation_time", 100)
+        self.max_bonds_per_entity = state.get("max_bonds_per_entity", 5)
+
+    def _get_bond_key(self, id1: str, id2: str) -> str:
+        return "_".join(sorted([id1, id2]))
+
+    def _initialize_entity_bond_tracking(self, entity_id: str):
+        if entity_id not in self.entity_bonds:
+            self.entity_bonds[entity_id] = {}
+        if entity_id not in self.resonance_tracking:
+            self.resonance_tracking[entity_id] = {}
+
+    def _process_pair_resonance(
+        self, entity1: LivingEntity, entity2: LivingEntity, current_tick: float
+    ) -> tuple[bool, float, float]:
+        proximity = self.calculate_ontological_proximity(entity1, entity2)
+        qualia_res = self.check_qualia_resonance(entity1, entity2)
+        if qualia_res:
+            self.resonance_tracking[entity1.entity_id][entity2.entity_id] = (
+                float(
+                    self.resonance_tracking[entity1.entity_id].get(
+                        entity2.entity_id, 0.0
+                    )
+                )
+                + proximity
+            )
+            self.resonance_tracking[entity2.entity_id][entity1.entity_id] = (
+                float(
+                    self.resonance_tracking[entity2.entity_id].get(
+                        entity1.entity_id, 0.0
+                    )
+                )
+                + proximity
+            )
+            return (
+                True,
+                proximity,
+                self.resonance_tracking[entity1.entity_id][entity2.entity_id],
+            )
+        return False, 0.0, 0.0
+
+    def _update_existing_bond(
+        self,
+        bond: EmpatheticBond,
+        entity1: LivingEntity,
+        entity2: LivingEntity,
+        proximity: float,
+        current_tick: float,
+    ):
+        bond.bond_strength = min(1.0, bond.bond_strength + proximity * 0.01)
+        bond.qualia_synchronization = self._compare_qualia_states(
+            entity1.get_consciousness_summary()["main_consciousness"][
+                "current_qualia_state"
+            ],
+            entity2.get_consciousness_summary()["main_consciousness"][
+                "current_qualia_state"
+            ],
+        )
+        bond.last_resonance_tick = current_tick
+        bond.total_resonance_time += 1
+        self._update_bond_type(bond)
+
+    def _attempt_new_bond_formation(
+        self,
+        entity1: LivingEntity,
+        entity2: LivingEntity,
+        bond_key: str,
+        current_tick: float,
+        accumulated_resonance: float,
+    ) -> EmpatheticBond | None:
+        if accumulated_resonance >= self.resonance_threshold:
+            if (
+                len(self.entity_bonds[entity1.entity_id]) < self.max_bonds_per_entity
+                and len(self.entity_bonds[entity2.entity_id])
+                < self.max_bonds_per_entity
+            ):
+                new_bond = EmpatheticBond(
+                    entity_a_id=entity1.entity_id,
+                    entity_b_id=entity2.entity_id,
+                    bond_strength=0.1,
+                    bond_type=BondType.CURIOSITY,
+                    formation_tick=current_tick,
+                    qualia_synchronization=self._compare_qualia_states(
+                        entity1.get_consciousness_summary()["main_consciousness"][
+                            "current_qualia_state"
+                        ],
+                        entity2.get_consciousness_summary()["main_consciousness"][
+                            "current_qualia_state"
+                        ],
+                    ),
+                    last_resonance_tick=current_tick,
+                    total_resonance_time=1,
+                )
+                self.bonds[bond_key] = new_bond
+                self.entity_bonds[entity1.entity_id][entity2.entity_id] = new_bond
+                self.entity_bonds[entity2.entity_id][entity1.entity_id] = new_bond
+                self.resonance_tracking[entity1.entity_id][entity2.entity_id] = 0.0
+                self.resonance_tracking[entity2.entity_id][entity1.entity_id] = 0.0
+                return new_bond
+        return None
+
+    def _process_bond_outcomes(
+        self, bond: EmpatheticBond, altruistic_acts: int, reproductions: int
+    ) -> tuple[int, int]:
+        if bond.can_perform_altruism():
+            altruistic_acts += 1
+        if bond.is_strong_enough_for_reproduction():
+            reproductions += 1
+            bond.reproduction_attempts += 1
+        return altruistic_acts, reproductions
+
+    def _process_entity_pair(
+        self, entity1: LivingEntity, entity2: LivingEntity, current_tick: float
+    ) -> EmpatheticBond | None:
+        self._initialize_entity_bond_tracking(entity2.entity_id)
+        bond_key = self._get_bond_key(entity1.entity_id, entity2.entity_id)
+        resonant, proximity, accumulated_resonance = self._process_pair_resonance(
+            entity1, entity2, current_tick
+        )
+        if resonant:
+            if bond_key in self.bonds:
+                self._update_existing_bond(
+                    self.bonds[bond_key], entity1, entity2, proximity, current_tick
+                )
+                return None
+            else:
+                new_bond = self._attempt_new_bond_formation(
+                    entity1, entity2, bond_key, current_tick, accumulated_resonance
+                )
+                return new_bond
+        return None
+
+    def process_empathetic_resonance(
+        self, entities: list[LivingEntity], current_tick: float
+    ) -> dict[str, Any]:
+        new_bonds_formed = 0
+        altruistic_acts = 0
+        reproductions = 0
+        for i, entity1 in enumerate(entities):
+            self._initialize_entity_bond_tracking(entity1.entity_id)
+            for j, entity2 in enumerate(entities):
+                if i >= j:
+                    continue
+                new_bond = self._process_entity_pair(entity1, entity2, current_tick)
+                if new_bond:
+                    new_bonds_formed += 1
+        for _bond_key, bond in list(self.bonds.items()):
+            altruistic_acts, reproductions = self._process_bond_outcomes(
+                bond, altruistic_acts, reproductions
+            )
+        return {
+            "active_bonds": len(self.bonds),
+            "new_bonds_formed": new_bonds_formed,
+            "altruistic_acts": altruistic_acts,
+            "reproductions": reproductions,
+        }
+
+    def calculate_ontological_proximity(
+        self, entity1: LivingEntity, entity2: LivingEntity
+    ) -> float:
+        physical_proximity = 1.0 / (
+            1.0
+            + np.linalg.norm(np.array(entity1.position) - np.array(entity2.position))
+        )
+        summary1 = entity1.get_consciousness_summary()
+        summary2 = entity2.get_consciousness_summary()
+        qualia_similarity = self._compare_qualia_states(
+            summary1["main_consciousness"]["current_qualia_state"],
+            summary2["main_consciousness"]["current_qualia_state"],
+        )
+        temporal_overlap = 1.0  # Placeholder
+        proximity = (
+            qualia_similarity * 0.4 + temporal_overlap * 0.3 + physical_proximity * 0.3
+        )
+        return float(proximity)
+
+    def _compare_qualia_states(
+        self, qualia1: dict[str, Any], qualia2: dict[str, Any]
+    ) -> float:
+        q1 = np.array(
+            [
+                qualia1["emotional_valence"],
+                qualia1["arousal"],
+                qualia1["cognitive_complexity"],
+                qualia1["consciousness_density"],
+                qualia1["temporal_coherence"],
+            ]
+        )
+        q2 = np.array(
+            [
+                qualia2["emotional_valence"],
+                qualia2["arousal"],
+                qualia2["cognitive_complexity"],
+                qualia2["consciousness_density"],
+                qualia2["temporal_coherence"],
+            ]
+        )
+        distance = np.linalg.norm(q1 - q2)
+        return float(max(0.0, 1.0 - (distance / np.sqrt(len(q1)))))
+
+    def check_qualia_resonance(
+        self, entity1: LivingEntity, entity2: LivingEntity
+    ) -> bool:
+        summary1 = entity1.get_consciousness_summary()
+        summary2 = entity2.get_consciousness_summary()
+        return (
+            self._compare_qualia_states(
+                summary1["main_consciousness"]["current_qualia_state"],
+                summary2["main_consciousness"]["current_qualia_state"],
+            )
+            > 0.85
+        )
+
+    def _update_bond_type(self, bond: EmpatheticBond):
+        if bond.bond_strength >= 0.9:
+            bond.bond_type = BondType.COSMIC_UNITY
+        elif bond.bond_strength >= 0.7:
+            bond.bond_type = BondType.LOVE
+        elif bond.bond_strength >= 0.4:
+            bond.bond_type = BondType.AFFECTION
+        elif bond.bond_strength >= 0.2:
+            bond.bond_type = BondType.RESONANCE
+        else:
+            bond.bond_type = BondType.CURIOSITY
+
+    def get_bond_statistics(self) -> dict[str, Any]:
+        bond_counts = {bt.value: 0 for bt in BondType}
+        total_strength = 0.0
+        for bond in self.bonds.values():
+            bond_counts[bond.bond_type.value] += 1
+            total_strength += bond.bond_strength
+        return {
+            "total_active_bonds": len(self.bonds),
+            "average_bond_strength": (
+                total_strength / len(self.bonds) if len(self.bonds) > 0 else 0.0
+            ),
+            "bond_type_distribution": bond_counts,
+        }
+
+    def get_entity_social_profile(self, entity_id: str) -> dict[str, Any]:
+        profile: dict[str, Any] = {
+            "entity_id": entity_id,
+            "bonds_count": len(self.entity_bonds.get(entity_id, {})),
+            "partners": [],
+            "average_bond_strength": 0.0,
+            "reproduction_attempts": 0,
+            "altruistic_acts": 0,
+        }
+        if entity_id in self.entity_bonds:
+            total_strength = 0.0
+            bonds_count = profile["bonds_count"]
+            partners_list = profile["partners"]
+            reproduction_attempts = profile["reproduction_attempts"]
+            altruistic_acts = profile["altruistic_acts"]
+            for bond in self.entity_bonds[entity_id].values():
+                partners_list.append(
+                    {
+                        "id": bond.get_partner_id(entity_id),
+                        "type": bond.bond_type.value,
+                        "strength": bond.bond_strength,
+                    }
+                )
+                total_strength += bond.bond_strength
+                reproduction_attempts += bond.reproduction_attempts
+                altruistic_acts += bond.altruistic_actions
+            profile["reproduction_attempts"] = reproduction_attempts
+            profile["altruistic_acts"] = altruistic_acts
+            profile["average_bond_strength"] = (
+                total_strength / bonds_count if bonds_count > 0 else 0.0
+            )
+        return profile
+
+    def get_network_state(self) -> dict[str, Any]:
+        """
+        Devuelve un resumen del estado global de la red de vínculos empáticos.
+        """
+        bond_stats = self.get_bond_statistics()
+        return {
+            "total_bonds": bond_stats["total_active_bonds"],
+            "average_strength": bond_stats["average_bond_strength"],
+            "bond_type_distribution": bond_stats["bond_type_distribution"],
+        }
+
+    def cleanup_orphaned_data(self, active_entity_ids: set):
+        """
+        Elimina datos huérfanos de vínculos que involucran entidades no activas.
+        """
+        for bond_key, bond in list(self.bonds.items()):
+            if (
+                bond.entity_a_id not in active_entity_ids
+                or bond.entity_b_id not in active_entity_ids
+            ):
+                del self.bonds[bond_key]
+                if (
+                    bond.entity_a_id in self.entity_bonds
+                    and bond.entity_b_id in self.entity_bonds[bond.entity_a_id]
+                ):
+                    del self.entity_bonds[bond.entity_a_id][bond.entity_b_id]
+                if (
+                    bond.entity_b_id in self.entity_bonds
+                    and bond.entity_a_id in self.entity_bonds[bond.entity_b_id]
+                ):
+                    del self.entity_bonds[bond.entity_b_id][bond.entity_a_id]
+
+
+class EVAEmpatheticBondingSystem(EmpatheticBondingSystem, EVAMemoryMixin):
+    """
+    EVAEmpatheticBondingSystem - Sistema perfeccionado y extendido para integración con EVA.
+    Gestiona la formación, evolución y memoria viviente de vínculos empáticos entre entidades:
+    compila, almacena, simula y recuerda experiencias de vínculo como RealityBytecode,
+    soporta ingestión/recall, faseo, hooks de entorno, benchmarking y gestión avanzada de memoria viviente EVA.
+    """
+
+    def __init__(
+        self,
+        resonance_threshold: float = 1.5,
+        bond_formation_time: float = 100,
+        max_bonds_per_entity: int = 5,
+        phase: str = "default",
+    ):
+        super().__init__(resonance_threshold, bond_formation_time, max_bonds_per_entity)
+        # Initialize EVA memory using the mixin
+        self._init_eva_memory(eva_phase=phase)
+
+    def eva_ingest_bond_experience(
+        self,
+        bond: EmpatheticBond,
+        qualia_state: QualiaState = None,
+        phase: str = None,
+    ) -> str:
+        """
+        Compila una experiencia de vínculo empático en RealityBytecode y la almacena en la memoria EVA.
+        This method now uses the centralized EVAMemoryMixin for consistency.
+        """
+        import time
+
+        phase = phase or self.eva_phase
+        qualia_state = qualia_state or QualiaState(
+            emotional_valence=bond.qualia_synchronization,
+            cognitive_complexity=bond.bond_strength,
+            consciousness_density=bond.total_resonance_time / (bond.formation_tick + 1),
+            narrative_importance=(
+                1.0 if bond.bond_type in [BondType.LOVE, BondType.COSMIC_UNITY] else 0.7
+            ),
+            energy_level=1.0,
+        )
+
+        experience_data = {
+            "experience_id": f"eva_bond_{bond.entity_a_id}_{bond.entity_b_id}_{int(time.time())}",
+            "entity_a_id": bond.entity_a_id,
+            "entity_b_id": bond.entity_b_id,
+            "bond_strength": bond.bond_strength,
+            "bond_type": bond.bond_type.value,
+            "formation_tick": bond.formation_tick,
+            "shared_experiences": list(bond.shared_experiences),
+            "qualia_synchronization": bond.qualia_synchronization,
+            "reproduction_readiness": bond.reproduction_readiness,
+            "last_resonance_tick": bond.last_resonance_tick,
+            "total_resonance_time": bond.total_resonance_time,
+            "altruistic_actions": bond.altruistic_actions,
+            "reproduction_attempts": bond.reproduction_attempts,
+            "timestamp": time.time(),
+            "phase": phase,
+        }
+
+        # Use centralized EVA memory management
+        return self.eva_ingest_experience(
+            intention_type="ARCHIVE_EMP_BOND_EXPERIENCE",
+            experience_data=experience_data,
+            qualia_state=qualia_state,
+            phase=phase,
+        )
+
+    def eva_recall_bond_experience(self, cue: str, phase: str = None) -> dict:
+        """
+        Ejecuta el RealityBytecode de una experiencia de vínculo empático almacenada, manifestando la simulación.
+        This method now uses the centralized EVAMemoryMixin for consistency.
+        """
+        result = self.eva_recall_experience(cue, phase)
+
+        # Customize error message for EmpatheticBonding context
+        if "error" in result and "No bytecode found" in result["error"]:
+            result["error"] = "No bytecode found for EVA bond experience"
+
+        return result
+
+    # The following methods are now provided by EVAMemoryMixin:
+    # - add_experience_phase
+    # - set_memory_phase
+    # - get_memory_phase
+    # - get_experience_phases
+    # - add_environment_hook
+
+    def get_eva_api(self) -> dict:
+        """
+        Returns the EVA API extended with EmpatheticBondingSystem-specific methods.
+        """
+        # Get base API from mixin
+        api = super().get_eva_api()
+
+        # Add EmpatheticBondingSystem-specific methods
+        api.update(
+            {
+                "eva_ingest_bond_experience": self.eva_ingest_bond_experience,
+                "eva_recall_bond_experience": self.eva_recall_bond_experience,
+            }
+        )
+
+        return api

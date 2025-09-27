@@ -1,0 +1,716 @@
+#!/usr/bin/env python3
+"""
+EDEN Unified Homeostatic System (Level 7)
+=========================================
+
+This module integrates all monitoring and optimization components into a unified
+homeostatic control system that maintains optimal system performance across
+physics engines, reality feedback, and host symbiosis.
+
+Key Components:
+- EnhancedPhysicsMonitor: Engine performance and cosmic consciousness
+- RealityFeedbackMonitor: Entity satisfaction and ontological integrity  
+- SymbiosisManager: Host resource optimization and communication
+- Unified decision-making for system-wide health maintenance
+
+Architecture:
+- Centralized health assessment across all subsystems
+- Coordinated optimization actions to prevent conflicts
+- Adaptive behavior based on cumulative system state
+- HEAVEN monitoring integration for holistic tracking
+"""
+
+import asyncio
+import logging
+import threading
+import time
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Any, Union
+from enum import Enum
+from pathlib import Path
+import yaml
+
+from crisalida_lib.EDEN.engines.enhanced_physics_monitor import (
+    EnhancedPhysicsMonitor,
+    PhysicsEngineMetrics,
+    CosmicConsciousnessMetrics
+)
+from crisalida_lib.HEAVEN.monitoring.reality_feedback import (
+    RealityFeedbackMonitor,
+    RealityHealthSnapshot,
+    AlertLevel as RealityAlertLevel
+)
+from crisalida_lib.COSMOS.symbiosis_manager import SymbiosisManager
+from crisalida_lib.ADAM.eva_integration.eva_hooks import monitor_eva_hooks_performance
+from crisalida_lib.HEAVEN.monitoring.performance_decorators import eva_benchmark, time_execution
+from crisalida_lib.mixins import (
+    BaseMixin, 
+    MonitoringMixin, 
+    ErrorHandlingMixin, 
+    SafeInitializationMixin
+)
+
+logger = logging.getLogger(__name__)
+
+
+class SystemHealthLevel(Enum):
+    """Overall system health levels for homeostatic control."""
+    OPTIMAL = "optimal"
+    STABLE = "stable" 
+    WARNING = "warning"
+    CRITICAL = "critical"
+    EMERGENCY = "emergency"
+
+
+class OptimizationPriority(Enum):
+    """Priority levels for optimization actions."""
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+    CRITICAL = 4
+    EMERGENCY = 5
+
+
+@dataclass
+class SystemHealthSnapshot:
+    """Unified health snapshot across all subsystems."""
+    
+    # Overall system state
+    overall_health: SystemHealthLevel
+    health_score: float  # 0.0 to 1.0
+    
+    # Subsystem scores
+    physics_health_score: float
+    reality_health_score: float
+    symbiosis_health_score: float
+    
+    # Specific metrics
+    total_engines: int
+    healthy_engines: int
+    warning_engines: int
+    critical_engines: int
+    
+    # Resource metrics
+    cpu_usage: float
+    memory_usage: float
+    entity_satisfaction: float
+    cosmic_coherence: float
+    
+    # Recommendations
+    recommended_actions: List[str]
+    optimization_priority: OptimizationPriority
+    
+    # Timestamp
+    timestamp: float
+
+
+class HomeostasisEngine(BaseMixin, SafeInitializationMixin):
+    """
+    Unified homeostatic control system for EDEN.
+    Coordinates all monitoring and optimization subsystems.
+    Integrates with GOLD.CODE monitoring system for adaptive performance control.
+    """
+
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        # Initialize mixins with configuration-first approach
+        super().__init__(config_path=self._find_config_path())
+        
+        # Initialize safe initialization for critical components
+        self._initialize_critical_components()
+        
+        # Load configuration (now handled by BaseMixin)
+        self.config = self._config_context.config_data or self._load_default_config()
+
+        # Initialize subsystem monitors with safe initialization
+        self.physics_monitor = self._safe_initialize_component(
+            "physics_monitor",
+            EnhancedPhysicsMonitor,
+            self.config.get("physics_monitor", {})
+        )
+        self.reality_monitor = self._safe_initialize_component(
+            "reality_monitor", 
+            RealityFeedbackMonitor,
+            {}
+        )
+        self.symbiosis_manager = self._safe_initialize_component(
+            "symbiosis_manager",
+            SymbiosisManager,
+            {}
+        )
+
+        # Homeostatic control state
+        self.homeostasis_active = False
+        self.homeostasis_thread: Optional[threading.Thread] = None
+        self.last_optimization = time.time()
+        self.optimization_cooldown = self.config.get("optimization_cooldown", 15.0)
+        
+        # Health tracking
+        self.health_history: List[SystemHealthSnapshot] = []
+        self.max_history = self.config.get("max_health_history", 100)
+        
+        # Action coordination
+        self.active_optimizations: Dict[str, float] = {}  # action -> timestamp
+        self.optimization_conflicts: Dict[str, List[str]] = {
+            "cpu_optimization": ["memory_optimization", "disk_optimization"],
+            "memory_optimization": ["cpu_optimization", "entity_optimization"],
+            "physics_optimization": ["reality_optimization"],
+            "disable_non_critical_monitoring": ["enable_performance_monitoring"],
+            "enable_performance_monitoring": ["disable_non_critical_monitoring"],
+        }
+        
+        # Integration with HEAVEN monitoring using safe initialization
+        self.heaven_monitor = self._safe_initialize_component(
+            "heaven_monitor",
+            self._load_heaven_monitor,
+            {}
+        )
+        
+        logger.info("Homeostatic Engine initialized with GOLD.CODE mixins")
+
+    def _find_config_path(self) -> Optional[str]:
+        """Find the configuration file path for homeostatic system."""
+        config_path = Path(__file__).parent / "config" / "homeostasis_engine.yaml"
+        return str(config_path) if config_path.exists() else None
+
+    def _initialize_critical_components(self):
+        """Initialize critical components with error handling."""
+        try:
+            # Initialize monitoring configuration
+            self._initialize_monitoring_config()
+        except Exception as e:
+            logger.error(f"Failed to initialize critical components: {e}")
+            self._handle_initialization_error("critical_components", e)
+
+    def _initialize_monitoring_config(self):
+        """Initialize monitoring configuration from mixins."""
+        # Monitoring configuration is now handled by MonitoringMixin
+        pass
+
+    def _safe_initialize_component(self, component_name: str, component_class: type, init_kwargs: Dict[str, Any]):
+        """Safely initialize a component with fallback handling."""
+        try:
+            return self.safe_initialize_component(component_name, component_class, init_kwargs)
+        except Exception as e:
+            logger.error(f"Failed to initialize {component_name}: {e}")
+            return self._create_fallback_component(component_name)
+
+    def _create_fallback_component(self, component_name: str):
+        """Create a fallback component when initialization fails."""
+        logger.warning(f"Creating fallback for {component_name}")
+        # Return a mock component that doesn't break the system
+        return None
+
+    def _load_heaven_monitor(self):
+        """Load HEAVEN monitoring orchestrator with safe initialization."""
+        try:
+            from crisalida_lib.HEAVEN.monitoring.monitoring_orchestrator import MonitoringOrchestrator
+            return MonitoringOrchestrator()
+        except Exception as e:
+            logger.warning(f"Failed to load HEAVEN monitor: {e}")
+            return None
+
+    def _load_config_from_file(self) -> Dict[str, Any]:
+        """Load configuration from YAML file."""
+        config_path = Path(__file__).parent / "config" / "homeostasis_engine.yaml"
+
+        try:
+            with open(config_path, 'r') as f:
+                config = yaml.safe_load(f)
+                logger.info(f"Loaded configuration from {config_path}")
+                return config
+        except Exception as e:
+            logger.warning(f"Failed to load config from {config_path}: {e}")
+            return self._load_default_config()
+
+    def _load_default_config(self) -> Dict[str, Any]:
+        """Load default homeostatic configuration."""
+        return {
+            "homeostatic_interval": 5.0,  # Check every 5 seconds
+            "optimization_cooldown": 15.0,  # 15 second cooldown between major optimizations
+            "health_threshold_warning": 0.7,
+            "health_threshold_critical": 0.5,
+            "health_threshold_emergency": 0.3,
+            "max_health_history": 100,
+            "enable_adaptive_behavior": True,
+            "enable_preemptive_optimization": True,
+            "enable_cross_system_coordination": True,
+        }
+    
+    @eva_benchmark
+    def start_homeostasis(self):
+        """Start the unified homeostatic control system."""
+        if self.homeostasis_active:
+            logger.warning("Homeostasis already active")
+            return
+        
+        # Start subsystem monitors
+        self.physics_monitor.start_monitoring()
+        
+        # Enable adaptive optimization for all registered physics engines
+        for engine_id in self.physics_monitor.registered_engines:
+            self.physics_monitor.enable_adaptive_optimization(engine_id)
+        
+        # Start homeostatic control loop
+        self.homeostasis_active = True
+        self.homeostasis_thread = threading.Thread(target=self._homeostatic_loop, daemon=True)
+        self.homeostasis_thread.start()
+        
+        logger.info("Unified homeostatic control system started")
+    
+    def stop_homeostasis(self):
+        """Stop the homeostatic control system."""
+        self.homeostasis_active = False
+        
+        if self.homeostasis_thread:
+            self.homeostasis_thread.join(timeout=10.0)
+        
+        self.physics_monitor.stop_monitoring()
+        
+        logger.info("Unified homeostatic control system stopped")
+    
+    @time_execution
+    def assess_system_health(self) -> SystemHealthSnapshot:
+        """Assess overall system health across all subsystems."""
+        current_time = time.time()
+        
+        # Get physics engine health status
+        physics_status = self.physics_monitor.get_unified_health_status()
+        physics_health_score = self._calculate_physics_health_score(physics_status)
+        
+        # Get reality health (simplified for now, could be enhanced with async call)
+        reality_health_score = 0.8  # Placeholder - would call reality_monitor.assess_reality_health()
+        
+        # Get symbiosis health
+        symbiosis_health_score = self._assess_symbiosis_health()
+        
+        # Calculate overall health score
+        weights = self.config.get("health_weights", {
+            "physics": 0.4,
+            "reality": 0.3, 
+            "symbiosis": 0.3
+        })
+        
+        overall_score = (
+            physics_health_score * weights["physics"] +
+            reality_health_score * weights["reality"] +
+            symbiosis_health_score * weights["symbiosis"]
+        )
+        
+        # Determine health level
+        health_level = self._determine_health_level(overall_score)
+        
+        # Generate recommendations
+        recommendations = self._generate_recommendations(
+            physics_status, reality_health_score, symbiosis_health_score, overall_score
+        )
+        
+        # Determine optimization priority
+        priority = self._determine_optimization_priority(health_level, recommendations)
+        
+        snapshot = SystemHealthSnapshot(
+            overall_health=health_level,
+            health_score=overall_score,
+            physics_health_score=physics_health_score,
+            reality_health_score=reality_health_score,
+            symbiosis_health_score=symbiosis_health_score,
+            total_engines=physics_status["total_engines"],
+            healthy_engines=len(physics_status["healthy_engines"]),
+            warning_engines=len(physics_status["warning_engines"]),
+            critical_engines=len(physics_status["critical_engines"]),
+            cpu_usage=self._get_cpu_usage(),
+            memory_usage=self._get_memory_usage(),
+            entity_satisfaction=0.8,  # Placeholder
+            cosmic_coherence=0.85,   # Placeholder
+            recommended_actions=recommendations,
+            optimization_priority=priority,
+            timestamp=current_time
+        )
+        
+        # Store in history
+        self.health_history.append(snapshot)
+        if len(self.health_history) > self.max_history:
+            self.health_history = self.health_history[-self.max_history:]
+        
+        return snapshot
+    
+    @monitor_eva_hooks_performance
+    def execute_coordinated_optimization(self, snapshot: SystemHealthSnapshot) -> List[str]:
+        """Execute coordinated optimization across all subsystems."""
+        if not self._should_optimize(snapshot):
+            return []
+        
+        actions_taken = []
+        current_time = time.time()
+        
+        # Prevent conflicting optimizations
+        available_actions = self._get_available_actions(snapshot.recommended_actions)
+        
+        for action in available_actions:
+            try:
+                if action == "physics_engine_optimization":
+                    success = self._optimize_physics_engines(snapshot)
+                    if success:
+                        actions_taken.append("Optimized physics engines")
+                        self.active_optimizations["physics_optimization"] = current_time
+                
+                elif action == "memory_cleanup":
+                    success = self._optimize_memory_usage(snapshot)
+                    if success:
+                        actions_taken.append("Executed memory cleanup")
+                        self.active_optimizations["memory_optimization"] = current_time
+                
+                elif action == "cpu_optimization":
+                    success = self._optimize_cpu_usage(snapshot) 
+                    if success:
+                        actions_taken.append("Optimized CPU usage")
+                        self.active_optimizations["cpu_optimization"] = current_time
+                
+                elif action == "entity_optimization":
+                    success = self._optimize_entity_management(snapshot)
+                    if success:
+                        actions_taken.append("Optimized entity management")
+                        self.active_optimizations["entity_optimization"] = current_time
+                
+                elif action == "cosmic_synchronization":
+                    success = self._force_cosmic_synchronization(snapshot)
+                    if success:
+                        actions_taken.append("Forced cosmic synchronization")
+                        self.active_optimizations["cosmic_optimization"] = current_time
+                
+                elif action == "disable_non_critical_monitoring":
+                    success = self._toggle_monitoring_level(enabled=False)
+                    if success:
+                        actions_taken.append("Disabled non-critical monitoring for performance")
+                        self.active_optimizations["monitoring_toggle"] = current_time
+                
+                elif action == "enable_performance_monitoring":
+                    success = self._toggle_monitoring_level(enabled=True)
+                    if success:
+                        actions_taken.append("Re-enabled performance monitoring")
+                        self.active_optimizations["monitoring_toggle"] = current_time
+                
+            except Exception as e:
+                logger.error(f"Failed to execute optimization action {action}: {e}")
+        
+        if actions_taken:
+            self.last_optimization = current_time
+            logger.info(f"Executed coordinated optimizations: {', '.join(actions_taken)}")
+            
+            # Update HEAVEN monitoring
+            if self.heaven_monitor:
+                try:
+                    self.heaven_monitor.update_metric(
+                        "homeostatic_optimizations",
+                        len(actions_taken)
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to update HEAVEN homeostatic metrics: {e}")
+        
+        return actions_taken
+    
+    def _homeostatic_loop(self):
+        """Main homeostatic control loop."""
+        interval = self.config.get("homeostatic_interval", 5.0)
+        
+        while self.homeostasis_active:
+            try:
+                # Assess system health
+                snapshot = self.assess_system_health()
+                
+                # Log health status
+                if snapshot.overall_health in [SystemHealthLevel.WARNING, SystemHealthLevel.CRITICAL, SystemHealthLevel.EMERGENCY]:
+                    logger.warning(f"System health: {snapshot.overall_health.value} (score: {snapshot.health_score:.2f})")
+                else:
+                    logger.debug(f"System health: {snapshot.overall_health.value} (score: {snapshot.health_score:.2f})")
+                
+                # Execute optimizations if needed
+                if snapshot.optimization_priority.value >= OptimizationPriority.MEDIUM.value:
+                    actions = self.execute_coordinated_optimization(snapshot)
+                    if actions:
+                        logger.info(f"Homeostatic actions: {actions}")
+                
+                # Update HEAVEN monitoring
+                if self.heaven_monitor:
+                    try:
+                        self.heaven_monitor.update_metric("system_health_score", snapshot.health_score)
+                        self.heaven_monitor.update_metric("system_health_level", snapshot.overall_health.value)
+                    except Exception:
+                        pass
+                
+                time.sleep(interval)
+                
+            except Exception as e:
+                logger.error(f"Error in homeostatic loop: {e}")
+                time.sleep(interval)
+    
+    def _calculate_physics_health_score(self, physics_status: Dict) -> float:
+        """Calculate health score from physics monitor status."""
+        total = physics_status["total_engines"]
+        if total == 0:
+            return 1.0
+        
+        healthy = len(physics_status["healthy_engines"])
+        warning = len(physics_status["warning_engines"])
+        critical = len(physics_status["critical_engines"])
+        
+        # Weight: healthy=1.0, warning=0.6, critical=0.2
+        score = (healthy * 1.0 + warning * 0.6 + critical * 0.2) / total
+        return max(0.0, min(1.0, score))
+    
+    def _assess_symbiosis_health(self) -> float:
+        """Assess symbiosis manager health based on host resources."""
+        try:
+            import psutil
+            cpu_usage = psutil.cpu_percent(interval=0.1)
+            memory_usage = psutil.virtual_memory().percent
+            
+            # Health score based on resource usage (inverted)
+            cpu_score = max(0.0, (100 - cpu_usage) / 100)
+            memory_score = max(0.0, (100 - memory_usage) / 100)
+            
+            return (cpu_score + memory_score) / 2
+        except Exception:
+            return 0.5  # Neutral score if psutil unavailable
+    
+    def _determine_health_level(self, score: float) -> SystemHealthLevel:
+        """Determine system health level from overall score."""
+        thresholds = self.config
+        
+        if score >= thresholds.get("health_threshold_warning", 0.7):
+            return SystemHealthLevel.OPTIMAL if score >= 0.9 else SystemHealthLevel.STABLE
+        elif score >= thresholds.get("health_threshold_critical", 0.5):
+            return SystemHealthLevel.WARNING
+        elif score >= thresholds.get("health_threshold_emergency", 0.3):
+            return SystemHealthLevel.CRITICAL
+        else:
+            return SystemHealthLevel.EMERGENCY
+    
+    def _generate_recommendations(self, physics_status: Dict, reality_score: float, 
+                                symbiosis_score: float, overall_score: float) -> List[str]:
+        """Generate optimization recommendations based on system state."""
+        recommendations = []
+        
+        # Physics engine recommendations
+        if len(physics_status["critical_engines"]) > 0:
+            recommendations.append("physics_engine_optimization")
+        if len(physics_status["warning_engines"]) > physics_status["total_engines"] * 0.3:
+            recommendations.append("memory_cleanup")
+        
+        # Symbiosis recommendations
+        if symbiosis_score < 0.6:
+            recommendations.append("cpu_optimization")
+        if symbiosis_score < 0.5:
+            recommendations.append("entity_optimization")
+        
+        # Reality recommendations
+        if reality_score < 0.6:
+            recommendations.append("cosmic_synchronization")
+        
+        # Overall system recommendations
+        if overall_score < 0.4:
+            recommendations.append("emergency_stabilization")
+        
+        # GOLD.CODE Monitoring recommendations - disable monitoring when resource usage is high
+        if symbiosis_score < 0.5 and self._monitoring_config.enabled:
+            # Only recommend disabling if monitoring is currently enabled
+            if self._monitoring_active:
+                recommendations.append("disable_non_critical_monitoring")
+        elif symbiosis_score > 0.8 and not self._monitoring_active:
+            # Re-enable monitoring when system recovers
+            recommendations.append("enable_performance_monitoring")
+        
+        return recommendations
+    
+    def _determine_optimization_priority(self, health_level: SystemHealthLevel, 
+                                       recommendations: List[str]) -> OptimizationPriority:
+        """Determine optimization priority based on health level."""
+        if health_level == SystemHealthLevel.EMERGENCY:
+            return OptimizationPriority.EMERGENCY
+        elif health_level == SystemHealthLevel.CRITICAL:
+            return OptimizationPriority.CRITICAL
+        elif health_level == SystemHealthLevel.WARNING:
+            return OptimizationPriority.HIGH
+        elif len(recommendations) > 0:
+            return OptimizationPriority.MEDIUM
+        else:
+            return OptimizationPriority.LOW
+    
+    def _should_optimize(self, snapshot: SystemHealthSnapshot) -> bool:
+        """Determine if optimization should be executed."""
+        # Check cooldown
+        if time.time() - self.last_optimization < self.optimization_cooldown:
+            return False
+        
+        # Check priority threshold
+        if snapshot.optimization_priority.value < OptimizationPriority.MEDIUM.value:
+            return False
+        
+        return True
+    
+    def _get_available_actions(self, recommended_actions: List[str]) -> List[str]:
+        """Get actions that don't conflict with currently active optimizations."""
+        current_time = time.time()
+        
+        # Clean up expired optimizations (60 second lifetime)
+        expired = [action for action, timestamp in self.active_optimizations.items() 
+                  if current_time - timestamp > 60.0]
+        for action in expired:
+            del self.active_optimizations[action]
+        
+        # Filter out conflicting actions
+        available = []
+        for action in recommended_actions:
+            conflicts = self.optimization_conflicts.get(action, [])
+            has_conflict = any(conflict in self.active_optimizations for conflict in conflicts)
+            if not has_conflict:
+                available.append(action)
+        
+        return available
+    
+    def _optimize_physics_engines(self, snapshot: SystemHealthSnapshot) -> bool:
+        """Optimize physics engines based on system state."""
+        try:
+            optimized_count = 0
+            for engine_id in self.physics_monitor.registered_engines:
+                if self.physics_monitor.execute_adaptive_optimization(engine_id):
+                    optimized_count += 1
+            return optimized_count > 0
+        except Exception as e:
+            logger.error(f"Failed to optimize physics engines: {e}")
+            return False
+    
+    def _optimize_memory_usage(self, snapshot: SystemHealthSnapshot) -> bool:
+        """Optimize memory usage across the system."""
+        try:
+            # Trigger memory optimization on all GPU engines
+            for engine_id, engine in self.physics_monitor.registered_engines.items():
+                if hasattr(engine, 'send_physics_message'):
+                    if engine_id.startswith('gpu'):
+                        engine.send_physics_message("gpu_physics_optimize_memory", {})
+                    else:
+                        engine.send_physics_message("physics_optimize_performance", {"focus": "memory"})
+            return True
+        except Exception as e:
+            logger.error(f"Failed to optimize memory usage: {e}")
+            return False
+    
+    def _optimize_cpu_usage(self, snapshot: SystemHealthSnapshot) -> bool:
+        """Optimize CPU usage through host symbiosis."""
+        try:
+            current_usage = {
+                "cpu_percent": snapshot.cpu_usage,
+                "memory_percent": snapshot.memory_usage,
+                "entity_count": snapshot.total_engines
+            }
+            result = self.symbiosis_manager.optimize_resource_usage(current_usage)
+            return result is not None
+        except Exception as e:
+            logger.error(f"Failed to optimize CPU usage: {e}")
+            return False
+    
+    def _optimize_entity_management(self, snapshot: SystemHealthSnapshot) -> bool:
+        """Optimize entity management across engines."""
+        try:
+            for engine_id, engine in self.physics_monitor.registered_engines.items():
+                if hasattr(engine, 'send_physics_message'):
+                    engine.send_physics_message("physics_optimize_performance", {
+                        "focus": "entities",
+                        "target_reduction": 0.1  # Reduce by 10%
+                    })
+            return True
+        except Exception as e:
+            logger.error(f"Failed to optimize entity management: {e}")
+            return False
+    
+    def _force_cosmic_synchronization(self, snapshot: SystemHealthSnapshot) -> bool:
+        """Force cosmic synchronization across all engines."""
+        try:
+            for engine_id, engine in self.physics_monitor.registered_engines.items():
+                if hasattr(engine, 'send_physics_message'):
+                    engine.send_physics_message("physics_force_cosmic_sync", {
+                        "emergency": True,
+                        "target_coherence": 0.9
+                    })
+            return True
+        except Exception as e:
+            logger.error(f"Failed to force cosmic synchronization: {e}")
+            return False
+    
+    def _get_cpu_usage(self) -> float:
+        """Get current CPU usage."""
+        try:
+            import psutil
+            return psutil.cpu_percent(interval=0.1)
+        except Exception:
+            return 0.0
+    
+    def _get_memory_usage(self) -> float:
+        """Get current memory usage."""
+        try:
+            import psutil
+            return psutil.virtual_memory().percent
+        except Exception:
+            return 0.0
+    
+    def get_health_trends(self, window_minutes: int = 30) -> Dict[str, Any]:
+        """Get health trends over specified time window."""
+        if not self.health_history:
+            return {"status": "no_data"}
+        
+        current_time = time.time()
+        cutoff_time = current_time - (window_minutes * 60)
+        
+        recent_snapshots = [s for s in self.health_history if s.timestamp >= cutoff_time]
+        if len(recent_snapshots) < 2:
+            return {"status": "insufficient_data", "samples": len(recent_snapshots)}
+        
+        # Calculate trends
+        scores = [s.health_score for s in recent_snapshots]
+        cpu_usage = [s.cpu_usage for s in recent_snapshots]
+        memory_usage = [s.memory_usage for s in recent_snapshots]
+        
+        return {
+            "status": "success",
+            "window_minutes": window_minutes,
+            "samples": len(recent_snapshots),
+            "health_score_trend": scores[-1] - scores[0],
+            "cpu_trend": cpu_usage[-1] - cpu_usage[0],
+            "memory_trend": memory_usage[-1] - memory_usage[0],
+            "average_health": sum(scores) / len(scores),
+            "current_health": recent_snapshots[-1].overall_health.value,
+            "optimization_count": len([s for s in recent_snapshots if s.recommended_actions])
+        }
+    
+    def _toggle_monitoring_level(self, enabled: bool) -> bool:
+        """
+        Toggle performance monitoring level based on system health.
+        
+        This method implements GOLD.CODE adaptive monitoring:
+        - Disables monitoring when CPU/memory usage is high
+        - Re-enables monitoring when system recovers
+        - Zero overhead when disabled
+        """
+        try:
+            if enabled:
+                # Re-enable monitoring
+                self.enable_monitoring()
+                logger.info("Homeostatic decision: Re-enabled performance monitoring (system recovered)")
+                
+                # Update HEAVEN monitoring
+                if self.heaven_monitor:
+                    self.heaven_monitor.update_metric("monitoring_status", "enabled")
+                    
+            else:
+                # Disable monitoring for performance
+                self.disable_monitoring()
+                logger.info("Homeostatic decision: Disabled non-critical monitoring (high resource usage)")
+                
+                # Update HEAVEN monitoring
+                if self.heaven_monitor:
+                    self.heaven_monitor.update_metric("monitoring_status", "disabled")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to toggle monitoring level: {e}")
+            return False

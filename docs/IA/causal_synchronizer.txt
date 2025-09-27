@@ -1,0 +1,251 @@
+import logging
+import time
+from typing import Any
+
+from crisalida_lib.EVA.eva_memory_mixin import EVAMemoryMixin
+from crisalida_lib.EVA.types import (
+    QualiaState,
+)
+
+logger = logging.getLogger(__name__)
+
+
+class CausalSynchronizer:
+    """
+    El Sincronizador Causal (Mente-Lattice) arbitra interacciones entre entidades con diferentes tasas de tiempo local,
+    asegurando coherencia causal y sincronización evolutiva en el Metacosmos.
+    """
+
+    def __init__(self):
+        """Inicializa el sincronizador causal."""
+        self.registered_entities: dict[str, Any] = {}
+        self.last_synchronization_event: dict[str, Any] = {}
+        self.synchronization_history: list[dict[str, Any]] = []
+        self.max_history_size = 100
+        logger.info("🧭 Causal Synchronizer initialized.")
+
+    def register_entity(self, entity_id: str, entity_ref: Any) -> None:
+        """
+        Registra una entidad en el sincronizador causal.
+
+        Args:
+            entity_id: Identificador único de la entidad
+            entity_ref: Referencia a la entidad
+        """
+        self.registered_entities[entity_id] = entity_ref
+        logger.debug(f"🔗 Entity {entity_id} registered with Causal Synchronizer.")
+
+    def unregister_entity(self, entity_id: str) -> None:
+        """
+        Desregistra una entidad del sincronizador causal.
+
+        Args:
+            entity_id: Identificador único de la entidad
+        """
+        if entity_id in self.registered_entities:
+            del self.registered_entities[entity_id]
+            logger.debug(
+                f"🔗 Entity {entity_id} unregistered from Causal Synchronizer."
+            )
+
+    def synchronize_interaction(
+        self, entity1_id: str, entity2_id: str, interaction_data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """
+        Arbitra una interacción entre dos entidades, resolviendo diferenciales temporales y de coherencia.
+
+        Args:
+            entity1_id: ID de la primera entidad
+            entity2_id: ID de la segunda entidad
+            interaction_data: Datos de la interacción
+
+        Returns:
+            Resultado de la sincronización
+        """
+        logger.info(
+            f"🔄 Synchronizing interaction between {entity1_id} and {entity2_id}."
+        )
+
+        entity1 = self.registered_entities.get(entity1_id)
+        entity2 = self.registered_entities.get(entity2_id)
+
+        if not entity1 or not entity2:
+            logger.warning(
+                f"❗ One or both entities not found for synchronization: {entity1_id}, {entity2_id}"
+            )
+            return {"success": False, "reason": "Entities not found"}
+
+        # Obtener tasas de tick y coherencia temporal
+        tick_rate_1 = getattr(entity1, "local_tick_rate", 1.0)
+        tick_rate_2 = getattr(entity2, "local_tick_rate", 1.0)
+        coherence_1 = getattr(entity1, "temporal_coherence", 0.5)
+        coherence_2 = getattr(entity2, "temporal_coherence", 0.5)
+
+        # Resolver prioridad temporal y ajustar estados
+        if coherence_1 > coherence_2:
+            prioritized = entity1_id
+            adjustment = tick_rate_1 / max(tick_rate_2, 1e-6)
+            logger.debug(
+                f"⏳ Entity {entity1_id} prioritized (coherence={coherence_1:.2f}). Adjustment: {adjustment:.2f}"
+            )
+            # Simular ajuste de estado de entity2
+            if hasattr(entity2, "adjust_temporal_state"):
+                entity2.adjust_temporal_state(adjustment)
+        elif coherence_2 > coherence_1:
+            prioritized = entity2_id
+            adjustment = tick_rate_2 / max(tick_rate_1, 1e-6)
+            logger.debug(
+                f"⏳ Entity {entity2_id} prioritized (coherence={coherence_2:.2f}). Adjustment: {adjustment:.2f}"
+            )
+            if hasattr(entity1, "adjust_temporal_state"):
+                entity1.adjust_temporal_state(adjustment)
+        else:
+            prioritized = "neutral"
+            logger.debug("⏳ Temporal coherences are equal. Neutral resolution.")
+
+        # Aplicar efectos de interacción y registrar evento
+        resolved_data = interaction_data.copy()
+        resolved_data["causal_synchronization_applied"] = True
+        resolved_data["resolution_method"] = "coherence_priority"
+        resolved_data["prioritized_entity"] = prioritized
+        resolved_data["timestamp"] = time.time()
+
+        sync_event = {
+            "entities": (entity1_id, entity2_id),
+            "prioritized": prioritized,
+            "resolved_data": resolved_data,
+            "timestamp": resolved_data["timestamp"],
+        }
+        self.last_synchronization_event = sync_event
+        self.synchronization_history.append(sync_event)
+        if len(self.synchronization_history) > self.max_history_size:
+            self.synchronization_history = self.synchronization_history[
+                -self.max_history_size :
+            ]
+
+        return {"success": True, "resolved_data": resolved_data}
+
+    def get_status(self) -> dict[str, Any]:
+        """
+        Retorna el estado actual del Sincronizador Causal.
+
+        Returns:
+            Diccionario con el estado del sincronizador
+        """
+        return {
+            "registered_entities_count": len(self.registered_entities),
+            "status": "active",
+            "last_synchronization_event": self.last_synchronization_event,
+            "history_size": len(self.synchronization_history),
+        }
+
+    def get_history(self, limit: int = 10) -> list[dict[str, Any]]:
+        """
+        Retorna el historial de eventos de sincronización causal.
+
+        Args:
+            limit: Número máximo de eventos a retornar
+
+        Returns:
+            Lista de diccionarios con eventos de sincronización
+        """
+        return self.synchronization_history[-limit:]
+
+
+class EVACausalSynchronizer(CausalSynchronizer, EVAMemoryMixin):
+    """
+    EVACausalSynchronizer - Sincronizador causal perfeccionado y extendido para integración con EVA.
+    Orquesta interacciones entre entidades, registra experiencias de sincronización como RealityBytecode,
+    soporta ingestión/recall, faseo, hooks de entorno, benchmarking y gestión avanzada de memoria viviente EVA.
+    """
+
+    def __init__(self, phase: str = "default"):
+        super().__init__()
+        # Initialize EVA memory using the mixin
+        self._init_eva_memory(eva_phase=phase)
+
+    def eva_ingest_synchronization_experience(
+        self,
+        entity1_id: str,
+        entity2_id: str,
+        interaction_data: dict[str, Any],
+        qualia_state: QualiaState = None,
+        phase: str = None,
+    ) -> str:
+        """
+        Compila una experiencia de sincronización causal en RealityBytecode y la almacena en la memoria EVA.
+        This method now uses the centralized EVAMemoryMixin for consistency.
+        """
+        import time
+
+        phase = phase or self.eva_phase
+        sync_result = self.synchronize_interaction(
+            entity1_id, entity2_id, interaction_data
+        )
+        qualia_state = qualia_state or QualiaState(
+            emotional_valence=0.7 if sync_result.get("success") else -0.5,
+            cognitive_complexity=0.8,
+            consciousness_density=0.6,
+            narrative_importance=1.0 if sync_result.get("success") else 0.5,
+            energy_level=1.0,
+        )
+
+        experience_data = {
+            "experience_id": f"eva_sync_{entity1_id}_{entity2_id}_{int(time.time())}",
+            "entity1_id": entity1_id,
+            "entity2_id": entity2_id,
+            "interaction_data": interaction_data,
+            "sync_result": sync_result,
+            "history": self.get_history(5),
+            "timestamp": time.time(),
+            "phase": phase,
+        }
+
+        # Use centralized EVA memory management
+        return self.eva_ingest_experience(
+            intention_type="ARCHIVE_CAUSAL_SYNC_EXPERIENCE",
+            experience_data=experience_data,
+            qualia_state=qualia_state,
+            phase=phase,
+        )
+
+    def eva_recall_synchronization_experience(
+        self, cue: str, phase: str = None
+    ) -> dict:
+        """
+        Ejecuta el RealityBytecode de una experiencia de sincronización causal almacenada, manifestando la simulación.
+        This method now uses the centralized EVAMemoryMixin for consistency.
+        """
+        result = self.eva_recall_experience(cue, phase)
+
+        # Customize error message for CausalSynchronizer context
+        if "error" in result and "No bytecode found" in result["error"]:
+            result["error"] = (
+                "No bytecode found for EVA causal synchronization experience"
+            )
+
+        return result
+
+    # The add_experience_phase method is now provided by EVAMemoryMixin
+    # The following methods are also provided by EVAMemoryMixin:
+    # - set_memory_phase
+    # - get_memory_phase
+    # - get_experience_phases
+    # - add_environment_hook
+
+    def get_eva_api(self) -> dict:
+        """
+        Returns the EVA API extended with CausalSynchronizer-specific methods.
+        """
+        # Get base API from mixin
+        api = super().get_eva_api()
+
+        # Add CausalSynchronizer-specific methods
+        api.update(
+            {
+                "eva_ingest_synchronization_experience": self.eva_ingest_synchronization_experience,
+                "eva_recall_synchronization_experience": self.eva_recall_synchronization_experience,
+            }
+        )
+
+        return api

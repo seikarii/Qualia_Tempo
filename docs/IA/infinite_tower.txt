@@ -1,0 +1,365 @@
+import logging
+import random
+from typing import Any
+
+from crisalida_lib.monitoring.performance_monitor import PerformanceMonitor
+from crisalida_lib.reality_engine.reality_level import RealityLevel
+from crisalida_lib.EVA.core_types import LivingSymbolRuntime
+from crisalida_lib.symbolic_language.types import (
+    EVAExperience,
+    QualiaState,
+    RealityBytecode,
+)
+
+logger = logging.getLogger(__name__)
+
+
+class InfiniteTower:
+    """
+    Torre infinita de niveles de realidad con generación procedural avanzada.
+    Cada nivel puede tener propiedades emergentes, reglas únicas, fenómenos y requisitos de acceso.
+    El límite de niveles cacheados se adapta dinámicamente según la salud y rendimiento del sistema de monitoreo.
+    """
+
+    def __init__(self, monitor: PerformanceMonitor = None):
+        self.levels: dict[int, RealityLevel] = {}
+        self.current_level: int = 0
+        self.level_history: list[int] = []
+        self.monitor = monitor or PerformanceMonitor()
+        self.max_cached_levels: int = self._calculate_max_levels()
+        # EVA extension
+        self.eva_phase: str = "default"
+        self.eva_runtime = LivingSymbolRuntime()
+        self.eva_memory_store: dict[str, RealityBytecode] = {}
+        self.eva_experience_store: dict[str, EVAExperience] = {}
+        self.eva_phases: dict[str, dict[str, RealityBytecode]] = {}
+        self._environment_hooks: list = []
+
+    def get_or_generate_level(self, level_id: int) -> RealityLevel:
+        """
+        Obtiene un nivel si existe, o lo genera proceduralmente si no.
+        Mantiene un historial de niveles accedidos y gestiona el caché.
+        """
+        if level_id not in self.levels:
+            new_level = self._generate_procedural_level(level_id)
+            self.levels[level_id] = new_level
+            self.level_history.append(level_id)
+            logger.info(
+                f"[InfiniteTower] Generated new level {level_id}: {new_level.name}"
+            )
+            self._manage_cache()
+            # EVA: Ingesta experiencia de generación de nivel
+            self.eva_ingest_level_experience(new_level, phase=self.eva_phase)
+        else:
+            logger.debug(
+                f"[InfiniteTower] Accessed cached level {level_id}: {self.levels[level_id].name}"
+            )
+        self.current_level = level_id
+        return self.levels[level_id]
+
+    def _generate_procedural_level(self, level_id: int) -> RealityLevel:
+        """
+        Genera proceduralmente un nivel de realidad con propiedades emergentes,
+        reglas, fenómenos y requisitos de acceso.
+        """
+        properties = self._calculate_level_properties(level_id)
+        dominant_lattice = random.choice(["fire", "water", "air", "earth", "ether"])
+        lattice_types = [dominant_lattice]
+        if random.random() < 0.5:
+            lattice_types.append(
+                random.choice(
+                    [
+                        lattice_type
+                        for lattice_type in ["fire", "water", "air", "earth", "ether"]
+                        if lattice_type != dominant_lattice
+                    ]
+                )
+            )
+        access_reqs = {
+            "consciousness_level": round(0.1 * level_id, 2),
+            "narrative_significance": round(0.05 * level_id, 2),
+        }
+        phenomena = []
+        if random.random() < 0.15 + 0.05 * level_id:
+            phenomena.append("temporal_distortion")
+        if random.random() < 0.1 + 0.03 * level_id:
+            phenomena.append("archetypal_resonance")
+        if random.random() < 0.07 + 0.02 * level_id:
+            phenomena.append("quantum_flux")
+        rules = {
+            "energy_conservation": random.random() > 0.5,
+            "narrative_coherence": random.random() > 0.7,
+            "emergence_enabled": random.random() > 0.3,
+        }
+        name = f"Plane of {dominant_lattice.capitalize()} ({level_id})"
+        new_level = RealityLevel(
+            id=level_id,
+            name=name,
+            properties=properties,
+            lattice_types=lattice_types,
+            access_requirements=access_reqs,
+            unique_phenomena=phenomena,
+            level_specific_rules=rules,
+        )
+        return new_level
+
+    def _calculate_level_properties(self, level: int) -> dict[str, Any]:
+        """
+        Calcula propiedades emergentes del nivel, incluyendo estabilidad,
+        complejidad, permeabilidad de conciencia y potencial creativo.
+        """
+        stability = round(1.0 / (1.0 + 0.18 * abs(level)), 3)
+        complexity = round(min(1.0, 0.25 + 0.09 * abs(level)), 3)
+        consciousness_permeability = round(1.0 - (1.0 / (1.0 + 0.12 * abs(level))), 3)
+        temporal_flow_rate = round(1.0 + 0.045 * level, 3)
+        narrative_tension = round(complexity * 0.6 + stability * 0.2, 3)
+        creative_potential = round(
+            consciousness_permeability * 0.7 + complexity * 0.2, 3
+        )
+        information_density = round(complexity * 0.85, 3)
+        return {
+            "stability": stability,
+            "complexity": complexity,
+            "consciousness_permeability": consciousness_permeability,
+            "temporal_flow_rate": temporal_flow_rate,
+            "information_density": information_density,
+            "creative_potential": creative_potential,
+            "narrative_tension": narrative_tension,
+        }
+
+    def _calculate_max_levels(self) -> int:
+        """
+        Calcula el máximo de niveles cacheados en base a la salud y rendimiento del sistema.
+        Se adapta dinámicamente según FPS, uso de memoria y carga de CPU.
+        """
+        stats = getattr(self.monitor, "metrics", {})
+        fps = stats.get("last_fps", 60.0)
+        mem = stats.get("last_frame_time", 0.02)
+        cpu = stats.get("cpu_percent", 10.0)
+        # Algoritmo adaptativo: más FPS y menos uso → más niveles
+        base = 100
+        if fps > 90:
+            base += 50
+        elif fps < 30:
+            base -= 30
+        if mem > 0.05:
+            base -= 20
+        if cpu > 80:
+            base -= 30
+        return max(20, min(200, int(base)))
+
+    def _manage_cache(self):
+        """
+        Mantiene el caché de niveles bajo el límite dinámico configurado.
+        Elimina los niveles menos recientes si se supera el límite.
+        """
+        self.max_cached_levels = self._calculate_max_levels()
+        if len(self.levels) > self.max_cached_levels:
+            # Eliminar los niveles menos recientes
+            to_remove = self.level_history[: -self.max_cached_levels]
+            for level_id in to_remove:
+                if level_id in self.levels:
+                    del self.levels[level_id]
+            self.level_history = self.level_history[-self.max_cached_levels :]
+            logger.info(
+                f"[InfiniteTower] Cache pruned to {self.max_cached_levels} levels (dynamic)."
+            )
+
+    def get_current_level(self) -> RealityLevel:
+        """Devuelve el nivel actual."""
+        return self.levels.get(self.current_level)
+
+    def get_level_summary(self, level_id: int) -> dict[str, Any]:
+        """Devuelve un resumen de las propiedades y reglas de un nivel."""
+        level = self.levels.get(level_id)
+        if not level:
+            level = self.get_or_generate_level(level_id)
+        return {
+            "id": level.id,
+            "name": level.name,
+            "properties": level.properties,
+            "lattice_types": level.lattice_types,
+            "access_requirements": level.access_requirements,
+            "unique_phenomena": level.unique_phenomena,
+            "level_specific_rules": level.level_specific_rules,
+        }
+
+    # === EVA EXTENSION ===
+
+    def eva_ingest_level_experience(
+        self, level: RealityLevel, qualia_state: QualiaState = None, phase: str = None
+    ) -> str:
+        """
+        Compila una experiencia de generación/acceso de nivel en RealityBytecode y la almacena en la memoria EVA.
+        """
+        import time
+
+        phase = phase or self.eva_phase
+        qualia_state = qualia_state or QualiaState(
+            emotional_valence=level.properties.get("narrative_tension", 0.5),
+            cognitive_complexity=level.properties.get("complexity", 0.7),
+            consciousness_density=level.properties.get(
+                "consciousness_permeability", 0.6
+            ),
+            narrative_importance=1.0,
+            energy_level=1.0,
+        )
+        experience_id = f"eva_level_{level.id}_{int(time.time())}"
+        experience_data = {
+            "level_id": level.id,
+            "name": level.name,
+            "properties": level.properties,
+            "lattice_types": level.lattice_types,
+            "access_requirements": level.access_requirements,
+            "unique_phenomena": level.unique_phenomena,
+            "level_specific_rules": level.level_specific_rules,
+            "timestamp": time.time(),
+            "phase": phase,
+        }
+        intention = {
+            "intention_type": "ARCHIVE_LEVEL_EXPERIENCE",
+            "experience": experience_data,
+            "qualia": qualia_state,
+            "phase": phase,
+        }
+        bytecode = self.eva_runtime.divine_compiler.compile_intention(intention)
+        reality_bytecode = RealityBytecode(
+            bytecode_id=experience_id,
+            instructions=bytecode,
+            qualia_state=qualia_state,
+            phase=phase,
+            timestamp=experience_data["timestamp"],
+        )
+        self.eva_memory_store[experience_id] = reality_bytecode
+        if phase not in self.eva_phases:
+            self.eva_phases[phase] = {}
+        self.eva_phases[phase][experience_id] = reality_bytecode
+        self.eva_experience_store[experience_id] = reality_bytecode
+        for hook in self._environment_hooks:
+            try:
+                hook(reality_bytecode)
+            except Exception as e:
+                logger.warning(f"[EVA-INFINITE-TOWER] Environment hook failed: {e}")
+        return experience_id
+
+    def eva_recall_level_experience(self, cue: str, phase: str = None) -> dict:
+        """
+        Ejecuta el RealityBytecode de una experiencia de nivel almacenada, manifestando la simulación.
+        """
+        phase = phase or self.eva_phase
+        reality_bytecode = self.eva_phases.get(phase, {}).get(
+            cue
+        ) or self.eva_memory_store.get(cue)
+        if not reality_bytecode:
+            return {"error": "No bytecode found for EVA level experience"}
+        quantum_field = getattr(self.eva_runtime, "quantum_field", None)
+        manifestations = []
+        if quantum_field:
+            for instr in reality_bytecode.instructions:
+                symbol_manifest = self.eva_runtime.execute_instruction(
+                    instr, quantum_field
+                )
+                if symbol_manifest:
+                    manifestations.append(symbol_manifest)
+                    for hook in self._environment_hooks:
+                        try:
+                            hook(symbol_manifest)
+                        except Exception as e:
+                            logger.warning(
+                                f"[EVA-INFINITE-TOWER] Manifestation hook failed: {e}"
+                            )
+        eva_experience = EVAExperience(
+            experience_id=reality_bytecode.bytecode_id,
+            bytecode=reality_bytecode,
+            manifestations=manifestations,
+            phase=reality_bytecode.phase,
+            qualia_state=reality_bytecode.qualia_state,
+            timestamp=reality_bytecode.timestamp,
+        )
+        self.eva_experience_store[reality_bytecode.bytecode_id] = eva_experience
+        return {
+            "experience_id": eva_experience.experience_id,
+            "manifestations": [m.to_dict() for m in manifestations],
+            "phase": eva_experience.phase,
+            "qualia_state": (
+                eva_experience.qualia_state.to_dict()
+                if hasattr(eva_experience.qualia_state, "to_dict")
+                else {}
+            ),
+            "timestamp": eva_experience.timestamp,
+        }
+
+    def add_experience_phase(
+        self,
+        experience_id: str,
+        phase: str,
+        level: RealityLevel,
+        qualia_state: QualiaState,
+    ):
+        """
+        Añade una fase alternativa para una experiencia de nivel EVA.
+        """
+        import time
+
+        experience_data = {
+            "level_id": level.id,
+            "name": level.name,
+            "properties": level.properties,
+            "lattice_types": level.lattice_types,
+            "access_requirements": level.access_requirements,
+            "unique_phenomena": level.unique_phenomena,
+            "level_specific_rules": level.level_specific_rules,
+            "timestamp": time.time(),
+            "phase": phase,
+        }
+        intention = {
+            "intention_type": "ARCHIVE_LEVEL_EXPERIENCE",
+            "experience": experience_data,
+            "qualia": qualia_state,
+            "phase": phase,
+        }
+        bytecode = self.eva_runtime.divine_compiler.compile_intention(intention)
+        reality_bytecode = RealityBytecode(
+            bytecode_id=experience_id,
+            instructions=bytecode,
+            qualia_state=qualia_state,
+            phase=phase,
+            timestamp=experience_data["timestamp"],
+        )
+        if phase not in self.eva_phases:
+            self.eva_phases[phase] = {}
+        self.eva_phases[phase][experience_id] = reality_bytecode
+
+    def set_memory_phase(self, phase: str):
+        """Cambia la fase activa de memoria EVA."""
+        self.eva_phase = phase
+        for hook in self._environment_hooks:
+            try:
+                hook({"phase_changed": phase})
+            except Exception as e:
+                logger.warning(f"[EVA-INFINITE-TOWER] Phase hook failed: {e}")
+
+    def get_memory_phase(self) -> str:
+        """Devuelve la fase de memoria actual."""
+        return self.eva_phase
+
+    def get_experience_phases(self, experience_id: str) -> list:
+        """Lista todas las fases disponibles para una experiencia de nivel EVA."""
+        return [
+            phase for phase, exps in self.eva_phases.items() if experience_id in exps
+        ]
+
+    def add_environment_hook(self, hook: callable):
+        """Registra un hook para manifestación simbólica o eventos EVA."""
+        self._environment_hooks.append(hook)
+
+    def get_eva_api(self) -> dict:
+        return {
+            "eva_ingest_level_experience": self.eva_ingest_level_experience,
+            "eva_recall_level_experience": self.eva_recall_level_experience,
+            "add_experience_phase": self.add_experience_phase,
+            "set_memory_phase": self.set_memory_phase,
+            "get_memory_phase": self.get_memory_phase,
+            "get_experience_phases": self.get_experience_phases,
+            "add_environment_hook": self.add_environment_hook,
+        }

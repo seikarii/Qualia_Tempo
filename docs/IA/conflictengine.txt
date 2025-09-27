@@ -1,0 +1,1432 @@
+import math
+import random
+from datetime import datetime
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
+
+from crisalida_lib.conflict_engine.datatypes import (
+    Alliance,
+    ComplexConflictEvent,
+    EnhancedSource,
+    EVAConflictMemory,
+    PowerBalance,
+)
+from crisalida_lib.conflict_engine.enums import (
+    AllianceType,
+    ConflictPhase,
+    ConflictStrategy,
+)
+from crisalida_lib.consciousness.mente.conscious_being import ConsciousBeing
+from crisalida_lib.qualia.qualia_field import QualiaField
+from crisalida_lib.symbolic_language.living_symbols import LivingSymbolRuntime
+from crisalida_lib.symbolic_language.types import (
+    EVAExperience,
+    QualiaState,
+    RealityBytecode,
+)
+
+
+class SophisticatedConflictEngine(BaseModel):
+    """
+    SophisticatedConflictEngine - Motor avanzado de conflictos para el Metacosmos
+    ============================================================================
+    Orquesta dinámicas de conflicto, alianzas, evolución estratégica y consecuencias narrativas.
+    Integración con campos de qualia, lattices elementales y entidades SO-Ser.
+    Inspirado en El Verbo v7, BB6 Enhanced y METACOSMOSv8.
+    """
+
+    # ... (keep the full SophisticatedConflictEngine implementation here)
+
+
+class EVASophisticatedConflictEngine(SophisticatedConflictEngine):
+    """
+    Motor avanzado de conflictos extendido para integración con EVA y ADAM.
+    Orquesta dinámicas de conflicto, alianzas, evolución estratégica y consecuencias narrativas,
+    integrando memoria viviente EVA, ingestión/recall de experiencias, faseo, hooks y benchmarking.
+    Ahora opera sobre entidades ADAM (ConsciousBeing) en vez de SOSer.
+    """
+
+    eva_phase: str = "default"
+    eva_runtime: LivingSymbolRuntime = LivingSymbolRuntime()
+    eva_memory_store: dict[str, RealityBytecode] = {}
+    eva_experience_store: dict[str, EVAExperience] = {}
+    eva_phases: dict[str, dict[str, RealityBytecode]] = {}
+    _environment_hooks: list = []
+    eva_conflict_memory: EVAConflictMemory = EVAConflictMemory()
+
+    def ingest_conflict_experience_eva(
+        self,
+        event: ComplexConflictEvent,
+        qualia_state: QualiaState = None,
+        phase: str = None,
+    ) -> str:
+        """
+        Compila un evento de conflicto en RealityBytecode y lo almacena en la memoria EVA.
+        """
+        phase = phase or self.eva_phase
+        qualia_state = qualia_state or QualiaState(
+            emotional_valence=event.intensity,
+            cognitive_complexity=0.8,
+            consciousness_density=0.7,
+            narrative_importance=0.9,
+            energy_level=1.0,
+        )
+        exp_id = self.eva_conflict_memory.ingest_conflict_experience(
+            event, qualia_state, phase
+        )
+        self.eva_memory_store[exp_id] = self.eva_conflict_memory.eva_memory_store[
+            exp_id
+        ]
+        if phase not in self.eva_phases:
+            self.eva_phases[phase] = {}
+        self.eva_phases[phase][exp_id] = self.eva_memory_store[exp_id]
+        for hook in self._environment_hooks:
+            try:
+                hook(self.eva_memory_store[exp_id])
+            except Exception as e:
+                print(f"[EVA-CONFLICT-ENGINE] Environment hook failed: {e}")
+        return exp_id
+
+    def recall_conflict_experience_eva(self, cue: str, phase: str = None) -> dict:
+        """
+        Ejecuta el RealityBytecode de una experiencia de conflicto almacenada, manifestando la simulación.
+        """
+        phase = phase or self.eva_phase
+        return self.eva_conflict_memory.recall_conflict_experience(cue, phase)
+
+    def ingest_source_experience_eva(
+        self,
+        source: EnhancedSource,
+        qualia_state: QualiaState = None,
+        phase: str = None,
+    ) -> str:
+        """
+        Compila una experiencia de fuente narrativa/estratégica en RealityBytecode y la almacena en la memoria EVA.
+        """
+        phase = phase or self.eva_phase
+        qualia_state = qualia_state or QualiaState(
+            emotional_valence=source.current_morale,
+            cognitive_complexity=0.85,
+            consciousness_density=0.8,
+            narrative_importance=0.8,
+            energy_level=1.0,
+        )
+        exp_id = self.eva_conflict_memory.ingest_source_experience(
+            source, qualia_state, phase
+        )
+        self.eva_memory_store[exp_id] = self.eva_conflict_memory.eva_memory_store[
+            exp_id
+        ]
+        if phase not in self.eva_phases:
+            self.eva_phases[phase] = {}
+        self.eva_phases[phase][exp_id] = self.eva_memory_store[exp_id]
+        for hook in self._environment_hooks:
+            try:
+                hook(self.eva_memory_store[exp_id])
+            except Exception as e:
+                print(f"[EVA-CONFLICT-ENGINE] Environment hook failed: {e}")
+        return exp_id
+
+    def add_experience_phase(
+        self,
+        experience_id: str,
+        phase: str,
+        experience_data: dict,
+        qualia_state: QualiaState,
+    ):
+        """
+        Añade una fase alternativa para una experiencia de conflicto EVA.
+        """
+        self.eva_conflict_memory.add_experience_phase(
+            experience_id, phase, experience_data, qualia_state
+        )
+        self.eva_phases.setdefault(phase, {})[experience_id] = (
+            self.eva_conflict_memory.eva_phases[phase][experience_id]
+        )
+
+    def set_memory_phase(self, phase: str):
+        """Cambia la fase activa de memoria EVA."""
+        self.eva_phase = phase
+        self.eva_conflict_memory.set_memory_phase(phase)
+        for hook in self._environment_hooks:
+            try:
+                hook({"phase_changed": phase})
+            except Exception as e:
+                print(f"[EVA-CONFLICT-ENGINE] Phase hook failed: {e}")
+
+    def get_memory_phase(self) -> str:
+        """Devuelve la fase de memoria actual."""
+        return self.eva_phase
+
+    def get_experience_phases(self, experience_id: str) -> list:
+        """Lista todas las fases disponibles para una experiencia de conflicto EVA."""
+        return [
+            phase for phase, exps in self.eva_phases.items() if experience_id in exps
+        ]
+
+    def add_environment_hook(self, hook: callable):
+        """Registra un hook para manifestación simbólica o eventos EVA."""
+        self._environment_hooks.append(hook)
+        self.eva_conflict_memory.add_environment_hook(hook)
+
+    def get_eva_api(self) -> dict:
+        return {
+            "ingest_conflict_experience_eva": self.ingest_conflict_experience_eva,
+            "recall_conflict_experience_eva": self.recall_conflict_experience_eva,
+            "ingest_source_experience_eva": self.ingest_source_experience_eva,
+            "add_experience_phase": self.add_experience_phase,
+            "set_memory_phase": self.set_memory_phase,
+            "get_memory_phase": self.get_memory_phase,
+            "get_experience_phases": self.get_experience_phases,
+            "add_environment_hook": self.add_environment_hook,
+        }
+
+
+class SophisticatedConflictEngine(BaseModel):
+    """
+    SophisticatedConflictEngine - Motor avanzado de conflictos para el Metacosmos
+    ============================================================================
+    Orquesta dinámicas de conflicto, alianzas, evolución estratégica y consecuencias narrativas.
+    Integración con campos de qualia, lattices elementales y entidades SO-Ser.
+    Inspirado en El Verbo v7, BB6 Enhanced y METACOSMOSv8.
+    """
+
+    sources: dict[str, EnhancedSource] = Field(default_factory=dict)
+    alliances: dict[str, Alliance] = Field(default_factory=dict)
+    conflict_history: list[ComplexConflictEvent] = Field(default_factory=list)
+    global_tension: float = Field(
+        0.3, ge=0, le=1, description="Nivel global de tensión"
+    )
+    diplomatic_climate: float = Field(
+        0.5, ge=0, le=1, description="Clima diplomático global"
+    )
+    resource_scarcity: float = Field(
+        0.2, ge=0, le=1, description="Presión global de recursos"
+    )
+    ongoing_conflicts: dict[str, ComplexConflictEvent] = Field(default_factory=dict)
+    power_history: list[dict[str, float]] = Field(default_factory=list)
+    alliance_stability_history: list[dict[str, float]] = Field(default_factory=list)
+
+    def add_enhanced_source(
+        self,
+        source_id: str,
+        name: str,
+        description: str,
+        initial_power_balance: PowerBalance | None = None,
+        strategy: ConflictStrategy = ConflictStrategy.DEFENSIVE,
+        **kwargs,
+    ) -> EnhancedSource:
+        """Registra una fuente avanzada con atributos estratégicos y narrativos."""
+        if source_id in self.sources:
+            raise ValueError(f"Source with ID '{source_id}' already exists.")
+        power_balance = initial_power_balance or PowerBalance()
+        new_source = EnhancedSource(
+            source_id=source_id,
+            name=name,
+            description=description,
+            power_balance=power_balance,
+            primary_strategy=strategy,
+            **kwargs,
+        )
+        self.sources[source_id] = new_source
+        # Inicializar matrices de confianza y hostilidad
+        for existing_id in self.sources:
+            if existing_id != source_id:
+                self.sources[existing_id].trust_matrix[source_id] = random.uniform(
+                    0.3, 0.7
+                )
+                new_source.trust_matrix[existing_id] = random.uniform(0.3, 0.7)
+                self.sources[existing_id].hostility_matrix[source_id] = random.uniform(
+                    0.0, 0.3
+                )
+                new_source.hostility_matrix[existing_id] = random.uniform(0.0, 0.3)
+        print(
+            f"Added Enhanced Source: {name} ({source_id}) with strategy {strategy.value}"
+        )
+        return new_source
+
+    def form_alliance(
+        self,
+        source_ids: list[str],
+        alliance_type: AllianceType,
+        conditions: dict[str, Any] | None = None,
+    ) -> Alliance | None:
+        """Forma una alianza entre fuentes, validando confianza y compatibilidad estratégica."""
+        for source_id in source_ids:
+            if source_id not in self.sources:
+                print(f"Source {source_id} not found")
+                return None
+        if len(source_ids) < 2:
+            print("Alliance requires at least 2 sources")
+            return None
+        min_trust_required = {
+            AllianceType.NON_AGGRESSION: 0.3,
+            AllianceType.TRADE_AGREEMENT: 0.4,
+            AllianceType.TEMPORARY_COOPERATION: 0.5,
+            AllianceType.MUTUAL_DEFENSE: 0.6,
+            AllianceType.FULL_ALLIANCE: 0.7,
+        }
+        required_trust = min_trust_required[alliance_type]
+        for i, source_id in enumerate(source_ids):
+            for j, other_id in enumerate(source_ids):
+                if i != j:
+                    trust_level = self.sources[source_id].trust_matrix.get(
+                        other_id, 0.5
+                    )
+                    if trust_level < required_trust:
+                        print(
+                            f"Insufficient trust between {source_id} and {other_id} for {alliance_type.value}"
+                        )
+                        return None
+        alliance_id = (
+            f"alliance_{len(self.alliances) + 1}_{int(datetime.now().timestamp())}"
+        )
+        member_strategies = [self.sources[sid].primary_strategy for sid in source_ids]
+        strategy_compatibility = self._calculate_strategy_compatibility(
+            member_strategies
+        )
+        trust_levels = {}
+        for source_id in source_ids:
+            avg_trust = sum(
+                self.sources[source_id].trust_matrix.get(other_id, 0.5)
+                for other_id in source_ids
+                if other_id != source_id
+            ) / max(1, len(source_ids) - 1)
+            trust_levels[source_id] = avg_trust
+        alliance = Alliance(
+            alliance_id=alliance_id,
+            members=set(source_ids),
+            alliance_type=alliance_type,
+            strength=strategy_compatibility
+            * sum(trust_levels.values())
+            / len(trust_levels),
+            conditions=conditions or {},
+            trust_levels=trust_levels,
+        )
+        self.alliances[alliance_id] = alliance
+        for source_id in source_ids:
+            for other_id in source_ids:
+                if source_id != other_id:
+                    self.sources[source_id].trust_matrix[other_id] = min(
+                        1.0,
+                        self.sources[source_id].trust_matrix.get(other_id, 0.5) + 0.1,
+                    )
+                    self.sources[source_id].hostility_matrix[other_id] = max(
+                        0.0,
+                        self.sources[source_id].hostility_matrix.get(other_id, 0.0)
+                        - 0.1,
+                    )
+        print(
+            f"Formed {alliance_type.value} alliance between {source_ids} with strength {alliance.strength:.2f}"
+        )
+        return alliance
+
+    def _calculate_strategy_compatibility(
+        self, strategies: list[ConflictStrategy]
+    ) -> float:
+        """Calcula la compatibilidad estratégica entre miembros de la alianza."""
+        if len(strategies) <= 1:
+            return 1.0
+        compatibility_matrix = {
+            ConflictStrategy.AGGRESSIVE: {
+                ConflictStrategy.AGGRESSIVE: 0.7,
+                ConflictStrategy.DEFENSIVE: 0.4,
+                ConflictStrategy.DIPLOMATIC: 0.3,
+                ConflictStrategy.SUBVERSIVE: 0.6,
+                ConflictStrategy.COLLABORATIVE: 0.2,
+                ConflictStrategy.ISOLATIONIST: 0.1,
+            },
+            ConflictStrategy.DEFENSIVE: {
+                ConflictStrategy.AGGRESSIVE: 0.4,
+                ConflictStrategy.DEFENSIVE: 0.8,
+                ConflictStrategy.DIPLOMATIC: 0.7,
+                ConflictStrategy.SUBVERSIVE: 0.5,
+                ConflictStrategy.COLLABORATIVE: 0.6,
+                ConflictStrategy.ISOLATIONIST: 0.3,
+            },
+            ConflictStrategy.DIPLOMATIC: {
+                ConflictStrategy.AGGRESSIVE: 0.3,
+                ConflictStrategy.DEFENSIVE: 0.7,
+                ConflictStrategy.DIPLOMATIC: 0.9,
+                ConflictStrategy.SUBVERSIVE: 0.4,
+                ConflictStrategy.COLLABORATIVE: 0.8,
+                ConflictStrategy.ISOLATIONIST: 0.2,
+            },
+            ConflictStrategy.COLLABORATIVE: {
+                ConflictStrategy.AGGRESSIVE: 0.2,
+                ConflictStrategy.DEFENSIVE: 0.6,
+                ConflictStrategy.DIPLOMATIC: 0.8,
+                ConflictStrategy.SUBVERSIVE: 0.3,
+                ConflictStrategy.COLLABORATIVE: 0.9,
+                ConflictStrategy.ISOLATIONIST: 0.4,
+            },
+        }
+        total_compatibility = 0.0
+        pairs = 0
+        for i in range(len(strategies)):
+            for j in range(i + 1, len(strategies)):
+                strategy1, strategy2 = strategies[i], strategies[j]
+                compatibility = compatibility_matrix.get(strategy1, {}).get(
+                    strategy2, 0.5
+                )
+                total_compatibility += compatibility
+                pairs += 1
+        return total_compatibility / max(1, pairs)
+
+    def break_alliance(
+        self,
+        alliance_id: str,
+        breaking_source: str,
+        reason: str = "strategic_differences",
+    ):
+        """Break an alliance"""
+        if alliance_id not in self.alliances:
+            print(f"Alliance {alliance_id} not found")
+            return
+        alliance = self.alliances[alliance_id]
+        if breaking_source not in alliance.members:
+            print(f"Source {breaking_source} not in alliance {alliance_id}")
+            return
+        print(f"Source {breaking_source} breaks alliance {alliance_id} due to {reason}")
+        # Dramatic impact on trust
+        for member_id in alliance.members:
+            if member_id != breaking_source:
+                # Betrayal dramatically reduces trust
+                current_trust = self.sources[member_id].trust_matrix.get(
+                    breaking_source, 0.5
+                )
+                self.sources[member_id].trust_matrix[breaking_source] = max(
+                    0.0, current_trust - 0.4
+                )
+                # Increase hostility
+                current_hostility = self.sources[member_id].hostility_matrix.get(
+                    breaking_source, 0.0
+                )
+                self.sources[member_id].hostility_matrix[breaking_source] = min(
+                    1.0, current_hostility + 0.3
+                )
+                # Add to historical memory
+                self.sources[member_id].historical_memory.append(
+                    f"Betrayed by {breaking_source} in alliance {alliance_id}"
+                )
+        # Remove alliance
+        del self.alliances[alliance_id]
+        # Global diplomatic climate suffers
+        self.diplomatic_climate = max(0.0, self.diplomatic_climate - 0.1)
+
+    def initiate_sophisticated_conflict(
+        self,
+        initiator_id: str,
+        target_id: str,
+        conflict_type: Literal[
+            "ideological", "territorial", "resource", "diplomatic", "proxy"
+        ],
+        base_intensity: float = 0.5,
+        specific_cause: str | None = None,
+    ) -> ComplexConflictEvent | None:
+        """Initiate a sophisticated conflict with complex dynamics"""
+        initiator = self.sources.get(initiator_id)
+        target = self.sources.get(target_id)
+        if not initiator or not target:
+            print(f"Source not found: {initiator_id} or {target_id}")
+            return None
+        if initiator_id == target_id:
+            print("Source cannot conflict with itself")
+            return None
+        # Check if sources are allied
+        blocking_alliance = self._find_alliance_between(initiator_id, target_id)
+        if blocking_alliance and blocking_alliance.alliance_type in [
+            AllianceType.FULL_ALLIANCE,
+            AllianceType.NON_AGGRESSION,
+        ]:
+            # Alliance prevents direct conflict, but might cause alliance breakdown
+            if random.random() < 0.3:  # 30% chance alliance breaks under pressure
+                self.break_alliance(
+                    blocking_alliance.alliance_id,
+                    initiator_id,
+                    "irreconcilable_differences",
+                )
+                print("Alliance broken, conflict proceeds")
+            else:
+                print(
+                    f"Alliance prevents conflict between {initiator_id} and {target_id}"
+                )
+                return None
+        # Calculate actual conflict intensity based on multiple factors
+        actual_intensity = self._calculate_conflict_intensity(
+            initiator, target, conflict_type, base_intensity
+        )
+        # Determine allied involvement
+        allied_sources = self._determine_allied_involvement(initiator_id, target_id)
+        # Create conflict event
+        event_id = f"conflict_{len(self.conflict_history) + 1}_{int(datetime.now().timestamp())}"
+        conflict_event = ComplexConflictEvent(
+            event_id=event_id,
+            initiator_source_id=initiator_id,
+            target_source_id=target_id,
+            allied_sources=allied_sources,
+            conflict_type=conflict_type,
+            intensity=actual_intensity,
+            duration=self._calculate_conflict_duration(
+                actual_intensity, allied_sources
+            ),
+        )
+        # Execute conflict phases
+        self._execute_conflict_phases(conflict_event)
+        # Apply consequences
+        self._apply_conflict_consequences(conflict_event)
+        # Store conflict
+        self.conflict_history.append(conflict_event)
+        self.ongoing_conflicts[event_id] = conflict_event
+        # Update global state
+        self.global_tension = min(1.0, self.global_tension + actual_intensity * 0.2)
+        self.diplomatic_climate = max(
+            0.0, self.diplomatic_climate - actual_intensity * 0.15
+        )
+        print(f"Sophisticated conflict initiated: {initiator.name} vs {target.name}")
+        print(
+            f"Type: {conflict_type}, Intensity: {actual_intensity:.2f}, Duration: {conflict_event.duration:.1f}"
+        )
+        if allied_sources:
+            print(f"Allied involvement: {allied_sources}")
+        return conflict_event
+
+    def _calculate_conflict_intensity(
+        self,
+        initiator: EnhancedSource,
+        target: EnhancedSource,
+        conflict_type: str,
+        base_intensity: float,
+    ) -> float:
+        """Calculate actual conflict intensity based on multiple factors"""
+        # Power differential affects intensity
+        initiator_power = initiator.calculate_effective_power_against(
+            target, conflict_type
+        )
+        target_power = target.calculate_effective_power_against(
+            initiator, conflict_type
+        )
+        power_ratio = initiator_power / (target_power + 1e-6)
+        # Closer power means higher intensity (more even fight)
+        power_intensity_modifier = 1.0 - abs(math.log(power_ratio)) * 0.1
+        power_intensity_modifier = max(0.5, min(1.5, power_intensity_modifier))
+        # Historical relationship affects intensity
+        hostility_level = initiator.hostility_matrix.get(target.source_id, 0.0)
+        trust_level = initiator.trust_matrix.get(target.source_id, 0.5)
+        relationship_modifier = 0.8 + hostility_level * 0.4 - trust_level * 0.2
+        # Strategic compatibility affects intensity
+        strategy_modifier = 1.0
+        if initiator.primary_strategy == ConflictStrategy.AGGRESSIVE:
+            strategy_modifier += 0.3
+        elif initiator.primary_strategy == ConflictStrategy.DIPLOMATIC:
+            strategy_modifier -= 0.2
+        # Global factors
+        global_modifier = 0.8 + self.global_tension * 0.4
+        # Risk tolerance affects willingness to escalate
+        risk_modifier = 0.9 + initiator.risk_tolerance * 0.2
+        final_intensity = (
+            base_intensity
+            * power_intensity_modifier
+            * relationship_modifier
+            * strategy_modifier
+            * global_modifier
+            * risk_modifier
+        )
+        return max(0.1, min(1.0, final_intensity))
+
+    def _find_alliance_between(
+        self, source1_id: str, source2_id: str
+    ) -> Alliance | None:
+        """Find active alliance between two sources"""
+        for alliance in self.alliances.values():
+            if (
+                alliance.involves_source(source1_id)
+                and alliance.involves_source(source2_id)
+                and alliance.is_active(datetime.now())
+            ):
+                return alliance
+        return None
+
+    def _determine_allied_involvement(
+        self, initiator_id: str, target_id: str
+    ) -> dict[str, list[str]]:
+        """Determine which allies get involved in the conflict"""
+        allied_sources: dict[str, list[str]] = {
+            "initiator_allies": [],
+            "target_allies": [],
+        }
+        # Check all alliances
+        for alliance in self.alliances.values():
+            if not alliance.is_active(datetime.now()):
+                continue
+            if alliance.involves_source(initiator_id):
+                # Initiator's allies might join
+                for member in alliance.members:
+                    if member != initiator_id:
+                        involvement_chance = (
+                            self._calculate_alliance_involvement_chance(
+                                alliance, member, initiator_id, "support"
+                            )
+                        )
+                        if random.random() < involvement_chance:
+                            allied_sources["initiator_allies"].append(member)
+            elif alliance.involves_source(target_id):
+                # Target's allies might join defensively
+                for member in alliance.members:
+                    if member != target_id:
+                        involvement_chance = (
+                            self._calculate_alliance_involvement_chance(
+                                alliance, member, target_id, "defend"
+                            )
+                        )
+                        if random.random() < involvement_chance:
+                            allied_sources["target_allies"].append(member)
+        return allied_sources
+
+    def _calculate_alliance_involvement_chance(
+        self, alliance: Alliance, potential_ally: str, principal: str, role: str
+    ) -> float:
+        """Calculate chance that an ally gets involved"""
+        base_chance = 0.4
+        # Alliance type affects involvement
+        involvement_by_type = {
+            AllianceType.FULL_ALLIANCE: 0.8,
+            AllianceType.MUTUAL_DEFENSE: 0.9 if role == "defend" else 0.3,
+            AllianceType.TEMPORARY_COOPERATION: 0.3,
+            AllianceType.TRADE_AGREEMENT: 0.2,
+            AllianceType.NON_AGGRESSION: 0.1,
+        }
+        type_modifier = involvement_by_type.get(alliance.alliance_type, base_chance)
+        # Alliance strength affects involvement
+        strength_modifier = alliance.strength
+        # Trust level between ally and principal
+        trust_level = alliance.trust_levels.get(potential_ally, 0.5)
+        # Source's own strategic tendencies
+        ally_source = self.sources[potential_ally]
+        strategy_modifier = 1.0
+        if ally_source.primary_strategy == ConflictStrategy.ISOLATIONIST:
+            strategy_modifier = 0.3
+        elif ally_source.primary_strategy == ConflictStrategy.COLLABORATIVE:
+            strategy_modifier = 1.2
+        elif ally_source.primary_strategy == ConflictStrategy.AGGRESSIVE:
+            strategy_modifier = 1.1
+        # War weariness reduces involvement
+        weariness_modifier = 1.0 - ally_source.war_weariness * 0.5
+        final_chance = (
+            type_modifier
+            * strength_modifier
+            * trust_level
+            * strategy_modifier
+            * weariness_modifier
+        )
+        return max(0.0, min(1.0, final_chance))
+
+    def _calculate_conflict_duration(
+        self, intensity: float, allied_sources: dict[str, list[str]]
+    ) -> float:
+        """Calculate how long the conflict lasts"""
+        base_duration = 2.0 + intensity * 8.0  # 2-10 time units
+        # More allies = longer conflict
+        total_allies = len(allied_sources["initiator_allies"]) + len(
+            allied_sources["target_allies"]
+        )
+        ally_modifier = 1.0 + total_allies * 0.3
+        # Global tension extends conflicts
+        tension_modifier = 1.0 + self.global_tension * 0.5
+        return base_duration * ally_modifier * tension_modifier
+
+    def _execute_conflict_phases(self, conflict: ComplexConflictEvent):
+        """Execute the different phases of conflict"""
+        phases = [
+            ConflictPhase.TENSION_BUILDING,
+            ConflictPhase.ACTIVE_CONFLICT,
+        ]
+        # Determine if conflict escalates
+        if (
+            conflict.intensity > 0.7
+            or len(conflict.allied_sources["initiator_allies"])
+            + len(conflict.allied_sources["target_allies"])
+            > 2
+        ):
+            phases.append(ConflictPhase.ESCALATION)
+        # High-intensity conflicts might reach stalemate
+        if conflict.intensity > 0.8:
+            phases.append(ConflictPhase.STALEMATE)
+        # Add resolution phases
+        phases.extend(
+            [
+                ConflictPhase.DE_ESCALATION,
+                ConflictPhase.RESOLUTION,
+                ConflictPhase.AFTERMATH,
+            ]
+        )
+        # Execute each phase
+        for phase in phases:
+            conflict.conflict_phase = phase
+            self._execute_conflict_phase(conflict, phase)
+
+    def _execute_conflict_phase(
+        self, conflict: ComplexConflictEvent, phase: ConflictPhase
+    ):
+        """Execute a specific phase of conflict"""
+        initiator = self.sources[conflict.initiator_source_id]
+        target = self.sources[conflict.target_source_id]
+        if phase == ConflictPhase.TENSION_BUILDING:
+            # Build up hostility and prepare for conflict
+            current_hostility = initiator.hostility_matrix.get(target.source_id, 0.0)
+            initiator.hostility_matrix[target.source_id] = min(
+                1.0, current_hostility + 0.2
+            )
+            current_trust = initiator.trust_matrix.get(target.source_id, 0.5)
+            initiator.trust_matrix[target.source_id] = max(0.0, current_trust - 0.1)
+        elif phase == ConflictPhase.ACTIVE_CONFLICT:
+            # Main combat phase - determine outcomes
+            self._resolve_combat_phase(conflict)
+        elif phase == ConflictPhase.ESCALATION:
+            # Conflict intensifies
+            conflict.intensity = min(1.0, conflict.intensity * 1.3)
+            # Check for war crimes
+            if conflict.intensity > 0.9 and random.random() < 0.3:
+                conflict.war_crimes = True
+                conflict.civilian_impact = random.uniform(0.5, 0.8)
+        elif phase == ConflictPhase.STALEMATE:
+            # Neither side can gain advantage
+            # Increase war weariness
+            initiator.war_weariness = min(1.0, initiator.war_weariness + 0.2)
+            target.war_weariness = min(1.0, target.war_weariness + 0.2)
+        elif phase == ConflictPhase.DE_ESCALATION:
+            # Intensity decreases
+            conflict.intensity *= 0.7
+        elif phase == ConflictPhase.RESOLUTION:
+            # Determine final winner and terms
+            self._resolve_conflict_outcome(conflict)
+        elif phase == ConflictPhase.AFTERMATH:
+            # Long-term consequences
+            self._apply_aftermath_consequences(conflict)
+
+    def _resolve_combat_phase(self, conflict: ComplexConflictEvent):
+        """Resolve the main combat phase of conflict"""
+        initiator = self.sources[conflict.initiator_source_id]
+        target = self.sources[conflict.target_source_id]
+        # Calculate effective forces
+        initiator_power = initiator.calculate_effective_power_against(
+            target, conflict.conflict_type
+        )
+        target_power = target.calculate_effective_power_against(
+            initiator, conflict.conflict_type
+        )
+        # Add allied power
+        for ally_id in conflict.allied_sources["initiator_allies"]:
+            ally = self.sources[ally_id]
+            initiator_power += (
+                ally.calculate_effective_power_against(target, conflict.conflict_type)
+                * 0.7
+            )
+        for ally_id in conflict.allied_sources["target_allies"]:
+            ally = self.sources[ally_id]
+            target_power += (
+                ally.calculate_effective_power_against(
+                    initiator, conflict.conflict_type
+                )
+                * 0.7
+            )
+        # Add randomness (fog of war)
+        initiator_power *= random.uniform(0.8, 1.2)
+        target_power *= random.uniform(0.8, 1.2)
+        # Determine victor and casualties
+        total_power = initiator_power + target_power
+        initiator_advantage = initiator_power / total_power if total_power > 0 else 0.5
+        # Calculate casualties based on intensity and power levels
+        base_casualty_rate = conflict.intensity * 0.3
+        initiator_casualties = base_casualty_rate * (1.0 - initiator_advantage)
+        target_casualties = base_casualty_rate * initiator_advantage
+        # Store casualty impacts
+        conflict.casualty_impacts[conflict.initiator_source_id] = initiator_casualties
+        conflict.casualty_impacts[conflict.target_source_id] = target_casualties
+        # Apply power losses
+        initiator_power_loss = self._calculate_power_loss(
+            initiator_casualties, conflict.intensity
+        )
+        target_power_loss = self._calculate_power_loss(
+            target_casualties, conflict.intensity
+        )
+        self._apply_power_loss(initiator, initiator_power_loss, conflict.conflict_type)
+        self._apply_power_loss(target, target_power_loss, conflict.conflict_type)
+        # Store power shifts
+        conflict.power_shifts[conflict.initiator_source_id] = initiator_power_loss
+        conflict.power_shifts[conflict.target_source_id] = target_power_loss
+        # Update victory/defeat counters
+        if initiator_advantage > 0.6:
+            initiator.recent_victories += 1
+            target.recent_defeats += 1
+        elif initiator_advantage < 0.4:
+            target.recent_victories += 1
+            initiator.recent_defeats += 1
+
+    def _calculate_power_loss(
+        self, casualty_rate: float, intensity: float
+    ) -> dict[str, float]:
+        """Calculate power losses across different dimensions"""
+        base_loss = casualty_rate * intensity
+        return {
+            "military": base_loss * random.uniform(0.8, 1.2),
+            "economic": base_loss * random.uniform(0.3, 0.7),
+            "diplomatic": base_loss * random.uniform(0.1, 0.5),
+            "ideological": base_loss * random.uniform(0.2, 0.6),
+            "technological": base_loss * random.uniform(0.1, 0.4),
+            "spiritual": base_loss * random.uniform(0.2, 0.8),
+        }
+
+    def _apply_power_loss(
+        self, source: EnhancedSource, power_loss: dict[str, float], conflict_type: str
+    ):
+        """Apply power losses to a source"""
+        # Multiply losses based on conflict type
+        type_multipliers = {
+            "territorial": {"military": 1.5, "economic": 1.2},
+            "resource": {"economic": 1.5, "military": 1.1},
+            "ideological": {"ideological": 1.5, "spiritual": 1.2},
+            "diplomatic": {"diplomatic": 1.5, "ideological": 1.1},
+        }
+        multipliers = type_multipliers.get(conflict_type, {})
+        # Apply losses
+        source.power_balance.military = max(
+            10.0,
+            source.power_balance.military
+            - power_loss["military"] * multipliers.get("military", 1.0) * 10,
+        )
+        source.power_balance.economic = max(
+            10.0,
+            source.power_balance.economic
+            - power_loss["economic"] * multipliers.get("economic", 1.0) * 10,
+        )
+        source.power_balance.diplomatic = max(
+            10.0,
+            source.power_balance.diplomatic
+            - power_loss["diplomatic"] * multipliers.get("diplomatic", 1.0) * 10,
+        )
+        source.power_balance.ideological = max(
+            10.0,
+            source.power_balance.ideological
+            - power_loss["ideological"] * multipliers.get("ideological", 1.0) * 10,
+        )
+        source.power_balance.technological = max(
+            10.0,
+            source.power_balance.technological
+            - power_loss["technological"] * multipliers.get("technological", 1.0) * 10,
+        )
+        source.power_balance.spiritual = max(
+            10.0,
+            source.power_balance.spiritual
+            - power_loss["spiritual"] * multipliers.get("spiritual", 1.0) * 10,
+        )
+
+    def _resolve_conflict_outcome(self, conflict: ComplexConflictEvent):
+        """Determine the final outcome and resolution type"""
+        initiator = self.sources[conflict.initiator_source_id]
+        target = self.sources[conflict.target_source_id]
+        # Calculate final power positions
+        initiator_final_power = initiator.power_balance.total_power()
+        target_final_power = target.power_balance.total_power()
+        power_ratio = initiator_final_power / (target_final_power + 1e-6)
+        # Determine resolution type
+        if power_ratio > 1.5:
+            conflict.resolution_type = "decisive_victory"
+            # Territory changes for territorial conflicts
+            if conflict.conflict_type == "territorial":
+                self._transfer_territory(target, initiator, 0.3)
+        elif power_ratio > 1.2:
+            conflict.resolution_type = "marginal_victory"
+            if conflict.conflict_type == "territorial":
+                self._transfer_territory(target, initiator, 0.1)
+        elif power_ratio < 0.8:
+            conflict.resolution_type = "decisive_defeat"
+            if conflict.conflict_type == "territorial":
+                self._transfer_territory(initiator, target, 0.3)
+        elif power_ratio < 0.9:
+            conflict.resolution_type = "marginal_defeat"
+            if conflict.conflict_type == "territorial":
+                self._transfer_territory(initiator, target, 0.1)
+        else:
+            conflict.resolution_type = "stalemate"
+        # Update historical memory
+        outcome_description = f"Conflict with {target.name}: {conflict.resolution_type}"
+        initiator.historical_memory.append(outcome_description)
+        outcome_description = f"Conflict with {initiator.name}: {self._invert_outcome(conflict.resolution_type)}"
+        target.historical_memory.append(outcome_description)
+
+    def _invert_outcome(self, outcome: str) -> str:
+        """Invert outcome from perspective of the other side"""
+        inversions = {
+            "decisive_victory": "decisive_defeat",
+            "marginal_victory": "marginal_defeat",
+            "decisive_defeat": "decisive_victory",
+            "marginal_defeat": "marginal_victory",
+            "stalemate": "stalemate",
+        }
+        return inversions.get(outcome, outcome)
+
+    def _transfer_territory(
+        self, from_source: EnhancedSource, to_source: EnhancedSource, proportion: float
+    ):
+        """Transfer territory between sources"""
+        territories_to_transfer = int(
+            len(from_source.controlled_territories) * proportion
+        )
+        if territories_to_transfer > 0:
+            transferred = random.sample(
+                list(from_source.controlled_territories), territories_to_transfer
+            )
+            for territory in transferred:
+                from_source.controlled_territories.discard(territory)
+                to_source.controlled_territories.add(territory)
+
+    def _apply_aftermath_consequences(self, conflict: ComplexConflictEvent):
+        """Apply long-term consequences of the conflict"""
+        # Economic disruption
+        if conflict.intensity > 0.6:
+            self.resource_scarcity = min(
+                1.0, self.resource_scarcity + conflict.intensity * 0.2
+            )
+        # Diplomatic climate effects
+        if conflict.war_crimes:
+            self.diplomatic_climate = max(0.0, self.diplomatic_climate - 0.3)
+            conflict.long_term_consequences.append(
+                "International condemnation for war crimes"
+            )
+        # Refugee and civilian consequences
+        if conflict.civilian_impact > 0.5:
+            conflict.long_term_consequences.append("Large-scale civilian displacement")
+            # Neighboring sources might be affected
+            for source in self.sources.values():
+                if source.source_id not in [
+                    conflict.initiator_source_id,
+                    conflict.target_source_id,
+                ]:
+                    # Random chance of refugee burden
+                    if random.random() < conflict.civilian_impact * 0.5:
+                        source.resource_stockpiles["humanitarian_burden"] = (
+                            source.resource_stockpiles.get("humanitarian_burden", 0.0)
+                            + conflict.civilian_impact
+                        )
+        # Technological advancement from conflict
+        if conflict.intensity > 0.7:
+            # War drives innovation
+            initiator = self.sources[conflict.initiator_source_id]
+            target = self.sources[conflict.target_source_id]
+            tech_advancement = conflict.intensity * 5.0
+            initiator.power_balance.technological = min(
+                100.0, initiator.power_balance.technological + tech_advancement
+            )
+            target.power_balance.technological = min(
+                100.0, target.power_balance.technological + tech_advancement * 0.7
+            )
+        # Alliance impacts
+        for alliance_id, strength_change in conflict.alliance_impacts.items():
+            if alliance_id in self.alliances:
+                self.alliances[alliance_id].strength = max(
+                    0.0,
+                    min(1.0, self.alliances[alliance_id].strength + strength_change),
+                )
+
+    def _apply_conflict_consequences(self, conflict: ComplexConflictEvent):
+        """Apply immediate consequences of conflict"""
+        initiator = self.sources[conflict.initiator_source_id]
+        target = self.sources[conflict.target_source_id]
+        # Update war weariness for all participants
+        all_participants = [conflict.initiator_source_id, conflict.target_source_id]
+        all_participants.extend(conflict.allied_sources["initiator_allies"])
+        all_participants.extend(conflict.allied_sources["target_allies"])
+        for source_id in all_participants:
+            source = self.sources[source_id]
+            weariness_increase = conflict.intensity * conflict.duration * 0.1
+            source.war_weariness = min(1.0, source.war_weariness + weariness_increase)
+        # Strategic adaptations
+        recent_outcomes = [
+            event.resolution_type
+            for event in self.conflict_history[-5:]
+            if event.resolution_type
+        ]
+        initiator.adapt_strategy(
+            recent_outcomes, {"global_tension": self.global_tension}
+        )
+        target.adapt_strategy(recent_outcomes, {"global_tension": self.global_tension})
+
+    def apply_qualia_field_impacts(
+        self, conflict: ComplexConflictEvent, qualia_field: QualiaField
+    ) -> dict[str, Any]:
+        """Apply conflict impacts to the Qualia Field"""
+        impacts = {}
+        initiator = self.sources[conflict.initiator_source_id]
+        target = self.sources[conflict.target_source_id]
+        # Determine influence type based on conflict outcome and participants
+        # Calculate influence strength based on conflict intensity and participants
+        base_influence = conflict.intensity * 0.3
+        # Winner's ideology has stronger influence
+        if conflict.resolution_type in ["decisive_victory", "marginal_victory"]:
+            winner_influence = initiator.influence_on_qualia
+            loser_influence = target.influence_on_qualia
+            winner_multiplier = 1.5
+            loser_multiplier = 0.5
+        elif conflict.resolution_type in ["decisive_defeat", "marginal_defeat"]:
+            winner_influence = target.influence_on_qualia
+            loser_influence = initiator.influence_on_qualia
+            winner_multiplier = 1.5
+            loser_multiplier = 0.5
+        else:  # Stalemate
+            winner_influence = initiator.influence_on_qualia
+            loser_influence = target.influence_on_qualia
+            winner_multiplier = 1.0
+            loser_multiplier = 1.0
+        # Apply influences to qualia field
+        total_order_influence = 0.0
+        total_chaos_influence = 0.0
+        # Winner's influence
+        if "order_bias" in winner_influence:
+            order_influence = (
+                base_influence * winner_influence["order_bias"] * winner_multiplier
+            )
+            # qualia_field.influence_field(order_influence, is_order_influence=True)
+            total_order_influence += order_influence
+        if "chaos_bias" in winner_influence:
+            chaos_influence = (
+                base_influence * winner_influence["chaos_bias"] * winner_multiplier
+            )
+            # qualia_field.influence_field(chaos_influence, is_order_influence=False)
+            total_chaos_influence += chaos_influence
+        # Loser's diminished influence
+        if "order_bias" in loser_influence:
+            order_influence = (
+                base_influence * loser_influence["order_bias"] * loser_multiplier
+            )
+            total_order_influence += order_influence
+        if "chaos_bias" in loser_influence:
+            chaos_influence = (
+                base_influence * loser_influence["chaos_bias"] * loser_multiplier
+            )
+            total_chaos_influence += chaos_influence
+        # War crimes create chaos
+        if conflict.war_crimes:
+            chaos_from_crimes = conflict.civilian_impact * 0.4
+            # qualia_field.influence_field(chaos_from_crimes, is_order_influence=False)
+            total_chaos_influence += chaos_from_crimes
+        # High-intensity conflicts create field disruption
+        if conflict.intensity > 0.7:
+            disruption_strength = (conflict.intensity - 0.7) * 0.5
+            # Create random field disruptions
+            for _ in range(int(disruption_strength * 10)):
+                random_pos = (
+                    random.randint(0, qualia_field.dimensions[0] - 1),
+                    random.randint(0, qualia_field.dimensions[1] - 1),
+                    random.randint(0, qualia_field.dimensions[2] - 1),
+                )
+                # Create chaotic disruption
+                qualia_field.apply_consciousness_influence(
+                    entity_id=f"conflict_disruption_{conflict.event_id}",
+                    consciousness_state={
+                        "consciousness_coherence": 0.2,
+                        "stress_level": 0.9,
+                        "energy_balance": 0.8,
+                        "decision_confidence": 0.3,
+                    },
+                    position=random_pos,
+                    influence_type=qualia_field.InfluenceType.CHAOS,
+                    strength=disruption_strength,
+                    radius=2.0,
+                    duration=conflict.duration,
+                )
+        impacts["total_order_influence"] = total_order_influence
+        impacts["total_chaos_influence"] = total_chaos_influence
+        impacts["field_disruptions"] = conflict.intensity > 0.7
+        impacts["disruption_strength"] = (
+            (conflict.intensity - 0.7) * 0.5 if conflict.intensity > 0.7 else 0.0
+        )
+        conflict.qualia_field_impacts = impacts
+        return impacts
+
+    def apply_lattice_impacts(
+        self, conflict: ComplexConflictEvent, elemental_lattices: dict[str, Any]
+    ) -> list[dict[str, Any]]:
+        """Apply conflict impacts to Elemental Lattices"""
+        lattice_impacts = []
+        if conflict.conflict_type == "territorial":
+            # Territorial conflicts cause physical disruption
+            for element_type, lattice in elemental_lattices.items():
+                if random.random() < conflict.intensity * 0.4:
+                    # Create disruption in random location
+                    disruption_pos = (
+                        random.randint(0, lattice.dimensions[0] - 1),
+                        random.randint(0, lattice.dimensions[1] - 1),
+                        random.randint(0, lattice.dimensions[2] - 1),
+                    )
+                    disruption_strength = conflict.intensity * random.uniform(0.5, 1.2)
+                    radius = max(1, int(conflict.intensity * 3))
+                    lattice.deform_lattice(
+                        disruption_pos[0],
+                        disruption_pos[1],
+                        disruption_pos[2],
+                        disruption_strength,
+                        radius=radius,
+                    )
+                    impact = {
+                        "element_type": element_type,
+                        "disruption_position": disruption_pos,
+                        "strength": disruption_strength,
+                        "radius": radius,
+                        "cause": f"Territorial conflict {conflict.event_id}",
+                    }
+                    lattice_impacts.append(impact)
+        elif conflict.conflict_type == "resource":
+            # Resource conflicts deplete and concentrate materials
+            for element_type, lattice in elemental_lattices.items():
+                if random.random() < conflict.intensity * 0.6:
+                    # Depletion zone
+                    depletion_pos = (
+                        random.randint(0, lattice.dimensions[0] - 1),
+                        random.randint(0, lattice.dimensions[1] - 1),
+                        random.randint(0, lattice.dimensions[2] - 1),
+                    )
+                    # Concentration zone
+                    concentration_pos = (
+                        random.randint(0, lattice.dimensions[0] - 1),
+                        random.randint(0, lattice.dimensions[1] - 1),
+                        random.randint(0, lattice.dimensions[2] - 1),
+                    )
+                    resource_transfer = conflict.intensity * random.uniform(0.3, 0.8)
+                    # Apply depletion
+                    lattice.deform_lattice(
+                        depletion_pos[0],
+                        depletion_pos[1],
+                        depletion_pos[2],
+                        -resource_transfer,
+                        radius=2,
+                    )
+                    # Apply concentration
+                    lattice.deform_lattice(
+                        concentration_pos[0],
+                        concentration_pos[1],
+                        concentration_pos[2],
+                        resource_transfer * 0.8,  # Some loss in transfer
+                        radius=1,
+                    )
+                    impact = {
+                        "element_type": element_type,
+                        "depletion_position": depletion_pos,
+                        "concentration_position": concentration_pos,
+                        "transfer_amount": resource_transfer,
+                        "cause": f"Resource conflict {conflict.event_id}",
+                    }
+                    lattice_impacts.append(impact)
+        elif conflict.conflict_type == "ideological":
+            # Ideological conflicts create widespread subtle changes
+            for element_type, lattice in elemental_lattices.items():
+                # Increase background fluctuations
+                enhanced_fluctuation = lattice.quantum_fluctuation_strength * (
+                    1.0 + conflict.intensity * 0.5
+                )
+                original_fluctuation = lattice.quantum_fluctuation_strength
+                lattice.quantum_fluctuation_strength = enhanced_fluctuation
+                # Let it run for the conflict duration worth of updates
+                for _ in range(int(conflict.duration)):
+                    lattice.update_dynamics(dt=0.1)
+                # Restore original fluctuation level
+                lattice.quantum_fluctuation_strength = original_fluctuation
+                impact = {
+                    "element_type": element_type,
+                    "fluctuation_increase": enhanced_fluctuation - original_fluctuation,
+                    "duration": conflict.duration,
+                    "cause": f"Ideological conflict {conflict.event_id}",
+                }
+                lattice_impacts.append(impact)
+        conflict.lattice_disruptions = lattice_impacts
+        return lattice_impacts
+
+    def apply_so_ser_impacts(
+        self, conflict: ComplexConflictEvent, so_ser_entities: dict[str, Any]
+    ) -> dict[str, dict[str, float | dict[str, float]]]:
+        """
+        Aplica los impactos del conflicto a entidades SO-Ser.
+        Corrige errores de inicialización y lógica de impactos.
+        """
+        so_ser_impacts = {}
+        for entity_id, entity in so_ser_entities.items():
+            entity_impacts: dict[str, float | dict[str, float]] = {
+                "stress_impact": 0.0,
+                "coherence_impact": 0.0,
+                "energy_impact": 0.0,
+                "chakra_impacts": {},
+                "qualia_impacts": {},
+            }
+            base_impact = conflict.intensity * 0.3
+            entity_alignment = random.choice(["initiator", "target", "neutral"])
+            # Impactos principales
+            if entity_alignment == "initiator":
+                if conflict.resolution_type in ["decisive_victory", "marginal_victory"]:
+                    entity_impacts["coherence_impact"] = base_impact * 0.5
+                    entity_impacts["energy_impact"] = base_impact * 0.3
+                    entity_impacts["stress_impact"] = -base_impact * 0.2
+                    entity.consciousness_coherence = min(
+                        1.0,
+                        float(getattr(entity, "consciousness_coherence", 0.5))
+                        + entity_impacts["coherence_impact"],
+                    )
+                    entity.stress_level = max(
+                        0.0,
+                        float(getattr(entity, "stress_level", 0.5))
+                        + entity_impacts["stress_impact"],
+                    )
+                    entity.energy_balance = min(
+                        1.0,
+                        float(getattr(entity, "energy_balance", 0.5))
+                        + entity_impacts["energy_impact"],
+                    )
+                else:
+                    entity_impacts["coherence_impact"] = -base_impact * 0.3
+                    entity_impacts["energy_impact"] = -base_impact * 0.4
+                    entity_impacts["stress_impact"] = base_impact * 0.5
+                    entity.consciousness_coherence = max(
+                        0.0,
+                        float(getattr(entity, "consciousness_coherence", 0.5))
+                        + entity_impacts["coherence_impact"],
+                    )
+                    entity.stress_level = min(
+                        1.0,
+                        float(getattr(entity, "stress_level", 0.5))
+                        + entity_impacts["stress_impact"],
+                    )
+                    entity.energy_balance = max(
+                        0.0,
+                        float(getattr(entity, "energy_balance", 0.5))
+                        + entity_impacts["energy_impact"],
+                    )
+            elif entity_alignment == "target":
+                if conflict.resolution_type in ["decisive_defeat", "marginal_defeat"]:
+                    entity_impacts["coherence_impact"] = base_impact * 0.5
+                    entity_impacts["energy_impact"] = base_impact * 0.3
+                    entity_impacts["stress_impact"] = -base_impact * 0.2
+                else:
+                    entity_impacts["coherence_impact"] = -base_impact * 0.3
+                    entity_impacts["energy_impact"] = -base_impact * 0.4
+                    entity_impacts["stress_impact"] = base_impact * 0.5
+            else:
+                entity_impacts["stress_impact"] = base_impact * 0.3
+                entity_impacts["coherence_impact"] = -base_impact * 0.1
+                entity.stress_level = min(
+                    1.0,
+                    float(getattr(entity, "stress_level", 0.5))
+                    + entity_impacts["stress_impact"],
+                )
+                entity.consciousness_coherence = max(
+                    0.0,
+                    float(getattr(entity, "consciousness_coherence", 0.5))
+                    + entity_impacts["coherence_impact"],
+                )
+            # Impactos por crímenes de guerra
+            if conflict.war_crimes:
+                trauma_impact = conflict.civilian_impact * 0.4
+                entity_impacts["stress_impact"] += trauma_impact
+                entity_impacts["coherence_impact"] -= trauma_impact * 0.5
+                entity.stress_level = min(
+                    1.0,
+                    float(getattr(entity, "stress_level", 0.5)) + trauma_impact,
+                )
+                entity.consciousness_coherence = max(
+                    0.0,
+                    float(getattr(entity, "consciousness_coherence", 0.5))
+                    - trauma_impact * 0.5,
+                )
+            # Impactos de chakras
+            if hasattr(entity, "soul") and hasattr(entity.soul, "chakras"):
+                if conflict.conflict_type == "territorial":
+                    root_impact = base_impact * 10
+                    entity.soul.chakras.drain_chakra("ROOT", root_impact)
+                    entity_impacts["chakra_impacts"]["ROOT"] = -root_impact
+                elif conflict.conflict_type == "resource":
+                    solar_impact = base_impact * 8
+                    entity.soul.chakras.drain_chakra("SOLAR_PLEXUS", solar_impact)
+                    entity_impacts["chakra_impacts"]["SOLAR_PLEXUS"] = -solar_impact
+                elif conflict.conflict_type == "ideological":
+                    crown_impact = base_impact * 6
+                    entity.soul.chakras.drain_chakra("CROWN", crown_impact)
+                    entity_impacts["chakra_impacts"]["CROWN"] = -crown_impact
+            # Impactos de qualia
+            if hasattr(entity, "conscious_mind") and hasattr(
+                entity.conscious_mind, "current_qualia"
+            ):
+                qualia_state = entity.conscious_mind.current_qualia
+                if (
+                    conflict.resolution_type in ["decisive_victory", "marginal_victory"]
+                    and entity_alignment == "initiator"
+                ):
+                    qualia_state.update_state(
+                        order_change=base_impact * 0.2, emotion="triumph"
+                    )
+                    entity_impacts["qualia_impacts"]["order_change"] = base_impact * 0.2
+                elif (
+                    conflict.resolution_type in ["decisive_defeat", "marginal_defeat"]
+                    and entity_alignment == "initiator"
+                ):
+                    qualia_state.update_state(
+                        chaos_change=base_impact * 0.2, emotion="despair"
+                    )
+                    entity_impacts["qualia_impacts"]["chaos_change"] = base_impact * 0.2
+                if conflict.war_crimes:
+                    qualia_state.update_state(
+                        chaos_change=conflict.civilian_impact * 0.3, emotion="horror"
+                    )
+                    entity_impacts["qualia_impacts"]["chaos_change"] = (
+                        entity_impacts["qualia_impacts"].get("chaos_change", 0.0)
+                        + conflict.civilian_impact * 0.3
+                    )
+            so_ser_impacts[entity_id] = entity_impacts
+        conflict.so_ser_effects = so_ser_impacts
+        return so_ser_impacts
+
+    def apply_adam_impacts(
+        self, conflict: ComplexConflictEvent, adam_entities: dict[str, ConsciousBeing]
+    ) -> dict[str, dict[str, float | dict[str, float]]]:
+        """
+        Aplica los impactos del conflicto a entidades ADAM (ConsciousBeing).
+        Corrige inicialización y lógica de impactos.
+        """
+        adam_impacts = {}
+        for entity_id, adam in adam_entities.items():
+            entity_impacts: dict[str, float | dict[str, float]] = {
+                "stress_impact": 0.0,
+                "coherence_impact": 0.0,
+                "energy_impact": 0.0,
+                "chakra_impacts": {},
+                "qualia_impacts": {},
+            }
+            base_impact = conflict.intensity * 0.3
+            entity_alignment = random.choice(["initiator", "target", "neutral"])
+            mind = getattr(adam, "mind", None)
+            soul = getattr(adam, "soul", None)
+            body = getattr(adam, "body", None)
+            if entity_alignment == "initiator":
+                if conflict.resolution_type in ["decisive_victory", "marginal_victory"]:
+                    entity_impacts["coherence_impact"] = base_impact * 0.5
+                    entity_impacts["energy_impact"] = base_impact * 0.3
+                    entity_impacts["stress_impact"] = -base_impact * 0.2
+                    if mind:
+                        mind.consciousness_coherence = min(
+                            1.0,
+                            float(getattr(mind, "consciousness_coherence", 0.5))
+                            + entity_impacts["coherence_impact"],
+                        )
+                    if body:
+                        body.stress_level = max(
+                            0.0,
+                            float(getattr(body, "stress_level", 0.5))
+                            + entity_impacts["stress_impact"],
+                        )
+                        body.energy_balance = min(
+                            1.0,
+                            float(getattr(body, "energy_balance", 0.5))
+                            + entity_impacts["energy_impact"],
+                        )
+                else:
+                    entity_impacts["coherence_impact"] = -base_impact * 0.3
+                    entity_impacts["energy_impact"] = -base_impact * 0.4
+                    entity_impacts["stress_impact"] = base_impact * 0.5
+                    if mind:
+                        mind.consciousness_coherence = max(
+                            0.0,
+                            float(getattr(mind, "consciousness_coherence", 0.5))
+                            + entity_impacts["coherence_impact"],
+                        )
+                    if body:
+                        body.stress_level = min(
+                            1.0,
+                            float(getattr(body, "stress_level", 0.5))
+                            + entity_impacts["stress_impact"],
+                        )
+                        body.energy_balance = max(
+                            0.0,
+                            float(getattr(body, "energy_balance", 0.5))
+                            + entity_impacts["energy_impact"],
+                        )
+            elif entity_alignment == "target":
+                if conflict.resolution_type in ["decisive_defeat", "marginal_defeat"]:
+                    entity_impacts["coherence_impact"] = base_impact * 0.5
+                    entity_impacts["energy_impact"] = base_impact * 0.3
+                    entity_impacts["stress_impact"] = -base_impact * 0.2
+                else:
+                    entity_impacts["coherence_impact"] = -base_impact * 0.3
+                    entity_impacts["energy_impact"] = -base_impact * 0.4
+                    entity_impacts["stress_impact"] = base_impact * 0.5
+            else:
+                entity_impacts["stress_impact"] = base_impact * 0.3
+                entity_impacts["coherence_impact"] = -base_impact * 0.1
+                if body:
+                    body.stress_level = min(
+                        1.0,
+                        float(getattr(body, "stress_level", 0.5))
+                        + entity_impacts["stress_impact"],
+                    )
+                if mind:
+                    mind.consciousness_coherence = max(
+                        0.0,
+                        float(getattr(mind, "consciousness_coherence", 0.5))
+                        + entity_impacts["coherence_impact"],
+                    )
+            if conflict.war_crimes:
+                trauma_impact = conflict.civilian_impact * 0.4
+                entity_impacts["stress_impact"] += trauma_impact
+                entity_impacts["coherence_impact"] -= trauma_impact * 0.5
+                if body:
+                    body.stress_level = min(
+                        1.0, float(getattr(body, "stress_level", 0.5)) + trauma_impact
+                    )
+                if mind:
+                    mind.consciousness_coherence = max(
+                        0.0,
+                        float(getattr(mind, "consciousness_coherence", 0.5))
+                        - trauma_impact * 0.5,
+                    )
+            if soul and hasattr(soul, "chakras"):
+                if conflict.conflict_type == "territorial":
+                    root_impact = base_impact * 10
+                    soul.chakras.drain_chakra("ROOT", root_impact)
+                    entity_impacts["chakra_impacts"]["ROOT"] = -root_impact
+                elif conflict.conflict_type == "resource":
+                    solar_impact = base_impact * 8
+                    soul.chakras.drain_chakra("SOLAR_PLEXUS", solar_impact)
+                    entity_impacts["chakra_impacts"]["SOLAR_PLEXUS"] = -solar_impact
+                elif conflict.conflict_type == "ideological":
+                    crown_impact = base_impact * 6
+                    soul.chakras.drain_chakra("CROWN", crown_impact)
+                    entity_impacts["chakra_impacts"]["CROWN"] = -crown_impact
+            if mind and hasattr(mind, "current_qualia"):
+                qualia_state = mind.current_qualia
+                if (
+                    conflict.resolution_type in ["decisive_victory", "marginal_victory"]
+                    and entity_alignment == "initiator"
+                ):
+                    qualia_state.update_state(
+                        order_change=base_impact * 0.2, emotion="triumph"
+                    )
+                    entity_impacts["qualia_impacts"]["order_change"] = base_impact * 0.2
+                elif (
+                    conflict.resolution_type in ["decisive_defeat", "marginal_defeat"]
+                    and entity_alignment == "initiator"
+                ):
+                    qualia_state.update_state(
+                        chaos_change=base_impact * 0.2, emotion="despair"
+                    )
+                    entity_impacts["qualia_impacts"]["chaos_change"] = base_impact * 0.2
+                if conflict.war_crimes:
+                    qualia_state.update_state(
+                        chaos_change=conflict.civilian_impact * 0.3, emotion="horror"
+                    )
+                    entity_impacts["qualia_impacts"]["chaos_change"] = (
+                        entity_impacts["qualia_impacts"].get("chaos_change", 0.0)
+                        + conflict.civilian_impact * 0.3
+                    )
+            adam_impacts[entity_id] = entity_impacts
+        conflict.adam_effects = adam_impacts
+        return adam_impacts
+
+
+#

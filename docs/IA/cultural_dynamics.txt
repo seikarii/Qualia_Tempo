@@ -1,0 +1,1193 @@
+# crisalida_lib/EARTH/cultural_dynamics.py
+
+import asyncio
+import json
+import logging
+import re
+import time
+from collections import Counter, defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any
+
+from crisalida_lib.EVA.core_types import (
+    LivingSymbolRuntime,
+    QuantumField,
+)
+from crisalida_lib.EARTH.self_modifying_engine import SelfModifyingEngine
+from crisalida_lib.EVA.types import (
+    EVAExperience,
+    QualiaState,
+    RealityBytecode,
+)
+
+logger = logging.getLogger(__name__)
+
+
+class CulturalTrend(Enum):
+    """Types of cultural trends observed in the Noosphere"""
+
+    LANGUAGE_EVOLUTION = "language_evolution"
+    BEHAVIORAL_PATTERN = "behavioral_pattern"
+    SOCIAL_STRUCTURE = "social_structure"
+    KNOWLEDGE_PROPAGATION = "knowledge_propagation"
+    MEMETIC_SPREAD = "memetic_spread"
+    COLLECTIVE_INTELLIGENCE = "collective_intelligence"
+
+
+@dataclass
+class CulturalMeme:
+    """Represents a cultural meme propagating through the Noosphere"""
+
+    id: str
+    content: str
+    origin_entity: str
+    propagation_count: int = 0
+    evolution_mutations: list[str] = field(default_factory=list)
+    fitness_score: float = 0.0
+    lifespan_hours: float = 0.0
+    associated_behaviors: list[str] = field(default_factory=list)
+    creation_timestamp: datetime = field(default_factory=datetime.now)
+
+
+@dataclass
+class CulturalObservation:
+    """A single observation of cultural phenomena"""
+
+    id: str
+    trend_type: CulturalTrend
+    description: str
+    entities_involved: set[str]
+    impact_score: float
+    suggested_evolution_targets: list[str] = field(default_factory=list)
+    timestamp: datetime = field(default_factory=datetime.now)
+
+
+class CulturalEvolutionObserver:
+    """
+    Observador evolutivo para la proto-noosfera y el análisis de dinámicas culturales.
+    Analiza patrones lingüísticos, fitness memética, salud cultural,
+    observa tendencias culturales y propone modificaciones adaptativas al sistema.
+    """
+
+    def __init__(
+        self,
+        storage_manager: Any,
+        sme_instance: SelfModifyingEngine | None = None,
+    ):
+        # From cultural_evolution.py
+        self.storage_manager = storage_manager
+        self.sme = sme_instance
+        self.linguistic_patterns: dict[str, int] = defaultdict(int)
+        self.concept_emergence: dict[str, Any] = {}
+        self.memetic_fitness: dict[str, float] = defaultdict(float)
+        self.meme_tracking: dict[str, Any] = defaultdict(
+            lambda: {"history": [], "mutations": 0}
+        )
+        self.observation_window = timedelta(hours=1)
+        self.last_proposal_tick = 0
+
+        # From cultural_feedback.py
+        self.active_memes: dict[str, CulturalMeme] = {}
+        self.cultural_observations: list[CulturalObservation] = []
+        self.language_evolution_tracker: dict[str, int] = defaultdict(int)
+        self.behavioral_patterns: dict[str, list[str]] = defaultdict(list)
+        self.social_network_metrics: dict[str, Any] = {}
+        self.evolution_suggestions: list[str] = []
+        self.suggestion_confidence: dict[str, float] = {}
+        self._previous_avg_connections: float = 0.0  # To track network changes
+
+        logger.info("🌐 Cultural Evolution Observer initialized")
+
+    # Methods from cultural_evolution.py
+    def get_state(self) -> dict[str, Any]:
+        return {
+            "linguistic_patterns": dict(self.linguistic_patterns),
+            "concept_emergence": self.concept_emergence,
+            "memetic_fitness": dict(self.memetic_fitness),
+            "meme_tracking": dict(self.meme_tracking),
+            "observation_window_seconds": self.observation_window.total_seconds(),
+            "last_proposal_tick": self.last_proposal_tick,
+        }
+
+    def set_state(self, state: dict[str, Any]):
+        self.linguistic_patterns = defaultdict(
+            int, state.get("linguistic_patterns", {})
+        )
+        self.concept_emergence = state.get("concept_emergence", {})
+        self.memetic_fitness = defaultdict(float, state.get("memetic_fitness", {}))
+        self.meme_tracking = defaultdict(
+            lambda: {"history": [], "mutations": 0}, state.get("meme_tracking", {})
+        )
+        self.observation_window = timedelta(
+            seconds=state.get(
+                "observation_window_seconds", timedelta(hours=1).total_seconds()
+            )
+        )
+        self.last_proposal_tick = state.get("last_proposal_tick", 0)
+
+    def analyze_linguistic_evolution(
+        self,
+        time_window_hours: int = 1,
+    ) -> dict[str, Any]:
+        cutoff_time = datetime.now() - timedelta(hours=time_window_hours)
+        recent_posts = self.storage_manager.get_recent_posts(limit=1000)
+        time_filtered_posts = [
+            post
+            for post in recent_posts
+            if float(post["timestamp"]) > cutoff_time.timestamp()
+        ]
+        if not time_filtered_posts:
+            return {"status": "insufficient_data", "posts_analyzed": 0}
+
+        word_frequency: Counter[str] = Counter()
+        qualia_correlations = defaultdict(list)
+        for post in time_filtered_posts:
+            content = post["content"].lower()
+            words = re.findall(r"\b\w+\b", content)
+            word_frequency.update(words)
+            if post.get("qualia_state_json"):
+                try:
+                    qualia_data = json.loads(post["qualia_state_json"])
+                    for word in words:
+                        qualia_correlations[word].append(qualia_data)
+                except json.JSONDecodeError:
+                    continue
+
+        emerging_concepts = self._identify_emerging_concepts(
+            word_frequency, time_filtered_posts
+        )
+        memetic_analysis = self._analyze_memetic_fitness(time_filtered_posts)
+        qualia_word_corr = self._calculate_qualia_correlations(qualia_correlations)
+
+        analysis_result = {
+            "status": "success",
+            "posts_analyzed": len(time_filtered_posts),
+            "time_window_hours": time_window_hours,
+            "most_frequent_words": word_frequency.most_common(20),
+            "emerging_concepts": emerging_concepts,
+            "memetic_fitness": memetic_analysis,
+            "linguistic_diversity": len(word_frequency),
+            "unique_authors": len({post["author_id"] for post in time_filtered_posts}),
+            "qualia_word_correlations": qualia_word_corr,
+        }
+
+        self.storage_manager.store_cultural_pattern(
+            pattern_id="linguistic_evolution",
+            pattern_type="linguistic",
+            data=json.dumps(analysis_result),
+            detected_at=time.time(),
+        )
+        return analysis_result
+
+    def _identify_emerging_concepts(
+        self,
+        word_frequency: Counter,
+        posts: list[dict],
+    ) -> dict[str, Any]:
+        ontological_keywords = {
+            "lattice",
+            "ontological",
+            "qualia",
+            "consciousness",
+            "density",
+            "coherence",
+            "resonance",
+            "emergence",
+            "topología",
+            "entropia",
+            "fragmentos",
+            "distorsiones",
+            "flujos",
+            "patrones",
+        }
+        emerging = {}
+        for word, frequency in word_frequency.items():
+            if word in ontological_keywords and frequency > 1:
+                contexts = [
+                    post["content"] for post in posts if word in post["content"].lower()
+                ]
+                emerging[word] = {
+                    "frequency": frequency,
+                    "contexts": contexts[:3],
+                    "emergence_strength": min(frequency / 10.0, 1.0),
+                }
+        return emerging
+
+    def _analyze_memetic_fitness(self, posts: list[dict]) -> dict[str, Any]:
+        post_types = defaultdict(list)
+        for post in posts:
+            post_type = post.get("post_type", "unknown")
+            post_types[post_type].append(post)
+        memetic_fitness = {}
+        for post_type, type_posts in post_types.items():
+            avg_interaction = sum(
+                post.get("interaction_count", 0) for post in type_posts
+            ) / max(len(type_posts), 1)
+            propagation_score = len(type_posts) / max(len(posts), 1)
+            memetic_fitness[post_type] = {
+                "count": len(type_posts),
+                "average_interactions": avg_interaction,
+                "propagation_score": propagation_score,
+                "fitness_index": round(
+                    (avg_interaction * 0.6) + (propagation_score * 0.4), 3
+                ),
+            }
+        return memetic_fitness
+
+    def _calculate_qualia_correlations(
+        self,
+        qualia_correlations: dict[str, list],
+    ) -> dict[str, dict]:
+        correlations = {}
+        for word, qualia_states in qualia_correlations.items():
+            if len(qualia_states) < 2:
+                continue
+            avg_valence = sum(
+                q.get("emotional_valence", 0) for q in qualia_states
+            ) / len(qualia_states)
+            avg_arousal = sum(q.get("arousal", 0) for q in qualia_states) / len(
+                qualia_states
+            )
+            avg_complexity = sum(
+                q.get("cognitive_complexity", 0) for q in qualia_states
+            ) / len(qualia_states)
+            avg_density = sum(
+                q.get("consciousness_density", 0) for q in qualia_states
+            ) / len(qualia_states)
+            correlations[word] = {
+                "sample_count": len(qualia_states),
+                "avg_emotional_valence": round(avg_valence, 3),
+                "avg_arousal": round(avg_arousal, 3),
+                "avg_cognitive_complexity": round(avg_complexity, 3),
+                "avg_consciousness_density": round(avg_density, 3),
+            }
+        return correlations
+
+    def detect_cultural_memes(self, time_window_hours: int = 24) -> dict[str, Any]:
+        analysis = self.analyze_linguistic_evolution(time_window_hours)
+        if analysis["status"] != "success":
+            return analysis
+        posts = self.storage_manager.get_recent_posts(limit=500)
+        phrase_patterns: dict[str, int] = defaultdict(int)
+        for post in posts:
+            content = post["content"]
+            sentences = re.split(r"[.!?]+", content)
+            for sentence in sentences:
+                words = sentence.strip().split()
+                if 3 <= len(words) <= 6:
+                    phrase = " ".join(words).lower()
+                    phrase_patterns[phrase] += 1
+        memes = {
+            phrase: count
+            for phrase, count in phrase_patterns.items()
+            if count >= 2 and len(phrase.split()) >= 3
+        }
+        for meme, count in memes.items():
+            self.meme_tracking[meme]["history"].append(
+                (datetime.now().isoformat(), count)
+            )
+        meme_analysis = {
+            "detected_memes": memes,
+            "meme_diversity": len(memes),
+            "strongest_meme": max(memes.items(), key=lambda x: x[1]) if memes else None,
+            "total_memetic_expressions": sum(memes.values()),
+        }
+        return {**analysis, "memetic_analysis": meme_analysis}
+
+    def get_cultural_health_metrics(self) -> dict[str, Any]:
+        recent_analysis = self.analyze_linguistic_evolution(time_window_hours=6)
+        if recent_analysis["status"] != "success":
+            return {"status": "insufficient_data"}
+        diversity_score = min(recent_analysis["linguistic_diversity"] / 100.0, 1.0)
+        author_diversity = min(recent_analysis["unique_authors"] / 10.0, 1.0)
+        activity_score = min(recent_analysis["posts_analyzed"] / 50.0, 1.0)
+        coherence_score = min(len(recent_analysis["emerging_concepts"]) / 20.0, 1.0)
+        cultural_health = (
+            diversity_score * 0.3
+            + author_diversity * 0.2
+            + activity_score * 0.3
+            + coherence_score * 0.2
+        )
+        return {
+            "cultural_health_index": round(cultural_health, 3),
+            "diversity_score": round(diversity_score, 3),
+            "author_diversity_score": round(author_diversity, 3),
+            "activity_score": round(activity_score, 3),
+            "coherence_score": round(coherence_score, 3),
+            "analysis_timestamp": datetime.now().isoformat(),
+            "recommendations": self._generate_health_recommendations(cultural_health),
+        }
+
+    def _generate_health_recommendations(self, health_index: float) -> list[str]:
+        recommendations = []
+        if health_index < 0.3:
+            recommendations.extend(
+                [
+                    "Salud cultural crítica - considerar intervención del Demiurgo",
+                    "Estimular diversidad de temas en las interacciones",
+                    "Monitorear posible estancamiento cultural",
+                ]
+            )
+        elif health_index < 0.6:
+            recommendations.extend(
+                [
+                    "Salud cultural moderada - fomentar más interacción entre entidades",
+                    "Introducir nuevos estímulos conceptuales",
+                ]
+            )
+        else:
+            recommendations.append(
+                "Salud cultural óptima - mantener condiciones actuales"
+            )
+        return recommendations
+
+    def propose_linguistic_modification(self, current_tick: int):
+        if not self.sme:
+            return
+        if current_tick - self.last_proposal_tick < 100:
+            return
+        cultural_health = self.get_cultural_health_metrics()
+        if cultural_health.get("cultural_health_index", 0) == 0:
+            return
+        # Propuesta por baja diversidad lingüística
+        if cultural_health["diversity_score"] < 0.5:
+            logger.info(
+                "CulturalEvolutionObserver: Low linguistic diversity detected. Proposing LinguisticEngine modification."
+            )
+            rationale = (
+                f"Linguistic diversity is low ({cultural_health['diversity_score']:.2f}). "
+                "Proposing to increase neologism probability in LinguisticEngine to foster "
+                "richer cultural expression and prevent linguistic stagnation."
+            )
+            proposed_changes = """
+# Proposed change to LinguisticEngine.create_new_word or similar method:
+self.neologism_boost = min(self.neologism_boost + 0.1, 1.0)
+"""
+            proposal_id = self.sme.submit_proposal(
+                target_component="janus/linguistic_engine.py",
+                rationale=rationale,
+                proposed_changes=proposed_changes,
+                estimated_benefit="Increased linguistic diversity and cultural dynamism.",
+            )
+            self.last_proposal_tick = current_tick
+            logger.info(
+                f"CulturalEvolutionObserver: Submitted proposal {proposal_id} to SME."
+            )
+        # Propuesta por baja actividad cultural
+        elif cultural_health["activity_score"] < 0.4:
+            logger.info(
+                "CulturalEvolutionObserver: Low cultural activity detected. Proposing interaction stimulus."
+            )
+            rationale = (
+                f"Cultural activity is low ({cultural_health['activity_score']:.2f}). "
+                "Proposing to adjust entity interaction parameters to stimulate more communication "
+                "and post generation."
+            )
+            proposed_changes = """
+# Proposed change to entity behavior or interaction frequency:
+self.entity_interaction_frequency_multiplier = min(self.entity_interaction_frequency_multiplier + 0.05, 2.0)
+"""
+            proposal_id = self.sme.submit_proposal(
+                target_component="lifecycle/living_entity.py",
+                rationale=rationale,
+                proposed_changes=proposed_changes,
+                estimated_benefit="Increased cultural activity and social engagement.",
+            )
+            self.last_proposal_tick = current_tick
+            logger.info(
+                f"CulturalEvolutionObserver: Submitted proposal {proposal_id} to SME."
+            )
+
+    # Methods from cultural_feedback.py
+    async def observe_cultural_dynamics(
+        self,
+        noosphere_state: dict[str, Any],
+    ) -> list[CulturalObservation]:
+        """
+        Observe and analyze cultural dynamics in the Noosphere.
+        Args:
+            noosphere_state: Current state of the Noosphere including entities, messages, etc.
+        Returns:
+            List of cultural observations with evolution suggestions.
+        """
+        observations: list[CulturalObservation] = []
+        # Analyze language evolution
+        observations += await self._analyze_language_evolution(noosphere_state)
+        # Analyze behavioral patterns
+        observations += await self._analyze_behavioral_patterns(noosphere_state)
+        # Analyze social structures
+        observations += await self._analyze_social_structures(noosphere_state)
+        # Analyze memetic propagation
+        observations += await self._analyze_memetic_propagation(noosphere_state)
+        # Update internal state
+        self.cultural_observations.extend(observations)
+        # Generate evolution suggestions
+        await self._generate_evolution_suggestions(observations)
+        logger.info(
+            f"🔍 Cultural observation complete: {len(observations)} new observations"
+        )
+        return observations
+
+    async def _analyze_language_evolution(
+        self,
+        noosphere_state: dict[str, Any],
+    ) -> list[CulturalObservation]:
+        """Analyze how language is evolving among entities"""
+        messages = noosphere_state.get("recent_messages", [])
+        entities = noosphere_state.get("entities", {})
+        observations: list[CulturalObservation] = []
+        # Track new vocabulary emergence
+        vocabulary_changes = self._track_vocabulary_changes(messages)
+        if vocabulary_changes:
+            obs = CulturalObservation(
+                id=f"lang_evo_{int(datetime.now().timestamp())}",
+                trend_type=CulturalTrend.LANGUAGE_EVOLUTION,
+                description=f"New vocabulary patterns detected: {vocabulary_changes}",
+                entities_involved={msg.get("sender_id", "") for msg in messages},
+                impact_score=len(vocabulary_changes) * 0.1,
+                suggested_evolution_targets=[
+                    "noosphere/message_processing.py",
+                    "internal_consciousness/language_centers.py",
+                ],
+            )
+            observations.append(obs)
+        # Analyze communication efficiency patterns
+        comm_efficiency = self._analyze_communication_efficiency(messages)
+        if comm_efficiency["efficiency_decline"] > 0.2:
+            obs = CulturalObservation(
+                id=f"comm_eff_{int(datetime.now().timestamp())}",
+                trend_type=CulturalTrend.LANGUAGE_EVOLUTION,
+                description=f"Communication efficiency declining: {comm_efficiency['reason']}",
+                entities_involved=set(entities.keys()),
+                impact_score=comm_efficiency["efficiency_decline"],
+                suggested_evolution_targets=[
+                    "noosphere/message_routing.py",
+                    "noosphere/semantic_processing.py",
+                ],
+            )
+            observations.append(obs)
+        return observations
+
+    async def _analyze_behavioral_patterns(
+        self,
+        noosphere_state: dict[str, Any],
+    ) -> list[CulturalObservation]:
+        """Analyze emerging behavioral patterns among entities"""
+        entity_actions = noosphere_state.get("recent_actions", [])
+        observations: list[CulturalObservation] = []
+        # Detect recurring behavioral patterns
+        patterns = self._detect_behavioral_patterns(entity_actions)
+        for pattern_name, pattern_data in patterns.items():
+            if pattern_data["frequency"] > 0.3:  # Pattern appears in >30% of actions
+                obs = CulturalObservation(
+                    id=f"behavior_{pattern_name}_{int(datetime.now().timestamp())}",
+                    trend_type=CulturalTrend.BEHAVIORAL_PATTERN,
+                    description=f"Behavioral pattern '{pattern_name}' emerging: {pattern_data['description']}",
+                    entities_involved=set(pattern_data["entities"]),
+                    impact_score=pattern_data["frequency"],
+                    suggested_evolution_targets=[
+                        "internal_consciousness/behavioral_engine.py",
+                        "core_universe/entity_dynamics.py",
+                    ],
+                )
+                observations.append(obs)
+        # Analyze collective decision-making patterns
+        decision_patterns = self._analyze_collective_decisions(entity_actions)
+        if decision_patterns["coordination_improvement"] > 0.15:
+            obs = CulturalObservation(
+                id=f"collective_decision_{int(datetime.now().timestamp())}",
+                trend_type=CulturalTrend.COLLECTIVE_INTELLIGENCE,
+                description="Improved collective decision-making detected",
+                entities_involved={
+                    a.get("entity_id", "unknown") for a in entity_actions
+                },
+                impact_score=decision_patterns["coordination_improvement"],
+                suggested_evolution_targets=[
+                    "noosphere/consensus_mechanisms.py",
+                    "internal_consciousness/group_dynamics.py",
+                ],
+            )
+            observations.append(obs)
+        return observations
+
+    async def _analyze_social_structures(
+        self,
+        noosphere_state: dict[str, Any],
+    ) -> list[CulturalObservation]:
+        """Analyze evolving social structures and hierarchies"""
+        relationships = noosphere_state.get("entity_relationships", {})
+        entities = noosphere_state.get("entities", {})
+        observations: list[CulturalObservation] = []
+        # Analyze network topology evolution
+        network_changes = self._analyze_network_topology(relationships)
+        if network_changes["significant_change"]:
+            obs = CulturalObservation(
+                id=f"social_struct_{int(datetime.now().timestamp())}",
+                trend_type=CulturalTrend.SOCIAL_STRUCTURE,
+                description=f"Social network evolution: {network_changes['description']}",
+                entities_involved=set(relationships.keys()),
+                impact_score=network_changes["change_magnitude"],
+                suggested_evolution_targets=[
+                    "noosphere/social_dynamics.py",
+                    "internal_consciousness/relationship_management.py",
+                ],
+            )
+            observations.append(obs)
+        # Detect emergence of specialized roles
+        role_specialization = self._detect_role_specialization(entities)
+        if role_specialization["new_roles"]:
+            obs = CulturalObservation(
+                id=f"role_spec_{int(datetime.now().timestamp())}",
+                trend_type=CulturalTrend.SOCIAL_STRUCTURE,
+                description=f"New specialized roles emerging: {role_specialization['new_roles']}",
+                entities_involved=set(role_specialization["entities"]),
+                impact_score=len(role_specialization["new_roles"]) * 0.2,
+                suggested_evolution_targets=[
+                    "core_universe/entity_specialization.py",
+                    "noosphere/role_management.py",
+                ],
+            )
+            observations.append(obs)
+        return observations
+
+    async def _analyze_memetic_propagation(
+        self,
+        noosphere_state: dict[str, Any],
+    ) -> list[CulturalObservation]:
+        """Analyze how memes spread and evolve through the Noosphere"""
+        messages = noosphere_state.get("recent_messages", [])
+        observations: list[CulturalObservation] = []
+        meme_analysis = self._track_meme_evolution(messages)
+        for meme_id, meme_data in meme_analysis.items():
+            if meme_data["viral_coefficient"] > 1.5:  # Viral spread
+                obs = CulturalObservation(
+                    id=f"meme_{meme_id}_{int(datetime.now().timestamp())}",
+                    trend_type=CulturalTrend.MEMETIC_SPREAD,
+                    description=f"Viral meme detected: {meme_data['content'][:100]}...",
+                    entities_involved=set(meme_data["spreaders"]),
+                    impact_score=meme_data["viral_coefficient"] / 10.0,
+                    suggested_evolution_targets=[
+                        "noosphere/meme_processing.py",
+                        "internal_consciousness/memetic_resistance.py",
+                    ],
+                )
+                observations.append(obs)
+        return observations
+
+    async def _generate_evolution_suggestions(
+        self,
+        observations: list[CulturalObservation],
+    ):
+        """Generate specific evolution suggestions based on cultural observations"""
+        module_suggestions = defaultdict(list)
+        module_confidence = defaultdict(float)
+        for obs in observations:
+            for target in obs.suggested_evolution_targets:
+                module_suggestions[target].append(obs.description)
+                module_confidence[target] += obs.impact_score
+        self.evolution_suggestions.clear()
+        self.suggestion_confidence.clear()
+        for module, _suggestions in module_suggestions.items():
+            if module_confidence[module] > 0.3:  # Minimum confidence threshold
+                self.evolution_suggestions.append(module)
+                self.suggestion_confidence[module] = min(1.0, module_confidence[module])
+        logger.info(
+            f"🎯 Generated {len(self.evolution_suggestions)} evolution suggestions"
+        )
+
+    def _track_vocabulary_changes(self, messages: list[dict[str, Any]]) -> list[str]:
+        """Track new vocabulary and language patterns"""
+        new_terms = []
+        for msg in messages:
+            content = msg.get("content", "").lower()
+            words = content.split()
+            for word in words:
+                if len(word) > 6 and word not in self.language_evolution_tracker:
+                    self.language_evolution_tracker[word] += 1
+                    if self.language_evolution_tracker[word] > 3:  # Emerging term
+                        new_terms.append(word)
+        return new_terms
+
+    def _analyze_communication_efficiency(
+        self,
+        messages: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Analyze communication efficiency trends"""
+        if not messages:
+            return {"efficiency_decline": 0.0, "reason": "No messages"}
+        avg_length = sum(len(msg.get("content", "")) for msg in messages) / len(
+            messages
+        )
+        response_times = [msg.get("response_time", 1.0) for msg in messages]
+        avg_response_time = sum(response_times) / len(response_times)
+        efficiency_decline = 0.0
+        reason = "Normal communication"
+        if avg_length > 500:
+            efficiency_decline += 0.1
+            reason = "Messages becoming verbose"
+        if avg_response_time > 2.0:
+            efficiency_decline += 0.15
+            reason = "Response times increasing"
+        return {
+            "efficiency_decline": efficiency_decline,
+            "reason": reason,
+            "avg_length": avg_length,
+            "avg_response_time": avg_response_time,
+        }
+
+    def _detect_behavioral_patterns(
+        self,
+        actions: list[dict[str, Any]],
+    ) -> dict[str, dict[str, Any]]:
+        """Detect recurring behavioral patterns"""
+        patterns = {}
+        if not actions:
+            return patterns
+        action_sequences = defaultdict(list)
+        for action in actions:
+            entity_id = action.get("entity_id", "unknown")
+            action_type = action.get("type", "unknown")
+            action_sequences[entity_id].append(action_type)
+        pattern_counter = Counter()
+        for entity_id, sequence in action_sequences.items():
+            for i in range(len(sequence) - 2):
+                pattern = tuple(sequence[i : i + 3])
+                pattern_counter[pattern] += 1
+        total_entities = len(action_sequences)
+        for pattern, count in pattern_counter.items():
+            if count > 1:
+                frequency = count / total_entities
+                patterns[str(pattern)] = {
+                    "frequency": frequency,
+                    "description": f"Action sequence: {' -> '.join(pattern)}",
+                    "entities": [
+                        eid
+                        for eid, seq in action_sequences.items()
+                        if any(
+                            tuple(seq[i : i + 3]) == pattern
+                            for i in range(len(seq) - 2)
+                        )
+                    ],
+                }
+        return patterns
+
+    def _analyze_collective_decisions(
+        self,
+        actions: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Analyze collective decision-making improvements"""
+        coordination_actions = [a for a in actions if a.get("type") == "coordinate"]
+        successful_coordination = [
+            a for a in coordination_actions if a.get("success", False)
+        ]
+        if not coordination_actions:
+            return {"coordination_improvement": 0.0}
+        success_rate = len(successful_coordination) / len(coordination_actions)
+        return {
+            "coordination_improvement": max(0.0, success_rate - 0.5),
+            "success_rate": success_rate,
+        }
+
+    def _analyze_network_topology(
+        self,
+        relationships: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Analyze changes in social network topology"""
+        if not relationships:
+            return {
+                "significant_change": False,
+                "change_magnitude": 0.0,
+                "description": "",
+            }
+        connection_count = sum(len(conns) for conns in relationships.values())
+        avg_connections = connection_count / max(1, len(relationships))
+        previous_avg = getattr(self, "_previous_avg_connections", avg_connections)
+        change_magnitude = abs(avg_connections - previous_avg) / max(1, previous_avg)
+        self._previous_avg_connections = avg_connections
+        return {
+            "significant_change": change_magnitude > 0.2,
+            "change_magnitude": change_magnitude,
+            "description": f"Average connections changed from {previous_avg:.1f} to {avg_connections:.1f}",
+        }
+
+    def _detect_role_specialization(self, entities: dict[str, Any]) -> dict[str, Any]:
+        """Detect emerging specialized roles among entities"""
+        role_analysis = defaultdict(list)
+        for entity_id, entity_data in entities.items():
+            recent_actions = entity_data.get("recent_actions", [])
+            if len(recent_actions) > 5:
+                action_types = [a.get("type") for a in recent_actions]
+                most_common_action = Counter(action_types).most_common(1)
+                if (
+                    most_common_action
+                    and most_common_action[0][1] > len(recent_actions) * 0.6
+                ):
+                    role = f"{most_common_action[0][0]}_specialist"
+                    role_analysis[role].append(entity_id)
+        new_roles = [
+            role for role, entities in role_analysis.items() if len(entities) >= 2
+        ]
+        return {
+            "new_roles": new_roles,
+            "entities": [
+                eid for entities in role_analysis.values() for eid in entities
+            ],
+        }
+
+    def _track_meme_evolution(self, messages: list[dict[str, Any]]) -> dict[str, Any]:
+        """Track evolution and spread of memes"""
+        meme_analysis = {}
+        phrase_counter = Counter()
+        phrase_spreaders = defaultdict(set)
+        for msg in messages:
+            content = msg.get("content", "")
+            sender = msg.get("sender_id", "unknown")
+            words = content.split()
+            for i in range(len(words) - 2):
+                phrase = " ".join(words[i : i + 3])
+                if len(phrase) > 10:
+                    phrase_counter[phrase] += 1
+                    phrase_spreaders[phrase].add(sender)
+        for phrase, count in phrase_counter.items():
+            if count > 2:
+                spreader_count = len(phrase_spreaders[phrase])
+                viral_coefficient = count / max(1, spreader_count)
+                meme_analysis[phrase] = {
+                    "content": phrase,
+                    "spread_count": count,
+                    "spreaders": list(phrase_spreaders[phrase]),
+                    "viral_coefficient": viral_coefficient,
+                }
+        return meme_analysis
+
+    def get_evolution_suggestions(self) -> list[str]:
+        """Get current evolution suggestions for the evolutionary engine"""
+        return self.evolution_suggestions.copy()
+
+    def get_suggestion_confidence(self, module_path: str) -> float:
+        """Get confidence score for a specific module evolution suggestion"""
+        return self.suggestion_confidence.get(module_path, 0.0)
+
+    def get_cultural_summary(self) -> dict[str, Any]:
+        """Get a summary of current cultural observations"""
+        recent_observations = [
+            obs
+            for obs in self.cultural_observations
+            if obs.timestamp > datetime.now() - timedelta(hours=24)
+        ]
+        trend_counts = Counter(obs.trend_type for obs in recent_observations)
+        avg_impact = sum(obs.impact_score for obs in recent_observations) / max(
+            1, len(recent_observations)
+        )
+        return {
+            "total_observations": len(self.cultural_observations),
+            "recent_observations": len(recent_observations),
+            "trend_distribution": dict(trend_counts),
+            "average_impact_score": avg_impact,
+            "active_memes": len(self.active_memes),
+            "evolution_suggestions": len(self.evolution_suggestions),
+            "most_suggested_modules": [
+                m for m, _ in Counter(self.evolution_suggestions).most_common(5)
+            ],
+        }
+
+    def cleanup_old_observations(self, days_old: int = 7):
+        """Clean up old cultural observations"""
+        cutoff_time = datetime.now() - timedelta(days=days_old)
+        initial_count = len(self.cultural_observations)
+        self.cultural_observations = [
+            obs for obs in self.cultural_observations if obs.timestamp > cutoff_time
+        ]
+        removed_count = initial_count - len(self.cultural_observations)
+        logger.info(f"🧹 Cleaned up {removed_count} old cultural observations")
+
+
+class EVACulturalEvolutionObserver(CulturalEvolutionObserver):
+    """
+    Observador de evolución cultural extendido para integración con EVA.
+    Permite compilar, almacenar, simular y recordar observaciones culturales como RealityBytecode,
+    soporta faseo, hooks de entorno, benchmarking y gestión de memoria viviente EVA.
+    """
+
+    def __init__(
+        self,
+        storage_manager: Any,
+        sme_instance: SelfModifyingEngine | None = None,
+        phase: str = "default",
+    ):
+        super().__init__(
+            storage_manager, sme_instance
+        )  # Corrected super().__init__ call
+        self.eva_phase = phase
+        self.eva_runtime = LivingSymbolRuntime()
+        self.eva_memory_store: dict[str, RealityBytecode] = {}
+        self.eva_experience_store: dict[str, EVAExperience] = {}
+        self.eva_phases: dict[str, dict[str, RealityBytecode]] = {}
+        self._environment_hooks: list = []
+
+    async def eva_ingest_cultural_observation(
+        self, observation: Any, qualia_state: QualiaState = None, phase: str = None
+    ) -> str:
+        """
+        Compila una observación cultural en RealityBytecode y la almacena en la memoria EVA.
+        Handles both CulturalObservation dataclass and generic dict/object.
+        """
+        phase = phase or self.eva_phase
+
+        # Extract data robustly, handling both CulturalObservation and generic objects/dicts
+        if isinstance(observation, CulturalObservation):
+            observation_id = observation.id
+            trend_type_value = observation.trend_type.value
+            description = observation.description
+            entities_involved = list(observation.entities_involved)
+            impact_score = observation.impact_score
+            suggested_evolution_targets = observation.suggested_evolution_targets
+            timestamp_val = observation.timestamp.timestamp()
+        else:
+            # Fallback for generic objects/dicts, using getattr for robustness
+            observation_id = getattr(observation, "id", None)
+            trend_type_value = getattr(
+                getattr(observation, "trend_type", None), "value", None
+            )
+            description = getattr(observation, "description", "")
+            entities_involved = list(getattr(observation, "entities_involved", []))
+            impact_score = getattr(observation, "impact_score", 0.0)
+            suggested_evolution_targets = getattr(
+                observation, "suggested_evolution_targets", []
+            )
+            # Handle timestamp: if it's a datetime object, convert to timestamp; otherwise, use as is or current time
+            timestamp_attr = getattr(observation, "timestamp", None)
+            if isinstance(timestamp_attr, datetime):
+                timestamp_val = timestamp_attr.timestamp()
+            elif callable(timestamp_attr):  # For lambda functions
+                timestamp_val = timestamp_attr()  # Call the lambda to get the value
+            else:
+                timestamp_val = time.time()  # Default to current time
+
+        qualia_state = qualia_state or QualiaState(
+            emotional_valence=impact_score,  # Use extracted impact_score
+            cognitive_complexity=0.7,
+            consciousness_density=0.6,
+            narrative_importance=0.8,
+            energy_level=1.0,
+        )
+        experience_data = {
+            "observation_id": observation_id,
+            "trend_type": trend_type_value,
+            "description": description,
+            "entities_involved": entities_involved,
+            "impact_score": impact_score,
+            "suggested_evolution_targets": suggested_evolution_targets,
+            "timestamp": timestamp_val,
+            "phase": phase,
+        }
+        intention = {
+            "intention_type": "ARCHIVE_CULTURAL_OBSERVATION_EXPERIENCE",
+            "experience": experience_data,
+            "qualia": qualia_state,
+            "phase": phase,
+        }
+        bytecode = self.eva_runtime.divine_compiler.compile_intention(intention)
+        experience_id = (
+            f"eva_cultural_obs_{observation_id or hash(str(experience_data))}"
+        )
+        reality_bytecode = RealityBytecode(
+            bytecode_id=experience_id,
+            instructions=bytecode,
+            qualia_state=qualia_state,
+            phase=phase,
+            timestamp=experience_data["timestamp"],
+        )
+        self.eva_memory_store[experience_id] = reality_bytecode
+        if phase not in self.eva_phases:
+            self.eva_phases[phase] = {}
+        self.eva_phases[phase][experience_id] = reality_bytecode
+        return experience_id
+
+    async def eva_recall_cultural_observation(
+        self, cue: str, phase: str = None
+    ) -> dict:
+        """
+        Ejecuta el RealityBytecode de una observación cultural almacenada, manifestando la simulación.
+        """
+        phase = phase or self.eva_phase
+        reality_bytecode = self.eva_phases.get(phase, {}).get(
+            cue
+        ) or self.eva_memory_store.get(cue)
+        if not reality_bytecode:
+            return {"error": "No bytecode found for EVA cultural observation"}
+        quantum_field = QuantumField()
+        manifestations = []
+        for instr in reality_bytecode.instructions:
+            symbol_manifest = self.eva_runtime.execute_instruction(instr, quantum_field)
+            if symbol_manifest:
+                manifestations.append(symbol_manifest)
+                for hook in self._environment_hooks:
+                    try:
+                        hook(symbol_manifest)
+                    except Exception as e:
+                        logger.warning(f"[EVA-CULTURAL] Environment hook failed: {e}")
+        eva_experience = EVAExperience(
+            experience_id=reality_bytecode.bytecode_id,
+            bytecode=reality_bytecode,
+            manifestations=manifestations,
+            phase=reality_bytecode.phase,
+            qualia_state=reality_bytecode.qualia_state,
+            timestamp=reality_bytecode.timestamp,
+        )
+        self.eva_experience_store[reality_bytecode.bytecode_id] = eva_experience
+        return {
+            "experience_id": eva_experience.experience_id,
+            "manifestations": [m.to_dict() for m in manifestations],
+            "phase": eva_experience.phase,
+            "qualia_state": (
+                eva_experience.qualia_state.to_dict()
+                if hasattr(eva_experience.qualia_state, "to_dict")
+                else {}
+            ),
+            "timestamp": eva_experience.timestamp,
+        }
+
+    async def eva_ingest_cultural_batch(
+        self, observations: list[Any], phase: str = None
+    ) -> list[str]:
+        """
+        Ingiera un lote de observaciones culturales en la memoria EVA.
+        """
+        phase = phase or self.eva_phase
+        ids = []
+        for obs in observations:
+            eid = await self.eva_ingest_cultural_observation(obs, phase=phase)
+            ids.append(eid)
+        return ids
+
+    def add_experience_phase(
+        self,
+        experience_id: str,
+        phase: str,
+        observation: Any,
+        qualia_state: QualiaState,
+    ):
+        """
+        Añade una fase alternativa para una observación cultural EVA.
+        Handles both CulturalObservation dataclass and generic dict/object.
+        """
+        # Extract data robustly, handling both CulturalObservation and generic objects/dicts
+        if isinstance(observation, CulturalObservation):
+            observation_id = observation.id
+            trend_type_value = observation.trend_type.value
+            description = observation.description
+            entities_involved = list(observation.entities_involved)
+            impact_score = observation.impact_score
+            suggested_evolution_targets = observation.suggested_evolution_targets
+            timestamp_val = observation.timestamp.timestamp()
+        else:
+            # Fallback for generic objects/dicts, using getattr for robustness
+            observation_id = getattr(observation, "id", None)
+            trend_type_value = getattr(
+                getattr(observation, "trend_type", None), "value", None
+            )
+            description = getattr(observation, "description", "")
+            entities_involved = list(getattr(observation, "entities_involved", []))
+            impact_score = getattr(observation, "impact_score", 0.0)
+            suggested_evolution_targets = getattr(
+                observation, "suggested_evolution_targets", []
+            )
+            # Handle timestamp: if it's a datetime object, convert to timestamp; otherwise, use as is or current time
+            timestamp_attr = getattr(observation, "timestamp", None)
+            if isinstance(timestamp_attr, datetime):
+                timestamp_val = timestamp_attr.timestamp()
+            elif callable(timestamp_attr):  # For lambda functions
+                timestamp_val = timestamp_attr()  # Call the lambda to get the value
+            else:
+                timestamp_val = time.time()  # Default to current time
+
+        experience_data = {
+            "observation_id": observation_id,
+            "trend_type": trend_type_value,
+            "description": description,
+            "entities_involved": entities_involved,
+            "impact_score": impact_score,
+            "suggested_evolution_targets": suggested_evolution_targets,
+            "timestamp": timestamp_val,
+            "phase": phase,
+        }
+        intention = {
+            "intention_type": "ARCHIVE_CULTURAL_OBSERVATION_EXPERIENCE",
+            "experience": experience_data,
+            "qualia": qualia_state,
+            "phase": phase,
+        }
+        bytecode = self.eva_runtime.divine_compiler.compile_intention(intention)
+        reality_bytecode = RealityBytecode(
+            bytecode_id=experience_id,
+            instructions=bytecode,
+            qualia_state=qualia_state,
+            phase=phase,
+            timestamp=experience_data["timestamp"],
+        )
+        if phase not in self.eva_phases:
+            self.eva_phases[phase] = {}
+        self.eva_phases[phase][experience_id] = reality_bytecode
+
+    def set_memory_phase(self, phase: str):
+        """Cambia la fase activa de memoria EVA."""
+        self.eva_phase = phase
+        for hook in self._environment_hooks:
+            try:
+                hook({"phase_changed": phase})
+            except Exception as e:
+                logger.warning(f"[EVA-CULTURAL] Phase hook failed: {e}")
+
+    def get_memory_phase(self) -> str:
+        """Devuelve la fase de memoria actual."""
+        return self.eva_phase
+
+    def get_experience_phases(self, experience_id: str) -> list:
+        """Lista todas las fases disponibles para una observación cultural EVA."""
+        return [
+            phase for phase, exps in self.eva_phases.items() if experience_id in exps
+        ]
+
+    def add_environment_hook(self, hook: callable):
+        """Registra un hook para manifestación simbólica o eventos EVA."""
+        self._environment_hooks.append(hook)
+
+    def get_eva_api(self) -> dict:
+        return {
+            "eva_ingest_cultural_observation": self.eva_ingest_cultural_observation,
+            "eva_recall_cultural_observation": self.eva_recall_cultural_observation,
+            "eva_ingest_cultural_batch": self.eva_ingest_cultural_batch,
+            "add_experience_phase": self.add_experience_phase,
+            "set_memory_phase": self.set_memory_phase,
+            "get_memory_phase": self.get_memory_phase,
+            "get_experience_phases": self.get_experience_phases,
+            "add_environment_hook": self.add_environment_hook,
+        }
+
+
+# Integration functions
+async def integrate_cultural_evolution_with_engine(
+    cultural_observer: CulturalEvolutionObserver,
+    evolutionary_engine: Any,  # Type hint for evolutionary_engine
+    noosphere_state: dict[str, Any],
+) -> list[str]:
+    """
+    Integrate cultural evolution observations with the evolutionary engine.
+    This creates the code-culture feedback loop described in BREACH.md.
+    """
+    await cultural_observer.observe_cultural_dynamics(noosphere_state)
+    suggestions = cultural_observer.get_evolution_suggestions()
+    if suggestions:
+        logger.info(
+            f"🌐 Cultural evolution suggests evolving {len(suggestions)} modules"
+        )
+        high_confidence_suggestions = [
+            module
+            for module in suggestions
+            if cultural_observer.get_suggestion_confidence(module) > 0.5
+        ]
+        return high_confidence_suggestions
+    return []
+
+
+# Demo function
+async def demo_cultural_evolution():
+    """Demonstrate cultural evolution observation and integration"""
+    print("🌐 CULTURAL EVOLUTION OBSERVER DEMO")
+    print("=" * 60)
+
+    # Mock storage_manager and SME for demo purposes
+    class MockStorageManager:
+        def get_recent_posts(self, limit):
+            return [
+                {
+                    "content": "hello world",
+                    "timestamp": time.time(),
+                    "author_id": "user1",
+                    "interaction_count": 5,
+                },
+                {
+                    "content": "another post",
+                    "timestamp": time.time() - 3600,
+                    "author_id": "user2",
+                    "interaction_count": 10,
+                },
+            ]
+
+        def store_cultural_pattern(self, pattern_id, pattern_type, data, detected_at):
+            pass  # Do nothing for demo
+
+    class MockSME:
+        def submit_proposal(
+            self, target_component, rationale, proposed_changes, estimated_benefit
+        ):
+            print(f"SME received proposal for {target_component}")
+            return "mock_proposal_id"
+
+    observer = CulturalEvolutionObserver(
+        storage_manager=MockStorageManager(), sme_instance=MockSME()
+    )
+    mock_state = {
+        "entities": {
+            "entity_1": {
+                "capabilities": ["think", "communicate"],
+                "recent_actions": [
+                    {"type": "communicate", "success": True, "entity_id": "entity_1"},
+                    {"type": "think", "success": True, "entity_id": "entity_1"},
+                    {"type": "coordinate", "success": True, "entity_id": "entity_1"},
+                ],
+            },
+            "entity_2": {
+                "capabilities": ["create", "analyze"],
+                "recent_actions": [
+                    {"type": "create", "success": True, "entity_id": "entity_2"},
+                    {"type": "analyze", "success": True, "entity_id": "entity_2"},
+                ],
+            },
+        },
+        "recent_messages": [
+            {
+                "sender_id": "entity_1",
+                "content": "Hello world this is interesting",
+                "response_time": 1.0,
+            },
+            {
+                "sender_id": "entity_2",
+                "content": "this is interesting indeed very fascinating",
+                "response_time": 1.2,
+            },
+            {
+                "sender_id": "entity_1",
+                "content": "fascinating patterns emerge everywhere",
+                "response_time": 0.8,
+            },
+        ],
+        "recent_actions": [
+            {"entity_id": "entity_1", "type": "communicate", "success": True},
+            {"entity_id": "entity_2", "type": "coordinate", "success": True},
+            {"entity_id": "entity_1", "type": "think", "success": True},
+        ],
+        "entity_relationships": {"entity_1": ["entity_2"], "entity_2": ["entity_1"]},
+    }
+    observations = await observer.observe_cultural_dynamics(mock_state)
+    print(f"📊 Cultural Observations: {len(observations)}")
+    for obs in observations:
+        print(f"  - {obs.trend_type.value}: {obs.description}")
+        print(
+            f"    Impact: {obs.impact_score:.2f}, Entities: {len(obs.entities_involved)}"
+        )
+        print(f"    Suggested targets: {obs.suggested_evolution_targets}")
+    suggestions = observer.get_evolution_suggestions()
+    print(f"\n🎯 Evolution Suggestions: {suggestions}")
+    summary = observer.get_cultural_summary()
+    print("\n📈 Cultural Summary:")
+    for key, value in summary.items():
+        print(f"  {key}: {value}")
+    print("\n✅ Cultural evolution demo completed!")
+
+
+if __name__ == "__main__":
+    asyncio.run(demo_cultural_evolution())
