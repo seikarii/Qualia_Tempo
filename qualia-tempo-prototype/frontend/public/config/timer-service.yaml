@@ -1,0 +1,27 @@
+# Timer Service Configuration  
+# QUALIA.CODE Compliant: All timing-related configuration externalized
+
+timer:
+  # Performance monitoring
+  performance:
+    # Enable performance tracking for timers
+    enableTracking: true
+    
+    # Log slow timers (threshold in milliseconds)
+    slowTimerThreshold: 1000
+  
+  # Cleanup settings
+  cleanup:
+    # Automatic cleanup interval (milliseconds)
+    cleanupInterval: 60000
+    
+    # Maximum number of tracked timers
+    maxTrackedTimers: 1000
+  
+  # Debug settings
+  debug:
+    # Enable debug logging for timer operations
+    enableDebugLogging: false
+    
+    # Log timer creation and destruction
+    logTimerLifecycle: false

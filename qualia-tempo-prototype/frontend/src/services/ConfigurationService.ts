@@ -467,15 +467,15 @@ export class ConfigurationService implements IConfigurationService {
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IHttpService) httpService: IHttpService,
-    configBasePath: string = "",
-    configManifest?: Record<string, string>,
+    @inject(TYPES.ConfigBasePath) configBasePath: string,
+    @inject(TYPES.ConfigManifest) configManifest: Record<string, string>,
   ) {
     this.logger = logger;
     this.httpService = httpService;
     this.configBasePath = configBasePath;
 
-    // Accept configuration file manifest externally or discover them
-    this.configFileManifest = configManifest || this.discoverConfigFiles();
+    // Accept configuration file manifest externally
+    this.configFileManifest = configManifest;
   }
 
   /**
@@ -499,25 +499,13 @@ export class ConfigurationService implements IConfigurationService {
 
   /**
    * Load all configuration files from YAML
-   */
-  /**
-   * Load configuration from external YAML files (interface compliance).
-   * @returns Promise that resolves when configuration is loaded
-   */
-  public async loadConfig(): Promise<void>;
-
-  /**
-   * Load configuration from external YAML files (implementation).
    * @returns Promise that resolves with the loaded configuration
    */
-  public async loadConfig(): Promise<FullGameConfig>;
 
-  /**
-   * Load configuration implementation.
-   */
+
   @logMethod()
   @catchError()
-  public async loadConfig(): Promise<FullGameConfig | void> {
+  public async loadConfig(): Promise<FullGameConfig> {
     try {
       this.logger.info("Loading configuration from multiple YAML files...");
 

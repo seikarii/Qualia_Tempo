@@ -77,14 +77,14 @@ export class TimerService implements ITimerService {
 
     let timeoutId: number | undefined;
 
-    const debounced = ((...args: Parameters<T>) => {
+    const debounced = ((..._args: Parameters<T>) => {
       if (timeoutId !== undefined) {
         this.clearTimeout(timeoutId);
       }
 
       timeoutId = this.setTimeout(() => {
         timeoutId = undefined;
-        func(...args);
+        func(..._args);
       }, wait);
     }) as T;
 
@@ -98,12 +98,12 @@ export class TimerService implements ITimerService {
 
     let lastCallTime = 0;
 
-    const throttled = ((...args: Parameters<T>) => {
+    const throttled = ((..._args: Parameters<T>) => {
       const now = Date.now();
 
       if (now - lastCallTime >= wait) {
         lastCallTime = now;
-        func(...args);
+        func(..._args);
       }
     }) as T;
 

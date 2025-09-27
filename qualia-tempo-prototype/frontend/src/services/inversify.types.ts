@@ -35,6 +35,10 @@ export const TYPES = {
   // Used for injecting Zustand store setter function
   StoreSetter: Symbol.for("StoreSetter"),
   IGameStateStore: Symbol.for("IGameStateStore"),
+
+  // Configuration values for services
+  ConfigBasePath: Symbol.for("ConfigBasePath"),
+  ConfigManifest: Symbol.for("ConfigManifest"),
 } as const;
 
 // Type-safe access to TYPES

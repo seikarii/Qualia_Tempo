@@ -431,6 +431,7 @@ export class DebugService implements IDebugService {
   /**
    * Check if debugging is currently enabled.
    */
+  @logMethod()
   public isEnabled(): boolean {
     return this.isStarted;
   }

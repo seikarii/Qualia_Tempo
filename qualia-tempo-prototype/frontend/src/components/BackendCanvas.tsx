@@ -245,7 +245,7 @@ const BackendCanvas: React.FC<BackendCanvasProps> = ({
   // Setup streaming service and frame subscription
   useEffect(() => {
     let frameSubscriptionId: string | null = null;
-    let statusInterval: NodeJS.Timeout | null = null;
+    let statusInterval: ReturnType<typeof setInterval> | null = null;
 
     const setupStreaming = async () => {
       try {

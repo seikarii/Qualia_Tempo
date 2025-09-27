@@ -10,7 +10,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   position,
   qualiaState,
 }) => {
-  const [x, _y, z] = position;
+  const [x, _y, z] = position; // Extract position coordinates
 
   // Map QualiaState to visual properties
   const intensityHue = qualiaState.intensity * 360;

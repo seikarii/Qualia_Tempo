@@ -1,0 +1,33 @@
+# ApplicationInitializerService Configuration
+# Defines default state values and initialization parameters
+
+stateUpdates:
+  configLoaded:
+    isConfigLoaded: true
+  
+  initializationComplete:
+    configLoaded: true
+    allServicesStarted: true
+
+messages:
+  serviceInitialized: "ApplicationInitializerService initialized with all core services"
+  alreadyRunning: "⚠️ [ApplicationInitializerService] Service already running"
+  initializationStarted: "Starting application initialization sequence"
+  gameStateServiceStarted: "GameStateStoreService started - now listening to events"
+  configurationLoaded: "Configuration loaded successfully"
+  httpServiceConfigured: "HttpService configured successfully"
+  transversalServicesStarted: "Transversal services started successfully"
+  gameControllerStarted: "Game controller service started successfully"
+  rhythmicControllerStarted: "Rhythmic movement controller started successfully"
+  backendSyncStarted: "Starting backend synchronization"
+  initializationCompleted: "Application initialization completed successfully"
+  initializationFailed: "Application initialization failed"
+
+steps:
+  loadConfiguration: "Loading application configuration"
+  configureHttpService: "Configuring HttpService with loaded configuration"
+  startGameStateService: "Starting GameStateStoreService"
+  startTransversalServices: "Starting transversal services"
+  startGameController: "Starting game controller service"
+  startRhythmicController: "Starting rhythmic movement controller"
+  startBackendSync: "Starting backend synchronization"

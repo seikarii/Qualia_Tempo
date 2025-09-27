@@ -200,6 +200,7 @@ const createWindow = (): BrowserWindow => {
       try {
         return { success: true };
       } catch (error) {
+        // eslint-disable-next-line no-unreachable
         console.error("Audio session error:", error);
         return { success: false, error: (error as Error).message };
       }

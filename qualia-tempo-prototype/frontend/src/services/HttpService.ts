@@ -7,6 +7,7 @@ import type {
   IHttpService,
   HttpRequestOptions,
 } from "./interfaces/IHttpService";
+import type { IConfigurationService } from "./interfaces/IConfigurationService";
 
 // QUALIA.CODE v1.1: Platform Abstraction - Custom error for timeout handling
 export class RequestTimeoutError extends Error {
@@ -25,11 +26,12 @@ export class HttpService implements IHttpService {
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerService) timerService: ITimerService,
-    defaultTimeout: number = 30000, // 30 seconds default - QUALIA.CODE: Configuration externalized
+    @inject(TYPES.IConfigurationService) private config: IConfigurationService,
   ) {
     this.logger = logger;
     this.timerService = timerService;
-    this.defaultTimeout = defaultTimeout;
+    // QUALIA.CODE: Configuration externalized - use ConfigurationService
+    this.defaultTimeout = this.config.getHttpConfig?.()?.defaultTimeout ?? 30000;
     this.logger.info("HttpService initialized with fetch abstraction");
   }
 

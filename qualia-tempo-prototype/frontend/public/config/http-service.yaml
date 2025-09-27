@@ -1,0 +1,33 @@
+# HTTP Service Configuration
+# QUALIA.CODE Compliant: All HTTP-related configuration externalized
+
+http:
+  # Default timeout for HTTP requests (milliseconds)
+  defaultTimeout: 30000
+  
+  # Connection settings
+  connection:
+    # Maximum number of retries for failed requests
+    maxRetries: 3
+    
+    # Retry delay (milliseconds)
+    retryDelay: 1000
+    
+    # Connection timeout (milliseconds) 
+    connectionTimeout: 10000
+  
+  # Request headers
+  headers:
+    # Default user agent
+    userAgent: "QualiaTempoGame/1.0"
+    
+    # Content type
+    contentType: "application/json"
+  
+  # Security settings
+  security:
+    # Enable CORS for development
+    enableCors: true
+    
+    # Validate SSL certificates
+    validateSSL: true

@@ -8,7 +8,7 @@ import { schemaRegistry } from "../schemas";
 // Resolves dual signature problem ONCE. No more repetition.
 
 type UniversalDecorator = {
-  // eslint-disable-next-line no-unused-vars
+   
   (
     target: any,
     propertyKey?: string | symbol,

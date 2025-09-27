@@ -91,11 +91,10 @@ export class BackendSyncService implements IBackendSyncService {
 
     // QUALIA.CODE FIX: Do NOT access configuration in constructor
     // Configuration will be loaded lazily when needed
-    this.logger.info(
-      "BackendSyncService constructed - configuration will be loaded when start() is called",
-    );
+    const config = this.configService.getConfigSection<any>("backend-sync");
+    this.logger.info(config.messages.configurationConstructed);
 
-    this.logger.info("🔄 [BackendSync] Service initialized");
+    this.logger.info(config.messages.serviceInitialized);
   }
 
   /**
@@ -107,15 +106,12 @@ export class BackendSyncService implements IBackendSyncService {
         this.config =
           this.configService.getConfigSection<BackendSyncConfig>("backendSync");
         this.healthCheckInterval = this.config.connection.healthCheckInterval;
-        this.logger.debug(
-          "BackendSyncService configuration loaded successfully",
-        );
+        const configMessages = this.configService.getConfigSection<any>("backend-sync");
+        this.logger.debug(configMessages.messages.configurationLoaded);
       } catch (error) {
-        this.logger.error(
-          "Failed to load BackendSyncService configuration",
-          error,
-        );
-        throw new Error("BackendSyncService configuration not available");
+        const configMessages = this.configService.getConfigSection<any>("backend-sync");
+        this.logger.error(configMessages.messages.configurationFailed, error);
+        throw new Error(configMessages.messages.configurationNotAvailable);
       }
     }
     return this.config;

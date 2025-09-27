@@ -61,22 +61,34 @@ import { useGameStore } from "../state/useGameStore";
 container.bind<IEventBus>(TYPES.IEventBus).to(EventBus).inSingletonScope();
 container.bind<ILogger>(TYPES.ILogger).to(QualiaLogger).inSingletonScope();
 
-// Bind ConfigurationService first (no dependencies)
+// Bind configuration values for ConfigurationService
+container.bind<string>(TYPES.ConfigBasePath).toConstantValue("/config/");
+container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
+  "game": "game-config.yaml",
+  "audio": "audio-service.yaml",
+  "debug": "debug-service.yaml",
+  "error-reporting": "error-reporting.yaml",
+  "qualia-calculator": "qualia-calculator.yaml",
+  "backend-sync": "backend-sync-service.yaml",
+  "game-controller": "game-controller.yaml",
+  "notification": "notification-service.yaml",
+  "rhythmic-movement": "rhythmic-movement.yaml",
+  "visual-effects": "visual-effects.yaml",
+  "http": "http-service.yaml",
+  "timer": "timer-service.yaml",
+  "application-initializer": "application-initializer-service.yaml"
+});
+
+// Bind ConfigurationService after its dependencies
 container
   .bind<IConfigurationService>(TYPES.IConfigurationService)
   .to(ConfigurationService)
   .inSingletonScope();
 
-// Bind HttpService with default timeout (ConfigurationService will provide actual config at runtime)
+// Bind HttpService with proper IoC pattern
 container
   .bind<IHttpService>(TYPES.IHttpService)
-  .toDynamicValue(() => {
-    // Get services from container - this resolves after all services are bound
-    const logger = container.get<ILogger>(TYPES.ILogger);
-    const timerService = container.get<ITimerService>(TYPES.ITimerService);
-    // Use default timeout initially - ConfigurationService will override at runtime
-    return new HttpService(logger, timerService, 30000);
-  })
+  .to(HttpService)
   .inSingletonScope();
 
 container

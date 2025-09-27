@@ -10,6 +10,7 @@ import type {
   ErrorReportingConfig,
   RhythmicMovementConfig,
   NotificationServiceConfig,
+  FullGameConfig,
 } from "../ConfigurationService";
 
 export interface IConfigurationService {
@@ -17,7 +18,7 @@ export interface IConfigurationService {
    * Load configuration from external YAML files.
    * @returns Promise that resolves when configuration is loaded
    */
-  loadConfig(): Promise<void>;
+  loadConfig(): Promise<FullGameConfig>;
 
   /**
    * Get the complete configuration object.

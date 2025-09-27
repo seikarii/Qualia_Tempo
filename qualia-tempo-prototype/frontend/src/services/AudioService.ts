@@ -162,9 +162,8 @@ export class AudioService implements IAudioService {
   @catchError()
   public playRhythmicFeedback(timing: "perfect" | "good" | "miss"): void {
     if (!this.audioEngine || !this.isInitialized) {
-      this.logger.warn(
-        "AudioService not initialized, cannot play rhythmic feedback",
-      );
+      const audioConfig = this.configService.getConfigSection<any>("audio");
+      this.logger.warn(audioConfig.messages.cannotPlayRhythmicFeedback);
       return;
     }
 
@@ -174,9 +173,8 @@ export class AudioService implements IAudioService {
         this.configService.getConfigSection<AudioServiceConfig>("audioService");
       const audioContext = this.webAudioAPIService.getAudioContext();
       if (!audioContext) {
-        this.logger.warn(
-          "AudioContext not available, cannot play rhythmic feedback.",
-        );
+        const audioConfig = this.configService.getConfigSection<any>("audio");
+        this.logger.warn(audioConfig.messages.audioContextNotAvailable);
         return;
       }
       const oscillator = audioContext.createOscillator();
@@ -249,9 +247,8 @@ export class AudioService implements IAudioService {
   @catchError()
   public createEntityVoice(entityId: string, qualiaState: QualiaState): void {
     if (!this.audioEngine || !this.isInitialized) {
-      this.logger.warn(
-        "AudioService not initialized, cannot create entity voice",
-      );
+      const audioConfig = this.configService.getConfigSection<any>("audio");
+      this.logger.warn(audioConfig.messages.cannotCreateEntityVoice);
       return;
     }
 
@@ -262,9 +259,8 @@ export class AudioService implements IAudioService {
   @catchError()
   public removeEntityVoice(entityId: string): void {
     if (!this.audioEngine) {
-      this.logger.warn(
-        "AudioService not initialized, cannot remove entity voice",
-      );
+      const audioConfig = this.configService.getConfigSection<any>("audio");
+      this.logger.warn(audioConfig.messages.cannotRemoveEntityVoice);
       return;
     }
 
@@ -275,16 +271,16 @@ export class AudioService implements IAudioService {
   @catchError()
   public removeAllEntityVoices(): void {
     if (!this.audioEngine) {
-      this.logger.warn(
-        "AudioService not initialized, cannot remove entity voices",
-      );
+      const audioConfig = this.configService.getConfigSection<any>("audio");
+      this.logger.warn(audioConfig.messages.cannotRemoveEntityVoices);
       return;
     }
 
     // Remove common entity voices
-    this.removeEntityVoice("player");
-    this.removeEntityVoice("boss");
-    this.removeEntityVoice("environment");
+    const audioConfig = this.configService.getConfigSection<any>("audio");
+    audioConfig.entityVoices.defaultEntities.forEach((entityId: string) => {
+      this.removeEntityVoice(entityId);
+    });
   }
 
   // --- IAudioService Interface Implementation ---
@@ -326,7 +322,8 @@ export class AudioService implements IAudioService {
 
       oscillator.start();
       if (!loop) {
-        oscillator.stop(audioContext.currentTime + 0.5); // Default 0.5s duration
+        const audioConfig = this.configService.getConfigSection<any>("audio");
+        oscillator.stop(audioContext.currentTime + audioConfig.defaultSoundDuration);
       }
 
       this.logger.debug(`🔊 Playing sound: ${soundId}`, { volume, loop });
@@ -367,34 +364,25 @@ export class AudioService implements IAudioService {
   @catchError()
   public async preloadSounds(soundIds: string[]): Promise<void> {
     if (!this.isInitialized) {
-      this.logger.warn("AudioService not initialized, cannot preload sounds");
+      const audioConfig = this.configService.getConfigSection<any>("audio");
+      this.logger.warn(audioConfig.messages.cannotPreloadSounds);
       return;
     }
 
     // Basic implementation - in a full implementation, we'd actually preload audio files
-    this.logger.info(`🔊 Preloading sounds: ${soundIds.join(", ")}`);
+    const audioConfig = this.configService.getConfigSection<any>("audio");
+    this.logger.info(`${audioConfig.messages.preloadingSounds} ${soundIds.join(", ")}`);
 
     // Simulate preloading
-    await new Promise((resolve) => this.timerService.setTimeout(() => resolve(undefined), 100));
+    await new Promise((resolve) => this.timerService.setTimeout(() => resolve(undefined), audioConfig.preloadSimulationDelay));
 
-    this.logger.info(`✅ Sounds preloaded successfully`);
+    this.logger.info(audioConfig.messages.soundsPreloaded);
   }
 
   // --- Helper Methods ---
 
   private getSoundFrequency(soundId: string): number {
-    // Basic frequency mapping for different sound types
-    const frequencyMap: Record<string, number> = {
-      "ui-click": 800,
-      "ui-hover": 600,
-      "game-hit": 440,
-      "game-miss": 200,
-      "game-success": 880,
-      "game-fail": 150,
-      ambient: 220,
-      notification: 550,
-    };
-
-    return frequencyMap[soundId] ?? 440; // Default to A4
+    const audioConfig = this.configService.getConfigSection<any>("audio");
+    return audioConfig.soundFrequencies[soundId] ?? audioConfig.defaultFrequency;
   }
 }

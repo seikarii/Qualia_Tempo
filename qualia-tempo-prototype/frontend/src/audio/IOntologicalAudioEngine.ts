@@ -21,22 +21,22 @@ export interface IOntologicalAudioEngine {
   /**
    * Create a musical voice for an entity based on its qualia state.
    */
-  createEntityVoice(entityId: string, qualiaState: QualiaState): void;
+  createEntityVoice(_entityId: string, _qualiaState: QualiaState): void;
 
   /**
    * Update the sound of an entity based on its qualia state.
    */
-  updateEntitySound(entityId: string, qualiaState: QualiaState): void;
+  updateEntitySound(_entityId: string, _qualiaState: QualiaState): void;
 
   /**
    * Remove an entity's voice from the audio engine.
    */
-  removeEntityVoice(entityId: string): void;
+  removeEntityVoice(_entityId: string): void;
 
   /**
    * Play an emergent pattern based on behavior.
    */
-  playEmergentPattern(behavior: EmergentBehavior): void;
+  playEmergentPattern(_behavior: EmergentBehavior): void;
 
   /**
    * Get the current master volume.
@@ -46,5 +46,5 @@ export interface IOntologicalAudioEngine {
   /**
    * Set the master volume.
    */
-  setMasterVolume(volume: number): void;
+  setMasterVolume(_volume: number): void;
 }
