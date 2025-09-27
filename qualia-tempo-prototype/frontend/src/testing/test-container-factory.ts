@@ -460,8 +460,8 @@ const mockTimerService: ITimerService = {
   clearTimeout: vi.fn(),
   setInterval: vi.fn().mockReturnValue(54321), // Return a mock interval ID
   clearInterval: vi.fn(),
-  debounce: vi.fn().mockImplementation((func: any) => func),
-  throttle: vi.fn().mockImplementation((func: any) => func),
+  nextTick: vi.fn(),
+  now: vi.fn().mockReturnValue(Date.now()),
 };
 
 /**

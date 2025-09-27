@@ -12,7 +12,7 @@
  * - Injectable service with pure DI compliance
  */
 
-import { injectable, inject, unmanaged } from "inversify";
+import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import { logMethod, catchError } from "../utils/decorators";
 import type {
@@ -92,32 +92,7 @@ export interface ExtendedNotificationConfig extends NotificationConfig {
   autoCleanupInterval: number;
 }
 
-// Default configuration
-const DEFAULT_NOTIFICATION_CONFIG: ExtendedNotificationConfig = {
-  enabled: true,
-  maxHistorySize: 1000,
-  defaultTtl: 30000, // 30 seconds
-  maxRetries: 3,
-  storeUpdateThrottleMs: 100,
-  enablePriorityQueuing: true,
-  enableThrottling: true,
-  filter: {
-    types: ["info", "success", "warning", "error", "achievement", "system"],
-    priorities: ["low", "normal", "high", "urgent"],
-    categories: [],
-    sources: [],
-    maxAge: 300000, // 5 minutes
-    enabled: true,
-  },
-  throttling: {
-    maxNotificationsPerSecond: 10, // Increased from 2 to allow test execution
-    maxNotificationsPerMinute: 50,
-    burstLimit: 10, // Increased from 2 to allow test execution
-    cooldownPeriod: 1000,
-    enabled: true,
-  },
-  autoCleanupInterval: 60000, // 1 minute
-};
+
 
 // Notification queue with priority handling
 export class NotificationQueue {
@@ -300,14 +275,14 @@ export class NotificationService implements INotificationService {
 
   /**
    * QUALIA.CODE v1.1: Pure Dependency Injection Constructor
+   * NO @unmanaged parameters, NO hardcoded configuration
    */
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IConfigurationService) _configService: IConfigurationService,
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
     @inject(TYPES.IGameStateStore) gameStateStore: IGameStateStore,
-    @inject(TYPES.ITimerService) timerService: ITimerService,
-    @unmanaged() config?: Partial<ExtendedNotificationConfig>,
+    @inject(TYPES.ITimerService) _timerService: ITimerService,
   ) {
     if (!eventBus) {
       throw new Error(
@@ -323,19 +298,26 @@ export class NotificationService implements INotificationService {
 
     this.eventBus = eventBus;
     this.logger = logger;
-    this.timerService = timerService;
-    this._configService = _configService;
+    this.timerService = _timerService;
+    this._configService = configService;
     this.gameStateStore = gameStateStore;
-    this.config = { ...DEFAULT_NOTIFICATION_CONFIG, ...config };
+    
+    // QUALIA.CODE v1.1: NO hardcoded configuration - will be loaded in start()
+    this.config = {} as ExtendedNotificationConfig;
 
-    // Initialize processing components
+    // Initialize processing components with minimal state
     this.notificationQueue = new NotificationQueue();
-    this.throttlingManager = new ThrottlingManager(this.config.throttling);
+    this.throttlingManager = new ThrottlingManager({
+      maxNotificationsPerSecond: 0,
+      maxNotificationsPerMinute: 0,
+      burstLimit: 0,
+      cooldownPeriod: 0,
+      enabled: false,
+    });
 
     this.logger.info(
-      "🔧 [NotificationService] Service initialized with event-driven architecture and Zustand store bridging",
+      "🔧 [NotificationService] Service initialized - configuration will be loaded in start()",
     );
-    this.logCurrentConfig();
   }
 
   /**
@@ -357,6 +339,14 @@ export class NotificationService implements INotificationService {
     }
 
     try {
+      // QUALIA.CODE v1.1: Load configuration from pure YAML in start() method
+      this.logger.debug("Loading NotificationService configuration from YAML");
+      this.config = this._configService.getConfigSection<ExtendedNotificationConfig>('notification');
+      this.logger.info("NotificationService configuration loaded from YAML successfully");
+      
+      // Reinitialize throttling manager with actual configuration
+      this.throttlingManager = new ThrottlingManager(this.config.throttling);
+
       this.logger.info(
         "🚀 [NotificationService] Starting notification processing...",
       );

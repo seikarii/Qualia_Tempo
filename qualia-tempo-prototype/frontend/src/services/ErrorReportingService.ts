@@ -12,7 +12,7 @@
  * - Injectable service with pure DI compliance
  */
 
-import { injectable, inject, unmanaged } from "inversify";
+import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import { logMethod, catchError } from "../utils/decorators";
 import type {
@@ -99,33 +99,7 @@ export interface ExtendedErrorReportingConfig extends ErrorReportingConfig {
   externalService: ExternalServiceConfig;
 }
 
-// QUALIA.CODE: NO HARDCODED DEFAULTS - Configuration loaded from YAML
-// This function creates configuration from ConfigurationService
-function createErrorReportingConfig(configService: any): ExtendedErrorReportingConfig {
-  const yamlConfig = configService.getConfig().errorReporting || {};
-  return {
-    enabled: yamlConfig.enabled ?? true,
-    maxBatchSize: yamlConfig.maxBatchSize ?? 50,
-    batchFlushInterval: yamlConfig.batchFlushInterval ?? 30000,
-    maxRetries: yamlConfig.maxRetries ?? 3,
-    retryDelay: yamlConfig.retryDelay ?? 1000,
-    rateLimitTokens: yamlConfig.rateLimitTokens ?? 10,
-    rateLimitRefillRate: yamlConfig.rateLimitRefillRate ?? 1,
-    circuitBreakerThreshold: yamlConfig.circuitBreakerThreshold ?? 5,
-    circuitBreakerTimeout: yamlConfig.circuitBreakerTimeout ?? 60000,
-    enableDeduplication: yamlConfig.enableDeduplication ?? true,
-    memoryCleanupThreshold: yamlConfig.memoryCleanupThreshold ?? 1000,
-    externalService: yamlConfig.externalService ?? {
-      endpoint: "https://api.example.com/errors",
-      apiKey: "",
-      timeout: 5000,
-      maxRetries: 3,
-      retryDelay: 2000,
-      batchSize: 20,
-      enabled: false,
-    },
-  };
-}
+
 
 // Error fingerprinting for deduplication
 export class ErrorFingerprinter {
@@ -206,14 +180,14 @@ export class ErrorReportingService implements IErrorReportingService {
 
   /**
    * QUALIA.CODE v1.1: Pure Dependency Injection Constructor
+   * NO @unmanaged parameters, NO hardcoded configuration
    */
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IHttpService) httpService: IHttpService,
     @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IConfigurationService) _configService: IConfigurationService,
-    @unmanaged() config?: Partial<ExtendedErrorReportingConfig>,
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
   ) {
     if (!eventBus) {
       throw new Error(
@@ -225,38 +199,23 @@ export class ErrorReportingService implements IErrorReportingService {
     this.logger = logger;
     this.httpService = httpService;
     this.timerService = timerService;
-    this._configService = _configService;
+    this._configService = configService;
     
-    // QUALIA.CODE: NO HARDCODED CONFIG - Load in start() method only
-    // Use minimal defaults for constructor, will be updated in start()
-    this.config = {
-      enabled: true,
-      maxBatchSize: 50,
-      batchFlushInterval: 30000,
-      maxRetries: 3,
-      retryDelay: 1000,
-      rateLimitTokens: 10,
-      rateLimitRefillRate: 1,
-      circuitBreakerThreshold: 5,
-      circuitBreakerTimeout: 60000,
-      enableDeduplication: true,
-      memoryCleanupThreshold: 1000,
-      externalService: {
-        endpoint: "https://api.example.com/errors",
-        apiKey: "",
-        timeout: 5000,
-        maxRetries: 3,
-        retryDelay: 2000,
-        batchSize: 20,
-        enabled: false,
-      },
-      ...config, // Override with provided unmanaged config
-    };
+    // QUALIA.CODE v1.1: NO hardcoded configuration - will be loaded in start()
+    this.config = {} as ExtendedErrorReportingConfig;
     this.sessionId = this.generateSessionId();
 
-    // Initialize rate limiting and circuit breaker
-    this.rateLimitState = this.initializeRateLimitState();
-    this.circuitBreakerState = this.initializeCircuitBreakerState();
+    // Initialize rate limiting and circuit breaker to minimal state
+    this.rateLimitState = {
+      tokens: 0,
+      lastRefill: new Date(),
+      maxTokens: 0,
+      refillRate: 0,
+    };
+    this.circuitBreakerState = {
+      state: "closed",
+      failureCount: 0,
+    };
 
     this.logger.info(
       "🔧 [ErrorReportingService] Service initialized - configuration will be loaded in start()",
@@ -275,11 +234,14 @@ export class ErrorReportingService implements IErrorReportingService {
     }
 
     try {
-      // QUALIA.CODE: Load configuration from YAML in start() method
+      // QUALIA.CODE v1.1: Load configuration from pure YAML in start() method
       this.logger.debug("Loading ErrorReporting configuration from YAML");
-      const yamlConfig = createErrorReportingConfig(this._configService);
-      this.config = { ...this.config, ...yamlConfig };
-      this.logger.info("ErrorReporting configuration loaded from YAML");
+      this.config = this._configService.getConfigSection<ExtendedErrorReportingConfig>('errorReporting');
+      this.logger.info("ErrorReporting configuration loaded from YAML successfully");
+      
+      // Reinitialize state objects with actual configuration
+      this.rateLimitState = this.initializeRateLimitState();
+      this.circuitBreakerState = this.initializeCircuitBreakerState();
 
       if (!this.config.enabled) {
         this.logger.info(
@@ -572,9 +534,8 @@ export class ErrorReportingService implements IErrorReportingService {
         stack: safeError.stack,
       },
       severity,
-      userAgent:
-        typeof navigator !== "undefined" ? navigator.userAgent : "Unknown",
-      url: typeof window !== "undefined" ? window.location.href : "Unknown",
+      userAgent: context?.userAgent || "Unknown",
+      url: context?.url || "Unknown",
       stackTrace: safeError.stack,
       context,
       fingerprint,

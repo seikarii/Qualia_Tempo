@@ -24,7 +24,7 @@ import type {
 } from "./interfaces/IDebugService";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
-import type { ITimerService } from "./interfaces/ITimerService";
+import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { DebugServiceConfig } from "./ConfigurationService";
 import type {
@@ -124,6 +124,7 @@ export class DebugService implements IDebugService {
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerService) timerService: ITimerService,
     @inject(TYPES.IConfigurationService) _configService: IConfigurationService,
+    @inject(TYPES.IPerformanceService) private readonly _performanceService: IPerformanceService,
   ) {
     if (!eventBus) {
       throw new Error(
@@ -262,7 +263,7 @@ export class DebugService implements IDebugService {
 
     this.recordEvent(event);
     this.updateEventPatterns(event.type);
-    this.updatePerformanceMetrics(event.type, performance.now());
+    this.updatePerformanceMetrics(event.type, this._performanceService.now());
   }
 
   /**
@@ -514,7 +515,7 @@ export class DebugService implements IDebugService {
   private handleGenericEvent(event: BaseEvent): void {
     this.recordEvent(event);
     this.updateEventPatterns(event.type);
-    this.updatePerformanceMetrics(event.type, performance.now());
+    this.updatePerformanceMetrics(event.type, this._performanceService.now());
 
     // Type-specific handling
     switch (event.type) {
@@ -538,12 +539,12 @@ export class DebugService implements IDebugService {
 
   private handlePlayerActionEvent(event: PlayerActionEvent): void {
     this.updateEventPatterns(event.type, event.action);
-    this.updatePerformanceMetrics("PlayerAction", performance.now());
+    this.updatePerformanceMetrics("PlayerAction", this._performanceService.now());
   }
 
   private handleQualiaStateEvent(event: QualiaStateUpdatedEvent): void {
     this.lastQualiaState = event.qualiaState;
-    this.updatePerformanceMetrics("QualiaStateUpdated", performance.now());
+    this.updatePerformanceMetrics("QualiaStateUpdated", this._performanceService.now());
 
     // Track QualiaState update rate
     this.performanceMetrics.qualiaStateUpdateRate++;
@@ -551,7 +552,7 @@ export class DebugService implements IDebugService {
 
   private handleErrorEvent(event: ErrorEvent): void {
     this.errorHistory.push(event);
-    this.updatePerformanceMetrics("Error", performance.now());
+    this.updatePerformanceMetrics("Error", this._performanceService.now());
 
     // Update error rate
     this.performanceMetrics.errorRate =
@@ -564,11 +565,11 @@ export class DebugService implements IDebugService {
 
   private handleGameStateEvent(event: GameStateChangedEvent): void {
     this.gameStateHistory.push(event.newState);
-    this.updatePerformanceMetrics("GameStateChanged", performance.now());
+    this.updatePerformanceMetrics("GameStateChanged", this._performanceService.now());
   }
 
   private handleBackendSyncEvent(_event: BackendSyncEvent): void {
-    this.updatePerformanceMetrics("BackendSync", performance.now());
+    this.updatePerformanceMetrics("BackendSync", this._performanceService.now());
   }
 
   private recordEvent(event: BaseEvent): void {
@@ -643,7 +644,7 @@ export class DebugService implements IDebugService {
 
     this.aiAnalysisInterval = this.timerService.setInterval(() => {
       this.performAIAnalysis();
-    }, this.config.aiAnalysisInterval); // Use configuration interval
+    }, this.config.aiAnalysisInterval || 30000); // Use configuration interval with fallback
   }
 
   private startMemoryCleanup(): void {
@@ -702,8 +703,9 @@ export class DebugService implements IDebugService {
   }
 
   private calculateMemoryUsage(): number {
-    if (typeof window !== "undefined" && (performance as any).memory) {
-      return (performance as any).memory.usedJSHeapSize;
+    const memoryInfo = this._performanceService.getMemoryInfo();
+    if (memoryInfo.usedJSHeapSize !== undefined) {
+      return memoryInfo.usedJSHeapSize;
     }
     return (
       this.eventHistory.length +

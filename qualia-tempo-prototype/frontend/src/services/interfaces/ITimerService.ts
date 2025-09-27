@@ -1,46 +1,85 @@
+/**
+ * ITimerService interface
+ * Abstraction layer for timer operations (setTimeout, setInterval, etc.)
+ * Provides a testable and mockable interface for time-based functionality.
+ */
+
 export interface ITimerService {
   /**
-   * Sets a timeout that executes a callback after a specified delay
-   * @param callback Function to execute after the delay
-   * @param delay Delay in milliseconds
-   * @returns Timer ID that can be used to clear the timeout
+   * Schedule a function to be executed after a delay
    */
   setTimeout(callback: () => void, delay: number): number;
 
   /**
-   * Clears a timeout created by setTimeout
-   * @param id Timer ID returned by setTimeout
+   * Clear a scheduled timeout
    */
-  clearTimeout(id: number): void;
+  clearTimeout(timeoutId: number): void;
 
   /**
-   * Sets an interval that repeatedly executes a callback at specified intervals
-   * @param callback Function to execute at each interval
-   * @param interval Interval in milliseconds
-   * @returns Timer ID that can be used to clear the interval
+   * Schedule a function to be executed repeatedly
    */
   setInterval(callback: () => void, interval: number): number;
 
   /**
-   * Clears an interval created by setInterval
-   * @param id Timer ID returned by setInterval
+   * Clear a scheduled interval
    */
-  clearInterval(id: number): void;
+  clearInterval(intervalId: number): void;
 
   /**
-   * Creates a debounced version of a function that delays invoking func until after wait milliseconds
-   * have elapsed since the last time the debounced function was invoked
-   * @param func Function to debounce
-   * @param wait Wait time in milliseconds
-   * @returns Debounced function
+   * Execute a function after the next microtask
    */
-  debounce<T extends (...args: any[]) => any>(func: T, wait: number): T;
+  nextTick(callback: () => void): void;
 
   /**
-   * Creates a throttled version of a function that only invokes func at most once per every wait milliseconds
-   * @param func Function to throttle
-   * @param wait Wait time in milliseconds
-   * @returns Throttled function
+   * Get current timestamp in milliseconds
    */
-  throttle<T extends (...args: any[]) => any>(func: T, wait: number): T;
+  now(): number;
+}
+
+/**
+ * IPerformanceService interface
+ * Abstraction layer for performance measurement APIs
+ * Provides a testable and mockable interface for performance monitoring.
+ * QUALIA.CODE v1.1: Mandatory abstraction for performance.now() and memory APIs
+ */
+export interface IPerformanceService {
+  /**
+   * Get high-resolution timestamp in milliseconds
+   * Abstraction for performance.now()
+   */
+  now(): number;
+
+  /**
+   * Get memory usage information
+   * Abstraction for performance.memory (when available)
+   */
+  getMemoryInfo(): {
+    usedJSHeapSize?: number;
+    totalJSHeapSize?: number;
+    jsHeapSizeLimit?: number;
+  };
+
+  /**
+   * Mark a performance measurement point
+   * Abstraction for performance.mark()
+   */
+  mark(name: string): void;
+
+  /**
+   * Measure time between two performance marks
+   * Abstraction for performance.measure()
+   */
+  measure(name: string, startMark?: string, endMark?: string): number;
+
+  /**
+   * Clear performance marks
+   * Abstraction for performance.clearMarks()
+   */
+  clearMarks(name?: string): void;
+
+  /**
+   * Clear performance measures
+   * Abstraction for performance.clearMeasures()
+   */
+  clearMeasures(name?: string): void;
 }

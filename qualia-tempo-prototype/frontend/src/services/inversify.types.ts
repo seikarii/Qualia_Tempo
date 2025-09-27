@@ -13,6 +13,7 @@ export const TYPES = {
   IConfigurationService: Symbol.for("IConfigurationService"),
   IHttpService: Symbol.for("IHttpService"),
   ITimerService: Symbol.for("ITimerService"),
+  IPerformanceService: Symbol.for("IPerformanceService"),
 
   // ===== FEATURE SERVICES =====
   IQualiaStateCalculatorService: Symbol.for("IQualiaStateCalculatorService"),

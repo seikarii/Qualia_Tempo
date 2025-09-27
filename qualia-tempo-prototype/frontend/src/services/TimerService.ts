@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import { logMethod, catchError } from "../utils/decorators";
 import type { ILogger } from "./interfaces/ILogger";
-import type { ITimerService } from "./interfaces/ITimerService";
+import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
 
 @injectable()
 export class TimerService implements ITimerService {
@@ -125,5 +125,95 @@ export class TimerService implements ITimerService {
       window.clearInterval(id);
     }
     this.activeIntervals.clear();
+  }
+
+  @logMethod()
+  public nextTick(callback: () => void): void {
+    this.logger.debug("Scheduling next tick callback");
+    Promise.resolve().then(() => {
+      try {
+        callback();
+      } catch (error) {
+        this.logger.error("Next tick callback failed", { error });
+      }
+    });
+  }
+
+  @logMethod()
+  public now(): number {
+    return Date.now();
+  }
+}
+
+/**
+ * QUALIA.CODE v1.1 Compliant PerformanceService
+ * Abstraction layer for performance measurement APIs
+ * Replaces direct usage of performance.now() and performance.memory
+ */
+@injectable()
+export class PerformanceService implements IPerformanceService {
+  private readonly logger: ILogger;
+
+  constructor(@inject(TYPES.ILogger) logger: ILogger) {
+    this.logger = logger;
+    this.logger.info("PerformanceService initialized with performance abstraction");
+  }
+
+  @logMethod()
+  public now(): number {
+    if (typeof performance !== 'undefined' && performance.now) {
+      return performance.now();
+    }
+    // Fallback to Date.now() if performance.now() is not available
+    return Date.now();
+  }
+
+  @logMethod()
+  public getMemoryInfo(): { usedJSHeapSize?: number; totalJSHeapSize?: number; jsHeapSizeLimit?: number } {
+    if (typeof performance !== 'undefined' && (performance as any).memory) {
+      const memory = (performance as any).memory;
+      return {
+        usedJSHeapSize: memory.usedJSHeapSize,
+        totalJSHeapSize: memory.totalJSHeapSize,
+        jsHeapSizeLimit: memory.jsHeapSizeLimit,
+      };
+    }
+    return {};
+  }
+
+  @logMethod()
+  public mark(name: string): void {
+    if (typeof performance !== 'undefined' && performance.mark) {
+      performance.mark(name);
+      this.logger.debug("Performance mark created", { name });
+    }
+  }
+
+  @logMethod()
+  public measure(name: string, startMark?: string, endMark?: string): number {
+    if (typeof performance !== 'undefined' && performance.measure && performance.getEntriesByName) {
+      performance.measure(name, startMark, endMark);
+      const entries = performance.getEntriesByName(name, 'measure');
+      const duration = entries.length > 0 ? entries[entries.length - 1].duration : 0;
+      this.logger.debug("Performance measure completed", { name, duration, startMark, endMark });
+      return duration;
+    }
+    return 0;
+  }
+
+  @logMethod()
+  public clearMarks(name?: string): void {
+    if (typeof performance !== 'undefined' && performance.clearMarks) {
+      performance.clearMarks(name);
+      this.logger.debug("Performance marks cleared", { name });
+    }
+  }
+
+  @logMethod()
+  public clearMeasures(name?: string): void {
+    if (typeof performance !== 'undefined' && performance.clearMeasures) {
+      performance.clearMeasures(name);
+      this.logger.debug("Performance measures cleared", { name });
+    }
   }
 }
