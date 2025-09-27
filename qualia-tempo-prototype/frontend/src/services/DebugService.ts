@@ -413,7 +413,6 @@ export class DebugService implements IDebugService {
    * Enable performance profiling.
    */
   @logMethod()
-  @catchError()
   public enableProfiling(): void {
     this.config.profiling.enableProfiling = true;
     this.logger.info("Performance profiling enabled");
