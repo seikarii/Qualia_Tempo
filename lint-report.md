@@ -215,8 +215,5 @@ Las reglas actuales son insuficientemente estrictas para prevenir incidentes sim
    - **Rationale**: Prevenir cualquier importación directa de servicios en componentes, forzando el uso exclusivo de `useService()` hooks.
    - **Implementación**: Detectar imports de servicios en archivos `.tsx` que no sean a través de hooks.
 
-#### 6. **Integración con CI/CD más estricta**
-   - **Propuesta**: Configurar el linting para fallar el build en cualquier violación, no solo en errores críticos.
-   - **Implementación**: Ajustar `--max-warnings 0` para incluir warnings arquitectónicos como errores.
 
 Estas mejoras convertirían el sistema de linting de un "detector de problemas" a un "preventor de incidentes", activando alarmas mucho antes de que las violaciones se conviertan en bugs en producción.
