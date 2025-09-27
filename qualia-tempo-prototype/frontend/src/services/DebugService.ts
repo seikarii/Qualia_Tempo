@@ -111,6 +111,9 @@ export class DebugService implements IDebugService {
   private aiAnalysisInterval: number | null = null;
   private memoryCleanupInterval: number | null = null;
 
+  // Debug interface for external access
+  private debugInterface: any = null;
+
   // State tracking for advanced analysis
   private lastQualiaState: QualiaState | null = null;
   private gameStateHistory: string[] = [];
@@ -185,7 +188,7 @@ export class DebugService implements IDebugService {
       this.startMemoryCleanup();
 
       // Setup global interface if enabled
-      this.setupGlobalInterface();
+      this.debugInterface = this.setupGlobalInterface();
 
       this.isStarted = true;
       this.logger.info(
@@ -803,14 +806,14 @@ export class DebugService implements IDebugService {
     return results;
   }
 
-  private setupGlobalInterface(): void {
+  private setupGlobalInterface(): any {
     // Only setup if enabled in config
     if (!this.config.development.enableDebugOverlay) {
-      return;
+      return null;
     }
 
-    // Expose debugging interface globally
-    (window as any).QA_DEBUG = {
+    // Create debugging interface object
+    const debugInterface = {
       service: this,
       getStats: () => this.getDebugStats(),
       getSnapshot: () => this.getSystemSnapshot(),
@@ -846,8 +849,18 @@ export class DebugService implements IDebugService {
     };
 
     this.logger.info(
-      "🌐 [DebugService] Global debugging interface exposed as window.QA_DEBUG",
+      "🌐 [DebugService] Global debugging interface created (not attached to window)",
     );
+
+    return debugInterface;
+  }
+
+  /**
+   * Get the debug interface for external access (development only).
+   */
+  @logMethod()
+  public getDebugInterface(): any {
+    return this.debugInterface;
   }
 
   private logCurrentConfig(): void {

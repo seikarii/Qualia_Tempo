@@ -115,8 +115,8 @@ export interface IDebugService {
   isEnabled(): boolean;
 
   /**
-   * Set debug level for filtering debug output.
-   * @param level The debug level to set
+   * Get the debug interface for external access (development only).
+   * Returns null if debug interface is disabled.
    */
-  setDebugLevel(level: "minimal" | "normal" | "verbose"): void;
+  getDebugInterface(): any;
 }

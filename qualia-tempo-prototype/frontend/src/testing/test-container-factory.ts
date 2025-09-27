@@ -27,7 +27,7 @@ import type { IErrorReportingService } from "../services/interfaces/IErrorReport
 import type { INotificationService } from "../services/interfaces/INotificationService";
 import type { IRhythmicMovementController } from "../services/interfaces/IRhythmicMovementController";
 import type { IHttpService } from "../services/interfaces/IHttpService";
-import type { ITimerService } from "../services/interfaces/ITimerService";
+import type { ITimerService, IPerformanceService } from "../services/interfaces/ITimerService";
 import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { IStreamingVideoService } from "../services/interfaces/IStreamingVideoService";
 import type { IGameControllerService } from "../services/interfaces/IGameControllerService";
@@ -465,6 +465,22 @@ const mockTimerService: ITimerService = {
 };
 
 /**
+ * Mock PerformanceService Implementation - QUALIA.CODE v1.1 Compliance
+ */
+const mockPerformanceService: IPerformanceService = {
+  now: vi.fn().mockReturnValue(5000), // Return a consistent number for predictable tests
+  getMemoryInfo: vi.fn().mockReturnValue({
+    usedJSHeapSize: 1000000,
+    totalJSHeapSize: 2000000,
+    jsHeapSizeLimit: 5000000,
+  }),
+  mark: vi.fn(),
+  measure: vi.fn().mockReturnValue(100),
+  clearMarks: vi.fn(),
+  clearMeasures: vi.fn(),
+};
+
+/**
  * Mock StreamingVideoService Implementation
  */
 const mockStreamingVideoService: IStreamingVideoService = {
@@ -540,6 +556,9 @@ export function createTestContainer(
   container
     .bind<ITimerService>(TYPES.ITimerService)
     .toConstantValue(mockTimerService);
+  container
+    .bind<IPerformanceService>(TYPES.IPerformanceService)
+    .toConstantValue(mockPerformanceService);
   // -----------------------
 
   // Mock StoreSetter (Zustand store setter function)
@@ -621,6 +640,7 @@ export function getMocksFromContainer(container: Container) {
     // --- CORE SERVICE MOCKS ---
     mockHttpService: container.get<IHttpService>(TYPES.IHttpService),
     mockTimerService: container.get<ITimerService>(TYPES.ITimerService),
+    mockPerformanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
     mockStreamingVideoService: container.get<IStreamingVideoService>(
       TYPES.IStreamingVideoService,
     ),

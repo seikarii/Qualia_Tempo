@@ -12,8 +12,10 @@ import "./index.css";
 import "./services/inversify.config";
 import { container } from "./services/inversify.container";
 import { TYPES } from "./services/inversify.types";
+import { env } from "./utils/env";
 import type { IApplicationInitializerService } from "./services/interfaces/IApplicationInitializerService";
 import type { ILogger } from "./services/interfaces/ILogger";
+import type { IDebugService } from "./services/interfaces/IDebugService";
 import { LoggerProvider, QualiaLogger } from "./services/Logger";
 
 import App from "./App";
@@ -46,6 +48,21 @@ const initializeApplication = async (): Promise<boolean> => {
 
     logger.info("Application Bootstrap: Initializing services...");
     await appInitializer.start();
+
+    // Attach debug interface to window in development mode
+    if (env.isDev) {
+      try {
+        const debugService = container.get<IDebugService>(TYPES.IDebugService);
+        const debugInterface = debugService.getDebugInterface();
+        if (debugInterface) {
+          (window as any).QA_DEBUG = debugInterface;
+          logger.info("🌐 [BOOTSTRAP] Debug interface attached to window.QA_DEBUG");
+        }
+      } catch (error) {
+        logger.warn("⚠️ [BOOTSTRAP] Failed to attach debug interface:", error);
+      }
+    }
+
     logger.info(
       "Application Bootstrap: Initialization complete. Rendering application.",
     );
