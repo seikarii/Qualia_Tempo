@@ -77,9 +77,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.configService = configService;
     this.timerService = timerService;
 
-    this.logger.info(
-      "RhythmicMovementController initialized - configuration will be loaded on start()",
-    );
+    const config = this.configService.getConfigSection<any>("rhythmic-movement");
+    this.logger.info(config.messages.serviceInitialized);
   }
 
   /**
@@ -89,14 +88,15 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private ensureConfigurationLoaded(): void {
     const rhythmicConfig = this.configService.getRhythmicMovementConfig();
 
+    const defaultConfig = this.configService.getConfigSection<any>("rhythmic-movement");
     this.config = {
-      bpm: rhythmicConfig.bpm || 120,
-      perfectTiming: rhythmicConfig.perfectTiming || 100,
-      goodTiming: rhythmicConfig.goodTiming || 200,
-      gridSize: rhythmicConfig.gridSize || 32,
-      slowdownFactor: rhythmicConfig.slowdownFactor || 0.3,
-      slowdownDuration: rhythmicConfig.slowdownDuration || 500,
-      keyThrottleMs: rhythmicConfig.keyThrottleMs || 50,
+      bpm: rhythmicConfig.bpm || defaultConfig.rhythm.defaultBPM,
+      perfectTiming: rhythmicConfig.perfectTiming || defaultConfig.timing.perfectTiming,
+      goodTiming: rhythmicConfig.goodTiming || defaultConfig.timing.goodTiming,
+      gridSize: rhythmicConfig.gridSize || defaultConfig.movement.gridSize,
+      slowdownFactor: rhythmicConfig.slowdownFactor || defaultConfig.slowdown.slowdownFactor,
+      slowdownDuration: rhythmicConfig.slowdownDuration || defaultConfig.slowdown.slowdownDuration,
+      keyThrottleMs: rhythmicConfig.keyThrottleMs || defaultConfig.input.keyThrottleMs,
     };
 
     this.loadConfigurationValues();
@@ -134,9 +134,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.setupGameStateListener();
     this.startMetronome();
     this.isListening = true;
-    this.logger.info(
-      "🎵 RhythmicMovementController started with configuration loaded",
-    );
+    const config = this.configService.getConfigSection<any>("rhythmic-movement");
+    this.logger.info(config.messages.serviceStarted);
   }
 
   @logMethod()
@@ -602,9 +601,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   @catchError()
   public async checkSyncAccuracy(currentTime: number): Promise<number> {
     if (!Number.isFinite(currentTime)) {
-      this.logger.warn(
-        "Invalid time provided for sync check, using current time",
-      );
+      const config = this.configService.getConfigSection<any>("rhythmic-movement");
+      this.logger.warn(config.messages.invalidTimeWarning);
       currentTime = performance.now();
     }
 

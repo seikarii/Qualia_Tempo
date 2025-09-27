@@ -15,6 +15,7 @@ import { TYPES } from "./inversify.types";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ITimerService } from "./interfaces/ITimerService";
+import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from "../utils/decorators";
 // ✅ CORRECT: Importing from the central contracts file
@@ -139,17 +140,25 @@ export type EventListener = {
 export class EventBus implements IEventBus {
   private listeners: Map<string, EventListener[]> = new Map();
   private eventHistory: BaseEvent[] = [];
-  private maxHistorySize = 1000;
+  private maxHistorySize: number;
   private isDestroyed = false;
   private logger: ILogger;
   private timerService: ITimerService;
+  private configService: IConfigurationService;
 
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.ITimerService) timerService: ITimerService
+    @inject(TYPES.ITimerService) timerService: ITimerService,
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService
   ) {
     this.logger = logger;
     this.timerService = timerService;
+    this.configService = configService;
+    
+    // Initialize configuration-driven values
+    const config = this.configService.getConfigSection<any>("eventbus");
+    this.maxHistorySize = config.performance.maxEventHistory;
+    
     this.setupErrorHandling();
     this.setupPerformanceMonitoring();
     this.logger.info("🚀 [EventBus] EventBus initialized via InversifyJS");
@@ -282,9 +291,8 @@ export class EventBus implements IEventBus {
 
     try {
       if (this.isDestroyed) {
-        this.logger.warn(
-          "⚠️ [EventBus] Attempted to emit event on destroyed EventBus",
-        );
+        const config = this.configService.getConfigSection<any>("eventbus");
+        this.logger.warn(config.messages.destroyedEventBusWarning);
         return;
       }
 
@@ -464,20 +472,22 @@ export class EventBus implements IEventBus {
   // Private helper methods
 
   private convertPriority(priority?: "low" | "normal" | "high"): number {
+    const config = this.configService.getConfigSection<any>("eventbus");
     switch (priority) {
       case "high":
-        return 100;
+        return config.priorities.high;
       case "normal":
-        return 50;
+        return config.priorities.normal;
       case "low":
-        return 0;
+        return config.priorities.low;
       default:
-        return 50; // default to normal
+        return config.priorities.default;
     }
   }
 
   private generateListenerId(): string {
-    return `listener_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const config = this.configService.getConfig().eventbus.listeners.defaultOptions;
+    return `${config.idPrefix}_${Date.now()}_${Math.random().toString(config.randomBase).substr(config.idStart, config.idLength)}`;
   }
 
   private async executeHandler(
@@ -528,27 +538,27 @@ export class EventBus implements IEventBus {
           `⚠️ [EventBus] Event history approaching limit: ${stats.historySize}`,
         );
       }
-    }, 30000); // Check every 30 seconds
+    }, this.configService.getConfigSection<any>("eventbus").performance.cleanupInterval);
   }
 }
 
 // Type-safe event emission helpers class with sealed constructor
 export class QualiaEvents {
-  private constructor(private eventBus: IEventBus) {}
+  private constructor(private _eventBus: IEventBus) {}
 
   /**
    * Factory method to create QualiaEvents instance.
    * This is the ONLY way to instantiate QualiaEvents.
    */
-  public static create(eventBus: IEventBus): QualiaEvents {
-    return new QualiaEvents(eventBus);
+  public static create(_eventBus: IEventBus): QualiaEvents {
+    return new QualiaEvents(_eventBus);
   }
 
   public playerAction(
     action: PlayerActionEvent["action"],
     context?: Record<string, any>,
   ): void {
-    this.eventBus.emit({
+    this._eventBus.emit({
       type: "PlayerAction",
       action,
       context,
@@ -557,7 +567,7 @@ export class QualiaEvents {
   }
 
   public qualiaStateUpdated(qualiaState: QualiaState): void {
-    this.eventBus.emit({
+    this._eventBus.emit({
       type: "QualiaStateUpdated",
       qualiaState,
       source: "QualiaCalculator",
@@ -567,12 +577,13 @@ export class QualiaEvents {
   public gameStateChanged(
     newState: GameStateChangedEvent["newState"],
     previousState: string,
+    metadata?: Record<string, any>,
   ): void {
-    this.eventBus.emit({
+    this._eventBus.emit({
       type: "GameStateChanged",
       newState,
       previousState,
-      source: "GameController",
+      metadata,
     } as Omit<GameStateChangedEvent, "timestamp">);
   }
 
@@ -581,7 +592,7 @@ export class QualiaEvents {
     severity: ErrorEvent["severity"] = "medium",
     source = "Unknown",
   ): void {
-    this.eventBus.emit({
+    this._eventBus.emit({
       type: "Error",
       error,
       severity,
@@ -590,7 +601,7 @@ export class QualiaEvents {
   }
 
   public backendSync(data: any, syncType: BackendSyncEvent["syncType"]): void {
-    this.eventBus.emit({
+    this._eventBus.emit({
       type: "BackendSync",
       data,
       syncType,

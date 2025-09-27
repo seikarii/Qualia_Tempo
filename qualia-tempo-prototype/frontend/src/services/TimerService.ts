@@ -72,7 +72,7 @@ export class TimerService implements ITimerService {
 
   @logMethod()
   @catchError()
-  public debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
+  public debounce<T extends (..._args: any[]) => any>(func: T, wait: number): T {
     this.logger.debug("Creating debounced function", { wait });
 
     let timeoutId: number | undefined;
@@ -93,7 +93,7 @@ export class TimerService implements ITimerService {
 
   @logMethod()
   @catchError()
-  public throttle<T extends (...args: any[]) => any>(func: T, wait: number): T {
+  public throttle<T extends (..._args: any[]) => any>(func: T, wait: number): T {
     this.logger.debug("Creating throttled function", { wait });
 
     let lastCallTime = 0;

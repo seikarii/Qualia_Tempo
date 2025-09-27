@@ -1,0 +1,74 @@
+# EventBus Configuration  
+# Defines event priorities, cleanup intervals, and system messages
+
+# Event priority system
+priorities:
+  high: 100                    # High priority events (critical errors, game state changes)
+  normal: 50                   # Normal priority events (user actions, updates)
+  low: 0                       # Low priority events (debug, analytics)
+  default: 50                  # Default priority when none specified
+
+# Performance and cleanup
+performance:
+  cleanupInterval: 30000       # Milliseconds between cleanup cycles (30 seconds)
+  maxListeners: 1000           # Maximum number of event listeners
+  maxEventHistory: 100         # Maximum events to keep in history
+  throttleInterval: 16         # Milliseconds between event processing (60fps)
+  
+# Error handling
+errorHandling:
+  globalErrorHandling: true    # Enable global error event handling
+  logUnhandledRejections: true # Log unhandled promise rejections
+  errorSeverityThreshold: "normal" # Minimum severity to log
+  maxRetries: 3                # Maximum retries for failed event handlers
+
+# Event batching and queuing
+batching:
+  enableBatching: false        # Batch similar events together
+  batchSize: 10                # Maximum events per batch
+  batchTimeout: 100            # Milliseconds to wait before processing batch
+  
+# Debugging and monitoring
+debug:
+  logEventEmission: false      # Log every event emission
+  logEventHandling: false      # Log event handler execution
+  logPerformanceMetrics: true  # Log performance statistics
+  trackEventHistory: true      # Keep history of recent events
+  
+# System messages
+messages:
+  serviceInitialized: "📡 [EventBus] Service initialized successfully"
+  serviceDestroyed: "📡 [EventBus] Service destroyed - all listeners cleared"
+  listenerAdded: "📡 [EventBus] Event listener added"
+  listenerRemoved: "📡 [EventBus] Event listener removed"
+  eventEmitted: "📡 [EventBus] Event emitted"
+  eventHandled: "📡 [EventBus] Event handled successfully"
+  destroyedEventBusWarning: "⚠️ [EventBus] Attempted to emit event on destroyed EventBus"
+  handlerExecutionFailed: "❌ [EventBus] Event handler execution failed"
+  cleanupStarted: "🧹 [EventBus] Starting cleanup cycle"
+  cleanupCompleted: "🧹 [EventBus] Cleanup cycle completed"
+  
+# Event type definitions
+eventTypes:
+  system: ["Error", "GameStateChanged", "ConfigurationUpdated"]
+  user: ["PlayerAction", "UserInput", "UIInteraction"]  
+  audio: ["AudioEvent", "RhythmicFeedback", "VolumeChanged"]
+  debug: ["DebugEvent", "PerformanceMetric", "LogMessage"]
+
+# Listener configuration
+listeners:
+  defaultOptions:
+    once: false                # Whether listener should auto-remove after first execution
+    priority: "normal"         # Default listener priority
+    timeout: 5000              # Timeout for async handlers (ms)
+    retries: 1                 # Number of retries on handler failure
+    idLength: 9                # Length of random ID suffix for listeners
+    idStart: 2                 # Starting position for substr in random ID generation  
+    idPrefix: "listener"       # Prefix for generated listener IDs
+    randomBase: 36             # Base for Math.random().toString() in ID generation
+    
+# Memory management
+memory:
+  weakReferences: false        # Use weak references for listeners (experimental)
+  autoCleanup: true            # Automatically cleanup unused listeners
+  cleanupThreshold: 0.8        # Memory usage threshold to trigger cleanup

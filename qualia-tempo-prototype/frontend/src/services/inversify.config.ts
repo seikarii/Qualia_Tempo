@@ -70,13 +70,14 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "error-reporting": "error-reporting.yaml",
   "qualia-calculator": "qualia-calculator.yaml",
   "backend-sync": "backend-sync-service.yaml",
-  "game-controller": "game-controller.yaml",
+  "game-controller": "game-controller-service.yaml",
   "notification": "notification-service.yaml",
-  "rhythmic-movement": "rhythmic-movement.yaml",
+  "rhythmic-movement": "rhythmic-movement-service.yaml",
   "visual-effects": "visual-effects.yaml",
   "http": "http-service.yaml",
   "timer": "timer-service.yaml",
-  "application-initializer": "application-initializer-service.yaml"
+  "application-initializer": "application-initializer-service.yaml",
+  "eventbus": "eventbus-service.yaml"
 });
 
 // Bind ConfigurationService after its dependencies

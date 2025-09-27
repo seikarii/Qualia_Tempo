@@ -47,6 +47,7 @@ module.exports = {
         "**/services/TimerService.ts",
         "**/services/HttpService.ts", 
         "**/services/WebAudioAPIService.ts",
+        "**/services/EventBus.ts",
       ],
       rules: {
         "@qualia-tempo/qualia-code/no-global-api-calls": "off",
@@ -87,11 +88,20 @@ module.exports = {
     // Application entry point - allowed to access container directly
     {
       files: [
-        "**/index.tsx",
+        "**/index.tsx", 
         "**/main.ts",
       ],
       rules: {
         "@qualia-tempo/qualia-code/enforce-use-services-hook": "off",
+      },
+    },
+    // Interface files - method names can reference global APIs for abstraction
+    {
+      files: [
+        "**/interfaces/ITimerService.ts",
+      ],
+      rules: {
+        "@qualia-tempo/qualia-code/no-global-api-calls": "off",
       },
     },
   ],

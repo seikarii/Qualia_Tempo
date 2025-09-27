@@ -1,0 +1,22 @@
+# HTTP Service Configuration  
+# Configuration for HTTP request handling and API communication
+httpService:
+  # Request timeout settings
+  defaultTimeout: 30000        # Default timeout for HTTP requests (milliseconds)
+  fallbackTimeout: 30000       # Fallback timeout if defaultTimeout is not available
+  
+  # Retry configuration
+  maxRetries: 3                # Maximum number of retry attempts
+  retryDelay: 1000             # Base delay between retries (milliseconds)
+  retryBackoffMultiplier: 2    # Multiplier for exponential backoff
+  
+  # Request configuration
+  maxBodySize: 10485760        # Maximum request body size (10MB)
+  validateSSL: true            # Validate SSL certificates
+  followRedirects: true        # Follow HTTP redirects
+  
+  # Headers configuration
+  defaultHeaders:
+    "Content-Type": "application/json"
+    "Accept": "application/json"
+    "User-Agent": "QualiaTempo/1.0"

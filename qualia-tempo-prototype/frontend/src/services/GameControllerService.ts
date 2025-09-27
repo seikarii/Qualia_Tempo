@@ -269,9 +269,8 @@ export class GameControllerService implements IGameControllerService {
     );
     this.eventListenerIds.push(gameStateListenerId);
 
-    this.logger.info(
-      "📡 [GameController] Subscribed to PlayerAction and GameStateChanged events",
-    );
+    const config = this.configService.getConfigSection<any>("game-controller");
+    this.logger.info(config.messages.eventsSubscribed);
   }
 
   private unsubscribeFromEvents(): void {
@@ -379,9 +378,10 @@ export class GameControllerService implements IGameControllerService {
   private handleFastForward(_context?: Record<string, any>): void {
     if (!this.gameState.isPlaying || this.gameState.isPaused) return;
 
-    this.logger.info("⏩ [GameController] Fast forward activated");
+    const config = this.configService.getConfigSection<any>("game-controller");
+    this.logger.info(config.messages.fastForwardActivated);
     // Fast forward could give temporary score boost
-    this.gameState.currentScore += 20;
+    this.gameState.currentScore += config.mechanics.fastForwardScoreBoost;
     this.emitGameStateChanged("Playing");
   }
 

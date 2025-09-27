@@ -1,0 +1,65 @@
+# GameControllerService Configuration
+# Defines game mechanics, scoring, and state management parameters
+
+# Game mechanics
+mechanics:
+  fastForwardScoreBoost: 20    # Points awarded for fast forward action
+  rewindScorePenalty: -10      # Points deducted for rewind action
+  perfectHitBonus: 100         # Bonus points for perfect timing
+  goodHitBonus: 50             # Bonus points for good timing
+  missHitPenalty: -25          # Points deducted for missed notes
+
+# Player state limits
+playerLimits:
+  maxHealth: 100               # Maximum player health
+  minHealth: 0                 # Minimum player health (game over)
+  healthRegenRate: 1           # Health regeneration per second
+  maxCombo: 999                # Maximum combo multiplier
+  comboMultiplier: 1.5         # Score multiplier per combo level
+
+# Game timing
+timing:
+  gameStartDelay: 1000         # Milliseconds before game actually starts
+  pauseTransitionTime: 500     # Animation time for pause/unpause
+  gameOverDelay: 2000          # Delay before showing game over screen
+  resetConfirmationTime: 3000  # Time to confirm game reset
+
+# Logging and status messages
+messages:
+  serviceInitialized: "🎮 [GameController] Service initialized successfully"
+  serviceStarted: "🎮 [GameController] Service started - ready for game events"
+  serviceStopped: "🎮 [GameController] Service stopped - unsubscribed from events"
+  eventsSubscribed: "📡 [GameController] Subscribed to PlayerAction and GameStateChanged events"
+  eventsUnsubscribed: "📡 [GameController] Unsubscribed from all events"
+  gameStarted: "🎮 [GameController] Game started"
+  gamePaused: "⏸️ [GameController] Game paused"
+  gameResumed: "▶️ [GameController] Game resumed"
+  gameReset: "🔄 [GameController] Game reset to initial state"
+  gameOver: "💀 [GameController] Game over"
+  fastForwardActivated: "⏩ [GameController] Fast forward activated"
+  rewindActivated: "⏪ [GameController] Rewind activated"
+  playerActionProcessed: "🎯 [GameController] Player action processed"
+  stateChangeEmitted: "📡 [GameController] Game state change emitted"
+
+# Initial game state values
+initialState:
+  isPlaying: false
+  isPaused: false
+  currentScore: 0
+  playerHealth: 100
+  currentCombo: 0
+  gameStartTime: null
+  totalPlayTime: 0
+
+# Event handling
+events:
+  throttlePlayerActions: true  # Whether to throttle rapid player actions
+  throttleInterval: 50         # Milliseconds between processed actions
+  maxPendingActions: 10        # Maximum queued actions before dropping
+
+# Debug and development
+debug:
+  logAllPlayerActions: false   # Log every player action (verbose)
+  logStateChanges: true        # Log game state changes
+  logEventSubscriptions: true  # Log event subscription/unsubscription
+  validateStateTransitions: true # Validate state changes are legal

@@ -26,13 +26,16 @@ export class HttpService implements IHttpService {
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IConfigurationService) private config: IConfigurationService,
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
   ) {
     this.logger = logger;
     this.timerService = timerService;
     // QUALIA.CODE: Configuration externalized - use ConfigurationService
-    this.defaultTimeout = this.config.getHttpConfig?.()?.defaultTimeout ?? 30000;
-    this.logger.info("HttpService initialized with fetch abstraction");
+    const httpConfig = configService.getConfig().httpService;
+    this.defaultTimeout = httpConfig?.defaultTimeout ?? httpConfig?.fallbackTimeout;
+    this.logger.info("HttpService initialized with fetch abstraction", {
+      config: configService.getConfig().httpService
+    });
   }
 
   @logMethod()
