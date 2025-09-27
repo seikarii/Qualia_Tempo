@@ -134,60 +134,82 @@
    /media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/backend/services/StreamingWebService.py:326: Method connected_clients missing @log_execution decorator
    ... and 229 more violations
 
+---
+
+## Análisis de Falsos Positivos
+
+Después de revisar el reporte actualizado (28 de septiembre de 2025) y **leer archivos específicos** para verificar contexto, identifico **un posible falso positivo** y confirmo que el resto son violaciones legítimas:
+
+### Falso Positivo Identificado:
+- **inversify.container.ts línea 1**: Error "CRISALIDA.CODE: El fichero index.tsx debe importar 'reflect-metadata' en la primera línea". 
+  - **Análisis**: El error se reporta en `inversify.container.ts` pero se refiere a `index.tsx`. En `index.tsx`, `reflect-metadata` está importado en línea 6 (no primera), pero el archivo reportado es incorrecto. Esto parece un bug en la regla del linter `@qualia-tempo/qualia-code/enforce-inversify-conventions`.
+
+### Violaciones Legítimas Confirmadas:
+- **PlayerAvatar.tsx línea 13**: `const [x, _y, z] = position;` - Variable `_y` no usada. Legítimo error (debe usarse o cambiar patrón ESLint).
+- **Hardcoded values**: Ejemplos como `count: 100` en ConfigurationService.ts, `memoryCleanupThreshold: 1000` en DebugService.ts. Deben externalizarse según Sección 1.
+- **Otros errores**: Imports directos, @catchError overuse, console usage, window access - todos violan reglas documentadas.
+
+**Conclusión: 1 falso positivo identificado (error de linter mal reportado). El resto requiere corrección.**
+
+---
+
+## Plan de Corrección de Errores
+
+### Prioridad 1: Arquitectura Crítica (InversifyJS & IoC)
+1. **Corregir imports directos de servicios en componentes**:
+   - `QualiaTempoGame.tsx`, `QualiaTempoHUD.tsx`, `index.tsx`: Reemplazar imports directos con `useService()` hook.
+   - Asegurar que todos los servicios estén registrados en `inversify.config.ts`.
+
+2. **Corregir inversify.container.ts**:
+   - **NOTA: Este error parece ser un falso positivo del linter** (se refiere a index.tsx pero reporta en container.ts). Verificar regla del linter antes de cambiar.
+
+### Prioridad 2: Externalización de Configuración (Sección 1 - LAW OF SOVEREIGNTY)
+3. **Crear/actualizar archivos YAML de configuración**:
+   - Identificar todos los valores hardcoded (106+ errores).
+   - Crear `frontend/src/config/game.yaml`, `qualia.yaml`, `services.yaml`, etc.
+   - Externalizar valores como timeouts, URLs, multiplicadores, flags de features.
+
+4. **Actualizar ConfigurationService**:
+   - Implementar carga de YAML files.
+   - Proporcionar getters type-safe para configuración.
+
+5. **Reemplazar hardcoded values**:
+   - En todos los servicios: `DebugService`, `ErrorReportingService`, `NotificationService`, `QualiaStateCalculatorService`, `StreamingVideoService`, `TimerService`, `GameStateStoreService`, etc.
+   - Usar `this.config.getQualiaConfig().someValue` en lugar de literales.
+
+### Prioridad 3: Decoradores y Performance (Sección 8.1)
+6. **Corregir @catchError overuse**:
+   - Remover `@catchError()` de getters simples en `AudioService`, `BackendSyncService`.
+   - Mantener solo en métodos async complejos.
+
+7. **Agregar @catchError faltantes**:
+   - En `StreamingVideoService`: Agregar a métodos async que no son getters simples.
+
+### Prioridad 4: Logging y Abstracción (Sección 5.3)
+8. **Reemplazar console.* en Logger.ts**:
+   - Usar injected `QualiaLogger` en lugar de `console.log/warn/error`.
+
+9. **Corregir window access**:
+   - En `QualiaStateCalculatorService`: Usar servicio de abstracción para window APIs.
+
+### Prioridad 5: Backend Python
+10. **Agregar @log_execution decorators**:
+    - A todos los métodos públicos faltantes en servicios backend.
+    - Seguir patrón de Sección 5.1.
+
+### Prioridad 6: Limpieza de Código
+11. **Corregir unused vars**:
+    - En `GameStateStoreService`, `NotificationService`: Prefijar con `_` o usar las variables.
+
+12. **Corregir unused var en PlayerAvatar.tsx**:
+    - Remover o usar `_y`.
+
+### Verificación Final
+13. **Ejecutar linting completo** después de cada prioridad.
+14. **Actualizar shared contracts** si es necesario con `./scripts/generate_contracts.sh`.
+15. **Pruebas unitarias** para validar cambios.
+
+**Estimación de esfuerzo**: 2-3 días de trabajo sistemático, priorizando arquitectura sobre detalles.
 
 
 
-# Análisis Preliminar
-
-### ¿Detectó el linter el uso de APIs globales (window, navigator) en los servicios modificados por el junior (ahora revertidos)?
-
-Sí, el linter detectó múltiples violaciones relacionadas con el acceso directo a APIs globales en la capa de servicios:
-
-- En `DebugService.ts`: Líneas 705 y 811 - Acceso directo a `window`
-- En `ErrorReportingService.ts`: Líneas 576 (navigator), 577 (window) - Acceso directo a `navigator` y `window`
-- En `QualiaStateCalculatorService.ts`: Líneas 352 y 359 - Acceso directo a `window`
-
-Estas violaciones corresponden exactamente a la regla `@qualia-tempo/qualia-code/no-global-api-calls`, que prohíbe el uso directo de APIs globales como `window`, `navigator`, etc. en la capa de servicios. El linter identificó correctamente estos patrones como violaciones arquitectónicas críticas.
-
-### ¿Hay alguna regla en QUALIA.CODE que no tenga una correspondiente regla de ESLint activa?
-
-Basándome en la documentación QUALIA.CODE.md y la salida del linter, todas las reglas principales parecen tener implementación activa:
-
-- ✅ `no-hardcoded-config`: Activa y detectando múltiples violaciones
-- ✅ `no-global-api-calls`: Activa y detectando violaciones de `window`/`navigator`
-- ✅ `enforce-inversify-conventions`: Activa y detectando problemas de inyección de dependencias
-- ✅ `enforce-method-decorators`: No visible en esta ejecución, pero configurada
-- ✅ `no-direct-service-instantiation`: No visible, pero configurada
-- ✅ `enforce-use-services-hook`: No visible, pero configurada
-
-Sin embargo, hay una discrepancia en el reporte final: indica "Backend Compliance: PASSED" pero luego lista "❌ Backend architectural violations detected" con 262+ violaciones. Esto sugiere un posible bug en el script de reporte o en la lógica de conteo de violaciones.
-
-### ¿Consideras que las reglas actuales son lo suficientemente estrictas? ¿Propones alguna mejora o nueva regla para evitar incidentes similares?
-
-Las reglas actuales son insuficientemente estrictas para prevenir incidentes similares. El sistema permitió que se introdujeran múltiples violaciones críticas sin activar alarmas efectivas durante el desarrollo. Propongo las siguientes mejoras:
-
-#### 1. **Nueva Regla: `no-console-log-in-services`**
-   - **Rationale**: El uso de `console.log` en servicios viola el principio de logging centralizado. Debe requerir el uso exclusivo del `QualiaLogger` inyectado.
-   - **Implementación**: Detectar cualquier uso de `console.*` métodos en archivos de servicios.
-
-#### 2. **Mejora: `enforce-method-decorators` con mayor granularidad**
-   - **Problema actual**: La regla permite `@catchError` solo en "métodos de sistema", pero no es lo suficientemente específica.
-   - **Propuesta**: Implementar análisis semántico para distinguir:
-     - Métodos síncronos simples (getters) → Sin `@catchError`
-     - Métodos con I/O (async, fetch, etc.) → Requieren `@catchError`
-     - Métodos de cálculo complejo → Requieren `@catchError`
-
-#### 3. **Nueva Regla: `no-async-without-catch-error`**
-   - **Rationale**: Cualquier método `async` que no sea un getter simple debe tener `@catchError` para prevenir excepciones no manejadas.
-   - **Implementación**: AST analysis para detectar métodos async sin el decorador apropiado.
-
-#### 4. **Mejora del sistema de reporte**
-   - **Problema**: El reporte indica "PASSED" para backend cuando hay 262 violaciones.
-   - **Propuesta**: Implementar verificación de integridad en el script de linting para asegurar que el conteo de violaciones sea preciso.
-
-#### 5. **Nueva Regla: `enforce-dependency-injection-only`**
-   - **Rationale**: Prevenir cualquier importación directa de servicios en componentes, forzando el uso exclusivo de `useService()` hooks.
-   - **Implementación**: Detectar imports de servicios en archivos `.tsx` que no sean a través de hooks.
-
-
-Estas mejoras convertirían el sistema de linting de un "detector de problemas" a un "preventor de incidentes", activando alarmas mucho antes de que las violaciones se conviertan en bugs en producción.
