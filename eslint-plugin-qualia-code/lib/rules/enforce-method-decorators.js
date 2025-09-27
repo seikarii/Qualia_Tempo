@@ -1,54 +1,51 @@
 /**
- * @fileoverview Rule to enforce method decorators in service classes
- * @author Qualia Tempo Team
+ * @qualia-tempo/eslint-plugin-qualia-code
+ * Rule: enforce-method-decorators (Enhanced)
+ * 
+ * Intelligent enforcement of method decorators based on method complexity and type.
+ * Requires @catchError on async methods that aren't simple getters.
+ * Prohibits @catchError on simple synchronous getters for performance.
+ * 
+ * This enforces QUALIA.CODE sections 5.2.1 and 8.1: Performance-aware decorator usage
  */
-
-'use strict';
-
-//------------------------------------------------------------------------------
-// Rule Definition
-//------------------------------------------------------------------------------
 
 module.exports = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'Enforce method decorators (@logMethod, @catchError, @throttle, @injectable, @inject) in service classes',
-      category: 'Best Practices',
-      recommended: true,
-      url: null
+      description: 'Intelligently enforce method decorators based on method complexity and performance impact',
+      category: 'QUALIA.CODE Compliance',
+      recommended: true
     },
     fixable: null,
     schema: [],
     messages: {
-      missingDecorator: 'Public methods in services must use a logging, error handling, performance, or dependency injection decorator (@logMethod, @catchError, @throttle, @injectable, @inject).'
+      missingLogMethod: 'Public methods in services must use @logMethod() decorator.',
+      missingCatchError: 'Public async methods that aren\'t simple getters must use @catchError() decorator for proper error boundaries.',
+      unnecessaryCatchError: 'Simple synchronous getters should NOT use @catchError() - it adds unnecessary performance overhead. (Section 8.1)',
+      performanceWarning: 'Consider removing @catchError from simple getter for better performance on hot paths.'
     }
   },
 
   create(context) {
     const filename = context.getFilename();
 
-    // COMPLETELY DISABLE this rule for files using Inversify during migration
-    if (filename.includes('migration-example.ts')) {
+    // Only check service files
+    if (!filename.includes('/services/') || !filename.endsWith('.ts')) {
       return {};
     }
 
-    // Include Inversify decorators as valid
-    const requiredDecorators = ['logMethod', 'catchError', 'throttle'];
-    const inversifyDecorators = ['injectable', 'inject'];
-    const allowedDecorators = [...requiredDecorators, ...inversifyDecorators];
-
-    function hasRequiredDecorator(node) {
+    function hasDecorator(node, decoratorName) {
       if (!node.decorators || !Array.isArray(node.decorators)) {
         return false;
       }
 
       return node.decorators.some(decorator => {
         if (decorator.expression?.type === 'Identifier') {
-          return allowedDecorators.includes(decorator.expression.name);
+          return decorator.expression.name === decoratorName;
         }
         if (decorator.expression?.type === 'CallExpression') {
-          return allowedDecorators.includes(decorator.expression.callee?.name);
+          return decorator.expression.callee?.name === decoratorName;
         }
         return false;
       });
@@ -66,62 +63,59 @@ module.exports = {
     }
 
     function isPublicMethod(node) {
-      // In TypeScript, methods are public by default unless marked private or protected
+      // Skip private/protected methods
       if (node.accessibility === 'private' || node.accessibility === 'protected') {
         return false;
       }
 
-      // Check if method name starts with underscore (convention for private)
+      // Skip underscore-prefixed methods (private convention)
       if (node.key?.name?.startsWith('_')) {
         return false;
       }
 
-      // Constructor, start, stop, and lifecycle methods can be exempt
+      // Skip constructors and lifecycle methods
       const exemptMethods = ['constructor', 'start', 'stop', 'initialize', 'shutdown', 'destroy'];
       if (exemptMethods.includes(node.key?.name)) {
         return false;
       }
 
-      // Simple getters in ConfigurationService don't need decorators
-      if (filename.includes('ConfigurationService')) {
-        const simpleGetterMethods = ['getConfig', 'getGameConfig', 'getQualiaConfig', 'getBackendConfig', 'isLoaded'];
-        if (simpleGetterMethods.includes(node.key?.name)) {
-          return false;
-        }
-      }
-
       return true;
     }
 
+    function isSimpleGetter(node) {
+      const methodName = node.key?.name;
+      
+      // Check if it starts with 'get' or 'is'
+      if (!methodName || (!methodName.startsWith('get') && !methodName.startsWith('is'))) {
+        return false;
+      }
+
+      // Check if method body is simple (single return statement)
+      if (!node.value?.body?.body || node.value.body.body.length !== 1) {
+        return false;
+      }
+
+      const firstStatement = node.value.body.body[0];
+      if (firstStatement.type !== 'ReturnStatement') {
+        return false;
+      }
+
+      // Check if it's returning a simple property access (this.property)
+      const returnExpression = firstStatement.argument;
+      if (returnExpression?.type === 'MemberExpression' && 
+          returnExpression.object?.type === 'ThisExpression') {
+        return true;
+      }
+
+      return false;
+    }
+
+    function isAsyncMethod(node) {
+      return node.value?.async === true;
+    }
+
     return {
-      // IGNORAR COMPLETAMENTE @inject decorators - NO MARCAR ERRORES
-      'Decorator'(node) {
-        if (node.expression?.type === 'CallExpression' &&
-            node.expression.callee?.name === 'inject') {
-          // NO HACER NADA - IGNORAR COMPLETAMENTE @inject
-          return;
-        }
-      },
-
-      // IGNORAR COMPLETAMENTE @injectable decorators - NO MARCAR ERRORES
-      'ClassDeclaration'(node) {
-        if (node.decorators) {
-          node.decorators.forEach(decorator => {
-            if (decorator.expression?.type === 'CallExpression' &&
-                decorator.expression.callee?.name === 'injectable') {
-              // NO HACER NADA - IGNORAR COMPLETAMENTE @injectable
-              return;
-            }
-          });
-        }
-      },
-
       MethodDefinition(node) {
-        // Only check service files
-        if (!filename.includes('Service.ts') && !filename.includes('Service.tsx')) {
-          return;
-        }
-
         // Only check if we're in a service class
         if (!isInServiceClass(node)) {
           return;
@@ -132,11 +126,40 @@ module.exports = {
           return;
         }
 
-        // Check if method has required decorators
-        if (!hasRequiredDecorator(node)) {
+        const hasLogMethod = hasDecorator(node, 'logMethod');
+        const hasCatchError = hasDecorator(node, 'catchError');
+        const isAsync = isAsyncMethod(node);
+        const isGetter = isSimpleGetter(node);
+
+        // Rule 1: All public methods must have @logMethod()
+        if (!hasLogMethod) {
           context.report({
             node,
-            messageId: 'missingDecorator'
+            messageId: 'missingLogMethod'
+          });
+        }
+
+        // Rule 2: Async methods that aren't simple getters must have @catchError()
+        if (isAsync && !isGetter && !hasCatchError) {
+          context.report({
+            node,
+            messageId: 'missingCatchError'
+          });
+        }
+
+        // Rule 3: Simple synchronous getters should NOT have @catchError()
+        if (!isAsync && isGetter && hasCatchError) {
+          context.report({
+            node,
+            messageId: 'unnecessaryCatchError'
+          });
+        }
+
+        // Rule 4: Performance warning for @catchError on potential hot paths
+        if (hasCatchError && isGetter) {
+          context.report({
+            node,
+            messageId: 'performanceWarning'
           });
         }
       }

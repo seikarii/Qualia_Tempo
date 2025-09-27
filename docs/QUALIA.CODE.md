@@ -178,17 +178,33 @@ The custom ESLint plugin enforces the following QUALIA.CODE principles:
 - **Requires:** Event-driven communication via EventBus
 - **Rationale:** Decoupled, testable communication patterns
 
-#### `enforce-method-decorators`
-- **Prohibits:** Service methods without required decorators
-- **Requires:** `@logMethod()` on all public service methods, `@catchError()` on system boundary methods only
-- **Rationale:** Consistent transversal logic application with performance considerations
-- **Smart Detection:** Distinguishes between simple getters and complex operations
-- **Performance Aware:** Does not require `@catchError` on trivial synchronous methods
+#### `enforce-method-decorators` ⚡ ENHANCED
+- **Requires:** `@logMethod()` on ALL public service methods for consistent logging
+- **Requires:** `@catchError()` on public async methods that aren't simple getters
+- **Prohibits:** `@catchError()` on simple synchronous getters (performance optimization)
+- **Smart Detection:** Analyzes method complexity, async nature, and naming patterns
+- **Performance Aware:** Prevents unnecessary overhead on hot path methods (Section 8.1)
+- **Enhanced Logic:** Distinguishes between complex operations and simple property accessors
 
 #### `enforce-inversify-conventions`
 - **Prohibits:** Missing `@injectable()` or `@inject()` decorators
 - **Requires:** Proper InversifyJS IoC container setup
 - **Rationale:** Dependency injection architectural integrity
+
+#### `no-console-in-services` ⭐ NEW
+- **Prohibits:** Usage of `console.log`, `console.warn`, `console.error`, etc. in service files
+- **Requires:** All logging channeled through injected `QualiaLogger`
+- **Rationale:** Centralized log control and production log management (Section 5.3)
+
+#### `no-direct-service-import-in-components` ⭐ NEW
+- **Prohibits:** Direct imports of service classes in React components (`.tsx` files)
+- **Requires:** Services accessed via `useService()` hook exclusively
+- **Rationale:** Enforces IoC/DI patterns and prevents tight coupling between UI and business logic
+
+#### `enforce-config-driven-values` ⭐ NEW
+- **Warns:** Magic literals that appear configurable (large numbers, URLs, timeouts)
+- **Suggests:** Externalization to `ConfigurationService` for runtime configurability
+- **Rationale:** Proactive enforcement of configuration sovereignty (Section 1)
 
 ### 4.4. Backend Python Rules
 

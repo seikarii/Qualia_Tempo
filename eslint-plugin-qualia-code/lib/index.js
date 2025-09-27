@@ -21,6 +21,10 @@ const deprecateApiClient = require('./rules/deprecate-api-client');
 const enforceMethodDecorators = require('./rules/enforce-method-decorators');
 const enforceInversifyConventions = require('./rules/enforce-inversify-conventions');
 const noGlobalApiCalls = require('./rules/no-global-api-calls');
+// NEW RULES - Enhanced QUALIA.CODE Compliance
+const noConsoleInServices = require('./rules/no-console-in-services');
+const noDirectServiceImportInComponents = require('./rules/no-direct-service-import-in-components');
+const enforceConfigDrivenValues = require('./rules/enforce-config-driven-values');
 
 module.exports = {
   rules: {
@@ -32,7 +36,11 @@ module.exports = {
     'deprecate-api-client': deprecateApiClient,
     'enforce-method-decorators': enforceMethodDecorators,
     'enforce-inversify-conventions': enforceInversifyConventions,
-    'no-global-api-calls': noGlobalApiCalls
+    'no-global-api-calls': noGlobalApiCalls,
+    // NEW RULES - Enhanced QUALIA.CODE v1.1 Compliance
+    'no-console-in-services': noConsoleInServices,
+    'no-direct-service-import-in-components': noDirectServiceImportInComponents,
+    'enforce-config-driven-values': enforceConfigDrivenValues
   },
   configs: {
     recommended: {
@@ -46,7 +54,11 @@ module.exports = {
         '@qualia-tempo/qualia-code/deprecate-api-client': 'error',
         '@qualia-tempo/qualia-code/enforce-method-decorators': 'error',
         '@qualia-tempo/qualia-code/enforce-inversify-conventions': 'error',
-        '@qualia-tempo/qualia-code/no-global-api-calls': 'error'
+        '@qualia-tempo/qualia-code/no-global-api-calls': 'error',
+        // NEW RULES - Enhanced QUALIA.CODE v1.1 Compliance
+        '@qualia-tempo/qualia-code/no-console-in-services': 'error',
+        '@qualia-tempo/qualia-code/no-direct-service-import-in-components': 'error',
+        '@qualia-tempo/qualia-code/enforce-config-driven-values': 'warn'
       }
     }
   }

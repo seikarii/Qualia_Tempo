@@ -121,6 +121,11 @@ else:
     print('   ✅ Backend architectural compliance: PASSED')
     sys.exit(0)
 "
+    
+    # CRITICAL FIX: Capture the exit code from the Python linter
+    if [ $? -ne 0 ]; then
+        BACKEND_ERRORS=1
+    fi
 else
     echo -e "   ${YELLOW}⚠️  Backend path not found, skipping Python linter${NC}"
 fi
