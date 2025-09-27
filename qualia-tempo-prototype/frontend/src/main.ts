@@ -3,6 +3,7 @@ import { app, BrowserWindow, ipcMain, screen, shell } from "electron";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { env } from "./utils/env";
+import log from "electron-log";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -98,7 +99,7 @@ const createWindow = (): BrowserWindow => {
       mainWindow.setOpacity(opacity);
     }, 16); // ~60fps
 
-    console.log("🎮 Qualia Tempo Window Ready - Neural Interface Activated");
+    log.info("🎮 Qualia Tempo Window Ready - Neural Interface Activated");
   });
 
   // Load the application
@@ -127,7 +128,7 @@ const createWindow = (): BrowserWindow => {
 
   // Window event handlers
   mainWindow.on("closed", () => {
-    console.log("🔌 Neural Interface Disconnected");
+    log.info("🔌 Neural Interface Disconnected");
   });
 
   // Prevent navigation to external sites (security)
@@ -205,6 +206,7 @@ const createWindow = (): BrowserWindow => {
         }
         return { success: true };
       } catch (error) {
+        log.error("Failed to set audio session:", error);
         return { success: false, error: (error as Error).message };
       }
     });
@@ -215,7 +217,7 @@ const createWindow = (): BrowserWindow => {
 
 // Application event handlers
 app.whenReady().then(() => {
-  console.log("⚡ Qualia Tempo Engine Initializing...");
+  log.info("⚡ Qualia Tempo Engine Initializing...");
 
   // Set app user model ID (Windows)
   if (process.platform === "win32") {
@@ -234,7 +236,7 @@ app.whenReady().then(() => {
         !navigationUrl.startsWith("file://")
       ) {
         event.preventDefault();
-        console.warn(`🚫 Blocked navigation to: ${navigationUrl}`);
+        log.warn(`🚫 Blocked navigation to: ${navigationUrl}`);
       }
     });
 
@@ -262,7 +264,7 @@ app.whenReady().then(() => {
   app.commandLine.appendSwitch("--ignore-gpu-blocklist");
   app.commandLine.appendSwitch("--enable-gpu-rasterization");
 
-  console.log("🎯 Neural Interface Online - Ready for Synchronization");
+  log.info("🎯 Neural Interface Online - Ready for Synchronization");
 });
 
 // Quit when all windows are closed, except on macOS
@@ -291,7 +293,7 @@ if (!gotTheLock) {
 
 // Enhanced error handling
 process.on("uncaughtException", (error) => {
-  console.error("🚨 Uncaught Exception:", error);
+  log.error("🚨 Uncaught Exception:", error);
   // Don't exit in development
   if (!env.isDev) {
     app.quit();
@@ -299,15 +301,15 @@ process.on("uncaughtException", (error) => {
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-  console.error("🚨 Unhandled Rejection at:", promise, "reason:", reason);
+  log.error("🚨 Unhandled Rejection at:", promise, "reason:", reason);
 });
 
 // Graceful shutdown
 app.on("before-quit", (_) => {
-  console.log("🔄 Initiating Neural Interface Shutdown...");
+  log.info("🔄 Initiating Neural Interface Shutdown...");
   // Perform cleanup operations here
 });
 
-console.log(
+log.info(
   "🚀 Qualia Tempo Electron Main Process Started - Neural Core Active",
 );
