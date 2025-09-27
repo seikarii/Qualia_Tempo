@@ -1,0 +1,57 @@
+
+# Documento de Diseño: El Campo Vibracional y la Física de la Magia
+
+## 1. Principio Fundamental: La Música como Fuerza Creadora
+
+En el universo de `QualiaTempo`, la música no es un mero acompañamiento ambiental. Es una fuerza física fundamental, la fuente de toda "magia". Los fenómenos que en otros universos se considerarían hechizos (telequinesis, creación de luz, alteración de la materia) son aquí consecuencias directas y emergentes de la manipulación de las vibraciones y su interacción con el tejido de la realidad.
+
+Abandonamos la idea de "hechizos scripteados". En su lugar, diseñamos un universo cuyas leyes físicas permiten que el sonido altere la materia y genere luz. La "magia" no se programa, se **descubre** al encontrar las resonancias y patrones armónicos correctos.
+
+## 2. La Arquitectura del Campo Unificado: El `QualiaManifold` Tricapa
+
+Nuestra arquitectura se basa en un único y unificado campo Euleriano, el `QualiaManifold`, que representa el propio espacio-tiempo. Este campo se compone de tres capas interdependientes que se resuelven simultáneamente en el núcleo nativo de la GPU:
+
+1.  **`PhiField` (Materia/Potencial):** La capa fundamental que define la "sustancia" del espacio y la existencia de los `LivingSymbols`. Su ecuación define la gravedad, la inercia y la cohesión de nuestro universo.
+
+2.  **`LuminiferousField` (Luz):** La capa que representa el potencial de nuestro "campo electromagnético" personalizado. La propagación de ondas en este campo es lo que percibimos como luz. Su simulación nos da luz y sombras emergentes.
+
+3.  **`AcousticField` (Sonido/Vibración):** **(NUEVA CAPA)** La capa que representa la presión y el desplazamiento de las ondas sonoras. Es la fuente de la energía dinámica que puede perturbar los otros dos campos.
+
+## 3. La Física del Acoplamiento: Las Leyes de la Magia Emergente
+
+La "magia" surge porque las ecuaciones diferenciales parciales (PDE) que gobiernan cada campo están **acopladas**. La ecuación de un campo contiene términos que dependen del estado de los otros campos. Esto crea un sistema dinámico, interconectado y rico en comportamientos emergentes.
+
+### 3.1. Sonokinesis (Interacción `AcousticField` -> `PhiField`)
+
+*   **El Concepto:** El sonido puede mover y alterar la materia.
+*   **La Ley Física:** La PDE del `PhiField` incluirá un **término de fuerza** proporcional a la **amplitud** y al **gradiente** del `AcousticField`.
+    `d(PhiField)/dt = ... + C1 * grad(AcousticField.pressure)`
+*   **Fenómenos Emergentes:**
+    *   **Ondas de Choque:** Un sonido fuerte y súbito (amplitud alta) crea una onda de presión en el `AcousticField` que se traduce en una fuerza física que empuja a los `LivingSymbols` en el `PhiField`.
+    *   **Levitación Acústica:** Una onda estacionaria de sonido, con nodos de alta y baja presión estables, puede crear "trampas" de fuerza en el `PhiField` capaces de hacer levitar objetos.
+    *   **Cimática y Resonancia:** Un acorde musical complejo (múltiples frecuencias en el `AcousticField`) puede generar patrones de interferencia que se imprimen como patrones geométricos en el `PhiField`. Si la frecuencia de una vibración coincide con la frecuencia resonante de la estructura de un `LivingSymbol`, este puede amplificar la energía hasta "romperse".
+
+### 3.2. Luminokinesis (Interacción `AcousticField` -> `LuminiferousField`)
+
+*   **El Concepto:** El sonido crea y modula la luz.
+*   **La Ley Física:** La PDE del `LuminiferousField` incluirá un **término de fuente (emisión)** que depende de la **amplitud** y la **frecuencia** del `AcousticField`.
+    `d(LuminiferousField)/dt = ... + C2 * AcousticField.amplitude * f(AcousticField.frequency)`
+*   **Fenómenos Emergentes:**
+    *   **Sinestesia Fundamental:** La música se convierte en la fuente de luz. No hay "luces" en el mundo, solo objetos que vibran. Un `LivingSymbol` que emite un sonido, emite luz como consecuencia directa.
+    *   **Timbre a Color:** La función `f()` mapeará la frecuencia del sonido al "color" (frecuencia) de la luz. Sonidos agudos y puros (flauta) generarán luz azul/violeta. Sonidos graves y profundos (bajo) generarán luz roja/naranja. Un ruido blanco podría generar luz blanca.
+    *   **Ritmo a Intensidad:** La amplitud del sonido (el "volumen") se traduce directamente en la amplitud (el "brillo") de la luz emitida.
+
+### 3.3. Retroalimentación y Modulación (Interacciones Inversas)
+
+*   **El Concepto:** El entorno físico y lumínico altera la propagación del sonido.
+*   **La Ley Física:** La PDE del `AcousticField` tendrá parámetros (como la velocidad del sonido o el factor de atenuación) que no son constantes, sino que dependen del estado de los otros campos.
+    `AcousticField.speed = C3 * f(PhiField.density, LuminiferousField.intensity)`
+*   **Fenómenos Emergentes:**
+    *   **Refracción Acústica:** Un `LivingSymbol` denso (alta densidad en el `PhiField`) podría "ralentizar" las ondas sonoras que lo atraviesan, curvando la trayectoria del sonido.
+    *   **Silencio y Foco:** Una zona de alta intensidad lumínica en el `LuminiferousField` podría actuar como un "muro" que refleja el sonido, o como una "lente" que lo enfoca. Esto crea una retroalimentación directa: la luz que creas con tu música puede alterar cómo se propaga esa misma música.
+
+## 4. Conclusión Arquitectónica
+
+Con la adición del `AcousticField` y la definición de estas leyes de acoplamiento, completamos la visión de un motor de física verdaderamente unificado. El `QualiaManifold` se convierte en un sistema único y coherente donde la materia, la luz y el sonido no son sistemas separados, sino tres facetas de la misma realidad interconectada.
+
+Nuestro trabajo como arquitectos no es diseñar "hechizos", sino implementar y optimizar el solver para este sistema de ecuaciones acopladas en el núcleo nativo. La complejidad, la belleza y la "magia" no vendrán de nuestro diseño de efectos, sino de la riqueza infinita de los comportamientos que emergerán de estas leyes fundamentales.
