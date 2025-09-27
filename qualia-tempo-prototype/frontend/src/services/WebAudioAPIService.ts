@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import { IWebAudioAPIService } from "./interfaces/IWebAudioAPIService";
-import { logMethod, catchError } from "../utils/decorators";
+import { logMethod } from "../utils/decorators";
 
 @injectable()
 export class WebAudioAPIService implements IWebAudioAPIService {
@@ -14,7 +14,6 @@ export class WebAudioAPIService implements IWebAudioAPIService {
   }
 
   @logMethod()
-  @catchError()
   public getAudioContext(): AudioContext {
     if (!this.audioContext) {
       throw new Error("AudioContext is not available in this environment.");

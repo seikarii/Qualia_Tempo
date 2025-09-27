@@ -478,24 +478,7 @@ export class ConfigurationService implements IConfigurationService {
     this.configFileManifest = configManifest;
   }
 
-  /**
-   * Discover configuration files dynamically - NO HARDCODING
-   */
-  private discoverConfigFiles(): Record<string, string> {
-    // Default discovery pattern - can be overridden via constructor
-    return {
-      compositionRoot: "/config/composition-root.yaml",
-      errorReporting: "/config/error-reporting.yaml",
-      audioService: "/config/audio-service.yaml",
-      qualiaCalculator: "/config/qualia-calculator.yaml",
-      backendSync: "/config/backend-sync.yaml",
-      gameController: "/config/game-controller.yaml",
-      debugService: "/config/debug-service.yaml",
-      notificationService: "/config/notification-service.yaml",
-      rhythmicMovement: "/config/rhythmic-movement.yaml", // NEW: Specific config file
-      visualEffects: "/config/visual-effects.yaml", // NEW: Visual effects configuration (optional)
-    };
-  }
+
 
   /**
    * Load all configuration files from YAML
@@ -545,7 +528,6 @@ export class ConfigurationService implements IConfigurationService {
    * Get the complete configuration
    */
   @logMethod()
-  @catchError()
   public getConfig(): FullGameConfig {
     if (!this.loadedConfig) {
       throw new Error("Configuration not loaded. Call loadConfig() first.");
@@ -558,7 +540,6 @@ export class ConfigurationService implements IConfigurationService {
    * Replaces all getRhythmicMovementConfig, getQualiaConfig, etc.
    */
   @logMethod()
-  @catchError()
   public getConfigSection<T>(sectionKey: keyof FullGameConfig): T {
     if (!this.loadedConfig) {
       throw new Error("Configuration not loaded. Call loadConfig() first.");
@@ -627,7 +608,6 @@ export class ConfigurationService implements IConfigurationService {
    * @returns Game configuration object
    */
   @logMethod()
-  @catchError()
   public getGameConfig(): any {
     return this.getConfigSection("gameController");
   }
@@ -637,7 +617,6 @@ export class ConfigurationService implements IConfigurationService {
    * @returns Qualia calculator configuration
    */
   @logMethod()
-  @catchError()
   public getQualiaConfig(): QualiaCalculatorConfig {
     return this.getConfigSection<QualiaCalculatorConfig>("qualiaCalculator");
   }
@@ -647,7 +626,6 @@ export class ConfigurationService implements IConfigurationService {
    * @returns Backend sync configuration
    */
   @logMethod()
-  @catchError()
   public getBackendConfig(): BackendSyncConfig {
     return this.getConfigSection<BackendSyncConfig>("backendSync");
   }
@@ -657,7 +635,6 @@ export class ConfigurationService implements IConfigurationService {
    * @returns Audio service configuration
    */
   @logMethod()
-  @catchError()
   public getAudioConfig(): AudioServiceConfig {
     return this.getConfigSection<AudioServiceConfig>("audioService");
   }
@@ -667,7 +644,6 @@ export class ConfigurationService implements IConfigurationService {
    * @returns Error reporting configuration
    */
   @logMethod()
-  @catchError()
   public getErrorReportingConfig(): ErrorReportingConfig {
     return this.getConfigSection<ErrorReportingConfig>("errorReporting");
   }
@@ -677,7 +653,6 @@ export class ConfigurationService implements IConfigurationService {
    * @returns Rhythmic movement configuration
    */
   @logMethod()
-  @catchError()
   public getRhythmicMovementConfig(): RhythmicMovementConfig {
     return this.getConfigSection<RhythmicMovementConfig>("rhythmicMovement");
   }
@@ -687,7 +662,6 @@ export class ConfigurationService implements IConfigurationService {
    * @returns Notification service configuration
    */
   @logMethod()
-  @catchError()
   public getNotificationConfig(): NotificationServiceConfig {
     return this.getConfigSection<NotificationServiceConfig>(
       "notificationService",
@@ -698,7 +672,6 @@ export class ConfigurationService implements IConfigurationService {
    * Get HTTP service configuration
    */
   @logMethod()
-  @catchError()
   public getHttpConfig(): {
     defaultTimeout: number;
     maxRetries: number;
@@ -712,7 +685,6 @@ export class ConfigurationService implements IConfigurationService {
    * @returns Visual effects configuration or default fallback if not defined
    */
   @logMethod()
-  @catchError()
   public getVisualEffectsConfig(): VisualEffectsConfig {
     // Provide a resilient fallback to avoid runtime failure if file missing
     const defaults: VisualEffectsConfig = {
@@ -753,7 +725,6 @@ export class ConfigurationService implements IConfigurationService {
    * Check if configuration is loaded
    */
   @logMethod()
-  @catchError()
   public isLoaded(): boolean {
     return this.loadedConfig !== null;
   }

@@ -137,13 +137,11 @@ export class GameStateStoreService implements IGameStateStoreService {
   }
 
   @logMethod()
-  @catchError()
   getStatus(): "running" | "stopped" {
     return this.isStarted ? "running" : "stopped";
   }
 
   @logMethod()
-  @catchError()
   isRunning(): boolean {
     return this.isStarted;
   }

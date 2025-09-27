@@ -16,7 +16,6 @@ export class TimerService implements ITimerService {
   }
 
   @logMethod()
-  @catchError()
   public setTimeout(callback: () => void, delay: number): number {
     this.logger.debug("Setting timeout", { delay });
 
@@ -34,7 +33,6 @@ export class TimerService implements ITimerService {
   }
 
   @logMethod()
-  @catchError()
   public clearTimeout(id: number): void {
     if (this.activeTimeouts.has(id)) {
       this.logger.debug("Clearing timeout", { id });
@@ -44,7 +42,6 @@ export class TimerService implements ITimerService {
   }
 
   @logMethod()
-  @catchError()
   public setInterval(callback: () => void, interval: number): number {
     this.logger.debug("Setting interval", { interval });
 
@@ -61,7 +58,6 @@ export class TimerService implements ITimerService {
   }
 
   @logMethod()
-  @catchError()
   public clearInterval(id: number): void {
     if (this.activeIntervals.has(id)) {
       this.logger.debug("Clearing interval", { id });

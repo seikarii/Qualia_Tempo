@@ -180,8 +180,10 @@ The custom ESLint plugin enforces the following QUALIA.CODE principles:
 
 #### `enforce-method-decorators`
 - **Prohibits:** Service methods without required decorators
-- **Requires:** `@logMethod()`, `@catchError()`, `@validate()` decorators
-- **Rationale:** Consistent transversal logic application
+- **Requires:** `@logMethod()` on all public service methods, `@catchError()` on system boundary methods only
+- **Rationale:** Consistent transversal logic application with performance considerations
+- **Smart Detection:** Distinguishes between simple getters and complex operations
+- **Performance Aware:** Does not require `@catchError` on trivial synchronous methods
 
 #### `enforce-inversify-conventions`
 - **Prohibits:** Missing `@injectable()` or `@inject()` decorators
@@ -348,6 +350,59 @@ jobs:
 - `@catchError()`: Catches runtime errors within a method and logs them to a reporting service.
 - `@validate(schemaName)`: Validates method arguments against a registered schema. The first argument of the method is validated against the specified schema from the schema registry.
 
+#### 5.2.1. @catchError Usage Guidelines (Performance Critical)
+
+**MANDATORY: Strategic @catchError Application**
+
+The `@catchError` decorator adds try/catch overhead and should be applied strategically to maintain optimal performance.
+
+**USE @catchError for:**
+- ✅ **Async operations** (network requests, file I/O, database operations)
+- ✅ **External API calls** (browser APIs that might fail, third-party services)
+- ✅ **Complex calculations** that might throw runtime errors
+- ✅ **Service lifecycle methods** (start, stop, initialize, cleanup)
+- ✅ **System boundary methods** (methods that cross architectural layers)
+- ✅ **Event handlers** that process external events
+- ✅ **Configuration loading and parsing operations**
+
+**DO NOT use @catchError for:**
+- ❌ **Simple synchronous getters** that return class properties
+- ❌ **Trivial validation methods** with basic conditionals
+- ❌ **Simple wrappers** around platform APIs that don't add complex logic
+- ❌ **Boolean flag methods** (isEnabled, isRunning, isLoaded - unless they perform I/O)
+- ❌ **Direct property accessors** (getCurrentState, getStatus - unless they validate)
+- ❌ **Simple arithmetic or string operations**
+
+**Performance Impact:**
+- `@catchError` adds ~5-10% overhead per method call
+- On frequently called getters (>1000 calls/sec), this compounds significantly
+- Simple property access should be as lightweight as possible
+
+**Examples:**
+
+```typescript
+// ❌ INCORRECT - Overuse on simple getter
+@logMethod()
+@catchError()  // UNNECESSARY - adds overhead to simple property access
+public getCurrentState(): GameState {
+  return this.gameState;
+}
+
+// ✅ CORRECT - Simple getter without error boundary
+@logMethod()
+public getCurrentState(): GameState {
+  return this.gameState;
+}
+
+// ✅ CORRECT - Complex operation needs error boundary
+@logMethod()
+@catchError()  // NECESSARY - async I/O operation can fail
+public async loadConfiguration(): Promise<void> {
+  const config = await this.httpService.get('/api/config');
+  this.parseAndValidateConfig(config);
+}
+```
+
 ### 5.3. Logging Standard
 - **Prohibited:** Direct usage of `console.log`, `console.warn`, `console.error`, etc. in the services layer (`src/services`).
 - **Required:** Use the injected `QualiaLogger` instance in service constructors for all logging needs.
@@ -373,7 +428,56 @@ jobs:
 
 ---
 
-## 8. AI Workflow Example: Adding a new Qualia Parameter
+## 8. Performance Optimization Protocol
+
+### 8.1. Decorator Performance Guidelines
+
+**CRITICAL: Avoid Decorator Overuse**
+
+Decorators add runtime overhead through proxy patterns and should be applied judiciously:
+
+#### Performance Impact Analysis:
+- `@logMethod()`: ~2-3% overhead (acceptable for debugging)
+- `@catchError()`: ~5-10% overhead (significant on hot paths)
+- `@validate()`: ~10-15% overhead (use only on data boundaries)
+- `@throttle()`: ~3-5% overhead (use only on frequent events)
+
+#### Hot Path Identification:
+Methods called >100 times per second should minimize decorator usage:
+- Configuration getters (getConfig, getAudioConfig, etc.)
+- State accessors (getCurrentState, isRunning, etc.)
+- Simple property returns
+- Timer wrappers (setTimeout, clearInterval, etc.)
+
+#### Optimization Strategy:
+1. **Profile before optimizing**: Use browser DevTools to identify hot paths
+2. **Remove unnecessary @catchError**: Keep only on system boundaries
+3. **Minimize validation**: Use @validate only on external data entry points
+4. **Strategic logging**: Use @logMethod selectively in production
+
+### 8.2. Service Performance Patterns
+
+**High-Performance Service Design:**
+```typescript
+@injectable()
+export class OptimizedService {
+  // ✅ Fast path - no decorators on simple getters
+  public getState(): State {
+    return this.state;
+  }
+  
+  // ✅ System boundary - appropriate decorator usage
+  @logMethod()
+  @catchError()
+  public async processExternalData(data: unknown): Promise<void> {
+    // Complex operation that justifies overhead
+  }
+}
+```
+
+---
+
+## 9. AI Workflow Example: Adding a new Qualia Parameter
 
 1.  **Modify Contract:** Edit the appropriate JSON Schema file in `/shared_contracts`.
 2.  **Generate Code:** Run `scripts/generate_contracts.sh`. Verify the changes in the generated Python model and TypeScript interface.
@@ -391,7 +495,7 @@ jobs:
 
 ---
 
-## 9. Core Service Definitions
+## 10. Core Service Definitions
 
 ### 9.1. EventBus (`frontend/src/services/EventBus.ts`)
 **Purpose:** Central communication hub for decoupled component interaction.
@@ -561,7 +665,7 @@ const [eventBus, configService] = useServices<IEventBus, IConfigurationService>(
 
 ---
 
-## 10. Testing & Debugging Philosophy
+## 11. Testing & Debugging Philosophy
 
 ### 7.1. Principios Fundamentales
 - **Pirámide de Testing:** Adoptamos el modelo de la pirámide de testing. La base son los tests unitarios rápidos, seguidos por tests de integración de servicios, y finalmente, un número reducido de tests E2E.
@@ -716,11 +820,11 @@ const testContainer = createTestContainer();
 const service = testContainer.get<IMyService>(TYPES.IMyService);
 ```
 
-## 11. Forbidden Practices: Global API Usage
+## 12. Forbidden Practices: Global API Usage
 
 To maintain architectural integrity, testability, and control, the direct use of the following global APIs within the services layer (`src/services`) is **STRICTLY FORBIDDEN**.
 
-### 9.1. Network Requests
+### 12.1. Network Requests
 - **FORBIDDEN:** `fetch()`
 - **REQUIRED:** Use the injected `IHttpService`.
 - **Example:**
@@ -732,7 +836,7 @@ To maintain architectural integrity, testability, and control, the direct use of
   const data = await this.httpService.get('/api/data');
   ```
 
-### 9.2. Timer Operations
+### 12.2. Timer Operations
 - **FORBIDDEN:** `setTimeout()`, `setInterval()`, `clearTimeout()`, `clearInterval()`
 - **REQUIRED:** Use the injected `ITimerService`.
 - **Example:**
