@@ -1,4 +1,5 @@
 /**
+ * @generated DO NOT EDIT
  * QUALIA.CODE v1.1 - Event Data Contracts
  * Single source of truth for data structures used in EventBus events.
  * Eliminates circular dependencies between EventBus and service interfaces.

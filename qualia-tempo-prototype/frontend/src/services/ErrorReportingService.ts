@@ -497,6 +497,7 @@ export class ErrorReportingService implements IErrorReportingService {
   /**
    * Check if error reporting is currently enabled.
    */
+  @logMethod()
   public isEnabled(): boolean {
     return this.isStarted && this.config.enabled;
   }

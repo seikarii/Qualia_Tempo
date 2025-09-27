@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 declare global {
   interface Window {
     electronAPI?: {
@@ -8,4 +7,3 @@ declare global {
 }
 
 export {};
-/* eslint-enable no-unused-vars */

@@ -198,10 +198,13 @@ const createWindow = (): BrowserWindow => {
     ipcMain.handle("set-audio-session", (_, _options) => {
       // Enhanced audio session handling for Windows
       try {
+        // TODO: Implement Windows-specific audio session configuration
+        // For now, return success as this is a placeholder
+        if (_options) {
+          // Placeholder for future audio session configuration
+        }
         return { success: true };
       } catch (error) {
-        // eslint-disable-next-line no-unreachable
-        console.error("Audio session error:", error);
         return { success: false, error: (error as Error).message };
       }
     });

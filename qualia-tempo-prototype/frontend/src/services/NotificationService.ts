@@ -776,6 +776,7 @@ export class NotificationService implements INotificationService {
   /**
    * Check if notifications are currently enabled.
    */
+  @logMethod()
   public isEnabled(): boolean {
     return this.isStarted && this.config.enabled;
   }

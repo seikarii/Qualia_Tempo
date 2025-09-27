@@ -519,6 +519,7 @@ export class QualiaStateCalculatorService
    * Check if the service is currently running.
    * @returns True if the service is active
    */
+  @logMethod()
   public isRunning(): boolean {
     return this._isRunning;
   }

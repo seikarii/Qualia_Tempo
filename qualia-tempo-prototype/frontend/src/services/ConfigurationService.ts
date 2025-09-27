@@ -349,6 +349,13 @@ export interface DebugServiceConfig {
     logRequestHeaders: boolean;
     logRequestBodies: boolean;
   };
+  // QUALIA.CODE: Additional DebugService configuration properties
+  maxSessionHistory?: number;
+  maxEventHistory?: number;
+  performanceMonitoringInterval?: number;
+  aiAnalysisInterval?: number;
+  enableAIAnalysis?: boolean;
+  memoryCleanupThreshold?: number;
 }
 
 // NotificationService Configuration
@@ -686,38 +693,20 @@ export class ConfigurationService implements IConfigurationService {
    */
   @logMethod()
   public getVisualEffectsConfig(): VisualEffectsConfig {
-    // Provide a resilient fallback to avoid runtime failure if file missing
-    const defaults: VisualEffectsConfig = {
-      particles: {
-        count: 120,
-        minSize: 1,
-        maxSize: 4,
-        speed: 0.35,
-        drift: 0.5,
-      },
-      bloom: { intensity: 1.0, pulseSpeed: 6 },
-      gradients: {
-        cycleDuration: 16,
-        layers: [
-          "radial-gradient(circle at 20% 30%, rgba(0,255,255,0.15), transparent 60%)",
-          "radial-gradient(circle at 80% 70%, rgba(255,0,255,0.12), transparent 65%)",
-          "radial-gradient(circle at 50% 50%, rgba(255,255,0,0.08), transparent 70%)",
-        ],
-      },
-      noise: { enabled: true, opacity: 0.06, scale: 2, speed: 0.25 },
-      palette: ["#00ffff", "#ff00ff", "#ffff00", "#ff0080", "#00ff80"],
-      aura: { rings: 4, rotationSpeed: 22, pulseDuration: 9 },
-    };
-
+    // QUALIA.CODE: Configuration externalized - load from YAML, minimal fallback only
     try {
-      const cfg = this.getConfigSection<VisualEffectsConfig>("visualEffects");
-      if (!cfg) return defaults;
-      // Minimal validation for required subsections
-      if (!cfg.particles?.count || !cfg.palette?.length)
-        return { ...defaults, ...cfg };
-      return cfg;
-    } catch {
-      return defaults;
+      return this.getConfigSection<VisualEffectsConfig>("visualEffects");
+    } catch (configError) {
+      this.logger.warn("Visual effects configuration not found, using minimal fallback", { configError });
+      // Minimal fallback - should not happen in production with proper YAML setup
+      return {
+        particles: { count: 100, minSize: 1, maxSize: 4, speed: 0.5, drift: 0.5 },
+        bloom: { intensity: 1.0, pulseSpeed: 0.5 },
+        gradients: { cycleDuration: 10, layers: [] },
+        noise: { enabled: false, opacity: 0, scale: 1, speed: 0 },
+        palette: ["#ffffff"],
+        aura: { rings: 1, rotationSpeed: 10, pulseDuration: 5 },
+      };
     }
   }
 

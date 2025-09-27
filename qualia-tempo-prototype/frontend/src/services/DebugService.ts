@@ -639,11 +639,11 @@ export class DebugService implements IDebugService {
   }
 
   private startAIAnalysis(): void {
-    if (true) return; // AI Analysis enabled by default
+    if (!this.config.enableAIAnalysis) return; // Use configuration value
 
     this.aiAnalysisInterval = this.timerService.setInterval(() => {
       this.performAIAnalysis();
-    }, 30000); // Default AI analysis interval: 30 seconds
+    }, this.config.aiAnalysisInterval); // Use configuration interval
   }
 
   private startMemoryCleanup(): void {
@@ -684,8 +684,8 @@ export class DebugService implements IDebugService {
     const totalEvents =
       this.eventHistory.length + this.aiAnalysisResults.length;
 
-    if (totalEvents > 1000) {
-      // Default memory cleanup threshold
+    if (totalEvents > (this.config.memoryCleanupThreshold || 1000)) {
+      // Use configuration threshold
       // Clean up old events
       this.eventHistory = this.eventHistory.slice(
         -Math.floor(this.config.eventMonitoring.maxEventHistory * 0.8),

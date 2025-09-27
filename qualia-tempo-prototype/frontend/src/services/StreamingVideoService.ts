@@ -22,7 +22,7 @@ import type { ITimerService } from "./interfaces/ITimerService";
 import type { StreamingStatusChangedEvent } from "./EventBus";
 import { logMethod, catchError } from "../utils/decorators";
 
-type FrameCallback = (frame: VideoFrame) => void;
+type FrameCallback = (_frame: VideoFrame) => void;
 
 @injectable()
 export class StreamingVideoService implements IStreamingVideoService {
@@ -271,10 +271,12 @@ export class StreamingVideoService implements IStreamingVideoService {
     this.logger.debug("Frame subscription removed", { subscriptionId });
   }
 
+  @logMethod()
   public getConnectionStatus(): ConnectionStatus {
     return { ...this.connectionStatus };
   }
 
+  @logMethod()
   public getStatistics(): StreamingStatistics {
     return { ...this.statistics };
   }

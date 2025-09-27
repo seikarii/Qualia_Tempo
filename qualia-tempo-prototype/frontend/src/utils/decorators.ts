@@ -10,9 +10,9 @@ import { schemaRegistry } from "../schemas";
 type UniversalDecorator = {
    
   (
-    target: any,
-    propertyKey?: string | symbol,
-    descriptor?: PropertyDescriptor,
+    _target: any,
+    _propertyKey?: string | symbol,
+    _descriptor?: PropertyDescriptor,
   ): PropertyDescriptor | void;
 };
 

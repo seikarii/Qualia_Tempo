@@ -290,6 +290,7 @@ export class GameStateStoreService implements IGameStateStoreService {
   /**
    * Set the store setter function (for initialization after IoC container setup)
    */
+  @logMethod()
   public setStoreSetter(setStore: StoreSetter): void {
     (this as any).setStore = setStore;
   }
