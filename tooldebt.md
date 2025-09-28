@@ -49,7 +49,7 @@ This report analyzes the current state of custom linting and analysis tools for 
 
 **Assessment:** Requires complete rewrite and implementation.
 
-### 3. Ruff Plugin (ruff-qualia-code-rust)
+### 3. Ruff Plugin (ruff-qualia-code)
 **Status: BASIC IMPLEMENTATION - NEEDS EXPANSION** ⚠️
 
 **Implemented Rules:**
@@ -57,9 +57,6 @@ This report analyzes the current state of custom linting and analysis tools for 
 - `QLA002`: (Not analyzed in code)
 - `QLA003`: (Not analyzed in code)
 
-**Strengths:**
-- Native Rust implementation for performance
-- Basic service instantiation detection working
 
 **Gaps:**
 - Only 3 rules implemented vs. 11+ needed for QUALIA.CODE
