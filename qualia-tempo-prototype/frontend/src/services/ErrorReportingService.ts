@@ -27,80 +27,14 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { IHttpService } from "./interfaces/IHttpService";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
-import type { ErrorEvent } from "./EventBus";
-
-// Error severity levels with priority ordering
-export type ErrorSeverity = "low" | "medium" | "high" | "critical";
-
-// Error report interface for external service submission
-export interface ExtendedErrorReport extends ErrorReport {
-  id: string;
-  timestamp: Date;
-  sessionId: string;
-  userAgent: string;
-  url: string;
-  stackTrace?: string;
-  context?: Record<string, any>;
-  fingerprint: string;
-  attempts: number;
-  lastAttempt?: Date;
-}
-
-// Error batch for efficient bulk reporting
-export interface ExtendedErrorBatch extends ErrorBatch {
-  id: string;
-  createdAt: Date;
-  errors: ExtendedErrorReport[];
-  size: number;
-  totalRetries: number;
-  lastRetryAt?: Date;
-  status: "pending" | "processing" | "completed" | "failed";
-}
-
-// Circuit breaker state for managing external service failures
-export interface CircuitBreakerState {
-  state: "closed" | "open" | "half-open";
-  failureCount: number;
-  lastFailureTime?: Date;
-  nextAttemptTime?: Date;
-}
-
-// Rate limiting state with token bucket algorithm
-export interface RateLimitState {
-  tokens: number;
-  lastRefill: Date;
-  maxTokens: number;
-  refillRate: number; // tokens per second
-}
-
-// External service configuration
-export interface ExternalServiceConfig {
-  endpoint: string;
-  apiKey: string;
-  timeout: number;
-  maxRetries: number;
-  retryDelay: number;
-  batchSize: number;
-  enabled: boolean;
-}
-
-// Extended configuration interface for ErrorReportingService
-export interface ExtendedErrorReportingConfig extends ErrorReportingConfig {
-  maxBatchSize: number;
-  batchFlushInterval: number;
-  maxRetries: number;
-  retryDelay: number;
-  rateLimitTokens: number;
-  rateLimitRefillRate: number;
-  circuitBreakerThreshold: number;
-  circuitBreakerTimeout: number;
-  enableDeduplication: boolean;
-  memoryCleanupThreshold: number;
-  memoryCleanupInterval: number;
-  rateLimitRefillInterval: number;
-  fingerprintLength: number;
-  externalService: ExternalServiceConfig;
-}
+import type {
+  ExtendedErrorReport,
+  ExtendedErrorBatch,
+  CircuitBreakerState,
+  RateLimitState,
+  ExternalServiceConfig,
+  ErrorSeverity,
+} from "./contracts/IErrorReportingService.contracts";
 
 
 
@@ -148,7 +82,7 @@ export class ErrorReportingService implements IErrorReportingService {
   // Configuration service for future extensibility
   // @ts-ignore - Unused parameter for future configuration features
   private readonly _configService: IConfigurationService;
-  private config: ExtendedErrorReportingConfig;
+  private config: ErrorReportingConfig;
   private isStarted = false;
   private eventListenerIds: string[] = [];
 
@@ -206,7 +140,7 @@ export class ErrorReportingService implements IErrorReportingService {
     this._configService = configService;
     
     // QUALIA.CODE v1.1: NO hardcoded configuration - will be loaded in start()
-    this.config = {} as ExtendedErrorReportingConfig;
+    this.config = {} as ErrorReportingConfig;
     this.sessionId = this.generateSessionId();
 
     // Initialize rate limiting and circuit breaker to minimal state

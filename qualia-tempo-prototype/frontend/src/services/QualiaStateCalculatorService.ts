@@ -19,7 +19,7 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
-import { QualiaStateUpdatedEvent } from "./EventBus";
+import { QualiaStateUpdatedEvent } from "./contracts/events.contracts";
 import type { PlayerActionEvent } from "./contracts/events.contracts";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from "../utils/decorators";

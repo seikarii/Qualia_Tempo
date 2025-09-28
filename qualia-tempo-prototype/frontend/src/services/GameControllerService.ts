@@ -19,29 +19,11 @@ import {
 } from "./EventBus";
 import { logMethod, catchError } from "../utils/decorators";
 import { QualiaLogger } from "./Logger";
+import type { GameState, GameControllerConfig } from "./contracts/IGameControllerService.contracts";
 import type { IGameControllerService } from "./interfaces/IGameControllerService";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 import type { ITimerService } from "./interfaces/ITimerService";
-
-// Game state interface
-export interface GameState {
-  isPlaying: boolean;
-  isPaused: boolean;
-  currentScore: number;
-  comboCount: number;
-  health: number;
-  level: number;
-  gameMode: "normal" | "hard" | "qualia";
-}
-
-// Configuration interface
-export interface GameControllerConfig {
-  maxHealth: number;
-  initialScore: number;
-  comboMultiplier: number;
-  healthDecayRate: number;
-}
 
 /**
  * GameControllerService: Manages game state and control logic
@@ -267,7 +249,7 @@ export class GameControllerService implements IGameControllerService {
     );
     this.eventListenerIds.push(gameStateListenerId);
 
-    const config = this.configService.getConfigSection<any>("gameController");
+    const config = this.configService.getConfigSection("gameController");
     this.logger.info(config.messages.eventsSubscribed);
   }
 
@@ -376,7 +358,7 @@ export class GameControllerService implements IGameControllerService {
   private handleFastForward(_context?: Record<string, any>): void {
     if (!this.gameState.isPlaying || this.gameState.isPaused) return;
 
-    const config = this.configService.getConfigSection<any>("game-controller");
+    const config = this.configService.getConfigSection("gameController");
     this.logger.info(config.messages.fastForwardActivated);
     // Fast forward could give temporary score boost
     this.gameState.currentScore += config.mechanics.fastForwardScoreBoost;

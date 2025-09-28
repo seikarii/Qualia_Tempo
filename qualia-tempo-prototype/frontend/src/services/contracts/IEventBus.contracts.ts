@@ -40,4 +40,23 @@ export interface EventBusConfig {
     enableEventHistory: boolean;
     enableEventValidation: boolean;
   };
+  
+  // Additional properties needed by EventBus for ID generation
+  idPrefix: string;
+  randomBase: number;
+  idStart: number;
+  idLength: number;
+  
+  // Priority configuration (referenced in EventBus.ts)
+  priorities: {
+    high: number;
+    normal: number;
+    low: number;
+    default: number;
+  };
+  
+  // Messages for logging
+  messages: {
+    destroyedEventBusWarning: string;
+  };
 }

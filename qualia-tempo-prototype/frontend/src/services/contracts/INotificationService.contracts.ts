@@ -58,6 +58,18 @@ export interface NotificationServiceConfig {
   };
   maxNotifications: number; // Maximum concurrent notifications
   defaultDuration: number; // Default notification display duration
+  
+  // Additional properties from ExtendedNotificationConfig to eliminate type conflicts  
+  maxHistorySize: number;
+  defaultTtl: number;
+  maxRetries: number;
+  storeUpdateThrottleMs: number;
+  enablePriorityQueuing: boolean;
+  enableThrottling: boolean;
+  autoCleanupInterval: number;
+  filter: NotificationFilter;
+  throttling: ThrottlingConfig;
+  enabled: boolean;
 }
 
 // Notification types with specific handling
@@ -142,24 +154,11 @@ export interface ThrottlingConfig {
   historyRetention: number; // How long to keep notification history
 }
 
-// Extended configuration interface for NotificationService
-export interface ExtendedNotificationConfig extends NotificationConfig {
-  maxHistorySize: number;
-  defaultTtl: number;
-  maxRetries: number;
-  storeUpdateThrottleMs: number;
-  enablePriorityQueuing: boolean;
-  enableThrottling: boolean;
-  filter: NotificationFilter;
-  throttling: ThrottlingConfig;
-  autoCleanupInterval: number;
-}
-
 // Type-safe export data interface (replaces any)
 export interface NotificationServiceExport {
   notifications: ExtendedNotification[];
   statistics: NotificationStatistics;
-  configuration: ExtendedNotificationConfig;
+  configuration: NotificationServiceConfig;
   metadata: {
     exportTimestamp: Date;
     totalCount: number;
@@ -191,7 +190,7 @@ export interface FlexibleNotificationConfig {
   types?: Record<string, boolean>;
   
   // Nested config for test compatibility  
-  notifications?: Partial<ExtendedNotificationConfig> & {
+  notifications?: Partial<NotificationServiceConfig> & {
     allowHighPriority?: boolean;
   };
   

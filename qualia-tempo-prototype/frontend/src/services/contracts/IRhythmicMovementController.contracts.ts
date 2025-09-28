@@ -1,10 +1,12 @@
 /**
- * QUALIA.CODE v1.1 - IRhythmicMovementController Contracts
- * Single Source of Truth for RhythmicMovementController data structures.
- * This file is manually maintained for RhythmicMovementController-specific contracts.
+ * QUALIA.CODE v1.1 - RhythmicMovementController Contracts
+ * Centralized type definitions for rhythmic movement system
+ *
+ * Purpose: Single source of truth for all rhythmic movement data structures
+ * Architecture: Contract definitions extracted from service implementation for clarity and reusability
  */
 
-// RhythmicMovement Configuration - PURE DI TARGET - Migrated from ConfigurationService.ts
+// Configuration interface for RhythmicMovementController
 export interface RhythmicMovementConfig {
   bpm: number;
   perfectTiming: number;
@@ -13,4 +15,10 @@ export interface RhythmicMovementConfig {
   slowdownFactor: number;
   slowdownDuration: number;
   keyThrottleMs: number; // CRISALIDA.CODE: Configuration-driven throttling
+  
+  // Messages for logging
+  messages: {
+    serviceInitialized: string;
+    invalidTimeWarning: string;
+  };
 }

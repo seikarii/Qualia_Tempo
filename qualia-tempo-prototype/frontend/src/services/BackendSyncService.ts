@@ -5,8 +5,8 @@
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import { EventHandler, BackendSyncEvent, ErrorEvent } from "./EventBus";
-import type { QualiaStateUpdatedEvent } from "./EventBus";
+import { EventHandler } from "./EventBus";
+import type { BackendSyncEvent, ErrorEvent, QualiaStateUpdatedEvent } from "./contracts/events.contracts";
 import {
   logMethod,
   catchError,

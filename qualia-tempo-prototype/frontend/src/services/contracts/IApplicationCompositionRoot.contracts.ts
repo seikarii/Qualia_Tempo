@@ -21,6 +21,37 @@ export interface CompositionRootConfig {
     maxRetries: number;
     retryDelay: number;
   };
+  
+  // Messages for logging
+  messages: {
+    alreadyRunning: string;
+    initializationStarted: string;
+    configurationLoaded: string;
+    httpServiceConfigured: string;
+    gameStateServiceStarted: string;
+    transversalServicesStarted: string;
+    gameControllerStarted: string;
+    rhythmicControllerStarted: string;
+    initializationCompleted: string;
+    initializationFailed: string;
+  };
+  
+  // Steps for initialization logging
+  steps: {
+    loadConfiguration: string;
+    configureHttpService: string;
+    startGameStateService: string;
+    startTransversalServices: string;
+    startGameController: string;
+    startRhythmicController: string;
+    startBackendSync: string;
+  };
+  
+  // State updates for game state store
+  stateUpdates: {
+    configLoaded: any;
+    initializationComplete: any;
+  };
 }
 
 // Visual Effects Configuration - Migrated from ConfigurationService.ts

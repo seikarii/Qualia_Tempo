@@ -9,22 +9,12 @@ import type {
 } from "./contracts/events.contracts";
 import { logMethod, catchError } from "../utils/decorators";
 import type { QualiaState } from "../types/contracts";
+import type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementController.contracts";
 import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovementController";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { ITimerService } from "./interfaces/ITimerService";
-
-// PURE DI: Configuration interface for this service
-export interface RhythmicMovementConfig {
-  bpm: number;
-  perfectTiming: number;
-  goodTiming: number;
-  gridSize: number;
-  slowdownFactor: number;
-  slowdownDuration: number;
-  keyThrottleMs: number; // CRISALIDA.CODE: Configuration-driven throttling
-}
 
 /**
  * RhythmicMovementController - Core rhythm game logic
@@ -78,35 +68,11 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.configService = configService;
     this.timerService = timerService;
 
-    const config = this.configService.getConfigSection<any>("rhythmicMovement");
+    const config = this.configService.getConfigSection("rhythmicMovement");
     this.logger.info(config.messages.serviceInitialized);
   }
 
-  /**
-   * QUALIA.CODE: Ensure configuration is loaded when service starts
-   * This replaces the anti-pattern of loading config in constructor
-   */
-  private ensureConfigurationLoaded(): void {
-    const rhythmicConfig = this.configService.getConfigSection("rhythmicMovement");
 
-    const defaultConfig = this.configService.getConfigSection<any>("rhythmicMovement");
-    this.config = {
-      bpm: rhythmicConfig.bpm || defaultConfig.rhythm.defaultBPM,
-      perfectTiming: rhythmicConfig.perfectTiming || defaultConfig.timing.perfectTiming,
-      goodTiming: rhythmicConfig.goodTiming || defaultConfig.timing.rhythmGoodTiming,
-      gridSize: rhythmicConfig.gridSize || defaultConfig.movement.gridSize,
-      slowdownFactor: rhythmicConfig.slowdownFactor || defaultConfig.slowdown.slowdownFactor,
-      slowdownDuration: rhythmicConfig.slowdownDuration || defaultConfig.slowdown.slowdownDuration,
-      keyThrottleMs: rhythmicConfig.keyThrottleMs || defaultConfig.input.keyThrottleMs,
-    };
-
-    this.loadConfigurationValues();
-    this.beatInterval = (60 / this.bpm) * 1000; // Convert BPM to milliseconds
-
-    this.logger.info("Configuration loaded successfully", {
-      config: this.config,
-    });
-  }
 
   /**
    * Load values from configuration object into instance variables
@@ -128,15 +94,16 @@ export class RhythmicMovementController implements IRhythmicMovementController {
       return;
     }
 
-    // QUALIA.CODE: Load configuration when service starts, not in constructor
-    this.ensureConfigurationLoaded();
+    // QUALIA.CODE: Load configuration when service starts
+    this.config = this.configService.getConfigSection("rhythmicMovement");
+    this.loadConfigurationValues();
+    this.beatInterval = (60 / this.bpm) * 1000; // Convert BPM to milliseconds
 
     this.setupInputListener();
     this.setupGameStateListener();
     this.startMetronome();
     this.isListening = true;
-    const config = this.configService.getConfigSection<any>("rhythmicMovement");
-    this.logger.info(config.messages.serviceStarted);
+    this.logger.info("RhythmicMovementController started successfully");
   }
 
   @logMethod
@@ -602,7 +569,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   @catchError
   public async checkSyncAccuracy(currentTime: number): Promise<number> {
     if (!Number.isFinite(currentTime)) {
-      const config = this.configService.getConfigSection<any>("rhythmic-movement");
+      const config = this.configService.getConfigSection("rhythmicMovement");
       this.logger.warn(config.messages.invalidTimeWarning);
       currentTime = performance.now();
     }

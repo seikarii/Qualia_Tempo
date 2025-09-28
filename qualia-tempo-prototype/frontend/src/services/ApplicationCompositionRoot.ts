@@ -44,15 +44,16 @@ export class ApplicationCompositionRoot {
     // Step 4: Attach debug interface in development mode
     // Development debug interface setup handled by ConfigurationService
     const config = configService;
-    if (config.getConfig()?.development?.enableDebugInterface) {
+    // Debug interface setup using proper configuration access
+    const debugConfig = config.getConfigSection("debugService");
+    if (debugConfig?.development?.enableDebugOverlay) {
       try {
         const debugService = container.get<IDebugService>(TYPES.IDebugService);
         const debugInterface = debugService.getDebugInterface();
         if (debugInterface) {
           // Global API access is handled by dedicated service
           const globalApiService = debugInterface.getGlobalApiService();
-          const debugConfig = config.getConfig()?.debug;
-          const debugKey = debugConfig?.globalInterfaceKey || 'QA_DEBUG';  
+          const debugKey = 'QA_DEBUG';  
           globalApiService.attachToWindow(debugKey, debugInterface);
           logger.info(`🌐 [BOOTSTRAP] Debug interface attached to window.${debugKey}`);
         }
@@ -61,12 +62,8 @@ export class ApplicationCompositionRoot {
       }
     }
 
-    const bootstrapConfig = config.getConfig()?.bootstrap;
-    const completionMessage = bootstrapConfig?.completionMessage || 
-      bootstrapConfig?.defaultCompletionMessage;
-    if (completionMessage) {
-      logger.info(completionMessage);
-    }
+    // Application completion message
+    logger.info("✅ [BOOTSTRAP] Application initialization completed successfully");
   }
 
   /**

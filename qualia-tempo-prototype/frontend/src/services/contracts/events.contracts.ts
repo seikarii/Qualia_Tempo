@@ -93,3 +93,38 @@ export interface PlayerInputEvent extends BaseEvent {
   key: string;
   source?: string;
 }
+
+// Additional event types moved from EventBus.ts
+export interface QualiaStateUpdatedEvent extends BaseEvent {
+  type: "QualiaStateUpdated";
+  qualiaState: import("../../types/contracts").QualiaState;
+}
+
+export interface ErrorEvent extends BaseEvent {
+  type: "Error";
+  error: Error;
+  severity: "low" | "medium" | "high" | "critical";
+  context?: Record<string, any>;
+}
+
+export interface BackendSyncEvent extends BaseEvent {
+  type: "BackendSync";
+  data: any;
+  syncType: "qualiaState" | "gameState" | "config";
+  status?: "success" | "error" | "pending";
+  error?: any;
+}
+
+export interface VisualImpactRequestedEvent extends BaseEvent {
+  type: "VisualImpactRequested";
+  payload: {
+    x: number; // Normalized coordinates (0 to 1)
+    y: number; // Normalized coordinates (0 to 1)
+    intensity: number; // Impact intensity (0 to 1)
+  };
+}
+
+export interface StreamingStatusChangedEvent extends BaseEvent {
+  type: "StreamingStatusChanged";
+  status: ConnectionStatus;
+}

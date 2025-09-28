@@ -1,12 +1,12 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import { EventBus } from "./EventBus";
-import type { QualiaStateUpdatedEvent } from "./EventBus";
+import type { QualiaStateUpdatedEvent } from "./contracts/events.contracts";
 import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError, measureTime } from "../utils/decorators";
 import { QualiaLogger } from "./Logger";
-import type { AudioServiceConfig } from "./contracts/IAudioService.contracts";
+
 import type { IAudioService } from "./interfaces/IAudioService";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { IWebAudioAPIService } from "./interfaces/IWebAudioAPIService";
@@ -161,8 +161,8 @@ export class AudioService implements IAudioService {
   @catchError
   public playRhythmicFeedback(timing: "perfect" | "good" | "miss"): void {
     if (!this.audioEngine || !this.isInitialized) {
-      const audioConfig = this.configService.getConfigSection<any>("audio");
-      this.logger.warn(audioConfig.messages.cannotPlayRhythmicFeedback);
+      const audioConfig = this.configService.getConfigSection("audioService");
+      this.logger.warn("Cannot play rhythmic feedback: audio not initialized");
       return;
     }
 
@@ -172,7 +172,7 @@ export class AudioService implements IAudioService {
         this.configService.getConfigSection("audioService");
       const audioContext = this.webAudioAPIService.getAudioContext();
       if (!audioContext) {
-        const audioConfig = this.configService.getConfigSection<any>("audio");
+        const audioConfig = this.configService.getConfigSection("audioService");
         this.logger.warn(audioConfig.messages.audioContextNotAvailable);
         return;
       }
@@ -246,7 +246,7 @@ export class AudioService implements IAudioService {
   @catchError
   public createEntityVoice(entityId: string, qualiaState: QualiaState): void {
     if (!this.audioEngine || !this.isInitialized) {
-      const audioConfig = this.configService.getConfigSection<any>("audio");
+      const audioConfig = this.configService.getConfigSection("audioService");
       this.logger.warn(audioConfig.messages.cannotCreateEntityVoice);
       return;
     }
@@ -258,7 +258,7 @@ export class AudioService implements IAudioService {
   @catchError
   public removeEntityVoice(entityId: string): void {
     if (!this.audioEngine) {
-      const audioConfig = this.configService.getConfigSection<any>("audio");
+      const audioConfig = this.configService.getConfigSection("audioService");
       this.logger.warn(audioConfig.messages.cannotRemoveEntityVoice);
       return;
     }
@@ -270,13 +270,13 @@ export class AudioService implements IAudioService {
   @catchError
   public removeAllEntityVoices(): void {
     if (!this.audioEngine) {
-      const audioConfig = this.configService.getConfigSection<any>("audio");
+      const audioConfig = this.configService.getConfigSection("audioService");
       this.logger.warn(audioConfig.messages.cannotRemoveEntityVoices);
       return;
     }
 
     // Remove common entity voices
-    const audioConfig = this.configService.getConfigSection<any>("audio");
+    const audioConfig = this.configService.getConfigSection("audioService");
     audioConfig.entityVoices.defaultEntities.forEach((entityId: string) => {
       this.removeEntityVoice(entityId);
     });
@@ -321,7 +321,7 @@ export class AudioService implements IAudioService {
 
       oscillator.start();
       if (!loop) {
-        const audioConfig = this.configService.getConfigSection<any>("audio");
+        const audioConfig = this.configService.getConfigSection("audioService");
         oscillator.stop(audioContext.currentTime + audioConfig.defaultSoundDuration);
       }
 
@@ -363,13 +363,13 @@ export class AudioService implements IAudioService {
   @catchError
   public async preloadSounds(soundIds: string[]): Promise<void> {
     if (!this.isInitialized) {
-      const audioConfig = this.configService.getConfigSection<any>("audio");
+      const audioConfig = this.configService.getConfigSection("audioService");
       this.logger.warn(audioConfig.messages.cannotPreloadSounds);
       return;
     }
 
     // Basic implementation - in a full implementation, we'd actually preload audio files
-    const audioConfig = this.configService.getConfigSection<any>("audio");
+    const audioConfig = this.configService.getConfigSection("audioService");
     this.logger.info(`${audioConfig.messages.preloadingSounds} ${soundIds.join(", ")}`);
 
     // Simulate preloading
@@ -381,7 +381,7 @@ export class AudioService implements IAudioService {
   // --- Helper Methods ---
 
   private getSoundFrequency(soundId: string): number {
-    const audioConfig = this.configService.getConfigSection<any>("audio");
+    const audioConfig = this.configService.getConfigSection("audioService");
     return audioConfig.soundFrequencies[soundId] ?? audioConfig.defaultFrequency;
   }
 }

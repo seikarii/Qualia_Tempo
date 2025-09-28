@@ -3,27 +3,8 @@
 
 import { injectable } from "inversify";
 import type { ILogger } from "./interfaces/ILogger";
-
-export enum LogLevel {
-  // eslint-disable-next-line no-unused-vars
-  DEBUG = 0,
-  // eslint-disable-next-line no-unused-vars
-  INFO = 1,
-  // eslint-disable-next-line no-unused-vars
-  WARN = 2,
-  // eslint-disable-next-line no-unused-vars
-  ERROR = 3,
-  // eslint-disable-next-line no-unused-vars
-  NONE = 4,
-}
-
-export interface LogEntry {
-  level: LogLevel;
-  message: string;
-  context?: Record<string, any>;
-  timestamp: string;
-  source: string;
-}
+import type { LogEntry } from "./contracts/ILogger.contracts";
+import { LogLevel } from "./contracts/ILogger.contracts";
 
 /**
  * Centralized logging service that can be injected into services

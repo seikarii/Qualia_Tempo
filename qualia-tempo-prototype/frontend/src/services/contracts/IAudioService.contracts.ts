@@ -25,6 +25,7 @@ export interface AudioServiceConfig {
     player: { baseFrequency: number; modulationRange: number };
     boss: { baseFrequency: number; modulationRange: number };
     environment: { baseFrequency: number; modulationRange: number };
+    defaultEntities: string[];
   };
   enableAudioPooling: boolean;
   maxConcurrentSounds: number;
@@ -34,4 +35,19 @@ export interface AudioServiceConfig {
   soundEnabled: boolean; // Global sound enable/disable toggle
   musicEnabled: boolean; // Music enable/disable toggle
   muteDuringDevelopment: boolean; // Development mute setting
+  defaultSoundDuration: number;
+  preloadSimulationDelay: number;
+  soundFrequencies: Record<string, number>;
+  defaultFrequency: number;
+  
+  // Messages for logging
+  messages: {
+    audioContextNotAvailable: string;
+    cannotCreateEntityVoice: string;
+    cannotRemoveEntityVoice: string;
+    cannotRemoveEntityVoices: string;
+    cannotPreloadSounds: string;
+    preloadingSounds: string;
+    soundsPreloaded: string;
+  };
 }

@@ -3,7 +3,7 @@
  * Centralized logging interface for all services.
  */
 
-import type { LogLevel } from "../Logger";
+import type { LogLevel } from "../contracts/ILogger.contracts";
 
 export interface ILogger {
   /**

@@ -26,7 +26,7 @@ import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
-import type { DebugServiceConfig } from "./contracts/IDebugService.contracts";
+import type { DebugSession, PerformanceMetrics, AIAnalysisResult, DebugServiceConfig } from "./contracts/IDebugService.contracts";
 import type {
   BaseEvent,
   QualiaStateUpdatedEvent,
@@ -34,42 +34,8 @@ import type {
   PlayerActionEvent,
   ErrorEvent,
   BackendSyncEvent,
-} from "./EventBus";
+} from "./contracts/events.contracts";
 import { QualiaState } from "../types/contracts";
-
-// Debug session interface for tracking debugging activities
-export interface DebugSession {
-  id: string;
-  startTime: Date;
-  events: BaseEvent[];
-  errors: ErrorEvent[];
-  performance: PerformanceMetrics;
-  aiAnalysis?: AIAnalysisResult[];
-}
-
-// Performance metrics for system monitoring
-export interface PerformanceMetrics {
-  eventProcessingTimes: Map<string, number[]>;
-  memoryUsage: number[];
-  eventFrequency: Map<string, number>;
-  errorRate: number;
-  averageResponseTime: number;
-  qualiaStateUpdateRate: number;
-}
-
-// AI analysis result interface
-export interface AIAnalysisResult {
-  timestamp: Date;
-  type:
-    | "error_pattern"
-    | "performance_issue"
-    | "state_anomaly"
-    | "recommendation";
-  severity: "low" | "medium" | "high" | "critical";
-  description: string;
-  data: any;
-  suggestions: string[];
-}
 
 // Export types for test compatibility
 export type {

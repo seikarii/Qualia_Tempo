@@ -19,7 +19,7 @@ import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { ITimerService } from "./interfaces/ITimerService";
-import type { StreamingStatusChangedEvent } from "./EventBus";
+import type { StreamingStatusChangedEvent } from "./contracts/events.contracts";
 import { logMethod, catchError } from "../utils/decorators";
 
 type FrameCallback = (_frame: VideoFrame) => void;

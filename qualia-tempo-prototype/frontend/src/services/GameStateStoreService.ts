@@ -14,7 +14,7 @@ import { TYPES } from "./inversify.types";
 import type {
   GameStateChangedEvent,
   QualiaStateUpdatedEvent,
-} from "./EventBus";
+} from "./contracts/events.contracts";
 import {
   logMethod,
   catchError,

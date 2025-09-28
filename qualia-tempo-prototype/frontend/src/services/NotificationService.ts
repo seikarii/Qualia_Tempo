@@ -24,7 +24,7 @@ import type {
   Notification,
   NotificationStatistics,
   ExtendedNotification,
-  ExtendedNotificationConfig,
+  NotificationServiceConfig,
   NotificationServiceExport,
   NotificationLogData,
   FlexibleNotificationConfig,
@@ -39,7 +39,7 @@ import type {
   GameStateChangedEvent,
   ErrorEvent,
   BackendSyncEvent,
-} from "./EventBus";
+} from "./contracts/events.contracts";
 import { NotificationQueue } from "./utils/NotificationQueue";
 import { ThrottlingManager } from "./utils/ThrottlingManager";
 
@@ -79,7 +79,7 @@ export class NotificationService implements INotificationService {
   // @ts-ignore - Unused parameter for future configuration features
   private readonly _configService: IConfigurationService;
   private readonly gameStateStore: IGameStateStore;
-  private config: ExtendedNotificationConfig;
+  private config: NotificationServiceConfig;
   private isStarted = false;
   private eventListenerIds: string[] = [];
 
@@ -146,7 +146,7 @@ export class NotificationService implements INotificationService {
     this.gameStateStore = gameStateStore;
     
     // QUALIA.CODE v1.1: NO hardcoded configuration - will be loaded in start()
-    this.config = {} as ExtendedNotificationConfig;
+    this.config = {} as NotificationServiceConfig;
 
     // Initialize processing components with minimal state
     this.notificationQueue = new NotificationQueue();

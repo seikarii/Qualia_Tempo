@@ -1,8 +1,29 @@
 /**
- * QUALIA.CODE v1.1 - IGameControllerService Contracts
- * Single Source of Truth for GameControllerService data structures.
- * This file is manually maintained for GameControllerService-specific contracts.
+ * QUALIA.CODE v1.1 - GameControllerService Contracts
+ * Centralized type definitions for game controller system
+ *
+ * Purpose: Single source of truth for all game controller data structures
+ * Architecture: Contract definitions extracted from service implementation for clarity and reusability
  */
+
+// Game state interface
+export interface GameState {
+  isPlaying: boolean;
+  isPaused: boolean;
+  currentScore: number;
+  comboCount: number;
+  health: number;
+  level: number;
+  gameMode: "normal" | "hard" | "qualia";
+}
+
+// Configuration interface
+export interface GameControllerConfig {
+  maxHealth: number;
+  initialScore: number;
+  comboMultiplier: number;
+  healthDecayRate: number;
+}
 
 // GameController Configuration - Migrated from ConfigurationService.ts
 export interface GameControllerConfig {
@@ -53,10 +74,25 @@ export interface GameControllerConfig {
     maxEventQueueSize: number;
     eventProcessingInterval: number;
   };
+  mechanics: {
+    fastForwardScoreBoost: number;
+  };
   maxPlayers: number; // Maximum number of players supported
   enablePauseResume: boolean; // Enable pause/resume functionality
   enableGameStateValidation: boolean; // Enable game state validation
   enablePerformanceMonitoring: boolean; // Enable performance monitoring
   autoSaveEnabled: boolean; // Enable auto-save functionality
   autoSaveIntervalMs: number; // Auto-save interval
+
+  // Additional properties needed by GameControllerService to eliminate type conflicts
+  maxHealth: number;
+  initialScore: number;
+  comboMultiplier: number;
+  healthDecayRate: number;
+  
+  // Messages for logging
+  messages: {
+    eventsSubscribed: string;
+    fastForwardActivated: string;
+  };
 }

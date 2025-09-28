@@ -14,64 +14,23 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IEventBus } from "./interfaces/IEventBus";
+import type {
+  BaseEvent,
+  PlayerActionEvent,
+  PlayerInputEvent,
+  GameStateChangedEvent,
+  MetronomeTickEvent,
+  RhythmicDashEvent,
+  QualiaStateUpdatedEvent,
+  ErrorEvent,
+  BackendSyncEvent,
+  VisualImpactRequestedEvent,
+  StreamingStatusChangedEvent,
+} from "./contracts/events.contracts";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from "../utils/decorators";
-// ✅ CORRECT: Importing from the central contracts file
-import type { 
-  ConnectionStatus,
-  BaseEvent,
-  PlayerActionEvent,
-  PlayerInputEvent,
-  RhythmicDashEvent,
-  MetronomeTickEvent,
-  GameStateChangedEvent
-} from "./contracts/events.contracts";
-
-// Additional event types specific to this EventBus implementation
-export interface QualiaStateUpdatedEvent extends BaseEvent {
-  type: "QualiaStateUpdated";
-  qualiaState: QualiaState; // QUALIA.CODE Contract Compliance: Using generated interface
-}
-
-
-
-
-
-export interface ErrorEvent extends BaseEvent {
-  type: "Error";
-  error: Error;
-  severity: "low" | "medium" | "high" | "critical";
-  context?: Record<string, any>;
-}
-
-export interface BackendSyncEvent extends BaseEvent {
-  type: "BackendSync";
-  data: any;
-  syncType: "qualiaState" | "gameState" | "config";
-  status?: "success" | "error" | "pending";
-  error?: any;
-}
-
-export interface VisualImpactRequestedEvent extends BaseEvent {
-  type: "VisualImpactRequested";
-  payload: {
-    x: number; // Normalized coordinates (0 to 1)
-    y: number; // Normalized coordinates (0 to 1)
-    intensity: number; // Impact intensity (0 to 1)
-  };
-}
-
-
-
-
-
-export interface StreamingStatusChangedEvent extends BaseEvent {
-  type: "StreamingStatusChanged";
-  // ✅ CORRECT: Using the clean, direct import
-  status: ConnectionStatus;
-}
 
 // Union type for all events
 export type EventTypes =
@@ -123,7 +82,7 @@ export class EventBus implements IEventBus {
     this.configService = configService;
     
     // Initialize configuration-driven values
-    const config = this.configService.getConfigSection<any>("eventbus");
+    const config = this.configService.getConfigSection("eventbus");
     this.maxHistorySize = config.performance.maxEventHistory;
     
     this.setupErrorHandling();
@@ -258,7 +217,7 @@ export class EventBus implements IEventBus {
 
     try {
       if (this.isDestroyed) {
-        const config = this.configService.getConfigSection<any>("eventbus");
+        const config = this.configService.getConfigSection("eventbus");
         this.logger.warn(config.messages.destroyedEventBusWarning);
         return;
       }
@@ -439,7 +398,7 @@ export class EventBus implements IEventBus {
   // Private helper methods
 
   private convertPriority(priority?: "low" | "normal" | "high"): number {
-    const config = this.configService.getConfigSection<any>("eventbus");
+    const config = this.configService.getConfigSection("eventbus");
     switch (priority) {
       case "high":
         return config.priorities.high;
@@ -505,7 +464,7 @@ export class EventBus implements IEventBus {
           `⚠️ [EventBus] Event history approaching limit: ${stats.historySize}`,
         );
       }
-    }, this.configService.getConfigSection<any>("eventbus").performance.cleanupInterval);
+    }, this.configService.getConfigSection("eventbus").performance.cleanupInterval);
   }
 }
 

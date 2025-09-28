@@ -264,122 +264,91 @@ const mockConfigurationService: IConfigurationService = {
       defaultDuration: 3000,
     },
   }),
-  getConfigSection: vi.fn().mockReturnValue({
-    maxHealth: 100,
-    initialScore: 0,
-    tickRate: 60,
-  }),
-  // All specific getters removed - use getConfigSection instead
-  getBackendConfig: vi.fn().mockReturnValue({
-    url: "http://localhost:8000",
-    timeout: 5000,
-    retryAttempts: 3,
-  }),
-  getAudioConfig: vi.fn().mockReturnValue({
-    masterVolume: 0.7,
-    enableSpatialAudio: true,
-    bufferSize: 2048,
-  }),
-  getErrorReportingConfig: vi.fn().mockReturnValue({
-    enabled: true,
-    batchSize: 5,
-    batchTimeout: 1000,
-    maxRetries: 3,
-  }),
-  getRhythmicMovementConfig: vi.fn().mockReturnValue({
-    bpm: 120,
-    syncTolerance: 100,
-    adaptive: true,
-  }),
-  getNotificationConfig: vi.fn().mockReturnValue({
-    enabled: true,
-    maxConcurrent: 5,
-    defaultDuration: 3000,
-  }),
-  getHttpConfig: vi.fn().mockReturnValue({
-    defaultTimeout: 30000,
-    maxRetries: 3,
-    retryDelay: 1000,
-  }),
-  getVisualEffectsConfig: vi.fn().mockReturnValue({
-    particles: { count: 120, minSize: 1, maxSize: 4, speed: 0.35, drift: 0.5 },
-    bloom: { intensity: 1.0, pulseSpeed: 6 },
-    gradients: {
-      cycleDuration: 16,
-      layers: [
-        "radial-gradient(circle at 20% 30%, rgba(0,255,255,0.15), transparent 60%)",
-        "radial-gradient(circle at 80% 70%, rgba(255,0,255,0.12), transparent 65%)",
-      ],
-    },
-    noise: { enabled: true, opacity: 0.06, scale: 2, speed: 0.25 },
-    palette: ["#00ffff", "#ff00ff", "#ffff00", "#ff0080", "#00ff80"],
-    aura: { rings: 4, rotationSpeed: 22, pulseDuration: 9 },
-  }),
   getConfigSection: vi.fn().mockImplementation((section: string) => {
-    if (section === "debugService") {
-      return {
-        logging: {
-          enableConsoleOutput: true,
-          enableFileOutput: false,
-          logLevel: "info",
-          maxLogFiles: 10,
-          maxLogSize: 1000000,
-        },
-        eventMonitoring: {
-          enableEventLogging: true,
-          enableEventMetrics: true,
-          maxEventHistory: 1000,
-          eventLogThrottle: 100,
-        },
-        performance: {
-          enablePerformanceTracking: true,
-          enableMemoryMonitoring: true,
-          enableFrameRateTracking: true,
-          metricsUpdateInterval: 5000,
-        },
-        development: {
-          enableDebugOverlay: false,
-          enableCheats: false,
-          enableHotReload: false,
-          enableBreakpoints: false,
-        },
-        profiling: {
-          enableProfiling: true,
-          profileUpdateInterval: 1000,
-          maxProfileSamples: 1000,
-        },
-        errorTracking: {
-          enableErrorStackTraces: true,
-          enableErrorReporting: true,
-          maxErrorHistory: 100,
-        },
-        network: {
-          enableNetworkLogging: false,
-          enableRequestMetrics: false,
-          logRequestHeaders: false,
-          logRequestBodies: false,
-        },
-      };
+    // Mock configuration sections based on the new architecture
+    switch (section) {
+      case "gameController":
+        return {
+          maxHealth: 100,
+          initialScore: 0,
+          tickRate: 60,
+          gameLifecycle: { autoStart: false, enablePause: true, enableReset: true, saveStateOnExit: false },
+          performance: { updateIntervalMs: 16, maxFrameSkip: 5, enableFrameRateLimiting: true },
+          stateManagement: { enableStateValidation: true, enableStatePersistence: false, stateSaveInterval: 30000, maxSaveSlots: 3 },
+          inputHandling: { enableInputBuffering: true, inputBufferSize: 100, enableInputFiltering: true, inputDebounceMs: 50 },
+          scoring: { baseScorePerHit: 100, comboMultiplier: 1.5, maxComboMultiplier: 10, scoreDecayRate: 0.1 },
+          health: { maxHealth: 100, healthRegenRate: 0.5, damageOnMiss: 10, enableInvincibilityFrames: true, invincibilityDuration: 1000 },
+          difficulty: { adaptiveDifficulty: true, difficultyIncreaseRate: 0.1, maxDifficulty: 10, minDifficulty: 1 },
+          events: { enableEventBuffering: true, maxEventQueueSize: 1000, eventProcessingInterval: 16 },
+          maxPlayers: 1,
+          enablePauseResume: true,
+          enableGameStateValidation: true,
+          enablePerformanceMonitoring: true,
+          autoSaveEnabled: false,
+          autoSaveIntervalMs: 30000
+        };
+      case "rhythmicMovement":
+        return {
+          bpm: 120,
+          perfectTiming: 50,
+          goodTiming: 100,
+          gridSize: 64,
+          slowdownFactor: 0.5,
+          slowdownDuration: 1000,
+          keyThrottleMs: 50
+        };
+      case "backendSync":
+        return {
+          api: { baseUrl: "http://localhost:8000", qualiaEndpoint: "/api/qualia", healthEndpoint: "/api/health", timeout: 5000 },
+          streaming: { websocket: { url: "ws://localhost:8000/ws", maxReconnectAttempts: 5, reconnectDelay: 1000, pingInterval: 30000, pingTimeout: 5000, connectionTimeout: 10000 }},
+          sync: { throttleDelay: 250, batchSize: 10, maxRetries: 3, retryDelay: 1000 },
+          connection: { healthCheckInterval: 30000, connectionTimeout: 10000, maxFailedAttempts: 3 },
+          validation: { enableSchemaValidation: true, strictMode: false, logValidationErrors: true },
+          performance: { enableCompression: true, maxPayloadSize: 1048576, enableBuffering: true, bufferFlushInterval: 1000 },
+          errorHandling: { enableCircuitBreaker: true, circuitBreakerThreshold: 5, circuitBreakerTimeout: 60000, enableFallbackMode: true },
+          messages: {}
+        };
+      case "audioService":
+        return {
+          rhythmicFeedback: { perfect: { frequency: 800, gain: 0.3, duration: 0.1 }, good: { frequency: 600, gain: 0.2, duration: 0.1 }, miss: { frequency: 200, gain: 0.5, duration: 0.2 }},
+          metronome: { frequency: 1000, gain: 0.1, duration: 0.05 },
+          audioEngine: { sampleRate: 44100, channels: 2, bufferSize: 2048 },
+          entityVoices: { player: { baseFrequency: 440, modulationRange: 100 }, boss: { baseFrequency: 220, modulationRange: 50 }, environment: { baseFrequency: 110, modulationRange: 25 }},
+          enableAudioPooling: true,
+          maxConcurrentSounds: 32,
+          audioFadeTime: 0.1,
+          volume: 0.7,
+          enableSubtitles: false,
+          soundEnabled: true,
+          musicEnabled: true,
+          muteDuringDevelopment: false
+        };
+      case "visualEffects":
+        return {
+          particles: { count: 120, minSize: 1, maxSize: 4, speed: 0.35, drift: 0.5 },
+          bloom: { intensity: 1.0, pulseSpeed: 6 },
+          gradients: { cycleDuration: 16, layers: ["radial-gradient(circle at 20% 30%, rgba(0,255,255,0.15), transparent 60%)"] },
+          noise: { enabled: true, opacity: 0.06, scale: 2, speed: 0.25 },
+          palette: ["#00ffff", "#ff00ff", "#ffff00", "#ff0080", "#00ff80"],
+          aura: { rings: 4, rotationSpeed: 22, pulseDuration: 9 }
+        };
+      case "compositionRoot":
+        return {
+          autoStart: false,
+          enableBackendSync: true,
+          enableHealthMonitoring: true,
+          healthCheckIntervalMs: 30000,
+          retryInitializationOnError: true,
+          maxInitializationRetries: 3,
+          serviceInitializationTimeoutMs: 10000,
+          serviceShutdownTimeoutMs: 5000,
+          enableServiceLifecycleLogging: true,
+          enablePerformanceMonitoring: true,
+          http: { defaultTimeout: 30000, maxRetries: 3, retryDelay: 1000 }
+        };
+      default:
+        return {};
     }
-    // Fallback for other sections
-    const defaultConfig: any = {
-      gameController: { maxHealth: 100, initialScore: 0, tickRate: 60 },
-      errorReporting: {
-        enabled: true,
-        batchSize: 5,
-        batchTimeout: 1000,
-        maxRetries: 3,
-      },
-      backendSync: {
-        api: {
-          baseUrl: "http://localhost:8000",
-          qualiaEndpoint: "/api/qualia",
-          healthEndpoint: "/api/health",
-          timeout: 5000,
-        },
-      },
-    };
-    return defaultConfig[section] || {};
   }),
   isLoaded: vi.fn().mockReturnValue(true),
   reload: vi.fn().mockResolvedValue(undefined),
@@ -668,9 +637,8 @@ export function resetAllMocks() {
   (mockEventBus.getStats as Mock).mockClear();
 
   (mockConfigurationService.isLoaded as Mock).mockReturnValue(true);
-  (mockConfigurationService.getBackendConfig as Mock).mockReturnValue({
-    url: "http://localhost:8000",
-    timeout: 5000,
-    retryAttempts: 3,
+  (mockConfigurationService.getConfigSection as Mock).mockReturnValue({
+    api: { baseUrl: "http://localhost:8000", timeout: 5000 },
+    sync: { retryAttempts: 3 }
   });
 }

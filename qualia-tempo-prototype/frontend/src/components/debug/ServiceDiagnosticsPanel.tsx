@@ -127,9 +127,9 @@ export const ServiceDiagnosticsPanel: React.FC = () => {
         stats: config
           ? {
               configSections: Object.keys(config).length,
-              hasGameConfig: !!config.game,
-              hasQualiaConfig: !!config.qualia,
-              hasBackendConfig: !!config.backend,
+              hasGameConfig: !!config.gameController,
+              hasQualiaConfig: !!config.qualiaCalculator,
+              hasBackendConfig: !!config.backendSync,
             }
           : { message: "Configuration not loaded" },
       });
