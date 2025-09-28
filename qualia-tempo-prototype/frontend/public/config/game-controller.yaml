@@ -29,10 +29,19 @@ scoring:
 
 health:
   maxHealth: 100
-  healthRegenRate: 1.0
+  healthRegenRate: 0.1
   damageOnMiss: 10
-  enableInvincibilityFrames: true
-  invincibilityDuration: 500
+  enableInvincibilityFrames: false
+  invincibilityDuration: 1000
+
+mechanics:
+  fastForwardScoreBoost: 2.0
+
+# Legacy compatibility (required for services still using old structure)
+maxHealth: 100
+initialScore: 0
+comboMultiplier: 1.5
+healthDecayRate: 0.1
 
 difficulty:
   adaptiveDifficulty: true
@@ -55,5 +64,4 @@ autoSaveIntervalMs: 30000
 # Service messages for logging
 messages:
   eventsSubscribed: "✅ [GameController] Events subscribed successfully"
-  serviceStarted: "🎮 [GameController] Service started successfully"
-  serviceStopped: "🛑 [GameController] Service stopped successfully"
+  fastForwardActivated: "⚡ [GameController] Fast forward mode activated"

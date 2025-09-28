@@ -73,7 +73,7 @@ export class ApplicationInitializerService
   @logMethod
   @catchError
   public async start(): Promise<void> {
-    const config = this.configService.getConfigSection("compositionRoot");
+    const config = this.configService.getConfigSection("applicationInitializer");
     
     if (this.isStarted) {
       this.logger.warn(config.messages.alreadyRunning);
@@ -83,15 +83,14 @@ export class ApplicationInitializerService
     this.logger.info(config.messages.initializationStarted);
 
     try {
-      // Step 0: Load configuration FIRST - Services need config to start properly
-      this.logger.debug(config.steps.loadConfiguration);
-      await this.configService.loadConfig();
+      // Configuration is already loaded by ApplicationCompositionRoot.configureServices()
+      // No need to reload it here - this was causing duplicate container bindings
       this.logger.info(config.messages.configurationLoaded);
 
       // Step 0.5: Configure HttpService with loaded configuration (breaks circular dependency)
       this.logger.debug(config.steps.configureHttpService);
-      const httpConfig = this.configService.getConfigSection("compositionRoot").http;
-      this.httpService.updateConfig(httpConfig.defaultTimeout);
+      const httpConfig = this.configService.getConfigSection("http");
+      this.httpService.updateConfig(httpConfig.http.defaultTimeout);
       this.logger.info(config.messages.httpServiceConfigured);
 
       // Step 1: Start GameStateStoreService - it must listen to all events

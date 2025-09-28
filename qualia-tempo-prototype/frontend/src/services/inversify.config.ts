@@ -90,11 +90,11 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "rhythmicMovement": "rhythmic-movement.yaml",
   "visualEffects": "visual-effects.yaml",
   "compositionRoot": "composition-root.yaml",
-  "eventbus": "eventbus.yaml",
+  "eventBus": "eventbus.yaml",
   "applicationInitializer": "application-initializer.yaml",
   "mainMenu": "main-menu.yaml",
-  "httpService": "http-service.yaml",
-  "timerService": "timer-service.yaml"
+  "http": "http-service.yaml",
+  "logger": "logger.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
@@ -197,7 +197,15 @@ container
  * 
  * CALL THIS FUNCTION BEFORE INITIALIZING ANY OTHER SERVICES.
  */
+// Static flag to prevent multiple configuration bindings
+let isConfigured = false;
+
 export async function configureServices(): Promise<void> {
+  // CRITICAL: Prevent duplicate configuration bindings
+  if (isConfigured) {
+    return;
+  }
+
   // 1. Get ConfigurationService instance to load configuration
   const configService = container.get<IConfigurationService>(TYPES.IConfigurationService);
   
@@ -226,6 +234,9 @@ export async function configureServices(): Promise<void> {
   if (fullConfig.visualEffects) {
     container.bind<VisualEffectsConfig>(TYPES.VisualEffectsConfig).toConstantValue(fullConfig.visualEffects);
   }
+  
+  // Mark as configured to prevent duplicate bindings
+  isConfigured = true;
 }
 
 // ===== CONTAINER VERIFICATION =====

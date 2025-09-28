@@ -15,12 +15,15 @@ memoryCleanupInterval: 60000  # 1 minute
 rateLimitRefillInterval: 1000  # 1 second
 fingerprintLength: 16  # Hash length for error deduplication
 
-# Rate limiting (legacy compatibility)
+# Rate limiting (legacy compatibility)  
 rateLimitWindow: 60000
 maxErrorsPerWindow: 100
 batchSize: 50
 batchTimeout: 30000
 maxRetentionTime: 86400000
+
+# External service URL (required by validator)
+externalServiceUrl: "https://api.example.com/errors"
 
 # External service configuration
 externalService:

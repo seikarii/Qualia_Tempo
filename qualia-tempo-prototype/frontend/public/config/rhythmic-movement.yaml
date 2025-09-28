@@ -2,6 +2,11 @@ enabled: true
 updateInterval: 16
 smoothingFactor: 0.8
 deadzone: 0.05
+bpm: 120
+perfectTiming: 50
+goodTiming: 100
+gridSize: 8
+keyThrottleMs: 100
 
 movement:
   gridSize: 8

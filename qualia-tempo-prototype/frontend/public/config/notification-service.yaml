@@ -11,8 +11,15 @@ display:
   enableAnimations: true
   animationDuration: 300
 
-positioning:
+toasts:
   position: "top-right"
+  maxVisible: 5
+  duration: 3000
+  animation: "slide"
+  enableSound: true
+  queueSize: 50
+  animationDuration: 300
+  fadeOutDuration: 500
   offsetX: 20
   offsetY: 20
   zIndex: 1000
@@ -32,19 +39,19 @@ sound:
 types:
   success:
     duration: 3000
-    soundEnabled: true
+    enableSound: true
     color: "#00ff00"
   error:
     duration: 5000
-    soundEnabled: true
+    enableSound: true
     color: "#ff0000"
   warning:
     duration: 4000
-    soundEnabled: false
+    enableSound: false
     color: "#ffff00"
   info:
     duration: 2500
-    soundEnabled: false
+    enableSound: false
     color: "#0080ff"
 
 queue:

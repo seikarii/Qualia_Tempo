@@ -1,8 +1,11 @@
 baseQualiaState:
+  intensity: 0.5
   precision: 0.5
   flow: 0.5
   chaos: 0.0
   aggression: 0.0
+  recovery: 0.5
+  transcendence: 0.0
 
 precision:
   hitBonus: 0.1
@@ -40,3 +43,12 @@ rhythm:
 combo:
   resetTime: 2000
   multiplierCap: 5.0
+
+performanceMultipliers:
+  perfect: 1.5
+  good: 1.2
+  miss: 0.8
+  combo: 1.1
+
+updateIntervalMs: 100
+historySize: 1000

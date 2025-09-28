@@ -17,15 +17,7 @@ export interface GameState {
   gameMode: "normal" | "hard" | "qualia";
 }
 
-// Configuration interface
-export interface GameControllerConfig {
-  maxHealth: number;
-  initialScore: number;
-  comboMultiplier: number;
-  healthDecayRate: number;
-}
-
-// GameController Configuration - Migrated from ConfigurationService.ts
+// GameController Configuration - Unified interface (QUALIA.CODE v1.1)
 export interface GameControllerConfig {
   gameLifecycle: {
     autoStart: boolean;
@@ -83,12 +75,6 @@ export interface GameControllerConfig {
   enablePerformanceMonitoring: boolean; // Enable performance monitoring
   autoSaveEnabled: boolean; // Enable auto-save functionality
   autoSaveIntervalMs: number; // Auto-save interval
-
-  // Additional properties needed by GameControllerService to eliminate type conflicts
-  maxHealth: number;
-  initialScore: number;
-  comboMultiplier: number;
-  healthDecayRate: number;
   
   // Messages for logging
   messages: {

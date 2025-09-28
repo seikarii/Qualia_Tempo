@@ -23,6 +23,18 @@ soundEffects:
   masterVolume: 0.7
   spatialAudio: false
 
+metronome:
+  frequency: 440
+  enabled: true
+  volume: 0.5
+
+audioEngine:
+  sampleRate: 44100
+  bufferSize: 256
+
+volume: 0.7
+soundEnabled: true
+
 qualiaAudio:
   precision:
     frequency: 1000

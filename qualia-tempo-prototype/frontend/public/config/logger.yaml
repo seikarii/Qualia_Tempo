@@ -1,0 +1,20 @@
+# QUALIA.CODE v1.1 - Logger Configuration
+# External configuration for centralized logging system
+
+# Log level (0=DEBUG, 1=INFO, 2=WARN, 3=ERROR, 4=NONE)
+level: 1  # INFO
+
+# Output channels
+enableConsole: true
+enableFile: false
+enableRemote: false
+
+# File logging configuration (when enabled)
+maxFileSize: 10485760  # 10MB
+maxFiles: 5
+logDirectory: "./logs"
+remoteEndpoint: null
+
+# Format configuration
+format: "text"  # Options: "json" | "text"
+timestampFormat: "ISO"  # ISO timestamp format
