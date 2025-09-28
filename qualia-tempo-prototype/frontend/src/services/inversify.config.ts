@@ -190,20 +190,29 @@ container
 // ===== CONFIGURATION BINDING FUNCTION =====
 /**
  * CRITICAL MISSION: Eliminate Service Locator Antipattern
+ * React.StrictMode Safe Configuration Binding
  * 
  * This function loads configuration ONCE and binds each typed configuration 
  * object to its specific Symbol. Services will now inject specific config 
  * objects instead of the ConfigurationService.
  * 
- * CALL THIS FUNCTION BEFORE INITIALIZING ANY OTHER SERVICES.
+ * QUALIA.CODE v1.1 COMPLIANT: Uses container.isBound() for React.StrictMode immunity
  */
-// Static flag to prevent multiple configuration bindings
-let isConfigured = false;
+
+/**
+ * Safe binding helper that prevents duplicate bindings
+ * Uses InversifyJS native container.isBound() method
+ */
+function safeBindConstant<T>(identifier: symbol, value: T): void {
+  if (!container.isBound(identifier)) {
+    container.bind<T>(identifier).toConstantValue(value);
+  }
+}
 
 export async function configureServices(): Promise<void> {
-  // CRITICAL: Prevent duplicate configuration bindings
-  if (isConfigured) {
-    return;
+  // CRITICAL: Use container.isBound() instead of static flags for React.StrictMode immunity
+  if (container.isBound(TYPES.FullGameConfig)) {
+    return; // Configuration already loaded
   }
 
   // 1. Get ConfigurationService instance to load configuration
@@ -213,30 +222,27 @@ export async function configureServices(): Promise<void> {
   await configService.loadConfig();
   const fullConfig = configService.getConfig();
   
-  // 3. Bind each configuration object to its specific Symbol
-  // This enables direct injection of typed configuration objects
-  container.bind<FullGameConfig>(TYPES.FullGameConfig).toConstantValue(fullConfig);
-  container.bind<CompositionRootConfig>(TYPES.CompositionRootConfig).toConstantValue(fullConfig.compositionRoot);
-  container.bind<AppInitializerConfig>(TYPES.AppInitializerConfig).toConstantValue(fullConfig.applicationInitializer);
-  container.bind<LoggerConfig>(TYPES.LoggerConfig).toConstantValue(fullConfig.logger);
-  container.bind<HttpConfig>(TYPES.HttpConfig).toConstantValue(fullConfig.http);
-  container.bind<EventBusConfig>(TYPES.EventBusConfig).toConstantValue(fullConfig.eventBus);
-  container.bind<BackendSyncConfig>(TYPES.BackendSyncConfig).toConstantValue(fullConfig.backendSync);
-  container.bind<GameControllerConfig>(TYPES.GameControllerConfig).toConstantValue(fullConfig.gameController);
-  container.bind<QualiaCalculatorConfig>(TYPES.QualiaCalculatorConfig).toConstantValue(fullConfig.qualiaCalculator);
-  container.bind<RhythmicMovementConfig>(TYPES.RhythmicMovementConfig).toConstantValue(fullConfig.rhythmicMovement);
-  container.bind<AudioServiceConfig>(TYPES.AudioServiceConfig).toConstantValue(fullConfig.audioService);
-  container.bind<NotificationServiceConfig>(TYPES.NotificationServiceConfig).toConstantValue(fullConfig.notificationService);
-  container.bind<ErrorReportingConfig>(TYPES.ErrorReportingConfig).toConstantValue(fullConfig.errorReporting);
-  container.bind<DebugServiceConfig>(TYPES.DebugServiceConfig).toConstantValue(fullConfig.debugService);
+  // 3. Bind each configuration object using safe binding pattern
+  // This prevents duplicate bindings even under React.StrictMode
+  safeBindConstant<FullGameConfig>(TYPES.FullGameConfig, fullConfig);
+  safeBindConstant<CompositionRootConfig>(TYPES.CompositionRootConfig, fullConfig.compositionRoot);
+  safeBindConstant<AppInitializerConfig>(TYPES.AppInitializerConfig, fullConfig.applicationInitializer);
+  safeBindConstant<LoggerConfig>(TYPES.LoggerConfig, fullConfig.logger);
+  safeBindConstant<HttpConfig>(TYPES.HttpConfig, fullConfig.http);
+  safeBindConstant<EventBusConfig>(TYPES.EventBusConfig, fullConfig.eventBus);
+  safeBindConstant<BackendSyncConfig>(TYPES.BackendSyncConfig, fullConfig.backendSync);
+  safeBindConstant<GameControllerConfig>(TYPES.GameControllerConfig, fullConfig.gameController);
+  safeBindConstant<QualiaCalculatorConfig>(TYPES.QualiaCalculatorConfig, fullConfig.qualiaCalculator);
+  safeBindConstant<RhythmicMovementConfig>(TYPES.RhythmicMovementConfig, fullConfig.rhythmicMovement);
+  safeBindConstant<AudioServiceConfig>(TYPES.AudioServiceConfig, fullConfig.audioService);
+  safeBindConstant<NotificationServiceConfig>(TYPES.NotificationServiceConfig, fullConfig.notificationService);
+  safeBindConstant<ErrorReportingConfig>(TYPES.ErrorReportingConfig, fullConfig.errorReporting);
+  safeBindConstant<DebugServiceConfig>(TYPES.DebugServiceConfig, fullConfig.debugService);
   
-  // Optional configuration with null check
+  // Optional configuration with safe binding
   if (fullConfig.visualEffects) {
-    container.bind<VisualEffectsConfig>(TYPES.VisualEffectsConfig).toConstantValue(fullConfig.visualEffects);
+    safeBindConstant<VisualEffectsConfig>(TYPES.VisualEffectsConfig, fullConfig.visualEffects);
   }
-  
-  // Mark as configured to prevent duplicate bindings
-  isConfigured = true;
 }
 
 // ===== CONTAINER VERIFICATION =====

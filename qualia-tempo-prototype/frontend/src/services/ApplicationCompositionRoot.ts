@@ -18,8 +18,6 @@ import { LoggerProvider, QualiaLogger } from "./Logger";
  * Encapsulates all bootstrap logic and IoC container interaction
  */
 export class ApplicationCompositionRoot {
-  private static isInitialized = false;
-
   /**
    * Initialize the entire application
    * This method handles ALL bootstrap logic that was previously in index.tsx
@@ -27,11 +25,8 @@ export class ApplicationCompositionRoot {
   public async initializeApplication(): Promise<void> {
     // STEP 0: CRITICAL - Configure services with Direct Configuration Injection
     // This eliminates the Service Locator antipattern across the entire system
-    // GUARD: Only configure services once to prevent duplicate container bindings
-    if (!ApplicationCompositionRoot.isInitialized) {
-      await configureServices();
-      ApplicationCompositionRoot.isInitialized = true;
-    }
+    // QUALIA.CODE v1.1: React.StrictMode safe configuration using container.isBound()
+    await configureServices();
 
     // Step 1: NOW resolve core services from IoC container (they have direct config access)
     const logger = container.get<ILogger>(TYPES.ILogger);
