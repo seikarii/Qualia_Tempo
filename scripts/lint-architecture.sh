@@ -21,9 +21,33 @@ FRONTEND_PATH="$PROJECT_ROOT/qualia-tempo-prototype/frontend"
 BACKEND_PATH="$PROJECT_ROOT/qualia-tempo-prototype/backend"
 
 # Error tracking
+CONTRACT_ERRORS=0
+CONFIG_ERRORS=0
 FRONTEND_ERRORS=0
 BACKEND_ERRORS=0
 TYPE_ERRORS=0
+
+echo -e "${BLUE}📋 Phase 0: Contract & Configuration Integrity${NC}"
+if python3 "$PROJECT_ROOT/scripts/contract-validator.py"; then
+    echo -e "   ${GREEN}✅ Contract integrity: PASSED${NC}"
+else
+    echo -e "   ${RED}❌ Contract integrity violations detected${NC}"
+    CONTRACT_ERRORS=1
+fi
+
+if python3 "$PROJECT_ROOT/scripts/config-validator.py"; then
+    echo -e "   ${GREEN}✅ Configuration integrity: PASSED${NC}"
+else
+    echo -e "   ${RED}❌ Configuration integrity violations detected${NC}"
+    CONFIG_ERRORS=1
+fi
+
+# If integrity checks fail, exit immediately
+if [ $CONTRACT_ERRORS -eq 1 ] || [ $CONFIG_ERRORS -eq 1 ]; then
+    echo
+    echo -e "${RED}🚫 INTEGRITY CHECK FAILED: Fix integrity issues before proceeding${NC}"
+    exit 1
+fi
 
 echo -e "${BLUE}📋 Phase 1: Frontend ESLint Rules${NC}"
 if [ -d "$FRONTEND_PATH" ]; then
@@ -108,11 +132,13 @@ fi
 
 echo
 echo -e "${BLUE}📋 Phase 4: Summary${NC}"
-echo "   Frontend Compliance: $([ $FRONTEND_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
+echo "   Contract Integrity:   $([ $CONTRACT_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
+echo "   Config Integrity:     $([ $CONFIG_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
+echo "   Frontend Compliance:  $([ $FRONTEND_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
 echo "   Backend Patterns:     $([ $BACKEND_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
 echo "   Backend Types:        $([ $TYPE_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
 
-TOTAL_ERRORS=$((FRONTEND_ERRORS + BACKEND_ERRORS + TYPE_ERRORS))
+TOTAL_ERRORS=$((CONTRACT_ERRORS + CONFIG_ERRORS + FRONTEND_ERRORS + BACKEND_ERRORS + TYPE_ERRORS))
 
 if [ $TOTAL_ERRORS -eq 0 ]; then
     echo

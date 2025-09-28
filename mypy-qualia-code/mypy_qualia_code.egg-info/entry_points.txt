@@ -1,0 +1,2 @@
+[mypy]
+qualia-code = mypy_qualia_code.plugin:plugin

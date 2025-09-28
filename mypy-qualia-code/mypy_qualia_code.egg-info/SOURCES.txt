@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+mypy_qualia_code/__init__.py
+mypy_qualia_code/plugin.py
+mypy_qualia_code/py.typed
+mypy_qualia_code.egg-info/PKG-INFO
+mypy_qualia_code.egg-info/SOURCES.txt
+mypy_qualia_code.egg-info/dependency_links.txt
+mypy_qualia_code.egg-info/entry_points.txt
+mypy_qualia_code.egg-info/requires.txt
+mypy_qualia_code.egg-info/top_level.txt
+tests/test_plugin.py

@@ -5,17 +5,17 @@ server:
   host: "127.0.0.1"  # Changed from 0.0.0.0 to 127.0.0.1 for WebSocket compatibility
   port: 8000
   reload: false
-  log_level: "info"
+  log_level: "INFO"
   workers: 1
   
   # Environment-specific overrides
   development:
     reload: true
-    log_level: "debug"
+    log_level: "DEBUG"
   
   production:
     reload: false
-    log_level: "warning"
+    log_level: "WARNING"
     workers: 4
 
 # CORS settings
