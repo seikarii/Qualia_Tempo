@@ -49,78 +49,23 @@ if [ -d "$BACKEND_PATH" ]; then
         source "$PROJECT_ROOT/.venv/bin/activate"
     fi
     
-    # For now, use a simple Python script to check basic QUALIA.CODE rules
-    # TODO: Replace with native Ruff plugin once dependency issues are resolved
-    python3 -c "
-import os
-import ast
-import sys
-
-def should_skip_directory(dirname):
-    \"\"\"Check if directory should be skipped during analysis.\"\"\"
-    skip_dirs = {
-        '.venv', 'venv', '__pycache__', '.git', '.pytest_cache', 
-        'node_modules', '.next', 'dist', 'build', '.tox', '.eggs',
-        '*.egg-info', '.mypy_cache', '.coverage', 'htmlcov'
-    }
-    return dirname in skip_dirs or dirname.startswith('.') or dirname.startswith('__')
-
-def check_qualia_code_compliance(directory):
-    violations = []
+    # QUALIA.CODE Native Ruff Plugin Integration
+    echo "   Running Ruff with QUALIA.CODE plugin..."
     
-    for root, dirs, files in os.walk(directory):
-        # Filter out directories to skip
-        dirs[:] = [d for d in dirs if not should_skip_directory(d)]
-        
-        for file in files:
-            if file.endswith('.py'):
-                filepath = os.path.join(root, file)
-                try:
-                    with open(filepath, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                    
-                    tree = ast.parse(content, filepath)
-                    
-                    # Check for direct service instantiation
-                    for node in ast.walk(tree):
-                        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'Service':
-                            if hasattr(node, 'args') and node.args:
-                                violations.append(f'{filepath}: Direct service instantiation detected')
-                        
-                        # Check for missing @log_execution decorators
-                        if isinstance(node, ast.FunctionDef):
-                            # QUALIA.CODE: Intelligent decorator enforcement.
-                            # Ignore private methods, simple getters, and single-return functions.
-                            is_private = node.name.startswith('_')
-                            is_simple_getter = node.name.startswith('get_')
-                            is_single_return = len(node.body) == 1 and isinstance(node.body[0], ast.Return)
-
-                            if not is_private and not is_simple_getter and not is_single_return:
-                                has_decorator = any(
-                                    (isinstance(d, ast.Call) and isinstance(d.func, ast.Name) and d.func.id == 'log_execution') or
-                                    (isinstance(d, ast.Name) and d.id == 'log_execution')
-                                    for d in node.decorator_list
-                                )
-                                if not has_decorator:
-                                    violations.append(f'{filepath}:{node.lineno}: Method {node.name} missing @log_execution decorator')
-                
-                except Exception as e:
-                    violations.append(f'{filepath}: Error parsing file - {e}')
+    # Install the plugin in development mode if not already installed
+    if ! python -c "import ruff_qualia_code" 2>/dev/null; then
+        echo "   Installing ruff-qualia-code plugin..."
+        pip install -e "$PROJECT_ROOT/ruff-qualia-code" > /dev/null 2>&1
+    fi
     
-    return violations
-
-violations = check_qualia_code_compliance('$BACKEND_PATH')
-if violations:
-    print('   ❌ Backend architectural violations detected')
-    for v in violations[:10]:  # Show first 10 violations
-        print(f'   {v}')
-    if len(violations) > 10:
-        print(f'   ... and {len(violations) - 10} more violations')
-    sys.exit(1)
-else:
-    print('   ✅ Backend architectural compliance: PASSED')
-    sys.exit(0)
-"
+    # Run Ruff with QUALIA.CODE rules on backend Python files
+    if python -m ruff_qualia_code "$BACKEND_PATH" --format=concise; then
+        echo "   ✅ Backend architectural compliance: PASSED"
+    else
+        echo "   ❌ Backend architectural violations detected"
+        echo "   Run 'python -m ruff_qualia_code $BACKEND_PATH --verbose' for details"
+        BACKEND_ERRORS=1
+    fi
     
     # CRITICAL FIX: Capture the exit code from the Python linter
     if [ $? -ne 0 ]; then
