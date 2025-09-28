@@ -3,6 +3,7 @@
 
 # Messages for initialization process
 messages:
+  serviceConstructed: "ApplicationInitializerService constructed - awaiting start()"
   serviceInitialized: "✅ ApplicationInitializerService initialized and ready"
   alreadyRunning: "⚠️ ApplicationInitializerService already running - ignoring start() call"
   initializationStarted: "🚀 Starting application initialization sequence..."

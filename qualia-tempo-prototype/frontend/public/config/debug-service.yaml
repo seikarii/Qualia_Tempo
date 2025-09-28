@@ -45,4 +45,31 @@ performanceMonitoringInterval: 5000
 aiAnalysisInterval: 30000
 enableAIAnalysis: true
 sessionIdLength: 8  # Random part length for session IDs
+sessionIdPrefixLength: 2  # Characters to skip in random string (for "0." prefix)
 memoryCleanupThreshold: 1000  # Threshold for memory cleanup
+memoryCleanupInterval: 60000  # Memory cleanup interval in milliseconds
+eventProcessingTimeThreshold: 50  # Threshold for slow event processing in ms
+memoryCleanupRatio: 0.8  # Ratio of history to keep during cleanup
+maxAIAnalysisHistory: 50  # Maximum number of AI analysis results to keep
+maxErrorHistory: 100  # Maximum number of error history entries to keep
+aiAnalysisIntervalDefault: "30000ms"  # Default AI analysis interval string
+enableAIAnalysisDefault: true  # Default AI analysis enabled state
+memoryCleanupThresholdDefault: 1000  # Default memory cleanup threshold
+
+messages:
+  serviceInitialized: "🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI"
+  configLoaded: "DebugService configuration loaded successfully."
+  configLoadFailed: "🚨 [DebugService] Failed to load configuration. Service cannot start."
+  serviceStarted: "🚀 [DebugService] Service started - AI debugging active"
+  serviceStartFailed: "🚨 [DebugService] Failed to start service:"
+  serviceNotRunning: "⚠️ [DebugService] Service not running"
+  serviceStopping: "🛑 [DebugService] Stopping service..."
+  serviceStopped: "🛑 [DebugService] Service stopped"
+  serviceStopFailed: "🚨 [DebugService] Error stopping service:"
+  monitoringStarted: "🔧 [DebugService] Event monitoring started"
+  monitoringStopped: "🔧 [DebugService] Event monitoring stopped"
+  performanceTrackingEnabled: "🔧 [DebugService] Performance tracking enabled"
+  aiAnalysisEnabled: "🔧 [DebugService] AI analysis enabled"
+  memoryCleanupPerformed: "🧹 [DebugService] Memory cleanup performed"
+  historyCleared: "🧹 [DebugService] History cleared via global interface"
+  globalInterfaceCreated: "🌐 [DebugService] Global debugging interface created (not attached to window)"

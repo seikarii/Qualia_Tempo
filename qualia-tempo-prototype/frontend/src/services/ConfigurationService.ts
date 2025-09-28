@@ -357,6 +357,33 @@ export interface DebugServiceConfig {
   enableAIAnalysis?: boolean;
   memoryCleanupThreshold?: number;
   sessionIdLength?: number;
+  sessionIdPrefixLength?: number;
+  memoryCleanupInterval?: number;
+  eventProcessingTimeThreshold?: number;
+  memoryCleanupRatio?: number;
+  maxAIAnalysisHistory?: number;
+  maxErrorHistory?: number;
+  aiAnalysisIntervalDefault?: string;
+  enableAIAnalysisDefault?: boolean;
+  memoryCleanupThresholdDefault?: number;
+  messages?: {
+    serviceInitialized?: string;
+    configLoaded?: string;
+    configLoadFailed?: string;
+    serviceStarted?: string;
+    serviceStartFailed?: string;
+    serviceNotRunning?: string;
+    serviceStopping?: string;
+    serviceStopped?: string;
+    serviceStopFailed?: string;
+    monitoringStarted?: string;
+    monitoringStopped?: string;
+    performanceTrackingEnabled?: string;
+    aiAnalysisEnabled?: string;
+    memoryCleanupPerformed?: string;
+    historyCleared?: string;
+    globalInterfaceCreated?: string;
+  };
 }
 
 // NotificationService Configuration
@@ -756,8 +783,8 @@ export class ConfigurationService implements IConfigurationService {
       this.logger.warn("Visual effects configuration not found, using minimal fallback", { configError });
       // Minimal fallback - should not happen in production with proper YAML setup
       return {
-        particles: { count: 100, minSize: 1, maxSize: 4, speed: 0.5, drift: 0.5 },
-        bloom: { intensity: 1.0, pulseSpeed: 0.5 },
+        particles: { count: 500, minSize: 4, maxSize: 16, speed: 1.5, drift: 1.2 },
+        bloom: { intensity: 3.5, pulseSpeed: 2 },
         gradients: { cycleDuration: 10, layers: [] },
         noise: { enabled: false, opacity: 0, scale: 1, speed: 0 },
         palette: ["#ffffff"],

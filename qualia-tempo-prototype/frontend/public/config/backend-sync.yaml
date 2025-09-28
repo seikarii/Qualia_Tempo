@@ -26,3 +26,12 @@ connection:
 
 validation:
   enableSchemaValidation: true
+
+messages:
+  serviceInitialized: "BackendSyncService initialized - configuration will be loaded on demand"
+  syncStarted: "Backend sync service started"
+  syncStopped: "Backend sync service stopped"
+  connectionEstablished: "Connection to backend established"
+  connectionLost: "Connection to backend lost"
+  syncThrottled: "Sync throttled due to high frequency"
+  syncError: "Error during sync operation"

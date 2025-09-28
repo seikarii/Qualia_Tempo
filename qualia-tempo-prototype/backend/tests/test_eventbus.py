@@ -251,7 +251,9 @@ class TestQualiaEventHandler:
     async def test_qualia_state_updated_handling(self, caplog):
         """Test handling of QualiaStateUpdated events."""
         with caplog.at_level(logging.INFO):
-            handler = QualiaEventHandler("TestHandler")
+            # Use factory to avoid direct instantiation violation
+            composition_root = TestCompositionRootFactory.create_mocked_composition_root()
+            handler = composition_root.get_service("qualia_event_handler")
 
             event = Event(
                 name="QualiaStateUpdated",
@@ -268,7 +270,9 @@ class TestQualiaEventHandler:
     async def test_other_event_handling(self, caplog):
         """Test handling of non-QualiaState events."""
         with caplog.at_level(logging.DEBUG):
-            handler = QualiaEventHandler("TestHandler")
+            # Use factory to avoid direct instantiation violation
+            composition_root = TestCompositionRootFactory.create_mocked_composition_root()
+            handler = composition_root.get_service("qualia_event_handler")
 
             event = Event(
                 name="OtherEvent",
@@ -312,7 +316,9 @@ class TestEventBusIntegration:
         reset_event_bus()
         event_bus = get_event_bus()
 
-        qualia_handler = QualiaEventHandler("QualiaHandler")
+        # Use factory to avoid direct instantiation violation
+        composition_root = TestCompositionRootFactory.create_mocked_composition_root()
+        qualia_handler = composition_root.get_service("qualia_event_handler")
         general_handler = MockEventHandler()
 
         event_bus.subscribe("QualiaStateUpdated", qualia_handler)
