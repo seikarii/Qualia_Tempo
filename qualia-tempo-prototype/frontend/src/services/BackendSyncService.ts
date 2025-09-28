@@ -12,7 +12,7 @@ import {
   catchError,
   validateEventProperty,
 } from "../utils/decorators";
-import type { BackendSyncConfig } from "./ConfigurationService";
+import type { BackendSyncConfig, QualiaStateRequest, HealthCheckResponse, QualiaSyncResponse } from "./contracts/IBackendSyncService.contracts";
 import type { IBackendSyncService } from "./interfaces/IBackendSyncService";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
@@ -30,23 +30,7 @@ const SERVICE_INIT_MESSAGE = "BackendSyncService initialized - configuration wil
 
 // Default configuration - REMOVED: Using ConfigurationService defaults
 
-// API request/response types
-export interface QualiaStateRequest {
-  intensity: number;
-  precision: number;
-  aggression: number;
-  flow: number;
-  chaos: number;
-  recovery: number;
-  transcendence: number;
-}
-
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  timestamp: string;
-}
+// API request/response types - MOVED TO contracts/IBackendSyncService.contracts.ts
 
 /**
  * Service for synchronizing frontend state with backend API.
@@ -97,6 +81,7 @@ export class BackendSyncService implements IBackendSyncService {
     this.logger.info(SERVICE_INIT_MESSAGE);
   }
 
+  // eslint-disable-next-line max-params
   /**
    * QUALIA.CODE: Ensure configuration is loaded before accessing it
    */
@@ -365,13 +350,7 @@ export class BackendSyncService implements IBackendSyncService {
     const url = `${config.api.baseUrl}${config.api.qualiaEndpoint}`;
 
     try {
-      const response = await this.httpService.post<any>(url, {
-        timeout: config.api.timeout,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: qualiaRequest,
-      });
+      const response = await this._executeSyncRequest(url, qualiaRequest);
 
       this.lastSyncTime = performance.now();
 
@@ -409,6 +388,17 @@ export class BackendSyncService implements IBackendSyncService {
     }
   }
 
+  private async _executeSyncRequest(url: string, data: QualiaStateRequest): Promise<QualiaSyncResponse> {
+    const config = this.ensureConfigLoaded();
+    return await this.httpService.post<QualiaSyncResponse>(url, {
+      timeout: config.api.timeout,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: data,
+    });
+  }
+
   private async checkHealth(): Promise<void> {
     const startTime = performance.now();
     const config = this.ensureConfigLoaded();
@@ -416,15 +406,7 @@ export class BackendSyncService implements IBackendSyncService {
 
     try {
       const url = `${config.api.baseUrl}${config.api.healthEndpoint}`;
-      this.logger.debug(`[BackendSync] Health check URL: ${url}`);
-
-      const response = await this.httpService.get<any>(url, {
-        timeout: config.api.timeout,
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      });
+      const response = await this._executeHealthCheckRequest(url);
 
       this.connected = true;
 
@@ -442,6 +424,17 @@ export class BackendSyncService implements IBackendSyncService {
       );
       throw error;
     }
+  }
+
+  private async _executeHealthCheckRequest(url: string): Promise<HealthCheckResponse> {
+    const config = this.ensureConfigLoaded();
+    return await this.httpService.get<HealthCheckResponse>(url, {
+      timeout: config.api.timeout,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
   }
 
   private startHealthChecking(): void {
@@ -493,7 +486,7 @@ export class BackendSyncService implements IBackendSyncService {
     };
 
     const url = `${config.api.baseUrl}${config.api.qualiaEndpoint}`;
-    await this.httpService.post<any>(url, {
+    await this.httpService.post<QualiaSyncResponse>(url, {
       timeout: config.api.timeout,
       body: qualiaRequest,
       headers: {
@@ -538,7 +531,7 @@ export class BackendSyncService implements IBackendSyncService {
     try {
       const config = this.ensureConfigLoaded();
       const url = `${config.api.baseUrl}${config.api.healthEndpoint}`;
-      await this.httpService.get<any>(url, {
+      await this.httpService.get<HealthCheckResponse>(url, {
         timeout: config.api.timeout,
         headers: {
           "Content-Type": "application/json",

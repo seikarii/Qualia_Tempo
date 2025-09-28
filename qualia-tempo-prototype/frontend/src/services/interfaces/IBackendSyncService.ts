@@ -4,6 +4,7 @@
  */
 
 import type { QualiaState } from "../../types/contracts";
+import type { BackendSyncConfig } from "../contracts/IBackendSyncService.contracts";
 
 export interface IBackendSyncService {
   /**
@@ -42,13 +43,13 @@ export interface IBackendSyncService {
    * Get current backend configuration.
    * @returns The current configuration object
    */
-  getConfig(): any;
+  getConfig(): BackendSyncConfig;
 
   /**
    * Update the backend configuration.
    * @param config New configuration to apply
    */
-  updateConfig(config: any): void;
+  updateConfig(config: Partial<BackendSyncConfig>): void;
 
   /**
    * Get service status and statistics.
