@@ -365,6 +365,22 @@ export class QualiaService implements IQualiaService {
 
 - The direct `ApiClient` is deprecated.
 - An `EventBus` service will be implemented on both frontend and backend.
+- **Event Contracts:** All event data structures are defined in `frontend/src/services/contracts/events.contracts.ts` to eliminate circular dependencies and provide a single source of truth for event types.
+
+#### Event Contracts (`frontend/src/services/contracts/events.contracts.ts`)
+
+**MANDATE:** All EventBus event interfaces MUST be defined in `events.contracts.ts`. This file serves as the single source of truth for event data structures and eliminates circular dependencies between services.
+
+**Key Event Types:**
+- `BaseEvent`: Base interface for all events with `type`, `timestamp`, `source`, and `metadata` fields
+- `PlayerActionEvent`: Player actions like "Dash", "HitNote", "MissNote", etc.
+- `RhythmicDashEvent`: Rhythmic movement events with direction and timing
+- `MetronomeTickEvent`: Metronome beat events
+- `GameStateChangedEvent`: Game state transitions
+- `PlayerInputEvent`: Raw player input events
+
+**PROHIBITED:** Defining event interfaces directly in service files or EventBus.ts. All event contracts MUST reside in `events.contracts.ts`.
+
 - **Frontend Flow:**
   1. Player actions (`Dash`, `HitNote`) generate events on the frontend `EventBus`.
   2. A `QualiaStateCalculatorService` listens to these events and computes the new `QualiaState`.
@@ -390,7 +406,10 @@ export class QualiaService implements IQualiaService {
 - `@logMethod()`: Logs method calls and arguments.
 - `@throttle(milliseconds=250)`: Throttles the execution of a method.
 - `@catchError()`: Catches runtime errors within a method and logs them to a reporting service.
+- `@measureTime()`: Measures and logs execution time of methods for performance monitoring.
 - `@validate(schemaName)`: Validates method arguments against a registered schema. The first argument of the method is validated against the specified schema from the schema registry.
+- `@validateEventProperty()`: Validates event properties against predefined schemas for EventBus events.
+- `@qualiaMethod()`: Comprehensive decorator that combines logging, error handling, and performance monitoring for critical qualia operations.
 
 ### 5.3. Logging Standard
 - **Prohibited:** Direct usage of `console.log`, `console.warn`, `console.error`, etc. in the services layer (`src/services`).
