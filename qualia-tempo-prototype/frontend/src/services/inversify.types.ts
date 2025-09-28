@@ -40,6 +40,24 @@ export const TYPES = {
   // Configuration values for services
   ConfigBasePath: Symbol.for("ConfigBasePath"),
   ConfigManifest: Symbol.for("ConfigManifest"),
+
+  // ===== CONFIGURATION CONTRACTS =====
+  // Direct injection of typed configuration objects - eliminates Service Locator antipattern
+  FullGameConfig: Symbol.for("FullGameConfig"),
+  CompositionRootConfig: Symbol.for("CompositionRootConfig"),
+  AppInitializerConfig: Symbol.for("AppInitializerConfig"),
+  LoggerConfig: Symbol.for("LoggerConfig"),
+  HttpConfig: Symbol.for("HttpConfig"),
+  EventBusConfig: Symbol.for("EventBusConfig"),
+  BackendSyncConfig: Symbol.for("BackendSyncConfig"),
+  GameControllerConfig: Symbol.for("GameControllerConfig"),
+  QualiaCalculatorConfig: Symbol.for("QualiaCalculatorConfig"),
+  RhythmicMovementConfig: Symbol.for("RhythmicMovementConfig"),
+  AudioServiceConfig: Symbol.for("AudioServiceConfig"),
+  NotificationServiceConfig: Symbol.for("NotificationServiceConfig"),
+  ErrorReportingConfig: Symbol.for("ErrorReportingConfig"),
+  DebugServiceConfig: Symbol.for("DebugServiceConfig"),
+  VisualEffectsConfig: Symbol.for("VisualEffectsConfig"),
 } as const;
 
 // Type-safe access to TYPES

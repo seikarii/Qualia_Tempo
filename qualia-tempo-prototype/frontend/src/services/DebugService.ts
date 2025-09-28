@@ -25,7 +25,6 @@ import type {
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
-import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { DebugSession, PerformanceMetrics, AIAnalysisResult, DebugServiceConfig } from "./contracts/IDebugService.contracts";
 import type {
   BaseEvent,
@@ -92,7 +91,7 @@ export class DebugService implements IDebugService {
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IConfigurationService) _configService: IConfigurationService,
+    @inject(TYPES.DebugServiceConfig) config: DebugServiceConfig,
     @inject(TYPES.IPerformanceService) private readonly _performanceService: IPerformanceService,
   ) {
     if (!eventBus) {
@@ -124,7 +123,7 @@ export class DebugService implements IDebugService {
     }
 
     try {
-      this.config = this._configService.getConfigSection("debugService");
+      this.config = this.config;
       this.logger.info("DebugService configuration loaded successfully.");
       this.logCurrentConfig(); // Log the newly loaded config
     } catch (error) {

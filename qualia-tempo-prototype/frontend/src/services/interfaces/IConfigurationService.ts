@@ -31,9 +31,15 @@ export interface IConfigurationService {
   /**
    * Get specific configuration section with full type safety.
    * 
-   * ARCHITECTURAL ADVANTAGE: This method provides type-safe access to any
-   * configuration section without ConfigurationService needing to know
-   * the structure of individual service configurations.
+   * @deprecated ARCHITECTURAL MIGRATION: This method is deprecated as part of the
+   * elimination of the Service Locator antipattern. Services should now inject
+   * their specific configuration objects directly via @inject(TYPES.ConfigName).
+   * 
+   * MIGRATION PATH:
+   * OLD: constructor(@inject(TYPES.IConfigurationService) config: IConfigurationService)
+   *      this.config = config.getConfigSection("myService")
+   * NEW: constructor(@inject(TYPES.MyServiceConfig) config: MyServiceConfig)
+   *      this.config = config
    * 
    * @param sectionKey - The key of the configuration section
    * @returns The requested configuration section with correct typing

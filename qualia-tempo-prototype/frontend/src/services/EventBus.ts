@@ -28,7 +28,7 @@ import type {
   StreamingStatusChangedEvent,
 } from "./contracts/events.contracts";
 import type { ITimerService } from "./interfaces/ITimerService";
-import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { EventBusConfig } from "./contracts/IEventBus.contracts";
 import { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from "../utils/decorators";
 
@@ -70,19 +70,18 @@ export class EventBus implements IEventBus {
   private isDestroyed = false;
   private logger: ILogger;
   private timerService: ITimerService;
-  private configService: IConfigurationService;
+  private config: EventBusConfig;
 
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService
+    @inject(TYPES.EventBusConfig) config: EventBusConfig
   ) {
     this.logger = logger;
     this.timerService = timerService;
-    this.configService = configService;
+    this.config = config;
     
     // Initialize configuration-driven values
-    const config = this.configService.getConfigSection("eventBus");
     this.maxHistorySize = config.performance.maxEventHistory;
     
     this.setupErrorHandling();
@@ -217,7 +216,7 @@ export class EventBus implements IEventBus {
 
     try {
       if (this.isDestroyed) {
-        const config = this.configService.getConfigSection("eventBus");
+        const config = this.config;
         this.logger.warn(config.messages.destroyedEventBusWarning);
         return;
       }
@@ -398,7 +397,7 @@ export class EventBus implements IEventBus {
   // Private helper methods
 
   private convertPriority(priority?: "low" | "normal" | "high"): number {
-    const config = this.configService.getConfigSection("eventBus");
+    const config = this.config;
     switch (priority) {
       case "high":
         return config.priorities.high;
@@ -412,7 +411,7 @@ export class EventBus implements IEventBus {
   }
 
   private generateListenerId(): string {
-    const config = this.configService.getConfigSection("eventBus");
+    const config = this.config;
     return `${config.idPrefix}_${Date.now()}_${Math.random().toString(config.randomBase).substr(config.idStart, config.idLength)}`;
   }
 
@@ -464,7 +463,7 @@ export class EventBus implements IEventBus {
           `⚠️ [EventBus] Event history approaching limit: ${stats.historySize}`,
         );
       }
-    }, this.configService.getConfigSection("eventBus").performance.cleanupInterval);
+    }, this.config.performance.cleanupInterval);
   }
 }
 

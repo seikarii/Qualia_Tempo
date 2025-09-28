@@ -13,7 +13,7 @@ import type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementContro
 import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovementController";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
-import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementController.contracts";
 import type { ITimerService } from "./interfaces/ITimerService";
 
 /**
@@ -24,7 +24,7 @@ import type { ITimerService } from "./interfaces/ITimerService";
 export class RhythmicMovementController implements IRhythmicMovementController {
   private eventBus: IEventBus;
   private logger: ILogger;
-  private configService: IConfigurationService;
+  private config: RhythmicMovementConfig;
   private timerService: ITimerService;
   private config!: RhythmicMovementConfig; // Will be loaded in constructor
 
@@ -60,15 +60,15 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
+    @inject(TYPES.RhythmicMovementConfig) config: RhythmicMovementConfig,
     @inject(TYPES.ITimerService) timerService: ITimerService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
-    this.configService = configService;
+    this.config = config;
     this.timerService = timerService;
 
-    const config = this.configService.getConfigSection("rhythmicMovement");
+    const config = this.config;
     this.logger.info(config.messages.serviceInitialized);
   }
 
@@ -95,7 +95,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     }
 
     // QUALIA.CODE: Load configuration when service starts
-    this.config = this.configService.getConfigSection("rhythmicMovement");
+    this.config = this.config;
     this.loadConfigurationValues();
     this.beatInterval = (60 / this.bpm) * 1000; // Convert BPM to milliseconds
 
@@ -569,7 +569,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   @catchError
   public async checkSyncAccuracy(currentTime: number): Promise<number> {
     if (!Number.isFinite(currentTime)) {
-      const config = this.configService.getConfigSection("rhythmicMovement");
+      const config = this.config;
       this.logger.warn(config.messages.invalidTimeWarning);
       currentTime = performance.now();
     }

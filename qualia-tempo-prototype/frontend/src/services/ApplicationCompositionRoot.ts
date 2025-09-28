@@ -4,13 +4,13 @@
  * Implements the Composition Root pattern for dependency injection
  */
 
-import { container } from "./inversify.container";
+import { container, configureServices } from "./inversify.config";
 import { TYPES } from "./inversify.types";
 // Environment check handled by Vite's import.meta.env
 import type { IApplicationInitializerService } from "./interfaces/IApplicationInitializerService";
 import { ILogger } from "./interfaces/ILogger";
 import { IDebugService } from "./interfaces/IDebugService";
-import { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { DebugServiceConfig } from "./contracts/IDebugService.contracts";
 import { LoggerProvider, QualiaLogger } from "./Logger";
 
 /**
@@ -23,11 +23,11 @@ export class ApplicationCompositionRoot {
    * This method handles ALL bootstrap logic that was previously in index.tsx
    */
   public async initializeApplication(): Promise<void> {
-    // Step 0: Load configuration FIRST - CRITICAL for QUALIA.CODE compliance
-    const configService = container.get<IConfigurationService>(TYPES.IConfigurationService);
-    await configService.loadConfig();
+    // STEP 0: CRITICAL - Configure services with Direct Configuration Injection
+    // This eliminates the Service Locator antipattern across the entire system
+    await configureServices();
 
-    // Step 1: NOW resolve core services from IoC container (they can access config)
+    // Step 1: NOW resolve core services from IoC container (they have direct config access)
     const logger = container.get<ILogger>(TYPES.ILogger);
     const appInitializer = container.get<IApplicationInitializerService>(
       TYPES.IApplicationInitializerService,
@@ -42,11 +42,9 @@ export class ApplicationCompositionRoot {
     await appInitializer.start();
 
     // Step 4: Attach debug interface in development mode
-    // Development debug interface setup handled by ConfigurationService
-    const config = configService;
-    // Debug interface setup using proper configuration access
-    const debugConfig = config.getConfigSection("debugService");
-    if (debugConfig?.development?.enableDebugOverlay) {
+    // Get debug configuration via direct injection
+    const debugConfig = container.get<DebugServiceConfig>(TYPES.DebugServiceConfig);
+    if (debugConfig?.logging?.enableConsoleOutput) {
       try {
         const debugService = container.get<IDebugService>(TYPES.IDebugService);
         const debugInterface = debugService.getDebugInterface();

@@ -31,7 +31,7 @@ import type {
 } from "./contracts/INotificationService.contracts";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
-import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { NotificationServiceConfig } from "./contracts/INotificationService.contracts";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type {
@@ -123,7 +123,7 @@ export class NotificationService implements INotificationService {
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
+    @inject(TYPES.NotificationServiceConfig) config: NotificationServiceConfig,
     @inject(TYPES.IGameStateStore) gameStateStore: IGameStateStore,
     @inject(TYPES.ITimerService) _timerService: ITimerService,
   ) {
@@ -142,7 +142,7 @@ export class NotificationService implements INotificationService {
     this.eventBus = eventBus;
     this.logger = logger;
     this.timerService = _timerService;
-    this._configService = configService;
+    this.config = config;
     this.gameStateStore = gameStateStore;
     
     // QUALIA.CODE v1.1: NO hardcoded configuration - will be loaded in start()
@@ -179,7 +179,7 @@ export class NotificationService implements INotificationService {
     try {
       // QUALIA.CODE v1.1: Load configuration from pure YAML in start() method
       this.logger.debug("Loading NotificationService configuration from YAML");
-      this.config = this._configService.getConfigSection('notificationService');
+      this.config = this.config;
       this.logger.info("NotificationService configuration loaded from YAML successfully");
       
       // Reinitialize throttling manager with actual configuration

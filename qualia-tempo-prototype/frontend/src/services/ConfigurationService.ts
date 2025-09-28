@@ -112,9 +112,9 @@ export class ConfigurationService implements IConfigurationService {
   }
 
   /**
-   * PURE DI: Get specific configuration section by key
-   * Replaces all getRhythmicMovementConfig, getQualiaConfig, etc.
-   * Now properly typed to return the correct configuration section type.
+   * @deprecated ARCHITECTURAL MIGRATION: Service Locator antipattern elimination
+   * This method is deprecated. Services should inject their configuration directly.
+   * See inversify.config.ts configureServices() function for the new approach.
    */
   @logMethod
   public getConfigSection<K extends keyof FullGameConfig>(sectionKey: K): FullGameConfig[K] {

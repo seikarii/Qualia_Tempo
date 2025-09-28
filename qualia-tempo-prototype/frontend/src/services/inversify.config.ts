@@ -9,6 +9,22 @@
 import { container } from "./inversify.container";
 import { TYPES } from "./inversify.types";
 
+// ===== IMPORT CONFIGURATION CONTRACTS =====
+import type { FullGameConfig } from "../types/config";
+import type { AppInitializerConfig } from "./contracts/IApplicationInitializerService.contracts";
+import type { AudioServiceConfig } from "./contracts/IAudioService.contracts";
+import type { BackendSyncConfig } from "./contracts/IBackendSyncService.contracts";
+import type { CompositionRootConfig, VisualEffectsConfig } from "./contracts/IApplicationCompositionRoot.contracts";
+import type { DebugServiceConfig } from "./contracts/IDebugService.contracts";
+import type { ErrorReportingConfig } from "./contracts/IErrorReportingService.contracts";
+import type { EventBusConfig } from "./contracts/IEventBus.contracts";
+import type { GameControllerConfig } from "./contracts/IGameControllerService.contracts";
+import type { HttpConfig } from "./contracts/IHttpService.contracts";
+import type { LoggerConfig } from "./contracts/ILogger.contracts";
+import type { NotificationServiceConfig } from "./contracts/INotificationService.contracts";
+import type { QualiaCalculatorConfig } from "./contracts/IQualiaStateCalculatorService.contracts";
+import type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementController.contracts";
+
 // ===== IMPORT ALL INTERFACES =====
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
@@ -171,7 +187,49 @@ container
   .to(StreamingVideoService)
   .inSingletonScope();
 
+// ===== CONFIGURATION BINDING FUNCTION =====
+/**
+ * CRITICAL MISSION: Eliminate Service Locator Antipattern
+ * 
+ * This function loads configuration ONCE and binds each typed configuration 
+ * object to its specific Symbol. Services will now inject specific config 
+ * objects instead of the ConfigurationService.
+ * 
+ * CALL THIS FUNCTION BEFORE INITIALIZING ANY OTHER SERVICES.
+ */
+export async function configureServices(): Promise<void> {
+  // 1. Get ConfigurationService instance to load configuration
+  const configService = container.get<IConfigurationService>(TYPES.IConfigurationService);
+  
+  // 2. Load all configuration ONE TIME
+  await configService.loadConfig();
+  const fullConfig = configService.getConfig();
+  
+  // 3. Bind each configuration object to its specific Symbol
+  // This enables direct injection of typed configuration objects
+  container.bind<FullGameConfig>(TYPES.FullGameConfig).toConstantValue(fullConfig);
+  container.bind<CompositionRootConfig>(TYPES.CompositionRootConfig).toConstantValue(fullConfig.compositionRoot);
+  container.bind<AppInitializerConfig>(TYPES.AppInitializerConfig).toConstantValue(fullConfig.applicationInitializer);
+  container.bind<LoggerConfig>(TYPES.LoggerConfig).toConstantValue(fullConfig.logger);
+  container.bind<HttpConfig>(TYPES.HttpConfig).toConstantValue(fullConfig.http);
+  container.bind<EventBusConfig>(TYPES.EventBusConfig).toConstantValue(fullConfig.eventBus);
+  container.bind<BackendSyncConfig>(TYPES.BackendSyncConfig).toConstantValue(fullConfig.backendSync);
+  container.bind<GameControllerConfig>(TYPES.GameControllerConfig).toConstantValue(fullConfig.gameController);
+  container.bind<QualiaCalculatorConfig>(TYPES.QualiaCalculatorConfig).toConstantValue(fullConfig.qualiaCalculator);
+  container.bind<RhythmicMovementConfig>(TYPES.RhythmicMovementConfig).toConstantValue(fullConfig.rhythmicMovement);
+  container.bind<AudioServiceConfig>(TYPES.AudioServiceConfig).toConstantValue(fullConfig.audioService);
+  container.bind<NotificationServiceConfig>(TYPES.NotificationServiceConfig).toConstantValue(fullConfig.notificationService);
+  container.bind<ErrorReportingConfig>(TYPES.ErrorReportingConfig).toConstantValue(fullConfig.errorReporting);
+  container.bind<DebugServiceConfig>(TYPES.DebugServiceConfig).toConstantValue(fullConfig.debugService);
+  
+  // Optional configuration with null check
+  if (fullConfig.visualEffects) {
+    container.bind<VisualEffectsConfig>(TYPES.VisualEffectsConfig).toConstantValue(fullConfig.visualEffects);
+  }
+}
+
 // ===== CONTAINER VERIFICATION =====
 // Container is configured and ready
+// CRITICAL: Call configureServices() before using any service that requires configuration
 
 export { container };

@@ -16,7 +16,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
-import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { QualiaCalculatorConfig } from "./contracts/IQualiaStateCalculatorService.contracts";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
 import { QualiaStateUpdatedEvent } from "./contracts/events.contracts";
@@ -51,7 +51,7 @@ export class QualiaStateCalculatorService
   private _isRunning = false; // Renamed to avoid conflict with method
   private eventBus: IEventBus;
   private logger: ILogger;
-  private configService: IConfigurationService;
+  private config: QualiaCalculatorConfig;
   private timerService: ITimerService;
 
   // Statistics tracking
@@ -61,12 +61,12 @@ export class QualiaStateCalculatorService
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
+    @inject(TYPES.QualiaCalculatorConfig) config: QualiaCalculatorConfig,
     @inject(TYPES.ITimerService) timerService: ITimerService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
-    this.configService = configService;
+    this.config = config;
     this.timerService = timerService;
 
     // QUALIA.CODE: Load configuration immediately for proper initialization
@@ -85,7 +85,7 @@ export class QualiaStateCalculatorService
   private ensureConfigLoaded(): QualiaCalculatorConfig {
     if (!this.config) {
       try {
-        this.config = this.configService.getConfigSection("qualiaCalculator");
+        this.config = this.config;
         this.logger.debug(
           "QualiaStateCalculatorService configuration loaded successfully",
         );

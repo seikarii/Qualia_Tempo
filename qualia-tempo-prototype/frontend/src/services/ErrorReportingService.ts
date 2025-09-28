@@ -26,7 +26,6 @@ import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IHttpService } from "./interfaces/IHttpService";
 import type { ITimerService } from "./interfaces/ITimerService";
-import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type {
   ExtendedErrorReport,
   ExtendedErrorBatch,
@@ -125,7 +124,7 @@ export class ErrorReportingService implements IErrorReportingService {
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IHttpService) httpService: IHttpService,
     @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
+    @inject(TYPES.ErrorReportingConfig) config: ErrorReportingConfig,
   ) {
     if (!eventBus) {
       throw new Error(
@@ -137,7 +136,7 @@ export class ErrorReportingService implements IErrorReportingService {
     this.logger = logger;
     this.httpService = httpService;
     this.timerService = timerService;
-    this._configService = configService;
+    this.config = config;
     
     // QUALIA.CODE v1.1: NO hardcoded configuration - will be loaded in start()
     this.config = {} as ErrorReportingConfig;
@@ -174,7 +173,7 @@ export class ErrorReportingService implements IErrorReportingService {
     try {
       // QUALIA.CODE v1.1: Load configuration from pure YAML in start() method
       this.logger.debug("Loading ErrorReporting configuration from YAML");
-      this.config = this._configService.getConfigSection('errorReporting');
+      this.config = this.config;
       this.logger.info("ErrorReporting configuration loaded from YAML successfully");
       
       // Reinitialize state objects with actual configuration

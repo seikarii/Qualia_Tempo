@@ -18,7 +18,6 @@ import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IHttpService } from "./interfaces/IHttpService";
 import type { ITimerService } from "./interfaces/ITimerService";
-import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { QualiaState } from "../types/contracts";
 
 // QUALIA.CODE: Module-level constant for pre-config initialization message
@@ -38,13 +37,12 @@ const SERVICE_INIT_MESSAGE = "BackendSyncService initialized - configuration wil
  */
 @injectable()
 export class BackendSyncService implements IBackendSyncService {
-  private config: BackendSyncConfig | null = null; // QUALIA.CODE: Lazy initialization
+  private config: BackendSyncConfig;
   private eventListenerIds: string[] = [];
   private isRunning = false;
   private connected = false;
   private eventBus: IEventBus;
   private logger: ILogger;
-  private configService: IConfigurationService;
   private httpService: IHttpService;
   private timerService: ITimerService;
 
@@ -66,18 +64,16 @@ export class BackendSyncService implements IBackendSyncService {
   constructor(
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
+    @inject(TYPES.BackendSyncConfig) config: BackendSyncConfig,
     @inject(TYPES.IHttpService) httpService: IHttpService,
     @inject(TYPES.ITimerService) timerService: ITimerService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
-    this.configService = configService;
+    this.config = config;
     this.httpService = httpService;
     this.timerService = timerService;
 
-    // QUALIA.CODE FIX: Do NOT access configuration in constructor
-    // Configuration will be loaded lazily when needed
     this.logger.info(SERVICE_INIT_MESSAGE);
   }
 
@@ -86,16 +82,7 @@ export class BackendSyncService implements IBackendSyncService {
    * QUALIA.CODE: Ensure configuration is loaded before accessing it
    */
   private ensureConfigLoaded(): BackendSyncConfig {
-    if (!this.config) {
-      try {
-        this.config = this.configService.getConfigSection("backendSync");
-        this.healthCheckInterval = this.config.connection.healthCheckInterval;
-        this.logger.debug("BackendSync configuration loaded successfully");
-      } catch (error) {
-        this.logger.error("Failed to load BackendSync configuration", error);
-        throw new Error("BackendSync configuration not available");
-      }
-    }
+    this.healthCheckInterval = this.config.connection.healthCheckInterval;
     return this.config;
   }
 
