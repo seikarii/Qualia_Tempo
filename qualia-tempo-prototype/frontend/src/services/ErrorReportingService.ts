@@ -17,12 +17,11 @@ import { TYPES } from "./inversify.types";
 import { logMethod, catchError } from "../utils/decorators";
 import type {
   IErrorReportingService,
-  ErrorReportingConfig,
-  ErrorReport,
-  ErrorBatch,
   ErrorStatistics,
 } from "./interfaces/IErrorReportingService";
+import type { ErrorReportingConfig } from "./contracts/IErrorReportingService.contracts";
 import type { IEventBus } from "./interfaces/IEventBus";
+import type { ErrorEvent } from "./contracts/events.contracts";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IHttpService } from "./interfaces/IHttpService";
 import type { ITimerService } from "./interfaces/ITimerService";
@@ -31,7 +30,6 @@ import type {
   ExtendedErrorBatch,
   CircuitBreakerState,
   RateLimitState,
-  ExternalServiceConfig,
   ErrorSeverity,
 } from "./contracts/IErrorReportingService.contracts";
 
@@ -78,9 +76,6 @@ export class ErrorReportingService implements IErrorReportingService {
   private readonly logger: ILogger;
   private readonly httpService: IHttpService;
   private readonly timerService: ITimerService;
-  // Configuration service for future extensibility
-  // @ts-ignore - Unused parameter for future configuration features
-  private readonly _configService: IConfigurationService;
   private config: ErrorReportingConfig;
   private isStarted = false;
   private eventListenerIds: string[] = [];
@@ -137,9 +132,6 @@ export class ErrorReportingService implements IErrorReportingService {
     this.httpService = httpService;
     this.timerService = timerService;
     this.config = config;
-    
-    // QUALIA.CODE v1.1: NO hardcoded configuration - will be loaded in start()
-    this.config = {} as ErrorReportingConfig;
     this.sessionId = this.generateSessionId();
 
     // Initialize rate limiting and circuit breaker to minimal state

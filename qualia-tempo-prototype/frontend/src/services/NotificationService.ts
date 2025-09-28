@@ -31,7 +31,6 @@ import type {
 } from "./contracts/INotificationService.contracts";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
-import type { NotificationServiceConfig } from "./contracts/INotificationService.contracts";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type {
@@ -50,7 +49,6 @@ export type {
   ExtendedNotification,
   NotificationFilter,
   ThrottlingConfig,
-  ExtendedNotificationConfig,
 } from "./contracts/INotificationService.contracts";
 
 
@@ -144,9 +142,6 @@ export class NotificationService implements INotificationService {
     this.timerService = _timerService;
     this.config = config;
     this.gameStateStore = gameStateStore;
-    
-    // QUALIA.CODE v1.1: NO hardcoded configuration - will be loaded in start()
-    this.config = {} as NotificationServiceConfig;
 
     // Initialize processing components with minimal state
     this.notificationQueue = new NotificationQueue();
@@ -177,9 +172,8 @@ export class NotificationService implements INotificationService {
     }
 
     try {
-      // QUALIA.CODE v1.1: Load configuration from pure YAML in start() method
-      this.logger.debug("Loading NotificationService configuration from YAML");
-      this.config = this.config;
+      // QUALIA.CODE v1.1: Configuration is now injected directly via constructor
+      this.logger.debug("NotificationService initialized with injected configuration");
       this.logger.info("NotificationService configuration loaded from YAML successfully");
       
       // Reinitialize throttling manager with actual configuration
@@ -521,33 +515,28 @@ export class NotificationService implements INotificationService {
       this.fullConfig = newConfig;
 
       // Handle nested notification config structure from tests
-      let configToMerge = newConfig;
+      let configToMerge: any = newConfig;
       if (newConfig.notifications) {
         configToMerge = newConfig.notifications;
       }
 
-      // Validate configuration parameters
-      if (
-        configToMerge.maxConcurrent !== undefined &&
-        configToMerge.maxConcurrent < 0
-      ) {
-        this.logger.warn(
-          "Invalid configuration: maxConcurrent must be a positive number",
-        );
-        return;
+      // Create a properly typed config for merging
+      const mergedConfig: Partial<NotificationServiceConfig> = {};
+
+      // Copy over the compatible properties
+      if (configToMerge.display) mergedConfig.display = configToMerge.display;
+      if (configToMerge.positioning) mergedConfig.positioning = configToMerge.positioning;
+      if (configToMerge.styling) mergedConfig.styling = configToMerge.styling;
+      if (configToMerge.sound) mergedConfig.sound = configToMerge.sound;
+      if (configToMerge.queue) mergedConfig.queue = configToMerge.queue;
+      if (configToMerge.accessibility) mergedConfig.accessibility = configToMerge.accessibility;
+
+      // Handle types - if it's the detailed type, use it directly
+      if (configToMerge.types && typeof configToMerge.types === 'object' && 'success' in configToMerge.types) {
+        mergedConfig.types = configToMerge.types;
       }
 
-      if (
-        configToMerge.defaultDuration !== undefined &&
-        typeof configToMerge.defaultDuration !== "number"
-      ) {
-        this.logger.warn(
-          "Invalid configuration: defaultDuration must be a number",
-        );
-        return;
-      }
-
-      this.config = { ...this.config, ...configToMerge };
+      this.config = { ...this.config, ...mergedConfig };
 
       // Process types configuration if present
       if (configToMerge.types && typeof configToMerge.types === "object") {

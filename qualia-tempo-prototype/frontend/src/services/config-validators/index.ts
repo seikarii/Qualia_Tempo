@@ -55,7 +55,7 @@ export function validateFullGameConfig(config: FullGameConfig): void {
   validateDebugServiceConfig(config.debugService);
   validateNotificationServiceConfig(config.notificationService);
   validateRhythmicMovementConfig(config.rhythmicMovement);
-  validateEventBusConfig(config.eventbus);
+  validateEventBusConfig(config.eventBus);
   
   // Visual effects config is optional, only validate if present
   // Individual services handle their optional config validation internally

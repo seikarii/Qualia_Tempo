@@ -23,7 +23,6 @@ import { QualiaStateUpdatedEvent } from "./contracts/events.contracts";
 import type { PlayerActionEvent } from "./contracts/events.contracts";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from "../utils/decorators";
-import type { QualiaCalculatorConfig } from "./contracts/IQualiaStateCalculatorService.contracts";
 
 // Configuration interface - REMOVED: Using ConfigurationService interface
 
@@ -44,14 +43,13 @@ export class QualiaStateCalculatorService
   implements IQualiaStateCalculatorService
 {
   private currentState!: QualiaState;
-  private config: QualiaCalculatorConfig | null = null; // QUALIA.CODE: Lazy initialization
+  private config: QualiaCalculatorConfig; // QUALIA.CODE: Injected directly via constructor
   private lastUpdateTime: number;
   private updateIntervalId: number | null = null;
   private eventListenerIds: string[] = [];
   private _isRunning = false; // Renamed to avoid conflict with method
   private eventBus: IEventBus;
   private logger: ILogger;
-  private config: QualiaCalculatorConfig;
   private timerService: ITimerService;
 
   // Statistics tracking
@@ -69,8 +67,12 @@ export class QualiaStateCalculatorService
     this.config = config;
     this.timerService = timerService;
 
-    // QUALIA.CODE: Load configuration immediately for proper initialization
-    this.ensureConfigLoaded();
+    // QUALIA.CODE: Configuration is now injected directly via constructor
+    // Always ensure currentState is initialized
+    if (!this.currentState) {
+      this.currentState = this.createInitialState();
+      this.logger.debug("QualiaStateCalculatorService state initialized");
+    }
     this.lastUpdateTime = performance.now();
 
     this.logger.info(
@@ -82,30 +84,7 @@ export class QualiaStateCalculatorService
   /**
    * QUALIA.CODE: Ensure configuration is loaded before accessing it
    */
-  private ensureConfigLoaded(): QualiaCalculatorConfig {
-    if (!this.config) {
-      try {
-        this.config = this.config;
-        this.logger.debug(
-          "QualiaStateCalculatorService configuration loaded successfully",
-        );
-      } catch (error) {
-        this.logger.error(
-          "Failed to load QualiaStateCalculatorService configuration",
-          error,
-        );
-        throw new Error(
-          "QualiaStateCalculatorService configuration not available",
-        );
-      }
-    }
-    // Always ensure currentState is initialized
-    if (!this.currentState) {
-      this.currentState = this.createInitialState();
-      this.logger.debug("QualiaStateCalculatorService state initialized");
-    }
-    return this.config;
-  }
+
 
   /**
    * Start the calculator service and begin listening to events.
@@ -116,9 +95,7 @@ export class QualiaStateCalculatorService
       return;
     }
 
-    // QUALIA.CODE: Load configuration before proceeding
-    this.ensureConfigLoaded();
-
+    // QUALIA.CODE: Configuration is already loaded in constructor
     this.subscribeToPlayerActionEvents();
     this.startUpdateLoop();
     this._isRunning = true;
@@ -259,7 +236,7 @@ export class QualiaStateCalculatorService
   // ==================== ACTION HANDLERS ====================
 
   private onNoteHit(_context?: Record<string, any>): void {
-    const config = this.ensureConfigLoaded();
+    const config = this.config;
     const multipliers = config.hitNoteMultipliers;
 
     const currentState = this.currentState;
@@ -284,7 +261,7 @@ export class QualiaStateCalculatorService
   }
 
   private onNoteMiss(_context?: Record<string, any>): void {
-    const config = this.ensureConfigLoaded();
+    const config = this.config;
     const multipliers = config.missNoteMultipliers;
 
     this.currentState.precision = this.clamp(
@@ -301,7 +278,7 @@ export class QualiaStateCalculatorService
   }
 
   private onDash(_context?: Record<string, any>): void {
-    const config = this.ensureConfigLoaded();
+    const config = this.config;
     const multipliers = config.dashMultipliers;
 
     this.currentState.intensity = this.clamp(
@@ -315,7 +292,7 @@ export class QualiaStateCalculatorService
   }
 
   private onFastForward(_context?: Record<string, any>): void {
-    const config = this.ensureConfigLoaded();
+    const config = this.config;
     const multipliers = config.fastForwardMultipliers;
 
     this.currentState.aggression = this.clamp(
@@ -331,7 +308,7 @@ export class QualiaStateCalculatorService
   }
 
   private onRewind(_context?: Record<string, any>): void {
-    const config = this.ensureConfigLoaded();
+    const config = this.config;
     const multipliers = config.rewindMultipliers;
 
     this.currentState.recovery = this.clamp(
@@ -349,7 +326,7 @@ export class QualiaStateCalculatorService
   private startUpdateLoop(): void {
     this.stopUpdateLoop(); // Ensure no duplicate intervals
 
-    const config = this.ensureConfigLoaded();
+    const config = this.config;
     this.updateIntervalId = this.timerService.setInterval(() => {
       this.updateStateWithDecay();
     }, config.updateInterval);
@@ -370,7 +347,7 @@ export class QualiaStateCalculatorService
     const deltaTime = (now - this.lastUpdateTime) / 1000; // Convert to seconds
     this.lastUpdateTime = now;
 
-    const config = this.ensureConfigLoaded();
+    const config = this.config;
 
     // Apply decay to all values
     this.currentState.intensity = this.clamp(
@@ -402,7 +379,7 @@ export class QualiaStateCalculatorService
   }
 
   private checkTranscendenceActivation(): void {
-    const config = this.ensureConfigLoaded();
+    const config = this.config;
     const thresholds = config.transcendenceThresholds;
 
     if (
@@ -419,7 +396,7 @@ export class QualiaStateCalculatorService
   }
 
   private clamp(value: number): number {
-    const config = this.ensureConfigLoaded();
+    const config = this.config;
     return Math.max(config.minValue, Math.min(config.maxValue, value));
   }
 
@@ -497,7 +474,7 @@ export class QualiaStateCalculatorService
    */
   @logMethod
   private applyDecayToAllValues(deltaTime: number): void {
-    const config = this.ensureConfigLoaded();
+    const config = this.config;
     const decayRates = config.decayRates;
 
     // Apply exponential decay to all values using individual decay rates

@@ -103,7 +103,7 @@ export class DebugService implements IDebugService {
     this.eventBus = eventBus;
     this.logger = logger;
     this.timerService = timerService;
-    this._configService = _configService;
+    this.config = config;
     this.performanceMetrics = this.initializePerformanceMetrics();
 
     this.logger.info(
@@ -123,7 +123,6 @@ export class DebugService implements IDebugService {
     }
 
     try {
-      this.config = this.config;
       this.logger.info("DebugService configuration loaded successfully.");
       this.logCurrentConfig(); // Log the newly loaded config
     } catch (error) {

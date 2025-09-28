@@ -38,6 +38,7 @@ export class GameControllerService implements IGameControllerService {
   private eventBus: EventBus;
   private gameStateStoreService: IGameStateStoreService;
   private timerService: ITimerService;
+  private config: GameControllerConfig;
   private eventListenerIds: string[] = [];
   private isRunning = false;
   private logger: QualiaLogger;

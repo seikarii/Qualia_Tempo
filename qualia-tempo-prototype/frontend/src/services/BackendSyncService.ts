@@ -81,10 +81,7 @@ export class BackendSyncService implements IBackendSyncService {
   /**
    * QUALIA.CODE: Ensure configuration is loaded before accessing it
    */
-  private ensureConfigLoaded(): BackendSyncConfig {
-    this.healthCheckInterval = this.config.connection.healthCheckInterval;
-    return this.config;
-  }
+
 
   /**
    * Start the sync service and begin listening to events.
@@ -99,7 +96,7 @@ export class BackendSyncService implements IBackendSyncService {
       return;
     }
 
-    this.ensureConfigLoaded();
+    this.healthCheckInterval = this.config.connection.healthCheckInterval;
     this.subscribeToEvents();
     this.startHealthChecking();
     this.isRunning = true;
@@ -159,8 +156,7 @@ export class BackendSyncService implements IBackendSyncService {
     this.logger.info("⚙️ [BackendSync] UpdateConfig called");
 
     try {
-      const currentConfig = this.ensureConfigLoaded();
-      this.config = { ...currentConfig, ...newConfig };
+      this.config = { ...this.config, ...newConfig };
 
       const duration = performance.now() - startTime;
       this.logger.info(
@@ -219,7 +215,7 @@ export class BackendSyncService implements IBackendSyncService {
   @logMethod
   @catchError
   public getConfig(): BackendSyncConfig {
-    return { ...this.ensureConfigLoaded() };
+    return { ...this.config };
   }
 
   // Private methods
@@ -256,9 +252,8 @@ export class BackendSyncService implements IBackendSyncService {
     this.logger.info("📊 [BackendSync] QualiaState update received");
 
     if (!this.isConnected) {
-      const config = this.ensureConfigLoaded();
       this.logger.warn(
-        `⚠️ [BackendSync] ${config.messages.backendNotConnected}`,
+        `⚠️ [BackendSync] ${this.config.messages.backendNotConnected}`,
       );
       return;
     }
@@ -279,19 +274,18 @@ export class BackendSyncService implements IBackendSyncService {
   private scheduleSync(qualiaRequest: QualiaStateRequest): void {
     const now = performance.now();
     const timeSinceLastSync = now - this.lastSyncTime;
-    const config = this.ensureConfigLoaded();
 
     // Store the latest state
     this.pendingSync = qualiaRequest;
 
     // If we haven't hit the throttle limit, sync immediately
-    if (timeSinceLastSync >= config.sync.throttleDelay) {
+    if (timeSinceLastSync >= this.config.sync.throttleDelay) {
       this.performSyncSafe(qualiaRequest);
       this.pendingSync = null;
     } else {
       // Schedule a delayed sync
       this.clearPendingSync();
-      const delay = config.sync.throttleDelay - timeSinceLastSync;
+      const delay = this.config.sync.throttleDelay - timeSinceLastSync;
 
       this.syncTimeoutId = this.timerService.setTimeout(() => {
         if (this.pendingSync) {
@@ -325,22 +319,21 @@ export class BackendSyncService implements IBackendSyncService {
 
   private async performSync(qualiaRequest: QualiaStateRequest): Promise<void> {
     const startTime = performance.now();
-    const config = this.ensureConfigLoaded();
 
-    if (config.validation.logValidationErrors) {
+    if (this.config.validation.logValidationErrors) {
       this.logger.info("🌐 [BackendSync] Sending QualiaState to backend:", {
         qualiaRequest,
       });
     }
 
-    const url = `${config.api.baseUrl}${config.api.qualiaEndpoint}`;
+    const url = `${this.config.api.baseUrl}${this.config.api.qualiaEndpoint}`;
 
     try {
       const response = await this._executeSyncRequest(url, qualiaRequest);
 
       this.lastSyncTime = performance.now();
 
-      if (config.validation.logValidationErrors) {
+      if (this.config.validation.logValidationErrors) {
         this.logger.info("📥 [BackendSync] Backend response:", { response });
       }
 
@@ -375,9 +368,8 @@ export class BackendSyncService implements IBackendSyncService {
   }
 
   private async _executeSyncRequest(url: string, data: QualiaStateRequest): Promise<QualiaSyncResponse> {
-    const config = this.ensureConfigLoaded();
     return await this.httpService.post<QualiaSyncResponse>(url, {
-      timeout: config.api.timeout,
+      timeout: this.config.api.timeout,
       headers: {
         "Content-Type": "application/json",
       },
@@ -387,11 +379,10 @@ export class BackendSyncService implements IBackendSyncService {
 
   private async checkHealth(): Promise<void> {
     const startTime = performance.now();
-    const config = this.ensureConfigLoaded();
     this.logger.info("🏥 [BackendSync] Health check");
 
     try {
-      const url = `${config.api.baseUrl}${config.api.healthEndpoint}`;
+      const url = `${this.config.api.baseUrl}${this.config.api.healthEndpoint}`;
       const response = await this._executeHealthCheckRequest(url);
 
       this.connected = true;
@@ -406,16 +397,15 @@ export class BackendSyncService implements IBackendSyncService {
       const duration = performance.now() - startTime;
       this.logger.error(
         `🚨 [BackendSync] Health check failed - ${duration.toFixed(2)}ms:`,
-        { error, url: `${config.api.baseUrl}${config.api.healthEndpoint}` },
+        { error, url: `${this.config.api.baseUrl}${this.config.api.healthEndpoint}` },
       );
       throw error;
     }
   }
 
   private async _executeHealthCheckRequest(url: string): Promise<HealthCheckResponse> {
-    const config = this.ensureConfigLoaded();
     return await this.httpService.get<HealthCheckResponse>(url, {
-      timeout: config.api.timeout,
+      timeout: this.config.api.timeout,
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -460,7 +450,6 @@ export class BackendSyncService implements IBackendSyncService {
   @logMethod
   @catchError
   public async syncQualiaState(state: QualiaState): Promise<void> {
-    const config = this.ensureConfigLoaded();
     const qualiaRequest: QualiaStateRequest = {
       intensity: state.intensity || 0,
       precision: state.precision || 0,
@@ -471,9 +460,9 @@ export class BackendSyncService implements IBackendSyncService {
       transcendence: state.transcendence || 0,
     };
 
-    const url = `${config.api.baseUrl}${config.api.qualiaEndpoint}`;
+    const url = `${this.config.api.baseUrl}${this.config.api.qualiaEndpoint}`;
     await this.httpService.post<QualiaSyncResponse>(url, {
-      timeout: config.api.timeout,
+      timeout: this.config.api.timeout,
       body: qualiaRequest,
       headers: {
         "Content-Type": "application/json",
@@ -515,10 +504,9 @@ export class BackendSyncService implements IBackendSyncService {
   @catchError
   public async testConnection(): Promise<boolean> {
     try {
-      const config = this.ensureConfigLoaded();
-      const url = `${config.api.baseUrl}${config.api.healthEndpoint}`;
+      const url = `${this.config.api.baseUrl}${this.config.api.healthEndpoint}`;
       await this.httpService.get<HealthCheckResponse>(url, {
-        timeout: config.api.timeout,
+        timeout: this.config.api.timeout,
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",

@@ -13,7 +13,6 @@ import type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementContro
 import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovementController";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
-import type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementController.contracts";
 import type { ITimerService } from "./interfaces/ITimerService";
 
 /**
@@ -26,7 +25,6 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private logger: ILogger;
   private config: RhythmicMovementConfig;
   private timerService: ITimerService;
-  private config!: RhythmicMovementConfig; // Will be loaded in constructor
 
   private playerPosition: [number, number] = [4, 4]; // Center of 8x8 grid
   private isListening: boolean = false;
@@ -68,8 +66,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.config = config;
     this.timerService = timerService;
 
-    const config = this.config;
-    this.logger.info(config.messages.serviceInitialized);
+    this.logger.info(this.config.messages.serviceInitialized);
   }
 
 
@@ -94,8 +91,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
       return;
     }
 
-    // QUALIA.CODE: Load configuration when service starts
-    this.config = this.config;
+    // QUALIA.CODE: Configuration is now injected directly via constructor
     this.loadConfigurationValues();
     this.beatInterval = (60 / this.bpm) * 1000; // Convert BPM to milliseconds
 
