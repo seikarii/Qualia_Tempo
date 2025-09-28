@@ -1,0 +1,1 @@
+# ruff-qualia-code plugin

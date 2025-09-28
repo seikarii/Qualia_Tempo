@@ -1,0 +1,11 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ruff-qualia-code"
+version = "0.1.0"
+dependencies = ["ruff>=0.1.0"]
+
+[project.entry-points."ruff.plugins"]
+qualia-code = "ruff_qualia_code.plugin:plugin"
