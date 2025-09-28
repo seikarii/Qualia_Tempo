@@ -13,7 +13,7 @@ import time
 class Event:
     """Base event class for all system events."""
 
-    name: str
+    type: str
     data: Any
     timestamp: float
     source: str
@@ -35,7 +35,7 @@ class EventBus:
     Implements pub/sub pattern with async event handling.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._handlers: Dict[str, List[EventHandler]] = {}
         self._logger = logging.getLogger(__name__)
         self._stats = {"events_published": 0, "events_handled": 0, "errors": 0}
@@ -101,7 +101,7 @@ class EventBus:
             correlation_id: Optional correlation ID for tracing
         """
         event = Event(
-            name=event_name,
+            type=event_name,
             data=data,
             timestamp=time.time(),
             source=source,
@@ -136,12 +136,12 @@ class EventBus:
             await handler.handle(event)
             self._stats["events_handled"] += 1
             self._logger.debug(
-                f"✅ Event {event.name} handled successfully by {handler.__class__.__name__}"
+                f"✅ Event {event.type} handled successfully by {handler.__class__.__name__}"
             )
         except Exception as e:
             self._stats["errors"] += 1
             self._logger.error(
-                f"🚨 Error handling event {event.name} with {handler.__class__.__name__}: {str(e)}"
+                f"🚨 Error handling event {event.type} with {handler.__class__.__name__}: {str(e)}"
             )
 
     def get_stats(self) -> Dict[str, int]:
@@ -178,11 +178,11 @@ class QualiaEventHandler(EventHandler):
 
     async def handle(self, event: Event) -> None:
         """Handle QualiaState update events."""
-        if event.name == "QualiaStateUpdated":
+        if event.type == "QualiaStateUpdated":
             self._logger.info(f"🎵 {self.name} processing QualiaState update")
             await self._process_qualia_state(event.data)
         else:
-            self._logger.debug(f"⚠️  {self.name} ignoring event: {event.name}")
+            self._logger.debug(f"⚠️  {self.name} ignoring event: {event.type}")
 
     async def _process_qualia_state(self, qualia_state: Dict[str, Any]) -> None:
         """

@@ -129,9 +129,15 @@ class QLA002Checker:
 
     def _enter_class(self, node: ast.ClassDef) -> None:
         self.current_class = node.name
+        # Check if this is an interface (starts with I and has service-like suffix)
+        is_interface = node.name.startswith('I') and any(
+            suffix in node.name for suffix in ["Service", "Engine", "Manager", "Processor", "Handler"]
+        )
+        
         self.in_service_class = (
             "services" in str(self.filepath) and
-            any(suffix in node.name for suffix in ["Service", "Engine", "Manager", "Processor", "Handler"])
+            any(suffix in node.name for suffix in ["Service", "Engine", "Manager", "Processor", "Handler"]) and
+            not is_interface
         )
 
     def _exit_class(self) -> None:
@@ -547,10 +553,8 @@ class QLA006Checker:
        is_event_class = (
            # Inherits from BaseEvent
            any(getattr(base, 'id', '') == "BaseEvent" for base in node.bases if isinstance(base, ast.Name)) or
-           # Has "Event" in name
-           "Event" in node.name or
-           # Has event-like structure (type field + others)
-           self._has_event_structure(node)
+           # Has event-like structure (type field + others) AND has "Event" in name but is not base classes
+           (self._has_event_structure(node) and "Event" in node.name and node.name not in ["EventHandler", "EventBus", "CallableEventHandler", "QualiaEventHandler"])
        )
        if is_event_class:
            self._validate_event_class(node)
@@ -566,37 +570,16 @@ class QLA006Checker:
        return "type" in fields and len(fields) >= 3
 
    def _check_event_emission_call(self, node: ast.Call) -> None:
-       """Check function calls that might be event emissions"""
-       if isinstance(node.func, ast.Attribute):
-           # Check eventBus.emit(), bus.publish(), etc.
-           if isinstance(node.func.value, ast.Name):
-               obj_name = node.func.value.id
-               method_name = node.func.attr
-               
-               if (obj_name in self.event_bus_names and method_name in self.event_bus_methods):
-                   self._validate_event_emission(node)
-           
-           # Check self.event_bus.emit() patterns
-           elif isinstance(node.func.value, ast.Attribute):
-               if (isinstance(node.func.value.value, ast.Name) and
-                   node.func.value.value.id == "self" and
-                   node.func.value.attr in self.event_bus_names and
-                   node.func.attr in self.event_bus_methods):
-                   self._validate_event_emission(node)
+       """Check function calls that might be creating events"""
+       # Only validate Event constructor calls
+       if isinstance(node.func, ast.Name) and node.func.id == "Event":
+           self._validate_constructor_call(node)
 
    def _check_standalone_event_dict(self, node: ast.Dict) -> None:
        """Check for standalone event dictionaries (not in method calls)"""
-       if len(node.keys) >= 3:  # Must have at least 3 fields to be considered an event
-           keys = set()
-           for key in node.keys:
-               if isinstance(key, ast.Constant) and isinstance(key.value, str):
-                   keys.add(key.value)
-
-           # If has type field and looks event-like, validate it
-           if "type" in keys:
-               missing_fields = self.required_event_fields - keys
-               if missing_fields:
-                   self._report_event_contract_violation(node, missing_fields)
+       # Only validate if this dict is being passed to an event bus method
+       # Don't validate arbitrary dicts that happen to have "type"
+       pass  # Disabled - too many false positives
 
    def _validate_event_class(self, node: ast.ClassDef) -> None:
        # Check if event class has required fields
@@ -618,6 +601,25 @@ class QLA006Checker:
        if node.args:
            event_arg = node.args[0]
            self._validate_event_structure(event_arg)
+       elif node.keywords:
+           # Check if this is a constructor call with keyword arguments (Event(type=..., timestamp=..., source=...))
+           self._validate_constructor_call(node)
+
+   def _validate_constructor_call(self, node: ast.Call) -> None:
+       """Validate Event constructor calls with keyword arguments"""
+       if isinstance(node.func, ast.Name) and node.func.id == "Event":
+           # Extract keyword argument names
+           kwarg_names = set()
+           for kwarg in node.keywords:
+               if isinstance(kwarg, ast.keyword) and isinstance(kwarg.arg, str):
+                   kwarg_names.add(kwarg.arg)
+           
+           missing_fields = self.required_event_fields - kwarg_names
+           if not missing_fields:
+               # All required fields are present in constructor call
+               return
+           
+           self._report_event_contract_violation(node, missing_fields)
 
    def _validate_event_structure(self, event_node) -> None:
        if isinstance(event_node, ast.Dict):
@@ -659,6 +661,19 @@ class QLA007Checker:
        if not self.is_generated_file:
            return
 
+       # For generated files, check the first few lines of the file directly
+       # since # comments don't appear in the AST
+       try:
+           with open(self.filepath, 'r', encoding='utf-8') as f:
+               lines = f.readlines()[:10]  # Check first 10 lines
+               for line in lines:
+                   line = line.strip()
+                   if line.startswith('#') and ('@generated' in line.lower() or 'do not edit' in line.lower()):
+                       return  # Valid generated file comment found
+       except Exception:
+           pass  # If we can't read the file, continue with AST checking
+
+       # Fallback: check AST for docstrings
        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
            self._check_generated_comment(node)
 

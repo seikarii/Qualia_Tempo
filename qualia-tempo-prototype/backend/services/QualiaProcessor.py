@@ -95,15 +95,18 @@ class QualiaProcessor:
                 source="QualiaProcessor",
             )
 
+    @log_execution(level="DEBUG")
     def get_current_state(self) -> Optional[Dict[str, Any]]:
         """Get the current QualiaState."""
         return self._current_state.copy() if self._current_state else None
 
+    @log_execution(level="INFO")
     def enable_processing(self) -> None:
         """Enable QualiaState processing."""
         self._processing_enabled = True
         self._logger.info("✅ QualiaProcessor enabled")
 
+    @log_execution(level="INFO")
     def disable_processing(self) -> None:
         """Disable QualiaState processing."""
         self._processing_enabled = False
@@ -138,14 +141,17 @@ class MinimalQualiaProcessor:
             source="MinimalQualiaProcessor",
         )
 
+    @log_execution(level="DEBUG")
     def get_current_state(self) -> Optional[Dict[str, Any]]:
         """Get current state (always None in minimal processor)."""
         return None
 
+    @log_execution(level="DEBUG")
     def enable_processing(self) -> None:
         """Enable processing (no-op in minimal processor)."""
         pass
 
+    @log_execution(level="DEBUG")
     def disable_processing(self) -> None:
         """Disable processing (no-op in minimal processor)."""
         pass

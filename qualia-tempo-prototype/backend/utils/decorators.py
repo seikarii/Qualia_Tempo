@@ -10,7 +10,7 @@ import jsonschema
 import json
 
 
-def log_execution(level: str = "INFO"):
+def log_execution(level: str = "INFO") -> Callable[[Callable], Callable]:
     """
     Decorator to log function entry, exit, and execution time.
 
@@ -18,9 +18,9 @@ def log_execution(level: str = "INFO"):
         level: Logging level (DEBUG, INFO, WARNING, ERROR)
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             logger = logging.getLogger(func.__module__)
             log_level = getattr(logging, level.upper())
 
@@ -44,7 +44,7 @@ def log_execution(level: str = "INFO"):
     return decorator
 
 
-def handle_errors(fallback_return_value: Any = None):
+def handle_errors(fallback_return_value: Any = None) -> Callable[[Callable], Callable]:
     """
     Decorator to wrap function in try/except block and log errors.
 
@@ -52,9 +52,9 @@ def handle_errors(fallback_return_value: Any = None):
         fallback_return_value: Value to return if an error occurs
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             logger = logging.getLogger(func.__module__)
             func_name = f"{func.__module__}.{func.__qualname__}"
 
@@ -80,7 +80,7 @@ def handle_errors(fallback_return_value: Any = None):
     return decorator
 
 
-def validate_schema(schema_name: str):
+def validate_schema(schema_name: str) -> Callable[[Callable], Callable]:
     """
     Decorator to validate input against a shared contract schema.
 
@@ -88,9 +88,9 @@ def validate_schema(schema_name: str):
         schema_name: Name of the schema to validate against (e.g., "QualiaState")
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             logger = logging.getLogger(func.__module__)
             func_name = f"{func.__module__}.{func.__qualname__}"
 
@@ -138,14 +138,14 @@ def validate_schema(schema_name: str):
     return decorator
 
 
-def time_execution():
+def time_execution() -> Callable[[Callable], Callable]:
     """
     Decorator to measure and log execution time with performance categorization.
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             logger = logging.getLogger(func.__module__)
             func_name = f"{func.__module__}.{func.__qualname__}"
 
@@ -179,7 +179,7 @@ def time_execution():
     return decorator
 
 
-def cache_result(ttl_seconds: Optional[int] = None):
+def cache_result(ttl_seconds: Optional[int] = None) -> Callable[[Callable], Callable]:
     """
     Decorator to cache function results with optional TTL.
 
@@ -188,9 +188,9 @@ def cache_result(ttl_seconds: Optional[int] = None):
     """
     cache: Dict[str, Dict[str, Any]] = {}
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             # Create cache key from function name and arguments
             cache_key = f"{func.__module__}.{func.__qualname__}:{hash(str(args) + str(sorted(kwargs.items())))}"
 

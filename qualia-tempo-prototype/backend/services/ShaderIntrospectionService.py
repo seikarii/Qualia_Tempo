@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple, Any
 from backend.services.interfaces.IShaderIntrospectionService import (
     IShaderIntrospectionService,
 )
+from backend.utils.decorators import log_execution, handle_errors
 
 
 class ShaderIntrospectionService(IShaderIntrospectionService):
@@ -27,7 +28,7 @@ class ShaderIntrospectionService(IShaderIntrospectionService):
         "mat4": "16f",
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the shader introspection service."""
         self._type_sizes = {
             "float": 4,
@@ -39,6 +40,8 @@ class ShaderIntrospectionService(IShaderIntrospectionService):
             "mat4": 64,
         }
 
+    @log_execution(level="DEBUG")
+    @handle_errors(fallback_return_value={})
     def introspect(self, shader_source: str) -> Dict[str, Any]:
         """
         Parse GLSL shader source and extract UBO uniform information.

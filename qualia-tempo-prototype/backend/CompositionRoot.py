@@ -18,7 +18,7 @@ class CompositionRoot:
     All other code must receive services via dependency injection.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._services: Dict[str, Any] = {}
         self._logger = logging.getLogger(__name__)
         self._event_bus = get_event_bus()
@@ -203,11 +203,11 @@ class CompositionRoot:
             from .services.EventBus import QualiaEventHandler
 
             class EngineResetHandler(QualiaEventHandler):
-                def __init__(self, particle_engine):
+                def __init__(self, particle_engine: Any) -> None:
                     super().__init__("EngineResetHandler")
                     self.particle_engine = particle_engine
 
-                async def handle_event(self, event_name, data, source):
+                async def handle_event(self, event_name: str, data: Any, source: str) -> None:
                     """Handle EngineReset event by resetting particle engine."""
                     if event_name == "EngineReset":
                         await self.particle_engine.reset()

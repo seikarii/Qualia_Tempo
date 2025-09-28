@@ -23,8 +23,8 @@ class StreamingWebService:
     """
 
     def __init__(
-        self, event_bus: EventBus, rendering_service: RenderingService, particle_engine
-    ):
+        self, event_bus: EventBus, rendering_service: RenderingService, particle_engine: Any
+    ) -> None:
         self._event_bus = event_bus
         self._rendering_service = rendering_service
         self._particle_engine = (
@@ -310,6 +310,7 @@ class StreamingWebService:
 
         self._logger.info("✅ StreamingWebService shutdown complete.")
 
+    @log_execution(level="DEBUG")
     def get_status(self) -> Dict[str, Any]:
         """Get current streaming service status."""
         return {
@@ -323,11 +324,13 @@ class StreamingWebService:
         }
 
     @property
+    @log_execution(level="DEBUG")
     def connected_clients(self) -> int:
         """Get number of connected clients."""
         return self._connected_clients
 
     @property
+    @log_execution(level="DEBUG")
     def is_streaming(self) -> bool:
         """Check if currently streaming."""
         return self._is_streaming

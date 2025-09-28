@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconn
 from fastapi.middleware.cors import CORSMiddleware
 from .models import QualiaState, QualiaUpdateResponse
 from ..CompositionRoot import get_composition_root, CompositionRoot
+from typing import Dict, Any
 import logging
 import json
 
@@ -40,7 +41,7 @@ async def get_services() -> CompositionRoot:
 
 
 @app.on_event("startup")
-async def startup_event():
+async def startup_event() -> None:
     """Initialize all services on startup for eager initialization."""
     try:
         composition_root = get_composition_root()
@@ -52,7 +53,7 @@ async def startup_event():
 
 
 @app.on_event("shutdown")
-async def shutdown_event():
+async def shutdown_event() -> None:
     """
     QUALIA.CODE compliant shutdown handler.
     Ensures all background services are gracefully terminated.
@@ -67,7 +68,7 @@ async def shutdown_event():
 
 
 @app.get("/")
-async def root():
+async def root() -> Dict[str, Any]:
     return {
         "message": "Qualia Tempo Engine - QUALIA.CODE v1.0 Ready",
         "architecture": "EventBus + IoC",
@@ -75,7 +76,7 @@ async def root():
 
 
 @app.get("/health")
-async def health_check(services: CompositionRoot = Depends(get_services)):
+async def health_check(services: CompositionRoot = Depends(get_services)) -> Dict[str, Any]:
     """Health check with service validation."""
     try:
         event_bus = services.get_event_bus()
@@ -97,7 +98,7 @@ async def health_check(services: CompositionRoot = Depends(get_services)):
 @app.post("/update_qualia", response_model=QualiaUpdateResponse)
 async def update_qualia_visuals(
     state: QualiaState, services: CompositionRoot = Depends(get_services)
-):
+) -> QualiaUpdateResponse:
     """
     QUALIA.CODE compliant endpoint for QualiaState updates.
     Uses dependency injection and EventBus for decoupled communication.
@@ -127,7 +128,7 @@ async def update_qualia_visuals(
 @app.websocket("/ws/video_stream")
 async def websocket_video_stream(
     websocket: WebSocket, services: CompositionRoot = Depends(get_services)
-):
+) -> None:
     """
     QUALIA.CODE WebSocket endpoint for video streaming.
     Streams rendered frames from RenderingService to frontend clients.
@@ -175,7 +176,7 @@ async def websocket_video_stream(
 
 
 @app.get("/stream_status")
-async def get_stream_status(services: CompositionRoot = Depends(get_services)):
+async def get_stream_status(services: CompositionRoot = Depends(get_services)) -> Dict[str, Any]:
     """Get current streaming service status."""
     try:
         streaming_service = services.get_streaming_web_service()
@@ -191,7 +192,7 @@ async def get_stream_status(services: CompositionRoot = Depends(get_services)):
 
 
 @app.websocket("/ws/test")
-async def websocket_test(websocket: WebSocket):
+async def websocket_test(websocket: WebSocket) -> None:
     """Simple WebSocket test endpoint to verify WebSocket infrastructure."""
     logger.info("🔌 WebSocket connection attempt to /ws/test")
     try:
@@ -223,7 +224,7 @@ def _log_qualia_state_detailed(state_dict: dict) -> None:
 
 
 @app.post("/reset_engine")
-async def reset_visual_engine(services: CompositionRoot = Depends(get_services)):
+async def reset_visual_engine(services: CompositionRoot = Depends(get_services)) -> QualiaUpdateResponse:
     """Reset the visual engine to initial state using dependency injection."""
     try:
         # Reset through EventBus only - no direct calls
@@ -241,7 +242,7 @@ async def reset_visual_engine(services: CompositionRoot = Depends(get_services))
 
 
 @app.get("/stats")
-async def get_engine_stats(services: CompositionRoot = Depends(get_services)):
+async def get_engine_stats(services: CompositionRoot = Depends(get_services)) -> Dict[str, Any]:
     """Get engine statistics and current state."""
     try:
         event_bus = services.get_event_bus()

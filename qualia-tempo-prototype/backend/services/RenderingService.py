@@ -1028,17 +1028,20 @@ class RenderingService:
             )
 
     @property
+    @log_execution(level="DEBUG")
     def is_initialized(self) -> bool:
         """Check if rendering service is properly initialized."""
         return self._is_initialized
 
     @property
+    @log_execution(level="DEBUG")
     def current_fps(self) -> float:
         """Get current rendering FPS."""
         if self._last_frame_time == 0:
             return 0.0
         return 1.0 / max(time.time() - self._last_frame_time, 0.001)
 
+    @log_execution(level="DEBUG")
     def get_status(self) -> Dict[str, Any]:
         """Get current rendering service status."""
         return {
