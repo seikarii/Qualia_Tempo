@@ -382,7 +382,7 @@ describe("NotificationService - GOLD.CODE IoC Testing", () => {
       );
       expect(typeof notificationId).toBe("string");
 
-      await notificationService.hide(notificationId);
+      await notificationService.hideNotification(notificationId);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         "Hiding notification",
@@ -394,7 +394,7 @@ describe("NotificationService - GOLD.CODE IoC Testing", () => {
       await notificationService.show("Notification 1", "info");
       await notificationService.show("Notification 2", "success");
 
-      await notificationService.clearAll();
+      await notificationService.clearAllNotifications();
 
       expect(mockLogger.info).toHaveBeenCalledWith("All notifications cleared");
     });

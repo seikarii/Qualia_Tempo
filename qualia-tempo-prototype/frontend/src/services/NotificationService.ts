@@ -17,10 +17,18 @@ import { TYPES } from "./inversify.types";
 import { logMethod, catchError } from "../utils/decorators";
 import type {
   INotificationService,
-  NotificationConfig,
+} from "./interfaces/INotificationService";
+import type {
+  NotificationPriority,
+  NotificationType,
   Notification,
   NotificationStatistics,
-} from "./interfaces/INotificationService";
+  ExtendedNotification,
+  ExtendedNotificationConfig,
+  NotificationServiceExport,
+  NotificationLogData,
+  FlexibleNotificationConfig,
+} from "./contracts/INotificationService.contracts";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
@@ -32,198 +40,30 @@ import type {
   ErrorEvent,
   BackendSyncEvent,
 } from "./EventBus";
+import { NotificationQueue } from "./utils/NotificationQueue";
+import { ThrottlingManager } from "./utils/ThrottlingManager";
 
-// Notification priority levels
-export type NotificationPriority = "low" | "normal" | "high" | "urgent";
-
-// Notification types with specific handling
-export type NotificationType =
-  | "info"
-  | "success"
-  | "warning"
-  | "error"
-  | "achievement"
-  | "system"
-  | "debug";
-
-// Extended notification interface
-export interface ExtendedNotification extends Notification {
-  id: string;
-  timestamp: Date;
-  priority: NotificationPriority;
-  category: string;
-  source: string;
-  metadata?: Record<string, any>;
-  displayed: boolean;
-  dismissed: boolean;
-  expiresAt?: Date;
-  retryCount: number;
-}
-
-// Notification filter configuration
-export interface NotificationFilter {
-  types: NotificationType[];
-  priorities: NotificationPriority[];
-  categories: string[];
-  sources: string[];
-  maxAge: number; // milliseconds
-  enabled: boolean;
-}
-
-// Throttling configuration
-export interface ThrottlingConfig {
-  maxNotificationsPerSecond: number;
-  maxNotificationsPerMinute: number;
-  burstLimit: number;
-  cooldownPeriod: number;
-  enabled: boolean;
-  rateLimitWindow: number;  // Window for rate limiting (1 second)
-  burstWindow: number;      // Window for burst detection (1 minute)
-  historyRetention: number; // How long to keep notification history
-}
-
-// Extended configuration interface for NotificationService
-export interface ExtendedNotificationConfig extends NotificationConfig {
-  maxHistorySize: number;
-  defaultTtl: number;
-  maxRetries: number;
-  storeUpdateThrottleMs: number;
-  enablePriorityQueuing: boolean;
-  enableThrottling: boolean;
-  filter: NotificationFilter;
-  throttling: ThrottlingConfig;
-  autoCleanupInterval: number;
-}
+// Re-export types for backward compatibility
+export type {
+  NotificationPriority,
+  NotificationType,
+  ExtendedNotification,
+  NotificationFilter,
+  ThrottlingConfig,
+  ExtendedNotificationConfig,
+} from "./contracts/INotificationService.contracts";
 
 
 
-// Notification queue with priority handling
-export class NotificationQueue {
-  private queues: Map<NotificationPriority, ExtendedNotification[]>;
-  private priorities: NotificationPriority[] = [
-    "urgent",
-    "high",
-    "normal",
-    "low",
-  ];
 
-  constructor() {
-    this.queues = new Map();
-    this.priorities.forEach((priority) => {
-      this.queues.set(priority, []);
-    });
-  }
 
-  enqueue(notification: ExtendedNotification): void {
-    const queue = this.queues.get(notification.priority) || [];
-    queue.push(notification);
-    this.queues.set(notification.priority, queue);
-  }
 
-  dequeue(): ExtendedNotification | null {
-    for (const priority of this.priorities) {
-      const queue = this.queues.get(priority) || [];
-      if (queue.length > 0) {
-        return queue.shift() || null;
-      }
-    }
-    return null;
-  }
-
-  size(): number {
-    return Array.from(this.queues.values()).reduce(
-      (total, queue) => total + queue.length,
-      0,
-    );
-  }
-
-  clear(): void {
-    this.queues.forEach((queue) => (queue.length = 0));
-  }
-
-  getByPriority(priority: NotificationPriority): ExtendedNotification[] {
-    return [...(this.queues.get(priority) || [])];
-  }
-}
-
-// Throttling manager for rate limiting notifications
-export class ThrottlingManager {
-  private recentNotifications: Date[] = [];
-  private burstCount = 0;
-  private lastBurstTime = 0;
-  private inCooldown = false;
-
-  constructor(private config: ThrottlingConfig) {}
-
-  canProcess(): boolean {
-    if (!this.config.enabled) {
-      return true;
-    }
-
-    const now = Date.now();
-
-    // Clean old notifications
-    this.cleanOldNotifications();
-
-    // Check cooldown
-    if (
-      this.inCooldown &&
-      now - this.lastBurstTime < this.config.cooldownPeriod
-    ) {
-      return false;
-    } else if (this.inCooldown) {
-      this.inCooldown = false;
-      this.burstCount = 0;
-    }
-
-    // Check burst limit
-    if (this.burstCount >= this.config.burstLimit) {
-      this.inCooldown = true;
-      this.lastBurstTime = now;
-      return false;
-    }
-
-    // Check per-second limit
-    const secondAgo = now - (this.config.rateLimitWindow || 1000);
-    const recentCount = this.recentNotifications.filter(
-      (time) => time.getTime() > secondAgo,
-    ).length;
-    if (recentCount >= this.config.maxNotificationsPerSecond) {
-      return false;
-    }
-
-    // Check per-minute limit
-    const minuteAgo = now - (this.config.burstWindow || 60000);
-    const minuteCount = this.recentNotifications.filter(
-      (time) => time.getTime() > minuteAgo,
-    ).length;
-    if (minuteCount >= this.config.maxNotificationsPerMinute) {
-      return false;
-    }
-
-    return true;
-  }
-
-  recordNotification(): void {
-    const now = new Date();
-    this.recentNotifications.push(now);
-    this.burstCount++;
-  }
-
-  private cleanOldNotifications(): void {
-    const cutoff = Date.now() - (this.config.historyRetention || 60000); // Use configured retention
-    this.recentNotifications = this.recentNotifications.filter(
-      (time) => time.getTime() > cutoff,
-    );
-  }
-}
 
 // Export types for test compatibility
 export type {
-  NotificationConfig,
   Notification,
   NotificationStatistics,
-} from "./interfaces/INotificationService";
+} from "./contracts/INotificationService.contracts";
 
 /**
  * QUALIA.CODE v1.1 Compliant NotificationService
@@ -271,7 +111,7 @@ export class NotificationService implements INotificationService {
   private disabledTypes: Set<string> = new Set();
 
   // Store full configuration for priority override
-  private fullConfig: any = {};
+  private fullConfig: FlexibleNotificationConfig = {};
 
   // Store update throttling
   private pendingStoreUpdate = false;
@@ -310,16 +150,8 @@ export class NotificationService implements INotificationService {
 
     // Initialize processing components with minimal state
     this.notificationQueue = new NotificationQueue();
-    this.throttlingManager = new ThrottlingManager({
-      maxNotificationsPerSecond: 0,
-      maxNotificationsPerMinute: 0,
-      burstLimit: 0,
-      cooldownPeriod: 0,
-      enabled: false,
-      rateLimitWindow: 1000,
-      burstWindow: 60000,
-      historyRetention: 60000,
-    });
+    // ThrottlingManager will be initialized in start() with proper configuration
+    this.throttlingManager = null as any; // Temporary until start() is called
 
     this.logger.info(
       "🔧 [NotificationService] Service initialized - configuration will be loaded in start()",
@@ -441,7 +273,7 @@ export class NotificationService implements INotificationService {
 
   /**
    * COMPATIBILITY BRIDGE: show() method for test compatibility
-   * Delegates to showNotification() to maintain interface compliance
+   * FASE 3: Refactored as orchestrator with extracted validation
    */
   @logMethod
   @catchError
@@ -451,7 +283,38 @@ export class NotificationService implements INotificationService {
     duration?: number,
     metadata?: Record<string, any>,
   ): string {
-    // Validate input data to handle malformed notifications gracefully
+    // Validate input using extracted method
+    const validationResult = this._isValidShowRequest(message, type);
+    if (validationResult !== 'valid') {
+      return validationResult;
+    }
+
+    // Check if notifications are disabled
+    if (!this.config.enabled) {
+      this.logger.debug("Notifications are disabled");
+      return "disabled";
+    }
+
+    // Extract priority from metadata if provided, default to 'normal'
+    const priority = (metadata?.priority as NotificationPriority) || "normal";
+
+    // Create, filter, throttle, and display - orchestrator pattern
+    const notification = this.createNotification(message, type, priority, {
+      expiresAt: duration ? new Date(Date.now() + duration) : undefined,
+      metadata,
+    });
+
+    if (this._shouldFilterNotification(notification)) return notification.id;
+    if (this._shouldThrottleNotification()) return notification.id;
+    
+    this._processNotificationForDisplay(notification);
+    return notification.id;
+  }
+
+  /**
+   * FASE 3: Extracted validation method from show()
+   */
+  private _isValidShowRequest(message: string, type: NotificationType): string {
     if (!message || typeof message !== "string") {
       this.logger.warn(
         "Malformed notification: message is null, undefined, or not a string",
@@ -470,7 +333,7 @@ export class NotificationService implements INotificationService {
 
     const validTypes: NotificationType[] = [
       "info",
-      "success",
+      "success", 
       "warning",
       "error",
       "achievement",
@@ -485,34 +348,28 @@ export class NotificationService implements INotificationService {
       return "invalid-type";
     }
 
-    // Check if notifications are disabled
-    if (!this.config.enabled) {
-      this.logger.debug("Notifications are disabled");
-      return "disabled";
-    }
+    return 'valid';
+  }
 
-    // Extract priority from metadata if provided, default to 'normal'
-    const priority = (metadata?.priority as NotificationPriority) || "normal";
-
-    const notification = this.createNotification(message, type, priority, {
-      expiresAt: duration ? new Date(Date.now() + duration) : undefined,
-      metadata,
-    });
-
-    // Check filtering before throttling
+  private _shouldFilterNotification(notification: ExtendedNotification): boolean {
     if (this.shouldFilterNotification(notification)) {
       this.logger.debug("Notification filtered based on user preferences");
       this.statistics.filteredNotifications++;
-      return notification.id;
+      return true;
     }
+    return false;
+  }
 
-    // Check throttling before display
+  private _shouldThrottleNotification(): boolean {
     if (this.config.enableThrottling && !this.throttlingManager.canProcess()) {
       this.logger.debug("Notification has been throttled due to rate limiting");
       this.statistics.throttledNotifications++;
-      return notification.id;
+      return true;
     }
+    return false;
+  }
 
+  private _processNotificationForDisplay(notification: ExtendedNotification): void {
     // Record notification for throttling
     if (this.config.enableThrottling) {
       this.throttlingManager.recordNotification();
@@ -520,8 +377,6 @@ export class NotificationService implements INotificationService {
 
     // Display the notification
     this.displayNotification(notification);
-
-    return notification.id;
   }
 
   /**
@@ -612,23 +467,7 @@ export class NotificationService implements INotificationService {
     this.clearAllNotifications();
   }
 
-  /**
-   * COMPATIBILITY BRIDGE: hide() method for test compatibility
-   */
-  @logMethod
-  @catchError
-  public hide(id: string): void {
-    this.hideNotification(id);
-  }
-
-  /**
-   * COMPATIBILITY BRIDGE: clearAll() method for test compatibility
-   */
-  @logMethod
-  @catchError
-  public clearAll(): void {
-    this.clearAllNotifications();
-  }
+  // Compatibility bridges removed - tests now use primary methods
 
   /**
    * COMPATIBILITY BRIDGE: getActiveCount() method for test compatibility
@@ -676,7 +515,7 @@ export class NotificationService implements INotificationService {
    */
   @logMethod
   @catchError
-  public updateConfig(newConfig: any): void {
+  public updateConfig(newConfig: FlexibleNotificationConfig): void {
     try {
       // Store the full configuration for priority override logic
       this.fullConfig = newConfig;
@@ -758,14 +597,17 @@ export class NotificationService implements INotificationService {
    */
   @logMethod
   @catchError
-  public exportNotificationData(): any {
+  public exportNotificationData(): NotificationServiceExport {
     return {
-      timestamp: Date.now(),
+      notifications: this.notificationHistory,
       statistics: this.getStatistics(),
-      notificationHistory: this.notificationHistory,
-      activeNotifications: Array.from(this.activeNotifications.values()),
-      queueSize: this.notificationQueue.size(),
-      config: this.config,
+      configuration: this.config,
+      metadata: {
+        exportTimestamp: new Date(),
+        totalCount: this.notificationHistory.length,
+        activeCount: this.activeNotifications.size,
+        historyCount: this.notificationHistory.length,
+      },
     };
   }
 
@@ -995,66 +837,51 @@ export class NotificationService implements INotificationService {
     });
   }
 
-  private shouldFilterNotification(
-    notification: ExtendedNotification,
-  ): boolean {
-    if (!this.config.filter.enabled) {
-      return false;
-    }
-
-    // Check for priority override - high priority notifications bypass type filtering
-    const isHighPriority =
-      notification.priority === "high" || notification.priority === "urgent";
-    const allowHighPriority =
-      this.fullConfig?.notifications?.allowHighPriority || false;
-
-    if (isHighPriority && allowHighPriority) {
-      return false; // Allow high priority notifications to bypass filtering
-    }
-
-    // Check if type is disabled
-    if (this.disabledTypes.has(notification.type)) {
-      return true;
-    }
-
-    const filter = this.config.filter;
-
-    // Check type filter (legacy array format)
-    if (filter.types.length > 0 && !filter.types.includes(notification.type)) {
-      return true;
-    }
-
-    // Check priority filter
-    if (
-      filter.priorities.length > 0 &&
-      !filter.priorities.includes(notification.priority)
-    ) {
-      return true;
-    }
-
-    // Check category filter
-    if (
-      filter.categories.length > 0 &&
-      !filter.categories.includes(notification.category)
-    ) {
-      return true;
-    }
-
-    // Check source filter
-    if (
-      filter.sources.length > 0 &&
-      !filter.sources.includes(notification.source)
-    ) {
-      return true;
-    }
-
-    // Check age filter
-    const age = Date.now() - notification.timestamp.getTime();
-    if (age > filter.maxAge) {
-      return true;
-    }
-
+  /**
+   * FASE 3: Refactored shouldFilterNotification with guard clauses
+   * Improved readability and reduced cyclomatic complexity
+   */
+  private shouldFilterNotification(notification: ExtendedNotification): boolean {
+    if (this._isFilterDisabled()) return false;
+    if (this._isHighPriorityOverride(notification)) return false;
+    if (this._isTypeDisabled(notification)) return true;
+    if (this._isFilteredBy('types', notification.type)) return true;
+    if (this._isFilteredBy('priorities', notification.priority)) return true;
+    if (this._isFilteredBy('categories', notification.category)) return true;
+    if (this._isFilteredBy('sources', notification.source)) return true;
+    if (this._isExpiredByAge(notification)) return true;
+    
     return false;
+  }
+
+  private _isFilterDisabled(): boolean {
+    return !this.config.filter.enabled;
+  }
+
+  private _isHighPriorityOverride(notification: ExtendedNotification): boolean {
+    const isHighPriority = 
+      notification.priority === "high" || notification.priority === "urgent";
+    const allowHighPriority = 
+      this.fullConfig?.notifications?.allowHighPriority || false;
+    
+    return isHighPriority && allowHighPriority;
+  }
+
+  private _isTypeDisabled(notification: ExtendedNotification): boolean {
+    return this.disabledTypes.has(notification.type);
+  }
+
+  private _isFilteredBy(
+    filterType: 'types' | 'priorities' | 'categories' | 'sources',
+    value: string
+  ): boolean {
+    const filterArray = this.config.filter[filterType] as string[];
+    return filterArray.length > 0 && !filterArray.includes(value);
+  }
+
+  private _isExpiredByAge(notification: ExtendedNotification): boolean {
+    const age = Date.now() - notification.timestamp.getTime();
+    return age > this.config.filter.maxAge;
   }
 
   private displayNotification(notification: ExtendedNotification): void {
@@ -1070,13 +897,17 @@ export class NotificationService implements INotificationService {
     this.updateStore();
 
     // Log for test compatibility - include metadata and duration if available
-    const logData: any = {
-      message: notification.message,
+    const logData: NotificationLogData = {
+      notificationId: notification.id,
       type: notification.type,
+      priority: notification.priority,
+      message: notification.message,
+      timestamp: notification.timestamp,
+      source: notification.source,
     };
 
     if (notification.expiresAt) {
-      logData.duration = notification.expiresAt.getTime() - Date.now();
+      logData.processingTime = notification.expiresAt.getTime() - Date.now();
     }
 
     if (notification.metadata) {

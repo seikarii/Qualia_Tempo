@@ -3,51 +3,13 @@
  * Complete contract for event-driven notification management with Zustand store bridging.
  */
 
-// Notification types with specific handling
-export type NotificationType =
-  | "info"
-  | "success"
-  | "warning"
-  | "error"
-  | "achievement"
-  | "system"
-  | "debug";
-
-// Notification priority levels
-export type NotificationPriority = "low" | "normal" | "high" | "urgent";
-
-// Base notification interface
-export interface Notification {
-  id: string;
-  message: string;
-  type: NotificationType;
-  priority: NotificationPriority;
-  timestamp: Date;
-  displayed: boolean;
-  dismissed: boolean;
-  expiresAt?: Date;
-}
-
-// Notification configuration
-export interface NotificationConfig {
-  enabled: boolean;
-  maxHistorySize?: number;
-  defaultTtl?: number;
-  enablePriorityQueuing?: boolean;
-  enableThrottling?: boolean;
-  storeUpdateThrottleMs?: number;
-  autoCleanupInterval?: number;
-}
-
-// Notification statistics
-export interface NotificationStatistics {
-  totalNotifications: number;
-  displayedNotifications: number;
-  dismissedNotifications: number;
-  expiredNotifications: number;
-  throttledNotifications: number;
-  filteredNotifications: number;
-}
+import type {
+  NotificationType,
+  Notification,
+  NotificationStatistics,
+  FlexibleNotificationConfig,
+  NotificationServiceExport,
+} from '../contracts/INotificationService.contracts';
 
 // Service interface
 export interface INotificationService {
@@ -62,14 +24,21 @@ export interface INotificationService {
       actions?: { label: string; action: () => void }[];
     },
   ): string;
+  // Compatibility method for tests
+  show(
+    message: string,
+    type?: NotificationType,
+    duration?: number,
+    metadata?: Record<string, any>
+  ): string;
   dismissNotification(id: string): void;
   clearAllNotifications(): void;
   hideNotification(id: string): void;
   hideAllNotifications(): void;
   getActiveNotifications(): Notification[];
-  updateConfig(newConfig: Partial<NotificationConfig>): void;
+  updateConfig(newConfig: FlexibleNotificationConfig): void;
   getStatistics(): NotificationStatistics;
   getStatus(): { isRunning: boolean; queueSize: number };
-  exportNotificationData(): any;
+  exportNotificationData(): NotificationServiceExport;
   isEnabled(): boolean;
 }
