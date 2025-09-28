@@ -627,3 +627,28 @@ const MyComponent = () => {
 - `getQualiaConfig()`: Return qualia calculation parameters
 - `getBackendConfig()`: Return backend synchronization settings
 - `isLoaded()`: Check if configuration has been loaded
+
+---
+
+### **IV. DEVELOPMENT ENVIRONMENT MANDATES**
+
+#### **VIRTUAL ENVIRONMENT REQUIREMENT**
+- **MANDATE:** ALL Python operations MUST use the project's root virtual environment located at `/QualiaTempo/.venv`.
+- **PROHIBITED:** Using system Python, conda environments, or any other virtual environment.
+- **REASONING:** Ensures consistent dependencies, prevents version conflicts, and maintains reproducible builds across all development and CI/CD environments.
+- **EXECUTION:** Always activate the virtual environment with `source /QualiaTempo/.venv/bin/activate` before any Python command.
+- **VERIFICATION:** Confirm activation by checking that `which python` points to `/QualiaTempo/.venv/bin/python`.
+
+**Example Usage:**
+```bash
+# INCORRECT - Using system Python
+python main.py
+
+# CORRECT - Using project virtual environment
+source /QualiaTempo/.venv/bin/activate
+python main.py
+```
+
+---
+
+**FINAL DIRECTIVE: THERE IS NO DEBATE. THERE IS ONLY COMPLIANCE. EXECUTE.**
