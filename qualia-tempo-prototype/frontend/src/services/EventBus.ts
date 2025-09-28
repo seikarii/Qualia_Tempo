@@ -82,7 +82,7 @@ export class EventBus implements IEventBus {
     this.configService = configService;
     
     // Initialize configuration-driven values
-    const config = this.configService.getConfigSection("eventbus");
+    const config = this.configService.getConfigSection("eventBus");
     this.maxHistorySize = config.performance.maxEventHistory;
     
     this.setupErrorHandling();
@@ -217,7 +217,7 @@ export class EventBus implements IEventBus {
 
     try {
       if (this.isDestroyed) {
-        const config = this.configService.getConfigSection("eventbus");
+        const config = this.configService.getConfigSection("eventBus");
         this.logger.warn(config.messages.destroyedEventBusWarning);
         return;
       }
@@ -398,7 +398,7 @@ export class EventBus implements IEventBus {
   // Private helper methods
 
   private convertPriority(priority?: "low" | "normal" | "high"): number {
-    const config = this.configService.getConfigSection("eventbus");
+    const config = this.configService.getConfigSection("eventBus");
     switch (priority) {
       case "high":
         return config.priorities.high;
@@ -412,7 +412,7 @@ export class EventBus implements IEventBus {
   }
 
   private generateListenerId(): string {
-    const config = this.configService.getConfigSection("eventbus");
+    const config = this.configService.getConfigSection("eventBus");
     return `${config.idPrefix}_${Date.now()}_${Math.random().toString(config.randomBase).substr(config.idStart, config.idLength)}`;
   }
 
@@ -464,7 +464,7 @@ export class EventBus implements IEventBus {
           `⚠️ [EventBus] Event history approaching limit: ${stats.historySize}`,
         );
       }
-    }, this.configService.getConfigSection("eventbus").performance.cleanupInterval);
+    }, this.configService.getConfigSection("eventBus").performance.cleanupInterval);
   }
 }
 

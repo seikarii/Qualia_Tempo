@@ -47,6 +47,7 @@ import { BackendSyncService } from "../services/BackendSyncService";
 import { AudioService } from "../services/AudioService";
 import { QualiaStateCalculatorService } from "../services/QualiaStateCalculatorService";
 import { WebAudioAPIService } from "../services/WebAudioAPIService";
+import { ConfigurationService } from "../services/ConfigurationService";
 
 /**
  * Mock Logger Implementation - Complete Interface Coverage
@@ -297,6 +298,37 @@ const mockConfigurationService: IConfigurationService = {
           slowdownDuration: 1000,
           keyThrottleMs: 50
         };
+      case "eventBus":
+        return {
+          maxListeners: 1000,
+          enableAsyncProcessing: true,
+          enableEventBuffering: true,
+          bufferSize: 10000,
+          enableMetrics: true,
+          metricsInterval: 5000,
+          enableErrorHandling: true,
+          maxRetries: 3,
+          retryDelay: 1000,
+          enableLogging: true,
+          logLevel: "info"
+        };
+      case "applicationInitializer":
+        return {
+          enableHealthChecks: true,
+          healthCheckInterval: 30000,
+          maxInitRetries: 3,
+          initTimeout: 10000,
+          enableServiceValidation: true,
+          validationTimeout: 5000
+        };
+      case "http":
+        return {
+          baseUrl: "http://localhost:8000",
+          timeout: 5000,
+          retries: 3,
+          headers: { "Content-Type": "application/json" },
+          enableCompression: true
+        };
       case "backendSync":
         return {
           api: { baseUrl: "http://localhost:8000", qualiaEndpoint: "/api/qualia", healthEndpoint: "/api/health", timeout: 5000 },
@@ -500,9 +532,31 @@ export function createTestContainer(
   }
 
   // 3. Vincule el mock fusionado
+  // Note: ConfigurationService is bound to concrete implementation for testing
+  // The mock is used for its dependencies but the service itself is real
   container
     .bind<IConfigurationService>(TYPES.IConfigurationService)
-    .toConstantValue(localMockConfig);
+    .to(ConfigurationService)
+    .inSingletonScope();
+
+  // Bind configuration dependencies required by ConfigurationService
+  container
+    .bind<string>(TYPES.ConfigBasePath)
+    .toConstantValue("/config");
+  container
+    .bind<Record<string, string>>(TYPES.ConfigManifest)
+    .toConstantValue({
+      game: "/config/game.yaml",
+      audio: "/config/audio.yaml",
+      backend: "/config/backend.yaml",
+      notifications: "/config/notifications.yaml",
+      debug: "/config/debug.yaml",
+      rhythmicMovement: "/config/rhythmic-movement.yaml",
+      visualEffects: "/config/visual-effects.yaml",
+      errorReporting: "/config/error-reporting.yaml",
+      http: "/config/http.yaml",
+      applicationInitializer: "/config/application-initializer.yaml"
+    });
 
   // Bind mock dependencies first (these will be injected into services)
   container.bind<ILogger>(TYPES.ILogger).toConstantValue(mockLogger);

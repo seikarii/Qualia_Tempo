@@ -24,3 +24,17 @@ export enum LogLevel {
   // eslint-disable-next-line no-unused-vars
   NONE = 4,
 }
+
+// Logger Configuration - Migrated from ConfigurationService.ts
+export interface LoggerConfig {
+  level: LogLevel;
+  enableConsole: boolean;
+  enableFile: boolean;
+  enableRemote: boolean;
+  maxFileSize: number;
+  maxFiles: number;
+  logDirectory: string;
+  remoteEndpoint?: string;
+  format: 'json' | 'text';
+  timestampFormat: string;
+}
