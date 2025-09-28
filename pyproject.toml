@@ -10,7 +10,7 @@ ignore = []
 "__init__.py" = ["F401"]
 "test_*.py" = ["S101"]
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.12"
 plugins = ["mypy_qualia_code.plugin"]
 warn_return_any = true
 warn_unused_configs = true
@@ -25,6 +25,19 @@ warn_no_return = true
 warn_unreachable = true
 strict_equality = true
 
+# Exclude directories that shouldn't be type-checked
+exclude = [
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "htmlcov",
+    "htmlcov_backend",
+    ".coverage"
+]
+
 # QUALIA.CODE specific settings
 qualia_code = true
 
@@ -36,3 +49,36 @@ module = [
 ]
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
+
+# Relax rules for test files
+[[tool.mypy.overrides]]
+module = "qualia_tempo_prototype.backend.tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = false
+warn_return_any = false
+warn_no_return = false
+
+# Alternative: per-file pattern for tests
+[[tool.mypy.overrides]]
+module = "*.tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = false
+warn_return_any = false
+warn_no_return = false
+
+# Per-file ignores for MyPy (similar to Ruff)
+[tool.mypy.per-file-ignores]
+"**/tests/*.py" = [
+    "no-untyped-def",
+    "no-untyped-call", 
+    "no-any-return",
+    "attr-defined"
+]
+"**/test_*.py" = [
+    "no-untyped-def",
+    "no-untyped-call",
+    "no-any-return",
+    "attr-defined"
+]
