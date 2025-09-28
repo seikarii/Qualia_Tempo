@@ -1,22 +1,24 @@
 /**
  * QUALIA.CODE v1.1 - IConfigurationService Interface
- * External configuration management and loading interface.
+ * 
+ * ARCHITECTURAL MISSION: Generic, type-safe configuration provider.
+ * NO knowledge of specific service configuration structures.
+ * Eliminates god object anti-pattern through decoupled design.
  */
 
-import type {
-  QualiaCalculatorConfig,
-  BackendSyncConfig,
-  AudioServiceConfig,
-  ErrorReportingConfig,
-  RhythmicMovementConfig,
-  NotificationServiceConfig,
-  FullGameConfig,
-} from "../ConfigurationService";
+import type { FullGameConfig } from '../../types/config';
 
+/**
+ * Minimal, powerful configuration service interface.
+ * 
+ * PRINCIPLE: ConfigurationService is a generic configuration provider.
+ * It does NOT define configuration contracts - those belong to individual services.
+ * It provides type-safe access to externally-defined configuration structures.
+ */
 export interface IConfigurationService {
   /**
    * Load configuration from external YAML files.
-   * @returns Promise that resolves when configuration is loaded
+   * @returns Promise that resolves with the complete loaded configuration
    */
   loadConfig(): Promise<FullGameConfig>;
 
@@ -24,76 +26,23 @@ export interface IConfigurationService {
    * Get the complete configuration object.
    * @returns The full configuration object
    */
-  getConfig(): any;
+  getConfig(): FullGameConfig;
 
   /**
-   * Get game-specific configuration section.
-   * @returns Game configuration object
+   * Get specific configuration section with full type safety.
+   * 
+   * ARCHITECTURAL ADVANTAGE: This method provides type-safe access to any
+   * configuration section without ConfigurationService needing to know
+   * the structure of individual service configurations.
+   * 
+   * @param sectionKey - The key of the configuration section
+   * @returns The requested configuration section with correct typing
    */
-  getGameConfig(): any;
+  getConfigSection<K extends keyof FullGameConfig>(sectionKey: K): FullGameConfig[K];
 
   /**
-   * Get qualia calculation configuration.
-   * @returns Qualia calculator configuration
-   */
-  getQualiaConfig(): QualiaCalculatorConfig;
-
-  /**
-   * Get backend synchronization configuration.
-   * @returns Backend sync configuration
-   */
-  getBackendConfig(): BackendSyncConfig;
-
-  /**
-   * Get audio service configuration.
-   * @returns Audio service configuration
-   */
-  getAudioConfig(): AudioServiceConfig;
-
-  /**
-   * Get error reporting configuration.
-   * @returns Error reporting configuration
-   */
-  getErrorReportingConfig(): ErrorReportingConfig;
-
-  /**
-   * Get rhythmic movement configuration.
-   * @returns Rhythmic movement configuration
-   */
-  getRhythmicMovementConfig(): RhythmicMovementConfig;
-
-  /**
-   * Get notification service configuration.
-   * @returns Notification service configuration
-   */
-  getNotificationConfig(): NotificationServiceConfig;
-
-  /**
-   * Get HTTP service configuration.
-   * @returns HTTP service configuration
-   */
-  getHttpConfig(): {
-    defaultTimeout: number;
-    maxRetries: number;
-    retryDelay: number;
-  };
-
-  /**
-   * Get visual effects configuration (qualia landing background, particles, bloom, etc.).
-   * @returns Visual effects configuration
-   */
-  getVisualEffectsConfig(): any; // Use any here to avoid circular import; concrete typing done in implementation
-
-  /**
-   * Get a specific configuration section by name.
-   * @param section The name of the configuration section
-   * @returns The configuration section
-   */
-  getConfigSection<T>(section: string): T;
-
-  /**
-   * Check if configuration has been loaded.
-   * @returns True if configuration is loaded and ready
+   * Check if configuration is loaded.
+   * @returns True if configuration is loaded, false otherwise
    */
   isLoaded(): boolean;
 

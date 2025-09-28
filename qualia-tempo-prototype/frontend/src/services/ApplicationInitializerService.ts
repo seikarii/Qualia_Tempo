@@ -90,7 +90,7 @@ export class ApplicationInitializerService
 
       // Step 0.5: Configure HttpService with loaded configuration (breaks circular dependency)
       this.logger.debug(config.steps.configureHttpService);
-      const httpConfig = this.configService.getHttpConfig();
+      const httpConfig = this.configService.getConfigSection("compositionRoot").http;
       this.httpService.updateConfig(httpConfig.defaultTimeout);
       this.logger.info(config.messages.httpServiceConfigured);
 

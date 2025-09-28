@@ -88,8 +88,7 @@ export class BackendSyncService implements IBackendSyncService {
   private ensureConfigLoaded(): BackendSyncConfig {
     if (!this.config) {
       try {
-        this.config =
-          this.configService.getConfigSection<BackendSyncConfig>("backendSync");
+        this.config = this.configService.getConfigSection("backendSync");
         this.healthCheckInterval = this.config.connection.healthCheckInterval;
         this.logger.debug("BackendSync configuration loaded successfully");
       } catch (error) {

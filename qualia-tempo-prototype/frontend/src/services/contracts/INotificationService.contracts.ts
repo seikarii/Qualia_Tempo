@@ -1,11 +1,64 @@
 /**
- * @generated DO NOT EDIT
  * QUALIA.CODE v1.1 - NotificationService Contracts
  * Centralized type definitions for notification system
  *
  * Purpose: Single source of truth for all notification-related data structures
  * Architecture: Contract definitions extracted from service implementation for clarity and reusability
  */
+
+// NotificationService Configuration - Migrated from ConfigurationService.ts
+export interface NotificationServiceConfig {
+  display: {
+    enableNotifications: boolean;
+    maxVisibleNotifications: number;
+    notificationDuration: number;
+    enableAnimations: boolean;
+    animationDuration: number;
+  };
+  positioning: {
+    position: string;
+    offsetX: number;
+    offsetY: number;
+    zIndex: number;
+  };
+  styling: {
+    enableThemes: boolean;
+    defaultTheme: string;
+    enableCustomStyling: boolean;
+    borderRadius: number;
+    shadowEnabled: boolean;
+  };
+  sound: {
+    enableNotificationSounds: boolean;
+    defaultSoundVolume: number;
+    enableSoundVariations: boolean;
+  };
+  types: {
+    success: { duration: number; soundEnabled: boolean; color: string };
+    error: { duration: number; soundEnabled: boolean; color: string };
+    warning: { duration: number; soundEnabled: boolean; color: string };
+    info: { duration: number; soundEnabled: boolean; color: string };
+  };
+  queue: {
+    enableQueueing: boolean;
+    maxQueueSize: number;
+    queueProcessingInterval: number;
+  };
+  accessibility: {
+    enableScreenReader: boolean;
+    enableHighContrast: boolean;
+    enableReducedMotion: boolean;
+    enableKeyboardNavigation: boolean;
+  };
+  performance: {
+    enablePooling: boolean;
+    maxPoolSize: number;
+    enableGarbageCollection: boolean;
+    gcInterval: number;
+  };
+  maxNotifications: number; // Maximum concurrent notifications
+  defaultDuration: number; // Default notification display duration
+}
 
 // Notification types with specific handling
 export type NotificationType =

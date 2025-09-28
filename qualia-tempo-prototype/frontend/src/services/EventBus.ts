@@ -453,7 +453,7 @@ export class EventBus implements IEventBus {
   }
 
   private generateListenerId(): string {
-    const config = this.configService.getConfig().eventbus.listeners.defaultOptions;
+    const config = this.configService.getConfigSection("eventbus");
     return `${config.idPrefix}_${Date.now()}_${Math.random().toString(config.randomBase).substr(config.idStart, config.idLength)}`;
   }
 

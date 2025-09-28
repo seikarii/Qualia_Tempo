@@ -26,7 +26,7 @@ import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
-import type { DebugServiceConfig } from "./ConfigurationService";
+import type { DebugServiceConfig } from "./contracts/IDebugService.contracts";
 import type {
   BaseEvent,
   QualiaStateUpdatedEvent,
@@ -158,10 +158,7 @@ export class DebugService implements IDebugService {
     }
 
     try {
-      this.config =
-        this._configService.getConfigSection<DebugServiceConfig>(
-          "debugService",
-        );
+      this.config = this._configService.getConfigSection("debugService");
       this.logger.info("DebugService configuration loaded successfully.");
       this.logCurrentConfig(); // Log the newly loaded config
     } catch (error) {

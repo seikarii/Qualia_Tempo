@@ -45,12 +45,13 @@ export { RhythmicMovementController } from "./RhythmicMovementController";
 export { useService } from "./hooks";
 
 // ===== TYPES =====
-// Re-export important types from services
-export type {
-  QualiaCalculatorConfig,
-  BackendSyncConfig,
-  AudioServiceConfig,
-  ErrorReportingConfig,
-  RhythmicMovementConfig,
-  NotificationServiceConfig,
-} from "./ConfigurationService";
+// Export configuration types from their new centralized location
+export type { FullGameConfig } from "../types/config";
+
+// Export individual configuration types from their respective contract files
+export type { QualiaCalculatorConfig } from "./contracts/IQualiaStateCalculatorService.contracts";
+export type { BackendSyncConfig } from "./contracts/IBackendSyncService.contracts";
+export type { AudioServiceConfig } from "./contracts/IAudioService.contracts";
+export type { ErrorReportingConfig } from "./contracts/IErrorReportingService.contracts";
+export type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementController.contracts";
+export type { NotificationServiceConfig } from "./contracts/INotificationService.contracts";

@@ -264,16 +264,12 @@ const mockConfigurationService: IConfigurationService = {
       defaultDuration: 3000,
     },
   }),
-  getGameConfig: vi.fn().mockReturnValue({
+  getConfigSection: vi.fn().mockReturnValue({
     maxHealth: 100,
     initialScore: 0,
     tickRate: 60,
   }),
-  getQualiaConfig: vi.fn().mockReturnValue({
-    decayRate: 0.01,
-    intensityMultiplier: 1.2,
-    flowThreshold: 0.7,
-  }),
+  // All specific getters removed - use getConfigSection instead
   getBackendConfig: vi.fn().mockReturnValue({
     url: "http://localhost:8000",
     timeout: 5000,

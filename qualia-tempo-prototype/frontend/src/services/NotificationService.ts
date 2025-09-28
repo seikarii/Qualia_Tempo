@@ -179,7 +179,7 @@ export class NotificationService implements INotificationService {
     try {
       // QUALIA.CODE v1.1: Load configuration from pure YAML in start() method
       this.logger.debug("Loading NotificationService configuration from YAML");
-      this.config = this._configService.getConfigSection<ExtendedNotificationConfig>('notification');
+      this.config = this._configService.getConfigSection('notificationService');
       this.logger.info("NotificationService configuration loaded from YAML successfully");
       
       // Reinitialize throttling manager with actual configuration

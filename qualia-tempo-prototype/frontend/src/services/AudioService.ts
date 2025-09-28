@@ -6,7 +6,7 @@ import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError, measureTime } from "../utils/decorators";
 import { QualiaLogger } from "./Logger";
-import type { AudioServiceConfig } from "./ConfigurationService";
+import type { AudioServiceConfig } from "./contracts/IAudioService.contracts";
 import type { IAudioService } from "./interfaces/IAudioService";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { IWebAudioAPIService } from "./interfaces/IWebAudioAPIService";
@@ -169,7 +169,7 @@ export class AudioService implements IAudioService {
     // Simple audio feedback based on timing
     try {
       const config =
-        this.configService.getConfigSection<AudioServiceConfig>("audioService");
+        this.configService.getConfigSection("audioService");
       const audioContext = this.webAudioAPIService.getAudioContext();
       if (!audioContext) {
         const audioConfig = this.configService.getConfigSection<any>("audio");
@@ -220,7 +220,7 @@ export class AudioService implements IAudioService {
 
     try {
       const config =
-        this.configService.getConfigSection<AudioServiceConfig>("audioService");
+        this.configService.getConfigSection("audioService");
       const audioContext = this.webAudioAPIService.getAudioContext();
       if (!audioContext) {
         return; // Silently fail if context is not available
@@ -316,7 +316,7 @@ export class AudioService implements IAudioService {
       oscillator.type = "sine";
       gainNode.gain.value =
         volume *
-        this.configService.getConfigSection<AudioServiceConfig>("audioService")
+        this.configService.getConfigSection("audioService")
           .volume;
 
       oscillator.start();
@@ -347,16 +347,16 @@ export class AudioService implements IAudioService {
   @catchError
   public setMasterVolume(volume: number): void {
     // Update the configuration service with new volume
-    const config =
-      this.configService.getConfigSection<AudioServiceConfig>("audioService");
-    config.volume = Math.max(0, Math.min(1, volume));
-    this.logger.info(`🔊 Master volume set to: ${config.volume}`);
+        const config = this.configService.getConfigSection("audioService");
+    // Note: This modifies the config object - consider if this is the intended behavior
+    (config as any).volume = Math.max(0, Math.min(1, volume));
+    this.logger.info(`🔊 Master volume set to: ${(config as any).volume}`);
   }
 
   @logMethod
   @catchError
   public getMasterVolume(): number {
-    return this.configService.getAudioConfig().volume;
+    return this.configService.getConfigSection("audioService").volume;
   }
 
   @logMethod

@@ -87,7 +87,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
    * This replaces the anti-pattern of loading config in constructor
    */
   private ensureConfigurationLoaded(): void {
-    const rhythmicConfig = this.configService.getRhythmicMovementConfig();
+    const rhythmicConfig = this.configService.getConfigSection("rhythmicMovement");
 
     const defaultConfig = this.configService.getConfigSection<any>("rhythmicMovement");
     this.config = {

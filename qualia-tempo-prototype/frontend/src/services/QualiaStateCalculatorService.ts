@@ -23,7 +23,7 @@ import { QualiaStateUpdatedEvent } from "./EventBus";
 import type { PlayerActionEvent } from "./contracts/events.contracts";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from "../utils/decorators";
-import type { QualiaCalculatorConfig } from "./ConfigurationService";
+import type { QualiaCalculatorConfig } from "./contracts/IQualiaStateCalculatorService.contracts";
 
 // Configuration interface - REMOVED: Using ConfigurationService interface
 
@@ -85,10 +85,7 @@ export class QualiaStateCalculatorService
   private ensureConfigLoaded(): QualiaCalculatorConfig {
     if (!this.config) {
       try {
-        this.config =
-          this.configService.getConfigSection<QualiaCalculatorConfig>(
-            "qualiaCalculator",
-          );
+        this.config = this.configService.getConfigSection("qualiaCalculator");
         this.logger.debug(
           "QualiaStateCalculatorService configuration loaded successfully",
         );

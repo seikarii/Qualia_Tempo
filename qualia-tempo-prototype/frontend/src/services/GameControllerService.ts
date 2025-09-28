@@ -94,9 +94,7 @@ export class GameControllerService implements IGameControllerService {
    * Get current configuration from ConfigurationService
    */
   private get config(): GameControllerConfig {
-    return this.configService.getConfigSection<GameControllerConfig>(
-      "gameController",
-    );
+    return this.configService.getConfigSection("gameController");
   }
 
   /**
