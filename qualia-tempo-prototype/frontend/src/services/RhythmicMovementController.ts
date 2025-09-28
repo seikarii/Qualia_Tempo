@@ -1,11 +1,12 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import type { PlayerActionEvent, PlayerInputEvent } from "./EventBus";
-import type {
+import type { 
+  PlayerActionEvent, 
+  PlayerInputEvent,
   GameStateChangedEvent,
   MetronomeTickEvent,
   RhythmicDashEvent,
-} from "./EventBus";
+} from "./contracts/events.contracts";
 import { logMethod, catchError } from "../utils/decorators";
 import type { QualiaState } from "../types/contracts";
 import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovementController";
@@ -119,8 +120,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.keyThrottleMs = this.config.keyThrottleMs; // CRISALIDA.CODE: Load throttle configuration
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public start(): void {
     if (this.isListening) {
       this.logger.warn("RhythmicMovementController already started");
@@ -138,8 +139,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.logger.info(config.messages.serviceStarted);
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public stop(): void {
     if (!this.isListening) {
       this.logger.warn("RhythmicMovementController not running");
@@ -170,7 +171,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     }
   }
 
-  @logMethod()
+  @logMethod
   private handleGameStateChange(event: GameStateChangedEvent): void {
     const newState = event.newState;
 
@@ -184,7 +185,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     }
   }
 
-  @logMethod()
+  @logMethod
   private activatePauseWithSlowdown(): void {
     const slowdownDuration = this.config.slowdownDuration;
     const slowdownFactor = this.config.slowdownFactor;
@@ -205,7 +206,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     }, slowdownDuration);
   }
 
-  @logMethod()
+  @logMethod
   private resumeFromPause(): void {
     this.logger.info("▶️ Resuming from pause");
 
@@ -223,7 +224,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.startMetronome();
   }
 
-  @logMethod()
+  @logMethod
   private startMetronome(): void {
     this.metronomeIntervalId = this.timerService.setInterval(() => {
       // Skip metronome ticks when completely paused
@@ -301,7 +302,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     }
   }
 
-  @logMethod()
+  @logMethod
   private processDashInput(
     direction: "north" | "south" | "east" | "west",
   ): void {
@@ -403,8 +404,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   /**
    * Update movement based on QualiaState.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public updateMovement(qualiaState: QualiaState): void {
     const startTime = performance.now();
 
@@ -429,8 +430,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   /**
    * Set the intensity of rhythmic movement.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public setIntensity(intensity: number): void {
     this.currentIntensity = Math.max(0, Math.min(1, intensity));
     this.logger.debug("Movement intensity set", {
@@ -455,8 +456,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   /**
    * Update the movement configuration.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public updateConfig(config: any): void {
     this.config = { ...this.config, ...config };
     this.loadConfigurationValues();
@@ -509,8 +510,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   /**
    * Record player performance for a specific action
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async recordPlayerPerformance(
     action: string,
     timestamp: number,
@@ -543,8 +544,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   /**
    * Set custom beat pattern for rhythm gameplay
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async setCustomBeatPattern(
     patternName: string,
     pattern: number[],
@@ -572,8 +573,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   /**
    * Sync with audio context for precise timing
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async syncWithAudio(audioContext: AudioContext | null): Promise<void> {
     if (!audioContext) {
       this.logger.error("Invalid audio context provided for sync");
@@ -597,8 +598,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   /**
    * Check synchronization accuracy with current audio timing
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async checkSyncAccuracy(currentTime: number): Promise<number> {
     if (!Number.isFinite(currentTime)) {
       const config = this.configService.getConfigSection<any>("rhythmic-movement");
@@ -625,8 +626,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   /**
    * Analyze audio data for beat detection
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async analyzeAudioForBeat(audioData: Float32Array): Promise<boolean> {
     if (!audioData || audioData.length === 0) {
       this.logger.warn("Invalid audio data provided for beat analysis");
@@ -653,8 +654,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   /**
    * Start beat tracking for the current session
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async startBeatTracking(): Promise<void> {
     this.logger.info("Starting beat tracking");
 
@@ -671,8 +672,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   /**
    * Get upcoming movement predictions
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async getUpcomingMovements(count: number = 4): Promise<string[]> {
     this.logger.debug("Generating upcoming movement predictions", { count });
 
@@ -691,8 +692,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   /**
    * Predict optimal timing for a specific action
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async predictOptimalTiming(
     action: string,
   ): Promise<{ nextBeat: number; confidence: number }> {
@@ -710,8 +711,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   /**
    * Calculate difficulty score for a movement sequence
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async calculateSequenceDifficulty(
     sequence: string[],
   ): Promise<number> {

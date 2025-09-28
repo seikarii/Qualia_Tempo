@@ -1,151 +1,110 @@
 // QUALIA.CODE v1.0 - Frontend Decorators
 // Mandatory transversal logic implementation for TypeScript
+// Updated for TypeScript 5.9.2 compatibility with stage-3 decorators
 
 import { LoggerProvider } from "../services/Logger";
 import { schemaRegistry } from "../schemas";
 
-// ==================== UNIVERSAL DECORATOR FACTORY ====================
-// Resolves dual signature problem ONCE. No more repetition.
-
-type UniversalDecorator = {
-   
-  (
-    _target: any,
-    _propertyKey?: string | symbol,
-    _descriptor?: PropertyDescriptor,
-  ): PropertyDescriptor | void;
-};
-
-type DecoratorLogic = (
-  // eslint-disable-next-line no-unused-vars
-  originalMethod: Function,
-  // eslint-disable-next-line no-unused-vars
-  context: { target: any; propertyKey: string },
-) => Function;
-
-/**
- * Universal Decorator Factory - Eliminates signature duplication.
- * All decorators use this pattern. Zero exceptions.
- */
-function createUniversalDecorator(logic: DecoratorLogic): UniversalDecorator {
-  return function (
-    target: any,
-    propertyKey?: string | symbol,
-    descriptor?: PropertyDescriptor,
-  ): PropertyDescriptor | void {
-    if (!descriptor && propertyKey) {
-      descriptor = Object.getOwnPropertyDescriptor(target, propertyKey) || {
-        value: target[propertyKey],
-        writable: true,
-        enumerable: true,
-        configurable: true,
-      };
-    }
-
-    if (!descriptor || typeof descriptor.value !== "function") {
-      return descriptor;
-    }
-
-    const originalMethod = descriptor.value;
-    const methodName = String(propertyKey || "unknown");
-
-    descriptor.value = logic(originalMethod, {
-      target,
-      propertyKey: methodName,
-    });
-
-    return descriptor;
-  };
-}
-
-// ==================== CLEAN DECORATOR IMPLEMENTATIONS ====================
+// ==================== STAGE-3 DECORATOR IMPLEMENTATIONS ====================
+// Compatible with TypeScript 5.9.2 and stage-3 decorator proposal
 
 /**
  * Decorator to log method calls and arguments.
  * Uses instance logger if available, falls back to console only when necessary.
- * Usage: @logMethod()
+ * Usage: @logMethod
  */
-export function logMethod(): UniversalDecorator {
-  return createUniversalDecorator((originalMethod, context) => {
-    return function (this: any, ...args: any[]) {
-      const className = context.target.constructor.name;
-      const methodName = `${className}.${context.propertyKey}`;
+export function logMethod(
+  _target: any,
+  propertyKey: string,
+  descriptor: PropertyDescriptor
+): PropertyDescriptor {
+  const method = descriptor.value;
 
-      // Access logger from instance (this) at runtime
-      const instanceLogger = (this as any).logger;
-      let logger: any;
+  descriptor.value = function (this: any, ...args: any[]) {
+    const className = this.constructor.name;
+    const fullMethodName = `${className}.${propertyKey}`;
 
-      if (instanceLogger && typeof instanceLogger.debug === 'function') {
-        logger = instanceLogger;
-      } else {
-        // Try global logger as secondary option
-        try {
-          logger = LoggerProvider.getLogger();
-        } catch (error) {
-          // Final fallback: console (only when no instance logger available)
-          console.debug(`→ ENTER ${methodName}`, {
-            arguments: args.length > 0 ? args : "no arguments",
-            timestamp: new Date().toISOString(),
-            note: "Logger not found on instance, using console fallback",
-          });
-          return originalMethod.apply(this, args);
-        }
-      }
+    // Access logger from instance (this) at runtime
+    const instanceLogger = (this as any).logger;
+    let logger: any;
 
-      logger.debug(`→ ENTER ${methodName}`, {
-        arguments: args.length > 0 ? args : "no arguments",
-        timestamp: new Date().toISOString(),
-      });
-
+    if (instanceLogger && typeof instanceLogger.debug === 'function') {
+      logger = instanceLogger;
+    } else {
+      // Try global logger as secondary option
       try {
-        const result = originalMethod.apply(this, args);
-
-        // Handle both sync and async results
-        if (result instanceof Promise) {
-          return result
-            .then((res) => {
-              logger.debug(`← EXIT ${methodName}`, {
-                result: res,
-                timestamp: new Date().toISOString(),
-              });
-              return res;
-            })
-            .catch((error) => {
-              logger.error(`✗ ERROR ${methodName}`, {
-                error: error.message,
-                timestamp: new Date().toISOString(),
-              });
-              throw error;
-            });
-        } else {
-          logger.debug(`← EXIT ${methodName}`, {
-            result: result,
-            timestamp: new Date().toISOString(),
-          });
-          return result;
-        }
+        logger = LoggerProvider.getLogger();
       } catch (error) {
-        logger.error(`✗ ERROR ${methodName}`, {
-          error: error instanceof Error ? error.message : String(error),
+        // Final fallback: console (only when no instance logger available)
+        console.debug(`→ ENTER ${fullMethodName}`, {
+          arguments: args.length > 0 ? args : "no arguments",
+          timestamp: new Date().toISOString(),
+          note: "Logger not found on instance, using console fallback",
+        });
+        return method.apply(this, args);
+      }
+    }
+
+    logger.debug(`→ ENTER ${fullMethodName}`, {
+      arguments: args.length > 0 ? args : "no arguments",
+      timestamp: new Date().toISOString(),
+    });
+
+    try {
+      const result = method.apply(this, args);
+
+      // Handle both sync and async results
+      if (result instanceof Promise) {
+        return result
+          .then((res) => {
+            logger.debug(`← EXIT ${fullMethodName}`, {
+              result: res,
+              timestamp: new Date().toISOString(),
+            });
+            return res;
+          })
+          .catch((error) => {
+            logger.error(`✗ ERROR ${fullMethodName}`, {
+              error: error.message,
+              timestamp: new Date().toISOString(),
+            });
+            throw error;
+          });
+      } else {
+        logger.debug(`← EXIT ${fullMethodName}`, {
+          result: result,
           timestamp: new Date().toISOString(),
         });
-        throw error;
+        return result;
       }
-    };
-  });
+    } catch (error) {
+      logger.error(`✗ ERROR ${fullMethodName}`, {
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
+      });
+      throw error;
+    }
+  };
+
+  return descriptor;
 }
 
 /**
  * Decorator to throttle method execution.
  * Usage: @throttle(250)
  */
-export function throttle(milliseconds: number): UniversalDecorator {
+export function throttle(milliseconds: number) {
   const throttleMap = new Map<string, number>();
 
-  return createUniversalDecorator((originalMethod, context) => {
+  return function (
+    value: any,
+    context: ClassMethodDecoratorContext
+  ): any {
+    const methodName = String(context.name);
+
     return function (this: any, ...args: any[]) {
-      const className = context.target.constructor.name;
-      const methodKey = `${className}.${context.propertyKey}`;
+      const className = this.constructor.name;
+      const methodKey = `${className}.${methodName}`;
       const now = Date.now();
       const lastCall = throttleMap.get(methodKey) || 0;
 
@@ -163,7 +122,7 @@ export function throttle(milliseconds: number): UniversalDecorator {
         }
         throttleMap.set(methodKey, now);
         console.debug(`Executing ${methodKey}`);
-        return originalMethod.apply(this, args);
+        return value.apply(this, args);
       }
 
       if (now - lastCall < milliseconds) {
@@ -176,146 +135,151 @@ export function throttle(milliseconds: number): UniversalDecorator {
       throttleMap.set(methodKey, now);
       logger.debug(`Executing ${methodKey}`);
 
-      return originalMethod.apply(this, args);
+      return value.apply(this, args);
     };
-  });
+  };
 }
 
 /**
  * Decorator to catch and handle runtime errors.
- * Usage: @catchError()
+ * Usage: @catchError
  */
-export function catchError(fallbackValue?: any): UniversalDecorator {
-  return createUniversalDecorator((originalMethod, context) => {
-    return function (this: any, ...args: any[]) {
-      const className = context.target.constructor.name;
-      const methodName = `${className}.${context.propertyKey}`;
+export function catchError(
+  _target: any,
+  propertyKey: string,
+  descriptor: PropertyDescriptor
+): PropertyDescriptor {
+  const method = descriptor.value;
 
-      // Access logger from instance (this) at runtime
-      const instanceLogger = (this as any).logger;
-      let logger: any;
+  descriptor.value = function (this: any, ...args: any[]) {
+    const className = this.constructor.name;
+    const fullMethodName = `${className}.${propertyKey}`;
 
-      if (instanceLogger && typeof instanceLogger.error === 'function') {
-        logger = instanceLogger;
-      } else {
-        // Try global logger as secondary option
-        try {
-          logger = LoggerProvider.getLogger();
-        } catch (error) {
-          // Logger not available, proceed with execution and use console fallback if needed
-          logger = null;
-        }
-      }
+    // Access logger from instance (this) at runtime
+    const instanceLogger = (this as any).logger;
+    let logger: any;
 
+    if (instanceLogger && typeof instanceLogger.error === 'function') {
+      logger = instanceLogger;
+    } else {
+      // Try global logger as secondary option
       try {
-        const result = originalMethod.apply(this, args);
-
-        // Handle async methods
-        if (result instanceof Promise) {
-          return result.catch((error: any) => {
-            if (logger) {
-              logger.error(`${methodName}:`, {
-                error: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : "No stack trace",
-                arguments: args,
-                timestamp: new Date().toISOString(),
-              });
-            } else {
-              console.error(`${methodName}:`, {
-                error: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : "No stack trace",
-                arguments: args,
-                timestamp: new Date().toISOString(),
-                note: "Logger not found on instance, using console fallback",
-              });
-            }
-
-            if (fallbackValue !== undefined) {
-              return fallbackValue;
-            }
-
-            throw error;
-          });
-        }
-
-        return result;
-      } catch (methodError) {
-        if (logger) {
-          logger.error(`${methodName}:`, {
-            error:
-              methodError instanceof Error
-                ? methodError.message
-                : String(methodError),
-            stack:
-              methodError instanceof Error
-                ? methodError.stack
-                : "No stack trace",
-            arguments: args,
-            timestamp: new Date().toISOString(),
-          });
-        } else {
-          // Final fallback to console only when no logger available
-          console.error(`${methodName}:`, {
-            error:
-              methodError instanceof Error
-                ? methodError.message
-                : String(methodError),
-            stack:
-              methodError instanceof Error
-                ? methodError.stack
-                : "No stack trace",
-            arguments: args,
-            timestamp: new Date().toISOString(),
-            note: "Logger not found on instance, using console fallback",
-          });
-        }
-
-        if (fallbackValue !== undefined) {
-          return fallbackValue;
-        }
-
-        throw methodError;
+        logger = LoggerProvider.getLogger();
+      } catch (error) {
+        // Logger not available, proceed with execution and use console fallback if needed
+        logger = null;
       }
-    };
-  });
+    }
+
+    try {
+      const result = method.apply(this, args);
+
+      // Handle async methods
+      if (result instanceof Promise) {
+        return result.catch((error: any) => {
+          if (logger) {
+            logger.error(`${fullMethodName}:`, {
+              error: error instanceof Error ? error.message : String(error),
+              stack: error instanceof Error ? error.stack : "No stack trace",
+              arguments: args,
+              timestamp: new Date().toISOString(),
+            });
+          } else {
+            console.error(`${fullMethodName}:`, {
+              error: error instanceof Error ? error.message : String(error),
+              stack: error instanceof Error ? error.stack : "No stack trace",
+              arguments: args,
+              timestamp: new Date().toISOString(),
+              note: "Logger not found on instance, using console fallback",
+            });
+          }
+
+          // Re-throw the error after logging
+          throw error;
+        });
+      }
+
+      return result;
+    } catch (methodError) {
+      if (logger) {
+        logger.error(`${fullMethodName}:`, {
+          error:
+            methodError instanceof Error
+              ? methodError.message
+              : String(methodError),
+          stack:
+            methodError instanceof Error
+              ? methodError.stack
+              : "No stack trace",
+          arguments: args,
+          timestamp: new Date().toISOString(),
+        });
+      } else {
+        // Final fallback to console only when no logger available
+        console.error(`${fullMethodName}:`, {
+          error:
+            methodError instanceof Error
+              ? methodError.message
+              : String(methodError),
+          stack:
+            methodError instanceof Error
+              ? methodError.stack
+              : "No stack trace",
+          arguments: args,
+          timestamp: new Date().toISOString(),
+          note: "Logger not found on instance, using console fallback",
+        });
+      }
+
+      throw methodError;
+    }
+  };
+
+  return descriptor;
 }
 
 /**
  * Decorator to measure method execution time.
- * Usage: @measureTime()
+ * Usage: @measureTime
  */
-export function measureTime(): UniversalDecorator {
-  return createUniversalDecorator((originalMethod, context) => {
-    return function (this: any, ...args: any[]) {
-      const className = context.target.constructor.name;
-      const methodName = `${className}.${context.propertyKey}`;
-      const startTime = performance.now();
+export function measureTime(
+  _target: any,
+  propertyKey: string,
+  descriptor: PropertyDescriptor
+): PropertyDescriptor {
+  const method = descriptor.value;
 
-      try {
-        const result = originalMethod.apply(this, args);
+  descriptor.value = function (this: any, ...args: any[]) {
+    const className = this.constructor.name;
+    const fullMethodName = `${className}.${propertyKey}`;
+    const startTime = performance.now();
 
-        // Handle async methods
-        if (result instanceof Promise) {
-          return result.finally(() => {
-            const endTime = performance.now();
-            const duration = endTime - startTime;
-            logPerformance(methodName, duration);
-          });
-        }
+    try {
+      const result = method.apply(this, args);
 
-        const endTime = performance.now();
-        const duration = endTime - startTime;
-        logPerformance(methodName, duration);
-
-        return result;
-      } catch (error) {
-        const endTime = performance.now();
-        const duration = endTime - startTime;
-        logPerformance(methodName, duration, true);
-        throw error;
+      // Handle async methods
+      if (result instanceof Promise) {
+        return result.finally(() => {
+          const endTime = performance.now();
+          const duration = endTime - startTime;
+          logPerformance(fullMethodName, duration);
+        });
       }
-    };
-  });
+
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      logPerformance(fullMethodName, duration);
+
+      return result;
+    } catch (error) {
+      const endTime = performance.now();
+      const duration = endTime - startTime;
+      logPerformance(fullMethodName, duration, true);
+      throw error;
+    }
+  };
+
+  return descriptor;
 }
 
 /**
@@ -363,11 +327,16 @@ function logPerformance(
  * Schema validation decorator.
  * Usage: @validate('QualiaState')
  */
-export function validate(schemaName: string): UniversalDecorator {
-  return createUniversalDecorator((originalMethod, context) => {
+export function validate(schemaName: string) {
+  return function (
+    value: any,
+    context: ClassMethodDecoratorContext
+  ): any {
+    const methodName = String(context.name);
+
     return function (this: any, ...args: any[]) {
-      const className = context.target.constructor.name;
-      const methodName = `${className}.${context.propertyKey}`;
+      const className = this.constructor.name;
+      const fullMethodName = `${className}.${methodName}`;
       const logger = LoggerProvider.getLogger();
 
       // Validate first argument if present
@@ -379,7 +348,7 @@ export function validate(schemaName: string): UniversalDecorator {
           if (!schema) {
             const errorMessage = `Schema '${schemaName}' not found in registry`;
             logger.error(
-              `Schema validation failed for ${schemaName} in ${methodName}:`,
+              `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
               { error: errorMessage },
             );
             throw new Error(errorMessage);
@@ -391,7 +360,7 @@ export function validate(schemaName: string): UniversalDecorator {
           if (!validationResult.success) {
             const errorMessage = `Schema validation failed: ${validationResult.error.message}`;
             logger.error(
-              `Schema validation failed for ${schemaName} in ${methodName}:`,
+              `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
               {
                 error: errorMessage,
                 issues: validationResult.error.issues,
@@ -402,22 +371,22 @@ export function validate(schemaName: string): UniversalDecorator {
           }
 
           logger.debug(
-            `✅ Schema validation passed for ${schemaName} in ${methodName}`,
+            `✅ Schema validation passed for ${schemaName} in ${fullMethodName}`,
           );
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
           logger.error(
-            `Schema validation failed for ${schemaName} in ${methodName}:`,
+            `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
             { error: errorMessage },
           );
           throw new Error(`Schema validation failed: ${errorMessage}`);
         }
       }
 
-      return originalMethod.apply(this, args);
+      return value.apply(this, args);
     };
-  });
+  };
 }
 
 /**
@@ -428,11 +397,17 @@ export function validate(schemaName: string): UniversalDecorator {
 export function validateEventProperty(
   propertyName: string,
   schemaName: string,
-): UniversalDecorator {
-  return createUniversalDecorator((originalMethod, context) => {
-    return function (this: any, ...args: any[]) {
-      const className = context.target.constructor.name;
-      const methodName = `${className}.${context.propertyKey}`;
+) {
+  return function (
+    _target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ): PropertyDescriptor {
+    const method = descriptor.value;
+
+    descriptor.value = function (this: any, ...args: any[]) {
+      const className = this.constructor.name;
+      const fullMethodName = `${className}.${propertyKey}`;
       const logger = LoggerProvider.getLogger();
 
       // Validate property of first argument if present
@@ -444,7 +419,7 @@ export function validateEventProperty(
           if (!schema) {
             const errorMessage = `Schema '${schemaName}' not found in registry`;
             logger.error(
-              `Schema validation failed for ${schemaName} in ${methodName}:`,
+              `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
               { error: errorMessage },
             );
             throw new Error(errorMessage);
@@ -455,7 +430,7 @@ export function validateEventProperty(
           if (propertyValue === undefined) {
             const errorMessage = `Property '${propertyName}' not found in event object`;
             logger.error(
-              `Event property validation failed for ${propertyName} in ${methodName}:`,
+              `Event property validation failed for ${propertyName} in ${fullMethodName}:`,
               { error: errorMessage },
             );
             throw new Error(errorMessage);
@@ -467,7 +442,7 @@ export function validateEventProperty(
           if (!validationResult.success) {
             const errorMessage = `Schema validation failed: ${validationResult.error.message}`;
             logger.error(
-              `Event property validation failed for ${propertyName}.${schemaName} in ${methodName}:`,
+              `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
               {
                 error: errorMessage,
                 issues: validationResult.error.issues,
@@ -478,22 +453,24 @@ export function validateEventProperty(
           }
 
           logger.debug(
-            `✅ Event property validation passed for ${propertyName}.${schemaName} in ${methodName}`,
+            `✅ Event property validation passed for ${propertyName}.${schemaName} in ${fullMethodName}`,
           );
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
           logger.error(
-            `Event property validation failed for ${propertyName}.${schemaName} in ${methodName}:`,
+            `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
             { error: errorMessage },
           );
           throw new Error(`Event property validation failed: ${errorMessage}`);
         }
       }
 
-      return originalMethod.apply(this, args);
+      return method.apply(this, args);
     };
-  });
+
+    return descriptor;
+  };
 }
 
 /**
@@ -508,99 +485,157 @@ export function qualiaMethod(
     skipTiming?: boolean;
     schema?: string;
   } = {},
-): UniversalDecorator {
-  return createUniversalDecorator((originalMethod, context) => {
-    let decoratedMethod = originalMethod;
+) {
+  return function (
+    value: any,
+    context: ClassMethodDecoratorContext
+  ): any {
+    // Start with the original method
+    let decoratedMethod = value;
 
     // Apply decorators in reverse order (they wrap outward)
     if (options.throttleMs) {
       const throttleDecorator = throttle(options.throttleMs);
-      const tempDescriptor = {
-        value: decoratedMethod,
-        writable: true,
-        enumerable: true,
-        configurable: true,
-      };
-      const result = throttleDecorator(
-        context.target,
-        context.propertyKey,
-        tempDescriptor,
-      );
-      if (result && typeof result.value === "function") {
-        decoratedMethod = result.value;
-      }
+      decoratedMethod = throttleDecorator(decoratedMethod, context);
     }
 
     if (options.schema) {
       const validateDecorator = validate(options.schema);
-      const tempDescriptor = {
-        value: decoratedMethod,
-        writable: true,
-        enumerable: true,
-        configurable: true,
-      };
-      const result = validateDecorator(
-        context.target,
-        context.propertyKey,
-        tempDescriptor,
-      );
-      if (result && typeof result.value === "function") {
-        decoratedMethod = result.value;
-      }
+      decoratedMethod = validateDecorator(decoratedMethod, context);
     }
 
-    const catchErrorDecorator = catchError(options.fallbackValue);
-    let tempDescriptor = {
+    // Always apply catchError
+    const catchErrorDecorator = (
+      _target: any,
+      propertyKey: string,
+      descriptor: PropertyDescriptor
+    ) => {
+      const method = descriptor.value;
+      descriptor.value = function (this: any, ...args: any[]) {
+        const className = this.constructor.name;
+        const fullMethodName = `${className}.${propertyKey}`;
+
+        const instanceLogger = (this as any).logger;
+        let logger: any;
+
+        if (instanceLogger && typeof instanceLogger.error === 'function') {
+          logger = instanceLogger;
+        } else {
+          try {
+            logger = LoggerProvider.getLogger();
+          } catch (error) {
+            logger = null;
+          }
+        }
+
+        try {
+          const result = method.apply(this, args);
+          if (result instanceof Promise) {
+            return result.catch((error: any) => {
+              if (logger) {
+                logger.error(`${fullMethodName}:`, {
+                  error: error instanceof Error ? error.message : String(error),
+                  stack: error instanceof Error ? error.stack : "No stack trace",
+                  arguments: args,
+                  timestamp: new Date().toISOString(),
+                });
+              } else {
+                console.error(`${fullMethodName}:`, {
+                  error: error instanceof Error ? error.message : String(error),
+                  stack: error instanceof Error ? error.stack : "No stack trace",
+                  arguments: args,
+                  timestamp: new Date().toISOString(),
+                  note: "Logger not found on instance, using console fallback",
+                });
+              }
+              throw error;
+            });
+          }
+          return result;
+        } catch (methodError) {
+          if (logger) {
+            logger.error(`${fullMethodName}:`, {
+              error: methodError instanceof Error ? methodError.message : String(methodError),
+              stack: methodError instanceof Error ? methodError.stack : "No stack trace",
+              arguments: args,
+              timestamp: new Date().toISOString(),
+            });
+          } else {
+            console.error(`${fullMethodName}:`, {
+              error: methodError instanceof Error ? methodError.message : String(methodError),
+              stack: methodError instanceof Error ? methodError.stack : "No stack trace",
+              arguments: args,
+              timestamp: new Date().toISOString(),
+              note: "Logger not found on instance, using console fallback",
+            });
+          }
+          throw methodError;
+        }
+      };
+      return descriptor;
+    };
+    const descriptor = {
       value: decoratedMethod,
       writable: true,
       enumerable: true,
       configurable: true,
     };
-    let result = catchErrorDecorator(
-      context.target,
-      context.propertyKey,
-      tempDescriptor,
-    );
-    if (result && typeof result.value === "function") {
-      decoratedMethod = result.value;
-    }
+    decoratedMethod = catchErrorDecorator({}, String(context.name), descriptor).value;
 
     if (!options.skipLogging) {
-      const logDecorator = logMethod();
-      tempDescriptor = {
+      const logDecorator = logMethod;
+      const descriptor = {
         value: decoratedMethod,
         writable: true,
         enumerable: true,
         configurable: true,
       };
-      result = logDecorator(
-        context.target,
-        context.propertyKey,
-        tempDescriptor,
-      );
-      if (result && typeof result.value === "function") {
-        decoratedMethod = result.value;
-      }
+      decoratedMethod = logDecorator({}, String(context.name), descriptor).value;
     }
 
     if (!options.skipTiming) {
-      const measureDecorator = measureTime();
-      tempDescriptor = {
+      const measureDecorator = (
+        _target: any,
+        propertyKey: string,
+        descriptor: PropertyDescriptor
+      ) => {
+        const method = descriptor.value;
+        descriptor.value = function (this: any, ...args: any[]) {
+          const className = this.constructor.name;
+          const fullMethodName = `${className}.${propertyKey}`;
+          const startTime = performance.now();
+
+          try {
+            const result = method.apply(this, args);
+            if (result instanceof Promise) {
+              return result.finally(() => {
+                const endTime = performance.now();
+                const duration = endTime - startTime;
+                logPerformance(fullMethodName, duration);
+              });
+            }
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+            logPerformance(fullMethodName, duration);
+            return result;
+          } catch (error) {
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+            logPerformance(fullMethodName, duration, true);
+            throw error;
+          }
+        };
+        return descriptor;
+      };
+      const descriptor = {
         value: decoratedMethod,
         writable: true,
         enumerable: true,
         configurable: true,
       };
-      result = measureDecorator(
-        context.target,
-        context.propertyKey,
-        tempDescriptor,
-      );
-      if (result && typeof result.value === "function") {
-        decoratedMethod = result.value;
-      }
+      decoratedMethod = measureDecorator({}, String(context.name), descriptor).value;
     }
 
     return decoratedMethod;
-  });
+  };
 }

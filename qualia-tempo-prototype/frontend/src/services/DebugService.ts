@@ -149,8 +149,8 @@ export class DebugService implements IDebugService {
   /**
    * Start the DebugService and begin monitoring all system events.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public start(): void {
     if (this.isStarted) {
       this.logger.warn("⚠️ [DebugService] Service already running");
@@ -205,8 +205,8 @@ export class DebugService implements IDebugService {
   /**
    * Stop the DebugService and clean up resources.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public stop(): void {
     if (!this.isStarted) {
       this.logger.warn("⚠️ [DebugService] Service not running");
@@ -238,7 +238,7 @@ export class DebugService implements IDebugService {
   /**
    * Log service status information.
    */
-  @logMethod()
+  @logMethod
   public logServiceStatus(): void {
     const status = {
       isStarted: this.isStarted,
@@ -257,8 +257,8 @@ export class DebugService implements IDebugService {
   /**
    * Log EventBus activity for debugging.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public logEvent(event: BaseEvent): void {
     if (!this.isStarted) {
       return;
@@ -272,8 +272,8 @@ export class DebugService implements IDebugService {
   /**
    * Get performance metrics.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getMetrics(): {
     isRunning: boolean;
     eventsLogged: number;
@@ -293,8 +293,8 @@ export class DebugService implements IDebugService {
   /**
    * Update DebugService configuration.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public updateConfig(newConfig: Partial<DebugConfig>): void {
     this.config = { ...this.config, ...newConfig };
     this.logger.info("⚙️ [DebugService] Configuration updated");
@@ -312,8 +312,8 @@ export class DebugService implements IDebugService {
   /**
    * Get current debug statistics and system health.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getDebugStats(): DebugStats {
     return {
       isRunning: this.isStarted,
@@ -330,8 +330,8 @@ export class DebugService implements IDebugService {
   /**
    * Get system state snapshot for debugging.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getSystemSnapshot(): SystemSnapshot {
     return {
       timestamp: Date.now(),
@@ -355,8 +355,8 @@ export class DebugService implements IDebugService {
   /**
    * Perform AI analysis on recent events and errors.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public performAIAnalysis(): AnalysisResult[] {
     this.logger.info("🤖 [DebugService] Performing AI analysis...");
 
@@ -397,8 +397,8 @@ export class DebugService implements IDebugService {
   /**
    * Export debug session data for external analysis.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public exportDebugData(): any {
     return {
       timestamp: Date.now(),
@@ -416,7 +416,7 @@ export class DebugService implements IDebugService {
   /**
    * Enable performance profiling.
    */
-  @logMethod()
+  @logMethod
   public enableProfiling(): void {
     this.config.profiling.enableProfiling = true;
     this.logger.info("Performance profiling enabled");
@@ -425,7 +425,7 @@ export class DebugService implements IDebugService {
   /**
    * Disable performance profiling.
    */
-  @logMethod()
+  @logMethod
   public disableProfiling(): void {
     this.config.profiling.enableProfiling = false;
     this.logger.info("Performance profiling disabled");
@@ -434,7 +434,7 @@ export class DebugService implements IDebugService {
   /**
    * Check if debugging is currently enabled.
    */
-  @logMethod()
+  @logMethod
   public isEnabled(): boolean {
     return this.isStarted;
   }
@@ -442,7 +442,7 @@ export class DebugService implements IDebugService {
   /**
    * Set debug level for filtering debug output.
    */
-  @logMethod()
+  @logMethod
   public setDebugLevel(level: "minimal" | "normal" | "verbose"): void {
     this.config.logging.logLevel = level;
     this.logger.info(`Debug level set to: ${level}`);
@@ -858,7 +858,7 @@ export class DebugService implements IDebugService {
   /**
    * Get the debug interface for external access (development only).
    */
-  @logMethod()
+  @logMethod
   public getDebugInterface(): any {
     return this.debugInterface;
   }

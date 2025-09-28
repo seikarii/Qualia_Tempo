@@ -38,26 +38,26 @@ export class HttpService implements IHttpService {
     });
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async get<T>(url: string, options?: HttpRequestOptions): Promise<T> {
     return this.request<T>("GET", url, options);
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async post<T>(url: string, options?: HttpRequestOptions): Promise<T> {
     return this.request<T>("POST", url, options);
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async put<T>(url: string, options?: HttpRequestOptions): Promise<T> {
     return this.request<T>("PUT", url, options);
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async delete<T>(
     url: string,
     options?: HttpRequestOptions,
@@ -172,8 +172,8 @@ export class HttpService implements IHttpService {
     }
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public updateConfig(timeout: number): void {
     (this as any).defaultTimeout = timeout;
     this.logger.debug("HttpService configuration updated", { timeout });

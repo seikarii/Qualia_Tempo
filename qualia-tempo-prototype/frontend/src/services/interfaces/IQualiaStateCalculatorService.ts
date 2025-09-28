@@ -4,7 +4,7 @@
  */
 
 import type { QualiaState } from "../../types/contracts";
-import type { PlayerActionEvent } from "../EventBus";
+import type { PlayerActionEvent } from "../contracts/events.contracts";
 
 export interface IQualiaStateCalculatorService {
   /**

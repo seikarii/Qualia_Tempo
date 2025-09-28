@@ -108,8 +108,8 @@ export class StreamingVideoService implements IStreamingVideoService {
     );
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async connect(): Promise<void> {
     this.referenceCount++;
     this.logger.debug(
@@ -210,7 +210,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     }
   }
 
-  @logMethod()
+  @logMethod
   public disconnect(): void {
     if (this.referenceCount > 0) {
       this.referenceCount--;
@@ -256,7 +256,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     this.logger.info("Disconnected from video stream");
   }
 
-  @logMethod()
+  @logMethod
   public subscribeToFrames(callback: FrameCallback): string {
     const subscriptionId = `frame_sub_${this.nextSubscriptionId++}`;
     this.frameSubscriptions.set(subscriptionId, callback);
@@ -265,23 +265,23 @@ export class StreamingVideoService implements IStreamingVideoService {
     return subscriptionId;
   }
 
-  @logMethod()
+  @logMethod
   public unsubscribeFromFrames(subscriptionId: string): void {
     this.frameSubscriptions.delete(subscriptionId);
     this.logger.debug("Frame subscription removed", { subscriptionId });
   }
 
-  @logMethod()
+  @logMethod
   public getConnectionStatus(): ConnectionStatus {
     return { ...this.connectionStatus };
   }
 
-  @logMethod()
+  @logMethod
   public getStatistics(): StreamingStatistics {
     return { ...this.statistics };
   }
 
-  @logMethod()
+  @logMethod
   public requestQualityChange(quality: number): void {
     if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
       this.logger.warn("Cannot change quality: not connected");
@@ -303,7 +303,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     this.logger.info("Requested quality change", { quality });
   }
 
-  @logMethod()
+  @logMethod
   public requestFpsChange(fps: number): void {
     if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
       this.logger.warn("Cannot change FPS: not connected");
@@ -325,7 +325,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     this.logger.info("Requested FPS change", { fps });
   }
 
-  @logMethod()
+  @logMethod
   public async ping(): Promise<number> {
     if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
       throw new Error("Not connected");
@@ -363,7 +363,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     });
   }
 
-  @catchError()
+  @catchError
   private onWebSocketOpen(): void {
     this.logger.info("WebSocket connection established.");
     this.state = "CONNECTED";
@@ -398,7 +398,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     });
   }
 
-  @catchError()
+  @catchError
   private onWebSocketMessage(event: MessageEvent): void {
     try {
       const message = JSON.parse(event.data);
@@ -417,7 +417,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     }
   }
 
-  @catchError()
+  @catchError
   private onWebSocketClose(event: CloseEvent): void {
     this.logger.warn(
       `WebSocket closed. Code: ${event.code}, Clean: ${event.wasClean}`,
@@ -462,7 +462,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     }
   }
 
-  @catchError()
+  @catchError
   private onWebSocketError(event: Event): void {
     this.state = "ERROR";
     this.connectionStatus.state = "ERROR";
@@ -478,7 +478,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     });
   }
 
-  @catchError()
+  @catchError
   private handleVideoFrame(message: any): void {
     const frame: VideoFrame = {
       data: message.data,
@@ -510,7 +510,7 @@ export class StreamingVideoService implements IStreamingVideoService {
     }
   }
 
-  @catchError()
+  @catchError
   private handlePong(message: any): void {
     const pingId = message.pingId;
 

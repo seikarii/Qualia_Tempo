@@ -329,8 +329,8 @@ export class NotificationService implements INotificationService {
   /**
    * Start the NotificationService and begin processing notifications.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public start(): void {
     if (this.isStarted) {
       this.logger.warn("⚠️ [NotificationService] Service already running");
@@ -377,8 +377,8 @@ export class NotificationService implements INotificationService {
   /**
    * Stop the NotificationService and clean up resources.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public stop(): void {
     if (!this.isStarted) {
       this.logger.warn("⚠️ [NotificationService] Service not running");
@@ -412,8 +412,8 @@ export class NotificationService implements INotificationService {
   /**
    * Show a notification manually.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public showNotification(
     message: string,
     type: NotificationType = "info",
@@ -443,8 +443,8 @@ export class NotificationService implements INotificationService {
    * COMPATIBILITY BRIDGE: show() method for test compatibility
    * Delegates to showNotification() to maintain interface compliance
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public show(
     message: string,
     type: NotificationType = "info",
@@ -527,8 +527,8 @@ export class NotificationService implements INotificationService {
   /**
    * Show a notification with priority (internal method).
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async showNotificationWithPriority(
     message: string,
     type: NotificationType = "info",
@@ -551,8 +551,8 @@ export class NotificationService implements INotificationService {
   /**
    * Dismiss a notification by ID.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public dismissNotification(id: string): void {
     const notification = this.activeNotifications.get(id);
     if (notification) {
@@ -574,8 +574,8 @@ export class NotificationService implements INotificationService {
   /**
    * Clear all active notifications.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public clearAllNotifications(): void {
     const count = this.activeNotifications.size;
     this.activeNotifications.forEach((notification) => {
@@ -597,8 +597,8 @@ export class NotificationService implements INotificationService {
   /**
    * Hide a notification by ID (alias for dismiss).
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public hideNotification(id: string): void {
     this.dismissNotification(id);
   }
@@ -606,8 +606,8 @@ export class NotificationService implements INotificationService {
   /**
    * Hide all notifications (alias for clear).
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public hideAllNotifications(): void {
     this.clearAllNotifications();
   }
@@ -615,8 +615,8 @@ export class NotificationService implements INotificationService {
   /**
    * COMPATIBILITY BRIDGE: hide() method for test compatibility
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public hide(id: string): void {
     this.hideNotification(id);
   }
@@ -624,8 +624,8 @@ export class NotificationService implements INotificationService {
   /**
    * COMPATIBILITY BRIDGE: clearAll() method for test compatibility
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public clearAll(): void {
     this.clearAllNotifications();
   }
@@ -633,8 +633,8 @@ export class NotificationService implements INotificationService {
   /**
    * COMPATIBILITY BRIDGE: getActiveCount() method for test compatibility
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getActiveCount(): number {
     return this.activeNotifications.size;
   }
@@ -642,8 +642,8 @@ export class NotificationService implements INotificationService {
   /**
    * Get all active notifications.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getActiveNotifications(): Notification[] {
     return Array.from(this.activeNotifications.values()).map(
       (notification) => ({
@@ -662,8 +662,8 @@ export class NotificationService implements INotificationService {
   /**
    * Get service status.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getStatus(): { isRunning: boolean; queueSize: number } {
     return {
       isRunning: this.isStarted,
@@ -674,8 +674,8 @@ export class NotificationService implements INotificationService {
   /**
    * Update NotificationService configuration.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public updateConfig(newConfig: any): void {
     try {
       // Store the full configuration for priority override logic
@@ -738,8 +738,8 @@ export class NotificationService implements INotificationService {
   /**
    * Get notification statistics.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getStatistics(): NotificationStatistics & {
     totalShown: number;
     totalDismissed: number;
@@ -756,8 +756,8 @@ export class NotificationService implements INotificationService {
   /**
    * Export notification data for analysis.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public exportNotificationData(): any {
     return {
       timestamp: Date.now(),
@@ -772,7 +772,7 @@ export class NotificationService implements INotificationService {
   /**
    * Check if notifications are currently enabled.
    */
-  @logMethod()
+  @logMethod
   public isEnabled(): boolean {
     return this.isStarted && this.config.enabled;
   }

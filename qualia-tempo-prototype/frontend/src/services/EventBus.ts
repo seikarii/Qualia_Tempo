@@ -19,49 +19,25 @@ import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from "../utils/decorators";
 // ✅ CORRECT: Importing from the central contracts file
-import type { ConnectionStatus } from "./contracts/events.contracts";
+import type { 
+  ConnectionStatus,
+  BaseEvent,
+  PlayerActionEvent,
+  PlayerInputEvent,
+  RhythmicDashEvent,
+  MetronomeTickEvent,
+  GameStateChangedEvent
+} from "./contracts/events.contracts";
 
-// Event type definitions following QUALIA.CODE contracts
-export interface BaseEvent {
-  type: string;
-  timestamp: Date;
-  source?: string;
-  metadata?: Record<string, any>;
-}
-
+// Additional event types specific to this EventBus implementation
 export interface QualiaStateUpdatedEvent extends BaseEvent {
   type: "QualiaStateUpdated";
   qualiaState: QualiaState; // QUALIA.CODE Contract Compliance: Using generated interface
 }
 
-export interface PlayerActionEvent extends BaseEvent {
-  type: "PlayerAction";
-  action:
-    | "Dash"
-    | "HitNote"
-    | "MissNote"
-    | "FastForward"
-    | "Rewind"
-    | "StartGame"
-    | "PauseGame"
-    | "ResetGame"
-    | "scoreIncrease";
-  context?: Record<string, any>;
-  value?: number; // For scoreIncrease and other actions that need a value
-}
 
-export interface PlayerInputEvent extends BaseEvent {
-  type: "PlayerInput";
-  key: string;
-  source?: string;
-}
 
-export interface GameStateChangedEvent extends BaseEvent {
-  type: "GameStateChanged";
-  newState: "Playing" | "Paused" | "GameOver" | "Menu";
-  oldState: string;
-  previousState: string;
-}
+
 
 export interface ErrorEvent extends BaseEvent {
   type: "Error";
@@ -87,18 +63,9 @@ export interface VisualImpactRequestedEvent extends BaseEvent {
   };
 }
 
-export interface RhythmicDashEvent extends BaseEvent {
-  type: "RhythmicDash";
-  direction: "north" | "south" | "east" | "west";
-  timing: "perfect" | "good" | "miss";
-  newPosition: [number, number];
-}
 
-export interface MetronomeTickEvent extends BaseEvent {
-  type: "MetronomeTick";
-  beatNumber: number;
-  bpm: number;
-}
+
+
 
 export interface StreamingStatusChangedEvent extends BaseEvent {
   type: "StreamingStatusChanged";
@@ -170,8 +137,8 @@ export class EventBus implements IEventBus {
    * @param handler - The event handler function
    * @param options - Additional options (once, priority)
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public subscribe<T extends EventTypes>(
     eventType: T["type"],
     handler: EventHandler<T>,
@@ -609,3 +576,13 @@ export class QualiaEvents {
     } as Omit<BackendSyncEvent, "timestamp">);
   }
 }
+
+// Re-export event types for external use
+export type {
+  BaseEvent,
+  PlayerActionEvent,
+  PlayerInputEvent,
+  RhythmicDashEvent,
+  MetronomeTickEvent,
+  GameStateChangedEvent,
+} from "./contracts/events.contracts";

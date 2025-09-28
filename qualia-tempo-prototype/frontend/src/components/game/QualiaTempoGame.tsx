@@ -13,7 +13,7 @@ import type {
   PlayerActionEvent,
   RhythmicDashEvent,
   MetronomeTickEvent,
-} from "../../services/EventBus";
+} from "../../services/contracts/events.contracts";
 import type { NoteData } from "../../types/contracts";
 
 import QualiaTempoHUD from "./QualiaTempoHUD";

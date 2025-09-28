@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { QualiaState } from "../../types/contracts";
 import { useGameStore } from "../../state/useGameStore";
 import { useEventBus, useTimerService } from "../../services/hooks";
-// Types can be imported from services - this is allowed
-import type { PlayerActionEvent } from "../../services/EventBus";
+// ✅ CORRECT: Import event types from contracts, not services
+import type { PlayerActionEvent } from "../../services/contracts/events.contracts";
 
 interface MusicData {
   bpm: number;

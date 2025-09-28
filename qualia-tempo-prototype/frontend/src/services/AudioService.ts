@@ -42,9 +42,9 @@ export class AudioService implements IAudioService {
     this.timerService = timerService;
   }
 
-  @logMethod()
-  @catchError()
-  @measureTime()
+  @logMethod
+  @catchError
+  @measureTime
   public async start(): Promise<void> {
     if (this.isInitialized) {
       this.logger.warn("AudioService already initialized");
@@ -64,8 +64,8 @@ export class AudioService implements IAudioService {
     this.logger.info("✅ AudioService initialized successfully");
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async stop(): Promise<void> {
     if (!this.isInitialized) {
       this.logger.warn("AudioService not initialized, nothing to stop");
@@ -84,14 +84,14 @@ export class AudioService implements IAudioService {
     this.logger.info("✅ AudioService stopped successfully");
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public isRunning(): boolean {
     return this.isInitialized;
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getStatus(): { running: boolean; engine: boolean } {
     return {
       running: this.isInitialized,
@@ -99,8 +99,8 @@ export class AudioService implements IAudioService {
     };
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   private handleQualiaStateUpdate(event: QualiaStateUpdatedEvent): void {
     const { qualiaState } = event;
 
@@ -120,8 +120,8 @@ export class AudioService implements IAudioService {
     }
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   private createEntityVoices(): void {
     if (!this.audioEngine) return;
 
@@ -144,8 +144,8 @@ export class AudioService implements IAudioService {
     this.setupRhythmicFeedback();
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   private setupRhythmicFeedback(): void {
     // Listen for rhythmic dash events to provide audio feedback
     this.eventBus.subscribe<any>("RhythmicDash", (event) => {
@@ -158,8 +158,8 @@ export class AudioService implements IAudioService {
     });
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public playRhythmicFeedback(timing: "perfect" | "good" | "miss"): void {
     if (!this.audioEngine || !this.isInitialized) {
       const audioConfig = this.configService.getConfigSection<any>("audio");
@@ -212,8 +212,8 @@ export class AudioService implements IAudioService {
     }
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public playMetronomeTick(): void {
     if (!this.audioEngine || !this.isInitialized) {
       return; // Silent fail for metronome - not critical
@@ -243,8 +243,8 @@ export class AudioService implements IAudioService {
     }
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public createEntityVoice(entityId: string, qualiaState: QualiaState): void {
     if (!this.audioEngine || !this.isInitialized) {
       const audioConfig = this.configService.getConfigSection<any>("audio");
@@ -255,8 +255,8 @@ export class AudioService implements IAudioService {
     this.audioEngine.createEntityVoice(entityId, qualiaState);
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public removeEntityVoice(entityId: string): void {
     if (!this.audioEngine) {
       const audioConfig = this.configService.getConfigSection<any>("audio");
@@ -267,8 +267,8 @@ export class AudioService implements IAudioService {
     this.audioEngine.removeEntityVoice(entityId);
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public removeAllEntityVoices(): void {
     if (!this.audioEngine) {
       const audioConfig = this.configService.getConfigSection<any>("audio");
@@ -285,8 +285,8 @@ export class AudioService implements IAudioService {
 
   // --- IAudioService Interface Implementation ---
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public playSound(
     soundId: string,
     options?: { volume?: number; loop?: boolean },
@@ -332,8 +332,8 @@ export class AudioService implements IAudioService {
     }
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public stopSound(soundId: string): void {
     if (!this.isInitialized) {
       this.logger.warn("AudioService not initialized, cannot stop sound");
@@ -344,8 +344,8 @@ export class AudioService implements IAudioService {
     this.logger.debug(`🔇 Stopping sound: ${soundId}`);
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public setMasterVolume(volume: number): void {
     // Update the configuration service with new volume
     const config =
@@ -354,14 +354,14 @@ export class AudioService implements IAudioService {
     this.logger.info(`🔊 Master volume set to: ${config.volume}`);
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getMasterVolume(): number {
     return this.configService.getAudioConfig().volume;
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async preloadSounds(soundIds: string[]): Promise<void> {
     if (!this.isInitialized) {
       const audioConfig = this.configService.getConfigSection<any>("audio");

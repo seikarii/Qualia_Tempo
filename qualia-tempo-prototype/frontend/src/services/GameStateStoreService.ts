@@ -60,8 +60,8 @@ export class GameStateStoreService implements IGameStateStoreService {
   /**
    * Start listening to events and updating the store
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   start(): void {
     if (this.isStarted) {
       this.logger.warn("⚠️ [GameStateStoreService] Service already started");
@@ -98,8 +98,8 @@ export class GameStateStoreService implements IGameStateStoreService {
   /**
    * Stop listening to events
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   stop(): void {
     if (!this.isStarted) {
       this.logger.warn("⚠️ [GameStateStoreService] Service not started");
@@ -118,8 +118,8 @@ export class GameStateStoreService implements IGameStateStoreService {
     this.logger.info("✅ [GameStateStoreService] Event listeners stopped");
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   updateGameState(state: any): void {
     this.setStore((currentState: any) => ({
       ...currentState,
@@ -127,8 +127,8 @@ export class GameStateStoreService implements IGameStateStoreService {
     }));
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   updateQualiaState(state: any): void {
     this.setStore((currentState: any) => ({
       ...currentState,
@@ -136,12 +136,12 @@ export class GameStateStoreService implements IGameStateStoreService {
     }));
   }
 
-  @logMethod()
+  @logMethod
   getStatus(): "running" | "stopped" {
     return this.isStarted ? "running" : "stopped";
   }
 
-  @logMethod()
+  @logMethod
   isRunning(): boolean {
     return this.isStarted;
   }
@@ -290,7 +290,7 @@ export class GameStateStoreService implements IGameStateStoreService {
   /**
    * Set the store setter function (for initialization after IoC container setup)
    */
-  @logMethod()
+  @logMethod
   public setStoreSetter(setStore: StoreSetter): void {
     (this as any).setStore = setStore;
   }

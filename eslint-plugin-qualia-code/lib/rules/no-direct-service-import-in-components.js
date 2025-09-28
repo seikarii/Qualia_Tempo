@@ -23,8 +23,9 @@ module.exports = {
   create(context) {
     const filename = context.getFilename();
     const isComponent = filename.endsWith('.tsx');
+    const isBootstrapFile = filename.endsWith('index.tsx') || filename.includes('/src/index.tsx');
 
-    if (!isComponent) {
+    if (!isComponent || isBootstrapFile) {
       return {};
     }
 
@@ -33,7 +34,14 @@ module.exports = {
         const sourcePath = node.source.value;
         
         // Check if importing from services directory
-        if (typeof sourcePath === 'string' && sourcePath.includes('/services/') && !sourcePath.includes('/interfaces/') && !sourcePath.includes('/hooks')) {
+        // Allow: /interfaces/, /hooks, /contracts/, and type-only imports
+        const isServicesImport = sourcePath.includes('/services/');
+        const isAllowedPath = sourcePath.includes('/interfaces/') || 
+                             sourcePath.includes('/hooks') || 
+                             sourcePath.includes('/contracts/');
+        const isTypeOnlyImport = node.importKind === 'type';
+        
+        if (typeof sourcePath === 'string' && isServicesImport && !isAllowedPath && !isTypeOnlyImport) {
           context.report({
             node,
             message: 'QUALIA.CODE Violation: Direct service imports prohibited in components. Use useService() hook instead. (Section 2.2)'

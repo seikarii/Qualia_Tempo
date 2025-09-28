@@ -13,7 +13,7 @@ export class WebAudioAPIService implements IWebAudioAPIService {
     }
   }
 
-  @logMethod()
+  @logMethod
   public getAudioContext(): AudioContext {
     if (!this.audioContext) {
       throw new Error("AudioContext is not available in this environment.");

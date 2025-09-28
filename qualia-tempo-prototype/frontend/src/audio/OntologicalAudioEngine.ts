@@ -54,8 +54,8 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   /**
    * Crea una voz musical para una entidad basada en su estado qualia.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public createEntityVoice(entityId: string, qualiaState: QualiaState): void {
     if (this.synthPool.has(entityId)) return;
 
@@ -79,8 +79,8 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   /**
    * Actualiza el sonido de una entidad según su estado qualia.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public updateEntitySound(entityId: string, qualiaState: QualiaState): void {
     const synth = this.synthPool.get(entityId);
     if (!synth) return;
@@ -146,8 +146,8 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   /**
    * Ejecuta patrones musicales emergentes según el tipo de comportamiento.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public playEmergentPattern(behavior: EmergentBehavior): void {
     switch (behavior.type) {
       case "CLUSTERING":
@@ -231,8 +231,8 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   /**
    * Elimina la voz de una entidad y libera recursos.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public removeEntityVoice(entityId: string): void {
     const synth = this.synthPool.get(entityId);
     if (synth) {
@@ -244,7 +244,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   /**
    * Get the current master volume.
    */
-  @logMethod()
+  @logMethod
   public getMasterVolume(): number {
     return this.masterVolume.volume.value;
   }
@@ -252,8 +252,8 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   /**
    * Set the master volume.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public setMasterVolume(volume: number): void {
     this.masterVolume.volume.value = volume;
   }

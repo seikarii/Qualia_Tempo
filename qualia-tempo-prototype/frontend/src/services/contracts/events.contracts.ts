@@ -43,3 +43,53 @@ export interface VideoFrame {
   /** Frame height in pixels */
   height?: number;
 }
+
+// EventBus Event Type Definitions - Moved from EventBus.ts to eliminate direct service imports
+export interface BaseEvent {
+  type: string;
+  timestamp: Date;
+  source?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface PlayerActionEvent extends BaseEvent {
+  type: "PlayerAction";
+  action:
+    | "Dash"
+    | "HitNote"
+    | "MissNote"
+    | "FastForward"
+    | "Rewind"
+    | "StartGame"
+    | "PauseGame"
+    | "ResetGame"
+    | "scoreIncrease";
+  context?: Record<string, any>;
+  value?: number; // For scoreIncrease and other actions that need a value
+}
+
+export interface RhythmicDashEvent extends BaseEvent {
+  type: "RhythmicDash";
+  direction: "north" | "south" | "east" | "west";
+  timing: "perfect" | "good" | "miss";
+  newPosition: [number, number];
+}
+
+export interface MetronomeTickEvent extends BaseEvent {
+  type: "MetronomeTick";
+  beatNumber: number;
+  bpm: number;
+}
+
+export interface GameStateChangedEvent extends BaseEvent {
+  type: "GameStateChanged";
+  newState: "Playing" | "Paused" | "GameOver" | "Menu";
+  oldState: string;
+  previousState: string;
+}
+
+export interface PlayerInputEvent extends BaseEvent {
+  type: "PlayerInput";
+  key: string;
+  source?: string;
+}

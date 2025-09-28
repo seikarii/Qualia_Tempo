@@ -1,125 +1,196 @@
 🏗️  QUALIA.CODE Architectural Enforcement
 =========================================
-[0;34m📋 Phase 1: Frontend ESLint Rules[0m
+📋 Phase 1: Frontend ESLint Rules
    Running ESLint with QUALIA.CODE rules...
 
 > qualia-tempo-frontend@1.0.0 lint
 > eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0
 
+=============
 
-/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/components/game/PlayerAvatar.tsx
-  13:13  error  '_y' is assigned a value but never used  no-unused-vars
+WARNING: You are currently running a version of TypeScript which is not officially supported by @typescript-eslint/typescr
+ipt-estree.                                                                                                               
+You may find that it works just fine, or you may not.
 
+SUPPORTED TYPESCRIPT VERSIONS: >=4.3.5 <5.4.0
+
+YOUR TYPESCRIPT VERSION: 5.9.2
+
+Please only submit bug reports when using the officially supported version.
+
+=============
+
+/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx
+  12:1  error  QUALIA.CODE Violation: Direct service imports prohibited in components. Use useService() hook instead. (Section 2.2)  @qualia-tempo/qualia-code/no-direct-service-import-in-components
+/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/components/game/QualiaTempoHUD.tsx
+  7:1  error  QUALIA.CODE Violation: Direct service imports prohibited in components. Use useService() hook instead. (Section 2.2)  @qualia-tempo/qualia-code/no-direct-service-import-in-components
+/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/index.tsx
+  12:1  error  QUALIA.CODE Violation: Direct service imports prohibited in components. Use useService() hook instead. (Section 2.2)  @qualia-tempo/qualia-code/no-direct-service-import-in-components
+  13:1  error  QUALIA.CODE Violation: Direct service imports prohibited in components. Use useService() hook instead. (Section 2.2)  @qualia-tempo/qualia-code/no-direct-service-import-in-components
+  14:1  error  QUALIA.CODE Violation: Direct service imports prohibited in components. Use useService() hook instead. (Section 2.2)  @qualia-tempo/qualia-code/no-direct-service-import-in-components
+  19:1  error  QUALIA.CODE Violation: Direct service imports prohibited in components. Use useService() hook instead. (Section 2.2)  @qualia-tempo/qualia-code/no-direct-service-import-in-components
+/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/AudioService.ts
+  87:3  error  Simple synchronous getters should NOT use @catchError() - it adds unnecessary performance overhead. (Section 8.1)  @qualia-tempo/qualia-code/enforce-method-decorators
+  87:3  error  Consider removing @catchError from simple getter for better performance on hot paths
+        @qualia-tempo/qualia-code/enforce-method-decorators
+/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/BackendSyncService.ts
+   70:46  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  275:3   error    Simple synchronous getters should NOT use @catchError() - it adds unnecessary performance overhead. (Section 8.1)           @qualia-tempo/qualia-code/enforce-method-decorators
+  275:3   error    Consider removing @catchError from simple getter for better performance on hot paths
+                     @qualia-tempo/qualia-code/enforce-method-decorators
 /media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/ConfigurationService.ts
-  700:24  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-
+  701:24  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
 /media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/DebugService.ts
-  145:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  169:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  195:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  466:65  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  621:24  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  650:42  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  656:8   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  699:62  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  755:21  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  831:11  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  852:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-
+  145:7   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  169:9   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  195:9   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  466:65  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  621:56  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  650:42  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  650:42  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  656:8   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  656:8   warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  691:62  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  699:62  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  755:21  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  831:11  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  852:7   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  876:31  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
 /media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/ErrorReportingService.ts
-  115:68  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  121:66  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  221:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  240:24  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  248:11  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  254:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  268:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  272:25  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  394:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  426:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  470:66  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  495:22  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  504:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  528:57  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  555:11  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  578:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  602:8   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  646:57  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  673:11  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  684:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  723:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  753:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  815:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  854:24  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-
+  112:33   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  225:7    error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  244:24   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  252:11   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  258:9    error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  272:9    error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  276:25   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  398:7    error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  430:7    error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  474:66   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  499:22   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  508:7    error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  526:113  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  532:57   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  559:11   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  582:7    error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  606:45   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  606:45   warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  612:47   warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  650:57   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  677:11   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  688:9    error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  727:9    error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  757:9    error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  787:68   warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  819:9    error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  846:41   warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  847:73   warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  858:24   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
 /media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/GameStateStoreService.ts
-   51:47  error  'eventBus' is defined but never used. Allowed unused args must match /^_/u                                     no-unused-vars
-   52:45  error  'logger' is defined but never used. Allowed unused args must match /^_/u                                       no-unused-vars
-   53:49  error  'setStore' is defined but never used. Allowed unused args must match /^_/u                                     no-unused-vars
+   51:47  error  'eventBus' is defined but never used. Allowed unused args must match /^_/u
+      no-unused-vars
+   52:45  error  'logger' is defined but never used. Allowed unused args must match /^_/u
+      no-unused-vars
+   53:49  error  'setStore' is defined but never used. Allowed unused args must match /^_/u
+      no-unused-vars
    55:22  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
    71:22  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
   109:22  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
   156:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
   256:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
   270:22  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-
+/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/Logger.ts
+   97:9  error  QUALIA.CODE Violation: console.* usage prohibited in services. Use injected QualiaLogger instead. (Section 5.3)  @qualia-tempo/qualia-code/no-console-in-services
+  100:9  error  QUALIA.CODE Violation: console.* usage prohibited in services. Use injected QualiaLogger instead. (Section 5.3)  @qualia-tempo/qualia-code/no-console-in-services
+  103:9  error  QUALIA.CODE Violation: console.* usage prohibited in services. Use injected QualiaLogger instead. (Section 5.3)  @qualia-tempo/qualia-code/no-console-in-services
+  106:9  error  QUALIA.CODE Violation: console.* usage prohibited in services. Use injected QualiaLogger instead. (Section 5.3)  @qualia-tempo/qualia-code/no-console-in-services
+  124:7  error  QUALIA.CODE Violation: console.* usage prohibited in services. Use injected QualiaLogger instead. (Section 5.3)  @qualia-tempo/qualia-code/no-console-in-services
+  140:7  error  QUALIA.CODE Violation: console.* usage prohibited in services. Use injected QualiaLogger instead. (Section 5.3)  @qualia-tempo/qualia-code/no-console-in-services
 /media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/NotificationService.ts
-   153:23  error  'config' is defined but never used. Allowed unused args must match /^_/u                                       no-unused-vars
-   193:29  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   211:33  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   319:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   336:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   343:25  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   345:24  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   351:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   451:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   505:25  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   690:11  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   700:11  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   809:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   819:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   921:64  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  1164:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  1198:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-
+   156:23  error    'config' is defined but never used. Allowed unused args must match /^_/u
+                      no-unused-vars
+  187:61  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  196:57  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  196:57  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  214:66  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  214:66  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  319:24  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  320:20  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  320:20  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  321:25  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  321:25  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  325:7   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  342:9   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  349:25  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  351:24  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  357:9   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  457:9   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  511:25  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  696:11  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  706:11  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  815:7   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  825:7   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  927:64  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+ 1170:9   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+ 1204:9   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
 /media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/QualiaStateCalculatorService.ts
-   73:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   89:11  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   93:11  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  126:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  209:22  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  280:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  299:22  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  313:22  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  328:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  352:29  error  Direct access to "window" is forbidden in services layer. Use appropriate abstraction service instead          @qualia-tempo/qualia-code/no-global-api-calls
-  359:7   error  Direct access to "window" is forbidden in services layer. Use appropriate abstraction service instead          @qualia-tempo/qualia-code/no-global-api-calls
-  415:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  476:22  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-
+   77:7   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+   93:11  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+   97:11  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  130:7   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  213:22  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  284:7   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  303:22  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  317:22  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  332:7   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  373:53  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  419:9   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  480:22  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  491:53  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/RhythmicMovementController.ts
+  103:43  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  385:43  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  586:38  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
 /media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/StreamingVideoService.ts
-   98:57  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-   99:55  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  102:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  124:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  138:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  161:13  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  182:13  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  197:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  362:10  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  460:9   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-  561:7   error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-
+   41:37  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+   97:61  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+   98:57  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+   98:57  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+   99:55  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+   99:55  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  102:7   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  124:9   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  138:7   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  161:13  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  161:13  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  165:45  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  172:12  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  182:13  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  197:9   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  234:28  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  328:3   error    Public async methods that aren't simple getters must use @catchError() decorator for proper error boundaries                @qualia-tempo/qualia-code/enforce-method-decorators
+  351:26  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  362:10  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  450:22  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  451:22  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  460:9   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  533:36  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  561:7   error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+  561:7   warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
 /media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/TimerService.ts
-  159:22  error  Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService  @qualia-tempo/qualia-code/no-hardcoded-config
-
+   20:23  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+   38:25  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  159:22  error    Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService               @qualia-tempo/qualia-code/no-hardcoded-config
+/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/inversify.config.ts
+  77:3   warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
+  77:11  warning  QUALIA.CODE Suggestion: Consider externalizing this value to ConfigurationService for runtime configurability. (Section 1)  @qualia-tempo/qualia-code/enforce-config-driven-values
 /media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/src/services/inversify.container.ts
   1:1  error  CRISALIDA.CODE: El fichero index.tsx debe importar 'reflect-metadata' en la primera línea  @qualia-tempo/qualia-code/enforce-inversify-conventions
 
-✖ 89 problems (89 errors, 0 warnings)
+✖ 143 problems (105 errors, 38 warnings)
 
-   [0;31m❌ Frontend architectural violations detected[0m
-[0;34m📋 Phase 2: Backend Python Rules[0m
+   ❌ Frontend architectural violations detected
+📋 Phase 2: Backend Python Rules
    Running QUALIA.CODE Python linter...
    ❌ Backend architectural violations detected
    /media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/backend/main.py:23: Method load_server_config missing @log_execution decorator
@@ -145,9 +216,12 @@ Después de revisar el reporte actualizado (28 de septiembre de 2025) y **leer a
   - **Análisis**: El error se reporta en `inversify.container.ts` pero se refiere a `index.tsx`. En `index.tsx`, `reflect-metadata` está importado en línea 6 (no primera), pero el archivo reportado es incorrecto. Esto parece un bug en la regla del linter `@qualia-tempo/qualia-code/enforce-inversify-conventions`.
 
 ### Violaciones Legítimas Confirmadas:
-- **PlayerAvatar.tsx línea 13**: `const [x, _y, z] = position;` - Variable `_y` no usada. Legítimo error (debe usarse o cambiar patrón ESLint).
-- **Hardcoded values**: Ejemplos como `count: 100` en ConfigurationService.ts, `memoryCleanupThreshold: 1000` en DebugService.ts. Deben externalizarse según Sección 1.
-- **Otros errores**: Imports directos, @catchError overuse, console usage, window access - todos violan reglas documentadas.
+- **Direct service imports**: Ejemplos como `QualiaTempoGame.tsx`, `QualiaTempoHUD.tsx`, `index.tsx` - violan Sección 2.2.
+- **Hardcoded values**: Más de 100 errores de valores hardcoded que deben externalizarse según Sección 1.
+- **@catchError overuse**: En `AudioService`, `BackendSyncService` - getters simples no deben usar este decorador.
+- **Console usage**: En `Logger.ts` - violan Sección 5.3.
+- **Unused vars**: En `GameStateStoreService`, `NotificationService` - parámetros no usados.
+- **Backend @log_execution**: Más de 230 métodos faltantes del decorador.
 
 **Conclusión: 1 falso positivo identificado (error de linter mal reportado). El resto requiere corrección.**
 
@@ -165,7 +239,7 @@ Después de revisar el reporte actualizado (28 de septiembre de 2025) y **leer a
 
 ### Prioridad 2: Externalización de Configuración (Sección 1 - LAW OF SOVEREIGNTY)
 3. **Crear/actualizar archivos YAML de configuración**:
-   - Identificar todos los valores hardcoded (106+ errores).
+   - Identificar todos los valores hardcoded (105+ errores).
    - Crear `frontend/src/config/game.yaml`, `qualia.yaml`, `services.yaml`, etc.
    - Externalizar valores como timeouts, URLs, multiplicadores, flags de features.
 
@@ -210,6 +284,3 @@ Después de revisar el reporte actualizado (28 de septiembre de 2025) y **leer a
 15. **Pruebas unitarias** para validar cambios.
 
 **Estimación de esfuerzo**: 2-3 días de trabajo sistemático, priorizando arquitectura sobre detalles.
-
-
-

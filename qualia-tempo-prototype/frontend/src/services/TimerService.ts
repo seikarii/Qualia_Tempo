@@ -15,7 +15,7 @@ export class TimerService implements ITimerService {
     this.logger.info("TimerService initialized with timer abstraction");
   }
 
-  @logMethod()
+  @logMethod
   public setTimeout(callback: () => void, delay: number): number {
     this.logger.debug("Setting timeout", { delay });
 
@@ -32,7 +32,7 @@ export class TimerService implements ITimerService {
     return id;
   }
 
-  @logMethod()
+  @logMethod
   public clearTimeout(id: number): void {
     if (this.activeTimeouts.has(id)) {
       this.logger.debug("Clearing timeout", { id });
@@ -41,7 +41,7 @@ export class TimerService implements ITimerService {
     }
   }
 
-  @logMethod()
+  @logMethod
   public setInterval(callback: () => void, interval: number): number {
     this.logger.debug("Setting interval", { interval });
 
@@ -57,7 +57,7 @@ export class TimerService implements ITimerService {
     return id;
   }
 
-  @logMethod()
+  @logMethod
   public clearInterval(id: number): void {
     if (this.activeIntervals.has(id)) {
       this.logger.debug("Clearing interval", { id });
@@ -66,8 +66,8 @@ export class TimerService implements ITimerService {
     }
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public debounce<T extends (..._args: any[]) => any>(func: T, wait: number): T {
     this.logger.debug("Creating debounced function", { wait });
 
@@ -87,8 +87,8 @@ export class TimerService implements ITimerService {
     return debounced;
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public throttle<T extends (..._args: any[]) => any>(func: T, wait: number): T {
     this.logger.debug("Creating throttled function", { wait });
 
@@ -110,7 +110,7 @@ export class TimerService implements ITimerService {
    * Cleanup method to clear all active timers
    * Should be called when the service is being destroyed
    */
-  @logMethod()
+  @logMethod
   public cleanup(): void {
     this.logger.info("Cleaning up all active timers");
 
@@ -127,7 +127,7 @@ export class TimerService implements ITimerService {
     this.activeIntervals.clear();
   }
 
-  @logMethod()
+  @logMethod
   public nextTick(callback: () => void): void {
     this.logger.debug("Scheduling next tick callback");
     Promise.resolve().then(() => {
@@ -139,7 +139,7 @@ export class TimerService implements ITimerService {
     });
   }
 
-  @logMethod()
+  @logMethod
   public now(): number {
     return Date.now();
   }
@@ -159,7 +159,7 @@ export class PerformanceService implements IPerformanceService {
     this.logger.info("PerformanceService initialized with performance abstraction");
   }
 
-  @logMethod()
+  @logMethod
   public now(): number {
     if (typeof performance !== 'undefined' && performance.now) {
       return performance.now();
@@ -168,7 +168,7 @@ export class PerformanceService implements IPerformanceService {
     return Date.now();
   }
 
-  @logMethod()
+  @logMethod
   public getMemoryInfo(): { usedJSHeapSize?: number; totalJSHeapSize?: number; jsHeapSizeLimit?: number } {
     if (typeof performance !== 'undefined' && (performance as any).memory) {
       const memory = (performance as any).memory;
@@ -181,7 +181,7 @@ export class PerformanceService implements IPerformanceService {
     return {};
   }
 
-  @logMethod()
+  @logMethod
   public mark(name: string): void {
     if (typeof performance !== 'undefined' && performance.mark) {
       performance.mark(name);
@@ -189,7 +189,7 @@ export class PerformanceService implements IPerformanceService {
     }
   }
 
-  @logMethod()
+  @logMethod
   public measure(name: string, startMark?: string, endMark?: string): number {
     if (typeof performance !== 'undefined' && performance.measure && performance.getEntriesByName) {
       performance.measure(name, startMark, endMark);
@@ -201,7 +201,7 @@ export class PerformanceService implements IPerformanceService {
     return 0;
   }
 
-  @logMethod()
+  @logMethod
   public clearMarks(name?: string): void {
     if (typeof performance !== 'undefined' && performance.clearMarks) {
       performance.clearMarks(name);
@@ -209,7 +209,7 @@ export class PerformanceService implements IPerformanceService {
     }
   }
 
-  @logMethod()
+  @logMethod
   public clearMeasures(name?: string): void {
     if (typeof performance !== 'undefined' && performance.clearMeasures) {
       performance.clearMeasures(name);

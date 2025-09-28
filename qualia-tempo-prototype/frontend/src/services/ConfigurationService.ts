@@ -494,8 +494,8 @@ export class ConfigurationService implements IConfigurationService {
    */
 
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async loadConfig(): Promise<FullGameConfig> {
     try {
       this.logger.info("Loading configuration from multiple YAML files...");
@@ -535,7 +535,7 @@ export class ConfigurationService implements IConfigurationService {
   /**
    * Get the complete configuration
    */
-  @logMethod()
+  @logMethod
   public getConfig(): FullGameConfig {
     if (!this.loadedConfig) {
       throw new Error("Configuration not loaded. Call loadConfig() first.");
@@ -547,7 +547,7 @@ export class ConfigurationService implements IConfigurationService {
    * PURE DI: Get specific configuration section by key
    * Replaces all getRhythmicMovementConfig, getQualiaConfig, etc.
    */
-  @logMethod()
+  @logMethod
   public getConfigSection<T>(sectionKey: keyof FullGameConfig): T {
     if (!this.loadedConfig) {
       throw new Error("Configuration not loaded. Call loadConfig() first.");
@@ -615,7 +615,7 @@ export class ConfigurationService implements IConfigurationService {
    * Get game-specific configuration section.
    * @returns Game configuration object
    */
-  @logMethod()
+  @logMethod
   public getGameConfig(): any {
     return this.getConfigSection("gameController");
   }
@@ -624,7 +624,7 @@ export class ConfigurationService implements IConfigurationService {
    * Get qualia calculation configuration.
    * @returns Qualia calculator configuration
    */
-  @logMethod()
+  @logMethod
   public getQualiaConfig(): QualiaCalculatorConfig {
     return this.getConfigSection<QualiaCalculatorConfig>("qualiaCalculator");
   }
@@ -633,7 +633,7 @@ export class ConfigurationService implements IConfigurationService {
    * Get backend synchronization configuration.
    * @returns Backend sync configuration
    */
-  @logMethod()
+  @logMethod
   public getBackendConfig(): BackendSyncConfig {
     return this.getConfigSection<BackendSyncConfig>("backendSync");
   }
@@ -642,7 +642,7 @@ export class ConfigurationService implements IConfigurationService {
    * Get audio service configuration.
    * @returns Audio service configuration
    */
-  @logMethod()
+  @logMethod
   public getAudioConfig(): AudioServiceConfig {
     return this.getConfigSection<AudioServiceConfig>("audioService");
   }
@@ -651,7 +651,7 @@ export class ConfigurationService implements IConfigurationService {
    * Get error reporting configuration.
    * @returns Error reporting configuration
    */
-  @logMethod()
+  @logMethod
   public getErrorReportingConfig(): ErrorReportingConfig {
     return this.getConfigSection<ErrorReportingConfig>("errorReporting");
   }
@@ -660,7 +660,7 @@ export class ConfigurationService implements IConfigurationService {
    * Get rhythmic movement configuration.
    * @returns Rhythmic movement configuration
    */
-  @logMethod()
+  @logMethod
   public getRhythmicMovementConfig(): RhythmicMovementConfig {
     return this.getConfigSection<RhythmicMovementConfig>("rhythmicMovement");
   }
@@ -669,7 +669,7 @@ export class ConfigurationService implements IConfigurationService {
    * Get notification service configuration.
    * @returns Notification service configuration
    */
-  @logMethod()
+  @logMethod
   public getNotificationConfig(): NotificationServiceConfig {
     return this.getConfigSection<NotificationServiceConfig>(
       "notificationService",
@@ -679,7 +679,7 @@ export class ConfigurationService implements IConfigurationService {
   /**
    * Get HTTP service configuration
    */
-  @logMethod()
+  @logMethod
   public getHttpConfig(): {
     defaultTimeout: number;
     maxRetries: number;
@@ -692,7 +692,7 @@ export class ConfigurationService implements IConfigurationService {
    * Get visual effects configuration (qualia background & landing visuals).
    * @returns Visual effects configuration or default fallback if not defined
    */
-  @logMethod()
+  @logMethod
   public getVisualEffectsConfig(): VisualEffectsConfig {
     // QUALIA.CODE: Configuration externalized - load from YAML, minimal fallback only
     try {
@@ -714,7 +714,7 @@ export class ConfigurationService implements IConfigurationService {
   /**
    * Check if configuration is loaded
    */
-  @logMethod()
+  @logMethod
   public isLoaded(): boolean {
     return this.loadedConfig !== null;
   }
@@ -722,8 +722,8 @@ export class ConfigurationService implements IConfigurationService {
   /**
    * Reload configuration from external sources
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async reload(): Promise<void> {
     this.loadedConfig = null;
     await this.loadConfig();

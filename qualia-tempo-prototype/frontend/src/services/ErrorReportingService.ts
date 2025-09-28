@@ -229,8 +229,8 @@ export class ErrorReportingService implements IErrorReportingService {
   /**
    * Start the ErrorReportingService and begin monitoring error events.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public start(): void {
     if (this.isStarted) {
       this.logger.warn("⚠️ [ErrorReportingService] Service already running");
@@ -283,8 +283,8 @@ export class ErrorReportingService implements IErrorReportingService {
   /**
    * Stop the ErrorReportingService and clean up resources.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public stop(): void {
     if (!this.isStarted) {
       this.logger.warn("⚠️ [ErrorReportingService] Service not running");
@@ -318,8 +318,8 @@ export class ErrorReportingService implements IErrorReportingService {
   /**
    * Report an error manually.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async reportError(
     error: Error,
     severity: ErrorSeverity = "medium",
@@ -341,8 +341,8 @@ export class ErrorReportingService implements IErrorReportingService {
   /**
    * Update ErrorReportingService configuration.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public updateConfig(newConfig: Partial<ErrorReportingConfig>): void {
     this.config = { ...this.config, ...newConfig };
     this.logger.info("⚙️ [ErrorReportingService] Configuration updated");
@@ -361,8 +361,8 @@ export class ErrorReportingService implements IErrorReportingService {
   /**
    * Get error reporting statistics.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getStatistics(): ErrorStatistics {
     return {
       ...this.statistics,
@@ -373,8 +373,8 @@ export class ErrorReportingService implements IErrorReportingService {
   /**
    * Export error data for external analysis.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public exportErrorData(): any {
     return {
       timestamp: Date.now(),
@@ -391,8 +391,8 @@ export class ErrorReportingService implements IErrorReportingService {
   /**
    * Force flush all pending errors immediately.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async forceFlush(): Promise<void> {
     this.logger.info(
       "🔄 [ErrorReportingService] Force flushing all pending errors...",
@@ -407,8 +407,8 @@ export class ErrorReportingService implements IErrorReportingService {
   /**
    * Clear all error history and reset statistics.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public clearHistory(): void {
     this.errorHistory = [];
     this.duplicateRegistry.clear();
@@ -434,8 +434,8 @@ export class ErrorReportingService implements IErrorReportingService {
   /**
    * Clear error reporting statistics.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public clearStatistics(): void {
     this.statistics = {
       totalErrors: 0,
@@ -451,8 +451,8 @@ export class ErrorReportingService implements IErrorReportingService {
   /**
    * Set the minimum error reporting level.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public setReportingLevel(level: ErrorSeverity): void {
     // Store the reporting level in config or a separate field
     this.logger.info(
@@ -463,7 +463,7 @@ export class ErrorReportingService implements IErrorReportingService {
   /**
    * Check if error reporting is currently enabled.
    */
-  @logMethod()
+  @logMethod
   public isEnabled(): boolean {
     return this.isStarted && this.config.enabled;
   }

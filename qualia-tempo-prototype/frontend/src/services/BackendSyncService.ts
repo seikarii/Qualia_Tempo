@@ -120,8 +120,8 @@ export class BackendSyncService implements IBackendSyncService {
   /**
    * Start the sync service and begin listening to events.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async start(): Promise<void> {
     const startTime = performance.now();
     this.logger.info("🚀 [BackendSync] Start called");
@@ -182,8 +182,8 @@ export class BackendSyncService implements IBackendSyncService {
   /**
    * Stop the sync service and clean up resources.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async stop(): Promise<void> {
     const startTime = performance.now();
     this.logger.info("🛑 [BackendSync] Stop called");
@@ -216,8 +216,8 @@ export class BackendSyncService implements IBackendSyncService {
   /**
    * Update configuration at runtime.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public updateConfig(newConfig: Partial<BackendSyncConfig>): void {
     const startTime = performance.now();
     this.logger.info("⚙️ [BackendSync] UpdateConfig called");
@@ -243,8 +243,8 @@ export class BackendSyncService implements IBackendSyncService {
   /**
    * Force an immediate sync (bypassing throttling).
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async forceSync(): Promise<void> {
     const startTime = performance.now();
     this.logger.info("⚡ [BackendSync] ForceSync called");
@@ -272,8 +272,8 @@ export class BackendSyncService implements IBackendSyncService {
   /**
    * Check if the service is connected to the backend.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public isBackendConnected(): boolean {
     return this.isConnected;
   }
@@ -281,8 +281,8 @@ export class BackendSyncService implements IBackendSyncService {
   /**
    * Get current configuration.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getConfig(): BackendSyncConfig {
     return { ...this.ensureConfigLoaded() };
   }
@@ -514,8 +514,8 @@ export class BackendSyncService implements IBackendSyncService {
    * @param state The QualiaState to sync
    * @returns Promise that resolves when sync is complete
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async syncQualiaState(state: QualiaState): Promise<void> {
     const config = this.ensureConfigLoaded();
     const qualiaRequest: QualiaStateRequest = {
@@ -542,7 +542,7 @@ export class BackendSyncService implements IBackendSyncService {
    * Get service status and statistics.
    * @returns Object containing service metrics
    */
-  @logMethod()
+  @logMethod
   public getStatus(): {
     isRunning: boolean;
     isConnected: boolean;
@@ -568,8 +568,8 @@ export class BackendSyncService implements IBackendSyncService {
    * Manually test the backend connection.
    * @returns Promise that resolves with connection status
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async testConnection(): Promise<boolean> {
     try {
       const config = this.ensureConfigLoaded();

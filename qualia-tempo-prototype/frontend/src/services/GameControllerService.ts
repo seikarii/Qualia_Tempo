@@ -102,8 +102,8 @@ export class GameControllerService implements IGameControllerService {
   /**
    * Start the game controller service
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public start(): void {
     const startTime = performance.now();
     this.logger.info("🚀 [GameController] Starting service...");
@@ -134,8 +134,8 @@ export class GameControllerService implements IGameControllerService {
   /**
    * Stop the game controller service
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public stop(): void {
     const startTime = performance.now();
     this.logger.info("🛑 [GameController] Stopping service...");
@@ -166,8 +166,8 @@ export class GameControllerService implements IGameControllerService {
 
   // --- IGameControllerService Interface Implementation ---
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public startGame(): void {
     this.logger.info("🎮 [GameController] Starting game");
     this.gameState.isPlaying = true;
@@ -175,8 +175,8 @@ export class GameControllerService implements IGameControllerService {
     this.emitGameStateChanged("Playing");
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public pauseGame(): void {
     if (!this.gameState.isPlaying) return;
 
@@ -185,8 +185,8 @@ export class GameControllerService implements IGameControllerService {
     this.emitGameStateChanged("Paused");
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public resumeGame(): void {
     if (!this.gameState.isPlaying || !this.gameState.isPaused) return;
 
@@ -195,8 +195,8 @@ export class GameControllerService implements IGameControllerService {
     this.emitGameStateChanged("Playing");
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public resetGame(): void {
     this.logger.info("🔄 [GameController] Resetting game");
     this.gameState = {
@@ -211,20 +211,20 @@ export class GameControllerService implements IGameControllerService {
     this.emitGameStateChanged("Menu");
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getGameState(): any {
     return { ...this.gameState };
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public isPlaying(): boolean {
     return this.gameState.isPlaying && !this.gameState.isPaused;
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public isPaused(): boolean {
     return this.gameState.isPaused;
   }
@@ -234,8 +234,8 @@ export class GameControllerService implements IGameControllerService {
   /**
    * Get configuration
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getConfig(): Readonly<GameControllerConfig> {
     return { ...this.config };
   }

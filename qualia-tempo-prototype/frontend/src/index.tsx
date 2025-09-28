@@ -1,22 +1,16 @@
+import "reflect-metadata"; // MUST be first import for InversifyJS decorators
 /**
  * QUALIA.CODE v1.1 - Application Entry Point (GOLD.CODE STANDARD)
  * InversifyJS IoC Bootstrap - PURE DEPENDENCY INJECTION
  */
-
-import "reflect-metadata"; // MUST be first import for InversifyJS decorators
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 
 // Import the InversifyJS configuration which sets up the container.
 import "./services/inversify.config";
-import { container } from "./services/inversify.container";
-import { TYPES } from "./services/inversify.types";
-import { env } from "./utils/env";
-import type { IApplicationInitializerService } from "./services/interfaces/IApplicationInitializerService";
-import type { ILogger } from "./services/interfaces/ILogger";
-import type { IDebugService } from "./services/interfaces/IDebugService";
-import { LoggerProvider, QualiaLogger } from "./services/Logger";
+// Import ApplicationCompositionRoot for proper bootstrap
+import { ApplicationCompositionRoot } from "./services/ApplicationCompositionRoot";
 
 import App from "./App";
 
@@ -33,39 +27,13 @@ class BootstrapLogger {
 }
 
 /**
- * Factory function for application initialization (not a React component)
- * Keeps container access outside React component tree
+ * QUALIA.CODE COMPLIANT: Application initialization via Composition Root
+ * NO direct container access - delegates to ApplicationCompositionRoot
  */
 const initializeApplication = async (): Promise<boolean> => {
   try {
-    const logger = container.get<ILogger>(TYPES.ILogger);
-    const appInitializer = container.get<IApplicationInitializerService>(
-      TYPES.IApplicationInitializerService,
-    );
-
-    // Register logger for decorator access
-    LoggerProvider.register(logger as QualiaLogger);
-
-    logger.info("Application Bootstrap: Initializing services...");
-    await appInitializer.start();
-
-    // Attach debug interface to window in development mode
-    if (env.isDev) {
-      try {
-        const debugService = container.get<IDebugService>(TYPES.IDebugService);
-        const debugInterface = debugService.getDebugInterface();
-        if (debugInterface) {
-          (window as any).QA_DEBUG = debugInterface;
-          logger.info("🌐 [BOOTSTRAP] Debug interface attached to window.QA_DEBUG");
-        }
-      } catch (error) {
-        logger.warn("⚠️ [BOOTSTRAP] Failed to attach debug interface:", error);
-      }
-    }
-
-    logger.info(
-      "Application Bootstrap: Initialization complete. Rendering application.",
-    );
+    const compositionRoot = new ApplicationCompositionRoot();
+    await compositionRoot.initializeApplication();
     return true;
   } catch (error) {
     BootstrapLogger.error(

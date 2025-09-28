@@ -20,7 +20,7 @@ import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
 import { QualiaStateUpdatedEvent } from "./EventBus";
-import type { PlayerActionEvent } from "./EventBus";
+import type { PlayerActionEvent } from "./contracts/events.contracts";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from "../utils/decorators";
 import type { QualiaCalculatorConfig } from "./ConfigurationService";
@@ -150,8 +150,8 @@ export class QualiaStateCalculatorService
   /**
    * Get current QualiaState (for debugging/monitoring).
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getCurrentState(): QualiaState {
     return { ...this.currentState };
   }
@@ -159,8 +159,8 @@ export class QualiaStateCalculatorService
   /**
    * Update configuration (for runtime adjustments).
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public updateConfig(newConfig: Partial<QualiaCalculatorConfig>): void {
     // Safely merge configurations, ensuring all required properties are preserved
     this.config = {
@@ -462,8 +462,8 @@ export class QualiaStateCalculatorService
    * @param action The player action to process
    * @returns The updated QualiaState
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public calculateQualiaState(_action: PlayerActionEvent): QualiaState {
     // This method would process the action and return updated state
     // For now, return current state (implementation can be expanded)
@@ -473,8 +473,8 @@ export class QualiaStateCalculatorService
   /**
    * Reset the QualiaState to initial values.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public resetState(): void {
     this.currentState = this.createInitialState();
     this.logger.info("🔄 [QualiaCalculator] State reset to initial values");
@@ -484,8 +484,8 @@ export class QualiaStateCalculatorService
    * Apply time-based decay to the current state.
    * Called automatically by the service's internal timer.
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public applyTimeDecay(): void {
     const now = Date.now();
     const deltaTime = (now - this.lastUpdateTime) / 1000;
@@ -498,7 +498,7 @@ export class QualiaStateCalculatorService
    * Apply decay to all qualia values based on time passed.
    * @param deltaTime Time passed in seconds
    */
-  @logMethod()
+  @logMethod
   private applyDecayToAllValues(deltaTime: number): void {
     const config = this.ensureConfigLoaded();
     const decayRates = config.decayRates;
@@ -523,7 +523,7 @@ export class QualiaStateCalculatorService
    * Check if the service is currently running.
    * @returns True if the service is active
    */
-  @logMethod()
+  @logMethod
   public isRunning(): boolean {
     return this._isRunning;
   }
@@ -532,8 +532,8 @@ export class QualiaStateCalculatorService
    * Get performance statistics for the calculator.
    * @returns Object containing performance metrics
    */
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public getStats(): {
     isRunning: boolean;
     calculationsPerformed: number;

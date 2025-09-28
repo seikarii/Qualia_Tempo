@@ -67,8 +67,8 @@ export class ApplicationInitializerService
     this.logger.info(config.messages.serviceInitialized);
   }
 
-  @logMethod()
-  @catchError()
+  @logMethod
+  @catchError
   public async start(): Promise<void> {
     const config = this.configService.getConfigSection<any>("application-initializer");
     
