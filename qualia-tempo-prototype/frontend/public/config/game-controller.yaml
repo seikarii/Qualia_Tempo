@@ -51,3 +51,9 @@ enableGameStateValidation: true
 enablePerformanceMonitoring: true
 autoSaveEnabled: true
 autoSaveIntervalMs: 30000
+
+# Service messages for logging
+messages:
+  eventsSubscribed: "✅ [GameController] Events subscribed successfully"
+  serviceStarted: "🎮 [GameController] Service started successfully"
+  serviceStopped: "🛑 [GameController] Service stopped successfully"

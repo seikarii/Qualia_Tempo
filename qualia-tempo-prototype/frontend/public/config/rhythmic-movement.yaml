@@ -4,6 +4,7 @@ smoothingFactor: 0.8
 deadzone: 0.05
 
 movement:
+  gridSize: 8
   speed: 5.0
   acceleration: 2.0
   friction: 0.9
@@ -21,21 +22,22 @@ visualization:
   particleCount: 50
   colorIntensity: 1.0
 
-input:
-  mouseSensitivity: 1.0
-  keyboardSpeed: 200
-  gamepadDeadzone: 0.1
-  touchSensitivity: 1.2
-
 # Core rhythm game settings
 timing:
   perfectTiming: 50
   goodTiming: 100
   okTiming: 150
 
-grid:
-  size: 8
-  cellSize: 64
+slowdown:
+  slowdownFactor: 0.5
+  slowdownDuration: 1000
+
+input:
+  keyThrottleMs: 100
+  mouseSensitivity: 1.0
+  keyboardSpeed: 200
+  gamepadDeadzone: 0.1
+  touchSensitivity: 1.2
 
 # Service messages for logging
 messages:

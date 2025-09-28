@@ -1,188 +1,410 @@
 {
-  "timestamp": "2025-09-28T03:20:33.309Z",
+  "timestamp": "2025-09-28T03:59:20.499Z",
   "success": false,
   "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('INITIATE NEURAL SYNC')\u001b[22m\n",
   "stack": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('INITIATE NEURAL SYNC')\u001b[22m\n\n    at comprehensiveTest (/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/browser-test.js:132:54)",
   "logs": [
     {
-      "timestamp": "2025-09-28T03:19:47.076Z",
+      "timestamp": "2025-09-28T03:58:34.513Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST SCRIPT LOADED ===",
       "entry": "[LOG] === RACE CONDITION TEST SCRIPT LOADED ==="
     },
     {
-      "timestamp": "2025-09-28T03:19:47.233Z",
+      "timestamp": "2025-09-28T03:58:34.637Z",
       "type": "debug",
       "text": "[vite] connecting...",
       "entry": "[DEBUG] [vite] connecting..."
     },
     {
-      "timestamp": "2025-09-28T03:19:47.236Z",
+      "timestamp": "2025-09-28T03:58:34.639Z",
       "type": "debug",
       "text": "[vite] connected.",
       "entry": "[DEBUG] [vite] connected."
     },
     {
-      "timestamp": "2025-09-28T03:19:47.778Z",
+      "timestamp": "2025-09-28T03:58:34.972Z",
       "type": "info",
       "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
       "entry": "[INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
     },
     {
-      "timestamp": "2025-09-28T03:19:47.828Z",
+      "timestamp": "2025-09-28T03:58:35.023Z",
       "type": "log",
       "text": "%c * Tone.js v14.9.17 *  background: #000; color: #fff",
       "entry": "[LOG] %c * Tone.js v14.9.17 *  background: #000; color: #fff"
     },
     {
-      "timestamp": "2025-09-28T03:19:47.881Z",
+      "timestamp": "2025-09-28T03:58:35.078Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-28T03:19:47.882Z",
+      "timestamp": "2025-09-28T03:58:35.080Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-28T03:19:48.097Z",
+      "timestamp": "2025-09-28T03:58:35.288Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}"
     },
     {
-      "timestamp": "2025-09-28T03:19:48.098Z",
+      "timestamp": "2025-09-28T03:58:35.290Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {defaultTimeout: 10000}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {defaultTimeout: 10000}"
     },
     {
-      "timestamp": "2025-09-28T03:19:48.098Z",
+      "timestamp": "2025-09-28T03:58:35.291Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
     },
     {
-      "timestamp": "2025-09-28T03:19:48.118Z",
+      "timestamp": "2025-09-28T03:58:35.312Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
     },
     {
-      "timestamp": "2025-09-28T03:19:48.157Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}"
-    },
-    {
-      "timestamp": "2025-09-28T03:19:48.158Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
-    },
-    {
-      "timestamp": "2025-09-28T03:19:48.158Z",
+      "timestamp": "2025-09-28T03:58:35.349Z",
       "type": "log",
-      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection [object Object]",
-      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection [object Object]"
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: Failed to load configuration: [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: Failed to load configuration: [object Object]"
     },
     {
-      "timestamp": "2025-09-28T03:19:48.159Z",
-      "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection [object Object]"
-    },
-    {
-      "timestamp": "2025-09-28T03:19:48.160Z",
+      "timestamp": "2025-09-28T03:58:35.349Z",
       "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection {error: Configuration section 'eventbus' not found., timestamp: 2025-09-28T03:19:48.157Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection {error: Configuration section 'eventbus' not found., timestamp: 2025-09-28T03:19:48.157Z}"
+      "text": "🚨 [QualiaLogger] ERROR: Failed to load configuration: {error: YAMLException$1}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: Failed to load configuration: {error: YAMLException$1}"
     },
     {
-      "timestamp": "2025-09-28T03:19:48.161Z",
+      "timestamp": "2025-09-28T03:58:35.350Z",
       "type": "log",
-      "text": "🔴 CONFIGURATION ERROR DETECTED: [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration section 'eventbus' not found.",
-      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration section 'eventbus' not found."
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]"
     },
     {
-      "timestamp": "2025-09-28T03:19:48.161Z",
+      "timestamp": "2025-09-28T03:58:35.350Z",
+      "type": "log",
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:35.350Z",
       "type": "error",
-      "text": "[BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration section 'eventbus' not found.\n    at ConfigurationService.getConfigSection (http://localhost:5173/src/services/ConfigurationService.ts:66:13)\n    at descriptor.value (http://localhost:5173/src/utils/decorators.ts:29:29)\n    at new EventBus (http://localhost:5173/src/services/EventBus.ts:27:39)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1613:12\n    at Nt (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1614:4)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1555:84",
-      "entry": "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration section 'eventbus' not found.\n    at ConfigurationService.getConfigSection (http://localhost:5173/src/services/ConfigurationService.ts:66:13)\n    at descriptor.value (http://localhost:5173/src/utils/decorators.ts:29:29)\n    at new EventBus (http://localhost:5173/src/services/EventBus.ts:27:39)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1613:12\n    at Nt (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1614:4)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1555:84"
+      "text": "🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, stack: YAMLException: duplicated mapping key (30:1)\n\n 27 …rvice.ts:37:38\n    at async Promise.all (index 7), arguments: Array(0), timestamp: 2025-09-28T03:58:35.343Z}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, stack: YAMLException: duplicated mapping key (30:1)\n\n 27 …rvice.ts:37:38\n    at async Promise.all (index 7), arguments: Array(0), timestamp: 2025-09-28T03:58:35.343Z}"
     },
     {
-      "timestamp": "2025-09-28T03:19:48.172Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [Config] Configuration validation passed {}"
-    },
-    {
-      "timestamp": "2025-09-28T03:19:48.172Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
-    },
-    {
-      "timestamp": "2025-09-28T03:19:48.173Z",
+      "timestamp": "2025-09-28T03:58:35.350Z",
       "type": "log",
-      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection [object Object]",
-      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection [object Object]"
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]"
     },
     {
-      "timestamp": "2025-09-28T03:19:48.174Z",
+      "timestamp": "2025-09-28T03:58:35.350Z",
       "type": "log",
-      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection [object Object]",
-      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection [object Object]"
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]"
     },
     {
-      "timestamp": "2025-09-28T03:19:48.174Z",
+      "timestamp": "2025-09-28T03:58:35.350Z",
       "type": "error",
-      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection {error: Configuration section 'eventbus' not found., timestamp: 2025-09-28T03:19:48.171Z}",
-      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection {error: Configuration section 'eventbus' not found., timestamp: 2025-09-28T03:19:48.171Z}"
+      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, timestamp: 2025-09-28T03:58:35.344Z}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, timestamp: 2025-09-28T03:58:35.344Z}"
     },
     {
-      "timestamp": "2025-09-28T03:19:48.174Z",
-      "type": "log",
-      "text": "🔴 CONFIGURATION ERROR DETECTED: [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration section 'eventbus' not found.",
-      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration section 'eventbus' not found."
-    },
-    {
-      "timestamp": "2025-09-28T03:19:48.174Z",
+      "timestamp": "2025-09-28T03:58:35.351Z",
       "type": "error",
-      "text": "[BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration section 'eventbus' not found.\n    at ConfigurationService.getConfigSection (http://localhost:5173/src/services/ConfigurationService.ts:66:13)\n    at descriptor.value (http://localhost:5173/src/utils/decorators.ts:29:29)\n    at new EventBus (http://localhost:5173/src/services/EventBus.ts:27:39)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1613:12\n    at Nt (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1614:4)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1555:84",
-      "entry": "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration section 'eventbus' not found.\n    at ConfigurationService.getConfigSection (http://localhost:5173/src/services/ConfigurationService.ts:66:13)\n    at descriptor.value (http://localhost:5173/src/utils/decorators.ts:29:29)\n    at new EventBus (http://localhost:5173/src/services/EventBus.ts:27:39)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1613:12\n    at Nt (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1614:4)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1555:84"
+      "text": "[BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. YAMLException$1",
+      "entry": "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. YAMLException$1"
     },
     {
-      "timestamp": "2025-09-28T03:19:50.069Z",
+      "timestamp": "2025-09-28T03:58:35.366Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: Failed to load configuration: [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: Failed to load configuration: [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:35.367Z",
+      "type": "error",
+      "text": "🚨 [QualiaLogger] ERROR: Failed to load configuration: {error: YAMLException$1}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: Failed to load configuration: {error: YAMLException$1}"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:35.367Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:35.367Z",
+      "type": "log",
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:35.367Z",
+      "type": "error",
+      "text": "🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, stack: YAMLException: duplicated mapping key (30:1)\n\n 27 …rvice.ts:37:38\n    at async Promise.all (index 7), arguments: Array(0), timestamp: 2025-09-28T03:58:35.365Z}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, stack: YAMLException: duplicated mapping key (30:1)\n\n 27 …rvice.ts:37:38\n    at async Promise.all (index 7), arguments: Array(0), timestamp: 2025-09-28T03:58:35.365Z}"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:35.369Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:35.369Z",
+      "type": "log",
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:35.369Z",
+      "type": "error",
+      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, timestamp: 2025-09-28T03:58:35.365Z}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, timestamp: 2025-09-28T03:58:35.365Z}"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:35.369Z",
+      "type": "error",
+      "text": "[BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. YAMLException$1",
+      "entry": "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. YAMLException$1"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:37.505Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST RESULTS ===",
       "entry": "[LOG] === RACE CONDITION TEST RESULTS ==="
     },
     {
-      "timestamp": "2025-09-28T03:19:50.071Z",
+      "timestamp": "2025-09-28T03:58:37.507Z",
       "type": "log",
-      "text": "❌ CONFIGURATION ERRORS FOUND: [Object, Object, Object, Object]",
-      "entry": "[LOG] ❌ CONFIGURATION ERRORS FOUND: [Object, Object, Object, Object]"
+      "text": "❌ CONFIGURATION ERRORS FOUND: [Object, Object, Object, Object, Object, Object]",
+      "entry": "[LOG] ❌ CONFIGURATION ERRORS FOUND: [Object, Object, Object, Object, Object, Object]"
     },
     {
-      "timestamp": "2025-09-28T03:19:50.071Z",
+      "timestamp": "2025-09-28T03:58:37.507Z",
       "type": "log",
-      "text": "❌ SERVICE INITIALIZATION ERRORS FOUND: [Object, Object]",
-      "entry": "[LOG] ❌ SERVICE INITIALIZATION ERRORS FOUND: [Object, Object]"
+      "text": "❌ SERVICE INITIALIZATION ERRORS FOUND: [Object, Object, Object, Object]",
+      "entry": "[LOG] ❌ SERVICE INITIALIZATION ERRORS FOUND: [Object, Object, Object, Object]"
     },
     {
-      "timestamp": "2025-09-28T03:19:50.072Z",
+      "timestamp": "2025-09-28T03:58:37.508Z",
+      "type": "log",
+      "text": "=== TEST COMPLETE ===",
+      "entry": "[LOG] === TEST COMPLETE ==="
+    },
+    {
+      "timestamp": "2025-09-28T03:58:50.600Z",
+      "type": "log",
+      "text": "=== RACE CONDITION TEST SCRIPT LOADED ===",
+      "entry": "[LOG] === RACE CONDITION TEST SCRIPT LOADED ==="
+    },
+    {
+      "timestamp": "2025-09-28T03:58:50.795Z",
+      "type": "debug",
+      "text": "[vite] connecting...",
+      "entry": "[DEBUG] [vite] connecting..."
+    },
+    {
+      "timestamp": "2025-09-28T03:58:50.797Z",
+      "type": "debug",
+      "text": "[vite] connected.",
+      "entry": "[DEBUG] [vite] connected."
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.063Z",
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+      "entry": "[INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.082Z",
+      "type": "log",
+      "text": "%c * Tone.js v14.9.17 *  background: #000; color: #fff",
+      "entry": "[LOG] %c * Tone.js v14.9.17 *  background: #000; color: #fff"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.143Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.145Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {defaultTimeout: 10000}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {defaultTimeout: 10000}"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.145Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.176Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.210Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: Failed to load configuration: [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: Failed to load configuration: [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.214Z",
+      "type": "error",
+      "text": "🚨 [QualiaLogger] ERROR: Failed to load configuration: {error: YAMLException$1}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: Failed to load configuration: {error: YAMLException$1}"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.214Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.215Z",
+      "type": "log",
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.215Z",
+      "type": "error",
+      "text": "🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, stack: YAMLException: duplicated mapping key (30:1)\n\n 27 …rvice.ts:37:38\n    at async Promise.all (index 7), arguments: Array(0), timestamp: 2025-09-28T03:58:51.196Z}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, stack: YAMLException: duplicated mapping key (30:1)\n\n 27 …rvice.ts:37:38\n    at async Promise.all (index 7), arguments: Array(0), timestamp: 2025-09-28T03:58:51.196Z}"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.215Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.215Z",
+      "type": "log",
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.215Z",
+      "type": "error",
+      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, timestamp: 2025-09-28T03:58:51.197Z}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, timestamp: 2025-09-28T03:58:51.197Z}"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.215Z",
+      "type": "error",
+      "text": "[BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. YAMLException$1",
+      "entry": "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. YAMLException$1"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.222Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: Failed to load configuration: [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: Failed to load configuration: [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.224Z",
+      "type": "error",
+      "text": "🚨 [QualiaLogger] ERROR: Failed to load configuration: {error: YAMLException$1}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: Failed to load configuration: {error: YAMLException$1}"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.224Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.224Z",
+      "type": "log",
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.225Z",
+      "type": "error",
+      "text": "🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, stack: YAMLException: duplicated mapping key (30:1)\n\n 27 …rvice.ts:37:38\n    at async Promise.all (index 7), arguments: Array(0), timestamp: 2025-09-28T03:58:51.219Z}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, stack: YAMLException: duplicated mapping key (30:1)\n\n 27 …rvice.ts:37:38\n    at async Promise.all (index 7), arguments: Array(0), timestamp: 2025-09-28T03:58:51.219Z}"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.225Z",
+      "type": "log",
+      "text": "🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]",
+      "entry": "[LOG] 🔴 CONFIGURATION ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.225Z",
+      "type": "log",
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig [object Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.225Z",
+      "type": "error",
+      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, timestamp: 2025-09-28T03:58:51.219Z}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, timestamp: 2025-09-28T03:58:51.219Z}"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:51.225Z",
+      "type": "error",
+      "text": "[BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. YAMLException$1",
+      "entry": "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. YAMLException$1"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:53.592Z",
+      "type": "log",
+      "text": "=== RACE CONDITION TEST RESULTS ===",
+      "entry": "[LOG] === RACE CONDITION TEST RESULTS ==="
+    },
+    {
+      "timestamp": "2025-09-28T03:58:53.593Z",
+      "type": "log",
+      "text": "❌ CONFIGURATION ERRORS FOUND: [Object, Object, Object, Object, Object, Object]",
+      "entry": "[LOG] ❌ CONFIGURATION ERRORS FOUND: [Object, Object, Object, Object, Object, Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:53.594Z",
+      "type": "log",
+      "text": "❌ SERVICE INITIALIZATION ERRORS FOUND: [Object, Object, Object, Object]",
+      "entry": "[LOG] ❌ SERVICE INITIALIZATION ERRORS FOUND: [Object, Object, Object, Object]"
+    },
+    {
+      "timestamp": "2025-09-28T03:58:53.594Z",
       "type": "log",
       "text": "=== TEST COMPLETE ===",
       "entry": "[LOG] === TEST COMPLETE ==="
     }
   ],
   "errors": [
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection {error: Configuration section 'eventbus' not found., timestamp: 2025-09-28T03:19:48.157Z}",
-    "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration section 'eventbus' not found.\n    at ConfigurationService.getConfigSection (http://localhost:5173/src/services/ConfigurationService.ts:66:13)\n    at descriptor.value (http://localhost:5173/src/utils/decorators.ts:29:29)\n    at new EventBus (http://localhost:5173/src/services/EventBus.ts:27:39)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1613:12\n    at Nt (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1614:4)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1555:84",
-    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.getConfigSection {error: Configuration section 'eventbus' not found., timestamp: 2025-09-28T03:19:48.171Z}",
-    "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. Error: Configuration section 'eventbus' not found.\n    at ConfigurationService.getConfigSection (http://localhost:5173/src/services/ConfigurationService.ts:66:13)\n    at descriptor.value (http://localhost:5173/src/utils/decorators.ts:29:29)\n    at new EventBus (http://localhost:5173/src/services/EventBus.ts:27:39)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1513:15\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1550:36\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1466:32\n    at St (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1594:14)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1613:12\n    at Nt (http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1614:4)\n    at http://localhost:5173/node_modules/.vite/deps/inversify.js?v=56446eba:1555:84"
+    "[ERROR] 🚨 [QualiaLogger] ERROR: Failed to load configuration: {error: YAMLException$1}",
+    "[ERROR] 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, stack: YAMLException: duplicated mapping key (30:1)\n\n 27 …rvice.ts:37:38\n    at async Promise.all (index 7), arguments: Array(0), timestamp: 2025-09-28T03:58:35.343Z}",
+    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, timestamp: 2025-09-28T03:58:35.344Z}",
+    "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. YAMLException$1",
+    "[ERROR] 🚨 [QualiaLogger] ERROR: Failed to load configuration: {error: YAMLException$1}",
+    "[ERROR] 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, stack: YAMLException: duplicated mapping key (30:1)\n\n 27 …rvice.ts:37:38\n    at async Promise.all (index 7), arguments: Array(0), timestamp: 2025-09-28T03:58:35.365Z}",
+    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, timestamp: 2025-09-28T03:58:35.365Z}",
+    "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. YAMLException$1",
+    "[ERROR] 🚨 [QualiaLogger] ERROR: Failed to load configuration: {error: YAMLException$1}",
+    "[ERROR] 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, stack: YAMLException: duplicated mapping key (30:1)\n\n 27 …rvice.ts:37:38\n    at async Promise.all (index 7), arguments: Array(0), timestamp: 2025-09-28T03:58:51.196Z}",
+    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, timestamp: 2025-09-28T03:58:51.197Z}",
+    "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. YAMLException$1",
+    "[ERROR] 🚨 [QualiaLogger] ERROR: Failed to load configuration: {error: YAMLException$1}",
+    "[ERROR] 🚨 [QualiaLogger] ERROR: ConfigurationService.loadConfig: {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, stack: YAMLException: duplicated mapping key (30:1)\n\n 27 …rvice.ts:37:38\n    at async Promise.all (index 7), arguments: Array(0), timestamp: 2025-09-28T03:58:51.219Z}",
+    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR ConfigurationService.loadConfig {error: duplicated mapping key (30:1)\n\n 27 |   goodTiming:…t:\n------^\n 31 |   gridSize: 8\n 32 |   speed: 5.0, timestamp: 2025-09-28T03:58:51.219Z}",
+    "[ERROR] [BOOTSTRAP ERROR] Application Bootstrap: CRITICAL FAILURE during initialization. YAMLException$1"
   ]
 }

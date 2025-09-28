@@ -54,7 +54,7 @@ export class BackendSyncService implements IBackendSyncService {
   private config: BackendSyncConfig | null = null; // QUALIA.CODE: Lazy initialization
   private eventListenerIds: string[] = [];
   private isRunning = false;
-  private isConnected = false;
+  private connected = false;
   private eventBus: IEventBus;
   private logger: ILogger;
   private configService: IConfigurationService;
@@ -91,10 +91,7 @@ export class BackendSyncService implements IBackendSyncService {
 
     // QUALIA.CODE FIX: Do NOT access configuration in constructor
     // Configuration will be loaded lazily when needed
-    const config = this.configService.getConfigSection<any>("backend-sync");
-    this.logger.info(config.messages.configurationConstructed);
-
-    this.logger.info(config.messages.serviceInitialized);
+    this.logger.info("BackendSyncService initialized - configuration will be loaded on demand");
   }
 
   /**
@@ -106,12 +103,10 @@ export class BackendSyncService implements IBackendSyncService {
         this.config =
           this.configService.getConfigSection<BackendSyncConfig>("backendSync");
         this.healthCheckInterval = this.config.connection.healthCheckInterval;
-        const configMessages = this.configService.getConfigSection<any>("backend-sync");
-        this.logger.debug(configMessages.messages.configurationLoaded);
+        this.logger.debug("BackendSync configuration loaded successfully");
       } catch (error) {
-        const configMessages = this.configService.getConfigSection<any>("backend-sync");
-        this.logger.error(configMessages.messages.configurationFailed, error);
-        throw new Error(configMessages.messages.configurationNotAvailable);
+        this.logger.error("Failed to load BackendSync configuration", error);
+        throw new Error("BackendSync configuration not available");
       }
     }
     return this.config;
@@ -123,60 +118,27 @@ export class BackendSyncService implements IBackendSyncService {
   @logMethod
   @catchError
   public async start(): Promise<void> {
-    const startTime = performance.now();
-    this.logger.info("🚀 [BackendSync] Start called");
-
-    // QUALIA.CODE: Load configuration before proceeding
-    this.ensureConfigLoaded();
-
+    this.logger.info("🚀 [BackendSync] Starting service...");
+    
     if (this.isRunning) {
       this.logger.warn("⚠️ [BackendSync] Service already running");
       return;
     }
 
-    const config = this.ensureConfigLoaded();
-    const maxRetries = config.sync.maxRetries;
-    const retryDelay = config.sync.retryDelay;
+    this.ensureConfigLoaded();
+    this.subscribeToEvents();
+    this.startHealthChecking();
+    this.isRunning = true;
+    
+    this.logger.info("✅ [BackendSync] Service started successfully");
+  }
 
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        this.logger.info(
-          `[BackendSync] Connection attempt ${i + 1}/${maxRetries}...`,
-        );
-        await this.checkHealth(); // Attempt to connect
-
-        // If checkHealth succeeds, we're connected
-        this.subscribeToEvents();
-        this.startHealthChecking();
-        this.isRunning = true;
-        const duration = performance.now() - startTime;
-        this.logger.info(
-          `🚀 [BackendSync] Service started successfully after ${i + 1} attempts - ${duration.toFixed(2)}ms`,
-        );
-        return; // Exit the function successfully
-      } catch (error) {
-        this.logger.warn(
-          `[BackendSync] Connection attempt ${i + 1} failed. Retrying in ${retryDelay}ms...`,
-        );
-        if (i === maxRetries - 1) {
-          // This was the last attempt, so fail permanently
-          const duration = performance.now() - startTime;
-          this.logger.error(
-            `🚨 [BackendSync] Start failed after ${maxRetries} attempts - ${duration.toFixed(2)}ms`,
-            { error },
-          );
-          this.eventBus.emit<ErrorEvent>({
-            type: "Error",
-            error: error instanceof Error ? error : new Error(String(error)),
-            severity: "high",
-          });
-          throw error; // Re-throw the final error
-        }
-        await new Promise<void>((resolve) => {
-          this.timerService.setTimeout(() => resolve(), retryDelay);
-        }); // Wait before retrying
-      }
-    }
+  /**
+   * Check if backend is connected
+   */
+  @logMethod
+  public isConnected(): boolean {
+    return this.connected;
   }
 
   /**
@@ -198,7 +160,7 @@ export class BackendSyncService implements IBackendSyncService {
       this.stopHealthChecking();
       this.clearPendingSync();
       this.isRunning = false;
-      this.isConnected = false;
+      this.connected = false;
 
       const duration = performance.now() - startTime;
       this.logger.info(
@@ -275,7 +237,7 @@ export class BackendSyncService implements IBackendSyncService {
   @logMethod
   @catchError
   public isBackendConnected(): boolean {
-    return this.isConnected;
+    return this.connected;
   }
 
   /**
@@ -462,7 +424,7 @@ export class BackendSyncService implements IBackendSyncService {
         },
       });
 
-      this.isConnected = true;
+      this.connected = true;
 
       const duration = performance.now() - startTime;
       this.logger.info(
@@ -470,7 +432,7 @@ export class BackendSyncService implements IBackendSyncService {
         { response },
       );
     } catch (error) {
-      this.isConnected = false;
+      this.connected = false;
       const duration = performance.now() - startTime;
       this.logger.error(
         `🚨 [BackendSync] Health check failed - ${duration.toFixed(2)}ms:`,
@@ -488,7 +450,7 @@ export class BackendSyncService implements IBackendSyncService {
         this.logger.error("🚨 [BackendSync] Periodic health check failed:", {
           error,
         });
-        this.isConnected = false;
+        this.connected = false;
       });
     }, this.healthCheckInterval); // Check every configured interval
   }

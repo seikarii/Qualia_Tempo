@@ -413,6 +413,44 @@ export interface NotificationServiceConfig {
   defaultDuration: number; // Default notification display duration
 }
 
+// EventBus Configuration
+export interface EventBusConfig {
+  performance: {
+    maxEventHistory: number;
+    maxConcurrentEvents: number;
+    throttle: {
+      enable: boolean;
+      windowMs: number;
+      maxEventsPerWindow: number;
+    };
+    cleanupInterval: number;
+  };
+  errorHandling: {
+    maxRetries: number;
+    retryDelayMs: number;
+    continueOnError: boolean;
+    errorLogLevel: string;
+  };
+  priority: {
+    highPriorityQueueSize: number;
+    normalPriorityQueueSize: number;
+    lowPriorityQueueSize: number;
+    priorityProcessing: boolean;
+  };
+  development: {
+    enableEventLogging: boolean;
+    enablePerformanceMetrics: boolean;
+    enableEventHistory: boolean;
+    enableEventValidation: boolean;
+  };
+  production: {
+    enableEventLogging: boolean;
+    enablePerformanceMetrics: boolean;
+    enableEventHistory: boolean;
+    enableEventValidation: boolean;
+  };
+}
+
 // Complete Configuration Interface
 export interface FullGameConfig {
   compositionRoot: CompositionRootConfig;
@@ -424,6 +462,7 @@ export interface FullGameConfig {
   debugService: DebugServiceConfig;
   notificationService: NotificationServiceConfig;
   rhythmicMovement: RhythmicMovementConfig;
+  eventbus: EventBusConfig; // QUALIA.CODE: EventBus configuration
   visualEffects?: VisualEffectsConfig; // NEW: Optional visual effects config (loaded if provided)
 }
 
@@ -608,6 +647,13 @@ export class ConfigurationService implements IConfigurationService {
       throw new Error("Invalid notificationService.display configuration");
     }
 
+    // Validate EventBus config
+    if (
+      typeof config.eventbus?.performance?.maxEventHistory !== "number"
+    ) {
+      throw new Error("Invalid eventbus.performance configuration");
+    }
+
     this.logger.info("✅ [Config] Configuration validation passed");
   }
 
@@ -674,6 +720,15 @@ export class ConfigurationService implements IConfigurationService {
     return this.getConfigSection<NotificationServiceConfig>(
       "notificationService",
     );
+  }
+
+  /**
+   * Get EventBus configuration.
+   * @returns EventBus configuration
+   */
+  @logMethod
+  public getEventBusConfig(): EventBusConfig {
+    return this.getConfigSection<EventBusConfig>("eventbus");
   }
 
   /**
