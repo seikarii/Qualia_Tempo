@@ -93,7 +93,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.config = {
       bpm: rhythmicConfig.bpm || defaultConfig.rhythm.defaultBPM,
       perfectTiming: rhythmicConfig.perfectTiming || defaultConfig.timing.perfectTiming,
-      goodTiming: rhythmicConfig.goodTiming || defaultConfig.timing.goodTiming,
+      goodTiming: rhythmicConfig.goodTiming || defaultConfig.timing.rhythmGoodTiming,
       gridSize: rhythmicConfig.gridSize || defaultConfig.movement.gridSize,
       slowdownFactor: rhythmicConfig.slowdownFactor || defaultConfig.slowdown.slowdownFactor,
       slowdownDuration: rhythmicConfig.slowdownDuration || defaultConfig.slowdown.slowdownDuration,

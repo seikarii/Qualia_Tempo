@@ -781,6 +781,12 @@ class RenderingService:
             particle_count = (
                 self._particle_engine.max_particles if self._particle_engine else 0
             )
+            
+            # CRITICAL SAFETY CHECK: Ensure VAO is initialized before rendering
+            if self._particle_vao is None:
+                self._logger.warning("Particle VAO not initialized, skipping particle render")
+                return self._render_software_fallback()
+            
             self._particle_vao.render(moderngl.POINTS, vertices=particle_count)
 
             # === PASS 2: BRIGHT PASS EXTRACTION ===

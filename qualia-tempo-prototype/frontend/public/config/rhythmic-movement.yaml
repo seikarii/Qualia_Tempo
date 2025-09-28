@@ -25,7 +25,7 @@ visualization:
 # Core rhythm game settings
 timing:
   perfectTiming: 50
-  goodTiming: 100
+  rhythmGoodTiming: 100
   okTiming: 150
 
 slowdown:

@@ -562,6 +562,15 @@ class QualiaParticleEngine:
             logger.warning("Cannot compute: buffers not initialized or shader missing")
             return False
 
+        # CRITICAL SAFETY CHECKS
+        if not self.particle_buffers or not self.particle_buffers.input_buffer or not self.particle_buffers.output_buffer:
+            logger.error("CRITICAL: Particle buffers not properly initialized")
+            return False
+        
+        if not self.ctx:
+            logger.error("CRITICAL: OpenGL context not available")
+            return False
+
         start_time = time.time() if self.enable_metrics else 0
 
         try:
