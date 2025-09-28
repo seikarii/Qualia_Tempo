@@ -269,7 +269,7 @@ export class GameControllerService implements IGameControllerService {
     );
     this.eventListenerIds.push(gameStateListenerId);
 
-    const config = this.configService.getConfigSection<any>("game-controller");
+    const config = this.configService.getConfigSection<any>("gameController");
     this.logger.info(config.messages.eventsSubscribed);
   }
 

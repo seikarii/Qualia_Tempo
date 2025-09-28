@@ -7,7 +7,6 @@ import type {
   IHttpService,
   HttpRequestOptions,
 } from "./interfaces/IHttpService";
-import type { IConfigurationService } from "./interfaces/IConfigurationService";
 
 // QUALIA.CODE v1.1: Platform Abstraction - Custom error for timeout handling
 export class RequestTimeoutError extends Error {
@@ -21,20 +20,19 @@ export class RequestTimeoutError extends Error {
 export class HttpService implements IHttpService {
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
-  private readonly defaultTimeout: number;
+  private defaultTimeout: number; // Made mutable for updateConfig()
 
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
   ) {
     this.logger = logger;
     this.timerService = timerService;
-    // QUALIA.CODE: Configuration externalized - use ConfigurationService
-    const httpConfig = configService.getConfig().httpService;
-    this.defaultTimeout = httpConfig?.defaultTimeout ?? httpConfig?.fallbackTimeout;
+    // QUALIA.CODE: Platform Abstraction - Start with reasonable defaults
+    // Configuration will be injected via updateConfig() after construction
+    this.defaultTimeout = 10000; // 10 seconds default
     this.logger.info("HttpService initialized with fetch abstraction", {
-      config: configService.getConfig().httpService
+      defaultTimeout: this.defaultTimeout
     });
   }
 
@@ -175,7 +173,10 @@ export class HttpService implements IHttpService {
   @logMethod
   @catchError
   public updateConfig(timeout: number): void {
-    (this as any).defaultTimeout = timeout;
-    this.logger.debug("HttpService configuration updated", { timeout });
+    this.defaultTimeout = timeout;
+    this.logger.info("HttpService configuration updated", { 
+      previousTimeout: this.defaultTimeout, 
+      newTimeout: timeout 
+    });
   }
 }

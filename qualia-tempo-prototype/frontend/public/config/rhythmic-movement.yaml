@@ -26,3 +26,19 @@ input:
   keyboardSpeed: 200
   gamepadDeadzone: 0.1
   touchSensitivity: 1.2
+
+# Core rhythm game settings
+timing:
+  perfectTiming: 50
+  goodTiming: 100
+  okTiming: 150
+
+grid:
+  size: 8
+  cellSize: 64
+
+# Service messages for logging
+messages:
+  serviceInitialized: "RhythmicMovementController initialized successfully"
+  serviceStarted: "RhythmicMovementController started and listening for events"
+  serviceStopped: "RhythmicMovementController stopped"

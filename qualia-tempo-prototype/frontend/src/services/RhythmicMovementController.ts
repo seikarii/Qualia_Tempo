@@ -78,7 +78,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.configService = configService;
     this.timerService = timerService;
 
-    const config = this.configService.getConfigSection<any>("rhythmic-movement");
+    const config = this.configService.getConfigSection<any>("rhythmicMovement");
     this.logger.info(config.messages.serviceInitialized);
   }
 
@@ -89,7 +89,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private ensureConfigurationLoaded(): void {
     const rhythmicConfig = this.configService.getRhythmicMovementConfig();
 
-    const defaultConfig = this.configService.getConfigSection<any>("rhythmic-movement");
+    const defaultConfig = this.configService.getConfigSection<any>("rhythmicMovement");
     this.config = {
       bpm: rhythmicConfig.bpm || defaultConfig.rhythm.defaultBPM,
       perfectTiming: rhythmicConfig.perfectTiming || defaultConfig.timing.perfectTiming,
@@ -135,7 +135,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.setupGameStateListener();
     this.startMetronome();
     this.isListening = true;
-    const config = this.configService.getConfigSection<any>("rhythmic-movement");
+    const config = this.configService.getConfigSection<any>("rhythmicMovement");
     this.logger.info(config.messages.serviceStarted);
   }
 

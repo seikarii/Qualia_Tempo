@@ -69,7 +69,7 @@ export class ApplicationInitializerService
   @logMethod
   @catchError
   public async start(): Promise<void> {
-    const config = this.configService.getConfigSection<any>("application-initializer");
+    const config = this.configService.getConfigSection<any>("applicationInitializer");
     
     if (this.isStarted) {
       this.logger.warn(config.messages.alreadyRunning);

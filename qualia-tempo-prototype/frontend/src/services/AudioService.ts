@@ -85,7 +85,6 @@ export class AudioService implements IAudioService {
   }
 
   @logMethod
-  @catchError
   public isRunning(): boolean {
     return this.isInitialized;
   }

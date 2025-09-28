@@ -1,0 +1,87 @@
+# QUALIA.CODE v1.1 - EventBus Configuration
+# Core communication system configuration
+# Compliance: Configuration Sovereignty - All behavior externalized
+
+# Performance Configuration
+performance:
+  # Maximum number of events to keep in history for debugging
+  maxEventHistory: 1000
+  
+  # Event processing configuration
+  maxConcurrentEvents: 100
+  
+  # Throttling configuration
+  throttle:
+    enable: true
+    windowMs: 1000
+    maxEventsPerWindow: 500
+  
+  # Memory management
+  cleanupInterval: 30000  # 30 seconds
+  
+# Error Handling Configuration
+errorHandling:
+  # Maximum retries for failed event handlers
+  maxRetries: 3
+  
+  # Retry delay in milliseconds
+  retryDelayMs: 1000
+  
+  # Whether to continue processing other events if one fails
+  continueOnError: true
+  
+  # Log level for event processing errors
+  errorLogLevel: "error"
+
+# Event Priority Configuration
+priority:
+  # Priority queue sizes
+  highPriorityQueueSize: 100
+  normalPriorityQueueSize: 500
+  lowPriorityQueueSize: 1000
+  
+  # Processing order (true = high priority first)
+  priorityProcessing: true
+
+# Priority values for event processing
+priorities:
+  high: 1
+  normal: 2
+  low: 3
+  default: 2
+
+# Listener Configuration
+listeners:
+  defaultOptions:
+    idPrefix: "listener"
+    randomBase: 36
+    idStart: 2
+    idLength: 8
+
+# Development Configuration
+development:
+  # Enable detailed event logging in development
+  enableEventLogging: true
+  
+  # Enable performance metrics
+  enablePerformanceMetrics: true
+  
+  # Enable event history tracking
+  enableEventHistory: true
+  
+  # Enable event validation
+  enableEventValidation: true
+
+# Production Configuration
+production:
+  # Reduced logging in production
+  enableEventLogging: false
+  
+  # Performance metrics for monitoring
+  enablePerformanceMetrics: true
+  
+  # Minimal event history for memory efficiency
+  enableEventHistory: false
+  
+  # Always validate events in production
+  enableEventValidation: true

@@ -64,20 +64,21 @@ container.bind<ILogger>(TYPES.ILogger).to(QualiaLogger).inSingletonScope();
 // Bind configuration values for ConfigurationService
 container.bind<string>(TYPES.ConfigBasePath).toConstantValue("/config/");
 container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
-  "game": "game-config.yaml",
-  "audio": "audio-service.yaml",
-  "debug": "debug-service.yaml",
-  "error-reporting": "error-reporting.yaml",
-  "qualia-calculator": "qualia-calculator.yaml",
-  "backend-sync": "backend-sync-service.yaml",
-  "game-controller": "game-controller-service.yaml",
-  "notification": "notification-service.yaml",
-  "rhythmic-movement": "rhythmic-movement-service.yaml",
-  "visual-effects": "visual-effects.yaml",
-  "http": "http-service.yaml",
-  "timer": "timer-service.yaml",
-  "application-initializer": "application-initializer-service.yaml",
-  "eventbus": "eventbus-service.yaml"
+  "gameController": "game-controller.yaml",
+  "audioService": "audio-service.yaml",
+  "debugService": "debug-service.yaml",
+  "errorReporting": "error-reporting.yaml",
+  "qualiaCalculator": "qualia-calculator.yaml",
+  "backendSync": "backend-sync.yaml",
+  "notificationService": "notification-service.yaml",
+  "rhythmicMovement": "rhythmic-movement.yaml",
+  "visualEffects": "visual-effects.yaml",
+  "compositionRoot": "composition-root.yaml",
+  "eventbus": "eventbus.yaml",
+  "applicationInitializer": "application-initializer.yaml",
+  "mainMenu": "main-menu.yaml",
+  "httpService": "http-service.yaml",
+  "timerService": "timer-service.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
