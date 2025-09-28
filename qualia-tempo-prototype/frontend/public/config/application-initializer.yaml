@@ -1,0 +1,51 @@
+# QUALIA.CODE v1.1 - ApplicationInitializerService Configuration
+# External configuration for application initialization messages and behavior
+
+# Messages for initialization process
+messages:
+  serviceInitialized: "✅ ApplicationInitializerService initialized and ready"
+  alreadyRunning: "⚠️ ApplicationInitializerService already running - ignoring start() call"
+  initializationStarted: "🚀 Starting application initialization sequence..."
+  configurationLoaded: "✅ Configuration loaded successfully"
+  httpServiceConfigured: "✅ HttpService configured with loaded settings"
+  gameStateServiceStarted: "✅ GameStateStoreService started and listening"
+  transversalServicesStarted: "✅ Transversal services (ErrorReporting, Debug, Notification) started"
+  gameControllerStarted: "✅ GameControllerService started and ready"
+  rhythmicControllerStarted: "✅ RhythmicMovementController started and ready"
+  backendSyncStarted: "✅ BackendSyncService started and syncing"
+  initializationComplete: "🎉 Application initialization sequence completed successfully!"
+
+# Step descriptions for debug logging
+steps:
+  loadConfiguration: "Step 0: Loading configuration from YAML files..."
+  configureHttpService: "Step 0.5: Configuring HttpService with loaded configuration..."
+  startGameStateService: "Step 1: Starting GameStateStoreService..."
+  startTransversalServices: "Step 2: Starting transversal services..."
+  startGameController: "Step 3: Starting GameControllerService..."
+  startRhythmicController: "Step 4: Starting RhythmicMovementController..."
+  startBackendSync: "Step 5: Starting BackendSyncService..."
+
+# State updates for GameStateStore
+stateUpdates:
+  configLoaded:
+    configurationLoaded: true
+    lastConfigLoadTime: null  # Will be set dynamically
+
+# Error messages
+errors:
+  configurationLoadFailed: "❌ Failed to load configuration"
+  serviceStartFailed: "❌ Failed to start service"
+  initializationFailed: "❌ Application initialization failed"
+
+# Timing configuration
+timing:
+  maxInitializationTime: 30000  # 30 seconds max for initialization
+  serviceStartupDelay: 100       # 100ms delay between service startups
+  healthCheckDelay: 1000         # 1 second delay before health checks
+
+# Feature flags
+features:
+  enableDetailedLogging: true
+  enablePerformanceMonitoring: true
+  enableHealthChecks: true
+  enableErrorReporting: true

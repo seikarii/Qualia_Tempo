@@ -1007,7 +1007,7 @@ class RenderingService:
 
             if self._vao:
                 self._vao.release()
-            if self._framebuffer:
+            if hasattr(self, '_framebuffer') and self._framebuffer:
                 self._framebuffer.release()
             if self._color_texture:
                 self._color_texture.release()

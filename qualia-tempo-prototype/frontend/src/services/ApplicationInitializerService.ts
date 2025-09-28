@@ -62,9 +62,8 @@ export class ApplicationInitializerService
     this.debugService = debugService;
     this.logger = logger;
     
-    // Load config for initialization message
-    const config = this.configService.getConfigSection<any>("application-initializer");
-    this.logger.info(config.messages.serviceInitialized);
+    // Configuration will be accessed in start() method after it's loaded
+    this.logger.info("ApplicationInitializerService constructed - awaiting start()");
   }
 
   @logMethod

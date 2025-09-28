@@ -23,7 +23,11 @@ export class ApplicationCompositionRoot {
    * This method handles ALL bootstrap logic that was previously in index.tsx
    */
   public async initializeApplication(): Promise<void> {
-    // Step 1: Resolve core services from IoC container
+    // Step 0: Load configuration FIRST - CRITICAL for QUALIA.CODE compliance
+    const configService = container.get<IConfigurationService>(TYPES.IConfigurationService);
+    await configService.loadConfig();
+
+    // Step 1: NOW resolve core services from IoC container (they can access config)
     const logger = container.get<ILogger>(TYPES.ILogger);
     const appInitializer = container.get<IApplicationInitializerService>(
       TYPES.IApplicationInitializerService,
@@ -39,7 +43,7 @@ export class ApplicationCompositionRoot {
 
     // Step 4: Attach debug interface in development mode
     // Development debug interface setup handled by ConfigurationService
-    const config = container.get<IConfigurationService>(TYPES.IConfigurationService);
+    const config = configService;
     if (config.getConfig()?.development?.enableDebugInterface) {
       try {
         const debugService = container.get<IDebugService>(TYPES.IDebugService);
