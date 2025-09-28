@@ -94,15 +94,19 @@ export class QualiaLogger implements ILogger {
 
     switch (entry.level) {
       case LogLevel.DEBUG:
+        // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services
         console.debug(`🔍 ${prefix}: ${entry.message}`, entry.context || {});
         break;
       case LogLevel.INFO:
+        // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services
         console.info(`ℹ️ ${prefix}: ${entry.message}`, entry.context || {});
         break;
       case LogLevel.WARN:
+        // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services
         console.warn(`⚠️ ${prefix}: ${entry.message}`, entry.context || {});
         break;
       case LogLevel.ERROR:
+        // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services
         console.error(`🚨 ${prefix}: ${entry.message}`, entry.context || {});
         break;
     }
@@ -121,6 +125,7 @@ export class LoggerProvider {
   public static register(logger: QualiaLogger): void {
     if (this.loggerInstance && !this.isRegistering) {
       // Opcional: Prevenir doble registro
+      // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services
       console.warn("[LoggerProvider] Logger already registered.");
       return;
     }
@@ -137,6 +142,7 @@ export class LoggerProvider {
       }
 
       // Crear un logger temporal en lugar de fallar
+      // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services
       console.warn(
         "[LoggerProvider] Logger not registered, creating temporary logger",
       );

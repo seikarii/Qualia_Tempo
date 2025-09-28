@@ -21,6 +21,9 @@ import type { ITimerService } from "./interfaces/ITimerService";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { QualiaState } from "../types/contracts";
 
+// QUALIA.CODE: Module-level constant for pre-config initialization message
+const SERVICE_INIT_MESSAGE = "BackendSyncService initialized - configuration will be loaded on demand";
+
 // Backend synchronization event interface - REMOVED: Using EventBus definition
 
 // Configuration interface for BackendSync behavior - REMOVED: Using ConfigurationService interface
@@ -67,7 +70,7 @@ export class BackendSyncService implements IBackendSyncService {
   private syncTimeoutId: number | null = null;
 
   // Connection monitoring
-  private healthCheckInterval: number = 30 * 1000; // 30 seconds default
+  private healthCheckInterval: number = 0; // Will be loaded from config
   private healthCheckIntervalId: number | null = null;
 
   // Statistics tracking
@@ -91,7 +94,7 @@ export class BackendSyncService implements IBackendSyncService {
 
     // QUALIA.CODE FIX: Do NOT access configuration in constructor
     // Configuration will be loaded lazily when needed
-    this.logger.info("BackendSyncService initialized - configuration will be loaded on demand");
+    this.logger.info(SERVICE_INIT_MESSAGE);
   }
 
   /**
@@ -235,7 +238,6 @@ export class BackendSyncService implements IBackendSyncService {
    * Check if the service is connected to the backend.
    */
   @logMethod
-  @catchError
   public isBackendConnected(): boolean {
     return this.connected;
   }

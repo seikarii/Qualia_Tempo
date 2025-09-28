@@ -326,6 +326,7 @@ export class StreamingVideoService implements IStreamingVideoService {
   }
 
   @logMethod
+  @catchError
   public async ping(): Promise<number> {
     if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
       throw new Error("Not connected");

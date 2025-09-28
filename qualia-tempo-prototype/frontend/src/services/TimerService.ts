@@ -4,6 +4,10 @@ import { logMethod, catchError } from "../utils/decorators";
 import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
 
+// QUALIA.CODE: Module-level constants for initialization messages
+const TIMER_SERVICE_INIT_MESSAGE = "TimerService initialized with timer abstraction";
+const PERFORMANCE_SERVICE_INIT_MESSAGE = "PerformanceService initialized with performance abstraction";
+
 @injectable()
 export class TimerService implements ITimerService {
   private readonly logger: ILogger;
@@ -12,7 +16,7 @@ export class TimerService implements ITimerService {
 
   constructor(@inject(TYPES.ILogger) logger: ILogger) {
     this.logger = logger;
-    this.logger.info("TimerService initialized with timer abstraction");
+    this.logger.info(TIMER_SERVICE_INIT_MESSAGE);
   }
 
   @logMethod
@@ -156,7 +160,7 @@ export class PerformanceService implements IPerformanceService {
 
   constructor(@inject(TYPES.ILogger) logger: ILogger) {
     this.logger = logger;
-    this.logger.info("PerformanceService initialized with performance abstraction");
+    this.logger.info(PERFORMANCE_SERVICE_INIT_MESSAGE);
   }
 
   @logMethod

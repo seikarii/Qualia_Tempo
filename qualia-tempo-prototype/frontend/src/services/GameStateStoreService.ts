@@ -33,6 +33,20 @@ const GAME_EVENTS = {
   QUALIA_UPDATED: "QualiaStateUpdated",
 } as const;
 
+// QUALIA.CODE: Externalized message constants
+const SERVICE_MESSAGES = {
+  INITIALIZED: "🔗 [GameStateStoreService] Bridge service initialized",
+  ALREADY_STARTED: "⚠️ [GameStateStoreService] Service already started",
+  STARTING_LISTENERS: "🎧 [GameStateStoreService] Starting event listeners...",
+  LISTENERS_ACTIVE: "✅ [GameStateStoreService] Event listeners active",
+  NOT_STARTED: "⚠️ [GameStateStoreService] Service not started",
+  STOPPING_LISTENERS: "🔇 [GameStateStoreService] Stopping event listeners...",
+  LISTENERS_STOPPED: "✅ [GameStateStoreService] Event listeners stopped",
+  STATE_UPDATED: "🔄 [GameStateStoreService] Game state updated",
+  QUALIA_UPDATED: "✨ [GameStateStoreService] Qualia state updated",
+  RHYTHMIC_DASH: "� [GameStateStoreService] Processing RhythmicDash:",
+} as const;
+
 /**
  * GameStateStoreService: Bridge between EventBus and Zustand Store
  *
@@ -52,7 +66,7 @@ export class GameStateStoreService implements IGameStateStoreService {
     @inject(TYPES.ILogger) private readonly logger: ILogger,
     @inject(TYPES.StoreSetter) private readonly setStore: StoreSetter,
   ) {
-    this.logger.info("🔗 [GameStateStoreService] Bridge service initialized");
+    this.logger.info(SERVICE_MESSAGES.INITIALIZED);
   }
 
   // --- IGameStateStoreService Interface Implementation ---
@@ -64,11 +78,11 @@ export class GameStateStoreService implements IGameStateStoreService {
   @catchError
   start(): void {
     if (this.isStarted) {
-      this.logger.warn("⚠️ [GameStateStoreService] Service already started");
+      this.logger.warn(SERVICE_MESSAGES.ALREADY_STARTED);
       return;
     }
 
-    this.logger.info("🎧 [GameStateStoreService] Starting event listeners...");
+    this.logger.info(SERVICE_MESSAGES.STARTING_LISTENERS);
 
     // Subscribe to GameStateChanged events
     const gameStateListenerId = this.eventBus.subscribe(
@@ -92,7 +106,7 @@ export class GameStateStoreService implements IGameStateStoreService {
     this.listenerIds.push(rhythmicDashListenerId);
 
     this.isStarted = true;
-    this.logger.info("✅ [GameStateStoreService] Event listeners active");
+    this.logger.info(SERVICE_MESSAGES.LISTENERS_ACTIVE);
   }
 
   /**
@@ -102,11 +116,11 @@ export class GameStateStoreService implements IGameStateStoreService {
   @catchError
   stop(): void {
     if (!this.isStarted) {
-      this.logger.warn("⚠️ [GameStateStoreService] Service not started");
+      this.logger.warn(SERVICE_MESSAGES.NOT_STARTED);
       return;
     }
 
-    this.logger.info("🔇 [GameStateStoreService] Stopping event listeners...");
+    this.logger.info(SERVICE_MESSAGES.STOPPING_LISTENERS);
 
     // Unsubscribe from all events
     this.listenerIds.forEach((listenerId) => {
@@ -115,7 +129,7 @@ export class GameStateStoreService implements IGameStateStoreService {
     this.listenerIds = [];
 
     this.isStarted = false;
-    this.logger.info("✅ [GameStateStoreService] Event listeners stopped");
+    this.logger.info(SERVICE_MESSAGES.LISTENERS_STOPPED);
   }
 
   @logMethod
@@ -267,7 +281,7 @@ export class GameStateStoreService implements IGameStateStoreService {
    * Handle RhythmicDash events to update player position
    */
   private handleRhythmicDash(event: any): void {
-    this.logger.info("🏃 [GameStateStoreService] Processing RhythmicDash:", {
+    this.logger.info(SERVICE_MESSAGES.RHYTHMIC_DASH, {
       direction: event.direction,
       newPosition: event.newPosition,
       timing: event.timing,

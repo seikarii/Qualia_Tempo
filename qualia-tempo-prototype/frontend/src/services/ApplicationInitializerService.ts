@@ -18,6 +18,9 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { IApplicationInitializerService } from "./interfaces/IApplicationInitializerService";
 import { logMethod, catchError } from "../utils/decorators";
 
+// QUALIA.CODE: Module-level constant for pre-config initialization message
+const SERVICE_INIT_MESSAGE = "ApplicationInitializerService constructed - awaiting start()";
+
 @injectable()
 export class ApplicationInitializerService
   implements IApplicationInitializerService
@@ -63,7 +66,8 @@ export class ApplicationInitializerService
     this.logger = logger;
     
     // Configuration will be accessed in start() method after it's loaded
-    this.logger.info("ApplicationInitializerService constructed - awaiting start()");
+    // Note: Using pre-loaded constant since ConfigService may not be ready yet
+    this.logger.info(SERVICE_INIT_MESSAGE);
   }
 
   @logMethod
