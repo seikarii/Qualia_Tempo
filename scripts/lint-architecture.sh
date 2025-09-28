@@ -23,6 +23,7 @@ BACKEND_PATH="$PROJECT_ROOT/qualia-tempo-prototype/backend"
 # Error tracking
 FRONTEND_ERRORS=0
 BACKEND_ERRORS=0
+TYPE_ERRORS=0
 
 echo -e "${BLUE}📋 Phase 1: Frontend ESLint Rules${NC}"
 if [ -d "$FRONTEND_PATH" ]; then
@@ -74,13 +75,44 @@ if [ -d "$BACKEND_PATH" ]; then
 else
     echo -e "   ${YELLOW}⚠️  Backend path not found, skipping Python linter${NC}"
 fi
+echo -e "${BLUE}📋 Phase 3: Backend Type Architecture Analysis${NC}"
+if [ -d "$BACKEND_PATH" ]; then
+    cd "$PROJECT_ROOT"
+    echo "   Running MyPy with QUALIA.CODE plugin..."
+
+    # Activate virtual environment if it exists
+    if [ -f "$PROJECT_ROOT/.venv/bin/activate" ]; then
+        source "$PROJECT_ROOT/.venv/bin/activate"
+    fi
+
+    # Install MyPy plugin in development mode if not already installed
+    if ! python -c "import mypy_qualia_code" 2>/dev/null; then
+        echo "   Installing mypy-qualia-code plugin..."
+        pip install -e "$PROJECT_ROOT/mypy-qualia-code" > /dev/null 2>&1
+    fi
+
+    # Run MyPy with QUALIA.CODE plugin on backend Python files
+    if python -m mypy "$BACKEND_PATH" --config-file "$PROJECT_ROOT/pyproject.toml"; then
+        echo -e "   ${GREEN}✅ Backend type architecture: PASSED${NC}"
+        TYPE_ERRORS=0
+    else
+        echo -e "   ${RED}❌ Backend type architecture violations detected${NC}"
+        echo "   Run 'python -m mypy $BACKEND_PATH --config-file $PROJECT_ROOT/pyproject.toml' for details"
+        TYPE_ERRORS=1
+    fi
+else
+    echo -e "   ${YELLOW}⚠️  Backend path not found, skipping type analysis${NC}"
+    TYPE_ERRORS=0
+fi
+
 
 echo
-echo -e "${BLUE}📋 Phase 3: Summary${NC}"
+echo -e "${BLUE}📋 Phase 4: Summary${NC}"
 echo "   Frontend Compliance: $([ $FRONTEND_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
-echo "   Backend Compliance:  $([ $BACKEND_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
+echo "   Backend Patterns:     $([ $BACKEND_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
+echo "   Backend Types:        $([ $TYPE_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
 
-TOTAL_ERRORS=$((FRONTEND_ERRORS + BACKEND_ERRORS))
+TOTAL_ERRORS=$((FRONTEND_ERRORS + BACKEND_ERRORS + TYPE_ERRORS))
 
 if [ $TOTAL_ERRORS -eq 0 ]; then
     echo
