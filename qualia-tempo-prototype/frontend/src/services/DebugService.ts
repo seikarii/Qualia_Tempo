@@ -463,7 +463,7 @@ export class DebugService implements IDebugService {
 
   private startNewSession(): void {
     this.currentSession = {
-      id: `debug_session_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`,
+      id: `debug_session_${Date.now()}_${Math.random().toString(36).substr(2, this.config.sessionIdLength || 8)}`,
       startTime: new Date(),
       events: [],
       errors: [],
@@ -485,9 +485,9 @@ export class DebugService implements IDebugService {
       this.sessionHistory.push(this.currentSession);
 
       // Maintain session history limit
-      if (this.sessionHistory.length > 10) {
-        // Default maxSessionHistory
-        this.sessionHistory = this.sessionHistory.slice(-10);
+      if (this.sessionHistory.length > (this.config.maxSessionHistory || 10)) {
+        // Use configured maxSessionHistory
+        this.sessionHistory = this.sessionHistory.slice(-(this.config.maxSessionHistory || 10));
       }
 
       this.logger.info(
@@ -602,9 +602,9 @@ export class DebugService implements IDebugService {
     const timestamps = this.eventPatterns.get(key) || [];
     timestamps.push(Date.now());
 
-    // Keep only last 100 timestamps
-    if (timestamps.length > 100) {
-      timestamps.splice(0, timestamps.length - 100);
+    // Keep only configured timestamps
+    if (timestamps.length > (this.config.maxEventHistory || 100)) {
+      timestamps.splice(0, timestamps.length - (this.config.maxEventHistory || 100));
     }
 
     this.eventPatterns.set(key, timestamps);
@@ -618,7 +618,7 @@ export class DebugService implements IDebugService {
     const times =
       this.performanceMetrics.eventProcessingTimes.get(eventType) || [];
     times.push(processingTime);
-    if (times.length > 50) times.shift(); // Keep last 50 measurements
+    if (times.length > (this.config.maxEventHistory || 50)) times.shift(); // Keep configured measurements
     this.performanceMetrics.eventProcessingTimes.set(eventType, times);
 
     // Update event frequency

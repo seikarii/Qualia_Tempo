@@ -77,6 +77,9 @@ export interface ThrottlingConfig {
   burstLimit: number;
   cooldownPeriod: number;
   enabled: boolean;
+  rateLimitWindow: number;  // Window for rate limiting (1 second)
+  burstWindow: number;      // Window for burst detection (1 minute)
+  historyRetention: number; // How long to keep notification history
 }
 
 // Extended configuration interface for NotificationService
@@ -181,7 +184,7 @@ export class ThrottlingManager {
     }
 
     // Check per-second limit
-    const secondAgo = now - 1000;
+    const secondAgo = now - (this.config.rateLimitWindow || 1000);
     const recentCount = this.recentNotifications.filter(
       (time) => time.getTime() > secondAgo,
     ).length;
@@ -190,7 +193,7 @@ export class ThrottlingManager {
     }
 
     // Check per-minute limit
-    const minuteAgo = now - 60000;
+    const minuteAgo = now - (this.config.burstWindow || 60000);
     const minuteCount = this.recentNotifications.filter(
       (time) => time.getTime() > minuteAgo,
     ).length;
@@ -208,7 +211,7 @@ export class ThrottlingManager {
   }
 
   private cleanOldNotifications(): void {
-    const cutoff = Date.now() - 60000; // Keep 1 minute of history
+    const cutoff = Date.now() - (this.config.historyRetention || 60000); // Use configured retention
     this.recentNotifications = this.recentNotifications.filter(
       (time) => time.getTime() > cutoff,
     );
@@ -313,6 +316,9 @@ export class NotificationService implements INotificationService {
       burstLimit: 0,
       cooldownPeriod: 0,
       enabled: false,
+      rateLimitWindow: 1000,
+      burstWindow: 60000,
+      historyRetention: 60000,
     });
 
     this.logger.info(

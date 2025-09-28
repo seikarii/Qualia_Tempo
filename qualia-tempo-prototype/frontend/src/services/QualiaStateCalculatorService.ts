@@ -17,6 +17,7 @@ import { TYPES } from "./inversify.types";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { ITimerService } from "./interfaces/ITimerService";
 import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
 import { QualiaStateUpdatedEvent } from "./EventBus";
 import type { PlayerActionEvent } from "./EventBus";
@@ -51,6 +52,7 @@ export class QualiaStateCalculatorService
   private eventBus: IEventBus;
   private logger: ILogger;
   private configService: IConfigurationService;
+  private timerService: ITimerService;
 
   // Statistics tracking
   private calculationsPerformed = 0;
@@ -60,10 +62,12 @@ export class QualiaStateCalculatorService
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
+    @inject(TYPES.ITimerService) timerService: ITimerService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.configService = configService;
+    this.timerService = timerService;
 
     // QUALIA.CODE: Load configuration immediately for proper initialization
     this.ensureConfigLoaded();
@@ -349,14 +353,14 @@ export class QualiaStateCalculatorService
     this.stopUpdateLoop(); // Ensure no duplicate intervals
 
     const config = this.ensureConfigLoaded();
-    this.updateIntervalId = window.setInterval(() => {
+    this.updateIntervalId = this.timerService.setInterval(() => {
       this.updateStateWithDecay();
     }, config.updateInterval);
   }
 
   private stopUpdateLoop(): void {
     if (this.updateIntervalId !== null) {
-      window.clearInterval(this.updateIntervalId);
+      this.timerService.clearInterval(this.updateIntervalId);
       this.updateIntervalId = null;
     }
   }

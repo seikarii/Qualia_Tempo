@@ -44,3 +44,5 @@ maxEventHistory: 500
 performanceMonitoringInterval: 5000
 aiAnalysisInterval: 30000
 enableAIAnalysis: true
+sessionIdLength: 8  # Random part length for session IDs
+memoryCleanupThreshold: 1000  # Threshold for memory cleanup

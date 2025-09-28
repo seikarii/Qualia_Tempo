@@ -10,7 +10,7 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   position,
   qualiaState,
 }) => {
-  const [x, _y, z] = position; // Extract position coordinates
+  const [x, y, z] = position; // Extract position coordinates (x, y, z for 3D positioning)
 
   // Map QualiaState to visual properties
   const intensityHue = qualiaState.intensity * 360;
@@ -19,11 +19,11 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   const chaosRotation = qualiaState.chaos * 180;
   const transcendenceGlow = qualiaState.transcendence * 20;
 
-  // Avatar style based on QualiaState
+    // Avatar style based on QualiaState
   const avatarStyle: React.CSSProperties = {
     position: "fixed",
-    left: `${400 + z * 80}px`,
-    top: `${300 + x * 80}px`,
+    left: `${400 + x * 80 + z * 20}px`, // X for horizontal, Z for depth offset
+    top: `${300 + y * 80}px`, // Y for vertical positioning
     width: `${precisionSize}px`,
     height: `${precisionSize}px`,
     borderRadius: "50%",

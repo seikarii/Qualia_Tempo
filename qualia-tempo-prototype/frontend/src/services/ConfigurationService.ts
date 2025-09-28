@@ -356,6 +356,7 @@ export interface DebugServiceConfig {
   aiAnalysisInterval?: number;
   enableAIAnalysis?: boolean;
   memoryCleanupThreshold?: number;
+  sessionIdLength?: number;
 }
 
 // NotificationService Configuration

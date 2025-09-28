@@ -11,6 +11,9 @@ circuitBreakerThreshold: 5
 circuitBreakerTimeout: 60000  # 1 minute
 enableDeduplication: true
 memoryCleanupThreshold: 1000
+memoryCleanupInterval: 60000  # 1 minute
+rateLimitRefillInterval: 1000  # 1 second
+fingerprintLength: 16  # Hash length for error deduplication
 
 # Rate limiting (legacy compatibility)
 rateLimitWindow: 60000

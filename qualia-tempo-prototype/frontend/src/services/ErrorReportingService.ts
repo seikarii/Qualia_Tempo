@@ -96,6 +96,9 @@ export interface ExtendedErrorReportingConfig extends ErrorReportingConfig {
   circuitBreakerTimeout: number;
   enableDeduplication: boolean;
   memoryCleanupThreshold: number;
+  memoryCleanupInterval: number;
+  rateLimitRefillInterval: number;
+  fingerprintLength: number;
   externalService: ExternalServiceConfig;
 }
 
@@ -106,19 +109,20 @@ export class ErrorFingerprinter {
   static generateFingerprint(
     error: Error | null | undefined,
     context?: Record<string, any>,
+    fingerprintLength: number = 16,
   ): string {
     // Handle null/undefined errors gracefully
     if (!error) {
       const message = "Unknown error (null/undefined)";
       const stack = "";
       const contextString = context ? JSON.stringify(context) : "";
-      return btoa(`${message}:${stack}:${contextString}`).slice(0, 16);
+      return btoa(`${message}:${stack}:${contextString}`).slice(0, fingerprintLength);
     }
 
     const message = error.message || "Unknown error";
     const stack = error.stack?.split("\n")[0] || "";
     const contextString = context ? JSON.stringify(context) : "";
-    return btoa(`${message}:${stack}:${contextString}`).slice(0, 16);
+    return btoa(`${message}:${stack}:${contextString}`).slice(0, fingerprintLength);
   }
 }
 
@@ -519,7 +523,7 @@ export class ErrorReportingService implements IErrorReportingService {
     severity: ErrorSeverity,
     context?: Record<string, any>,
   ): ExtendedErrorReport {
-    const fingerprint = ErrorFingerprinter.generateFingerprint(error, context);
+    const fingerprint = ErrorFingerprinter.generateFingerprint(error, context, this.config.fingerprintLength || 16);
 
     // Handle null/undefined errors gracefully
     const safeError = error || new Error("Unknown error (null/undefined)");
@@ -599,13 +603,13 @@ export class ErrorReportingService implements IErrorReportingService {
   private startMemoryCleanup(): void {
     this.memoryCleanupInterval = this.timerService.setInterval(() => {
       this.performMemoryCleanup();
-    }, 60000); // Every minute
+    }, this.config.memoryCleanupInterval || 60000); // Use configured interval
   }
 
   private startRateLimitRefill(): void {
     this.rateLimitRefillInterval = this.timerService.setInterval(() => {
       this.refillRateLimitTokens();
-    }, 1000); // Every second
+    }, this.config.rateLimitRefillInterval || 1000); // Use configured interval
   }
 
   private stopAllIntervals(): void {

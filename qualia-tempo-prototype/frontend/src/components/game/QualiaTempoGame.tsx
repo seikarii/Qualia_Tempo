@@ -9,7 +9,7 @@ import {
 import { Vector2 } from "three";
 import { useGameStore } from "../../state/useGameStore";
 import { useEventBus } from "../../services/hooks";
-import {
+import type {
   PlayerActionEvent,
   RhythmicDashEvent,
   MetronomeTickEvent,

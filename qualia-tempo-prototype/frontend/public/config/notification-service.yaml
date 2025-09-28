@@ -64,5 +64,15 @@ performance:
   enableGarbageCollection: true
   gcInterval: 60000
 
+throttling:
+  enabled: true
+  maxNotificationsPerSecond: 5
+  maxNotificationsPerMinute: 30
+  burstLimit: 10
+  cooldownPeriod: 2000
+  rateLimitWindow: 1000  # 1 second
+  burstWindow: 60000     # 1 minute
+  historyRetention: 60000  # 1 minute
+
 maxNotifications: 5
 defaultDuration: 3000
