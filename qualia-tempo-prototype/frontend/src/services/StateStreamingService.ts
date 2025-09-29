@@ -13,12 +13,7 @@ import type { StreamingConfig } from "./contracts/IStateStreamingService.contrac
 import type { QualiaState } from "../types/contracts";
 import type { QualiaStateUpdatedEvent, StreamingStatusChangedEvent, ConnectionStatus } from "./contracts/events.contracts";
 import { logMethod, catchError } from "../utils/decorators";
-
-export interface IStateStreamingService {
-  connect(): Promise<void>;
-  disconnect(): Promise<void>;
-  getConnectionStatus(): ConnectionStatus;
-}
+import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
 
 @injectable()
 export class StateStreamingService implements IStateStreamingService {

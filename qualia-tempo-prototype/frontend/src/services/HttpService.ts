@@ -7,6 +7,7 @@ import type {
   IHttpService,
   HttpRequestOptions,
 } from "./interfaces/IHttpService";
+import type { HttpConfig } from "./contracts/IHttpService.contracts";
 
 // QUALIA.CODE v1.1: Platform Abstraction - Custom error for timeout handling
 export class RequestTimeoutError extends Error {
@@ -20,19 +21,18 @@ export class RequestTimeoutError extends Error {
 export class HttpService implements IHttpService {
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
-  private defaultTimeout: number; // Made mutable for updateConfig()
+  private readonly config: HttpConfig;
 
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerService) timerService: ITimerService,
+    @inject(TYPES.HttpConfig) config: HttpConfig,
   ) {
     this.logger = logger;
     this.timerService = timerService;
-    // QUALIA.CODE: Platform Abstraction - Start with reasonable defaults
-    // Configuration will be injected via updateConfig() after construction
-    this.defaultTimeout = 10000; // 10 seconds default
+    this.config = config;
     this.logger.info("HttpService initialized with fetch abstraction", {
-      defaultTimeout: this.defaultTimeout
+      defaultTimeout: this.config.timeout
     });
   }
 
@@ -72,7 +72,7 @@ export class HttpService implements IHttpService {
 
     // QUALIA.CODE v1.1: Platform Abstraction - Timeout management encapsulated in HttpService
     const { timeout, ...fetchOptions } = options || {};
-    const effectiveTimeout = timeout ?? this.defaultTimeout; // QUALIA.CODE: Configuration externalized to avoid circular dependency
+    const effectiveTimeout = timeout ?? this.config.timeout; // QUALIA.CODE: Configuration externalized to avoid circular dependency
 
     const controller = new AbortController();
     const timeoutId = this.timerService.setTimeout(() => {
@@ -168,15 +168,5 @@ export class HttpService implements IHttpService {
       });
       throw error;
     }
-  }
-
-  @logMethod
-  @catchError
-  public updateConfig(timeout: number): void {
-    this.defaultTimeout = timeout;
-    this.logger.info("HttpService configuration updated", { 
-      previousTimeout: this.defaultTimeout, 
-      newTimeout: timeout 
-    });
   }
 }

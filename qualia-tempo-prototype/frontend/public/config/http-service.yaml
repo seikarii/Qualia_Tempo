@@ -2,19 +2,17 @@
 # QUALIA.CODE Compliant: All HTTP-related configuration externalized
 
 http:
-  # Default timeout for HTTP requests (milliseconds)
-  defaultTimeout: 30000
+  # Base URL for API requests
+  baseUrl: "http://localhost:8000"
   
-  # Connection settings
-  connection:
-    # Maximum number of retries for failed requests
-    maxRetries: 3
-    
-    # Retry delay (milliseconds)
-    retryDelay: 1000
-    
-    # Connection timeout (milliseconds) 
-    connectionTimeout: 10000
+  # Default timeout for HTTP requests (milliseconds)
+  timeout: 30000
+  
+  # Maximum number of retries for failed requests
+  retries: 3
+  
+  # Retry delay (milliseconds)
+  retryDelay: 1000
   
   # Request headers
   headers:
@@ -24,10 +22,8 @@ http:
     # Content type
     contentType: "application/json"
   
-  # Security settings
-  security:
-    # Enable CORS for development
-    enableCors: true
-    
-    # Validate SSL certificates
-    validateSSL: true
+  # Enable response compression
+  enableCompression: true
+  
+  # Enable HTTP caching
+  enableCaching: false

@@ -10,5 +10,4 @@ export interface IHttpService {
   post<T>(url: string, options?: HttpRequestOptions): Promise<T>;
   put<T>(url: string, options?: HttpRequestOptions): Promise<T>;
   delete<T>(url: string, options?: HttpRequestOptions): Promise<T>;
-  updateConfig(timeout: number): void;
 }

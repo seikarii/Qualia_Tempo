@@ -6,28 +6,23 @@
 
 // Specific state update interfaces for type safety
 export interface ConfigLoadedStateUpdate {
-  configLoaded: true;
-  timestamp: number;
-  version: string;
+  configurationLoaded: boolean;
+  lastConfigLoadTime: number | null;
 }
 
 export interface InitializationCompleteStateUpdate {
-  initializationComplete: true;
-  timestamp: number;
-  duration: number;
+  initializationComplete: boolean;
+  timestamp: number | null;
+  duration: number | null;
   servicesStarted: string[];
 }
 
 // ApplicationInitializer Configuration - Migrated from ConfigurationService.ts
 export interface AppInitializerConfig {
-  enableHealthChecks: boolean;
-  healthCheckInterval: number;
-  maxInitRetries: number;
-  initTimeout: number;
-  enableDebugLogging: boolean;
-
   // Message templates for logging
   messages: {
+    serviceConstructed: string;
+    serviceInitialized: string;
     alreadyRunning: string;
     initializationStarted: string;
     configurationLoaded: string;
@@ -36,12 +31,14 @@ export interface AppInitializerConfig {
     transversalServicesStarted: string;
     gameControllerStarted: string;
     rhythmicControllerStarted: string;
-    initializationCompleted: string;
+    backendSyncStarted: string;
+    initializationComplete: string;
     initializationFailed: string;
   };
 
   // Step descriptions for debug logging
   steps: {
+    loadConfiguration: string;
     configureHttpService: string;
     startGameStateService: string;
     startTransversalServices: string;
@@ -54,5 +51,27 @@ export interface AppInitializerConfig {
   stateUpdates: {
     configLoaded: ConfigLoadedStateUpdate;
     initializationComplete: InitializationCompleteStateUpdate;
+  };
+
+  // Error messages
+  errors: {
+    configurationLoadFailed: string;
+    serviceStartFailed: string;
+    initializationFailed: string;
+  };
+
+  // Timing configuration
+  timing: {
+    maxInitializationTime: number;
+    serviceStartupDelay: number;
+    healthCheckDelay: number;
+  };
+
+  // Feature flags
+  features: {
+    enableDetailedLogging: boolean;
+    enablePerformanceMonitoring: boolean;
+    enableHealthChecks: boolean;
+    enableErrorReporting: boolean;
   };
 }

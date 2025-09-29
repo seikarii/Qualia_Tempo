@@ -5,8 +5,6 @@
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import type { IConfigurationService } from "./interfaces/IConfigurationService";
-import type { IHttpService } from "./interfaces/IHttpService";
 import type { IBackendSyncService } from "./interfaces/IBackendSyncService";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 import type { IGameControllerService } from "./interfaces/IGameControllerService";
@@ -28,8 +26,6 @@ export class ApplicationInitializerService
   implements IApplicationInitializerService
 {
   private readonly config: AppInitializerConfig;
-  private readonly configService: IConfigurationService;
-  private readonly httpService: IHttpService;
   private readonly backendSyncService: IBackendSyncService;
   private readonly gameStateStoreService: IGameStateStoreService;
   private readonly gameControllerService: IGameControllerService;
@@ -43,8 +39,6 @@ export class ApplicationInitializerService
 
   constructor(
     @inject(TYPES.AppInitializerConfig) config: AppInitializerConfig,
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
-    @inject(TYPES.IHttpService) httpService: IHttpService,
     @inject(TYPES.IBackendSyncService) backendSyncService: IBackendSyncService,
     @inject(TYPES.IGameStateStoreService)
     gameStateStoreService: IGameStateStoreService,
@@ -61,8 +55,6 @@ export class ApplicationInitializerService
     @inject(TYPES.ILogger) logger: ILogger,
   ) {
     this.config = config;
-    this.configService = configService;
-    this.httpService = httpService;
     this.backendSyncService = backendSyncService;
     this.gameStateStoreService = gameStateStoreService;
     this.gameControllerService = gameControllerService;
@@ -91,7 +83,7 @@ export class ApplicationInitializerService
     try {
       await this.initializeServices();
       this.isStarted = true;
-      this.logger.info(this.config.messages.initializationCompleted, {
+      this.logger.info(this.config.messages.initializationComplete, {
         ...this.config.stateUpdates.initializationComplete,
         backendConnected: this.backendSyncService.isBackendConnected(),
       });
@@ -105,17 +97,9 @@ export class ApplicationInitializerService
     // Configuration is already loaded by ApplicationCompositionRoot.configureServices()
     this.logger.info(this.config.messages.configurationLoaded);
 
-    await this.configureHttpService();
     await this.startCoreServices();
     await this.startGameServices();
     await this.startBackendServices();
-  }
-
-  private async configureHttpService(): Promise<void> {
-    this.logger.debug(this.config.steps.configureHttpService);
-    const httpConfig = this.configService.getConfigSection("http");
-    this.httpService.updateConfig(httpConfig.timeout);
-    this.logger.info(this.config.messages.httpServiceConfigured);
   }
 
   private async startCoreServices(): Promise<void> {
