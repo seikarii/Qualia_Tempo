@@ -97,7 +97,7 @@ export interface PlayerInputEvent extends BaseEvent {
 // Additional event types moved from EventBus.ts
 export interface QualiaStateUpdatedEvent extends BaseEvent {
   type: "QualiaStateUpdated";
-  qualiaState: import("../../types/contracts").QualiaState;
+  particleData: ArrayBuffer; // BINARY PROTOCOL: Raw particle data from numpy.tobytes()
 }
 
 export interface ErrorEvent extends BaseEvent {

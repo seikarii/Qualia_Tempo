@@ -49,6 +49,12 @@ export interface IWebSocketService {
    * Check if WebSocket is connected
    */
   isConnected(): boolean;
+
+  /**
+   * Configure binary type for WebSocket messages
+   * BINARY PROTOCOL: Required for ArrayBuffer support
+   */
+  setBinaryType(type: 'blob' | 'arraybuffer'): Promise<void>;
 }
 
 /**

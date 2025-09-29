@@ -1,6 +1,7 @@
 /**
- * QUALIA.CODE v1.1 - StateStreamingService Implementation
- * WebSocket-based state streaming service for receiving QualiaState updates.
+ * QUALIA.CODE v1.2 - StateStreamingService Implementation
+ * WebSocket-based state streaming service for receiving binary particle data.
+ * BINARY PROTOCOL: Eliminates JSON serialization for maximum performance.
  */
 
 import { injectable, inject } from "inversify";
@@ -10,7 +11,6 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { IWebSocketService } from "./interfaces/IWebSocketService";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { StreamingConfig } from "./contracts/IStateStreamingService.contracts";
-import type { QualiaState } from "../types/contracts";
 import type { QualiaStateUpdatedEvent, StreamingStatusChangedEvent, ConnectionStatus } from "./contracts/events.contracts";
 import { logMethod, catchError } from "../utils/decorators";
 import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
@@ -83,6 +83,10 @@ export class StateStreamingService implements IStateStreamingService {
     this.updateConnectionStatus();
 
     try {
+      // BINARY PROTOCOL: Configure WebSocket for ArrayBuffer mode
+      // This must be set before connection establishment
+      await this.webSocketService.setBinaryType('arraybuffer');
+
       // Register event handlers
       this.webSocketService.onOpen(() => this.handleOpen());
       this.webSocketService.onMessage((data) => this.handleMessage(data));
@@ -149,25 +153,21 @@ export class StateStreamingService implements IStateStreamingService {
   };
 
   private handleMessage = (event: MessageEvent): void => {
-    try {
-      const data = JSON.parse(event.data);
-      this.messagesReceived++;
+    // BINARY PROTOCOL: event.data is now ArrayBuffer, not JSON string
+    const particleData: ArrayBuffer = event.data;
+    this.messagesReceived++;
 
-      if (data.type === "qualiaState") {
-        const qualiaState: QualiaState = data.state;
-        this.eventBus.emit<QualiaStateUpdatedEvent>({
-          type: "QualiaStateUpdated",
-          qualiaState,
-        });
-      } else if (data.type === "pong") {
-        // Handle ping response
-        this.logger.debug("Received pong from server");
-      } else {
-        this.logger.debug("Received unknown message type", { type: data.type });
-      }
-    } catch (error) {
-      this.logger.error("Failed to parse WebSocket message", { error, data: event.data });
-    }
+    // Emit the binary data directly - no JSON parsing, no main thread blocking
+    this.eventBus.emit<QualiaStateUpdatedEvent>({
+      type: "QualiaStateUpdated",
+      particleData, // Binary ArrayBuffer payload
+      source: "StateStreamingService",
+    });
+
+    this.logger.debug("Received binary particle data", {
+      byteLength: particleData.byteLength,
+      particleCount: particleData.byteLength / (21 * 4), // 21 floats * 4 bytes each
+    });
   };
 
   private handleClose = (event: CloseEvent): void => {
@@ -179,58 +179,71 @@ export class StateStreamingService implements IStateStreamingService {
       this.pingTimerId = null;
     }
 
-    this.logger.info("WebSocket connection closed", {
+    this.logger.info("State stream connection closed", {
       code: event.code,
       reason: event.reason,
       wasClean: event.wasClean,
     });
 
-    // Attempt reconnection if not a clean disconnect
-    if (!event.wasClean && event.code !== 1000) {
+    // Attempt reconnection if not a clean close
+    if (!event.wasClean && this.reconnectAttempts < this.config.websocket.maxReconnectAttempts) {
       this.scheduleReconnect();
     }
   };
 
   private handleError = (error: Event): void => {
+    this.logger.error("State stream connection error", { error });
     this.state = "ERROR";
     this.updateConnectionStatus();
 
-    this.logger.error("WebSocket connection error", { error });
-    this.scheduleReconnect();
+    // Schedule reconnection on error
+    if (this.reconnectAttempts < this.config.websocket.maxReconnectAttempts) {
+      this.scheduleReconnect();
+    }
   };
 
   private scheduleReconnect = (): void => {
-    if (this.reconnectAttempts >= this.config.websocket.maxReconnectAttempts) {
-      this.logger.error("Max reconnection attempts reached", {
-        attempts: this.reconnectAttempts,
-        maxAttempts: this.config.websocket.maxReconnectAttempts,
-      });
-      return;
+    if (this.reconnectTimerId) {
+      return; // Already scheduled
     }
 
     this.reconnectAttempts++;
-    const delay = this.config.websocket.reconnectDelay * Math.pow(1.5, this.reconnectAttempts - 1); // Exponential backoff
+    this.state = "RECONNECTING";
+    this.updateConnectionStatus();
 
-    this.logger.info("Scheduling reconnection", {
-      attempt: this.reconnectAttempts,
-      delay: delay,
+    const delay = this.config.websocket.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+    
+    this.logger.info(`Scheduling reconnection attempt ${this.reconnectAttempts}`, {
+      delay,
+      maxAttempts: this.config.websocket.maxReconnectAttempts,
     });
 
-    this.reconnectTimerId = this.timerService.setTimeout(() => {
-      this.connect().catch((error) => {
-        this.logger.error("Reconnection failed", { error });
-      });
+    this.reconnectTimerId = this.timerService.setTimeout(async () => {
+      this.reconnectTimerId = null;
+      
+      if (this.reconnectAttempts <= this.config.websocket.maxReconnectAttempts) {
+        try {
+          await this.connect();
+        } catch (error) {
+          this.logger.error("Reconnection attempt failed", { error });
+        }
+      }
     }, delay);
   };
 
   private startPingTimer = (): void => {
+    if (this.pingTimerId) {
+      this.timerService.clearInterval(this.pingTimerId);
+    }
+
     this.pingTimerId = this.timerService.setInterval(() => {
       if (this.webSocketService.isConnected()) {
-        this.webSocketService.send(JSON.stringify({
-          type: "ping",
-          timestamp: Date.now(),
-          pingId: Math.random().toString(36).substr(2, 9),
-        }));
+        try {
+          this.webSocketService.send(JSON.stringify({ type: "ping", timestamp: Date.now() }));
+          this.logger.debug("Sent ping to server");
+        } catch (error) {
+          this.logger.error("Failed to send ping", { error });
+        }
       }
     }, this.config.websocket.pingInterval);
   };

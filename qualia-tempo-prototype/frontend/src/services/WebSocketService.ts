@@ -13,6 +13,7 @@ import type { IWebSocketService } from "./interfaces/IWebSocketService";
 export class WebSocketService implements IWebSocketService {
   private readonly logger: ILogger;
   private websocket: WebSocket | null = null;
+  private binaryType: 'blob' | 'arraybuffer' = 'blob'; // Default binary type
 
   // Event handlers
   private messageHandler?: (_data: any) => void;
@@ -40,6 +41,9 @@ export class WebSocketService implements IWebSocketService {
 
     try {
       this.websocket = new WebSocket(url);
+
+      // BINARY PROTOCOL: Apply configured binary type
+      this.websocket.binaryType = this.binaryType;
 
       // Bind event handlers
       this.websocket.onopen = this.handleOpen.bind(this);
@@ -137,6 +141,18 @@ export class WebSocketService implements IWebSocketService {
   @logMethod
   public isConnected(): boolean {
     return this.websocket ? this.websocket.readyState === WebSocket.OPEN : false;
+  }
+
+  @logMethod
+  public async setBinaryType(type: 'blob' | 'arraybuffer'): Promise<void> {
+    // Store the binary type for use during connection
+    this.binaryType = type;
+    
+    // If already connected, apply immediately
+    if (this.websocket) {
+      this.websocket.binaryType = type;
+      this.logger.info(`WebSocket binary type set to: ${type}`);
+    }
   }
 
   private handleOpen = (): void => {

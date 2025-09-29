@@ -3,7 +3,7 @@
 
 import asyncio
 import logging
-import json
+# BINARY PROTOCOL: json import removed - no more JSON serialization
 from typing import Dict, Any, Set, Optional
 from fastapi import WebSocket, WebSocketDisconnect
 from .EventBus import EventBus
@@ -112,22 +112,18 @@ class StateStreamingService:
                 loop_start = asyncio.get_event_loop().time()
 
                 try:
-                    # Get current qualia state from particle engine
-                    # QUALIA.CODE: ParticleEngine manages its own autonomous simulation loop
-                    qualia_state = self._particle_engine.get_qualia_state()
+                    # CRITICAL FIX: Call correct method that actually exists
+                    particle_data = self._particle_engine.get_particle_data_as_numpy_array()
 
-                    # Serialize state to JSON
-                    state_json = json.dumps({
-                        "type": "state_update",
-                        "data": qualia_state,
-                        "timestamp": loop_start,
-                        "sequence_number": self._states_sent,
-                    })
+                    if particle_data is not None:
+                        # BINARY PROTOCOL: Convert numpy array directly to bytes
+                        # NO JSON SERIALIZATION - Maximum performance
+                        binary_payload = particle_data.tobytes()
 
-                    # Send state update to all connected clients
-                    await self._broadcast_state_update(state_json)
+                        # Send binary state update to all connected clients
+                        await self._broadcast_state_update(binary_payload)
 
-                    # Update statistics
+                        # Update statistics
                     self._states_sent += 1
 
                 except Exception as e:
@@ -151,8 +147,14 @@ class StateStreamingService:
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
-    async def _broadcast_state_update(self, state_json: str) -> None:
-        """Send state update message to all connected clients, removing dead connections."""
+    async def _broadcast_state_update(self, binary_payload: bytes) -> None:
+        """Send binary particle data to all connected clients via WebSocket.
+        
+        QUALIA.CODE v1.2: BINARY PROTOCOL IMPLEMENTATION
+        - Eliminates JSON serialization performance disaster
+        - Streams raw numpy bytes directly to GPU pipeline
+        - Zero-copy, maximum throughput architecture
+        """
         if not self._connections:
             return
 
@@ -160,11 +162,12 @@ class StateStreamingService:
 
         for connection in self._connections:
             try:
-                await connection.send_text(state_json)
+                # BINARY STREAMING: send_bytes instead of send_text
+                await connection.send_bytes(binary_payload)
             except WebSocketDisconnect:
                 dead_connections.add(connection)
             except Exception as e:
-                self._logger.error(f"Error sending to client: {e}")
+                self._logger.error(f"Error sending binary data to client: {e}")
                 dead_connections.add(connection)
 
         # Remove dead connections

@@ -671,8 +671,13 @@ class QualiaParticleEngine:
         except Exception as e:
             logger.error(f"🚨 Failed to reset particle engine: {e}")
 
-    def read_particles_data(self) -> Any:
-        """Read current particle data from GPU (lazy transfer)."""
+    def get_particle_data_as_numpy_array(self) -> Any:
+        """Read current particle data from GPU as numpy array (binary-ready).
+        
+        QUALIA.CODE v1.2: Renamed from read_particles_data() for explicit naming.
+        Fixed critical reshape bug: particles have 21 components, not 12.
+        Returns binary-ready numpy array for zero-copy streaming.
+        """
         if not self.particles_initialized:
             return None
 
@@ -683,8 +688,9 @@ class QualiaParticleEngine:
 
             # Convert back to numpy array
             particles_array = np.frombuffer(particle_bytes, dtype=np.float32)
-            # Reshape based on QualiaParticle structure (12 floats per particle)
-            return particles_array.reshape(-1, 12)
+            # CRITICAL FIX: Reshape based on QualiaParticle structure (21 components)
+            # position(3) + velocity(3) + acceleration(3) + color(4) + lifetime(1) + size(1) + resonance(1) + mass(1) + charge(1) + force_accumulator(3) = 21
+            return particles_array.reshape(-1, 21)
 
         except Exception as e:
             logger.error(f"🚨 Failed to read particles data: {e}")
