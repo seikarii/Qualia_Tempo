@@ -28,7 +28,8 @@ import type { ITimerService, IPerformanceService } from "./interfaces/ITimerServ
 import type { DebugSession, PerformanceMetrics, AIAnalysisResult, DebugServiceConfig } from "./contracts/IDebugService.contracts";
 import type {
   BaseEvent,
-  QualiaStateUpdatedEvent,
+  QualiaStateCalculatedEvent,
+  QualiaParticleDataReceivedEvent,
   GameStateChangedEvent,
   PlayerActionEvent,
   ErrorEvent,
@@ -483,8 +484,11 @@ export class DebugService implements IDebugService {
 
     // Type-specific handling
     switch (event.type) {
-      case "QualiaStateUpdated":
-        this.handleQualiaStateEvent(event as QualiaStateUpdatedEvent);
+      case "QualiaStateCalculated":
+        this.handleQualiaStateCalculatedEvent(event as QualiaStateCalculatedEvent);
+        break;
+      case "QualiaParticleDataReceived":
+        this.handleQualiaParticleDataReceivedEvent(event as QualiaParticleDataReceivedEvent);
         break;
       case "Error":
         this.handleErrorEvent(event as ErrorEvent);
@@ -506,16 +510,30 @@ export class DebugService implements IDebugService {
     this.updatePerformanceMetrics("PlayerAction", this._performanceService.now());
   }
 
-  private handleQualiaStateEvent(event: QualiaStateUpdatedEvent): void {
-    // Binary protocol: Store particle data buffer info for debugging
+  private handleQualiaStateCalculatedEvent(event: QualiaStateCalculatedEvent): void {
+    // Store the calculated qualia state for debugging
+    this.lastQualiaState = event.qualiaState;
+    this.updatePerformanceMetrics("QualiaStateCalculated", this._performanceService.now());
+
+    // Track QualiaState calculation rate
+    this.performanceMetrics.qualiaStateUpdateRate++;
+    
+    this.logger.debug(
+      "🔍 [DebugService] QualiaState calculated from player actions:",
+      event.qualiaState
+    );
+  }
+
+  private handleQualiaParticleDataReceivedEvent(event: QualiaParticleDataReceivedEvent): void {
+    // Store particle data buffer info for debugging
     this.lastQualiaState = {
       particleBufferSize: event.particleData.byteLength,
       timestamp: event.timestamp,
       // Note: Actual QualiaState reconstruction from binary data would require particle parsing
     };
-    this.updatePerformanceMetrics("QualiaStateUpdated", this._performanceService.now());
+    this.updatePerformanceMetrics("QualiaParticleDataReceived", this._performanceService.now());
 
-    // Track QualiaState update rate and binary data throughput
+    // Track binary data throughput
     this.performanceMetrics.qualiaStateUpdateRate++;
     
     this.logger.debug(

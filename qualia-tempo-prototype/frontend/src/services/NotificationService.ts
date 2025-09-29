@@ -34,7 +34,7 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type {
-  QualiaStateUpdatedEvent,
+  QualiaStateCalculatedEvent,
   GameStateChangedEvent,
   ErrorEvent,
   BackendSyncEvent,
@@ -625,9 +625,9 @@ export class NotificationService implements INotificationService {
 
     this.eventListenerIds.push(
       this.eventBus.subscribe(
-        "QualiaStateUpdated",
-        (event: QualiaStateUpdatedEvent) => {
-          this.handleQualiaStateEvent(event);
+        "QualiaStateCalculated",
+        (event: QualiaStateCalculatedEvent) => {
+          this.handleQualiaStateCalculatedEvent(event);
         },
       ),
     );
@@ -699,23 +699,22 @@ export class NotificationService implements INotificationService {
     this.processNotification(notification);
   }
 
-  private handleQualiaStateEvent(event: QualiaStateUpdatedEvent): void {
-    // Binary protocol: Notification based on particle data activity
-    // For now, show notification for any binary data received (indicates system activity)
-    const hasParticleActivity = event.particleData.byteLength > 0;
+  private handleQualiaStateCalculatedEvent(event: QualiaStateCalculatedEvent): void {
+    // Only show notifications for significant qualia changes
+    const hasSignificantChange = Object.values(event.qualiaState).some(
+      (value) => typeof value === "number" && (value > 0.8 || value < 0.2),
+    );
 
-    if (hasParticleActivity) {
+    if (hasSignificantChange) {
       const notification = this.createNotification(
-        "Qualia particle data stream active",
+        "Significant qualia state change detected",
         "achievement",
         "normal",
         {
           source: "QualiaStateEvent",
           category: "performance",
           metadata: {
-            particleDataSize: event.particleData.byteLength,
-            timestamp: event.timestamp,
-            // Note: Actual qualia analysis would require particle data parsing
+            qualiaState: event.qualiaState,
           },
         },
       );

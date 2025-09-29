@@ -21,7 +21,6 @@ import type {
   GameStateChangedEvent,
   MetronomeTickEvent,
   RhythmicDashEvent,
-  QualiaStateUpdatedEvent,
   QualiaStateCalculatedEvent,
   QualiaParticleDataReceivedEvent,
   ErrorEvent,
@@ -36,7 +35,6 @@ import { logMethod, catchError } from "../utils/decorators";
 
 // Union type for all events
 export type EventTypes =
-  | QualiaStateUpdatedEvent
   | QualiaStateCalculatedEvent
   | QualiaParticleDataReceivedEvent
   | PlayerActionEvent

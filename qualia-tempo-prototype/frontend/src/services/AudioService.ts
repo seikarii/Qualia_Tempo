@@ -1,7 +1,7 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import { EventBus } from "./EventBus";
-import type { QualiaStateUpdatedEvent } from "./contracts/events.contracts";
+import type { QualiaStateCalculatedEvent } from "./contracts/events.contracts";
 import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError, measureTime } from "../utils/decorators";
@@ -54,8 +54,8 @@ export class AudioService implements IAudioService {
     // Create entity voices for game entities
     this.createEntityVoices();
 
-    const listenerId = this.eventBus.subscribe<QualiaStateUpdatedEvent>(
-      "QualiaStateUpdated",
+    const listenerId = this.eventBus.subscribe<QualiaStateCalculatedEvent>(
+      "QualiaStateCalculated",
       this.handleQualiaStateUpdate.bind(this),
     );
     this.qualiaStateListenerId = listenerId;
@@ -100,33 +100,23 @@ export class AudioService implements IAudioService {
 
   @logMethod
   @catchError
-  private handleQualiaStateUpdate(event: QualiaStateUpdatedEvent): void {
-    // Binary protocol: Audio processing requires particle data analysis
-    // For now, create minimal qualia state for audio compatibility
-    const mockQualiaState = {
-      intensity: 0,
-      precision: 0,
-      aggression: 0,
-      flow: 0,
-      chaos: 0,
-      recovery: 0,
-      transcendence: 0,
-    };
+  private handleQualiaStateUpdate(event: QualiaStateCalculatedEvent): void {
+    // Use the real qualiaState from frontend calculation
+    const { qualiaState } = event;
 
-    // TODO: Implement particle data to qualia state conversion for audio
-    this.audioEngine.updateEntitySound("player", mockQualiaState);
+    this.audioEngine.updateEntitySound("player", qualiaState);
     
     this.logger.debug(
-      "🎵 [AudioService] Binary particle data received:",
-      { size: event.particleData.byteLength }
+      "🎵 [AudioService] QualiaState calculated from player actions:",
+      qualiaState
     );
 
     // Patrón emergente basado en el estado
-    if (mockQualiaState.transcendence > 0.8) {
+    if (qualiaState.transcendence > 0.8) {
       const emergentBehavior = {
         type: "NARRATIVE_EVENT" as const,
         entities: [],
-        strength: mockQualiaState.intensity,
+        strength: qualiaState.intensity,
         description: "Transcendence achievement",
         timestamp: this.timerService.now(),
       };

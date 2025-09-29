@@ -107,12 +107,6 @@ export interface QualiaParticleDataReceivedEvent extends BaseEvent {
   particleData: ArrayBuffer; // BINARY PROTOCOL: Raw particle data from numpy.tobytes()
 }
 
-// LEGACY: Keep for backward compatibility during transition
-export interface QualiaStateUpdatedEvent extends BaseEvent {
-  type: "QualiaStateUpdated";
-  particleData: ArrayBuffer; // BINARY PROTOCOL: Raw particle data from numpy.tobytes()
-}
-
 export interface ErrorEvent extends BaseEvent {
   type: "Error";
   error: Error;
