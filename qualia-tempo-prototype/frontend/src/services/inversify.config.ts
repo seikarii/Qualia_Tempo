@@ -109,7 +109,10 @@ container
   .inSingletonScope();
 
 // Bind HttpService with proper IoC pattern
-// MOVED TO configureServices to avoid circular dependency
+container
+  .bind<IHttpService>(TYPES.IHttpService)
+  .to(HttpService)
+  .inSingletonScope();
 
 container
   .bind<ITimerService>(TYPES.ITimerService)
@@ -262,11 +265,6 @@ export async function configureServices(): Promise<void> {
   
   // Bind ThrottlingConfig from NotificationService config
   safeBindConstant(TYPES.ThrottlingConfig, fullConfig.notificationService.throttling);
-  
-  // Bind HttpService after config is loaded to avoid circular dependency
-  if (!container.isBound(TYPES.IHttpService)) {
-    container.bind<IHttpService>(TYPES.IHttpService).to(HttpService).inSingletonScope();
-  }
 }
 }
 
