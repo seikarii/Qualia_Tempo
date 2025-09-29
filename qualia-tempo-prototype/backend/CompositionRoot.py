@@ -175,16 +175,15 @@ class CompositionRoot:
     async def _initialize_streaming_web_service(self) -> None:
         """Initialize StreamingWebService for video streaming via WebSocket."""
         from .services.StreamingWebService import StreamingWebService
+        from .services.RenderingService import RenderingService
 
-        # StreamingWebService needs rendering_service, but we'll use a placeholder for now
-        # since the main issue is just service registration
         particle_engine = self._services.get("particle_system")
         
-        # Create a simple placeholder rendering service if not available
-        rendering_service = self._services.get("rendering_service")
-        if rendering_service is None:
-            # Use the particle engine as a placeholder - it has the necessary interface
-            rendering_service = particle_engine
+        # Create the actual rendering service
+        rendering_service = RenderingService(
+            ctx=self._services.get("shared_opengl_context"),
+            particle_engine=particle_engine
+        )
 
         streaming_web_service = StreamingWebService(
             event_bus=self._event_bus,
@@ -192,7 +191,8 @@ class CompositionRoot:
             particle_engine=particle_engine,
         )
         self._services["streaming_web_service"] = streaming_web_service
-        self._logger.debug("✅ StreamingWebService initialized")
+        self._services["rendering_service"] = rendering_service
+        self._logger.debug("✅ StreamingWebService and RenderingService initialized")
 
     async def _initialize_state_streaming_service(self) -> None:
         """Initialize StateStreamingService for WebSocket state streaming."""

@@ -1,1658 +1,1658 @@
 {
-  "timestamp": "2025-09-29T07:50:50.135Z",
+  "timestamp": "2025-09-29T08:38:34.665Z",
   "success": false,
-  "error": "page.focus: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('canvas')\u001b[22m\n\u001b[2m    - locator resolved to 3 elements. Proceeding with the first one: <canvas width=\"300\" height=\"150\" data-engine=\"three.js r180\"></canvas>\u001b[22m\n",
-  "stack": "page.focus: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('canvas')\u001b[22m\n\u001b[2m    - locator resolved to 3 elements. Proceeding with the first one: <canvas width=\"300\" height=\"150\" data-engine=\"three.js r180\"></canvas>\u001b[22m\n\n    at comprehensiveTest (/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/browser-test.js:88:20)",
+  "error": "page.content: Target page, context or browser has been closed",
+  "stack": "page.content: Target page, context or browser has been closed\n    at comprehensiveTest (/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/browser-test.js:74:44)",
   "logs": [
     {
-      "timestamp": "2025-09-29T07:50:30.848Z",
+      "timestamp": "2025-09-29T08:38:15.371Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST SCRIPT LOADED ===",
       "entry": "[LOG] === RACE CONDITION TEST SCRIPT LOADED ==="
     },
     {
-      "timestamp": "2025-09-29T07:50:30.952Z",
+      "timestamp": "2025-09-29T08:38:15.412Z",
       "type": "debug",
       "text": "[vite] connecting...",
       "entry": "[DEBUG] [vite] connecting..."
     },
     {
-      "timestamp": "2025-09-29T07:50:30.966Z",
+      "timestamp": "2025-09-29T08:38:15.432Z",
       "type": "debug",
       "text": "[vite] connected.",
       "entry": "[DEBUG] [vite] connected."
     },
     {
-      "timestamp": "2025-09-29T07:50:31.198Z",
+      "timestamp": "2025-09-29T08:38:15.720Z",
       "type": "info",
       "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
       "entry": "[INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.241Z",
+      "timestamp": "2025-09-29T08:38:15.767Z",
       "type": "log",
       "text": "%c * Tone.js v14.9.17 *  background: #000; color: #fff",
       "entry": "[LOG] %c * Tone.js v14.9.17 *  background: #000; color: #fff"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.292Z",
+      "timestamp": "2025-09-29T08:38:15.817Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.293Z",
+      "timestamp": "2025-09-29T08:38:15.818Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.502Z",
+      "timestamp": "2025-09-29T08:38:16.038Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.505Z",
+      "timestamp": "2025-09-29T08:38:16.038Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {defaultTimeout: 10000}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {defaultTimeout: 10000}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.506Z",
+      "timestamp": "2025-09-29T08:38:16.040Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.515Z",
+      "timestamp": "2025-09-29T08:38:16.044Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.559Z",
+      "timestamp": "2025-09-29T08:38:16.087Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.561Z",
+      "timestamp": "2025-09-29T08:38:16.088Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.561Z",
+      "timestamp": "2025-09-29T08:38:16.089Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: BackendSyncService initialized - configuration will be loaded on demand {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendSyncService initialized - configuration will be loaded on demand {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.563Z",
+      "timestamp": "2025-09-29T08:38:16.090Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.563Z",
+      "timestamp": "2025-09-29T08:38:16.090Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service initialized {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.563Z",
+      "timestamp": "2025-09-29T08:38:16.091Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: RhythmicMovementController initialized successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: RhythmicMovementController initialized successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.563Z",
+      "timestamp": "2025-09-29T08:38:16.091Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔧 [NotificationService] Service initialized - configuration will be loaded in start() {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [NotificationService] Service initialized - configuration will be loaded in start() {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.564Z",
+      "timestamp": "2025-09-29T08:38:16.091Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔧 [ErrorReportingService] Service initialized - configuration will be loaded in start() {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [ErrorReportingService] Service initialized - configuration will be loaded in start() {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.564Z",
+      "timestamp": "2025-09-29T08:38:16.092Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: PerformanceService initialized with performance abstraction {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: PerformanceService initialized with performance abstraction {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.566Z",
+      "timestamp": "2025-09-29T08:38:16.092Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.566Z",
+      "timestamp": "2025-09-29T08:38:16.092Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: StateStreamingService initialized {connectionUrl: ws://127.0.0.1:8000/ws/video_stream, maxReconnectAttempts: 10}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: StateStreamingService initialized {connectionUrl: ws://127.0.0.1:8000/ws/video_stream, maxReconnectAttempts: 10}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.567Z",
+      "timestamp": "2025-09-29T08:38:16.092Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ApplicationInitializerService constructed - awaiting start() {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ApplicationInitializerService constructed - awaiting start() {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.567Z",
+      "timestamp": "2025-09-29T08:38:16.093Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.567Z",
+      "timestamp": "2025-09-29T08:38:16.093Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 Starting application initialization sequence... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 Starting application initialization sequence... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.567Z",
+      "timestamp": "2025-09-29T08:38:16.094Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ Configuration loaded successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ Configuration loaded successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.567Z",
+      "timestamp": "2025-09-29T08:38:16.094Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: HttpService configuration updated {previousTimeout: 30000, newTimeout: 30000}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: HttpService configuration updated {previousTimeout: 30000, newTimeout: 30000}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.568Z",
+      "timestamp": "2025-09-29T08:38:16.094Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ HttpService configured with loaded settings {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ HttpService configured with loaded settings {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.568Z",
+      "timestamp": "2025-09-29T08:38:16.094Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.572Z",
+      "timestamp": "2025-09-29T08:38:16.095Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.572Z",
+      "timestamp": "2025-09-29T08:38:16.096Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132231563_0.665150129742555) - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132231563_0.665150129742555) - 0.30ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135096092_0.683318902382584) - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135096092_0.683318902382584) - 0.30ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.572Z",
+      "timestamp": "2025-09-29T08:38:16.096Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.572Z",
+      "timestamp": "2025-09-29T08:38:16.096Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132231563_0.033996708694046696) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132231563_0.033996708694046696) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135096092_0.44427029901844517) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135096092_0.44427029901844517) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.572Z",
+      "timestamp": "2025-09-29T08:38:16.096Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.573Z",
+      "timestamp": "2025-09-29T08:38:16.097Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759132231563_0.24819297971139787) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759132231563_0.24819297971139787) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759135096092_0.4284094213400974) - 0.00ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759135096092_0.4284094213400974) - 0.00ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.573Z",
+      "timestamp": "2025-09-29T08:38:16.097Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.573Z",
+      "timestamp": "2025-09-29T08:38:16.097Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ GameStateStoreService started and listening {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ GameStateStoreService started and listening {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.573Z",
+      "timestamp": "2025-09-29T08:38:16.099Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ErrorReporting configuration loaded from YAML successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ErrorReporting configuration loaded from YAML successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.573Z",
+      "timestamp": "2025-09-29T08:38:16.099Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.573Z",
+      "timestamp": "2025-09-29T08:38:16.100Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.574Z",
+      "timestamp": "2025-09-29T08:38:16.100Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759132231564_0.28503459681369103) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759132231564_0.28503459681369103) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759135096094_0.010376944555116174) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759135096094_0.010376944555116174) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.574Z",
+      "timestamp": "2025-09-29T08:38:16.100Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.574Z",
+      "timestamp": "2025-09-29T08:38:16.100Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.574Z",
+      "timestamp": "2025-09-29T08:38:16.101Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📊 [ErrorReportingService] Current Configuration: {enabled: true, maxBatchSize: 50, batchFlushInterval: 30000ms, maxRetries: 3, retryDelay: 1000ms}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [ErrorReportingService] Current Configuration: {enabled: true, maxBatchSize: 50, batchFlushInterval: 30000ms, maxRetries: 3, retryDelay: 1000ms}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.574Z",
+      "timestamp": "2025-09-29T08:38:16.101Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: DebugService configuration loaded successfully. {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: DebugService configuration loaded successfully. {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.574Z",
+      "timestamp": "2025-09-29T08:38:16.101Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.575Z",
+      "timestamp": "2025-09-29T08:38:16.101Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Starting AI debugging service... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Starting AI debugging service... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.575Z",
+      "timestamp": "2025-09-29T08:38:16.102Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1759132231566_e3b2ylvs {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1759132231566_e3b2ylvs {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1759135096095_vionpo4w {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1759135096095_vionpo4w {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.579Z",
+      "timestamp": "2025-09-29T08:38:16.106Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for * {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for * {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.580Z",
+      "timestamp": "2025-09-29T08:38:16.107Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: undefined_1759132231566_0.32930689700897864) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: undefined_1759132231566_0.32930689700897864) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: undefined_1759135096095_0.07603322807002921) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: undefined_1759135096095_0.07603322807002921) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.580Z",
+      "timestamp": "2025-09-29T08:38:16.107Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [DebugService] Subscribed to all event types {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [DebugService] Subscribed to all event types {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.580Z",
+      "timestamp": "2025-09-29T08:38:16.107Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Service started - AI debugging active {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Service started - AI debugging active {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.580Z",
+      "timestamp": "2025-09-29T08:38:16.107Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: NotificationService configuration loaded from YAML successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: NotificationService configuration loaded from YAML successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.580Z",
+      "timestamp": "2025-09-29T08:38:16.107Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Starting notification processing... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Starting notification processing... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.580Z",
+      "timestamp": "2025-09-29T08:38:16.107Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.580Z",
+      "timestamp": "2025-09-29T08:38:16.108Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759132231567_0.8633428725808808) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759132231567_0.8633428725808808) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759135096096_0.5862527365108832) - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759135096096_0.5862527365108832) - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.581Z",
+      "timestamp": "2025-09-29T08:38:16.108Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.581Z",
+      "timestamp": "2025-09-29T08:38:16.108Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132231567_0.4595694527659919) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132231567_0.4595694527659919) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135096097_0.47924101343513037) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135096097_0.47924101343513037) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.581Z",
+      "timestamp": "2025-09-29T08:38:16.108Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.581Z",
+      "timestamp": "2025-09-29T08:38:16.108Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132231568_0.7308911176981232) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132231568_0.7308911176981232) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135096097_0.9015489865282502) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135096097_0.9015489865282502) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.581Z",
+      "timestamp": "2025-09-29T08:38:16.109Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for BackendSync {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for BackendSync {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.581Z",
+      "timestamp": "2025-09-29T08:38:16.109Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: undefined_1759132231568_0.6718222374348982) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: undefined_1759132231568_0.6718222374348982) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: undefined_1759135096097_0.27647970367151464) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: undefined_1759135096097_0.27647970367151464) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.581Z",
+      "timestamp": "2025-09-29T08:38:16.109Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [NotificationService] Subscribed to notification events {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [NotificationService] Subscribed to notification events {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.582Z",
+      "timestamp": "2025-09-29T08:38:16.109Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: NotificationService started {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: NotificationService started {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.582Z",
+      "timestamp": "2025-09-29T08:38:16.109Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ Transversal services (ErrorReporting, Debug, Notification) started {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ Transversal services (ErrorReporting, Debug, Notification) started {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.582Z",
+      "timestamp": "2025-09-29T08:38:16.109Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: StateStreamingService started and EventBus injected. {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: StateStreamingService started and EventBus injected. {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.582Z",
+      "timestamp": "2025-09-29T08:38:16.109Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: State streaming service started {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: State streaming service started {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.582Z",
+      "timestamp": "2025-09-29T08:38:16.109Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.582Z",
+      "timestamp": "2025-09-29T08:38:16.110Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.582Z",
+      "timestamp": "2025-09-29T08:38:16.110Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: undefined_1759132231569_0.3869572225531521) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: undefined_1759132231569_0.3869572225531521) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: undefined_1759135096098_0.8409641344433776) - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: undefined_1759135096098_0.8409641344433776) - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.583Z",
+      "timestamp": "2025-09-29T08:38:16.110Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.583Z",
+      "timestamp": "2025-09-29T08:38:16.110Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132231569_0.49166783186728324) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132231569_0.49166783186728324) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135096098_0.16020628463090847) - 0.00ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135096098_0.16020628463090847) - 0.00ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.583Z",
+      "timestamp": "2025-09-29T08:38:16.110Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ [GameController] Events subscribed successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [GameController] Events subscribed successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.583Z",
+      "timestamp": "2025-09-29T08:38:16.115Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.80ms {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.80ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.583Z",
+      "timestamp": "2025-09-29T08:38:16.115Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ GameControllerService started and ready {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ GameControllerService started and ready {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.583Z",
+      "timestamp": "2025-09-29T08:38:16.115Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerInput {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerInput {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.588Z",
+      "timestamp": "2025-09-29T08:38:16.115Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: undefined_1759132231570_0.70899470677787) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: undefined_1759132231570_0.70899470677787) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: undefined_1759135096099_0.05544506780996494) - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: undefined_1759135096099_0.05544506780996494) - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.588Z",
+      "timestamp": "2025-09-29T08:38:16.115Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.588Z",
+      "timestamp": "2025-09-29T08:38:16.116Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132231570_0.654986314446595) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132231570_0.654986314446595) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135096099_0.3575102671588577) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135096099_0.3575102671588577) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.589Z",
+      "timestamp": "2025-09-29T08:38:16.116Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: RhythmicMovementController started successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: RhythmicMovementController started successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.589Z",
+      "timestamp": "2025-09-29T08:38:16.116Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ RhythmicMovementController started and ready {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ RhythmicMovementController started and ready {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.589Z",
+      "timestamp": "2025-09-29T08:38:16.116Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Starting service... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Starting service... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.589Z",
+      "timestamp": "2025-09-29T08:38:16.116Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.589Z",
+      "timestamp": "2025-09-29T08:38:16.116Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132231571_0.8099312621528515) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132231571_0.8099312621528515) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135096100_0.917778223417874) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135096100_0.917778223417874) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.589Z",
+      "timestamp": "2025-09-29T08:38:16.117Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [BackendSync] Subscribed to events {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [BackendSync] Subscribed to events {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.589Z",
+      "timestamp": "2025-09-29T08:38:16.117Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Service started successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Service started successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.590Z",
+      "timestamp": "2025-09-29T08:38:16.117Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: undefined {backendConnected: false}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: undefined {backendConnected: false}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.590Z",
+      "timestamp": "2025-09-29T08:38:16.117Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ [BOOTSTRAP] Application initialization completed successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [BOOTSTRAP] Application initialization completed successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.590Z",
+      "timestamp": "2025-09-29T08:38:16.117Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: FrontendRenderingService initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: FrontendRenderingService initialized {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.664Z",
+      "timestamp": "2025-09-29T08:38:16.215Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.665Z",
+      "timestamp": "2025-09-29T08:38:16.216Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132231663_0.005631967725897802) - 0.40ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132231663_0.005631967725897802) - 0.40ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135096213_0.016226521400319882) - 0.40ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135096213_0.016226521400319882) - 0.40ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.666Z",
+      "timestamp": "2025-09-29T08:38:16.216Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: FrontendRenderingService initialized successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: FrontendRenderingService initialized successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.669Z",
+      "timestamp": "2025-09-29T08:38:16.219Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Disconnected from state stream {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Disconnected from state stream {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.670Z",
+      "timestamp": "2025-09-29T08:38:16.220Z",
       "type": "warning",
       "text": "⚠️ [QualiaLogger] WARN: FrontendRenderingService already initialized {}",
       "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: FrontendRenderingService already initialized {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.693Z",
+      "timestamp": "2025-09-29T08:38:16.248Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: FrontendRenderingService started {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: FrontendRenderingService started {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.694Z",
+      "timestamp": "2025-09-29T08:38:16.248Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Authentication disabled - connecting without token {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Authentication disabled - connecting without token {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.694Z",
+      "timestamp": "2025-09-29T08:38:16.249Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Initiating WebSocket connection to state stream {url: ws://127.0.0.1:8000/ws/video_stream}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Initiating WebSocket connection to state stream {url: ws://127.0.0.1:8000/ws/video_stream}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.696Z",
+      "timestamp": "2025-09-29T08:38:16.249Z",
       "type": "warning",
       "text": "⚠️ [QualiaLogger] WARN: FrontendRenderingService already running {}",
       "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: FrontendRenderingService already running {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.697Z",
+      "timestamp": "2025-09-29T08:38:16.250Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Connection attempt already in progress {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Connection attempt already in progress {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.697Z",
+      "timestamp": "2025-09-29T08:38:16.250Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: FrontendRenderer initialized and connected to state stream {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: FrontendRenderer initialized and connected to state stream {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.697Z",
+      "timestamp": "2025-09-29T08:38:16.250Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: FrontendRenderer initialized and connected to state stream {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: FrontendRenderer initialized and connected to state stream {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.699Z",
+      "timestamp": "2025-09-29T08:38:16.251Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.699Z",
+      "timestamp": "2025-09-29T08:38:16.251Z",
       "type": "warning",
       "text": "[LoggerProvider] Logger already registered.",
       "entry": "[WARNING] [LoggerProvider] Logger already registered."
     },
     {
-      "timestamp": "2025-09-29T07:50:31.700Z",
+      "timestamp": "2025-09-29T08:38:16.252Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.700Z",
+      "timestamp": "2025-09-29T08:38:16.252Z",
       "type": "warning",
       "text": "⚠️ [QualiaLogger] WARN: ⚠️ ApplicationInitializerService already running - ignoring start() call {}",
       "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ ApplicationInitializerService already running - ignoring start() call {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:31.700Z",
+      "timestamp": "2025-09-29T08:38:16.252Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ [BOOTSTRAP] Application initialization completed successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [BOOTSTRAP] Application initialization completed successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:32.366Z",
+      "timestamp": "2025-09-29T08:38:16.993Z",
       "type": "warning",
-      "text": "[GroupMarkerNotSet(crbug.com/242999)!:A0F0220094090000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
-      "entry": "[WARNING] [GroupMarkerNotSet(crbug.com/242999)!:A0F0220094090000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content."
+      "text": "[GroupMarkerNotSet(crbug.com/242999)!:A0F022006C1E0000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
+      "entry": "[WARNING] [GroupMarkerNotSet(crbug.com/242999)!:A0F022006C1E0000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content."
     },
     {
-      "timestamp": "2025-09-29T07:50:32.370Z",
+      "timestamp": "2025-09-29T08:38:16.998Z",
       "type": "warning",
-      "text": "[.WebGL-0x1f2c00b9a300]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
-      "entry": "[WARNING] [.WebGL-0x1f2c00b9a300]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      "text": "[.WebGL-0x169c00ca5500]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "entry": "[WARNING] [.WebGL-0x169c00ca5500]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
     },
     {
-      "timestamp": "2025-09-29T07:50:32.372Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Connected to state stream {connectionTime: 1759132232370}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Connected to state stream {connectionTime: 1759132232370}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:32.683Z",
+      "timestamp": "2025-09-29T08:38:17.326Z",
       "type": "warning",
-      "text": "[.WebGL-0x1f2c00b9a300]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
-      "entry": "[WARNING] [.WebGL-0x1f2c00b9a300]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      "text": "[.WebGL-0x169c00ca5500]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "entry": "[WARNING] [.WebGL-0x169c00ca5500]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
     },
     {
-      "timestamp": "2025-09-29T07:50:33.007Z",
+      "timestamp": "2025-09-29T08:38:17.664Z",
       "type": "warning",
-      "text": "[.WebGL-0x1f2c00b9a300]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
-      "entry": "[WARNING] [.WebGL-0x1f2c00b9a300]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      "text": "[.WebGL-0x169c00ca5500]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "entry": "[WARNING] [.WebGL-0x169c00ca5500]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
     },
     {
-      "timestamp": "2025-09-29T07:50:33.316Z",
+      "timestamp": "2025-09-29T08:38:17.997Z",
       "type": "warning",
-      "text": "[.WebGL-0x1f2c00b9a300]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
-      "entry": "[WARNING] [.WebGL-0x1f2c00b9a300]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+      "text": "[.WebGL-0x169c00ca5500]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+      "entry": "[WARNING] [.WebGL-0x169c00ca5500]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
     },
     {
-      "timestamp": "2025-09-29T07:50:33.915Z",
+      "timestamp": "2025-09-29T08:38:18.627Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST RESULTS ===",
       "entry": "[LOG] === RACE CONDITION TEST RESULTS ==="
     },
     {
-      "timestamp": "2025-09-29T07:50:33.916Z",
+      "timestamp": "2025-09-29T08:38:18.628Z",
       "type": "log",
       "text": "✅ NO CONFIGURATION ERRORS DETECTED",
       "entry": "[LOG] ✅ NO CONFIGURATION ERRORS DETECTED"
     },
     {
-      "timestamp": "2025-09-29T07:50:33.916Z",
+      "timestamp": "2025-09-29T08:38:18.628Z",
       "type": "log",
       "text": "✅ NO SERVICE INITIALIZATION ERRORS DETECTED",
       "entry": "[LOG] ✅ NO SERVICE INITIALIZATION ERRORS DETECTED"
     },
     {
-      "timestamp": "2025-09-29T07:50:33.916Z",
+      "timestamp": "2025-09-29T08:38:18.628Z",
       "type": "log",
       "text": "=== TEST COMPLETE ===",
       "entry": "[LOG] === TEST COMPLETE ==="
     },
     {
-      "timestamp": "2025-09-29T07:50:34.557Z",
+      "timestamp": "2025-09-29T08:38:19.333Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST SCRIPT LOADED ===",
       "entry": "[LOG] === RACE CONDITION TEST SCRIPT LOADED ==="
     },
     {
-      "timestamp": "2025-09-29T07:50:34.568Z",
+      "timestamp": "2025-09-29T08:38:19.338Z",
       "type": "debug",
       "text": "[vite] connecting...",
       "entry": "[DEBUG] [vite] connecting..."
     },
     {
-      "timestamp": "2025-09-29T07:50:34.574Z",
+      "timestamp": "2025-09-29T08:38:19.340Z",
       "type": "debug",
       "text": "[vite] connected.",
       "entry": "[DEBUG] [vite] connected."
     },
     {
-      "timestamp": "2025-09-29T07:50:34.601Z",
+      "timestamp": "2025-09-29T08:38:19.377Z",
       "type": "info",
       "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
       "entry": "[INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.610Z",
+      "timestamp": "2025-09-29T08:38:19.386Z",
       "type": "log",
       "text": "%c * Tone.js v14.9.17 *  background: #000; color: #fff",
       "entry": "[LOG] %c * Tone.js v14.9.17 *  background: #000; color: #fff"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.664Z",
+      "timestamp": "2025-09-29T08:38:19.436Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: TimerService initialized with timer abstraction {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.666Z",
+      "timestamp": "2025-09-29T08:38:19.437Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {defaultTimeout: 10000}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: HttpService initialized with fetch abstraction {defaultTimeout: 10000}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.667Z",
+      "timestamp": "2025-09-29T08:38:19.438Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.674Z",
+      "timestamp": "2025-09-29T08:38:19.446Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Loading configuration from multiple YAML files... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.790Z",
+      "timestamp": "2025-09-29T08:38:19.560Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.791Z",
+      "timestamp": "2025-09-29T08:38:19.561Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [EventBus] EventBus initialized via InversifyJS {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.792Z",
+      "timestamp": "2025-09-29T08:38:19.563Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: BackendSyncService initialized - configuration will be loaded on demand {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendSyncService initialized - configuration will be loaded on demand {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.793Z",
+      "timestamp": "2025-09-29T08:38:19.563Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [GameStateStoreService] Bridge service initialized {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.793Z",
+      "timestamp": "2025-09-29T08:38:19.565Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service initialized {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.795Z",
+      "timestamp": "2025-09-29T08:38:19.565Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: RhythmicMovementController initialized successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: RhythmicMovementController initialized successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.795Z",
+      "timestamp": "2025-09-29T08:38:19.565Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔧 [NotificationService] Service initialized - configuration will be loaded in start() {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [NotificationService] Service initialized - configuration will be loaded in start() {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.795Z",
+      "timestamp": "2025-09-29T08:38:19.566Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔧 [ErrorReportingService] Service initialized - configuration will be loaded in start() {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [ErrorReportingService] Service initialized - configuration will be loaded in start() {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.796Z",
+      "timestamp": "2025-09-29T08:38:19.566Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: PerformanceService initialized with performance abstraction {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: PerformanceService initialized with performance abstraction {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.796Z",
+      "timestamp": "2025-09-29T08:38:19.566Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔧 [DebugService] Service initialized with AI debugging capabilities and pure DI {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.796Z",
+      "timestamp": "2025-09-29T08:38:19.570Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: StateStreamingService initialized {connectionUrl: ws://127.0.0.1:8000/ws/video_stream, maxReconnectAttempts: 10}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: StateStreamingService initialized {connectionUrl: ws://127.0.0.1:8000/ws/video_stream, maxReconnectAttempts: 10}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.796Z",
+      "timestamp": "2025-09-29T08:38:19.570Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ApplicationInitializerService constructed - awaiting start() {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ApplicationInitializerService constructed - awaiting start() {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.799Z",
+      "timestamp": "2025-09-29T08:38:19.570Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.799Z",
+      "timestamp": "2025-09-29T08:38:19.570Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 Starting application initialization sequence... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 Starting application initialization sequence... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.799Z",
+      "timestamp": "2025-09-29T08:38:19.570Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ Configuration loaded successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ Configuration loaded successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.799Z",
+      "timestamp": "2025-09-29T08:38:19.571Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: HttpService configuration updated {previousTimeout: 30000, newTimeout: 30000}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: HttpService configuration updated {previousTimeout: 30000, newTimeout: 30000}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.799Z",
+      "timestamp": "2025-09-29T08:38:19.571Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ HttpService configured with loaded settings {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ HttpService configured with loaded settings {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.799Z",
+      "timestamp": "2025-09-29T08:38:19.571Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎧 [GameStateStoreService] Starting event listeners... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.799Z",
+      "timestamp": "2025-09-29T08:38:19.571Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.800Z",
+      "timestamp": "2025-09-29T08:38:19.571Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132234793_0.3698768069344679) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132234793_0.3698768069344679) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135099563_0.29546093048666144) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135099563_0.29546093048666144) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.800Z",
+      "timestamp": "2025-09-29T08:38:19.572Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.800Z",
+      "timestamp": "2025-09-29T08:38:19.572Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132234793_0.9619623923424844) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132234793_0.9619623923424844) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135099564_0.287867463397222) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135099564_0.287867463397222) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.800Z",
+      "timestamp": "2025-09-29T08:38:19.572Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.800Z",
+      "timestamp": "2025-09-29T08:38:19.572Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759132234793_0.17756146450104315) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759132234793_0.17756146450104315) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759135099564_0.34043900166215446) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759135099564_0.34043900166215446) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.800Z",
+      "timestamp": "2025-09-29T08:38:19.573Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [GameStateStoreService] Event listeners active {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.800Z",
+      "timestamp": "2025-09-29T08:38:19.573Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ GameStateStoreService started and listening {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ GameStateStoreService started and listening {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.800Z",
+      "timestamp": "2025-09-29T08:38:19.580Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ErrorReporting configuration loaded from YAML successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ErrorReporting configuration loaded from YAML successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.800Z",
+      "timestamp": "2025-09-29T08:38:19.580Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Starting production error reporting... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.800Z",
+      "timestamp": "2025-09-29T08:38:19.580Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.801Z",
+      "timestamp": "2025-09-29T08:38:19.581Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759132234794_0.4489004210860167) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759132234794_0.4489004210860167) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759135099565_0.8223414179271127) - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759135099565_0.8223414179271127) - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.801Z",
+      "timestamp": "2025-09-29T08:38:19.581Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [ErrorReportingService] Subscribed to Error events {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.801Z",
+      "timestamp": "2025-09-29T08:38:19.581Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [ErrorReportingService] Service started - Production error handling active {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.801Z",
+      "timestamp": "2025-09-29T08:38:19.581Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📊 [ErrorReportingService] Current Configuration: {enabled: true, maxBatchSize: 50, batchFlushInterval: 30000ms, maxRetries: 3, retryDelay: 1000ms}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [ErrorReportingService] Current Configuration: {enabled: true, maxBatchSize: 50, batchFlushInterval: 30000ms, maxRetries: 3, retryDelay: 1000ms}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.811Z",
+      "timestamp": "2025-09-29T08:38:19.581Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: DebugService configuration loaded successfully. {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: DebugService configuration loaded successfully. {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.811Z",
+      "timestamp": "2025-09-29T08:38:19.582Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📊 [DebugService] Current Configuration: {maxSessionHistory: 10, maxEventHistory: 500, performanceMonitoringInterval: 5000ms, aiAnalysisInterval: 30000ms, enableAIAnalysis: true}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.812Z",
+      "timestamp": "2025-09-29T08:38:19.582Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Starting AI debugging service... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Starting AI debugging service... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.812Z",
+      "timestamp": "2025-09-29T08:38:19.582Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1759132234795_45ttuyy1 {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1759132234795_45ttuyy1 {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1759135099566_y6f9mzk9 {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔍 [DebugService] Started new debug session: debug_session_1759135099566_y6f9mzk9 {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.812Z",
+      "timestamp": "2025-09-29T08:38:19.582Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for * {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for * {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.812Z",
+      "timestamp": "2025-09-29T08:38:19.582Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: undefined_1759132234795_0.22235051896205082) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: undefined_1759132234795_0.22235051896205082) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: undefined_1759135099566_0.6667762451084556) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to * (ID: undefined_1759135099566_0.6667762451084556) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.812Z",
+      "timestamp": "2025-09-29T08:38:19.582Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [DebugService] Subscribed to all event types {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [DebugService] Subscribed to all event types {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.813Z",
+      "timestamp": "2025-09-29T08:38:19.583Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Service started - AI debugging active {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [DebugService] Service started - AI debugging active {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.813Z",
+      "timestamp": "2025-09-29T08:38:19.583Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: NotificationService configuration loaded from YAML successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: NotificationService configuration loaded from YAML successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.813Z",
+      "timestamp": "2025-09-29T08:38:19.583Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Starting notification processing... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [NotificationService] Starting notification processing... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.813Z",
+      "timestamp": "2025-09-29T08:38:19.583Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for Error {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.813Z",
+      "timestamp": "2025-09-29T08:38:19.583Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759132234796_0.4516828464440734) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759132234796_0.4516828464440734) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759135099567_0.060832182950787406) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to Error (ID: undefined_1759135099567_0.060832182950787406) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.813Z",
+      "timestamp": "2025-09-29T08:38:19.584Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.814Z",
+      "timestamp": "2025-09-29T08:38:19.584Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132234796_0.26158261752740697) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132234796_0.26158261752740697) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135099567_0.5512101837651178) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135099567_0.5512101837651178) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.814Z",
+      "timestamp": "2025-09-29T08:38:19.584Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.814Z",
+      "timestamp": "2025-09-29T08:38:19.584Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132234796_0.08297278192870505) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132234796_0.08297278192870505) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135099567_0.8907336474111484) - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135099567_0.8907336474111484) - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.814Z",
+      "timestamp": "2025-09-29T08:38:19.584Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for BackendSync {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for BackendSync {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.814Z",
+      "timestamp": "2025-09-29T08:38:19.584Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: undefined_1759132234796_0.28399158989696727) - 0.00ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: undefined_1759132234796_0.28399158989696727) - 0.00ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: undefined_1759135099568_0.723839499214119) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to BackendSync (ID: undefined_1759135099568_0.723839499214119) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.814Z",
+      "timestamp": "2025-09-29T08:38:19.585Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [NotificationService] Subscribed to notification events {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [NotificationService] Subscribed to notification events {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.815Z",
+      "timestamp": "2025-09-29T08:38:19.596Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: NotificationService started {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: NotificationService started {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.815Z",
+      "timestamp": "2025-09-29T08:38:19.596Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ Transversal services (ErrorReporting, Debug, Notification) started {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ Transversal services (ErrorReporting, Debug, Notification) started {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.815Z",
+      "timestamp": "2025-09-29T08:38:19.597Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: StateStreamingService started and EventBus injected. {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: StateStreamingService started and EventBus injected. {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.815Z",
+      "timestamp": "2025-09-29T08:38:19.597Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: State streaming service started {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: State streaming service started {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.815Z",
+      "timestamp": "2025-09-29T08:38:19.597Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [GameController] Starting service... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.815Z",
+      "timestamp": "2025-09-29T08:38:19.597Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerAction {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.816Z",
+      "timestamp": "2025-09-29T08:38:19.597Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: undefined_1759132234797_0.28825427045602603) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: undefined_1759132234797_0.28825427045602603) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: undefined_1759135099569_0.6726455620824084) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerAction (ID: undefined_1759135099569_0.6726455620824084) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.816Z",
+      "timestamp": "2025-09-29T08:38:19.598Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.822Z",
+      "timestamp": "2025-09-29T08:38:19.598Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132234798_0.32690350098589327) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132234798_0.32690350098589327) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135099569_0.5758436350543252) - 0.00ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135099569_0.5758436350543252) - 0.00ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.822Z",
+      "timestamp": "2025-09-29T08:38:19.598Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ [GameController] Events subscribed successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [GameController] Events subscribed successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.822Z",
+      "timestamp": "2025-09-29T08:38:19.598Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.70ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.70ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.80ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Service started successfully - 0.80ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.822Z",
+      "timestamp": "2025-09-29T08:38:19.598Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ GameControllerService started and ready {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ GameControllerService started and ready {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.822Z",
+      "timestamp": "2025-09-29T08:38:19.598Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerInput {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for PlayerInput {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.823Z",
+      "timestamp": "2025-09-29T08:38:19.599Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: undefined_1759132234798_0.8449141691248497) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: undefined_1759132234798_0.8449141691248497) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: undefined_1759135099569_0.44597319394837587) - 0.00ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to PlayerInput (ID: undefined_1759135099569_0.44597319394837587) - 0.00ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.823Z",
+      "timestamp": "2025-09-29T08:38:19.599Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for GameStateChanged {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.823Z",
+      "timestamp": "2025-09-29T08:38:19.599Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132234798_0.6091445759286299) - 0.00ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759132234798_0.6091445759286299) - 0.00ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135099570_0.9466352551679694) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to GameStateChanged (ID: undefined_1759135099570_0.9466352551679694) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.823Z",
+      "timestamp": "2025-09-29T08:38:19.599Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: RhythmicMovementController started successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: RhythmicMovementController started successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.823Z",
+      "timestamp": "2025-09-29T08:38:19.599Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ RhythmicMovementController started and ready {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ RhythmicMovementController started and ready {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.824Z",
+      "timestamp": "2025-09-29T08:38:19.600Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Starting service... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🚀 [BackendSync] Starting service... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.824Z",
+      "timestamp": "2025-09-29T08:38:19.600Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.824Z",
+      "timestamp": "2025-09-29T08:38:19.600Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132234799_0.8851872240905799) - 0.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132234799_0.8851872240905799) - 0.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135099570_0.45740353567425507) - 0.00ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135099570_0.45740353567425507) - 0.00ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.824Z",
+      "timestamp": "2025-09-29T08:38:19.600Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📡 [BackendSync] Subscribed to events {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📡 [BackendSync] Subscribed to events {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.824Z",
+      "timestamp": "2025-09-29T08:38:19.600Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Service started successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [BackendSync] Service started successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.824Z",
+      "timestamp": "2025-09-29T08:38:19.601Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: undefined {backendConnected: false}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: undefined {backendConnected: false}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.825Z",
+      "timestamp": "2025-09-29T08:38:19.601Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ [BOOTSTRAP] Application initialization completed successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [BOOTSTRAP] Application initialization completed successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.825Z",
+      "timestamp": "2025-09-29T08:38:19.601Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: All configurations loaded successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.825Z",
+      "timestamp": "2025-09-29T08:38:19.601Z",
       "type": "warning",
       "text": "[LoggerProvider] Logger already registered.",
       "entry": "[WARNING] [LoggerProvider] Logger already registered."
     },
     {
-      "timestamp": "2025-09-29T07:50:34.825Z",
+      "timestamp": "2025-09-29T08:38:19.601Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Application Bootstrap: Initializing services... {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.825Z",
+      "timestamp": "2025-09-29T08:38:19.602Z",
       "type": "warning",
       "text": "⚠️ [QualiaLogger] WARN: ⚠️ ApplicationInitializerService already running - ignoring start() call {}",
       "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: ⚠️ ApplicationInitializerService already running - ignoring start() call {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.826Z",
+      "timestamp": "2025-09-29T08:38:19.602Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ✅ [BOOTSTRAP] Application initialization completed successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ✅ [BOOTSTRAP] Application initialization completed successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.826Z",
+      "timestamp": "2025-09-29T08:38:19.602Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: FrontendRenderingService initialized {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: FrontendRenderingService initialized {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.844Z",
+      "timestamp": "2025-09-29T08:38:19.617Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for QualiaStateUpdated {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.844Z",
+      "timestamp": "2025-09-29T08:38:19.618Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132234842_0.46118992787839475) - 0.40ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759132234842_0.46118992787839475) - 0.40ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135099615_0.4028308405019282) - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to QualiaStateUpdated (ID: undefined_1759135099615_0.4028308405019282) - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.844Z",
+      "timestamp": "2025-09-29T08:38:19.618Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: FrontendRenderingService initialized successfully {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: FrontendRenderingService initialized successfully {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.845Z",
+      "timestamp": "2025-09-29T08:38:19.619Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Disconnected from state stream {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Disconnected from state stream {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.845Z",
+      "timestamp": "2025-09-29T08:38:19.619Z",
       "type": "warning",
       "text": "⚠️ [QualiaLogger] WARN: FrontendRenderingService already initialized {}",
       "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: FrontendRenderingService already initialized {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.862Z",
+      "timestamp": "2025-09-29T08:38:19.632Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: FrontendRenderingService started {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: FrontendRenderingService started {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.862Z",
+      "timestamp": "2025-09-29T08:38:19.633Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Authentication disabled - connecting without token {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Authentication disabled - connecting without token {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.864Z",
+      "timestamp": "2025-09-29T08:38:19.633Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Initiating WebSocket connection to state stream {url: ws://127.0.0.1:8000/ws/video_stream}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Initiating WebSocket connection to state stream {url: ws://127.0.0.1:8000/ws/video_stream}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.865Z",
+      "timestamp": "2025-09-29T08:38:19.633Z",
       "type": "warning",
       "text": "⚠️ [QualiaLogger] WARN: FrontendRenderingService already running {}",
       "entry": "[WARNING] ⚠️ [QualiaLogger] WARN: FrontendRenderingService already running {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.865Z",
+      "timestamp": "2025-09-29T08:38:19.634Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: Connection attempt already in progress {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Connection attempt already in progress {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.865Z",
+      "timestamp": "2025-09-29T08:38:19.634Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: FrontendRenderer initialized and connected to state stream {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: FrontendRenderer initialized and connected to state stream {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.865Z",
+      "timestamp": "2025-09-29T08:38:19.634Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: FrontendRenderer initialized and connected to state stream {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: FrontendRenderer initialized and connected to state stream {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:34.868Z",
+      "timestamp": "2025-09-29T08:38:20.340Z",
       "type": "warning",
-      "text": "[GroupMarkerNotSet(crbug.com/242999)!:A0F0220094090000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
-      "entry": "[WARNING] [GroupMarkerNotSet(crbug.com/242999)!:A0F0220094090000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content."
+      "text": "[GroupMarkerNotSet(crbug.com/242999)!:A0F022006C1E0000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
+      "entry": "[WARNING] [GroupMarkerNotSet(crbug.com/242999)!:A0F022006C1E0000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content."
     },
     {
-      "timestamp": "2025-09-29T07:50:35.528Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Connected to state stream {connectionTime: 1759132235527}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Connected to state stream {connectionTime: 1759132235527}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:37.645Z",
+      "timestamp": "2025-09-29T08:38:22.618Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST RESULTS ===",
       "entry": "[LOG] === RACE CONDITION TEST RESULTS ==="
     },
     {
-      "timestamp": "2025-09-29T07:50:37.645Z",
+      "timestamp": "2025-09-29T08:38:22.618Z",
       "type": "log",
       "text": "✅ NO CONFIGURATION ERRORS DETECTED",
       "entry": "[LOG] ✅ NO CONFIGURATION ERRORS DETECTED"
     },
     {
-      "timestamp": "2025-09-29T07:50:37.646Z",
+      "timestamp": "2025-09-29T08:38:22.619Z",
       "type": "log",
       "text": "✅ NO SERVICE INITIALIZATION ERRORS DETECTED",
       "entry": "[LOG] ✅ NO SERVICE INITIALIZATION ERRORS DETECTED"
     },
     {
-      "timestamp": "2025-09-29T07:50:37.646Z",
+      "timestamp": "2025-09-29T08:38:22.620Z",
       "type": "log",
       "text": "=== TEST COMPLETE ===",
       "entry": "[LOG] === TEST COMPLETE ==="
     },
     {
-      "timestamp": "2025-09-29T07:50:38.233Z",
+      "timestamp": "2025-09-29T08:38:23.668Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting PlayerAction to 1 listeners {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting PlayerAction to 1 listeners {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.234Z",
+      "timestamp": "2025-09-29T08:38:23.669Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Handling PlayerAction: StartGame {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Handling PlayerAction: StartGame {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.235Z",
+      "timestamp": "2025-09-29T08:38:23.669Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Starting game {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameController] Starting game {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.235Z",
+      "timestamp": "2025-09-29T08:38:23.669Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting GameStateChanged to 4 listeners {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting GameStateChanged to 4 listeners {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.235Z",
+      "timestamp": "2025-09-29T08:38:23.669Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🎮 [GameStateStoreService] Processing GameStateChanged: {newState: Playing}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🎮 [GameStateStoreService] Processing GameStateChanged: {newState: Playing}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.237Z",
+      "timestamp": "2025-09-29T08:38:23.670Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: Showing notification {notificationId: notification_1759132238233_u3ua2qs6, type: info, priority: normal, message: Game state changed to: Playing, timestamp: Mon Sep 29 2025 09:50:38 GMT+0200 (hora de verano de Europa central)}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Showing notification {notificationId: notification_1759132238233_u3ua2qs6, type: info, priority: normal, message: Game state changed to: Playing, timestamp: Mon Sep 29 2025 09:50:38 GMT+0200 (hora de verano de Europa central)}"
+      "text": "ℹ️ [QualiaLogger] INFO: Showing notification {notificationId: notification_1759135103669_nwfjh92h, type: info, priority: normal, message: Game state changed to: Playing, timestamp: Mon Sep 29 2025 10:38:23 GMT+0200 (hora de verano de Europa central)}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: Showing notification {notificationId: notification_1759135103669_nwfjh92h, type: info, priority: normal, message: Game state changed to: Playing, timestamp: Mon Sep 29 2025 10:38:23 GMT+0200 (hora de verano de Europa central)}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.237Z",
+      "timestamp": "2025-09-29T08:38:23.671Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [NotificationService] Notification displayed {id: notification_1759132238233_u3ua2qs6, type: info, message: Game state changed to: Playing}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [NotificationService] Notification displayed {id: notification_1759132238233_u3ua2qs6, type: info, message: Game state changed to: Playing}"
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [NotificationService] Notification displayed {id: notification_1759135103669_nwfjh92h, type: info, message: Game state changed to: Playing}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [NotificationService] Notification displayed {id: notification_1759135103669_nwfjh92h, type: info, message: Game state changed to: Playing}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.237Z",
+      "timestamp": "2025-09-29T08:38:23.671Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: ⏰ [GameController] Starting game clock {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: ⏰ [GameController] Starting game clock {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.290Z",
+      "timestamp": "2025-09-29T08:38:23.719Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.291Z",
+      "timestamp": "2025-09-29T08:38:23.721Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759132238288_0.34943508796977507) - 0.40ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759132238288_0.34943508796977507) - 0.40ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759135103718_0.16942321030162366) - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759135103718_0.16942321030162366) - 0.30ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.291Z",
+      "timestamp": "2025-09-29T08:38:23.721Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for MetronomeTick {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for MetronomeTick {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.291Z",
+      "timestamp": "2025-09-29T08:38:23.721Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to MetronomeTick (ID: undefined_1759132238289_0.15270634389258186) - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to MetronomeTick (ID: undefined_1759132238289_0.15270634389258186) - 0.20ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to MetronomeTick (ID: undefined_1759135103718_0.7702315186703396) - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to MetronomeTick (ID: undefined_1759135103718_0.7702315186703396) - 0.10ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.293Z",
+      "timestamp": "2025-09-29T08:38:23.723Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribe called for ID: undefined_1759132238288_0.34943508796977507 {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribe called for ID: undefined_1759132238288_0.34943508796977507 {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribe called for ID: undefined_1759135103718_0.16942321030162366 {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribe called for ID: undefined_1759135103718_0.16942321030162366 {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.293Z",
+      "timestamp": "2025-09-29T08:38:23.723Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribed from RhythmicDash (ID: undefined_1759132238288_0.34943508796977507) {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribed from RhythmicDash (ID: undefined_1759132238288_0.34943508796977507) {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribed from RhythmicDash (ID: undefined_1759135103718_0.16942321030162366) {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribed from RhythmicDash (ID: undefined_1759135103718_0.16942321030162366) {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.293Z",
+      "timestamp": "2025-09-29T08:38:23.723Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribe called for ID: undefined_1759132238289_0.15270634389258186 {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribe called for ID: undefined_1759132238289_0.15270634389258186 {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribe called for ID: undefined_1759135103718_0.7702315186703396 {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribe called for ID: undefined_1759135103718_0.7702315186703396 {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.293Z",
+      "timestamp": "2025-09-29T08:38:23.723Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribed from MetronomeTick (ID: undefined_1759132238289_0.15270634389258186) {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribed from MetronomeTick (ID: undefined_1759132238289_0.15270634389258186) {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribed from MetronomeTick (ID: undefined_1759135103718_0.7702315186703396) {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔌 [EventBus] Unsubscribed from MetronomeTick (ID: undefined_1759135103718_0.7702315186703396) {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.295Z",
+      "timestamp": "2025-09-29T08:38:23.723Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for RhythmicDash {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.295Z",
+      "timestamp": "2025-09-29T08:38:23.725Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759132238291_0.179282108099878) - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759132238291_0.179282108099878) - 0.30ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759135103720_0.29860325251412) - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to RhythmicDash (ID: undefined_1759135103720_0.29860325251412) - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.295Z",
+      "timestamp": "2025-09-29T08:38:23.725Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for MetronomeTick {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribe called for MetronomeTick {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.295Z",
+      "timestamp": "2025-09-29T08:38:23.725Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to MetronomeTick (ID: undefined_1759132238291_0.9935972637882416) - 0.00ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to MetronomeTick (ID: undefined_1759132238291_0.9935972637882416) - 0.00ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to MetronomeTick (ID: undefined_1759135103721_0.548452022128412) - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 🔗 [EventBus] Subscribed to MetronomeTick (ID: undefined_1759135103721_0.548452022128412) - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.296Z",
+      "timestamp": "2025-09-29T08:38:23.725Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for GameStateChanged - 59.10ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for GameStateChanged - 59.10ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for GameStateChanged - 53.40ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for GameStateChanged - 53.40ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.296Z",
+      "timestamp": "2025-09-29T08:38:23.725Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for PlayerAction - 60.70ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for PlayerAction - 60.70ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for PlayerAction - 55.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for PlayerAction - 55.20ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.634Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:38.634Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:38.672Z",
+      "timestamp": "2025-09-29T08:38:24.187Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:38.673Z",
+      "timestamp": "2025-09-29T08:38:24.187Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.50ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.50ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:24.536Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:24.536Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:39.010Z",
+      "timestamp": "2025-09-29T08:38:24.559Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:24.560Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:24.560Z",
       "type": "warning",
-      "text": "[GroupMarkerNotSet(crbug.com/242999)!:A020230094090000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
-      "entry": "[WARNING] [GroupMarkerNotSet(crbug.com/242999)!:A020230094090000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content."
+      "text": "[GroupMarkerNotSet(crbug.com/242999)!:A05023006C1E0000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.",
+      "entry": "[WARNING] [GroupMarkerNotSet(crbug.com/242999)!:A05023006C1E0000]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content."
     },
     {
-      "timestamp": "2025-09-29T07:50:41.393Z",
+      "timestamp": "2025-09-29T08:38:27.349Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:41.394Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:42.344Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:42.345Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:42.356Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:42.356Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 2.50ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 2.50ms {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:43.281Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:43.281Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:44.174Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:44.174Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:45.107Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:45.107Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:46.052Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:46.052Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.70ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.70ms {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:46.985Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-29T07:50:46.985Z",
+      "timestamp": "2025-09-29T08:38:27.350Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:47.940Z",
+      "timestamp": "2025-09-29T08:38:27.394Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:47.940Z",
+      "timestamp": "2025-09-29T08:38:27.394Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:47.963Z",
+      "timestamp": "2025-09-29T08:38:28.356Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:47.963Z",
+      "timestamp": "2025-09-29T08:38:28.357Z",
       "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:49.749Z",
+      "timestamp": "2025-09-29T08:38:29.386Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
     },
     {
-      "timestamp": "2025-09-29T07:50:49.750Z",
+      "timestamp": "2025-09-29T08:38:29.387Z",
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:29.401Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:29.402Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:31.433Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:31.433Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.50ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.50ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:31.476Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:31.476Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:33.496Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:33.497Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:33.524Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:33.525Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:33.528Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:33.529Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:34.519Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T08:38:34.520Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}"
     }
   ],
   "errors": []

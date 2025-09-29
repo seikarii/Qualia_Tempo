@@ -14,6 +14,11 @@ from ..utils.decorators import (
     handle_errors,
 )
 
+try:
+    import moderngl
+except ImportError:
+    moderngl = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -54,46 +59,6 @@ class StreamingWebService:
         self._event_bus.subscribe(
             "RENDERING_PIPELINE_FAILED", self._handle_rendering_failure
         )
-
-    @log_execution(level="INFO")
-    @handle_errors(fallback_return_value=None)
-    async def connect_client(self, websocket: WebSocket) -> None:
-        """Accept new WebSocket connection and add to active connections."""
-        try:
-            await websocket.accept()
-            self._connections.add(websocket)
-            self._connected_clients = len(self._connections)
-
-            self._logger.info(
-                f"🔗 Client connected. Total connections: {self._connected_clients}"
-            )
-
-            # Start streaming if this is the first connection
-            if not self._is_streaming and self._connected_clients > 0:
-                await self._start_streaming()
-
-        except Exception as e:
-            self._logger.error(f"🚨 Failed to connect client: {e}")
-
-    @log_execution(level="INFO")
-    @handle_errors(fallback_return_value=None)
-    async def disconnect_client(self, websocket: WebSocket) -> None:
-        """Remove WebSocket connection from active connections."""
-        try:
-            if websocket in self._connections:
-                self._connections.remove(websocket)
-                self._connected_clients = len(self._connections)
-
-                self._logger.info(
-                    f"🔌 Client disconnected. Total connections: {self._connected_clients}"
-                )
-
-                # Stop streaming if no connections remain
-                if self._connected_clients == 0 and self._is_streaming:
-                    await self._stop_streaming()
-
-        except Exception as e:
-            self._logger.error(f"🚨 Error disconnecting client: {e}")
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
@@ -182,7 +147,7 @@ class StreamingWebService:
         task_id = id(asyncio.current_task())
 
         # Health check pre-loop: Check if rendering service is healthy before starting
-        if not self._rendering_service.is_healthy():
+        if hasattr(self._rendering_service, 'is_healthy') and not self._rendering_service.is_healthy():
             self._logger.critical(
                 "RenderingService is not healthy. Aborting streaming."
             )
@@ -216,30 +181,24 @@ class StreamingWebService:
                 frame_bytes = None
 
                 try:
-                    # CRITICAL: Execute particle simulation step with OpenGL context safety
+                    # CRITICAL: Execute particle simulation step
                     compute_success = self._particle_engine.compute_step()
                     if not compute_success:
-                        self._logger.warning(
-                            "⚠️ Particle compute step failed - continuing with last frame"
-                        )
-                        # Continue with rendering even if particle step fails
+                        self._logger.warning("Particle compute step failed, frame will be based on last successful state.")
+                        # Do not break, allow rendering to proceed if possible
 
-                    # CRITICAL: Execute rendering in the same thread context as particle engine
-                    # Both operations must share the same OpenGL context to prevent segfaults
-                    # This call will now raise specific exceptions if it fails
+                    # CRITICAL: Execute rendering
                     frame_bytes = self._rendering_service.render_frame()
 
-                except (RenderingPipelineError, GPUResourceError) as e:
-                    self._logger.critical(
-                        f"Unrecoverable rendering error caught: {e}. Shutting down stream."
+                except (RenderingPipelineError, GPUResourceError, moderngl.Error) as e:
+                    self._logger.critical(f"Unrecoverable rendering error: {e}. Shutting down stream.")
+                    # Publish a failure event for system-wide awareness
+                    await self._event_bus.publish(
+                        "RENDERING_PIPELINE_FAILED",
+                        {"error_message": str(e), "error_code": "CRITICAL_GPU_ERROR"},
+                        source="StreamingWebService"
                     )
-                    # The event handler will handle the shutdown via RenderingPipelineFailedEvent
-                    break  # Exit the loop
-
-                except Exception as e:
-                    self._logger.error(f"Unhandled exception in streaming loop: {e}")
-                    # Consider if this should also trigger a shutdown
-                    continue
+                    break # EXIT THE LOOP
 
                 if frame_bytes:
                     # THIRD CANCELLATION CHECK BEFORE TRANSMISSION
@@ -320,7 +279,17 @@ class StreamingWebService:
 
         # Remove disconnected clients
         for websocket in disconnected:
-            await self.disconnect_client(websocket)
+            if websocket in self._connections:
+                self._connections.remove(websocket)
+                self._connected_clients = len(self._connections)
+
+                self._logger.info(
+                    f"🔌 Client disconnected during broadcast. Total connections: {self._connected_clients}"
+                )
+
+                # Stop streaming if no connections remain
+                if self._connected_clients == 0 and self._is_streaming:
+                    await self._stop_streaming()
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
@@ -405,12 +374,21 @@ class StreamingWebService:
     async def handle_websocket_connection(self, websocket: WebSocket) -> None:
         """
         Handle a complete WebSocket connection lifecycle for video streaming.
-        Manages connection, message handling, and cleanup.
+        Assumes websocket is already accepted. Manages message handling and cleanup.
         """
-        try:
-            # Connect the client
-            await self.connect_client(websocket)
+        # Add websocket to active connections
+        self._connections.add(websocket)
+        self._connected_clients = len(self._connections)
 
+        self._logger.info(
+            f"🔗 Client added to streaming. Total connections: {self._connected_clients}"
+        )
+
+        # Start streaming if this is the first connection
+        if not self._is_streaming and self._connected_clients > 0:
+            await self._start_streaming()
+
+        try:
             # Handle incoming messages
             while True:
                 try:
@@ -436,6 +414,17 @@ class StreamingWebService:
             self._logger.error(f"🚨 WebSocket connection error: {e}")
 
         finally:
-            # Ensure client is properly disconnected
-            await self.disconnect_client(websocket)
+            # Remove websocket from active connections
+            if websocket in self._connections:
+                self._connections.remove(websocket)
+                self._connected_clients = len(self._connections)
+
+                self._logger.info(
+                    f"🔌 Client removed from streaming. Total connections: {self._connected_clients}"
+                )
+
+                # Stop streaming if no connections remain
+                if self._connected_clients == 0 and self._is_streaming:
+                    await self._stop_streaming()
+
             self._logger.info("🔌 WebSocket connection handled and cleaned up")

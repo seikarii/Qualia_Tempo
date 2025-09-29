@@ -587,7 +587,7 @@ class QualiaParticleEngine:
                 self.force_fields_buffer.bind_to_storage_buffer(2)  # Force fields
 
             if self.uniform_buffer:
-                self.uniform_buffer.bind_to_uniform_buffer(1)  # QualiaState
+                self.uniform_buffer.bind_to_uniform_buffer(3)  # QualiaState
 
             # Dispatch compute shader
             num_work_groups = (self.particle_buffers.element_count + 63) // 64

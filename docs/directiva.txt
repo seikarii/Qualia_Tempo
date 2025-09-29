@@ -1,0 +1,140 @@
+Análisis Arquitectónico de los Cambios (git diff --staged)
+
+   1. ✅ (Correcto) SecurityService y ISecurityService: Se ha creado una abstracción de seguridad siguiendo los principios de CRISALIDA.CODE. La implementación es
+      correcta y se carga desde el CompositionRoot.
+   2. ✅ (Correcto) config/server.yaml: La configuración de seguridad es ahora explícita y está desactivada para el entorno de desarrollo, tal como se solicitó.
+   3. ❌ (Incorrecto y Causa del Nuevo Error) CompositionRoot.py y api/routes.py:
+       * Se ha introducido un nuevo servicio, StreamingWebService, y un nuevo endpoint, /ws/video_stream.
+       * El CompositionRoot ahora inicializa este StreamingWebService y lo inyecta en el endpoint.
+       * Error Crítico de Arquitectura: En _initialize_streaming_web_service, se está inyectando el particle_engine como si fuera un rendering_service. El comentario // 
+         Use the particle engine as a placeholder - it has the necessary interface es una bandera roja gigantesca. Esto es una violación del principio de sustitución de
+         Liskov y un antipatrón de acoplamiento. Aunque las interfaces parezcan similares, su comportamiento contractual no está garantizado.
+   4. ❌ (Consecuencia) frontend/src/services/StateStreamingService.ts: El frontend ha sido modificado para conectarse al nuevo y problemático endpoint /ws/video_stream
+      en lugar del original.
+
+  Hipótesis del Nuevo Error
+
+  El error 403 ha desaparecido. El nuevo problema es un timeout porque el StreamingWebService falla silenciosamente o entra en un estado anómalo debido a la inyección
+  de una dependencia incorrecta (particle_engine en lugar de rendering_service). El frontend se conecta, pero nunca recibe los datos esperados, lo que lleva al timeout
+   de 20 segundos en el script de playwright. El error final en el log de playwright (page.focus: Target page, context or browser has been closed) es simplemente el
+  síntoma de que el test se rindió y cerró el navegador.
+
+  El problema ha mutado. Ya no es un problema de autenticación, sino un fallo de lógica de negocio y de violación de contratos de interfaz dentro del nuevo
+  StreamingWebService.
+
+  Plan de Acción Revisado
+
+  Mi objetivo es confirmar el fallo en la lógica del StreamingWebService.
+
+   1. Examinaré el backend.log completo para encontrar excepciones o logs de error provenientes del StreamingWebService o del QualiaParticleEngine después de que se
+      establezca la conexión WebSocket.
+   2. Luego, analizaré el browser-console.log para confirmar que el frontend se conecta pero no recibe ningún frame de video, lo que causa el timeout.
+
+  Procedo a leer el backend.log completo.
+
+ ╭─────────────────────────────────────╮
+ │ ✔ ReadFile debuglogs//backend.log  │
+ ╰─────────────────────────────────────╯
+✦ El backend.log ha revelado la causa raíz del nuevo error. Mi hipótesis era correcta: el problema reside en el StreamingWebService recién introducido.
+
+  Análisis del backend.log
+
+  He aquí la secuencia de eventos que conduce al fallo:
+
+   1. 2025-09-29 09:50:31,695: El frontend intenta conectarse a /ws/video_stream.
+   2. 2025-09-29 09:50:31,695: El SecurityService (correctamente) permite la conexión porque la autenticación está deshabilitada.
+   3. INFO: ... "WebSocket /ws/video_stream" [accepted]: FastAPI acepta la conexión.
+   4. 2025-09-29 09:50:31,695: El endpoint en routes.py registra "Video stream client connected".
+   5. `2025-09-29 09:50:31,696 - backend.services.StreamingWebService - ERROR - 🚨 Failed to connect client: Expected ASGI message "websocket.send" or "websocket.close", 
+      but got 'websocket.accept'`
+
+  Causa Raíz del Error
+
+  El mensaje de error es inequívoco: `Expected ASGI message "websocket.send" or "websocket.close", but got 'websocket.accept'`.
+
+  Esto es un error de protocolo ASGI y una violación de la separación de responsabilidades arquitectónicas.
+
+  El problema es el siguiente:
+   1. Capa de Ruteo (`routes.py`): El decorador @app.websocket en routes.py ya gestiona el handshake y acepta la conexión con await websocket.accept(). Su
+      responsabilidad es manejar la conexión a nivel de protocolo.
+   2. Capa de Servicio (`StreamingWebService.py`): Después de aceptar la conexión, el control se pasa al StreamingWebService. Sin embargo, este servicio, en su método
+      connect_client, intenta gestionar la conexión de nuevo, lo que entra en conflicto con el estado ya establecido por FastAPI. El servicio recibe una señal de
+      "accept" cuando ya no la espera, lo que provoca la excepción y el cierre abrupto de la conexión.
+
+  La responsabilidad de aceptar la conexión debe recaer únicamente en la capa de ruteo. La capa de servicio debe recibir un socket ya aceptado y listo para la
+  transmisión de datos.
+
+  Problema Arquitectónico Adicional
+
+  Además, reitero que la inyección del particle_engine como un rendering_service en CompositionRoot.py es un antipatrón severo que causará problemas futuros. Es una
+  bomba de tiempo.
+
+  Directiva Arquitectónica para el Ingeniero
+
+  Ahora que la causa raíz está identificada, emitiré una directiva clara y precisa para resolver el fallo de protocolo ASGI y realinear la arquitectura.
+
+  Asunto: Corrección de Violación de Protocolo ASGI en StreamingWebService y Refactorización de Responsabilidades
+
+  Ingeniero,
+
+  He analizado los cambios y he identificado la causa del nuevo fallo de timeout. El error 403 ha sido resuelto con éxito gracias a la implementación del
+  SecurityService. Sin embargo, la nueva implementación del StreamingWebService viola el protocolo ASGI, causando el cierre prematuro de la conexión.
+
+  Directiva:
+
+  Debe refactorizar el StreamingWebService y su interacción con la capa de ruteo para adherirse a una estricta separación de responsabilidades.
+
+   1. Eliminar la Gestión de Conexión del Servicio:
+       * En qualia-tempo-prototype/backend/services/StreamingWebService.py, elimine por completo los métodos connect_client y disconnect_client. Su lógica es redundante
+         y conflictiva.
+       * El shutdown del servicio debe seguir funcionando para la limpieza de recursos, pero no debe gestionar el estado del cliente.
+
+   2. Simplificar el `handle_websocket_connection`:
+       * Modifique el método handle_websocket_connection en StreamingWebService.py. Este método debe recibir un objeto websocket ya aceptado y entrar directamente en el
+         bucle de transmisión de datos (while True). No debe llamar a connect_client.
+       * La gestión de try/finally para la desconexión debe permanecer, pero solo para la lógica de negocio (ej. self._logger.info("Client disconnected")), no para el
+         protocolo.
+
+   3. Asegurar la Responsabilidad Única en `routes.py`:
+       * En qualia-tempo-prototype/backend/api/routes.py, dentro del endpoint /ws/video_stream, asegúrese de que la secuencia sea:
+           1. Verificación de seguridad.
+           2. await websocket.accept().
+           3. Paso del control a streaming_web_service.handle_websocket_connection(websocket).
+       * Esta capa, y solo esta, es responsable del ciclo de vida del protocolo WebSocket.
+
+   4. Refactorización de Dependencia (Advertencia Arquitectónica):
+       * La inyección de particle_engine como rendering_service en CompositionRoot.py es inaceptable y debe ser marcada para refactorización inmediata después de esta
+         corrección. Cree un ticket en el backlog para crear un MockRenderingService o un NullRenderingService que cumpla explícitamente el contrato de
+         IRenderingService para entornos de prueba o desarrollo donde el servicio real no esté disponible. No vuelva a usar un servicio por otro.
+
+  Ejemplo de Pseudocódigo para `StreamingWebService.handle_websocket_connection`:
+
+    1 // En StreamingWebService.py
+    2 
+    3 @log_execution
+    4 async def handle_websocket_connection(self, websocket: WebSocket):
+    5     // El websocket ya está aceptado por routes.py
+    6     self.add_active_client(websocket) // Lógica de negocio para rastrear clientes
+    7 
+    8     try:
+    9         // Bucle principal para enviar datos de video/estado
+   10         while self.is_client_active(websocket):
+   11             frame_data = await self.get_next_frame()
+   12             if frame_data:
+   13                 await websocket.send_bytes(frame_data)
+   14             else:
+   15                 // Esperar si no hay datos nuevos
+   16                 await asyncio.sleep(0.016) // ~60fps
+   17     except WebSocketDisconnect:
+   18         self.logger.info("Client disconnected by remote peer.")
+   19     except Exception as e:
+   20         self.logger.error(f"Error during streaming: {e}")
+   21     finally:
+   22         // Limpieza de lógica de negocio
+   23         self.remove_active_client(websocket)
+   24         self.logger.info("Cleaned up client resources.")
+
+  Implemente estas correcciones. El objetivo es que el StreamingWebService se centre exclusivamente en la lógica de streaming, sin tocar el protocolo de conexión que
+  le corresponde a FastAPI.
+
+
