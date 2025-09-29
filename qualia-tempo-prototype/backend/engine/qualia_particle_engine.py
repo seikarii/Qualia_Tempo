@@ -455,10 +455,26 @@ class QualiaParticleEngine:
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
     def _on_resources_ready(self, event: Any) -> None:
-        """Handle System.ResourcesReady event and start autonomous simulation."""
-        logger.info("📡 Received System.ResourcesReady event, starting autonomous simulation")
-        self._start_autonomous_simulation()
-        self.status = "running"
+        """
+        Handle System.ResourcesReady event.
+        THIS IS THE CORRECT PLACE TO INITIALIZE BUFFERS.
+        """
+        # Add a guard to prevent re-initialization
+        if self.particles_initialized:
+            logger.warning("Buffers already initialized, ignoring redundant ResourcesReady event.")
+            return
+
+        logger.info("📡 Received System.ResourcesReady event. Initializing particle buffers...")
+
+        # 1. CRITICAL FIX: Initialize the buffers here.
+        if self.initialize_buffers():
+            logger.info("✅ Particle buffers initialized successfully.")
+            # 2. Only start the simulation AFTER buffers are ready.
+            self._start_autonomous_simulation()
+            self.status = "running"
+        else:
+            logger.critical("🔥🔥 FAILED TO INITIALIZE PARTICLE BUFFERS. Engine cannot start. 🔥🔥")
+            self.status = "error_buffer_initialization_failed"
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
