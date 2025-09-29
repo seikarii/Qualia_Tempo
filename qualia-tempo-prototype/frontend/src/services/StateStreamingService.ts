@@ -11,8 +11,8 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { IWebSocketService } from "./interfaces/IWebSocketService";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { StreamingConfig } from "./contracts/IStateStreamingService.contracts";
-import type { QualiaParticleDataReceivedEvent, ConnectionStatus, StreamingStatusChangedEvent } from "./contracts/events.contracts";
-import { logMethod, catchError } from "../utils/decorators";
+import type { ConnectionStatus, StreamingStatusChangedEvent } from "./contracts/events.contracts";
+import { logMethod, catchError, AdaptAndEmit } from "../utils/decorators";
 import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
 
 @injectable()
@@ -89,7 +89,7 @@ export class StateStreamingService implements IStateStreamingService {
 
       // Register event handlers
       this.webSocketService.onOpen(() => this.handleOpen());
-      this.webSocketService.onMessage((data) => this.handleMessage(data));
+      this.webSocketService.onMessage((data) => this.onRawMessage(data));
       this.webSocketService.onClose((event) => this.handleClose(event));
       this.webSocketService.onError((error) => this.handleError(error));
 
@@ -152,23 +152,27 @@ export class StateStreamingService implements IStateStreamingService {
     });
   };
 
-  private handleMessage = (event: MessageEvent): void => {
-    // BINARY PROTOCOL: event.data is now ArrayBuffer, not JSON string
-    const particleData: ArrayBuffer = event.data;
+  /**
+   * QUALIA.CODE v1.2 - Protocol Adaptation Bundle Implementation
+   * This method serves as a PURE ENTRY POINT for raw WebSocket data.
+   * The @AdaptAndEmit decorator handles all protocol translation and event emission.
+   * 
+   * ARCHITECTURAL PURITY ACHIEVED:
+   * - StateStreamingService no longer knows about QualiaParticleDataReceivedEvent
+   * - StateStreamingService no longer constructs domain events
+   * - StateStreamingService no longer directly calls EventBus.emit
+   * - Single Responsibility: WebSocket connection management ONLY
+   */
+  @AdaptAndEmit(TYPES.IRawToParticleEventAdapter)
+  private onRawMessage(_data: ArrayBuffer): void {
+    // ARCHITECTURAL COMPLIANCE: This method body is INTENTIONALLY EMPTY.
+    // Its sole purpose is to serve as a decorated entry point for raw data.
+    // All protocol translation, event construction, and emission is handled
+    // by the @AdaptAndEmit decorator using the injected adapter.
+    
+    // Statistics tracking - only business logic that belongs to this service
     this.messagesReceived++;
-
-    // Emit the binary data directly - no JSON parsing, no main thread blocking
-    this.eventBus.emit<QualiaParticleDataReceivedEvent>({
-      type: "QualiaParticleDataReceived",
-      particleData, // Binary ArrayBuffer payload
-      source: "StateStreamingService",
-    });
-
-    this.logger.debug("Received binary particle data", {
-      byteLength: particleData.byteLength,
-      particleCount: particleData.byteLength / (21 * 4), // 21 floats * 4 bytes each
-    });
-  };
+  }
 
   private handleClose = (event: CloseEvent): void => {
     this.state = "DISCONNECTED";

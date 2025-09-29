@@ -77,6 +77,11 @@ import { WebSocketService } from "./WebSocketService";
 import { BrowserEventsService } from "./BrowserEventsService";
 import { ThrottlingManager } from "./utils/ThrottlingManager";
 
+// ===== PROTOCOL ADAPTER IMPORTS =====
+// QUALIA.CODE v1.2 - Protocol Adapter Bundle
+import type { IMessageAdapter } from "./protocol/IMessageAdapter";
+import { RawToParticleEventAdapter } from "./protocol/adapters/RawToParticleEventAdapter";
+
 // ===== CORE SERVICE BINDINGS =====
 // These services have no dependencies and can be bound directly
 container.bind<IEventBus>(TYPES.IEventBus).to(EventBus).inSingletonScope();
@@ -208,6 +213,13 @@ container
 container
   .bind<IBrowserEventsService>(TYPES.IBrowserEventsService)
   .to(BrowserEventsService)
+  .inSingletonScope();
+
+// ===== PROTOCOL ADAPTER BINDINGS =====
+// QUALIA.CODE v1.2 - Protocol Adapter Bundle
+container
+  .bind<IMessageAdapter>(TYPES.IRawToParticleEventAdapter)
+  .to(RawToParticleEventAdapter)
   .inSingletonScope();
 
 // ===== CONFIGURATION BINDING FUNCTION =====

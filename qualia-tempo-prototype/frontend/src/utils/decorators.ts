@@ -639,3 +639,82 @@ export function qualiaMethod(
     return decoratedMethod;
   };
 }
+
+// ==================== PROTOCOL ADAPTER DECORATORS ====================
+// QUALIA.CODE v1.2 - Protocol Adaptation Bundle
+
+/**
+ * @AdaptAndEmit decorator for Protocol Adapter Bundle.
+ * Automatically adapts raw data using the specified adapter and emits the result.
+ * Implements the architectural pattern for protocol translation at system boundaries.
+ * 
+ * @param adapterIdentifier - Symbol identifier for the message adapter service
+ * @returns Method decorator that intercepts, adapts, and emits data
+ */
+export function AdaptAndEmit(adapterIdentifier: symbol) {
+  return function (_target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value;
+
+    descriptor.value = function (this: any, ...args: any[]) {
+      const rawData = args[0];
+      const className = this.constructor.name;
+      const fullMethodName = `${className}.${propertyKey}`;
+
+      try {
+        // CRITICAL: Import container dynamically to avoid circular dependencies
+        const { container } = require('../services/inversify.config');
+        const { TYPES } = require('../services/inversify.types');
+        
+        // 1. Resolve dependencies from the IoC container
+        const adapter = container.get(adapterIdentifier);
+        const eventBus = container.get(TYPES.IEventBus);
+
+        // Access instance logger if available
+        const instanceLogger = (this as any).logger;
+        if (instanceLogger && typeof instanceLogger.debug === 'function') {
+          instanceLogger.debug(`🔄 @AdaptAndEmit processing in ${fullMethodName}`, {
+            adapterType: adapterIdentifier.toString(),
+            rawDataType: typeof rawData,
+            timestamp: new Date().toISOString()
+          });
+        }
+
+        // 2. Adapt the raw message using the injected adapter
+        const adaptedEvent = adapter.adapt(rawData);
+
+        // 3. Emit the adapted event through the EventBus
+        eventBus.emit(adaptedEvent);
+
+        if (instanceLogger && typeof instanceLogger.debug === 'function') {
+          instanceLogger.debug(`✅ @AdaptAndEmit completed in ${fullMethodName}`, {
+            eventType: adaptedEvent.type,
+            eventSource: adaptedEvent.source,
+            timestamp: new Date().toISOString()
+          });
+        }
+
+        // Optional: Call the original method if it has implementation logic
+        // For protocol adapters, the method body is typically empty (entry point only)
+        if (originalMethod && typeof originalMethod === 'function') {
+          return originalMethod.apply(this, args);
+        }
+
+      } catch (error) {
+        // Error boundary: Log and re-throw for proper error handling
+        const instanceLogger = (this as any).logger;
+        if (instanceLogger && typeof instanceLogger.error === 'function') {
+          instanceLogger.error(`🚨 @AdaptAndEmit failed in ${fullMethodName}`, {
+            error: error instanceof Error ? error.message : String(error),
+            adapterType: adapterIdentifier.toString(),
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          console.error(`🚨 @AdaptAndEmit failed in ${fullMethodName}:`, error);
+        }
+        throw error;
+      }
+    };
+
+    return descriptor;
+  };
+}

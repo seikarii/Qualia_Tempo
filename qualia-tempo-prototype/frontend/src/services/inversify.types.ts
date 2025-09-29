@@ -33,6 +33,10 @@ export const TYPES = {
   IWebSocketService: Symbol.for("IWebSocketService"),
   IBrowserEventsService: Symbol.for("IBrowserEventsService"),
 
+  // ===== PROTOCOL ADAPTERS =====
+  // QUALIA.CODE v1.2 - Protocol Adapter Bundle
+  IRawToParticleEventAdapter: Symbol.for("IRawToParticleEventAdapter"),
+
   // ===== SPECIAL TYPES =====
   IGameStateStore: Symbol.for("IGameStateStore"),
   ThrottlingManager: Symbol.for("ThrottlingManager"),
