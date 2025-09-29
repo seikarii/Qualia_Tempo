@@ -44,6 +44,10 @@ export interface BackendSyncConfig {
     enableBuffering: boolean;
     bufferFlushInterval: number;
   };
+  authentication: {
+    enabled: boolean;
+    token: string | null;
+  };
   errorHandling: {
     enableCircuitBreaker: boolean;
     circuitBreakerThreshold: number;

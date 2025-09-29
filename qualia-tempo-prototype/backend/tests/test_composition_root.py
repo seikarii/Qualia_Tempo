@@ -209,6 +209,18 @@ class TestCompositionRootFactory:
 
         mock_streaming_service.get_status = Mock(side_effect=dynamic_get_status)
 
+        # Create REAL SecurityService instance for testing
+        from backend.services.SecurityService import SecurityService
+        import yaml
+        from pathlib import Path
+
+        # Load test configuration
+        config_path = Path(__file__).parent.parent / "config" / "server.yaml"
+        with open(config_path, "r") as file:
+            test_config = yaml.safe_load(file)
+
+        security_service_instance = SecurityService(test_config)
+
         # 4. Inject services into composition root
         composition_root._services = {
             "event_bus": mock_event_bus,
@@ -217,6 +229,7 @@ class TestCompositionRootFactory:
             "qualia_processor": mock_qualia_processor,
             "rendering_service": mock_rendering_service,
             "streaming_service": mock_streaming_service,
+            "security_service": security_service_instance,  # REAL SECURITY SERVICE
         }
         composition_root._initialized = True
 
@@ -260,6 +273,9 @@ class TestCompositionRootFactory:
             "shader_introspection_service": composition_root.get_service(
                 "shader_introspection_service"
             ),  # Mock
+            "security_service": composition_root.get_service(
+                "security_service"
+            ),  # REAL SUT
         }
 
 

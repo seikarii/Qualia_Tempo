@@ -49,6 +49,17 @@ class GPUResourceError(RenderingPipelineError):
         self.resource_type = resource_type
 
 
+class SecurityException(Exception):
+    """Raised when security validation fails."""
+
+    def __init__(
+        self, message: str, security_context: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(message)
+        self.security_context = security_context or {}
+        self.timestamp = __import__("time").time()
+
+
 class OpenGLContextError(RenderingPipelineError):
     """Raised when OpenGL context operations fail."""
 

@@ -48,5 +48,14 @@ logging:
 # Performance settings
 performance:
   max_request_size: 16777216  # 16MB
+
+# Security configuration - QUALIA.CODE v1.1
+security:
+  websockets:
+    auth_enabled: false  # Disabled for development/testing - set to true for production
+    token_validation: "simple"  # simple, jwt, or database
+    allowed_origins: 
+      - "http://localhost:5173"
+      - "http://127.0.0.1:5173"
   timeout: 30
   keepalive: 2

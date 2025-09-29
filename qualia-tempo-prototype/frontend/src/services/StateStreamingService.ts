@@ -46,6 +46,10 @@ export class StateStreamingService implements IStateStreamingService {
   private lastMessageTimestamp = 0;
   private connectionStartTime = 0;
 
+  // Authentication
+  private authEnabled: boolean = false;
+  private authToken: string | null = null;
+
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
@@ -59,11 +63,16 @@ export class StateStreamingService implements IStateStreamingService {
     const streamingConfig =
       configService.getConfig().backendSync.streaming?.websocket || {};
     this.connectionUrl =
-      streamingConfig.url || "ws://127.0.0.1:8000/ws/state_stream";
+      streamingConfig.url || "ws://127.0.0.1:8000/ws/video_stream";
     this.maxReconnectAttempts = streamingConfig.maxReconnectAttempts || 10;
     this.reconnectDelay = streamingConfig.reconnectDelay || 2000;
     this.pingInterval = streamingConfig.pingInterval || 8000;
     this.pingTimeout = streamingConfig.pingTimeout || 6000;
+
+    // Load authentication configuration
+    const authConfig = configService.getConfig().backendSync.authentication || {};
+    this.authEnabled = authConfig.enabled || false;
+    this.authToken = authConfig.token || null;
 
     this.logger.info("StateStreamingService initialized", {
       connectionUrl: this.connectionUrl,
@@ -95,7 +104,17 @@ export class StateStreamingService implements IStateStreamingService {
     this.updateConnectionStatus();
 
     try {
-      this.websocket = new WebSocket(this.connectionUrl);
+      // Build connection URL with authentication if enabled
+      let connectionUrl = this.connectionUrl;
+      if (this.authEnabled && this.authToken) {
+        const separator = connectionUrl.includes('?') ? '&' : '?';
+        connectionUrl = `${connectionUrl}${separator}token=${encodeURIComponent(this.authToken)}`;
+        this.logger.info("Authentication enabled - including token in connection");
+      } else {
+        this.logger.info("Authentication disabled - connecting without token");
+      }
+
+      this.websocket = new WebSocket(connectionUrl);
 
       this.websocket.onopen = this.handleOpen.bind(this);
       this.websocket.onmessage = this.handleMessage.bind(this);

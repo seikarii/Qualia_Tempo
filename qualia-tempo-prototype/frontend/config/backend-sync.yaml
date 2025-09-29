@@ -18,6 +18,11 @@ streaming:
     pingTimeout: 6000 # 6 seconds (increased from 3s for stability)
     connectionTimeout: 10000 # 10 seconds
 
+# Authentication configuration - QUALIA.CODE v1.1
+authentication:
+  enabled: false # Disabled for development/testing
+  token: null # Set to a valid token when authentication is enabled
+
 # Synchronization settings
 sync:
   throttleDelay: 250 # Throttle updates to 250ms

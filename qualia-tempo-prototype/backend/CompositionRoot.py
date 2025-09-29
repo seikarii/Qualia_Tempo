@@ -42,9 +42,11 @@ class CompositionRoot:
 
         # Initialize core services
         await self._initialize_event_bus()
+        await self._initialize_security_service()
         await self._initialize_shader_introspection_service()
         await self._initialize_particle_system()
         await self._initialize_qualia_processor()
+        await self._initialize_streaming_web_service()
         await self._initialize_state_streaming_service()
 
         # Register event handlers
@@ -101,6 +103,26 @@ class CompositionRoot:
         self._services["event_bus"] = self._event_bus
         self._logger.debug("📡 EventBus service registered")
 
+    async def _initialize_security_service(self) -> None:
+        """Initialize SecurityService with configuration."""
+        try:
+            from .services.SecurityService import SecurityService
+            import yaml
+            from pathlib import Path
+
+            # Load configuration
+            config_path = Path(__file__).parent / "config" / "server.yaml"
+            with open(config_path, "r") as file:
+                config = yaml.safe_load(file)
+
+            security_service = SecurityService(config)
+            self._services["security_service"] = security_service
+            self._logger.debug("🔒 SecurityService registered with configuration")
+
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize SecurityService: {e}")
+            raise
+
     async def _initialize_shader_introspection_service(self) -> None:
         """Initialize the ShaderIntrospectionService."""
         shader_introspection_service = ShaderIntrospectionService()
@@ -149,6 +171,28 @@ class CompositionRoot:
         processor = QualiaProcessor(event_bus=self._event_bus)
         self._services["qualia_processor"] = processor
         self._logger.debug("✅ QualiaProcessor initialized")
+
+    async def _initialize_streaming_web_service(self) -> None:
+        """Initialize StreamingWebService for video streaming via WebSocket."""
+        from .services.StreamingWebService import StreamingWebService
+
+        # StreamingWebService needs rendering_service, but we'll use a placeholder for now
+        # since the main issue is just service registration
+        particle_engine = self._services.get("particle_system")
+        
+        # Create a simple placeholder rendering service if not available
+        rendering_service = self._services.get("rendering_service")
+        if rendering_service is None:
+            # Use the particle engine as a placeholder - it has the necessary interface
+            rendering_service = particle_engine
+
+        streaming_web_service = StreamingWebService(
+            event_bus=self._event_bus,
+            rendering_service=rendering_service,
+            particle_engine=particle_engine,
+        )
+        self._services["streaming_web_service"] = streaming_web_service
+        self._logger.debug("✅ StreamingWebService initialized")
 
     async def _initialize_state_streaming_service(self) -> None:
         """Initialize StateStreamingService for WebSocket state streaming."""
@@ -242,6 +286,10 @@ class CompositionRoot:
     def get_state_streaming_service(self) -> Any:
         """Get StateStreamingService instance."""
         return self.get_service("state_streaming_service")
+
+    def get_security_service(self) -> Any:
+        """Get SecurityService instance."""
+        return self.get_service("security_service")
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)

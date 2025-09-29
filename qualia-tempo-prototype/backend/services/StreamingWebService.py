@@ -4,10 +4,10 @@
 import asyncio
 import logging
 import base64
+import json
 from typing import Dict, Any, Set, Optional
 from fastapi import WebSocket, WebSocketDisconnect
 from .EventBus import EventBus, RenderingPipelineFailedEvent
-from .RenderingService import RenderingService
 from .exceptions import RenderingPipelineError, GPUResourceError
 from ..utils.decorators import (
     log_execution,
@@ -26,7 +26,7 @@ class StreamingWebService:
     def __init__(
         self,
         event_bus: EventBus,
-        rendering_service: RenderingService,
+        rendering_service: Any,  # RenderingService type - using Any to avoid circular import
         particle_engine: Any,
     ) -> None:
         self._event_bus = event_bus
@@ -399,3 +399,43 @@ class StreamingWebService:
     def is_streaming(self) -> bool:
         """Check if currently streaming."""
         return self._is_streaming
+
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
+    async def handle_websocket_connection(self, websocket: WebSocket) -> None:
+        """
+        Handle a complete WebSocket connection lifecycle for video streaming.
+        Manages connection, message handling, and cleanup.
+        """
+        try:
+            # Connect the client
+            await self.connect_client(websocket)
+
+            # Handle incoming messages
+            while True:
+                try:
+                    # Receive message from client
+                    message_text = await websocket.receive_text()
+                    message = json.loads(message_text)
+
+                    # Handle client message
+                    await self.handle_client_message(websocket, message)
+
+                except WebSocketDisconnect:
+                    break
+                except json.JSONDecodeError as e:
+                    self._logger.error(f"🚨 Invalid JSON from client: {e}")
+                    await websocket.send_json(
+                        {"type": "error", "message": "Invalid JSON format"}
+                    )
+                except Exception as e:
+                    self._logger.error(f"🚨 Error handling WebSocket message: {e}")
+                    break
+
+        except Exception as e:
+            self._logger.error(f"🚨 WebSocket connection error: {e}")
+
+        finally:
+            # Ensure client is properly disconnected
+            await self.disconnect_client(websocket)
+            self._logger.info("🔌 WebSocket connection handled and cleaned up")
