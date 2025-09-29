@@ -330,6 +330,36 @@ async function comprehensiveTest() {
         }, null, 2));
         console.log('📊 Game view state captured.');
 
+        // --- Phase 4: Movement Test ---
+        console.log('🎮 Testing character movement (W + D keys)...');
+        // Press and hold W and D keys simultaneously
+        await page.keyboard.down('KeyW');
+        await page.keyboard.down('KeyD');
+        
+        // Hold for 1 second to allow movement
+        await page.waitForTimeout(1000);
+        
+        // Release keys
+        await page.keyboard.up('KeyD');
+        await page.keyboard.up('KeyW');
+        
+        console.log('⏳ Waiting for movement to register...');
+        await page.waitForTimeout(500);
+
+        // --- Phase 5: Movement Result ---
+        console.log('📸 Capturing movement test state (Screenshot + DOM)...');
+        await page.screenshot({ path: 'debug-screenshot-movement-test.png', fullPage: true });
+        const movementContent = await page.content();
+        fs.writeFileSync('debug-page-content-movement-test.html', movementContent);
+        fs.writeFileSync('browser-test-report-movement-test.json', JSON.stringify({
+            timestamp: new Date().toISOString(),
+            phase: 'movement-test',
+            success: errors.length === 0,
+            stats: { errors: errors.length, logs: logs.length },
+            logs, errors
+        }, null, 2));
+        console.log('📊 Movement test state captured.');
+
     } catch (error) {
         console.error(`❌❌❌ BROWSER TEST FAILED: ${error.message}`);
 
@@ -419,8 +449,8 @@ $(tail -20 "$FRONTEND_LOG" 2>/dev/null || echo "No frontend log available")
 ## Browser Test Results
 EOF
 
-    if [ -f "$LOG_DIR/browser-test-report-main-menu.json" ] || [ -f "$LOG_DIR/browser-test-report-game-view.json" ]; then
-        echo "Browser test reports available: browser-test-report-main-menu.json, browser-test-report-game-view.json" >> "$DEBUG_REPORT"
+    if [ -f "$LOG_DIR/browser-test-report-main-menu.json" ] || [ -f "$LOG_DIR/browser-test-report-game-view.json" ] || [ -f "$LOG_DIR/browser-test-report-movement-test.json" ]; then
+        echo "Browser test reports available: browser-test-report-main-menu.json, browser-test-report-game-view.json, browser-test-report-movement-test.json" >> "$DEBUG_REPORT"
         
         # Extract key info from JSON reports
         if command -v jq &> /dev/null; then
@@ -445,6 +475,18 @@ EOF
 - **Errors:** $(jq -r '.stats.errors' "$LOG_DIR/browser-test-report-game-view.json")
 - **Config Errors:** $(jq -r '.stats.configErrors' "$LOG_DIR/browser-test-report-game-view.json")
 - **Root Element:** $(jq -r '.hasRoot' "$LOG_DIR/browser-test-report-game-view.json")
+EOF
+            fi
+            
+            if [ -f "$LOG_DIR/browser-test-report-movement-test.json" ]; then
+                cat >> "$DEBUG_REPORT" << EOF
+
+### Movement Test Browser Test Summary
+- **Success:** $(jq -r '.success' "$LOG_DIR/browser-test-report-movement-test.json")
+- **Total Logs:** $(jq -r '.stats.totalLogs' "$LOG_DIR/browser-test-report-movement-test.json")
+- **Errors:** $(jq -r '.stats.errors' "$LOG_DIR/browser-test-report-movement-test.json")
+- **Config Errors:** $(jq -r '.stats.configErrors' "$LOG_DIR/browser-test-report-movement-test.json")
+- **Root Element:** $(jq -r '.hasRoot' "$LOG_DIR/browser-test-report-movement-test.json")
 EOF
             fi
         fi

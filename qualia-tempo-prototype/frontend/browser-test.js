@@ -82,6 +82,36 @@ async function comprehensiveTest() {
         }, null, 2));
         console.log('📊 Game view state captured.');
 
+        // --- Phase 4: Movement Test ---
+        console.log('🎮 Testing character movement (W + D keys)...');
+        // Press and hold W and D keys simultaneously
+        await page.keyboard.down('KeyW');
+        await page.keyboard.down('KeyD');
+        
+        // Hold for 1 second to allow movement
+        await page.waitForTimeout(1000);
+        
+        // Release keys
+        await page.keyboard.up('KeyD');
+        await page.keyboard.up('KeyW');
+        
+        console.log('⏳ Waiting for movement to register...');
+        await page.waitForTimeout(500);
+
+        // --- Phase 5: Movement Result ---
+        console.log('📸 Capturing movement test state (Screenshot + DOM)...');
+        await page.screenshot({ path: 'debug-screenshot-movement-test.png', fullPage: true });
+        const movementContent = await page.content();
+        fs.writeFileSync('debug-page-content-movement-test.html', movementContent);
+        fs.writeFileSync('browser-test-report-movement-test.json', JSON.stringify({
+            timestamp: new Date().toISOString(),
+            phase: 'movement-test',
+            success: errors.length === 0,
+            stats: { errors: errors.length, logs: logs.length },
+            logs, errors
+        }, null, 2));
+        console.log('📊 Movement test state captured.');
+
     } catch (error) {
         console.error(`❌❌❌ BROWSER TEST FAILED: ${error.message}`);
 
