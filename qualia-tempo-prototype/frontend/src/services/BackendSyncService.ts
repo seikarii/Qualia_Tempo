@@ -17,7 +17,7 @@ import type { IBackendSyncService } from "./interfaces/IBackendSyncService";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IHttpService } from "./interfaces/IHttpService";
-import type { ITimerService } from "./interfaces/ITimerService";
+import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
 import type { QualiaState } from "../types/contracts";
 
 // QUALIA.CODE: Module-level constant for pre-config initialization message
@@ -45,6 +45,7 @@ export class BackendSyncService implements IBackendSyncService {
   private logger: ILogger;
   private httpService: IHttpService;
   private timerService: ITimerService;
+  private performanceService: IPerformanceService;
 
   // Throttling state
   private lastSyncTime = 0;
@@ -67,12 +68,14 @@ export class BackendSyncService implements IBackendSyncService {
     @inject(TYPES.BackendSyncConfig) config: BackendSyncConfig,
     @inject(TYPES.IHttpService) httpService: IHttpService,
     @inject(TYPES.ITimerService) timerService: ITimerService,
+    @inject(TYPES.IPerformanceService) performanceService: IPerformanceService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.config = config;
     this.httpService = httpService;
     this.timerService = timerService;
+    this.performanceService = performanceService;
 
     this.logger.info(SERVICE_INIT_MESSAGE);
   }
@@ -117,7 +120,7 @@ export class BackendSyncService implements IBackendSyncService {
   @logMethod
   @catchError
   public async stop(): Promise<void> {
-    const startTime = performance.now();
+    const startTime = this.performanceService.now();
     this.logger.info("🛑 [BackendSync] Stop called");
 
     try {
@@ -132,12 +135,12 @@ export class BackendSyncService implements IBackendSyncService {
       this.isRunning = false;
       this.connected = false;
 
-      const duration = performance.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.info(
         `🛑 [BackendSync] Service stopped - ${duration.toFixed(2)}ms`,
       );
     } catch (error) {
-      const duration = performance.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.error(
         `🚨 [BackendSync] Stop failed - ${duration.toFixed(2)}ms:`,
         { error },
@@ -151,18 +154,18 @@ export class BackendSyncService implements IBackendSyncService {
   @logMethod
   @catchError
   public updateConfig(newConfig: Partial<BackendSyncConfig>): void {
-    const startTime = performance.now();
+    const startTime = this.performanceService.now();
     this.logger.info("⚙️ [BackendSync] UpdateConfig called");
 
     try {
       this.config = { ...this.config, ...newConfig };
 
-      const duration = performance.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.info(
         `⚙️ [BackendSync] Configuration updated - ${duration.toFixed(2)}ms`,
       );
     } catch (error) {
-      const duration = performance.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.error(
         `🚨 [BackendSync] UpdateConfig failed - ${duration.toFixed(2)}ms:`,
         { error },
@@ -177,7 +180,7 @@ export class BackendSyncService implements IBackendSyncService {
   @logMethod
   @catchError
   public async forceSync(): Promise<void> {
-    const startTime = performance.now();
+    const startTime = this.performanceService.now();
     this.logger.info("⚡ [BackendSync] ForceSync called");
 
     try {
@@ -186,12 +189,12 @@ export class BackendSyncService implements IBackendSyncService {
         this.pendingSync = null;
       }
 
-      const duration = performance.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.info(
         `⚡ [BackendSync] Force sync completed - ${duration.toFixed(2)}ms`,
       );
     } catch (error) {
-      const duration = performance.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.error(
         `🚨 [BackendSync] ForceSync failed - ${duration.toFixed(2)}ms:`,
         { error },
@@ -271,7 +274,7 @@ export class BackendSyncService implements IBackendSyncService {
   }
 
   private scheduleSync(qualiaRequest: QualiaStateRequest): void {
-    const now = performance.now();
+    const now = this.performanceService.now();
     const timeSinceLastSync = now - this.lastSyncTime;
 
     // Store the latest state
@@ -317,7 +320,7 @@ export class BackendSyncService implements IBackendSyncService {
   }
 
   private async performSync(qualiaRequest: QualiaStateRequest): Promise<void> {
-    const startTime = performance.now();
+    const startTime = this.performanceService.now();
 
     if (this.config.validation.logValidationErrors) {
       this.logger.info("🌐 [BackendSync] Sending QualiaState to backend:", {
@@ -330,7 +333,7 @@ export class BackendSyncService implements IBackendSyncService {
     try {
       const response = await this._executeSyncRequest(url, qualiaRequest);
 
-      this.lastSyncTime = performance.now();
+      this.lastSyncTime = this.performanceService.now();
 
       if (this.config.validation.logValidationErrors) {
         this.logger.info("📥 [BackendSync] Backend response:", { response });
@@ -343,7 +346,7 @@ export class BackendSyncService implements IBackendSyncService {
         syncType: "qualiaState",
       });
 
-      const duration = performance.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.info(
         `✅ [BackendSync] Sync completed - ${duration.toFixed(2)}ms`,
       );
@@ -353,7 +356,7 @@ export class BackendSyncService implements IBackendSyncService {
       this.totalSyncTime += duration;
       this.lastSyncTimestamp = new Date();
     } catch (error) {
-      const duration = performance.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.error(
         `🚨 [BackendSync] Sync failed - ${duration.toFixed(2)}ms:`,
         { error },
@@ -377,7 +380,7 @@ export class BackendSyncService implements IBackendSyncService {
   }
 
   private async checkHealth(): Promise<void> {
-    const startTime = performance.now();
+    const startTime = this.performanceService.now();
     this.logger.info("🏥 [BackendSync] Health check");
 
     try {
@@ -386,14 +389,14 @@ export class BackendSyncService implements IBackendSyncService {
 
       this.connected = true;
 
-      const duration = performance.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.info(
         `✅ [BackendSync] Backend healthy - ${duration.toFixed(2)}ms`,
         { response },
       );
     } catch (error) {
       this.connected = false;
-      const duration = performance.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.error(
         `🚨 [BackendSync] Health check failed - ${duration.toFixed(2)}ms:`,
         { error, url: `${this.config.api.baseUrl}${this.config.api.healthEndpoint}` },

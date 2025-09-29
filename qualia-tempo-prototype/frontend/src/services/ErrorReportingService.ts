@@ -301,7 +301,7 @@ export class ErrorReportingService implements IErrorReportingService {
   @catchError
   public exportErrorData(): any {
     return {
-      timestamp: Date.now(),
+      timestamp: this.timerService.now(),
       sessionId: this.sessionId,
       statistics: this.getStatistics(),
       errorHistory: this.errorHistory,
@@ -395,7 +395,7 @@ export class ErrorReportingService implements IErrorReportingService {
   // Private implementation methods
 
   private generateSessionId(): string {
-    return `error_session_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
+    return `error_session_${this.timerService.now()}_${Math.random().toString(36).substr(2, 8)}`;
   }
 
   private initializeRateLimitState(): RateLimitState {
@@ -453,7 +453,7 @@ export class ErrorReportingService implements IErrorReportingService {
     const safeError = error || new Error("Unknown error (null/undefined)");
 
     return {
-      id: `error_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`,
+      id: `error_${this.timerService.now()}_${Math.random().toString(36).substr(2, 8)}`,
       timestamp: new Date(),
       sessionId: this.sessionId,
       error: {
@@ -571,7 +571,7 @@ export class ErrorReportingService implements IErrorReportingService {
     const errors = this.errorQueue.splice(0, batchSize);
 
     const batch: ExtendedErrorBatch = {
-      id: `batch_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`,
+      id: `batch_${this.timerService.now()}_${Math.random().toString(36).substr(2, 8)}`,
       createdAt: new Date(),
       timestamp: new Date(),
       errors,
@@ -595,7 +595,7 @@ export class ErrorReportingService implements IErrorReportingService {
     // Check circuit breaker
     if (this.circuitBreakerState.state === "open") {
       if (
-        Date.now() < (this.circuitBreakerState.nextAttemptTime?.getTime() || 0)
+        this.timerService.now() < (this.circuitBreakerState.nextAttemptTime?.getTime() || 0)
       ) {
         this.logger.warn(
           "⚡ [ErrorReportingService] Circuit breaker open, skipping batch processing",
@@ -656,7 +656,7 @@ export class ErrorReportingService implements IErrorReportingService {
     try {
       const payload = {
         sessionId: this.sessionId,
-        timestamp: Date.now(),
+        timestamp: this.timerService.now(),
         errors: batch.errors.map((error) => ({
           id: error.id,
           timestamp: error.timestamp.toISOString(),
@@ -737,7 +737,7 @@ export class ErrorReportingService implements IErrorReportingService {
     ) {
       this.circuitBreakerState.state = "open";
       this.circuitBreakerState.nextAttemptTime = new Date(
-        Date.now() + this.config.circuitBreakerTimeout,
+        this.timerService.now() + this.config.circuitBreakerTimeout,
       );
       this.logger.warn(
         "⚡ [ErrorReportingService] Circuit breaker opened due to repeated failures",

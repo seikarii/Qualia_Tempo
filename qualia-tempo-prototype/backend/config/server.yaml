@@ -59,3 +59,7 @@ security:
       - "http://127.0.0.1:5173"
   timeout: 30
   keepalive: 2
+
+# Streaming configuration - QUALIA.CODE §7: Externalized streaming settings
+streaming:
+  target_fps: 30.0  # State update frequency for WebSocket streaming

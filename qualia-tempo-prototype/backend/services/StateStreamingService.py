@@ -22,10 +22,11 @@ class StateStreamingService:
     """
 
     def __init__(
-        self, event_bus: EventBus, particle_engine: Any
+        self, event_bus: EventBus, particle_engine: Any, config: Dict[str, Any]
     ) -> None:
         self._event_bus = event_bus
         self._particle_engine = particle_engine
+        self._config = config
         self._logger = logging.getLogger(__name__)
 
         # Connection management
@@ -33,8 +34,8 @@ class StateStreamingService:
         self._is_streaming = False
         self._stream_task: Optional[asyncio.Task[Any]] = None
 
-        # Streaming configuration
-        self._target_fps = 30.0  # State update frequency
+        # Streaming configuration - Externalized from QUALIA.CODE §7
+        self._target_fps = self._config.get("streaming", {}).get("target_fps", 30.0)
 
         # Statistics
         self._states_sent = 0

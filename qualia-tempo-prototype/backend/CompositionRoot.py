@@ -196,15 +196,28 @@ class CompositionRoot:
 
     async def _initialize_state_streaming_service(self) -> None:
         """Initialize StateStreamingService for WebSocket state streaming."""
-        from .services.StateStreamingService import StateStreamingService
+        try:
+            from .services.StateStreamingService import StateStreamingService
+            import yaml
+            from pathlib import Path
 
-        particle_engine = self._services["particle_system"]
-        streaming_service = StateStreamingService(
-            event_bus=self._event_bus,
-            particle_engine=particle_engine,
-        )
-        self._services["state_streaming_service"] = streaming_service
-        self._logger.debug("✅ StateStreamingService initialized")
+            # Load configuration - QUALIA.CODE §7: Externalized configuration
+            config_path = Path(__file__).parent / "config" / "server.yaml"
+            with open(config_path, "r") as file:
+                config = yaml.safe_load(file)
+
+            particle_engine = self._services["particle_system"]
+            streaming_service = StateStreamingService(
+                event_bus=self._event_bus,
+                particle_engine=particle_engine,
+                config=config
+            )
+            self._services["state_streaming_service"] = streaming_service
+            self._logger.debug("✅ StateStreamingService initialized with externalized config")
+
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize StateStreamingService: {e}")
+            raise
 
     async def _register_event_handlers(self) -> None:
         """Register event handlers for cross-service communication."""

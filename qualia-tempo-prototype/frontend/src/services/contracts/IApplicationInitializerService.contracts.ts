@@ -4,6 +4,20 @@
  * This file is manually maintained for ApplicationInitializerService-specific contracts.
  */
 
+// Specific state update interfaces for type safety
+export interface ConfigLoadedStateUpdate {
+  configLoaded: true;
+  timestamp: number;
+  version: string;
+}
+
+export interface InitializationCompleteStateUpdate {
+  initializationComplete: true;
+  timestamp: number;
+  duration: number;
+  servicesStarted: string[];
+}
+
 // ApplicationInitializer Configuration - Migrated from ConfigurationService.ts
 export interface AppInitializerConfig {
   enableHealthChecks: boolean;
@@ -36,9 +50,9 @@ export interface AppInitializerConfig {
     startBackendSync: string;
   };
 
-  // State updates for store
+  // State updates for store - now type-safe
   stateUpdates: {
-    configLoaded: Record<string, unknown>;
-    initializationComplete: Record<string, unknown>;
+    configLoaded: ConfigLoadedStateUpdate;
+    initializationComplete: InitializationCompleteStateUpdate;
   };
 }
