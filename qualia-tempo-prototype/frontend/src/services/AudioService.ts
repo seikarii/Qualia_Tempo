@@ -101,17 +101,32 @@ export class AudioService implements IAudioService {
   @logMethod
   @catchError
   private handleQualiaStateUpdate(event: QualiaStateUpdatedEvent): void {
-    const { qualiaState } = event;
+    // Binary protocol: Audio processing requires particle data analysis
+    // For now, create minimal qualia state for audio compatibility
+    const mockQualiaState = {
+      intensity: 0,
+      precision: 0,
+      aggression: 0,
+      flow: 0,
+      chaos: 0,
+      recovery: 0,
+      transcendence: 0,
+    };
 
-    // Actualizar el audio basado en el estado - ya está adaptado para QualiaState
-    this.audioEngine.updateEntitySound("player", qualiaState);
+    // TODO: Implement particle data to qualia state conversion for audio
+    this.audioEngine.updateEntitySound("player", mockQualiaState);
+    
+    this.logger.debug(
+      "🎵 [AudioService] Binary particle data received:",
+      { size: event.particleData.byteLength }
+    );
 
     // Patrón emergente basado en el estado
-    if (qualiaState.transcendence > 0.8) {
+    if (mockQualiaState.transcendence > 0.8) {
       const emergentBehavior = {
         type: "NARRATIVE_EVENT" as const,
         entities: [],
-        strength: qualiaState.intensity,
+        strength: mockQualiaState.intensity,
         description: "Transcendence achievement",
         timestamp: this.timerService.now(),
       };

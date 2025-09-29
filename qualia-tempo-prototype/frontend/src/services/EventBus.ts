@@ -22,6 +22,8 @@ import type {
   MetronomeTickEvent,
   RhythmicDashEvent,
   QualiaStateUpdatedEvent,
+  QualiaStateCalculatedEvent,
+  QualiaParticleDataReceivedEvent,
   ErrorEvent,
   BackendSyncEvent,
   VisualImpactRequestedEvent,
@@ -35,6 +37,8 @@ import { logMethod, catchError } from "../utils/decorators";
 // Union type for all events
 export type EventTypes =
   | QualiaStateUpdatedEvent
+  | QualiaStateCalculatedEvent
+  | QualiaParticleDataReceivedEvent
   | PlayerActionEvent
   | PlayerInputEvent
   | GameStateChangedEvent
@@ -43,9 +47,7 @@ export type EventTypes =
   | MetronomeTickEvent
   | StreamingStatusChangedEvent
   | VisualImpactRequestedEvent
-  | RhythmicDashEvent
-  | MetronomeTickEvent
-  | StreamingStatusChangedEvent;
+  | RhythmicDashEvent;
 
 // Event handler types
 export type EventHandler<T extends BaseEvent = BaseEvent> = (
@@ -491,12 +493,12 @@ export class QualiaEvents {
     } as Omit<PlayerActionEvent, "timestamp">);
   }
 
-  public qualiaStateUpdated(qualiaState: QualiaState): void {
+  public qualiaStateCalculated(qualiaState: QualiaState): void {
     this._eventBus.emit({
-      type: "QualiaStateUpdated",
+      type: "QualiaStateCalculated",
       qualiaState,
       source: "QualiaCalculator",
-    } as Omit<QualiaStateUpdatedEvent, "timestamp">);
+    } as Omit<QualiaStateCalculatedEvent, "timestamp">);
   }
 
   public gameStateChanged(

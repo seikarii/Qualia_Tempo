@@ -11,7 +11,7 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { IWebSocketService } from "./interfaces/IWebSocketService";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { StreamingConfig } from "./contracts/IStateStreamingService.contracts";
-import type { QualiaStateUpdatedEvent, StreamingStatusChangedEvent, ConnectionStatus } from "./contracts/events.contracts";
+import type { QualiaParticleDataReceivedEvent, ConnectionStatus, StreamingStatusChangedEvent } from "./contracts/events.contracts";
 import { logMethod, catchError } from "../utils/decorators";
 import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
 
@@ -158,8 +158,8 @@ export class StateStreamingService implements IStateStreamingService {
     this.messagesReceived++;
 
     // Emit the binary data directly - no JSON parsing, no main thread blocking
-    this.eventBus.emit<QualiaStateUpdatedEvent>({
-      type: "QualiaStateUpdated",
+    this.eventBus.emit<QualiaParticleDataReceivedEvent>({
+      type: "QualiaParticleDataReceived",
       particleData, // Binary ArrayBuffer payload
       source: "StateStreamingService",
     });

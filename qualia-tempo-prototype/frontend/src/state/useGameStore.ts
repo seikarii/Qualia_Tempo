@@ -37,8 +37,15 @@ export interface GameState {
   // Combat data
   combatData: CombatData | null;
 
-  // Qualia state - the heart of the visual system
+  // Qualia state - LEGACY: kept for backward compatibility
   qualiaState: QualiaState;
+  
+  // Binary protocol: Raw particle data from backend
+  particleData?: {
+    buffer: ArrayBuffer;
+    timestamp: number;
+    size: number;
+  };
 
   // Performance tracking
   totalNotes: number;

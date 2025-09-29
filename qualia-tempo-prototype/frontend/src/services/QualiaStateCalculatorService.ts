@@ -19,7 +19,7 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { QualiaCalculatorConfig } from "./contracts/IQualiaStateCalculatorService.contracts";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
-import { QualiaStateUpdatedEvent } from "./contracts/events.contracts";
+import { QualiaStateCalculatedEvent } from "./contracts/events.contracts";
 import type { PlayerActionEvent } from "./contracts/events.contracts";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError } from "../utils/decorators";
@@ -407,12 +407,12 @@ export class QualiaStateCalculatorService
   }
 
   /**
-   * Emit QualiaStateUpdated event.
-   * ARCHITECTURE: This is the ONLY output from this service.
+   * Emit QualiaStateCalculated event.
+   * ARCHITECTURE: This is the ONLY output from this service - frontend-calculated state.
    */
   private emitStateUpdate(): void {
-    this.eventBus.emit<QualiaStateUpdatedEvent>({
-      type: "QualiaStateUpdated",
+    this.eventBus.emit<QualiaStateCalculatedEvent>({
+      type: "QualiaStateCalculated",
       qualiaState: this.currentState,
     });
   }

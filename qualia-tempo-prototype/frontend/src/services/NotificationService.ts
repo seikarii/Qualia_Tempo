@@ -700,21 +700,22 @@ export class NotificationService implements INotificationService {
   }
 
   private handleQualiaStateEvent(event: QualiaStateUpdatedEvent): void {
-    // Only show notifications for significant qualia changes
-    const hasSignificantChange = Object.values(event.qualiaState).some(
-      (value) => typeof value === "number" && (value > 0.8 || value < 0.2),
-    );
+    // Binary protocol: Notification based on particle data activity
+    // For now, show notification for any binary data received (indicates system activity)
+    const hasParticleActivity = event.particleData.byteLength > 0;
 
-    if (hasSignificantChange) {
+    if (hasParticleActivity) {
       const notification = this.createNotification(
-        "Significant qualia state change detected",
+        "Qualia particle data stream active",
         "achievement",
         "normal",
         {
           source: "QualiaStateEvent",
           category: "performance",
           metadata: {
-            qualiaState: event.qualiaState,
+            particleDataSize: event.particleData.byteLength,
+            timestamp: event.timestamp,
+            // Note: Actual qualia analysis would require particle data parsing
           },
         },
       );

@@ -13,12 +13,11 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import type {
   GameStateChangedEvent,
-  QualiaStateUpdatedEvent,
+  QualiaParticleDataReceivedEvent,
 } from "./contracts/events.contracts";
 import {
   logMethod,
   catchError,
-  validateEventProperty,
 } from "../utils/decorators";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 import type { IEventBus } from "./interfaces/IEventBus";
@@ -30,7 +29,7 @@ type StoreSetter = (_state: any) => void;
 // Event types
 const GAME_EVENTS = {
   STATE_CHANGED: "GameStateChanged",
-  QUALIA_UPDATED: "QualiaStateUpdated",
+  PARTICLE_DATA_RECEIVED: "QualiaParticleDataReceived",
 } as const;
 
 // QUALIA.CODE: Externalized message constants
@@ -91,12 +90,17 @@ export class GameStateStoreService implements IGameStateStoreService {
     );
     this.listenerIds.push(gameStateListenerId);
 
-    // Subscribe to QualiaStateUpdated events
-    const qualiaStateListenerId = this.eventBus.subscribe(
-      GAME_EVENTS.QUALIA_UPDATED,
-      this.handleQualiaStateUpdate.bind(this),
+    // Subscribe to QualiaParticleDataReceived events
+    const particleListenerId = this.eventBus.subscribe(
+      "QualiaParticleDataReceived",
+      (event) => {
+        if (event.type === "QualiaParticleDataReceived") {
+          this.handleParticleDataReceived(event as QualiaParticleDataReceivedEvent);
+        }
+      },
+      { priority: "normal" },
     );
-    this.listenerIds.push(qualiaStateListenerId);
+    this.listenerIds.push(particleListenerId);
 
     // Subscribe to RhythmicDash events to update player position
     const rhythmicDashListenerId = this.eventBus.subscribe(
@@ -262,18 +266,25 @@ export class GameStateStoreService implements IGameStateStoreService {
   }
 
   /**
-   * Handle QualiaStateUpdated events
+   * Handle QualiaParticleDataReceived events - Binary Protocol
+   * NOTE: Binary protocol delivers particle data via ArrayBuffer, 
+   * no direct qualiaState reconstruction in store service
    */
-  @validateEventProperty("qualiaState", "QualiaState")
-  private handleQualiaStateUpdate(event: QualiaStateUpdatedEvent): void {
+  private handleParticleDataReceived(event: QualiaParticleDataReceivedEvent): void {
     this.logger.info(
-      "🌟 [GameStateStoreService] Processing QualiaStateUpdated:",
-      event.qualiaState,
+      "🌟 [GameStateStoreService] Processing QualiaStateUpdated (Binary):",
+      { particleDataSize: event.particleData.byteLength, timestamp: event.timestamp },
     );
 
+    // Binary protocol: Store particle data buffer directly
+    // QualiaState reconstruction is handled by specialized particle processing services
     this.setStore((state: any) => ({
       ...state,
-      qualiaState: { ...event.qualiaState },
+      particleData: {
+        buffer: event.particleData,
+        timestamp: event.timestamp,
+        size: event.particleData.byteLength,
+      },
     }));
   }
 

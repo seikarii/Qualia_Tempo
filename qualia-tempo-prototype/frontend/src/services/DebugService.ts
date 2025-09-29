@@ -80,7 +80,7 @@ export class DebugService implements IDebugService {
   private debugInterface: any = null;
 
   // State tracking for advanced analysis
-  private lastQualiaState: QualiaState | null = null;
+  private lastQualiaState: QualiaState | any | null = null; // Binary protocol: stores debug info
   private gameStateHistory: string[] = [];
   private eventPatterns: Map<string, number[]> = new Map();
 
@@ -507,11 +507,21 @@ export class DebugService implements IDebugService {
   }
 
   private handleQualiaStateEvent(event: QualiaStateUpdatedEvent): void {
-    this.lastQualiaState = event.qualiaState;
+    // Binary protocol: Store particle data buffer info for debugging
+    this.lastQualiaState = {
+      particleBufferSize: event.particleData.byteLength,
+      timestamp: event.timestamp,
+      // Note: Actual QualiaState reconstruction from binary data would require particle parsing
+    };
     this.updatePerformanceMetrics("QualiaStateUpdated", this._performanceService.now());
 
-    // Track QualiaState update rate
+    // Track QualiaState update rate and binary data throughput
     this.performanceMetrics.qualiaStateUpdateRate++;
+    
+    this.logger.debug(
+      "🔍 [DebugService] Binary particle data received:",
+      { size: event.particleData.byteLength, timestamp: event.timestamp }
+    );
   }
 
   private handleErrorEvent(event: ErrorEvent): void {

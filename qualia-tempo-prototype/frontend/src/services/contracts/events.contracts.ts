@@ -5,6 +5,8 @@
  * Eliminates circular dependencies between EventBus and service interfaces.
  */
 
+import type { QualiaState } from "../../types/contracts";
+
 // Moved from IStreamingVideoService.ts
 export type ConnectionStateType =
   | "IDLE"
@@ -94,7 +96,18 @@ export interface PlayerInputEvent extends BaseEvent {
   source?: string;
 }
 
-// Additional event types moved from EventBus.ts
+// ARCHITECTURE v1.1: Separated event types for different data sources
+export interface QualiaStateCalculatedEvent extends BaseEvent {
+  type: "QualiaStateCalculated";
+  qualiaState: QualiaState; // Frontend-calculated game state from player actions
+}
+
+export interface QualiaParticleDataReceivedEvent extends BaseEvent {
+  type: "QualiaParticleDataReceived";
+  particleData: ArrayBuffer; // BINARY PROTOCOL: Raw particle data from numpy.tobytes()
+}
+
+// LEGACY: Keep for backward compatibility during transition
 export interface QualiaStateUpdatedEvent extends BaseEvent {
   type: "QualiaStateUpdated";
   particleData: ArrayBuffer; // BINARY PROTOCOL: Raw particle data from numpy.tobytes()

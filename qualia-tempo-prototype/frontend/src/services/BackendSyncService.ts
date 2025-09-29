@@ -6,7 +6,7 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import { EventHandler } from "./EventBus";
-import type { BackendSyncEvent, ErrorEvent, QualiaStateUpdatedEvent } from "./contracts/events.contracts";
+import type { BackendSyncEvent, ErrorEvent, QualiaStateCalculatedEvent } from "./contracts/events.contracts";
 import {
   logMethod,
   catchError,
@@ -223,15 +223,15 @@ export class BackendSyncService implements IBackendSyncService {
   // Private methods
 
   private subscribeToEvents(): void {
-    // Subscribe to QualiaStateUpdated events
-    const qualiaStateListener: EventHandler<QualiaStateUpdatedEvent> = (
+    // Subscribe to QualiaStateCalculated events from frontend calculator
+    const qualiaStateListener: EventHandler<QualiaStateCalculatedEvent> = (
       event,
     ) => {
       this.handleQualiaStateUpdate(event);
     };
 
     const listenerId = this.eventBus.subscribe(
-      "QualiaStateUpdated",
+      "QualiaStateCalculated",
       qualiaStateListener,
       { priority: "high" },
     );
@@ -250,8 +250,8 @@ export class BackendSyncService implements IBackendSyncService {
   }
 
   @validateEventProperty("qualiaState", "QualiaState")
-  private handleQualiaStateUpdate(event: QualiaStateUpdatedEvent): void {
-    this.logger.info("📊 [BackendSync] QualiaState update received");
+  private handleQualiaStateUpdate(event: QualiaStateCalculatedEvent): void {
+    this.logger.info("📊 [BackendSync] QualiaState calculated from frontend");
 
     if (!this.isConnected) {
       this.logger.warn(
@@ -260,6 +260,7 @@ export class BackendSyncService implements IBackendSyncService {
       return;
     }
 
+    // Frontend-calculated QualiaState from player actions
     const qualiaRequest: QualiaStateRequest = {
       intensity: event.qualiaState.intensity || 0,
       precision: event.qualiaState.precision || 0,
