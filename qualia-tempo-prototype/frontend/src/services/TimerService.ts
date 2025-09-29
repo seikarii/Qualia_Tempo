@@ -157,9 +157,14 @@ export class TimerService implements ITimerService {
 @injectable()
 export class PerformanceService implements IPerformanceService {
   private readonly logger: ILogger;
+  private readonly timerService: ITimerService;
 
-  constructor(@inject(TYPES.ILogger) logger: ILogger) {
+  constructor(
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.ITimerService) timerService: ITimerService
+  ) {
     this.logger = logger;
+    this.timerService = timerService;
     this.logger.info(PERFORMANCE_SERVICE_INIT_MESSAGE);
   }
 
@@ -218,6 +223,24 @@ export class PerformanceService implements IPerformanceService {
     if (typeof performance !== 'undefined' && performance.clearMeasures) {
       performance.clearMeasures(name);
       this.logger.debug("Performance measures cleared", { name });
+    }
+  }
+
+  @logMethod
+  public requestAnimationFrame(callback: () => void): number {
+    if (typeof window !== 'undefined' && window.requestAnimationFrame) {
+      return window.requestAnimationFrame(callback);
+    }
+    // Fallback for environments without requestAnimationFrame
+    return this.timerService.setTimeout(callback, 16); // ~60fps fallback
+  }
+
+  @logMethod
+  public cancelAnimationFrame(animationId: number): void {
+    if (typeof window !== 'undefined' && window.cancelAnimationFrame) {
+      window.cancelAnimationFrame(animationId);
+    } else {
+      this.timerService.clearTimeout(animationId);
     }
   }
 }

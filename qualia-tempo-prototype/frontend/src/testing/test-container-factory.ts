@@ -71,6 +71,7 @@ const mockTimerService: ITimerService = {
 const mockPerformanceService: IPerformanceService = {
   now: vi.fn(), getMemoryInfo: vi.fn(), mark: vi.fn(),
   measure: vi.fn(), clearMarks: vi.fn(), clearMeasures: vi.fn(),
+  requestAnimationFrame: vi.fn(), cancelAnimationFrame: vi.fn(),
 };
 
 /**

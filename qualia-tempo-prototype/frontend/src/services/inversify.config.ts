@@ -24,6 +24,7 @@ import type { LoggerConfig } from "./contracts/ILogger.contracts";
 import type { NotificationServiceConfig } from "./contracts/INotificationService.contracts";
 import type { QualiaCalculatorConfig } from "./contracts/IQualiaStateCalculatorService.contracts";
 import type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementController.contracts";
+import type { StreamingConfig } from "./contracts/IStateStreamingService.contracts";
 
 // ===== IMPORT ALL INTERFACES =====
 import type { IEventBus } from "./interfaces/IEventBus";
@@ -47,6 +48,8 @@ import type { IWebAudioAPIService } from "./interfaces/IWebAudioAPIService";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
 import type { IFrontendRenderingService } from "./interfaces/IFrontendRenderingService";
 import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
+import type { IWebSocketService } from "./interfaces/IWebSocketService";
+import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { EventBus } from "./EventBus";
@@ -70,6 +73,8 @@ import { WebAudioAPIService } from "./WebAudioAPIService";
 import { GameStateStore } from "./GameStateStore";
 import { FrontendRenderingService } from "./FrontendRenderingService";
 import { StateStreamingService } from "./StateStreamingService";
+import { WebSocketService } from "./WebSocketService";
+import { BrowserEventsService } from "./BrowserEventsService";
 
 // ===== CORE SERVICE BINDINGS =====
 // These services have no dependencies and can be bound directly
@@ -188,6 +193,16 @@ container
   .to(StateStreamingService)
   .inSingletonScope();
 
+container
+  .bind<IWebSocketService>(TYPES.IWebSocketService)
+  .to(WebSocketService)
+  .inSingletonScope();
+
+container
+  .bind<IBrowserEventsService>(TYPES.IBrowserEventsService)
+  .to(BrowserEventsService)
+  .inSingletonScope();
+
 // ===== CONFIGURATION BINDING FUNCTION =====
 /**
  * CRITICAL MISSION: Eliminate Service Locator Antipattern
@@ -239,6 +254,7 @@ export async function configureServices(): Promise<void> {
   safeBindConstant<NotificationServiceConfig>(TYPES.NotificationServiceConfig, fullConfig.notificationService);
   safeBindConstant<ErrorReportingConfig>(TYPES.ErrorReportingConfig, fullConfig.errorReporting);
   safeBindConstant<DebugServiceConfig>(TYPES.DebugServiceConfig, fullConfig.debugService);
+  safeBindConstant<StreamingConfig>(TYPES.StreamingConfig, fullConfig.backendSync.streaming);
   
   // =================================================================
   // BINDING PARA NotificationServiceConfig - CÓDIGO FALTANTE

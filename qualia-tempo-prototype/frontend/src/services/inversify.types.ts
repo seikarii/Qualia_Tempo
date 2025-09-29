@@ -30,6 +30,8 @@ export const TYPES = {
   IWebAudioAPIService: Symbol.for("IWebAudioAPIService"),
   IFrontendRenderingService: Symbol.for("IFrontendRenderingService"),
   IStateStreamingService: Symbol.for("IStateStreamingService"),
+  IWebSocketService: Symbol.for("IWebSocketService"),
+  IBrowserEventsService: Symbol.for("IBrowserEventsService"),
 
   // ===== SPECIAL TYPES =====
   IGameStateStore: Symbol.for("IGameStateStore"),
@@ -55,6 +57,7 @@ export const TYPES = {
   ErrorReportingConfig: Symbol.for("ErrorReportingConfig"),
   DebugServiceConfig: Symbol.for("DebugServiceConfig"),
   VisualEffectsConfig: Symbol.for("VisualEffectsConfig"),
+  StreamingConfig: Symbol.for("StreamingConfig"),
 } as const;
 
 // Type-safe access to TYPES

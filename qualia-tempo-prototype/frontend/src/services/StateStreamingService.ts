@@ -7,7 +7,9 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
-import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { IWebSocketService } from "./interfaces/IWebSocketService";
+import type { ITimerService } from "./interfaces/ITimerService";
+import type { StreamingConfig } from "./contracts/IStateStreamingService.contracts";
 import type { QualiaState } from "../types/contracts";
 import type { QualiaStateUpdatedEvent, StreamingStatusChangedEvent, ConnectionStatus } from "./contracts/events.contracts";
 import { logMethod, catchError } from "../utils/decorators";
@@ -23,56 +25,44 @@ export class StateStreamingService implements IStateStreamingService {
   @inject(TYPES.IEventBus)
   private eventBus!: IEventBus;
   private readonly logger: ILogger;
-  private readonly configService: IConfigurationService;
+  private readonly webSocketService: IWebSocketService;
+  private readonly timerService: ITimerService;
+  private readonly config: StreamingConfig;
 
-  // WebSocket connection
-  private websocket: WebSocket | null = null;
+  // WebSocket connection state
   private connectionUrl: string;
   private state: "IDLE" | "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "RECONNECTING" | "ERROR" = "IDLE";
 
   // Reconnection management
-  private reconnectTimer: number | null = null;
-  private pingTimer: number | null = null;
+  private reconnectTimerId: number | null = null;
+  private pingTimerId: number | null = null;
   private reconnectAttempts = 0;
-  private readonly maxReconnectAttempts: number;
-  private readonly reconnectDelay: number;
-  private readonly pingInterval: number;
 
   // Statistics
   private messagesReceived = 0;
   private connectionStartTime = 0;
 
-  // Authentication
-  private authEnabled: boolean = false;
-  private authToken: string | null = null;
-
   constructor(
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService,
+    @inject(TYPES.IWebSocketService) webSocketService: IWebSocketService,
+    @inject(TYPES.ITimerService) timerService: ITimerService,
+    @inject(TYPES.StreamingConfig) config: StreamingConfig,
     @inject(TYPES.ILogger) logger: ILogger
   ) {
-    this.configService = configService;
+    this.webSocketService = webSocketService;
+    this.timerService = timerService;
+    this.config = config;
     this.logger = logger;
 
-    // Ensure configService is recognized as used
-    void this.configService;
-
-    // Load streaming configuration
-    const streamingConfig =
-      configService.getConfig().backendSync.streaming?.websocket || {};
-    this.connectionUrl =
-      streamingConfig.url || "ws://127.0.0.1:8000/ws/video_stream";
-    this.maxReconnectAttempts = streamingConfig.maxReconnectAttempts || 10;
-    this.reconnectDelay = streamingConfig.reconnectDelay || 2000;
-    this.pingInterval = streamingConfig.pingInterval || 8000;
-
-    // Load authentication configuration
-    const authConfig = configService.getConfig().backendSync.authentication || {};
-    this.authEnabled = authConfig.enabled || false;
-    this.authToken = authConfig.token || null;
+    // Build connection URL with authentication if enabled
+    this.connectionUrl = this.config.websocket.url;
+    if (this.config.authentication?.enabled && this.config.authentication.token) {
+      const separator = this.connectionUrl.includes('?') ? '&' : '?';
+      this.connectionUrl = `${this.connectionUrl}${separator}token=${encodeURIComponent(this.config.authentication.token)}`;
+    }
 
     this.logger.info("StateStreamingService initialized", {
       connectionUrl: this.connectionUrl,
-      maxReconnectAttempts: this.maxReconnectAttempts,
+      maxReconnectAttempts: this.config.websocket.maxReconnectAttempts,
     });
   }
 
@@ -84,7 +74,7 @@ export class StateStreamingService implements IStateStreamingService {
   @logMethod
   @catchError
   async connect(): Promise<void> {
-    if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+    if (this.webSocketService.isConnected()) {
       this.logger.info("Already connected to state stream");
       return;
     }
@@ -98,22 +88,14 @@ export class StateStreamingService implements IStateStreamingService {
     this.updateConnectionStatus();
 
     try {
-      // Build connection URL with authentication if enabled
-      let connectionUrl = this.connectionUrl;
-      if (this.authEnabled && this.authToken) {
-        const separator = connectionUrl.includes('?') ? '&' : '?';
-        connectionUrl = `${connectionUrl}${separator}token=${encodeURIComponent(this.authToken)}`;
-        this.logger.info("Authentication enabled - including token in connection");
-      } else {
-        this.logger.info("Authentication disabled - connecting without token");
-      }
+      // Register event handlers
+      this.webSocketService.onOpen(() => this.handleOpen());
+      this.webSocketService.onMessage((data) => this.handleMessage(data));
+      this.webSocketService.onClose((event) => this.handleClose(event));
+      this.webSocketService.onError((error) => this.handleError(error));
 
-      this.websocket = new WebSocket(connectionUrl);
-
-      this.websocket.onopen = this.handleOpen.bind(this);
-      this.websocket.onmessage = this.handleMessage.bind(this);
-      this.websocket.onclose = this.handleClose.bind(this);
-      this.websocket.onerror = this.handleError.bind(this);
+      // Connect to WebSocket
+      await this.webSocketService.connect(this.connectionUrl);
 
       this.logger.info("Initiating WebSocket connection to state stream", {
         url: this.connectionUrl,
@@ -132,20 +114,17 @@ export class StateStreamingService implements IStateStreamingService {
     this.state = "DISCONNECTED";
     this.updateConnectionStatus();
 
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
+    if (this.reconnectTimerId) {
+      this.timerService.clearTimeout(this.reconnectTimerId);
+      this.reconnectTimerId = null;
     }
 
-    if (this.pingTimer) {
-      clearInterval(this.pingTimer);
-      this.pingTimer = null;
+    if (this.pingTimerId) {
+      this.timerService.clearInterval(this.pingTimerId);
+      this.pingTimerId = null;
     }
 
-    if (this.websocket) {
-      this.websocket.close(1000, "Client disconnecting");
-      this.websocket = null;
-    }
+    await this.webSocketService.disconnect();
 
     this.logger.info("Disconnected from state stream");
   }
@@ -200,9 +179,9 @@ export class StateStreamingService implements IStateStreamingService {
     this.state = "DISCONNECTED";
     this.updateConnectionStatus();
 
-    if (this.pingTimer) {
-      clearInterval(this.pingTimer);
-      this.pingTimer = null;
+    if (this.pingTimerId) {
+      this.timerService.clearInterval(this.pingTimerId);
+      this.pingTimerId = null;
     }
 
     this.logger.info("WebSocket connection closed", {
@@ -226,23 +205,23 @@ export class StateStreamingService implements IStateStreamingService {
   };
 
   private scheduleReconnect = (): void => {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+    if (this.reconnectAttempts >= this.config.websocket.maxReconnectAttempts) {
       this.logger.error("Max reconnection attempts reached", {
         attempts: this.reconnectAttempts,
-        maxAttempts: this.maxReconnectAttempts,
+        maxAttempts: this.config.websocket.maxReconnectAttempts,
       });
       return;
     }
 
     this.reconnectAttempts++;
-    const delay = this.reconnectDelay * Math.pow(1.5, this.reconnectAttempts - 1); // Exponential backoff
+    const delay = this.config.websocket.reconnectDelay * Math.pow(1.5, this.reconnectAttempts - 1); // Exponential backoff
 
     this.logger.info("Scheduling reconnection", {
       attempt: this.reconnectAttempts,
       delay: delay,
     });
 
-    this.reconnectTimer = window.setTimeout(() => {
+    this.reconnectTimerId = this.timerService.setTimeout(() => {
       this.connect().catch((error) => {
         this.logger.error("Reconnection failed", { error });
       });
@@ -250,15 +229,15 @@ export class StateStreamingService implements IStateStreamingService {
   };
 
   private startPingTimer = (): void => {
-    this.pingTimer = window.setInterval(() => {
-      if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-        this.websocket.send(JSON.stringify({
+    this.pingTimerId = this.timerService.setInterval(() => {
+      if (this.webSocketService.isConnected()) {
+        this.webSocketService.send(JSON.stringify({
           type: "ping",
           timestamp: Date.now(),
           pingId: Math.random().toString(36).substr(2, 9),
         }));
       }
-    }, this.pingInterval);
+    }, this.config.websocket.pingInterval);
   };
 
   private updateConnectionStatus = (): void => {

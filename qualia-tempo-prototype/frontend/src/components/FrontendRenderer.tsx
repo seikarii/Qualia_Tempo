@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useRef, useState } from "react";
-import { useFrontendRenderingService, useStateStreamingService, useLogger } from "../services/hooks";
+import { useFrontendRenderingService, useStateStreamingService, useLogger, useBrowserEventsService } from "../services/hooks";
 import type { ConnectionStateType } from "../services/contracts/events.contracts";
 
 interface FrontendRendererProps {
@@ -37,20 +37,20 @@ const FrontendRenderer: React.FC<FrontendRendererProps> = ({
   className = "",
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const initializedRef = useRef(false);
   const renderingService = useFrontendRenderingService();
   const streamingService = useStateStreamingService();
   const logger = useLogger();
+  const browserEventsService = useBrowserEventsService();
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStateType>("IDLE");
 
   // Initialize rendering service and connect to state stream
   useEffect(() => {
-    const initialized = useRef(false);
-
     const initializeRenderer = async () => {
-      if (initialized.current) return;
-      initialized.current = true;
+      if (initializedRef.current) return;
+      initializedRef.current = true;
 
       if (!canvasRef.current) return;
 
@@ -81,14 +81,14 @@ const FrontendRenderer: React.FC<FrontendRendererProps> = ({
       }
     };
 
-    window.addEventListener('resize', handleResize);
+    browserEventsService.addWindowEventListener('resize', handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      browserEventsService.removeWindowEventListener('resize', handleResize);
       renderingService.stop();
       streamingService.disconnect();
     };
-  }, [renderingService, streamingService, logger]);
+  }, [renderingService, streamingService, logger, browserEventsService]);
 
   // Monitor connection status
   useEffect(() => {

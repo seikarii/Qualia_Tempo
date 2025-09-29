@@ -13,11 +13,13 @@ import type {
   QualiaState,
 } from "./interfaces/IFrontendRenderingService";
 import type { ILogger } from "./interfaces/ILogger";
+import type { IPerformanceService } from "./interfaces/ITimerService";
 import { logMethod, catchError } from "../utils/decorators";
 
 @injectable()
 export class FrontendRenderingService implements IFrontendRenderingService {
   private readonly logger: ILogger;
+  private readonly performanceService: IPerformanceService;
 
   // Three.js core objects
   private scene!: THREE.Scene;
@@ -42,9 +44,11 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   private frameTime = 0;
 
   constructor(
-    @inject(TYPES.ILogger) logger: ILogger
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.IPerformanceService) performanceService: IPerformanceService
   ) {
     this.logger = logger;
+    this.performanceService = performanceService;
 
     this.logger.info("FrontendRenderingService initialized");
   }
@@ -206,7 +210,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     }
 
     this.isRunning = true;
-    this.lastTime = performance.now();
+    this.lastTime = this.performanceService.now();
     this.animate();
 
     this.logger.info("FrontendRenderingService started");
@@ -221,7 +225,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     this.isRunning = false;
 
     if (this.animationId !== null) {
-      cancelAnimationFrame(this.animationId);
+      this.performanceService.cancelAnimationFrame(this.animationId);
       this.animationId = null;
     }
 
@@ -284,9 +288,9 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   private animate = (): void => {
     if (!this.isRunning) return;
 
-    this.animationId = requestAnimationFrame(this.animate);
+    this.animationId = this.performanceService.requestAnimationFrame(this.animate);
 
-    const currentTime = performance.now();
+    const currentTime = this.performanceService.now();
     const deltaTime = currentTime - this.lastTime;
 
     // Update FPS calculation

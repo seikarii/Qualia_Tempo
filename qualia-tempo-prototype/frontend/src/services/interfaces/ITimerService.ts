@@ -82,4 +82,16 @@ export interface IPerformanceService {
    * Abstraction for performance.clearMeasures()
    */
   clearMeasures(name?: string): void;
+
+  /**
+   * Request animation frame callback
+   * Abstraction for requestAnimationFrame()
+   */
+  requestAnimationFrame(callback: () => void): number;
+
+  /**
+   * Cancel animation frame
+   * Abstraction for cancelAnimationFrame()
+   */
+  cancelAnimationFrame(animationId: number): void;
 }

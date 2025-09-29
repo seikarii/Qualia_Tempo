@@ -23,6 +23,8 @@ import type { IFrontendRenderingService } from './interfaces/IFrontendRenderingS
 import type { IStateStreamingService } from './interfaces/IStateStreamingService';
 import type { IHttpService } from './interfaces/IHttpService';
 import type { ITimerService } from './interfaces/ITimerService';
+import type { IWebSocketService } from './interfaces/IWebSocketService';
+import type { IBrowserEventsService } from './interfaces/IBrowserEventsService';
 
 /**
  * Generic hook to resolve a service from the IoC container
@@ -110,6 +112,12 @@ export const useErrorReporting = useErrorReportingService;
 // Utility Services
 export const useTimerService = (): ITimerService => 
   useService<ITimerService>(TYPES.ITimerService);
+
+export const useWebSocketService = (): IWebSocketService => 
+  useService<IWebSocketService>(TYPES.IWebSocketService);
+
+export const useBrowserEventsService = (): IBrowserEventsService => 
+  useService<IBrowserEventsService>(TYPES.IBrowserEventsService);
 
 export const useRhythmicMovementController = (): IRhythmicMovementController => 
   useService<IRhythmicMovementController>(TYPES.IRhythmicMovementController);
