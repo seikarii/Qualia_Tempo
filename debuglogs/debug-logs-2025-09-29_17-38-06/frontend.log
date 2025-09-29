@@ -1,0 +1,15 @@
+
+> qualia-tempo-frontend@1.0.0 dev
+> vite
+
+
+  VITE v5.4.20  ready in 244 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+17:38:19 [vite] page reload browser-test.js
+17:38:20 [vite] page reload browser-test-failure.json
+17:38:20 [vite] page reload debug-page-content-FAILURE.html
+17:38:23 [vite] page reload debug-page-content-main-menu.html
+17:38:35 [vite] page reload debug-page-content-game-view.html
+17:38:39 [vite] page reload browser-test-failure.json

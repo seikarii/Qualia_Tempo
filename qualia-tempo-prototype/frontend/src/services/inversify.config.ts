@@ -134,7 +134,7 @@ container
 // Bind ThrottlingManager as a utility class
 container
   .bind<ThrottlingManager>(TYPES.ThrottlingManager)
-  .toSelf()
+  .to(ThrottlingManager)
   .inSingletonScope();
 
 // ===== FEATURE SERVICE BINDINGS =====

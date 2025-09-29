@@ -737,7 +737,7 @@ export class DebugService implements IDebugService {
     if (this.lastQualiaState) {
       // Check for extreme values
       Object.entries(this.lastQualiaState).forEach(([key, value]) => {
-        if (typeof value === "number" && (value < 0 ?? value > 1)) {
+        if (typeof value === "number" && (value < 0 || value > 1)) {
           results.push({
             type: "state_anomaly",
             severity: "medium",

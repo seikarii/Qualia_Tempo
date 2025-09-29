@@ -1,8 +1,11 @@
 {
-  "timestamp": "2025-09-29T15:38:39.938Z",
+  "timestamp": "2025-09-29T15:38:35.186Z",
+  "phase": "game-view",
   "success": false,
-  "error": "page.waitForTimeout: Target page, context or browser has been closed",
-  "stack": "page.waitForTimeout: Target page, context or browser has been closed\n    at comprehensiveTest (/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/browser-test.js:95:20)",
+  "stats": {
+    "errors": 1,
+    "logs": 157
+  },
   "logs": [
     {
       "timestamp": "2025-09-29T15:38:20.640Z",
@@ -945,66 +948,6 @@
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-29T15:38:35.188Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-29T15:38:35.188Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-29T15:38:36.073Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-29T15:38:36.073Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
-    },
-    {
-      "timestamp": "2025-09-29T15:38:37.064Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-29T15:38:37.065Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-29T15:38:38.057Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-29T15:38:38.057Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}"
-    },
-    {
-      "timestamp": "2025-09-29T15:38:38.063Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
-    },
-    {
-      "timestamp": "2025-09-29T15:38:38.064Z",
-      "type": "info",
-      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}",
-      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}"
     }
   ],
   "errors": [
