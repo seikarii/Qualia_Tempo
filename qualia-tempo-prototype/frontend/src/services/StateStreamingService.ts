@@ -4,7 +4,6 @@
  */
 
 import { injectable, inject } from "inversify";
-import { container } from "./inversify.container";
 import { TYPES } from "./inversify.types";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
@@ -22,7 +21,8 @@ export interface IStateStreamingService {
 
 @injectable()
 export class StateStreamingService implements IStateStreamingService {
-  private eventBus!: IEventBus; // Declarar, pero no inyectar en constructor
+  @inject(TYPES.IEventBus)
+  private eventBus!: IEventBus;
   private readonly logger: ILogger;
   private readonly configService: IConfigurationService;
   private readonly timerService: ITimerService;
@@ -82,8 +82,6 @@ export class StateStreamingService implements IStateStreamingService {
 
   @logMethod
   public async start(): Promise<void> {
-    // Obtener la instancia de forma perezosa (lazy) para romper el ciclo
-    this.eventBus = container.get<IEventBus>(TYPES.IEventBus);
     this.logger.info("StateStreamingService started and EventBus injected.");
   }
 

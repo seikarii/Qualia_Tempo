@@ -1,104 +1,104 @@
 {
-  "timestamp": "2025-09-29T09:54:51.299Z",
+  "timestamp": "2025-09-29T10:05:20.102Z",
   "success": false,
   "error": "page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('text=INITIATE NEURAL SYNC') to be visible\u001b[22m\n",
   "stack": "page.waitForSelector: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('text=INITIATE NEURAL SYNC') to be visible\u001b[22m\n\n    at comprehensiveTest (/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/browser-test.js:46:20)",
   "logs": [
     {
-      "timestamp": "2025-09-29T09:54:40.492Z",
+      "timestamp": "2025-09-29T10:05:09.277Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST SCRIPT LOADED ===",
       "entry": "[LOG] === RACE CONDITION TEST SCRIPT LOADED ==="
     },
     {
-      "timestamp": "2025-09-29T09:54:40.605Z",
+      "timestamp": "2025-09-29T10:05:09.391Z",
       "type": "debug",
       "text": "[vite] connecting...",
       "entry": "[DEBUG] [vite] connecting..."
     },
     {
-      "timestamp": "2025-09-29T09:54:40.619Z",
+      "timestamp": "2025-09-29T10:05:09.408Z",
       "type": "debug",
       "text": "[vite] connected.",
       "entry": "[DEBUG] [vite] connected."
     },
     {
-      "timestamp": "2025-09-29T09:54:40.908Z",
+      "timestamp": "2025-09-29T10:05:09.703Z",
       "type": "info",
       "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
       "entry": "[INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
     },
     {
-      "timestamp": "2025-09-29T09:54:40.959Z",
+      "timestamp": "2025-09-29T10:05:09.753Z",
       "type": "log",
       "text": "%c * Tone.js v14.9.17 *  background: #000; color: #fff",
       "entry": "[LOG] %c * Tone.js v14.9.17 *  background: #000; color: #fff"
     },
     {
-      "timestamp": "2025-09-29T09:54:41.010Z",
+      "timestamp": "2025-09-29T10:05:09.806Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-29T09:54:41.010Z",
+      "timestamp": "2025-09-29T10:05:09.807Z",
       "type": "warning",
       "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio",
       "entry": "[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
     },
     {
-      "timestamp": "2025-09-29T09:54:41.222Z",
+      "timestamp": "2025-09-29T10:05:10.025Z",
       "type": "pageerror",
       "text": "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.",
       "entry": "[PAGE ERROR] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.",
-      "stack": "Error: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.\n    at Object.throwInvalidHookError (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:11501:17)\n    at Object.useRef (http://localhost:5173/node_modules/.vite/deps/chunk-4S2OYCSJ.js?v=56446eba:1074:29)\n    at http://localhost:5173/src/index.tsx?t=1759139679860:52:31\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:16915:34)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18156:19)\n    at commitPassiveMountEffects_complete (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18129:17)\n    at commitPassiveMountEffects_begin (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18119:15)\n    at commitPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18109:11)\n    at flushPassiveEffectsImpl (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19490:11)\n    at flushPassiveEffects (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19447:22)"
+      "stack": "Error: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.\n    at Object.throwInvalidHookError (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:11501:17)\n    at Object.useRef (http://localhost:5173/node_modules/.vite/deps/chunk-4S2OYCSJ.js?v=56446eba:1074:29)\n    at http://localhost:5173/src/index.tsx?t=1759140308636:52:31\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:16915:34)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18156:19)\n    at commitPassiveMountEffects_complete (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18129:17)\n    at commitPassiveMountEffects_begin (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18119:15)\n    at commitPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18109:11)\n    at flushPassiveEffectsImpl (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19490:11)\n    at flushPassiveEffects (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19447:22)"
     },
     {
-      "timestamp": "2025-09-29T09:54:41.222Z",
+      "timestamp": "2025-09-29T10:05:10.025Z",
       "type": "pageerror",
       "text": "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.",
       "entry": "[PAGE ERROR] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.",
-      "stack": "Error: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.\n    at Object.throwInvalidHookError (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:11501:17)\n    at Object.useRef (http://localhost:5173/node_modules/.vite/deps/chunk-4S2OYCSJ.js?v=56446eba:1074:29)\n    at http://localhost:5173/src/index.tsx?t=1759139679860:52:31\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:16915:34)\n    at invokePassiveEffectMountInDEV (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18324:19)\n    at invokeEffectsInDev (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19701:19)\n    at commitDoubleInvokeEffectsInDEV (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19686:15)\n    at flushPassiveEffectsImpl (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19503:13)\n    at flushPassiveEffects (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19447:22)\n    at http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19328:17"
+      "stack": "Error: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.\n    at Object.throwInvalidHookError (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:11501:17)\n    at Object.useRef (http://localhost:5173/node_modules/.vite/deps/chunk-4S2OYCSJ.js?v=56446eba:1074:29)\n    at http://localhost:5173/src/index.tsx?t=1759140308636:52:31\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:16915:34)\n    at invokePassiveEffectMountInDEV (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18324:19)\n    at invokeEffectsInDev (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19701:19)\n    at commitDoubleInvokeEffectsInDEV (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19686:15)\n    at flushPassiveEffectsImpl (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19503:13)\n    at flushPassiveEffects (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19447:22)\n    at http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19328:17"
     },
     {
-      "timestamp": "2025-09-29T09:54:41.225Z",
+      "timestamp": "2025-09-29T10:05:10.028Z",
       "type": "error",
-      "text": "The above error occurred in the <AppBootstrap> component:\n\n    at AppBootstrap (http://localhost:5173/src/index.tsx?t=1759139679860:48:51)\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries.",
-      "entry": "[ERROR] The above error occurred in the <AppBootstrap> component:\n\n    at AppBootstrap (http://localhost:5173/src/index.tsx?t=1759139679860:48:51)\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries."
+      "text": "The above error occurred in the <AppBootstrap> component:\n\n    at AppBootstrap (http://localhost:5173/src/index.tsx?t=1759140308636:48:51)\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries.",
+      "entry": "[ERROR] The above error occurred in the <AppBootstrap> component:\n\n    at AppBootstrap (http://localhost:5173/src/index.tsx?t=1759140308636:48:51)\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries."
     },
     {
-      "timestamp": "2025-09-29T09:54:41.226Z",
+      "timestamp": "2025-09-29T10:05:10.028Z",
       "type": "error",
-      "text": "The above error occurred in the <AppBootstrap> component:\n\n    at AppBootstrap (http://localhost:5173/src/index.tsx?t=1759139679860:48:51)\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries.",
-      "entry": "[ERROR] The above error occurred in the <AppBootstrap> component:\n\n    at AppBootstrap (http://localhost:5173/src/index.tsx?t=1759139679860:48:51)\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries."
+      "text": "The above error occurred in the <AppBootstrap> component:\n\n    at AppBootstrap (http://localhost:5173/src/index.tsx?t=1759140308636:48:51)\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries.",
+      "entry": "[ERROR] The above error occurred in the <AppBootstrap> component:\n\n    at AppBootstrap (http://localhost:5173/src/index.tsx?t=1759140308636:48:51)\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries."
     },
     {
-      "timestamp": "2025-09-29T09:54:41.226Z",
+      "timestamp": "2025-09-29T10:05:10.029Z",
       "type": "pageerror",
       "text": "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.",
       "entry": "[PAGE ERROR] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.",
-      "stack": "Error: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.\n    at Object.throwInvalidHookError (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:11501:17)\n    at Object.useRef (http://localhost:5173/node_modules/.vite/deps/chunk-4S2OYCSJ.js?v=56446eba:1074:29)\n    at http://localhost:5173/src/index.tsx?t=1759139679860:52:31\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:16915:34)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18156:19)\n    at commitPassiveMountEffects_complete (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18129:17)\n    at commitPassiveMountEffects_begin (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18119:15)\n    at commitPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18109:11)\n    at flushPassiveEffectsImpl (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19490:11)\n    at flushPassiveEffects (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19447:22)"
+      "stack": "Error: Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.\n    at Object.throwInvalidHookError (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:11501:17)\n    at Object.useRef (http://localhost:5173/node_modules/.vite/deps/chunk-4S2OYCSJ.js?v=56446eba:1074:29)\n    at http://localhost:5173/src/index.tsx?t=1759140308636:52:31\n    at commitHookEffectListMount (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:16915:34)\n    at commitPassiveMountOnFiber (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18156:19)\n    at commitPassiveMountEffects_complete (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18129:17)\n    at commitPassiveMountEffects_begin (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18119:15)\n    at commitPassiveMountEffects (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:18109:11)\n    at flushPassiveEffectsImpl (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19490:11)\n    at flushPassiveEffects (http://localhost:5173/node_modules/.vite/deps/chunk-UXDD7MME.js?v=56446eba:19447:22)"
     },
     {
-      "timestamp": "2025-09-29T09:54:43.493Z",
+      "timestamp": "2025-09-29T10:05:12.277Z",
       "type": "log",
       "text": "=== RACE CONDITION TEST RESULTS ===",
       "entry": "[LOG] === RACE CONDITION TEST RESULTS ==="
     },
     {
-      "timestamp": "2025-09-29T09:54:43.493Z",
+      "timestamp": "2025-09-29T10:05:12.277Z",
       "type": "log",
       "text": "✅ NO CONFIGURATION ERRORS DETECTED",
       "entry": "[LOG] ✅ NO CONFIGURATION ERRORS DETECTED"
     },
     {
-      "timestamp": "2025-09-29T09:54:43.493Z",
+      "timestamp": "2025-09-29T10:05:12.278Z",
       "type": "log",
       "text": "✅ NO SERVICE INITIALIZATION ERRORS DETECTED",
       "entry": "[LOG] ✅ NO SERVICE INITIALIZATION ERRORS DETECTED"
     },
     {
-      "timestamp": "2025-09-29T09:54:43.493Z",
+      "timestamp": "2025-09-29T10:05:12.278Z",
       "type": "log",
       "text": "=== TEST COMPLETE ===",
       "entry": "[LOG] === TEST COMPLETE ==="
@@ -107,8 +107,8 @@
   "errors": [
     "[PAGE ERROR] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.",
     "[PAGE ERROR] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.",
-    "[ERROR] The above error occurred in the <AppBootstrap> component:\n\n    at AppBootstrap (http://localhost:5173/src/index.tsx?t=1759139679860:48:51)\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries.",
-    "[ERROR] The above error occurred in the <AppBootstrap> component:\n\n    at AppBootstrap (http://localhost:5173/src/index.tsx?t=1759139679860:48:51)\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries.",
+    "[ERROR] The above error occurred in the <AppBootstrap> component:\n\n    at AppBootstrap (http://localhost:5173/src/index.tsx?t=1759140308636:48:51)\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries.",
+    "[ERROR] The above error occurred in the <AppBootstrap> component:\n\n    at AppBootstrap (http://localhost:5173/src/index.tsx?t=1759140308636:48:51)\n\nConsider adding an error boundary to your tree to customize error handling behavior.\nVisit https://reactjs.org/link/error-boundaries to learn more about error boundaries.",
     "[PAGE ERROR] Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem."
   ]
 }
