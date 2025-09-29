@@ -13,12 +13,15 @@ import { ILogger } from "./interfaces/ILogger";
 import { IDebugService } from "./interfaces/IDebugService";
 import type { DebugServiceConfig } from "./contracts/IDebugService.contracts";
 import { LoggerProvider, QualiaLogger } from "./Logger";
+import type { GameState } from "../state/useGameStore";
 
 /**
  * Type for the game store API provided by Zustand
  */
 type GameStoreApi = {
-  setState: (state: unknown) => void;
+  getState: () => GameState;
+  setState: (partial: GameState | Partial<GameState> | ((state: GameState) => GameState | Partial<GameState>), replace?: boolean) => void;
+  subscribe: (listener: (state: GameState, prevState: GameState) => void) => () => void;
 };
 
 /**

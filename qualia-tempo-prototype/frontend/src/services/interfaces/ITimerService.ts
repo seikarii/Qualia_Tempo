@@ -34,6 +34,12 @@ export interface ITimerService {
    * Get current timestamp in milliseconds
    */
   now(): number;
+
+  /**
+   * Get current date object
+   * Abstraction for new Date()
+   */
+  getCurrentDate(): Date;
 }
 
 /**

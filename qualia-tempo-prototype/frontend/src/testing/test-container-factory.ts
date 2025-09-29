@@ -68,6 +68,7 @@ const mockHttpService: IHttpService = {
 const mockTimerService: ITimerService = {
   setTimeout: vi.fn(), clearTimeout: vi.fn(), setInterval: vi.fn(),
   clearInterval: vi.fn(), nextTick: vi.fn(), now: vi.fn(),
+  getCurrentDate: vi.fn(),
 };
 
 const mockPerformanceService: IPerformanceService = {

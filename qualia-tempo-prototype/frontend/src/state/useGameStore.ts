@@ -21,7 +21,7 @@ export const GAME_EVENTS = {
   PLAYER_ACTION: "PlayerAction",
 } as const;
 
-interface GameState {
+export interface GameState {
   // Core game state
   isPlaying: boolean;
   currentTime: number;

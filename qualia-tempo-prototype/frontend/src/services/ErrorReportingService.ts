@@ -137,7 +137,7 @@ export class ErrorReportingService implements IErrorReportingService {
     // Initialize rate limiting and circuit breaker to minimal state
     this.rateLimitState = {
       tokens: 0,
-      lastRefill: new Date(),
+      lastRefill: this.timerService.getCurrentDate(),
       maxTokens: 0,
       refillRate: 0,
     };
@@ -401,7 +401,7 @@ export class ErrorReportingService implements IErrorReportingService {
   private initializeRateLimitState(): RateLimitState {
     return {
       tokens: this.config.rateLimitTokens,
-      lastRefill: new Date(),
+      lastRefill: this.timerService.getCurrentDate(),
       maxTokens: this.config.rateLimitTokens,
       refillRate: this.config.rateLimitRefillRate,
     };
@@ -454,7 +454,7 @@ export class ErrorReportingService implements IErrorReportingService {
 
     return {
       id: `error_${this.timerService.now()}_${Math.random().toString(36).substr(2, 8)}`,
-      timestamp: new Date(),
+      timestamp: this.timerService.getCurrentDate(),
       sessionId: this.sessionId,
       error: {
         name: safeError.name || "UnknownError",
@@ -572,8 +572,8 @@ export class ErrorReportingService implements IErrorReportingService {
 
     const batch: ExtendedErrorBatch = {
       id: `batch_${this.timerService.now()}_${Math.random().toString(36).substr(2, 8)}`,
-      createdAt: new Date(),
-      timestamp: new Date(),
+      createdAt: this.timerService.getCurrentDate(),
+      timestamp: this.timerService.getCurrentDate(),
       errors,
       size: errors.length,
       totalRetries: 0,
@@ -634,7 +634,7 @@ export class ErrorReportingService implements IErrorReportingService {
     } catch (error) {
       batch.status = "failed";
       batch.totalRetries++;
-      batch.lastRetryAt = new Date();
+      batch.lastRetryAt = this.timerService.getCurrentDate();
       this.statistics.failedReports += batch.size;
       this.onBatchFailure(batch, error as Error);
       this.logger.error(
@@ -706,7 +706,7 @@ export class ErrorReportingService implements IErrorReportingService {
   }
 
   private refillRateLimitTokens(): void {
-    const now = new Date();
+    const now = this.timerService.getCurrentDate();
     const timeDiff =
       (now.getTime() - this.rateLimitState.lastRefill.getTime()) / 1000;
     const tokensToAdd = timeDiff * this.rateLimitState.refillRate;
@@ -729,7 +729,7 @@ export class ErrorReportingService implements IErrorReportingService {
   private onBatchFailure(_batch: ExtendedErrorBatch, _error: Error): void {
     // Update circuit breaker on failure
     this.circuitBreakerState.failureCount++;
-    this.circuitBreakerState.lastFailureTime = new Date();
+    this.circuitBreakerState.lastFailureTime = this.timerService.getCurrentDate();
 
     if (
       this.circuitBreakerState.failureCount >=

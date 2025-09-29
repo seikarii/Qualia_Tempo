@@ -147,6 +147,11 @@ export class TimerService implements ITimerService {
   public now(): number {
     return Date.now();
   }
+
+  @logMethod
+  public getCurrentDate(): Date {
+    return new Date();
+  }
 }
 
 /**
