@@ -645,13 +645,13 @@ export function qualiaMethod(
 
 /**
  * @AdaptAndEmit decorator for Protocol Adapter Bundle.
- * Automatically adapts raw data using the specified adapter and emits the result.
+ * Automatically adapts raw data using the injected adapter and emits the result.
  * Implements the architectural pattern for protocol translation at system boundaries.
  * 
- * @param adapterIdentifier - Symbol identifier for the message adapter service
+ * @param adapterPropertyKey - Name of the property containing the injected adapter
  * @returns Method decorator that intercepts, adapts, and emits data
  */
-export function AdaptAndEmit(adapterIdentifier: symbol) {
+export function AdaptAndEmit(adapterPropertyKey: keyof any) {
   return function (_target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
@@ -661,19 +661,28 @@ export function AdaptAndEmit(adapterIdentifier: symbol) {
       const fullMethodName = `${className}.${propertyKey}`;
 
       try {
-        // CRITICAL: Import container dynamically to avoid circular dependencies
-        const { container } = require('../services/inversify.config');
-        const { TYPES } = require('../services/inversify.types');
-        
-        // 1. Resolve dependencies from the IoC container
-        const adapter = container.get(adapterIdentifier);
-        const eventBus = container.get(TYPES.IEventBus);
+        // ARCHITECTURAL PURITY: Get dependencies from instance (this), not from container
+        const adapter: any = this[adapterPropertyKey];
+        const eventBus: any = this.eventBus;
+
+        // VALIDACIÓN ARQUITECTÓNICA EN TIEMPO DE EJECUCIÓN
+        if (!adapter) {
+          const errorMsg = `Architectural Violation: Decorated class ${className} is missing required property '${String(adapterPropertyKey)}'. Ensure the adapter is injected and assigned in the constructor.`;
+          console.error(errorMsg);
+          throw new Error(errorMsg);
+        }
+
+        if (!eventBus) {
+          const errorMsg = `Architectural Violation: Decorated class ${className} is missing required property 'eventBus'. Ensure IEventBus is injected and assigned.`;
+          console.error(errorMsg);
+          throw new Error(errorMsg);
+        }
 
         // Access instance logger if available
         const instanceLogger = (this as any).logger;
         if (instanceLogger && typeof instanceLogger.debug === 'function') {
           instanceLogger.debug(`🔄 @AdaptAndEmit processing in ${fullMethodName}`, {
-            adapterType: adapterIdentifier.toString(),
+            adapterProperty: adapterPropertyKey,
             rawDataType: typeof rawData,
             timestamp: new Date().toISOString()
           });
@@ -693,11 +702,8 @@ export function AdaptAndEmit(adapterIdentifier: symbol) {
           });
         }
 
-        // Optional: Call the original method if it has implementation logic
-        // For protocol adapters, the method body is typically empty (entry point only)
-        if (originalMethod && typeof originalMethod === 'function') {
-          return originalMethod.apply(this, args);
-        }
+        // Execute the original method (for logic like 'this.messagesReceived++')
+        return originalMethod.apply(this, args);
 
       } catch (error) {
         // Error boundary: Log and re-throw for proper error handling
@@ -705,7 +711,7 @@ export function AdaptAndEmit(adapterIdentifier: symbol) {
         if (instanceLogger && typeof instanceLogger.error === 'function') {
           instanceLogger.error(`🚨 @AdaptAndEmit failed in ${fullMethodName}`, {
             error: error instanceof Error ? error.message : String(error),
-            adapterType: adapterIdentifier.toString(),
+            adapterProperty: adapterPropertyKey,
             timestamp: new Date().toISOString()
           });
         } else {

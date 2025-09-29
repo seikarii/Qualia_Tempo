@@ -10,6 +10,7 @@ import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IWebSocketService } from "./interfaces/IWebSocketService";
 import type { ITimerService } from "./interfaces/ITimerService";
+import type { IMessageAdapter } from "./protocol/IMessageAdapter";
 import type { StreamingConfig } from "./contracts/IStateStreamingService.contracts";
 import type { ConnectionStatus, StreamingStatusChangedEvent } from "./contracts/events.contracts";
 import { logMethod, catchError, AdaptAndEmit } from "../utils/decorators";
@@ -23,6 +24,7 @@ export class StateStreamingService implements IStateStreamingService {
   private readonly webSocketService: IWebSocketService;
   private readonly timerService: ITimerService;
   private readonly config: StreamingConfig;
+  private readonly messageAdapter: IMessageAdapter;
 
   // WebSocket connection state
   private connectionUrl: string;
@@ -41,12 +43,14 @@ export class StateStreamingService implements IStateStreamingService {
     @inject(TYPES.IWebSocketService) webSocketService: IWebSocketService,
     @inject(TYPES.ITimerService) timerService: ITimerService,
     @inject(TYPES.StreamingConfig) config: StreamingConfig,
-    @inject(TYPES.ILogger) logger: ILogger
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.IRawToParticleEventAdapter) messageAdapter: IMessageAdapter
   ) {
     this.webSocketService = webSocketService;
     this.timerService = timerService;
     this.config = config;
     this.logger = logger;
+    this.messageAdapter = messageAdapter;
 
     // Build connection URL with authentication if enabled
     this.connectionUrl = this.config.websocket.url;
@@ -163,14 +167,13 @@ export class StateStreamingService implements IStateStreamingService {
    * - StateStreamingService no longer directly calls EventBus.emit
    * - Single Responsibility: WebSocket connection management ONLY
    */
-  @AdaptAndEmit(TYPES.IRawToParticleEventAdapter)
+  @AdaptAndEmit('messageAdapter')
   private onRawMessage(_data: ArrayBuffer): void {
-    // ARCHITECTURAL COMPLIANCE: This method body is INTENTIONALLY EMPTY.
-    // Its sole purpose is to serve as a decorated entry point for raw data.
-    // All protocol translation, event construction, and emission is handled
-    // by the @AdaptAndEmit decorator using the injected adapter.
+    // ARCHITECTURAL COMPLIANCE: This method body contains ONLY business logic
+    // that belongs to the StateStreamingService (statistics tracking).
+    // Protocol translation, event construction, and emission is handled
+    // by the @AdaptAndEmit decorator using injected dependencies.
     
-    // Statistics tracking - only business logic that belongs to this service
     this.messagesReceived++;
   }
 
