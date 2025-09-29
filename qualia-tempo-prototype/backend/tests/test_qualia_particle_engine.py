@@ -81,7 +81,7 @@ class TestQualiaParticleEngineLogic:
         """
         GIVEN a particle engine with an event bus
         WHEN start is called
-        THEN it subscribes to the 'QualiaStateUpdated' event.
+        THEN it subscribes to the 'QualiaStateUpdated' and 'System.ResourcesReady' events and waits for resources.
         """
         # ARRANGE
         sut, mocks = setup
@@ -91,10 +91,14 @@ class TestQualiaParticleEngineLogic:
         sut.start()
 
         # ASSERT
-        assert sut.status == "running"
-        # Assert that the REAL start() method called the subscribe method on the MOCKED event bus
-        mock_event_bus.subscribe.assert_called_once_with(
+        assert sut.status == "waiting_for_resources"
+        # Assert that the start() method called the subscribe method on the MOCKED event bus for both events
+        assert mock_event_bus.subscribe.call_count == 2
+        mock_event_bus.subscribe.assert_any_call(
             "QualiaStateUpdated", sut._on_qualia_state_updated
+        )
+        mock_event_bus.subscribe.assert_any_call(
+            "System.ResourcesReady", sut._on_resources_ready
         )
 
     @patch("backend.engine.qualia_particle_engine.struct.pack")

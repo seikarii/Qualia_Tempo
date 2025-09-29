@@ -166,6 +166,9 @@ class QualiaParticleEngine:
         self._is_simulating = False
         self._target_fps = 60.0  # High-frequency autonomous simulation
 
+        # QUALIA.CODE v1.2: State cache for decoupling event handling from GPU operations
+        self._pending_qualia_state: Optional[Any] = None
+
         if ctx:
             self._initialize_shader()
 
@@ -460,7 +463,7 @@ class QualiaParticleEngine:
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
     def _on_qualia_state_updated(self, event: Any) -> None:
-        """Handle QualiaStateUpdated events and update uniform buffer ONLY."""
+        """Handle QualiaStateUpdated events and cache state for GPU update in simulation loop."""
         try:
             # Extract QualiaState from event data
             # QUALIA.CODE: EventBus passes Event object with data attribute
@@ -470,16 +473,16 @@ class QualiaParticleEngine:
                 logger.warning("⚠️ QualiaStateUpdated event missing qualia_state data")
                 return
 
-            # QUALIA.CODE v1.1: ONLY update uniform buffer, do NOT trigger compute_step
-            # The autonomous simulation loop handles compute execution
-            self.update_uniform_buffer(qualia_state)
+            # QUALIA.CODE v1.2: Cache state instead of directly updating GPU buffer
+            # GPU operations are now centralized in the autonomous simulation loop
+            self._pending_qualia_state = qualia_state
 
             logger.debug(
-                "✅ Particle system uniform buffer updated from QualiaState event"
+                "✅ Cached QualiaState for next simulation tick"
             )
 
         except Exception as e:
-            logger.error(f"🚨 Failed to handle QualiaStateUpdated event: {e}")
+            logger.error(f"🚨 Failed to cache QualiaStateUpdated event: {e}")
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
@@ -723,6 +726,11 @@ class QualiaParticleEngine:
         try:
             while self._is_simulating:
                 loop_start = time.time()
+                
+                # QUALIA.CODE v1.2: Consume cached QualiaState before compute step
+                if self._pending_qualia_state is not None:
+                    self.update_uniform_buffer(self._pending_qualia_state)
+                    self._pending_qualia_state = None  # Clear cache
                 
                 # Execute particle simulation step
                 self.compute_step()
