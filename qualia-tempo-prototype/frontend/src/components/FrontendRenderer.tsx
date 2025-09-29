@@ -6,6 +6,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useFrontendRenderingService, useStateStreamingService, useLogger } from "../services/hooks";
+import type { ConnectionStateType } from "../services/contracts/events.contracts";
 
 interface FrontendRendererProps {
   /** Canvas width (default: full viewport) */
@@ -41,7 +42,7 @@ const FrontendRenderer: React.FC<FrontendRendererProps> = ({
   const logger = useLogger();
 
   const [isInitialized, setIsInitialized] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<"IDLE" | "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "ERROR">("IDLE");
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStateType>("IDLE");
 
   // Initialize rendering service and connect to state stream
   useEffect(() => {
@@ -133,6 +134,7 @@ const FrontendRenderer: React.FC<FrontendRendererProps> = ({
           }}
         >
           {connectionStatus === "CONNECTING" && "Connecting..."}
+          {connectionStatus === "RECONNECTING" && "Reconnecting..."}
           {connectionStatus === "DISCONNECTED" && "Disconnected"}
           {connectionStatus === "ERROR" && "Connection Error"}
           {connectionStatus === "IDLE" && "Idle"}

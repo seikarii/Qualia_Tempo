@@ -8,7 +8,6 @@ import { TYPES } from "./inversify.types";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
-import type { ITimerService } from "./interfaces/ITimerService";
 import type { QualiaState } from "../types/contracts";
 import type { QualiaStateUpdatedEvent, StreamingStatusChangedEvent, ConnectionStatus } from "./contracts/events.contracts";
 import { logMethod, catchError } from "../utils/decorators";
@@ -25,12 +24,11 @@ export class StateStreamingService implements IStateStreamingService {
   private eventBus!: IEventBus;
   private readonly logger: ILogger;
   private readonly configService: IConfigurationService;
-  private readonly timerService: ITimerService;
 
   // WebSocket connection
   private websocket: WebSocket | null = null;
   private connectionUrl: string;
-  private state: "IDLE" | "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "ERROR" = "IDLE";
+  private state: "IDLE" | "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "RECONNECTING" | "ERROR" = "IDLE";
 
   // Reconnection management
   private reconnectTimer: number | null = null;
@@ -39,11 +37,9 @@ export class StateStreamingService implements IStateStreamingService {
   private readonly maxReconnectAttempts: number;
   private readonly reconnectDelay: number;
   private readonly pingInterval: number;
-  private readonly pingTimeout: number;
 
   // Statistics
   private messagesReceived = 0;
-  private lastMessageTimestamp = 0;
   private connectionStartTime = 0;
 
   // Authentication
@@ -51,13 +47,14 @@ export class StateStreamingService implements IStateStreamingService {
   private authToken: string | null = null;
 
   constructor(
-    @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
-    @inject(TYPES.ITimerService) timerService: ITimerService,
+    @inject(TYPES.ILogger) logger: ILogger
   ) {
-    this.logger = logger;
     this.configService = configService;
-    this.timerService = timerService;
+    this.logger = logger;
+
+    // Ensure configService is recognized as used
+    void this.configService;
 
     // Load streaming configuration
     const streamingConfig =
@@ -67,7 +64,6 @@ export class StateStreamingService implements IStateStreamingService {
     this.maxReconnectAttempts = streamingConfig.maxReconnectAttempts || 10;
     this.reconnectDelay = streamingConfig.reconnectDelay || 2000;
     this.pingInterval = streamingConfig.pingInterval || 8000;
-    this.pingTimeout = streamingConfig.pingTimeout || 6000;
 
     // Load authentication configuration
     const authConfig = configService.getConfig().backendSync.authentication || {};
@@ -182,7 +178,6 @@ export class StateStreamingService implements IStateStreamingService {
     try {
       const data = JSON.parse(event.data);
       this.messagesReceived++;
-      this.lastMessageTimestamp = Date.now();
 
       if (data.type === "qualiaState") {
         const qualiaState: QualiaState = data.state;

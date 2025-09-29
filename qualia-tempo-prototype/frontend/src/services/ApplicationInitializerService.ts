@@ -17,6 +17,7 @@ import type { IDebugService } from "./interfaces/IDebugService";
 import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IApplicationInitializerService } from "./interfaces/IApplicationInitializerService";
+import type { AppInitializerConfig } from "./contracts/IApplicationInitializerService.contracts";
 import { logMethod, catchError } from "../utils/decorators";
 
 // QUALIA.CODE: Module-level constant for pre-config initialization message
@@ -26,6 +27,7 @@ const SERVICE_INIT_MESSAGE = "ApplicationInitializerService constructed - awaiti
 export class ApplicationInitializerService
   implements IApplicationInitializerService
 {
+  private readonly config: AppInitializerConfig;
   private readonly configService: IConfigurationService;
   private readonly httpService: IHttpService;
   private readonly backendSyncService: IBackendSyncService;
@@ -40,6 +42,7 @@ export class ApplicationInitializerService
   private isStarted = false;
 
   constructor(
+    @inject(TYPES.AppInitializerConfig) config: AppInitializerConfig,
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
     @inject(TYPES.IHttpService) httpService: IHttpService,
     @inject(TYPES.IBackendSyncService) backendSyncService: IBackendSyncService,
@@ -57,6 +60,7 @@ export class ApplicationInitializerService
     @inject(TYPES.IStateStreamingService) stateStreamingService: IStateStreamingService,
     @inject(TYPES.ILogger) logger: ILogger,
   ) {
+    this.config = config;
     this.configService = configService;
     this.httpService = httpService;
     this.backendSyncService = backendSyncService;
@@ -77,57 +81,55 @@ export class ApplicationInitializerService
   @logMethod
   @catchError
   public async start(): Promise<void> {
-    const config = this.configService.getConfigSection("applicationInitializer");
-    
     if (this.isStarted) {
-      this.logger.warn(config.messages.alreadyRunning);
+      this.logger.warn(this.config.messages.alreadyRunning);
       return;
     }
 
-    this.logger.info(config.messages.initializationStarted);
+    this.logger.info(this.config.messages.initializationStarted);
 
     try {
       // Configuration is already loaded by ApplicationCompositionRoot.configureServices()
       // No need to reload it here - this was causing duplicate container bindings
-      this.logger.info(config.messages.configurationLoaded);
+      this.logger.info(this.config.messages.configurationLoaded);
 
       // Step 0.5: Configure HttpService with loaded configuration (breaks circular dependency)
-      this.logger.debug(config.steps.configureHttpService);
+      this.logger.debug(this.config.steps.configureHttpService);
       const httpConfig = this.configService.getConfigSection("http");
-      this.httpService.updateConfig(httpConfig.http.defaultTimeout);
-      this.logger.info(config.messages.httpServiceConfigured);
+      this.httpService.updateConfig(httpConfig.timeout);
+      this.logger.info(this.config.messages.httpServiceConfigured);
 
       // Step 1: Start GameStateStoreService - it must listen to all events
-      this.logger.debug(config.steps.startGameStateService);
+      this.logger.debug(this.config.steps.startGameStateService);
       this.gameStateStoreService.start();
-      this.logger.info(config.messages.gameStateServiceStarted);
+      this.logger.info(this.config.messages.gameStateServiceStarted);
 
       // Step 2: Update store with config loaded state
-      this.gameStateStoreService.updateGameState(config.stateUpdates.configLoaded);
+      this.gameStateStoreService.updateGameState(this.config.stateUpdates.configLoaded);
 
       // Step 3: Start transversal services (now that config is loaded)
-      this.logger.debug(config.steps.startTransversalServices);
+      this.logger.debug(this.config.steps.startTransversalServices);
       this.errorReportingService.start();
       this.debugService.start();
       this.notificationService.start();
-      this.logger.info(config.messages.transversalServicesStarted);
+      this.logger.info(this.config.messages.transversalServicesStarted);
 
       // Step 4: Start state streaming service (needs EventBus to be available)
       await this.stateStreamingService.start();
       this.logger.info("State streaming service started");
 
       // Step 5: Start game controller service
-      this.logger.debug(config.steps.startGameController);
+      this.logger.debug(this.config.steps.startGameController);
       this.gameControllerService.start();
-      this.logger.info(config.messages.gameControllerStarted);
+      this.logger.info(this.config.messages.gameControllerStarted);
 
       // Step 5: Start rhythmic movement controller
-      this.logger.debug(config.steps.startRhythmicController);
+      this.logger.debug(this.config.steps.startRhythmicController);
       this.rhythmicMovementController.start();
-      this.logger.info(config.messages.rhythmicControllerStarted);
+      this.logger.info(this.config.messages.rhythmicControllerStarted);
 
       // Step 6: Start backend synchronization
-      this.logger.debug(config.steps.startBackendSync);
+      this.logger.debug(this.config.steps.startBackendSync);
       await this.backendSyncService.start();
 
       // Step 7: Update backend connection status
@@ -137,12 +139,12 @@ export class ApplicationInitializerService
       });
 
       this.isStarted = true;
-      this.logger.info(config.messages.initializationCompleted, {
-        ...config.stateUpdates.initializationComplete,
+      this.logger.info(this.config.messages.initializationCompleted, {
+        ...this.config.stateUpdates.initializationComplete,
         backendConnected: isConnected,
       });
     } catch (error) {
-      this.logger.error(config.messages.initializationFailed, error);
+      this.logger.error(this.config.messages.initializationFailed, error);
       throw error;
     }
   }

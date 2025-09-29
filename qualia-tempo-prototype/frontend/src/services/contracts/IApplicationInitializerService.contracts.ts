@@ -11,4 +11,34 @@ export interface AppInitializerConfig {
   maxInitRetries: number;
   initTimeout: number;
   enableDebugLogging: boolean;
+
+  // Message templates for logging
+  messages: {
+    alreadyRunning: string;
+    initializationStarted: string;
+    configurationLoaded: string;
+    httpServiceConfigured: string;
+    gameStateServiceStarted: string;
+    transversalServicesStarted: string;
+    gameControllerStarted: string;
+    rhythmicControllerStarted: string;
+    initializationCompleted: string;
+    initializationFailed: string;
+  };
+
+  // Step descriptions for debug logging
+  steps: {
+    configureHttpService: string;
+    startGameStateService: string;
+    startTransversalServices: string;
+    startGameController: string;
+    startRhythmicController: string;
+    startBackendSync: string;
+  };
+
+  // State updates for store
+  stateUpdates: {
+    configLoaded: any;
+    initializationComplete: any;
+  };
 }

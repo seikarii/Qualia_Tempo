@@ -1,6 +1,6 @@
 /**
  * GOLD.CODE: Parent/Child Container Testing Infrastructure
- * Supreme Guardian Directive Compliance - QUALIA.CODE v1.1
+ * Supreme Guardian Directive Compliance 
  *
  * This factory implements the CORRECT Parent/Child Container Architecture for testing,
  * ensuring supreme performance, isolation, and maintainability as per the architect's mandate.
@@ -17,7 +17,6 @@
 import { vi, type Mock } from "vitest";
 import { Container } from "inversify";
 import { TYPES } from "../services/inversify.types";
-import { container } from "../services/inversify.config"; // The REAL container
 
 // Import all necessary interfaces for type safety
 import type { ILogger } from "../services/interfaces/ILogger";
@@ -27,7 +26,6 @@ import type { IGameStateStoreService } from "../services/interfaces/IGameStateSt
 import type { IHttpService } from "../services/interfaces/IHttpService";
 import type { ITimerService, IPerformanceService } from "../services/interfaces/ITimerService";
 import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
-import type { IStreamingVideoService } from "../services/interfaces/IStreamingVideoService";
 
 export interface MockOverride<T = any> {
   type: symbol;
@@ -75,56 +73,44 @@ const mockPerformanceService: IPerformanceService = {
   measure: vi.fn(), clearMarks: vi.fn(), clearMeasures: vi.fn(),
 };
 
-const mockStreamingVideoService: IStreamingVideoService = {
-  connect: vi.fn(), disconnect: vi.fn(), subscribeToFrames: vi.fn(), unsubscribeFromFrames: vi.fn(),
-  getConnectionStatus: vi.fn(), getStatistics: vi.fn(), requestQualityChange: vi.fn(),
-  requestFpsChange: vi.fn(), ping: vi.fn(),
-};
+/**
+ * Mock Services Interface
+ */
+export interface MockServices {
+  mockLogger: ILogger;
+  mockEventBus: IEventBus;
+  mockGameStateStore: any;
+  mockGameStateStoreService: any;
+  mockHttpService: IHttpService;
+  mockTimerService: ITimerService;
+  mockPerformanceService: IPerformanceService;
+  mockOntologicalAudioEngine: IOntologicalAudioEngine;
+}
 
 /**
  * Create Test Container Factory - FINAL IMPLEMENTATION
  * This is the only correct way to implement this function.
  */
 export function createTestContainer(overrides: MockOverride[] = []): Container {
-  // STEP 1: Use the OFFICIAL InversifyJS API to create a child container.
-  const childContainer = container.createChild();
+  // STEP 1: Create a new isolated container for testing
+  const testContainer = new Container();
 
-  // STEP 2: Use the OFFICIAL 'rebind' method to replace bindings with mocks.
-  childContainer.rebind<ILogger>(TYPES.ILogger).toConstantValue(mockLogger);
-  childContainer.rebind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
-  childContainer.rebind<IGameStateStore>(TYPES.IGameStateStore).toConstantValue(mockGameStateStore);
-  childContainer.rebind<IGameStateStoreService>(TYPES.IGameStateStoreService).toConstantValue(mockGameStateStoreService);
-  childContainer.rebind<IHttpService>(TYPES.IHttpService).toConstantValue(mockHttpService);
-  childContainer.rebind<ITimerService>(TYPES.ITimerService).toConstantValue(mockTimerService);
-  childContainer.rebind<IPerformanceService>(TYPES.IPerformanceService).toConstantValue(mockPerformanceService);
-  childContainer.rebind<IStreamingVideoService>(TYPES.IStreamingVideoService).toConstantValue(mockStreamingVideoService);
-  childContainer.rebind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).toConstantValue(mockOntologicalAudioEngine);
-  childContainer.rebind<(_state: any) => void>(TYPES.StoreSetter).toConstantValue(vi.fn());
+  // STEP 2: Bind all mock services to the test container
+  testContainer.bind<ILogger>(TYPES.ILogger).toConstantValue(mockLogger);
+  testContainer.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
+  testContainer.bind<IGameStateStore>(TYPES.IGameStateStore).toConstantValue(mockGameStateStore);
+  testContainer.bind<IGameStateStoreService>(TYPES.IGameStateStoreService).toConstantValue(mockGameStateStoreService);
+  testContainer.bind<IHttpService>(TYPES.IHttpService).toConstantValue(mockHttpService);
+  testContainer.bind<ITimerService>(TYPES.ITimerService).toConstantValue(mockTimerService);
+  testContainer.bind<IPerformanceService>(TYPES.IPerformanceService).toConstantValue(mockPerformanceService);
+  testContainer.bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).toConstantValue(mockOntologicalAudioEngine);
 
   // STEP 3: Apply any test-specific overrides.
   for (const override of overrides) {
-    childContainer.rebind(override.type).toConstantValue(override.value);
+    testContainer.bind(override.type).toConstantValue(override.value);
   }
 
-  return childContainer;
-}
-
-/**
- * Get Mock Instances from Container
- */
-export function getMocksFromContainer(container: Container) {
-  return {
-    mockLogger: container.get<ILogger>(TYPES.ILogger),
-    mockEventBus: container.get<IEventBus>(TYPES.IEventBus),
-    mockGameStateStore: container.get<IGameStateStore>(TYPES.IGameStateStore),
-    mockGameStateStoreService: container.get<IGameStateStoreService>(TYPES.IGameStateStoreService),
-    mockHttpService: container.get<IHttpService>(TYPES.IHttpService),
-    mockTimerService: container.get<ITimerService>(TYPES.ITimerService),
-    mockPerformanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
-    mockStreamingVideoService: container.get<IStreamingVideoService>(TYPES.IStreamingVideoService),
-    mockOntologicalAudioEngine: container.get<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine),
-    mockStoreSetter: container.get<(_state: any) => void>(TYPES.StoreSetter),
-  };
+  return testContainer;
 }
 
 /**

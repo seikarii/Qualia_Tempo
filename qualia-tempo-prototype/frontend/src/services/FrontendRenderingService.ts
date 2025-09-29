@@ -12,20 +12,17 @@ import type {
   RenderingStats,
   QualiaState,
 } from "./interfaces/IFrontendRenderingService";
-import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import { logMethod, catchError } from "../utils/decorators";
 
 @injectable()
 export class FrontendRenderingService implements IFrontendRenderingService {
-  private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
 
   // Three.js core objects
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
-  private canvas!: HTMLCanvasElement;
 
   // Rendering state
   private isInitialized = false;
@@ -38,9 +35,6 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   private particleMaterial!: THREE.ShaderMaterial;
   private particleCount = 10000;
 
-  // Qualia state
-  private currentQualiaState!: QualiaState;
-
   // Performance tracking
   private frameCount = 0;
   private lastTime = 0;
@@ -48,10 +42,8 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   private frameTime = 0;
 
   constructor(
-    @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger
   ) {
-    this.eventBus = eventBus;
     this.logger = logger;
 
     this.logger.info("FrontendRenderingService initialized");
@@ -65,13 +57,12 @@ export class FrontendRenderingService implements IFrontendRenderingService {
       return;
     }
 
-    this.canvas = canvas;
+    this.logger.info("Initializing FrontendRenderingService");
 
-    // Initialize Three.js scene
+    // Create scene
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x000000);
 
-    // Initialize camera
+    // Create camera
     this.camera = new THREE.PerspectiveCamera(
       75,
       canvas.clientWidth / canvas.clientHeight,
@@ -80,16 +71,13 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     );
     this.camera.position.z = 5;
 
-    // Initialize renderer
+    // Create renderer
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setClearColor(0x000000);
 
     // Initialize particle system
-    this.initializeParticleSystem();
-
-    // Subscribe to QualiaState updates
-    this.eventBus.subscribe("QualiaStateUpdated", this.handleQualiaStateUpdate.bind(this));
+    await this.initializeParticleSystem();
 
     this.isInitialized = true;
     this.logger.info("FrontendRenderingService initialized successfully");
@@ -242,8 +230,6 @@ export class FrontendRenderingService implements IFrontendRenderingService {
 
   @logMethod
   updateQualiaState(state: QualiaState): void {
-    this.currentQualiaState = { ...state };
-
     // Update shader uniforms
     if (this.particleMaterial) {
       this.particleMaterial.uniforms.intensity.value = state.intensity;
@@ -323,11 +309,5 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     this.camera.lookAt(0, 0, 0);
 
     this.renderer.render(this.scene, this.camera);
-  };
-
-  private handleQualiaStateUpdate = (event: any): void => {
-    if (event.qualiaState) {
-      this.updateQualiaState(event.qualiaState);
-    }
   };
 }
