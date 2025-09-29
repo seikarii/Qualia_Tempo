@@ -15,10 +15,10 @@ export class WebSocketService implements IWebSocketService {
   private websocket: WebSocket | null = null;
 
   // Event handlers
-  private messageHandler?: (data: any) => void;
+  private messageHandler?: (_data: any) => void;
   private openHandler?: () => void;
-  private closeHandler?: (event: CloseEvent) => void;
-  private errorHandler?: (error: Event) => void;
+  private closeHandler?: (_event: CloseEvent) => void;
+  private errorHandler?: (_error: Event) => void;
 
   constructor(@inject(TYPES.ILogger) logger: ILogger) {
     this.logger = logger;
@@ -106,7 +106,7 @@ export class WebSocketService implements IWebSocketService {
   }
 
   @logMethod
-  public onMessage(callback: (data: any) => void): void {
+  public onMessage(callback: (_data: any) => void): void {
     this.messageHandler = callback;
     this.logger.debug("Message handler registered");
   }
@@ -118,13 +118,13 @@ export class WebSocketService implements IWebSocketService {
   }
 
   @logMethod
-  public onClose(callback: (event: CloseEvent) => void): void {
+  public onClose(callback: (_event: CloseEvent) => void): void {
     this.closeHandler = callback;
     this.logger.debug("Close handler registered");
   }
 
   @logMethod
-  public onError(callback: (error: Event) => void): void {
+  public onError(callback: (_error: Event) => void): void {
     this.errorHandler = callback;
     this.logger.debug("Error handler registered");
   }

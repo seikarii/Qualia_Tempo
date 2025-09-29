@@ -147,10 +147,10 @@ const ComboStreak: React.FC<{
           strokeLinecap="round"
           strokeDasharray="251.2"
           initial={{
-            strokeDashoffset: 251.2 * (1 - (progress || 0)),
+            strokeDashoffset: 251.2 * (1 - (progress ?? 0)),
           }}
           animate={{
-            strokeDashoffset: 251.2 * (1 - (progress || 0)),
+            strokeDashoffset: 251.2 * (1 - (progress ?? 0)),
           }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         />
@@ -243,7 +243,7 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
       // Reset animation trigger
       timerService.setTimeout(() => setScoreChange(0), 400);
     }
-  }, [score, lastScore, eventBus]);
+  }, [score, lastScore, eventBus, timerService]);
 
   // QUALIA.CODE COMPLIANT: Combo managed by GameStateStore, no local decay needed
   // Combo decay logic should be handled by a dedicated service via EventBus

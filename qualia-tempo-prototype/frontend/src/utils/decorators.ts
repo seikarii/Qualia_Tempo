@@ -72,7 +72,7 @@ export function logMethod(
           });
       } else {
         logger.debug(`← EXIT ${fullMethodName}`, {
-          result: result,
+          result,
           timestamp: new Date().toISOString(),
         });
         return result;

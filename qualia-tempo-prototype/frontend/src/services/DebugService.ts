@@ -55,7 +55,7 @@ export class DebugService implements IDebugService {
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
   // Configuration service for future extensibility
-  // @ts-ignore - Unused parameter for future configuration features
+  // @ts-expect-error - Unused parameter for future configuration features
   private readonly _configService: IConfigurationService;
   private config!: DebugServiceConfig;
   private isStarted = false;
@@ -424,7 +424,7 @@ export class DebugService implements IDebugService {
 
   private startNewSession(): void {
     this.currentSession = {
-      id: `debug_session_${Date.now()}_${Math.random().toString(36).substr(2, this.config.sessionIdLength || 8)}`,
+      id: `debug_session_${Date.now()}_${Math.random().toString(36).substr(2, this.config.sessionIdLength ?? 8)}`,
       startTime: new Date(),
       events: [],
       errors: [],
@@ -446,9 +446,9 @@ export class DebugService implements IDebugService {
       this.sessionHistory.push(this.currentSession);
 
       // Maintain session history limit
-      if (this.sessionHistory.length > (this.config.maxSessionHistory || 10)) {
+      if (this.sessionHistory.length > (this.config.maxSessionHistory ?? 10)) {
         // Use configured maxSessionHistory
-        this.sessionHistory = this.sessionHistory.slice(-(this.config.maxSessionHistory || 10));
+        this.sessionHistory = this.sessionHistory.slice(-(this.config.maxSessionHistory ?? 10));
       }
 
       this.logger.info(
@@ -560,12 +560,12 @@ export class DebugService implements IDebugService {
 
   private updateEventPatterns(eventType: string, action?: string): void {
     const key = action ? `${eventType}:${action}` : eventType;
-    const timestamps = this.eventPatterns.get(key) || [];
+    const timestamps = this.eventPatterns.get(key) ?? [];
     timestamps.push(Date.now());
 
     // Keep only configured timestamps
-    if (timestamps.length > (this.config.maxEventHistory || 100)) {
-      timestamps.splice(0, timestamps.length - (this.config.maxEventHistory || 100));
+    if (timestamps.length > (this.config.maxEventHistory ?? 100)) {
+      timestamps.splice(0, timestamps.length - (this.config.maxEventHistory ?? 100));
     }
 
     this.eventPatterns.set(key, timestamps);
@@ -577,14 +577,14 @@ export class DebugService implements IDebugService {
   ): void {
     // Update event processing times
     const times =
-      this.performanceMetrics.eventProcessingTimes.get(eventType) || [];
+      this.performanceMetrics.eventProcessingTimes.get(eventType) ?? [];
     times.push(processingTime);
-    if (times.length > (this.config.maxEventHistory || 50)) times.shift(); // Keep configured measurements
+    if (times.length > (this.config.maxEventHistory ?? 50)) times.shift(); // Keep configured measurements
     this.performanceMetrics.eventProcessingTimes.set(eventType, times);
 
     // Update event frequency
     const frequency =
-      this.performanceMetrics.eventFrequency.get(eventType) || 0;
+      this.performanceMetrics.eventFrequency.get(eventType) ?? 0;
     this.performanceMetrics.eventFrequency.set(eventType, frequency + 1);
 
     // Update average response time
@@ -608,7 +608,7 @@ export class DebugService implements IDebugService {
 
     this.aiAnalysisInterval = this.timerService.setInterval(() => {
       this.performAIAnalysis();
-    }, this.config.aiAnalysisInterval || 30000); // Use configuration interval with fallback
+    }, this.config.aiAnalysisInterval ?? 30000); // Use configuration interval with fallback
   }
 
   private startMemoryCleanup(): void {
@@ -649,7 +649,7 @@ export class DebugService implements IDebugService {
     const totalEvents =
       this.eventHistory.length + this.aiAnalysisResults.length;
 
-    if (totalEvents > (this.config.memoryCleanupThreshold || 1000)) {
+    if (totalEvents > (this.config.memoryCleanupThreshold ?? 1000)) {
       // Use configuration threshold
       // Clean up old events
       this.eventHistory = this.eventHistory.slice(
@@ -687,7 +687,7 @@ export class DebugService implements IDebugService {
     const errorGroups = new Map<string, ErrorEvent[]>();
     this.errorHistory.forEach((error) => {
       const key = error.error.message;
-      const group = errorGroups.get(key) || [];
+      const group = errorGroups.get(key) ?? [];
       group.push(error);
       errorGroups.set(key, group);
     });
@@ -737,7 +737,7 @@ export class DebugService implements IDebugService {
     if (this.lastQualiaState) {
       // Check for extreme values
       Object.entries(this.lastQualiaState).forEach(([key, value]) => {
-        if (typeof value === "number" && (value < 0 || value > 1)) {
+        if (typeof value === "number" && (value < 0 ?? value > 1)) {
           results.push({
             type: "state_anomaly",
             severity: "medium",
@@ -805,7 +805,7 @@ export class DebugService implements IDebugService {
 
       // Helper for quick debugging
       log: (message: string, data?: any) => {
-        this.logger.info(`🔧 [QA_DEBUG] ${message}`, data || "");
+        this.logger.info(`🔧 [QA_DEBUG] ${message}`, data ?? "");
       },
     };
 

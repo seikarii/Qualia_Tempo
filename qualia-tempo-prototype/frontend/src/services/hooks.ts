@@ -36,14 +36,10 @@ export function useService<T>(serviceIdentifier: symbol): T {
   const serviceRef = useRef<T | null>(null);
   
   if (serviceRef.current === null) {
-    try {
-      if (!container.isBound(serviceIdentifier)) {
-        throw new Error(`Service ${serviceIdentifier.toString()} is not bound in the IoC container. Make sure configureServices() has been called.`);
-      }
-      serviceRef.current = container.get<T>(serviceIdentifier);
-    } catch (error) {
-      throw error;
+    if (!container.isBound(serviceIdentifier)) {
+      throw new Error(`Service ${serviceIdentifier.toString()} is not bound in the IoC container. Make sure configureServices() has been called.`);
     }
+    serviceRef.current = container.get<T>(serviceIdentifier);
   }
   
   return serviceRef.current as T;
