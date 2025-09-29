@@ -14,7 +14,7 @@ import type { FullGameConfig } from "../types/config";
 import type { AppInitializerConfig } from "./contracts/IApplicationInitializerService.contracts";
 import type { AudioServiceConfig } from "./contracts/IAudioService.contracts";
 import type { BackendSyncConfig } from "./contracts/IBackendSyncService.contracts";
-import type { CompositionRootConfig, VisualEffectsConfig } from "./contracts/IApplicationCompositionRoot.contracts";
+import type { CompositionRootConfig } from "./contracts/IApplicationCompositionRoot.contracts";
 import type { DebugServiceConfig } from "./contracts/IDebugService.contracts";
 import type { ErrorReportingConfig } from "./contracts/IErrorReportingService.contracts";
 import type { EventBusConfig } from "./contracts/IEventBus.contracts";
@@ -265,7 +265,6 @@ export async function configureServices(): Promise<void> {
   
   // Bind ThrottlingConfig from NotificationService config
   safeBindConstant(TYPES.ThrottlingConfig, fullConfig.notificationService.throttling);
-}
 }
 
 // ===== CONTAINER VERIFICATION =====

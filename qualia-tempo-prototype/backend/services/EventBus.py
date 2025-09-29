@@ -39,6 +39,22 @@ class RenderingPipelineFailedEvent(Event):
         )
 
 
+@dataclass
+class SystemResourcesReadyEvent(Event):
+    """Event triggered when all core system resources (GPU buffers, etc.) are initialized and ready."""
+
+    def __init__(self, context: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            type="System.ResourcesReady",
+            data={
+                "message": "All core system resources have been initialized and are ready for use",
+                "context": context or {},
+            },
+            timestamp=time.time(),
+            source="RenderingService",
+        )
+
+
 class EventHandler(ABC):
     """Abstract base class for event handlers."""
 

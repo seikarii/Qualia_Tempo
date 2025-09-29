@@ -62,7 +62,7 @@ const mockGameStateStoreService: any = {
 };
 
 const mockHttpService: IHttpService = {
-  get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn(), updateConfig: vi.fn(),
+  get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn(),
 };
 
 const mockTimerService: ITimerService = {

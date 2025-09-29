@@ -1,0 +1,1255 @@
+INFO:     Started server process [360456]
+INFO:     Waiting for application startup.
+2025-09-29 18:13:26,025 - backend.CompositionRoot - INFO - → ENTER backend.CompositionRoot.CompositionRoot.initialize
+2025-09-29 18:13:26,025 - backend.CompositionRoot - INFO - ← EXIT backend.CompositionRoot.CompositionRoot.initialize (⏱️ 0.000s)
+2025-09-29 18:13:26,025 - backend.CompositionRoot - INFO - 🚀 Initializing QUALIA.CODE CompositionRoot...
+2025-09-29 18:13:26,335 - backend.CompositionRoot - INFO - ✅ Created shared EGL OpenGL context
+2025-09-29 18:13:26,348 - backend.services.SecurityService - INFO - SecurityService initialized with auth_enabled=False
+2025-09-29 18:13:26,470 - backend.engine.qualia_particle_engine - INFO - → ENTER backend.engine.qualia_particle_engine.QualiaParticleEngine._initialize_shader
+2025-09-29 18:13:26,470 - backend.engine.qualia_particle_engine - INFO - 🔧 Compiling and linking GLSL shaders...
+2025-09-29 18:13:26,471 - backend.engine.qualia_particle_engine - INFO - 🔍 Shader introspection complete: 1 uniforms, format: f
+2025-09-29 18:13:26,474 - backend.engine.qualia_particle_engine - INFO - ✅ Shaders compiled and linked successfully.
+2025-09-29 18:13:26,475 - backend.engine.qualia_particle_engine - INFO - 🔍 Detected uniforms in shader program: []
+2025-09-29 18:13:26,475 - backend.engine.qualia_particle_engine - INFO - ← EXIT backend.engine.qualia_particle_engine.QualiaParticleEngine._initialize_shader (⏱️ 0.005s)
+2025-09-29 18:13:26,475 - backend.engine.qualia_particle_engine - INFO - QualiaParticleEngine initialized (max_particles=10000)
+2025-09-29 18:13:26,476 - backend.engine.qualia_particle_engine - INFO - → ENTER backend.engine.qualia_particle_engine.QualiaParticleEngine.start
+2025-09-29 18:13:26,476 - backend.engine.qualia_particle_engine - INFO - → ENTER backend.engine.qualia_particle_engine.QualiaParticleEngine._start_autonomous_simulation
+2025-09-29 18:13:26,476 - backend.engine.qualia_particle_engine - INFO - 🎯 Started autonomous simulation loop at 60.0fps
+2025-09-29 18:13:26,477 - backend.engine.qualia_particle_engine - INFO - ← EXIT backend.engine.qualia_particle_engine.QualiaParticleEngine._start_autonomous_simulation (⏱️ 0.001s)
+2025-09-29 18:13:26,477 - backend.engine.qualia_particle_engine - INFO - 🎆 QualiaParticleEngine started with autonomous simulation loop and subscribed to QualiaState events
+2025-09-29 18:13:26,477 - backend.engine.qualia_particle_engine - INFO - ← EXIT backend.engine.qualia_particle_engine.QualiaParticleEngine.start (⏱️ 0.001s)
+2025-09-29 18:13:26,493 - backend.services.RenderingService - INFO - RenderingService graphics resources initialized
+2025-09-29 18:13:26,499 - backend.CompositionRoot - INFO - ✅ CompositionRoot initialization complete
+2025-09-29 18:13:26,499 - backend.api.routes - INFO - ✅ QUALIA.CODE services initialized successfully on startup
+2025-09-29 18:13:26,499 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+2025-09-29 18:13:26,516 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,533 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,550 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,566 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,582 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,599 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,615 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,632 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,648 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,666 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,682 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,698 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,715 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,731 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,748 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,764 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,781 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,797 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,813 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,830 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,846 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,863 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,879 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,895 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,912 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,928 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,945 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,961 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,978 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:26,994 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,010 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,026 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,043 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,059 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,076 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,092 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,109 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+🎵 Starting Qualia Tempo Visual Engine (QUALIA.CODE v1.0)...
+🔥 Backend ready to receive rhythm data from frontend
+🌟 Visual effects generated via EventBus architecture
+
+Backend running on: http://127.0.0.1:8000
+API Documentation: http://127.0.0.1:8000/docs
+Architecture: IoC + EventBus + Dependency Injection
+
+INFO:     127.0.0.1:36952 - "GET /health HTTP/1.1" 200 OK
+2025-09-29 18:13:27,125 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,141 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,158 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,174 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,190 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,207 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,223 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,240 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,256 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,272 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,288 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,305 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,321 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,337 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,353 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,369 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,386 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,402 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,418 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,435 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,451 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,467 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,484 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,500 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,516 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,532 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,548 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,565 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,581 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,598 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,614 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,631 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,647 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,663 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,680 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,696 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,712 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,728 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,744 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,760 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,777 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,793 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,810 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,826 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,843 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,859 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,876 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,892 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,909 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,925 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,942 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,958 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,974 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:27,991 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,007 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,024 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,040 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,057 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,073 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,090 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,106 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,122 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,139 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,155 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,172 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,188 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,205 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,221 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,238 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,255 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,271 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,287 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,304 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,320 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,337 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,353 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,370 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,386 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,402 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,419 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,435 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,452 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,468 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,484 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,501 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,517 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,534 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,550 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,566 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,583 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,599 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,615 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,631 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,648 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,666 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,682 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,699 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,715 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,731 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,748 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,764 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,780 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,796 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,812 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,828 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,845 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,861 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,877 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,894 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,911 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,927 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,943 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,960 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,976 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:28,992 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,008 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,025 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,041 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,058 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,074 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,091 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,107 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,124 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,140 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,157 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,173 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,189 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,206 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,222 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,239 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,255 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,272 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,288 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,304 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,320 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,336 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,353 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,369 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,385 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,402 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,418 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,434 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,451 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,467 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,484 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,500 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,518 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,534 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,551 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,567 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,584 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,602 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,619 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,636 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,653 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,671 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,687 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,703 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,720 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,736 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,752 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,768 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,785 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,802 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,819 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,836 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,853 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,869 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,887 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,903 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,920 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,936 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,952 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,969 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:29,986 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,002 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,018 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,035 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,051 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,068 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,084 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,100 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,117 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,133 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,150 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,166 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,183 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,199 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,216 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,232 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,249 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,265 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,281 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,297 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,313 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,330 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,346 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,363 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,379 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,395 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,412 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,428 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,445 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,461 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,478 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,494 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,511 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,527 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,544 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,562 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,579 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,596 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,614 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,630 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,647 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,664 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,680 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,697 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,714 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,731 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,748 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,764 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,781 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,798 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,815 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,832 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,848 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,865 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,882 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,898 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,915 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,931 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,948 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,964 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,981 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:30,997 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,014 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,030 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,046 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,063 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,079 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,095 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,112 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,129 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,145 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,161 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,178 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,194 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,210 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,226 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,243 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,259 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,275 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,292 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,308 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,325 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,341 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,357 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,374 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,390 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,407 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,423 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,440 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,456 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,472 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,489 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,505 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,521 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,537 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,554 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,570 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,586 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,603 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,620 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,636 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,652 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,668 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,684 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,701 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,717 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,734 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,750 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,767 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,784 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,800 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,817 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,833 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,849 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,866 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,882 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,899 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,915 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,932 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,948 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,964 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,981 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:31,997 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,014 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,030 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,046 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,063 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,079 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,096 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,112 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,128 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,144 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,161 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,177 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,193 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,210 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,226 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,243 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,259 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,276 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,292 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,308 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,324 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,340 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,357 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,373 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,390 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,406 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,423 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,439 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,455 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,472 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,488 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,505 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,521 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,538 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,554 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,570 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,587 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,603 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,619 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,635 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,652 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,668 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,684 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,701 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,717 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,734 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,750 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,767 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,783 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,799 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,815 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,831 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,848 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,864 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,881 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,897 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,914 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,930 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,946 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,963 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,979 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:32,996 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,012 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,029 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,045 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,061 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,078 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,094 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,111 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,127 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,144 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,160 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,177 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,193 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,209 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,226 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,242 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,259 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,275 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,292 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,308 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,325 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,341 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,358 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,374 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,390 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,407 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,423 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,440 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,456 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,472 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,489 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,505 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,522 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,538 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,554 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,571 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,587 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,604 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,620 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,636 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,653 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,669 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,686 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,702 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,719 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,735 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,752 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,769 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,785 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,801 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,817 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,834 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,850 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,867 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,883 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,900 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,916 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,933 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,950 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,966 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,983 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:33,999 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,016 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,032 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,049 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,065 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,082 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,099 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,115 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,132 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,148 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,165 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,181 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,197 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,214 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,230 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,247 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,263 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,279 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,296 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,312 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,328 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,344 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,361 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,377 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,394 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,410 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,426 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,444 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,460 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,477 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,493 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,509 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,525 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,541 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,558 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,575 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,592 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,608 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,625 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,641 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,659 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,675 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,692 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,709 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,725 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,743 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,759 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,775 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,792 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,808 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,826 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,842 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,858 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,874 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,890 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,907 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,918 - backend.api.routes - INFO - 🔌 WebSocket connection attempt to /ws/video_stream
+2025-09-29 18:13:34,918 - backend.services.SecurityService - INFO - → ENTER backend.services.SecurityService.SecurityService.verify_connection
+2025-09-29 18:13:34,918 - backend.services.SecurityService - INFO - ← EXIT backend.services.SecurityService.SecurityService.verify_connection (⏱️ 0.000s)
+2025-09-29 18:13:34,918 - backend.services.SecurityService - INFO - Authentication disabled - allowing connection
+2025-09-29 18:13:34,918 - backend.api.routes - INFO - ✅ Authentication successful for video stream: {'user': 'anonymous', 'auth_disabled': True}
+INFO:     ('127.0.0.1', 36964) - "WebSocket /ws/video_stream" [accepted]
+2025-09-29 18:13:34,918 - backend.api.routes - INFO - ✅ Video stream client connected
+2025-09-29 18:13:34,918 - backend.services.StreamingWebService - INFO - → ENTER backend.services.StreamingWebService.StreamingWebService.handle_websocket_connection
+2025-09-29 18:13:34,918 - backend.services.StreamingWebService - INFO - ← EXIT backend.services.StreamingWebService.StreamingWebService.handle_websocket_connection (⏱️ 0.000s)
+2025-09-29 18:13:34,918 - backend.services.StreamingWebService - INFO - 🔗 Client added to streaming. Total connections: 1
+2025-09-29 18:13:34,918 - backend.services.StreamingWebService - INFO - → ENTER backend.services.StreamingWebService.StreamingWebService._start_streaming
+2025-09-29 18:13:34,918 - backend.services.StreamingWebService - INFO - ← EXIT backend.services.StreamingWebService.StreamingWebService._start_streaming (⏱️ 0.000s)
+2025-09-29 18:13:34,918 - backend.services.StreamingWebService - INFO - → ENTER backend.services.StreamingWebService.StreamingWebService._stop_streaming
+2025-09-29 18:13:34,918 - backend.services.StreamingWebService - INFO - ← EXIT backend.services.StreamingWebService.StreamingWebService._stop_streaming (⏱️ 0.000s)
+2025-09-29 18:13:34,918 - backend.services.StreamingWebService - INFO - Streaming is already stopped.
+2025-09-29 18:13:34,918 - backend.services.StreamingWebService - INFO - 🚀 Started new video streaming task: 132892361080896
+INFO:     connection open
+2025-09-29 18:13:34,919 - backend.services.RenderingService - INFO - → ENTER backend.services.RenderingService.RenderingService.is_healthy
+2025-09-29 18:13:34,919 - backend.services.RenderingService - INFO - ← EXIT backend.services.RenderingService.RenderingService.is_healthy (⏱️ 0.000s)
+2025-09-29 18:13:34,919 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:34,919 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:34,924 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,941 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,952 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:34,952 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:34,958 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,974 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:34,985 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:34,985 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:34,991 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,008 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,019 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,019 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,024 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,041 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,051 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,052 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,058 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,075 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,084 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,085 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,091 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,108 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,117 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,118 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,125 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,141 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,150 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,151 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,158 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,175 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,183 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,183 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,193 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,210 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,216 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,216 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,227 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,244 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,249 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,249 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,261 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,279 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,282 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,282 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,296 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,313 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,315 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,315 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,330 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,347 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,348 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,348 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,363 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,380 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,382 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,382 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,396 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,413 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,415 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,416 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,430 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,447 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,448 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,448 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,465 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,481 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,481 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,481 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,498 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,515 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,515 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,515 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,532 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,548 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,548 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,550 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,567 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,581 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,581 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,584 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,601 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,614 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,614 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,619 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,636 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,647 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,647 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,653 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,670 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,680 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,680 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,686 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,702 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,713 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,714 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,718 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,735 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,746 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,747 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,752 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,769 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,779 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,779 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,787 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,803 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,812 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,813 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,819 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,836 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,846 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,846 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,853 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,870 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,880 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,880 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,886 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,902 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,914 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,914 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,918 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,936 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,947 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,947 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,952 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,969 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:35,980 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:35,980 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:35,987 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,004 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,014 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,014 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,021 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,038 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,047 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,047 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,055 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,072 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,079 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,079 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,088 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,105 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,112 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,112 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,121 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,138 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,145 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,146 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,154 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,170 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,179 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,179 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,186 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,203 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,212 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,212 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,220 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,237 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,245 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,245 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,254 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,272 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,278 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,278 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,288 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,305 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,311 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,311 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,322 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,339 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,344 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,344 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,355 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,373 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,377 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,377 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,389 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,406 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,410 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,410 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,422 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,439 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,443 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,443 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,456 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,472 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,476 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,476 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,490 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,506 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,509 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,509 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,523 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,541 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,542 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,542 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,557 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,574 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,575 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,575 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,591 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,607 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,609 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,609 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,624 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,640 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,642 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,642 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,656 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,672 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,675 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,675 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,689 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,706 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,707 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,707 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,722 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,739 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,740 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,740 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,756 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,773 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,773 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,773 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,790 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,807 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,807 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,807 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,824 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,841 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,841 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,841 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,858 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,874 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,875 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,875 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,892 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,907 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,907 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,909 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,926 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,940 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,940 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,943 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,960 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,973 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:36,973 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:36,976 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:36,994 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,006 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,006 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,010 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,028 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,039 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,039 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,045 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,062 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,072 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,072 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,079 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,096 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,105 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,105 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,112 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,130 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,138 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,138 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,146 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,163 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,171 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,171 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,180 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,197 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,205 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,205 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,213 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,230 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,239 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,239 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,247 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,264 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,272 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,272 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,281 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,298 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,306 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,306 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,315 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,332 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,339 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,339 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,350 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,367 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,372 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,372 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,384 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,401 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,405 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,405 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,417 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,435 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,438 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,438 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,452 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,470 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,471 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,471 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,486 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,503 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,505 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,505 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,520 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,537 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,539 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,539 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,553 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,569 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,572 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,572 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,586 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,604 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,605 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,605 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,620 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,637 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,638 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,638 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,654 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,671 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,671 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,672 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,689 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,705 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,705 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,705 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,722 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,738 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,738 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,738 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,756 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,771 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,771 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,772 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,789 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,805 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,805 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,805 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,822 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,838 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,839 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,839 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,856 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,871 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,871 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,872 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,889 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,905 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,905 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,906 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,924 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,938 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,938 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,940 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,958 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,971 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:37,971 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:37,974 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:37,991 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,004 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,004 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,008 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,025 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,037 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,037 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,042 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,059 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,071 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,071 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,076 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,093 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,103 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,104 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,109 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,126 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,136 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,136 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,142 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,159 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,169 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,169 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,176 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,193 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,202 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,202 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,210 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,227 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,235 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,236 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,243 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,259 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,269 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,269 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,276 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,293 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,302 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,303 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,310 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,327 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,336 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,336 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,343 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,360 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,368 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,368 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,376 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,393 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,402 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,402 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,410 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,427 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,435 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,435 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,443 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,461 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,468 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,468 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,477 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,495 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,501 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,501 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,511 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,529 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,534 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,534 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,546 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,563 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,568 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,568 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,580 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,597 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,600 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,601 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,613 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,630 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,633 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,634 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,646 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,663 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,666 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,666 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,680 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,697 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,699 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,699 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,714 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,731 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,732 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,732 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,747 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,765 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,765 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,765 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,782 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,798 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,798 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,800 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,817 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,831 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,831 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,835 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,852 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,864 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,864 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,869 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,887 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,897 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:38,897 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:38,903 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,913 - backend.services.StreamingWebService - INFO - 🔌 Client removed from streaming. Total connections: 0
+2025-09-29 18:13:38,914 - backend.services.StreamingWebService - INFO - → ENTER backend.services.StreamingWebService.StreamingWebService._stop_streaming
+2025-09-29 18:13:38,914 - backend.services.StreamingWebService - INFO - ← EXIT backend.services.StreamingWebService.StreamingWebService._stop_streaming (⏱️ 0.000s)
+2025-09-29 18:13:38,914 - backend.services.StreamingWebService - INFO - Attempting to cancel streaming task: 132892361080896
+2025-09-29 18:13:38,914 - backend.services.StreamingWebService - INFO - 🛑 Streaming loop cancelled successfully
+2025-09-29 18:13:38,914 - backend.services.StreamingWebService - INFO - 🛑 Streaming loop terminated
+2025-09-29 18:13:38,914 - backend.services.StreamingWebService - INFO - Streaming task 132892361080896 confirmed cancelled.
+2025-09-29 18:13:38,914 - backend.services.StreamingWebService - INFO - 🔌 WebSocket connection handled and cleaned up
+INFO:     connection closed
+2025-09-29 18:13:38,920 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,936 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,952 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,969 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:38,985 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,002 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,018 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,035 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,051 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,067 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,084 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,100 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,117 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,133 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,150 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,166 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,182 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,198 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,214 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,230 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,246 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,263 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,279 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,296 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,312 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,330 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,334 - backend.api.routes - INFO - 🔌 WebSocket connection attempt to /ws/video_stream
+2025-09-29 18:13:39,334 - backend.services.SecurityService - INFO - → ENTER backend.services.SecurityService.SecurityService.verify_connection
+2025-09-29 18:13:39,334 - backend.services.SecurityService - INFO - ← EXIT backend.services.SecurityService.SecurityService.verify_connection (⏱️ 0.000s)
+2025-09-29 18:13:39,334 - backend.services.SecurityService - INFO - Authentication disabled - allowing connection
+2025-09-29 18:13:39,334 - backend.api.routes - INFO - ✅ Authentication successful for video stream: {'user': 'anonymous', 'auth_disabled': True}
+INFO:     ('127.0.0.1', 52604) - "WebSocket /ws/video_stream" [accepted]
+2025-09-29 18:13:39,335 - backend.api.routes - INFO - ✅ Video stream client connected
+2025-09-29 18:13:39,335 - backend.services.StreamingWebService - INFO - → ENTER backend.services.StreamingWebService.StreamingWebService.handle_websocket_connection
+2025-09-29 18:13:39,335 - backend.services.StreamingWebService - INFO - ← EXIT backend.services.StreamingWebService.StreamingWebService.handle_websocket_connection (⏱️ 0.000s)
+2025-09-29 18:13:39,335 - backend.services.StreamingWebService - INFO - 🔗 Client added to streaming. Total connections: 1
+2025-09-29 18:13:39,335 - backend.services.StreamingWebService - INFO - → ENTER backend.services.StreamingWebService.StreamingWebService._start_streaming
+2025-09-29 18:13:39,335 - backend.services.StreamingWebService - INFO - ← EXIT backend.services.StreamingWebService.StreamingWebService._start_streaming (⏱️ 0.000s)
+2025-09-29 18:13:39,335 - backend.services.StreamingWebService - INFO - → ENTER backend.services.StreamingWebService.StreamingWebService._stop_streaming
+2025-09-29 18:13:39,335 - backend.services.StreamingWebService - INFO - ← EXIT backend.services.StreamingWebService.StreamingWebService._stop_streaming (⏱️ 0.000s)
+2025-09-29 18:13:39,335 - backend.services.StreamingWebService - INFO - Streaming is already stopped.
+2025-09-29 18:13:39,336 - backend.services.StreamingWebService - INFO - 🚀 Started new video streaming task: 132892361082048
+INFO:     connection open
+2025-09-29 18:13:39,336 - backend.services.RenderingService - INFO - → ENTER backend.services.RenderingService.RenderingService.is_healthy
+2025-09-29 18:13:39,336 - backend.services.RenderingService - INFO - ← EXIT backend.services.RenderingService.RenderingService.is_healthy (⏱️ 0.000s)
+2025-09-29 18:13:39,337 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,337 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,346 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,362 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,369 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,369 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,379 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,396 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,402 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,402 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,413 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,429 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,435 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,435 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,446 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,464 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,468 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,468 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,480 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,497 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,501 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,501 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,515 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,532 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,534 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,534 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,548 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,564 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,568 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,568 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,581 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,598 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,601 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,602 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,614 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,630 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,635 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,635 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,647 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,664 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,667 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,667 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,681 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,698 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,701 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,701 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,715 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,731 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,734 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,734 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,749 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,765 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,767 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,767 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,781 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,799 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,800 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,800 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,816 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,834 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,834 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,834 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,851 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,867 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,868 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,868 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,885 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,900 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,900 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,903 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,920 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:39,933 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:39,933 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:39,937 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:52,903 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:52,913 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:52,913 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:52,920 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:52,936 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:52,946 - backend.services.RenderingService - WARNING - No particle buffer available for rendering
+2025-09-29 18:13:52,946 - backend.services.StreamingWebService - WARNING - render_frame returned None without an exception. This indicates a potential logic flaw.
+2025-09-29 18:13:52,954 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:52,971 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:52,977 - backend.services.StreamingWebService - INFO - 🔌 Client removed from streaming. Total connections: 0
+2025-09-29 18:13:52,977 - backend.services.StreamingWebService - INFO - → ENTER backend.services.StreamingWebService.StreamingWebService._stop_streaming
+2025-09-29 18:13:52,977 - backend.services.StreamingWebService - INFO - ← EXIT backend.services.StreamingWebService.StreamingWebService._stop_streaming (⏱️ 0.000s)
+2025-09-29 18:13:52,977 - backend.services.StreamingWebService - INFO - Attempting to cancel streaming task: 132892361082048
+2025-09-29 18:13:52,978 - backend.services.StreamingWebService - INFO - 🛑 Streaming loop cancelled successfully
+2025-09-29 18:13:52,978 - backend.services.StreamingWebService - INFO - 🛑 Streaming loop terminated
+2025-09-29 18:13:52,978 - backend.services.StreamingWebService - INFO - Streaming task 132892361082048 confirmed cancelled.
+2025-09-29 18:13:52,978 - backend.services.StreamingWebService - INFO - 🔌 WebSocket connection handled and cleaned up
+INFO:     connection closed
+2025-09-29 18:13:52,987 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,004 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,020 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,037 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,054 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,070 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,086 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,103 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,119 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,136 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,152 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,169 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,185 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,202 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,218 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,235 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,251 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,268 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,284 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,301 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,317 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,334 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+INFO:     Shutting down
+2025-09-29 18:13:53,351 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,367 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,383 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,400 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,416 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+2025-09-29 18:13:53,433 - backend.engine.qualia_particle_engine - WARNING - Cannot compute: buffers not initialized or shader missing
+INFO:     Waiting for application shutdown.
+2025-09-29 18:13:53,444 - backend.api.routes - INFO - 🚨 Shutting down QUALIA.CODE services...
+2025-09-29 18:13:53,444 - backend.CompositionRoot - INFO - → ENTER backend.CompositionRoot.CompositionRoot.shutdown
+2025-09-29 18:13:53,444 - backend.CompositionRoot - INFO - ← EXIT backend.CompositionRoot.CompositionRoot.shutdown (⏱️ 0.000s)
+2025-09-29 18:13:53,444 - backend.CompositionRoot - INFO - 🔌 Gracefully shutting down QUALIA.CODE services...
+2025-09-29 18:13:53,444 - backend.CompositionRoot - INFO - 🛑 Shutting down rendering_service...
+2025-09-29 18:13:53,444 - backend.services.RenderingService - INFO - → ENTER backend.services.RenderingService.RenderingService.shutdown
+2025-09-29 18:13:53,444 - backend.services.RenderingService - INFO - RenderingService shutdown complete
+2025-09-29 18:13:53,444 - backend.services.RenderingService - INFO - ← EXIT backend.services.RenderingService.RenderingService.shutdown (⏱️ 0.000s)
+2025-09-29 18:13:53,445 - backend.CompositionRoot - CRITICAL - ✅ rendering_service TERMINATED.
+2025-09-29 18:13:53,445 - backend.CompositionRoot - INFO - 🛑 Shutting down streaming_web_service...
+2025-09-29 18:13:53,445 - backend.services.StreamingWebService - INFO - → ENTER backend.services.StreamingWebService.StreamingWebService.shutdown
+2025-09-29 18:13:53,445 - backend.services.StreamingWebService - INFO - ← EXIT backend.services.StreamingWebService.StreamingWebService.shutdown (⏱️ 0.000s)
+2025-09-29 18:13:53,445 - backend.services.StreamingWebService - INFO - Shutting down StreamingWebService...
+2025-09-29 18:13:53,445 - backend.services.StreamingWebService - INFO - → ENTER backend.services.StreamingWebService.StreamingWebService._stop_streaming
+2025-09-29 18:13:53,445 - backend.services.StreamingWebService - INFO - ← EXIT backend.services.StreamingWebService.StreamingWebService._stop_streaming (⏱️ 0.000s)
+2025-09-29 18:13:53,445 - backend.services.StreamingWebService - INFO - Streaming is already stopped.
+2025-09-29 18:13:53,445 - backend.services.StreamingWebService - INFO - ✅ StreamingWebService shutdown complete.
+2025-09-29 18:13:53,445 - backend.CompositionRoot - CRITICAL - ✅ streaming_web_service TERMINATED.
+2025-09-29 18:13:53,445 - backend.CompositionRoot - INFO - 🛑 Shutting down qualia_processor...
+2025-09-29 18:13:53,445 - backend.services.QualiaProcessor - INFO - 🛑 Shutting down QualiaProcessor...
+2025-09-29 18:13:53,446 - backend.CompositionRoot - CRITICAL - ✅ qualia_processor TERMINATED.
+2025-09-29 18:13:53,446 - backend.CompositionRoot - INFO - 🛑 Shutting down particle_system...
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - → ENTER backend.engine.qualia_particle_engine.QualiaParticleEngine.shutdown
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - ← EXIT backend.engine.qualia_particle_engine.QualiaParticleEngine.shutdown (⏱️ 0.000s)
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - → ENTER backend.engine.qualia_particle_engine.QualiaParticleEngine._stop_autonomous_simulation
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - ← EXIT backend.engine.qualia_particle_engine.QualiaParticleEngine._stop_autonomous_simulation (⏱️ 0.000s)
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - 🛑 Autonomous simulation loop cancelled
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - 🛑 Autonomous simulation loop terminated
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - ✅ Autonomous simulation loop cancelled
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - ✅ QualiaParticleEngine shutdown complete
+2025-09-29 18:13:53,447 - backend.CompositionRoot - CRITICAL - ✅ particle_system TERMINATED.
+2025-09-29 18:13:53,447 - backend.CompositionRoot - CRITICAL - 💀 ALL SERVICES TERMINATED. CompositionRoot shutdown is complete.
+2025-09-29 18:13:53,447 - backend.api.routes - INFO - ✅ All services terminated gracefully.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [360456]

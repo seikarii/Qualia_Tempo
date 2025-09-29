@@ -1,6 +1,6 @@
 # Qualia Tempo Debug Report
-**Generated:** lun 29 sep 2025 16:24:17 CEST
-**Session:** 2025-09-29_16-24-17
+**Generated:** lun 29 sep 2025 18:13:19 CEST
+**Session:** 2025-09-29_18-13-19
 
 ## System Information
 - **Project Root:** /media/seikarii/Nvme/QualiaTempo
@@ -10,7 +10,7 @@
 
 ## Debug Session Log
 [0;34m[INFO][0m Debug environment initialized
-[0;34m[INFO][0m Logs will be saved to: /media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-29_16-24-17
+[0;34m[INFO][0m Logs will be saved to: /media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-29_18-13-19
 [0;34m[INFO][0m Checking system health...
 [0;32m[SUCCESS][0m System health check passed
 [0;34m[INFO][0m Setting up environment...
@@ -80,7 +80,7 @@ Requirement already satisfied: cffi>=1.14 in /media/seikarii/Nvme/QualiaTempo/.v
 Requirement already satisfied: pycparser in /media/seikarii/Nvme/QualiaTempo/.venv/lib/python3.12/site-packages (from cffi>=1.14->cryptography>=3.4.0->python-jose[cryptography]>=3.3.0->-r requirements.txt (line 27)) (2.22)
 [0;34m[INFO][0m Installing frontend dependencies...
 
-added 20 packages, and audited 1253 packages in 3s
+added 20 packages, and audited 1253 packages in 2s
 
 187 packages are looking for funding
   run `npm fund` for details
@@ -95,11 +95,11 @@ Run `npm audit` for details.
 [0;34m[INFO][0m Cleaning up existing processes...
 [0;32m[SUCCESS][0m Existing processes cleaned up
 [0;34m[INFO][0m Starting backend server...
-[0;36m[DEBUG][0m Backend PID: 284105
+[0;36m[DEBUG][0m Backend PID: 360456
 [0;34m[INFO][0m Waiting for backend to be ready...
 [0;32m[SUCCESS][0m Backend is ready (http://localhost:8000)
 [0;34m[INFO][0m Starting frontend server...
-[0;36m[DEBUG][0m Frontend PID: 284190
+[0;36m[DEBUG][0m Frontend PID: 360531
 [0;34m[INFO][0m Waiting for frontend to be ready...
 [0;32m[SUCCESS][0m Frontend is ready (http://localhost:5173)
 [0;32m[SUCCESS][0m Both services are running!
@@ -110,12 +110,12 @@ Run `npm audit` for details.
 [0;32m[SUCCESS][0m Dynamic browser test script generated.
 [0;34m[INFO][0m Executing browser test... (Errors are expected during failure tests)
 [0;34m[INFO][0m Browser test execution finished.
-[0;34m[INFO][0m Archiving all generated artifacts to /media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-29_16-24-17...
+[0;34m[INFO][0m Archiving all generated artifacts to /media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-29_18-13-19...
 [0;32m[SUCCESS][0m Artifact archiving complete. All generated files have been moved.
 [0;34m[INFO][0m Debug test completed, auto-terminating...
 [0;34m[INFO][0m Cleaning up debug session...
-[0;34m[INFO][0m Stopping backend (PID: 284105)...
-[0;34m[INFO][0m Stopping frontend (PID: 284190)...
+[0;34m[INFO][0m Stopping backend (PID: 360456)...
+[0;34m[INFO][0m Stopping frontend (PID: 360531)...
 [0;34m[INFO][0m Generating comprehensive debug report...
 
 ## Backend Status
@@ -125,32 +125,32 @@ Run `npm audit` for details.
 ❌ Not running
 
 ## Log Files Generated
-- Backend Log: `/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-29_16-24-17/backend.log`
-- Frontend Log: `/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-29_16-24-17/frontend.log`
-- Browser Console Log: `/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-29_16-24-17/browser-console.log`
+- Backend Log: `/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-29_18-13-19/backend.log`
+- Frontend Log: `/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-29_18-13-19/frontend.log`
+- Browser Console Log: `/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-29_18-13-19/browser-console.log`
 
 ## Recent Backend Log (last 20 lines)
 ```
-2025-09-29 16:24:43,197 - backend.services.StreamingWebService - INFO - Streaming is already stopped.
-2025-09-29 16:24:43,197 - backend.services.StreamingWebService - INFO - ✅ StreamingWebService shutdown complete.
-2025-09-29 16:24:43,197 - backend.CompositionRoot - CRITICAL - ✅ streaming_web_service TERMINATED.
-2025-09-29 16:24:43,197 - backend.CompositionRoot - INFO - 🛑 Shutting down qualia_processor...
-2025-09-29 16:24:43,198 - backend.services.QualiaProcessor - INFO - 🛑 Shutting down QualiaProcessor...
-2025-09-29 16:24:43,198 - backend.CompositionRoot - CRITICAL - ✅ qualia_processor TERMINATED.
-2025-09-29 16:24:43,198 - backend.CompositionRoot - INFO - 🛑 Shutting down particle_system...
-2025-09-29 16:24:43,198 - backend.engine.qualia_particle_engine - INFO - → ENTER backend.engine.qualia_particle_engine.QualiaParticleEngine.shutdown
-2025-09-29 16:24:43,198 - backend.engine.qualia_particle_engine - INFO - ← EXIT backend.engine.qualia_particle_engine.QualiaParticleEngine.shutdown (⏱️ 0.000s)
-2025-09-29 16:24:43,198 - backend.engine.qualia_particle_engine - INFO - → ENTER backend.engine.qualia_particle_engine.QualiaParticleEngine._stop_autonomous_simulation
-2025-09-29 16:24:43,199 - backend.engine.qualia_particle_engine - INFO - ← EXIT backend.engine.qualia_particle_engine.QualiaParticleEngine._stop_autonomous_simulation (⏱️ 0.000s)
-2025-09-29 16:24:43,199 - backend.engine.qualia_particle_engine - INFO - 🛑 Autonomous simulation loop cancelled
-2025-09-29 16:24:43,199 - backend.engine.qualia_particle_engine - INFO - 🛑 Autonomous simulation loop terminated
-2025-09-29 16:24:43,199 - backend.engine.qualia_particle_engine - INFO - ✅ Autonomous simulation loop cancelled
-2025-09-29 16:24:43,199 - backend.engine.qualia_particle_engine - INFO - ✅ QualiaParticleEngine shutdown complete
-2025-09-29 16:24:43,199 - backend.CompositionRoot - CRITICAL - ✅ particle_system TERMINATED.
-2025-09-29 16:24:43,199 - backend.CompositionRoot - CRITICAL - 💀 ALL SERVICES TERMINATED. CompositionRoot shutdown is complete.
-2025-09-29 16:24:43,200 - backend.api.routes - INFO - ✅ All services terminated gracefully.
+2025-09-29 18:13:53,445 - backend.services.StreamingWebService - INFO - Streaming is already stopped.
+2025-09-29 18:13:53,445 - backend.services.StreamingWebService - INFO - ✅ StreamingWebService shutdown complete.
+2025-09-29 18:13:53,445 - backend.CompositionRoot - CRITICAL - ✅ streaming_web_service TERMINATED.
+2025-09-29 18:13:53,445 - backend.CompositionRoot - INFO - 🛑 Shutting down qualia_processor...
+2025-09-29 18:13:53,445 - backend.services.QualiaProcessor - INFO - 🛑 Shutting down QualiaProcessor...
+2025-09-29 18:13:53,446 - backend.CompositionRoot - CRITICAL - ✅ qualia_processor TERMINATED.
+2025-09-29 18:13:53,446 - backend.CompositionRoot - INFO - 🛑 Shutting down particle_system...
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - → ENTER backend.engine.qualia_particle_engine.QualiaParticleEngine.shutdown
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - ← EXIT backend.engine.qualia_particle_engine.QualiaParticleEngine.shutdown (⏱️ 0.000s)
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - → ENTER backend.engine.qualia_particle_engine.QualiaParticleEngine._stop_autonomous_simulation
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - ← EXIT backend.engine.qualia_particle_engine.QualiaParticleEngine._stop_autonomous_simulation (⏱️ 0.000s)
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - 🛑 Autonomous simulation loop cancelled
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - 🛑 Autonomous simulation loop terminated
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - ✅ Autonomous simulation loop cancelled
+2025-09-29 18:13:53,446 - backend.engine.qualia_particle_engine - INFO - ✅ QualiaParticleEngine shutdown complete
+2025-09-29 18:13:53,447 - backend.CompositionRoot - CRITICAL - ✅ particle_system TERMINATED.
+2025-09-29 18:13:53,447 - backend.CompositionRoot - CRITICAL - 💀 ALL SERVICES TERMINATED. CompositionRoot shutdown is complete.
+2025-09-29 18:13:53,447 - backend.api.routes - INFO - ✅ All services terminated gracefully.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [284105]
+INFO:     Finished server process [360456]
 ```
 
 ## Recent Frontend Log (last 20 lines)
@@ -160,17 +160,38 @@ INFO:     Finished server process [284105]
 > vite
 
 
-  VITE v5.4.20  ready in 247 ms
+  VITE v5.4.20  ready in 246 ms
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: use --host to expose
-16:24:31 [vite] page reload browser-test.js
-16:24:31 [vite] page reload browser-test-failure.json
-16:24:31 [vite] page reload debug-page-content-FAILURE.html
-16:24:43 [vite] page reload browser-test-failure.json
-16:24:43 [vite] page reload debug-page-content-FAILURE.html
+18:13:33 [vite] page reload browser-test.js
+18:13:33 [vite] page reload browser-test-failure.json
+18:13:33 [vite] page reload browser-test-report-game-view.json
+18:13:33 [vite] page reload browser-test-report-main-menu.json
+18:13:33 [vite] page reload debug-page-content-game-view.html
+18:13:33 [vite] page reload debug-page-content-main-menu.html
+18:13:37 [vite] page reload debug-page-content-main-menu.html
+18:13:37 [vite] page reload browser-test-report-main-menu.json
+18:13:48 [vite] page reload debug-page-content-game-view.html
+18:13:48 [vite] page reload browser-test-report-game-view.json
+18:13:53 [vite] page reload browser-test-failure.json
 ```
 
 ## Browser Test Results
-[0;32m[SUCCESS][0m Debug report generated: /media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-29_16-24-17/debug-report.md
+Browser test reports available: browser-test-report-main-menu.json, browser-test-report-game-view.json, browser-test-report-movement-test.json
+
+### Main Menu Browser Test Summary
+- **Success:** true
+- **Total Logs:** null
+- **Errors:** 0
+- **Config Errors:** null
+- **Root Element:** null
+
+### Game View Browser Test Summary
+- **Success:** true
+- **Total Logs:** null
+- **Errors:** 0
+- **Config Errors:** null
+- **Root Element:** null
+[0;32m[SUCCESS][0m Debug report generated: /media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-29_18-13-19/debug-report.md
 [0;32m[SUCCESS][0m 🔍 DEBUG SESSION COMPLETE
