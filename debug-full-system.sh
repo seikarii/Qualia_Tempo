@@ -2,6 +2,10 @@
 
 # QUALIA.CODE v1.0 - Full System Debug Script
 # Levanta frontend/backend, captura logs, y debugea errores automáticamente
+# 
+# MAXIMUM EXECUTION TIME: 20 seconds
+# If the script takes longer than 20 seconds, something is DEFINITELY wrong.
+# DO NOT increase this timeout - fix the underlying issue instead.
 
 set -e
 set -u
@@ -180,7 +184,7 @@ start_backend() {
     
     # Wait for backend to start
     log_info "Waiting for backend to be ready..."
-    for i in {1..30}; do
+    for i in {1..5}; do
         if curl -s http://localhost:8000/health > /dev/null 2>&1; then
             log_success "Backend is ready (http://localhost:8000)"
             return 0
@@ -189,7 +193,7 @@ start_backend() {
         echo -n "."
     done
     
-    log_error "Backend failed to start within 30 seconds"
+    log_error "Backend failed to start within 5 seconds"
     log_error "Backend log tail:"
     tail -20 "$BACKEND_LOG" | while read line; do
         log_error "  $line"
@@ -211,7 +215,7 @@ start_frontend() {
     
     # Wait for frontend to start
     log_info "Waiting for frontend to be ready..."
-    for i in {1..30}; do
+    for i in {1..5}; do
         if curl -s http://localhost:5173 > /dev/null 2>&1; then
             log_success "Frontend is ready (http://localhost:5173)"
             return 0
@@ -220,7 +224,7 @@ start_frontend() {
         echo -n "."
     done
     
-    log_error "Frontend failed to start within 30 seconds"
+    log_error "Frontend failed to start within 5 seconds"
     log_error "Frontend log tail:"
     tail -20 "$FRONTEND_LOG" | while read line; do
         log_error "  $line"
@@ -284,7 +288,11 @@ async function comprehensiveTest() {
 
         console.log('📡 Navigating to http://localhost:5173...');
         await page.goto('http://localhost:5173', { waitUntil: 'domcontentloaded', timeout: 30000 });
-        await page.waitForTimeout(15000);
+        
+        // Wait for the main menu to be fully loaded - look for the INITIATE NEURAL SYNC button
+        console.log('⏳ Waiting for main menu to load...');
+        await page.waitForSelector('text=INITIATE NEURAL SYNC', { timeout: 10000 });
+        console.log('✅ Main menu loaded successfully');
 
         // --- Phase 1: Main Menu ---
         console.log('📸 Capturing main menu state (Screenshot + DOM)...');
@@ -303,7 +311,10 @@ async function comprehensiveTest() {
         // --- Phase 2: Interaction ---
         console.log('🚀 Clicking "INITIATE NEURAL SYNC" button...');
         await page.getByText('INITIATE NEURAL SYNC').click();
-        await page.waitForTimeout(2000);
+        
+        // Wait for game to transition - look for some game element or reduced timeout
+        console.log('⏳ Waiting for game transition...');
+        await page.waitForTimeout(2000); // Keep original 2s but add logging
 
         // --- Phase 3: Game View ---
         console.log('📸 Capturing game view state (Screenshot + DOM)...');
@@ -360,8 +371,13 @@ EOF
 
     # Execute the test. We use `|| true` to prevent `set -e` from halting the script on test failure.
     # We NEED to proceed to the artifact copy step regardless of the outcome.
+    # MAXIMUM EXECUTION TIME: 20 seconds - if exceeded, something is definitely wrong
     log_info "Executing browser test... (Errors are expected during failure tests)"
-    node browser-test.js > "$BROWSER_LOG" 2>&1 || true
+    timeout 20 node browser-test.js > "$BROWSER_LOG" 2>&1 || {
+        echo "❌ Browser test exceeded 20 seconds - something is definitely wrong!"
+        echo "⚠️  DO NOT increase this timeout. Fix the underlying issue instead."
+        true
+    }
     log_info "Browser test execution finished."
 
     # MANDATO 3: Unconditionally archive all generated artifacts.
@@ -475,6 +491,10 @@ cleanup() {
 
 # Main execution
 main() {
+    # TOTAL MAXIMUM EXECUTION TIME: 20 seconds
+    # Backend startup: 5s, Frontend startup: 5s, Browser test: 20s (with timeout enforcement)
+    # If exceeded, something is definitely wrong - DO NOT increase timeouts
+    
     # Initialize
     init_debug
     

@@ -40,7 +40,11 @@ async function comprehensiveTest() {
 
         console.log('📡 Navigating to http://localhost:5173...');
         await page.goto('http://localhost:5173', { waitUntil: 'domcontentloaded', timeout: 30000 });
-        await page.waitForTimeout(15000);
+        
+        // Wait for the main menu to be fully loaded - look for the INITIATE NEURAL SYNC button
+        console.log('⏳ Waiting for main menu to load...');
+        await page.waitForSelector('text=INITIATE NEURAL SYNC', { timeout: 10000 });
+        console.log('✅ Main menu loaded successfully');
 
         // --- Phase 1: Main Menu ---
         console.log('📸 Capturing main menu state (Screenshot + DOM)...');
@@ -59,7 +63,10 @@ async function comprehensiveTest() {
         // --- Phase 2: Interaction ---
         console.log('🚀 Clicking "INITIATE NEURAL SYNC" button...');
         await page.getByText('INITIATE NEURAL SYNC').click();
-        await page.waitForTimeout(2000);
+        
+        // Wait for game to transition - look for some game element or reduced timeout
+        console.log('⏳ Waiting for game transition...');
+        await page.waitForTimeout(2000); // Keep original 2s but add logging
 
         // --- Phase 3: Game View ---
         console.log('📸 Capturing game view state (Screenshot + DOM)...');
