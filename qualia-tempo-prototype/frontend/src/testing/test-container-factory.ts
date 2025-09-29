@@ -26,6 +26,8 @@ import type { IGameStateStoreService } from "../services/interfaces/IGameStateSt
 import type { IHttpService } from "../services/interfaces/IHttpService";
 import type { ITimerService, IPerformanceService } from "../services/interfaces/ITimerService";
 import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
+import type { IWebSocketService } from "../services/interfaces/IWebSocketService";
+import type { IBrowserEventsService } from "../services/interfaces/IBrowserEventsService";
 
 export interface MockOverride<T = any> {
   type: symbol;
@@ -74,6 +76,18 @@ const mockPerformanceService: IPerformanceService = {
   requestAnimationFrame: vi.fn(), cancelAnimationFrame: vi.fn(),
 };
 
+const mockWebSocketService: IWebSocketService = {
+  connect: vi.fn(), disconnect: vi.fn(), send: vi.fn(),
+  onMessage: vi.fn(), onOpen: vi.fn(), onClose: vi.fn(),
+  onError: vi.fn(), getReadyState: vi.fn(), isConnected: vi.fn(),
+};
+
+const mockBrowserEventsService: IBrowserEventsService = {
+  addWindowEventListener: vi.fn(), removeWindowEventListener: vi.fn(),
+  addElementEventListener: vi.fn(), removeElementEventListener: vi.fn(),
+  getWindowDimensions: vi.fn(), getViewportDimensions: vi.fn(),
+};
+
 /**
  * Mock Services Interface
  */
@@ -86,6 +100,8 @@ export interface MockServices {
   mockTimerService: ITimerService;
   mockPerformanceService: IPerformanceService;
   mockOntologicalAudioEngine: IOntologicalAudioEngine;
+  mockWebSocketService: IWebSocketService;
+  mockBrowserEventsService: IBrowserEventsService;
 }
 
 /**
@@ -105,6 +121,8 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   testContainer.bind<ITimerService>(TYPES.ITimerService).toConstantValue(mockTimerService);
   testContainer.bind<IPerformanceService>(TYPES.IPerformanceService).toConstantValue(mockPerformanceService);
   testContainer.bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).toConstantValue(mockOntologicalAudioEngine);
+  testContainer.bind<IWebSocketService>(TYPES.IWebSocketService).toConstantValue(mockWebSocketService);
+  testContainer.bind<IBrowserEventsService>(TYPES.IBrowserEventsService).toConstantValue(mockBrowserEventsService);
 
   // STEP 3: Apply any test-specific overrides.
   for (const override of overrides) {
