@@ -11,7 +11,7 @@ import { TYPES } from "./inversify.types";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { ExtendedNotification } from "./NotificationService";
-import { useGameStore, type Notification } from "../state/useGameStore";
+import { gameStoreApi, type Notification } from "../state/useGameStore";
 
 @injectable()
 export class GameStateStore implements IGameStateStore {
@@ -42,7 +42,7 @@ export class GameStateStore implements IGameStateStore {
         duration: notification.metadata?.duration ?? this.configService.getConfig().notificationService.display.notificationDuration,
       }));
 
-    useGameStore.setState((state) => ({
+    gameStoreApi.setState((state) => ({
       ...state,
       notifications: storeNotifications,
     }));
@@ -52,8 +52,8 @@ export class GameStateStore implements IGameStateStore {
    * Get current notifications from the store.
    */
   getNotifications(): ExtendedNotification[] {
-    const state = useGameStore.getState();
-    return state.notifications.map((notification) => ({
+    const state = gameStoreApi.getState();
+    return state.notifications.map((notification: Notification) => ({
       id: notification.id,
       type: notification.type,
       message: notification.message,
@@ -71,7 +71,7 @@ export class GameStateStore implements IGameStateStore {
    * Update game state in the store.
    */
   updateGameState(state: any): void {
-    useGameStore.setState((currentState) => ({
+    gameStoreApi.setState((currentState) => ({
       ...currentState,
       ...state,
     }));
@@ -81,14 +81,14 @@ export class GameStateStore implements IGameStateStore {
    * Get current game state from the store.
    */
   getGameState(): any {
-    return useGameStore.getState();
+    return gameStoreApi.getState();
   }
 
   /**
    * Update qualia state in the store.
    */
   updateQualiaState(state: any): void {
-    useGameStore.setState((currentState) => ({
+    gameStoreApi.setState((currentState) => ({
       ...currentState,
       qualiaState: { ...state },
     }));
@@ -98,7 +98,7 @@ export class GameStateStore implements IGameStateStore {
    * Get current qualia state from the store.
    */
   getQualiaState(): any {
-    const state = useGameStore.getState();
+    const state = gameStoreApi.getState();
     return state.qualiaState;
   }
 }

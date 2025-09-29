@@ -97,6 +97,14 @@ export const useGameStore = createWithEqualityFn<GameState>()(
   subscribeWithSelector(() => initialState),
 );
 
+// Export store API methods for service layer access (non-hook)
+// QUALIA.CODE COMPLIANT: Allow services to access store without React context
+export const gameStoreApi = {
+  getState: useGameStore.getState,
+  setState: useGameStore.setState,
+  subscribe: useGameStore.subscribe,
+};
+
 // Selectors
 export const useQualiaState = () => useGameStore((state) => state.qualiaState);
 export const usePlayerState = () => useGameStore((state) => state.player);
