@@ -188,7 +188,6 @@ export class GameControllerService implements IGameControllerService {
   }
 
   @logMethod
-  @catchError
   public getGameState(): GameState {
     return { ...this.gameState };
   }
