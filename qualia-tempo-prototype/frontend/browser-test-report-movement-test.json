@@ -1,10 +1,10 @@
 {
-  "timestamp": "2025-09-29T07:01:47.128Z",
-  "phase": "game-view",
+  "timestamp": "2025-09-29T07:01:56.484Z",
+  "phase": "movement-test",
   "success": false,
   "stats": {
     "errors": 7,
-    "logs": 205
+    "logs": 250
   },
   "logs": [
     {
@@ -1237,6 +1237,276 @@
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:47.137Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:47.137Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:47.138Z",
+      "type": "warning",
+      "text": "WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use",
+      "entry": "[WARNING] WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:47.891Z",
+      "type": "warning",
+      "text": "WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use",
+      "entry": "[WARNING] WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:48.596Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:48.597Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:48.606Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:48.606Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.20ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:48.614Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:48.614Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.10ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:48.615Z",
+      "type": "warning",
+      "text": "WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use",
+      "entry": "[WARNING] WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:49.323Z",
+      "type": "warning",
+      "text": "WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use",
+      "entry": "[WARNING] WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:49.978Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:49.979Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:49.997Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:49.998Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:49.999Z",
+      "type": "warning",
+      "text": "WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use",
+      "entry": "[WARNING] WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:50.739Z",
+      "type": "warning",
+      "text": "WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use",
+      "entry": "[WARNING] WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:51.473Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:51.473Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:51.485Z",
+      "type": "warning",
+      "text": "WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use",
+      "entry": "[WARNING] WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:52.194Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:52.195Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:52.205Z",
+      "type": "warning",
+      "text": "WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use",
+      "entry": "[WARNING] WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:52.946Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:52.947Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:52.966Z",
+      "type": "warning",
+      "text": "WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use",
+      "entry": "[WARNING] WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:53.716Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:53.717Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:53.747Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:53.748Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:53.751Z",
+      "type": "warning",
+      "text": "WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use",
+      "entry": "[WARNING] WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:54.463Z",
+      "type": "warning",
+      "text": "WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use",
+      "entry": "[WARNING] WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:55.124Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:55.125Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:55.143Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:55.143Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:55.146Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:55.146Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:55.152Z",
+      "type": "warning",
+      "text": "WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use",
+      "entry": "[WARNING] WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:55.822Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:55.824Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.50ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.50ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:55.833Z",
+      "type": "warning",
+      "text": "WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use",
+      "entry": "[WARNING] WebGL: INVALID_OPERATION: drawArrays: no valid shader program in use"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:56.482Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:01:56.483Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}"
     }
   ],
   "errors": [

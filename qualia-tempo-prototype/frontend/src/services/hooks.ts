@@ -20,6 +20,8 @@ import type { IErrorReportingService } from './interfaces/IErrorReportingService
 import type { IDebugService } from './interfaces/IDebugService';
 import type { IRhythmicMovementController } from './interfaces/IRhythmicMovementController';
 import type { IStreamingVideoService } from './interfaces/IStreamingVideoService';
+import type { IFrontendRenderingService } from './interfaces/IFrontendRenderingService';
+import type { IStateStreamingService } from './interfaces/IStateStreamingService';
 import type { IHttpService } from './interfaces/IHttpService';
 import type { ITimerService } from './interfaces/ITimerService';
 
@@ -70,6 +72,12 @@ export const useAudioService = (): IAudioService =>
 
 export const useStreamingVideoService = (): IStreamingVideoService => 
   useService<IStreamingVideoService>(TYPES.IStreamingVideoService);
+
+export const useFrontendRenderingService = (): IFrontendRenderingService => 
+  useService<IFrontendRenderingService>(TYPES.IFrontendRenderingService);
+
+export const useStateStreamingService = (): IStateStreamingService => 
+  useService<IStateStreamingService>(TYPES.IStateStreamingService);
 
 // Communication Services
 export const useBackendSyncService = (): IBackendSyncService => 

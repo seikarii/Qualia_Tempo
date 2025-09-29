@@ -7,7 +7,7 @@
  * - ELIMINATED: Local visual effects (qualiaParticles, audioWaves)
  * - RETAINED: Pure UI elements (title, button, event emission)
  *
- * Visual effects are now the exclusive domain of BackendCanvas.
+ * Visual effects are now the exclusive domain of FrontendRenderer.
  */
 
 import React, { useState } from "react";
@@ -43,7 +43,7 @@ export default function QualiaMainMenu() {
       onClick={handleBackgroundClick}
     >
       <div className="flex flex-col items-center justify-center gap-12 p-8 pointer-events-auto">
-        {/* PURIFIED: All particle and visual effects removed - now handled by BackendCanvas */}
+        {/* PURIFIED: All particle and visual effects removed - now handled by FrontendRenderer */}
 
         {/* Main Title */}
         <motion.div

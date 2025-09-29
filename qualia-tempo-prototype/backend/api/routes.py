@@ -125,23 +125,23 @@ async def update_qualia_visuals(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.websocket("/ws/video_stream")
-async def websocket_video_stream(
+@app.websocket("/ws/state_stream")
+async def websocket_state_stream(
     websocket: WebSocket, services: CompositionRoot = Depends(get_services)
 ) -> None:
     """
-    QUALIA.CODE WebSocket endpoint for video streaming.
-    Streams rendered frames from RenderingService to frontend clients.
+    QUALIA.CODE WebSocket endpoint for state streaming.
+    Streams qualia state data from StateStreamingService to frontend clients.
     """
-    logger.info("🔌 WebSocket connection attempt to /ws/video_stream")
-    streaming_service = services.get_streaming_web_service()
+    logger.info("🔌 WebSocket connection attempt to /ws/state_stream")
+    streaming_service = services.get_state_streaming_service()
 
     try:
         # Connect client
         logger.info("🔗 Calling connect_client...")
         await streaming_service.connect_client(websocket)
 
-        logger.info("✅ Client connected to video stream")
+        logger.info("✅ Client connected to state stream")
 
         # Handle incoming messages
         while True:
@@ -172,19 +172,17 @@ async def websocket_video_stream(
     finally:
         # Ensure client is properly disconnected
         await streaming_service.disconnect_client(websocket)
-        logger.info("🔌 Client disconnected from video stream")
+        logger.info("🔌 Client disconnected from state stream")
 
 
 @app.get("/stream_status")
 async def get_stream_status(services: CompositionRoot = Depends(get_services)) -> Dict[str, Any]:
     """Get current streaming service status."""
     try:
-        streaming_service = services.get_streaming_web_service()
-        rendering_service = services.get_rendering_service()
+        streaming_service = services.get_state_streaming_service()
 
         return {
             "streaming": streaming_service.get_status(),
-            "rendering": rendering_service.get_status(),
         }
     except Exception as e:
         logger.error(f"Stream status check failed: {e}")

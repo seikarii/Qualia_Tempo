@@ -28,9 +28,8 @@ export const TYPES = {
   IOntologicalAudioEngine: Symbol.for("IOntologicalAudioEngine"),
   IApplicationInitializerService: Symbol.for("IApplicationInitializerService"),
   IWebAudioAPIService: Symbol.for("IWebAudioAPIService"),
-
-  // ===== STREAMING SERVICES =====
-  IStreamingVideoService: Symbol.for("IStreamingVideoService"),
+  IFrontendRenderingService: Symbol.for("IFrontendRenderingService"),
+  IStateStreamingService: Symbol.for("IStateStreamingService"),
 
   // ===== SPECIAL TYPES =====
   // Used for injecting Zustand store setter function

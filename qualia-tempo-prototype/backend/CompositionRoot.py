@@ -45,8 +45,7 @@ class CompositionRoot:
         await self._initialize_shader_introspection_service()
         await self._initialize_particle_system()
         await self._initialize_qualia_processor()
-        await self._initialize_rendering_service()
-        await self._initialize_streaming_web_service()
+        await self._initialize_state_streaming_service()
 
         # Register event handlers
         await self._register_event_handlers()
@@ -151,44 +150,17 @@ class CompositionRoot:
         self._services["qualia_processor"] = processor
         self._logger.debug("✅ QualiaProcessor initialized")
 
-    async def _initialize_rendering_service(self) -> None:
-        """Initialize RenderingService with shared OpenGL context."""
-        from .services.RenderingService import RenderingService
-
-        # GOLD.CODE: Get shared context and particle engine from services
-        shared_ctx = self._services.get("shared_opengl_context")
-        if shared_ctx is None:
-            raise RuntimeError(
-                "GOLD.CODE VIOLATION: Shared context not available for rendering service"
-            )
+    async def _initialize_state_streaming_service(self) -> None:
+        """Initialize StateStreamingService for WebSocket state streaming."""
+        from .services.StateStreamingService import StateStreamingService
 
         particle_engine = self._services["particle_system"]
-
-        rendering_service = RenderingService(
+        streaming_service = StateStreamingService(
             event_bus=self._event_bus,
-            particle_engine=particle_engine,  # QUALIA.CODE: Inject particle engine dependency
-            ctx=shared_ctx,  # GOLD.CODE: Inject shared OpenGL context
-            width=1920,
-            height=1080,
+            particle_engine=particle_engine,
         )
-        self._services["rendering_service"] = rendering_service
-        self._logger.debug("✅ RenderingService initialized with shared context")
-
-    async def _initialize_streaming_web_service(self) -> None:
-        """Initialize StreamingWebService for WebSocket video streaming."""
-        from .services.StreamingWebService import StreamingWebService
-
-        rendering_service = self._services["rendering_service"]
-        particle_engine = self._services[
-            "particle_system"
-        ]  # QUALIA.CODE: Inject particle engine dependency
-        streaming_service = StreamingWebService(
-            event_bus=self._event_bus,
-            rendering_service=rendering_service,
-            particle_engine=particle_engine,  # QUALIA.CODE: Pass particle engine for simulation control
-        )
-        self._services["streaming_web_service"] = streaming_service
-        self._logger.debug("✅ StreamingWebService initialized")
+        self._services["state_streaming_service"] = streaming_service
+        self._logger.debug("✅ StateStreamingService initialized")
 
     async def _register_event_handlers(self) -> None:
         """Register event handlers for cross-service communication."""
@@ -266,6 +238,10 @@ class CompositionRoot:
     def get_streaming_web_service(self) -> Any:
         """Get StreamingWebService instance."""
         return self.get_service("streaming_web_service")
+
+    def get_state_streaming_service(self) -> Any:
+        """Get StateStreamingService instance."""
+        return self.get_service("state_streaming_service")
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)

@@ -3,7 +3,7 @@
  * Architectural orchestrator for the definitive visual layering system.
  *
  * This component establishes the sacred hierarchy of visual layers:
- * Layer 0: BackendCanvas (z-0) - GPU-rendered backend engine visuals
+ * Layer 0: FrontendRenderer (z-0) - GPU-rendered Three.js particle visuals
  * Layer 1: Atmosphere (z-10) - CSS complementary effects (grid, bloom)
  * Layer 2: UI (z-20) - Interactive menu/game elements based on game state
  *
@@ -15,7 +15,7 @@
 
 import React from "react";
 import { Atmosphere } from "../Atmosphere";
-import BackendCanvas from "../BackendCanvas";
+import FrontendRenderer from "../FrontendRenderer";
 import QualiaMainMenu from "../QualiaMainMenu";
 import QualiaTempoGame from "../game/QualiaTempoGame";
 import { useGameStore } from "../../state/useGameStore";
@@ -27,12 +27,12 @@ const MainLayout: React.FC = () => {
   return (
     <div className="h-screen w-screen relative overflow-hidden">
       {/* 
-        LAYER 0: BACKEND CANVAS (Z-0)
+        LAYER 0: FRONTEND RENDERER (Z-0)
         La fuente de verdad para los visuales del motor.
         Debe llenar toda la pantalla.
       */}
       <div className="absolute inset-0 z-0">
-        <BackendCanvas showStatus={true} />
+        <FrontendRenderer />
       </div>
 
       {/* 

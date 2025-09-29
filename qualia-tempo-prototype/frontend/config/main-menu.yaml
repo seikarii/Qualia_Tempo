@@ -1,9 +1,9 @@
 # QUALIA.CODE v1.1 - Main Menu Configuration
-# ARCHITECTURAL COMPLIANCE: DOM particles REMOVED - all visuals via BackendCanvas
+# ARCHITECTURAL COMPLIANCE: DOM particles REMOVED - all visuals via FrontendRenderer
 
-# DOM particle system DEPRECATED - using GPU particles via BackendCanvas
+# DOM particle system DEPRECATED - using GPU particles via FrontendRenderer
 # All visual effects are now handled by:
-# 1. BackendCanvas (GPU particles via WebSocket)
+# 1. FrontendRenderer (GPU particles via Three.js)
 # 2. Atmosphere (CSS effects)
 
 # UI Element Configurations only:

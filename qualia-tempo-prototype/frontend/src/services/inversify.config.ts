@@ -45,7 +45,8 @@ import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { IApplicationInitializerService } from "./interfaces/IApplicationInitializerService";
 import type { IWebAudioAPIService } from "./interfaces/IWebAudioAPIService";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
-import type { IStreamingVideoService } from "./interfaces/IStreamingVideoService";
+import type { IFrontendRenderingService } from "./interfaces/IFrontendRenderingService";
+import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { EventBus } from "./EventBus";
@@ -67,7 +68,8 @@ import { OntologicalAudioEngine } from "../audio/OntologicalAudioEngine";
 import { ApplicationInitializerService } from "./ApplicationInitializerService";
 import { WebAudioAPIService } from "./WebAudioAPIService";
 import { GameStateStore } from "./GameStateStore";
-import { StreamingVideoService } from "./StreamingVideoService";
+import { FrontendRenderingService } from "./FrontendRenderingService";
+import { StateStreamingService } from "./StateStreamingService";
 
 // ===== IMPORT ZUSTAND STORE =====
 import { useGameStore } from "../state/useGameStore";
@@ -183,8 +185,13 @@ container
 
 // ===== STREAMING SERVICE BINDINGS =====
 container
-  .bind<IStreamingVideoService>(TYPES.IStreamingVideoService)
-  .to(StreamingVideoService)
+  .bind<IFrontendRenderingService>(TYPES.IFrontendRenderingService)
+  .to(FrontendRenderingService)
+  .inSingletonScope();
+
+container
+  .bind<IStateStreamingService>(TYPES.IStateStreamingService)
+  .to(StateStreamingService)
   .inSingletonScope();
 
 // ===== CONFIGURATION BINDING FUNCTION =====
