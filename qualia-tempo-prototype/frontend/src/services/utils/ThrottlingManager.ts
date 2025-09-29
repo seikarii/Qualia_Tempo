@@ -7,21 +7,28 @@
  */
 
 import type { ThrottlingConfig } from '../contracts/INotificationService.contracts';
+import type { ITimerService } from '../interfaces/ITimerService';
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../inversify.types';
 
+@injectable()
 export class ThrottlingManager {
   private recentNotifications: Date[] = [];
   private burstCount = 0;
   private lastBurstTime = 0;
   private inCooldown = false;
 
-  constructor(private config: ThrottlingConfig) {}
+  constructor(
+    @inject(TYPES.ThrottlingConfig) private _config: ThrottlingConfig,
+    @inject(TYPES.ITimerService) private timerService: ITimerService
+  ) {}
 
   canProcess(): boolean {
-    if (!this.config.enabled) {
+    if (!this._config.enabled) {
       return true;
     }
 
-    const now = Date.now();
+    const now = this.timerService.now();
 
     // Clean old notifications
     this.cleanOldNotifications();
@@ -29,7 +36,7 @@ export class ThrottlingManager {
     // Check cooldown
     if (
       this.inCooldown &&
-      now - this.lastBurstTime < this.config.cooldownPeriod
+      now - this.lastBurstTime < this._config.cooldownPeriod
     ) {
       return false;
     } else if (this.inCooldown) {
@@ -38,27 +45,27 @@ export class ThrottlingManager {
     }
 
     // Check burst limit
-    if (this.burstCount >= this.config.burstLimit) {
+    if (this.burstCount >= this._config.burstLimit) {
       this.inCooldown = true;
       this.lastBurstTime = now;
       return false;
     }
 
     // Check per-second limit
-    const secondAgo = now - (this.config.rateLimitWindow || 1000);
+    const secondAgo = now - (this._config.rateLimitWindow || 1000);
     const recentCount = this.recentNotifications.filter(
       (time) => time.getTime() > secondAgo,
     ).length;
-    if (recentCount >= this.config.maxNotificationsPerSecond) {
+    if (recentCount >= this._config.maxNotificationsPerSecond) {
       return false;
     }
 
     // Check per-minute limit
-    const minuteAgo = now - (this.config.burstWindow || 60000);
+    const minuteAgo = now - (this._config.burstWindow || 60000);
     const minuteCount = this.recentNotifications.filter(
       (time) => time.getTime() > minuteAgo,
     ).length;
-    if (minuteCount >= this.config.maxNotificationsPerMinute) {
+    if (minuteCount >= this._config.maxNotificationsPerMinute) {
       return false;
     }
 
@@ -66,13 +73,13 @@ export class ThrottlingManager {
   }
 
   recordNotification(): void {
-    const now = new Date();
+    const now = new Date(this.timerService.now());
     this.recentNotifications.push(now);
     this.burstCount++;
   }
 
   private cleanOldNotifications(): void {
-    const cutoff = Date.now() - (this.config.historyRetention || 60000); // Use configured retention
+    const cutoff = this.timerService.now() - (this._config.historyRetention || 60000); // Use configured retention
     this.recentNotifications = this.recentNotifications.filter(
       (time) => time.getTime() > cutoff,
     );

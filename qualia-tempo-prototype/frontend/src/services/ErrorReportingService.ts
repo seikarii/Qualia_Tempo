@@ -50,8 +50,8 @@ export class ErrorFingerprinter {
       return btoa(`${message}:${stack}:${contextString}`).slice(0, fingerprintLength);
     }
 
-    const message = error.message || "Unknown error";
-    const stack = error.stack?.split("\n")[0] || "";
+    const message = error.message ?? "Unknown error";
+    const stack = error.stack?.split("\n")[0] ?? "";
     const contextString = context ? JSON.stringify(context) : "";
     return btoa(`${message}:${stack}:${contextString}`).slice(0, fingerprintLength);
   }
@@ -447,23 +447,23 @@ export class ErrorReportingService implements IErrorReportingService {
     severity: ErrorSeverity,
     context?: Record<string, any>,
   ): ExtendedErrorReport {
-    const fingerprint = ErrorFingerprinter.generateFingerprint(error, context, this.config.fingerprintLength || 16);
+    const fingerprint = ErrorFingerprinter.generateFingerprint(error, context, this.config.fingerprintLength ?? 16);
 
     // Handle null/undefined errors gracefully
-    const safeError = error || new Error("Unknown error (null/undefined)");
+    const safeError = error ?? new Error("Unknown error (null/undefined)");
 
     return {
       id: `error_${this.timerService.now()}_${Math.random().toString(36).substr(2, 8)}`,
       timestamp: this.timerService.getCurrentDate(),
       sessionId: this.sessionId,
       error: {
-        name: safeError.name || "UnknownError",
-        message: safeError.message || "Unknown error occurred",
+        name: safeError.name ?? "UnknownError",
+        message: safeError.message ?? "Unknown error occurred",
         stack: safeError.stack,
       },
       severity,
-      userAgent: context?.userAgent || "Unknown",
-      url: context?.url || "Unknown",
+      userAgent: context?.userAgent ?? "Unknown",
+      url: context?.url ?? "Unknown",
       stackTrace: safeError.stack,
       context,
       fingerprint,
@@ -527,13 +527,13 @@ export class ErrorReportingService implements IErrorReportingService {
   private startMemoryCleanup(): void {
     this.memoryCleanupInterval = this.timerService.setInterval(() => {
       this.performMemoryCleanup();
-    }, this.config.memoryCleanupInterval || 60000); // Use configured interval
+    }, this.config.memoryCleanupInterval ?? 60000); // Use configured interval
   }
 
   private startRateLimitRefill(): void {
     this.rateLimitRefillInterval = this.timerService.setInterval(() => {
       this.refillRateLimitTokens();
-    }, this.config.rateLimitRefillInterval || 1000); // Use configured interval
+    }, this.config.rateLimitRefillInterval ?? 1000); // Use configured interval
   }
 
   private stopAllIntervals(): void {
@@ -595,7 +595,7 @@ export class ErrorReportingService implements IErrorReportingService {
     // Check circuit breaker
     if (this.circuitBreakerState.state === "open") {
       if (
-        this.timerService.now() < (this.circuitBreakerState.nextAttemptTime?.getTime() || 0)
+        this.timerService.now() < (this.circuitBreakerState.nextAttemptTime?.getTime() ?? 0)
       ) {
         this.logger.warn(
           "⚡ [ErrorReportingService] Circuit breaker open, skipping batch processing",

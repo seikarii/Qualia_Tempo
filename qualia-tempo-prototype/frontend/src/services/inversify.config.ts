@@ -75,6 +75,7 @@ import { FrontendRenderingService } from "./FrontendRenderingService";
 import { StateStreamingService } from "./StateStreamingService";
 import { WebSocketService } from "./WebSocketService";
 import { BrowserEventsService } from "./BrowserEventsService";
+import { ThrottlingManager } from "./utils/ThrottlingManager";
 
 // ===== CORE SERVICE BINDINGS =====
 // These services have no dependencies and can be bound directly
@@ -128,6 +129,12 @@ container
 container
   .bind<IGameStateStore>(TYPES.IGameStateStore)
   .to(GameStateStore)
+  .inSingletonScope();
+
+// Bind ThrottlingManager as a utility class
+container
+  .bind<ThrottlingManager>(TYPES.ThrottlingManager)
+  .toSelf()
   .inSingletonScope();
 
 // ===== FEATURE SERVICE BINDINGS =====
@@ -255,6 +262,9 @@ export async function configureServices(): Promise<void> {
   safeBindConstant<ErrorReportingConfig>(TYPES.ErrorReportingConfig, fullConfig.errorReporting);
   safeBindConstant<DebugServiceConfig>(TYPES.DebugServiceConfig, fullConfig.debugService);
   safeBindConstant<StreamingConfig>(TYPES.StreamingConfig, fullConfig.backendSync.streaming);
+  
+  // Bind ThrottlingConfig from NotificationService config
+  safeBindConstant(TYPES.ThrottlingConfig, fullConfig.notificationService.throttling);
   
   // =================================================================
   // BINDING PARA NotificationServiceConfig - CÓDIGO FALTANTE

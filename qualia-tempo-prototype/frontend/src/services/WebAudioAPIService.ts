@@ -20,4 +20,21 @@ export class WebAudioAPIService implements IWebAudioAPIService {
     }
     return this.audioContext;
   }
+
+  @logMethod
+  public playTone(frequency: number, duration: number, gain: number, type: OscillatorType): void {
+    const audioContext = this.getAudioContext();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+    oscillator.type = type;
+    gainNode.gain.setValueAtTime(gain, audioContext.currentTime);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + duration);
+  }
 }

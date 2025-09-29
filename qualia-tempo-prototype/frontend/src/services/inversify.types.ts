@@ -35,6 +35,8 @@ export const TYPES = {
 
   // ===== SPECIAL TYPES =====
   IGameStateStore: Symbol.for("IGameStateStore"),
+  ThrottlingManager: Symbol.for("ThrottlingManager"),
+  ThrottlingConfig: Symbol.for("ThrottlingConfig"),
 
   // Configuration values for services
   ConfigBasePath: Symbol.for("ConfigBasePath"),

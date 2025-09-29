@@ -74,7 +74,7 @@ export class NotificationService implements INotificationService {
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
   // Configuration service for future extensibility
-  // @ts-ignore - Unused parameter for future configuration features
+  // @ts-expect-error - Unused parameter for future configuration features
   private readonly _configService: IConfigurationService;
   private readonly gameStateStore: IGameStateStore;
   private config: NotificationServiceConfig;
@@ -124,6 +124,7 @@ export class NotificationService implements INotificationService {
     @inject(TYPES.NotificationServiceConfig) config: NotificationServiceConfig,
     @inject(TYPES.IGameStateStore) gameStateStore: IGameStateStore,
     @inject(TYPES.ITimerService) _timerService: ITimerService,
+    @inject(TYPES.ThrottlingManager) throttlingManager: ThrottlingManager,
   ) {
     if (!eventBus) {
       throw new Error(
@@ -142,11 +143,10 @@ export class NotificationService implements INotificationService {
     this.timerService = _timerService;
     this.config = config;
     this.gameStateStore = gameStateStore;
+    this.throttlingManager = throttlingManager;
 
-    // Initialize processing components with minimal state
+    // Initialize processing components
     this.notificationQueue = new NotificationQueue();
-    // ThrottlingManager will be initialized in start() with proper configuration
-    this.throttlingManager = null as any; // Temporary until start() is called
 
     this.logger.info(
       "🔧 [NotificationService] Service initialized - configuration will be loaded in start()",
@@ -175,9 +175,6 @@ export class NotificationService implements INotificationService {
       // QUALIA.CODE v1.1: Configuration is now injected directly via constructor
       this.logger.debug("NotificationService initialized with injected configuration");
       this.logger.info("NotificationService configuration loaded from YAML successfully");
-      
-      // Reinitialize throttling manager with actual configuration
-      this.throttlingManager = new ThrottlingManager(this.config.throttling);
 
       this.logger.info(
         "🚀 [NotificationService] Starting notification processing...",
@@ -294,7 +291,7 @@ export class NotificationService implements INotificationService {
 
     // Create, filter, throttle, and display - orchestrator pattern
     const notification = this.createNotification(message, type, priority, {
-      expiresAt: duration ? new Date(Date.now() + duration) : undefined,
+              expiresAt: duration ? new Date(this.timerService.now() + duration) : undefined,
       metadata,
     });
 
@@ -548,7 +545,6 @@ export class NotificationService implements INotificationService {
         }
       }
 
-      this.throttlingManager = new ThrottlingManager(this.config.throttling);
       this.logger.info("NotificationService configuration updated");
       this.logCurrentConfig();
 
@@ -753,21 +749,21 @@ export class NotificationService implements INotificationService {
     priority: NotificationPriority,
     options?: Partial<ExtendedNotification>,
   ): ExtendedNotification {
-    const now = new Date();
+    const now = new Date(this.timerService.now());
     return {
-      id: `notification_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`,
+      id: `notification_${this.timerService.now()}_${Math.random().toString(36).substr(2, 8)}`,
       timestamp: now,
       message,
       type,
       priority,
-      category: options?.category || "general",
-      source: options?.source || "manual",
+      category: options?.category ?? "general",
+      source: options?.source ?? "manual",
       metadata: options?.metadata,
       displayed: false,
       dismissed: false,
       expiresAt: new Date(
         now.getTime() +
-          (options?.expiresAt?.getTime() || this.config.defaultTtl),
+          (options?.expiresAt?.getTime() ?? this.config.defaultTtl),
       ),
       retryCount: 0,
       ...options,
@@ -869,7 +865,7 @@ export class NotificationService implements INotificationService {
   }
 
   private _isExpiredByAge(notification: ExtendedNotification): boolean {
-    const age = Date.now() - notification.timestamp.getTime();
+    const age = this.timerService.now() - notification.timestamp.getTime();
     return age > this.config.filter.maxAge;
   }
 
@@ -896,7 +892,7 @@ export class NotificationService implements INotificationService {
     };
 
     if (notification.expiresAt) {
-      logData.processingTime = notification.expiresAt.getTime() - Date.now();
+      logData.processingTime = notification.expiresAt.getTime() - this.timerService.now();
     }
 
     if (notification.metadata) {
@@ -913,7 +909,7 @@ export class NotificationService implements INotificationService {
 
     // Auto-dismiss functionality: Set up timer if expiresAt is defined
     if (notification.expiresAt) {
-      const timeToExpire = notification.expiresAt.getTime() - Date.now();
+      const timeToExpire = notification.expiresAt.getTime() - this.timerService.now();
       if (timeToExpire > 0) {
         this.timerService.setTimeout(() => {
           // Only dismiss if notification is still active
@@ -971,7 +967,7 @@ export class NotificationService implements INotificationService {
   }
 
   private performAutoCleanup(): void {
-    const now = Date.now();
+    const now = this.timerService.now();
     let expiredCount = 0;
 
     // Clean up expired notifications

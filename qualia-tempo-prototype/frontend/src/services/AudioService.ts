@@ -113,7 +113,7 @@ export class AudioService implements IAudioService {
         entities: [],
         strength: qualiaState.intensity,
         description: "Transcendence achievement",
-        timestamp: Date.now(),
+        timestamp: this.timerService.now(),
       };
       this.audioEngine.playEmergentPattern(emergentBehavior);
     }
@@ -161,46 +161,18 @@ export class AudioService implements IAudioService {
   @catchError
   public playRhythmicFeedback(timing: "perfect" | "good" | "miss"): void {
     if (!this.audioEngine || !this.isInitialized) {
-      this.logger.warn("Cannot play rhythmic feedback: audio not initialized");
+      this.logger.warn(this.config.messages.audioNotInitialized);
       return;
     }
 
     // Simple audio feedback based on timing
     try {
-      const config = this.config;
-      const audioContext = this.webAudioAPIService.getAudioContext();
-      if (!audioContext) {
-        const audioConfig = this.config;
-        this.logger.warn(audioConfig.messages.audioContextNotAvailable);
-        return;
-      }
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      // Different frequencies for different timing accuracy
-      switch (timing) {
-        case "perfect":
-          oscillator.frequency.value =
-            config.rhythmicFeedback.perfect.frequency;
-          gainNode.gain.value = config.rhythmicFeedback.perfect.gain;
-          break;
-        case "good":
-          oscillator.frequency.value = config.rhythmicFeedback.good.frequency;
-          gainNode.gain.value = config.rhythmicFeedback.good.gain;
-          break;
-        case "miss":
-          oscillator.frequency.value = config.rhythmicFeedback.miss.frequency;
-          gainNode.gain.value = config.rhythmicFeedback.miss.gain;
-          break;
-      }
-
-      oscillator.type = "sine";
-      oscillator.start();
-      oscillator.stop(
-        audioContext.currentTime + config.rhythmicFeedback[timing].duration,
+      const feedbackConfig = this.config.rhythmicFeedback[timing];
+      this.webAudioAPIService.playTone(
+        feedbackConfig.frequency,
+        feedbackConfig.duration / 1000, // duration in seconds
+        feedbackConfig.gain,
+        "sine"
       );
 
       this.logger.info(`🔊 Rhythmic feedback: ${timing}`);
@@ -217,24 +189,12 @@ export class AudioService implements IAudioService {
     }
 
     try {
-      const config =
-        this.config;
-      const audioContext = this.webAudioAPIService.getAudioContext();
-      if (!audioContext) {
-        return; // Silently fail if context is not available
-      }
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      oscillator.frequency.value = config.metronome.frequency;
-      oscillator.type = "square";
-      gainNode.gain.value = config.metronome.gain;
-
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + config.metronome.duration);
+      this.webAudioAPIService.playTone(
+        this.config.metronome.frequency,
+        this.config.metronome.duration,
+        this.config.metronome.gain,
+        "square"
+      );
     } catch (error) {
       // Silent fail for metronome
     }
@@ -345,10 +305,10 @@ export class AudioService implements IAudioService {
   @catchError
   public setMasterVolume(volume: number): void {
     // Update the configuration service with new volume
-        const config = this.config;
-    // Note: This modifies the config object - consider if this is the intended behavior
-    (config as any).volume = Math.max(0, Math.min(1, volume));
-    this.logger.info(`🔊 Master volume set to: ${(config as any).volume}`);
+    this.logger.warn(
+      `Attempted to set master volume to ${volume}. This is a read-only value. Please modify the volume in audio-service.yaml and restart.`
+    );
+    // DO NOT MODIFY this.config.volume
   }
 
   @logMethod
