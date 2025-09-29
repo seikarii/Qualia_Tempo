@@ -180,7 +180,7 @@ export class GameControllerService implements IGameControllerService {
       isPaused: false,
       currentScore: 0,
       comboCount: 0,
-      health: this.config.maxHealth,
+      health: this.config.health.maxHealth,
       level: 1,
       gameMode: "normal",
     };
@@ -189,18 +189,16 @@ export class GameControllerService implements IGameControllerService {
 
   @logMethod
   @catchError
-  public getGameState(): any {
+  public getGameState(): GameState {
     return { ...this.gameState };
   }
 
   @logMethod
-  @catchError
   public isPlaying(): boolean {
     return this.gameState.isPlaying && !this.gameState.isPaused;
   }
 
   @logMethod
-  @catchError
   public isPaused(): boolean {
     return this.gameState.isPaused;
   }
@@ -211,7 +209,6 @@ export class GameControllerService implements IGameControllerService {
    * Get configuration
    */
   @logMethod
-  @catchError
   public getConfig(): Readonly<GameControllerConfig> {
     return { ...this.config };
   }
@@ -321,7 +318,7 @@ export class GameControllerService implements IGameControllerService {
 
     // Health recovery for good hits
     this.gameState.health = Math.min(
-      this.config.maxHealth,
+      this.config.health.maxHealth,
       this.gameState.health + 2,
     );
 
@@ -367,7 +364,7 @@ export class GameControllerService implements IGameControllerService {
     this.logger.info("⏪ [GameController] Rewind activated");
     // Rewind could restore some health
     this.gameState.health = Math.min(
-      this.config.maxHealth,
+      this.config.health.maxHealth,
       this.gameState.health + 10,
     );
     this.emitGameStateChanged("Playing");
