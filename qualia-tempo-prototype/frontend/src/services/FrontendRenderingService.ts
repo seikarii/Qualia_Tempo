@@ -125,7 +125,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
       uniforms: {
         time: { value: 0 },
         intensity: { value: 0 },
-        precision: { value: 0 },
+        u_precision: { value: 0 },
         aggression: { value: 0 },
         flow: { value: 0 },
         chaos: { value: 0 },
@@ -134,13 +134,12 @@ export class FrontendRenderingService implements IFrontendRenderingService {
       },
       vertexShader: `
         attribute float size;
-        attribute vec3 color;
         varying vec3 vColor;
         varying float vSize;
 
         uniform float time;
         uniform float intensity;
-        uniform float precision;
+        uniform float u_precision;
         uniform float aggression;
         uniform float flow;
         uniform float chaos;
@@ -148,7 +147,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
         uniform float ultimate;
 
         void main() {
-          vColor = color;
+          vColor = vec3(1.0, 1.0, 1.0); // Default white color since we removed the color attribute
 
           // Dynamic sizing based on qualia state
           float dynamicSize = size * (1.0 + intensity * 2.0 + ultimate * 3.0);
@@ -180,13 +179,13 @@ export class FrontendRenderingService implements IFrontendRenderingService {
         varying vec3 vColor;
         varying float vSize;
 
-        uniform float precision;
+        uniform float u_precision;
         uniform float ultimate;
 
         void main() {
           // Create circular particles with precision-based sharpness
           float distance = length(gl_PointCoord - vec2(0.5));
-          float alpha = 1.0 - smoothstep(0.1 * (1.0 - precision * 0.8), 0.5, distance);
+          float alpha = 1.0 - smoothstep(0.1 * (1.0 - u_precision * 0.8), 0.5, distance);
 
           // Ultimate mode creates glowing effects
           vec3 finalColor = vColor;
@@ -248,7 +247,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     // Update shader uniforms
     if (this.particleMaterial) {
       this.particleMaterial.uniforms.intensity.value = state.intensity;
-      this.particleMaterial.uniforms.precision.value = state.precision;
+      this.particleMaterial.uniforms.u_precision.value = state.precision;
       this.particleMaterial.uniforms.aggression.value = state.aggression;
       this.particleMaterial.uniforms.flow.value = state.flow;
       this.particleMaterial.uniforms.chaos.value = state.chaos;

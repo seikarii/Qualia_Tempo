@@ -324,6 +324,10 @@ window.$RefreshSig$ = () => (type) => type;</script>
   --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
   box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
 }
+.outline {
+  outline-style: var(--tw-outline-style);
+  outline-width: 1px;
+}
 .drop-shadow-\[0_0_10px_rgba\(56\,189\,248\,0\.8\)\] {
   --tw-drop-shadow-size: drop-shadow(0 0 10px var(--tw-drop-shadow-color, rgba(56,189,248,0.8)));
   --tw-drop-shadow: var(--tw-drop-shadow-size);
@@ -331,6 +335,9 @@ window.$RefreshSig$ = () => (type) => type;</script>
 }
 .filter {
   filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
+}
+.backdrop-filter {
+  backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
 }
 .transition {
   transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, backdrop-filter, display, content-visibility, overlay, pointer-events;
@@ -1104,6 +1111,11 @@ textarea:focus {
   inherits: false;
   initial-value: 0 0 #0000;
 }
+@property --tw-outline-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
 @property --tw-blur {
   syntax: "*";
   inherits: false;
@@ -1157,6 +1169,42 @@ textarea:focus {
   syntax: "*";
   inherits: false;
 }
+@property --tw-backdrop-blur {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-backdrop-brightness {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-backdrop-contrast {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-backdrop-grayscale {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-backdrop-hue-rotate {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-backdrop-invert {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-backdrop-opacity {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-backdrop-saturate {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-backdrop-sepia {
+  syntax: "*";
+  inherits: false;
+}
 @property --tw-duration {
   syntax: "*";
   inherits: false;
@@ -1199,6 +1247,7 @@ textarea:focus {
       --tw-ring-offset-width: 0px;
       --tw-ring-offset-color: #fff;
       --tw-ring-offset-shadow: 0 0 #0000;
+      --tw-outline-style: solid;
       --tw-blur: initial;
       --tw-brightness: initial;
       --tw-contrast: initial;
@@ -1212,13 +1261,22 @@ textarea:focus {
       --tw-drop-shadow-color: initial;
       --tw-drop-shadow-alpha: 100%;
       --tw-drop-shadow-size: initial;
+      --tw-backdrop-blur: initial;
+      --tw-backdrop-brightness: initial;
+      --tw-backdrop-contrast: initial;
+      --tw-backdrop-grayscale: initial;
+      --tw-backdrop-hue-rotate: initial;
+      --tw-backdrop-invert: initial;
+      --tw-backdrop-opacity: initial;
+      --tw-backdrop-saturate: initial;
+      --tw-backdrop-sepia: initial;
       --tw-duration: initial;
     }
   }
 }
 </style></head>
   <body>
-    <div id="root"><div class="h-screen w-screen relative overflow-hidden"><div class="absolute inset-0 z-0"><div class="frontend-renderer "><canvas data-engine="three.js r180" width="300" height="150" style="width: 300px; height: 150px; display: block; background: rgb(0, 0, 0);"></canvas><div style="position: absolute; top: 10px; right: 10px; padding: 8px 12px; background: rgb(68, 68, 68); color: white; border-radius: 4px; font-size: 12px; font-family: monospace;">Disconnected</div><div style="position: absolute; bottom: 10px; left: 10px; padding: 8px 12px; background: rgba(0, 0, 0, 0.7); color: white; border-radius: 4px; font-size: 11px; font-family: monospace;">FPS: 0.0 | Triangles: 10000 | Draw Calls: 1</div></div></div><div class="absolute inset-0 z-10 pointer-events-none"><div class="cyber-grid absolute inset-0"></div><div class="absolute inset-0 qualia-bloom-extreme mix-blend-screen opacity-80" style="background: radial-gradient(rgba(0, 255, 255, 0.25) 0%, rgba(128, 0, 255, 0.18) 30%, rgba(255, 0, 128, 0.12) 50%, rgba(10, 10, 30, 0.9) 80%);"></div><div class="absolute inset-0 pointer-events-none opacity-60" style="background: linear-gradient(45deg, rgba(2, 2, 12, 0.8) 0%, rgba(8, 4, 20, 0.6) 50%, rgba(2, 2, 12, 0.8) 100%);"></div></div><div class="absolute inset-0 z-20"><div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"><div class="relative w-full h-full flex items-center justify-center"><div class="flex flex-col items-center justify-center gap-12 p-8 pointer-events-auto"><div class="text-center pointer-events-auto" style="opacity: 0; transform: translateY(-35.1506px);"><h1 class="text-6xl md:text-8xl lg:text-9xl font-orbitron font-black tracking-wider"><span class="relative"><span class="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x">QUALIA</span><span class="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 bg-clip-text text-transparent animate-gradient-x opacity-50 blur-sm"></span><span class="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-cyan-400/10 to-purple-500/10 bg-clip-text text-transparent animate-gradient-x opacity-30 blur-md" style="animation-delay: 0.5s;"></span></span><br><span class="relative"><span class="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x" style="animation-delay: 0.25s;">TEMPO</span><span class="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 bg-clip-text text-transparent animate-gradient-x opacity-50 blur-sm" style="animation-delay: 0.25s;"></span><span class="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-cyan-400/10 to-purple-500/10 bg-clip-text text-transparent animate-gradient-x opacity-30 blur-md" style="animation-delay: 0.75s;"></span></span></h1><div class="absolute inset-0 pointer-events-none"><div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div></div></div><div class="text-center relative pointer-events-auto" style="opacity: 0; transform: translateY(-30px);"><h2 class="text-xl md:text-2xl lg:text-3xl font-orbitron font-medium tracking-widest text-cyan-300/90">A CHARLIE HELLSINGER STORY</h2><div class="absolute inset-0 pointer-events-none"><div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-8 bg-cyan-400/30 rounded-full blur-lg"></div></div></div><p class="text-lg text-white/60 mb-12 font-light tracking-wide text-center" style="opacity: 0;">IMMERSE IN GPU-RENDERED QUALIA</p><div class="relative pointer-events-auto" style="opacity: 0; transform: translateY(50px);"><button class="
+    <div id="root"><div class="h-screen w-screen relative overflow-hidden"><div class="absolute inset-0 z-0"><div class="frontend-renderer "><canvas data-engine="three.js r180" width="300" height="150" style="width: 300px; height: 150px; display: block; background: rgb(0, 0, 0);"></canvas><div style="position: absolute; top: 10px; right: 10px; padding: 8px 12px; background: rgb(68, 68, 68); color: white; border-radius: 4px; font-size: 12px; font-family: monospace;">Disconnected</div><div style="position: absolute; bottom: 10px; left: 10px; padding: 8px 12px; background: rgba(0, 0, 0, 0.7); color: white; border-radius: 4px; font-size: 11px; font-family: monospace;">FPS: 0.0 | Triangles: 10000 | Draw Calls: 1</div></div></div><div class="absolute inset-0 z-10 pointer-events-none"><div class="cyber-grid absolute inset-0"></div><div class="absolute inset-0 qualia-bloom-extreme mix-blend-screen opacity-80" style="background: radial-gradient(rgba(0, 255, 255, 0.25) 0%, rgba(128, 0, 255, 0.18) 30%, rgba(255, 0, 128, 0.12) 50%, rgba(10, 10, 30, 0.9) 80%);"></div><div class="absolute inset-0 pointer-events-none opacity-60" style="background: linear-gradient(45deg, rgba(2, 2, 12, 0.8) 0%, rgba(8, 4, 20, 0.6) 50%, rgba(2, 2, 12, 0.8) 100%);"></div></div><div class="absolute inset-0 z-20"><div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"><div class="relative w-full h-full flex items-center justify-center"><div class="flex flex-col items-center justify-center gap-12 p-8 pointer-events-auto"><div class="text-center pointer-events-auto" style="opacity: 1; transform: none;"><h1 class="text-6xl md:text-8xl lg:text-9xl font-orbitron font-black tracking-wider"><span class="relative"><span class="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x">QUALIA</span><span class="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 bg-clip-text text-transparent animate-gradient-x opacity-50 blur-sm"></span><span class="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-cyan-400/10 to-purple-500/10 bg-clip-text text-transparent animate-gradient-x opacity-30 blur-md" style="animation-delay: 0.5s;"></span></span><br><span class="relative"><span class="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x" style="animation-delay: 0.25s;">TEMPO</span><span class="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 bg-clip-text text-transparent animate-gradient-x opacity-50 blur-sm" style="animation-delay: 0.25s;"></span><span class="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-cyan-400/10 to-purple-500/10 bg-clip-text text-transparent animate-gradient-x opacity-30 blur-md" style="animation-delay: 0.75s;"></span></span></h1><div class="absolute inset-0 pointer-events-none"><div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div></div></div><div class="text-center relative pointer-events-auto" style="opacity: 0; transform: translateY(-0.189616px);"><h2 class="text-xl md:text-2xl lg:text-3xl font-orbitron font-medium tracking-widest text-cyan-300/90">A CHARLIE HELLSINGER STORY</h2><div class="absolute inset-0 pointer-events-none"><div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-8 bg-cyan-400/30 rounded-full blur-lg"></div></div></div><p class="text-lg text-white/60 mb-12 font-light tracking-wide text-center" style="opacity: 1;">IMMERSE IN GPU-RENDERED QUALIA</p><div class="relative pointer-events-auto" style="opacity: 0; transform: translateY(10.436px);"><button class="
               relative px-12 py-6 font-orbitron font-bold text-lg md:text-xl tracking-wider
               border-2 border-transparent rounded-lg
               bg-gradient-to-r from-gray-900 to-black
@@ -1226,8 +1284,8 @@ textarea:focus {
               overflow-hidden
               transition-all duration-300
               
-            " tabindex="0"><div class="absolute inset-0 rounded-lg p-0.5 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500" style="background-size: 200% 200%; background-position: 0% 50%; opacity: 0.8;"></div><div class="absolute inset-[3px] rounded-lg bg-gradient-to-br from-gray-900 to-black"></div><div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent" style="width: 100%; transform: translateX(-100%);"></div><span class="relative z-10 text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.8)]">INITIATE NEURAL SYNC</span><div class="absolute inset-0 rounded-lg bg-cyan-400/20 blur-xl" style="transform: none; opacity: 1;"></div><div class="absolute inset-0 rounded-lg bg-purple-500/15 blur-2xl" style="transform: none; opacity: 1;"></div><div class="absolute inset-0 rounded-lg bg-black/40" style="opacity: 0;"></div></button></div></div></div></div></div></div></div>
-    <script type="module" src="/src/index.tsx?t=1759129297717"></script>
+            " tabindex="0"><div class="absolute inset-0 rounded-lg p-0.5 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500" style="background-size: 200% 200%; background-position: 0% 50%; opacity: 0.8;"></div><div class="absolute inset-[3px] rounded-lg bg-gradient-to-br from-gray-900 to-black"></div><div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent" style="width: 100%; transform: translateX(-100%);"></div><span class="relative z-10 text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.8)]">INITIATE NEURAL SYNC</span><div class="absolute inset-0 rounded-lg bg-cyan-400/20 blur-xl" style="transform: none; opacity: 0.3;"></div><div class="absolute inset-0 rounded-lg bg-purple-500/15 blur-2xl" style="transform: none; opacity: 0.2;"></div><div class="absolute inset-0 rounded-lg bg-black/40" style="opacity: 0;"></div></button></div></div></div></div></div></div></div>
+    <script type="module" src="/src/index.tsx?t=1759130205873"></script>
   
 
 </body></html>

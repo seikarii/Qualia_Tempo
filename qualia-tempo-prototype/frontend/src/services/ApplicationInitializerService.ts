@@ -14,6 +14,7 @@ import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovement
 import type { INotificationService } from "./interfaces/INotificationService";
 import type { IErrorReportingService } from "./interfaces/IErrorReportingService";
 import type { IDebugService } from "./interfaces/IDebugService";
+import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IApplicationInitializerService } from "./interfaces/IApplicationInitializerService";
 import { logMethod, catchError } from "../utils/decorators";
@@ -34,6 +35,7 @@ export class ApplicationInitializerService
   private readonly notificationService: INotificationService;
   private readonly errorReportingService: IErrorReportingService;
   private readonly debugService: IDebugService;
+  private readonly stateStreamingService: IStateStreamingService;
   private readonly logger: ILogger;
   private isStarted = false;
 
@@ -52,6 +54,7 @@ export class ApplicationInitializerService
     @inject(TYPES.IErrorReportingService)
     errorReportingService: IErrorReportingService,
     @inject(TYPES.IDebugService) debugService: IDebugService,
+    @inject(TYPES.IStateStreamingService) stateStreamingService: IStateStreamingService,
     @inject(TYPES.ILogger) logger: ILogger,
   ) {
     this.configService = configService;
@@ -63,6 +66,7 @@ export class ApplicationInitializerService
     this.notificationService = notificationService;
     this.errorReportingService = errorReportingService;
     this.debugService = debugService;
+    this.stateStreamingService = stateStreamingService;
     this.logger = logger;
     
     // Configuration will be accessed in start() method after it's loaded
@@ -108,7 +112,11 @@ export class ApplicationInitializerService
       this.notificationService.start();
       this.logger.info(config.messages.transversalServicesStarted);
 
-      // Step 4: Start game controller service
+      // Step 4: Start state streaming service (needs EventBus to be available)
+      await this.stateStreamingService.start();
+      this.logger.info("State streaming service started");
+
+      // Step 5: Start game controller service
       this.logger.debug(config.steps.startGameController);
       this.gameControllerService.start();
       this.logger.info(config.messages.gameControllerStarted);

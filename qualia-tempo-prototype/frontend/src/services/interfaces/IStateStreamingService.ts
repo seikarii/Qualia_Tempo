@@ -1,5 +1,6 @@
 // IStateStreamingService.ts
 export interface IStateStreamingService {
+  start(): Promise<void>;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   getConnectionStatus(): ConnectionStatus;

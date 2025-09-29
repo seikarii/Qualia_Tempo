@@ -4,12 +4,14 @@
  */
 
 import { injectable, inject } from "inversify";
+import { container } from "./inversify.container";
 import { TYPES } from "./inversify.types";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { QualiaState } from "../types/contracts";
+import type { QualiaStateUpdatedEvent, StreamingStatusChangedEvent, ConnectionStatus } from "./contracts/events.contracts";
 import { logMethod, catchError } from "../utils/decorators";
 
 export interface IStateStreamingService {
@@ -18,15 +20,9 @@ export interface IStateStreamingService {
   getConnectionStatus(): ConnectionStatus;
 }
 
-export interface ConnectionStatus {
-  connected: boolean;
-  state: "IDLE" | "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "ERROR";
-  lastStateUpdate?: number;
-}
-
 @injectable()
 export class StateStreamingService implements IStateStreamingService {
-  private readonly eventBus: IEventBus;
+  private eventBus!: IEventBus; // Declarar, pero no inyectar en constructor
   private readonly logger: ILogger;
   private readonly configService: IConfigurationService;
   private readonly timerService: ITimerService;
@@ -51,12 +47,10 @@ export class StateStreamingService implements IStateStreamingService {
   private connectionStartTime = 0;
 
   constructor(
-    @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IConfigurationService) configService: IConfigurationService,
     @inject(TYPES.ITimerService) timerService: ITimerService,
   ) {
-    this.eventBus = eventBus;
     this.logger = logger;
     this.configService = configService;
     this.timerService = timerService;
@@ -75,6 +69,13 @@ export class StateStreamingService implements IStateStreamingService {
       connectionUrl: this.connectionUrl,
       maxReconnectAttempts: this.maxReconnectAttempts,
     });
+  }
+
+  @logMethod
+  public async start(): Promise<void> {
+    // Obtener la instancia de forma perezosa (lazy) para romper el ciclo
+    this.eventBus = container.get<IEventBus>(TYPES.IEventBus);
+    this.logger.info("StateStreamingService started and EventBus injected.");
   }
 
   @logMethod
@@ -140,8 +141,10 @@ export class StateStreamingService implements IStateStreamingService {
   getConnectionStatus(): ConnectionStatus {
     return {
       connected: this.state === "CONNECTED",
-      state: this.state,
-      lastStateUpdate: Date.now(),
+      state: this.state as any, // Type assertion for compatibility
+      url: this.connectionUrl,
+      connectedAt: this.connectionStartTime ? new Date(this.connectionStartTime) : undefined,
+      reconnectAttempts: this.reconnectAttempts,
     };
   }
 
@@ -166,7 +169,10 @@ export class StateStreamingService implements IStateStreamingService {
 
       if (data.type === "qualiaState") {
         const qualiaState: QualiaState = data.state;
-        this.eventBus.publish("QualiaStateUpdated", { qualiaState }, "StateStreamingService");
+        this.eventBus.emit<QualiaStateUpdatedEvent>({
+          type: "QualiaStateUpdated",
+          qualiaState,
+        });
       } else if (data.type === "pong") {
         // Handle ping response
         this.logger.debug("Received pong from server");
@@ -244,14 +250,9 @@ export class StateStreamingService implements IStateStreamingService {
   };
 
   private updateConnectionStatus = (): void => {
-    this.eventBus.publish("StreamingStatusChanged", {
-      service: "StateStreamingService",
+    this.eventBus.emit<StreamingStatusChangedEvent>({
+      type: "StreamingStatusChanged",
       status: this.getConnectionStatus(),
-      statistics: {
-        messagesReceived: this.messagesReceived,
-        lastMessageTimestamp: this.lastMessageTimestamp,
-        connectionStartTime: this.connectionStartTime,
-      },
-    }, "StateStreamingService");
+    });
   };
 }

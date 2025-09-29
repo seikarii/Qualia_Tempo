@@ -1,11 +1,8 @@
 {
-  "timestamp": "2025-09-29T07:17:04.211Z",
-  "phase": "game-view",
+  "timestamp": "2025-09-29T07:17:05.798Z",
   "success": false,
-  "stats": {
-    "errors": 11,
-    "logs": 298
-  },
+  "error": "page.focus: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('canvas')\u001b[22m\n",
+  "stack": "page.focus: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('canvas')\u001b[22m\n\n    at comprehensiveTest (/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/browser-test.js:88:20)",
   "logs": [
     {
       "timestamp": "2025-09-29T07:16:46.532Z",
@@ -1794,6 +1791,24 @@
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.40ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:17:05.115Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:17:05.116Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.30ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T07:17:05.116Z",
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "entry": "[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED"
     }
   ],
   "errors": [
@@ -1807,6 +1822,7 @@
     "[ERROR] 🚨 [QualiaLogger] ERROR: WebSocket connection error {error: Event}",
     "[ERROR] WebSocket connection to 'ws://127.0.0.1:8000/ws/video_stream' failed: Error during WebSocket handshake: Unexpected response code: 403",
     "[ERROR] 🚨 [QualiaLogger] ERROR: WebSocket connection error {error: Event}",
+    "[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED",
     "[ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED"
   ]
 }
