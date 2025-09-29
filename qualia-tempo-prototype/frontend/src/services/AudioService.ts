@@ -257,31 +257,17 @@ export class AudioService implements IAudioService {
     const loop = options?.loop ?? false;
 
     try {
-      const audioContext = this.webAudioAPIService.getAudioContext();
-      if (!audioContext) {
-        this.logger.warn("AudioContext not available, cannot play sound.");
-        return;
-      }
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      // Basic sound generation based on soundId
       const frequency = this.getSoundFrequency(soundId);
-      oscillator.frequency.value = frequency;
-      oscillator.type = "sine";
-      gainNode.gain.value =
-        volume *
-        this.config
-          .volume;
+      const gain = volume * this.config.volume;
+      const duration = loop ? 0 : this.config.defaultSoundDuration; // For loop, duration is ignored
 
-      oscillator.start();
-      if (!loop) {
-        const audioConfig = this.config;
-        oscillator.stop(audioContext.currentTime + audioConfig.defaultSoundDuration);
-      }
+      this.webAudioAPIService.playTone(
+        frequency,
+        duration,
+        gain,
+        "sine",
+        loop
+      );
 
       this.logger.debug(`🔊 Playing sound: ${soundId}`, { volume, loop });
     } catch (error) {

@@ -22,7 +22,7 @@ export class WebAudioAPIService implements IWebAudioAPIService {
   }
 
   @logMethod
-  public playTone(frequency: number, duration: number, gain: number, type: OscillatorType): void {
+  public playTone(frequency: number, duration: number, gain: number, type: OscillatorType, loop: boolean = false): void {
     const audioContext = this.getAudioContext();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -35,6 +35,8 @@ export class WebAudioAPIService implements IWebAudioAPIService {
     gainNode.gain.setValueAtTime(gain, audioContext.currentTime);
 
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + duration);
+    if (!loop) {
+      oscillator.stop(audioContext.currentTime + duration);
+    }
   }
 }

@@ -266,23 +266,6 @@ export async function configureServices(): Promise<void> {
   // Bind ThrottlingConfig from NotificationService config
   safeBindConstant(TYPES.ThrottlingConfig, fullConfig.notificationService.throttling);
   
-  // =================================================================
-  // BINDING PARA NotificationServiceConfig - CÓDIGO FALTANTE
-  // =================================================================
-  // Este bloque es SEGURO en React.StrictMode porque se verifica si el binding ya existe.
-  if (!container.isBound(TYPES.NotificationServiceConfig)) {
-    // Obtenemos la configuración completa UNA SOLA VEZ durante el bootstrap.
-    const fullConfig2 = container.get<IConfigurationService>(TYPES.IConfigurationService).getConfig();
-
-    // Extraemos el objeto de configuración específico.
-    const notificationConfig = fullConfig2.notificationService;
-
-    // Registramos el objeto específico como un valor constante para que sea inyectado.
-    // ESTE ES EL PASO QUE FALTA.
-    container.bind<NotificationServiceConfig>(TYPES.NotificationServiceConfig).toConstantValue(notificationConfig);
-  }
-  // =================================================================
-  
   // Optional configuration with safe binding
   if (fullConfig.visualEffects) {
     safeBindConstant<VisualEffectsConfig>(TYPES.VisualEffectsConfig, fullConfig.visualEffects);
