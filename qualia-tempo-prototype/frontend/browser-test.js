@@ -84,6 +84,9 @@ async function comprehensiveTest() {
 
         // --- Phase 4: Movement Test ---
         console.log('🎮 Testing character movement (W + D keys)...');
+        console.log("Forzando foco en el canvas");
+        await page.focus('canvas');
+        console.log("Foco en canvas establecido");
         // Press and hold W and D keys simultaneously
         await page.keyboard.down('KeyW');
         await page.keyboard.down('KeyD');

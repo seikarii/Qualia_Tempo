@@ -6,8 +6,9 @@ import logging
 import base64
 from typing import Dict, Any, Set, Optional
 from fastapi import WebSocket, WebSocketDisconnect
-from .EventBus import EventBus
+from .EventBus import EventBus, RenderingPipelineFailedEvent
 from .RenderingService import RenderingService
+from .exceptions import RenderingPipelineError, GPUResourceError
 from ..utils.decorators import (
     log_execution,
     handle_errors,
@@ -23,7 +24,10 @@ class StreamingWebService:
     """
 
     def __init__(
-        self, event_bus: EventBus, rendering_service: RenderingService, particle_engine: Any
+        self,
+        event_bus: EventBus,
+        rendering_service: RenderingService,
+        particle_engine: Any,
     ) -> None:
         self._event_bus = event_bus
         self._rendering_service = rendering_service
@@ -45,6 +49,11 @@ class StreamingWebService:
         self._frames_sent = 0
         self._bytes_sent = 0
         self._connected_clients = 0
+
+        # Subscribe to rendering pipeline failure events
+        self._event_bus.subscribe(
+            "RENDERING_PIPELINE_FAILED", self._handle_rendering_failure
+        )
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
@@ -103,6 +112,34 @@ class StreamingWebService:
             f"🚀 Started new video streaming task: {id(self._stream_task)}"
         )
 
+    async def _handle_rendering_failure(
+        self, event: RenderingPipelineFailedEvent
+    ) -> None:
+        """Handle rendering pipeline failure events by stopping the stream."""
+        self._logger.critical(
+            f"🚨 Rendering pipeline failed: {event.data['error_message']}"
+        )
+        self._logger.critical("🛑 Shutting down stream due to rendering failure")
+
+        # Disconnect all clients with error message
+        disconnect_message = {
+            "type": "error",
+            "message": "Rendering pipeline failed. Stream terminated.",
+            "error_code": event.data["error_code"],
+            "timestamp": event.timestamp,
+        }
+
+        # Send error message to all clients before disconnecting
+        for connection in list(self._connections):
+            try:
+                await connection.send_json(disconnect_message)
+                await connection.close(code=1011)  # Internal Error
+            except Exception as e:
+                self._logger.error(f"Failed to notify client of rendering failure: {e}")
+
+        # Stop streaming immediately
+        await self._stop_streaming()
+
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
     async def _stop_streaming(self) -> None:
@@ -144,6 +181,14 @@ class StreamingWebService:
         frame_time = 1.0 / self._target_fps
         task_id = id(asyncio.current_task())
 
+        # Health check pre-loop: Check if rendering service is healthy before starting
+        if not self._rendering_service.is_healthy():
+            self._logger.critical(
+                "RenderingService is not healthy. Aborting streaming."
+            )
+            await self._stop_streaming()
+            return
+
         try:
             while self._is_streaming:  # Check streaming state
                 # IMMEDIATE CANCELLATION CHECK
@@ -159,42 +204,52 @@ class StreamingWebService:
 
                 loop_start = asyncio.get_event_loop().time()
 
+                # SECOND CANCELLATION CHECK BEFORE EXPENSIVE OPERATION
+                if not self._is_streaming:
+                    logger.critical(
+                        f"💀 STREAMING CANCELLED - ABORTING RENDER: {task_id}"
+                    )
+                    break
+
+                # QUALIA.CODE CRITICAL FIX: CONTEXT-SAFE OpenGL operations
+                # CRITICAL: All OpenGL operations must run in the main thread context
+                frame_bytes = None
+
                 try:
-                    # SECOND CANCELLATION CHECK BEFORE EXPENSIVE OPERATION
+                    # CRITICAL: Execute particle simulation step with OpenGL context safety
+                    compute_success = self._particle_engine.compute_step()
+                    if not compute_success:
+                        self._logger.warning(
+                            "⚠️ Particle compute step failed - continuing with last frame"
+                        )
+                        # Continue with rendering even if particle step fails
+
+                    # CRITICAL: Execute rendering in the same thread context as particle engine
+                    # Both operations must share the same OpenGL context to prevent segfaults
+                    # This call will now raise specific exceptions if it fails
+                    frame_bytes = self._rendering_service.render_frame()
+
+                except (RenderingPipelineError, GPUResourceError) as e:
+                    self._logger.critical(
+                        f"Unrecoverable rendering error caught: {e}. Shutting down stream."
+                    )
+                    # The event handler will handle the shutdown via RenderingPipelineFailedEvent
+                    break  # Exit the loop
+
+                except Exception as e:
+                    self._logger.error(f"Unhandled exception in streaming loop: {e}")
+                    # Consider if this should also trigger a shutdown
+                    continue
+
+                if frame_bytes:
+                    # THIRD CANCELLATION CHECK BEFORE TRANSMISSION
                     if not self._is_streaming:
                         logger.critical(
-                            f"💀 STREAMING CANCELLED - ABORTING RENDER: {task_id}"
+                            f"💀 STREAMING CANCELLED - ABORTING TRANSMISSION: {task_id}"
                         )
                         break
 
-                    # QUALIA.CODE CRITICAL FIX: Run particle simulation step BEFORE rendering
-                    self._particle_engine.compute_step()
-
-                    # Generate frame from rendering service - MAKE IT CANCELLABLE!
-                    # Run the blocking render_frame() in a thread pool to make it cancellable
-                    loop = asyncio.get_event_loop()
                     try:
-                        frame_bytes = await asyncio.wait_for(
-                            loop.run_in_executor(
-                                None, self._rendering_service.render_frame
-                            ),
-                            timeout=0.1,  # 100ms timeout for frame rendering
-                        )
-                    except asyncio.TimeoutError:
-                        logger.warning("⚠️ Frame rendering timed out - skipping frame")
-                        frame_bytes = None
-                    except asyncio.CancelledError:
-                        logger.critical(f"💀 FRAME RENDERING CANCELLED: {task_id}")
-                        break
-
-                    if frame_bytes:
-                        # THIRD CANCELLATION CHECK BEFORE TRANSMISSION
-                        if not self._is_streaming:
-                            logger.critical(
-                                f"💀 STREAMING CANCELLED - ABORTING TRANSMISSION: {task_id}"
-                            )
-                            break
-
                         # Encode frame as base64 for WebSocket transmission
                         frame_b64 = base64.b64encode(frame_bytes).decode("utf-8")
 
@@ -213,16 +268,26 @@ class StreamingWebService:
                         self._frames_sent += 1
                         self._bytes_sent += len(frame_bytes)
 
-                    # Frame rate limiting
-                    elapsed = asyncio.get_event_loop().time() - loop_start
-                    sleep_time = max(0, frame_time - elapsed)
+                    except WebSocketDisconnect:
+                        # Handle client disconnects gracefully
+                        self._logger.debug(
+                            "Client disconnected during frame transmission"
+                        )
+                    except Exception as e:
+                        self._logger.error(f"🚨 Error in frame transmission: {e}")
+                else:
+                    # This case should now only happen if render_frame explicitly returns None
+                    # in a controlled, non-error scenario (which it shouldn't).
+                    self._logger.warning(
+                        "render_frame returned None without an exception. This indicates a potential logic flaw."
+                    )
 
-                    if sleep_time > 0:
-                        await asyncio.sleep(sleep_time)
+                # Frame rate limiting
+                elapsed = asyncio.get_event_loop().time() - loop_start
+                sleep_time = max(0, frame_time - elapsed)
 
-                except Exception as e:
-                    self._logger.error(f"🚨 Error in frame generation: {e}")
-                    await asyncio.sleep(0.1)  # Brief pause before retry
+                if sleep_time > 0:
+                    await asyncio.sleep(sleep_time)
 
         except asyncio.CancelledError:
             self._logger.info("🛑 Streaming loop cancelled successfully")

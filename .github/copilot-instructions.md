@@ -32,126 +32,123 @@
 
 This is the most critical section of your directives. The manual `CompositionRoot` is DEPRECATED and FORBIDDEN. All service instantiation and dependency management is handled EXCLUSIVELY by the InversifyJS container.
 
-#### **THE GOLDEN PATH: SERVICE IMPLEMENTATION PROTOCOL**
+#### **THE GOLDEN PATH v1.2: SERVICE IMPLEMENTATION PROTOCOL**
 
-Execute these five steps sequentially and without deviation for ALL new service creation.
+Execute these six steps sequentially and without deviation for ALL new service creation.
 
 **STEP 1: DEFINE THE CONTRACT (THE INTERFACE)**
 - **LOCATION:** `/frontend/src/services/interfaces/I[ServiceName].ts`
-- **RATIONALE:** We code against abstractions, not concretions. This is the core of the Dependency Inversion Principle. It allows implementations to be swapped without affecting consumers, which is critical for testing and extensibility.
-- **MANDATE:** All services MUST have a corresponding interface defining their public API.
+- **MANDATE:** All services MUST have a corresponding interface defining their public API. This remains unchanged.
 
 ```typescript
-// CORRECT IMPLEMENTATION
 // RUTA: /frontend/src/services/interfaces/IMyNewService.ts
 export interface IMyNewService {
   execute(params: any): Promise<void>;
-  getStatus(): string;
 }
 ```
 
-**STEP 2: IMPLEMENT THE SERVICE (THE CONCRETE CLASS)**
-- **LOCATION:** `/frontend/src/services/[ServiceName].ts`
-- **RATIONALE:** This is the concrete implementation of the contract. It contains the business logic. By using `@injectable` and `@inject`, we allow the IoC container to manage its lifecycle and dependencies.
-- **MANDATE:** The class MUST be decorated with `@injectable()`. All dependencies MUST be injected into the constructor and decorated with `@inject(TYPES.Identifier)`. The class MUST implement its corresponding interface.
+**STEP 2: DEFINE DATA CONTRACTS & CONFIGURATION SHAPE (NEW)**
+- **LOCATION:** `/frontend/src/services/contracts/I[ServiceName].contracts.ts`
+- **MANDATE:** Define la forma del objeto de configuración que tu servicio necesitará. Esto centraliza las estructuras de datos.
 
 ```typescript
-// CORRECT IMPLEMENTATION
+// RUTA: /frontend/src/services/contracts/IMyNewService.contracts.ts
+export interface MyNewServiceConfig {
+  apiUrl: string;
+  timeout: number;
+  featureFlags: {
+    newFeature: boolean;
+  };
+}
+```
+
+**STEP 3: IMPLEMENT THE SERVICE WITH DIRECT CONFIGURATION INJECTION**
+- **LOCATION:** `/frontend/src/services/[ServiceName].ts`
+- **MANDATE:** The class MUST be decorated with `@injectable()`. Dependencies are injected as usual, but configuration is now injected directly as a typed object, NOT via IConfigurationService.
+
+```typescript
 // RUTA: /frontend/src/services/MyNewService.ts
 import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
-import { IMyDependency } from './interfaces/IMyDependency';
 import { IMyNewService } from './interfaces/IMyNewService';
-import { QualiaLogger } from './Logger';
-import { logMethod } from '../utils/decorators';
+import { MyNewServiceConfig } from './contracts/IMyNewService.contracts';
+import { ILogger } from './interfaces/ILogger';
 
 @injectable()
 export class MyNewService implements IMyNewService {
-  // Dependencies are private and readonly
-  private readonly dependency: IMyDependency;
-  private readonly logger: QualiaLogger;
+  private readonly config: MyNewServiceConfig;
+  private readonly logger: ILogger;
 
   constructor(
-    @inject(TYPES.IMyDependency) dependency: IMyDependency,
-    @inject(TYPES.Logger) logger: QualiaLogger
+    // CRITICAL CHANGE: Inject the specific config object, NOT IConfigurationService
+    @inject(TYPES.MyNewServiceConfig) config: MyNewServiceConfig,
+    @inject(TYPES.ILogger) logger: ILogger
   ) {
-    this.dependency = dependency;
+    this.config = config;
     this.logger = logger;
-    this.logger.info('MyNewService Initialized');
+    this.logger.info('MyNewService Initialized with timeout:', this.config.timeout);
   }
 
   @logMethod()
   public async execute(params: any): Promise<void> {
-    this.logger.debug('Executing MyNewService logic', { params });
-    await this.dependency.doWork(params);
-  }
-
-  public getStatus(): string {
-      return 'Operational';
+    if (!this.config.featureFlags.newFeature) {
+        this.logger.warn('New feature is disabled by configuration.');
+        return;
+    }
+    // ... logic using this.config.apiUrl
   }
 }
 ```
 
-**STEP 3: REGISTER THE SERVICE TYPE (THE IDENTIFIER)**
+**STEP 4: REGISTER THE SERVICE AND CONFIGURATION TYPES**
 - **LOCATION:** `/frontend/src/services/inversify.types.ts`
-- **RATIONALE:** Using `Symbol` for identifiers prevents name collisions and decouples the binding from fragile string literals.
-- **MANDATE:** Every service interface MUST have a corresponding entry in the `TYPES` object.
+- **MANDATE:** Every service interface AND its corresponding configuration contract MUST have a Symbol identifier.
 
 ```typescript
-// CORRECT IMPLEMENTATION
 // RUTA: /frontend/src/services/inversify.types.ts
 export const TYPES = {
-  // --- Core Services ---
-  Logger: Symbol.for("Logger"),
-  EventBus: Symbol.for("EventBus"),
-  ConfigurationService: Symbol.for("ConfigurationService"),
+  // ... existing types
+  IMyNewService: Symbol.for("IMyNewService"),
 
-  // --- Feature Services ---
-  IMyDependency: Symbol.for("IMyDependency"),
-  IMyNewService: Symbol.for("IMyNewService"), // Your new service type
+  // NEW: Add the configuration type
+  MyNewServiceConfig: Symbol.for("MyNewServiceConfig"),
 };
 ```
 
-**STEP 4: BIND THE SERVICE IN THE IOC CONTAINER (THE REGISTRATION)**
+**STEP 5: BIND THE SERVICE AND CONFIGURE THE MANIFEST**
 - **LOCATION:** `/frontend/src/services/inversify.config.ts`
-- **RATIONALE:** This is the central registry where interfaces are mapped to their concrete implementations. This is where the "inversion of control" happens.
-- **MANDATE:** Every new service MUST be bound here. Default to `inSingletonScope()` unless you have a documented architectural reason for a transient instance.
+- **MANDATE:**
+    1. Add your new YAML configuration file to the ConfigManifest.
+    2. Bind your service interface to its implementation as usual.
 
 ```typescript
-// CORRECT IMPLEMENTATION
 // RUTA: /frontend/src/services/inversify.config.ts
-import { container } from './inversify.container'; // Assuming container is defined elsewhere
-import { TYPES } from './inversify.types';
-import { IMyNewService } from './interfaces/IMyNewService';
-import { MyNewService } from './MyNewService';
 
-// ... other bindings
+// 1. Add to manifest
+container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
+  // ... existing configs
+  "myNewService": "my-new-service.yaml", // Your new config file
+});
 
+// 2. Bind the service
 container.bind<IMyNewService>(TYPES.IMyNewService).to(MyNewService).inSingletonScope();
 ```
 
-**STEP 5: CONSUME THE SERVICE IN THE UI (THE HOOK)**
-- **LOCATION:** Any React component (`.tsx`)
-- **RATIONALE:** This provides a clean, type-safe, and decoupled way for the UI layer to access business logic without knowing how it's created or what its dependencies are.
-- **MANDATE:** Services are consumed in the UI layer **ONLY** via the `useService` hook.
+**STEP 6: BIND THE CONFIGURATION OBJECT**
+- **LOCATION:** `/frontend/src/services/inversify.config.ts` (inside configureServices function)
+- **MANDATE:** After the configuration is loaded, bind the specific section of the configuration to its corresponding Symbol.
 
 ```typescript
-// CORRECT IMPLEMENTATION
-// RUTA: /frontend/src/components/MyComponent.tsx
-import { useService } from '../services/hooks';
-import { TYPES } from '../services/inversify.types';
-import { IMyNewService } from '../services/interfaces/IMyNewService';
+// RUTA: /frontend/src/services/inversify.config.ts
 
-const MyComponent = () => {
-  // Resolve the service from the container via the hook
-  const myService = useService<IMyNewService>(TYPES.IMyNewService);
+export async function configureServices(): Promise<void> {
+  // ... existing logic to load fullConfig
 
-  const handleClick = () => {
-    myService.execute({ data: 'example' });
-  };
+  // Bind your new configuration object
+  safeBindConstant<MyNewServiceConfig>(TYPES.MyNewServiceConfig, fullConfig.myNewService);
 
-  return <button onClick={handleClick}>Execute Service</button>;
-};
+  // ... other bindings
+}
 ```
 
 #### **FORBIDDEN PATTERNS (CRITICAL VIOLATIONS)**
@@ -181,6 +178,34 @@ Detection of these patterns will result in immediate task failure and require a 
     // FORBIDDEN
     import { container } from '../services/inversify.config';
     const service = container.get<IMyService>(TYPES.IMyService); // CRITICAL VIOLATION IN A COMPONENT
+    ```
+
+4.  **ANTI-PATTERN: INJECTING `IConfigurationService` (DEPRECATED)**
+    - **REASON:** This is a Service Locator anti-pattern. It couples services to the ConfigurationService and hides their true dependencies. The new standard is Direct Configuration Injection.
+    ```typescript
+    // FORBIDDEN - DEPRECATED PATTERN
+    @injectable()
+    export class MyOldService {
+      private configService: IConfigurationService;
+      constructor(
+        // CRITICAL VIOLATION: Do not inject the entire ConfigurationService
+        @inject(TYPES.IConfigurationService) configService: IConfigurationService
+      ) {
+        this.configService = configService;
+      }
+    }
+
+    // CORRECT - DIRECT CONFIGURATION INJECTION
+    @injectable()
+    export class MyNewService {
+      private config: MyNewServiceConfig;
+      constructor(
+        // CORRECT: Inject only the configuration object you need
+        @inject(TYPES.MyNewServiceConfig) config: MyNewServiceConfig
+      ) {
+        this.config = config;
+      }
+    }
     ```
 
 ---

@@ -59,30 +59,36 @@ container.bind<IQualiaService>(TYPES.IQualiaService).to(QualiaService).inSinglet
 import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
 import { IEventBus } from './interfaces/IEventBus';
-import { IConfigurationService } from './interfaces/IConfigurationService';
-import { QualiaLogger } from './Logger';
+import { IQualiaService } from './interfaces/IQualiaService';
+import { QualiaServiceConfig } from './contracts/IQualiaService.contracts';
+import { ILogger } from './interfaces/ILogger';
 
 @injectable()
 export class QualiaService implements IQualiaService {
   private readonly eventBus: IEventBus;
-  private readonly config: IConfigurationService;
-  private readonly logger: QualiaLogger;
+  private readonly config: QualiaServiceConfig;
+  private readonly logger: ILogger;
 
   constructor(
     @inject(TYPES.EventBus) eventBus: IEventBus,
-    @inject(TYPES.ConfigurationService) config: IConfigurationService,
-    @inject(TYPES.Logger) logger: QualiaLogger
+    // CRITICAL CHANGE: Inject the specific config object, NOT IConfigurationService
+    @inject(TYPES.QualiaServiceConfig) config: QualiaServiceConfig,
+    @inject(TYPES.ILogger) logger: ILogger
   ) {
     this.eventBus = eventBus;
     this.config = config;
     this.logger = logger;
-    this.logger.info('QualiaService Initialized');
+    this.logger.info('QualiaService Initialized with timeout:', this.config.timeout);
   }
 
   @logMethod()
   public async processQualiaState(state: QualiaState): Promise<void> {
+    if (!this.config.featureFlags.newFeature) {
+        this.logger.warn('New feature is disabled by configuration.');
+        return;
+    }
     this.logger.debug('Processing qualia state', { state });
-    // Implementation...
+    // Implementation using this.config.apiUrl...
   }
 }
 ```
@@ -927,6 +933,55 @@ To maintain architectural integrity, testability, and control, the direct use of
   const timerId = this.timerService.setTimeout(() => { /* ... */ }, 1000);
   this.timerService.clearTimeout(timerId);
   ```
+
+---
+
+## 12.5. Configuration Injection Anti-Patterns
+
+### ANTI-PATTERN: INJECTING `IConfigurationService` (DEPRECATED)
+- **REASON:** This is a Service Locator anti-pattern. It couples services to the ConfigurationService and hides their true dependencies. The new standard is Direct Configuration Injection.
+
+```typescript
+// FORBIDDEN - DEPRECATED PATTERN
+@injectable()
+export class MyOldService {
+  private configService: IConfigurationService;
+  constructor(
+    // CRITICAL VIOLATION: Do not inject the entire ConfigurationService
+    @inject(TYPES.IConfigurationService) configService: IConfigurationService
+  ) {
+    this.configService = configService;
+  }
+
+  public async execute(): Promise<void> {
+    // Accessing config through service locator pattern
+    const apiUrl = this.configService.getConfig().apiUrl;
+    const timeout = this.configService.getConfig().timeout;
+    // ... use apiUrl and timeout
+  }
+}
+
+// CORRECT - DIRECT CONFIGURATION INJECTION
+@injectable()
+export class MyNewService {
+  private config: MyNewServiceConfig;
+  constructor(
+    // CORRECT: Inject only the configuration object you need
+    @inject(TYPES.MyNewServiceConfig) config: MyNewServiceConfig
+  ) {
+    this.config = config;
+  }
+
+  public async execute(): Promise<void> {
+    // Direct access to typed configuration
+    if (!this.config.featureFlags.newFeature) {
+        this.logger.warn('New feature is disabled by configuration.');
+        return;
+    }
+    // ... use this.config.apiUrl and this.config.timeout
+  }
+}
+```
 
 ---
 

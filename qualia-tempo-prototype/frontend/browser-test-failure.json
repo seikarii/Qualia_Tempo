@@ -1,11 +1,8 @@
 {
-  "timestamp": "2025-09-29T06:40:47.957Z",
-  "phase": "game-view",
-  "success": true,
-  "stats": {
-    "errors": 0,
-    "logs": 274
-  },
+  "timestamp": "2025-09-29T06:40:49.385Z",
+  "success": false,
+  "error": "page.focus: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('canvas')\u001b[22m\n",
+  "stack": "page.focus: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('canvas')\u001b[22m\n\n    at comprehensiveTest (/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/frontend/browser-test.js:88:20)",
   "logs": [
     {
       "timestamp": "2025-09-29T06:40:30.106Z",
@@ -1650,7 +1647,58 @@
       "type": "info",
       "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 120, frameSize: 1920x1080, timestamp: 18903.248, dataSize: 16700}",
       "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 120, frameSize: 1920x1080, timestamp: 18903.248, dataSize: 16700}"
+    },
+    {
+      "timestamp": "2025-09-29T06:40:47.960Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emitting MetronomeTick to 1 listeners {}"
+    },
+    {
+      "timestamp": "2025-09-29T06:40:47.960Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.10ms {}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: 📢 [EventBus] Emit completed for MetronomeTick - 0.10ms {}"
+    },
+    {
+      "timestamp": "2025-09-29T06:40:47.968Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 150, frameSize: 1920x1080, timestamp: 18904.244, dataSize: 16700}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 150, frameSize: 1920x1080, timestamp: 18904.244, dataSize: 16700}"
+    },
+    {
+      "timestamp": "2025-09-29T06:40:47.968Z",
+      "type": "info",
+      "text": "ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 150, frameSize: 1920x1080, timestamp: 18904.244, dataSize: 16700}",
+      "entry": "[INFO] ℹ️ [QualiaLogger] INFO: BackendCanvas rendering frames {frameCount: 150, frameSize: 1920x1080, timestamp: 18904.244, dataSize: 16700}"
+    },
+    {
+      "timestamp": "2025-09-29T06:40:47.970Z",
+      "type": "log",
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: StreamingVideoService.ping: [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: StreamingVideoService.ping: [object Object]"
+    },
+    {
+      "timestamp": "2025-09-29T06:40:47.970Z",
+      "type": "error",
+      "text": "🚨 [QualiaLogger] ERROR: StreamingVideoService.ping: {error: Ping timeout, stack: Error: Ping timeout\n    at http://localhost:5173/s…/localhost:5173/src/services/TimerService.ts:30:9, arguments: Array(0), timestamp: 2025-09-29T06:40:47.965Z}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: StreamingVideoService.ping: {error: Ping timeout, stack: Error: Ping timeout\n    at http://localhost:5173/s…/localhost:5173/src/services/TimerService.ts:30:9, arguments: Array(0), timestamp: 2025-09-29T06:40:47.965Z}"
+    },
+    {
+      "timestamp": "2025-09-29T06:40:47.971Z",
+      "type": "log",
+      "text": "🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR StreamingVideoService.ping [object Object]",
+      "entry": "[LOG] 🔴 SERVICE ERROR DETECTED: 🚨 [QualiaLogger] ERROR: ✗ ERROR StreamingVideoService.ping [object Object]"
+    },
+    {
+      "timestamp": "2025-09-29T06:40:47.971Z",
+      "type": "error",
+      "text": "🚨 [QualiaLogger] ERROR: ✗ ERROR StreamingVideoService.ping {error: Ping timeout, timestamp: 2025-09-29T06:40:47.966Z}",
+      "entry": "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR StreamingVideoService.ping {error: Ping timeout, timestamp: 2025-09-29T06:40:47.966Z}"
     }
   ],
-  "errors": []
+  "errors": [
+    "[ERROR] 🚨 [QualiaLogger] ERROR: StreamingVideoService.ping: {error: Ping timeout, stack: Error: Ping timeout\n    at http://localhost:5173/s…/localhost:5173/src/services/TimerService.ts:30:9, arguments: Array(0), timestamp: 2025-09-29T06:40:47.965Z}",
+    "[ERROR] 🚨 [QualiaLogger] ERROR: ✗ ERROR StreamingVideoService.ping {error: Ping timeout, timestamp: 2025-09-29T06:40:47.966Z}"
+  ]
 }

@@ -6,7 +6,16 @@ import io
 import os
 import time
 import asyncio
-from typing import Dict, Any, Optional, Tuple, TYPE_CHECKING
+from typing import Dict, Any, Optional, Tuple, TYPE_CHECKING, Literal
+from .exceptions import (
+    RenderingPipelineError,
+    ShaderCompilationError,
+    FramebufferError,
+    GPUResourceError,
+    OpenGLContextError,
+    ParticleEngineError,
+    RenderingInitializationError,
+)
 
 try:
     from PIL import Image
@@ -16,7 +25,7 @@ except ImportError:
     Image = None  # type: ignore
     PIL_AVAILABLE = False
 
-from .EventBus import EventBus
+from .EventBus import EventBus, RenderingPipelineFailedEvent
 from ..engine.qualia_particle_engine import (
     QualiaParticleEngine,
 )
@@ -216,6 +225,7 @@ class RenderingService:
         self._camera = Camera(aspect=width / height)
 
         self._is_initialized = False
+        self._health_status: Literal["HEALTHY", "DEGRADED", "FAILED"] = "FAILED"
 
         # Particle rendering pipeline
         self._particle_render_shader: Optional[Any] = None
@@ -296,14 +306,22 @@ class RenderingService:
             self._create_post_processing_pipeline()
 
             self._is_initialized = True
+            self._health_status = "HEALTHY"
             self._logger.info(
                 "✅ Advanced HDR rendering pipeline initialized successfully"
             )
             return True
 
         except Exception as e:
-            self._logger.error(f"🚨 Graphics initialization failed: {e}")
-            return self._initialize_software_fallback()
+            self._logger.error(f"🚨 Failed to initialize rendering pipeline: {e}")
+            self._is_initialized = False
+            self._health_status = "FAILED"
+            # Raise specific exception instead of returning False
+            raise RenderingInitializationError(
+                f"Failed to initialize rendering pipeline: {e}",
+                "graphics_pipeline",
+                {"error": str(e)},
+            )
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
@@ -781,12 +799,14 @@ class RenderingService:
             particle_count = (
                 self._particle_engine.max_particles if self._particle_engine else 0
             )
-            
+
             # CRITICAL SAFETY CHECK: Ensure VAO is initialized before rendering
             if self._particle_vao is None:
-                self._logger.warning("Particle VAO not initialized, skipping particle render")
+                self._logger.warning(
+                    "Particle VAO not initialized, skipping particle render"
+                )
                 return self._render_software_fallback()
-            
+
             self._particle_vao.render(moderngl.POINTS, vertices=particle_count)
 
             # === PASS 2: BRIGHT PASS EXTRACTION ===
@@ -922,9 +942,37 @@ class RenderingService:
 
             return jpeg_data
 
+        except moderngl.Error as e:
+            self._health_status = "FAILED"
+            self._logger.critical(f"🚨 OpenGL rendering error: {e}")
+            # Publish failure event
+            if self._event_bus:
+                failure_event = RenderingPipelineFailedEvent(
+                    error_message=f"OpenGL rendering failure: {e}",
+                    error_code="GPU_RESOURCE_ERROR",
+                    context={"error": str(e), "error_type": "moderngl.Error"},
+                )
+                asyncio.create_task(self._event_bus.publish(failure_event))
+            raise GPUResourceError(
+                f"OpenGL rendering failure: {e}", "opengl_context", {"error": str(e)}
+            )
+
         except Exception as e:
-            self._logger.error(f"🚨 HDR rendering pipeline failed: {e}")
-            return self._render_software_fallback()
+            self._health_status = "FAILED"
+            self._logger.critical(f"🚨 HDR rendering pipeline failed: {e}")
+            # Publish failure event
+            if self._event_bus:
+                failure_event = RenderingPipelineFailedEvent(
+                    error_message=f"HDR rendering pipeline failure: {e}",
+                    error_code="RENDER_PIPELINE_ERROR",
+                    context={"error": str(e), "error_type": type(e).__name__},
+                )
+                asyncio.create_task(self._event_bus.publish(failure_event))
+            raise RenderingPipelineError(
+                f"HDR rendering pipeline failure: {e}",
+                "RENDER_PIPELINE_ERROR",
+                {"error": str(e)},
+            )
 
     def _create_projection_matrix(self) -> Any:
         """
@@ -979,6 +1027,8 @@ class RenderingService:
             self._logger.error(f"🚨 Software fallback rendering failed: {e}")
             return None
 
+    # REMOVED: render_fallback_frame() - Anti-pattern that masks critical failures
+
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
     async def shutdown(self) -> None:
@@ -1013,7 +1063,7 @@ class RenderingService:
 
             if self._vao:
                 self._vao.release()
-            if hasattr(self, '_framebuffer') and self._framebuffer:
+            if hasattr(self, "_framebuffer") and self._framebuffer:
                 self._framebuffer.release()
             if self._color_texture:
                 self._color_texture.release()
@@ -1041,11 +1091,20 @@ class RenderingService:
             return 0.0
         return 1.0 / max(time.time() - self._last_frame_time, 0.001)
 
+    def is_healthy(self) -> bool:
+        """Check if the rendering service is in a healthy state."""
+        return self._health_status == "HEALTHY"
+
+    def get_health_status(self) -> Literal["HEALTHY", "DEGRADED", "FAILED"]:
+        """Get the current health status of the rendering service."""
+        return self._health_status
+
     @log_execution(level="DEBUG")
     def get_status(self) -> Dict[str, Any]:
         """Get current rendering service status."""
         return {
             "initialized": self._is_initialized,
+            "health_status": self._health_status,
             "resolution": f"{self._width}x{self._height}",
             "target_fps": self._target_fps,
             "current_fps": self.current_fps,

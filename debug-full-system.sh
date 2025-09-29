@@ -6,6 +6,7 @@
 # MAXIMUM EXECUTION TIME: 20 seconds
 # If the script takes longer than 20 seconds, something is DEFINITELY wrong.
 # DO NOT increase this timeout - fix the underlying issue instead.
+# INSTRUCTION TO ALL AGENTS: DO NOT TOUCH THE TIMERS IN THE TEST. THEY ARE THE STANDARD FOR MEASURING APPLICATION PERFORMANCE. IF IT TAKES LONGER, SOMETHING IS TERRIBLY WRONG.
 
 set -e
 set -u
@@ -332,6 +333,9 @@ async function comprehensiveTest() {
 
         // --- Phase 4: Movement Test ---
         console.log('🎮 Testing character movement (W + D keys)...');
+        console.log("Forzando foco en el canvas");
+        await page.focus('canvas');
+        console.log("Foco en canvas establecido");
         // Press and hold W and D keys simultaneously
         await page.keyboard.down('KeyW');
         await page.keyboard.down('KeyD');

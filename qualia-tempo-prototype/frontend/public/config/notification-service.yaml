@@ -4,6 +4,14 @@ defaultTtl: 30000
 enablePriorityQueuing: true
 enableThrottling: true
 
+filter:
+  enabled: true
+  types: []
+  priorities: []
+  categories: []
+  sources: []
+  maxAge: 30000
+
 display:
   enableNotifications: true
   maxVisibleNotifications: 5

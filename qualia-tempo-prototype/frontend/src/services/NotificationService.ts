@@ -844,7 +844,7 @@ export class NotificationService implements INotificationService {
   }
 
   private _isFilterDisabled(): boolean {
-    return !this.config.filter.enabled;
+    return !this.config.filter?.enabled;
   }
 
   private _isHighPriorityOverride(notification: ExtendedNotification): boolean {

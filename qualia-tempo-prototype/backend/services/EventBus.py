@@ -20,6 +20,25 @@ class Event:
     correlation_id: Optional[str] = None
 
 
+@dataclass
+class RenderingPipelineFailedEvent(Event):
+    """Event triggered when the rendering pipeline fails critically."""
+
+    def __init__(
+        self, error_message: str, error_code: str, context: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(
+            type="RENDERING_PIPELINE_FAILED",
+            data={
+                "error_message": error_message,
+                "error_code": error_code,
+                "context": context or {},
+            },
+            timestamp=time.time(),
+            source="RenderingService",
+        )
+
+
 class EventHandler(ABC):
     """Abstract base class for event handlers."""
 
