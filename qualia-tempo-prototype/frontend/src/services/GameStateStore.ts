@@ -9,18 +9,18 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
-import type { IConfigurationService } from "./interfaces/IConfigurationService";
+import type { NotificationServiceConfig } from "./contracts/INotificationService.contracts";
 import type { ExtendedNotification } from "./NotificationService";
 import { gameStoreApi, type Notification } from "../state/useGameStore";
 
 @injectable()
 export class GameStateStore implements IGameStateStore {
-  private readonly configService: IConfigurationService;
+  private readonly config: NotificationServiceConfig;
 
   constructor(
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService
+    @inject(TYPES.NotificationServiceConfig) config: NotificationServiceConfig
   ) {
-    this.configService = configService;
+    this.config = config;
   }
   /**
    * Set notifications in the store.
@@ -39,7 +39,7 @@ export class GameStateStore implements IGameStateStore {
         message: notification.message,
         timestamp: notification.timestamp.getTime(),
         autoHide: notification.metadata?.autoHide ?? true,
-        duration: notification.metadata?.duration ?? this.configService.getConfig().notificationService.display.notificationDuration,
+        duration: notification.metadata?.duration ?? this.config.display.notificationDuration,
       }));
 
     gameStoreApi.setState((state) => ({
