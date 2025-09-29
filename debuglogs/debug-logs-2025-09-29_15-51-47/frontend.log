@@ -1,0 +1,18 @@
+
+> qualia-tempo-frontend@1.0.0 dev
+> vite
+
+
+  VITE v5.4.20  ready in 245 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+15:52:01 [vite] page reload browser-test.js
+15:52:01 [vite] page reload browser-test-failure.json
+15:52:01 [vite] page reload browser-test-report-main-menu.json
+15:52:01 [vite] page reload debug-page-content-main-menu.html
+15:52:11 [vite] hmr update /src/index.tsx, /src/index.css
+15:52:11 [vite] hmr invalidate /src/index.tsx Could not Fast Refresh ("true" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+15:52:11 [vite] hmr update /src/index.css
+15:52:12 [vite] page reload debug-page-content-FAILURE.html
+15:52:12 [vite] page reload browser-test-failure.json

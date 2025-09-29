@@ -1,0 +1,23 @@
+🌐 Starting comprehensive browser test...
+📡 Navigating to http://localhost:5173...
+[LOG] === RACE CONDITION TEST SCRIPT LOADED ===
+[DEBUG] [vite] connecting...
+[DEBUG] [vite] connected.
+[INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold
+[LOG] %c * Tone.js v14.9.17 *  background: #000; color: #fff
+[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
+[WARNING] The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio
+[PAGE ERROR] "toSelf" function can only be applied when a newable function is used as service identifier
+⏳ Waiting for main menu to load...
+[LOG] === RACE CONDITION TEST RESULTS ===
+[LOG] ✅ NO CONFIGURATION ERRORS DETECTED
+[LOG] ✅ NO SERVICE INITIALIZATION ERRORS DETECTED
+[LOG] === TEST COMPLETE ===
+❌❌❌ BROWSER TEST FAILED: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+[2m  - waiting for locator('text=INITIATE NEURAL SYNC') to be visible[22m
+
+📸 Capturing FAILURE state (Screenshot + DOM)...
+📸 Failure state captured.
+📊 Failure report generated.
+Closing browser if it exists...
