@@ -182,7 +182,8 @@ class CompositionRoot:
         # Create the actual rendering service
         rendering_service = RenderingService(
             ctx=self._services.get("shared_opengl_context"),
-            particle_engine=particle_engine
+            particle_engine=particle_engine,
+            event_bus=self._event_bus
         )
 
         streaming_web_service = StreamingWebService(

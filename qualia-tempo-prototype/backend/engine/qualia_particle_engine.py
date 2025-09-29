@@ -431,7 +431,7 @@ class QualiaParticleEngine:
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
     def start(self) -> None:
-        """Start the QualiaParticleEngine with autonomous simulation loop and subscribe to QualiaState events."""
+        """Start the QualiaParticleEngine and wait for system resources to be ready."""
         if not self.event_bus:
             logger.warning(
                 "⚠️ No EventBus provided, cannot start event-driven operation"
@@ -441,13 +441,21 @@ class QualiaParticleEngine:
         # QUALIA.CODE: Subscribe to QualiaStateUpdated events for EDA compliance
         self.event_bus.subscribe("QualiaStateUpdated", self._on_qualia_state_updated)
         
-        # QUALIA.CODE v1.1: Start autonomous simulation loop
-        self._start_autonomous_simulation()
+        # QUALIA.CODE v1.1: Subscribe to System.ResourcesReady event instead of starting immediately
+        self.event_bus.subscribe("System.ResourcesReady", self._on_resources_ready)
         
-        self.status = "running"
+        self.status = "waiting_for_resources"
         logger.info(
-            "🎆 QualiaParticleEngine started with autonomous simulation loop and subscribed to QualiaState events"
+            "🎆 QualiaParticleEngine started and waiting for System.ResourcesReady event"
         )
+
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
+    def _on_resources_ready(self, event: Any) -> None:
+        """Handle System.ResourcesReady event and start autonomous simulation."""
+        logger.info("📡 Received System.ResourcesReady event, starting autonomous simulation")
+        self._start_autonomous_simulation()
+        self.status = "running"
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)

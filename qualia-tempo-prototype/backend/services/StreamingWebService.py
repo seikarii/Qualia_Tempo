@@ -45,6 +45,7 @@ class StreamingWebService:
         self._connections: Set[WebSocket] = set()
         self._is_streaming = False
         self._stream_task: Optional[asyncio.Task[Any]] = None
+        self._resources_ready = False  # QUALIA.CODE: Flag to track if system resources are ready
 
         # Streaming configuration
         self._target_fps = 30.0  # Lower FPS for WebSocket streaming
@@ -59,6 +60,11 @@ class StreamingWebService:
         self._event_bus.subscribe(
             "RENDERING_PIPELINE_FAILED", self._handle_rendering_failure
         )
+        
+        # QUALIA.CODE: Subscribe to system resources ready event
+        self._event_bus.subscribe(
+            "System.ResourcesReady", self._on_resources_ready
+        )
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
@@ -67,6 +73,19 @@ class StreamingWebService:
         if self._is_streaming:
             self._logger.warning("Start streaming called, but it is already running.")
             return
+
+        # QUALIA.CODE: Wait for system resources to be ready
+        if not self._resources_ready:
+            self._logger.info("Waiting for system resources to be ready before starting streaming...")
+            timeout = 10.0  # 10 second timeout
+            waited = 0.0
+            while not self._resources_ready and waited < timeout:
+                await asyncio.sleep(0.1)
+                waited += 0.1
+            
+            if not self._resources_ready:
+                self._logger.critical("System resources not ready within timeout. Cannot start streaming.")
+                return
 
         # Ensure any lingering task is robustly stopped before starting a new one.
         await self._stop_streaming()
@@ -104,6 +123,13 @@ class StreamingWebService:
 
         # Stop streaming immediately
         await self._stop_streaming()
+
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
+    def _on_resources_ready(self, event: Any) -> None:
+        """Handle System.ResourcesReady event and mark resources as available."""
+        self._resources_ready = True
+        self._logger.info("📡 Received System.ResourcesReady event - resources are now available for streaming")
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)

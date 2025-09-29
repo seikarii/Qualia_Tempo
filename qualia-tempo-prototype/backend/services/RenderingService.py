@@ -7,6 +7,7 @@ from typing import Optional, Any
 
 from ..utils.decorators import log_execution, handle_errors
 from .interfaces.IRenderingService import IRenderingService
+from .EventBus import SystemResourcesReadyEvent
 
 try:
     import moderngl
@@ -26,16 +27,18 @@ class RenderingService(IRenderingService):
     GPU-accelerated rendering service that produces video frames for WebSocket streaming.
     """
 
-    def __init__(self, ctx: Any, particle_engine: Any) -> None:
+    def __init__(self, ctx: Any, particle_engine: Any, event_bus: Any) -> None:
         """
         Initialize the rendering service.
 
         Args:
             ctx: ModernGL context
             particle_engine: Particle engine for particle data
+            event_bus: EventBus for system communication
         """
         self._ctx = ctx
         self._particle_engine = particle_engine
+        self._event_bus = event_bus
         self._logger = logging.getLogger(__name__)
 
         # Rendering resources
@@ -87,11 +90,28 @@ class RenderingService(IRenderingService):
             # Create VAO - will be properly initialized in render_frame with engine's buffer
             self._vao = None
 
-            logger.info("RenderingService graphics resources initialized")
+            logger.info("✅ RenderingService graphics resources initialized")
+            
+            # QUALIA.CODE: Emit system resources ready event
+            import asyncio
+            asyncio.create_task(self._emit_resources_ready_event())
 
         except Exception as e:
             logger.error(f"Failed to initialize rendering graphics: {e}")
             self._cleanup_resources()
+
+    async def _emit_resources_ready_event(self) -> None:
+        """Emit the System.ResourcesReady event to signal that GPU resources are initialized."""
+        try:
+            event = SystemResourcesReadyEvent(context={"service": "RenderingService"})
+            await self._event_bus.publish(
+                event.type,
+                event.data,
+                source=event.source
+            )
+            self._logger.info("📡 Emitted System.ResourcesReady event")
+        except Exception as e:
+            self._logger.error(f"Failed to emit resources ready event: {e}")
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
