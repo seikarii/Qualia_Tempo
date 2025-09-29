@@ -84,7 +84,7 @@ class SecurityService(ISecurityService):
 
     async def _validate_token(self, token: str) -> Dict[str, Any]:
         """
-        Validate authentication token.
+        Validate authentication token using JWT or environment-based validation.
         
         Args:
             token: Authentication token to validate
@@ -95,12 +95,57 @@ class SecurityService(ISecurityService):
         Raises:
             SecurityException: If token is invalid
         """
-        # Simple token validation - in production this would check against a database/JWT
-        if token == "dev-token" or token.startswith("valid-"):
+        # QUALIA.CODE v1.1: Secure token validation with externalized configuration
+        import os
+        
+        # Get validation method from environment/config
+        auth_method = os.getenv("AUTH_METHOD", "jwt")
+        
+        if auth_method == "jwt":
+            return await self._validate_jwt_token(token)
+        elif auth_method == "env_token":
+            return await self._validate_env_token(token)
+        else:
+            raise SecurityException(f"Unknown authentication method: {auth_method}")
+    
+    async def _validate_jwt_token(self, token: str) -> Dict[str, Any]:
+        """Validate JWT token (requires PyJWT)."""
+        try:
+            import jwt
+            import os
+            
+            secret_key = os.getenv("JWT_SECRET_KEY")
+            if not secret_key:
+                raise SecurityException("JWT_SECRET_KEY not configured")
+            
+            payload = jwt.decode(token, secret_key, algorithms=["HS256"])
+            
             return {
-                "user": f"user_{token[-8:]}",
+                "user": payload.get("sub", "unknown"),
+                "token": token,
+                "authenticated": True,
+                "jwt_payload": payload
+            }
+        except ImportError:
+            raise SecurityException("JWT authentication requires PyJWT library")
+        except jwt.InvalidTokenError as e:
+            raise SecurityException(f"Invalid JWT token: {str(e)}")
+    
+    async def _validate_env_token(self, token: str) -> Dict[str, Any]:
+        """Validate token against environment variable."""
+        import os
+        
+        valid_tokens = os.getenv("VALID_TOKENS", "").split(",")
+        valid_tokens = [t.strip() for t in valid_tokens if t.strip()]
+        
+        if not valid_tokens:
+            raise SecurityException("No valid tokens configured in VALID_TOKENS environment variable")
+        
+        if token in valid_tokens:
+            return {
+                "user": f"env_user_{token[-8:]}",
                 "token": token,
                 "authenticated": True
             }
         
-        raise SecurityException(f"Invalid authentication token: {token[:8]}...")
+        raise SecurityException(f"Invalid authentication token")

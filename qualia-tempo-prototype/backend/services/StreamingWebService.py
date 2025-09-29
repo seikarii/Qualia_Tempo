@@ -181,13 +181,8 @@ class StreamingWebService:
                 frame_bytes = None
 
                 try:
-                    # CRITICAL: Execute particle simulation step
-                    compute_success = self._particle_engine.compute_step()
-                    if not compute_success:
-                        self._logger.warning("Particle compute step failed, frame will be based on last successful state.")
-                        # Do not break, allow rendering to proceed if possible
-
                     # CRITICAL: Execute rendering
+                    # QUALIA.CODE: ParticleEngine manages its own autonomous simulation loop
                     frame_bytes = self._rendering_service.render_frame()
 
                 except (RenderingPipelineError, GPUResourceError, moderngl.Error) as e:

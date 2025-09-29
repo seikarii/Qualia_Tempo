@@ -5,7 +5,7 @@ import logging
 import os
 import struct
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from dataclasses import dataclass
 from enum import Enum
 
@@ -160,6 +160,11 @@ class QualiaParticleEngine:
 
         # Current time for animations
         self.start_time = time.time()
+
+        # QUALIA.CODE v1.1: Autonomous simulation loop management  
+        self._simulation_task: Optional[Any] = None
+        self._is_simulating = False
+        self._target_fps = 60.0  # High-frequency autonomous simulation
 
         if ctx:
             self._initialize_shader()
@@ -426,7 +431,7 @@ class QualiaParticleEngine:
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
     def start(self) -> None:
-        """Start the QualiaParticleEngine and subscribe to QualiaState events."""
+        """Start the QualiaParticleEngine with autonomous simulation loop and subscribe to QualiaState events."""
         if not self.event_bus:
             logger.warning(
                 "⚠️ No EventBus provided, cannot start event-driven operation"
@@ -435,15 +440,19 @@ class QualiaParticleEngine:
 
         # QUALIA.CODE: Subscribe to QualiaStateUpdated events for EDA compliance
         self.event_bus.subscribe("QualiaStateUpdated", self._on_qualia_state_updated)
+        
+        # QUALIA.CODE v1.1: Start autonomous simulation loop
+        self._start_autonomous_simulation()
+        
         self.status = "running"
         logger.info(
-            "🎆 QualiaParticleEngine started and subscribed to QualiaState events"
+            "🎆 QualiaParticleEngine started with autonomous simulation loop and subscribed to QualiaState events"
         )
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
     def _on_qualia_state_updated(self, event: Any) -> None:
-        """Handle QualiaStateUpdated events and update uniform buffer."""
+        """Handle QualiaStateUpdated events and update uniform buffer ONLY."""
         try:
             # Extract QualiaState from event data
             # QUALIA.CODE: EventBus passes Event object with data attribute
@@ -453,15 +462,12 @@ class QualiaParticleEngine:
                 logger.warning("⚠️ QualiaStateUpdated event missing qualia_state data")
                 return
 
-            # Update uniform buffer with new state
+            # QUALIA.CODE v1.1: ONLY update uniform buffer, do NOT trigger compute_step
+            # The autonomous simulation loop handles compute execution
             self.update_uniform_buffer(qualia_state)
 
-            # Execute compute step for particle simulation
-            # QUALIA.CODE: Maintain particle system responsiveness to state changes
-            self.compute_step()
-
             logger.debug(
-                "✅ Particle system updated and computed from QualiaState event"
+                "✅ Particle system uniform buffer updated from QualiaState event"
             )
 
         except Exception as e:
@@ -684,9 +690,80 @@ class QualiaParticleEngine:
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
+    def _start_autonomous_simulation(self) -> None:
+        """Start the autonomous simulation loop at high frequency."""
+        if self._is_simulating:
+            logger.warning("Autonomous simulation already running")
+            return
+            
+        self._is_simulating = True
+        
+        # Import asyncio here to avoid top-level import issues
+        import asyncio
+        self._simulation_task = asyncio.create_task(self._autonomous_simulation_loop())
+        logger.info(f"🎯 Started autonomous simulation loop at {self._target_fps}fps")
+
+    @log_execution(level="DEBUG")
+    @handle_errors(fallback_return_value=None)
+    async def _autonomous_simulation_loop(self) -> None:
+        """Autonomous high-frequency simulation loop."""
+        import asyncio
+        import time
+        
+        frame_time = 1.0 / self._target_fps
+        
+        try:
+            while self._is_simulating:
+                loop_start = time.time()
+                
+                # Execute particle simulation step
+                self.compute_step()
+                
+                # Frame rate limiting
+                elapsed = time.time() - loop_start
+                sleep_time = max(0, frame_time - elapsed)
+                
+                if sleep_time > 0:
+                    await asyncio.sleep(sleep_time)
+                    
+        except asyncio.CancelledError:
+            logger.info("🛑 Autonomous simulation loop cancelled")
+            raise
+        except Exception as e:
+            logger.error(f"🚨 Error in autonomous simulation loop: {e}")
+        finally:
+            logger.info("🛑 Autonomous simulation loop terminated")
+
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
+    async def _stop_autonomous_simulation(self) -> None:
+        """Stop the autonomous simulation loop."""
+        if not self._is_simulating or not self._simulation_task:
+            return
+            
+        self._is_simulating = False
+        
+        if not self._simulation_task.done():
+            self._simulation_task.cancel()
+            try:
+                import asyncio
+                await asyncio.wait_for(self._simulation_task, timeout=1.0)
+                logger.info("✅ Autonomous simulation loop stopped successfully")
+            except asyncio.CancelledError:
+                logger.info("✅ Autonomous simulation loop cancelled")
+            except asyncio.TimeoutError:
+                logger.warning("⚠️ Timeout stopping autonomous simulation loop")
+                
+        self._simulation_task = None
+
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
     async def shutdown(self) -> None:
         """Clean shutdown of Qualia particle engine."""
         try:
+            # QUALIA.CODE v1.1: Stop autonomous simulation first
+            await self._stop_autonomous_simulation()
+            
             self.particle_buffers.release()
 
             if self.uniform_buffer:

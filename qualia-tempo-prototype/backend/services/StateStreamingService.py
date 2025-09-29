@@ -111,12 +111,8 @@ class StateStreamingService:
                 loop_start = asyncio.get_event_loop().time()
 
                 try:
-                    # Execute particle simulation step
-                    compute_success = self._particle_engine.compute_step()
-                    if not compute_success:
-                        self._logger.warning("⚠️ Particle compute step failed - continuing")
-
                     # Get current qualia state from particle engine
+                    # QUALIA.CODE: ParticleEngine manages its own autonomous simulation loop
                     qualia_state = self._particle_engine.get_qualia_state()
 
                     # Serialize state to JSON

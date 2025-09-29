@@ -47,7 +47,16 @@ This report analyzes the current technical debt in the Qualia Tempo prototype pr
 
 ## Key Technical Debt Areas
 
-### 1. Architectural Compliance (QUALIA.CODE)
+### 1. Fragile Shader Introspection (CRITICAL RISK)
+- **File**: `qualia-tempo-prototype/backend/services/ShaderIntrospectionService.py`
+- **Issue**: Uses regular expressions to parse GLSL shader code
+- **Risk**: Brittle implementation that will fail with complex shaders, comments, or formatting changes
+- **Impact**: Runtime failures during shader uniform introspection
+- **Proposed Solution**: Replace regex-based parser with robust GLSL parsing library (e.g., pyglsl-parser)
+- **Priority**: High - Should be addressed in next sprint
+- **Workaround**: Current implementation is functional for basic shaders but needs monitoring
+
+### 2. Architectural Compliance (QUALIA.CODE)
 - Extensive hardcoded configuration values
 - IoC container violations
 - Missing service decorators

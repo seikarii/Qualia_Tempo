@@ -2,6 +2,7 @@
 # GPU-accelerated rendering service for producing video frames
 
 import logging
+import os
 from typing import Optional, Any
 
 from ..utils.decorators import log_execution, handle_errors
@@ -60,31 +61,19 @@ class RenderingService(IRenderingService):
                 color_attachments=[self._ctx.texture((800, 600), 4)]
             )
 
-            # Create simple shader program for particle rendering
-            vertex_shader = """
-            #version 330 core
-            in vec3 position;
-            in vec4 color;
-            in float size;
-
-            out vec4 frag_color;
-
-            void main() {
-                gl_Position = vec4(position, 1.0);
-                gl_PointSize = size * 100.0;
-                frag_color = color;
-            }
-            """
-
-            fragment_shader = """
-            #version 330 core
-            in vec4 frag_color;
-            out vec4 out_color;
-
-            void main() {
-                out_color = frag_color;
-            }
-            """
+            # QUALIA.CODE v1.1: Load shaders from files instead of hardcoded strings
+            shader_dir = os.path.join(os.path.dirname(__file__), "..", "engine", "shaders")
+            
+            vertex_shader_path = os.path.join(shader_dir, "particle.vert")
+            fragment_shader_path = os.path.join(shader_dir, "particle.frag")
+            
+            # Load vertex shader
+            with open(vertex_shader_path, 'r') as f:
+                vertex_shader = f.read()
+            
+            # Load fragment shader  
+            with open(fragment_shader_path, 'r') as f:
+                fragment_shader = f.read()
 
             self._program = self._ctx.program(
                 vertex_shader=vertex_shader,
@@ -111,28 +100,59 @@ class RenderingService(IRenderingService):
     @handle_errors(fallback_return_value=None)
     def render_frame(self) -> Optional[bytes]:
         """
-        Render a single frame and return the pixel data.
+        Render a single frame using particle engine data and return the pixel data.
 
         Returns:
             bytes: Raw RGBA pixel data, or None if rendering failed
         """
-        # For now, always return a dummy frame to ensure streaming works
-        # TODO: Implement proper GPU rendering
-        return self._get_dummy_frame()
+        if not self._is_ready():
+            logger.warning("Rendering service not ready")
+            return None
+            
+        try:
+            # QUALIA.CODE v1.1: Use particle engine's current particle buffer as data source
+            if not self._particle_engine or not hasattr(self._particle_engine, 'particle_buffers'):
+                logger.warning("Particle engine not available or missing buffers")
+                return None
+                
+            particle_buffer = self._particle_engine.particle_buffers.input_buffer
+            if not particle_buffer:
+                logger.warning("No particle buffer available for rendering")
+                return None
+            
+            # Clear the framebuffer
+            self._fbo.use()
+            self._ctx.clear(0.0, 0.0, 0.0, 1.0)
+            
+            # Bind particle data to VAO
+            # Update VAO with current particle data from engine
+            self._vao = self._ctx.vertex_array(
+                self._program,
+                [(particle_buffer, '3f 3f 4f 1f 1f', 'position', 'velocity', 'color', 'lifetime', 'size')]
+            )
+            
+            # Enable point sprites and blending for particles
+            self._ctx.enable(moderngl.BLEND)
+            self._ctx.blend_func = moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA
+            self._ctx.enable(moderngl.PROGRAM_POINT_SIZE)
+            
+            # Set uniforms
+            if 'time' in self._program:
+                self._program['time'] = self._particle_engine.start_time
+            if 'intensity_multiplier' in self._program:
+                self._program['intensity_multiplier'] = 1.0
+                
+            # Render particles
+            self._vao.render(mode=moderngl.POINTS)
+            
+            # Read back the framebuffer data
+            return self._fbo.color_attachments[0].read()
+            
+        except Exception as e:
+            logger.error(f"Error during frame rendering: {e}")
+            return None
 
-    def _get_dummy_frame(self) -> bytes:
-        """Return a dummy frame for testing purposes."""
-        # Create a simple 800x600 RGBA frame with a pattern
-        width, height = 800, 600
-        frame = bytearray(width * height * 4)
-        for y in range(height):
-            for x in range(width):
-                i = (y * width + x) * 4
-                frame[i] = (x * 255) // width      # R
-                frame[i + 1] = (y * 255) // height # G
-                frame[i + 2] = 128                 # B
-                frame[i + 3] = 255                 # A
-        return bytes(frame)
+    # QUALIA.CODE v1.1: Dummy frame method removed - all rendering now uses real GPU data
 
     def is_healthy(self) -> bool:
         """
