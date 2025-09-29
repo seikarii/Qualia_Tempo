@@ -433,6 +433,26 @@ export interface PlayerActionEvent extends BaseEvent {
 - `@validate(schemaName)`: Validates method arguments against a registered schema. The first argument of the method is validated against the specified schema from the schema registry.
 - `@validateEventProperty()`: Validates event properties against predefined schemas for EventBus events.
 - `@qualiaMethod()`: Comprehensive decorator that combines logging, error handling, and performance monitoring for critical qualia operations.
+- `@AdaptAndEmit(adapterPropertyKey: string)`: **CRÍTICO PARA LA ADAPTACIÓN DE PROTOCOLOS.** Este decorador es el núcleo del `ProtocolAdapterBundle`. DEBE usarse en métodos que sirven como puntos de entrada para datos crudos de fuentes externas (ej. WebSockets). Traduce automáticamente los datos crudos a un evento de dominio tipado y lo emite en el `EventBus`.
+  - **Mecanismo:** Accede a una implementación de `IMessageAdapter` y al `IEventBus` desde las propiedades inyectadas de la instancia del servicio.
+  - **`adapterPropertyKey`:** El nombre en formato `string` de la propiedad de la clase que contiene el adaptador de mensajes inyectado.
+  - **Uso Obligatorio:**
+    ```typescript
+    // 1. Inyectar el adaptador y el EventBus en el constructor del servicio.
+    constructor(
+      @inject(TYPES.IEventBus) private eventBus: IEventBus,
+      @inject(TYPES.IRawToParticleEventAdapter) private messageAdapter: IMessageAdapter
+    ) {}
+
+    // 2. Aplicar el decorador al método de punto de entrada.
+    @AdaptAndEmit('messageAdapter')
+    private onRawMessage(rawData: ArrayBuffer): void {
+      // El cuerpo de este método puede estar vacío o contener lógica
+      // que se ejecuta DESPUÉS de que el evento ha sido emitido,
+      // como el seguimiento de estadísticas.
+      this.messagesReceived++;
+    }
+    ```
 
 #### 5.2.1. @catchError Usage Guidelines (Performance Critical)
 
