@@ -45,7 +45,12 @@ const FrontendRenderer: React.FC<FrontendRendererProps> = ({
 
   // Initialize rendering service and connect to state stream
   useEffect(() => {
+    const initialized = useRef(false);
+
     const initializeRenderer = async () => {
+      if (initialized.current) return;
+      initialized.current = true;
+
       if (!canvasRef.current) return;
 
       try {

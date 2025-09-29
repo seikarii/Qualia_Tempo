@@ -9,8 +9,11 @@ import "./index.css";
 
 // Import the InversifyJS configuration which sets up the container.
 import "./services/inversify.config";
+import { container } from "./services/inversify.config";
 // Import ApplicationCompositionRoot for proper bootstrap
 import { ApplicationCompositionRoot } from "./services/ApplicationCompositionRoot";
+// Import ServiceProvider for context-based container provision
+import { ServiceProvider } from "./services/ServiceContext";
 
 import App from "./App";
 
@@ -52,13 +55,21 @@ const AppBootstrap: React.FC = () => {
   const [initError, setInitError] = React.useState(false);
 
   React.useEffect(() => {
-    initializeApplication().then((success) => {
+    const initialized = React.useRef(false);
+
+    const init = async () => {
+      if (initialized.current) return;
+      initialized.current = true;
+
+      const success = await initializeApplication();
       if (success) {
         setIsInitialized(true);
       } else {
         setInitError(true);
       }
-    });
+    };
+
+    init();
   }, []);
 
   if (initError) {
@@ -101,7 +112,11 @@ const AppBootstrap: React.FC = () => {
     );
   }
 
-  return <App />;
+  return (
+    <ServiceProvider container={container}>
+      <App />
+    </ServiceProvider>
+  );
 };
 
 // Bootstrap the application

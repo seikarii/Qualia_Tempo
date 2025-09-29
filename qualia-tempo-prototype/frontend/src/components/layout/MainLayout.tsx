@@ -14,19 +14,19 @@
  */
 
 import React from "react";
+import { useGameStore } from "../../state/useGameStore";
 import { Atmosphere } from "../Atmosphere";
-import FrontendRenderer from "../FrontendRenderer";
 import QualiaMainMenu from "../QualiaMainMenu";
 import QualiaTempoGame from "../game/QualiaTempoGame";
-import { useGameStore } from "../../state/useGameStore";
+import FrontendRenderer from "../FrontendRenderer";
 
 const MainLayout: React.FC = () => {
   // QUALIA.CODE: State-driven UI rendering via Zustand store
-  const isPlaying = useGameStore((state) => state.isPlaying);
+  const isPlaying = useGameStore((state: any) => state.isPlaying);
 
   return (
     <div className="h-screen w-screen relative overflow-hidden">
-      {/* 
+      {/*
         LAYER 0: FRONTEND RENDERER (Z-0)
         La fuente de verdad para los visuales del motor.
         Debe llenar toda la pantalla.
@@ -35,7 +35,7 @@ const MainLayout: React.FC = () => {
         <FrontendRenderer />
       </div>
 
-      {/* 
+      {/*
         LAYER 1: ATMOSPHERE (Z-10)
         Para efectos CSS complementarios como grids y bloom global.
       */}
@@ -43,7 +43,7 @@ const MainLayout: React.FC = () => {
         <Atmosphere />
       </div>
 
-      {/* 
+      {/*
         LAYER 2: UI (Z-20)
         State-driven conditional rendering: Menu OR Game view
         QUALIA.CODE: Pure UI layer that reacts to service-managed state

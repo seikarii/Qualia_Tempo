@@ -5,7 +5,7 @@
  */
 
 import { useRef } from 'react';
-import { container } from './inversify.container';
+import { useContainer } from './ServiceContext';
 import { TYPES } from './inversify.types';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { ILogger } from './interfaces/ILogger';
@@ -19,7 +19,6 @@ import type { INotificationService } from './interfaces/INotificationService';
 import type { IErrorReportingService } from './interfaces/IErrorReportingService';
 import type { IDebugService } from './interfaces/IDebugService';
 import type { IRhythmicMovementController } from './interfaces/IRhythmicMovementController';
-import type { IStreamingVideoService } from './interfaces/IStreamingVideoService';
 import type { IFrontendRenderingService } from './interfaces/IFrontendRenderingService';
 import type { IStateStreamingService } from './interfaces/IStateStreamingService';
 import type { IHttpService } from './interfaces/IHttpService';
@@ -31,13 +30,21 @@ import type { ITimerService } from './interfaces/ITimerService';
  * @returns The resolved service instance
  */
 export function useService<T>(serviceIdentifier: symbol): T {
+  const container = useContainer();
   const serviceRef = useRef<T | null>(null);
   
   if (serviceRef.current === null) {
-    serviceRef.current = container.get<T>(serviceIdentifier);
+    try {
+      if (!container.isBound(serviceIdentifier)) {
+        throw new Error(`Service ${serviceIdentifier.toString()} is not bound in the IoC container. Make sure configureServices() has been called.`);
+      }
+      serviceRef.current = container.get<T>(serviceIdentifier);
+    } catch (error) {
+      throw error;
+    }
   }
   
-  return serviceRef.current;
+  return serviceRef.current as T;
 }
 
 /**
@@ -69,9 +76,6 @@ export const useQualiaStateCalculatorService = (): IQualiaStateCalculatorService
 // Media Services
 export const useAudioService = (): IAudioService => 
   useService<IAudioService>(TYPES.IAudioService);
-
-export const useStreamingVideoService = (): IStreamingVideoService => 
-  useService<IStreamingVideoService>(TYPES.IStreamingVideoService);
 
 export const useFrontendRenderingService = (): IFrontendRenderingService => 
   useService<IFrontendRenderingService>(TYPES.IFrontendRenderingService);

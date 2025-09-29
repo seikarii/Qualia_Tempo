@@ -81,14 +81,11 @@ class RenderingService(IRenderingService):
             )
 
             # Create vertex buffer for particles (placeholder)
-            # In a real implementation, this would be updated with particle data
-            self._particle_buffer = self._ctx.buffer(reserve=1024 * 1024)  # 1MB reserve
+            # QUALIA.CODE v1.1: VAO will be created in render_frame with actual particle data
+            self._particle_buffer = None  # Not needed since we use engine's buffer
 
-            # Create VAO
-            self._vao = self._ctx.vertex_array(
-                self._program,
-                [(self._particle_buffer, '3f 4f 1f', 'position', 'color', 'size')]
-            )
+            # Create VAO - will be properly initialized in render_frame with engine's buffer
+            self._vao = None
 
             logger.info("RenderingService graphics resources initialized")
 
@@ -124,12 +121,15 @@ class RenderingService(IRenderingService):
             self._fbo.use()
             self._ctx.clear(0.0, 0.0, 0.0, 1.0)
             
-            # Bind particle data to VAO
-            # Update VAO with current particle data from engine
-            self._vao = self._ctx.vertex_array(
-                self._program,
-                [(particle_buffer, '3f 3f 4f 1f 1f', 'position', 'velocity', 'color', 'lifetime', 'size')]
-            )
+            # QUALIA.CODE v1.1: Create VAO once with correct particle buffer format
+            # VAO format matches shader inputs: '3f 3f 4f 1f 1f' for position, velocity, color, lifetime, size
+            if self._vao is None:
+                self._vao = self._ctx.vertex_array(
+                    self._program,
+                    [(particle_buffer, '3f 3f 4f 1f 1f', 
+                      'position', 'velocity', 'color', 'lifetime', 'size')]
+                )
+                self._logger.debug("VAO created with correct shader attribute format")
             
             # Enable point sprites and blending for particles
             self._ctx.enable(moderngl.BLEND)
@@ -169,7 +169,6 @@ class RenderingService(IRenderingService):
             self._ctx is not None and
             self._fbo is not None and
             self._program is not None and
-            self._vao is not None and
             moderngl is not None and
             np is not None
         )
@@ -193,8 +192,6 @@ class RenderingService(IRenderingService):
             if self._fbo:
                 self._fbo.release()
                 self._fbo = None
-            if self._particle_buffer:
-                self._particle_buffer.release()
-                self._particle_buffer = None
+            # QUALIA.CODE v1.1: No local particle_buffer to release (using engine's buffer)
         except Exception as e:
             logger.error(f"Error during resource cleanup: {e}")
