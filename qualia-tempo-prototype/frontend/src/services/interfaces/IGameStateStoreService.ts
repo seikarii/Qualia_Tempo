@@ -37,4 +37,12 @@ export interface IGameStateStoreService {
    * @returns True if service is active
    */
   isRunning(): boolean;
+
+  /**
+   * Provide the store setter dependency from the UI layer.
+   * CRITICAL: This method allows the Composition Root to inject the UI dependency
+   * after the service is constructed, breaking the React context collision.
+   * @param setStore Zustand store setter function
+   */
+  setStoreSetter(setStore: (state: any) => void): void;
 }

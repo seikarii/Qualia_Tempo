@@ -71,9 +71,6 @@ import { GameStateStore } from "./GameStateStore";
 import { FrontendRenderingService } from "./FrontendRenderingService";
 import { StateStreamingService } from "./StateStreamingService";
 
-// ===== IMPORT ZUSTAND STORE =====
-import { useGameStore } from "../state/useGameStore";
-
 // ===== CORE SERVICE BINDINGS =====
 // These services have no dependencies and can be bound directly
 container.bind<IEventBus>(TYPES.IEventBus).to(EventBus).inSingletonScope();
@@ -122,9 +119,6 @@ container
   .inSingletonScope();
 
 // ===== SPECIAL BINDINGS =====
-// Bind Zustand store setter for GameStateStoreService
-container.bind(TYPES.StoreSetter).toConstantValue(useGameStore.setState);
-
 // Bind GameStateStore for services that need store access
 container
   .bind<IGameStateStore>(TYPES.IGameStateStore)

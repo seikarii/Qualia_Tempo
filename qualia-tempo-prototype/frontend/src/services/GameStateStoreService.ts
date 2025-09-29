@@ -60,13 +60,13 @@ const SERVICE_MESSAGES = {
 export class GameStateStoreService implements IGameStateStoreService {
   private isStarted = false;
   private listenerIds: string[] = [];
+  private setStore!: StoreSetter; // Will be set by setStoreSetter method
 
   constructor(
     @inject(TYPES.IEventBus) private readonly eventBus: IEventBus,
     @inject(TYPES.ILogger) private readonly logger: ILogger,
-    @inject(TYPES.StoreSetter) private readonly setStore: StoreSetter,
   ) {
-    this.logger.info(SERVICE_MESSAGES.INITIALIZED);
+    this.logger.info("GameStateStoreService constructed. Awaiting store setter.");
   }
 
   // --- IGameStateStoreService Interface Implementation ---
@@ -303,9 +303,12 @@ export class GameStateStoreService implements IGameStateStoreService {
 
   /**
    * Set the store setter function (for initialization after IoC container setup)
+   * CRITICAL: Allows the Composition Root to provide the UI dependency after construction,
+   * preventing React context collisions during service layer initialization.
    */
   @logMethod
   public setStoreSetter(setStore: StoreSetter): void {
-    (this as any).setStore = setStore;
+    this.setStore = setStore;
+    this.logger.info("Zustand store setter has been provided to GameStateStoreService.");
   }
 }

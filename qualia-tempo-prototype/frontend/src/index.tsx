@@ -14,6 +14,11 @@ import { container } from "./services/inversify.config";
 import { ApplicationCompositionRoot } from "./services/ApplicationCompositionRoot";
 // Import ServiceProvider for context-based container provision
 import { ServiceProvider } from "./services/ServiceContext";
+// Import types for the Composition Root pattern implementation
+import type { IGameStateStoreService } from "./services/interfaces/IGameStateStoreService";
+import { TYPES } from "./services/inversify.types";
+// Import useGameStore - safe after React context is established
+import { useGameStore } from "./state/useGameStore";
 
 import App from "./App";
 
@@ -111,6 +116,13 @@ const AppBootstrap: React.FC = () => {
       </div>
     );
   }
+
+  // CRITICAL: After services are initialized, manually connect UI layer to service layer
+  // This is the Composition Root pattern - wiring dependencies at the application's true root
+  const gameStateStoreService = container.get<IGameStateStoreService>(TYPES.IGameStateStoreService);
+  
+  // Connect the UI layer to the service layer - safe after React context is established
+  gameStateStoreService.setStoreSetter(useGameStore.setState);
 
   return (
     <ServiceProvider container={container}>

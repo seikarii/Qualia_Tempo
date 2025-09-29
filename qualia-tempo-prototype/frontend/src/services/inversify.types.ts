@@ -32,8 +32,6 @@ export const TYPES = {
   IStateStreamingService: Symbol.for("IStateStreamingService"),
 
   // ===== SPECIAL TYPES =====
-  // Used for injecting Zustand store setter function
-  StoreSetter: Symbol.for("StoreSetter"),
   IGameStateStore: Symbol.for("IGameStateStore"),
 
   // Configuration values for services
