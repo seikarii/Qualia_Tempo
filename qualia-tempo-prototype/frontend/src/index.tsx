@@ -15,8 +15,9 @@ import { ApplicationCompositionRoot } from "./services/ApplicationCompositionRoo
 // Import ServiceProvider for context-based container provision
 import { ServiceProvider } from "./services/ServiceContext";
 // Main application component
-
 import App from "./App";
+// Import gameStoreApi for UI-Service bridge
+import { gameStoreApi } from "./state/useGameStore";
 
 /**
  * Bootstrap logger for critical failures before IoC container is available
@@ -33,11 +34,20 @@ class BootstrapLogger {
 /**
  * QUALIA.CODE COMPLIANT: Application initialization via Composition Root
  * NO direct container access - delegates to ApplicationCompositionRoot
+ * RESPECTS LAYER BOUNDARIES: Services first, then UI-Service bridge, then application start
  */
 const initializeApplication = async (): Promise<boolean> => {
   try {
+    // Step 1: Initialize service layer (WITHOUT UI dependencies)
     const compositionRoot = new ApplicationCompositionRoot();
-    await compositionRoot.initializeApplication();
+    await compositionRoot.initializeServices();
+
+    // Step 2: Establish UI-Service bridge with pre-imported gameStoreApi
+    await compositionRoot.bridgeUi(gameStoreApi);
+
+    // Step 3: Start the application now that UI bridge is established
+    await compositionRoot.startApplication();
+
     return true;
   } catch (error) {
     BootstrapLogger.error(

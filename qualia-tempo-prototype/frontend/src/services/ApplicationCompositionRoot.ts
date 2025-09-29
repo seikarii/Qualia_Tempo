@@ -20,25 +20,22 @@ import { LoggerProvider, QualiaLogger } from "./Logger";
  */
 export class ApplicationCompositionRoot {
   /**
-   * Connect the Zustand store to the service layer
-   * QUALIA.CODE COMPLIANT: IoC container access only from Composition Root
+   * Bridge the UI layer to the service layer
+   * QUALIA.CODE COMPLIANT: UI delivers its dependencies to services, not vice versa
    */
-  private async connectStoreToServices(): Promise<void> {
+  public async bridgeUi(gameStoreApi: any): Promise<void> {
     try {
-      // Import the store API dynamically to avoid circular dependencies
-      const { gameStoreApi } = await import("../state/useGameStore");
-      
       // Get the GameStateStoreService from IoC container
       const gameStateStoreService = container.get<IGameStateStoreService>(TYPES.IGameStateStoreService);
-      
+
       // Connect the store setter to the service - this creates the UI-Service bridge
       // CRITICAL: gameStoreApi.setState is the non-hook API method
       gameStateStoreService.setStoreSetter(gameStoreApi.setState);
-      
+
       // Get logger for confirmation
       const logger = container.get<ILogger>(TYPES.ILogger);
       logger.info("✅ [BOOTSTRAP] UI-Service bridge established successfully");
-      
+
     } catch (error) {
       const logger = container.get<ILogger>(TYPES.ILogger);
       logger.error("❌ [BOOTSTRAP] Failed to connect store to services:", error);
@@ -47,10 +44,10 @@ export class ApplicationCompositionRoot {
   }
 
   /**
-   * Initialize the entire application
-   * This method handles ALL bootstrap logic that was previously in index.tsx
+   * Initialize the service layer only (without UI dependencies)
+   * This method handles service bootstrap logic without touching UI layer
    */
-  public async initializeApplication(): Promise<void> {
+  public async initializeServices(): Promise<void> {
     // STEP 0: CRITICAL - Configure services with Direct Configuration Injection
     // This eliminates the Service Locator antipattern across the entire system
     // QUALIA.CODE v1.1: React.StrictMode safe configuration using container.isBound()
@@ -58,22 +55,31 @@ export class ApplicationCompositionRoot {
 
     // Step 1: NOW resolve core services from IoC container (they have direct config access)
     const logger = container.get<ILogger>(TYPES.ILogger);
-    const appInitializer = container.get<IApplicationInitializerService>(
-      TYPES.IApplicationInitializerService,
-    );
 
     // Step 2: Register logger for decorator access
     LoggerProvider.register(logger as QualiaLogger);
 
     logger.info("Application Bootstrap: Initializing services...");
 
-    // Step 3: Connect UI store to service layer - CRITICAL for UI-Service bridge
-    await this.connectStoreToServices();
+    // Application service layer initialization completed (without starting app)
+    logger.info("✅ [BOOTSTRAP] Service layer initialization completed successfully");
+  }
 
-    // Step 4: Start application services
+  /**
+   * Start the application after UI bridge is established
+   */
+  public async startApplication(): Promise<void> {
+    const logger = container.get<ILogger>(TYPES.ILogger);
+    const appInitializer = container.get<IApplicationInitializerService>(
+      TYPES.IApplicationInitializerService,
+    );
+
+    logger.info("Application Bootstrap: Starting application...");
+
+    // Step 3: Start application services (NOW that UI bridge is established)
     await appInitializer.start();
 
-    // Step 5: Attach debug interface in development mode
+    // Step 4: Attach debug interface in development mode
     // Get debug configuration via direct injection
     const debugConfig = container.get<DebugServiceConfig>(TYPES.DebugServiceConfig);
     if (debugConfig?.logging?.enableConsoleOutput) {
@@ -83,7 +89,7 @@ export class ApplicationCompositionRoot {
         if (debugInterface) {
           // Global API access is handled by dedicated service
           const globalApiService = debugInterface.getGlobalApiService();
-          const debugKey = 'QA_DEBUG';  
+          const debugKey = 'QA_DEBUG';
           globalApiService.attachToWindow(debugKey, debugInterface);
           logger.info(`🌐 [BOOTSTRAP] Debug interface attached to window.${debugKey}`);
         }
@@ -93,7 +99,7 @@ export class ApplicationCompositionRoot {
     }
 
     // Application completion message
-    logger.info("✅ [BOOTSTRAP] Application initialization completed successfully");
+    logger.info("✅ [BOOTSTRAP] Application startup completed successfully");
   }
 
   /**
