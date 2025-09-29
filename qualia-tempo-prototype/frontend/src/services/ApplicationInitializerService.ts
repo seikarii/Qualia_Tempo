@@ -89,63 +89,77 @@ export class ApplicationInitializerService
     this.logger.info(this.config.messages.initializationStarted);
 
     try {
-      // Configuration is already loaded by ApplicationCompositionRoot.configureServices()
-      // No need to reload it here - this was causing duplicate container bindings
-      this.logger.info(this.config.messages.configurationLoaded);
-
-      // Step 0.5: Configure HttpService with loaded configuration (breaks circular dependency)
-      this.logger.debug(this.config.steps.configureHttpService);
-      const httpConfig = this.configService.getConfigSection("http");
-      this.httpService.updateConfig(httpConfig.timeout);
-      this.logger.info(this.config.messages.httpServiceConfigured);
-
-      // Step 1: Start GameStateStoreService - it must listen to all events
-      this.logger.debug(this.config.steps.startGameStateService);
-      this.gameStateStoreService.start();
-      this.logger.info(this.config.messages.gameStateServiceStarted);
-
-      // Step 2: Update store with config loaded state
-      this.gameStateStoreService.updateGameState(this.config.stateUpdates.configLoaded);
-
-      // Step 3: Start transversal services (now that config is loaded)
-      this.logger.debug(this.config.steps.startTransversalServices);
-      this.errorReportingService.start();
-      this.debugService.start();
-      this.notificationService.start();
-      this.logger.info(this.config.messages.transversalServicesStarted);
-
-      // Step 4: Start state streaming service (needs EventBus to be available)
-      await this.stateStreamingService.start();
-      this.logger.info("State streaming service started");
-
-      // Step 5: Start game controller service
-      this.logger.debug(this.config.steps.startGameController);
-      this.gameControllerService.start();
-      this.logger.info(this.config.messages.gameControllerStarted);
-
-      // Step 5: Start rhythmic movement controller
-      this.logger.debug(this.config.steps.startRhythmicController);
-      this.rhythmicMovementController.start();
-      this.logger.info(this.config.messages.rhythmicControllerStarted);
-
-      // Step 6: Start backend synchronization
-      this.logger.debug(this.config.steps.startBackendSync);
-      await this.backendSyncService.start();
-
-      // Step 7: Update backend connection status
-      const isConnected = this.backendSyncService.isBackendConnected();
-      this.gameStateStoreService.updateGameState({
-        backendConnected: isConnected,
-      });
-
+      await this.initializeServices();
       this.isStarted = true;
       this.logger.info(this.config.messages.initializationCompleted, {
         ...this.config.stateUpdates.initializationComplete,
-        backendConnected: isConnected,
+        backendConnected: this.backendSyncService.isBackendConnected(),
       });
     } catch (error) {
       this.logger.error(this.config.messages.initializationFailed, error);
       throw error;
     }
+  }
+
+  private async initializeServices(): Promise<void> {
+    // Configuration is already loaded by ApplicationCompositionRoot.configureServices()
+    this.logger.info(this.config.messages.configurationLoaded);
+
+    await this.configureHttpService();
+    await this.startCoreServices();
+    await this.startGameServices();
+    await this.startBackendServices();
+  }
+
+  private async configureHttpService(): Promise<void> {
+    this.logger.debug(this.config.steps.configureHttpService);
+    const httpConfig = this.configService.getConfigSection("http");
+    this.httpService.updateConfig(httpConfig.timeout);
+    this.logger.info(this.config.messages.httpServiceConfigured);
+  }
+
+  private async startCoreServices(): Promise<void> {
+    // Step 1: Start GameStateStoreService - it must listen to all events
+    this.logger.debug(this.config.steps.startGameStateService);
+    this.gameStateStoreService.start();
+    this.logger.info(this.config.messages.gameStateServiceStarted);
+
+    // Step 2: Update store with config loaded state
+    this.gameStateStoreService.updateGameState(this.config.stateUpdates.configLoaded);
+
+    // Step 3: Start transversal services (now that config is loaded)
+    this.logger.debug(this.config.steps.startTransversalServices);
+    this.errorReportingService.start();
+    this.debugService.start();
+    this.notificationService.start();
+    this.logger.info(this.config.messages.transversalServicesStarted);
+
+    // Step 4: Start state streaming service (needs EventBus to be available)
+    await this.stateStreamingService.start();
+    this.logger.info("State streaming service started");
+  }
+
+  private async startGameServices(): Promise<void> {
+    // Step 5: Start game controller service
+    this.logger.debug(this.config.steps.startGameController);
+    this.gameControllerService.start();
+    this.logger.info(this.config.messages.gameControllerStarted);
+
+    // Step 5: Start rhythmic movement controller
+    this.logger.debug(this.config.steps.startRhythmicController);
+    this.rhythmicMovementController.start();
+    this.logger.info(this.config.messages.rhythmicControllerStarted);
+  }
+
+  private async startBackendServices(): Promise<void> {
+    // Step 6: Start backend synchronization
+    this.logger.debug(this.config.steps.startBackendSync);
+    await this.backendSyncService.start();
+
+    // Step 7: Update backend connection status
+    const isConnected = this.backendSyncService.isBackendConnected();
+    this.gameStateStoreService.updateGameState({
+      backendConnected: isConnected,
+    });
   }
 }

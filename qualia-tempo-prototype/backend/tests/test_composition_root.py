@@ -209,17 +209,10 @@ class TestCompositionRootFactory:
 
         mock_streaming_service.get_status = Mock(side_effect=dynamic_get_status)
 
-        # Create REAL SecurityService instance for testing
-        from backend.services.SecurityService import SecurityService
-        import yaml
-        from pathlib import Path
-
-        # Load test configuration
-        config_path = Path(__file__).parent.parent / "config" / "server.yaml"
-        with open(config_path, "r") as file:
-            test_config = yaml.safe_load(file)
-
-        security_service_instance = SecurityService(test_config)
+        # Create MOCK SecurityService for testing
+        mock_security_service = Mock()
+        mock_security_service.validate_token = Mock(return_value=True)
+        mock_security_service.generate_token = Mock(return_value="mock_token")
 
         # 4. Inject services into composition root
         composition_root._services = {
@@ -229,7 +222,7 @@ class TestCompositionRootFactory:
             "qualia_processor": mock_qualia_processor,
             "rendering_service": mock_rendering_service,
             "streaming_service": mock_streaming_service,
-            "security_service": security_service_instance,  # REAL SECURITY SERVICE
+            "security_service": mock_security_service,  # MOCK SECURITY SERVICE
         }
         composition_root._initialized = True
 

@@ -49,7 +49,7 @@ export interface BaseEvent {
   type: string;
   timestamp: Date;
   source?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PlayerActionEvent extends BaseEvent {
@@ -64,7 +64,7 @@ export interface PlayerActionEvent extends BaseEvent {
     | "PauseGame"
     | "ResetGame"
     | "scoreIncrease";
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   value?: number; // For scoreIncrease and other actions that need a value
 }
 
@@ -104,7 +104,7 @@ export interface ErrorEvent extends BaseEvent {
   type: "Error";
   error: Error;
   severity: "low" | "medium" | "high" | "critical";
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 export interface BackendSyncEvent extends BaseEvent {

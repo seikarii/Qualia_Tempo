@@ -11,28 +11,28 @@ export interface ILogger {
    * @param message The message to log
    * @param context Optional context object with additional data
    */
-  debug(message: string, context?: any): void;
+  debug(message: string, context?: unknown): void;
 
   /**
    * Log an informational message.
    * @param message The message to log
    * @param context Optional context object with additional data
    */
-  info(message: string, context?: any): void;
+  info(message: string, context?: unknown): void;
 
   /**
    * Log a warning message.
    * @param message The message to log
    * @param context Optional context object with additional data
    */
-  warn(message: string, context?: any): void;
+  warn(message: string, context?: unknown): void;
 
   /**
    * Log an error message.
    * @param message The message to log
    * @param context Optional context object with additional data
    */
-  error(message: string, context?: any): void;
+  error(message: string, context?: unknown): void;
 
   /**
    * Set the minimum log level.

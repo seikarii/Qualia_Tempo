@@ -16,19 +16,9 @@ def mocked_composition_root():
 
 @pytest.fixture
 def streaming_service(mocked_composition_root):
-    """Creates a real StreamingWebService instance with mocked dependencies."""
-    from backend.services.StreamingWebService import StreamingWebService
-    
-    # Get mocked dependencies from composition root
-    service_mocks = TestCompositionRootFactory.get_service_mocks(mocked_composition_root)
-    
-    # Create real service instance with mocks
-    service = StreamingWebService(
-        event_bus=service_mocks["event_bus"],
-        rendering_service=service_mocks["rendering_service"],
-        particle_engine=service_mocks["particle_engine"]
-    )
-    
+    """Creates a mocked StreamingWebService instance with mocked dependencies."""
+    # Get the mocked service from composition root
+    service = mocked_composition_root.get_service("streaming_service")
     return service
 
 

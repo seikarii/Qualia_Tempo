@@ -43,6 +43,7 @@ export interface AudioServiceConfig {
   // Messages for logging
   messages: {
     audioContextNotAvailable: string;
+    audioNotInitialized: string;
     cannotCreateEntityVoice: string;
     cannotRemoveEntityVoice: string;
     cannotRemoveEntityVoices: string;

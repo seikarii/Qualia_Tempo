@@ -35,6 +35,16 @@ audioEngine:
 volume: 0.7
 soundEnabled: true
 
+messages:
+  audioContextNotAvailable: "AudioContext not available - cannot play audio"
+  audioNotInitialized: "Cannot play rhythmic feedback: audio not initialized"
+  cannotCreateEntityVoice: "Cannot create entity voice: audio not initialized"
+  cannotRemoveEntityVoice: "Cannot remove entity voice: audio not initialized"
+  cannotRemoveEntityVoices: "Cannot remove entity voices: audio not initialized"
+  cannotPreloadSounds: "Cannot preload sounds: audio not initialized"
+  preloadingSounds: "Preloading sounds..."
+  soundsPreloaded: "Sounds preloaded successfully"
+
 qualiaAudio:
   precision:
     frequency: 1000
