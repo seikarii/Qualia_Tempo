@@ -64,7 +64,6 @@ export class ConfigurationService implements IConfigurationService {
   // QUALIA.CODE EXCEPTION: @catchError decorator is intentionally omitted from loadConfig method.
   // This method is part of critical application bootstrap. Failures here must be fatal and stop the application.
   // The try...catch block within the method handles logging but re-throws the exception for proper fatal error handling.
-  // eslint-disable-next-line @qualia-tempo/qualia-code/enforce-method-decorators
 
   @logMethod
   public async loadConfig(): Promise<FullGameConfig> {

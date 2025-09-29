@@ -154,6 +154,7 @@ class RenderingService(IRenderingService):
 
     # QUALIA.CODE v1.1: Dummy frame method removed - all rendering now uses real GPU data
 
+    @log_execution()
     def is_healthy(self) -> bool:
         """
         Check if the rendering service is healthy.

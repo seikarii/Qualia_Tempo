@@ -35,7 +35,7 @@ export class BrowserEventsService implements IBrowserEventsService {
   @logMethod
   public removeWindowEventListener<K extends keyof WindowEventMap>(
     type: K,
-    listener: (event: WindowEventMap[K]) => void,
+    listener: (_event: WindowEventMap[K]) => void,
     options?: boolean | EventListenerOptions
   ): void {
     if (typeof window !== 'undefined') {

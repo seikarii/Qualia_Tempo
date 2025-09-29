@@ -223,6 +223,7 @@ class StateStreamingService:
             # For state streaming, we don't handle other message types
             self._logger.debug(f"Ignored message type: {message_type}")
 
+    @log_execution()
     def get_status(self) -> Dict[str, Any]:
         """Get current streaming service status."""
         return {

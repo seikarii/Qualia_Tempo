@@ -38,7 +38,7 @@ export interface AppInitializerConfig {
 
   // State updates for store
   stateUpdates: {
-    configLoaded: any;
-    initializationComplete: any;
+    configLoaded: Record<string, unknown>;
+    initializationComplete: Record<string, unknown>;
   };
 }

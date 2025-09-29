@@ -77,7 +77,6 @@ export class BackendSyncService implements IBackendSyncService {
     this.logger.info(SERVICE_INIT_MESSAGE);
   }
 
-  // eslint-disable-next-line max-params
   /**
    * QUALIA.CODE: Ensure configuration is loaded before accessing it
    */

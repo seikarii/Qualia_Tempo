@@ -73,6 +73,7 @@ class SecurityService(ISecurityService):
             logger.error(f"Authentication failed: {e}")
             raise SecurityException(f"Authentication failed: {str(e)}")
 
+    @log_execution()
     def is_auth_enabled(self) -> bool:
         """
         Check if authentication is currently enabled.

@@ -15,6 +15,13 @@ import type { DebugServiceConfig } from "./contracts/IDebugService.contracts";
 import { LoggerProvider, QualiaLogger } from "./Logger";
 
 /**
+ * Type for the game store API provided by Zustand
+ */
+type GameStoreApi = {
+  setState: (state: unknown) => void;
+};
+
+/**
  * ApplicationCompositionRoot - The ONLY class allowed to access container directly
  * Encapsulates all bootstrap logic and IoC container interaction
  */
@@ -23,7 +30,7 @@ export class ApplicationCompositionRoot {
    * Bridge the UI layer to the service layer
    * QUALIA.CODE COMPLIANT: UI delivers its dependencies to services, not vice versa
    */
-  public async bridgeUi(gameStoreApi: any): Promise<void> {
+  public async bridgeUi(gameStoreApi: GameStoreApi): Promise<void> {
     try {
       // Get the GameStateStoreService from IoC container
       const gameStateStoreService = container.get<IGameStateStoreService>(TYPES.IGameStateStoreService);

@@ -165,7 +165,6 @@ export class ErrorReportingService implements IErrorReportingService {
     try {
       // QUALIA.CODE v1.1: Load configuration from pure YAML in start() method
       this.logger.debug("Loading ErrorReporting configuration from YAML");
-      this.config = this.config;
       this.logger.info("ErrorReporting configuration loaded from YAML successfully");
       
       // Reinitialize state objects with actual configuration
