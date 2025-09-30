@@ -17,6 +17,7 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { IShaderLoaderService } from "./interfaces/IShaderLoaderService";
 import type { PostProcessingConfig, PostProcessingPass } from "./contracts/IPostProcessingService.contracts";
 import { logMethod, catchError, BrowserOnly } from "../utils/decorators";
+import { GBufferPass } from "./postprocessing/GBufferPass.js";
 
 @injectable()
 export class PostProcessingService implements IPostProcessingService {
@@ -29,6 +30,7 @@ export class PostProcessingService implements IPostProcessingService {
   // Dynamic pipeline graph storage
   private readonly pipelines = new Map<string, EffectComposer>();
   private readonly renderTargets = new Map<string, THREE.WebGLRenderTarget>();
+  private readonly gbufferTextures = new Map<string, THREE.Texture>();
 
   // Shared objects from FrontendRenderingService
   private renderer!: THREE.WebGLRenderer;
@@ -83,15 +85,17 @@ export class PostProcessingService implements IPostProcessingService {
     this.logger.debug("Building render targets from configuration");
 
     for (const rtConfig of this.config.renderTargets) {
+      const options: THREE.RenderTargetOptions = {
+        type: this.mapTextureType(rtConfig.format),
+        minFilter: this.mapMinFilter(rtConfig.options?.minFilter),
+        magFilter: this.mapMagFilter(rtConfig.options?.magFilter),
+        // Añadir wrapS, wrapT si se definen en el contrato
+      };
+
       const renderTarget = new THREE.WebGLRenderTarget(
         rtConfig.width,
         rtConfig.height,
-        {
-          format: this.mapTextureFormat(rtConfig.format),
-          type: THREE.FloatType,
-          minFilter: THREE.LinearFilter,
-          magFilter: THREE.LinearFilter
-        }
+        options
       );
 
       this.renderTargets.set(rtConfig.name, renderTarget);
@@ -103,13 +107,27 @@ export class PostProcessingService implements IPostProcessingService {
 
   @logMethod
   @catchError
-  private mapTextureFormat(format: string): THREE.PixelFormat {
+  private mapTextureType(format: 'HalfFloat' | 'Float' | 'UnsignedByte'): THREE.TextureDataType {
     switch (format) {
-      case 'HalfFloat': return THREE.RGBAFormat; // THREE.js uses RGBAFormat with FloatType
-      case 'Float': return THREE.RGBAFormat;
-      case 'UnsignedByte': return THREE.RGBAFormat;
-      default: return THREE.RGBAFormat;
+      case 'HalfFloat': return THREE.HalfFloatType;
+      case 'Float': return THREE.FloatType;
+      case 'UnsignedByte': return THREE.UnsignedByteType;
+      default: return THREE.UnsignedByteType;
     }
+  }
+
+  @logMethod
+  @catchError
+  private mapMinFilter(filter?: 'Linear' | 'Nearest'): THREE.MinificationTextureFilter | undefined {
+    if (!filter) return undefined;
+    return filter === 'Linear' ? THREE.LinearFilter : THREE.NearestFilter;
+  }
+
+  @logMethod
+  @catchError
+  private mapMagFilter(filter?: 'Linear' | 'Nearest'): THREE.MagnificationTextureFilter | undefined {
+    if (!filter) return undefined;
+    return filter === 'Linear' ? THREE.LinearFilter : THREE.NearestFilter;
   }
 
   @logMethod
@@ -118,7 +136,20 @@ export class PostProcessingService implements IPostProcessingService {
     this.logger.debug("Building pipelines from configuration");
 
     for (const pipelineConfig of this.config.pipelines) {
-      const composer = new EffectComposer(this.renderer);
+      let composer: EffectComposer;
+      const outputTarget = this.renderTargets.get(pipelineConfig.output);
+
+      if (pipelineConfig.output === 'screen') {
+        // Este pipeline renderiza a la pantalla
+        composer = new EffectComposer(this.renderer);
+      } else if (outputTarget) {
+        // Este pipeline renderiza a un render target específico
+        composer = new EffectComposer(this.renderer, outputTarget);
+        composer.renderToScreen = false; // CRÍTICO: Desactivar render a pantalla
+      } else {
+        this.logger.error(`Output render target '${pipelineConfig.output}' not found for pipeline '${pipelineConfig.name}'`);
+        continue;
+      }
 
       // Add passes to the pipeline
       for (const passConfig of pipelineConfig.passes) {
@@ -136,7 +167,7 @@ export class PostProcessingService implements IPostProcessingService {
       }
 
       this.pipelines.set(pipelineConfig.name, composer);
-      this.logger.debug(`Built pipeline: ${pipelineConfig.name} with ${composer.passes.length} passes`);
+      this.logger.debug(`Built pipeline: ${pipelineConfig.name} with ${composer.passes.length} passes -> output: ${pipelineConfig.output}`);
     }
 
     this.logger.info(`Built ${this.pipelines.size} pipelines`);
@@ -161,10 +192,15 @@ export class PostProcessingService implements IPostProcessingService {
           for (const uniformName in passConfig.uniforms) {
             const uniformValue = passConfig.uniforms[uniformName].value;
 
-            // If uniform references a render target by name
-            if (typeof uniformValue === 'string' && this.renderTargets.has(uniformValue)) {
-              pass.uniforms[uniformName].value = this.renderTargets.get(uniformValue)!.texture;
-              this.logger.debug(`Connected render target ${uniformValue} to uniform ${uniformName} in pipeline ${pipelineName}`);
+            // If uniform references a render target or G-Buffer texture by name
+            if (typeof uniformValue === 'string') {
+              if (this.renderTargets.has(uniformValue)) {
+                pass.uniforms[uniformName].value = this.renderTargets.get(uniformValue)!.texture;
+                this.logger.debug(`Connected render target ${uniformValue} to uniform ${uniformName} in pipeline ${pipelineName}`);
+              } else if (this.gbufferTextures.has(uniformValue)) {
+                pass.uniforms[uniformName].value = this.gbufferTextures.get(uniformValue)!;
+                this.logger.debug(`Connected G-Buffer texture ${uniformValue} to uniform ${uniformName} in pipeline ${pipelineName}`);
+              }
             }
           }
         }
@@ -206,6 +242,10 @@ export class PostProcessingService implements IPostProcessingService {
         }
 
         return pass;
+      }
+
+      case 'GBufferPass': {
+        return new GBufferPass(this.scene, this.camera, this.config.renderTargetWidth, this.config.renderTargetHeight);
       }
 
       default:
@@ -262,6 +302,18 @@ export class PostProcessingService implements IPostProcessingService {
       const composer = this.pipelines.get(pipelineName);
       if (composer) {
         composer.render();
+
+        // Dynamic connection logic: Update G-Buffer textures after gbuffer-pipeline execution
+        if (pipelineName === 'gbuffer-pipeline') {
+          const gbufferPass = composer.passes.find(p => p instanceof GBufferPass) as GBufferPass;
+          if (gbufferPass) {
+            this.gbufferTextures.set('gBuffer-Color', gbufferPass.targets.color);
+            this.gbufferTextures.set('gBuffer-Normal', gbufferPass.targets.normal);
+            this.gbufferTextures.set('gBuffer-Depth', gbufferPass.targets.depth);
+            this.logger.debug(`Updated G-Buffer textures after ${pipelineName} execution`);
+          }
+        }
+
         this.logger.debug(`Rendered pipeline: ${pipelineName}`);
       } else {
         this.logger.warn(`Pipeline not found: ${pipelineName}`);
@@ -296,6 +348,13 @@ export class PostProcessingService implements IPostProcessingService {
       this.logger.debug(`Disposed render target: ${name}`);
     }
     this.renderTargets.clear();
+
+    // Dispose all G-Buffer textures
+    for (const [name, texture] of this.gbufferTextures) {
+      texture.dispose();
+      this.logger.debug(`Disposed G-Buffer texture: ${name}`);
+    }
+    this.gbufferTextures.clear();
 
     // Dispose all composers
     for (const [name, composer] of this.pipelines) {

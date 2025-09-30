@@ -4,20 +4,62 @@ renderTargetHeight: 1080
 
 # Define los buffers de renderizado que se pueden usar como entrada/salida
 renderTargets:
+  # G-Buffer textures
+  - name: 'gBuffer-Color'
+    width: 1920
+    height: 1080
+    format: 'UnsignedByte'
+    options:
+      minFilter: 'Linear'
+      magFilter: 'Linear'
+
+  - name: 'gBuffer-Normal'
+    width: 1920
+    height: 1080
+    format: 'UnsignedByte'
+    options:
+      minFilter: 'Linear'
+      magFilter: 'Linear'
+
+  - name: 'gBuffer-Depth'
+    width: 1920
+    height: 1080
+    format: 'Float'
+    options:
+      minFilter: 'Linear'
+      magFilter: 'Linear'
+
+  # Effect result textures
   - name: 'bloomResultTarget'
     width: 1920
     height: 1080
-    format: 'HalfFloat' # Opciones: HalfFloat, Float, UnsignedByte
+    format: 'HalfFloat'
+    options:
+      minFilter: 'Linear'
+      magFilter: 'Linear'
+
+  - name: 'ssr-Result'
+    width: 1920
+    height: 1080
+    format: 'HalfFloat'
     options:
       minFilter: 'Linear'
       magFilter: 'Linear'
 
 # Define los pipelines de renderizado
 pipelines:
+  - name: 'gbuffer-pipeline'
+    enabled: true
+    input: 'scene'
+    output: 'none' # Este pipeline genera múltiples textures, no renderiza a un target específico
+    passes:
+      - type: 'GBufferPass'
+        enabled: true
+
   - name: 'bloom-pipeline'
     enabled: true
-    input: 'scene' # 'scene' es una entrada implícita (el RenderPass principal)
-    output: 'bloomResultTarget' # El nombre de un renderTarget definido arriba
+    input: 'scene'
+    output: 'bloomResultTarget'
     passes:
       - type: 'RenderPass'
         enabled: true
@@ -28,26 +70,47 @@ pipelines:
           radius: 0.6
           threshold: 0.75
 
+  - name: 'ssr-pipeline'
+    enabled: true
+    input: 'scene'
+    output: 'ssr-Result'
+    passes:
+      - type: 'ShaderPass'
+        enabled: true
+        shader: 'ssr'
+        uniforms:
+          sceneColor: { value: 'gBuffer-Color' }
+          normalTexture: { value: 'gBuffer-Normal' }
+          depthTexture: { value: 'gBuffer-Depth' }
+          cameraNear: { value: 0.1 }
+          cameraFar: { value: 1000.0 }
+          resolution: { value: [1920, 1080] }
+
   - name: 'final-composition-pipeline'
     enabled: true
     input: 'scene'
-    output: 'screen' # 'screen' es la salida final a la pantalla
+    output: 'screen'
     passes:
       - type: 'RenderPass'
         enabled: true
       - type: 'ShaderPass'
         enabled: true
-        shader: 'composite_pass'
+        shader: 'composite_pass_v2'
         uniforms:
-          tBloom: { value: 'bloomResultTarget' } # Referencia al output de otro pipeline
+          tDiffuse: { value: 'gBuffer-Color' }
+          tBloom: { value: 'bloomResultTarget' }
+          tSSR: { value: 'ssr-Result' }
           exposure: { value: 1.0 }
           contrast: { value: 1.1 }
           saturation: { value: 1.2 }
           gamma: { value: 2.2 }
           bloomStrength: { value: 0.8 }
+          ssrStrength: { value: 0.3 }
           blendMode: { value: 0 }
 
 # Orden de ejecución de los pipelines
 pipelineOrder:
+  - 'gbuffer-pipeline'
   - 'bloom-pipeline'
+  - 'ssr-pipeline'
   - 'final-composition-pipeline'
