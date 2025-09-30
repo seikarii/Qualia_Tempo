@@ -5,11 +5,20 @@ particles:
   maxCount: 1000
   spawnRate: 10
   baseLifetime: 2000  # milliseconds
+  assumedFrameTime: 16  # assumed frame time in milliseconds for 60fps
+  frameTimeSeconds: 0.016  # frame time in seconds
 
 boss:
   baseScale: 1.0
   intensityMultiplier: 0.5
   phaseTransitionSpeed: 0.1
+  particleMultiplier: 0.2  # particles per power level unit
+  particleAngleDivisor: 20  # divisor for particle angle calculation
+  baseRadius: 4  # base radius for particle positioning
+  radiusVariation: 0.5  # variation in radius
+  heightMultiplier: 2  # multiplier for height oscillation
+  particleScale: 0.1  # scale of individual particles
+  particleOpacity: 0.8  # opacity of particles
 
 player:
   glowRange: [0.3, 1.0]
@@ -21,3 +30,16 @@ notes:
   pulseFrequency: 2.0
   scaleRange: [0.5, 1.5]
   rotationSpeed: 0.01
+
+qualiaField:
+  gridSpacing: 2.0
+  chaosSpread: 40.0
+  orderRandomness: 0.3
+  waveGridSize: 32
+  wavePlaneSize: 20
+  waveCenterOffset: 16
+  waveFrequency: 0.3
+  waveTimeMultiplier: 2
+  waveAmplitudeAlpha: 2
+  waveAmplitudeBeta: 1
+  waveFrequencyX: 0.2

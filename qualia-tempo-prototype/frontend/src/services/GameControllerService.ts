@@ -40,22 +40,14 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   private timerService: ITimerService;
   private audioService: IAudioService;
   private config: GameControllerConfig;
-  // @ts-ignore - Used by @OnEvent decorator lifecycle
+  // @ts-expect-error - Used by @OnEvent decorator lifecycle
   private _eventListeners: string[] = []; // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
   private isRunning = false;
   private logger: QualiaLogger;
   private gameClockInterval: number | null = null;
 
-  // Internal game state
-  private gameState: GameState = {
-    isPlaying: false,
-    isPaused: false,
-    currentScore: 0,
-    comboCount: 0,
-    health: 100,
-    level: 1,
-    gameMode: "normal",
-  };
+  // Internal game state - initialized in constructor with defaults, updated in initialize()
+  private gameState: GameState;
 
   constructor(
     @inject(TYPES.IEventBus) eventBus: EventBus,
@@ -72,6 +64,16 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     this.gameStateStoreService = gameStateStoreService;
     this.timerService = timerService;
     this.audioService = audioService;
+    // Initialize game state with defaults, will be updated in initialize()
+    this.gameState = {
+      isPlaying: false,
+      isPaused: false,
+      currentScore: 0,
+      comboCount: 0,
+      health: this.config.health.maxHealth,
+      level: 1,
+      gameMode: "normal",
+    };
     this.logger.info("🎮 [GameController] Service initialized");
   }
 
@@ -238,7 +240,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   }
 
   @OnEvent('PlayerAction')
-  // @ts-ignore - Reserved for future player action handling
+  // @ts-expect-error - Reserved for future player action handling
   private async _handlePlayerAction(event: PlayerActionEvent): Promise<void> {
     this.logger.info(
       `🎮 [GameController] Handling PlayerAction: ${event.action}`,
@@ -279,14 +281,14 @@ export class GameControllerService implements IGameControllerService, IBaseServi
 
     this.logger.info("💨 [GameController] Dash action performed");
     // Dash could give a temporary speed boost or score multiplier
-    this.gameState.currentScore += 5;
+    this.gameState.currentScore += this.config.mechanics.dashScoreBonus;
     this.emitGameStateChanged("Playing");
   }
 
   private handleHitNote(context?: Record<string, any>): void {
     if (!this.gameState.isPlaying || this.gameState.isPaused) return;
 
-    const points = context?.points || 10;
+    const points = context?.points || this.config.scoring.baseScorePerHit;
     const isPerfect = context?.perfect || false;
 
     // Update score
@@ -297,13 +299,13 @@ export class GameControllerService implements IGameControllerService, IBaseServi
 
     // Bonus for perfect hits
     if (isPerfect) {
-      this.gameState.currentScore += Math.floor(points * 0.5);
+      this.gameState.currentScore += Math.floor(points * this.config.scoring.perfectHitBonusMultiplier);
     }
 
     // Health recovery for good hits
     this.gameState.health = Math.min(
       this.config.health.maxHealth,
-      this.gameState.health + 2,
+      this.gameState.health + this.config.health.healthRecoveryOnHit,
     );
 
     this.logger.info(
@@ -319,7 +321,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     this.gameState.comboCount = 0;
 
     // Health damage
-    this.gameState.health = Math.max(0, this.gameState.health - 5);
+    this.gameState.health = Math.max(0, this.gameState.health - this.config.health.damageOnMiss);
 
     this.logger.info(
       `❌ [GameController] Note missed! Health: ${this.gameState.health}`,
@@ -349,13 +351,13 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     // Rewind could restore some health
     this.gameState.health = Math.min(
       this.config.health.maxHealth,
-      this.gameState.health + 10,
+      this.gameState.health + this.config.mechanics.rewindHealthBonus,
     );
     this.emitGameStateChanged("Playing");
   }
 
   @OnEvent('GameStateChanged')
-  // @ts-ignore - Reserved for future game state change handling
+  // @ts-expect-error - Reserved for future game state change handling
   private _handleGameStateChanged(event: GameStateChangedEvent): void {
     this.logger.debug(
       `🎮 [GameController] Game state changed: ${event.previousState} -> ${event.newState}`,
@@ -381,7 +383,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
       // Update game time in the store
       const currentTime = Date.now();
       this.gameStateStoreService.updateGameState({ currentTime });
-    }, 100); // Update every 100ms
+    }, this.config.performance.updateIntervalMs);
   }
 
   private stopGameClock(): void {
@@ -419,6 +421,16 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   @logMethod
   public initialize(): void {
     this.logger.info('🚀 [GameController] Initializing service with @OnEvent lifecycle...');
+    // Initialize game state from config
+    this.gameState = {
+      isPlaying: false,
+      isPaused: false,
+      currentScore: this.config.scoring.baseScorePerHit, // or 0?
+      comboCount: 0,
+      health: this.config.health.maxHealth,
+      level: 1,
+      gameMode: "normal",
+    };
     // @OnEvent subscriptions are handled automatically by initializeEventSubscriptions
     // No manual eventBus.subscribe calls needed
   }

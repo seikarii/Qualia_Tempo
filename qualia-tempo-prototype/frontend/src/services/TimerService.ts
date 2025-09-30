@@ -160,7 +160,7 @@ export class TimerService implements ITimerService {
   }
 
   @logMethod
-  public requestAnimationFrame(callback: (time: number) => void): number {
+  public requestAnimationFrame(callback: (_time: number) => void): number {
     this.logger.debug("Requesting animation frame");
     return this.timerProvider.requestAnimationFrame(callback);
   }

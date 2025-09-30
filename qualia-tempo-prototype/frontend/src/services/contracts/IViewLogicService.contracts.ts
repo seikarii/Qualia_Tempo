@@ -177,11 +177,20 @@ export interface ViewLogicConfig {
     maxCount: number;
     spawnRate: number;
     baseLifetime: number;
+    assumedFrameTime: number;  // assumed frame time in milliseconds for 60fps
+    frameTimeSeconds: number;  // frame time in seconds
   };
   boss: {
     baseScale: number;
     intensityMultiplier: number;
     phaseTransitionSpeed: number;
+    particleMultiplier: number;
+    particleAngleDivisor: number;
+    baseRadius: number;
+    radiusVariation: number;
+    heightMultiplier: number;
+    particleScale: number;
+    particleOpacity: number;
   };
   player: {
     glowRange: [number, number];
@@ -193,5 +202,18 @@ export interface ViewLogicConfig {
     pulseFrequency: number;
     scaleRange: [number, number];
     rotationSpeed: number;
+  };
+  qualiaField: {
+    gridSpacing: number;
+    chaosSpread: number;
+    orderRandomness: number;
+    waveGridSize: number;
+    wavePlaneSize: number;
+    waveCenterOffset: number;
+    waveFrequency: number;
+    waveTimeMultiplier: number;
+    waveAmplitudeAlpha: number;
+    waveAmplitudeBeta: number;
+    waveFrequencyX: number;
   };
 }

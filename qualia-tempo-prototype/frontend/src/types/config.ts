@@ -30,6 +30,7 @@ import type { GameplayMechanicsConfig } from '../services/contracts/IGameplayMec
 import type { ViewLogicConfig } from '../services/contracts/IViewLogicService.contracts';
 import type { SubtitleConfig } from '../services/contracts/ISubtitleService.contracts';
 import type { DebugOrchestratorConfig } from '../services/contracts/IDebugOrchestratorService.contracts';
+import type { GameStateStoreConfig } from '../services/contracts/IGameStateStoreService.contracts';
 
 /**
  * Gameplay Configuration Interface
@@ -84,6 +85,7 @@ export interface FullGameConfig {
   viewLogic: ViewLogicConfig;
   subtitle: SubtitleConfig;
   debugOrchestrator: DebugOrchestratorConfig;
+  gameStateStore: GameStateStoreConfig;
 
   // Optional Features
   visualEffects?: VisualEffectsConfig;

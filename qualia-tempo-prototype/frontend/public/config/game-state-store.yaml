@@ -1,0 +1,28 @@
+resetValues:
+  player:
+    health: 100
+    combo: 0
+    score: 0
+    isMoving: false
+    lastRhythmHit: 0
+  qualiaState:
+    intensity: 0
+    precision: 0
+    aggression: 0
+    flow: 0
+    chaos: 0
+    recovery: 0
+    transcendence: 0
+  gameStats:
+    totalNotes: 0
+    notesHit: 0
+    notesMissed: 0
+    currentStreak: 0
+    maxStreak: 0
+    pauseCooldownRemaining: 0
+  timing:
+    currentTime: 0
+    gameStartTime: 0
+
+eventPriorities:
+  particleData: "normal"

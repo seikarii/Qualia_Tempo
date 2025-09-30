@@ -14,7 +14,7 @@ import type { ExtendedNotification } from "./NotificationService";
 
 // Define the type for the game store API
 type GameStoreApi = {
-  setState: (_fn: (state: any) => any) => void;
+  setState: (_fn: (_state: any) => any) => void;
   getState: () => any;
 };
 

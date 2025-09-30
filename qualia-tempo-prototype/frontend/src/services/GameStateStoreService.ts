@@ -23,9 +23,11 @@ import {
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ITimerService } from "./interfaces/ITimerService";
+import type { ILogger } from "./interfaces/ILogger";
+import type { GameStateStoreConfig } from "./contracts/IGameStateStoreService.contracts";
 
 // Store setter type (from Zustand)
-type StoreSetter = (_state: any) => void;
+type StoreSetter = (_state: unknown) => void;
 
 // Event types
 const GAME_EVENTS = {
@@ -61,12 +63,15 @@ export class GameStateStoreService implements IGameStateStoreService {
   private isStarted = false;
   private listenerIds: string[] = [];
   private setStore!: StoreSetter; // Will be set by setStoreSetter method
+  private config: GameStateStoreConfig;
 
   constructor(
     @inject(TYPES.IEventBus) private readonly eventBus: IEventBus,
     @inject(TYPES.ILogger) private readonly logger: ILogger,
     @inject(TYPES.ITimerService) private readonly timerService: ITimerService,
+    @inject(TYPES.GameStateStoreConfig) config: GameStateStoreConfig,
   ) {
+    this.config = config;
     this.logger.info("GameStateStoreService constructed. Awaiting store setter.");
   }
 
@@ -212,31 +217,31 @@ export class GameStateStoreService implements IGameStateStoreService {
           isPlaying: false,
           ...(event.newState === "GameOver" && {
             // Reset game state on game over
-            currentTime: 0,
-            gameStartTime: 0,
+            currentTime: this.config.resetValues.timing.currentTime,
+            gameStartTime: this.config.resetValues.timing.gameStartTime,
             player: {
               ...state.player,
-              health: 100,
-              combo: 0,
-              score: 0,
-              isMoving: false,
-              lastRhythmHit: 0,
+              health: this.config.resetValues.player.health,
+              combo: this.config.resetValues.player.combo,
+              score: this.config.resetValues.player.score,
+              isMoving: this.config.resetValues.player.isMoving,
+              lastRhythmHit: this.config.resetValues.player.lastRhythmHit,
             },
             qualiaState: {
-              intensity: 0,
-              precision: 0, // Updated to match QualiaState schema
-              aggression: 0,
-              flow: 0,
-              chaos: 0,
-              recovery: 0,
-              transcendence: 0,
+              intensity: this.config.resetValues.qualiaState.intensity,
+              precision: this.config.resetValues.qualiaState.precision, // Updated to match QualiaState schema
+              aggression: this.config.resetValues.qualiaState.aggression,
+              flow: this.config.resetValues.qualiaState.flow,
+              chaos: this.config.resetValues.qualiaState.chaos,
+              recovery: this.config.resetValues.qualiaState.recovery,
+              transcendence: this.config.resetValues.qualiaState.transcendence,
             },
-            totalNotes: 0,
-            notesHit: 0,
-            notesMissed: 0,
-            currentStreak: 0,
-            maxStreak: 0,
-            pauseCooldownRemaining: 0,
+            totalNotes: this.config.resetValues.gameStats.totalNotes,
+            notesHit: this.config.resetValues.gameStats.notesHit,
+            notesMissed: this.config.resetValues.gameStats.notesMissed,
+            currentStreak: this.config.resetValues.gameStats.currentStreak,
+            maxStreak: this.config.resetValues.gameStats.maxStreak,
+            pauseCooldownRemaining: this.config.resetValues.gameStats.pauseCooldownRemaining,
           }),
         }));
         if (event.newState === "GameOver") {

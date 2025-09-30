@@ -45,45 +45,60 @@ export class ViewLogicService implements IViewLogicService {
     });
   }
 
+  private calculateBossPosition(boss: any, time: number): [number, number, number] {
+    if (boss.phase === 1) {
+      // Slow, menacing movement  
+      return [
+        boss.position[0],
+        boss.position[1] + Math.sin(time * 0.5) * 0.3,
+        boss.position[2]
+      ];
+    } else if (boss.phase === 2) {
+      // More aggressive movement
+      return [
+        boss.position[0] + Math.cos(time * 0.8) * 0.5,
+        boss.position[1] + Math.sin(time * 1.5) * 0.5,
+        boss.position[2]
+      ];
+    } else {
+      // Chaotic final phase movement
+      return [
+        boss.position[0] + Math.cos(time * 2.1) * 1.0,
+        boss.position[1] + Math.sin(time * 3) * 0.8,
+        boss.position[2]
+      ];
+    }
+  }
+
+  private calculateBossRotation(boss: any, time: number): [number, number, number] {
+    if (boss.phase === 1) {
+      return [0, time * 0.005, 0];
+    } else if (boss.phase === 2) {
+      return [0, time * 0.01, Math.sin(time) * 0.01];
+    } else {
+      return [Math.sin(time * 1.3) * 0.02, time * 0.02, 0];
+    }
+  }
+
   @logMethod
   @catchError
-  getBossVisuals(bossState: any, time: number): BossVisualData {
+  getBossVisuals(bossState: unknown, time: number): BossVisualData {
     // QUALIA.CODE v1.1: REAL visual logic extracted from BossRenderer
-    const boss = bossState;
+    const boss = bossState as {
+      stress_level: number;
+      phase: number;
+      position: [number, number, number];
+      qualia_state?: { emotional_valence: number };
+      power_level: number;
+    };
     // Power ratio calculation for future use
     // const powerRatio = boss.power_level / 200; // Assuming max 200
     const stressIntensity = boss.stress_level;
     const phaseMultiplier = boss.phase;
 
     // Calculate phase-based movement patterns (extracted from useFrame)
-    let calculatedPosition: [number, number, number];
-    let absoluteRotation: [number, number, number];
-    
-    if (boss.phase === 1) {
-      // Slow, menacing movement  
-      calculatedPosition = [
-        boss.position[0],
-        boss.position[1] + Math.sin(time * 0.5) * 0.3,
-        boss.position[2]
-      ];
-      absoluteRotation = [0, time * 0.005, 0];
-    } else if (boss.phase === 2) {
-      // More aggressive movement
-      calculatedPosition = [
-        boss.position[0] + Math.cos(time * 0.8) * 0.5,
-        boss.position[1] + Math.sin(time * 1.5) * 0.5,
-        boss.position[2]
-      ];
-      absoluteRotation = [0, time * 0.01, Math.sin(time) * 0.01];
-    } else {
-      // Chaotic final phase movement
-      calculatedPosition = [
-        boss.position[0] + Math.cos(time * 2.1) * 1.0,
-        boss.position[1] + Math.sin(time * 3) * 0.8,
-        boss.position[2]
-      ];
-      absoluteRotation = [Math.sin(time * 1.3) * 0.02, time * 0.02, 0];
-    }
+    const calculatedPosition = this.calculateBossPosition(boss, time);
+    const absoluteRotation = this.calculateBossRotation(boss, time);
 
     // Scale based on stress level (boss grows when stressed)
     const stressScale = 1 + stressIntensity * 0.3;
@@ -146,11 +161,11 @@ export class ViewLogicService implements IViewLogicService {
     });
 
     // Generate power level particles
-    const particleCount = Math.floor((boss.power_level / 100) * 20);
+    const particleCount = Math.floor(boss.power_level * this.config.boss.particleMultiplier);
     const powerParticles = Array.from({ length: particleCount }, (_, i) => {
-      const angle = (i / 20) * Math.PI * 2;
-      const radius = 4 + Math.sin(time + i) * 0.5;
-      const height = Math.cos(time * 0.5 + i) * 2;
+      const angle = (i / this.config.boss.particleAngleDivisor) * Math.PI * 2;
+      const radius = this.config.boss.baseRadius + Math.sin(time + i) * this.config.boss.radiusVariation;
+      const height = Math.cos(time * 0.5 + i) * this.config.boss.heightMultiplier;
       
       return {
         position: [
@@ -158,8 +173,8 @@ export class ViewLogicService implements IViewLogicService {
           height,
           Math.sin(angle) * radius
         ] as [number, number, number],
-        scale: 0.1,
-        opacity: 0.8
+        scale: this.config.boss.particleScale,
+        opacity: this.config.boss.particleOpacity
       };
     });
 
@@ -352,14 +367,14 @@ export class ViewLogicService implements IViewLogicService {
         const y = (Math.floor(i / gridSize) % gridSize) - gridSize / 2;
         const z = Math.floor(i / (gridSize * gridSize)) - gridSize / 2;
 
-        positions[i3] = x * 2 + (Math.random() - 0.5) * (1 - orderFactor);
-        positions[i3 + 1] = y * 2 + (Math.random() - 0.5) * (1 - orderFactor);
-        positions[i3 + 2] = z * 2 + (Math.random() - 0.5) * (1 - orderFactor);
+        positions[i3] = x * this.config.qualiaField.gridSpacing + (Math.random() - 0.5) * this.config.qualiaField.orderRandomness * (1 - orderFactor);
+        positions[i3 + 1] = y * this.config.qualiaField.gridSpacing + (Math.random() - 0.5) * this.config.qualiaField.orderRandomness * (1 - orderFactor);
+        positions[i3 + 2] = z * this.config.qualiaField.gridSpacing + (Math.random() - 0.5) * this.config.qualiaField.orderRandomness * (1 - orderFactor);
       } else {
         // More chaotic distribution
-        positions[i3] = (Math.random() - 0.5) * 40 * chaosFactor;
-        positions[i3 + 1] = (Math.random() - 0.5) * 40 * chaosFactor;
-        positions[i3 + 2] = (Math.random() - 0.5) * 40 * chaosFactor;
+        positions[i3] = (Math.random() - 0.5) * this.config.qualiaField.chaosSpread * chaosFactor;
+        positions[i3 + 1] = (Math.random() - 0.5) * this.config.qualiaField.chaosSpread * chaosFactor;
+        positions[i3 + 2] = (Math.random() - 0.5) * this.config.qualiaField.chaosSpread * chaosFactor;
       }
 
       // Color based on emotional valence and field parameters
@@ -401,16 +416,19 @@ export class ViewLogicService implements IViewLogicService {
     }
 
     // Generate wave plane positions
-    const wavePositions = new Float32Array(33 * 33 * 3); // 32x32 plane geometry
+    const gridSize = this.config.qualiaField.waveGridSize;
+    const planeSize = this.config.qualiaField.wavePlaneSize;
+    const centerOffset = this.config.qualiaField.waveCenterOffset;
+    const wavePositions = new Float32Array((gridSize + 1) * (gridSize + 1) * 3); // (gridSize+1)x(gridSize+1) plane geometry
     let posIndex = 0;
-    for (let x = 0; x <= 32; x++) {
-      for (let z = 0; z <= 32; z++) {
-        const worldX = (x - 16) * (20 / 32);
-        const worldZ = (z - 16) * (20 / 32);
+    for (let x = 0; x <= gridSize; x++) {
+      for (let z = 0; z <= gridSize; z++) {
+        const worldX = (x - centerOffset) * (planeSize / gridSize);
+        const worldZ = (z - centerOffset) * (planeSize / gridSize);
         const distance = Math.sqrt(worldX * worldX + worldZ * worldZ);
 
         wavePositions[posIndex] = worldX;
-        wavePositions[posIndex + 1] = Math.sin(distance * 0.3 - time * 2) * qualiaField.alpha * 2 + Math.cos(worldX * 0.2 + time) * qualiaField.beta * 1;
+        wavePositions[posIndex + 1] = Math.sin(distance * this.config.qualiaField.waveFrequency - time * this.config.qualiaField.waveTimeMultiplier) * qualiaField.alpha * this.config.qualiaField.waveAmplitudeAlpha + Math.cos(worldX * this.config.qualiaField.waveFrequencyX + time) * qualiaField.beta * this.config.qualiaField.waveAmplitudeBeta;
         wavePositions[posIndex + 2] = worldZ;
         posIndex += 3;
       }
@@ -710,12 +728,12 @@ export class ViewLogicService implements IViewLogicService {
 
   private updateExistingParticles(_time: number): void {
     this.activeParticles = this.activeParticles.filter(particle => {
-      particle.life += 16; // Assume 60fps, so ~16ms per frame
+      particle.life += this.config.particles.assumedFrameTime; // Assume 60fps, so ~16ms per frame
       
       // Update position based on velocity
-      particle.position[0] += particle.velocity[0] * 0.016;
-      particle.position[1] += particle.velocity[1] * 0.016;
-      particle.position[2] += particle.velocity[2] * 0.016;
+      particle.position[0] += particle.velocity[0] * this.config.particles.frameTimeSeconds;
+      particle.position[1] += particle.velocity[1] * this.config.particles.frameTimeSeconds;
+      particle.position[2] += particle.velocity[2] * this.config.particles.frameTimeSeconds;
       
       // Fade out over time
       const lifeRatio = particle.life / particle.maxLife;

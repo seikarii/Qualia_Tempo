@@ -34,6 +34,7 @@ import type { CoordinateSystemConfig } from "./contracts/ICoordinateSystemServic
 import type { ViewLogicConfig } from "./contracts/IViewLogicService.contracts";
 // import type { SubtitleConfig } from "./contracts/ISubtitleService.contracts";
 // import type { DebugOrchestratorConfig } from "./contracts/IDebugOrchestratorService.contracts";
+import type { GameStateStoreConfig } from "./contracts/IGameStateStoreService.contracts";
 
 // ===== IMPORT ALL INTERFACES =====
 import type { IEventBus } from "./interfaces/IEventBus";
@@ -133,7 +134,8 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "gameplayMechanics": "gameplay-mechanics.yaml",
   "viewLogic": "view-logic.yaml",
   "subtitle": "subtitle.yaml",
-  "debugOrchestrator": "debug-orchestrator.yaml"
+  "debugOrchestrator": "debug-orchestrator.yaml",
+  "gameStateStore": "game-state-store.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
@@ -375,6 +377,7 @@ export async function configureServices(): Promise<void> {
   safeBindConstant<ViewLogicConfig>(TYPES.ViewLogicConfig, fullConfig.viewLogic);
   safeBindConstant(TYPES.SubtitleConfig, fullConfig.subtitle);
   safeBindConstant(TYPES.DebugOrchestratorConfig, fullConfig.debugOrchestrator);
+  safeBindConstant<GameStateStoreConfig>(TYPES.GameStateStoreConfig, fullConfig.gameStateStore);
 }
 
 // ===== CONTAINER VERIFICATION =====

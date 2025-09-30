@@ -86,6 +86,7 @@ export const TYPES = {
   ViewLogicConfig: Symbol.for("ViewLogicConfig"),
   SubtitleConfig: Symbol.for("SubtitleConfig"),
   DebugOrchestratorConfig: Symbol.for("DebugOrchestratorConfig"),
+  GameStateStoreConfig: Symbol.for("GameStateStoreConfig"),
 } as const;
 
 // Type-safe access to TYPES

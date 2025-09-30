@@ -47,11 +47,13 @@ export interface GameControllerConfig {
     comboMultiplier: number;
     maxComboMultiplier: number;
     scoreDecayRate: number;
+    perfectHitBonusMultiplier: number;
   };
   health: {
     maxHealth: number;
     healthRegenRate: number;
     damageOnMiss: number;
+    healthRecoveryOnHit: number;
     enableInvincibilityFrames: boolean;
     invincibilityDuration: number;
   };
@@ -68,6 +70,8 @@ export interface GameControllerConfig {
   };
   mechanics: {
     fastForwardScoreBoost: number;
+    rewindHealthBonus: number;
+    dashScoreBonus: number;
   };
   maxPlayers: number; // Maximum number of players supported
   enablePauseResume: boolean; // Enable pause/resume functionality

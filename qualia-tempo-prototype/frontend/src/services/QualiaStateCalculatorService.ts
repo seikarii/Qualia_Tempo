@@ -235,7 +235,7 @@ export class QualiaStateCalculatorService
 
   // ==================== ACTION HANDLERS ====================
 
-  private onNoteHit(_context?: Record<string, any>): void {
+  private onNoteHit(_context?: Record<string, unknown>): void {
     const config = this.config;
     const multipliers = config.hitNoteMultipliers;
 
@@ -260,7 +260,7 @@ export class QualiaStateCalculatorService
     this.checkTranscendenceActivation();
   }
 
-  private onNoteMiss(_context?: Record<string, any>): void {
+  private onNoteMiss(_context?: Record<string, unknown>): void {
     const config = this.config;
     const multipliers = config.missNoteMultipliers;
 

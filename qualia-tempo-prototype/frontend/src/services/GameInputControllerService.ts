@@ -21,8 +21,8 @@ export class GameInputControllerService implements IGameInputControllerService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
 
-  private keyPressHandler?: (event: KeyboardEvent) => void;
-  private keyReleaseHandler?: (event: KeyboardEvent) => void;
+  private keyPressHandler?: (_event: KeyboardEvent) => void;
+  private keyReleaseHandler?: (_event: KeyboardEvent) => void;
   private isActive = false;
 
   constructor(
@@ -83,38 +83,38 @@ export class GameInputControllerService implements IGameInputControllerService {
     });
   }
 
-  private createKeyPressHandler(): (event: KeyboardEvent) => void {
-    return (event: KeyboardEvent) => {
+  private createKeyPressHandler(): (_event: KeyboardEvent) => void {
+    return (_event: KeyboardEvent) => {
       if (!this.isActive) return;
 
-      const key = event.key.toLowerCase();
+      const key = _event.key.toLowerCase();
       const movementKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'];
       const actionKeys = [' ', 'enter']; // Teclas de acción
 
       if (movementKeys.includes(key) || actionKeys.includes(key)) {
-        event.preventDefault();
-        this.inputStateService.pressKey(event.key);
+        _event.preventDefault();
+        this.inputStateService.pressKey(_event.key);
         return;
       }
 
       // Handle global game controls
       if (key === 'p' || key === 'escape') {
-        event.preventDefault();
+        _event.preventDefault();
         this.processPauseGame();
         return;
       }
     };
   }
 
-  private createKeyReleaseHandler(): (event: KeyboardEvent) => void {
-    return (event: KeyboardEvent) => {
+  private createKeyReleaseHandler(): (_event: KeyboardEvent) => void {
+    return (_event: KeyboardEvent) => {
       if (!this.isActive) return;
 
-      const key = event.key.toLowerCase();
+      const key = _event.key.toLowerCase();
       const keysToTrack = ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright', ' ', 'enter'];
 
       if (keysToTrack.includes(key)) {
-        this.inputStateService.releaseKey(event.key);
+        this.inputStateService.releaseKey(_event.key);
       }
     };
   }

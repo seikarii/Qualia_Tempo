@@ -26,16 +26,20 @@ scoring:
   comboMultiplier: 1.5
   maxComboMultiplier: 10.0
   scoreDecayRate: 0.95
+  perfectHitBonusMultiplier: 0.5
 
 health:
   maxHealth: 100
   healthRegenRate: 0.1
-  damageOnMiss: 10
+  damageOnMiss: 5
+  healthRecoveryOnHit: 2
   enableInvincibilityFrames: false
   invincibilityDuration: 1000
 
 mechanics:
   fastForwardScoreBoost: 2.0
+  rewindHealthBonus: 10
+  dashScoreBonus: 5
 
 # Legacy compatibility (required for services still using old structure)
 maxHealth: 100
