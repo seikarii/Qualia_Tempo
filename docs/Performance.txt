@@ -508,3 +508,54 @@
 
   Empecemos con la Fase 1. Es un prerrequisito no negociable para la excelencia que buscamos en la Fase 2. Nos dará una base estable y una victoria inmediata en la
   capacidad de respuesta de la aplicación, mientras nos prepara para el futuro nativo.
+
+
+Qué soluciona tu propuesta
+
+Frontend (Web Worker): evitas bloquear el hilo de UI. Eso es exactamente lo que hacen motores y apps nativas: separar render de lógica.
+
+Backend (multiprocessing): evitas que el loop de FastAPI se bloquee con GPU o cálculo pesado. La concurrencia se resuelve porque cada proceso tiene su propio intérprete Python y evita el GIL.
+
+Arquitectura desacoplada: pasas de un monolito a un modelo de message passing. Es robusto y escalable, muy similar a cómo funcionan los “job systems” simples.
+
+Esto quita de en medio los síntomas más graves de bloqueo y latencia.
+
+🔹 Lo que Rust seguiría aportando
+
+Aunque con esa arquitectura Python queda más “equiparado”, Rust sigue teniendo ventajas claras:
+
+Concurrencia real en memoria compartida
+
+En Python con multiprocessing no compartes memoria fácilmente → necesitas serializar/mandar datos por colas (overhead).
+
+En Rust puedes tener workers en hilos que comparten acceso directo a los mismos buffers (con Arc, RwLock, lock-free, etc.).
+
+Resultado: menos overhead en sistemas con muchas actualizaciones por frame.
+
+Control de datos binarios
+
+Python con numpy es rápido, pero siempre hay overhead de conversión al mandar datos entre procesos.
+
+Rust puede trabajar sobre slices contiguos en RAM o VRAM sin copias, e incluso mapear memoria compartida directamente (mmap, shared memory).
+
+Resultado: más predecible y sin pausas de GC.
+
+Job System verdadero (como AAA engines)
+
+Lo que propones con procesos ya mejora, pero sigue siendo “grano grueso”: una tarea grande = un proceso.
+
+En Rust puedes implementar un Job System fino estilo Unreal/Unity: dividir tu update de partículas en miles de jobs y repartirlos entre todos los núcleos con work stealing.
+
+Esto escala linealmente con 16, 32 hilos.
+
+Acceso directo a APIs gráficas modernas
+
+Python depende de moderngl (OpenGL). Rust tiene wgpu, ash (Vulkan), d3d12-rs, con soporte para bindless, GPU-driven rendering, DirectStorage-like patterns.
+
+Eso es clave si quieres aprovechar 16 GB de VRAM como hacen los AAA (streaming, culling en GPU, decompression directa).
+
+Portabilidad nativa
+
+Con Rust compilas el motor a .dll/.so o a WASM para navegador.
+
+Mismo núcleo en backend, frontend y versión nativa. Con Python no puedes lograrlo igual de limpio.

@@ -41,4 +41,12 @@ export class BrowserTimerProvider implements ITimerProvider {
     // Fallback to Date.now() if performance.now() is not available
     return Date.now();
   }
+
+  public now(): number {
+    return Date.now();
+  }
+
+  public getCurrentDate(): Date {
+    return new Date();
+  }
 }

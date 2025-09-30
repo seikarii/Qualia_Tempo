@@ -52,4 +52,16 @@ export interface ITimerProvider {
    * @returns High-resolution timestamp in milliseconds
    */
   performanceNow(): number;
+
+  /**
+   * Returns the current timestamp in milliseconds
+   * @returns Current timestamp
+   */
+  now(): number;
+
+  /**
+   * Returns the current date object
+   * @returns Current date
+   */
+  getCurrentDate(): Date;
 }

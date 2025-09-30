@@ -2,6 +2,7 @@ import * as Tone from "tone";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../services/inversify.types";
 import type { ILogger } from "../services/interfaces/ILogger";
+import type { ITimerService } from "../services/interfaces/ITimerService";
 import type { QualiaState } from "../types/contracts";
 import type {
   IOntologicalAudioEngine,
@@ -23,13 +24,18 @@ export type OscillatorType =
 @injectable()
 export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   private readonly logger: ILogger;
+  private readonly timerService: ITimerService;
   private synthPool: Map<string, Tone.PolySynth> = new Map();
   private globalReverb: Tone.Reverb;
   private globalDelay: Tone.FeedbackDelay;
   private masterVolume: Tone.Volume;
 
-  constructor(@inject(TYPES.ILogger) logger: ILogger) {
+  constructor(
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.ITimerService) timerService: ITimerService
+  ) {
     this.logger = logger;
+    this.timerService = timerService;
     this.globalReverb = new Tone.Reverb({
       decay: 1.5,
       wet: 0.45,
@@ -177,7 +183,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
     clusteredSynth.triggerAttackRelease(chord, "2n");
 
     // Limpiar después del uso
-    setTimeout(() => clusteredSynth.dispose(), 3000);
+    this.timerService.setTimeout(() => clusteredSynth.dispose(), 3000);
   }
 
   private playSynchronizationChord(behavior: EmergentBehavior): void {
@@ -192,7 +198,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
     const velocity = Math.min(behavior.strength ?? 0.8, 1.0);
     syncSynth.triggerAttackRelease(chord, "1n", undefined, velocity);
 
-    setTimeout(() => syncSynth.dispose(), 2200);
+    this.timerService.setTimeout(() => syncSynth.dispose(), 2200);
   }
 
   private playPropagationArpeggio(behavior: EmergentBehavior): void {
@@ -205,12 +211,12 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
     arpeggioSynth.connect(this.globalReverb);
 
     arpeggioNotes.forEach((note, idx) => {
-      setTimeout(() => {
+      this.timerService.setTimeout(() => {
         arpeggioSynth.triggerAttackRelease(note, "8n");
       }, idx * 160);
     });
 
-    setTimeout(() => arpeggioSynth.dispose(), 160 * arpeggioNotes.length + 600);
+    this.timerService.setTimeout(() => arpeggioSynth.dispose(), 160 * arpeggioNotes.length + 600);
   }
 
   private playNarrativeEvent(behavior: EmergentBehavior): void {
@@ -225,7 +231,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
     const velocity = Math.min(behavior.strength ?? 1.0, 1.0);
     eventSynth.triggerAttackRelease(chord, "2n", undefined, velocity);
 
-    setTimeout(() => eventSynth.dispose(), 2500);
+    this.timerService.setTimeout(() => eventSynth.dispose(), 2500);
   }
 
   /**

@@ -1,5 +1,8 @@
 /**
- * QUALIA.CODE v1.1 - ServiceDiagnosticsPanel Component
+ * QUALIA.CODE v1.1 - Servic  const timerService = useTimerService();
+
+  const [serviceData, setServiceData] = useState<string>("{}"); // Store as JSON string to comply with ESLint rule
+  const [lastUpdate, setLastUpdate] = useState<Date>(() => timerService.getCurrentDate());csPanel Component
  * Diagnostic panel for validating end-to-end service architecture integration.
  *
  * ARCHITECTURAL VALIDATION:
@@ -17,6 +20,8 @@ import {
   useErrorReporting,
   useEventBus,
   useConfiguration,
+  useLogger,
+  useTimerService,
 } from "../../services/hooks";
 
 interface ServiceStatus {
@@ -28,14 +33,16 @@ interface ServiceStatus {
 }
 
 export const ServiceDiagnosticsPanel: React.FC = () => {
-  const [serviceData, setServiceData] = useState<string>("{}"); // Store as JSON string to comply with ESLint rule
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-
   // QUALIA.CODE COMPLIANCE: Using hooks exclusively - NO direct IoC access
   const notificationService = useNotificationService();
   const errorReportingService = useErrorReporting();
   const eventBus = useEventBus();
   const configurationService = useConfiguration();
+  const logger = useLogger();
+  const timerService = useTimerService();
+
+  const [serviceData, setServiceData] = useState<string>("{}"); // Store as JSON string to comply with ESLint rule
+  const [lastUpdate, setLastUpdate] = useState<Date>(() => timerService.getCurrentDate());
 
   const gatherServiceDiagnostics = async (): Promise<void> => {
     const statuses: ServiceStatus[] = [];
@@ -148,7 +155,7 @@ export const ServiceDiagnosticsPanel: React.FC = () => {
 
   const refreshDiagnostics = async () => {
     await gatherServiceDiagnostics();
-    setLastUpdate(new Date());
+    setLastUpdate(timerService.getCurrentDate());
   };
 
   const sendTestNotification = () => {
@@ -159,7 +166,7 @@ export const ServiceDiagnosticsPanel: React.FC = () => {
         { duration: 3000 },
       );
     } catch (error) {
-      console.error("Failed to send test notification:", error);
+      logger.error("Failed to send test notification:", error);
     }
   };
 
@@ -171,16 +178,16 @@ export const ServiceDiagnosticsPanel: React.FC = () => {
         { source: "diagnostic_panel", test: true },
       );
     } catch (error) {
-      console.error("Failed to send test error:", error);
+      logger.error("Failed to send test error:", error);
     }
   };
 
   // Auto-refresh diagnostics every 5 seconds
   useEffect(() => {
     refreshDiagnostics();
-    const interval = setInterval(refreshDiagnostics, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    const interval = timerService.setInterval(refreshDiagnostics, 5000);
+    return () => timerService.clearInterval(interval);
+  }, [timerService]);
 
   // Parse service data for rendering
   const serviceStatuses: ServiceStatus[] = serviceData

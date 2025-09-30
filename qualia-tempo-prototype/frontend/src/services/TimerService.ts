@@ -151,12 +151,12 @@ export class TimerService implements ITimerService {
 
   @logMethod
   public now(): number {
-    return Date.now();
+    return this.timerProvider.now();
   }
 
   @logMethod
   public getCurrentDate(): Date {
-    return new Date();
+    return this.timerProvider.getCurrentDate();
   }
 
   @logMethod
