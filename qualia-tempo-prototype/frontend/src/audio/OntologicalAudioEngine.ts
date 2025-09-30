@@ -181,7 +181,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
       .slice(0, 4)
       .map((_entity, index) => Tone.Frequency(200 + index * 100).toNote());
 
-    const clusteredSynth = new Tone.PolySynth();
+    const clusteredSynth = this.toneFactory.createPolySynth();
     clusteredSynth.connect(this.globalReverb);
 
     clusteredSynth.triggerAttackRelease(chord, "2n");
@@ -196,7 +196,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
       .slice(0, 5)
       .map((_entity, idx) => Tone.Frequency(320 + idx * 70).toNote());
 
-    const syncSynth = new Tone.PolySynth();
+    const syncSynth = this.toneFactory.createPolySynth();
     syncSynth.connect(this.globalReverb);
 
     const velocity = Math.min(behavior.strength ?? 0.8, 1.0);
@@ -211,7 +211,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
       Tone.Frequency(160 + idx * 90).toNote(),
     );
 
-    const arpeggioSynth = new Tone.PolySynth();
+    const arpeggioSynth = this.toneFactory.createPolySynth();
     arpeggioSynth.connect(this.globalReverb);
 
     arpeggioNotes.forEach((note, idx) => {
@@ -229,7 +229,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
       .slice(0, 3)
       .map((_entity, idx) => Tone.Frequency(400 + idx * 150).toNote());
 
-    const eventSynth = new Tone.PolySynth();
+    const eventSynth = this.toneFactory.createPolySynth();
     eventSynth.connect(this.globalReverb);
 
     const velocity = Math.min(behavior.strength ?? 1.0, 1.0);

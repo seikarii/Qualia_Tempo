@@ -512,7 +512,7 @@ export class ViewLogicService implements IViewLogicService {
       ];
 
       // Scale animation - pulse effect in hit window
-      const baseScale = isInHitWindow ? 1.2 + Math.sin(Date.now() * 0.01) * 0.2 : 1;
+      const baseScale = isInHitWindow ? 1.2 + Math.sin(currentTime * 0.01) * 0.2 : 1;
 
       // Rotation animation
       const rotationSpeed = this.config.notes.rotationSpeed || 0.01;
