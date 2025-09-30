@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo } from "react";
+import React, { useEffect, useCallback, useMemo, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import {
@@ -7,6 +7,7 @@ import {
   ChromaticAberration,
 } from "@react-three/postprocessing";
 import { Vector2 } from "three";
+import * as THREE from "three";
 import { useGameStore } from "../../state/useGameStore";
 import { useEventBus, useService, useCoordinateSystemService } from "../../services/hooks";
 import { TYPES } from "../../services/inversify.types";
@@ -46,12 +47,12 @@ interface QualiaTempoGameProps {
 
 // QUALIA.CODE v1.1: GridRenderer wrapper that uses configuration instead of hardcoded values
 interface ConfigurableGridRendererProps {
-  playerPosition: [number, number];
+  playerAvatarRef: React.RefObject<THREE.Group>;
   activePositions: [number, number][];
 }
 
 const ConfigurableGridRenderer: React.FC<ConfigurableGridRendererProps> = ({ 
-  playerPosition, 
+  playerAvatarRef, 
   activePositions 
 }) => {
   const coordinateSystemService = useCoordinateSystemService();
@@ -63,7 +64,7 @@ const ConfigurableGridRenderer: React.FC<ConfigurableGridRendererProps> = ({
     <GridRenderer
       gridSize={gridSize}
       tileSize={tileSize}
-      playerPosition={playerPosition}
+      playerAvatarRef={playerAvatarRef}
       activePositions={activePositions}
     />
   );
@@ -78,6 +79,9 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
 
   // Get real game state from Zustand store
   const zustandState = useGameStore();
+
+  // Ref to access the player's 3D avatar for follower positioning
+  const playerAvatarRef = useRef<THREE.Group>(null);
 
   // QUALIA.CODE: Helper function for calculating note timing accuracy
   const calculateNoteAccuracy = useCallback(
@@ -300,6 +304,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
         />
 
         <PlayerRenderer
+          ref={playerAvatarRef}
           player={{
             id: "player_1",
             name: "The Demiurge",
@@ -350,10 +355,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
 
         {/* Game Grid - The core playfield with configuration-driven parameters */}
         <ConfigurableGridRenderer
-          playerPosition={[
-            zustandState.player.position.x,
-            zustandState.player.position.y,
-          ]}
+          playerAvatarRef={playerAvatarRef}
           activePositions={[]}
         />
 

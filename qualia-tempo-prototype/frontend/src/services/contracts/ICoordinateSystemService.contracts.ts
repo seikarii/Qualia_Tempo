@@ -22,8 +22,10 @@ export interface CoordinateSystemConfig {
   messages: {
     serviceInitialized: string;
     gridToWorldCalculated: string;
+    worldToGridCalculated: string;
     worldToScreenCalculated: string;
     invalidGridCoordinates: string;
+    invalidWorldCoordinates: string;
     cameraProjectionFailed: string;
   };
 }

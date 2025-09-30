@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useImperativeHandle } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useCoordinateSystemService } from "../../services/hooks";
@@ -31,11 +31,14 @@ interface PlayerRendererProps {
  * PlayerRenderer - Renders the player character (Demiurge Avatar) with
  * visual effects that respond to performance and qualia state.
  */
-const PlayerRenderer: React.FC<PlayerRendererProps> = ({
+const PlayerRenderer = React.forwardRef<THREE.Group, PlayerRendererProps>(({
   player,
   performance,
-}) => {
+}, ref) => {
   const playerMeshRef = useRef<THREE.Group>(null);
+
+  // Expose the player mesh to parent via ref
+  useImperativeHandle(ref, () => playerMeshRef.current!, []);
   const auraMeshRef = useRef<THREE.Mesh>(null);
   const powerCoreRef = useRef<THREE.Mesh>(null);
   
@@ -237,6 +240,6 @@ const PlayerRenderer: React.FC<PlayerRendererProps> = ({
       ))}
     </group>
   );
-};
+});
 
 export default PlayerRenderer;

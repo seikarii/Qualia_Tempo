@@ -25,8 +25,10 @@ coordinate_system:
   messages:
     serviceInitialized: "CoordinateSystemService initialized with grid configuration"
     gridToWorldCalculated: "Grid coordinates transformed to world coordinates"
+    worldToGridCalculated: "World coordinates transformed to grid coordinates"
     worldToScreenCalculated: "World coordinates projected to screen coordinates"
     invalidGridCoordinates: "Invalid grid coordinates provided"
+    invalidWorldCoordinates: "Invalid world coordinates provided - outside grid bounds"
     cameraProjectionFailed: "Camera projection failed - using fallback coordinates"
 
 rhythm:

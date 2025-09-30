@@ -1,11 +1,12 @@
 import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { useCoordinateSystemService } from "../../services/hooks";
 
 interface GridRendererProps {
   gridSize: number;
   tileSize: number;
-  playerPosition?: [number, number];
+  playerAvatarRef: React.RefObject<THREE.Group>;
   activePositions?: [number, number][];
 }
 
@@ -16,13 +17,22 @@ interface GridRendererProps {
 const GridRenderer: React.FC<GridRendererProps> = ({
   gridSize = 8,
   tileSize = 1,
-  playerPosition = [0, 0],
+  playerAvatarRef,
   activePositions = [],
 }) => {
   const gridRef = useRef<THREE.Group>(null);
+  const coordinateSystemService = useCoordinateSystemService();
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
+
+    // Get player position from avatar ref using CoordinateSystemService
+    let playerGridPos = { x: 0, y: 0 };
+    if (playerAvatarRef.current) {
+      const worldPos = playerAvatarRef.current.position;
+      // Use CoordinateSystemService for canonical world-to-grid transformation
+      playerGridPos = coordinateSystemService.worldToGrid(worldPos.x, worldPos.z);
+    }
 
     // Gentle pulsing animation for the grid
     if (gridRef.current) {
@@ -31,7 +41,7 @@ const GridRenderer: React.FC<GridRendererProps> = ({
         const z = Math.floor(index / gridSize);
 
         // Check if this tile is active (player position or combo positions)
-        const isPlayerTile = playerPosition[0] === x && playerPosition[1] === z;
+        const isPlayerTile = playerGridPos.x === x && playerGridPos.y === z;
         const isActiveTile = activePositions.some(
           (pos) => pos[0] === x && pos[1] === z,
         );

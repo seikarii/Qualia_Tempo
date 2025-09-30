@@ -101,6 +101,32 @@ export class CoordinateSystemService implements ICoordinateSystemService {
   }
 
   /**
+   * CANONICAL WORLD-TO-GRID TRANSFORMATION
+   * Inverse of gridToWorld transformation for converting world coordinates back to grid coordinates.
+   * This is the exact inverse mathematical operation of gridToWorld.
+   */
+  @logMethod
+  @catchError
+  public worldToGrid(worldX: number, worldZ: number): { x: number; y: number } {
+    // Apply the inverse transformation of gridToWorld
+    const gridX = Math.round((worldX / this.config.tileSize) + this.config.gridSize / 2 - 0.5);
+    const gridY = Math.round((worldZ / this.config.tileSize) + this.config.gridSize / 2 - 0.5);
+
+    // Validate output coordinates
+    if (gridX < 0 || gridX >= this.config.gridSize || 
+        gridY < 0 || gridY >= this.config.gridSize) {
+      this.logger.warn(this.config.messages.invalidWorldCoordinates, { worldX, worldZ, gridX, gridY });
+    }
+
+    this.logger.debug(this.config.messages.worldToGridCalculated, {
+      input: { worldX, worldZ },
+      output: { gridX, gridY }
+    });
+
+    return { x: gridX, y: gridY };
+  }
+
+  /**
    * Get current grid configuration for debugging/inspection.
    */
   public getGridConfig(): { gridSize: number; tileSize: number } {

@@ -42,6 +42,16 @@ export interface ICoordinateSystemService {
   ): { x: number; y: number };
 
   /**
+   * Converts 3D world coordinates back to grid coordinates.
+   * This is the inverse transformation of gridToWorld.
+   * 
+   * @param worldX - Position X in 3D world space.
+   * @param worldZ - Position Z in 3D world space.
+   * @returns An object { x, y } representing grid coordinates.
+   */
+  worldToGrid(worldX: number, worldZ: number): { x: number; y: number };
+
+  /**
    * Get current grid configuration for debugging/inspection.
    * @returns Current grid configuration values.
    */
