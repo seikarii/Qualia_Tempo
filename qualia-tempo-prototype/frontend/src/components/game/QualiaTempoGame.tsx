@@ -11,6 +11,7 @@ import { useGameStore } from "../../state/useGameStore";
 import { useEventBus } from "../../services/hooks";
 import type {
   PlayerActionEvent,
+  PlayerInputEvent,
   RhythmicDashEvent,
   MetronomeTickEvent,
 } from "../../services/contracts/events.contracts";
@@ -129,6 +130,21 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
 
     const handleKeyPress = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
+      const relevantMovementKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'];
+
+      // --- LÓGICA A RESTAURAR ---
+      if (relevantMovementKeys.includes(key)) {
+        event.preventDefault();
+        // Emitir el evento de dominio para que lo capture el RhythmicMovementController
+        eventBus.emit<PlayerInputEvent>({
+          type: 'PlayerInput',
+          key: event.key, // Usar la tecla original, no en minúsculas, para consistencia
+          timestamp: new Date(),
+          source: 'QualiaTempoGame',
+        });
+        return; // Finalizar para no procesar otras lógicas
+      }
+      // --- FIN DE LA LÓGICA A RESTAURAR ---
 
       // Global game controls
       if (key === "p" || key === "escape") {
