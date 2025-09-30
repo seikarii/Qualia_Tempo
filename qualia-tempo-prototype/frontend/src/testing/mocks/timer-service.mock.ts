@@ -9,4 +9,6 @@ export const mockTimerService: ITimerService = {
   nextTick: vi.fn(),
   now: vi.fn(),
   getCurrentDate: vi.fn(),
+  requestAnimationFrame: vi.fn(),
+  cancelAnimationFrame: vi.fn(),
 };

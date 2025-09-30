@@ -42,6 +42,22 @@ export interface PlayerVisualData {
   glowIntensity: number;
   trailOpacity: number;
   isMoving: boolean;
+  
+  // Aura properties
+  aura: {
+    scale: number;
+    rotation: [number, number, number];
+    color: [number, number, number];
+    opacity: number;
+  };
+  
+  // Power core properties
+  powerCore: {
+    scale: number;
+    rotation: [number, number, number];
+    color: [number, number, number];
+    emissiveIntensity: number;
+  };
 }
 
 export interface ParticleData {

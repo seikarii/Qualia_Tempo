@@ -29,10 +29,11 @@ import type { FrontendRenderingConfig } from "./contracts/IFrontendRenderingServ
 import type { CoordinateSystemConfig } from "./contracts/ICoordinateSystemService.contracts";
 
 // NEW SERVICES CONFIGURATION IMPORTS
-import type { GameplayMechanicsConfig } from "./contracts/IGameplayMechanicsService.contracts";
-import type { ViewLogicConfig } from "./contracts/IViewLogicService.contracts";
-import type { SubtitleConfig } from "./contracts/ISubtitleService.contracts";
-import type { DebugOrchestratorConfig } from "./contracts/IDebugOrchestratorService.contracts";
+// Future configuration imports for additional services
+// import type { GameplayMechanicsConfig } from "./contracts/IGameplayMechanicsService.contracts";
+// import type { ViewLogicConfig } from "./contracts/IViewLogicService.contracts";
+// import type { SubtitleConfig } from "./contracts/ISubtitleService.contracts";
+// import type { DebugOrchestratorConfig } from "./contracts/IDebugOrchestratorService.contracts";
 
 // ===== IMPORT ALL INTERFACES =====
 import type { IEventBus } from "./interfaces/IEventBus";

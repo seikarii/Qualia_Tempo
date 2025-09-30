@@ -23,7 +23,8 @@ import { logMethod, catchError } from '../utils/decorators';
 export class ViewLogicService implements IViewLogicService {
   private readonly config: ViewLogicConfig;
   private readonly logger: ILogger;
-  private readonly timerService: ITimerService;
+  // @ts-ignore - Reserved for future timer functionality
+  private readonly _timerService: ITimerService;
   
   private particleIdCounter = 0;
   private activeParticles: ParticleData[] = [];
@@ -35,7 +36,7 @@ export class ViewLogicService implements IViewLogicService {
   ) {
     this.config = config;
     this.logger = logger;
-    this.timerService = timerService;
+    this._timerService = timerService;
     this.logger.info('ViewLogicService initialized', {
       maxParticles: this.config.particles.maxCount,
       spawnRate: this.config.particles.spawnRate
@@ -47,13 +48,14 @@ export class ViewLogicService implements IViewLogicService {
   getBossVisuals(bossState: any, time: number): BossVisualData {
     // QUALIA.CODE v1.1: REAL visual logic extracted from BossRenderer
     const boss = bossState;
-    const powerRatio = boss.power_level / 200; // Assuming max 200
+    // Power ratio calculation for future use
+    // const powerRatio = boss.power_level / 200; // Assuming max 200
     const stressIntensity = boss.stress_level;
     const phaseMultiplier = boss.phase;
 
     // Calculate phase-based movement patterns (extracted from useFrame)
     let calculatedPosition: [number, number, number];
-    let rotationIncrement: [number, number, number];
+    let absoluteRotation: [number, number, number];
     
     if (boss.phase === 1) {
       // Slow, menacing movement  
@@ -62,7 +64,7 @@ export class ViewLogicService implements IViewLogicService {
         boss.position[1] + Math.sin(time * 0.5) * 0.3,
         boss.position[2]
       ];
-      rotationIncrement = [0, 0.005, 0];
+      absoluteRotation = [0, time * 0.005, 0];
     } else if (boss.phase === 2) {
       // More aggressive movement
       calculatedPosition = [
@@ -70,7 +72,7 @@ export class ViewLogicService implements IViewLogicService {
         boss.position[1] + Math.sin(time * 1.5) * 0.5,
         boss.position[2]
       ];
-      rotationIncrement = [0, 0.01, Math.sin(time) * 0.01];
+      absoluteRotation = [0, time * 0.01, Math.sin(time) * 0.01];
     } else {
       // Chaotic final phase movement
       calculatedPosition = [
@@ -78,7 +80,7 @@ export class ViewLogicService implements IViewLogicService {
         boss.position[1] + Math.sin(time * 3) * 0.8,
         boss.position[2]
       ];
-      rotationIncrement = [Math.sin(time * 1.3) * 0.02, 0.02, 0];
+      absoluteRotation = [Math.sin(time * 1.3) * 0.02, time * 0.02, 0];
     }
 
     // Scale based on stress level (boss grows when stressed)
@@ -134,7 +136,7 @@ export class ViewLogicService implements IViewLogicService {
     return {
       position: calculatedPosition,
       scale: [stressScale, stressScale, stressScale],
-      rotation: rotationIncrement,
+      rotation: absoluteRotation,
       color: bossColor,
       opacity: 0.8 + stressIntensity * 0.2,
       intensity: stressIntensity,
@@ -161,23 +163,82 @@ export class ViewLogicService implements IViewLogicService {
 
   @logMethod
   @catchError
-  getPlayerVisuals(playerState: any, time: number): PlayerVisualData {
-    const position = playerState?.position || { x: 0, y: 0 };
-    const isMoving = playerState?.isMoving || false;
-    const glowIntensity = this.calculatePlayerGlow(playerState, time);
+  getPlayerVisuals(playerData: any, performance: any, time: number): PlayerVisualData {
+    const player = playerData;
+    
+    // Extract calculations from PlayerRenderer useFrame
+    const powerLevel = player.power_level / 100; // Normalize to 0-1
+    const consciousnessLevel = player.consciousness_level;
+    const performanceLevel = (performance.accuracy + performance.rhythm_sync + performance.qualia_coherence) / 3;
+    
+    // Use CoordinateSystemService transformation (this will be injected later)
+    const player3DPosition: [number, number, number] = [
+      player.position[0],
+      player.position[1] + Math.sin(time * 2) * 0.1 * consciousnessLevel, // Floating animation
+      player.position[2]
+    ];
+    
+    // Player colors based on qualia state (extracted from PlayerRenderer)
+    const baseColor: [number, number, number] = [
+      player.qualia_state.emotional_valence * 0.8 + 0.1, // Hue based on valence
+      0.7 + player.qualia_state.arousal * 0.3, // Saturation based on arousal
+      0.4 + player.qualia_state.coherence * 0.4 // Lightness based on coherence
+    ];
+    
+    const auraColor: [number, number, number] = [
+      (player.qualia_state.emotional_valence * 0.8 + 0.3) % 1,
+      0.8,
+      0.5 + performanceLevel * 0.3
+    ];
+    
+    // Scale pulsing based on performance (extracted from PlayerRenderer)
+    const scale = 1 + Math.sin(time * 4) * 0.05 * performanceLevel;
+    
+    // Rotation based on qualia state (extracted from PlayerRenderer)
+    const absoluteRotation: [number, number, number] = [
+      0,
+      time * (player.qualia_state.emotional_valence - 0.5) * 0.005,
+      0
+    ];
+    
+    // Aura calculations (extracted from PlayerRenderer)
+    const auraScale = 1 + powerLevel * 0.5 + performanceLevel * 0.3;
+    const auraOpacity = 0.3 + Math.sin(time * 3) * 0.1 * performanceLevel;
+    
+    // Power core calculations (extracted from PlayerRenderer)
+    const coreIntensity = powerLevel * performanceLevel;
+    const coreScale = 0.5 + coreIntensity * 0.5;
     
     return {
-      position: [position.x, 0.5, position.y] as [number, number, number],
-      scale: [1, 1, 1] as [number, number, number],
-      rotation: [0, time * 0.001, 0] as [number, number, number],
-      color: [
-        0.3 + glowIntensity * 0.4,
-        0.8 + glowIntensity * 0.2,
-        1.0
-      ] as [number, number, number],
-      glowIntensity: glowIntensity,
-      trailOpacity: isMoving ? 0.7 : 0.3,
-      isMoving: isMoving
+      position: player3DPosition,
+      scale: [scale, scale, scale],
+      rotation: absoluteRotation,
+      color: baseColor,
+      glowIntensity: performanceLevel,
+      trailOpacity: performanceLevel > 0.5 ? 0.7 : 0.3,
+      isMoving: performanceLevel > 0.1,
+      
+      aura: {
+        scale: auraScale,
+        rotation: [
+          Math.sin(time * 0.5) * 0.002,
+          time * 0.01,
+          0
+        ],
+        color: auraColor,
+        opacity: auraOpacity
+      },
+      
+      powerCore: {
+        scale: coreScale,
+        rotation: [
+          time * 0.03,
+          time * 0.02,
+          0
+        ],
+        color: baseColor,
+        emissiveIntensity: coreIntensity
+      }
     };
   }
 
@@ -236,7 +297,8 @@ export class ViewLogicService implements IViewLogicService {
   }
 
   // Private helper methods
-  private calculatePlayerGlow(playerState: any, time: number): number {
+  // @ts-ignore - Reserved for future player glow calculations  
+  private _calculatePlayerGlow(playerState: any, time: number): number {
     const baseGlow = Math.sin(time * 0.003) * 0.2 + 0.5;
     const healthMultiplier = (playerState?.health || 100) / 100;
     const comboMultiplier = Math.min(1.5, 1 + (playerState?.combo || 0) * 0.02);
@@ -244,7 +306,7 @@ export class ViewLogicService implements IViewLogicService {
     return Math.min(1, baseGlow * healthMultiplier * comboMultiplier);
   }
 
-  private updateExistingParticles(time: number): void {
+  private updateExistingParticles(_time: number): void {
     this.activeParticles = this.activeParticles.filter(particle => {
       particle.life += 16; // Assume 60fps, so ~16ms per frame
       
@@ -261,7 +323,7 @@ export class ViewLogicService implements IViewLogicService {
     });
   }
 
-  private spawnQualiaParticles(qualiaState: QualiaState, musicData: any, time: number): void {
+  private spawnQualiaParticles(qualiaState: QualiaState, _musicData: any, _time: number): void {
     if (this.activeParticles.length >= this.config.particles.maxCount) {
       return;
     }

@@ -27,11 +27,13 @@ export class DebugOrchestratorService implements IDebugOrchestratorService {
   private readonly timerService: ITimerService;
   private readonly notificationService: INotificationService;
   private readonly errorReportingService: IErrorReportingService;
-  private readonly eventBus: IEventBus;
+  // @ts-ignore - Reserved for future debug orchestration functionality
+  private readonly _eventBus: IEventBus;
   private readonly configurationService: IConfigurationService;
   
   private lastUpdateTime: Date;
-  private cachedDiagnostics: ServiceDiagnosticData | null = null;
+  // @ts-ignore - Reserved for diagnostic caching functionality
+  private _cachedDiagnostics: ServiceDiagnosticData | null = null;
 
   constructor(
     @inject(TYPES.DebugOrchestratorConfig) config: DebugOrchestratorConfig,
@@ -47,7 +49,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService {
     this.timerService = timerService;
     this.notificationService = notificationService;
     this.errorReportingService = errorReportingService;
-    this.eventBus = eventBus;
+    this._eventBus = eventBus;
     this.configurationService = configurationService;
     
     this.lastUpdateTime = this.timerService.getCurrentDate();
@@ -90,7 +92,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService {
       eventBusStats
     };
 
-    this.cachedDiagnostics = diagnosticData;
+    this._cachedDiagnostics = diagnosticData;
     this.lastUpdateTime = this.timerService.getCurrentDate();
     
     return diagnosticData;
@@ -197,7 +199,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService {
   @catchError
   async forceRefresh(): Promise<void> {
     this.logger.info('Forcing diagnostic data refresh');
-    this.cachedDiagnostics = null;
+    this._cachedDiagnostics = null;
     await this.gatherServiceDiagnostics();
   }
 

@@ -2,6 +2,9 @@ import React, { useRef, useImperativeHandle } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useCoordinateSystemService } from "../../services/hooks";
+// Future imports for ViewLogicService refactoring:
+// import { useViewLogicService } from "../../services/hooks";
+// import { PlayerVisualData } from "../../services/contracts/IViewLogicService.contracts";
 
 interface Player {
   id: string;
@@ -44,6 +47,13 @@ const PlayerRenderer = React.forwardRef<THREE.Group, PlayerRendererProps>(({
   
   // QUALIA.CODE v1.1: Use CoordinateSystemService for proper grid-to-world transformation
   const coordinateSystemService = useCoordinateSystemService();
+  // Future: const viewLogicService = useViewLogicService();
+  
+  // Future: Store current visual state for JSX rendering
+  // const [currentVisuals, setCurrentVisuals] = useState<PlayerVisualData | null>(null);
+  
+  // Future: Get default visuals if no current state available
+  // const visuals = currentVisuals || viewLogicService.getPlayerVisuals(player, performance, 0);
 
   // FIXED: Use the canonical GridRenderer transformation via CoordinateSystemService
   // This eliminates the desynchronization issue between PlayerRenderer and GridRenderer

@@ -22,12 +22,13 @@ export interface IViewLogicService {
   getBossVisuals(bossState: any, time: number): BossVisualData;
 
   /**
-   * Generate player visual data based on player state and time
+   * Generate player visual data based on player state, performance, and time
    * @param playerState Current player state data
+   * @param performance Current player performance data
    * @param time Current game time
    * @returns Player visual properties for rendering
    */
-  getPlayerVisuals(playerState: any, time: number): PlayerVisualData;
+  getPlayerVisuals(playerState: any, performance: any, time: number): PlayerVisualData;
 
   /**
    * Generate qualia field particle data based on state and music

@@ -56,9 +56,7 @@ const BossRenderer: React.FC<BossRendererProps> = ({ boss, gameTime }) => {
     if (bossGroupRef.current) {
       bossGroupRef.current.position.set(...bossVisuals.position);
       bossGroupRef.current.scale.set(...bossVisuals.scale);
-      bossGroupRef.current.rotation.x += bossVisuals.rotation[0];
-      bossGroupRef.current.rotation.y += bossVisuals.rotation[1];
-      bossGroupRef.current.rotation.z += bossVisuals.rotation[2];
+      bossGroupRef.current.rotation.set(...bossVisuals.rotation);
     }
 
     // Apply core visual properties
@@ -160,16 +158,16 @@ const BossRenderer: React.FC<BossRendererProps> = ({ boss, gameTime }) => {
       <mesh>
         <sphereGeometry args={[3 + boss.phase, 16, 16]} />
         <meshBasicMaterial
-          color={bossColor}
+          color={new THREE.Color(...visuals.core.color)}
           transparent={true}
-          opacity={0.1 + stressIntensity * 0.2}
+          opacity={0.1 + boss.stress_level * 0.2}
           blending={THREE.AdditiveBlending}
           side={THREE.BackSide}
         />
       </mesh>
 
       {/* Power Level Particles */}
-      {[...Array(Math.floor(powerRatio * 20))].map((_, i) => {
+      {[...Array(Math.floor((boss.power_level / 100) * 20))].map((_, i) => {
         const angle = (i / 20) * Math.PI * 2;
         const radius = 4 + Math.sin(gameTime + i) * 0.5;
         const height = Math.cos(gameTime * 0.5 + i) * 2;
@@ -185,8 +183,8 @@ const BossRenderer: React.FC<BossRendererProps> = ({ boss, gameTime }) => {
           >
             <sphereGeometry args={[0.1, 6, 6]} />
             <meshStandardMaterial
-              color={stressColor}
-              emissive={stressColor.clone().multiplyScalar(0.5)}
+              color={new THREE.Color(...visuals.core.emissiveColor)}
+              emissive={new THREE.Color(...visuals.core.emissiveColor).multiplyScalar(0.5)}
               transparent={true}
               opacity={0.8}
             />

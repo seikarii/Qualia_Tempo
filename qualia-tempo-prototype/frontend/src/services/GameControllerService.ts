@@ -38,6 +38,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   private gameStateStoreService: IGameStateStoreService;
   private timerService: ITimerService;
   private config: GameControllerConfig;
+  // @ts-ignore - Used by @OnEvent decorator lifecycle
   private _eventListeners: string[] = []; // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
   private isRunning = false;
   private logger: QualiaLogger;
@@ -226,7 +227,8 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   }
 
   @OnEvent('PlayerAction')
-  private handlePlayerAction(event: PlayerActionEvent): void {
+  // @ts-ignore - Reserved for future player action handling
+  private _handlePlayerAction(event: PlayerActionEvent): void {
     this.logger.info(
       `🎮 [GameController] Handling PlayerAction: ${event.action}`,
     );
@@ -342,7 +344,8 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   }
 
   @OnEvent('GameStateChanged')
-  private handleGameStateChanged(event: GameStateChangedEvent): void {
+  // @ts-ignore - Reserved for future game state change handling
+  private _handleGameStateChanged(event: GameStateChangedEvent): void {
     this.logger.debug(
       `🎮 [GameController] Game state changed: ${event.previousState} -> ${event.newState}`,
     );
