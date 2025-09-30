@@ -16,9 +16,9 @@ export interface IFrontendRenderingService {
   stop(): void;
 
   /**
-   * Update the visualization with new QualiaState
+   * Update particle buffer with binary data from backend
    */
-  updateQualiaState(state: QualiaState): void;
+  updateParticleBuffer(data: ArrayBuffer): void;
 
   /**
    * Resize the renderer

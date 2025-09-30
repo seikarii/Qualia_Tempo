@@ -1,6 +1,18 @@
 /**
  * QUALIA.CODE v1.1 - FrontendRenderingService
- * Three.js-based real-time visualization service for Qualia Tempo.
+ * Three.js-based real-time visualization servi    // Create render target for post-processing
+    // NOTE: Render target is managed by PostProcessingService
+
+    // Initialize post-processing service
+    await this.postProcessingService.initialize(canvas);
+
+    // Setup WebGL context loss/restore handlers - REMOVED: No direct renderer access
+
+    // Initialize particle system
+    this.initializeParticleSystem();
+
+    this.isInitialized = true;
+    this.logger.info("FrontendRenderingService initialized successfully");po.
  * Renders particle effects based on streamed QualiaState data.
  *
  * IMPROVEMENTS:
@@ -17,37 +29,37 @@ import { TYPES } from "./inversify.types";
 import type {
   IFrontendRenderingService,
   RenderingStats,
-  QualiaState,
 } from "./interfaces/IFrontendRenderingService";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IPerformanceService } from "./interfaces/ITimerService";
+import type { IPostProcessingService } from "./interfaces/IPostProcessingService";
+import type { IEventBus } from "./interfaces/IEventBus";
 import type { FrontendRenderingConfig } from "./contracts/IFrontendRenderingService.contracts";
+import type { QualiaParticleDataReceivedEvent } from "./contracts/events.contracts";
 import { logMethod, catchError, BrowserOnly } from "../utils/decorators";
 
 @injectable()
 export class FrontendRenderingService implements IFrontendRenderingService {
   private readonly logger: ILogger;
   private readonly performanceService: IPerformanceService;
+  private readonly postProcessingService: IPostProcessingService;
+  private readonly eventBus: IEventBus;
   private readonly config: FrontendRenderingConfig;
 
   // Three.js core objects
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
-  private renderer!: THREE.WebGLRenderer;
-  // @ts-ignore - Stored for potential future use
   private _canvas!: HTMLCanvasElement;
 
   // Rendering state
   private isInitialized = false;
   private isRunning = false;
   private animationId: number | null = null;
-  // @ts-ignore - Stored for potential future use
-  private _isContextLost = false;
 
   // Particle system
   private particleSystem!: THREE.Points;
   private particleGeometry!: THREE.BufferGeometry;
-  private particleMaterial!: THREE.ShaderMaterial;
+  private particleMaterial!: THREE.PointsMaterial;
 
   // Performance tracking
   private frameCount = 0;
@@ -55,16 +67,20 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   private fps = 0;
   private frameTime = 0;
 
-  // Context loss recovery
-  private contextLossRetries = 0;
+  // Event handling
+  private particleDataListenerId: string | null = null;
 
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IPerformanceService) performanceService: IPerformanceService,
+    @inject(TYPES.IPostProcessingService) postProcessingService: IPostProcessingService,
+    @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.FrontendRenderingConfig) config: FrontendRenderingConfig
   ) {
     this.logger = logger;
     this.performanceService = performanceService;
+    this.postProcessingService = postProcessingService;
+    this.eventBus = eventBus;
     this.config = config;
 
     this.logger.info(this.config.messages.serviceInitialized);
@@ -94,107 +110,108 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     );
     this.camera.position.z = this.config.cameraDistance;
 
-    // Create renderer with configuration
-    this.renderer = new THREE.WebGLRenderer({
-      canvas,
-      antialias: this.config.antialias
-    });
-    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    this.renderer.setClearColor(this.config.backgroundColor);
+    // Create render target for post-processing
+    // NOTE: Render target is managed by PostProcessingService
 
-    // CRITICAL: Setup WebGL context loss/restore handlers
-    this.setupContextHandlers();
-
-    // Initialize particle system
-    await this.initializeParticleSystem();
+    // Post-processing initialization removed - handled by PostProcessingService    // Initialize particle system
+    this.initializeParticleSystem();
 
     this.isInitialized = true;
     this.logger.info("FrontendRenderingService initialized successfully");
   }
 
-  /**
-   * DIRECTIVA 1: WebGL Context Resilience
-   * Setup handlers for webglcontextlost and webglcontextrestored events
-   */
   @logMethod
-  private setupContextHandlers(): void {
-    if (!this.renderer || !this.renderer.domElement) {
-      this.logger.error("Cannot setup context handlers: renderer not initialized");
+  @catchError
+  updateParticleBuffer(data: ArrayBuffer): void {
+    if (!this.isInitialized) {
+      this.logger.warn("Cannot update particle buffer: service not initialized");
       return;
     }
 
-    // Handle context loss
-    this.renderer.domElement.addEventListener(
-      'webglcontextlost',
-      this.handleContextLost,
-      false
-    );
-
-    // Handle context restoration
-    this.renderer.domElement.addEventListener(
-      'webglcontextrestored',
-      this.handleContextRestored,
-      false
-    );
-
-    this.logger.debug("WebGL context handlers registered");
+    try {
+      this.decodeParticleData(data);
+    } catch (error) {
+      this.logger.error("Failed to update particle buffer", { error });
+    }
   }
 
   /**
-   * DIRECTIVA 1: Context Loss Handler
-   * Prevents default behavior and prepares for recovery
+   * Decode binary particle data and update geometry buffers
    */
-  private handleContextLost = (event: Event): void => {
-    event.preventDefault();
-    this.stop();
-    this._isContextLost = true;
-    this.logger.warn(this.config.messages.contextLost);
-  };
-
-  /**
-   * DIRECTIVA 1: Context Restoration Handler
-   * Reinitializes the rendering system after context recovery
-   */
-  private handleContextRestored = (): void => {
-    this.logger.info(this.config.messages.contextRestored);
+  @logMethod
+  private decodeParticleData(data: ArrayBuffer): void {
+    // Decode binary data (Float32Array from numpy.tobytes())
+    const floatArray = new Float32Array(data);
     
-    // Prevent infinite retry loops
-    if (this.contextLossRetries >= this.config.maxContextLossRetries) {
+    // Validate data length
+    if (floatArray.length % this.config.componentsPerParticle !== 0) {
       this.logger.error(
-        `Max context loss retries (${this.config.maxContextLossRetries}) exceeded. Manual intervention required.`
+        `Invalid particle data length: ${floatArray.length}, expected multiple of ${this.config.componentsPerParticle}`
       );
       return;
     }
 
-    this.contextLossRetries++;
-    this.reinitializeRendering();
-  };
+    const particleCount = floatArray.length / this.config.componentsPerParticle;
+    
+    // Extract rendering data
+    this.extractRenderingData(floatArray, particleCount);
+    
+    this.logger.debug(`Updated particle buffer with ${particleCount} particles`);
+  }
 
   /**
-   * DIRECTIVA 1: Reinitialize Rendering
-   * Recreates all Three.js resources after context restoration
+   * Extract position, color, and size data for rendering
    */
   @logMethod
-  @catchError
-  private reinitializeRendering(): void {
-    this.logger.info(this.config.messages.reinitializing);
+  private extractRenderingData(floatArray: Float32Array, particleCount: number): void {
+    // Extract position, color, and size for rendering
+    const positions = new Float32Array(particleCount * this.config.positionComponents);
+    const colors = new Float32Array(particleCount * this.config.colorComponents);
+    const sizes = new Float32Array(particleCount);
 
-    try {
-      // Recreate particle system
-      this.initializeParticleSystem();
-
-      // Reset context loss flag
-      this._isContextLost = false;
-      this.contextLossRetries = 0;
-
-      // Restart rendering loop
-      this.start();
-
-      this.logger.info("Rendering system successfully reinitialized");
-    } catch (error) {
-      this.logger.error("Failed to reinitialize rendering system", { error });
+    for (let i = 0; i < particleCount; i++) {
+      const offset = i * this.config.componentsPerParticle;
+      
+      // Position (x, y, z)
+      positions[i * this.config.positionComponents] = floatArray[offset + this.config.positionOffset];
+      positions[i * this.config.positionComponents + 1] = floatArray[offset + this.config.positionOffset + 1];
+      positions[i * this.config.positionComponents + 2] = floatArray[offset + this.config.positionOffset + 2];
+      
+      // Color (r, g, b) - use RGB for now
+      colors[i * this.config.colorComponents] = floatArray[offset + this.config.colorOffset];     // r
+      colors[i * this.config.colorComponents + 1] = floatArray[offset + this.config.colorOffset + 1]; // g
+      colors[i * this.config.colorComponents + 2] = floatArray[offset + this.config.colorOffset + 2]; // b
+      
+      // Size
+      sizes[i] = floatArray[offset + this.config.sizeOffset];
     }
+
+    this.updateGeometryBuffers(positions, colors, sizes);
   }
+
+  /**
+   * Update Three.js geometry buffers with extracted data
+   */
+  @logMethod
+  private updateGeometryBuffers(positions: Float32Array, colors: Float32Array, sizes: Float32Array): void {
+    // Update geometry buffers
+    this.particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, this.config.positionComponents));
+    this.particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, this.config.colorComponents));
+    this.particleGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    
+    // Mark for update
+    this.particleGeometry.attributes.position.needsUpdate = true;
+    this.particleGeometry.attributes.color.needsUpdate = true;
+    this.particleGeometry.attributes.size.needsUpdate = true;
+  }
+
+    // Event handlers removed - particle data handled by StateStreamingService
+
+    // WebGL context handlers removed - handled by PostProcessingService
+
+    // WebGL context handlers removed - handled by PostProcessingService
+
+    // Context loss recovery removed - handled by PostProcessingService
 
   @logMethod
   private initializeParticleSystem(): void {
@@ -206,101 +223,28 @@ export class FrontendRenderingService implements IFrontendRenderingService {
 
     // Initialize particles in random positions
     for (let i = 0; i < this.config.particleCount; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 20;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+      positions[i * 3] = (Math.random() - 0.5) * this.config.particlePositionRange;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * this.config.particlePositionRange;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * this.config.particlePositionRange;
 
       colors[i * 3] = Math.random();
       colors[i * 3 + 1] = Math.random();
       colors[i * 3 + 2] = Math.random();
 
-      sizes[i] = Math.random() * 5 + 1;
+      sizes[i] = Math.random() * (this.config.particleSizeMax - this.config.particleSizeMin) + this.config.particleSizeMin;
     }
 
     this.particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     this.particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     this.particleGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
-    // Create shader material
-    this.particleMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        time: { value: 0 },
-        intensity: { value: 0 },
-        u_precision: { value: 0 },
-        aggression: { value: 0 },
-        flow: { value: 0 },
-        chaos: { value: 0 },
-        recovery: { value: 0 },
-        ultimate: { value: 0 },
-      },
-      vertexShader: `
-        attribute float size;
-        varying vec3 vColor;
-        varying float vSize;
-
-        uniform float time;
-        uniform float intensity;
-        uniform float u_precision;
-        uniform float aggression;
-        uniform float flow;
-        uniform float chaos;
-        uniform float recovery;
-        uniform float ultimate;
-
-        void main() {
-          vColor = vec3(1.0, 1.0, 1.0); // Default white color since we removed the color attribute
-
-          // Dynamic sizing based on qualia state
-          float dynamicSize = size * (1.0 + intensity * 2.0 + ultimate * 3.0);
-          vSize = dynamicSize;
-
-          // Position animation based on qualia state
-          vec3 pos = position;
-
-          // Flow creates wave patterns
-          pos.y += sin(pos.x * 0.1 + time * flow * 2.0) * flow * 2.0;
-
-          // Chaos creates random movement
-          pos.x += sin(time * chaos * 5.0 + pos.y * 0.1) * chaos * 3.0;
-          pos.z += cos(time * chaos * 3.0 + pos.x * 0.1) * chaos * 2.0;
-
-          // Aggression creates explosive patterns
-          float aggressionForce = aggression * 10.0;
-          pos += normalize(pos) * aggressionForce * sin(time * 2.0);
-
-          // Recovery creates contracting patterns
-          pos *= (1.0 - recovery * 0.3);
-
-          vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-          gl_PointSize = dynamicSize * (300.0 / -mvPosition.z);
-          gl_Position = projectionMatrix * mvPosition;
-        }
-      `,
-      fragmentShader: `
-        varying vec3 vColor;
-        varying float vSize;
-
-        uniform float u_precision;
-        uniform float ultimate;
-
-        void main() {
-          // Create circular particles with precision-based sharpness
-          float distance = length(gl_PointCoord - vec2(0.5));
-          float alpha = 1.0 - smoothstep(0.1 * (1.0 - u_precision * 0.8), 0.5, distance);
-
-          // Ultimate mode creates glowing effects
-          vec3 finalColor = vColor;
-          if (ultimate > 0.5) {
-            finalColor += vec3(1.0, 0.5, 0.0) * ultimate * 2.0;
-            alpha *= (1.0 + ultimate);
-          }
-
-          gl_FragColor = vec4(finalColor, alpha);
-        }
-      `,
-      transparent: true,
+    // Create points material
+    this.particleMaterial = new THREE.PointsMaterial({
+      size: 2,
       vertexColors: true,
-      blending: THREE.AdditiveBlending,
+      transparent: true,
+      alphaTest: 0.5,
+      sizeAttenuation: true,
     });
 
     this.particleSystem = new THREE.Points(this.particleGeometry, this.particleMaterial);
@@ -322,6 +266,12 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     this.lastTime = this.performanceService.now();
     this.animate();
 
+    // Subscribe to particle data events
+    this.particleDataListenerId = this.eventBus.subscribe(
+      "QualiaParticleDataReceived",
+      this.handleParticleDataReceived.bind(this)
+    );
+
     this.logger.info("FrontendRenderingService started");
   }
 
@@ -338,22 +288,16 @@ export class FrontendRenderingService implements IFrontendRenderingService {
       this.animationId = null;
     }
 
+    // Unsubscribe from particle data events
+    if (this.particleDataListenerId !== null) {
+      this.eventBus.unsubscribe(this.particleDataListenerId);
+      this.particleDataListenerId = null;
+    }
+
     this.logger.info("FrontendRenderingService stopped");
   }
 
-  @logMethod
-  updateQualiaState(state: QualiaState): void {
-    // Update shader uniforms
-    if (this.particleMaterial) {
-      this.particleMaterial.uniforms.intensity.value = state.intensity;
-      this.particleMaterial.uniforms.u_precision.value = state.precision;
-      this.particleMaterial.uniforms.aggression.value = state.aggression;
-      this.particleMaterial.uniforms.flow.value = state.flow;
-      this.particleMaterial.uniforms.chaos.value = state.chaos;
-      this.particleMaterial.uniforms.recovery.value = state.recovery;
-      this.particleMaterial.uniforms.ultimate.value = state.ultimate;
-    }
-  }
+  // DEPRECATED: This method is no longer used. Particle data comes from backend via updateParticleBuffer.
 
   @logMethod
   resize(width: number, height: number): void {
@@ -361,7 +305,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
 
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(width, height);
+    this.postProcessingService.resize(width, height);
   }
 
   @logMethod
@@ -386,9 +330,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
       this.particleMaterial.dispose();
     }
 
-    if (this.renderer) {
-      this.renderer.dispose();
-    }
+    this.postProcessingService.dispose();
 
     this.isInitialized = false;
     this.logger.info("FrontendRenderingService disposed");
@@ -412,15 +354,23 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     }
 
     // Update time uniform for animations
-    if (this.particleMaterial) {
-      this.particleMaterial.uniforms.time.value = currentTime * 0.001; // Convert to seconds
-    }
+    // NOTE: Removed time uniform as we switched from ShaderMaterial to PointsMaterial
 
     // Rotate camera slowly for dynamic view
     this.camera.position.x = Math.cos(currentTime * 0.0005) * 8;
     this.camera.position.z = Math.sin(currentTime * 0.0005) * 8;
     this.camera.lookAt(0, 0, 0);
 
-    this.renderer.render(this.scene, this.camera);
+    // Render through post-processing pipeline
+    this.postProcessingService.render(this.scene, this.camera);
   };
+
+  @logMethod
+  private handleParticleDataReceived(event: QualiaParticleDataReceivedEvent): void {
+    try {
+      this.updateParticleBuffer(event.particleData);
+    } catch (error) {
+      this.logger.error("Failed to process particle data", { error, event });
+    }
+  }
 }

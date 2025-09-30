@@ -7,6 +7,14 @@ particlePositionRange: 20.0
 particleSizeMin: 1.0
 particleSizeMax: 6.0
 
+# Particle data format configuration
+componentsPerParticle: 21
+positionComponents: 3
+colorComponents: 3
+positionOffset: 0
+colorOffset: 6
+sizeOffset: 13
+
 # Camera configuration
 cameraFov: 75
 cameraNear: 0.1

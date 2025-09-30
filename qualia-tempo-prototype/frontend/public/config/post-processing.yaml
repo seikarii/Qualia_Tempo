@@ -1,0 +1,20 @@
+enabled: true
+renderTargetWidth: 1920
+renderTargetHeight: 1080
+passes:
+  - type: 'RenderPass'
+    enabled: true
+  - type: 'UnrealBloomPass'
+    enabled: true
+    params:
+      strength: 1.5
+      radius: 0.4
+      threshold: 0.85
+  - type: 'ShaderPass'
+    enabled: true
+    shader: 'vignette'
+    uniforms:
+      darkness:
+        value: 0.8
+      offset:
+        value: 1.0

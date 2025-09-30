@@ -136,7 +136,8 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "viewLogic": "view-logic.yaml",
   "subtitle": "subtitle.yaml",
   "debugOrchestrator": "debug-orchestrator.yaml",
-  "gameStateStore": "game-state-store.yaml"
+  "gameStateStore": "game-state-store.yaml",
+  "postProcessing": "post-processing.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
@@ -276,10 +277,14 @@ import { GameplayMechanicsService } from './GameplayMechanicsService';
 import { ViewLogicService } from './ViewLogicService';
 import { SubtitleService } from './SubtitleService';
 import { DebugOrchestratorService } from './DebugOrchestratorService';
+import { ShaderLoaderService } from './ShaderLoaderService';
+import { PostProcessingService } from './PostProcessingService';
 import type { IGameplayMechanicsService } from './interfaces/IGameplayMechanicsService';
 import type { IViewLogicService } from './interfaces/IViewLogicService';
 import type { ISubtitleService } from './interfaces/ISubtitleService';
 import type { IDebugOrchestratorService } from './interfaces/IDebugOrchestratorService';
+import type { IShaderLoaderService } from './interfaces/IShaderLoaderService';
+import type { IPostProcessingService } from './interfaces/IPostProcessingService';
 
 container
   .bind<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService)
@@ -299,6 +304,17 @@ container
 container
   .bind<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService)
   .to(DebugOrchestratorService)
+  .inSingletonScope();
+
+// ===== SHADER AND POST-PROCESSING SERVICES =====
+container
+  .bind<IShaderLoaderService>(TYPES.IShaderLoaderService)
+  .to(ShaderLoaderService)
+  .inSingletonScope();
+
+container
+  .bind<IPostProcessingService>(TYPES.IPostProcessingService)
+  .to(PostProcessingService)
   .inSingletonScope();
 
 // ===== PROTOCOL ADAPTER BINDINGS =====
@@ -379,6 +395,7 @@ export async function configureServices(): Promise<void> {
   safeBindConstant(TYPES.SubtitleConfig, fullConfig.subtitle);
   safeBindConstant(TYPES.DebugOrchestratorConfig, fullConfig.debugOrchestrator);
   safeBindConstant<GameStateStoreConfig>(TYPES.GameStateStoreConfig, fullConfig.gameStateStore);
+  safeBindConstant(TYPES.PostProcessingConfig, (fullConfig as any).postProcessing);
 }
 
 // ===== CONTAINER VERIFICATION =====

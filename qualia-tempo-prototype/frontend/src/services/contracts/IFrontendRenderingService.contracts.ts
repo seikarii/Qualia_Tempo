@@ -10,6 +10,14 @@ export interface FrontendRenderingConfig {
   particleSizeMin: number;
   particleSizeMax: number;
   
+  // Particle data format configuration
+  componentsPerParticle: number;
+  positionComponents: number;
+  colorComponents: number;
+  positionOffset: number;
+  colorOffset: number;
+  sizeOffset: number;
+  
   // Camera configuration
   cameraFov: number;
   cameraNear: number;

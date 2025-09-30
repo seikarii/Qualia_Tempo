@@ -37,6 +37,8 @@ export const TYPES = {
   IBrowserEventsService: Symbol.for("IBrowserEventsService"),
 
   // ===== NEW SERVICES =====
+  IShaderLoaderService: Symbol.for("IShaderLoaderService"),
+  IPostProcessingService: Symbol.for("IPostProcessingService"),
   IGameplayMechanicsService: Symbol.for("IGameplayMechanicsService"),
   IViewLogicService: Symbol.for("IViewLogicService"),
   ISubtitleService: Symbol.for("ISubtitleService"),
@@ -45,6 +47,7 @@ export const TYPES = {
   // ===== INFRASTRUCTURE SERVICE BUNDLES =====
   IGameInfrastructureService: Symbol.for("IGameInfrastructureService"),
   IKeyToDirectionAdapter: Symbol.for("IKeyToDirectionAdapter"),
+  IRawToParticleEventAdapter: Symbol.for("IRawToParticleEventAdapter"),
 
   // ===== COORDINATE SYSTEM SERVICES =====
   ICoordinateSystemService: Symbol.for("ICoordinateSystemService"),
@@ -86,6 +89,7 @@ export const TYPES = {
   SubtitleConfig: Symbol.for("SubtitleConfig"),
   DebugOrchestratorConfig: Symbol.for("DebugOrchestratorConfig"),
   GameStateStoreConfig: Symbol.for("GameStateStoreConfig"),
+  PostProcessingConfig: Symbol.for("PostProcessingConfig"),
 } as const;
 
 // Type-safe access to TYPES
