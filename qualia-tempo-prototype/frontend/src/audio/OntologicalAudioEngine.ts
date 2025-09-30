@@ -3,6 +3,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../services/inversify.types";
 import type { ILogger } from "../services/interfaces/ILogger";
 import type { ITimerService } from "../services/interfaces/ITimerService";
+import type { IEventBus } from "../services/interfaces/IEventBus";
 import type { QualiaState } from "../types/contracts";
 import type {
   IOntologicalAudioEngine,
@@ -27,19 +28,42 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
   private readonly toneFactory: IToneFactoryService;
+  private readonly eventBus: IEventBus;
+  private isEngineReady: boolean = false;
   private synthPool: Map<string, Tone.PolySynth> = new Map();
-  private globalReverb: Tone.Reverb;
-  private globalDelay: Tone.FeedbackDelay;
-  private masterVolume: Tone.Volume;
+  private globalReverb: Tone.Reverb | null = null;
+  private globalDelay: Tone.FeedbackDelay | null = null;
+  private masterVolume: Tone.Volume | null = null;
 
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IToneFactoryService) toneFactory: IToneFactoryService
+    @inject(TYPES.IToneFactoryService) toneFactory: IToneFactoryService,
+    @inject(TYPES.IEventBus) eventBus: IEventBus
   ) {
     this.logger = logger;
     this.timerService = timerService;
     this.toneFactory = toneFactory;
+    this.eventBus = eventBus;
+
+    // NO inicializar nodos de Tone.js aquí.
+    this.logger.info("OntologicalAudioEngine constructed. Waiting for AudioContext...");
+
+    // Suscribirse al evento que indica que el AudioContext está listo.
+    this.eventBus.subscribe('System.Audio.Ready', this.initializeEngine.bind(this));
+  }
+
+  /**
+   * MÉTODO CRÍTICO: Contiene toda la lógica de creación de nodos de Tone.js.
+   * Solo se ejecuta DESPUÉS de que el AudioContext esté activo.
+   */
+  @logMethod
+  private initializeEngine(): void {
+    if (this.isEngineReady) return;
+
+    this.logger.info("AudioContext is ready. Initializing OntologicalAudioEngine nodes...");
+
+    // AHORA es seguro crear los nodos de audio.
     this.globalReverb = this.toneFactory.createReverb({
       decay: 1.5,
       wet: 0.45,
@@ -58,7 +82,8 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
     this.globalReverb.connect(this.masterVolume);
     this.masterVolume.toDestination();
 
-    this.logger.info("OntologicalAudioEngine initialized");
+    this.isEngineReady = true;
+    this.logger.info("✅ OntologicalAudioEngine initialized successfully.");
   }
 
   /**
@@ -67,6 +92,12 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   @logMethod
   @catchError
   public createEntityVoice(entityId: string, qualiaState: QualiaState): void {
+    // AÑADIR ESTA GUARDIA
+    if (!this.isEngineReady) {
+      this.logger.warn(`Cannot create voice for ${entityId}. Engine not ready.`);
+      return;
+    }
+
     if (this.synthPool.has(entityId)) return;
 
     const synth = this.toneFactory.createPolySynth({
@@ -82,7 +113,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
       volume: -7 + qualiaState.precision * 7,
     });
 
-    synth.connect(this.globalDelay);
+    synth.connect(this.globalDelay!);
     this.synthPool.set(entityId, synth);
   }
 
@@ -92,6 +123,12 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   @logMethod
   @catchError
   public updateEntitySound(entityId: string, qualiaState: QualiaState): void {
+    // AÑADIR ESTA GUARDIA
+    if (!this.isEngineReady) {
+      // No registrar advertencia aquí para evitar spam, simplemente salir.
+      return;
+    }
+
     const synth = this.synthPool.get(entityId);
     if (!synth) return;
 
@@ -159,6 +196,12 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   @logMethod
   @catchError
   public playEmergentPattern(behavior: EmergentBehavior): void {
+    // AÑADIR ESTA GUARDIA
+    if (!this.isEngineReady) {
+      this.logger.warn(`Cannot play emergent pattern. Engine not ready.`);
+      return;
+    }
+
     switch (behavior.type) {
       case "CLUSTERING":
         this.playClusterHarmony(behavior);
@@ -182,7 +225,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
       .map((_entity, index) => Tone.Frequency(200 + index * 100).toNote());
 
     const clusteredSynth = this.toneFactory.createPolySynth();
-    clusteredSynth.connect(this.globalReverb);
+    clusteredSynth.connect(this.globalReverb!);
 
     clusteredSynth.triggerAttackRelease(chord, "2n");
 
@@ -197,7 +240,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
       .map((_entity, idx) => Tone.Frequency(320 + idx * 70).toNote());
 
     const syncSynth = this.toneFactory.createPolySynth();
-    syncSynth.connect(this.globalReverb);
+    syncSynth.connect(this.globalReverb!);
 
     const velocity = Math.min(behavior.strength ?? 0.8, 1.0);
     syncSynth.triggerAttackRelease(chord, "1n", undefined, velocity);
@@ -212,7 +255,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
     );
 
     const arpeggioSynth = this.toneFactory.createPolySynth();
-    arpeggioSynth.connect(this.globalReverb);
+    arpeggioSynth.connect(this.globalReverb!);
 
     arpeggioNotes.forEach((note, idx) => {
       this.timerService.setTimeout(() => {
@@ -230,7 +273,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
       .map((_entity, idx) => Tone.Frequency(400 + idx * 150).toNote());
 
     const eventSynth = this.toneFactory.createPolySynth();
-    eventSynth.connect(this.globalReverb);
+    eventSynth.connect(this.globalReverb!);
 
     const velocity = Math.min(behavior.strength ?? 1.0, 1.0);
     eventSynth.triggerAttackRelease(chord, "2n", undefined, velocity);
@@ -244,6 +287,12 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   @logMethod
   @catchError
   public removeEntityVoice(entityId: string): void {
+    // AÑADIR ESTA GUARDIA
+    if (!this.isEngineReady) {
+      this.logger.warn(`Cannot remove voice for ${entityId}. Engine not ready.`);
+      return;
+    }
+
     const synth = this.synthPool.get(entityId);
     if (synth) {
       synth.dispose();
@@ -256,6 +305,12 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
    */
   @logMethod
   public getMasterVolume(): number {
+    // AÑADIR ESTA GUARDIA
+    if (!this.isEngineReady || !this.masterVolume) {
+      this.logger.warn(`Cannot get master volume. Engine not ready.`);
+      return -8; // Valor por defecto
+    }
+
     return this.masterVolume.volume.value;
   }
 
@@ -265,6 +320,12 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   @logMethod
   @catchError
   public setMasterVolume(volume: number): void {
+    // AÑADIR ESTA GUARDIA
+    if (!this.isEngineReady || !this.masterVolume) {
+      this.logger.warn(`Cannot set master volume. Engine not ready.`);
+      return;
+    }
+
     this.masterVolume.volume.value = volume;
   }
 }
