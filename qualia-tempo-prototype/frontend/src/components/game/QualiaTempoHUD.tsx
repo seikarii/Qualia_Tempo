@@ -64,9 +64,10 @@ const QualiaOrb: React.FC<{
 };
 
 // Neural Activity Bars Component
-const NeuralActivityBars: React.FC<{ activity: number; color: string }> = ({
+const NeuralActivityBars: React.FC<{ activity: number; color: string; currentTime: number }> = ({
   activity,
   color,
+  currentTime,
 }) => {
   const bars = useMemo(() => Array.from({ length: 12 }, (_, i) => i), []);
 
@@ -80,7 +81,7 @@ const NeuralActivityBars: React.FC<{ activity: number; color: string }> = ({
             background: `linear-gradient(to top, ${color}, transparent)`,
           }}
           animate={{
-            height: `${20 + activity * 40 + Math.sin(Date.now() * 0.01 + bar * 0.5) * 10}px`,
+            height: `${20 + activity * 40 + Math.sin(currentTime * 0.01 + bar * 0.5) * 10}px`,
             opacity: [0.5, 0.9, 0.5],
           }}
           transition={{
@@ -218,7 +219,7 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
 
         // Generate qualia orb on score increase
         const newOrb = {
-          id: `orb-${Date.now()}-${Math.random()}`,
+          id: `orb-${timerService.now()}-${Math.random()}`,
           x: 20 + Math.random() * 60,
           y: 20 + Math.random() * 60,
           intensity: Math.min(change / 1000, 1),
@@ -264,11 +265,11 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
       ctx.lineWidth = 1;
 
       for (let i = 0; i < 20; i++) {
-        const x1 = Math.sin(Date.now() * 0.001 + i) * 50 + canvas.width / 2;
-        const y1 = Math.cos(Date.now() * 0.001 + i) * 50 + canvas.height / 2;
-        const x2 = Math.sin(Date.now() * 0.001 + i + 1) * 50 + canvas.width / 2;
+        const x1 = Math.sin(timerService.now() * 0.001 + i) * 50 + canvas.width / 2;
+        const y1 = Math.cos(timerService.now() * 0.001 + i) * 50 + canvas.height / 2;
+        const x2 = Math.sin(timerService.now() * 0.001 + i + 1) * 50 + canvas.width / 2;
         const y2 =
-          Math.cos(Date.now() * 0.001 + i + 1) * 50 + canvas.height / 2;
+          Math.cos(timerService.now() * 0.001 + i + 1) * 50 + canvas.height / 2;
 
         ctx.beginPath();
         ctx.moveTo(x1, y1);
@@ -276,22 +277,22 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
         ctx.stroke();
       }
 
-      animationRef.current = requestAnimationFrame(animate);
+      animationRef.current = timerService.requestAnimationFrame((_time) => animate());
     };
 
     animate();
 
     return () => {
       if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+        timerService.cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [qualiaState.flow]);
+  }, [qualiaState.flow, timerService]);
 
   // Calculate dynamic colors based on qualia state
   const intensityColor = `hsl(${qualiaState.intensity * 360}, 85%, ${55 + qualiaState.intensity * 25}%)`;
   const flowColor = `hsl(${180 + qualiaState.flow * 180}, 75%, 65%)`;
-  const chaosColor = `hsl(${qualiaState.chaos * 120}, 90%, ${70 + Math.sin(Date.now() * 0.01) * 15}%)`;
+  const chaosColor = `hsl(${qualiaState.chaos * 120}, 90%, ${70 + Math.sin(timerService.now() * 0.01) * 15}%)`;
 
   return (
     <>
@@ -325,6 +326,7 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
           <NeuralActivityBars
             activity={qualiaState.intensity}
             color={intensityColor}
+            currentTime={timerService.now()}
           />
         </div>
 

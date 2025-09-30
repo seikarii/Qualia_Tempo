@@ -33,4 +33,12 @@ export class BrowserTimerProvider implements ITimerProvider {
   cancelAnimationFrame(id: number): void {
     window.cancelAnimationFrame(id);
   }
+
+  performanceNow(): number {
+    if (typeof performance !== 'undefined' && performance.now) {
+      return performance.now();
+    }
+    // Fallback to Date.now() if performance.now() is not available
+    return Date.now();
+  }
 }

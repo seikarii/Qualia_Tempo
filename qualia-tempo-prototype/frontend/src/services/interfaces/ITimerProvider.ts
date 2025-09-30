@@ -46,4 +46,10 @@ export interface ITimerProvider {
    * @param id Animation frame ID returned by requestAnimationFrame
    */
   cancelAnimationFrame(id: number): void;
+
+  /**
+   * Returns high-resolution timestamp for performance measurements
+   * @returns High-resolution timestamp in milliseconds
+   */
+  performanceNow(): number;
 }

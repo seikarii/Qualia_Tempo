@@ -105,7 +105,7 @@ export class TimerService implements ITimerService {
     let lastCallTime = 0;
 
     const throttled = ((..._args: Parameters<T>) => {
-      const now = Date.now();
+      const now = this.now();
 
       if (now - lastCallTime >= wait) {
         lastCallTime = now;
@@ -158,6 +158,18 @@ export class TimerService implements ITimerService {
   public getCurrentDate(): Date {
     return new Date();
   }
+
+  @logMethod
+  public requestAnimationFrame(callback: (time: number) => void): number {
+    this.logger.debug("Requesting animation frame");
+    return this.timerProvider.requestAnimationFrame(callback);
+  }
+
+  @logMethod
+  public cancelAnimationFrame(animationId: number): void {
+    this.logger.debug("Cancelling animation frame", { animationId });
+    this.timerProvider.cancelAnimationFrame(animationId);
+  }
 }
 
 /**
@@ -181,11 +193,8 @@ export class PerformanceService implements IPerformanceService {
 
   @logMethod
   public now(): number {
-    if (typeof performance !== 'undefined' && performance.now) {
-      return performance.now();
-    }
-    // Fallback to Date.now() if performance.now() is not available
-    return Date.now();
+    // Delegar al provider, que a su vez puede usar performance.now si está disponible
+    return this.timerProvider.performanceNow();
   }
 
   @logMethod

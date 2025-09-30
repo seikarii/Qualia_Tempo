@@ -9,7 +9,7 @@ import {
 import { Vector2 } from "three";
 import * as THREE from "three";
 import { useGameStore } from "../../state/useGameStore";
-import { useEventBus, useService, useCoordinateSystemService } from "../../services/hooks";
+import { useEventBus, useService, useCoordinateSystemService, useTimerService, useBrowserEventsService } from "../../services/hooks";
 import { TYPES } from "../../services/inversify.types";
 import type { IInputStateService } from "../../services/interfaces/IInputStateService";
 import type {
@@ -76,6 +76,8 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
 }) => {
   const eventBus = useEventBus();
   const inputStateService = useService<IInputStateService>(TYPES.IInputStateService);
+  const timerService = useTimerService();
+  const browserEventsService = useBrowserEventsService();
 
   // Get real game state from Zustand store
   const zustandState = useGameStore();
@@ -195,7 +197,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
 
         if (combatNotes.length > 0) {
           // Calculate accuracy based on timing with the nearest note
-          const currentTime = Date.now() / 1000; // Convert to seconds to match noteData.timestamp
+          const currentTime = timerService.now() / 1000; // Convert to seconds to match noteData.timestamp
 
           // Find the closest note by timestamp
           const nearestNote = combatNotes.reduce((closest, note) => {
@@ -258,13 +260,13 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
       }
     };
 
-    window.addEventListener("keydown", handleKeyPress);
-    window.addEventListener("keyup", handleKeyRelease);
+    browserEventsService.addWindowEventListener("keydown", handleKeyPress);
+    browserEventsService.addWindowEventListener("keyup", handleKeyRelease);
     return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-      window.removeEventListener("keyup", handleKeyRelease);
+      browserEventsService.removeWindowEventListener("keydown", handleKeyPress);
+      browserEventsService.removeWindowEventListener("keyup", handleKeyRelease);
     };
-  }, [isActive, eventBus]);
+  }, [isActive, eventBus, browserEventsService]);
 
   return (
     <div className="fixed top-0 left-0 w-screen h-screen z-10">
