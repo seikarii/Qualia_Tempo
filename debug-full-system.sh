@@ -238,7 +238,7 @@ test_browser() {
     log_info "Preparing for in-memory browser test execution..."
 
     # Execute the test using pipes. The '-' in 'node -' tells Node.js to read from stdin.
-    # The 'EOF' does NOT have quotes to allow $LOG_DIR expansion.
+    # The 'EOF' is NOT quoted to allow $LOG_DIR expansion, but template literals have been replaced with string concatenation.
     # MAXIMUM EXECUTION TIME: 20 seconds - if exceeded, something is definitely wrong
     log_info "Executing in-memory browser test... (Errors are expected during failure tests)"
     timeout 20 node - > "$BROWSER_LOG" 2>&1 << EOF
@@ -273,14 +273,14 @@ async function runInMemoryTest() {
         page.on('console', (msg) => {
             const text = msg.text();
             const type = msg.type();
-            const entry = \`[\${type.toUpperCase()}] \${text}\`;
+            const entry = '[' + type.toUpperCase() + '] ' + text;
             logs.push({ timestamp: new Date().toISOString(), type, text, entry });
             if (type === 'error') errors.push(entry);
             console.log(entry);
         });
 
         page.on('pageerror', (error) => {
-            const errorText = \`[PAGE ERROR] \${error.message}\`;
+            const errorText = '[PAGE ERROR] ' + error.message;
             errors.push(errorText);
             logs.push({ timestamp: new Date().toISOString(), type: 'pageerror', text: error.message, entry: errorText, stack: error.stack });
             console.log(errorText);
@@ -312,9 +312,30 @@ async function runInMemoryTest() {
         console.log('🚀 Clicking "INITIATE NEURAL SYNC" button...');
         await page.getByText('INITIATE NEURAL SYNC').click();
 
-        // Wait for game to transition - look for some game element or reduced timeout
-        console.log('⏳ Waiting for game transition...');
-        await page.waitForTimeout(2000); // Keep original 2s but add logging
+        // ==================== BENCHMARK BLOCK ====================
+        console.log('📊 [BENCHMARK] Starting: Game View Transition...');
+        const startTime = performance.now();
+
+        // Step 1: Wait for the functional state to be ready (robust wait)
+        try {
+            await page.waitForSelector('canvas', { state: 'visible', timeout: 15000 });
+        } catch (e) {
+            // Functional error: The game never even loaded.
+            throw new Error('CRITICAL FUNCTIONAL FAILURE: Game canvas did not become visible within the timeout.');
+        }
+
+        const endTime = performance.now();
+        const transitionTime = endTime - startTime;
+        console.log('✅ [BENCHMARK] Game canvas visible in ' + transitionTime.toFixed(2) + 'ms.');
+
+        // Step 2: Assert the performance benchmark against our standard
+        const BENCHMARK_MS = 2000; // Our performance standard
+        if (transitionTime > BENCHMARK_MS) {
+            // Performance error: The game loaded, but too slowly.
+            throw new Error('❌ PERFORMANCE REGRESSION: Game transition took ' + transitionTime.toFixed(2) + 'ms, exceeding the ' + BENCHMARK_MS + 'ms benchmark.');
+        }
+        console.log('✅ [BENCHMARK] Performance standard met.');
+        // ================= END OF BENCHMARK BLOCK =================
 
         // --- Phase 3: Game View ---
         console.log('📸 Capturing game view state (Screenshot + DOM)...');
@@ -332,9 +353,10 @@ async function runInMemoryTest() {
 
         // --- Phase 4: Movement Test ---
         console.log('🎮 Testing character movement (W + D keys)...');
-        console.log("Forzando foco en el canvas");
-        await page.focus('canvas');
-        console.log("Foco en canvas establecido");
+        // ✅ ROBUST: Click to grant focus before testing functionality
+        console.log('🖱️ [FUNCTIONAL] Clicking canvas to ensure input focus...');
+        await page.click('canvas');
+        console.log('✅ [FUNCTIONAL] Canvas focused. Proceeding with movement test.');
         // Press and hold W and D keys simultaneously
         await page.keyboard.down('KeyW');
         await page.keyboard.down('KeyD');
@@ -364,7 +386,7 @@ async function runInMemoryTest() {
         console.log('📊 Movement test state captured.');
 
     } catch (error) {
-        console.error(\`❌❌❌ BROWSER TEST FAILED: \${error.message}\`);
+        console.error('❌❌❌ BROWSER TEST FAILED: ' + error.message);
 
         if (page && !page.isClosed()) {
             try {
@@ -374,7 +396,7 @@ async function runInMemoryTest() {
                 fs.writeFileSync('$LOG_DIR/debug-page-content-FAILURE.html', failureContent);
                 console.log('📸 Failure state captured.');
             } catch (captureError) {
-                console.error(\`📸 Could not capture failure state: \${captureError.message}\`);
+                console.error('📸 Could not capture failure state: ' + captureError.message);
             }
         } else {
             console.log('Page not available, cannot capture failure state.');
