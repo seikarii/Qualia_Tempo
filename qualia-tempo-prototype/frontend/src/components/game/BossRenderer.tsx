@@ -21,7 +21,6 @@ interface Boss {
 
 interface BossRendererProps {
   boss: Boss;
-  gameTime: number;
 }
 
 /**
@@ -29,7 +28,7 @@ interface BossRendererProps {
  * and attacks. Visual effects reflect boss stress level and qualia state.
  * Designed for memorable, streamable boss encounters.
  */
-const BossRenderer: React.FC<BossRendererProps> = ({ boss, gameTime }) => {
+const BossRenderer: React.FC<BossRendererProps> = ({ boss }) => {
   // QUALIA.CODE v1.1: Service injection for business logic separation
   const viewLogicService = useViewLogicService();
   
@@ -83,8 +82,7 @@ const BossRenderer: React.FC<BossRendererProps> = ({ boss, gameTime }) => {
     }
   });
 
-  // Generate attack pattern based on phase and timing
-  const shouldShowAttack = Math.floor(gameTime) % (4 / boss.phase) < 0.5;
+
 
   return (
     <group ref={bossGroupRef} position={boss.position}>
@@ -102,37 +100,32 @@ const BossRenderer: React.FC<BossRendererProps> = ({ boss, gameTime }) => {
 
       {/* Boss Appendages/Tentacles */}
       <group ref={tentaclesRef}>
-        {[...Array(4 + boss.phase)].map((_, i) => {
-          const angle = (i / (4 + boss.phase)) * Math.PI * 2;
-          const radius = 2 + boss.phase * 0.5;
-          const x = Math.cos(angle) * radius;
-          const z = Math.sin(angle) * radius;
-
-          return (
-            <group key={i} position={[x, 0, z]} rotation={[0, angle, 0]}>
-              {/* Tentacle segments */}
-              {[...Array(3)].map((_, segmentIndex) => (
-                <mesh
-                  key={segmentIndex}
-                  position={[0, -segmentIndex * 0.5, segmentIndex * 0.3]}
-                >
-                  <cylinderGeometry
-                    args={[
-                      0.2 - segmentIndex * 0.05,
-                      0.3 - segmentIndex * 0.05,
-                      1,
-                      8,
-                    ]}
-                  />
-                  <meshPhongMaterial
-                    color={new THREE.Color(...visuals.core.color)}
-                    emissive={new THREE.Color(...visuals.core.emissiveColor)}
-                  />
-                </mesh>
-              ))}
-            </group>
-          );
-        })}
+        {visuals.tentacles.map((tentacle, i) => (
+          <group key={i} position={tentacle.position} rotation={tentacle.rotation} scale={[tentacle.scale, tentacle.scale, tentacle.scale]}>
+            {/* Tentacle segments */}
+            {tentacle.segments.map((segment, segmentIndex) => (
+              <mesh
+                key={segmentIndex}
+                position={segment.position}
+                rotation={segment.rotation}
+                scale={[segment.scale, segment.scale, segment.scale]}
+              >
+                <cylinderGeometry
+                  args={[
+                    0.2 - segmentIndex * 0.05,
+                    0.3 - segmentIndex * 0.05,
+                    1,
+                    8,
+                  ]}
+                />
+                <meshPhongMaterial
+                  color={new THREE.Color(...visuals.core.color)}
+                  emissive={new THREE.Color(...visuals.core.emissiveColor)}
+                />
+              </mesh>
+            ))}
+          </group>
+        ))}
       </group>
 
       {/* Phase Indicators */}
@@ -146,51 +139,37 @@ const BossRenderer: React.FC<BossRendererProps> = ({ boss, gameTime }) => {
       />
 
       {/* Attack Effects */}
-      {shouldShowAttack && (
+      {visuals.shouldShowAttack && (
         <AttackEffect
-          phase={boss.phase}
+          attackWaves={visuals.attackWaves}
           color={new THREE.Color(...visuals.core.emissiveColor)}
-          gameTime={gameTime}
         />
       )}
 
       {/* Chaos Aura (grows with phase) */}
-      <mesh>
-        <sphereGeometry args={[3 + boss.phase, 16, 16]} />
+      <mesh scale={[visuals.chaosAura.scale, visuals.chaosAura.scale, visuals.chaosAura.scale]}>
+        <sphereGeometry args={[1, 16, 16]} />
         <meshBasicMaterial
-          color={new THREE.Color(...visuals.core.color)}
+          color={new THREE.Color(...visuals.chaosAura.color)}
           transparent={true}
-          opacity={0.1 + boss.stress_level * 0.2}
+          opacity={visuals.chaosAura.opacity}
           blending={THREE.AdditiveBlending}
           side={THREE.BackSide}
         />
       </mesh>
 
       {/* Power Level Particles */}
-      {[...Array(Math.floor((boss.power_level / 100) * 20))].map((_, i) => {
-        const angle = (i / 20) * Math.PI * 2;
-        const radius = 4 + Math.sin(gameTime + i) * 0.5;
-        const height = Math.cos(gameTime * 0.5 + i) * 2;
-
-        return (
-          <mesh
-            key={i}
-            position={[
-              Math.cos(angle) * radius,
-              height,
-              Math.sin(angle) * radius,
-            ]}
-          >
-            <sphereGeometry args={[0.1, 6, 6]} />
-            <meshStandardMaterial
-              color={new THREE.Color(...visuals.core.emissiveColor)}
-              emissive={new THREE.Color(...visuals.core.emissiveColor).multiplyScalar(0.5)}
-              transparent={true}
-              opacity={0.8}
-            />
-          </mesh>
-        );
-      })}
+      {visuals.powerParticles.map((particle, i) => (
+        <mesh key={i} position={particle.position} scale={[particle.scale, particle.scale, particle.scale]}>
+          <sphereGeometry args={[1, 6, 6]} />
+          <meshStandardMaterial
+            color={new THREE.Color(...visuals.core.emissiveColor)}
+            emissive={new THREE.Color(...visuals.core.emissiveColor).multiplyScalar(0.5)}
+            transparent={true}
+            opacity={particle.opacity}
+          />
+        </mesh>
+      ))}
     </group>
   );
 };
@@ -265,61 +244,48 @@ const StressVisualization: React.FC<StressVisualizationProps> = ({
 
 // Attack effect component
 interface AttackEffectProps {
-  phase: number;
+  attackWaves: Array<{
+    position: [number, number, number];
+    rotation: [number, number, number];
+    scale: number;
+    opacity: number;
+  }>;
   color: THREE.Color;
-  gameTime: number;
 }
 
 const AttackEffect: React.FC<AttackEffectProps> = ({
-  phase,
+  attackWaves,
   color,
-  gameTime,
 }) => {
   const attackRef = useRef<THREE.Group>(null);
 
-  useFrame((state) => {
-    if (attackRef.current) {
-      const time = state.clock.getElapsedTime();
-
-      // Different attack patterns per phase
-      if (phase === 1) {
-        // Simple rotation
-        attackRef.current.rotation.y += 0.05;
-      } else if (phase === 2) {
-        // Dual axis rotation
-        attackRef.current.rotation.y += 0.08;
-        attackRef.current.rotation.x += 0.03;
-      } else {
-        // Chaotic rotation
-        attackRef.current.rotation.y += Math.sin(time * 2) * 0.1;
-        attackRef.current.rotation.x += Math.cos(time * 1.7) * 0.08;
-        attackRef.current.rotation.z += Math.sin(time * 2.3) * 0.05;
-      }
+  // Apply the calculated rotation from ViewLogicService
+  useFrame(() => {
+    if (attackRef.current && attackWaves.length > 0) {
+      // Use the rotation from the first attack wave as the group rotation
+      attackRef.current.rotation.set(...attackWaves[0].rotation);
     }
   });
 
   return (
     <group ref={attackRef}>
       {/* Attack waves */}
-      {[...Array(phase * 2)].map((_, i) => {
-        const angle = (i / (phase * 2)) * Math.PI * 2;
-        const radius = 5 + Math.sin(gameTime * 2 + i) * 2;
-
-        return (
-          <mesh
-            key={i}
-            position={[Math.cos(angle) * radius, 0, Math.sin(angle) * radius]}
-          >
-            <coneGeometry args={[0.5, 2, 8]} />
-            <meshStandardMaterial
-              color={color}
-              emissive={color.clone().multiplyScalar(0.7)}
-              transparent={true}
-              opacity={0.6}
-            />
-          </mesh>
-        );
-      })}
+      {attackWaves.map((wave, i) => (
+        <mesh
+          key={i}
+          position={wave.position}
+          rotation={wave.rotation}
+          scale={[wave.scale, wave.scale, wave.scale]}
+        >
+          <coneGeometry args={[0.5, 2, 8]} />
+          <meshStandardMaterial
+            color={color}
+            emissive={color.clone().multiplyScalar(0.7)}
+            transparent={true}
+            opacity={wave.opacity}
+          />
+        </mesh>
+      ))}
     </group>
   );
 };

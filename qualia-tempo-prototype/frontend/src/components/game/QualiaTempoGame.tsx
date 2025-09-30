@@ -339,23 +339,20 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
 
         <BossRenderer
           boss={{
-            id: "boss_1",
-            name: "Order Incarnate",
-            position: [0, 5, 0],
-            power_level: 100,
-            phase: 1,
-            stress_level: zustandState.qualiaState.chaos,
+            id: "chaos_boss_1",
+            name: "Entropy Entity",
+            position: [0, 2, 0],
+            power_level: Math.min(200, zustandState.qualiaState.chaos * 200),
+            phase: Math.floor(zustandState.qualiaState.chaos * 3) + 1,
+            stress_level: zustandState.qualiaState.intensity,
             qualia_state: {
-              consciousness_density: 0.9,
-              emotional_valence: -zustandState.qualiaState.chaos,
-              arousal: zustandState.qualiaState.aggression,
-              coherence: 1 - zustandState.qualiaState.chaos,
-            },
+              consciousness_density: zustandState.qualiaState.precision,
+              emotional_valence: 1 - zustandState.qualiaState.recovery, // Inverse of player
+              arousal: zustandState.qualiaState.chaos,
+              coherence: 1 - zustandState.qualiaState.precision, // Chaos vs order
+            }
           }}
-          gameTime={zustandState.currentTime}
-        />
-
-        <MusicalNotesRenderer
+        />        <MusicalNotesRenderer
           notes={renderedNotes} // QUALIA.CODE: Real notes from memoized transformation
           currentTime={zustandState.currentTime}
           onNoteHit={handleNoteHit}

@@ -22,12 +22,39 @@ export interface BossVisualData {
     emissiveIntensity: number;
   };
   
-  // Tentacles/appendages
+  // Tentacles/appendages with segments
   tentacles: Array<{
     position: [number, number, number];
     rotation: [number, number, number];
     scale: number;
+    segments: Array<{
+      position: [number, number, number];
+      rotation: [number, number, number];
+      scale: number;
+    }>;
   }>;
+  
+  // Power level particles
+  powerParticles: Array<{
+    position: [number, number, number];
+    scale: number;
+    opacity: number;
+  }>;
+  
+  // Attack waves
+  attackWaves: Array<{
+    position: [number, number, number];
+    rotation: [number, number, number];
+    scale: number;
+    opacity: number;
+  }>;
+  
+  // Chaos aura
+  chaosAura: {
+    scale: number;
+    opacity: number;
+    color: [number, number, number];
+  };
   
   // Attack states
   shouldShowAttack: boolean;
@@ -79,6 +106,68 @@ export interface NoteVisualData {
   opacity: number;
   pulseIntensity: number;
   approachProgress: number;
+  geometryType: string; // For getGeometryForType selection
+  rotation: [number, number, number];
+  
+  // Trail effect properties
+  trail: {
+    visible: boolean;
+    color: [number, number, number];
+    intensity: number;
+  };
+  
+  // State flags for rendering logic
+  isActive: boolean;
+  isInHitWindow: boolean;
+  isMissed: boolean;
+  isPerfectTiming: boolean;
+}
+
+export interface TileVisualData {
+  key: string;
+  position: [number, number, number];
+  emissiveColor: [number, number, number];
+  baseColor: [number, number, number];
+  isPlayerTile: boolean;
+  isActiveTile: boolean;
+}
+
+export interface GridVisualData {
+  tiles: TileVisualData[];
+  gridBorders: {
+    size: number;
+    color: [number, number, number];
+  };
+}
+
+export interface QualiaFieldVisualData {
+  // Field particles
+  fieldParticles: {
+    positions: Float32Array;
+    colors: Float32Array;
+    sizes: Float32Array;
+    count: number;
+    rotation: [number, number, number];
+    materialSize: number;
+    materialOpacity: number;
+  };
+  
+  // Wave plane
+  wavePlane: {
+    positions: Float32Array;
+    position: [number, number, number];
+    rotation: [number, number, number];
+    color: [number, number, number];
+    opacity: number;
+  };
+  
+  // Ambient light spheres
+  ambientSpheres: Array<{
+    position: [number, number, number];
+    color: [number, number, number];
+    opacity: number;
+    scale: number;
+  }>;
 }
 
 export interface ViewLogicConfig {
@@ -101,5 +190,6 @@ export interface ViewLogicConfig {
     approachDistance: number;
     pulseFrequency: number;
     scaleRange: [number, number];
+    rotationSpeed: number;
   };
 }

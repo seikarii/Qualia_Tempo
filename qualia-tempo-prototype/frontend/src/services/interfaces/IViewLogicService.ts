@@ -8,7 +8,9 @@ import type {
   BossVisualData, 
   PlayerVisualData, 
   ParticleData, 
-  NoteVisualData 
+  NoteVisualData,
+  QualiaFieldVisualData,
+  GridVisualData
 } from '../contracts/IViewLogicService.contracts';
 import type { QualiaState } from '../../types/contracts';
 
@@ -29,6 +31,15 @@ export interface IViewLogicService {
    * @returns Player visual properties for rendering
    */
   getPlayerVisuals(playerState: any, performance: any, time: number): PlayerVisualData;
+
+  /**
+   * Generate qualia field visual data based on state and music
+   * @param qualiaField Current qualia field state
+   * @param musicData Current music analysis data
+   * @param time Current game time
+   * @returns Qualia field visual properties for rendering
+   */
+  getQualiaFieldVisuals(qualiaField: any, musicData: any, time: number): QualiaFieldVisualData;
 
   /**
    * Generate qualia field particle data based on state and music
@@ -54,5 +65,5 @@ export interface IViewLogicService {
    * @param time Current game time
    * @returns Grid visual data
    */
-  getGridVisuals(playerPosition: { x: number; y: number }, activePositions: [number, number][], time: number): any;
+  getGridVisuals(gridSize: number, tileSize: number, playerPosition: { x: number; y: number }, activePositions: [number, number][], time: number): GridVisualData;
 }

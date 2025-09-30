@@ -1,7 +1,8 @@
-import React, { useRef } from "react";
+import React, { useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { useCoordinateSystemService } from "../../services/hooks";
+import { useViewLogicService } from "../../services/hooks";
+import { GridVisualData } from "../../services/contracts/IViewLogicService.contracts";
 
 interface GridRendererProps {
   gridSize: number;
@@ -11,8 +12,8 @@ interface GridRendererProps {
 }
 
 /**
- * GridRenderer - Renders the 2.5D game arena with interactive tiles
- * Core component for the rhythm game playfield
+ * GridRenderer - Stateless 2.5D game arena renderer
+ * Uses ViewLogicService for all calculations, renders absolute values
  */
 const GridRenderer: React.FC<GridRendererProps> = ({
   gridSize = 8,
@@ -20,94 +21,42 @@ const GridRenderer: React.FC<GridRendererProps> = ({
   playerPosition,
   activePositions = [],
 }) => {
-  const gridRef = useRef<THREE.Group>(null);
-  const coordinateSystemService = useCoordinateSystemService();
+  const viewLogicService = useViewLogicService();
+  const [gridVisuals, setGridVisuals] = useState<GridVisualData>({ tiles: [], gridBorders: { size: 0, color: [0, 0, 0] } });
 
+  // Get visual data from ViewLogicService
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
-
-    // QUALIA.CODE: Use player position directly from GameStateStore via props
-    // This eliminates coupling to PlayerRenderer's visual state
-    const playerGridPos = playerPosition;
-
-    // Gentle pulsing animation for the grid
-    if (gridRef.current) {
-      gridRef.current.children.forEach((tile, index) => {
-        // DELEGAR A SERVICIO: Obtener coordenadas de la baldosa desde el servicio centralizado
-        const tileCoords = coordinateSystemService.indexToGrid(index);
-
-        // Check if this tile is active (player position or combo positions)
-        const isPlayerTile = playerGridPos.x === tileCoords.x && playerGridPos.y === tileCoords.y;
-        const isActiveTile = activePositions.some(
-          (pos) => pos[0] === tileCoords.x && pos[1] === tileCoords.y,
-        );
-
-        if (
-          tile instanceof THREE.Mesh &&
-          tile.material instanceof THREE.MeshStandardMaterial
-        ) {
-          if (isPlayerTile) {
-            // Player tile glows
-            tile.material.emissive.setHSL(
-              0.6,
-              1,
-              0.3 + Math.sin(time * 4) * 0.2,
-            );
-            tile.position.y = Math.sin(time * 3) * 0.05;
-          } else if (isActiveTile) {
-            // Active tiles pulse
-            tile.material.emissive.setHSL(
-              0.1,
-              0.8,
-              0.2 + Math.sin(time * 2 + index * 0.5) * 0.1,
-            );
-            tile.position.y = Math.sin(time * 2 + index * 0.5) * 0.02;
-          } else {
-            // Default tiles
-            tile.material.emissive.setHSL(0, 0, 0.05);
-            tile.position.y = 0;
-          }
-        }
-      });
-    }
+    const visuals = viewLogicService.getGridVisuals(gridSize, tileSize, playerPosition, activePositions, time);
+    setGridVisuals(visuals);
   });
 
-  // Generate grid tiles
-  const tiles = [];
-  for (let x = 0; x < gridSize; x++) {
-    for (let z = 0; z < gridSize; z++) {
-      tiles.push(
+  return (
+    <group>
+      {/* Render tiles from visual data */}
+      {gridVisuals.tiles.map((tile) => (
         <mesh
-          key={`tile-${x}-${z}`}
-          position={[
-            (x - gridSize / 2 + 0.5) * tileSize,
-            0,
-            (z - gridSize / 2 + 0.5) * tileSize,
-          ]}
+          key={tile.key}
+          position={tile.position}
         >
           <boxGeometry args={[tileSize * 0.9, 0.1, tileSize * 0.9]} />
           <meshStandardMaterial
-            color={new THREE.Color(0.2, 0.2, 0.3)}
+            color={new THREE.Color(...tile.baseColor)}
+            emissive={new THREE.Color(...tile.emissiveColor)}
             roughness={0.7}
             metalness={0.3}
           />
-        </mesh>,
-      );
-    }
-  }
-
-  return (
-    <group ref={gridRef}>
-      {tiles}
+        </mesh>
+      ))}
 
       {/* Grid borders */}
       <lineSegments>
         <edgesGeometry
           args={[
-            new THREE.PlaneGeometry(gridSize * tileSize, gridSize * tileSize),
+            new THREE.PlaneGeometry(gridVisuals.gridBorders.size, gridVisuals.gridBorders.size),
           ]}
         />
-        <lineBasicMaterial color={0x444444} />
+        <lineBasicMaterial color={new THREE.Color(...gridVisuals.gridBorders.color)} />
       </lineSegments>
     </group>
   );

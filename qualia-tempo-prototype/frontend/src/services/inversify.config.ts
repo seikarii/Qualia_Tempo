@@ -31,7 +31,7 @@ import type { CoordinateSystemConfig } from "./contracts/ICoordinateSystemServic
 // NEW SERVICES CONFIGURATION IMPORTS
 // Future configuration imports for additional services
 // import type { GameplayMechanicsConfig } from "./contracts/IGameplayMechanicsService.contracts";
-// import type { ViewLogicConfig } from "./contracts/IViewLogicService.contracts";
+import type { ViewLogicConfig } from "./contracts/IViewLogicService.contracts";
 // import type { SubtitleConfig } from "./contracts/ISubtitleService.contracts";
 // import type { DebugOrchestratorConfig } from "./contracts/IDebugOrchestratorService.contracts";
 
@@ -359,7 +359,7 @@ export async function configureServices(): Promise<void> {
 
   // NEW SERVICES CONFIGURATION BINDINGS - Using any for now until FullGameConfig is updated
   safeBindConstant(TYPES.GameplayMechanicsConfig, fullConfig.gameplayMechanics);
-  safeBindConstant(TYPES.ViewLogicConfig, fullConfig.viewLogic);
+  safeBindConstant<ViewLogicConfig>(TYPES.ViewLogicConfig, fullConfig.viewLogic);
   safeBindConstant(TYPES.SubtitleConfig, fullConfig.subtitle);
   safeBindConstant(TYPES.DebugOrchestratorConfig, fullConfig.debugOrchestrator);
 }

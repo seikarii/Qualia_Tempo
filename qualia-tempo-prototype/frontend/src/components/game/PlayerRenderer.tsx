@@ -1,10 +1,8 @@
-import React, { useRef, useImperativeHandle } from "react";
+import React, { useRef, useImperativeHandle, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { useCoordinateSystemService } from "../../services/hooks";
-// Future imports for ViewLogicService refactoring:
-// import { useViewLogicService } from "../../services/hooks";
-// import { PlayerVisualData } from "../../services/contracts/IViewLogicService.contracts";
+import { useViewLogicService } from "../../services/hooks";
+import { PlayerVisualData } from "../../services/contracts/IViewLogicService.contracts";
 
 interface Player {
   id: string;
@@ -33,126 +31,79 @@ interface PlayerRendererProps {
 /**
  * PlayerRenderer - Renders the player character (Demiurge Avatar) with
  * visual effects that respond to performance and qualia state.
+ * QUALIA.CODE v1.1: Refactored to follow Stateless View-Logic Pattern
  */
 const PlayerRenderer = React.forwardRef<THREE.Group, PlayerRendererProps>(({
   player,
   performance,
 }, ref) => {
+  // QUALIA.CODE v1.1: Service injection for business logic separation
+  const viewLogicService = useViewLogicService();
+  
   const playerMeshRef = useRef<THREE.Group>(null);
+  const auraMeshRef = useRef<THREE.Mesh>(null);
+  const powerCoreRef = useRef<THREE.Mesh>(null);
 
   // Expose the player mesh to parent via ref
   useImperativeHandle(ref, () => playerMeshRef.current!, []);
-  const auraMeshRef = useRef<THREE.Mesh>(null);
-  const powerCoreRef = useRef<THREE.Mesh>(null);
   
-  // QUALIA.CODE v1.1: Use CoordinateSystemService for proper grid-to-world transformation
-  const coordinateSystemService = useCoordinateSystemService();
-  // Future: const viewLogicService = useViewLogicService();
+  // Store current visual state for JSX rendering
+  const [currentVisuals, setCurrentVisuals] = useState<PlayerVisualData | null>(null);
   
-  // Future: Store current visual state for JSX rendering
-  // const [currentVisuals, setCurrentVisuals] = useState<PlayerVisualData | null>(null);
-  
-  // Future: Get default visuals if no current state available
-  // const visuals = currentVisuals || viewLogicService.getPlayerVisuals(player, performance, 0);
-
-  // FIXED: Use the canonical GridRenderer transformation via CoordinateSystemService
-  // This eliminates the desynchronization issue between PlayerRenderer and GridRenderer
-  const player3DPosition: [number, number, number] = coordinateSystemService.gridToWorld(
-    player.position[0], // Grid X coordinate
-    player.position[2]  // Grid Z coordinate (player.position[1] was incorrect)
-  );
-
-  // Calculate dynamic visual properties based on player state
-  const powerLevel = player.power_level / 100; // Normalize to 0-1
-  const consciousnessLevel = player.consciousness_level;
-  const performanceLevel =
-    (performance.accuracy +
-      performance.rhythm_sync +
-      performance.qualia_coherence) /
-    3;
-
-  // Player colors based on qualia state
-  const baseColor = new THREE.Color().setHSL(
-    player.qualia_state.emotional_valence * 0.8 + 0.1, // Hue based on valence
-    0.7 + player.qualia_state.arousal * 0.3, // Saturation based on arousal
-    0.4 + player.qualia_state.coherence * 0.4, // Lightness based on coherence
-  );
-
-  const auraColor = new THREE.Color().setHSL(
-    (player.qualia_state.emotional_valence * 0.8 + 0.3) % 1,
-    0.8,
-    0.5 + performanceLevel * 0.3,
-  );
+  // Get default visuals if no current state available
+  const visuals = currentVisuals || viewLogicService.getPlayerVisuals(player, performance, 0);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
+    
+    // QUALIA.CODE v1.1: Business logic extracted to ViewLogicService
+    const playerVisuals = viewLogicService.getPlayerVisuals(player, performance, time);
+    
+    // Store visual data for JSX rendering
+    setCurrentVisuals(playerVisuals);
 
-    // Animate main player mesh
+    // Apply calculated visual properties to Three.js objects
     if (playerMeshRef.current) {
-      // Floating animation based on consciousness level
-      playerMeshRef.current.position.y =
-        player3DPosition[1] + Math.sin(time * 2) * 0.1 * consciousnessLevel;
-
-      // Rotation based on qualia state
-      playerMeshRef.current.rotation.y +=
-        (player.qualia_state.emotional_valence - 0.5) * 0.005;
-
-      // Scale pulsing based on performance
-      const scale = 1 + Math.sin(time * 4) * 0.05 * performanceLevel;
-      playerMeshRef.current.scale.setScalar(scale);
+      playerMeshRef.current.position.set(...playerVisuals.position);
+      playerMeshRef.current.scale.set(...playerVisuals.scale);
+      playerMeshRef.current.rotation.set(...playerVisuals.rotation);
     }
 
-    // Animate aura
+    // Apply aura visual properties
     if (auraMeshRef.current) {
-      // Aura size based on power level and performance
-      const auraScale = 1 + powerLevel * 0.5 + performanceLevel * 0.3;
-      auraMeshRef.current.scale.setScalar(auraScale);
+      auraMeshRef.current.scale.setScalar(playerVisuals.aura.scale);
+      auraMeshRef.current.rotation.set(...playerVisuals.aura.rotation);
 
-      // Aura rotation
-      auraMeshRef.current.rotation.y += 0.01;
-      auraMeshRef.current.rotation.x += Math.sin(time * 0.5) * 0.002;
-
-      // Aura opacity pulsing
+      // Update aura material properties
       if (auraMeshRef.current.material instanceof THREE.MeshBasicMaterial) {
-        auraMeshRef.current.material.opacity =
-          0.3 + Math.sin(time * 3) * 0.1 * performanceLevel;
-        auraMeshRef.current.material.color = auraColor;
+        auraMeshRef.current.material.opacity = playerVisuals.aura.opacity;
+        auraMeshRef.current.material.color.setRGB(...playerVisuals.aura.color);
       }
     }
 
-    // Animate power core
+    // Apply power core visual properties
     if (powerCoreRef.current) {
-      // Core intensity based on power and performance
-      const coreIntensity = powerLevel * performanceLevel;
-      powerCoreRef.current.scale.setScalar(0.5 + coreIntensity * 0.5);
+      powerCoreRef.current.scale.setScalar(playerVisuals.powerCore.scale);
+      powerCoreRef.current.rotation.set(...playerVisuals.powerCore.rotation);
 
-      // Core rotation
-      powerCoreRef.current.rotation.x += 0.03;
-      powerCoreRef.current.rotation.y += 0.02;
-
-      // Core color shifting
+      // Update core material properties
       if (powerCoreRef.current.material instanceof THREE.MeshStandardMaterial) {
-        const coreColor = new THREE.Color().setHSL(
-          (player.qualia_state.emotional_valence + time * 0.1) % 1,
-          0.9,
-          0.6 + coreIntensity * 0.4,
+        powerCoreRef.current.material.color.setRGB(...playerVisuals.powerCore.color);
+        powerCoreRef.current.material.emissive.setRGB(
+          ...playerVisuals.powerCore.color.map(c => c * playerVisuals.powerCore.emissiveIntensity * 0.3) as [number, number, number]
         );
-        powerCoreRef.current.material.color = coreColor;
-        powerCoreRef.current.material.emissive = coreColor
-          .clone()
-          .multiplyScalar(0.3);
       }
     }
   });
 
   return (
-    <group ref={playerMeshRef} position={player3DPosition}>
+    <group ref={playerMeshRef} position={visuals.position}>
       {/* Main Player Body - RESIZED for proper cell fit */}
       <mesh position={[0, 0.4, 0]}>
         <octahedronGeometry args={[0.4, 1]} />
         <meshPhongMaterial
-          color={baseColor}
-          emissive={baseColor.clone().multiplyScalar(0.2)}
+          color={new THREE.Color(...visuals.color)}
+          emissive={new THREE.Color(...visuals.color).multiplyScalar(0.2)}
           shininess={100}
           transparent={true}
           opacity={0.9}
@@ -163,8 +114,8 @@ const PlayerRenderer = React.forwardRef<THREE.Group, PlayerRendererProps>(({
       <mesh ref={powerCoreRef} position={[0, 0.3, 0]}>
         <icosahedronGeometry args={[0.3, 1]} />
         <meshStandardMaterial
-          color={baseColor}
-          emissive={baseColor.clone().multiplyScalar(0.5)}
+          color={new THREE.Color(...visuals.powerCore.color)}
+          emissive={new THREE.Color(...visuals.powerCore.color).multiplyScalar(0.5)}
           transparent={true}
           opacity={0.8}
         />
@@ -174,9 +125,9 @@ const PlayerRenderer = React.forwardRef<THREE.Group, PlayerRendererProps>(({
       <mesh ref={auraMeshRef}>
         <sphereGeometry args={[0.7, 16, 16]} />
         <meshBasicMaterial
-          color={auraColor}
+          color={new THREE.Color(...visuals.aura.color)}
           transparent={true}
-          opacity={0.3}
+          opacity={visuals.aura.opacity}
           blending={THREE.AdditiveBlending}
           side={THREE.BackSide}
         />
@@ -222,7 +173,7 @@ const PlayerRenderer = React.forwardRef<THREE.Group, PlayerRendererProps>(({
           ]}
         />
         <meshBasicMaterial
-          color={auraColor}
+          color={new THREE.Color(...visuals.aura.color)}
           transparent={true}
           opacity={0.6}
           side={THREE.DoubleSide}
@@ -230,7 +181,7 @@ const PlayerRenderer = React.forwardRef<THREE.Group, PlayerRendererProps>(({
       </mesh>
 
       {/* Power Level Visualization */}
-      {[...Array(Math.floor(powerLevel * 10))].map((_, i) => (
+      {[...Array(Math.floor(player.power_level / 10))].map((_, i) => (
         <mesh
           key={i}
           position={[
@@ -241,8 +192,8 @@ const PlayerRenderer = React.forwardRef<THREE.Group, PlayerRendererProps>(({
         >
           <sphereGeometry args={[0.1, 8, 8]} />
           <meshStandardMaterial
-            color={baseColor}
-            emissive={baseColor.clone().multiplyScalar(0.3)}
+            color={new THREE.Color(...visuals.color)}
+            emissive={new THREE.Color(...visuals.color).multiplyScalar(0.3)}
             transparent={true}
             opacity={0.7}
           />
