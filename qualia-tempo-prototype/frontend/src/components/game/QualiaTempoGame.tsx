@@ -8,10 +8,11 @@ import {
 } from "@react-three/postprocessing";
 import { Vector2 } from "three";
 import { useGameStore } from "../../state/useGameStore";
-import { useEventBus } from "../../services/hooks";
+import { useEventBus, useService } from "../../services/hooks";
+import { TYPES } from "../../services/inversify.types";
+import type { IInputStateService } from "../../services/interfaces/IInputStateService";
 import type {
   PlayerActionEvent,
-  PlayerInputEvent,
   RhythmicDashEvent,
   MetronomeTickEvent,
 } from "../../services/contracts/events.contracts";
@@ -46,6 +47,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   isActive = false,
 }) => {
   const eventBus = useEventBus();
+  const inputStateService = useService<IInputStateService>(TYPES.IInputStateService);
 
   // Get real game state from Zustand store
   const zustandState = useGameStore();
@@ -132,19 +134,12 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
       const key = event.key.toLowerCase();
       const relevantMovementKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'];
 
-      // --- LÓGICA A RESTAURAR ---
+      // QUALIA.CODE: Nuevo modelo de estado - Actualiza el InputStateService
       if (relevantMovementKeys.includes(key)) {
         event.preventDefault();
-        // Emitir el evento de dominio para que lo capture el RhythmicMovementController
-        eventBus.emit<PlayerInputEvent>({
-          type: 'PlayerInput',
-          key: event.key, // Usar la tecla original, no en minúsculas, para consistencia
-          timestamp: new Date(),
-          source: 'QualiaTempoGame',
-        });
+        inputStateService.pressKey(event.key);
         return; // Finalizar para no procesar otras lógicas
       }
-      // --- FIN DE LA LÓGICA A RESTAURAR ---
 
       // Global game controls
       if (key === "p" || key === "escape") {
@@ -222,8 +217,22 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
       }
     };
 
+    const handleKeyRelease = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      const relevantMovementKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'];
+      
+      // QUALIA.CODE: Actualizar estado de liberación de teclas
+      if (relevantMovementKeys.includes(key)) {
+        inputStateService.releaseKey(event.key);
+      }
+    };
+
     window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
+    window.addEventListener("keyup", handleKeyRelease);
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+      window.removeEventListener("keyup", handleKeyRelease);
+    };
   }, [isActive, eventBus]);
 
   return (

@@ -48,6 +48,7 @@ import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { IApplicationInitializerService } from "./interfaces/IApplicationInitializerService";
 import type { IWebAudioAPIService } from "./interfaces/IWebAudioAPIService";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
+import type { IInputStateService } from "./interfaces/IInputStateService";
 import type { IFrontendRenderingService } from "./interfaces/IFrontendRenderingService";
 import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
 import type { IWebSocketService } from "./interfaces/IWebSocketService";
@@ -79,6 +80,7 @@ import { StateStreamingService } from "./StateStreamingService";
 import { WebSocketService } from "./WebSocketService";
 import { BrowserEventsService } from "./BrowserEventsService";
 import { ThrottlingManager } from "./utils/ThrottlingManager";
+import { InputStateService } from "./InputStateService";
 
 // ===== PROTOCOL ADAPTER IMPORTS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
@@ -198,6 +200,10 @@ container
 container
   .bind<IApplicationInitializerService>(TYPES.IApplicationInitializerService)
   .to(ApplicationInitializerService)
+  .inSingletonScope();
+container
+  .bind<IInputStateService>(TYPES.IInputStateService)
+  .to(InputStateService)
   .inSingletonScope();
 container
   .bind<IWebAudioAPIService>(TYPES.IWebAudioAPIService)

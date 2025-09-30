@@ -2,13 +2,11 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import type { 
   PlayerActionEvent, 
-  PlayerInputEvent,
-  PlayerDirectionEvent,
   GameStateChangedEvent,
   MetronomeTickEvent,
   RhythmicDashEvent,
 } from "./contracts/events.contracts";
-import { logMethod, catchError, AdaptAndEmit } from "../utils/decorators";
+import { logMethod, catchError } from "../utils/decorators";
 import type { QualiaState } from "../types/contracts";
 import type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementController.contracts";
 import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovementController";
@@ -16,6 +14,7 @@ import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IMessageAdapter } from "./protocol/IMessageAdapter";
+import type { IInputStateService } from "./interfaces/IInputStateService";
 
 /**
  * RhythmicMovementController - Core rhythm game logic
@@ -27,7 +26,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private logger: ILogger;
   private config: RhythmicMovementConfig;
   private timerService: ITimerService;
-  private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator
+  private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator (DEPRECATED)
+  private inputStateService: IInputStateService; // NUEVA FUENTE DE VERDAD
 
   private playerPosition: [number, number] = [4, 4]; // Center of 8x8 grid
   private isListening: boolean = false;
@@ -49,9 +49,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private slowdownTimeout: number | null = null;
   private gameStateListenerId: string | null = null;
 
-  // CRISALIDA.CODE: Configuration-driven throttling
-  private keyThrottleMs!: number;
-  private lastKeyPressTime: number = 0;
+  // QUALIA.CODE: Throttling eliminado - El sondeo de estado es inherentemente controlado
 
   // Interface implementation properties
   private currentIntensity: number = 0.5;
@@ -64,13 +62,15 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     @inject(TYPES.RhythmicMovementConfig) config: RhythmicMovementConfig,
     @inject(TYPES.ITimerService) timerService: ITimerService,
     @inject(TYPES.IKeyToDirectionAdapter) keyAdapter: IMessageAdapter,
+    @inject(TYPES.IInputStateService) inputStateService: IInputStateService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.config = config;
     this.timerService = timerService;
     this.keyAdapter = keyAdapter;
-    // Ensure keyAdapter is used by decorator (TypeScript workaround)
+    this.inputStateService = inputStateService;
+    // Ensure keyAdapter is used by decorator (TypeScript workaround) - DEPRECATED
     void this.keyAdapter;
 
     this.logger.info(this.config.messages.serviceInitialized);
@@ -87,7 +87,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.goodTiming = this.config.goodTiming;
     this.gridSize = this.config.gridSize;
     this.slowdownFactor = this.config.slowdownFactor;
-    this.keyThrottleMs = this.config.keyThrottleMs; // CRISALIDA.CODE: Load throttle configuration
+    // QUALIA.CODE: keyThrottleMs eliminado - No necesario en modelo de sondeo
   }
 
   @logMethod
@@ -205,13 +205,16 @@ export class RhythmicMovementController implements IRhythmicMovementController {
       this.beatNumber++;
       this.lastBeatTime = this.timerService.now();
 
-      // Emit metronome tick event with slowdown factor
+        // Emit metronome tick event with slowdown factor
       this.eventBus.emit<MetronomeTickEvent>({
         type: "MetronomeTick",
         beatNumber: this.beatNumber,
         bpm: this.bpm * this.slowdownFactor, // Affected by slowdown
         source: "RhythmicMovementController",
       });
+      
+      // QUALIA.CODE: Sondeo de estado de entrada en cada tick del juego
+      this.processMovementFromState();
     }, this.beatInterval / this.slowdownFactor); // Adjust interval based on slowdown
   }
 
@@ -223,14 +226,9 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   }
 
   private setupInputListener(): void {
-    this.eventBus.subscribe<PlayerInputEvent>(
-      "PlayerInput",
-      this.onPlayerInput.bind(this),
-    );
-    this.eventBus.subscribe<PlayerDirectionEvent>(
-      "PlayerDirectionInput",
-      this.handleDirectionInput.bind(this),
-    );
+    // QUALIA.CODE: Modelo de sondeo de estado - Sin suscripciones a eventos de entrada
+    // El sondeo se realiza en el bucle del metronome
+    this.logger.info('🎮 Input system migrated to state polling model');
   }
 
   private removeInputListener(): void {
@@ -239,36 +237,13 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     // listener IDs, you would unsubscribe here.
   }
 
-  @AdaptAndEmit('keyAdapter')
-  private onPlayerInput(_event: PlayerInputEvent): void {
-    // El cuerpo de este método ahora está vacío.
-    // El decorador se encarga de adaptar y emitir el nuevo evento.
-  }
+  // MÉTODO ELIMINADO: onPlayerInput - Reemplazado por sondeo de estado
 
-  private handleDirectionInput = (event: PlayerDirectionEvent): void => {
-    // DIRECTIVA 2: Instrumentación de Telemetría de Alta Precisión
-    this.logger.info("PlayerDirectionInput received", {
-      direction: event.direction,
-      timestamp: this.timerService.now(),
-      source: "handleDirectionInput"
-    });
-
-    // La lógica que estaba en `handlePlayerInput` ahora va aquí,
-    // pero usando el `event.direction` que ya viene procesado.
-
-    // CRISALIDA.CODE: Configuration-driven throttling implementation
-    const now = this.timerService.now();
-    if (now - this.lastKeyPressTime < this.keyThrottleMs) {
-      return; // Throttle the input
-    }
-    this.lastKeyPressTime = now;
-
-    this.processDashInput(event.direction);
-  };
+  // MÉTODO ELIMINADO: handleDirectionInput - Reemplazado por processMovementFromState
 
   @logMethod
   private processDashInput(
-    direction: "north" | "south" | "east" | "west",
+    direction: "north" | "south" | "east" | "west" | "northeast" | "northwest" | "southeast" | "southwest",
   ): void {
     // Don't process input when paused OR when game is not playing
     if (this.isPaused || !this.isGameActive()) {
@@ -321,7 +296,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   }
 
   private calculateNewPosition(
-    direction: "north" | "south" | "east" | "west",
+    direction: "north" | "south" | "east" | "west" | "northeast" | "northwest" | "southeast" | "southwest",
   ): [number, number] {
     const [x, z] = this.playerPosition;
 
@@ -334,6 +309,14 @@ export class RhythmicMovementController implements IRhythmicMovementController {
         return [x, z + 1]; // D moves right/east
       case "west":
         return [x, z - 1]; // A moves left/west
+      case "northeast":
+        return [x - 1, z + 1]; // W + D moves up-right
+      case "northwest":
+        return [x - 1, z - 1]; // W + A moves up-left
+      case "southeast":
+        return [x + 1, z + 1]; // S + D moves down-right
+      case "southwest":
+        return [x + 1, z - 1]; // S + A moves down-left
     }
   }
 
@@ -361,6 +344,49 @@ export class RhythmicMovementController implements IRhythmicMovementController {
    */
   private isGameActive(): boolean {
     return this.gameIsPlaying && !this.isPaused;
+  }
+
+  /**
+   * QUALIA.CODE: Nuevo método de sondeo de estado para movimiento simultáneo  
+   * Convierte el vector de dirección del InputStateService a una dirección nominal
+   * y procesa el movimiento si hay entrada activa.
+   */
+  @logMethod
+  private processMovementFromState(): void {
+    const directionVector = this.inputStateService.getDirectionVector();
+
+    // No hacer nada si no hay movimiento
+    if (directionVector.x === 0 && directionVector.z === 0) {
+      return;
+    }
+
+    // Convertir el vector a una dirección nominal (8 direcciones)
+    let direction: 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest';
+
+    if (directionVector.x === -1 && directionVector.z === 0) {
+      direction = 'north';
+    } else if (directionVector.x === 1 && directionVector.z === 0) {
+      direction = 'south';
+    } else if (directionVector.x === 0 && directionVector.z === 1) {
+      direction = 'east';
+    } else if (directionVector.x === 0 && directionVector.z === -1) {
+      direction = 'west';
+    } else if (directionVector.x === -1 && directionVector.z === 1) {
+      direction = 'northeast';
+    } else if (directionVector.x === -1 && directionVector.z === -1) {
+      direction = 'northwest';
+    } else if (directionVector.x === 1 && directionVector.z === 1) {
+      direction = 'southeast';
+    } else if (directionVector.x === 1 && directionVector.z === -1) {
+      direction = 'southwest';
+    } else {
+      // Vector inválido - no debería ocurrir
+      this.logger.warn('Invalid direction vector', { directionVector });
+      return;
+    }
+
+    // Procesar el movimiento con la dirección calculada
+    this.processDashInput(direction);
   }
 
   // ==================== IRhythmicMovementController INTERFACE IMPLEMENTATION ====================

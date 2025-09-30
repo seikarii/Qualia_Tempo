@@ -28,6 +28,7 @@ export const TYPES = {
   IRhythmicMovementController: Symbol.for("IRhythmicMovementController"),
   IOntologicalAudioEngine: Symbol.for("IOntologicalAudioEngine"),
   IApplicationInitializerService: Symbol.for("IApplicationInitializerService"),
+  IInputStateService: Symbol.for("IInputStateService"),
   IWebAudioAPIService: Symbol.for("IWebAudioAPIService"),
   IFrontendRenderingService: Symbol.for("IFrontendRenderingService"),
   IStateStreamingService: Symbol.for("IStateStreamingService"),

@@ -72,7 +72,7 @@ export interface PlayerActionEvent extends BaseEvent {
 
 export interface RhythmicDashEvent extends BaseEvent {
   type: "RhythmicDash";
-  direction: "north" | "south" | "east" | "west";
+  direction: "north" | "south" | "east" | "west" | "northeast" | "northwest" | "southeast" | "southwest";
   timing: "perfect" | "good" | "miss";
   newPosition: [number, number];
 }
