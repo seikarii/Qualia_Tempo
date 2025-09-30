@@ -301,13 +301,6 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     // Update player position (now guaranteed to be valid)
     this.playerPosition = newPosition;
 
-    // Emit player action for QualiaState calculation
-    this.eventBus.emit<PlayerActionEvent>({
-      type: "PlayerAction",
-      action: timing === "miss" ? "MissNote" : "HitNote",
-      source: "RhythmicMovementController",
-    });
-
     // Set movement lock to prevent multiple moves per beat
     this.hasMovedThisBeat = true;
   }

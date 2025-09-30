@@ -19,7 +19,6 @@ import type { DebugServiceConfig } from "./contracts/IDebugService.contracts";
 import type { ErrorReportingConfig } from "./contracts/IErrorReportingService.contracts";
 import type { EventBusConfig } from "./contracts/IEventBus.contracts";
 import type { GameControllerConfig } from "./contracts/IGameControllerService.contracts";
-import type { GameInputControllerConfig } from "./contracts/IGameInputControllerService.contracts";
 import type { HttpConfig } from "./contracts/IHttpService.contracts";
 import type { LoggerConfig } from "./contracts/ILogger.contracts";
 import type { NotificationServiceConfig } from "./contracts/INotificationService.contracts";
@@ -64,6 +63,7 @@ import type { IStateStreamingService } from "./interfaces/IStateStreamingService
 import type { IWebSocketService } from "./interfaces/IWebSocketService";
 import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
 import type { ICoordinateSystemService } from "./interfaces/ICoordinateSystemService";
+import type { IToneFactoryService } from "../audio/interfaces/IToneFactoryService";
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { EventBus } from "./EventBus";
@@ -94,6 +94,7 @@ import { BrowserEventsService } from "./BrowserEventsService";
 import { ThrottlingManager } from "./utils/ThrottlingManager";
 import { InputStateService } from "./InputStateService";
 import { CoordinateSystemService } from "./CoordinateSystemService";
+import { ToneFactoryService } from "../audio/ToneFactoryService";
 
 // ===== PROTOCOL ADAPTER IMPORTS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
@@ -223,6 +224,10 @@ container
   .to(OntologicalAudioEngine)
   .inSingletonScope();
 container
+  .bind<IToneFactoryService>(TYPES.IToneFactoryService)
+  .to(ToneFactoryService)
+  .inSingletonScope();
+container
   .bind<IApplicationInitializerService>(TYPES.IApplicationInitializerService)
   .to(ApplicationInitializerService)
   .inSingletonScope();
@@ -350,7 +355,6 @@ export async function configureServices(): Promise<void> {
   safeBindConstant<EventBusConfig>(TYPES.EventBusConfig, fullConfig.eventBus);
   safeBindConstant<BackendSyncConfig>(TYPES.BackendSyncConfig, fullConfig.backendSync);
   safeBindConstant<GameControllerConfig>(TYPES.GameControllerConfig, fullConfig.gameController);
-  safeBindConstant<GameInputControllerConfig>(TYPES.GameInputControllerConfig, fullConfig.gameInputController);
   safeBindConstant<QualiaCalculatorConfig>(TYPES.QualiaCalculatorConfig, fullConfig.qualiaCalculator);
   safeBindConstant<RhythmicMovementConfig>(TYPES.RhythmicMovementConfig, fullConfig.rhythmicMovement);
   safeBindConstant<AudioServiceConfig>(TYPES.AudioServiceConfig, fullConfig.audioService);

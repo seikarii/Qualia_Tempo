@@ -70,7 +70,6 @@ export const TYPES = {
   EventBusConfig: Symbol.for("EventBusConfig"),
   BackendSyncConfig: Symbol.for("BackendSyncConfig"),
   GameControllerConfig: Symbol.for("GameControllerConfig"),
-  GameInputControllerConfig: Symbol.for("GameInputControllerConfig"),
   QualiaCalculatorConfig: Symbol.for("QualiaCalculatorConfig"),
   RhythmicMovementConfig: Symbol.for("RhythmicMovementConfig"),
   AudioServiceConfig: Symbol.for("AudioServiceConfig"),
@@ -78,6 +77,7 @@ export const TYPES = {
   ErrorReportingConfig: Symbol.for("ErrorReportingConfig"),
   DebugServiceConfig: Symbol.for("DebugServiceConfig"),
   FrontendRenderingConfig: Symbol.for("FrontendRenderingConfig"),
+  IToneFactoryService: Symbol.for("IToneFactoryService"),
   VisualEffectsConfig: Symbol.for("VisualEffectsConfig"),
   StreamingConfig: Symbol.for("StreamingConfig"),
 

@@ -6,18 +6,16 @@
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
-import type { IGameInputControllerService, GameInputControllerConfig } from './interfaces/IGameInputControllerService';
+import type { IGameInputControllerService } from './interfaces/IGameInputControllerService';
 import type { IInputStateService } from './interfaces/IInputStateService';
 import type { IBrowserEventsService } from './interfaces/IBrowserEventsService';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { ILogger } from './interfaces/ILogger';
-import type { NoteData } from '../types/contracts';
 import type { PlayerActionEvent } from './contracts/events.contracts';
-import { logMethod, catchError } from '../utils/decorators';
+import { logMethod } from '../utils/decorators';
 
 @injectable()
 export class GameInputControllerService implements IGameInputControllerService {
-  private readonly config: GameInputControllerConfig;
   private readonly inputStateService: IInputStateService;
   private readonly browserEventsService: IBrowserEventsService;
   private readonly eventBus: IEventBus;
@@ -28,13 +26,11 @@ export class GameInputControllerService implements IGameInputControllerService {
   private isActive = false;
 
   constructor(
-    @inject(TYPES.GameInputControllerConfig) config: GameInputControllerConfig,
     @inject(TYPES.IInputStateService) inputStateService: IInputStateService,
     @inject(TYPES.IBrowserEventsService) browserEventsService: IBrowserEventsService,
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger
   ) {
-    this.config = config;
     this.inputStateService = inputStateService;
     this.browserEventsService = browserEventsService;
     this.eventBus = eventBus;
@@ -79,18 +75,6 @@ export class GameInputControllerService implements IGameInputControllerService {
   }
 
   @logMethod
-  @catchError
-  public calculateNoteAccuracy(currentTime: number, noteTimestamp: number): number {
-    const timeDiff = Math.abs(currentTime - noteTimestamp);
-
-    if (timeDiff <= this.config.timingWindows.perfect) return 1.0;
-    if (timeDiff <= this.config.timingWindows.good) {
-      return Math.max(0.5, 1.0 - timeDiff / this.config.timingWindows.good);
-    }
-    return 0.0; // Miss
-  }
-
-  @logMethod
   public processPauseGame(): void {
     this.eventBus.emit<PlayerActionEvent>({
       type: 'PlayerAction',
@@ -105,9 +89,9 @@ export class GameInputControllerService implements IGameInputControllerService {
 
       const key = event.key.toLowerCase();
       const movementKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'];
+      const actionKeys = [' ', 'enter']; // Teclas de acción
 
-      // Handle movement keys
-      if (movementKeys.includes(key)) {
+      if (movementKeys.includes(key) || actionKeys.includes(key)) {
         event.preventDefault();
         this.inputStateService.pressKey(event.key);
         return;
@@ -127,9 +111,9 @@ export class GameInputControllerService implements IGameInputControllerService {
       if (!this.isActive) return;
 
       const key = event.key.toLowerCase();
-      const movementKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'];
+      const keysToTrack = ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright', ' ', 'enter'];
 
-      if (movementKeys.includes(key)) {
+      if (keysToTrack.includes(key)) {
         this.inputStateService.releaseKey(event.key);
       }
     };

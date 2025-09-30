@@ -526,10 +526,10 @@ export class ViewLogicService implements IViewLogicService {
       const opacity = isMissed ? 0.3 : Math.max(0.1, 1 - Math.abs(timeDiff) / 5);
 
       // Color calculation based on qualia signature
-      const noteColor = this.getNoteColorBySignature(note.qualia_signature, timeDiff);
+      const noteColor = this.getNoteColorBySignature(note.qualia_signature, timeDiff, currentTime);
 
       // Pulse intensity for perfect timing
-      const pulseIntensity = isPerfectTiming ? Math.sin(Date.now() * 0.01) * 0.3 + 0.7 : 0;
+      const pulseIntensity = isPerfectTiming ? Math.sin(currentTime * 0.01) * 0.3 + 0.7 : 0;
 
       // Trail effect calculation
       const trailVisible = isInHitWindow || progress > 0.8;
@@ -560,7 +560,7 @@ export class ViewLogicService implements IViewLogicService {
     });
   }
 
-  private getNoteColorBySignature(signature: string, timeDiff: number): [number, number, number] {
+  private getNoteColorBySignature(signature: string, timeDiff: number, currentTime: number): [number, number, number] {
     const baseColors: Record<string, [number, number, number]> = {
       ORDER: [0.29, 0.56, 0.89], // #4A90E2
       CHAOS: [0.89, 0.29, 0.29], // #E24A4A
@@ -574,7 +574,7 @@ export class ViewLogicService implements IViewLogicService {
 
     // Pulse effect as note approaches hit window
     if (Math.abs(timeDiff) < 1) {
-      const pulse = Math.sin(Date.now() * 0.01) * 0.3 + 0.7;
+      const pulse = Math.sin(currentTime * 10) * 0.3 + 0.7;
       return [
         baseColor[0] * pulse,
         baseColor[1] * pulse,

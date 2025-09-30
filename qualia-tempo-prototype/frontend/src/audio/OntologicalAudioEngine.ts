@@ -8,6 +8,7 @@ import type {
   IOntologicalAudioEngine,
   EmergentBehavior,
 } from "./IOntologicalAudioEngine";
+import type { IToneFactoryService } from "./interfaces/IToneFactoryService";
 import { logMethod, catchError } from "../utils/decorators";
 
 export type OscillatorType =
@@ -25,6 +26,7 @@ export type OscillatorType =
 export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
+  private readonly toneFactory: IToneFactoryService;
   private synthPool: Map<string, Tone.PolySynth> = new Map();
   private globalReverb: Tone.Reverb;
   private globalDelay: Tone.FeedbackDelay;
@@ -32,22 +34,24 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
 
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.ITimerService) timerService: ITimerService
+    @inject(TYPES.ITimerService) timerService: ITimerService,
+    @inject(TYPES.IToneFactoryService) toneFactory: IToneFactoryService
   ) {
     this.logger = logger;
     this.timerService = timerService;
-    this.globalReverb = new Tone.Reverb({
+    this.toneFactory = toneFactory;
+    this.globalReverb = this.toneFactory.createReverb({
       decay: 1.5,
       wet: 0.45,
     });
 
-    this.globalDelay = new Tone.FeedbackDelay({
+    this.globalDelay = this.toneFactory.createFeedbackDelay({
       delayTime: "8n",
       feedback: 0.28,
       wet: 0.18,
     });
 
-    this.masterVolume = new Tone.Volume(-8);
+    this.masterVolume = this.toneFactory.createVolume(-8);
 
     // Cadena de efectos
     this.globalDelay.connect(this.globalReverb);
@@ -65,7 +69,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   public createEntityVoice(entityId: string, qualiaState: QualiaState): void {
     if (this.synthPool.has(entityId)) return;
 
-    const synth = new Tone.PolySynth(Tone.Synth, {
+    const synth = this.toneFactory.createPolySynth({
       oscillator: {
         type: this.getOscillatorType(qualiaState.intensity),
       },

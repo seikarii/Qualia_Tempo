@@ -18,7 +18,6 @@ import type { DebugServiceConfig } from '../services/contracts/IDebugService.con
 import type { ErrorReportingConfig } from '../services/contracts/IErrorReportingService.contracts';
 import type { EventBusConfig } from '../services/contracts/IEventBus.contracts';
 import type { GameControllerConfig } from '../services/contracts/IGameControllerService.contracts';
-import type { GameInputControllerConfig } from '../services/contracts/IGameInputControllerService.contracts';
 import type { HttpConfig } from '../services/contracts/IHttpService.contracts';
 import type { LoggerConfig } from '../services/contracts/ILogger.contracts';
 import type { NotificationServiceConfig } from '../services/contracts/INotificationService.contracts';
@@ -69,7 +68,6 @@ export interface FullGameConfig {
 
   // Game Logic Services
   gameController: GameControllerConfig;
-  gameInputController: GameInputControllerConfig;
   gameplay: GameplayConfig;
   qualiaCalculator: QualiaCalculatorConfig;
   rhythmicMovement: RhythmicMovementConfig;
