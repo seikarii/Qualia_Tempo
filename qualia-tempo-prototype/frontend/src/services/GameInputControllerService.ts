@@ -90,59 +90,6 @@ export class GameInputControllerService implements IGameInputControllerService {
     return 0.0; // Miss
   }
 
-    @logMethod
-  @catchError
-  public processNoteHit(combatNotes: NoteData[], currentTime: number): void {
-    if (combatNotes.length === 0) {
-      // No notes available - emit miss
-      this.eventBus.emit<PlayerActionEvent>({
-        type: 'PlayerAction',
-        action: 'MissNote',
-        source: 'GameInputControllerService',
-        context: { reason: 'no_notes_available' },
-      });
-      return;
-    }
-
-    // Find the closest note by timestamp
-    const nearestNote = combatNotes.reduce((closest, note) => {
-      const currentDiff = Math.abs(currentTime - note.timestamp);
-      const closestDiff = Math.abs(currentTime - closest.timestamp);
-      return currentDiff < closestDiff ? note : closest;
-    });
-
-    const timingAccuracy = this.calculateNoteAccuracy(
-      currentTime * 1000, // Convert to milliseconds
-      nearestNote.timestamp * 1000
-    );
-
-    if (timingAccuracy > 0) {
-      // Hit note with calculated accuracy
-      this.eventBus.emit<PlayerActionEvent>({
-        type: 'PlayerAction',
-        action: 'HitNote',
-        source: 'GameInputControllerService',
-        context: {
-          noteTimestamp: nearestNote.timestamp,
-          accuracy: timingAccuracy,
-          points: Math.floor(timingAccuracy * 100),
-          perfect: timingAccuracy > 0.9,
-        },
-      });
-    } else {
-      // Poor timing - miss
-      this.eventBus.emit<PlayerActionEvent>({
-        type: 'PlayerAction',
-        action: 'MissNote',
-        source: 'GameInputControllerService',
-        context: {
-          reason: 'poor_timing',
-          noteTimestamp: nearestNote.timestamp,
-        },
-      });
-    }
-  }
-
   @logMethod
   public processPauseGame(): void {
     this.eventBus.emit<PlayerActionEvent>({
@@ -170,14 +117,6 @@ export class GameInputControllerService implements IGameInputControllerService {
       if (key === 'p' || key === 'escape') {
         event.preventDefault();
         this.processPauseGame();
-        return;
-      }
-
-      // Handle note hitting
-      if (key === ' ' || key === 'enter') {
-        event.preventDefault();
-        // Note: The combat notes will be passed from the component
-        // This is handled in the component's useEffect
         return;
       }
     };

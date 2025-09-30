@@ -495,7 +495,7 @@ export class ViewLogicService implements IViewLogicService {
           approachProgress: 0,
           geometryType: note.type || 'default',
           rotation: [0, 0, 0],
-          trail: { visible: false, color: [0, 0, 0], intensity: 0 },
+          trail: { visible: false, color: [0, 0, 0], intensity: 0, scale: 0, opacity: 0 },
           isActive: false,
           isInHitWindow: false,
           isMissed: false,
@@ -548,7 +548,9 @@ export class ViewLogicService implements IViewLogicService {
         trail: {
           visible: trailVisible,
           color: noteColor,
-          intensity: trailIntensity
+          intensity: trailIntensity,
+          scale: 0.5 + Math.sin(currentTime * 2) * 0.2,
+          opacity: 0.3 + Math.sin(currentTime * 3) * 0.2
         },
         isActive: isActive,
         isInHitWindow: isInHitWindow,

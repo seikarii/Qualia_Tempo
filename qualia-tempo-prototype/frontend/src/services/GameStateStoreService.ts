@@ -164,6 +164,18 @@ export class GameStateStoreService implements IGameStateStoreService {
     return this.isStarted;
   }
 
+  @logMethod
+  getGameState(): any {
+    // Access the store state through the setter function
+    // This is a bit of a hack, but necessary due to the passive store pattern
+    let currentState: any;
+    this.setStore((state: any) => {
+      currentState = state;
+      return state; // No-op, just to get the current state
+    });
+    return currentState;
+  }
+
   // === PRIVATE EVENT HANDLERS ===
 
   /**

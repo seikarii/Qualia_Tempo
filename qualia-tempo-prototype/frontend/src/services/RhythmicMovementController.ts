@@ -15,6 +15,8 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IMessageAdapter } from "./protocol/IMessageAdapter";
 import type { IInputStateService } from "./interfaces/IInputStateService";
+import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
+import type { IGameplayMechanicsService } from "./interfaces/IGameplayMechanicsService";
 
 /**
  * RhythmicMovementController - Core rhythm game logic
@@ -28,6 +30,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private timerService: ITimerService;
   private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator (DEPRECATED)
   private inputStateService: IInputStateService; // NUEVA FUENTE DE VERDAD
+  private gameStateStore: IGameStateStoreService;
+  private gameplayMechanicsService: IGameplayMechanicsService;
 
   private playerPosition!: [number, number]; // Will be initialized from config in loadConfigurationValues
   private isListening: boolean = false;
@@ -64,6 +68,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     @inject(TYPES.ITimerService) timerService: ITimerService,
     @inject(TYPES.IKeyToDirectionAdapter) keyAdapter: IMessageAdapter,
     @inject(TYPES.IInputStateService) inputStateService: IInputStateService,
+    @inject(TYPES.IGameStateStoreService) gameStateStore: IGameStateStoreService,
+    @inject(TYPES.IGameplayMechanicsService) gameplayMechanicsService: IGameplayMechanicsService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
@@ -71,6 +77,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.timerService = timerService;
     this.keyAdapter = keyAdapter;
     this.inputStateService = inputStateService;
+    this.gameStateStore = gameStateStore;
+    this.gameplayMechanicsService = gameplayMechanicsService;
     // Ensure keyAdapter is used by decorator (TypeScript workaround) - DEPRECATED
     void this.keyAdapter;
 
@@ -225,6 +233,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
       
       // QUALIA.CODE: Sondeo de estado de entrada en cada tick del juego
       this.processMovementFromState();
+      this.processActionInputFromState();
     }, this.beatInterval / this.slowdownFactor); // Adjust interval based on slowdown
   }
 
@@ -357,7 +366,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   }
 
   /**
-   * QUALIA.CODE: Nuevo método de sondeo de estado para movimiento simultáneo  
+   * QUALIA.CODE: Nuevo método de sondeo de estado para movimiento simultáneo
    * Convierte el vector de dirección del InputStateService a una dirección nominal
    * y procesa el movimiento si hay entrada activa.
    */
@@ -403,6 +412,53 @@ export class RhythmicMovementController implements IRhythmicMovementController {
 
     // Procesar el movimiento con la dirección calculada
     this.processDashInput(direction);
+  }
+
+  /**
+   * QUALIA.CODE: Nuevo método de sondeo de estado para acciones rítmicas
+   * Centraliza toda la lógica de HitNote/MissNote en el bucle de juego
+   */
+  @logMethod
+  private processActionInputFromState(): void {
+    // Lógica para evitar spam de eventos si la tecla se mantiene pulsada
+    const wasActionPressed = this.inputStateService.wasActionJustPressed(' ');
+    if (!wasActionPressed) return;
+
+    const gameState = this.gameStateStore.getGameState();
+    const currentTime = this.timerService.now();
+
+    // Usar el GameplayMechanicsService para encontrar la nota más cercana
+    const nearestNote = this.gameplayMechanicsService.findNearestNote(gameState.combatData.noteMap, currentTime);
+    if (!nearestNote) {
+      this.eventBus.emit({
+        type: 'PlayerAction',
+        action: 'MissNote',
+        context: { reason: 'no_notes_available' },
+        timestamp: new Date()
+      } as PlayerActionEvent);
+      return;
+    }
+
+    // Usar el GameplayMechanicsService para el cálculo de precisión
+    const accuracy = this.gameplayMechanicsService.calculateNoteAccuracy(currentTime, nearestNote.timestamp);
+    const hitResult = this.gameplayMechanicsService.determineHitResult(accuracy);
+
+    if (hitResult === 'miss') {
+      this.eventBus.emit({
+        type: 'PlayerAction',
+        action: 'MissNote',
+        context: { reason: 'poor_timing' },
+        timestamp: new Date()
+      } as PlayerActionEvent);
+    } else {
+      const score = this.gameplayMechanicsService.calculateScoreForHit(accuracy);
+      this.eventBus.emit({
+        type: 'PlayerAction',
+        action: 'HitNote',
+        context: { accuracy, result: hitResult, score },
+        timestamp: new Date()
+      } as PlayerActionEvent);
+    }
   }
 
   // ==================== IRhythmicMovementController INTERFACE IMPLEMENTATION ====================

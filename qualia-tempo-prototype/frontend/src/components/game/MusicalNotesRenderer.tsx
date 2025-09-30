@@ -15,7 +15,7 @@ interface Note {
 interface MusicalNotesRendererProps {
   notes: Note[];
   currentTime: number;
-  onNoteHit: (_noteId: string, _accuracy: number) => void;
+  onNoteHit?: (noteId: string, accuracy: number) => void;
 }
 
 /**
@@ -25,7 +25,6 @@ interface MusicalNotesRendererProps {
 const MusicalNotesRenderer: React.FC<MusicalNotesRendererProps> = ({
   notes,
   currentTime,
-  onNoteHit,
 }) => {
   const viewLogicService = useViewLogicService();
   const [noteVisuals, setNoteVisuals] = useState<NoteVisualData[]>([]);
@@ -35,13 +34,6 @@ const MusicalNotesRenderer: React.FC<MusicalNotesRendererProps> = ({
     const visuals = viewLogicService.getMusicalNoteVisuals(notes, currentTime);
     setNoteVisuals(visuals);
   });
-
-  const handleNoteClick = (noteId: string, visual: NoteVisualData) => {
-    if (visual.isInHitWindow) {
-      const accuracy = visual.isPerfectTiming ? 1.0 : 0.8;
-      onNoteHit(noteId, accuracy);
-    }
-  };
 
   return (
     <group>
@@ -56,7 +48,6 @@ const MusicalNotesRenderer: React.FC<MusicalNotesRendererProps> = ({
             position={visual.position}
             scale={visual.scale}
             rotation={visual.rotation}
-            onClick={() => handleNoteClick(visual.id, visual)}
           >
             <primitive object={geometry} />
             <meshStandardMaterial
@@ -71,7 +62,9 @@ const MusicalNotesRenderer: React.FC<MusicalNotesRendererProps> = ({
               <TrailEffect
                 position={visual.position}
                 color={new THREE.Color(...visual.trail.color)}
-                signature={visual.geometryType}
+                scale={visual.trail.scale}
+                opacity={visual.trail.opacity}
+                rotation={0}
               />
             )}
           </mesh>
@@ -99,44 +92,33 @@ function getGeometryForType(type: string): THREE.BufferGeometry {
   }
 }
 
-// Trail effect component
+// Trail effect component - Now a pure component receiving calculated props
 interface TrailEffectProps {
   position: [number, number, number];
   color: THREE.Color;
-  signature: string;
+  scale: number;
+  opacity: number;
+  rotation: number;
 }
 
 const TrailEffect: React.FC<TrailEffectProps> = ({
   position,
   color,
-  signature,
+  scale,
+  opacity,
+  rotation,
 }) => {
-  const trailRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (trailRef.current) {
-      const time = state.clock.getElapsedTime();
-
-      // Create trailing effect based on signature
-      const rotationSpeed = signature === 'chaos' ? 1.0 : 0.5;
-      trailRef.current.rotation.z = time * rotationSpeed;
-      trailRef.current.scale.setScalar(0.5 + Math.sin(time * 2) * 0.2);
-
-      // Update opacity
-      const material = trailRef.current.material as THREE.MeshBasicMaterial;
-      if (material) {
-        material.opacity = 0.3 + Math.sin(time * 3) * 0.2;
-      }
-    }
-  });
-
   return (
-    <mesh ref={trailRef} position={[position[0], position[1], position[2] + 1]}>
+    <mesh
+      position={[position[0], position[1], position[2] + 1]}
+      scale={[scale, scale, scale]}
+      rotation={[0, 0, rotation]}
+    >
       <ringGeometry args={[0.8, 1.2, 16]} />
       <meshBasicMaterial
         color={color}
         transparent
-        opacity={0.5}
+        opacity={opacity}
         side={THREE.DoubleSide}
       />
     </mesh>

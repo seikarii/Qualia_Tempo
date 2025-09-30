@@ -34,13 +34,6 @@ export interface IGameInputControllerService {
   calculateNoteAccuracy(currentTime: number, noteTimestamp: number): number;
 
   /**
-   * Process note hit with timing calculation
-   * @param combatNotes Array of available notes
-   * @param currentTime Current game time in seconds
-   */
-  processNoteHit(combatNotes: NoteData[], currentTime: number): void;
-
-  /**
    * Process pause game action
    */
   processPauseGame(): void;

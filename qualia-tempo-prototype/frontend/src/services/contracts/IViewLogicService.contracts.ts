@@ -114,6 +114,8 @@ export interface NoteVisualData {
     visible: boolean;
     color: [number, number, number];
     intensity: number;
+    scale: number;
+    opacity: number;
   };
   
   // State flags for rendering logic
