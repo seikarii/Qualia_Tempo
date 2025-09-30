@@ -15,7 +15,9 @@ import type {
   GameStateChangedEvent,
   QualiaParticleDataReceivedEvent,
   PlayerActionEvent,
+  RhythmicDashEvent,
 } from "./contracts/events.contracts";
+import type { QualiaState } from "../types/contracts";
 import {
   logMethod,
   catchError,
@@ -30,19 +32,7 @@ import type { GameStateStoreConfig } from "./contracts/IGameStateStoreService.co
 // Store setter type (from Zustand)
 type StoreSetter = (_state: unknown) => void;
 
-// QUALIA.CODE: Externalized message constants
-const SERVICE_MESSAGES = {
-  INITIALIZED: "🔗 [GameStateStoreService] Bridge service initialized",
-  ALREADY_STARTED: "⚠️ [GameStateStoreService] Service already started",
-  STARTING_LISTENERS: "🎧 [GameStateStoreService] Starting event listeners...",
-  LISTENERS_ACTIVE: "✅ [GameStateStoreService] Event listeners active",
-  NOT_STARTED: "⚠️ [GameStateStoreService] Service not started",
-  STOPPING_LISTENERS: "🔇 [GameStateStoreService] Stopping event listeners...",
-  LISTENERS_STOPPED: "✅ [GameStateStoreService] Event listeners stopped",
-  STATE_UPDATED: "🔄 [GameStateStoreService] Game state updated",
-  QUALIA_UPDATED: "✨ [GameStateStoreService] Qualia state updated",
-  RHYTHMIC_DASH: "� [GameStateStoreService] Processing RhythmicDash:",
-} as const;
+// QUALIA.CODE: Externalized message constants - REMOVED, now in config
 
 /**
  * GameStateStoreService: Bridge between EventBus and Zustand Store
@@ -75,9 +65,9 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   @logMethod
   @catchError
   initialize(): void {
-    this.logger.info(SERVICE_MESSAGES.STARTING_LISTENERS);
+    this.logger.info(this.config.messages.STARTING_LISTENERS);
     // @OnEvent decorators handle subscriptions automatically
-    this.logger.info(SERVICE_MESSAGES.LISTENERS_ACTIVE);
+    this.logger.info(this.config.messages.LISTENERS_ACTIVE);
   }
 
   /**
@@ -86,9 +76,9 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   @logMethod
   @catchError
   cleanup(): void {
-    this.logger.info(SERVICE_MESSAGES.STOPPING_LISTENERS);
+    this.logger.info(this.config.messages.STOPPING_LISTENERS);
     // @OnEvent lifecycle handles cleanup automatically
-    this.logger.info(SERVICE_MESSAGES.LISTENERS_STOPPED);
+    this.logger.info(this.config.messages.LISTENERS_STOPPED);
   }
 
   @logMethod
@@ -102,8 +92,8 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
 
   @logMethod
   @catchError
-  updateQualiaState(state: any): void {
-    this.setStore((currentState: any) => ({
+  updateQualiaState(state: QualiaState): void {
+    this.setStore((currentState: Record<string, unknown>) => ({
       ...currentState,
       qualiaState: { ...state },
     }));
@@ -261,14 +251,14 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
    * Handle RhythmicDash events to update player position
    */
   @OnEvent('RhythmicDash')
-  private handleRhythmicDash(event: any): void {
-    this.logger.info(SERVICE_MESSAGES.RHYTHMIC_DASH, {
+  private handleRhythmicDash(event: RhythmicDashEvent): void {
+    this.logger.info(this.config.messages.RHYTHMIC_DASH, {
       direction: event.direction,
       newPosition: event.newPosition,
       timing: event.timing,
     });
 
-    this.setStore((state: any) => ({
+    this.setStore((state: Record<string, unknown>) => ({
       ...state,
       player: {
         ...state.player,

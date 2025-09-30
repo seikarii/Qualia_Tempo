@@ -65,6 +65,7 @@ import type { IWebSocketService } from "./interfaces/IWebSocketService";
 import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
 import type { ICoordinateSystemService } from "./interfaces/ICoordinateSystemService";
 import type { IToneFactoryService } from "../audio/interfaces/IToneFactoryService";
+import type { IGameInfrastructureService } from "./interfaces/IGameInfrastructureService";
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { EventBus } from "./EventBus";

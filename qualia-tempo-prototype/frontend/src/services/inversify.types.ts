@@ -42,9 +42,8 @@ export const TYPES = {
   ISubtitleService: Symbol.for("ISubtitleService"),
   IDebugOrchestratorService: Symbol.for("IDebugOrchestratorService"),
 
-  // ===== PROTOCOL ADAPTERS =====
-  // QUALIA.CODE v1.2 - Protocol Adapter Bundle
-  IRawToParticleEventAdapter: Symbol.for("IRawToParticleEventAdapter"),
+  // ===== INFRASTRUCTURE SERVICE BUNDLES =====
+  IGameInfrastructureService: Symbol.for("IGameInfrastructureService"),
   IKeyToDirectionAdapter: Symbol.for("IKeyToDirectionAdapter"),
 
   // ===== COORDINATE SYSTEM SERVICES =====

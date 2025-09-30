@@ -26,3 +26,15 @@ resetValues:
 
 eventPriorities:
   particleData: "normal"
+
+messages:
+  initialized: "🔗 [GameStateStoreService] Bridge service initialized"
+  alreadyStarted: "⚠️ [GameStateStoreService] Service already started"
+  startingListeners: "🎧 [GameStateStoreService] Starting event listeners..."
+  listenersActive: "✅ [GameStateStoreService] Event listeners active"
+  notStarted: "⚠️ [GameStateStoreService] Service not started"
+  stoppingListeners: "🔇 [GameStateStoreService] Stopping event listeners..."
+  listenersStopped: "✅ [GameStateStoreService] Event listeners stopped"
+  stateUpdated: "🔄 [GameStateStoreService] Game state updated"
+  qualiaUpdated: "✨ [GameStateStoreService] Qualia state updated"
+  rhythmicDash: "💨 [GameStateStoreService] Processing RhythmicDash:"

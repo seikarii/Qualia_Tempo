@@ -15,36 +15,49 @@ export interface QualiaCalculatorConfig {
     recovery: number;
     transcendence: number;
   };
+  precision: {
+    hitBonus: number;
+    missPenalty: number;
+    maxValue: number;
+    minValue: number;
+    decayRate: number;
+  };
+  flow: {
+    perfectHitBonus: number;
+    goodHitBonus: number;
+    missPenalty: number;
+    maxValue: number;
+    minValue: number;
+    decayRate: number;
+  };
+  chaos: {
+    missIncrease: number;
+    decayAmount: number;
+    maxValue: number;
+    minValue: number;
+    decayRate: number;
+  };
+  aggression: {
+    comboMultiplier: number;
+    maxCombo: number;
+    maxValue: number;
+    minValue: number;
+    decayRate: number;
+  };
+  rhythm: {
+    perfectWindow: number;
+    goodWindow: number;
+    missThreshold: number;
+  };
+  combo: {
+    resetTime: number;
+    multiplierCap: number;
+  };
   performanceMultipliers: {
-    perfectHit: number;
-    goodHit: number;
-    missHit: number;
-    comboBonus: number;
-  };
-  decayRates: {
-    intensity: number;
-    precision: number;
-    aggression: number;
-    flow: number;
-    chaos: number;
-    recovery: number;
-    transcendence: number;
-  };
-  thresholds: {
-    highIntensity: number;
-    lowPrecision: number;
-    chaosThreshold: number;
-    transcendenceThreshold: number;
-  };
-  comboSystem: {
-    maxComboMultiplier: number;
-    comboDecayTime: number;
-    perfectComboBonus: number;
-  };
-  recoveryMechanics: {
-    recoveryRate: number;
-    maxRecovery: number;
-    recoveryCooldown: number;
+    perfect: number;
+    good: number;
+    miss: number;
+    combo: number;
   };
   updateIntervalMs: number;
   historySize: number;

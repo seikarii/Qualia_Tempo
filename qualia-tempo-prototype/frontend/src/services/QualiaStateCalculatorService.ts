@@ -21,7 +21,7 @@ import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCal
 import { QualiaStateCalculatedEvent } from "./contracts/events.contracts";
 import type { PlayerActionEvent } from "./contracts/events.contracts";
 import type { QualiaState } from "../types/contracts";
-import type { ITimerService } from "./interfaces/ITimerService";
+import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
 import { logMethod, catchError, OnEvent, IBaseService } from "../utils/decorators";
 
 // Configuration interface - REMOVED: Using ConfigurationService interface
@@ -50,6 +50,7 @@ export class QualiaStateCalculatorService
   private eventBus: IEventBus;
   private logger: ILogger;
   private timerService: ITimerService;
+  private performanceService: IPerformanceService;
 
   // Statistics tracking
   private calculationsPerformed = 0;
@@ -60,11 +61,13 @@ export class QualiaStateCalculatorService
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.QualiaCalculatorConfig) config: QualiaCalculatorConfig,
     @inject(TYPES.ITimerService) timerService: ITimerService,
+    @inject(TYPES.IPerformanceService) performanceService: IPerformanceService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.config = config;
     this.timerService = timerService;
+    this.performanceService = performanceService;
 
     // QUALIA.CODE: Configuration is now injected directly via constructor
     // Always ensure currentState is initialized
@@ -72,7 +75,7 @@ export class QualiaStateCalculatorService
       this.currentState = this.createInitialState();
       this.logger.debug("QualiaStateCalculatorService state initialized");
     }
-    this.lastUpdateTime = performance.now();
+    this.lastUpdateTime = this.performanceService.now();
 
     this.logger.info(
       "🧮 [QualiaCalculator] Service constructed - configuration loaded",
@@ -163,7 +166,7 @@ export class QualiaStateCalculatorService
    */
   @OnEvent('PlayerAction')
   private handlePlayerAction(event: PlayerActionEvent): void {
-    const startTime = Date.now(); // TODO: Use IPerformanceService when available
+    const startTime = this.performanceService.now();
     const { action, context } = event;
 
     switch (action) {
@@ -190,7 +193,7 @@ export class QualiaStateCalculatorService
     this.emitStateUpdate();
 
     // Track calculation statistics
-    const duration = Date.now() - startTime; // TODO: Use IPerformanceService when available
+    const duration = this.performanceService.now() - startTime;
     this.calculationsPerformed++;
     this.totalCalculationTime += duration;
   }
@@ -198,23 +201,20 @@ export class QualiaStateCalculatorService
   // ==================== ACTION HANDLERS ====================
 
   private onNoteHit(_context?: Record<string, unknown>): void {
-    const config = this.config;
-    const multipliers = config.hitNoteMultipliers;
-
     const currentState = this.currentState;
 
     currentState.intensity = this.clamp(
-      currentState.intensity + multipliers.intensity,
+      currentState.intensity + this.config.performanceMultipliers.perfect,
     );
     this.currentState.precision = this.clamp(
-      this.currentState.precision + multipliers.precision,
+      this.currentState.precision + this.config.precision.hitBonus,
     );
     this.currentState.flow = this.clamp(
-      this.currentState.flow + multipliers.flow,
+      this.currentState.flow + this.config.flow.perfectHitBonus,
     );
 
     // Reduce chaos on successful hits
-    this.currentState.chaos = this.clamp(this.currentState.chaos - 0.1);
+    this.currentState.chaos = this.clamp(this.currentState.chaos - this.config.chaos.decayAmount);
 
     this.logger.info(
       "🎯 [QualiaCalculator] Note Hit! Intensity+, Precision+, Flow+, Chaos-",
@@ -223,45 +223,36 @@ export class QualiaStateCalculatorService
   }
 
   private onNoteMiss(_context?: Record<string, unknown>): void {
-    const config = this.config;
-    const multipliers = config.missNoteMultipliers;
-
     this.currentState.precision = this.clamp(
-      this.currentState.precision + multipliers.precision, // negative value
+      this.currentState.precision + this.config.precision.missPenalty, // negative value
     );
     this.currentState.chaos = this.clamp(
-      this.currentState.chaos + multipliers.chaos,
+      this.currentState.chaos + this.config.chaos.missIncrease,
     );
     this.currentState.flow = this.clamp(
-      this.currentState.flow + multipliers.flow, // negative value
+      this.currentState.flow + this.config.flow.missPenalty, // negative value
     );
 
     this.logger.info("❌ [QualiaCalculator] Note Miss! Chaos+, Focus-, Flow-");
   }
 
   private onDash(_context?: Record<string, any>): void {
-    const config = this.config;
-    const multipliers = config.dashMultipliers;
-
     this.currentState.intensity = this.clamp(
-      this.currentState.intensity + multipliers.intensity,
+      this.currentState.intensity + this.config.performanceMultipliers.good,
     );
     this.currentState.aggression = this.clamp(
-      this.currentState.aggression + multipliers.aggression,
+      this.currentState.aggression + this.config.aggression.comboMultiplier,
     );
 
     this.logger.info("🌊 [QualiaCalculator] Dash! Intensity+, Aggression+");
   }
 
   private onFastForward(_context?: Record<string, any>): void {
-    const config = this.config;
-    const multipliers = config.fastForwardMultipliers;
-
     this.currentState.aggression = this.clamp(
-      this.currentState.aggression + multipliers.aggression,
+      this.currentState.aggression + this.config.aggression.comboMultiplier,
     );
     this.currentState.intensity = this.clamp(
-      this.currentState.intensity + multipliers.intensity,
+      this.currentState.intensity + this.config.performanceMultipliers.good,
     );
 
     this.logger.info(
@@ -270,14 +261,11 @@ export class QualiaStateCalculatorService
   }
 
   private onRewind(_context?: Record<string, any>): void {
-    const config = this.config;
-    const multipliers = config.rewindMultipliers;
-
     this.currentState.recovery = this.clamp(
-      this.currentState.recovery + multipliers.recovery,
+      this.currentState.recovery + this.config.performanceMultipliers.good,
     );
     this.currentState.precision = this.clamp(
-      this.currentState.precision + multipliers.precision,
+      this.currentState.precision + this.config.precision.hitBonus,
     );
 
     this.logger.info("⏪ [QualiaCalculator] Rewind! Recovery+, Focus+");
@@ -305,33 +293,31 @@ export class QualiaStateCalculatorService
    * Apply time-based decay to all state values.
    */
   private updateStateWithDecay(): void {
-    const now = performance.now();
+    const now = this.performanceService.now();
     const deltaTime = (now - this.lastUpdateTime) / 1000; // Convert to seconds
     this.lastUpdateTime = now;
 
-    const config = this.config;
-
     // Apply decay to all values
     this.currentState.intensity = this.clamp(
-      this.currentState.intensity - config.intensityDecay * deltaTime,
+      this.currentState.intensity - this.config.precision.decayRate * deltaTime,
     );
     this.currentState.precision = this.clamp(
-      this.currentState.precision - config.precisionDecay * deltaTime,
+      this.currentState.precision - this.config.precision.decayRate * deltaTime,
     );
     this.currentState.aggression = this.clamp(
-      this.currentState.aggression - config.aggressionDecay * deltaTime,
+      this.currentState.aggression - this.config.aggression.decayRate * deltaTime,
     );
     this.currentState.flow = this.clamp(
-      this.currentState.flow - config.flowDecay * deltaTime,
+      this.currentState.flow - this.config.flow.decayRate * deltaTime,
     );
     this.currentState.chaos = this.clamp(
-      this.currentState.chaos - config.chaosDecay * deltaTime,
+      this.currentState.chaos - this.config.chaos.decayRate * deltaTime,
     );
     this.currentState.recovery = this.clamp(
-      this.currentState.recovery - config.recoveryDecay * deltaTime,
+      this.currentState.recovery - this.config.flow.decayRate * deltaTime, // Using flow decay for recovery
     );
     this.currentState.transcendence = this.clamp(
-      this.currentState.transcendence - config.transcendenceDecay * deltaTime,
+      this.currentState.transcendence - this.config.flow.decayRate * deltaTime, // Using flow decay for transcendence
     );
 
     // Only emit state update if there's significant change
@@ -423,7 +409,7 @@ export class QualiaStateCalculatorService
   @logMethod
   @catchError
   public applyTimeDecay(): void {
-    const now = Date.now();
+    const now = this.performanceService.now();
     const deltaTime = (now - this.lastUpdateTime) / 1000;
     this.lastUpdateTime = now;
 
@@ -436,23 +422,16 @@ export class QualiaStateCalculatorService
    */
   @logMethod
   private applyDecayToAllValues(deltaTime: number): void {
-    const config = this.config;
-    const decayRates = config.decayRates;
-
     // Apply exponential decay to all values using individual decay rates
-    this.currentState.intensity *= Math.exp(-decayRates.intensity * deltaTime);
-    this.currentState.precision *= Math.exp(-decayRates.precision * deltaTime);
-    this.currentState.aggression *= Math.exp(
-      -decayRates.aggression * deltaTime,
-    );
-    this.currentState.flow *= Math.exp(-decayRates.flow * deltaTime);
-    this.currentState.chaos *= Math.exp(-decayRates.chaos * deltaTime);
-    this.currentState.recovery *= Math.exp(-decayRates.recovery * deltaTime);
-    this.currentState.transcendence *= Math.exp(
-      -decayRates.transcendence * deltaTime,
-    );
+    this.currentState.intensity *= Math.exp(-this.config.precision.decayRate * deltaTime);
+    this.currentState.precision *= Math.exp(-this.config.precision.decayRate * deltaTime);
+    this.currentState.aggression *= Math.exp(-this.config.aggression.decayRate * deltaTime);
+    this.currentState.flow *= Math.exp(-this.config.flow.decayRate * deltaTime);
+    this.currentState.chaos *= Math.exp(-this.config.chaos.decayRate * deltaTime);
+    this.currentState.recovery *= Math.exp(-this.config.flow.decayRate * deltaTime); // Using flow decay for recovery
+    this.currentState.transcendence *= Math.exp(-this.config.flow.decayRate * deltaTime); // Using flow decay for transcendence
 
-    this.logger.debug("Applied temporal decay", { deltaTime, decayRates });
+    this.logger.debug("Applied temporal decay", { deltaTime });
   }
 
   /**

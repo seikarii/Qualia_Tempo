@@ -37,4 +37,16 @@ export interface GameStateStoreConfig {
   eventPriorities: {
     particleData: string;
   };
+  messages: {
+    initialized: string;
+    alreadyStarted: string;
+    startingListeners: string;
+    listenersActive: string;
+    notStarted: string;
+    stoppingListeners: string;
+    listenersStopped: string;
+    stateUpdated: string;
+    qualiaUpdated: string;
+    rhythmicDash: string;
+  };
 }

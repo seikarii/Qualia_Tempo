@@ -86,3 +86,13 @@ export interface GameControllerConfig {
     fastForwardActivated: string;
   };
 }
+
+// Event context interfaces for type safety
+export interface HitNoteContext {
+  points?: number;
+  perfect?: boolean;
+}
+
+export interface PlayerActionContext {
+  [key: string]: unknown;
+}
