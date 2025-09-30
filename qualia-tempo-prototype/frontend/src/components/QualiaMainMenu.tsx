@@ -13,6 +13,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useEventBus } from "../services/hooks";
+import type { VisualImpactRequestedEvent, PlayerActionEvent } from "../services/contracts/events.contracts";
 
 export default function QualiaMainMenu() {
   // Services
@@ -31,10 +32,13 @@ export default function QualiaMainMenu() {
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
 
-    eventBus.emit({
+    const visualImpactEvent: VisualImpactRequestedEvent = {
       type: "VisualImpactRequested",
+      timestamp: new Date(),
+      source: "QualiaMainMenu",
       payload: { x, y, intensity: 0.8 },
-    } as any); // Type assertion for event system compatibility
+    };
+    eventBus.emit(visualImpactEvent);
   };
 
   return (
@@ -129,11 +133,13 @@ export default function QualiaMainMenu() {
             onClick={(e) => {
               e.stopPropagation();
               // Emit StartGame event via EventBus following QUALIA.CODE architecture
-              eventBus.emit({
+              const startGameEvent: PlayerActionEvent = {
                 type: "PlayerAction",
-                action: "StartGame",
+                timestamp: new Date(),
                 source: "QualiaMainMenu",
-              } as any);
+                action: "StartGame",
+              };
+              eventBus.emit(startGameEvent);
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}

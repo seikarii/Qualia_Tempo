@@ -1,0 +1,32 @@
+# QUALIA.CODE v1.1 - DebugOrchestratorService Configuration
+# Configuration for service diagnostics orchestration
+
+refreshInterval: 5000        # Auto-refresh interval in milliseconds
+maxHistoryLength: 100        # Maximum diagnostic history to keep
+enablePerformanceTracking: true
+
+services:
+  NotificationService:
+    enabled: true
+    priority: 1
+  ErrorReportingService:
+    enabled: true
+    priority: 2
+  ConfigurationService:
+    enabled: true
+    priority: 3
+  EventBus:
+    enabled: true
+    priority: 4
+  GameControllerService:
+    enabled: true
+    priority: 5
+  QualiaStateCalculatorService:
+    enabled: true
+    priority: 6
+  BackendSyncService:
+    enabled: true
+    priority: 7
+  GameStateStoreService:
+    enabled: true
+    priority: 8

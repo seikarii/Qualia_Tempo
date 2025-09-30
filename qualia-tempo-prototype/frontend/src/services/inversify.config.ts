@@ -28,6 +28,12 @@ import type { StreamingConfig } from "./contracts/IStateStreamingService.contrac
 import type { FrontendRenderingConfig } from "./contracts/IFrontendRenderingService.contracts";
 import type { CoordinateSystemConfig } from "./contracts/ICoordinateSystemService.contracts";
 
+// NEW SERVICES CONFIGURATION IMPORTS
+import type { GameplayMechanicsConfig } from "./contracts/IGameplayMechanicsService.contracts";
+import type { ViewLogicConfig } from "./contracts/IViewLogicService.contracts";
+import type { SubtitleConfig } from "./contracts/ISubtitleService.contracts";
+import type { DebugOrchestratorConfig } from "./contracts/IDebugOrchestratorService.contracts";
+
 // ===== IMPORT ALL INTERFACES =====
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
@@ -115,7 +121,13 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "applicationInitializer": "application-initializer.yaml",
   "mainMenu": "main-menu.yaml",
   "http": "http-service.yaml",
-  "logger": "logger.yaml"
+  "logger": "logger.yaml",
+  
+  // NEW SERVICES CONFIGURATION FILES
+  "gameplayMechanics": "gameplay-mechanics.yaml",
+  "viewLogic": "view-logic.yaml",
+  "subtitle": "subtitle.yaml",
+  "debugOrchestrator": "debug-orchestrator.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
@@ -241,6 +253,37 @@ container
   .to(CoordinateSystemService)
   .inSingletonScope();
 
+// ===== NEW ARCHITECTURAL SERVICES =====
+// QUALIA.CODE v1.1 - Business Logic Extraction Services
+import { GameplayMechanicsService } from './GameplayMechanicsService';
+import { ViewLogicService } from './ViewLogicService';
+import { SubtitleService } from './SubtitleService';
+import { DebugOrchestratorService } from './DebugOrchestratorService';
+import type { IGameplayMechanicsService } from './interfaces/IGameplayMechanicsService';
+import type { IViewLogicService } from './interfaces/IViewLogicService';
+import type { ISubtitleService } from './interfaces/ISubtitleService';
+import type { IDebugOrchestratorService } from './interfaces/IDebugOrchestratorService';
+
+container
+  .bind<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService)
+  .to(GameplayMechanicsService)
+  .inSingletonScope();
+
+container
+  .bind<IViewLogicService>(TYPES.IViewLogicService)
+  .to(ViewLogicService)
+  .inSingletonScope();
+
+container
+  .bind<ISubtitleService>(TYPES.ISubtitleService)
+  .to(SubtitleService)
+  .inSingletonScope();
+
+container
+  .bind<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService)
+  .to(DebugOrchestratorService)
+  .inSingletonScope();
+
 // ===== PROTOCOL ADAPTER BINDINGS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
 container
@@ -312,6 +355,12 @@ export async function configureServices(): Promise<void> {
   
   // Bind CoordinateSystemConfig from RhythmicMovement config
   safeBindConstant<CoordinateSystemConfig>(TYPES.CoordinateSystemConfig, fullConfig.rhythmicMovement.coordinate_system);
+
+  // NEW SERVICES CONFIGURATION BINDINGS - Using any for now until FullGameConfig is updated
+  safeBindConstant(TYPES.GameplayMechanicsConfig, (fullConfig as any).gameplayMechanics);
+  safeBindConstant(TYPES.ViewLogicConfig, (fullConfig as any).viewLogic);
+  safeBindConstant(TYPES.SubtitleConfig, (fullConfig as any).subtitle);
+  safeBindConstant(TYPES.DebugOrchestratorConfig, (fullConfig as any).debugOrchestrator);
 }
 
 // ===== CONTAINER VERIFICATION =====

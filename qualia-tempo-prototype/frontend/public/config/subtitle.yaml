@@ -1,0 +1,21 @@
+# QUALIA.CODE v1.1 - SubtitleService Configuration
+# Configuration for subtitle display logic and styling
+
+displayDuration: 3.0  # Default display duration in seconds
+fadeInTime: 0.3       # Fade in animation time in seconds
+fadeOutTime: 0.5      # Fade out animation time in seconds
+maxLines: 2           # Maximum number of lines to display
+wordWrapLength: 80    # Character limit for word wrapping
+
+positioning:
+  bottom: 80          # Distance from bottom in pixels
+  maxWidth: "80%"     # Max width CSS value
+
+styling:
+  fontSize: "2rem"    # Font size CSS value
+  fontWeight: "bold"  # Font weight CSS value
+  textAlign: "center" # Text alignment CSS value
+  color: "#ffffff"    # Text color
+  backgroundColor: "rgba(0, 0, 0, 0.8)" # Background color with opacity
+  borderRadius: "8px" # Border radius CSS value
+  padding: "16px 32px" # Padding CSS value

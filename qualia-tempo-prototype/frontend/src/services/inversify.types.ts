@@ -35,6 +35,12 @@ export const TYPES = {
   IWebSocketService: Symbol.for("IWebSocketService"),
   IBrowserEventsService: Symbol.for("IBrowserEventsService"),
 
+  // ===== NEW SERVICES =====
+  IGameplayMechanicsService: Symbol.for("IGameplayMechanicsService"),
+  IViewLogicService: Symbol.for("IViewLogicService"),
+  ISubtitleService: Symbol.for("ISubtitleService"),
+  IDebugOrchestratorService: Symbol.for("IDebugOrchestratorService"),
+
   // ===== PROTOCOL ADAPTERS =====
   // QUALIA.CODE v1.2 - Protocol Adapter Bundle
   IRawToParticleEventAdapter: Symbol.for("IRawToParticleEventAdapter"),
@@ -72,6 +78,12 @@ export const TYPES = {
   FrontendRenderingConfig: Symbol.for("FrontendRenderingConfig"),
   VisualEffectsConfig: Symbol.for("VisualEffectsConfig"),
   StreamingConfig: Symbol.for("StreamingConfig"),
+
+  // ===== NEW SERVICES CONFIGURATION =====
+  GameplayMechanicsConfig: Symbol.for("GameplayMechanicsConfig"),
+  ViewLogicConfig: Symbol.for("ViewLogicConfig"),
+  SubtitleConfig: Symbol.for("SubtitleConfig"),
+  DebugOrchestratorConfig: Symbol.for("DebugOrchestratorConfig"),
 } as const;
 
 // Type-safe access to TYPES

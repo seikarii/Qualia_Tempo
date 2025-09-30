@@ -828,3 +828,112 @@ export function BrowserOnly(
 
   return descriptor;
 }
+
+/**
+ * QUALIA.CODE v1.1 - @OnEvent Decorator
+ * Automatically subscribes a method to an EventBus event type.
+ * Simplifies event handling by eliminating manual eventBus.subscribe calls in constructors.
+ * 
+ * CRITICAL: This decorator requires the service to have:
+ * - An 'eventBus' property of type IEventBus
+ * - A '_eventListeners' array property to track subscriptions
+ * - A logger property for debugging
+ * 
+ * Usage: @OnEvent('PlayerAction')
+ *        private handlePlayerAction(event: PlayerActionEvent): void { ... }
+ */
+export function OnEvent(eventType: string) {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ): PropertyDescriptor {
+    const originalMethod = descriptor.value;
+
+    // Store the event subscription metadata on the class prototype
+    if (!target.constructor._eventSubscriptions) {
+      target.constructor._eventSubscriptions = [];
+    }
+    
+    target.constructor._eventSubscriptions.push({
+      eventType,
+      methodName: propertyKey,
+      originalMethod
+    });
+
+    // Enhanced method that includes logging
+    descriptor.value = function (this: any, ...args: any[]) {
+      const instanceLogger = (this as any).logger;
+      if (instanceLogger && typeof instanceLogger.debug === 'function') {
+        instanceLogger.debug(`📡 [${this.constructor.name}] Event received: ${eventType}`, {
+          method: propertyKey,
+          eventData: args[0]
+        });
+      }
+      
+      return originalMethod.apply(this, args);
+    };
+
+    return descriptor;
+  };
+}
+
+// Helper function to set up event subscriptions for a service instance
+// This should be called during service initialization
+export function initializeEventSubscriptions(serviceInstance: any): void {
+  const eventBus = (serviceInstance as any).eventBus;
+  const logger = (serviceInstance as any).logger;
+  
+  if (!eventBus) {
+    if (logger && typeof logger.error === 'function') {
+      logger.error('Cannot initialize event subscriptions: eventBus not found on service instance');
+    }
+    return;
+  }
+
+  // Initialize listeners array if not exists
+  if (!(serviceInstance as any)._eventListeners) {
+    (serviceInstance as any)._eventListeners = [];
+  }
+
+  const subscriptions = serviceInstance.constructor._eventSubscriptions || [];
+  
+  for (const subscription of subscriptions) {
+    const method = (serviceInstance as any)[subscription.methodName];
+    if (method) {
+      const listenerId = eventBus.subscribe(
+        subscription.eventType,
+        method.bind(serviceInstance),
+        { priority: 'normal' }
+      );
+      
+      (serviceInstance as any)._eventListeners.push(listenerId);
+      
+      if (logger && typeof logger.debug === 'function') {
+        logger.debug(`📡 [${serviceInstance.constructor.name}] Subscribed to event: ${subscription.eventType}`, {
+          method: subscription.methodName,
+          listenerId
+        });
+      }
+    }
+  }
+}
+
+// Helper function to clean up event subscriptions
+export function cleanupEventSubscriptions(serviceInstance: any): void {
+  const eventBus = (serviceInstance as any).eventBus;
+  const listeners = (serviceInstance as any)._eventListeners || [];
+  const logger = (serviceInstance as any).logger;
+
+  if (eventBus && listeners.length > 0) {
+    listeners.forEach((listenerId: string) => {
+      eventBus.unsubscribe(listenerId);
+    });
+    
+    (serviceInstance as any)._eventListeners = [];
+    
+    if (logger && typeof logger.debug === 'function') {
+      logger.debug(`📡 [${serviceInstance.constructor.name}] Cleaned up ${listeners.length} event subscriptions`);
+    }
+  }
+}

@@ -28,6 +28,12 @@ import type { IBrowserEventsService } from './interfaces/IBrowserEventsService';
 import type { IInputStateService } from './interfaces/IInputStateService';
 import type { ICoordinateSystemService } from './interfaces/ICoordinateSystemService';
 
+// NEW SERVICES INTERFACES
+import type { IGameplayMechanicsService } from './interfaces/IGameplayMechanicsService';
+import type { IViewLogicService } from './interfaces/IViewLogicService';
+import type { ISubtitleService } from './interfaces/ISubtitleService';
+import type { IDebugOrchestratorService } from './interfaces/IDebugOrchestratorService';
+
 /**
  * Generic hook to resolve a service from the IoC container
  * @param serviceIdentifier - Symbol identifier for the service
@@ -125,3 +131,16 @@ export const useInputStateService = () =>
 
 export const useCoordinateSystemService = (): ICoordinateSystemService => 
   useService<ICoordinateSystemService>(TYPES.ICoordinateSystemService);
+
+// NEW SERVICES HOOKS
+export const useGameplayMechanicsService = (): IGameplayMechanicsService => 
+  useService<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService);
+
+export const useViewLogicService = (): IViewLogicService => 
+  useService<IViewLogicService>(TYPES.IViewLogicService);
+
+export const useSubtitleService = (): ISubtitleService => 
+  useService<ISubtitleService>(TYPES.ISubtitleService);
+
+export const useDebugOrchestratorService = (): IDebugOrchestratorService => 
+  useService<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService);

@@ -1,0 +1,17 @@
+# QUALIA.CODE v1.1 - GameplayMechanicsService Configuration
+# Configuration for gameplay mechanics calculations and timing windows
+
+timingWindows:
+  perfect: 50      # Perfect timing window in milliseconds
+  good: 200        # Good timing window in milliseconds  
+  miss: 500        # Miss threshold in milliseconds
+
+scoring:
+  basePointsPerHit: 100
+  perfectBonus: 50
+  comboThresholds: [5, 10, 20, 50, 100]
+  comboMultipliers: [1.2, 1.5, 2.0, 3.0, 5.0]
+
+difficulty:
+  noteSpeed: 1.0
+  timingTolerance: 1.0

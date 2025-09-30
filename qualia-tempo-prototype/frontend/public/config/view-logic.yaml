@@ -1,0 +1,22 @@
+# QUALIA.CODE v1.1 - ViewLogicService Configuration
+# Configuration for visual data processing and rendering properties
+
+particles:
+  maxCount: 1000
+  spawnRate: 10
+  baseLifetime: 2000  # milliseconds
+
+boss:
+  baseScale: 1.0
+  intensityMultiplier: 0.5
+  phaseTransitionSpeed: 0.1
+
+player:
+  glowRange: [0.3, 1.0]
+  trailLength: 10
+  movementSmoothness: 0.8
+
+notes:
+  approachDistance: 5.0
+  pulseFrequency: 2.0
+  scaleRange: [0.5, 1.5]
