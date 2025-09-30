@@ -440,7 +440,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
       this.eventBus.emit({
         type: 'PlayerAction',
         action: 'MissNote',
-        context: { reason: 'poor_timing' },
+        context: { noteId: nearestNote.id, reason: 'poor_timing' },
         timestamp: new Date()
       } as PlayerActionEvent);
     } else {

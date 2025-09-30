@@ -14,6 +14,7 @@ import { TYPES } from "./inversify.types";
 import type {
   GameStateChangedEvent,
   QualiaParticleDataReceivedEvent,
+  PlayerActionEvent,
 } from "./contracts/events.contracts";
 import {
   logMethod,
@@ -21,7 +22,7 @@ import {
 } from "../utils/decorators";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 import type { IEventBus } from "./interfaces/IEventBus";
-import type { ILogger } from "./interfaces/ILogger";
+import type { ITimerService } from "./interfaces/ITimerService";
 
 // Store setter type (from Zustand)
 type StoreSetter = (_state: any) => void;
@@ -64,6 +65,7 @@ export class GameStateStoreService implements IGameStateStoreService {
   constructor(
     @inject(TYPES.IEventBus) private readonly eventBus: IEventBus,
     @inject(TYPES.ILogger) private readonly logger: ILogger,
+    @inject(TYPES.ITimerService) private readonly timerService: ITimerService,
   ) {
     this.logger.info("GameStateStoreService constructed. Awaiting store setter.");
   }
@@ -108,6 +110,13 @@ export class GameStateStoreService implements IGameStateStoreService {
       this.handleRhythmicDash.bind(this),
     );
     this.listenerIds.push(rhythmicDashListenerId);
+
+    // Subscribe to PlayerAction events to update note states
+    const playerActionListenerId = this.eventBus.subscribe(
+      "PlayerAction",
+      this.handlePlayerAction.bind(this),
+    );
+    this.listenerIds.push(playerActionListenerId);
 
     this.isStarted = true;
     this.logger.info(SERVICE_MESSAGES.LISTENERS_ACTIVE);
@@ -320,6 +329,42 @@ export class GameStateStoreService implements IGameStateStoreService {
         },
       },
     }));
+  }
+
+  /**
+   * Handle PlayerAction events to update note states
+   */
+  private handlePlayerAction(event: PlayerActionEvent): void {
+    const { action, context } = event;
+    const noteId = context?.noteId as string;
+
+    if (!noteId || (action !== 'HitNote' && action !== 'MissNote')) return;
+
+    const currentGameState = this.getGameState();
+    const noteIndex = currentGameState.combatData.noteMap.findIndex((n: any) => n.id === noteId);
+
+    if (noteIndex > -1) {
+      const newNoteState = (action === 'HitNote') ? 'hit' : 'missed';
+
+      // Actualización inmutable del estado
+      const newNoteMap = [...currentGameState.combatData.noteMap];
+      newNoteMap[noteIndex] = { ...newNoteMap[noteIndex], state: newNoteState };
+
+      this.updateGameState({
+        ...currentGameState,
+        combatData: { ...currentGameState.combatData, noteMap: newNoteMap }
+      });
+
+      // Limpiar la nota después de un breve período
+      this.timerService.setTimeout(() => {
+        const updatedState = this.getGameState();
+        const updatedNoteMap = updatedState.combatData.noteMap.filter((n: any) => n.id !== noteId);
+        this.updateGameState({
+          ...updatedState,
+          combatData: { ...updatedState.combatData, noteMap: updatedNoteMap }
+        });
+      }, 500); // 500ms para dar tiempo a la vista
+    }
   }
 
   // === UTILITY METHODS ===

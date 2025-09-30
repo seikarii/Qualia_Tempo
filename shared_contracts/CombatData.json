@@ -60,6 +60,10 @@
     "NoteData": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the note"
+        },
         "timestamp": {
           "type": "number",
           "minimum": 0,
@@ -84,9 +88,18 @@
           "type": "number",
           "minimum": 0,
           "description": "Duration the note remains active"
+        },
+        "qualia_signature": {
+          "type": "string",
+          "description": "Qualia signature for the note"
+        },
+        "state": {
+          "type": "string",
+          "enum": ["active", "hit", "missed"],
+          "description": "Lifecycle state of the note"
         }
       },
-      "required": ["timestamp", "position", "duration"],
+      "required": ["id", "timestamp", "position", "duration", "qualia_signature", "state"],
       "additionalProperties": false
     },
     "LyricData": {

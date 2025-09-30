@@ -476,6 +476,46 @@ export class ViewLogicService implements IViewLogicService {
   @catchError
   getMusicalNoteVisuals(notes: any[], currentTime: number): NoteVisualData[] {
     return notes.map((note, index) => {
+      // Handle lifecycle states first
+      if (note.state === 'hit') {
+        return {
+          id: note.id || `note_${index}`,
+          position: note.position || [0, 0, 0],
+          scale: [2, 2, 2], // Explosion effect
+          color: [1, 1, 1], // White flash
+          opacity: 0, // Immediate fade
+          pulseIntensity: 1,
+          approachProgress: 1,
+          geometryType: note.type || 'default',
+          rotation: [0, 0, 0],
+          trail: { visible: true, color: [1, 1, 1], intensity: 1, scale: 2, opacity: 0.8 },
+          isActive: true,
+          isInHitWindow: true,
+          isMissed: false,
+          isPerfectTiming: true
+        };
+      }
+
+      if (note.state === 'missed') {
+        return {
+          id: note.id || `note_${index}`,
+          position: note.position || [0, 0, 0],
+          scale: [0.8, 0.8, 0.8], // Shrink effect
+          color: [0.3, 0.3, 0.3], // Grayish color
+          opacity: 0, // Fade out
+          pulseIntensity: 0,
+          approachProgress: 1,
+          geometryType: note.type || 'default',
+          rotation: [0, 0, 0],
+          trail: { visible: false, color: [0.3, 0.3, 0.3], intensity: 0, scale: 0, opacity: 0 },
+          isActive: true,
+          isInHitWindow: false,
+          isMissed: true,
+          isPerfectTiming: false
+        };
+      }
+
+      // Existing logic for 'active' notes
       // Extract timing calculations from MusicalNotesRenderer
       const timeDiff = note.timing - currentTime;
       const isActive = timeDiff > -1 && timeDiff < 5; // Show notes 5 seconds before and 1 second after

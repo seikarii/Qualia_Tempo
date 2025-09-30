@@ -7,6 +7,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field, Extra, ConfigDict
 from typing import List, Optional, Annotated
 
+from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Annotated
 from typing import Annotated, List
@@ -95,10 +96,25 @@ class QualiaState(BaseModel):
     """
 
 
+class State(Enum):
+    """
+    Lifecycle state of the note
+    """
+
+    active = 'active'
+    hit = 'hit'
+    missed = 'missed'
+
+
+
 class NoteData(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
+    id: str
+    """
+    Unique identifier for the note
+    """
     timestamp: Annotated[float, Field(ge=0.0)]
     """
     Time in seconds from song start
@@ -107,6 +123,14 @@ class NoteData(BaseModel):
     duration: Annotated[float, Field(ge=0.0)]
     """
     Duration the note remains active
+    """
+    qualia_signature: str
+    """
+    Qualia signature for the note
+    """
+    state: State
+    """
+    Lifecycle state of the note
     """
 
 
