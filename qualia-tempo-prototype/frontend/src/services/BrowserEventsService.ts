@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import { logMethod } from "../utils/decorators";
+import { logMethod, BrowserOnly } from "../utils/decorators";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
 
@@ -19,31 +19,25 @@ export class BrowserEventsService implements IBrowserEventsService {
   }
 
   @logMethod
+  @BrowserOnly
   public addWindowEventListener<K extends keyof WindowEventMap>(
     type: K,
     listener: (_event: WindowEventMap[K]) => void,
     options?: boolean | AddEventListenerOptions
   ): void {
-    if (typeof window !== 'undefined') {
-      window.addEventListener(type, listener, options); // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
-      this.logger.debug("Window event listener added", { type });
-    } else {
-      this.logger.warn("Window object not available, cannot add event listener", { type });
-    }
+    window.addEventListener(type, listener, options); // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
+    this.logger.debug("Window event listener added", { type });
   }
 
   @logMethod
+  @BrowserOnly
   public removeWindowEventListener<K extends keyof WindowEventMap>(
     type: K,
     listener: (_event: WindowEventMap[K]) => void,
     options?: boolean | EventListenerOptions
   ): void {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener(type, listener, options); // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
-      this.logger.debug("Window event listener removed", { type });
-    } else {
-      this.logger.warn("Window object not available, cannot remove event listener", { type });
-    }
+    window.removeEventListener(type, listener, options); // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
+    this.logger.debug("Window event listener removed", { type });
   }
 
   @logMethod
@@ -69,24 +63,20 @@ export class BrowserEventsService implements IBrowserEventsService {
   }
 
   @logMethod
+  @BrowserOnly
   public getWindowDimensions(): { width: number; height: number } {
-    if (typeof window !== 'undefined') {
-      return {
-        width: window.innerWidth, // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
-        height: window.innerHeight // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
-      };
-    }
-    return { width: 0, height: 0 };
+    return {
+      width: window.innerWidth, // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
+      height: window.innerHeight // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
+    };
   }
 
   @logMethod
+  @BrowserOnly
   public getViewportDimensions(): { width: number; height: number } {
-    if (typeof window !== 'undefined') {
-      return {
-        width: window.innerWidth, // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
-        height: window.innerHeight // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
-      };
-    }
-    return { width: 0, height: 0 };
+    return {
+      width: window.innerWidth, // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
+      height: window.innerHeight // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
+    };
   }
 }

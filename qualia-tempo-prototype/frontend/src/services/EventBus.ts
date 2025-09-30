@@ -18,6 +18,7 @@ import type {
   BaseEvent,
   PlayerActionEvent,
   PlayerInputEvent,
+  PlayerDirectionEvent,
   GameStateChangedEvent,
   MetronomeTickEvent,
   RhythmicDashEvent,
@@ -39,6 +40,7 @@ export type EventTypes =
   | QualiaParticleDataReceivedEvent
   | PlayerActionEvent
   | PlayerInputEvent
+  | PlayerDirectionEvent
   | GameStateChangedEvent
   | ErrorEvent
   | BackendSyncEvent

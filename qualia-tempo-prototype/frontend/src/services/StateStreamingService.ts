@@ -51,6 +51,8 @@ export class StateStreamingService implements IStateStreamingService {
     this.config = config;
     this.logger = logger;
     this.messageAdapter = messageAdapter;
+    // Ensure messageAdapter is used by decorator (TypeScript workaround)
+    void this.messageAdapter;
 
     // Build connection URL with authentication if enabled
     this.connectionUrl = this.config.websocket.url;

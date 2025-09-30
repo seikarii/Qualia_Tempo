@@ -36,6 +36,7 @@ export const TYPES = {
   // ===== PROTOCOL ADAPTERS =====
   // QUALIA.CODE v1.2 - Protocol Adapter Bundle
   IRawToParticleEventAdapter: Symbol.for("IRawToParticleEventAdapter"),
+  IKeyToDirectionAdapter: Symbol.for("IKeyToDirectionAdapter"),
 
   // ===== SPECIAL TYPES =====
   IGameStateStore: Symbol.for("IGameStateStore"),

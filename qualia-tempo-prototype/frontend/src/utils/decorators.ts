@@ -724,3 +724,37 @@ export function AdaptAndEmit(adapterPropertyKey: keyof any) {
     return descriptor;
   };
 }
+
+// ==================== BROWSER ENVIRONMENT DECORATORS ====================
+// QUALIA.CODE v1.2 - Browser Environment Bundle
+
+/**
+ * Decorador que asegura que un método solo se ejecute en un entorno de navegador.
+ * Si no está en el navegador, registra una advertencia y no hace nada.
+ * Usage: @BrowserOnly
+ */
+export function BrowserOnly(
+  _target: any,
+  propertyKey: string,
+  descriptor: PropertyDescriptor
+): PropertyDescriptor {
+  const originalMethod = descriptor.value;
+
+  descriptor.value = function (this: any, ...args: any[]) {
+    // Comprobad si `typeof window` es `'undefined'`.
+    if (typeof window === 'undefined') {
+      // Obtened el logger de la instancia (`this.logger`) y registrad un `warn`.
+      const instanceLogger = (this as any).logger;
+      if (instanceLogger && typeof instanceLogger.warn === 'function') {
+        instanceLogger.warn(`Cannot execute ${propertyKey} in a non-browser environment.`);
+      } else {
+        console.warn(`Cannot execute ${propertyKey} in a non-browser environment.`);
+      }
+      return; // No ejecutar el método original
+    }
+    // Si estáis en el navegador, simplemente llamad al método original con sus argumentos:
+    return originalMethod.apply(this, args);
+  };
+
+  return descriptor;
+}

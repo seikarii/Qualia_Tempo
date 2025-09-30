@@ -96,6 +96,11 @@ export interface PlayerInputEvent extends BaseEvent {
   source?: string;
 }
 
+export interface PlayerDirectionEvent extends BaseEvent {
+  type: "PlayerDirectionInput";
+  direction: 'north' | 'south' | 'east' | 'west';
+}
+
 // ARCHITECTURE v1.1: Separated event types for different data sources
 export interface QualiaStateCalculatedEvent extends BaseEvent {
   type: "QualiaStateCalculated";

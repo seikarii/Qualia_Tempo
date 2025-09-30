@@ -81,6 +81,7 @@ import { ThrottlingManager } from "./utils/ThrottlingManager";
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
 import type { IMessageAdapter } from "./protocol/IMessageAdapter";
 import { RawToParticleEventAdapter } from "./protocol/adapters/RawToParticleEventAdapter";
+import { KeyToDirectionAdapter } from "./protocol/adapters/KeyToDirectionAdapter";
 
 // ===== CORE SERVICE BINDINGS =====
 // These services have no dependencies and can be bound directly
@@ -220,6 +221,11 @@ container
 container
   .bind<IMessageAdapter>(TYPES.IRawToParticleEventAdapter)
   .to(RawToParticleEventAdapter)
+  .inSingletonScope();
+
+container
+  .bind<IMessageAdapter>(TYPES.IKeyToDirectionAdapter)
+  .to(KeyToDirectionAdapter)
   .inSingletonScope();
 
 // ===== CONFIGURATION BINDING FUNCTION =====

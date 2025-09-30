@@ -3,17 +3,19 @@ import { TYPES } from "./inversify.types";
 import type { 
   PlayerActionEvent, 
   PlayerInputEvent,
+  PlayerDirectionEvent,
   GameStateChangedEvent,
   MetronomeTickEvent,
   RhythmicDashEvent,
 } from "./contracts/events.contracts";
-import { logMethod, catchError } from "../utils/decorators";
+import { logMethod, catchError, AdaptAndEmit } from "../utils/decorators";
 import type { QualiaState } from "../types/contracts";
 import type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementController.contracts";
 import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovementController";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService } from "./interfaces/ITimerService";
+import type { IMessageAdapter } from "./protocol/IMessageAdapter";
 
 /**
  * RhythmicMovementController - Core rhythm game logic
@@ -25,6 +27,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private logger: ILogger;
   private config: RhythmicMovementConfig;
   private timerService: ITimerService;
+  private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator
 
   private playerPosition: [number, number] = [4, 4]; // Center of 8x8 grid
   private isListening: boolean = false;
@@ -60,11 +63,15 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.RhythmicMovementConfig) config: RhythmicMovementConfig,
     @inject(TYPES.ITimerService) timerService: ITimerService,
+    @inject(TYPES.IKeyToDirectionAdapter) keyAdapter: IMessageAdapter,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.config = config;
     this.timerService = timerService;
+    this.keyAdapter = keyAdapter;
+    // Ensure keyAdapter is used by decorator (TypeScript workaround)
+    void this.keyAdapter;
 
     this.logger.info(this.config.messages.serviceInitialized);
   }
@@ -218,7 +225,11 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private setupInputListener(): void {
     this.eventBus.subscribe<PlayerInputEvent>(
       "PlayerInput",
-      this.handlePlayerInput,
+      this.onPlayerInput,
+    );
+    this.eventBus.subscribe<PlayerDirectionEvent>(
+      "PlayerDirectionInput",
+      this.handleDirectionInput,
     );
   }
 
@@ -228,7 +239,16 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     // listener IDs, you would unsubscribe here.
   }
 
-  private handlePlayerInput = (event: PlayerInputEvent): void => {
+  @AdaptAndEmit('keyAdapter')
+  private onPlayerInput(_event: PlayerInputEvent): void {
+    // El cuerpo de este método ahora está vacío.
+    // El decorador se encarga de adaptar y emitir el nuevo evento.
+  }
+
+  private handleDirectionInput = (event: PlayerDirectionEvent): void => {
+    // La lógica que estaba en `handlePlayerInput` ahora va aquí,
+    // pero usando el `event.direction` que ya viene procesado.
+
     // CRISALIDA.CODE: Configuration-driven throttling implementation
     const now = performance.now();
     if (now - this.lastKeyPressTime < this.keyThrottleMs) {
@@ -236,34 +256,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     }
     this.lastKeyPressTime = now;
 
-    const direction = this.getDirectionFromKey(event.key);
-    if (!direction) return;
-
-    this.processDashInput(direction);
+    this.processDashInput(event.direction);
   };
-
-  private getDirectionFromKey(
-    key: string,
-  ): "north" | "south" | "east" | "west" | null {
-    if (!key) return null; // Handle undefined/null keys
-
-    switch (key.toLowerCase()) {
-      case "w":
-      case "arrowup":
-        return "north";
-      case "s":
-      case "arrowdown":
-        return "south";
-      case "d":
-      case "arrowright":
-        return "east";
-      case "a":
-      case "arrowleft":
-        return "west";
-      default:
-        return null;
-    }
-  }
 
   @logMethod
   private processDashInput(
