@@ -590,7 +590,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     // Emit performance event for other systems to consume
     this.eventBus.emit({
       type: "PlayerAction",
-      action: action,
+      action,
       timestamp: new Date(timestamp),
       data: performance,
     } as PlayerActionEvent);

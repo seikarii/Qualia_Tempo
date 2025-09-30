@@ -38,7 +38,7 @@ export class KeyToDirectionAdapter implements IMessageAdapter {
 
     return {
       type: "PlayerDirectionInput",
-      direction: direction,
+      direction,
       source: "ProtocolAdapter:KeyToDirection",
       timestamp: new Date(),
     };

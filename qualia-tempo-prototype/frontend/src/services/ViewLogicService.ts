@@ -6,7 +6,7 @@
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
-import type { IViewLogicService } from './interfaces/IViewLogicService';
+import type { IViewLogicService, BossState, PlayerState, PerformanceData, MusicData } from './interfaces/IViewLogicService';
 import type { 
   ViewLogicConfig,
   BossVisualData, 
@@ -45,7 +45,7 @@ export class ViewLogicService implements IViewLogicService {
     });
   }
 
-  private calculateBossPosition(boss: any, time: number): [number, number, number] {
+  private calculateBossPosition(boss: BossState, time: number): [number, number, number] {
     if (boss.phase === 1) {
       // Slow, menacing movement  
       return [
@@ -70,7 +70,7 @@ export class ViewLogicService implements IViewLogicService {
     }
   }
 
-  private calculateBossRotation(boss: any, time: number): [number, number, number] {
+  private calculateBossRotation(boss: BossState, time: number): [number, number, number] {
     if (boss.phase === 1) {
       return [0, time * 0.005, 0];
     } else if (boss.phase === 2) {
@@ -82,15 +82,9 @@ export class ViewLogicService implements IViewLogicService {
 
   @logMethod
   @catchError
-  getBossVisuals(bossState: unknown, time: number): BossVisualData {
+  getBossVisuals(bossState: BossState, time: number): BossVisualData {
     // QUALIA.CODE v1.1: REAL visual logic extracted from BossRenderer
-    const boss = bossState as {
-      stress_level: number;
-      phase: number;
-      position: [number, number, number];
-      qualia_state?: { emotional_valence: number };
-      power_level: number;
-    };
+    const boss = bossState;
     // Power ratio calculation for future use
     // const powerRatio = boss.power_level / 200; // Assuming max 200
     const stressIntensity = boss.stress_level;
@@ -246,7 +240,7 @@ export class ViewLogicService implements IViewLogicService {
 
   @logMethod
   @catchError
-  getPlayerVisuals(playerData: any, performance: any, time: number): PlayerVisualData {
+  getPlayerVisuals(playerData: PlayerState, performance: PerformanceData, time: number): PlayerVisualData {
     const player = playerData;
     
     // Extract calculations from PlayerRenderer useFrame
@@ -346,7 +340,7 @@ export class ViewLogicService implements IViewLogicService {
 
   @logMethod
   @catchError
-  getQualiaFieldVisuals(qualiaField: any, musicData: any, time: number): QualiaFieldVisualData {
+  getQualiaFieldVisuals(qualiaField: any, musicData: MusicData, time: number): QualiaFieldVisualData {
     // Extract particle generation logic from QualiaFieldRenderer
     const particleCount = Math.floor(1000 * qualiaField.coherence + 500);
     const positions = new Float32Array(particleCount * 3);
@@ -598,11 +592,11 @@ export class ViewLogicService implements IViewLogicService {
         position: finalPosition,
         scale: [baseScale, baseScale, baseScale],
         color: noteColor,
-        opacity: opacity,
-        pulseIntensity: pulseIntensity,
+        opacity,
+        pulseIntensity,
         approachProgress: progress,
         geometryType: note.type || 'default',
-        rotation: rotation,
+        rotation,
         trail: {
           visible: trailVisible,
           color: noteColor,
@@ -610,10 +604,10 @@ export class ViewLogicService implements IViewLogicService {
           scale: 0.5 + Math.sin(currentTime * 2) * 0.2,
           opacity: 0.3 + Math.sin(currentTime * 3) * 0.2
         },
-        isActive: isActive,
-        isInHitWindow: isInHitWindow,
-        isMissed: isMissed,
-        isPerfectTiming: isPerfectTiming
+        isActive,
+        isInHitWindow,
+        isMissed,
+        isPerfectTiming
       };
     });
   }
@@ -682,7 +676,7 @@ export class ViewLogicService implements IViewLogicService {
             yPosition,
             (z - gridSize / 2 + 0.5) * tileSize
           ],
-          emissiveColor: emissiveColor,
+          emissiveColor,
           baseColor: [0.2, 0.2, 0.3],
           isPlayerTile,
           isActiveTile

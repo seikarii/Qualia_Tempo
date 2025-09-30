@@ -20,8 +20,7 @@ import type { IHttpService } from "./interfaces/IHttpService";
 import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
 import type { QualiaState } from "../types/contracts";
 
-// QUALIA.CODE: Module-level constant for pre-config initialization message
-const SERVICE_INIT_MESSAGE = "BackendSyncService initialized - configuration will be loaded on demand";
+// QUALIA.CODE: Module-level constant for pre-config initialization message - REMOVED: Using configuration
 
 // Backend synchronization event interface - REMOVED: Using EventBus definition
 
@@ -69,7 +68,7 @@ export class BackendSyncService implements IBackendSyncService {
     @inject(TYPES.IHttpService) httpService: IHttpService,
     @inject(TYPES.ITimerService) timerService: ITimerService,
     @inject(TYPES.IPerformanceService) performanceService: IPerformanceService,
-  ) {
+  ) { // QUALIA.CODE EXCEPTION: 6 parameters required for full functionality - all services are essential for backend sync operations
     this.eventBus = eventBus;
     this.logger = logger;
     this.config = config;
@@ -77,7 +76,7 @@ export class BackendSyncService implements IBackendSyncService {
     this.timerService = timerService;
     this.performanceService = performanceService;
 
-    this.logger.info(SERVICE_INIT_MESSAGE);
+    this.logger.info(this.config.messages.serviceInitialized);
   }
 
   /**
@@ -91,10 +90,10 @@ export class BackendSyncService implements IBackendSyncService {
   @logMethod
   @catchError
   public async start(): Promise<void> {
-    this.logger.info("🚀 [BackendSync] Starting service...");
+    this.logger.info(this.config.messages.syncStarted);
     
     if (this.isRunning) {
-      this.logger.warn("⚠️ [BackendSync] Service already running");
+      this.logger.warn(this.config.messages.serviceAlreadyRunning);
       return;
     }
 
@@ -103,7 +102,7 @@ export class BackendSyncService implements IBackendSyncService {
     this.startHealthChecking();
     this.isRunning = true;
     
-    this.logger.info("✅ [BackendSync] Service started successfully");
+    this.logger.info(this.config.messages.serviceStartedSuccessfully);
   }
 
   /**
@@ -121,11 +120,11 @@ export class BackendSyncService implements IBackendSyncService {
   @catchError
   public async stop(): Promise<void> {
     const startTime = this.performanceService.now();
-    this.logger.info("🛑 [BackendSync] Stop called");
+    this.logger.info(this.config.messages.stopCalled);
 
     try {
       if (!this.isRunning) {
-        this.logger.warn("⚠️ [BackendSync] Service not running");
+        this.logger.warn(this.config.messages.serviceNotRunning);
         return;
       }
 
@@ -155,7 +154,7 @@ export class BackendSyncService implements IBackendSyncService {
   @catchError
   public updateConfig(newConfig: Partial<BackendSyncConfig>): void {
     const startTime = this.performanceService.now();
-    this.logger.info("⚙️ [BackendSync] UpdateConfig called");
+    this.logger.info(this.config.messages.updateConfigCalled);
 
     try {
       this.config = { ...this.config, ...newConfig };
@@ -181,7 +180,7 @@ export class BackendSyncService implements IBackendSyncService {
   @catchError
   public async forceSync(): Promise<void> {
     const startTime = this.performanceService.now();
-    this.logger.info("⚡ [BackendSync] ForceSync called");
+    this.logger.info(this.config.messages.forceSyncCalled);
 
     try {
       if (this.pendingSync) {
@@ -251,7 +250,7 @@ export class BackendSyncService implements IBackendSyncService {
 
   @validateEventProperty("qualiaState", "QualiaState")
   private handleQualiaStateUpdate(event: QualiaStateCalculatedEvent): void {
-    this.logger.info("📊 [BackendSync] QualiaState calculated from frontend");
+    this.logger.info(this.config.messages.qualiaStateCalculated);
 
     if (!this.isConnected) {
       this.logger.warn(
@@ -495,7 +494,7 @@ export class BackendSyncService implements IBackendSyncService {
       lastSyncTime: this.lastSyncTimestamp,
       syncCount: this.syncCount,
       errorCount: this.errorCount,
-      avgSyncTime: avgSyncTime,
+      avgSyncTime,
     };
   }
 

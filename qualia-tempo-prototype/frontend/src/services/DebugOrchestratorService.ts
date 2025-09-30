@@ -27,12 +27,12 @@ export class DebugOrchestratorService implements IDebugOrchestratorService {
   private readonly timerService: ITimerService;
   private readonly notificationService: INotificationService;
   private readonly errorReportingService: IErrorReportingService;
-  // @ts-ignore - Reserved for future debug orchestration functionality
+  // @ts-expect-error - Reserved for future debug orchestration functionality
   private readonly _eventBus: IEventBus;
   private readonly configurationService: IConfigurationService;
   
   private lastUpdateTime: Date;
-  // @ts-ignore - Reserved for diagnostic caching functionality
+  // @ts-expect-error - Reserved for diagnostic caching functionality
   private _cachedDiagnostics: ServiceDiagnosticData | null = null;
 
   constructor(

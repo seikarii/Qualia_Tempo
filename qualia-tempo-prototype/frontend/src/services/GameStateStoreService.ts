@@ -28,10 +28,10 @@ import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { GameStateStoreConfig } from "./contracts/IGameStateStoreService.contracts";
-import type { IGameInfrastructureService } from "./interfaces/IGameInfrastructureService";
+import type { GameState } from "../state/useGameStore";
 
 // Store setter type (from Zustand)
-type StoreSetter = (_state: unknown) => void;
+type StoreSetter = (updater: (state: GameState) => Partial<GameState>) => void;
 
 // QUALIA.CODE: Externalized message constants - REMOVED, now in config
 
@@ -48,19 +48,14 @@ type StoreSetter = (_state: unknown) => void;
 export class GameStateStoreService implements IGameStateStoreService, IBaseService {
   private setStore!: StoreSetter; // Will be set by setStoreSetter method
   private config: GameStateStoreConfig;
-  private logger: ILogger;
-  private eventBus: IEventBus;
 
   constructor(
     @inject(TYPES.IEventBus) private readonly _eventBus: IEventBus,
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
     @inject(TYPES.GameStateStoreConfig) config: GameStateStoreConfig,
-    @inject(TYPES.IGameInfrastructureService) private readonly infrastructureService: IGameInfrastructureService,
   ) {
     this.config = config;
-    this.logger = _logger;
-    this.eventBus = _eventBus;
-    this.logger.info("GameStateStoreService constructed. Awaiting store setter.");
+    this._logger.info("GameStateStoreService constructed. Awaiting store setter.");
   }
 
   // --- IGameStateStoreService Interface Implementation ---
@@ -71,9 +66,9 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   @logMethod
   @catchError
   initialize(): void {
-    this.logger.info(this.config.messages.startingListeners);
+    this._logger.info(this.config.messages.startingListeners);
     // @OnEvent decorators handle subscriptions automatically
-    this.logger.info(this.config.messages.listenersActive);
+    this._logger.info(this.config.messages.listenersActive);
   }
 
   /**
@@ -82,24 +77,24 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   @logMethod
   @catchError
   cleanup(): void {
-    this.logger.info(this.config.messages.stoppingListeners);
+    this._logger.info(this.config.messages.stoppingListeners);
     // @OnEvent lifecycle handles cleanup automatically
-    this.logger.info(this.config.messages.listenersStopped);
+    this._logger.info(this.config.messages.listenersStopped);
   }
 
   @logMethod
   @catchError
-  updateGameState(state: any): void {
-    this.setStore((currentState: any) => ({
+  updateGameState(state: QualiaState): void {
+    this.setStore((currentState: GameState) => ({
       ...currentState,
-      ...state,
+      qualiaState: { ...state },
     }));
   }
 
   @logMethod
   @catchError
   updateQualiaState(state: QualiaState): void {
-    this.setStore((currentState: Record<string, unknown>) => ({
+    this.setStore((currentState: GameState) => ({
       ...currentState,
       qualiaState: { ...state },
     }));
@@ -116,15 +111,15 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   }
 
   @logMethod
-  getGameState(): any {
+  getGameState(): GameState {
     // Access the store state through the setter function
     // This is a bit of a hack, but necessary due to the passive store pattern
-    let currentState: any;
-    this.setStore((state: any) => {
+    let currentState: GameState;
+    this.setStore((state: GameState) => {
       currentState = state;
       return state; // No-op, just to get the current state
     });
-    return currentState;
+    return currentState!;
   }
 
   // === PRIVATE EVENT HANDLERS ===
@@ -133,24 +128,25 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
    * Handle GameStateChanged events
    */
   @OnEvent('GameStateChanged')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handleGameStateChange(event: GameStateChangedEvent): void {
-    this.logger.info(
+    this._logger.info(
       "🎮 [GameStateStoreService] Processing GameStateChanged:",
       { newState: event.newState },
     );
 
     switch (event.newState) {
       case "Playing":
-        this.setStore((state: any) => ({
+        this.setStore((state: GameState) => ({
           ...state,
           isPlaying: true,
-          gameStartTime: this.infrastructureService.performanceService.now(),
+          gameStartTime: Date.now(),
         }));
         break;
 
       case "Paused":
       case "GameOver":
-        this.setStore((state: any) => ({
+        this.setStore((state: GameState) => ({
           ...state,
           isPlaying: false,
           ...(event.newState === "GameOver" && {
@@ -183,14 +179,14 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
           }),
         }));
         if (event.newState === "GameOver") {
-          this.logger.info(
+          this._logger.info(
             "💀 [GameStateStoreService] Game Over - State reset",
           );
         }
         break;
 
       case "Menu":
-        this.setStore((state: any) => ({
+        this.setStore((state: GameState) => ({
           ...state,
           isPlaying: false,
           currentTime: 0,
@@ -222,7 +218,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
         break;
 
       default:
-        this.logger.warn(
+        this._logger.warn(
           "⚠️ [GameStateStoreService] Unhandled game state:",
           event.newState,
         );
@@ -235,8 +231,9 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
    * no direct qualiaState reconstruction in store service
    */
   @OnEvent('QualiaParticleDataReceived')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handleParticleDataReceived(event: QualiaParticleDataReceivedEvent): void {
-    this.logger.info(
+    this._logger.info(
       "🌟 [GameStateStoreService] Processing QualiaStateUpdated (Binary):",
       { particleDataSize: event.particleData.byteLength, timestamp: event.timestamp },
     );
@@ -257,14 +254,15 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
    * Handle RhythmicDash events to update player position
    */
   @OnEvent('RhythmicDash')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handleRhythmicDash(event: RhythmicDashEvent): void {
-    this.logger.info(this.config.messages.rhythmicDash, {
+    this._logger.info(this.config.messages.rhythmicDash, {
       direction: event.direction,
       newPosition: event.newPosition,
       timing: event.timing,
     });
 
-    this.setStore((state: Record<string, unknown>) => ({
+    this.setStore((state: any) => ({
       ...state,
       player: {
         ...state.player,
@@ -280,6 +278,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
    * Handle PlayerAction events to update note states
    */
   @OnEvent('PlayerAction')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handlePlayerAction(event: PlayerActionEvent): void {
     const { action, context } = event;
     const noteId = context?.noteId as string;
@@ -287,25 +286,25 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
     if (!noteId || (action !== 'HitNote' && action !== 'MissNote')) return;
 
     const currentGameState = this.getGameState();
-    const noteIndex = currentGameState.combatData.noteMap.findIndex((n: any) => n.id === noteId);
+    const noteIndex = currentGameState.combatData?.noteMap.findIndex((n: { id: string }) => n.id === noteId) ?? -1;
 
-    if (noteIndex > -1) {
+    if (noteIndex > -1 && currentGameState.combatData) {
       const newNoteState = (action === 'HitNote') ? 'hit' : 'missed';
 
       // Actualización inmutable del estado
       const newNoteMap = [...currentGameState.combatData.noteMap];
       newNoteMap[noteIndex] = { ...newNoteMap[noteIndex], state: newNoteState };
 
-      this.updateGameState({
-        ...currentGameState,
-        combatData: { ...currentGameState.combatData, noteMap: newNoteMap }
-      });
+      this.setStore((state: GameState) => ({
+        ...state,
+        combatData: { ...state.combatData!, noteMap: newNoteMap }
+      }));
 
       // Emitir evento para limpiar la nota de la vista en lugar de usar setTimeout
-      this.eventBus.emit({
+      this._eventBus.emit({
         type: 'ClearNoteFromViewRequest' as any,
-        noteId: noteId,
-        timestamp: this.infrastructureService.performanceService.now(),
+        noteId,
+        timestamp: Date.now(),
         source: 'GameStateStoreService'
       } as any);
     }
@@ -321,6 +320,6 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   @logMethod
   public setStoreSetter(setStore: StoreSetter): void {
     this.setStore = setStore;
-    this.logger.info("Zustand store setter has been provided to GameStateStoreService.");
+    this._logger.info("Zustand store setter has been provided to GameStateStoreService.");
   }
 }

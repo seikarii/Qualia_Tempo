@@ -141,7 +141,7 @@ export class PostProcessingService implements IPostProcessingService {
       if (pipelineConfig.output === 'screen') {
         // Este pipeline renderiza a la pantalla
         composer = new EffectComposer(this.renderer);
-      } else if (outputTarget && outputTarget.renderTarget) {
+      } else if (outputTarget?.renderTarget) {
         // Este pipeline renderiza a un render target específico
         composer = new EffectComposer(this.renderer, outputTarget.renderTarget);
       } else {

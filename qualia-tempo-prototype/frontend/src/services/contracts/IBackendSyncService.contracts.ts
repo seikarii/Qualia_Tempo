@@ -79,6 +79,13 @@ export interface BackendSyncConfig {
     forceSyncFailed: string;
     circuitBreakerOpen: string;
     circuitBreakerClosed: string;
+    serviceInitialized: string;
+    syncStarted: string;
+    serviceStartedSuccessfully: string;
+    stopCalled: string;
+    updateConfigCalled: string;
+    forceSyncCalled: string;
+    qualiaStateCalculated: string;
   };
 }
 

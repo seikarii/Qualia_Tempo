@@ -29,6 +29,14 @@ validation:
 
 messages:
   serviceInitialized: "BackendSyncService initialized - configuration will be loaded on demand"
+  syncStarted: "🚀 [BackendSync] Starting service..."
+  serviceAlreadyRunning: "⚠️ [BackendSync] Service already running"
+  serviceStartedSuccessfully: "✅ [BackendSync] Service started successfully"
+  stopCalled: "🛑 [BackendSync] Stop called"
+  serviceNotRunning: "⚠️ [BackendSync] Service not running"
+  updateConfigCalled: "⚙️ [BackendSync] UpdateConfig called"
+  forceSyncCalled: "⚡ [BackendSync] ForceSync called"
+  qualiaStateCalculated: "📊 [BackendSync] QualiaState calculated from frontend"
   syncStarted: "Backend sync service started"
   syncStopped: "Backend sync service stopped"
   connectionEstablished: "Connection to backend established"

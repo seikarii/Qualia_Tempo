@@ -14,6 +14,47 @@ import type {
 } from '../contracts/IViewLogicService.contracts';
 import type { QualiaState } from '../../types/contracts';
 
+// Local type definitions for state processing
+export interface BossState {
+  stress_level: number;
+  phase: number;
+  position: [number, number, number];
+  qualia_state?: { emotional_valence: number };
+  power_level: number;
+}
+
+export interface PlayerState {
+  position: [number, number, number];
+  velocity: [number, number, number];
+  health: number;
+  power_level: number;
+  consciousness_level: number;
+  qualia_state: {
+    emotional_valence: number;
+    arousal: number;
+    coherence: number;
+  };
+}
+
+export interface PerformanceData {
+  accuracy: number;
+  rhythm_score: number;
+  combo_multiplier: number;
+  rhythm_sync: number;
+  qualia_coherence: number;
+}
+
+export interface MusicData {
+  tempo: number;
+  beat_position: number;
+  intensity: number;
+  frequency_bands: number[];
+  order_influence: number;
+  chaos_influence: number;
+  emotional_valence: number;
+  harmony: number;
+}
+
 export interface IViewLogicService {
   /**
    * Generate boss visual data based on boss state and time
@@ -21,7 +62,7 @@ export interface IViewLogicService {
    * @param time Current game time
    * @returns Boss visual properties for rendering
    */
-  getBossVisuals(bossState: any, time: number): BossVisualData;
+  getBossVisuals(bossState: BossState, time: number): BossVisualData;
 
   /**
    * Generate player visual data based on player state, performance, and time
@@ -30,7 +71,7 @@ export interface IViewLogicService {
    * @param time Current game time
    * @returns Player visual properties for rendering
    */
-  getPlayerVisuals(playerState: any, performance: any, time: number): PlayerVisualData;
+  getPlayerVisuals(playerState: PlayerState, performance: PerformanceData, time: number): PlayerVisualData;
 
   /**
    * Generate qualia field visual data based on state and music
@@ -39,7 +80,7 @@ export interface IViewLogicService {
    * @param time Current game time
    * @returns Qualia field visual properties for rendering
    */
-  getQualiaFieldVisuals(qualiaField: any, musicData: any, time: number): QualiaFieldVisualData;
+  getQualiaFieldVisuals(qualiaField: any, musicData: MusicData, time: number): QualiaFieldVisualData;
 
   /**
    * Generate qualia field particle data based on state and music

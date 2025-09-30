@@ -165,7 +165,7 @@ export class QualiaStateCalculatorService
    * ARCHITECTURE: This replaces the direct method calls from UI.
    */
   @OnEvent('PlayerAction')
-  // @ts-ignore
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handlePlayerAction(event: PlayerActionEvent): void {
     const startTime = this.performanceService.now();
     const { action, context } = event;
@@ -464,7 +464,7 @@ export class QualiaStateCalculatorService
     return {
       isRunning: this._isRunning,
       calculationsPerformed: this.calculationsPerformed,
-      averageCalculationTime: averageCalculationTime,
+      averageCalculationTime,
       currentState: { ...this.currentState },
     };
   }
