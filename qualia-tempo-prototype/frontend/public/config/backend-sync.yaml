@@ -37,7 +37,6 @@ messages:
   updateConfigCalled: "⚙️ [BackendSync] UpdateConfig called"
   forceSyncCalled: "⚡ [BackendSync] ForceSync called"
   qualiaStateCalculated: "📊 [BackendSync] QualiaState calculated from frontend"
-  syncStarted: "Backend sync service started"
   syncStopped: "Backend sync service stopped"
   connectionEstablished: "Connection to backend established"
   connectionLost: "Connection to backend lost"

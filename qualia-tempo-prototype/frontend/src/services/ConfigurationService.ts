@@ -14,7 +14,6 @@
 import { injectable, inject } from "inversify";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { ILogger } from "./interfaces/ILogger";
-import type { IEventBus } from "./interfaces/IEventBus";
 import type { FullGameConfig } from "../types/config";
 import { TYPES } from "./inversify.types";
 import * as yaml from "js-yaml";
@@ -35,7 +34,6 @@ export class ConfigurationService implements IConfigurationService {
   private configBasePath: string;
   private loadedConfig: FullGameConfig | null = null;
   private logger: ILogger;
-  private eventBus: IEventBus;
 
   // Configuration files discovery - NO HARDCODING
   private configFileManifest: Record<string, string> = {};
@@ -44,11 +42,9 @@ export class ConfigurationService implements IConfigurationService {
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ConfigBasePath) configBasePath: string,
     @inject(TYPES.ConfigManifest) configManifest: Record<string, string>,
-    @inject(TYPES.IEventBus) eventBus: IEventBus,
   ) {
     this.logger = logger;
     this.configBasePath = configBasePath;
-    this.eventBus = eventBus;
 
     // Accept configuration file manifest externally
     this.configFileManifest = configManifest;
@@ -102,15 +98,6 @@ export class ConfigurationService implements IConfigurationService {
 
     this.loadedConfig = mergedConfig as FullGameConfig;
     this.logger.info("All configurations loaded successfully");
-
-    // Emit ConfigurationLoadedEvent
-    this.eventBus.emit({
-      type: "ConfigurationLoaded",
-      loadedConfigs: Object.keys(this.configFileManifest),
-      totalConfigs: Object.keys(this.configFileManifest).length,
-      timestamp: new Date(),
-      source: "ConfigurationService"
-    } as any);
 
     return this.loadedConfig;
   }

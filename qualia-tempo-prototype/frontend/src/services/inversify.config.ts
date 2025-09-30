@@ -36,6 +36,9 @@ import type { ViewLogicConfig } from "./contracts/IViewLogicService.contracts";
 // import type { DebugOrchestratorConfig } from "./contracts/IDebugOrchestratorService.contracts";
 import type { GameStateStoreConfig } from "./contracts/IGameStateStoreService.contracts";
 
+// ===== IMPORT EVENT CONTRACTS =====
+import type { ConfigurationLoadedEvent } from "./contracts/events.contracts";
+
 // ===== IMPORT ALL INTERFACES =====
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
@@ -403,6 +406,24 @@ export async function configureServices(): Promise<void> {
   safeBindConstant(TYPES.DebugOrchestratorConfig, fullConfig.debugOrchestrator);
   safeBindConstant<GameStateStoreConfig>(TYPES.GameStateStoreConfig, fullConfig.gameStateStore);
   safeBindConstant(TYPES.PostProcessingConfig, (fullConfig as any).postProcessing);
+
+  // ===== EMIT CONFIGURATION LOADED EVENT =====
+  // CRITICAL: Emit ConfigurationLoadedEvent to notify all services that configuration is ready
+  // This breaks the circular dependency by centralizing event emission in IoC setup
+  const eventBus = container.get<IEventBus>(TYPES.IEventBus);
+  const configManifest = container.get<Record<string, string>>(TYPES.ConfigManifest);
+  const loadedConfigs = Object.keys(configManifest);
+  const totalConfigs = loadedConfigs.length;
+
+  const configLoadedEvent: ConfigurationLoadedEvent = {
+    type: "ConfigurationLoaded",
+    timestamp: new Date(),
+    source: "ConfigurationService",
+    loadedConfigs,
+    totalConfigs,
+  };
+
+  eventBus.emit(configLoadedEvent);
 }
 
 // ===== CONTAINER VERIFICATION =====
