@@ -49,6 +49,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   // Three.js core objects
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
+  private renderer!: THREE.WebGLRenderer;
   private _canvas!: HTMLCanvasElement;
 
   // Rendering state
@@ -98,6 +99,15 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     this.logger.info("Initializing FrontendRenderingService");
     this._canvas = canvas;
 
+    // Create renderer - FrontendRenderingService is the OWNER
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: this.config.antialias
+    });
+    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setClearColor(this.config.backgroundColor);
+
     // Create scene
     this.scene = new THREE.Scene();
 
@@ -110,10 +120,13 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     );
     this.camera.position.z = this.config.cameraDistance;
 
-    // Create render target for post-processing
-    // NOTE: Render target is managed by PostProcessingService
+    // Initialize post-processing service with shared renderer
+    await this.postProcessingService.initialize(this.renderer, this.scene, this.camera);
 
-    // Post-processing initialization removed - handled by PostProcessingService    // Initialize particle system
+    // Setup WebGL context loss/restore handlers
+    this.setupContextHandlers();
+
+    // Initialize particle system
     this.initializeParticleSystem();
 
     this.isInitialized = true;
@@ -252,6 +265,48 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   }
 
   @logMethod
+  private setupContextHandlers(): void {
+    const canvas = this.renderer.domElement;
+
+    canvas.addEventListener('webglcontextlost', (event) => {
+      this.logger.warn(this.config.messages.contextLost);
+      event.preventDefault();
+      this.handleContextLost();
+    });
+
+    canvas.addEventListener('webglcontextrestored', () => {
+      this.logger.info(this.config.messages.contextRestored);
+      this.handleContextRestored();
+    });
+  }
+
+  @logMethod
+  private handleContextLost(): void {
+    this.isRunning = false;
+    if (this.animationId !== null) {
+      this.performanceService.cancelAnimationFrame(this.animationId);
+      this.animationId = null;
+    }
+  }
+
+  @logMethod
+  private async handleContextRestored(): Promise<void> {
+    try {
+      this.logger.info(this.config.messages.reinitializing);
+
+      // Force renderer to reinitialize
+      this.renderer.forceContextRestore();
+
+      // Reinitialize post-processing with restored renderer
+      await this.postProcessingService.initialize(this.renderer, this.scene, this.camera);
+
+      this.logger.info("WebGL context restored successfully");
+    } catch (error) {
+      this.logger.error("Failed to restore WebGL context", { error });
+    }
+  }
+
+  @logMethod
   start(): void {
     if (!this.isInitialized) {
       throw new Error("FrontendRenderingService must be initialized before starting");
@@ -362,7 +417,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     this.camera.lookAt(0, 0, 0);
 
     // Render through post-processing pipeline
-    this.postProcessingService.render(this.scene, this.camera);
+    this.postProcessingService.render();
   };
 
   @logMethod

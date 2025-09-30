@@ -27,6 +27,11 @@ export class PostProcessingService implements IPostProcessingService {
   private renderTarget!: THREE.WebGLRenderTarget;
   private isInitialized = false;
 
+  // Shared objects from FrontendRenderingService
+  private renderer!: THREE.WebGLRenderer;
+  private scene!: THREE.Scene;
+  private camera!: THREE.Camera;
+
   // Performance tracking
   private renderTime = 0;
 
@@ -43,7 +48,7 @@ export class PostProcessingService implements IPostProcessingService {
   @logMethod
   @catchError
   @BrowserOnly
-  async initialize(canvas: HTMLCanvasElement): Promise<void> {
+  async initialize(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera): Promise<void> {
     if (this.isInitialized) {
       this.logger.warn("PostProcessingService already initialized");
       return;
@@ -51,14 +56,19 @@ export class PostProcessingService implements IPostProcessingService {
 
     this.logger.info("Initializing PostProcessingService");
 
+    // Store shared objects
+    this.renderer = renderer;
+    this.scene = scene;
+    this.camera = camera;
+
     // Create render target for scene rendering
     this.renderTarget = new THREE.WebGLRenderTarget(
       this.config.renderTargetWidth,
       this.config.renderTargetHeight
     );
 
-    // Create composer
-    this.composer = new EffectComposer(new THREE.WebGLRenderer({ canvas }));
+    // Create composer with shared renderer
+    this.composer = new EffectComposer(renderer);
 
     // Build the effects pipeline
     await this.buildPipeline();
@@ -95,10 +105,8 @@ export class PostProcessingService implements IPostProcessingService {
   private async createPass(passConfig: PostProcessingPass): Promise<any> {
     switch (passConfig.type) {
       case 'RenderPass':
-        // RenderPass is typically the first pass - create with dummy scene/camera, update during render
-        const dummyScene = new THREE.Scene();
-        const dummyCamera = new THREE.Camera();
-        return new RenderPass(dummyScene, dummyCamera);
+        // RenderPass uses the shared scene and camera
+        return new RenderPass(this.scene, this.camera);
 
       case 'UnrealBloomPass':
         return new UnrealBloomPass(
@@ -134,34 +142,46 @@ export class PostProcessingService implements IPostProcessingService {
   @logMethod
   @catchError
   private parseShader(shaderSource: string): any {
-    // Simple shader parsing - assumes vertex and fragment shaders are separated by ---FRAGMENT---
-    const parts = shaderSource.split('---FRAGMENT---');
-    if (parts.length !== 2) {
-      throw new Error('Shader must contain ---FRAGMENT--- separator');
+    // For ShaderPass, we need both vertex and fragment shaders
+    // If the file contains ---FRAGMENT--- separator, split it
+    // Otherwise, assume it's just a fragment shader and use default vertex shader
+    let vertexShader: string;
+    let fragmentShader: string;
+
+    if (shaderSource.includes('---FRAGMENT---')) {
+      const parts = shaderSource.split('---FRAGMENT---');
+      vertexShader = parts[0].trim();
+      fragmentShader = parts[1].trim();
+    } else {
+      // Use default pass-through vertex shader
+      vertexShader = `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `.trim();
+      fragmentShader = shaderSource.trim();
     }
 
     return {
-      uniforms: {},
-      vertexShader: parts[0].trim(),
-      fragmentShader: parts[1].trim(),
+      uniforms: {
+        tDiffuse: { value: null },
+        resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+      },
+      vertexShader,
+      fragmentShader,
     };
   }
 
   @logMethod
   @catchError
-  render(scene: THREE.Scene, camera: THREE.Camera): void {
+  render(): void {
     if (!this.isInitialized) {
       throw new Error("PostProcessingService must be initialized before rendering");
     }
 
     const startTime = performance.now();
-
-    // Update the render pass with current scene and camera
-    const renderPass = this.composer.passes[0] as RenderPass;
-    if (renderPass) {
-      renderPass.scene = scene;
-      renderPass.camera = camera;
-    }
 
     // Render through the pipeline
     this.composer.render();
