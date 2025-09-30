@@ -46,8 +46,8 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   private logger: QualiaLogger;
   private gameClockInterval: number | null = null;
 
-  // Internal game state - initialized in constructor with defaults, updated in initialize()
-  private gameState: GameState;
+  // Internal game state - initialized in initialize()
+  private gameState!: GameState;
 
   constructor(
     @inject(TYPES.IEventBus) eventBus: EventBus,
@@ -64,16 +64,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     this.gameStateStoreService = gameStateStoreService;
     this.timerService = timerService;
     this.audioService = audioService;
-    // Initialize game state with defaults, will be updated in initialize()
-    this.gameState = {
-      isPlaying: false,
-      isPaused: false,
-      currentScore: 0,
-      comboCount: 0,
-      health: this.config.health.maxHealth,
-      level: 1,
-      gameMode: "normal",
-    };
+    // gameState is initialized in initialize() to avoid redundancy
     this.logger.info("🎮 [GameController] Service initialized");
   }
 
@@ -87,7 +78,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   @logMethod
   @catchError
   public start(): void {
-    const startTime = performance.now();
+    const startTime = Date.now(); // TODO: Use IPerformanceService when available
     this.logger.info("🚀 [GameController] Starting service...");
 
     try {
@@ -96,15 +87,14 @@ export class GameControllerService implements IGameControllerService, IBaseServi
         return;
       }
 
-      this.subscribeToEvents();
       this.isRunning = true;
 
-      const duration = performance.now() - startTime;
+      const duration = Date.now() - startTime;
       this.logger.info(
         `🎮 [GameController] Service started successfully - ${duration.toFixed(2)}ms`,
       );
     } catch (error) {
-      const duration = performance.now() - startTime;
+      const duration = Date.now() - startTime;
       this.logger.error(
         `🚨 [GameController] Start failed - ${duration.toFixed(2)}ms`,
         { error },
@@ -129,15 +119,14 @@ export class GameControllerService implements IGameControllerService, IBaseServi
       }
 
       this.stopGameClock();
-      this.unsubscribeFromEvents();
       this.isRunning = false;
 
-      const duration = performance.now() - startTime;
+      const duration = Date.now() - startTime;
       this.logger.info(
         `✅ [GameController] Service stopped - ${duration.toFixed(2)}ms`,
       );
     } catch (error) {
-      const duration = performance.now() - startTime;
+      const duration = Date.now() - startTime;
       this.logger.error(
         `❌ [GameController] Stop failed - ${duration.toFixed(2)}ms:`,
         { error },
@@ -226,18 +215,6 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   }
 
   // === PRIVATE METHODS ===
-
-  private subscribeToEvents(): void {
-    // QUALIA.CODE v1.1: Event subscriptions now handled by @OnEvent decorators
-    // This method is deprecated but kept for backward compatibility during transition
-    this.logger.info('⚠️  [GameController] subscribeToEvents is deprecated - using @OnEvent decorators');
-  }
-
-  private unsubscribeFromEvents(): void {
-    // QUALIA.CODE v1.1: Event cleanup now handled by @OnEvent lifecycle via cleanupEventSubscriptions
-    // This method is deprecated but kept for backward compatibility during transition
-    this.logger.info('⚠️  [GameController] unsubscribeFromEvents is deprecated - using @OnEvent lifecycle');
-  }
 
   @OnEvent('PlayerAction')
   // @ts-expect-error - Reserved for future player action handling

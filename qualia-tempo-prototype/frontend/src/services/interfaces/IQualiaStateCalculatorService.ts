@@ -10,12 +10,12 @@ export interface IQualiaStateCalculatorService {
   /**
    * Initialize event subscriptions and start the calculation service.
    */
-  start(): void;
+  initialize(): void;
 
   /**
    * Clean up subscriptions and stop the calculation service.
    */
-  stop(): void;
+  cleanup(): void;
 
   /**
    * Calculate new QualiaState based on player action.

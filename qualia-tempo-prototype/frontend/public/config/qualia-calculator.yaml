@@ -24,6 +24,7 @@ flow:
 
 chaos:
   missIncrease: 0.2
+  decayAmount: 0.1
   maxValue: 1.0
   minValue: 0.0
   decayRate: 0.95

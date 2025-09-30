@@ -7,12 +7,12 @@ export interface IGameStateStoreService {
   /**
    * Initialize event subscriptions to GameStateChanged and QualiaStateUpdated.
    */
-  start(): void;
+  initialize(): void;
 
   /**
    * Clean up all event subscriptions.
    */
-  stop(): void;
+  cleanup(): void;
 
   /**
    * Update the game state in the store.

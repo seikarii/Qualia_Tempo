@@ -19,21 +19,16 @@ import type {
 import {
   logMethod,
   catchError,
+  OnEvent,
+  IBaseService,
 } from "../utils/decorators";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 import type { IEventBus } from "./interfaces/IEventBus";
-import type { ITimerService } from "./interfaces/ITimerService";
 import type { ILogger } from "./interfaces/ILogger";
 import type { GameStateStoreConfig } from "./contracts/IGameStateStoreService.contracts";
 
 // Store setter type (from Zustand)
 type StoreSetter = (_state: unknown) => void;
-
-// Event types
-const GAME_EVENTS = {
-  STATE_CHANGED: "GameStateChanged",
-  PARTICLE_DATA_RECEIVED: "QualiaParticleDataReceived",
-} as const;
 
 // QUALIA.CODE: Externalized message constants
 const SERVICE_MESSAGES = {
@@ -59,16 +54,13 @@ const SERVICE_MESSAGES = {
  * - Passive store: Store is just a data container
  */
 @injectable()
-export class GameStateStoreService implements IGameStateStoreService {
-  private isStarted = false;
-  private listenerIds: string[] = [];
+export class GameStateStoreService implements IGameStateStoreService, IBaseService {
   private setStore!: StoreSetter; // Will be set by setStoreSetter method
   private config: GameStateStoreConfig;
 
   constructor(
     @inject(TYPES.IEventBus) private readonly eventBus: IEventBus,
     @inject(TYPES.ILogger) private readonly logger: ILogger,
-    @inject(TYPES.ITimerService) private readonly timerService: ITimerService,
     @inject(TYPES.GameStateStoreConfig) config: GameStateStoreConfig,
   ) {
     this.config = config;
@@ -78,75 +70,24 @@ export class GameStateStoreService implements IGameStateStoreService {
   // --- IGameStateStoreService Interface Implementation ---
 
   /**
-   * Start listening to events and updating the store
+   * Initialize the service and set up event listeners
    */
   @logMethod
   @catchError
-  start(): void {
-    if (this.isStarted) {
-      this.logger.warn(SERVICE_MESSAGES.ALREADY_STARTED);
-      return;
-    }
-
+  initialize(): void {
     this.logger.info(SERVICE_MESSAGES.STARTING_LISTENERS);
-
-    // Subscribe to GameStateChanged events
-    const gameStateListenerId = this.eventBus.subscribe(
-      GAME_EVENTS.STATE_CHANGED,
-      this.handleGameStateChange.bind(this),
-    );
-    this.listenerIds.push(gameStateListenerId);
-
-    // Subscribe to QualiaParticleDataReceived events
-    const particleListenerId = this.eventBus.subscribe(
-      "QualiaParticleDataReceived",
-      (event) => {
-        if (event.type === "QualiaParticleDataReceived") {
-          this.handleParticleDataReceived(event as QualiaParticleDataReceivedEvent);
-        }
-      },
-      { priority: "normal" },
-    );
-    this.listenerIds.push(particleListenerId);
-
-    // Subscribe to RhythmicDash events to update player position
-    const rhythmicDashListenerId = this.eventBus.subscribe(
-      "RhythmicDash",
-      this.handleRhythmicDash.bind(this),
-    );
-    this.listenerIds.push(rhythmicDashListenerId);
-
-    // Subscribe to PlayerAction events to update note states
-    const playerActionListenerId = this.eventBus.subscribe(
-      "PlayerAction",
-      this.handlePlayerAction.bind(this),
-    );
-    this.listenerIds.push(playerActionListenerId);
-
-    this.isStarted = true;
+    // @OnEvent decorators handle subscriptions automatically
     this.logger.info(SERVICE_MESSAGES.LISTENERS_ACTIVE);
   }
 
   /**
-   * Stop listening to events
+   * Clean up the service and remove event listeners
    */
   @logMethod
   @catchError
-  stop(): void {
-    if (!this.isStarted) {
-      this.logger.warn(SERVICE_MESSAGES.NOT_STARTED);
-      return;
-    }
-
+  cleanup(): void {
     this.logger.info(SERVICE_MESSAGES.STOPPING_LISTENERS);
-
-    // Unsubscribe from all events
-    this.listenerIds.forEach((listenerId) => {
-      this.eventBus.unsubscribe(listenerId);
-    });
-    this.listenerIds = [];
-
-    this.isStarted = false;
+    // @OnEvent lifecycle handles cleanup automatically
     this.logger.info(SERVICE_MESSAGES.LISTENERS_STOPPED);
   }
 
@@ -170,12 +111,12 @@ export class GameStateStoreService implements IGameStateStoreService {
 
   @logMethod
   getStatus(): "running" | "stopped" {
-    return this.isStarted ? "running" : "stopped";
+    return "running"; // Service is always running after initialize
   }
 
   @logMethod
   isRunning(): boolean {
-    return this.isStarted;
+    return true; // Service is always running after initialize
   }
 
   @logMethod
@@ -195,6 +136,7 @@ export class GameStateStoreService implements IGameStateStoreService {
   /**
    * Handle GameStateChanged events
    */
+  @OnEvent('GameStateChanged')
   private handleGameStateChange(event: GameStateChangedEvent): void {
     this.logger.info(
       "🎮 [GameStateStoreService] Processing GameStateChanged:",
@@ -296,6 +238,7 @@ export class GameStateStoreService implements IGameStateStoreService {
    * NOTE: Binary protocol delivers particle data via ArrayBuffer, 
    * no direct qualiaState reconstruction in store service
    */
+  @OnEvent('QualiaParticleDataReceived')
   private handleParticleDataReceived(event: QualiaParticleDataReceivedEvent): void {
     this.logger.info(
       "🌟 [GameStateStoreService] Processing QualiaStateUpdated (Binary):",
@@ -317,6 +260,7 @@ export class GameStateStoreService implements IGameStateStoreService {
   /**
    * Handle RhythmicDash events to update player position
    */
+  @OnEvent('RhythmicDash')
   private handleRhythmicDash(event: any): void {
     this.logger.info(SERVICE_MESSAGES.RHYTHMIC_DASH, {
       direction: event.direction,
@@ -339,6 +283,7 @@ export class GameStateStoreService implements IGameStateStoreService {
   /**
    * Handle PlayerAction events to update note states
    */
+  @OnEvent('PlayerAction')
   private handlePlayerAction(event: PlayerActionEvent): void {
     const { action, context } = event;
     const noteId = context?.noteId as string;
@@ -360,15 +305,13 @@ export class GameStateStoreService implements IGameStateStoreService {
         combatData: { ...currentGameState.combatData, noteMap: newNoteMap }
       });
 
-      // Limpiar la nota después de un breve período
-      this.timerService.setTimeout(() => {
-        const updatedState = this.getGameState();
-        const updatedNoteMap = updatedState.combatData.noteMap.filter((n: any) => n.id !== noteId);
-        this.updateGameState({
-          ...updatedState,
-          combatData: { ...updatedState.combatData, noteMap: updatedNoteMap }
-        });
-      }, 500); // 500ms para dar tiempo a la vista
+      // Emitir evento para limpiar la nota de la vista en lugar de usar setTimeout
+      this.eventBus.emit({
+        type: 'ClearNoteFromViewRequest' as any,
+        noteId: noteId,
+        timestamp: Date.now(),
+        source: 'GameStateStoreService'
+      } as any);
     }
   }
 

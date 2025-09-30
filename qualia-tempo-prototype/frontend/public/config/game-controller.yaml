@@ -41,11 +41,11 @@ mechanics:
   rewindHealthBonus: 10
   dashScoreBonus: 5
 
-# Legacy compatibility (required for services still using old structure)
-maxHealth: 100
-initialScore: 0
-comboMultiplier: 1.5
-healthDecayRate: 0.1
+# Legacy compatibility (removed - no longer needed)
+# maxHealth: 100
+# initialScore: 0
+# comboMultiplier: 1.5
+# healthDecayRate: 0.1
 
 difficulty:
   adaptiveDifficulty: true

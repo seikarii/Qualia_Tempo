@@ -12,14 +12,15 @@ import type { IBrowserEventsService } from './interfaces/IBrowserEventsService';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { ILogger } from './interfaces/ILogger';
 import type { PlayerActionEvent } from './contracts/events.contracts';
-import { logMethod } from '../utils/decorators';
+import { logMethod, IBaseService } from '../utils/decorators';
 
 @injectable()
-export class GameInputControllerService implements IGameInputControllerService {
+export class GameInputControllerService implements IGameInputControllerService, IBaseService {
   private readonly inputStateService: IInputStateService;
   private readonly browserEventsService: IBrowserEventsService;
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
+  private _eventListeners: string[] = []; // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
 
   private keyPressHandler?: (_event: KeyboardEvent) => void;
   private keyReleaseHandler?: (_event: KeyboardEvent) => void;
@@ -37,6 +38,21 @@ export class GameInputControllerService implements IGameInputControllerService {
     this.logger = logger;
 
     this.logger.info('GameInputControllerService initialized');
+  }
+
+  @logMethod
+  public initialize(): void {
+    this.logger.info('🚀 [GameInputController] Initializing service...');
+    // Initialize input handling as active by default
+    this.initializeInputHandling(true);
+    this.logger.info('✅ [GameInputController] Service initialized');
+  }
+
+  @logMethod
+  public cleanup(): void {
+    this.logger.info('🧹 [GameInputController] Cleaning up service...');
+    this.cleanupInputHandling();
+    this.logger.info('✅ [GameInputController] Service cleaned up');
   }
 
   @logMethod

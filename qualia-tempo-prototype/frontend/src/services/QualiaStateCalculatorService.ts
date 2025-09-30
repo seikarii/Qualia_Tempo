@@ -17,12 +17,12 @@ import { TYPES } from "./inversify.types";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { QualiaCalculatorConfig } from "./contracts/IQualiaStateCalculatorService.contracts";
-import type { ITimerService } from "./interfaces/ITimerService";
 import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
 import { QualiaStateCalculatedEvent } from "./contracts/events.contracts";
 import type { PlayerActionEvent } from "./contracts/events.contracts";
 import type { QualiaState } from "../types/contracts";
-import { logMethod, catchError } from "../utils/decorators";
+import type { ITimerService } from "./interfaces/ITimerService";
+import { logMethod, catchError, OnEvent, IBaseService } from "../utils/decorators";
 
 // Configuration interface - REMOVED: Using ConfigurationService interface
 
@@ -40,13 +40,12 @@ import { logMethod, catchError } from "../utils/decorators";
  */
 @injectable()
 export class QualiaStateCalculatorService
-  implements IQualiaStateCalculatorService
+  implements IQualiaStateCalculatorService, IBaseService
 {
   private currentState!: QualiaState;
   private config: QualiaCalculatorConfig; // QUALIA.CODE: Injected directly via constructor
   private lastUpdateTime: number;
   private updateIntervalId: number | null = null;
-  private eventListenerIds: string[] = [];
   private _isRunning = false; // Renamed to avoid conflict with method
   private eventBus: IEventBus;
   private logger: ILogger;
@@ -87,38 +86,28 @@ export class QualiaStateCalculatorService
 
 
   /**
-   * Start the calculator service and begin listening to events.
+   * Initialize the calculator service and set up event listeners.
    */
-  public start(): void {
-    if (this._isRunning) {
-      this.logger.warn("⚠️ [QualiaCalculator] Service already running");
-      return;
-    }
-
-    // QUALIA.CODE: Configuration is already loaded in constructor
-    this.subscribeToPlayerActionEvents();
+  @logMethod
+  @catchError
+  public initialize(): void {
+    this.logger.info("🚀 [QualiaCalculator] Initializing service...");
+    // @OnEvent decorators handle subscriptions automatically
+    // TODO: Refactor to listen to GameTick event instead of internal loop
     this.startUpdateLoop();
-    this._isRunning = true;
-
-    this.logger.info(
-      "🚀 [QualiaCalculator] Service started - pure event architecture",
-    );
+    this.logger.info("🧮 [QualiaCalculator] Service initialized");
   }
 
   /**
-   * Stop the calculator service and unsubscribe from events.
+   * Clean up the calculator service and remove event listeners.
    */
-  public stop(): void {
-    if (!this._isRunning) {
-      this.logger.warn("⚠️ [QualiaCalculator] Service not running");
-      return;
-    }
-
-    this.unsubscribeFromEvents();
+  @logMethod
+  @catchError
+  public cleanup(): void {
+    this.logger.info("🛑 [QualiaCalculator] Cleaning up service...");
+    // @OnEvent lifecycle handles cleanup automatically
     this.stopUpdateLoop();
-    this._isRunning = false;
-
-    this.logger.info("🛑 [QualiaCalculator] Service stopped");
+    this.logger.info("✅ [QualiaCalculator] Service cleaned up");
   }
 
   /**
@@ -158,50 +147,23 @@ export class QualiaStateCalculatorService
 
   private createInitialState(): QualiaState {
     return {
-      intensity: 0.3,
-      precision: 0.5,
-      aggression: 0.0,
-      flow: 0.4,
-      chaos: 0.0,
-      recovery: 0.0,
-      transcendence: 0.0,
+      intensity: this.config.baseQualiaState.intensity,
+      precision: this.config.baseQualiaState.precision,
+      aggression: this.config.baseQualiaState.aggression,
+      flow: this.config.baseQualiaState.flow,
+      chaos: this.config.baseQualiaState.chaos,
+      recovery: this.config.baseQualiaState.recovery,
+      transcendence: this.config.baseQualiaState.transcendence,
     };
-  }
-
-  /**
-   * Subscribe to PlayerAction events on the EventBus.
-   * ARCHITECTURE: This is the ONLY input to this service.
-   */
-  private subscribeToPlayerActionEvents(): void {
-    const playerActionHandler = (event: PlayerActionEvent) => {
-      this.handlePlayerAction(event);
-    };
-
-    const listenerId = this.eventBus.subscribe(
-      "PlayerAction",
-      playerActionHandler.bind(this),
-      { priority: "high" },
-    );
-    this.eventListenerIds.push(listenerId);
-
-    this.logger.info("📡 [QualiaCalculator] Subscribed to PlayerAction events");
-  }
-
-  private unsubscribeFromEvents(): void {
-    for (const listenerId of this.eventListenerIds) {
-      this.eventBus.unsubscribe(listenerId);
-    }
-    this.eventListenerIds = [];
-
-    this.logger.info("📡 [QualiaCalculator] Unsubscribed from all events");
   }
 
   /**
    * Handle incoming PlayerAction events.
    * ARCHITECTURE: This replaces the direct method calls from UI.
    */
+  @OnEvent('PlayerAction')
   private handlePlayerAction(event: PlayerActionEvent): void {
-    const startTime = performance.now();
+    const startTime = Date.now(); // TODO: Use IPerformanceService when available
     const { action, context } = event;
 
     switch (action) {
@@ -228,7 +190,7 @@ export class QualiaStateCalculatorService
     this.emitStateUpdate();
 
     // Track calculation statistics
-    const duration = performance.now() - startTime;
+    const duration = Date.now() - startTime; // TODO: Use IPerformanceService when available
     this.calculationsPerformed++;
     this.totalCalculationTime += duration;
   }
