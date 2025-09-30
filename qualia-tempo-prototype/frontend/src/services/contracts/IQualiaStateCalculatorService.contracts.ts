@@ -61,25 +61,4 @@ export interface QualiaCalculatorConfig {
   };
   updateIntervalMs: number;
   historySize: number;
-  // Additional properties used by QualiaStateCalculatorService
-  hitNoteMultipliers: { intensity: number; precision: number; flow: number };
-  missNoteMultipliers: { chaos: number; precision: number; flow: number };
-  dashMultipliers: { aggression: number; intensity: number };
-  fastForwardMultipliers: { aggression: number; intensity: number };
-  rewindMultipliers: { recovery: number; precision: number };
-  updateInterval: number; // Legacy property - mapped to updateIntervalMs
-  intensityDecay: number;
-  precisionDecay: number;
-  aggressionDecay: number;
-  flowDecay: number;
-  chaosDecay: number;
-  recoveryDecay: number;
-  transcendenceDecay: number;
-  transcendenceThresholds: {
-    intensity: number;
-    precision: number;
-    flow: number;
-  };
-  minValue: number;
-  maxValue: number;
 }

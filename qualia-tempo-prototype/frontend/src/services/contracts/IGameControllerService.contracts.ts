@@ -73,6 +73,21 @@ export interface GameControllerConfig {
     rewindHealthBonus: number;
     dashScoreBonus: number;
   };
+  gameStates: {
+    initial: {
+      isPlaying: boolean;
+      isPaused: boolean;
+      currentScore: number;
+      comboCount: number;
+      level: number;
+      gameMode: string;
+    };
+    statusMessages: {
+      playing: string;
+      paused: string;
+      gameOver: string;
+    };
+  };
   maxPlayers: number; // Maximum number of players supported
   enablePauseResume: boolean; // Enable pause/resume functionality
   enableGameStateValidation: boolean; // Enable game state validation

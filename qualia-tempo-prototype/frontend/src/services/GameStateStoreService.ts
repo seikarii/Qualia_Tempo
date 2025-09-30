@@ -28,6 +28,7 @@ import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { GameStateStoreConfig } from "./contracts/IGameStateStoreService.contracts";
+import type { IGameInfrastructureService } from "./interfaces/IGameInfrastructureService";
 
 // Store setter type (from Zustand)
 type StoreSetter = (_state: unknown) => void;
@@ -47,13 +48,18 @@ type StoreSetter = (_state: unknown) => void;
 export class GameStateStoreService implements IGameStateStoreService, IBaseService {
   private setStore!: StoreSetter; // Will be set by setStoreSetter method
   private config: GameStateStoreConfig;
+  private logger: ILogger;
+  private eventBus: IEventBus;
 
   constructor(
-    @inject(TYPES.IEventBus) private readonly eventBus: IEventBus,
-    @inject(TYPES.ILogger) private readonly logger: ILogger,
+    @inject(TYPES.IEventBus) private readonly _eventBus: IEventBus,
+    @inject(TYPES.ILogger) private readonly _logger: ILogger,
     @inject(TYPES.GameStateStoreConfig) config: GameStateStoreConfig,
+    @inject(TYPES.IGameInfrastructureService) private readonly infrastructureService: IGameInfrastructureService,
   ) {
     this.config = config;
+    this.logger = _logger;
+    this.eventBus = _eventBus;
     this.logger.info("GameStateStoreService constructed. Awaiting store setter.");
   }
 
@@ -65,9 +71,9 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   @logMethod
   @catchError
   initialize(): void {
-    this.logger.info(this.config.messages.STARTING_LISTENERS);
+    this.logger.info(this.config.messages.startingListeners);
     // @OnEvent decorators handle subscriptions automatically
-    this.logger.info(this.config.messages.LISTENERS_ACTIVE);
+    this.logger.info(this.config.messages.listenersActive);
   }
 
   /**
@@ -76,9 +82,9 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   @logMethod
   @catchError
   cleanup(): void {
-    this.logger.info(this.config.messages.STOPPING_LISTENERS);
+    this.logger.info(this.config.messages.stoppingListeners);
     // @OnEvent lifecycle handles cleanup automatically
-    this.logger.info(this.config.messages.LISTENERS_STOPPED);
+    this.logger.info(this.config.messages.listenersStopped);
   }
 
   @logMethod
@@ -138,7 +144,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
         this.setStore((state: any) => ({
           ...state,
           isPlaying: true,
-          gameStartTime: Date.now(),
+          gameStartTime: this.infrastructureService.performanceService.now(),
         }));
         break;
 
@@ -252,7 +258,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
    */
   @OnEvent('RhythmicDash')
   private handleRhythmicDash(event: RhythmicDashEvent): void {
-    this.logger.info(this.config.messages.RHYTHMIC_DASH, {
+    this.logger.info(this.config.messages.rhythmicDash, {
       direction: event.direction,
       newPosition: event.newPosition,
       timing: event.timing,
@@ -299,7 +305,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
       this.eventBus.emit({
         type: 'ClearNoteFromViewRequest' as any,
         noteId: noteId,
-        timestamp: Date.now(),
+        timestamp: this.infrastructureService.performanceService.now(),
         source: 'GameStateStoreService'
       } as any);
     }

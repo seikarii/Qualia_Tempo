@@ -41,6 +41,19 @@ mechanics:
   rewindHealthBonus: 10
   dashScoreBonus: 5
 
+gameStates:
+  initial:
+    isPlaying: false
+    isPaused: false
+    currentScore: 0
+    comboCount: 0
+    level: 1
+    gameMode: "normal"
+  statusMessages:
+    playing: "Playing"
+    paused: "Paused"
+    gameOver: "GameOver"
+
 # Legacy compatibility (removed - no longer needed)
 # maxHealth: 100
 # initialScore: 0

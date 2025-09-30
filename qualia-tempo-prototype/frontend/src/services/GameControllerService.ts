@@ -396,13 +396,13 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     this.logger.info('🚀 [GameController] Initializing service with @OnEvent lifecycle...');
     // Initialize game state from config
     this.gameState = {
-      isPlaying: false,
-      isPaused: false,
-      currentScore: this.config.scoring.baseScorePerHit, // or 0?
-      comboCount: 0,
+      isPlaying: this.config.gameStates.initial.isPlaying,
+      isPaused: this.config.gameStates.initial.isPaused,
+      currentScore: this.config.gameStates.initial.currentScore,
+      comboCount: this.config.gameStates.initial.comboCount,
       health: this.config.health.maxHealth,
-      level: 1,
-      gameMode: "normal",
+      level: this.config.gameStates.initial.level,
+      gameMode: this.config.gameStates.initial.gameMode as "normal" | "hard" | "qualia",
     };
     // @OnEvent subscriptions are handled automatically by initializeEventSubscriptions
     // No manual eventBus.subscribe calls needed
