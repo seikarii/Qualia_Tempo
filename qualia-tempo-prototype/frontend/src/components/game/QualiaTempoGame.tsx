@@ -9,7 +9,7 @@ import {
 import { Vector2 } from "three";
 import * as THREE from "three";
 import { useGameStore } from "../../state/useGameStore";
-import { useEventBus, useService, useCoordinateSystemService, useTimerService, useBrowserEventsService } from "../../services/hooks";
+import { useEventBus, useService, useCoordinateSystemService, useTimerService, useBrowserEventsService, useConfiguration } from "../../services/hooks";
 import { TYPES } from "../../services/inversify.types";
 import type { IInputStateService } from "../../services/interfaces/IInputStateService";
 import type {
@@ -78,6 +78,10 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   const inputStateService = useService<IInputStateService>(TYPES.IInputStateService);
   const timerService = useTimerService();
   const browserEventsService = useBrowserEventsService();
+  const configurationService = useConfiguration();
+
+  // Get gameplay configuration
+  const gameplayConfig = configurationService.getConfigSection('gameplay');
 
   // Get real game state from Zustand store
   const zustandState = useGameStore();
@@ -89,15 +93,17 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   const calculateNoteAccuracy = useCallback(
     (currentTime: number, noteTimestamp: number): number => {
       const timeDiff = Math.abs(currentTime - noteTimestamp);
-      const maxTiming = 200; // milliseconds window for a "good" hit
-      const perfectTiming = 50; // milliseconds window for a "perfect" hit
+
+      // LÓGICA REFACTORIZADA - Externalized to configuration
+      const maxTiming = gameplayConfig.timingWindows.good; // ANTES: 200
+      const perfectTiming = gameplayConfig.timingWindows.perfect; // ANTES: 50
 
       if (timeDiff <= perfectTiming) return 1.0;
       if (timeDiff <= maxTiming)
         return Math.max(0.5, 1.0 - timeDiff / maxTiming);
       return 0.0; // Miss
     },
-    [],
+    [gameplayConfig], // Añadir como dependencia
   );
 
   // QUALIA.CODE: Memoized note transformation - Performance critical

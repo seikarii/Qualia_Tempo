@@ -26,6 +26,20 @@ import type { RhythmicMovementConfig } from '../services/contracts/IRhythmicMove
 import type { FrontendRenderingConfig } from '../services/contracts/IFrontendRenderingService.contracts';
 
 /**
+ * Gameplay Configuration Interface
+ * Defines timing windows and gameplay parameters
+ */
+export interface GameplayConfig {
+  timingWindows: {
+    perfect: number; // milliseconds - perfect hit window
+    good: number; // milliseconds - good hit window
+  };
+  rhythmTolerance: number; // milliseconds - window for rhythm accuracy
+  comboResetTime: number; // seconds - time before combo resets
+  pauseCooldown: number; // seconds - cooldown for Pause ability
+}
+
+/**
  * Complete Game Configuration Interface
  *
  * ARCHITECTURAL PRINCIPLE: This interface composes all service configurations
@@ -48,6 +62,7 @@ export interface FullGameConfig {
 
   // Game Logic Services
   gameController: GameControllerConfig;
+  gameplay: GameplayConfig;
   qualiaCalculator: QualiaCalculatorConfig;
   rhythmicMovement: RhythmicMovementConfig;
 

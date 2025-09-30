@@ -1,0 +1,8 @@
+# Gameplay Configuration
+# Externalized game mechanics configuration
+timingWindows:
+  perfect: 50 # milliseconds - perfect hit window
+  good: 200 # milliseconds - good hit window
+rhythmTolerance: 150 # milliseconds - window for rhythm accuracy
+comboResetTime: 2.0 # seconds - time before combo resets
+pauseCooldown: 1.0 # seconds - cooldown for Pause ability

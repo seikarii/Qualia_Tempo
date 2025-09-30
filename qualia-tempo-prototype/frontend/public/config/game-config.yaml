@@ -14,12 +14,6 @@ audio:
   volume: 0.8
   enableSubtitles: true
 
-# Gameplay configuration
-gameplay:
-  rhythmTolerance: 150 # milliseconds - window for rhythm accuracy
-  comboResetTime: 2.0 # seconds - time before combo resets
-  pauseCooldown: 1.0 # seconds - cooldown for Pause ability
-
 # Visual configuration
 visual:
   updateFrequency: 100 # milliseconds - how often to send QualiaState to backend

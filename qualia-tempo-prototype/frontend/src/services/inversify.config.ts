@@ -100,6 +100,7 @@ container.bind<ILogger>(TYPES.ILogger).to(QualiaLogger).inSingletonScope();
 container.bind<string>(TYPES.ConfigBasePath).toConstantValue("/config/");
 container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "gameController": "game-controller.yaml",
+  "gameplay": "gameplay.yaml",
   "audioService": "audio-service.yaml",
   "debugService": "debug-service.yaml",
   "errorReporting": "error-reporting.yaml",
