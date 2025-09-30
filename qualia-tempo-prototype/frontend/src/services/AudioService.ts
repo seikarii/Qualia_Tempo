@@ -6,6 +6,7 @@ import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError, measureTime } from "../utils/decorators";
 import { QualiaLogger } from "./Logger";
+import * as Tone from "tone";
 
 import type { IAudioService } from "./interfaces/IAudioService";
 import type { AudioServiceConfig } from "./contracts/IAudioService.contracts";
@@ -25,6 +26,7 @@ export class AudioService implements IAudioService {
   private timerService: ITimerService;
   private qualiaStateListenerId: string | null = null;
   private isInitialized: boolean = false;
+  private isAudioContextStarted: boolean = false;
 
   constructor(
     @inject(TYPES.IEventBus) eventBus: EventBus,
@@ -82,6 +84,20 @@ export class AudioService implements IAudioService {
     this.isInitialized = false;
 
     this.logger.info("✅ AudioService stopped successfully");
+  }
+
+  @logMethod
+  public async initializeAudioContext(): Promise<void> {
+    if (this.isAudioContextStarted) return;
+
+    try {
+      await Tone.start();
+      this.isAudioContextStarted = true;
+      this.logger.info("AudioContext started successfully after user gesture.");
+      this.eventBus.emit({ type: 'System.Audio.Ready' });
+    } catch (error) {
+      this.logger.error("Failed to start AudioContext", { error });
+    }
   }
 
   @logMethod

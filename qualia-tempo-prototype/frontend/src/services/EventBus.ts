@@ -28,6 +28,7 @@ import type {
   BackendSyncEvent,
   VisualImpactRequestedEvent,
   StreamingStatusChangedEvent,
+  SystemAudioReadyEvent,
 } from "./contracts/events.contracts";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { EventBusConfig } from "./contracts/IEventBus.contracts";
@@ -47,7 +48,8 @@ export type EventTypes =
   | MetronomeTickEvent
   | StreamingStatusChangedEvent
   | VisualImpactRequestedEvent
-  | RhythmicDashEvent;
+  | RhythmicDashEvent
+  | SystemAudioReadyEvent;
 
 // Event handler types
 export type EventHandler<T extends BaseEvent = BaseEvent> = (

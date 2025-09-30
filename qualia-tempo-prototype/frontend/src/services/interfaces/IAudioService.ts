@@ -11,6 +11,12 @@ export interface IAudioService {
   start(): Promise<void>;
 
   /**
+   * Initialize the AudioContext (required for web audio playback).
+   * @returns Promise that resolves when AudioContext is ready
+   */
+  initializeAudioContext(): Promise<void>;
+
+  /**
    * Stop the audio service and clean up resources.
    * @returns Promise that resolves when service is stopped
    */

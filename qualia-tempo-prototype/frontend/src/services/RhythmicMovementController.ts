@@ -448,7 +448,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
       this.eventBus.emit({
         type: 'PlayerAction',
         action: 'HitNote',
-        context: { accuracy, result: hitResult, score },
+        context: { noteId: nearestNote.id, accuracy, result: hitResult, score }, // AÑADIR noteId
         timestamp: new Date()
       } as PlayerActionEvent);
     }

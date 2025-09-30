@@ -7,7 +7,7 @@ export interface IGameControllerService {
   /**
    * Start the game and begin gameplay.
    */
-  startGame(): void;
+  startGame(): Promise<void>;
 
   /**
    * Pause the current game.

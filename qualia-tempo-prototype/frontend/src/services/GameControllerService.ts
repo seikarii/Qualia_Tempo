@@ -22,6 +22,7 @@ import type { GameState, GameControllerConfig } from "./contracts/IGameControlle
 import type { IGameControllerService } from "./interfaces/IGameControllerService";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 import type { ITimerService } from "./interfaces/ITimerService";
+import type { IAudioService } from "./interfaces/IAudioService";
 
 /**
  * GameControllerService: Manages game state and control logic
@@ -37,6 +38,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   private eventBus: EventBus;
   private gameStateStoreService: IGameStateStoreService;
   private timerService: ITimerService;
+  private audioService: IAudioService;
   private config: GameControllerConfig;
   // @ts-ignore - Used by @OnEvent decorator lifecycle
   private _eventListeners: string[] = []; // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
@@ -62,12 +64,14 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     @inject(TYPES.IGameStateStoreService)
     gameStateStoreService: IGameStateStoreService,
     @inject(TYPES.ITimerService) timerService: ITimerService,
+    @inject(TYPES.IAudioService) audioService: IAudioService,
   ) {
     this.eventBus = eventBus;
     this.logger = logger;
     this.config = config;
     this.gameStateStoreService = gameStateStoreService;
     this.timerService = timerService;
+    this.audioService = audioService;
     this.logger.info("🎮 [GameController] Service initialized");
   }
 
@@ -144,8 +148,15 @@ export class GameControllerService implements IGameControllerService, IBaseServi
 
   @logMethod
   @catchError
-  public startGame(): void {
-    this.logger.info("🎮 [GameController] Starting game");
+  public async startGame(): Promise<void> {
+    this.logger.info("🎮 [GameController] Starting game sequence...");
+
+    // PASO 1: Esperar a que el AudioContext se inicie. ESTO ES CRÍTICO.
+    await this.audioService.initializeAudioContext();
+
+    this.logger.info("AudioContext ready. Proceeding to start game state.");
+
+    // PASO 2: Proceder con la lógica original una vez el audio está listo.
     this.gameState.isPlaying = true;
     this.gameState.isPaused = false;
     this.emitGameStateChanged("Playing");
@@ -228,14 +239,14 @@ export class GameControllerService implements IGameControllerService, IBaseServi
 
   @OnEvent('PlayerAction')
   // @ts-ignore - Reserved for future player action handling
-  private _handlePlayerAction(event: PlayerActionEvent): void {
+  private async _handlePlayerAction(event: PlayerActionEvent): Promise<void> {
     this.logger.info(
       `🎮 [GameController] Handling PlayerAction: ${event.action}`,
     );
 
     switch (event.action) {
       case "StartGame":
-        this.startGame();
+        await this.startGame();
         break;
       case "PauseGame":
         this.pauseGame();

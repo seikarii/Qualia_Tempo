@@ -140,3 +140,7 @@ export interface StreamingStatusChangedEvent extends BaseEvent {
   type: "StreamingStatusChanged";
   status: ConnectionStatus;
 }
+
+export interface SystemAudioReadyEvent extends BaseEvent {
+  type: "System.Audio.Ready";
+}
