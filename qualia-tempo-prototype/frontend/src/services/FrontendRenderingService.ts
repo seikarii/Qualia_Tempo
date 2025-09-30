@@ -417,7 +417,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     this.camera.lookAt(0, 0, 0);
 
     // Render through post-processing pipeline
-    this.postProcessingService.render();
+    this.postProcessingService.render(this.camera);
   };
 
   @logMethod

@@ -1,7 +1,14 @@
 /**
- * QUALIA.CODE v3.2 - PostProcessingService
+ * QUALIA.CODE v4.3 - PostProcessingService
  * Dynamic post-processing pipeline graph engine using Three.js EffectComposer.
  * Loads pipeline configuration from YAML and orchestrates complex rendering graphs.
+ * 
+ * CHANGELOG v4.3:
+ * - Integrated SSR V2 shader with advanced configuration
+ * - Added support for gBuffer_Material texture binding
+ * - Enhanced SSR pass with projection/view matrices
+ * - Added camera near/far plane uniforms for SSR
+ * - Improved JIT pipeline connection for material properties
  */
 
 import { injectable, inject } from "inversify";
@@ -29,7 +36,7 @@ export class PostProcessingService implements IPostProcessingService {
 
   // Dynamic pipeline graph storage
   private readonly pipelines = new Map<string, EffectComposer>();
-  private readonly renderTargets = new Map<string, { texture: THREE.Texture, renderTarget?: THREE.WebGLRenderTarget }>();
+  private readonly renderTargets = new Map<string, THREE.WebGLRenderTarget>();
 
   // Shared objects from FrontendRenderingService
   private renderer!: THREE.WebGLRenderer;
@@ -52,13 +59,13 @@ export class PostProcessingService implements IPostProcessingService {
   @logMethod
   @catchError
   @BrowserOnly
-  async initialize(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera): Promise<void> {
+  async initialize(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera): Promise<void> {
     if (this.isInitialized) {
       this.logger.warn("PostProcessingService already initialized");
       return;
     }
 
-    this.logger.info("Initializing PostProcessingService v3.2");
+    this.logger.info("Initializing PostProcessingService v4.3 with SSR V2");
 
     // Store shared objects
     this.renderer = renderer;
@@ -75,7 +82,7 @@ export class PostProcessingService implements IPostProcessingService {
     this.connectPipelines();
 
     this.isInitialized = true;
-    this.logger.info("PostProcessingService v3.2 initialized successfully");
+    this.logger.info("PostProcessingService v4.3 initialized successfully with SSR V2 support");
   }
 
   @logMethod
@@ -88,7 +95,6 @@ export class PostProcessingService implements IPostProcessingService {
         type: this.mapTextureType(rtConfig.format),
         minFilter: this.mapMinFilter(rtConfig.options?.minFilter),
         magFilter: this.mapMagFilter(rtConfig.options?.magFilter),
-        // Añadir wrapS, wrapT si se definen en el contrato
       };
 
       const renderTarget = new THREE.WebGLRenderTarget(
@@ -97,7 +103,7 @@ export class PostProcessingService implements IPostProcessingService {
         options
       );
 
-      this.renderTargets.set(rtConfig.name, { texture: renderTarget.texture, renderTarget });
+      this.renderTargets.set(rtConfig.name, renderTarget);
       this.logger.debug(`Created render target: ${rtConfig.name} (${rtConfig.width}x${rtConfig.height})`);
     }
 
@@ -139,15 +145,13 @@ export class PostProcessingService implements IPostProcessingService {
       const outputTarget = this.renderTargets.get(pipelineConfig.output);
 
       if (pipelineConfig.output === 'screen') {
-        // Este pipeline renderiza a la pantalla
         composer = new EffectComposer(this.renderer);
-      } else if (outputTarget && outputTarget.renderTarget) {
-        // Este pipeline renderiza a un render target específico
-        composer = new EffectComposer(this.renderer, outputTarget.renderTarget);
-      } else {
-        // Para pipelines productores como gbuffer
-        composer = new EffectComposer(this.renderer);
+      } else if (outputTarget) {
+        composer = new EffectComposer(this.renderer, outputTarget);
         composer.renderToScreen = false;
+      } else {
+        this.logger.error(`Output render target '${pipelineConfig.output}' not found for pipeline '${pipelineConfig.name}'`);
+        continue;
       }
 
       // Add passes to the pipeline
@@ -211,7 +215,6 @@ export class PostProcessingService implements IPostProcessingService {
   private async createPass(passConfig: PostProcessingPass): Promise<Pass | null> {
     switch (passConfig.type) {
       case 'RenderPass':
-        // RenderPass uses the shared scene and camera
         return new RenderPass(this.scene, this.camera);
 
       case 'UnrealBloomPass':
@@ -230,17 +233,31 @@ export class PostProcessingService implements IPostProcessingService {
         const shaderSource = await this.shaderLoader.load(passConfig.shader);
         const shader = this.parseShader(shaderSource);
 
-        // Merge uniforms from config
-        shader.uniforms = { ...shader.uniforms, ...passConfig.uniforms };
-
-        // Add auto-connected uniforms
-        shader.uniforms.projectionMatrix = { value: new THREE.Matrix4() };
-        shader.uniforms.viewMatrix = { value: new THREE.Matrix4() };
-        shader.uniforms.cameraNear = { value: 0.1 };
-        shader.uniforms.cameraFar = { value: 1000 };
-        shader.uniforms.resolution = { value: new THREE.Vector2(this.config.renderTargetWidth, this.config.renderTargetHeight) };
-
         const pass = new ShaderPass(shader);
+
+        // Apply uniforms from configuration
+        if (passConfig.uniforms) {
+          for (const uniformName in passConfig.uniforms) {
+            const uniformConfig = passConfig.uniforms[uniformName];
+            
+            // Handle different uniform value types
+            if (typeof uniformConfig.value === 'string') {
+              // String values might reference render targets (handled in connectPipelines)
+              pass.uniforms[uniformName] = { value: null };
+            } else {
+              // Direct values (numbers, arrays, etc.)
+              pass.uniforms[uniformName] = { value: uniformConfig.value };
+            }
+          }
+        }
+
+        // CRITICAL: Add resolution uniform for SSR passes
+        if (passConfig.shader === 'ssr_v2') {
+          pass.uniforms.resolution = { 
+            value: new THREE.Vector2(this.config.renderTargetWidth, this.config.renderTargetHeight) 
+          };
+          this.logger.debug('SSR V2 pass created with advanced configuration');
+        }
 
         return pass;
       }
@@ -258,9 +275,6 @@ export class PostProcessingService implements IPostProcessingService {
   @logMethod
   @catchError
   private parseShader(shaderSource: string): { uniforms: Record<string, { value: unknown }>, vertexShader: string, fragmentShader: string } {
-    // For ShaderPass, we need both vertex and fragment shaders
-    // If the file contains ---FRAGMENT--- separator, split it
-    // Otherwise, assume it's just a fragment shader and use default vertex shader
     let vertexShader: string;
     let fragmentShader: string;
 
@@ -269,7 +283,7 @@ export class PostProcessingService implements IPostProcessingService {
       vertexShader = parts[0].trim();
       fragmentShader = parts[1].trim();
     } else {
-      // Use default pass-through vertex shader
+      // Default pass-through vertex shader
       vertexShader = `
         varying vec2 vUv;
         void main() {
@@ -290,47 +304,56 @@ export class PostProcessingService implements IPostProcessingService {
   }
 
   /**
-   * QUALIA.CODE v4.2: Update pipeline inputs from render targets map
-   * Updates ShaderPass uniforms that reference render targets by name
+   * QUALIA.CODE v4.3: Just-in-time pipeline input connections
+   * Connects G-Buffer textures and camera matrices directly from GBufferPass to SSR passes
+   * Eliminates frame lag by connecting textures immediately before rendering
    */
-  private _updatePipelineInputsFromMap(): void {
-    for (const [pipelineName, composer] of this.pipelines) {
-      for (const pass of composer.passes) {
-        if (pass instanceof ShaderPass && pass.uniforms) {
-          for (const uniformName in pass.uniforms) {
-            const uniformValue = pass.uniforms[uniformName].value;
-            if (typeof uniformValue === 'string' && this.renderTargets.has(uniformValue)) {
-              pass.uniforms[uniformName].value = this.renderTargets.get(uniformValue)!.texture;
-              this.logger.debug(`Updated uniform ${uniformName} in pipeline ${pipelineName} from map`);
-            }
-          }
-        }
-      }
-    }
-  }
+  private _connectPipelineInputs(composer: EffectComposer): void {
+    const gbufferPass = composer.passes.find(p => p instanceof GBufferPass) as GBufferPass;
+    if (!gbufferPass) return;
 
-  /**
-   * QUALIA.CODE v4.3: Update camera-related uniforms for all ShaderPasses
-   */
-  private _updateCameraUniforms(camera: THREE.PerspectiveCamera): void {
-    for (const composer of this.pipelines.values()) {
-      for (const pass of composer.passes) {
-        if (pass instanceof ShaderPass && pass.uniforms) {
-          if ('projectionMatrix' in pass.uniforms) {
-            pass.uniforms.projectionMatrix.value = camera.projectionMatrix;
-          }
-          if ('viewMatrix' in pass.uniforms) {
-            pass.uniforms.viewMatrix.value = camera.matrixWorldInverse;
-          }
-          if ('cameraNear' in pass.uniforms) {
-            pass.uniforms.cameraNear.value = camera.near;
-          }
-          if ('cameraFar' in pass.uniforms) {
-            pass.uniforms.cameraFar.value = camera.far;
-          }
-          if ('resolution' in pass.uniforms) {
-            pass.uniforms.resolution.value.set(this.config.renderTargetWidth, this.config.renderTargetHeight);
-          }
+    // Connect G-Buffer textures to all passes that need them
+    for (const pass of composer.passes) {
+      if (pass instanceof ShaderPass && pass.uniforms) {
+        // Connect G-Buffer textures
+        if ('gBuffer_Color' in pass.uniforms) {
+          pass.uniforms.gBuffer_Color.value = gbufferPass.targets.color;
+        }
+        if ('gBuffer_Normal' in pass.uniforms) {
+          pass.uniforms.gBuffer_Normal.value = gbufferPass.targets.normal;
+        }
+        if ('gBuffer_Depth' in pass.uniforms) {
+          pass.uniforms.gBuffer_Depth.value = gbufferPass.targets.depth;
+        }
+        // NEW: Connect material texture for SSR V2
+        if ('gBuffer_Material' in pass.uniforms) {
+          pass.uniforms.gBuffer_Material.value = gbufferPass.targets.material;
+          this.logger.debug('Connected gBuffer_Material texture to SSR pass');
+        }
+
+        // Connect camera matrices for SSR
+        if ('projectionMatrix' in pass.uniforms && this.camera instanceof THREE.PerspectiveCamera) {
+          pass.uniforms.projectionMatrix.value = this.camera.projectionMatrix;
+        }
+        if ('viewMatrix' in pass.uniforms) {
+          pass.uniforms.viewMatrix.value = this.camera.matrixWorldInverse;
+        }
+        if ('cameraNear' in pass.uniforms && this.camera instanceof THREE.PerspectiveCamera) {
+          pass.uniforms.cameraNear.value = this.camera.near;
+        }
+        if ('cameraFar' in pass.uniforms && this.camera instanceof THREE.PerspectiveCamera) {
+          pass.uniforms.cameraFar.value = this.camera.far;
+        }
+
+        // Legacy texture connections for backward compatibility
+        if ('tDiffuse' in pass.uniforms && !pass.uniforms.tDiffuse.value) {
+          pass.uniforms.tDiffuse.value = gbufferPass.targets.color;
+        }
+        if ('tNormal' in pass.uniforms) {
+          pass.uniforms.tNormal.value = gbufferPass.targets.normal;
+        }
+        if ('tDepth' in pass.uniforms) {
+          pass.uniforms.tDepth.value = gbufferPass.targets.depth;
         }
       }
     }
@@ -338,39 +361,21 @@ export class PostProcessingService implements IPostProcessingService {
 
   @logMethod
   @catchError
-  render(camera: THREE.PerspectiveCamera): void {
+  render(): void {
     if (!this.isInitialized) {
       throw new Error("PostProcessingService must be initialized before rendering");
     }
 
     const startTime = performance.now();
 
-    // Producer: Render gbuffer pipeline to produce textures
-    const gbufferPipeline = 'gbuffer_pipeline';
-    const gbufferComposer = this.pipelines.get(gbufferPipeline);
-    if (gbufferComposer) {
-      gbufferComposer.render();
-
-      // Update Map: Update renderTargets map with produced G-Buffer textures
-      const gbufferPass = gbufferComposer.passes.find(p => p instanceof GBufferPass) as GBufferPass;
-      if (gbufferPass) {
-        this.renderTargets.set('gbuffer_color', { texture: gbufferPass.colorTexture });
-        this.renderTargets.set('gbuffer_normal', { texture: gbufferPass.normalTexture });
-        this.renderTargets.set('gbuffer_depth', { texture: gbufferPass.depthTexture });
-        this.renderTargets.set('gbuffer_material', { texture: gbufferPass.materialTexture });
-      }
-
-      // Update uniforms from the updated map
-      this._updatePipelineInputsFromMap();
-
-      // Update camera uniforms
-      this._updateCameraUniforms(camera);
-    }
-
-    // Consumer: Render other pipelines that consume the textures
-    for (const pipelineName of (this.config.pipelineOrder || []).filter(name => name !== gbufferPipeline)) {
+    // Execute pipelines in the order defined in configuration
+    for (const pipelineName of this.config.pipelineOrder || []) {
       const composer = this.pipelines.get(pipelineName);
       if (composer) {
+        // QUALIA.CODE v4.3: Just-in-time pipeline connections
+        // Connect G-Buffer textures and camera matrices before rendering
+        this._connectPipelineInputs(composer);
+
         composer.render();
         this.logger.debug(`Rendered pipeline: ${pipelineName}`);
       } else {
@@ -386,11 +391,9 @@ export class PostProcessingService implements IPostProcessingService {
     if (!this.isInitialized) return;
 
     // Resize all render targets
-    for (const [name, rtWrapper] of this.renderTargets) {
-      if (rtWrapper.renderTarget) {
-        rtWrapper.renderTarget.setSize(width, height);
-        this.logger.debug(`Resized render target: ${name}`);
-      }
+    for (const [name, renderTarget] of this.renderTargets) {
+      renderTarget.setSize(width, height);
+      this.logger.debug(`Resized render target: ${name}`);
     }
 
     // Resize all composers
@@ -398,16 +401,23 @@ export class PostProcessingService implements IPostProcessingService {
       composer.setSize(width, height);
       this.logger.debug(`Resized pipeline: ${name}`);
     }
+
+    // Update resolution uniforms for SSR passes
+    for (const composer of this.pipelines.values()) {
+      for (const pass of composer.passes) {
+        if (pass instanceof ShaderPass && pass.uniforms.resolution) {
+          pass.uniforms.resolution.value.set(width, height);
+        }
+      }
+    }
   }
 
   @logMethod
   dispose(): void {
     // Dispose all render targets
-    for (const [name, rtWrapper] of this.renderTargets) {
-      if (rtWrapper.renderTarget) {
-        rtWrapper.renderTarget.dispose();
-        this.logger.debug(`Disposed render target: ${name}`);
-      }
+    for (const [name, renderTarget] of this.renderTargets) {
+      renderTarget.dispose();
+      this.logger.debug(`Disposed render target: ${name}`);
     }
     this.renderTargets.clear();
 

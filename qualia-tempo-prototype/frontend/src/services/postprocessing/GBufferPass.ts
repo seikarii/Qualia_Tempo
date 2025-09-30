@@ -12,16 +12,11 @@ export interface GBufferTargets {
   color: THREE.Texture;
   normal: THREE.Texture;
   depth: THREE.Texture;
-}
-
-export interface GBufferTargets {
-  color: THREE.Texture;
-  normal: THREE.Texture;
-  depth: THREE.Texture;
+  material: THREE.Texture;
 }
 
 export class GBufferPass extends Pass {
-  private gbuffer: THREE.WebGLRenderTarget;
+  private gbuffer: any;
   private gbufferMaterial!: THREE.ShaderMaterial;
   private originalOverrideMaterial: THREE.Material | null = null;
   private scene: THREE.Scene;
@@ -31,6 +26,7 @@ export class GBufferPass extends Pass {
   private _colorTexture!: THREE.Texture;
   private _normalTexture!: THREE.Texture;
   private _depthTexture!: THREE.Texture;
+  private _materialTexture!: THREE.Texture;
 
   constructor(scene: THREE.Scene, camera: THREE.Camera, width: number, height: number) {
     super();
@@ -42,13 +38,19 @@ export class GBufferPass extends Pass {
     this.initializeTextures();
 
     // Create render target
-    this.gbuffer = new THREE.WebGLRenderTarget(width, height, {
+    this.gbuffer = new (THREE as any).WebGLMultipleRenderTargets(width, height, 4, {
       type: THREE.UnsignedByteType,
       format: THREE.RGBAFormat,
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
       generateMipmaps: false
     });
+
+    // Assign textures to MRT
+    this.gbuffer.texture[0] = this._colorTexture;
+    this.gbuffer.texture[1] = this._normalTexture;
+    this.gbuffer.texture[2] = this._depthTexture;
+    this.gbuffer.texture[3] = this._materialTexture;
 
     // Create and configure G-Buffer shader material
     this.initializeShaderMaterial();
@@ -80,6 +82,14 @@ export class GBufferPass extends Pass {
     this._depthTexture.minFilter = THREE.LinearFilter;
     this._depthTexture.magFilter = THREE.LinearFilter;
     this._depthTexture.generateMipmaps = false;
+
+    this._materialTexture = new THREE.Texture();
+    this._materialTexture.name = 'gBuffer-Material';
+    this._materialTexture.type = THREE.FloatType;
+    this._materialTexture.format = THREE.RGBAFormat;
+    this._materialTexture.minFilter = THREE.LinearFilter;
+    this._materialTexture.magFilter = THREE.LinearFilter;
+    this._materialTexture.generateMipmaps = false;
   }
 
   private initializeShaderMaterial(): void {
@@ -122,6 +132,9 @@ export class GBufferPass extends Pass {
           // Output 2: Linear depth
           float depth = length(vViewPosition) / 1000.0; // Normalize depth
           gl_FragData[2] = vec4(vec3(depth), 1.0);
+
+          // Output 3: Material properties (placeholder)
+          gl_FragData[3] = vec4(0.5, 0.5, 0.5, 1.0);
         }
       `,
       uniforms: {
@@ -133,31 +146,13 @@ export class GBufferPass extends Pass {
   }
 
   render(renderer: THREE.WebGLRenderer, _writeBuffer: THREE.WebGLRenderTarget, _readBuffer: THREE.WebGLRenderTarget): void {
-    // Check for MRT extension support
-    const gl = renderer.getContext();
-    const ext = gl.getExtension('WEBGL_draw_buffers');
-
-    if (!ext) {
-      console.warn('GBufferPass: WEBGL_draw_buffers extension not supported. Falling back to single pass.');
-      // Fallback to single render target
-      renderer.setRenderTarget(this.gbuffer);
-      this.scene.overrideMaterial = this.gbufferMaterial;
-      renderer.render(this.scene, this.camera);
-      this.scene.overrideMaterial = null;
-      renderer.setRenderTarget(null);
-      return;
-    }
-
     // Store original override material
     this.originalOverrideMaterial = this.scene.overrideMaterial;
 
     // Override all materials with our G-Buffer material
     this.scene.overrideMaterial = this.gbufferMaterial;
 
-    // Configure MRT manually
-    this.setupMRT(gl, ext);
-
-    // Set render target
+    // Set render target to MRT
     renderer.setRenderTarget(this.gbuffer);
 
     // Render the scene once to all G-Buffer targets simultaneously
@@ -170,54 +165,6 @@ export class GBufferPass extends Pass {
     renderer.setRenderTarget(null);
   }
 
-  private setupMRT(gl: WebGLRenderingContext, ext: any): void {
-    // Bind the framebuffer
-    const framebuffer = (this.gbuffer as any).framebuffer || (this.gbuffer as any).fbo;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-
-    // Create and attach textures for MRT
-    const colorTexture = gl.createTexture();
-    const normalTexture = gl.createTexture();
-    const depthTexture = gl.createTexture();
-
-    // Configure color texture (attachment 0)
-    gl.bindTexture(gl.TEXTURE_2D, colorTexture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.gbuffer.width, this.gbuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, ext.COLOR_ATTACHMENT0_WEBGL, gl.TEXTURE_2D, colorTexture, 0);
-
-    // Configure normal texture (attachment 1)
-    gl.bindTexture(gl.TEXTURE_2D, normalTexture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.gbuffer.width, this.gbuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, ext.COLOR_ATTACHMENT1_WEBGL, gl.TEXTURE_2D, normalTexture, 0);
-
-    // Configure depth texture (attachment 2)
-    gl.bindTexture(gl.TEXTURE_2D, depthTexture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.gbuffer.width, this.gbuffer.height, 0, gl.RGBA, gl.FLOAT, null);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, ext.COLOR_ATTACHMENT2_WEBGL, gl.TEXTURE_2D, depthTexture, 0);
-
-    // Set draw buffers
-    ext.drawBuffersWEBGL([
-      ext.COLOR_ATTACHMENT0_WEBGL,
-      ext.COLOR_ATTACHMENT1_WEBGL,
-      ext.COLOR_ATTACHMENT2_WEBGL
-    ]);
-
-    // Update Three.js texture references
-    (this._colorTexture as any).__webglTexture = colorTexture;
-    (this._normalTexture as any).__webglTexture = normalTexture;
-    (this._depthTexture as any).__webglTexture = depthTexture;
-
-    // Unbind
-    gl.bindTexture(gl.TEXTURE_2D, null);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  }
-
   setSize(width: number, height: number): void {
     this.gbuffer.setSize(width, height);
   }
@@ -228,26 +175,32 @@ export class GBufferPass extends Pass {
     this._colorTexture.dispose();
     this._normalTexture.dispose();
     this._depthTexture.dispose();
+    this._materialTexture.dispose();
   }
 
   // Getters for accessing the G-Buffer textures
   get colorTexture(): THREE.Texture {
-    return this._colorTexture;
+    return this.gbuffer.texture[0];
   }
 
   get normalTexture(): THREE.Texture {
-    return this._normalTexture;
+    return this.gbuffer.texture[1];
   }
 
   get depthTexture(): THREE.Texture {
-    return this._depthTexture;
+    return this.gbuffer.texture[2];
+  }
+
+  get materialTexture(): THREE.Texture {
+    return this.gbuffer.texture[3];
   }
 
   get targets(): GBufferTargets {
     return {
-      color: this._colorTexture,
-      normal: this._normalTexture,
-      depth: this._depthTexture
+      color: this.gbuffer.texture[0],
+      normal: this.gbuffer.texture[1],
+      depth: this.gbuffer.texture[2],
+      material: this.gbuffer.texture[3]
     };
   }
 }
