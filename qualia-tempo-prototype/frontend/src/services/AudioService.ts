@@ -294,16 +294,6 @@ export class AudioService implements IAudioService {
 
   @logMethod
   @catchError
-  public setMasterVolume(volume: number): void {
-    // Update the configuration service with new volume
-    this.logger.warn(
-      `Attempted to set master volume to ${volume}. This is a read-only value. Please modify the volume in audio-service.yaml and restart.`
-    );
-    // DO NOT MODIFY this.config.volume
-  }
-
-  @logMethod
-  @catchError
   public getMasterVolume(): number {
     return this.config.volume;
   }
