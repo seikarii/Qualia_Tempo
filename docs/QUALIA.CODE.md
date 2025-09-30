@@ -153,7 +153,7 @@ The linting system integrates with continuous integration pipelines to ensure on
 @AdaptAndEmit('messageAdapter')
 private onRawMessage(rawData: ArrayBuffer): void { /* ... */ }
 
-### 5.2.1. Environment Adaptation Bundle
+### 6.2.1. Environment Adaptation Bundle
 
 - `@BrowserOnly`: **CRÍTICO PARA LA ABSTRACCIÓN DE PLATAFORMA.** Este decorador se debe usar en métodos que dependen de APIs exclusivas del navegador (ej. `window`, `document`). Asegura que el método solo se ejecute si está en un entorno de navegador. Si se invoca en un entorno de servidor (SSR) o de test, el decorador abortará la ejecución del método y registrará una advertencia, previniendo caídas del sistema.
 
