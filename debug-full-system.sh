@@ -235,18 +235,22 @@ start_frontend() {
 
 # Browser testing with GUARANTEED artifact generation and cleanup
 test_browser() {
-    log_info "Entering browser testing phase..."
-    cd "$FRONTEND_DIR"
+    log_info "Preparing for in-memory browser test execution..."
 
-    # MANDATO 2: A robust test script that captures failure states.
-    # This version includes screenshot-on-failure logic in the catch block.
-    log_info "Generating dynamic browser test script with enhanced failure reporting..."
-    cat > browser-test.js << 'EOF'
-import { chromium } from 'playwright';
-import fs from 'fs';
+    # Execute the test using pipes. The '-' in 'node -' tells Node.js to read from stdin.
+    # The 'EOF' does NOT have quotes to allow $LOG_DIR expansion.
+    # MAXIMUM EXECUTION TIME: 20 seconds - if exceeded, something is definitely wrong
+    log_info "Executing in-memory browser test... (Errors are expected during failure tests)"
+    timeout 20 node - > "$BROWSER_LOG" 2>&1 << EOF
+// ==========================================
+// IN-MEMORY PLAYWRIGHT SCRIPT
+// ==========================================
 
-async function comprehensiveTest() {
-    console.log('🌐 Starting comprehensive browser test...');
+const { chromium } = require('playwright');
+const fs = require('fs');
+
+async function runInMemoryTest() {
+    console.log('🌐 Starting in-memory browser test...');
     let browser;
     let page;
 
@@ -269,14 +273,14 @@ async function comprehensiveTest() {
         page.on('console', (msg) => {
             const text = msg.text();
             const type = msg.type();
-            const entry = `[${type.toUpperCase()}] ${text}`;
+            const entry = \`[\${type.toUpperCase()}] \${text}\`;
             logs.push({ timestamp: new Date().toISOString(), type, text, entry });
             if (type === 'error') errors.push(entry);
             console.log(entry);
         });
 
         page.on('pageerror', (error) => {
-            const errorText = `[PAGE ERROR] ${error.message}`;
+            const errorText = \`[PAGE ERROR] \${error.message}\`;
             errors.push(errorText);
             logs.push({ timestamp: new Date().toISOString(), type: 'pageerror', text: error.message, entry: errorText, stack: error.stack });
             console.log(errorText);
@@ -284,7 +288,7 @@ async function comprehensiveTest() {
 
         console.log('📡 Navigating to http://localhost:5173...');
         await page.goto('http://localhost:5173', { waitUntil: 'domcontentloaded', timeout: 30000 });
-        
+
         // Wait for the main menu to be fully loaded - look for the INITIATE NEURAL SYNC button
         console.log('⏳ Waiting for main menu to load...');
         await page.waitForSelector('text=INITIATE NEURAL SYNC', { timeout: 10000 });
@@ -292,10 +296,10 @@ async function comprehensiveTest() {
 
         // --- Phase 1: Main Menu ---
         console.log('📸 Capturing main menu state (Screenshot + DOM)...');
-        await page.screenshot({ path: 'LOG_DIR_PLACEHOLDER/debug-screenshot-main-menu.png', fullPage: true });
+        await page.screenshot({ path: '$LOG_DIR/debug-screenshot-main-menu.png', fullPage: true });
         const mainMenuContent = await page.content();
-        fs.writeFileSync('LOG_DIR_PLACEHOLDER/debug-page-content-main-menu.html', mainMenuContent);
-        fs.writeFileSync('LOG_DIR_PLACEHOLDER/browser-test-report-main-menu.json', JSON.stringify({
+        fs.writeFileSync('$LOG_DIR/debug-page-content-main-menu.html', mainMenuContent);
+        fs.writeFileSync('$LOG_DIR/browser-test-report-main-menu.json', JSON.stringify({
             timestamp: new Date().toISOString(),
             phase: 'main-menu',
             success: errors.length === 0,
@@ -307,17 +311,17 @@ async function comprehensiveTest() {
         // --- Phase 2: Interaction ---
         console.log('🚀 Clicking "INITIATE NEURAL SYNC" button...');
         await page.getByText('INITIATE NEURAL SYNC').click();
-        
+
         // Wait for game to transition - look for some game element or reduced timeout
         console.log('⏳ Waiting for game transition...');
         await page.waitForTimeout(2000); // Keep original 2s but add logging
 
         // --- Phase 3: Game View ---
         console.log('📸 Capturing game view state (Screenshot + DOM)...');
-        await page.screenshot({ path: 'LOG_DIR_PLACEHOLDER/debug-screenshot-game-view.png', fullPage: true });
+        await page.screenshot({ path: '$LOG_DIR/debug-screenshot-game-view.png', fullPage: true });
         const gameViewContent = await page.content();
-        fs.writeFileSync('LOG_DIR_PLACEHOLDER/debug-page-content-game-view.html', gameViewContent);
-        fs.writeFileSync('LOG_DIR_PLACEHOLDER/browser-test-report-game-view.json', JSON.stringify({
+        fs.writeFileSync('$LOG_DIR/debug-page-content-game-view.html', gameViewContent);
+        fs.writeFileSync('$LOG_DIR/browser-test-report-game-view.json', JSON.stringify({
             timestamp: new Date().toISOString(),
             phase: 'game-view',
             success: errors.length === 0,
@@ -334,23 +338,23 @@ async function comprehensiveTest() {
         // Press and hold W and D keys simultaneously
         await page.keyboard.down('KeyW');
         await page.keyboard.down('KeyD');
-        
+
         // Hold for 1 second to allow movement
         await page.waitForTimeout(1000);
-        
+
         // Release keys
         await page.keyboard.up('KeyD');
         await page.keyboard.up('KeyW');
-        
+
         console.log('⏳ Waiting for movement to register...');
         await page.waitForTimeout(500);
 
         // --- Phase 5: Movement Result ---
         console.log('📸 Capturing movement test state (Screenshot + DOM)...');
-        await page.screenshot({ path: 'LOG_DIR_PLACEHOLDER/debug-screenshot-movement-test.png', fullPage: true });
+        await page.screenshot({ path: '$LOG_DIR/debug-screenshot-movement-test.png', fullPage: true });
         const movementContent = await page.content();
-        fs.writeFileSync('LOG_DIR_PLACEHOLDER/debug-page-content-movement-test.html', movementContent);
-        fs.writeFileSync('LOG_DIR_PLACEHOLDER/browser-test-report-movement-test.json', JSON.stringify({
+        fs.writeFileSync('$LOG_DIR/debug-page-content-movement-test.html', movementContent);
+        fs.writeFileSync('$LOG_DIR/browser-test-report-movement-test.json', JSON.stringify({
             timestamp: new Date().toISOString(),
             phase: 'movement-test',
             success: errors.length === 0,
@@ -360,23 +364,23 @@ async function comprehensiveTest() {
         console.log('📊 Movement test state captured.');
 
     } catch (error) {
-        console.error(`❌❌❌ BROWSER TEST FAILED: ${error.message}`);
+        console.error(\`❌❌❌ BROWSER TEST FAILED: \${error.message}\`);
 
         if (page && !page.isClosed()) {
             try {
                 console.log('📸 Capturing FAILURE state (Screenshot + DOM)...');
-                await page.screenshot({ path: 'LOG_DIR_PLACEHOLDER/debug-screenshot-FAILURE.png', fullPage: true });
+                await page.screenshot({ path: '$LOG_DIR/debug-screenshot-FAILURE.png', fullPage: true });
                 const failureContent = await page.content();
-                fs.writeFileSync('LOG_DIR_PLACEHOLDER/debug-page-content-FAILURE.html', failureContent);
+                fs.writeFileSync('$LOG_DIR/debug-page-content-FAILURE.html', failureContent);
                 console.log('📸 Failure state captured.');
             } catch (captureError) {
-                console.error(`📸 Could not capture failure state: ${captureError.message}`);
+                console.error(\`📸 Could not capture failure state: \${captureError.message}\`);
             }
         } else {
             console.log('Page not available, cannot capture failure state.');
         }
 
-        fs.writeFileSync('LOG_DIR_PLACEHOLDER/browser-test-failure.json', JSON.stringify({
+        fs.writeFileSync('$LOG_DIR/browser-test-failure.json', JSON.stringify({
             timestamp: new Date().toISOString(),
             success: false,
             error: error.message,
@@ -394,22 +398,20 @@ async function comprehensiveTest() {
     }
 }
 
-comprehensiveTest();
-EOF
-    # Replace the placeholder with the actual log directory path
-    sed -i "s|LOG_DIR_PLACEHOLDER|$LOG_DIR|g" browser-test.js
-    log_success "Dynamic browser test script generated."
+// Execute the test
+runInMemoryTest();
 
-    # Execute the test. We use `|| true` to prevent `set -e` from halting the script on test failure.
-    # We NEED to proceed to the artifact copy step regardless of the outcome.
-    # MAXIMUM EXECUTION TIME: 20 seconds - if exceeded, something is definitely wrong
-    log_info "Executing browser test... (Errors are expected during failure tests)"
-    timeout 20 node browser-test.js > "$BROWSER_LOG" 2>&1 || {
-        echo "❌ Browser test exceeded 20 seconds - something is definitely wrong!"
-        echo "⚠️  DO NOT increase this timeout. Fix the underlying issue instead."
-        true
-    }
-    log_info "Browser test execution finished."
+// ========================================
+// END OF IN-MEMORY PLAYWRIGHT SCRIPT
+// ========================================
+EOF
+
+    # Handle timeout or execution failure
+    if [ $? -ne 0 ]; then
+        log_warning "Browser test failed or timed out. This is expected if there are errors."
+    fi
+
+    log_info "In-memory browser test execution finished."
 }
 
 # Generate comprehensive debug report
