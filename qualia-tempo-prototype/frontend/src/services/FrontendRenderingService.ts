@@ -50,7 +50,6 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
-  private _canvas!: HTMLCanvasElement;
 
   // Rendering state
   private isInitialized = false;
@@ -97,7 +96,6 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     }
 
     this.logger.info("Initializing FrontendRenderingService");
-    this._canvas = canvas;
 
     // Create renderer - FrontendRenderingService is the OWNER
     this.renderer = new THREE.WebGLRenderer({

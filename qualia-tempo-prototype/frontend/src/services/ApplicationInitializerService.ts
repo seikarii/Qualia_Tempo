@@ -128,7 +128,7 @@ export class ApplicationInitializerService
   private async startCoreServices(): Promise<void> {
     // Step 1: Start GameStateStoreService - it must listen to all events
     this.logger.debug(this.config.steps.startGameStateService);
-    this.gameStateStoreService.start();
+    this.gameStateStoreService.initialize();
     this.logger.info(this.config.messages.gameStateServiceStarted);
 
     // Step 2: Update store with config loaded state

@@ -97,6 +97,7 @@ import { ThrottlingManager } from "./utils/ThrottlingManager";
 import { InputStateService } from "./InputStateService";
 import { CoordinateSystemService } from "./CoordinateSystemService";
 import { ToneFactoryService } from "../audio/ToneFactoryService";
+import { GameInfrastructureService } from './GameInfrastructureService';
 
 // ===== PROTOCOL ADAPTER IMPORTS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
@@ -269,6 +270,12 @@ container
 container
   .bind<ICoordinateSystemService>(TYPES.ICoordinateSystemService)
   .to(CoordinateSystemService)
+  .inSingletonScope();
+
+// ===== INFRASTRUCTURE SERVICE BUNDLES =====
+container
+  .bind<IGameInfrastructureService>(TYPES.IGameInfrastructureService)
+  .to(GameInfrastructureService)
   .inSingletonScope();
 
 // ===== NEW ARCHITECTURAL SERVICES =====

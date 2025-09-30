@@ -20,7 +20,6 @@ export class GameInputControllerService implements IGameInputControllerService, 
   private readonly browserEventsService: IBrowserEventsService;
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
-  private _eventListeners: string[] = []; // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
 
   private keyPressHandler?: (_event: KeyboardEvent) => void;
   private keyReleaseHandler?: (_event: KeyboardEvent) => void;

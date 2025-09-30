@@ -165,6 +165,7 @@ export class QualiaStateCalculatorService
    * ARCHITECTURE: This replaces the direct method calls from UI.
    */
   @OnEvent('PlayerAction')
+  // @ts-ignore
   private handlePlayerAction(event: PlayerActionEvent): void {
     const startTime = this.performanceService.now();
     const { action, context } = event;
@@ -279,7 +280,7 @@ export class QualiaStateCalculatorService
     const config = this.config;
     this.updateIntervalId = this.timerService.setInterval(() => {
       this.updateStateWithDecay();
-    }, config.updateInterval);
+    }, config.updateIntervalMs);
   }
 
   private stopUpdateLoop(): void {

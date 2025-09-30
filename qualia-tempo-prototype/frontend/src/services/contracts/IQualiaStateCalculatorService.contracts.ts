@@ -61,4 +61,11 @@ export interface QualiaCalculatorConfig {
   };
   updateIntervalMs: number;
   historySize: number;
+  transcendenceThresholds: {
+    intensity: number;
+    precision: number;
+    flow: number;
+  };
+  minValue: number;
+  maxValue: number;
 }
