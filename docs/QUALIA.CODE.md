@@ -182,7 +182,533 @@ private onRawMessage(rawData: ArrayBuffer): void { /* ... */ }
 
 ---
 
-## 8. Performance Optimization Protocol
+## 8. Arquitectura de la Capa Visual
+
+### 8.1. El Patrón de Lógica de Vista Sin Estado (Stateless View-Logic Pattern).
+
+El patrón Stateless View-Logic Pattern es el núcleo de la arquitectura visual de QUALIA.CODE. Este patrón establece una separación estricta entre la lógica de cálculo de estado visual y la renderización de componentes, donde los componentes React son "tontos" (dumb) y únicamente consumen datos visuales absolutos calculados por servicios especializados.
+
+#### Principios Fundamentales:
+- **Componentes Tontos:** Los componentes React no contienen lógica de cálculo. Solo renderizan datos visuales proporcionados por servicios.
+- **Servicios Calculadores:** Los servicios (`ViewLogicService`) calculan y devuelven el estado visual absoluto para cada frame, basado en el estado del juego y el tiempo.
+- **Separación de Responsabilidades:** La lógica de animación, transformación y cálculo visual reside en servicios, no en componentes.
+
+#### Ejemplo Canónico: ViewLogicService.ts y BossRenderer.tsx
+
+**ANTES (Patrón Prohibido - Lógica en el Componente):**
+```typescript
+// BossRenderer.tsx - ANTES (VIOLACIÓN DE QUALIA.CODE)
+const BossRenderer: React.FC<BossRendererProps> = ({ boss }) => {
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+
+    // ❌ LÓGICA DE CÁLCULO EN EL COMPONENTE
+    const stressIntensity = boss.stress_level;
+    const phaseMultiplier = boss.phase;
+
+    // ❌ CÁLCULOS COMPLEJOS EN useFrame
+    let calculatedPosition: [number, number, number];
+    if (boss.phase === 1) {
+      calculatedPosition = [
+        boss.position[0],
+        boss.position[1] + Math.sin(time * 0.5) * 0.3,
+        boss.position[2]
+      ];
+    } else if (boss.phase === 2) {
+      // Más cálculos...
+    }
+
+    // ❌ APLICACIÓN DIRECTA DE TRANSFORMACIONES
+    if (bossGroupRef.current) {
+      bossGroupRef.current.position.set(...calculatedPosition);
+    }
+  });
+
+  return (
+    <group ref={bossGroupRef}>
+      {/* JSX con lógica mezclada */}
+    </group>
+  );
+};
+```
+
+**DESPUÉS (Patrón Correcto - Componente Purgado):**
+```typescript
+// ViewLogicService.ts - SERVICIO CALCULADOR
+@injectable()
+export class ViewLogicService implements IViewLogicService {
+  @logMethod
+  @catchError
+  getBossVisuals(bossState: any, time: number): BossVisualData {
+    // ✅ TODA LA LÓGICA DE CÁLCULO AQUÍ
+    const boss = bossState;
+    const stressIntensity = boss.stress_level;
+    const phaseMultiplier = boss.phase;
+
+    // ✅ CÁLCULOS COMPLEJOS EN SERVICIO
+    let calculatedPosition: [number, number, number];
+    if (boss.phase === 1) {
+      calculatedPosition = [
+        boss.position[0],
+        boss.position[1] + Math.sin(time * 0.5) * 0.3,
+        boss.position[2]
+      ];
+    } else if (boss.phase === 2) {
+      // Más cálculos...
+    }
+
+    // ✅ RETORNA ESTADO VISUAL ABSOLUTO
+    return {
+      position: calculatedPosition,
+      scale: [stressScale, stressScale, stressScale],
+      rotation: absoluteRotation,
+      // ... más datos visuales
+    };
+  }
+}
+
+// BossRenderer.tsx - DESPUÉS (COMPONENTE TONTO)
+const BossRenderer: React.FC<BossRendererProps> = ({ boss }) => {
+  const viewLogicService = useViewLogicService();
+
+  const [currentVisuals, setCurrentVisuals] = useState<BossVisualData | null>(null);
+  const visuals = currentVisuals || viewLogicService.getBossVisuals(boss, 0);
+
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+
+    // ✅ SOLO CONSUME DATOS DEL SERVICIO
+    const bossVisuals = viewLogicService.getBossVisuals(boss, time);
+    setCurrentVisuals(bossVisuals);
+
+    // ✅ APLICACIÓN PURA DE DATOS CALCULADOS
+    if (bossGroupRef.current) {
+      bossGroupRef.current.position.set(...bossVisuals.position);
+      bossGroupRef.current.scale.set(...bossVisuals.scale);
+      bossGroupRef.current.rotation.set(...bossVisuals.rotation);
+    }
+  });
+
+  return (
+    <group ref={bossGroupRef} position={boss.position}>
+      {/* ✅ JSX LIMPIO, SIN LÓGICA */}
+      <mesh ref={coreMeshRef}>
+        <icosahedronGeometry args={[1.5 + (boss.phase - 1) * 0.3, 2]} />
+        <meshPhongMaterial
+          color={new THREE.Color(...visuals.core.color)}
+          emissive={new THREE.Color(...visuals.core.emissiveColor)}
+        />
+      </mesh>
+    </group>
+  );
+};
+```
+
+#### Beneficios del Patrón:
+- **Testabilidad:** La lógica visual se puede probar unitariamente sin renderizar componentes.
+- **Reutilización:** Los mismos cálculos visuales pueden usarse en múltiples componentes.
+- **Performance:** Los cálculos se pueden optimizar y cachear a nivel de servicio.
+- **Mantenibilidad:** Cambios en la lógica visual no afectan la estructura del componente.
+
+### 8.2. Flujo de Datos Visuales.
+
+El flujo de datos visuales sigue un patrón unidireccional estricto que garantiza la separación entre estado del juego, lógica de cálculo visual y renderización.
+
+```
+GameStateStore (Zustand)
+        ↓
+Componente Orquestador (QualiaTempoGame)
+        ↓
+ViewLogicService.getBossVisuals(state, time)
+        ↓
+Objeto de Datos Visuales (BossVisualData)
+        ↓
+Componente de Renderizado (BossRenderer)
+```
+
+**Descripción del Flujo:**
+1. **GameStateStore:** Contiene el estado del juego actual (posiciones, estados, etc.)
+2. **Componente Orquestador:** Coordina la renderización, obtiene estado del store y pasa datos a servicios
+3. **ViewLogicService:** Calcula el estado visual absoluto basado en estado del juego y tiempo
+4. **Objeto de Datos Visuales:** Estructura tipada con todas las propiedades visuales calculadas
+5. **Componente de Renderizado:** Componente puro que solo aplica las propiedades visuales calculadas
+
+---
+
+## 9. Ciclo de Vida de Servicios y Eventos
+
+### 9.1. El Decorador `@OnEvent` y la Interfaz `IBaseService`.
+
+El decorador `@OnEvent` automatiza la suscripción al EventBus, eliminando la necesidad de llamadas manuales a `eventBus.subscribe()` y `eventBus.unsubscribe()`. Cualquier servicio que utilice este decorador DEBE implementar la interfaz `IBaseService`, y el `ApplicationInitializerService` es responsable de invocar `initialize()` y `cleanup()` para gestionar el ciclo de vida de las suscripciones.
+
+#### Cómo Funciona:
+- **Automatización:** El decorador registra automáticamente los métodos decorados como listeners de eventos.
+- **Gestión de Ciclo de Vida:** Las suscripciones se crean en `initialize()` y se limpian en `cleanup()`.
+- **Type Safety:** Los eventos están tipados y validados contra contratos de eventos.
+
+#### Ejemplo: GameControllerService.ts
+
+```typescript
+@injectable()
+export class GameControllerService implements IGameControllerService, IBaseService {
+  // ✅ IMPLEMENTA IBaseService
+  private _eventListeners: string[] = []; // Requerido para @OnEvent
+
+  constructor(/* dependencias */) {
+    // Constructor estándar
+  }
+
+  // ✅ CICLO DE VIDA: initialize() gestiona suscripciones @OnEvent
+  @logMethod
+  public initialize(): void {
+    this.logger.info('🚀 [GameController] Initializing service with @OnEvent lifecycle...');
+    // @OnEvent subscriptions are handled automatically by initializeEventSubscriptions
+  }
+
+  // ✅ CICLO DE VIDA: cleanup() limpia suscripciones @OnEvent
+  @logMethod
+  public cleanup(): void {
+    this.logger.info('🧹 [GameController] Cleaning up service...');
+    // @OnEvent subscriptions are cleaned up automatically by cleanupEventSubscriptions
+  }
+
+  // ✅ DECORADOR @OnEvent: Automatiza suscripción a 'PlayerAction'
+  @OnEvent('PlayerAction')
+  private _handlePlayerAction(event: PlayerActionEvent): void {
+    this.logger.info(`🎮 [GameController] Handling PlayerAction: ${event.action}`);
+
+    switch (event.action) {
+      case "StartGame":
+        this.startGame();
+        break;
+      case "PauseGame":
+        this.pauseGame();
+        break;
+      // ... más casos
+    }
+  }
+
+  // ✅ OTRO @OnEvent: Suscripción automática a 'GameStateChanged'
+  @OnEvent('GameStateChanged')
+  private _handleGameStateChanged(event: GameStateChangedEvent): void {
+    this.logger.debug(`🎮 [GameController] Game state changed: ${event.previousState} -> ${event.newState}`);
+  }
+}
+```
+
+#### Responsabilidades del ApplicationInitializerService:
+- **Inicialización:** Invoca `initialize()` en todos los servicios que implementan `IBaseService` durante el startup de la aplicación.
+- **Limpieza:** Invoca `cleanup()` en todos los servicios durante el shutdown para liberar recursos.
+- **Gestión de Ciclo de Vida:** Asegura que las suscripciones `@OnEvent` se crean y destruyen apropiadamente.
+
+#### Beneficios:
+- **Sin Código Boilerplate:** No se necesitan llamadas manuales a `eventBus.subscribe/unsubscribe`.
+- **Gestión Automática:** El ciclo de vida de suscripciones está centralizado.
+- **Prevención de Memory Leaks:** Las suscripciones se limpian automáticamente.
+- **Type Safety:** Los eventos están tipados y validados.
+
+---
+
+## 10. Testing Implementation
+
+### 10.1. Fundamental Principles
+- **Testing Pyramid:** We adopt the testing pyramid model. The base consists of fast unit tests, followed by service integration tests, and finally a reduced number of E2E tests.
+- **Zero Tolerance:** A broken test is a broken build. Code that breaks existing tests is not integrated. Tests are the specification; code adapts to them.
+- **Isolation is Key:** Tests must not have side effects. Each test must be able to run independently and in any order.
+
+### 10.2. Backend Testing Factory: `TestCompositionRootFactory`
+The pillar of our backend service testing is the `TestCompositionRootFactory`.
+
+- **Purpose:** Provides a pre-configured and isolated CompositionRoot for each test. This allows us to test a service (Service Under Test - SUT) in a controlled environment where all dependencies are mocked.
+- **Golden Rule:** It is **PROHIBITED** to manually instantiate services with `new` or direct constructor calls within test files. All services must be resolved through the test CompositionRoot to ensure correct mock injection.
+
+### 10.3. Frontend Mocking & Test Container Architecture
+
+#### Isolated Container Pattern (GOLD.CODE STANDARD)
+- **MANDATE:** The `test-container-factory.ts` implements the "Isolated Container Pattern" where each test receives a completely new `Container()` instance, ensuring total isolation and preventing cross-contamination.
+- **Prohibition:** Parent/Child container patterns are FORBIDDEN for service testing. The isolated approach guarantees predictability and prevents state leakage between tests.
+
+#### Centralized Mock Management
+- **Mock Directory:** All service mocks are centralized in `src/testing/mocks/` directory with individual files following `<service-name>.mock.ts` naming convention.
+- **Single Source of Truth:** Each mock interface (ILogger, IEventBus, etc.) has exactly one mock implementation file that serves as the authoritative source for all tests.
+- **Maintainability:** Mock definitions are separated from factory logic, enabling independent evolution and testing of mock behaviors.
+
+#### Global vs Service Mocks Distinction
+- **Global Mocks (`src/testing/setup.ts`):** Handle environment-wide mocking (decorators, browser APIs, external libraries like Tone.js) that should never execute real logic in any test.
+- **Service Mocks (`src/testing/mocks/`):** Provide controlled implementations of our interfaces (ILogger, IEventBus, etc.) for asserting service interactions and behaviors.
+
+### 10.4. Estrategia de Pruebas de Lógica de Vista.
+
+La estrategia de pruebas de lógica de vista se centra en probar los métodos de cálculo visual en aislamiento, asegurando que los servicios retornen los datos visuales correctos sin necesidad de renderizar componentes.
+
+#### Ejemplo: Prueba de getBossVisuals en ViewLogicService
+
+```typescript
+import { createTestContainer } from '../testing/test-container-factory';
+import { IViewLogicService } from '../interfaces/IViewLogicService';
+import { TYPES } from '../inversify.types';
+
+describe('ViewLogicService - getBossVisuals', () => {
+  let container: Container;
+  let viewLogicService: IViewLogicService;
+
+  beforeEach(() => {
+    container = createTestContainer();
+    viewLogicService = container.get<IViewLogicService>(TYPES.IViewLogicService);
+  });
+
+  it('should calculate correct boss visuals for phase 1', () => {
+    // Arrange: Crear estado mock del boss
+    const mockBossState = {
+      position: [0, 0, 0] as [number, number, number],
+      power_level: 150,
+      phase: 1,
+      stress_level: 0.8,
+      qualia_state: {
+        emotional_valence: 0.2,
+        arousal: 0.7,
+        coherence: 0.5
+      }
+    };
+    const mockTime = 1.5; // Tiempo de simulación
+
+    // Act: Llamar al método bajo prueba
+    const result = viewLogicService.getBossVisuals(mockBossState, mockTime);
+
+    // Assert: Verificar que el objeto de datos visuales contiene los valores correctos
+    expect(result).toBeDefined();
+    expect(result.position).toEqual([0, 0.3, 0]); // Posición calculada para phase 1
+    expect(result.scale).toEqual([1.64, 1.64, 1.64]); // Escala basada en stress_level
+    expect(result.rotation).toEqual([0, 0.0075, 0]); // Rotación basada en tiempo
+    expect(result.intensity).toBe(0.8); // Intensidad igual al stress_level
+    expect(result.phase).toBe(1); // Fase del boss
+    expect(result.core.color).toEqual([0.115, 0.8, 0.24]); // Color calculado
+    expect(result.tentacles).toHaveLength(5); // 4 + phase = 5 tentáculos
+    expect(result.powerParticles).toHaveLength(15); // power_level/100 * 20 = 15
+  });
+
+  it('should calculate different visuals for phase 2', () => {
+    // Arrange
+    const mockBossState = {
+      position: [5, 2, 3] as [number, number, number],
+      power_level: 200,
+      phase: 2,
+      stress_level: 0.3,
+      qualia_state: {
+        emotional_valence: -0.5,
+        arousal: 0.9,
+        coherence: 0.8
+      }
+    };
+    const mockTime = 3.2;
+
+    // Act
+    const result = viewLogicService.getBossVisuals(mockBossState, mockTime);
+
+    // Assert
+    expect(result.position[0]).toBeCloseTo(5.5, 1); // Movimiento más agresivo
+    expect(result.scale).toEqual([1.09, 1.09, 1.09]); // Menos escala por menos stress
+    expect(result.tentacles).toHaveLength(6); // 4 + phase = 6 tentáculos
+    expect(result.attackWaves).toHaveLength(4); // phase * 2 = 4 ondas de ataque
+  });
+});
+```
+
+#### Beneficios de Esta Estrategia:
+- **Pruebas Rápidas:** No requieren renderizado de componentes Three.js
+- **Aislamiento:** Prueba lógica pura sin dependencias de UI
+- **Cobertura Completa:** Verifica todos los cálculos visuales
+- **Mantenibilidad:** Cambios en lógica visual se detectan inmediatamente
+
+### 10.5. Estrategia de Pruebas de Integración de Eventos.
+
+Las pruebas de integración de eventos verifican el flujo completo desde la simulación de input del usuario hasta la actualización del estado en el GameStateStore, asegurando que todos los servicios interactúan correctamente a través del EventBus.
+
+#### Ejemplo: Prueba de Integración Completa de Input → EventBus → Servicios → Store
+
+```typescript
+import { createTestContainer } from '../testing/test-container-factory';
+import { IGameInputControllerService } from '../interfaces/IGameInputControllerService';
+import { IGameControllerService } from '../interfaces/IGameControllerService';
+import { IGameStateStoreService } from '../interfaces/IGameStateStoreService';
+import { IEventBus } from '../interfaces/IEventBus';
+import { TYPES } from '../inversify.types';
+
+describe('Input → EventBus → Services → Store Integration', () => {
+  let container: Container;
+  let inputController: IGameInputControllerService;
+  let gameController: IGameControllerService;
+  let gameStateStore: IGameStateStoreService;
+  let eventBus: IEventBus;
+
+  beforeEach(async () => {
+    container = createTestContainer();
+    inputController = container.get<IGameInputControllerService>(TYPES.IGameInputControllerService);
+    gameController = container.get<IGameControllerService>(TYPES.IGameControllerService);
+    gameStateStore = container.get<IGameStateStoreService>(TYPES.IGameStateStoreService);
+    eventBus = container.get<IEventBus>(TYPES.IEventBus);
+
+    // Inicializar servicios como en producción
+    await gameController.start();
+    await gameStateStore.start();
+    await inputController.start();
+  });
+
+  afterEach(async () => {
+    await inputController.stop();
+    await gameStateStore.stop();
+    await gameController.stop();
+  });
+
+  it('should process player input and update game state correctly', async () => {
+    // Arrange: Configurar estado inicial
+    expect(gameStateStore.getGameState().isPlaying).toBe(false);
+    expect(gameStateStore.getGameState().currentScore).toBe(0);
+
+    // Act: Simular input del jugador (presionar tecla de inicio)
+    const startKeyEvent = new KeyboardEvent('keydown', { key: ' ' }); // Espacio para start
+    inputController.handleKeyDown(startKeyEvent);
+
+    // Esperar a que los eventos se procesen
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Assert: Verificar que el estado del juego cambió
+    const finalState = gameStateStore.getGameState();
+    expect(finalState.isPlaying).toBe(true);
+    expect(finalState.isPaused).toBe(false);
+    expect(finalState.currentScore).toBe(0); // Score inicial
+    expect(finalState.health).toBe(100); // Salud inicial
+  });
+
+  it('should handle note hit and update score through event chain', async () => {
+    // Arrange: Iniciar juego primero
+    gameController.startGame();
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Act: Simular hit de nota (input rítmico)
+    const noteHitEvent = {
+      type: 'PlayerAction' as const,
+      action: 'HitNote' as const,
+      context: { points: 15, perfect: true },
+      timestamp: Date.now()
+    };
+    eventBus.emit(noteHitEvent);
+
+    // Esperar procesamiento
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Assert: Verificar actualización de score y combo
+    const finalState = gameStateStore.getGameState();
+    expect(finalState.currentScore).toBe(22); // 15 puntos + 7.5 bonus perfecto
+    expect(finalState.comboCount).toBe(1);
+    expect(finalState.health).toBe(102); // +2 por buen hit
+  });
+
+  it('should handle miss note and apply penalties', async () => {
+    // Arrange: Iniciar juego
+    gameController.startGame();
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Act: Simular miss de nota
+    const noteMissEvent = {
+      type: 'PlayerAction' as const,
+      action: 'MissNote' as const,
+      timestamp: Date.now()
+    };
+    eventBus.emit(noteMissEvent);
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Assert: Verificar penalizaciones
+    const finalState = gameStateStore.getGameState();
+    expect(finalState.comboCount).toBe(0); // Combo reset
+    expect(finalState.health).toBe(95); // -5 por miss
+  });
+
+  it('should trigger game over when health reaches zero', async () => {
+    // Arrange: Iniciar juego y reducir salud
+    gameController.startGame();
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Simular múltiples misses para reducir salud a 0
+    for (let i = 0; i < 20; i++) {
+      const missEvent = {
+        type: 'PlayerAction' as const,
+        action: 'MissNote' as const,
+        timestamp: Date.now()
+      };
+      eventBus.emit(missEvent);
+      await new Promise(resolve => setTimeout(resolve, 5));
+    }
+
+    // Assert: Game over triggered
+    const finalState = gameStateStore.getGameState();
+    expect(finalState.health).toBeLessThanOrEqual(0);
+    expect(finalState.isPlaying).toBe(false); // Juego terminado
+  });
+});
+```
+
+#### Beneficios de Esta Estrategia:
+- **Cobertura de Integración:** Verifica el flujo completo de datos
+- **Detección Temprana de Regresiones:** Captura problemas en la comunicación entre servicios
+- **Simulación Realista:** Usa eventos reales como en producción
+- **Validación de Estado:** Confirma que el store refleja correctamente los cambios
+
+### 10.6. Frontend Testing Factory: `test-container-factory.ts`
+
+### 10.7. Dependency Mocking and Decorators
+- **Dependencies:** All external dependencies (`ILogger`, `IEventBus`, `IConfigurationService`, etc.) are replaced by mocks in the test factories. This allows us to assert that a service calls its dependencies correctly (e.g., `expect(mockLogger.info).toHaveBeenCalled()`).
+- **Decorators:** Decorators like `@logMethod` or `@catchError` are globally mocked in Jest/Vitest configuration so they do not interfere with test logic.
+
+### 10.6. Testing Strategy Execution Protocol
+
+#### STEP 1: Identify Service Under Test (SUT)
+- **MANDATE:** Choose ONE service to test in isolation
+- **LOCATION:** The service being tested should be bound to its concrete implementation
+- **DEPENDENCIES:** ALL dependencies of the SUT must be mocked
+
+#### STEP 2: Create Test Container/CompositionRoot
+- **Backend:** Use `TestCompositionRootFactory.create_mocked_composition_root()`
+- **Frontend:** Use `createTestContainer()` from test-container-factory
+- **CRITICAL:** Never instantiate the SUT directly with `new`
+
+#### STEP 3: Configure Mock Behaviors
+- **Extract mocks:** Get dependency mocks from the factory
+- **Configure returns:** Set up mock return values for expected behavior
+- **Setup spies:** Configure mocks to track method calls
+
+#### STEP 4: Exercise the SUT
+- **Resolve from container:** Get the SUT instance from the test container/root
+- **Call methods:** Execute the functionality being tested
+- **Use real parameters:** Pass realistic data to the SUT methods
+
+#### STEP 5: Assert Results and Interactions
+- **Verify outputs:** Assert that the SUT returns expected results
+- **Check interactions:** Verify the SUT called its dependencies correctly
+- **Validate state:** Ensure the SUT's internal state is as expected
+
+### 10.7. E2E Debugging: `debug-full-system.sh`
+- **Purpose:** This script serves as a smoke test to verify complete integration between frontend and backend. It is useful for detecting configuration, environment, or communication issues between the two systems.
+- **Limitations:** Should not be used for iterative component development. Its feedback cycle is too long. It is a validation tool, not a rapid development tool.
+
+### 10.8. Future Vision: Improving the Ecosystem
+We are actively investigating more advanced testing tools to accelerate our development cycles, including:
+- **Vitest:** For a native Vite test runner with HMR.
+- **Playwright/Cypress Component Testing:** For testing React components in isolation, but with real browser power.
+- **Storybook:** For visual development and documentation of UI components.
+
+### 10.9. Testing Anti-Patterns (FORBIDDEN)
+
+#### Backend Anti-Patterns:
+Direct service instantiation and mock patches that bypass the container are forbidden.
+
+#### Frontend Anti-Patterns:
+Direct service instantiation and direct container access in tests are forbidden.
+
+---
+
+## 11. Performance Optimization Protocol
 
 ### 8.1. Decorator Performance Guidelines
 

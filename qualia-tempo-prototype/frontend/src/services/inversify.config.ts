@@ -19,6 +19,7 @@ import type { DebugServiceConfig } from "./contracts/IDebugService.contracts";
 import type { ErrorReportingConfig } from "./contracts/IErrorReportingService.contracts";
 import type { EventBusConfig } from "./contracts/IEventBus.contracts";
 import type { GameControllerConfig } from "./contracts/IGameControllerService.contracts";
+import type { GameInputControllerConfig } from "./contracts/IGameInputControllerService.contracts";
 import type { HttpConfig } from "./contracts/IHttpService.contracts";
 import type { LoggerConfig } from "./contracts/ILogger.contracts";
 import type { NotificationServiceConfig } from "./contracts/INotificationService.contracts";
@@ -46,6 +47,7 @@ import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCal
 import type { IBackendSyncService } from "./interfaces/IBackendSyncService";
 import type { IAudioService } from "./interfaces/IAudioService";
 import type { IGameControllerService } from "./interfaces/IGameControllerService";
+import type { IGameInputControllerService } from "./interfaces/IGameInputControllerService";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 // QUALIA.CODE: Complete service imports - All services implemented
 import type { INotificationService } from "./interfaces/INotificationService";
@@ -74,6 +76,7 @@ import { QualiaStateCalculatorService } from "./QualiaStateCalculatorService";
 import { BackendSyncService } from "./BackendSyncService";
 import { AudioService } from "./AudioService";
 import { GameControllerService } from "./GameControllerService";
+import { GameInputControllerService } from "./GameInputControllerService";
 import { GameStateStoreService } from "./GameStateStoreService";
 // QUALIA.CODE: Complete service implementations - All services implemented
 import { NotificationService } from "./NotificationService";
@@ -107,6 +110,7 @@ container.bind<ILogger>(TYPES.ILogger).to(QualiaLogger).inSingletonScope();
 container.bind<string>(TYPES.ConfigBasePath).toConstantValue("/config/");
 container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "gameController": "game-controller.yaml",
+  "gameInputController": "game-input-controller.yaml",
   "gameplay": "gameplay.yaml",
   "audioService": "audio-service.yaml",
   "debugService": "debug-service.yaml",
@@ -188,6 +192,10 @@ container
 container
   .bind<IGameControllerService>(TYPES.IGameControllerService)
   .to(GameControllerService)
+  .inSingletonScope();
+container
+  .bind<IGameInputControllerService>(TYPES.IGameInputControllerService)
+  .to(GameInputControllerService)
   .inSingletonScope();
 container
   .bind<IGameStateStoreService>(TYPES.IGameStateStoreService)
@@ -342,6 +350,7 @@ export async function configureServices(): Promise<void> {
   safeBindConstant<EventBusConfig>(TYPES.EventBusConfig, fullConfig.eventBus);
   safeBindConstant<BackendSyncConfig>(TYPES.BackendSyncConfig, fullConfig.backendSync);
   safeBindConstant<GameControllerConfig>(TYPES.GameControllerConfig, fullConfig.gameController);
+  safeBindConstant<GameInputControllerConfig>(TYPES.GameInputControllerConfig, fullConfig.gameInputController);
   safeBindConstant<QualiaCalculatorConfig>(TYPES.QualiaCalculatorConfig, fullConfig.qualiaCalculator);
   safeBindConstant<RhythmicMovementConfig>(TYPES.RhythmicMovementConfig, fullConfig.rhythmicMovement);
   safeBindConstant<AudioServiceConfig>(TYPES.AudioServiceConfig, fullConfig.audioService);

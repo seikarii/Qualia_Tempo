@@ -1,0 +1,3 @@
+timingWindows:
+  perfect: 50  # milliseconds - perfect hit window
+  good: 100    # milliseconds - good hit window

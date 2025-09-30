@@ -641,3 +641,341 @@ Dependencies: wasm-pack, Rust toolchain
 ---
 
 *"Implementation without architecture is chaos. Architecture without implementation is theory. Together they are power."*
+
+---
+
+## 12. Arquitectura de la Capa Visual - Implementación Práctica
+
+### 12.1. Implementación del Patrón Stateless View-Logic
+
+#### Configuración del Servicio ViewLogicService
+
+```typescript
+// frontend/src/services/inversify.config.ts
+container.bind<ViewLogicConfig>(TYPES.ViewLogicConfig).toConstantValue({
+  particles: {
+    maxCount: 1000,
+    spawnRate: 0.1,
+    baseLifetime: 2000
+  },
+  notes: {
+    rotationSpeed: 0.01,
+    pulseIntensity: 0.3
+  }
+});
+container.bind<IViewLogicService>(TYPES.IViewLogicService).to(ViewLogicService).inSingletonScope();
+```
+
+#### Uso en Componentes React
+
+```typescript
+// frontend/src/components/game/BossRenderer.tsx
+import { useViewLogicService } from '../../services/hooks';
+
+const BossRenderer: React.FC<BossRendererProps> = ({ boss }) => {
+  const viewLogicService = useViewLogicService();
+  const [visuals, setVisuals] = useState<BossVisualData | null>(null);
+
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+    const newVisuals = viewLogicService.getBossVisuals(boss, time);
+    setVisuals(newVisuals);
+
+    // Aplicar solo propiedades calculadas
+    if (bossGroupRef.current && newVisuals) {
+      bossGroupRef.current.position.set(...newVisuals.position);
+      bossGroupRef.current.scale.set(...newVisuals.scale);
+      bossGroupRef.current.rotation.set(...newVisuals.rotation);
+    }
+  });
+
+  if (!visuals) return null;
+
+  return (
+    <group position={visuals.position}>
+      <mesh scale={[visuals.core.scale, visuals.core.scale, visuals.core.scale]}>
+        <icosahedronGeometry args={[1.5, 2]} />
+        <meshPhongMaterial
+          color={new THREE.Color(...visuals.core.color)}
+          emissive={new THREE.Color(...visuals.core.emissiveColor)}
+        />
+      </mesh>
+    </group>
+  );
+};
+```
+
+### 12.2. Flujo de Datos Visuales - Ejemplo Completo
+
+```typescript
+// frontend/src/components/game/QualiaTempoGame.tsx - Componente Orquestador
+import { useGameStore } from '../../state/useGameStore';
+import { useViewLogicService } from '../../services/hooks';
+
+const QualiaTempoGame: React.FC = () => {
+  const gameState = useGameStore();
+  const viewLogicService = useViewLogicService();
+
+  // Obtener datos del store
+  const bossData = gameState.boss;
+  const playerData = gameState.player;
+
+  return (
+    <Canvas>
+      {/* Pasar datos del store al servicio de lógica visual */}
+      <BossRenderer boss={bossData} />
+      <PlayerRenderer player={playerData} />
+
+      {/* El servicio calcula los visuals internamente */}
+      <GridRenderer
+        gridSize={gameState.grid.size}
+        playerPosition={gameState.player.position}
+      />
+    </Canvas>
+  );
+};
+```
+
+---
+
+## 13. Ciclo de Vida de Servicios y Eventos - Implementación
+
+### 13.1. Implementación del Decorador @OnEvent
+
+#### Definición de Eventos
+
+```typescript
+// frontend/src/services/contracts/events.contracts.ts
+export interface PlayerActionEvent {
+  type: 'PlayerAction';
+  action: 'StartGame' | 'PauseGame' | 'HitNote' | 'MissNote';
+  context?: Record<string, any>;
+  timestamp: Date;
+}
+
+export interface GameStateChangedEvent {
+  type: 'GameStateChanged';
+  newState: string;
+  oldState: string;
+  source: string;
+}
+```
+
+#### Servicio con @OnEvent
+
+```typescript
+// frontend/src/services/GameControllerService.ts
+import { OnEvent, IBaseService } from '../utils/decorators';
+
+@injectable()
+export class GameControllerService implements IGameControllerService, IBaseService {
+  private _eventListeners: string[] = [];
+
+  @OnEvent('PlayerAction')
+  private _handlePlayerAction(event: PlayerActionEvent): void {
+    switch (event.action) {
+      case 'StartGame':
+        this.startGame();
+        break;
+      case 'HitNote':
+        this.handleHitNote(event.context);
+        break;
+    }
+  }
+
+  @OnEvent('GameStateChanged')
+  private _handleGameStateChanged(event: GameStateChangedEvent): void {
+    if (event.newState === 'Playing') {
+      this.startGameClock();
+    }
+  }
+
+  // Implementación IBaseService
+  public initialize(): void {
+    // @OnEvent subscriptions se crean automáticamente aquí
+  }
+
+  public cleanup(): void {
+    // @OnEvent subscriptions se limpian automáticamente aquí
+  }
+}
+```
+
+#### ApplicationInitializerService
+
+```typescript
+// frontend/src/services/ApplicationInitializerService.ts
+@injectable()
+export class ApplicationInitializerService {
+  constructor(
+    @inject(TYPES.IGameControllerService) private gameController: IGameControllerService,
+    @inject(TYPES.IViewLogicService) private viewLogic: IViewLogicService,
+    // ... otros servicios
+  ) {}
+
+  public async initializeApplication(): Promise<void> {
+    // Inicializar todos los servicios que implementan IBaseService
+    const baseServices = [
+      this.gameController,
+      this.viewLogic,
+      // ... otros servicios con @OnEvent
+    ];
+
+    for (const service of baseServices) {
+      if ('initialize' in service) {
+        await service.initialize();
+      }
+    }
+  }
+
+  public async cleanupApplication(): Promise<void> {
+    const baseServices = [this.gameController, this.viewLogic];
+
+    for (const service of baseServices) {
+      if ('cleanup' in service) {
+        await service.cleanup();
+      }
+    }
+  }
+}
+```
+
+---
+
+## 14. Estrategias de Testing Avanzadas
+
+### 14.1. Pruebas de Lógica Visual
+
+#### Configuración de Pruebas para ViewLogicService
+
+```typescript
+// frontend/src/services/__tests__/ViewLogicService.test.ts
+import { createTestContainer } from '../../testing/test-container-factory';
+import { IViewLogicService } from '../interfaces/IViewLogicService';
+import { TYPES } from '../inversify.types';
+
+describe('ViewLogicService', () => {
+  let viewLogicService: IViewLogicService;
+
+  beforeEach(() => {
+    const container = createTestContainer();
+    viewLogicService = container.get<IViewLogicService>(TYPES.IViewLogicService);
+  });
+
+  describe('getBossVisuals', () => {
+    it('should calculate phase 1 boss visuals correctly', () => {
+      const bossState = {
+        position: [0, 0, 0] as [number, number, number],
+        power_level: 150,
+        phase: 1,
+        stress_level: 0.8,
+        qualia_state: { emotional_valence: 0.2 }
+      };
+
+      const result = viewLogicService.getBossVisuals(bossState, 1.5);
+
+      expect(result.position).toEqual([0, 0.3, 0]);
+      expect(result.scale).toEqual([1.64, 1.64, 1.64]);
+      expect(result.tentacles).toHaveLength(5);
+    });
+  });
+});
+```
+
+### 14.2. Pruebas de Integración de Eventos
+
+#### Prueba de Flujo Completo Input → Store
+
+```typescript
+// frontend/src/integration-tests/__tests__/input-to-store.integration.test.ts
+import { createTestContainer } from '../../testing/test-container-factory';
+import { TYPES } from '../../services/inversify.types';
+
+describe('Input to Store Integration', () => {
+  let container: Container;
+  let inputController: IGameInputControllerService;
+  let gameController: IGameControllerService;
+  let gameStateStore: IGameStateStoreService;
+  let eventBus: IEventBus;
+
+  beforeEach(async () => {
+    container = createTestContainer();
+    inputController = container.get(TYPES.IGameInputControllerService);
+    gameController = container.get(TYPES.IGameControllerService);
+    gameStateStore = container.get(TYPES.IGameStateStoreService);
+    eventBus = container.get(TYPES.IEventBus);
+
+    await Promise.all([
+      gameController.start(),
+      gameStateStore.start(),
+      inputController.start()
+    ]);
+  });
+
+  it('should process key input and update game state', async () => {
+    // Simular input
+    const keyEvent = new KeyboardEvent('keydown', { key: ' ' });
+    inputController.handleKeyDown(keyEvent);
+
+    // Esperar procesamiento de eventos
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Verificar estado actualizado
+    const state = gameStateStore.getGameState();
+    expect(state.isPlaying).toBe(true);
+  });
+});
+```
+
+---
+
+## 15. Optimización de Performance - Ejemplos Prácticos
+
+### 15.1. Optimización de Decoradores
+
+```typescript
+// ✅ OPTIMIZADO: Decoradores selectivos
+@injectable()
+export class OptimizedViewLogicService {
+  // Sin decoradores en métodos de alto rendimiento
+  public getBossVisuals(boss: any, time: number): BossVisualData {
+    // Cálculos complejos sin overhead de decoradores
+    return this.calculateBossVisuals(boss, time);
+  }
+
+  // Decoradores solo en boundaries del sistema
+  @logMethod()
+  @catchError()
+  public async loadConfiguration(): Promise<void> {
+    // Operación I/O que justifica el overhead
+  }
+}
+```
+
+### 15.2. Abstracción de APIs del Navegador
+
+```typescript
+// frontend/src/services/BrowserEventsService.ts
+import { BrowserOnly } from '../utils/decorators';
+
+@injectable()
+export class BrowserEventsService {
+  @BrowserOnly
+  public getWindowDimensions(): { width: number; height: number } {
+    // Este método solo se ejecuta en navegador
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight
+    };
+  }
+
+  @BrowserOnly
+  public addResizeListener(callback: () => void): void {
+    window.addEventListener('resize', callback);
+  }
+}
+```
+
+---
+
+*"La arquitectura sin implementación es teoría vacía. La implementación sin arquitectura es caos inevitable."*

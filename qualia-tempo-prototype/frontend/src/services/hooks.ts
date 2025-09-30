@@ -14,6 +14,7 @@ import type { IQualiaStateCalculatorService } from './interfaces/IQualiaStateCal
 import type { IBackendSyncService } from './interfaces/IBackendSyncService';
 import type { IAudioService } from './interfaces/IAudioService';
 import type { IGameControllerService } from './interfaces/IGameControllerService';
+import type { IGameInputControllerService } from './interfaces/IGameInputControllerService';
 import type { IGameStateStoreService } from './interfaces/IGameStateStoreService';
 import type { INotificationService } from './interfaces/INotificationService';
 import type { IErrorReportingService } from './interfaces/IErrorReportingService';
@@ -72,6 +73,9 @@ export const useConfigurationService = (): IConfigurationService =>
 // Game Services  
 export const useGameControllerService = (): IGameControllerService => 
   useService<IGameControllerService>(TYPES.IGameControllerService);
+
+export const useGameInputControllerService = (): IGameInputControllerService => 
+  useService<IGameInputControllerService>(TYPES.IGameInputControllerService);
 
 export const useGameStateStoreService = (): IGameStateStoreService => 
   useService<IGameStateStoreService>(TYPES.IGameStateStoreService);

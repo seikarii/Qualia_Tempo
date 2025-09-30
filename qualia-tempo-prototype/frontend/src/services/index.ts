@@ -19,6 +19,7 @@ export * from "./interfaces/IQualiaStateCalculatorService";
 export * from "./interfaces/IBackendSyncService";
 export * from "./interfaces/IAudioService";
 export * from "./interfaces/IGameControllerService";
+export * from "./interfaces/IGameInputControllerService";
 export * from "./interfaces/IGameStateStoreService";
 export * from "./interfaces/INotificationService";
 export * from "./interfaces/IErrorReportingService";
