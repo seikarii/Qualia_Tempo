@@ -10,6 +10,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { Pass } from "three/examples/jsm/postprocessing/Pass.js";
 import { TYPES } from "./inversify.types";
 import type { IPostProcessingService } from "./interfaces/IPostProcessingService";
 import type { ILogger } from "./interfaces/ILogger";
@@ -102,7 +103,7 @@ export class PostProcessingService implements IPostProcessingService {
 
   @logMethod
   @catchError
-  private async createPass(passConfig: PostProcessingPass): Promise<any> {
+  private async createPass(passConfig: PostProcessingPass): Promise<Pass | null> {
     switch (passConfig.type) {
       case 'RenderPass':
         // RenderPass uses the shared scene and camera
@@ -116,7 +117,7 @@ export class PostProcessingService implements IPostProcessingService {
           passConfig.params?.threshold || 0.85
         );
 
-      case 'ShaderPass':
+      case 'ShaderPass': {
         if (!passConfig.shader) {
           throw new Error('ShaderPass requires shader name');
         }
@@ -132,6 +133,7 @@ export class PostProcessingService implements IPostProcessingService {
         }
 
         return pass;
+      }
 
       default:
         this.logger.warn(`Unknown pass type: ${passConfig.type}`);
@@ -141,7 +143,7 @@ export class PostProcessingService implements IPostProcessingService {
 
   @logMethod
   @catchError
-  private parseShader(shaderSource: string): any {
+  private parseShader(shaderSource: string): { uniforms: Record<string, { value: unknown }>, vertexShader: string, fragmentShader: string } {
     // For ShaderPass, we need both vertex and fragment shaders
     // If the file contains ---FRAGMENT--- separator, split it
     // Otherwise, assume it's just a fragment shader and use default vertex shader
@@ -166,8 +168,7 @@ export class PostProcessingService implements IPostProcessingService {
 
     return {
       uniforms: {
-        tDiffuse: { value: null },
-        resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+        tDiffuse: { value: null }
       },
       vertexShader,
       fragmentShader,

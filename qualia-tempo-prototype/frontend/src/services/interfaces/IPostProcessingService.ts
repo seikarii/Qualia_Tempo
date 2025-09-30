@@ -1,5 +1,7 @@
+import type { WebGLRenderer, Scene, Camera } from 'three';
+
 export interface IPostProcessingService {
-  initialize(renderer: any, scene: any, camera: any): Promise<void>; // Using any to avoid THREE.js import in interface
+  initialize(renderer: WebGLRenderer, scene: Scene, camera: Camera): Promise<void>;
   render(): void;
   resize(width: number, height: number): void;
   dispose(): void;
