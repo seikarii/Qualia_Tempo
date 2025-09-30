@@ -1,0 +1,40 @@
+# FrontendRenderingService Configuration
+# QUALIA.CODE v1.1 - Externalized Configuration
+
+# Particle system configuration
+particleCount: 10000
+particlePositionRange: 20.0
+particleSizeMin: 1.0
+particleSizeMax: 6.0
+
+# Camera configuration
+cameraFov: 75
+cameraNear: 0.1
+cameraFar: 1000
+cameraDistance: 5.0
+cameraOrbitSpeed: 0.0005
+cameraOrbitRadius: 8.0
+
+# Renderer configuration
+backgroundColor: 0x000000
+antialias: true
+
+# Performance configuration
+fpsUpdateInterval: 1000
+
+# WebGL context resilience
+contextLossRecoveryDelay: 100
+maxContextLossRetries: 3
+
+# Messages
+messages:
+  serviceInitialized: "FrontendRenderingService initialized"
+  alreadyInitialized: "FrontendRenderingService already initialized"
+  alreadyRunning: "FrontendRenderingService already running"
+  contextLost: "WebGL context lost. Rendering paused. Awaiting restoration."
+  contextRestored: "WebGL context restored. Re-initializing renderer..."
+  reinitializing: "Reinitializing rendering system after context restoration"
+  started: "FrontendRenderingService started"
+  stopped: "FrontendRenderingService stopped"
+  disposed: "FrontendRenderingService disposed"
+  mustInitializeFirst: "FrontendRenderingService must be initialized before starting"

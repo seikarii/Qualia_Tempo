@@ -64,6 +64,7 @@ export const TYPES = {
   NotificationServiceConfig: Symbol.for("NotificationServiceConfig"),
   ErrorReportingConfig: Symbol.for("ErrorReportingConfig"),
   DebugServiceConfig: Symbol.for("DebugServiceConfig"),
+  FrontendRenderingConfig: Symbol.for("FrontendRenderingConfig"),
   VisualEffectsConfig: Symbol.for("VisualEffectsConfig"),
   StreamingConfig: Symbol.for("StreamingConfig"),
 } as const;

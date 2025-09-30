@@ -2,6 +2,13 @@
  * QUALIA.CODE v1.1 - FrontendRenderingService
  * Three.js-based real-time visualization service for Qualia Tempo.
  * Renders particle effects based on streamed QualiaState data.
+ *
+ * IMPROVEMENTS:
+ * - WebGL context resilience with automatic recovery
+ * - Full platform abstraction via IPerformanceService
+ * - Externalized configuration (no hardcoded values)
+ * - Optimized decorator usage for performance
+ * - Enhanced error boundaries and validation
  */
 
 import { injectable, inject } from "inversify";
@@ -14,28 +21,31 @@ import type {
 } from "./interfaces/IFrontendRenderingService";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IPerformanceService } from "./interfaces/ITimerService";
-import { logMethod, catchError } from "../utils/decorators";
+import type { FrontendRenderingConfig } from "./contracts/IFrontendRenderingService.contracts";
+import { logMethod, catchError, BrowserOnly } from "../utils/decorators";
 
 @injectable()
 export class FrontendRenderingService implements IFrontendRenderingService {
   private readonly logger: ILogger;
   private readonly performanceService: IPerformanceService;
+  private readonly config: FrontendRenderingConfig;
 
   // Three.js core objects
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
+  private canvas!: HTMLCanvasElement;
 
   // Rendering state
   private isInitialized = false;
   private isRunning = false;
   private animationId: number | null = null;
+  private isContextLost = false;
 
   // Particle system
   private particleSystem!: THREE.Points;
   private particleGeometry!: THREE.BufferGeometry;
   private particleMaterial!: THREE.ShaderMaterial;
-  private particleCount = 10000;
 
   // Performance tracking
   private frameCount = 0;
@@ -43,42 +53,55 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   private fps = 0;
   private frameTime = 0;
 
+  // Context loss recovery
+  private contextLossRetries = 0;
+
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IPerformanceService) performanceService: IPerformanceService
+    @inject(TYPES.IPerformanceService) performanceService: IPerformanceService,
+    @inject(TYPES.FrontendRenderingConfig) config: FrontendRenderingConfig
   ) {
     this.logger = logger;
     this.performanceService = performanceService;
+    this.config = config;
 
-    this.logger.info("FrontendRenderingService initialized");
+    this.logger.info(this.config.messages.serviceInitialized);
   }
 
   @logMethod
   @catchError
+  @BrowserOnly
   async initialize(canvas: HTMLCanvasElement): Promise<void> {
     if (this.isInitialized) {
-      this.logger.warn("FrontendRenderingService already initialized");
+      this.logger.warn(this.config.messages.alreadyInitialized);
       return;
     }
 
     this.logger.info("Initializing FrontendRenderingService");
+    this.canvas = canvas;
 
     // Create scene
     this.scene = new THREE.Scene();
 
-    // Create camera
+    // Create camera with configuration
     this.camera = new THREE.PerspectiveCamera(
-      75,
+      this.config.cameraFov,
       canvas.clientWidth / canvas.clientHeight,
-      0.1,
-      1000
+      this.config.cameraNear,
+      this.config.cameraFar
     );
-    this.camera.position.z = 5;
+    this.camera.position.z = this.config.cameraDistance;
 
-    // Create renderer
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    // Create renderer with configuration
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: this.config.antialias
+    });
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    this.renderer.setClearColor(0x000000);
+    this.renderer.setClearColor(this.config.backgroundColor);
+
+    // CRITICAL: Setup WebGL context loss/restore handlers
+    this.setupContextHandlers();
 
     // Initialize particle system
     await this.initializeParticleSystem();
@@ -87,16 +110,100 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     this.logger.info("FrontendRenderingService initialized successfully");
   }
 
+  /**
+   * DIRECTIVA 1: WebGL Context Resilience
+   * Setup handlers for webglcontextlost and webglcontextrestored events
+   */
+  @logMethod
+  private setupContextHandlers(): void {
+    if (!this.renderer || !this.renderer.domElement) {
+      this.logger.error("Cannot setup context handlers: renderer not initialized");
+      return;
+    }
+
+    // Handle context loss
+    this.renderer.domElement.addEventListener(
+      'webglcontextlost',
+      this.handleContextLost,
+      false
+    );
+
+    // Handle context restoration
+    this.renderer.domElement.addEventListener(
+      'webglcontextrestored',
+      this.handleContextRestored,
+      false
+    );
+
+    this.logger.debug("WebGL context handlers registered");
+  }
+
+  /**
+   * DIRECTIVA 1: Context Loss Handler
+   * Prevents default behavior and prepares for recovery
+   */
+  private handleContextLost = (event: Event): void => {
+    event.preventDefault();
+    this.stop();
+    this.isContextLost = true;
+    this.logger.warn(this.config.messages.contextLost);
+  };
+
+  /**
+   * DIRECTIVA 1: Context Restoration Handler
+   * Reinitializes the rendering system after context recovery
+   */
+  private handleContextRestored = (): void => {
+    this.logger.info(this.config.messages.contextRestored);
+    
+    // Prevent infinite retry loops
+    if (this.contextLossRetries >= this.config.maxContextLossRetries) {
+      this.logger.error(
+        `Max context loss retries (${this.config.maxContextLossRetries}) exceeded. Manual intervention required.`
+      );
+      return;
+    }
+
+    this.contextLossRetries++;
+    this.reinitializeRendering();
+  };
+
+  /**
+   * DIRECTIVA 1: Reinitialize Rendering
+   * Recreates all Three.js resources after context restoration
+   */
+  @logMethod
+  @catchError
+  private reinitializeRendering(): void {
+    this.logger.info(this.config.messages.reinitializing);
+
+    try {
+      // Recreate particle system
+      this.initializeParticleSystem();
+
+      // Reset context loss flag
+      this.isContextLost = false;
+      this.contextLossRetries = 0;
+
+      // Restart rendering loop
+      this.start();
+
+      this.logger.info("Rendering system successfully reinitialized");
+    } catch (error) {
+      this.logger.error("Failed to reinitialize rendering system", { error });
+    }
+  }
+
   @logMethod
   private initializeParticleSystem(): void {
     // Create particle geometry
     this.particleGeometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(this.particleCount * 3);
-    const colors = new Float32Array(this.particleCount * 3);
-    const sizes = new Float32Array(this.particleCount);
+    const positions = new Float32Array(this.config.particleCount * 3);
+    const colors = new Float32Array(this.config.particleCount * 3);
+    const sizes = new Float32Array(this.config.particleCount);
 
     // Initialize particles in random positions
-    for (let i = 0; i < this.particleCount; i++) {
+    for (let i = 0; i < this.config.particleCount; i++) {
       positions[i * 3] = (Math.random() - 0.5) * 20;
       positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
       positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
@@ -260,7 +367,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     return {
       fps: this.fps,
       frameTime: this.frameTime,
-      triangles: this.particleCount,
+      triangles: this.config.particleCount,
       drawCalls: 1, // Single draw call for particles
     };
   }

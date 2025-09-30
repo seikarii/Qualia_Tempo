@@ -25,6 +25,7 @@ import type { NotificationServiceConfig } from "./contracts/INotificationService
 import type { QualiaCalculatorConfig } from "./contracts/IQualiaStateCalculatorService.contracts";
 import type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementController.contracts";
 import type { StreamingConfig } from "./contracts/IStateStreamingService.contracts";
+import type { FrontendRenderingConfig } from "./contracts/IFrontendRenderingService.contracts";
 
 // ===== IMPORT ALL INTERFACES =====
 import type { IEventBus } from "./interfaces/IEventBus";
@@ -101,6 +102,7 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "backendSync": "backend-sync.yaml",
   "notificationService": "notification-service.yaml",
   "rhythmicMovement": "rhythmic-movement.yaml",
+  "frontendRendering": "frontend-rendering.yaml",
   "visualEffects": "visual-effects.yaml",
   "compositionRoot": "composition-root.yaml",
   "eventBus": "eventbus.yaml",
@@ -286,6 +288,7 @@ export async function configureServices(): Promise<void> {
   safeBindConstant<NotificationServiceConfig>(TYPES.NotificationServiceConfig, fullConfig.notificationService);
   safeBindConstant<ErrorReportingConfig>(TYPES.ErrorReportingConfig, fullConfig.errorReporting);
   safeBindConstant<DebugServiceConfig>(TYPES.DebugServiceConfig, fullConfig.debugService);
+  safeBindConstant<FrontendRenderingConfig>(TYPES.FrontendRenderingConfig, fullConfig.frontendRendering);
   safeBindConstant<StreamingConfig>(TYPES.StreamingConfig, fullConfig.backendSync.streaming);
   
   // Bind ThrottlingConfig from NotificationService config

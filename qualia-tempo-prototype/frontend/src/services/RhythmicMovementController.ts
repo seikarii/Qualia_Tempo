@@ -203,7 +203,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
       }
 
       this.beatNumber++;
-      this.lastBeatTime = performance.now();
+      this.lastBeatTime = this.timerService.now();
 
       // Emit metronome tick event with slowdown factor
       this.eventBus.emit<MetronomeTickEvent>({
@@ -246,11 +246,18 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   }
 
   private handleDirectionInput = (event: PlayerDirectionEvent): void => {
+    // DIRECTIVA 2: Instrumentación de Telemetría de Alta Precisión
+    this.logger.info("PlayerDirectionInput received", {
+      direction: event.direction,
+      timestamp: this.timerService.now(),
+      source: "handleDirectionInput"
+    });
+
     // La lógica que estaba en `handlePlayerInput` ahora va aquí,
     // pero usando el `event.direction` que ya viene procesado.
 
     // CRISALIDA.CODE: Configuration-driven throttling implementation
-    const now = performance.now();
+    const now = this.timerService.now();
     if (now - this.lastKeyPressTime < this.keyThrottleMs) {
       return; // Throttle the input
     }
@@ -269,7 +276,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
       return;
     }
 
-    const currentTime = performance.now();
+    const currentTime = this.timerService.now();
     const timeSinceLastBeat = currentTime - this.lastBeatTime;
     const nextBeatTime = this.beatInterval - timeSinceLastBeat;
 
@@ -546,7 +553,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
       this.logger.info("Syncing with audio context", { audioTime, syncOffset });
 
       // Adjust internal timing if necessary
-      this.lastBeatTime = performance.now() - syncOffset;
+      this.lastBeatTime = this.timerService.now() - syncOffset;
     } catch (error) {
       this.logger.error("Failed to sync with audio context", { error });
     }
@@ -561,7 +568,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     if (!Number.isFinite(currentTime)) {
       const config = this.config;
       this.logger.warn(config.messages.invalidTimeWarning);
-      currentTime = performance.now();
+      currentTime = this.timerService.now();
     }
 
     const timeSinceLastBeat = currentTime - this.lastBeatTime;
@@ -618,7 +625,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
 
     // Reset beat tracking state
     this.beatNumber = 0;
-    this.lastBeatTime = performance.now();
+    this.lastBeatTime = this.timerService.now();
 
     // Start metronome if not already running
     if (!this.metronomeIntervalId) {

@@ -23,6 +23,7 @@ import type { LoggerConfig } from '../services/contracts/ILogger.contracts';
 import type { NotificationServiceConfig } from '../services/contracts/INotificationService.contracts';
 import type { QualiaCalculatorConfig } from '../services/contracts/IQualiaStateCalculatorService.contracts';
 import type { RhythmicMovementConfig } from '../services/contracts/IRhythmicMovementController.contracts';
+import type { FrontendRenderingConfig } from '../services/contracts/IFrontendRenderingService.contracts';
 
 /**
  * Complete Game Configuration Interface
@@ -52,6 +53,7 @@ export interface FullGameConfig {
 
   // Transversal Services
   audioService: AudioServiceConfig;
+  frontendRendering: FrontendRenderingConfig;
   notificationService: NotificationServiceConfig;
   errorReporting: ErrorReportingConfig;
   debugService: DebugServiceConfig;
