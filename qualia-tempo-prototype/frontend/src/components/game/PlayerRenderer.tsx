@@ -134,9 +134,9 @@ const PlayerRenderer: React.FC<PlayerRendererProps> = ({
 
   return (
     <group ref={playerMeshRef} position={player3DPosition}>
-      {/* Main Player Body */}
+      {/* Main Player Body - RESIZED for proper cell fit */}
       <mesh>
-        <octahedronGeometry args={[0.8, 2]} />
+        <octahedronGeometry args={[0.4, 1]} />
         <meshPhongMaterial
           color={baseColor}
           emissive={baseColor.clone().multiplyScalar(0.2)}
@@ -157,9 +157,9 @@ const PlayerRenderer: React.FC<PlayerRendererProps> = ({
         />
       </mesh>
 
-      {/* Consciousness Aura */}
+      {/* Consciousness Aura - RESIZED for proper cell fit */}
       <mesh ref={auraMeshRef}>
-        <sphereGeometry args={[1.5, 16, 16]} />
+        <sphereGeometry args={[0.7, 16, 16]} />
         <meshBasicMaterial
           color={auraColor}
           transparent={true}

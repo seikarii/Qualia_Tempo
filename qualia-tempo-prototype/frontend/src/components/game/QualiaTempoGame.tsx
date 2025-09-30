@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Html } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import {
   EffectComposer,
   Bloom,
@@ -19,7 +19,6 @@ import type {
 import type { NoteData } from "../../types/contracts";
 
 import QualiaTempoHUD from "./QualiaTempoHUD";
-import PlayerAvatar from "./PlayerAvatar";
 import QualiaFieldRenderer from "./QualiaFieldRenderer";
 import MusicalNotesRenderer from "./MusicalNotesRenderer";
 import BossRenderer from "./BossRenderer";
@@ -42,39 +41,8 @@ interface QualiaTempoGameProps {
   isActive?: boolean;
 }
 
-// QUALIA.CODE v1.1: PlayerAvatar wrapper that uses CoordinateSystemService
-// This component lives inside the Canvas and uses Html for proper positioning
-interface PlayerAvatarWithCoordinatesProps {
-  playerPosition: [number, number]; // Grid coordinates [x, z]
-  qualiaState: {
-    intensity: number;
-    precision: number;
-    aggression: number;
-    flow: number;
-    chaos: number;
-    recovery: number;
-    transcendence: number;
-  };
-}
-
-const PlayerAvatarWithCoordinates: React.FC<PlayerAvatarWithCoordinatesProps> = ({ 
-  playerPosition, 
-  qualiaState 
-}) => {
-  const coordinateSystemService = useCoordinateSystemService();
-  
-  // Convert grid position to world position using the canonical transformation
-  const worldPosition = coordinateSystemService.gridToWorld(playerPosition[0], playerPosition[1]);
-  
-  return (
-    <group position={worldPosition}>
-      <Html center>
-        {/* The PlayerAvatar now renders with proper positioning handled by Three.js */}
-        <PlayerAvatar qualiaState={qualiaState} />
-      </Html>
-    </group>
-  );
-};
+// QUALIA.CODE v1.1: PlayerAvatar ELIMINATED - Only 3D PlayerRenderer remains
+// The 2D PlayerAvatar component has been completely removed to eliminate the double avatar issue
 
 // QUALIA.CODE v1.1: GridRenderer wrapper that uses configuration instead of hardcoded values
 interface ConfigurableGridRendererProps {
@@ -299,7 +267,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
       {/* 3D Game Scene */}
       <Canvas
         data-testid="canvas"
-        camera={{ position: [0, 8, 8], fov: 45, rotation: [-0.5, 0, 0] }}
+        camera={{ position: [0, 18, 15], fov: 45, rotation: [-0.5, 0, 0] }}
         className="w-full h-full"
         style={{
           background: "linear-gradient(180deg, #0a0a2e 0%, #16213e 100%)",
@@ -395,19 +363,8 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
           enableRotate={false}
         />
 
-        {/* QUALIA.CODE v1.1: PlayerAvatar moved inside Canvas for coordinate synchronization */}
-        <PlayerAvatarWithCoordinates
-          playerPosition={[zustandState.player.position.x, zustandState.player.position.y]}
-          qualiaState={{
-            intensity: zustandState.qualiaState.intensity,
-            precision: zustandState.notesHit / Math.max(1, zustandState.totalNotes),
-            aggression: 0,
-            flow: zustandState.qualiaState.flow,
-            chaos: zustandState.qualiaState.chaos,
-            recovery: 0,
-            transcendence: zustandState.qualiaState.transcendence / 100,
-          }}
-        />
+        {/* QUALIA.CODE v1.1: PlayerAvatar ELIMINATED - Only 3D PlayerRenderer remains */}
+        {/* The 2D PlayerAvatar component has been completely removed to eliminate the double avatar issue */}
 
         {/* Post-processing effects */}
         <EffectComposer>

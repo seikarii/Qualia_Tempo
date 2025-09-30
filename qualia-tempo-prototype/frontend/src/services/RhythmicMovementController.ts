@@ -29,8 +29,9 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator (DEPRECATED)
   private inputStateService: IInputStateService; // NUEVA FUENTE DE VERDAD
 
-  private playerPosition: [number, number] = [4, 4]; // Center of 8x8 grid
+  private playerPosition: [number, number] = [8, 8]; // Center of 16x16 grid
   private isListening: boolean = false;
+  private hasMovedThisBeat: boolean = false; // Movement lock for one move per beat
 
   // Rhythm timing settings - will be loaded from injected config
   private bpm!: number;
@@ -205,6 +206,9 @@ export class RhythmicMovementController implements IRhythmicMovementController {
       this.beatNumber++;
       this.lastBeatTime = this.timerService.now();
 
+      // Reset movement lock for new beat
+      this.hasMovedThisBeat = false;
+
         // Emit metronome tick event with slowdown factor
       this.eventBus.emit<MetronomeTickEvent>({
         type: "MetronomeTick",
@@ -263,7 +267,14 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     // Calculate new position
     const newPosition = this.calculateNewPosition(direction);
 
-    // Emit rhythmic dash event
+    // VALIDATE POSITION FIRST - Critical fix for bounds checking
+    if (!this.isValidPosition(newPosition)) {
+      this.logger.debug("🚫 Movement blocked - invalid position (out of bounds)", { newPosition });
+      // Optional: Emit collision event for UI feedback
+      return; // Exit early - no event emission, no state update
+    }
+
+    // Position is valid - proceed with movement
     this.eventBus.emit<RhythmicDashEvent>({
       type: "RhythmicDash",
       direction,
@@ -272,17 +283,18 @@ export class RhythmicMovementController implements IRhythmicMovementController {
       source: "RhythmicMovementController",
     });
 
-    // Update player position if movement is valid
-    if (this.isValidPosition(newPosition)) {
-      this.playerPosition = newPosition;
+    // Update player position (now guaranteed to be valid)
+    this.playerPosition = newPosition;
 
-      // Emit player action for QualiaState calculation
-      this.eventBus.emit<PlayerActionEvent>({
-        type: "PlayerAction",
-        action: timing === "miss" ? "MissNote" : "HitNote",
-        source: "RhythmicMovementController",
-      });
-    }
+    // Emit player action for QualiaState calculation
+    this.eventBus.emit<PlayerActionEvent>({
+      type: "PlayerAction",
+      action: timing === "miss" ? "MissNote" : "HitNote",
+      source: "RhythmicMovementController",
+    });
+
+    // Set movement lock to prevent multiple moves per beat
+    this.hasMovedThisBeat = true;
   }
 
   private calculateTiming(timingOffset: number): "perfect" | "good" | "miss" {
@@ -301,22 +313,14 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     const [x, z] = this.playerPosition;
 
     switch (direction) {
-      case "north":
-        return [x - 1, z]; // W moves up/north
-      case "south":
-        return [x + 1, z]; // S moves down/south
-      case "east":
-        return [x, z + 1]; // D moves right/east
-      case "west":
-        return [x, z - 1]; // A moves left/west
-      case "northeast":
-        return [x - 1, z + 1]; // W + D moves up-right
-      case "northwest":
-        return [x - 1, z - 1]; // W + A moves up-left
-      case "southeast":
-        return [x + 1, z + 1]; // S + D moves down-right
-      case "southwest":
-        return [x + 1, z - 1]; // S + A moves down-left
+      case "north":     return [x, z - 1]; // 'W' moves north (negative Z)
+      case "south":     return [x, z + 1]; // 'S' moves south (positive Z)
+      case "east":      return [x + 1, z]; // 'D' moves east (positive X)
+      case "west":      return [x - 1, z]; // 'A' moves west (negative X)
+      case "northeast": return [x + 1, z - 1];
+      case "northwest": return [x - 1, z - 1];
+      case "southeast": return [x + 1, z + 1];
+      case "southwest": return [x - 1, z + 1];
     }
   }
 
@@ -353,6 +357,11 @@ export class RhythmicMovementController implements IRhythmicMovementController {
    */
   @logMethod
   private processMovementFromState(): void {
+    // Check movement lock - only one move per beat allowed
+    if (this.hasMovedThisBeat) {
+      return; // Already moved this beat, ignore additional input
+    }
+
     const directionVector = this.inputStateService.getDirectionVector();
 
     // No hacer nada si no hay movimiento

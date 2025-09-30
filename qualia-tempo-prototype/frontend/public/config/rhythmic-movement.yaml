@@ -5,11 +5,11 @@ deadzone: 0.05
 bpm: 120
 perfectTiming: 50
 goodTiming: 100
-gridSize: 8
+gridSize: 16
 keyThrottleMs: 100
 
 movement:
-  gridSize: 8
+  gridSize: 16
   speed: 5.0
   acceleration: 2.0
   friction: 0.9
@@ -18,7 +18,7 @@ movement:
 # Grid coordinate system configuration
 # Used by CoordinateSystemService for grid-to-world transformations
 coordinate_system:
-  gridSize: 8  # Grid dimensions (8x8)
+  gridSize: 16  # Grid dimensions (16x16)
   tileSize: 1  # Size of each tile in world units
   
   # Service messages for logging
