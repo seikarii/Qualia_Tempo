@@ -48,6 +48,8 @@ type StoreSetter = (updater: (state: GameState) => Partial<GameState>) => void;
 export class GameStateStoreService implements IGameStateStoreService, IBaseService {
   private setStore!: StoreSetter; // Will be set by setStoreSetter method
   private config: GameStateStoreConfig;
+  // @ts-expect-error - Reserved for @OnEvent decorator lifecycle management
+  private _eventListeners: string[] = [];
 
   constructor(
     @inject(TYPES.IEventBus) private readonly _eventBus: IEventBus,
@@ -288,7 +290,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
     const currentGameState = this.getGameState();
     const noteIndex = currentGameState.combatData?.noteMap.findIndex((n: { id: string }) => n.id === noteId) ?? -1;
 
-    if (noteIndex > -1 && currentGameState.combatData) {
+    if (noteIndex > -1 && currentGameState.combatData?.noteMap) {
       const newNoteState = (action === 'HitNote') ? 'hit' : 'missed';
 
       // Actualización inmutable del estado

@@ -17,11 +17,12 @@ import type { ITimerService } from './interfaces/ITimerService';
 import type { INotificationService } from './interfaces/INotificationService';
 import type { IErrorReportingService } from './interfaces/IErrorReportingService';
 import type { IEventBus } from './interfaces/IEventBus';
-import type { IConfigurationService } from './interfaces/IConfigurationService';
-import { logMethod, catchError } from '../utils/decorators';
+import { logMethod, catchError, OnEvent } from '../utils/decorators';
+import type { ConfigurationLoadedEvent } from './contracts/events.contracts';
+import type { IBaseService } from './interfaces/IBaseService';
 
 @injectable()
-export class DebugOrchestratorService implements IDebugOrchestratorService {
+export class DebugOrchestratorService implements IDebugOrchestratorService, IBaseService {
   private readonly config: DebugOrchestratorConfig;
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
@@ -29,11 +30,11 @@ export class DebugOrchestratorService implements IDebugOrchestratorService {
   private readonly errorReportingService: IErrorReportingService;
   // @ts-expect-error - Reserved for future debug orchestration functionality
   private readonly _eventBus: IEventBus;
-  private readonly configurationService: IConfigurationService;
   
   private lastUpdateTime: Date;
   // @ts-expect-error - Reserved for diagnostic caching functionality
   private _cachedDiagnostics: ServiceDiagnosticData | null = null;
+  private configLoaded: boolean = false;
 
   constructor(
     @inject(TYPES.DebugOrchestratorConfig) config: DebugOrchestratorConfig,
@@ -41,8 +42,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService {
     @inject(TYPES.ITimerService) timerService: ITimerService,
     @inject(TYPES.INotificationService) notificationService: INotificationService,
     @inject(TYPES.IErrorReportingService) errorReportingService: IErrorReportingService,
-    @inject(TYPES.IEventBus) eventBus: IEventBus,
-    @inject(TYPES.IConfigurationService) configurationService: IConfigurationService
+    @inject(TYPES.IEventBus) eventBus: IEventBus
   ) {
     this.config = config;
     this.logger = logger;
@@ -50,7 +50,6 @@ export class DebugOrchestratorService implements IDebugOrchestratorService {
     this.notificationService = notificationService;
     this.errorReportingService = errorReportingService;
     this._eventBus = eventBus;
-    this.configurationService = configurationService;
     
     this.lastUpdateTime = this.timerService.getCurrentDate();
     this.logger.info('DebugOrchestratorService initialized', {
@@ -159,7 +158,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService {
 
     // Configuration Service diagnostics
     try {
-      const configLoaded = this.configurationService.isLoaded();
+      const configLoaded = this.configLoaded;
       const configStatus = configLoaded ? 'LOADED' : 'NOT_LOADED';
 
       statuses.push({
@@ -168,7 +167,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService {
         status: `Status: ${configStatus}`,
         stats: {
           configLoaded,
-          configSections: configLoaded ? Object.keys(this.configurationService.getConfig()) : []
+          configSections: [] // Cannot access config sections without service injection
         },
         lastUpdate: this.timerService.getCurrentDate()
       });
@@ -203,6 +202,13 @@ export class DebugOrchestratorService implements IDebugOrchestratorService {
     await this.gatherServiceDiagnostics();
   }
 
+  @OnEvent('ConfigurationLoaded')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private onConfigurationLoaded(event: ConfigurationLoadedEvent): void {
+    this.configLoaded = true;
+    this.logger.info('Configuration loaded', { loadedConfigs: event.loadedConfigs });
+  }
+
   // Private helper methods
   private getMemoryUsage(): number {
     if (typeof performance !== 'undefined' && (performance as any).memory) {
@@ -221,5 +227,16 @@ export class DebugOrchestratorService implements IDebugOrchestratorService {
     // This would need to be integrated with the rendering system
     // For now, return a default value
     return 16.67; // ~60fps
+  }
+
+  // IBaseService implementation
+  public initialize(): void {
+    // @OnEvent subscriptions are set up automatically by the decorator
+    this.logger.info('DebugOrchestratorService initialized and event subscriptions active');
+  }
+
+  public cleanup(): void {
+    // @OnEvent subscriptions are cleaned up automatically by the decorator
+    this.logger.info('DebugOrchestratorService cleanup completed');
   }
 }

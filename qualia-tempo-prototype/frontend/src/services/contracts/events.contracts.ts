@@ -141,6 +141,12 @@ export interface StreamingStatusChangedEvent extends BaseEvent {
   status: ConnectionStatus;
 }
 
+export interface ConfigurationLoadedEvent extends BaseEvent {
+  type: "ConfigurationLoaded";
+  loadedConfigs: string[]; // List of config files that were loaded
+  totalConfigs: number; // Total number of config files expected
+}
+
 export interface SystemAudioReadyEvent extends BaseEvent {
   type: "System.Audio.Ready";
 }

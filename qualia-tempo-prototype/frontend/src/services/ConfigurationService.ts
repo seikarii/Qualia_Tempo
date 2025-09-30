@@ -14,6 +14,7 @@
 import { injectable, inject } from "inversify";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { ILogger } from "./interfaces/ILogger";
+import type { IEventBus } from "./interfaces/IEventBus";
 import type { FullGameConfig } from "../types/config";
 import { TYPES } from "./inversify.types";
 import * as yaml from "js-yaml";
@@ -34,6 +35,7 @@ export class ConfigurationService implements IConfigurationService {
   private configBasePath: string;
   private loadedConfig: FullGameConfig | null = null;
   private logger: ILogger;
+  private eventBus: IEventBus;
 
   // Configuration files discovery - NO HARDCODING
   private configFileManifest: Record<string, string> = {};
@@ -42,9 +44,11 @@ export class ConfigurationService implements IConfigurationService {
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ConfigBasePath) configBasePath: string,
     @inject(TYPES.ConfigManifest) configManifest: Record<string, string>,
+    @inject(TYPES.IEventBus) eventBus: IEventBus,
   ) {
     this.logger = logger;
     this.configBasePath = configBasePath;
+    this.eventBus = eventBus;
 
     // Accept configuration file manifest externally
     this.configFileManifest = configManifest;
@@ -63,43 +67,52 @@ export class ConfigurationService implements IConfigurationService {
 
   @logMethod
   public async loadConfig(): Promise<FullGameConfig> {
-    try {
-      this.logger.info("Loading configuration from multiple YAML files...");
+    this.logger.info("Loading configuration from multiple YAML files...");
 
-      // Load all configuration files in parallel
-      const configPromises = Object.entries(this.configFileManifest).map(
-        async ([key, path]) => {
-          const fullPath = this.configBasePath + path;
-          this.logger.debug(`Loading ${key} from ${fullPath}`);
+    // Load all configuration files with individual error handling
+    const loadedConfigs: { key: string; config: any }[] = [];
+    const configFiles = Object.entries(this.configFileManifest);
 
-          const response = await fetch(fullPath);
-          if (!response.ok) {
-            throw new Error(`Failed to load ${key} from ${fullPath}: ${response.status} ${response.statusText}`);
-          }
-          const yamlText = await response.text();
-          return { key, config: yaml.load(yamlText) };
-        },
-      );
+    for (const [key, path] of configFiles) {
+      try {
+        const fullPath = this.configBasePath + path;
+        this.logger.debug(`Loading ${key} from ${fullPath}`);
 
-      const loadedConfigs = await Promise.all(configPromises);
-
-      // Merge all configurations with proper typing
-      const mergedConfig = {} as Partial<FullGameConfig>;
-      loadedConfigs.forEach(({ key, config }) => {
-        (mergedConfig as any)[key] = config;
-      });
-
-      // Validate configuration using modular validators
-      validateFullGameConfig(mergedConfig as FullGameConfig);
-
-      this.loadedConfig = mergedConfig as FullGameConfig;
-      this.logger.info("All configurations loaded successfully");
-
-      return this.loadedConfig;
-    } catch (error) {
-      this.logger.error("Failed to load configuration:", { error });
-      throw error;
+        const response = await fetch(fullPath);
+        if (!response.ok) {
+          throw new Error(`Failed to load ${key} from ${fullPath}: ${response.status} ${response.statusText}`);
+        }
+        const yamlText = await response.text();
+        const config = yaml.load(yamlText);
+        loadedConfigs.push({ key, config });
+      } catch (error) {
+        // NO MÁS [object Object] - Throw specific error with file name and reason
+        throw new Error(`FATAL: ConfigurationService failed to load '${key}'. Reason: ${error instanceof Error ? error.message : String(error)}`);
+      }
     }
+
+    // Merge all configurations with proper typing
+    const mergedConfig = {} as Partial<FullGameConfig>;
+    loadedConfigs.forEach(({ key, config }) => {
+      (mergedConfig as any)[key] = config;
+    });
+
+    // Validate configuration using modular validators
+    validateFullGameConfig(mergedConfig as FullGameConfig);
+
+    this.loadedConfig = mergedConfig as FullGameConfig;
+    this.logger.info("All configurations loaded successfully");
+
+    // Emit ConfigurationLoadedEvent
+    this.eventBus.emit({
+      type: "ConfigurationLoaded",
+      loadedConfigs: Object.keys(this.configFileManifest),
+      totalConfigs: Object.keys(this.configFileManifest).length,
+      timestamp: new Date(),
+      source: "ConfigurationService"
+    } as any);
+
+    return this.loadedConfig;
   }
 
   /**

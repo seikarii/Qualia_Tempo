@@ -1,5 +1,7 @@
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
+import { TYPES } from './inversify.types';
 import { IInputStateService } from './interfaces/IInputStateService';
+import type { ILogger } from './interfaces/ILogger';
 import { logMethod } from '../utils/decorators';
 
 /**
@@ -14,6 +16,12 @@ import { logMethod } from '../utils/decorators';
 export class InputStateService implements IInputStateService {
   private readonly pressedKeys = new Set<string>();
   private readonly justPressedKeys = new Set<string>();
+  // @ts-expect-error - Used by @logMethod decorator
+  private readonly logger: ILogger;
+
+  constructor(@inject(TYPES.ILogger) logger: ILogger) {
+    this.logger = logger;
+  }
 
   @logMethod
   public pressKey(key: string): void {
