@@ -14,17 +14,56 @@ describe('RhythmicMovementController', () => {
   let mockGameplayMechanicsService: any;
 
   beforeEach(() => {
+    vi.clearAllMocks();
+    
     container = createTestContainer();
+    
+    // Bind configuration
+    container.bind(TYPES.RhythmicMovementConfig).toConstantValue({
+      bpm: 120,
+      perfectTiming: 50,
+      goodTiming: 100,
+      gridSize: 10,
+      slowdownFactor: 0.5,
+      slowdownDuration: 2000,
+      playerSpeed: 5,
+      dashDistance: 2,
+      messages: {
+        serviceInitialized: 'RhythmicMovementController initialized',
+      },
+    });
+    
+    // Bind additional mocks
+    const mockKeyAdapter = { adapt: vi.fn() };
+    const mockInputStateServiceLocal = {
+      wasActionJustPressed: vi.fn(),
+      getCurrentInputState: vi.fn(),
+    };
+    const mockGameplayMechanicsServiceLocal = {
+      findNearestNote: vi.fn(),
+      calculateScore: vi.fn(),
+      processNoteHit: vi.fn(),
+      calculateNoteAccuracy: vi.fn(),
+      determineHitResult: vi.fn(),
+      calculateScoreForHit: vi.fn(),
+    };
+    
+    container.bind(TYPES.IKeyToDirectionAdapter).toConstantValue(mockKeyAdapter);
+    container.bind(TYPES.IInputStateService).toConstantValue(mockInputStateServiceLocal);
+    container.bind(TYPES.IGameplayMechanicsService).toConstantValue(mockGameplayMechanicsServiceLocal);
+    
+    // Bind the Service Under Test (SUT)
+    container.bind(TYPES.IRhythmicMovementController).to(RhythmicMovementController).inSingletonScope();
+    
     controller = container.get(TYPES.IRhythmicMovementController);
 
     // Get mocks from container
-    const mocks = container.get('mocks');
-    mockEventBus = mocks.mockEventBus;
-    mockLogger = mocks.mockLogger;
-    mockTimerService = mocks.mockTimerService;
-    mockInputStateService = mocks.mockInputStateService;
-    mockGameStateStore = mocks.mockGameStateStore;
-    mockGameplayMechanicsService = mocks.mockGameplayMechanicsService;
+    mockEventBus = container.get(TYPES.IEventBus);
+    mockLogger = container.get(TYPES.ILogger);
+    mockTimerService = container.get(TYPES.ITimerService);
+    mockGameStateStore = container.get(TYPES.IGameStateStoreService);
+    mockInputStateService = mockInputStateServiceLocal;
+    mockGameplayMechanicsService = mockGameplayMechanicsServiceLocal;
   });
 
   describe('processActionInputFromState', () => {

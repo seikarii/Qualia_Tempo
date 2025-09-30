@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import {
@@ -9,12 +9,7 @@ import {
 import { Vector2 } from "three";
 import * as THREE from "three";
 import { useGameStore } from "../../state/useGameStore";
-import { useCoordinateSystemService, useConfiguration, useGameInputControllerService } from "../../services/hooks";
-import type {
-  PlayerActionEvent,
-  RhythmicDashEvent,
-  MetronomeTickEvent,
-} from "../../services/contracts/events.contracts";
+import { useCoordinateSystemService, useGameInputControllerService } from "../../services/hooks";
 import type { NoteData } from "../../types/contracts";
 
 import QualiaTempoHUD from "./QualiaTempoHUD";
@@ -72,12 +67,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   onGameAction: _onGameAction,
   isActive = false,
 }) => {
-  const coordinateSystemService = useCoordinateSystemService();
-  const configurationService = useConfiguration();
   const gameInputControllerService = useGameInputControllerService();
-
-  // Get gameplay configuration
-  const gameplayConfig = configurationService.getConfigSection('gameplay');
 
   // Get real game state from Zustand store
   const zustandState = useGameStore();

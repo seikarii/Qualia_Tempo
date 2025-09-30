@@ -7,4 +7,6 @@ export const mockGameStateStoreService: any = {
   updateQualiaState: vi.fn(),
   getStatus: vi.fn(),
   isRunning: vi.fn(),
+  getGameState: vi.fn(),
+  setStoreSetter: vi.fn(),
 };
