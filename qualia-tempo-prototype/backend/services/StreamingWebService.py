@@ -230,19 +230,8 @@ class StreamingWebService:
                         break
 
                     try:
-                        # Encode frame as base64 for WebSocket transmission
-                        frame_b64 = base64.b64encode(frame_bytes).decode("utf-8")
-
-                        # Create WebSocket message
-                        message = {
-                            "type": "video_frame",
-                            "data": frame_b64,
-                            "timestamp": loop_start,
-                            "frame_number": self._frames_sent,
-                        }
-
-                        # Send frame to all connected clients
-                        await self._broadcast_frame(message)
+                        # Send frame bytes directly to all connected clients
+                        await self._broadcast_bytes(frame_bytes)
 
                         # Update statistics
                         self._frames_sent += 1
@@ -449,3 +438,51 @@ class StreamingWebService:
                     await self._stop_streaming()
 
             self._logger.info("🔌 WebSocket connection handled and cleaned up")
+
+    @log_execution(level="DEBUG")
+    @handle_errors(fallback_return_value=None)
+    async def _broadcast_bytes(self, data: bytes) -> None:
+        """Send raw bytes to all connected clients."""
+        if not self._connections:
+            return
+
+        disconnected = set()
+        # Prepara las tareas de envío para todos los clientes.
+        send_tasks = [
+            self._send_bytes_to_client(websocket, data)
+            for websocket in self._connections
+        ]
+
+        # Ejecuta todas las tareas en paralelo para máxima eficiencia.
+        results = await asyncio.gather(*send_tasks, return_exceptions=True)
+
+        # Procesa los resultados para encontrar clientes desconectados.
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                websocket = list(self._connections)[i]
+                disconnected.add(websocket)
+                self._logger.error(f"🚨 Error sending bytes to client: {result}")
+
+        # Limpia las conexiones desconectadas.
+        if disconnected:
+            for websocket in disconnected:
+                if websocket in self._connections:
+                    self._connections.remove(websocket)
+                    self._connected_clients = len(self._connections)
+
+                    self._logger.info(
+                        f"🔌 Client disconnected during broadcast. Total connections: {self._connected_clients}"
+                    )
+
+                    # Stop streaming if no connections remain
+                    if self._connected_clients == 0 and self._is_streaming:
+                        await self._stop_streaming()
+
+    async def _send_bytes_to_client(self, websocket: WebSocket, data: bytes):
+        """Sends bytes to a single client and handles exceptions."""
+        try:
+            # ¡LA LLAMADA CORRECTA Y ÚNICA ACEPTABLE!
+            await websocket.send_bytes(data)
+        except (WebSocketDisconnect, RuntimeError) as e:
+            # Propaga la excepción para que el manejador de broadcast la capture.
+            raise e
