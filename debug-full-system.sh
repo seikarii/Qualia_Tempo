@@ -246,7 +246,7 @@ test_browser() {
 // IN-MEMORY PLAYWRIGHT SCRIPT
 // ==========================================
 
-const { chromium } = require('playwright');
+const { firefox } = require('playwright');
 const fs = require('fs');
 
 async function runInMemoryTest() {
@@ -261,7 +261,7 @@ async function runInMemoryTest() {
     const gameCanvasLocator = '[data-testid="canvas"] canvas';
 
     try {
-        browser = await chromium.launch({
+        browser = await firefox.launch({
             headless: false,
             args: [
                 '--no-sandbox',
