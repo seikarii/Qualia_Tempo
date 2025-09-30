@@ -241,7 +241,7 @@ test_browser() {
     # The 'EOF' is NOT quoted to allow $LOG_DIR expansion, but template literals have been replaced with string concatenation.
     # MAXIMUM EXECUTION TIME: 20 seconds - if exceeded, something is definitely wrong
     log_info "Executing in-memory browser test... (Errors are expected during failure tests)"
-    timeout 20 node - > "$BROWSER_LOG" 2>&1 << EOF
+    timeout 20 node - > "$BROWSER_LOG" 2>&1 << EOF &
 // ==========================================
 // IN-MEMORY PLAYWRIGHT SCRIPT
 // ==========================================
@@ -262,7 +262,7 @@ async function runInMemoryTest() {
 
     try {
         browser = await chromium.launch({
-            headless: true,
+            headless: false,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -431,9 +431,11 @@ runInMemoryTest();
 // ========================================
 EOF
 
-    # Handle timeout or execution failure
-    if [ $? -ne 0 ]; then
-        log_warning "Browser test failed or timed out. This is expected if there are errors."
+    local test_pid=$!
+    wait $test_pid
+    local test_exit_code=$?
+    if [ $test_exit_code -ne 0 ]; then
+        log_warning "Browser test failed, timed out, or exited with an error code: $test_exit_code."
     fi
 
     log_info "In-memory browser test execution finished."

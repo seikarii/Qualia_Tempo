@@ -51,6 +51,7 @@ export default defineConfig({
         secure: false,
       },
     },
+    open: 'firefox',
   },
   resolve: {
     alias: {
