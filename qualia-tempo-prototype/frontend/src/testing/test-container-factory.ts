@@ -1,14 +1,14 @@
 /**
- * GOLD.CODE: Parent/Child Container Testing Infrastructure
- * Supreme Guardian Directive Compliance 
+ * GOLD.CODE: Isolated Container Testing Infrastructure
+ * Supreme Guardian Directive Compliance
  *
- * This factory implements the CORRECT Parent/Child Container Architecture for testing,
+ * This factory implements the CORRECT Isolated Container Architecture for testing,
  * ensuring supreme performance, isolation, and maintainability as per the architect's mandate.
  *
  * ARCHITECTURE OVERVIEW:
- * - It uses the main application 'container' from 'inversify.config.ts' as the source.
- * - The createTestContainer function uses the OFFICIAL 'container.createChild()' method
- *   to create fast, isolated containers for each test.
+ * - The createTestContainer function creates a completely new Container() for each test
+ *   to guarantee total isolation and prevent cross-contamination between tests.
+ * - All mock services are centralized in src/testing/mocks/ directory for maintainability.
  *
  * MANDATE: NO manual service instantiation. NO API fabrication. NO monkey-patching.
  * OBLIGATION: All Service Under Test (SUT) must be resolved from a correctly created container.
@@ -29,66 +29,24 @@ import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { IWebSocketService } from "../services/interfaces/IWebSocketService";
 import type { IBrowserEventsService } from "../services/interfaces/IBrowserEventsService";
 
+// Import centralized mocks
+import { mockLogger } from "./mocks/logger.mock";
+import { mockEventBus } from "./mocks/event-bus.mock";
+import { mockOntologicalAudioEngine } from "./mocks/ontological-audio-engine.mock";
+import { mockGameStateStore } from "./mocks/game-state-store.mock";
+import { mockGameStateStoreService } from "./mocks/game-state-store-service.mock";
+import { mockHttpService } from "./mocks/http-service.mock";
+import { mockTimerService } from "./mocks/timer-service.mock";
+import { mockPerformanceService } from "./mocks/performance-service.mock";
+import { mockWebSocketService } from "./mocks/web-socket-service.mock";
+import { mockBrowserEventsService } from "./mocks/browser-events-service.mock";
+
 export interface MockOverride<T = any> {
   type: symbol;
   value: T;
 }
 
-// --- MOCK IMPLEMENTATIONS ---
-const mockLogger: ILogger = {
-  info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), setLevel: vi.fn(),
-  getLevel: vi.fn().mockReturnValue("info"),
-  child: vi.fn().mockReturnThis(),
-};
-
-const mockEventBus: IEventBus = {
-  subscribe: vi.fn(), unsubscribe: vi.fn(), emit: vi.fn(),
-  clear: vi.fn(), destroy: vi.fn(), getStats: vi.fn(),
-};
-
-const mockOntologicalAudioEngine: IOntologicalAudioEngine = {
-  createEntityVoice: vi.fn(), updateEntitySound: vi.fn(), removeEntityVoice: vi.fn(),
-  playEmergentPattern: vi.fn(), getMasterVolume: vi.fn(), setMasterVolume: vi.fn(),
-};
-
-const mockGameStateStore: any = {
-  setNotifications: vi.fn(), getNotifications: vi.fn(), updateGameState: vi.fn(),
-  getGameState: vi.fn(), updateQualiaState: vi.fn(), getQualiaState: vi.fn(), setState: vi.fn(),
-};
-
-const mockGameStateStoreService: any = {
-  start: vi.fn(), stop: vi.fn(), updateGameState: vi.fn(),
-  updateQualiaState: vi.fn(), getStatus: vi.fn(), isRunning: vi.fn(),
-};
-
-const mockHttpService: IHttpService = {
-  get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn(),
-};
-
-const mockTimerService: ITimerService = {
-  setTimeout: vi.fn(), clearTimeout: vi.fn(), setInterval: vi.fn(),
-  clearInterval: vi.fn(), nextTick: vi.fn(), now: vi.fn(),
-  getCurrentDate: vi.fn(),
-};
-
-const mockPerformanceService: IPerformanceService = {
-  now: vi.fn(), getMemoryInfo: vi.fn(), mark: vi.fn(),
-  measure: vi.fn(), clearMarks: vi.fn(), clearMeasures: vi.fn(),
-  requestAnimationFrame: vi.fn(), cancelAnimationFrame: vi.fn(),
-};
-
-const mockWebSocketService: IWebSocketService = {
-  connect: vi.fn(), disconnect: vi.fn(), send: vi.fn(),
-  onMessage: vi.fn(), onOpen: vi.fn(), onClose: vi.fn(),
-  onError: vi.fn(), getReadyState: vi.fn(), isConnected: vi.fn(),
-  setBinaryType: vi.fn(), // Binary protocol support
-};
-
-const mockBrowserEventsService: IBrowserEventsService = {
-  addWindowEventListener: vi.fn(), removeWindowEventListener: vi.fn(),
-  addElementEventListener: vi.fn(), removeElementEventListener: vi.fn(),
-  getWindowDimensions: vi.fn(), getViewportDimensions: vi.fn(),
-};
+// --- MOCK IMPLEMENTATIONS ARE NOW CENTRALIZED IN src/testing/mocks/ ---
 
 /**
  * Mock Services Interface

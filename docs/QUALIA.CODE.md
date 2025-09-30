@@ -27,97 +27,8 @@
   - Las dependencias en los constructores **DEBEN** ser inyectadas usando `@inject(TYPES.Identifier)`.
 - **PROHIBIDO:** Instanciación manual (`new MyService()`) en cualquier parte de la aplicación (componentes, otros servicios, etc.).
 
-#### Ejemplo: Definición de Tipos (`inversify.types.ts`)
-```typescript
-export const TYPES = {
-  // --- Core Services ---
-  Logger: Symbol.for("Logger"),
-  EventBus: Symbol.for("EventBus"),
-  ConfigurationService: Symbol.for("ConfigurationService"),
-  IHttpService: Symbol.for("IHttpService"),
-  ITimerService: Symbol.for("ITimerService"),
-
-  // --- Feature Services ---
-  IQualiaService: Symbol.for("IQualiaService"),
-  IBackendSyncService: Symbol.for("IBackendSyncService"),
-  IGameControllerService: Symbol.for("IGameControllerService"),
-};
-```
-
-#### Ejemplo: Configuración del Contenedor (`inversify.config.ts`)
-```typescript
-import { container } from './inversify.container';
-import { TYPES } from './inversify.types';
-import { QualiaService } from './QualiaService';
-import { IQualiaService } from './interfaces/IQualiaService';
-
-container.bind<IQualiaService>(TYPES.IQualiaService).to(QualiaService).inSingletonScope();
-```
-
-#### Ejemplo: Implementación de Servicio
-```typescript
-import { injectable, inject } from 'inversify';
-import { TYPES } from './inversify.types';
-import { IEventBus } from './interfaces/IEventBus';
-import { IQualiaService } from './interfaces/IQualiaService';
-import { QualiaServiceConfig } from './contracts/IQualiaService.contracts';
-import { ILogger } from './interfaces/ILogger';
-
-@injectable()
-export class QualiaService implements IQualiaService {
-  private readonly eventBus: IEventBus;
-  private readonly config: QualiaServiceConfig;
-  private readonly logger: ILogger;
-
-  constructor(
-    @inject(TYPES.EventBus) eventBus: IEventBus,
-    // CRITICAL CHANGE: Inject the specific config object, NOT IConfigurationService
-    @inject(TYPES.QualiaServiceConfig) config: QualiaServiceConfig,
-    @inject(TYPES.ILogger) logger: ILogger
-  ) {
-    this.eventBus = eventBus;
-    this.config = config;
-    this.logger = logger;
-    this.logger.info('QualiaService Initialized with timeout:', this.config.timeout);
-  }
-
-  @logMethod()
-  public async processQualiaState(state: QualiaState): Promise<void> {
-    if (!this.config.featureFlags.newFeature) {
-        this.logger.warn('New feature is disabled by configuration.');
-        return;
-    }
-    this.logger.debug('Processing qualia state', { state });
-    // Implementation using this.config.apiUrl...
-  }
-}
-```
-
-#### ApplicationCompositionRoot: Bootstrap & Initialization (`frontend/src/services/ApplicationCompositionRoot.ts`)
-
-The `ApplicationCompositionRoot` is the **ONLY** class allowed to directly access the InversifyJS IoC container. It encapsulates all bootstrap logic and application initialization, implementing the Composition Root pattern.
-
-**Key Responsibilities:**
-- Application bootstrap and service initialization
-- Container access encapsulation (no other code can access `container` directly)
-- Service lifecycle management
-- Logger registration for decorator access
-- Development environment setup
-
-**MANDATE:** All application initialization logic MUST go through `ApplicationCompositionRoot.initializeApplication()`. Direct container access elsewhere is a critical violation.
-
-**Example Usage:**
-```typescript
-// index.tsx - Application Entry Point
-import { ApplicationCompositionRoot } from './services/ApplicationCompositionRoot';
-
-async function main() {
-  const compositionRoot = new ApplicationCompositionRoot();
-  await compositionRoot.initializeApplication();
-  
-  // React app initialization...
-}
-```
+// Principio de Inyección:
+constructor(@inject(TYPES.IDependency) private dep: IDependency) {}
 
 ---
 
@@ -128,6 +39,14 @@ async function main() {
   1. Generate Pydantic models in `backend/api/models.py`.
   2. Generate TypeScript interfaces in `frontend/src/types/contracts.ts`.
 - **PROHIBITED:** Manual editing of the generated model and interface files.
+
+> **NOTA ARQUITECTÓNICA:**
+> Es crucial diferenciar entre los dos tipos de "contratos" en el proyecto:
+> 1.  **Shared Contracts (`/shared_contracts`):** Son esquemas JSON (la fuente única de verdad) que definen las estructuras de datos compartidas entre
+> el **backend (Python)** y el **frontend (TypeScript)**. Su propósito es la interoperabilidad entre sistemas.
+> 2.  **Service Contracts (`/frontend/src/services/contracts`):** Son interfaces TypeScript (`*.contracts.ts`) que definen las formas de los datos y
+> eventos *dentro* del ecosistema de servicios del frontend. Su propósito es garantizar la seguridad de tipos y el desacoplamiento entre los servicios
+> internos de la aplicación cliente.
 
 ---
 
@@ -145,171 +64,30 @@ The linting system consists of three integrated components:
 
 ### 4.2. Usage
 
-#### Running the Complete Architectural Linter
+The linting system provides unified command-line interface for comprehensive architectural compliance checking across both frontend and backend codebases.
 
 ```bash
-# From project root
 ./scripts/lint-architecture.sh
-```
-
-This command will:
-- ✅ Check frontend TypeScript/React code with custom ESLint rules
-- ✅ Analyze backend Python code for architectural violations
-- ✅ Provide colored output with violation details
-- ✅ Exit with code 0 if compliant, 1 if violations found
-- ✅ Show quick fix suggestions for common violations
-
-#### Integration with Development Workflow
-
-The linter should be run:
-- **Pre-commit**: Via git hooks to prevent architectural violations from entering the repository
-- **CI/CD**: As part of automated pipelines to ensure continuous compliance
-- **Manual**: During development to catch violations early
-
-```bash
-# Example: Add to package.json scripts
-{
-  "scripts": {
-    "lint:architecture": "./scripts/lint-architecture.sh",
-    "precommit": "npm run lint:architecture"
-  }
-}
 ```
 
 ### 4.3. Frontend ESLint Rules
 
-The custom ESLint plugin enforces the following QUALIA.CODE principles:
-
-#### `no-direct-service-instantiation`
-- **Prohibits:** `new ServiceName()` in React components
-- **Requires:** Services accessed via `useServices()` hook
-- **Rationale:** Enforces IoC/DI patterns and prevents tight coupling
-
-#### `enforce-use-services-hook`
-- **Prohibits:** Direct service imports in React components
-- **Requires:** `useServices()` hook usage
-- **Rationale:** Maintains separation between UI and business logic
-
-#### `no-complex-use-state`
-- **Prohibits:** Complex objects/arrays in `useState`
-- **Requires:** Simple primitives only; complex state in Zustand store
-- **Rationale:** Consistent state management architecture
-
-#### `no-hardcoded-config`
-- **Prohibits:** Hardcoded values in service files
-- **Requires:** All configuration from external YAML files
-- **Rationale:** Externalized, runtime-configurable behavior
-
-#### `no-manual-contract-edit`
-- **Prohibits:** Manual editing of generated contract files
-- **Requires:** `@generated DO NOT EDIT` comments in auto-generated files
-- **Rationale:** Single source of truth for data contracts
-
-#### `deprecate-api-client`
-- **Prohibits:** Direct `ApiClient` usage
-- **Requires:** Event-driven communication via EventBus
-- **Rationale:** Decoupled, testable communication patterns
-
-#### `enforce-method-decorators` ⚡ ENHANCED
-- **Requires:** `@logMethod()` on ALL public service methods for consistent logging
-- **Requires:** `@catchError()` on public async methods that aren't simple getters
-- **Prohibits:** `@catchError()` on simple synchronous getters (performance optimization)
-- **Smart Detection:** Analyzes method complexity, async nature, and naming patterns
-- **Performance Aware:** Prevents unnecessary overhead on hot path methods (Section 8.1)
-- **Enhanced Logic:** Distinguishes between complex operations and simple property accessors
-
-#### `enforce-inversify-conventions`
-- **Prohibits:** Missing `@injectable()` or `@inject()` decorators
-- **Requires:** Proper InversifyJS IoC container setup
-- **Rationale:** Dependency injection architectural integrity
-
-#### `no-console-in-services` ⭐ NEW
-- **Prohibits:** Usage of `console.log`, `console.warn`, `console.error`, etc. in service files
-- **Requires:** All logging channeled through injected `QualiaLogger`
-- **Rationale:** Centralized log control and production log management (Section 5.3)
-
-#### `no-direct-service-import-in-components` ⭐ NEW
-- **Prohibits:** Direct imports of service classes in React components (`.tsx` files)
-- **Requires:** Services accessed via `useService()` hook exclusively
-- **Rationale:** Enforces IoC/DI patterns and prevents tight coupling between UI and business logic
-
-#### `enforce-config-driven-values` ⭐ NEW
-- **Warns:** Magic literals that appear configurable (large numbers, URLs, timeouts)
-- **Suggests:** Externalization to `ConfigurationService` for runtime configurability
-- **Rationale:** Proactive enforcement of configuration sovereignty (Section 1)
+The custom ESLint plugin enforces QUALIA.CODE principles through automated static analysis of TypeScript/React code.
 
 ### 4.4. Backend Python Rules
 
-The Python AST analyzer validates:
-
-#### Direct Service Instantiation Detection
-- **Prohibits:** `Service()` constructor calls outside CompositionRoot
-- **Requires:** All services resolved via CompositionRoot dependency injection
-- **Detection:** AST parsing identifies `Service()` calls in inappropriate contexts
-
-#### Decorator Compliance
-- **Prohibits:** Public methods without `@log_execution` decorator
-- **Requires:** All service methods decorated for logging and error handling
-- **Detection:** AST analysis of function definitions and decorator lists
-
-#### Directory Filtering
-- **Ignores:** Virtual environments (`.venv`), cache directories (`__pycache__`), build artifacts
-- **Focus:** User code only, excluding dependencies and generated files
-- **Performance:** Prevents analysis of thousands of dependency files
+The Python AST analyzer validates architectural compliance in Python code through abstract syntax tree parsing.
 
 ### 4.5. Output and Error Handling
 
-#### Success State
-```bash
-🏗️  QUALIA.CODE Architectural Enforcement
-=========================================
-📋 Phase 1: Frontend ESLint Rules
-   Running ESLint with QUALIA.CODE rules...
-   ✅ Frontend architectural compliance: PASSED
+The linting system provides comprehensive reporting with clear success/failure states and actionable violation details.
 
-📋 Phase 2: Backend Python Rules
-   Running QUALIA.CODE Python linter...
-   ✅ Backend architectural compliance: PASSED
-
-📋 Phase 3: Summary
-   Frontend Compliance: PASSED
-   Backend Compliance: PASSED
-
-🎉 ARCHITECTURAL ENFORCEMENT: ALL SYSTEMS COMPLIANT
-   QUALIA.CODE principles successfully enforced
-```
-
-#### Violation State
-```bash
-🏗️  QUALIA.CODE Architectural Enforcement
-=========================================
-📋 Phase 1: Frontend ESLint Rules
-   Running ESLint with QUALIA.CODE rules...
-   ❌ Frontend architectural violations detected
-
-📋 Phase 2: Backend Python Rules
-   Running QUALIA.CODE Python linter...
-   ❌ Backend architectural violations detected
-   MyService.py:15: Method process_data missing @log_execution decorator
-   MyComponent.tsx:10: Direct service instantiation detected
-
-📋 Phase 3: Summary
-   Frontend Compliance: FAILED
-   Backend Compliance: FAILED
-
-🚫 ARCHITECTURAL ENFORCEMENT: VIOLATIONS DETECTED
-   2 system(s) have architectural violations
-
-💡 Quick Fixes:
-   • Frontend: Use useService() hooks instead of direct imports
-   • Backend: Add @log_execution decorators to service methods
-   • Backend: Inject services via CompositionRoot, never 'new Service()'
-```
+# Ejemplo de violación detectada:
+MyComponent.tsx:10: Direct service instantiation detected. Use useService() hook instead.
 
 ### 4.6. Configuration and Customization
 
-#### ESLint Plugin Configuration
-Located in `eslint-plugin-qualia-code/`, the plugin can be configured per project needs:
+The linting system supports project-specific configuration and CI/CD integration.
 
 ```javascript
 // .eslintrc.js
@@ -336,34 +114,7 @@ The Python rules are configured within `scripts/lint-architecture.sh` and can be
 
 ### 4.8. Integration with CI/CD
 
-Example GitHub Actions workflow:
-
-```yaml
-name: QUALIA.CODE Compliance
-on: [push, pull_request]
-
-jobs:
-  lint-architecture:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      - name: Install dependencies
-        run: |
-          npm install
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install -r requirements.txt
-      - name: Run Architectural Linter
-        run: ./scripts/lint-architecture.sh
-```
+The linting system integrates with continuous integration pipelines to ensure ongoing architectural compliance.
 
 ---
 
@@ -373,46 +124,9 @@ jobs:
 - An `EventBus` service will be implemented on both frontend and backend.
 - **Event Contracts:** All event data structures are defined in `frontend/src/services/contracts/events.contracts.ts` to eliminate circular dependencies and provide a single source of truth for event types.
 
-#### Event Contracts (`frontend/src/services/contracts/events.contracts.ts`)
-
 **MANDATE:** All EventBus event interfaces MUST be defined in `events.contracts.ts`. This file serves as the single source of truth for event data structures and eliminates circular dependencies between services.
 
-**Key Event Types:**
-- `BaseEvent`: Base interface for all events with `type`, `timestamp`, `source`, and `metadata` fields
-- `PlayerActionEvent`: Player actions like "Dash", "HitNote", "MissNote", etc.
-- `RhythmicDashEvent`: Rhythmic movement events with direction and timing
-- `MetronomeTickEvent`: Metronome beat events
-- `GameStateChangedEvent`: Game state transitions
-- `PlayerInputEvent`: Raw player input events
-
-**Example Event Contract:**
-```typescript
-export interface BaseEvent {
-  type: string;
-  timestamp: Date;
-  source?: string;
-  metadata?: Record<string, any>;
-}
-
-export interface PlayerActionEvent extends BaseEvent {
-  type: "PlayerAction";
-  action: "Dash" | "HitNote" | "MissNote" | "FastForward" | "Rewind" | "StartGame" | "PauseGame" | "ResetGame" | "scoreIncrease";
-  context?: Record<string, any>;
-  value?: number;
-}
-```
-
 **PROHIBITED:** Defining event interfaces directly in service files or EventBus.ts. All event contracts MUST reside in `events.contracts.ts`.
-
-- **Frontend Flow:**
-  1. Player actions (`Dash`, `HitNote`) generate events on the frontend `EventBus`.
-  2. A `QualiaStateCalculatorService` listens to these events and computes the new `QualiaState`.
-  3. Upon change, it emits a `QualiaStateUpdated` event with the new state.
-  4. A `BackendSyncService` listens for `QualiaStateUpdated`, throttles the events, and sends the final state to the backend API.
-  5. The `ConfigurationService` loads external YAML configuration and provides it to all services.
-- **Backend Flow:**
-  1. The API route receives the state and publishes it to the backend `EventBus`.
-  2. The `ParticleEngine`, `ShaderManager`, and other visual systems subscribe to this event to update themselves.
 
 ---
 
@@ -434,78 +148,10 @@ export interface PlayerActionEvent extends BaseEvent {
 - `@validateEventProperty()`: Validates event properties against predefined schemas for EventBus events.
 - `@qualiaMethod()`: Comprehensive decorator that combines logging, error handling, and performance monitoring for critical qualia operations.
 - `@AdaptAndEmit(adapterPropertyKey: string)`: **CRÍTICO PARA LA ADAPTACIÓN DE PROTOCOLOS.** Este decorador es el núcleo del `ProtocolAdapterBundle`. DEBE usarse en métodos que sirven como puntos de entrada para datos crudos de fuentes externas (ej. WebSockets). Traduce automáticamente los datos crudos a un evento de dominio tipado y lo emite en el `EventBus`.
-  - **Mecanismo:** Accede a una implementación de `IMessageAdapter` y al `IEventBus` desde las propiedades inyectadas de la instancia del servicio.
-  - **`adapterPropertyKey`:** El nombre en formato `string` de la propiedad de la clase que contiene el adaptador de mensajes inyectado.
-  - **Uso Obligatorio:**
-    ```typescript
-    // 1. Inyectar el adaptador y el EventBus en el constructor del servicio.
-    constructor(
-      @inject(TYPES.IEventBus) private eventBus: IEventBus,
-      @inject(TYPES.IRawToParticleEventAdapter) private messageAdapter: IMessageAdapter
-    ) {}
 
-    // 2. Aplicar el decorador al método de punto de entrada.
-    @AdaptAndEmit('messageAdapter')
-    private onRawMessage(rawData: ArrayBuffer): void {
-      // El cuerpo de este método puede estar vacío o contener lógica
-      // que se ejecuta DESPUÉS de que el evento ha sido emitido,
-      // como el seguimiento de estadísticas.
-      this.messagesReceived++;
-    }
-    ```
-
-#### 5.2.1. @catchError Usage Guidelines (Performance Critical)
-
-**MANDATORY: Strategic @catchError Application**
-
-The `@catchError` decorator adds try/catch overhead and should be applied strategically to maintain optimal performance.
-
-**USE @catchError for:**
-- ✅ **Async operations** (network requests, file I/O, database operations)
-- ✅ **External API calls** (browser APIs that might fail, third-party services)
-- ✅ **Complex calculations** that might throw runtime errors
-- ✅ **Service lifecycle methods** (start, stop, initialize, cleanup)
-- ✅ **System boundary methods** (methods that cross architectural layers)
-- ✅ **Event handlers** that process external events
-- ✅ **Configuration loading and parsing operations**
-
-**DO NOT use @catchError for:**
-- ❌ **Simple synchronous getters** that return class properties
-- ❌ **Trivial validation methods** with basic conditionals
-- ❌ **Simple wrappers** around platform APIs that don't add complex logic
-- ❌ **Boolean flag methods** (isEnabled, isRunning, isLoaded - unless they perform I/O)
-- ❌ **Direct property accessors** (getCurrentState, getStatus - unless they validate)
-- ❌ **Simple arithmetic or string operations**
-
-**Performance Impact:**
-- `@catchError` adds ~5-10% overhead per method call
-- On frequently called getters (>1000 calls/sec), this compounds significantly
-- Simple property access should be as lightweight as possible
-
-**Examples:**
-
-```typescript
-// ❌ INCORRECT - Overuse on simple getter
-@logMethod()
-@catchError()  // UNNECESSARY - adds overhead to simple property access
-public getCurrentState(): GameState {
-  return this.gameState;
-}
-
-// ✅ CORRECT - Simple getter without error boundary
-@logMethod()
-public getCurrentState(): GameState {
-  return this.gameState;
-}
-
-// ✅ CORRECT - Complex operation needs error boundary
-@logMethod()
-@catchError()  // NECESSARY - async I/O operation can fail
-public async loadConfiguration(): Promise<void> {
-  const config = await this.httpService.get('/api/config');
-  this.parseAndValidateConfig(config);
-}
-```
+// Aplicación del decorador de adaptación:
+@AdaptAndEmit('messageAdapter')
+private onRawMessage(rawData: ArrayBuffer): void { /* ... */ }
 
 ### 5.3. Logging Standard
 - **Prohibited:** Direct usage of `console.log`, `console.warn`, `console.error`, etc. in the services layer (`src/services`).
@@ -581,25 +227,9 @@ export class OptimizedService {
 
 ---
 
-## 9. AI Workflow Example: Adding a new Qualia Parameter
-
-1.  **Modify Contract:** Edit the appropriate JSON Schema file in `/shared_contracts`.
-2.  **Generate Code:** Run `scripts/generate_contracts.sh`. Verify the changes in the generated Python model and TypeScript interface.
-3.  **Update Configuration:** Add new parameters to the YAML configuration file loaded by `ConfigurationService`.
-4.  **Implement Service:** Create new service class with `@injectable()` decorator and `@inject()` parameters.
-5.  **Add Binding:** Registrar la nueva interfaz y su implementación en el contenedor `inversify.config.ts`:
-    ```typescript
-    container.bind<IMyNewService>(TYPES.IMyNewService).to(MyNewService).inSingletonScope();
-    ```
-6.  **Update Logic:**
-    - **Frontend:** Modify the service to compute the new parameter using configuration from `ConfigurationService`.
-    - **Backend:** Modify the visual systems (`ParticleEngine`, etc.) to react to the new parameter from the event bus.
-7.  **Apply Decorators:** Ensure any new methods use the appropriate decorators for logging, error handling, and validation.
-8.  **Test:** Write unit tests for the new calculation logic and integration tests for the visual output.
-
 ---
 
-## 10. Core Service Definitions
+## 9. Core Service Definitions
 
 ### 9.1. EventBus (`frontend/src/services/EventBus.ts`)
 **Purpose:** Central communication hub for decoupled component interaction.
@@ -713,17 +343,6 @@ export class OptimizedService {
 - `useService<T>(identifier: symbol)`: Resolve a single service by its identifier
 - `useServices<T[]>(identifiers: symbol[])`: Resolve multiple services at once
 - `useContainer()`: Access the InversifyJS container directly (advanced use only)
-**Usage Pattern:**
-```typescript
-// Single service resolution
-const eventBus = useService<IEventBus>(TYPES.EventBus);
-
-// Multiple services resolution
-const [eventBus, configService] = useServices<IEventBus, IConfigurationService>([
-  TYPES.EventBus,
-  TYPES.ConfigurationService
-]);
-```
 
 ### 9.9. ConfigurationService (`frontend/src/services/ConfigurationService.ts`)
 **Purpose:** External configuration management and loading.
@@ -767,93 +386,101 @@ const [eventBus, configService] = useServices<IEventBus, IConfigurationService>(
 - `setInterval(callback, ms)`: Execute a callback repeatedly.
 - `clearInterval(id)`: Cancel a scheduled interval.
 
+### 9.12. WebSocketService (`frontend/src/services/WebSocketService.ts`)
+**Purpose:** Encapsulación de la API nativa de WebSockets para abstraer la comunicación de bajo nivel.
+**Responsibilities:**
+- Provide a high-level interface for WebSocket connections
+- Handle connection lifecycle, reconnection logic, and error recovery
+- Abstract raw WebSocket message handling
+- Integrate with the EventBus for message processing
+- Manage connection state and health monitoring
+
+### 9.13. StateStreamingService (`frontend/src/services/StateStreamingService.ts`)
+**Purpose:** Orquesta el flujo de datos de estado hacia y desde el backend, actuando como un gestor de alto nivel sobre WebSocketService.
+**Responsibilities:**
+- Coordinate state synchronization between frontend and backend
+- Manage streaming protocols for real-time state updates
+- Handle message serialization/deserialization
+- Provide high-level state streaming APIs
+- Integrate with WebSocketService for transport layer
+
+### 9.14. Protocol Bundle (`frontend/src/services/protocol/`)
+**Purpose:** Define el patrón para la traducción de datos crudos.
+**Responsibilities:**
+- Provide interfaces and implementations for message adaptation
+- Transform raw data from external sources into domain events
+- Support multiple protocol formats and adapters
+- Enable pluggable protocol handling
+- Integrate with EventBus for event emission
+**Key Component - IMessageAdapter:**
+- Interface for protocol adapters
+- Defines contract for raw data transformation
+- Used by @AdaptAndEmit decorator for automatic adaptation
+
+### 9.15. Config-Validator Bundle (`frontend/src/services/config-validators/`)
+**Purpose:** Validación de configuración post-carga, asegurando que los objetos de configuración inyectados son correctos en tiempo de ejecución.
+**Responsibilities:**
+- Validate configuration objects after loading
+- Ensure configuration structure matches expected schemas
+- Provide runtime configuration validation
+- Support multiple validation strategies
+- Integrate with dependency injection for automatic validation
+
+### 9.16. BrowserEventsService (`frontend/src/services/BrowserEventsService.ts`)
+**Purpose:** Servicio responsable de abstraer y centralizar los eventos del navegador (resize, focus, etc.) y emitirlos en el EventBus.
+**Responsibilities:**
+- Listen to browser events (resize, focus, blur, visibility change, etc.)
+- Transform browser events into domain events
+- Emit events on the EventBus for system-wide consumption
+- Provide centralized browser event management
+- Handle event cleanup and memory management
+
+### 9.17. RhythmicMovementController (`frontend/src/services/RhythmicMovementController.ts`)
+**Purpose:** Orquestador de la lógica de movimiento rítmico, consumiendo eventos de input y produciendo eventos de acción de juego.
+**Responsibilities:**
+- Process player input events for rhythmic movement
+- Calculate movement timing and rhythm accuracy
+- Generate game action events based on input
+- Maintain rhythm state and timing calculations
+- Integrate with EventBus for input/output event handling
+
 ---
 
-## 11. Testing & Debugging Philosophy
+## 10. Testing & Debugging Philosophy
 
-### 7.1. Principios Fundamentales
-- **Pirámide de Testing:** Adoptamos el modelo de la pirámide de testing. La base son los tests unitarios rápidos, seguidos por tests de integración de servicios, y finalmente, un número reducido de tests E2E.
-- **Tolerancia Cero:** Un test roto es un `build` roto. No se integra código que rompa los tests existentes. Los tests son la especificación; el código se adapta a ellos.
-- **Aislamiento es Clave:** Los tests no deben tener efectos secundarios. Cada test debe poder ejecutarse de forma independiente y en cualquier orden.
+### 10.1. Fundamental Principles
+- **Testing Pyramid:** We adopt the testing pyramid model. The base consists of fast unit tests, followed by service integration tests, and finally a reduced number of E2E tests.
+- **Zero Tolerance:** A broken test is a broken build. Code that breaks existing tests is not integrated. Tests are the specification; code adapts to them.
+- **Isolation is Key:** Tests must not have side effects. Each test must be able to run independently and in any order.
 
-### 7.2. Backend Testing Factory: `TestCompositionRootFactory`
-El pilar de nuestro testing de servicios backend es el `TestCompositionRootFactory`.
+### 10.2. Backend Testing Factory: `TestCompositionRootFactory`
+The pillar of our backend service testing is the `TestCompositionRootFactory`.
 
-- **Propósito:** Proporciona un CompositionRoot pre-configurado y aislado para cada test. Esto nos permite testear un servicio (Service Under Test - SUT) en un entorno controlado donde todas sus dependencias están mockeadas.
-- **Regla de Oro:** Está **PROHIBIDO** instanciar servicios manualmente con `new` o llamadas directas al constructor dentro de los archivos de test. Todos los servicios deben ser resueltos a través del CompositionRoot de test para garantizar que se inyectan los mocks correctos.
+- **Purpose:** Provides a pre-configured and isolated CompositionRoot for each test. This allows us to test a service (Service Under Test - SUT) in a controlled environment where all dependencies are mocked.
+- **Golden Rule:** It is **PROHIBITED** to manually instantiate services with `new` or direct constructor calls within test files. All services must be resolved through the test CompositionRoot to ensure correct mock injection.
 
-#### Ejemplo de Uso (Backend):
-```python
-import pytest
-from backend.tests.test_composition_root import TestCompositionRootFactory
+### 10.3. Frontend Mocking & Test Container Architecture
 
-class TestMyService:
-    @pytest.fixture
-    def mocked_composition_root(self):
-        return TestCompositionRootFactory.create_mocked_composition_root()
-    
-    def test_my_service_functionality(self, mocked_composition_root):
-        # Arrange: Extract dependency mocks
-        mocks = TestCompositionRootFactory.get_service_mocks(mocked_composition_root)
-        event_bus_mock = mocks["event_bus"]
-        
-        # Act: Resolve Service Under Test from container
-        my_service = mocked_composition_root.get_service("my_service")
-        
-        # Configure mock behavior
-        event_bus_mock.publish.return_value = asyncio.create_task(asyncio.sleep(0))
-        
-        # Exercise the service
-        result = my_service.do_something()
-        
-        # Assert
-        assert result is not None
-        event_bus_mock.publish.assert_called_once()
-```
+#### Isolated Container Pattern (GOLD.CODE STANDARD)
+- **MANDATE:** The `test-container-factory.ts` implements the "Isolated Container Pattern" where each test receives a completely new `Container()` instance, ensuring total isolation and preventing cross-contamination.
+- **Prohibition:** Parent/Child container patterns are FORBIDDEN for service testing. The isolated approach guarantees predictability and prevents state leakage between tests.
 
-### 7.3. Frontend Testing Factory: `test-container-factory.ts`
-El pilar de nuestro testing de servicios frontend es el `test-container-factory.ts`.
+#### Centralized Mock Management
+- **Mock Directory:** All service mocks are centralized in `src/testing/mocks/` directory with individual files following `<service-name>.mock.ts` naming convention.
+- **Single Source of Truth:** Each mock interface (ILogger, IEventBus, etc.) has exactly one mock implementation file that serves as the authoritative source for all tests.
+- **Maintainability:** Mock definitions are separated from factory logic, enabling independent evolution and testing of mock behaviors.
 
-- **Propósito:** Proporciona un contenedor de InversifyJS pre-configurado y aislado para cada test. Esto nos permite testear un servicio (Service Under Test - SUT) en un entorno controlado donde todas sus dependencias están mockeadas.
-- **Regla de Oro:** Está **PROHIBIDO** instanciar servicios manualmente con `new` dentro de los archivos de test. Todos los servicios deben ser resueltos a través del contenedor de test para garantizar que se inyectan los mocks correctos.
+#### Global vs Service Mocks Distinction
+- **Global Mocks (`src/testing/setup.ts`):** Handle environment-wide mocking (decorators, browser APIs, external libraries like Tone.js) that should never execute real logic in any test.
+- **Service Mocks (`src/testing/mocks/`):** Provide controlled implementations of our interfaces (ILogger, IEventBus, etc.) for asserting service interactions and behaviors.
 
-#### Ejemplo de Uso (Frontend):
-```typescript
-import { createTestContainer, getMocksFromContainer } from '../testing/test-container-factory';
-import { INotificationService } from '../services/interfaces/INotificationService';
-import { ILogger } from '../services/interfaces/ILogger';
-import { TYPES } from '../services/inversify.types';
+### 10.4. Frontend Testing Factory: `test-container-factory.ts`
 
-describe('NotificationService', () => {
-  let container: Container;
-  let notificationService: INotificationService;
-  let mockLogger: jest.Mocked<ILogger>;
+### 10.5. Dependency Mocking and Decorators
+- **Dependencies:** All external dependencies (`ILogger`, `IEventBus`, `IConfigurationService`, etc.) are replaced by mocks in the test factories. This allows us to assert that a service calls its dependencies correctly (e.g., `expect(mockLogger.info).toHaveBeenCalled()`).
+- **Decorators:** Decorators like `@logMethod` or `@catchError` are globally mocked in Jest/Vitest configuration so they do not interfere with test logic.
 
-  beforeEach(() => {
-    container = createTestContainer();
-    notificationService = container.get<INotificationService>(TYPES.INotificationService);
-    const mocks = getMocksFromContainer(container);
-    mockLogger = mocks.mockLogger as jest.Mocked<ILogger>;
-  });
-
-  it('should do something correctly', () => {
-    // Arrange
-    const message = 'Test';
-
-    // Act
-    notificationService.show(message);
-
-    // Assert
-    expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining(message));
-  });
-});
-```
-
-### 7.4. Mocking de Dependencias y Decoradores
-- **Dependencias:** Todas las dependencias externas (`ILogger`, `IEventBus`, `IConfigurationService`, etc.) son reemplazadas por mocks en las factories de test. Esto nos permite afirmar que un servicio llama a sus dependencias correctamente (p. ej., `expect(mockLogger.info).toHaveBeenCalled()`).
-- **Decoradores:** Los decoradores como `@logMethod` o `@catchError` se mockean globalmente en la configuración de Jest/Vitest para que no interfieran con la lógica del test.
-
-### 7.5. Testing Strategy Execution Protocol
+### 10.6. Testing Strategy Execution Protocol
 
 #### STEP 1: Identify Service Under Test (SUT)
 - **MANDATE:** Choose ONE service to test in isolation
@@ -880,134 +507,29 @@ describe('NotificationService', () => {
 - **Check interactions:** Verify the SUT called its dependencies correctly
 - **Validate state:** Ensure the SUT's internal state is as expected
 
-### 7.6. Debugging E2E: `debug-full-system.sh`
-- **Propósito:** Este script sirve como una prueba de humo (smoke test) para verificar la integración completa entre el frontend y el backend. Es útil para detectar problemas de configuración, de entorno o de comunicación entre los dos sistemas.
-- **Limitaciones:** No debe usarse para el desarrollo iterativo de componentes. Su ciclo de feedback es demasiado largo. Es una herramienta de validación, no de desarrollo rápido.
+### 10.7. E2E Debugging: `debug-full-system.sh`
+- **Purpose:** This script serves as a smoke test to verify complete integration between frontend and backend. It is useful for detecting configuration, environment, or communication issues between the two systems.
+- **Limitations:** Should not be used for iterative component development. Its feedback cycle is too long. It is a validation tool, not a rapid development tool.
 
-### 7.7. Visión Futura: Mejorando el Ecosistema
-Estamos investigando activamente herramientas de testing más avanzadas para acelerar nuestros ciclos de desarrollo, incluyendo:
-- **Vitest:** Para un corredor de tests nativo de Vite con HMR.
-- **Playwright/Cypress Component Testing:** Para testear componentes de React en aislamiento, pero con la potencia de un navegador real.
-- **Storybook:** Para el desarrollo y la documentación visual de componentes de UI.
+### 10.8. Future Vision: Improving the Ecosystem
+We are actively investigating more advanced testing tools to accelerate our development cycles, including:
+- **Vitest:** For a native Vite test runner with HMR.
+- **Playwright/Cypress Component Testing:** For testing React components in isolation, but with real browser power.
+- **Storybook:** For visual development and documentation of UI components.
 
-### 7.8. Testing Anti-Patterns (FORBIDDEN)
+### 10.9. Testing Anti-Patterns (FORBIDDEN)
 
 #### Backend Anti-Patterns:
-```python
-# FORBIDDEN: Direct service instantiation
-from backend.services.MyService import MyService
-service = MyService(dependency)  # CRITICAL VIOLATION
-
-# FORBIDDEN: Mock patches that bypass the container
-@patch('backend.services.MyService.dependency')
-def test_with_patch(mock_dep):
-    service = MyService()  # STILL VIOLATES IoC
-
-# CORRECT: Use the factory
-def test_with_factory(mocked_composition_root):
-    service = mocked_composition_root.get_service("my_service")
-```
+Direct service instantiation and mock patches that bypass the container are forbidden.
 
 #### Frontend Anti-Patterns:
-```typescript
-// FORBIDDEN: Direct service instantiation
-import { MyService } from '../services/MyService';
-const service = new MyService(mockDep);  // CRITICAL VIOLATION
-
-// FORBIDDEN: Direct container access in tests
-import { container } from '../services/inversify.config';
-const service = container.get<IMyService>(TYPES.IMyService);  // VIOLATION
-
-// CORRECT: Use the test factory
-import { createTestContainer } from '../testing/test-container-factory';
-const testContainer = createTestContainer();
-const service = testContainer.get<IMyService>(TYPES.IMyService);
-```
-
-## 12. Forbidden Practices: Global API Usage
-
-To maintain architectural integrity, testability, and control, the direct use of the following global APIs within the services layer (`src/services`) is **STRICTLY FORBIDDEN**.
-
-### 12.1. Network Requests
-- **FORBIDDEN:** `fetch()`
-- **REQUIRED:** Use the injected `IHttpService`.
-- **Example:**
-  ```typescript
-  // INCORRECT - VIOLATION
-  const response = await fetch('/api/data');
-
-  // CORRECT - USE THIS
-  const data = await this.httpService.get('/api/data');
-  ```
-
-### 12.2. Timer Operations
-- **FORBIDDEN:** `setTimeout()`, `setInterval()`, `clearTimeout()`, `clearInterval()`
-- **REQUIRED:** Use the injected `ITimerService`.
-- **Example:**
-  ```typescript
-  // INCORRECT - VIOLATION
-  const timerId = setTimeout(() => { /* ... */ }, 1000);
-  clearTimeout(timerId);
-
-  // CORRECT - USE THIS
-  const timerId = this.timerService.setTimeout(() => { /* ... */ }, 1000);
-  this.timerService.clearTimeout(timerId);
-  ```
+Direct service instantiation and direct container access in tests are forbidden.
 
 ---
 
-## 12.5. Configuration Injection Anti-Patterns
+## 12. AI-First Development Protocol
 
-### ANTI-PATTERN: INJECTING `IConfigurationService` (DEPRECATED)
-- **REASON:** This is a Service Locator anti-pattern. It couples services to the ConfigurationService and hides their true dependencies. The new standard is Direct Configuration Injection.
-
-```typescript
-// FORBIDDEN - DEPRECATED PATTERN
-@injectable()
-export class MyOldService {
-  private configService: IConfigurationService;
-  constructor(
-    // CRITICAL VIOLATION: Do not inject the entire ConfigurationService
-    @inject(TYPES.IConfigurationService) configService: IConfigurationService
-  ) {
-    this.configService = configService;
-  }
-
-  public async execute(): Promise<void> {
-    // Accessing config through service locator pattern
-    const apiUrl = this.configService.getConfig().apiUrl;
-    const timeout = this.configService.getConfig().timeout;
-    // ... use apiUrl and timeout
-  }
-}
-
-// CORRECT - DIRECT CONFIGURATION INJECTION
-@injectable()
-export class MyNewService {
-  private config: MyNewServiceConfig;
-  constructor(
-    // CORRECT: Inject only the configuration object you need
-    @inject(TYPES.MyNewServiceConfig) config: MyNewServiceConfig
-  ) {
-    this.config = config;
-  }
-
-  public async execute(): Promise<void> {
-    // Direct access to typed configuration
-    if (!this.config.featureFlags.newFeature) {
-        this.logger.warn('New feature is disabled by configuration.');
-        return;
-    }
-    // ... use this.config.apiUrl and this.config.timeout
-  }
-}
-```
-
----
-
-## 13. AI-First Development Protocol
-
-### 13.1. AI-Native Codebase Philosophy
+### 12.1. AI-Native Codebase Philosophy
 **MANDATE:** This entire codebase is developed exclusively with AI assistance. All code, from initial conception to final implementation, is written, reviewed, and optimized by AI agents following QUALIA.CODE standards.
 
 **Key Principles:**
@@ -1015,7 +537,7 @@ export class MyNewService {
 - **Optimal Language Selection:** Choose the most appropriate programming language for each specific task rather than defaulting to generic solutions
 - **Continuous Optimization:** AI agents must continuously evaluate and optimize code for performance, maintainability, and architectural compliance
 
-### 13.2. Language Optimization Requirements
+### 12.2. Language Optimization Requirements
 
 **MANDATE:** AI agents MUST select the most optimal programming language for each component's specific requirements, without being constrained by traditional language preferences or team familiarity.
 
@@ -1031,7 +553,7 @@ export class MyNewService {
 - **Framework Dependency:** Avoid choosing languages solely based on framework availability
 - **Historical Precedence:** Do not maintain legacy language choices that no longer serve the project's needs
 
-### 13.3. Suboptimal Language Detection & Reporting
+### 12.3. Suboptimal Language Detection & Reporting
 
 **CRITICAL REQUIREMENT:** AI agents MUST actively scan the codebase and report any files written in suboptimal languages for their intended function.
 
@@ -1047,24 +569,7 @@ export class MyNewService {
 - **Risk Assessment:** Document potential risks of maintaining suboptimal implementations
 - **Timeline Recommendations:** Suggest migration priorities based on impact and complexity
 
-#### Example Scenarios:
-```typescript
-// SUBOPTIMAL: Using JavaScript for high-performance particle physics
-// RECOMMENDATION: Migrate particle calculations to Rust/WebAssembly
-class ParticleEngine {
-  updateParticles(particles: Particle[]): void {
-    // Complex physics calculations in JavaScript - poor performance
-  }
-}
-
-// OPTIMAL: Use Rust compiled to WebAssembly for performance-critical code
-// particle_engine.rs (compiled to WebAssembly)
-pub fn update_particles(particles: &mut [Particle]) {
-    // High-performance Rust implementation
-}
-```
-
-### 13.4. AI Agent Responsibilities
+### 12.4. AI Agent Responsibilities
 
 **MANDATE:** All AI agents working on this codebase must:
 
@@ -1074,33 +579,7 @@ pub fn update_particles(particles: &mut [Particle]) {
 4. **Documentation:** Clearly document language selection rationale in code comments
 5. **Peer Review:** Evaluate other AI agents' language choices for optimality
 
-### 13.5. Implementation Guidelines
-
-#### Code Comments for Language Justification:
-```rust
-/// OPTIMAL LANGUAGE SELECTION: Rust
-/// REASON: Memory safety, zero-cost abstractions, and WebAssembly compilation
-/// PERFORMANCE GAIN: 3-5x faster than JavaScript equivalent
-/// MAINTAINABILITY: Compile-time guarantees prevent runtime errors
-pub struct ParticleEngine {
-    // Implementation...
-}
-```
-
-#### Migration Assessment Template:
-```
-LANGUAGE MIGRATION ASSESSMENT
-============================
-Component: ParticleEngine
-Current Language: JavaScript/TypeScript
-Proposed Language: Rust
-Rationale: Performance-critical particle physics calculations
-Expected Performance Improvement: 400%
-Risk Level: Medium (WebAssembly integration required)
-Migration Complexity: High
-Timeline: 2-3 weeks
-Dependencies: wasm-pack, Rust toolchain
-```
+### 12.5. Implementation Guidelines
 
 ---
 
