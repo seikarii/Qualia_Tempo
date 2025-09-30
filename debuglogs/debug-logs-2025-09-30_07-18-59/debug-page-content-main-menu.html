@@ -324,10 +324,6 @@ window.$RefreshSig$ = () => (type) => type;</script>
   --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
   box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
 }
-.outline {
-  outline-style: var(--tw-outline-style);
-  outline-width: 1px;
-}
 .drop-shadow-\[0_0_10px_rgba\(56\,189\,248\,0\.8\)\] {
   --tw-drop-shadow-size: drop-shadow(0 0 10px var(--tw-drop-shadow-color, rgba(56,189,248,0.8)));
   --tw-drop-shadow: var(--tw-drop-shadow-size);
@@ -335,9 +331,6 @@ window.$RefreshSig$ = () => (type) => type;</script>
 }
 .filter {
   filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
-}
-.backdrop-filter {
-  backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
 }
 .transition {
   transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, backdrop-filter, display, content-visibility, overlay, pointer-events;
@@ -1111,11 +1104,6 @@ textarea:focus {
   inherits: false;
   initial-value: 0 0 #0000;
 }
-@property --tw-outline-style {
-  syntax: "*";
-  inherits: false;
-  initial-value: solid;
-}
 @property --tw-blur {
   syntax: "*";
   inherits: false;
@@ -1169,42 +1157,6 @@ textarea:focus {
   syntax: "*";
   inherits: false;
 }
-@property --tw-backdrop-blur {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-backdrop-brightness {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-backdrop-contrast {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-backdrop-grayscale {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-backdrop-hue-rotate {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-backdrop-invert {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-backdrop-opacity {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-backdrop-saturate {
-  syntax: "*";
-  inherits: false;
-}
-@property --tw-backdrop-sepia {
-  syntax: "*";
-  inherits: false;
-}
 @property --tw-duration {
   syntax: "*";
   inherits: false;
@@ -1247,7 +1199,6 @@ textarea:focus {
       --tw-ring-offset-width: 0px;
       --tw-ring-offset-color: #fff;
       --tw-ring-offset-shadow: 0 0 #0000;
-      --tw-outline-style: solid;
       --tw-blur: initial;
       --tw-brightness: initial;
       --tw-contrast: initial;
@@ -1261,34 +1212,22 @@ textarea:focus {
       --tw-drop-shadow-color: initial;
       --tw-drop-shadow-alpha: 100%;
       --tw-drop-shadow-size: initial;
-      --tw-backdrop-blur: initial;
-      --tw-backdrop-brightness: initial;
-      --tw-backdrop-contrast: initial;
-      --tw-backdrop-grayscale: initial;
-      --tw-backdrop-hue-rotate: initial;
-      --tw-backdrop-invert: initial;
-      --tw-backdrop-opacity: initial;
-      --tw-backdrop-saturate: initial;
-      --tw-backdrop-sepia: initial;
       --tw-duration: initial;
     }
   }
 }
 </style></head>
   <body>
-    <div id="root"><div class="h-screen w-screen relative overflow-hidden"><div class="absolute inset-0 z-0"><div class="frontend-renderer "><canvas data-engine="three.js r180" width="300" height="150" style="width: 300px; height: 150px; display: block; background: rgb(0, 0, 0);"></canvas><div style="position: absolute; top: 10px; right: 10px; padding: 8px 12px; background: rgb(68, 68, 68); color: white; border-radius: 4px; font-size: 12px; font-family: monospace;">Disconnected</div><div style="position: absolute; bottom: 10px; left: 10px; padding: 8px 12px; background: rgba(0, 0, 0, 0.7); color: white; border-radius: 4px; font-size: 11px; font-family: monospace;">FPS: 0.0 | Triangles: 10000 | Draw Calls: 1</div></div></div><div class="absolute inset-0 z-10 pointer-events-none"><div class="cyber-grid absolute inset-0"></div><div class="absolute inset-0 qualia-bloom-extreme mix-blend-screen opacity-80" style="background: radial-gradient(rgba(0, 255, 255, 0.25) 0%, rgba(128, 0, 255, 0.18) 30%, rgba(255, 0, 128, 0.12) 50%, rgba(10, 10, 30, 0.9) 80%);"></div><div class="absolute inset-0 pointer-events-none opacity-60" style="background: linear-gradient(45deg, rgba(2, 2, 12, 0.8) 0%, rgba(8, 4, 20, 0.6) 50%, rgba(2, 2, 12, 0.8) 100%);"></div></div><div class="absolute inset-0 z-20"><div class="fixed top-0 left-0 w-screen h-screen z-10"><div data-testid="canvas" class="w-full h-full" style="position: relative; width: 100%; height: 100%; overflow: hidden; pointer-events: auto; background: linear-gradient(rgb(10, 10, 46) 0%, rgb(22, 33, 62) 100%); touch-action: none;"><div style="width: 100%; height: 100%;"><canvas data-engine="three.js r180" width="1280" height="720" style="display: block; width: 1280px; height: 720px; touch-action: auto;"></canvas></div></div><div class="absolute top-8 left-8 z-50 flex items-center space-x-6"><div class="cyber-gradient border-2 border-cyan-400 px-6 py-4 rounded-xl backdrop-blur-md"><div class="text-3xl font-bold font-['Orbitron'] neon-glow-strong" style="color: rgb(238, 43, 43);">0</div><div class="text-sm text-cyan-300 font-['Orbitron'] uppercase tracking-wider">Neural Score</div></div><div class="cyber-gradient border border-cyan-300 px-4 py-2 rounded-lg"><div class="flex items-end space-x-1 h-16"><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 19.1088px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 14.9404px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 12.0107px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 11.0372px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 12.258px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 15.3744px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 19.6232px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 23.9644px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 27.3348px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 28.9095px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 28.3028px;"></div><div class="w-2 rounded-full opacity-70" style="background: linear-gradient(to top, rgb(238, 43, 43), transparent); height: 25.6633px;"></div></div></div></div><div class="absolute top-8 right-8 z-50 space-y-4" style="box-shadow: none;"><div class="cyber-gradient border-2 border-purple-400 px-6 py-4 rounded-xl text-right backdrop-blur-md"><div class="text-2xl font-bold text-purple-400 font-['Orbitron'] mb-1">0%</div><div class="text-sm text-purple-300 font-['Orbitron'] uppercase tracking-wider mb-2">Precision</div><div class="w-32 h-2 bg-gray-800 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-purple-600 to-pink-400" style="width: 0px;"></div></div></div><div class="cyber-gradient border-2 border-cyan-400 px-6 py-4 rounded-xl text-right backdrop-blur-md"><div class="text-2xl font-bold font-['Orbitron'] mb-1" style="color: rgb(99, 233, 233);">LOCK</div><div class="text-sm text-cyan-300 font-['Orbitron'] uppercase tracking-wider">Neural State</div></div></div><div class="absolute bottom-8 left-8 z-50"><div class="cyber-gradient border-2 border-red-400 px-6 py-4 rounded-xl backdrop-blur-md"><div class="text-lg font-bold text-red-400 font-['Orbitron'] mb-2">VITALS: 100%</div><div class="relative w-16 h-16 mx-auto"><svg class="w-full h-full -rotate-90" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,0,0,0.2)" stroke-width="8"></circle><circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" stroke-width="8" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="0"></circle></svg></div></div></div><div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50" style="transform: scale(1.05838);"><div class="cyber-gradient border-2 border-yellow-400 p-4 rounded-full backdrop-blur-md"><div class="w-12 h-12 rounded-full border-2 border-yellow-400 flex items-center justify-center" style="box-shadow: rgb(238, 43, 43) 0px 0px 20px;"><div class="text-yellow-400 font-bold text-xs">120</div></div></div></div><div class="fixed inset-0 pointer-events-none z-30"></div><canvas class="fixed inset-0 pointer-events-none z-20 opacity-30" width="1280" height="720"></canvas><div class="fixed inset-0 pointer-events-none z-25" style="background: none 0% 0% / auto repeat scroll padding-box border-box rgba(0, 0, 0, 0);"></div><style>
-        @keyframes transcendencePulse {
-          0%, 100% { 
-            filter: blur(1px) brightness(1) contrast(1);
-            transform: scale(1);
-          }
-          50% { 
-            filter: blur(2px) brightness(1.5) contrast(1.2);
-            transform: scale(1.02);
-          }
-        }
-      </style><div style="position: fixed; left: 800px; top: 300px; width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle, rgb(235, 71, 71) 0%, rgb(217, 217, 38) 40%, rgba(255, 255, 255, 0.3) 70%); border: 4px solid rgb(247, 110, 110); opacity: 1; transform: rotate(0deg) scale(1); box-shadow: rgb(255, 153, 153) 0px 0px 15px, rgba(255, 255, 255, 0.4) 0px 0px 15px inset; transition: 0.2s ease-in-out; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; color: rgb(255, 255, 255); font-weight: bold; text-shadow: rgb(0, 0, 0) 2px 2px 4px;">🔥</div><div class="absolute bottom-5 left-5 bg-black bg-opacity-70 text-white p-2.5 rounded-md text-xs"><div><strong>Controls:</strong></div><div>WASD: Move on Grid</div><div>P/ESC: Pause Game</div><div>SPACE/ENTER: Hit Notes</div><div>WASD: Movement</div><div>SPACE/ENTER: Hit Note</div><div>Performance: 0.0%</div></div></div></div></div></div>
-    <script type="module" src="/src/index.tsx?t=1759162417721"></script>
+    <div id="root"><div class="h-screen w-screen relative overflow-hidden"><div class="absolute inset-0 z-0"><div class="frontend-renderer "><canvas data-engine="three.js r180" width="300" height="150" style="width: 300px; height: 150px; display: block; background: rgb(0, 0, 0);"></canvas><div style="position: absolute; top: 10px; right: 10px; padding: 8px 12px; background: rgb(68, 68, 68); color: white; border-radius: 4px; font-size: 12px; font-family: monospace;">Disconnected</div><div style="position: absolute; bottom: 10px; left: 10px; padding: 8px 12px; background: rgba(0, 0, 0, 0.7); color: white; border-radius: 4px; font-size: 11px; font-family: monospace;">FPS: 0.0 | Triangles: 10000 | Draw Calls: 1</div></div></div><div class="absolute inset-0 z-10 pointer-events-none"><div class="cyber-grid absolute inset-0"></div><div class="absolute inset-0 qualia-bloom-extreme mix-blend-screen opacity-80" style="background: radial-gradient(rgba(0, 255, 255, 0.25) 0%, rgba(128, 0, 255, 0.18) 30%, rgba(255, 0, 128, 0.12) 50%, rgba(10, 10, 30, 0.9) 80%);"></div><div class="absolute inset-0 pointer-events-none opacity-60" style="background: linear-gradient(45deg, rgba(2, 2, 12, 0.8) 0%, rgba(8, 4, 20, 0.6) 50%, rgba(2, 2, 12, 0.8) 100%);"></div></div><div class="absolute inset-0 z-20"><div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"><div class="relative w-full h-full flex items-center justify-center"><div class="flex flex-col items-center justify-center gap-12 p-8 pointer-events-auto"><div class="text-center pointer-events-auto" style="opacity: 1; transform: none;"><h1 class="text-6xl md:text-8xl lg:text-9xl font-orbitron font-black tracking-wider"><span class="relative"><span class="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x">QUALIA</span><span class="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 bg-clip-text text-transparent animate-gradient-x opacity-50 blur-sm"></span><span class="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-cyan-400/10 to-purple-500/10 bg-clip-text text-transparent animate-gradient-x opacity-30 blur-md" style="animation-delay: 0.5s;"></span></span><br><span class="relative"><span class="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x" style="animation-delay: 0.25s;">TEMPO</span><span class="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 bg-clip-text text-transparent animate-gradient-x opacity-50 blur-sm" style="animation-delay: 0.25s;"></span><span class="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-cyan-400/10 to-purple-500/10 bg-clip-text text-transparent animate-gradient-x opacity-30 blur-md" style="animation-delay: 0.75s;"></span></span></h1><div class="absolute inset-0 pointer-events-none"><div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-cyan-400/20 via-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div></div></div><div class="text-center relative pointer-events-auto" style="opacity: 1; transform: none;"><h2 class="text-xl md:text-2xl lg:text-3xl font-orbitron font-medium tracking-widest text-cyan-300/90">A CHARLIE HELLSINGER STORY</h2><div class="absolute inset-0 pointer-events-none"><div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-8 bg-cyan-400/30 rounded-full blur-lg"></div></div></div><p class="text-lg text-white/60 mb-12 font-light tracking-wide text-center" style="opacity: 1;">IMMERSE IN GPU-RENDERED QUALIA</p><div class="relative pointer-events-auto" style="opacity: 1; transform: none;"><button class="
+              relative px-12 py-6 font-orbitron font-bold text-lg md:text-xl tracking-wider
+              border-2 border-transparent rounded-lg
+              bg-gradient-to-r from-gray-900 to-black
+              text-cyan-300
+              overflow-hidden
+              transition-all duration-300
+              
+            " tabindex="0"><div class="absolute inset-0 rounded-lg p-0.5 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500" style="background-size: 200% 200%; background-position: 0% 50%; opacity: 0.8;"></div><div class="absolute inset-[3px] rounded-lg bg-gradient-to-br from-gray-900 to-black"></div><div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent" style="width: 100%; transform: translateX(-100%);"></div><span class="relative z-10 text-cyan-300 drop-shadow-[0_0_10px_rgba(56,189,248,0.8)]">INITIATE NEURAL SYNC</span><div class="absolute inset-0 rounded-lg bg-cyan-400/20 blur-xl" style="transform: none; opacity: 0.3;"></div><div class="absolute inset-0 rounded-lg bg-purple-500/15 blur-2xl" style="transform: none; opacity: 0.2;"></div><div class="absolute inset-0 rounded-lg bg-black/40" style="opacity: 0;"></div></button></div></div></div></div></div></div></div>
+    <script type="module" src="/src/index.tsx?t=1759209553507"></script>
   
 
 </body></html>

@@ -48,10 +48,10 @@ async function comprehensiveTest() {
 
         // --- Phase 1: Main Menu ---
         console.log('📸 Capturing main menu state (Screenshot + DOM)...');
-        await page.screenshot({ path: 'debug-screenshot-main-menu.png', fullPage: true });
+        await page.screenshot({ path: '/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-30_07-18-59/debug-screenshot-main-menu.png', fullPage: true });
         const mainMenuContent = await page.content();
-        fs.writeFileSync('debug-page-content-main-menu.html', mainMenuContent);
-        fs.writeFileSync('browser-test-report-main-menu.json', JSON.stringify({
+        fs.writeFileSync('/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-30_07-18-59/debug-page-content-main-menu.html', mainMenuContent);
+        fs.writeFileSync('/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-30_07-18-59/browser-test-report-main-menu.json', JSON.stringify({
             timestamp: new Date().toISOString(),
             phase: 'main-menu',
             success: errors.length === 0,
@@ -70,10 +70,10 @@ async function comprehensiveTest() {
 
         // --- Phase 3: Game View ---
         console.log('📸 Capturing game view state (Screenshot + DOM)...');
-        await page.screenshot({ path: 'debug-screenshot-game-view.png', fullPage: true });
+        await page.screenshot({ path: '/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-30_07-18-59/debug-screenshot-game-view.png', fullPage: true });
         const gameViewContent = await page.content();
-        fs.writeFileSync('debug-page-content-game-view.html', gameViewContent);
-        fs.writeFileSync('browser-test-report-game-view.json', JSON.stringify({
+        fs.writeFileSync('/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-30_07-18-59/debug-page-content-game-view.html', gameViewContent);
+        fs.writeFileSync('/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-30_07-18-59/browser-test-report-game-view.json', JSON.stringify({
             timestamp: new Date().toISOString(),
             phase: 'game-view',
             success: errors.length === 0,
@@ -103,10 +103,10 @@ async function comprehensiveTest() {
 
         // --- Phase 5: Movement Result ---
         console.log('📸 Capturing movement test state (Screenshot + DOM)...');
-        await page.screenshot({ path: 'debug-screenshot-movement-test.png', fullPage: true });
+        await page.screenshot({ path: '/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-30_07-18-59/debug-screenshot-movement-test.png', fullPage: true });
         const movementContent = await page.content();
-        fs.writeFileSync('debug-page-content-movement-test.html', movementContent);
-        fs.writeFileSync('browser-test-report-movement-test.json', JSON.stringify({
+        fs.writeFileSync('/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-30_07-18-59/debug-page-content-movement-test.html', movementContent);
+        fs.writeFileSync('/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-30_07-18-59/browser-test-report-movement-test.json', JSON.stringify({
             timestamp: new Date().toISOString(),
             phase: 'movement-test',
             success: errors.length === 0,
@@ -121,9 +121,9 @@ async function comprehensiveTest() {
         if (page && !page.isClosed()) {
             try {
                 console.log('📸 Capturing FAILURE state (Screenshot + DOM)...');
-                await page.screenshot({ path: 'debug-screenshot-FAILURE.png', fullPage: true });
+                await page.screenshot({ path: '/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-30_07-18-59/debug-screenshot-FAILURE.png', fullPage: true });
                 const failureContent = await page.content();
-                fs.writeFileSync('debug-page-content-FAILURE.html', failureContent);
+                fs.writeFileSync('/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-30_07-18-59/debug-page-content-FAILURE.html', failureContent);
                 console.log('📸 Failure state captured.');
             } catch (captureError) {
                 console.error(`📸 Could not capture failure state: ${captureError.message}`);
@@ -132,7 +132,7 @@ async function comprehensiveTest() {
             console.log('Page not available, cannot capture failure state.');
         }
 
-        fs.writeFileSync('browser-test-failure.json', JSON.stringify({
+        fs.writeFileSync('/media/seikarii/Nvme/QualiaTempo/debuglogs/debug-logs-2025-09-30_07-18-59/browser-test-failure.json', JSON.stringify({
             timestamp: new Date().toISOString(),
             success: false,
             error: error.message,
