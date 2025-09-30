@@ -267,7 +267,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
       {/* 3D Game Scene */}
       <Canvas
         data-testid="canvas"
-        camera={{ position: [0, 18, 15], fov: 45, rotation: [-0.5, 0, 0] }}
+        camera={{ position: [0, 18, 0.1], fov: 50 }}
         className="w-full h-full"
         style={{
           background: "linear-gradient(180deg, #0a0a2e 0%, #16213e 100%)",

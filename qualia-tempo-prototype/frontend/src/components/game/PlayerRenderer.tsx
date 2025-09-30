@@ -135,7 +135,7 @@ const PlayerRenderer: React.FC<PlayerRendererProps> = ({
   return (
     <group ref={playerMeshRef} position={player3DPosition}>
       {/* Main Player Body - RESIZED for proper cell fit */}
-      <mesh>
+      <mesh position={[0, 0.4, 0]}>
         <octahedronGeometry args={[0.4, 1]} />
         <meshPhongMaterial
           color={baseColor}
@@ -147,7 +147,7 @@ const PlayerRenderer: React.FC<PlayerRendererProps> = ({
       </mesh>
 
       {/* Power Core */}
-      <mesh ref={powerCoreRef}>
+      <mesh ref={powerCoreRef} position={[0, 0.3, 0]}>
         <icosahedronGeometry args={[0.3, 1]} />
         <meshStandardMaterial
           color={baseColor}

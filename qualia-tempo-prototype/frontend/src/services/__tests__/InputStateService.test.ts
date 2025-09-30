@@ -45,32 +45,32 @@ describe('InputStateService - State Polling Model', () => {
     it('should handle single direction movements', () => {
       // North (W key)
       inputStateService.pressKey('w');
-      expect(inputStateService.getDirectionVector()).toEqual({ x: -1, z: 0 });
+      expect(inputStateService.getDirectionVector()).toEqual({ x: 0, z: -1 });
       
       inputStateService.releaseKey('w');
       
       // South (S key)
       inputStateService.pressKey('s');
-      expect(inputStateService.getDirectionVector()).toEqual({ x: 1, z: 0 });
+      expect(inputStateService.getDirectionVector()).toEqual({ x: 0, z: 1 });
       
       inputStateService.releaseKey('s');
       
       // East (D key)
       inputStateService.pressKey('d');
-      expect(inputStateService.getDirectionVector()).toEqual({ x: 0, z: 1 });
+      expect(inputStateService.getDirectionVector()).toEqual({ x: 1, z: 0 });
       
       inputStateService.releaseKey('d');
       
       // West (A key)
       inputStateService.pressKey('a');
-      expect(inputStateService.getDirectionVector()).toEqual({ x: 0, z: -1 });
+      expect(inputStateService.getDirectionVector()).toEqual({ x: -1, z: 0 });
     });
 
     it('should handle diagonal movements - THE CRITICAL TEST', () => {
       // Northeast (W + D)
       inputStateService.pressKey('w');
       inputStateService.pressKey('d');
-      expect(inputStateService.getDirectionVector()).toEqual({ x: -1, z: 1 });
+      expect(inputStateService.getDirectionVector()).toEqual({ x: 1, z: -1 });
       
       inputStateService.releaseKey('w');
       inputStateService.releaseKey('d');
@@ -78,7 +78,7 @@ describe('InputStateService - State Polling Model', () => {
       // Southwest (S + A)
       inputStateService.pressKey('s');
       inputStateService.pressKey('a');
-      expect(inputStateService.getDirectionVector()).toEqual({ x: 1, z: -1 });
+      expect(inputStateService.getDirectionVector()).toEqual({ x: -1, z: 1 });
       
       inputStateService.releaseKey('s');
       inputStateService.releaseKey('a');
@@ -101,7 +101,7 @@ describe('InputStateService - State Polling Model', () => {
       // Arrow keys should work the same as WASD
       inputStateService.pressKey('arrowup');
       inputStateService.pressKey('arrowright');
-      expect(inputStateService.getDirectionVector()).toEqual({ x: -1, z: 1 });
+      expect(inputStateService.getDirectionVector()).toEqual({ x: 1, z: -1 });
       
       inputStateService.releaseKey('arrowup');
       inputStateService.releaseKey('arrowright');
@@ -109,7 +109,7 @@ describe('InputStateService - State Polling Model', () => {
       // Mixed WASD and arrow keys
       inputStateService.pressKey('w');
       inputStateService.pressKey('arrowright');
-      expect(inputStateService.getDirectionVector()).toEqual({ x: -1, z: 1 });
+      expect(inputStateService.getDirectionVector()).toEqual({ x: 1, z: -1 });
     });
 
     it('should handle complex simultaneous inputs', () => {
@@ -123,7 +123,7 @@ describe('InputStateService - State Polling Model', () => {
       // Release opposing keys, should result in diagonal
       inputStateService.releaseKey('s'); // Release south, keep north
       inputStateService.releaseKey('a'); // Release west, keep east
-      expect(inputStateService.getDirectionVector()).toEqual({ x: -1, z: 1 }); // Northeast
+      expect(inputStateService.getDirectionVector()).toEqual({ x: 1, z: -1 }); // Northeast
     });
   });
 
@@ -136,7 +136,7 @@ describe('InputStateService - State Polling Model', () => {
       const vector1 = inputStateService.getDirectionVector();
       const vector2 = inputStateService.getDirectionVector();
       expect(vector1).toEqual(vector2);
-      expect(vector1).toEqual({ x: -1, z: 1 });
+      expect(vector1).toEqual({ x: 1, z: -1 });
     });
 
     it('should handle rapid key press/release cycles', () => {
@@ -144,10 +144,10 @@ describe('InputStateService - State Polling Model', () => {
       for (let i = 0; i < 10; i++) {
         inputStateService.pressKey('w');
         inputStateService.pressKey('d');
-        expect(inputStateService.getDirectionVector()).toEqual({ x: -1, z: 1 });
+        expect(inputStateService.getDirectionVector()).toEqual({ x: 1, z: -1 });
         
         inputStateService.releaseKey('w');
-        expect(inputStateService.getDirectionVector()).toEqual({ x: 0, z: 1 });
+        expect(inputStateService.getDirectionVector()).toEqual({ x: 1, z: 0 });
         
         inputStateService.releaseKey('d');
         expect(inputStateService.getDirectionVector()).toEqual({ x: 0, z: 0 });

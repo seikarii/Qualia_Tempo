@@ -33,11 +33,13 @@ export class InputStateService implements IInputStateService {
   public getDirectionVector(): { x: number; z: number } {
     const vector = { x: 0, z: 0 };
     
-    // QUALIA.CODE: Soporte completo para 8 direcciones (incluyendo diagonales)
-    if (this.isKeyPressed('w') || this.isKeyPressed('arrowup'))    vector.x -= 1;
-    if (this.isKeyPressed('s') || this.isKeyPressed('arrowdown'))  vector.x += 1;
-    if (this.isKeyPressed('a') || this.isKeyPressed('arrowleft'))  vector.z -= 1;
-    if (this.isKeyPressed('d') || this.isKeyPressed('arrowright')) vector.z += 1;
+    // CORRECTO: W/S controla el eje Z (adelante/atrás)
+    if (this.isKeyPressed('w') || this.isKeyPressed('arrowup'))    vector.z -= 1;
+    if (this.isKeyPressed('s') || this.isKeyPressed('arrowdown'))  vector.z += 1;
+    
+    // CORRECTO: A/D controla el eje X (izquierda/derecha)
+    if (this.isKeyPressed('a') || this.isKeyPressed('arrowleft'))  vector.x -= 1;
+    if (this.isKeyPressed('d') || this.isKeyPressed('arrowright')) vector.x += 1;
     
     return vector;
   }

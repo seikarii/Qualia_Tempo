@@ -372,21 +372,22 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     // Convertir el vector a una dirección nominal (8 direcciones)
     let direction: 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest';
 
-    if (directionVector.x === -1 && directionVector.z === 0) {
+    // LÓGICA CORREGIDA: z controla north/south, x controla east/west
+    if (directionVector.z === -1 && directionVector.x === 0) {
       direction = 'north';
-    } else if (directionVector.x === 1 && directionVector.z === 0) {
+    } else if (directionVector.z === 1 && directionVector.x === 0) {
       direction = 'south';
-    } else if (directionVector.x === 0 && directionVector.z === 1) {
+    } else if (directionVector.x === 1 && directionVector.z === 0) {
       direction = 'east';
-    } else if (directionVector.x === 0 && directionVector.z === -1) {
+    } else if (directionVector.x === -1 && directionVector.z === 0) {
       direction = 'west';
-    } else if (directionVector.x === -1 && directionVector.z === 1) {
+    } else if (directionVector.z === -1 && directionVector.x === 1) {
       direction = 'northeast';
-    } else if (directionVector.x === -1 && directionVector.z === -1) {
+    } else if (directionVector.z === -1 && directionVector.x === -1) {
       direction = 'northwest';
-    } else if (directionVector.x === 1 && directionVector.z === 1) {
+    } else if (directionVector.z === 1 && directionVector.x === 1) {
       direction = 'southeast';
-    } else if (directionVector.x === 1 && directionVector.z === -1) {
+    } else if (directionVector.z === 1 && directionVector.x === -1) {
       direction = 'southwest';
     } else {
       // Vector inválido - no debería ocurrir
