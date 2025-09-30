@@ -1,23 +1,53 @@
 enabled: true
 renderTargetWidth: 1920
 renderTargetHeight: 1080
-passes:
-  - type: 'RenderPass'
+
+# Define los buffers de renderizado que se pueden usar como entrada/salida
+renderTargets:
+  - name: 'bloomResultTarget'
+    width: 1920
+    height: 1080
+    format: 'HalfFloat' # Opciones: HalfFloat, Float, UnsignedByte
+    options:
+      minFilter: 'Linear'
+      magFilter: 'Linear'
+
+# Define los pipelines de renderizado
+pipelines:
+  - name: 'bloom-pipeline'
     enabled: true
-  - type: 'UnrealBloomPass'
+    input: 'scene' # 'scene' es una entrada implícita (el RenderPass principal)
+    output: 'bloomResultTarget' # El nombre de un renderTarget definido arriba
+    passes:
+      - type: 'RenderPass'
+        enabled: true
+      - type: 'UnrealBloomPass'
+        enabled: true
+        params:
+          strength: 0.8
+          radius: 0.6
+          threshold: 0.75
+
+  - name: 'final-composition-pipeline'
     enabled: true
-    name: 'BloomResult' # Nombre para identificar el resultado
-    params:
-      strength: 0.8
-      radius: 0.6
-      threshold: 0.75
-  - type: 'ShaderPass'
-    enabled: true
-    shader: 'composite_pass' # El nuevo shader adaptado
-    uniforms:
-      # tDiffuse se asigna automáticamente
-      tBloom: { value: null } # Se asignará dinámicamente
-      exposure: { value: 1.0 }
-      contrast: { value: 1.1 }
-      saturation: { value: 1.2 }
-      gamma: { value: 2.2 }
+    input: 'scene'
+    output: 'screen' # 'screen' es la salida final a la pantalla
+    passes:
+      - type: 'RenderPass'
+        enabled: true
+      - type: 'ShaderPass'
+        enabled: true
+        shader: 'composite_pass'
+        uniforms:
+          tBloom: { value: 'bloomResultTarget' } # Referencia al output de otro pipeline
+          exposure: { value: 1.0 }
+          contrast: { value: 1.1 }
+          saturation: { value: 1.2 }
+          gamma: { value: 2.2 }
+          bloomStrength: { value: 0.8 }
+          blendMode: { value: 0 }
+
+# Orden de ejecución de los pipelines
+pipelineOrder:
+  - 'bloom-pipeline'
+  - 'final-composition-pipeline'

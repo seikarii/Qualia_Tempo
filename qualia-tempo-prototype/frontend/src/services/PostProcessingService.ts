@@ -1,7 +1,7 @@
 /**
- * QUALIA.CODE v1.2 - PostProcessingService
- * Implements a post-processing effects pipeline using Three.js EffectComposer.
- * Loads effects configuration from YAML and applies them to rendered scenes.
+ * QUALIA.CODE v3.2 - PostProcessingService
+ * Dynamic post-processing pipeline graph engine using Three.js EffectComposer.
+ * Loads pipeline configuration from YAML and orchestrates complex rendering graphs.
  */
 
 import { injectable, inject } from "inversify";
@@ -24,14 +24,14 @@ export class PostProcessingService implements IPostProcessingService {
   private readonly shaderLoader: IShaderLoaderService;
   private readonly config: PostProcessingConfig;
 
-  private composer!: EffectComposer;
-  private renderTarget!: THREE.WebGLRenderTarget;
   private isInitialized = false;
 
-  // Map to store pass results for dependency management
-  private readonly passResults = new Map<string, THREE.Texture>();
+  // Dynamic pipeline graph storage
+  private readonly pipelines = new Map<string, EffectComposer>();
+  private readonly renderTargets = new Map<string, THREE.WebGLRenderTarget>();
 
   // Shared objects from FrontendRenderingService
+  private renderer!: THREE.WebGLRenderer;
   private scene!: THREE.Scene;
   private camera!: THREE.Camera;
 
@@ -57,86 +57,121 @@ export class PostProcessingService implements IPostProcessingService {
       return;
     }
 
-    this.logger.info("Initializing PostProcessingService");
+    this.logger.info("Initializing PostProcessingService v3.2");
 
     // Store shared objects
+    this.renderer = renderer;
     this.scene = scene;
     this.camera = camera;
 
-    // Create render target for scene rendering
-    this.renderTarget = new THREE.WebGLRenderTarget(
-      this.config.renderTargetWidth,
-      this.config.renderTargetHeight
-    );
+    // Build render targets from configuration
+    this.buildRenderTargets();
 
-    // Create composer with shared renderer
-    this.composer = new EffectComposer(renderer);
+    // Build pipelines from configuration
+    await this.buildPipelines();
 
-    // Build the effects pipeline
-    await this.buildPipeline();
+    // Connect pipeline dependencies
+    this.connectPipelines();
 
     this.isInitialized = true;
-    this.logger.info("PostProcessingService initialized successfully");
+    this.logger.info("PostProcessingService v3.2 initialized successfully");
   }
 
   @logMethod
   @catchError
-  private async buildPipeline(): Promise<void> {
-    // Clear existing passes and results
-    this.composer.passes = [];
-    this.passResults.clear();
+  private buildRenderTargets(): void {
+    this.logger.debug("Building render targets from configuration");
 
-    for (const passConfig of this.config.passes) {
-      if (!passConfig.enabled) continue;
+    for (const rtConfig of this.config.renderTargets) {
+      const renderTarget = new THREE.WebGLRenderTarget(
+        rtConfig.width,
+        rtConfig.height,
+        {
+          format: this.mapTextureFormat(rtConfig.format),
+          type: THREE.FloatType,
+          minFilter: THREE.LinearFilter,
+          magFilter: THREE.LinearFilter
+        }
+      );
 
-      try {
-        const pass = await this.createPass(passConfig);
-        if (pass) {
-          this.composer.addPass(pass);
+      this.renderTargets.set(rtConfig.name, renderTarget);
+      this.logger.debug(`Created render target: ${rtConfig.name} (${rtConfig.width}x${rtConfig.height})`);
+    }
 
-          // Store pass result if it has a name
-          if (passConfig.name) {
-            // For passes that have render targets (like UnrealBloomPass), store their texture
-            if ('renderTarget' in pass && (pass as unknown as { renderTarget: THREE.WebGLRenderTarget }).renderTarget) {
-              this.passResults.set(passConfig.name, (pass as unknown as { renderTarget: THREE.WebGLRenderTarget }).renderTarget.texture);
-              this.logger.debug(`Stored pass result: ${passConfig.name}`);
+    this.logger.info(`Built ${this.renderTargets.size} render targets`);
+  }
+
+  @logMethod
+  @catchError
+  private mapTextureFormat(format: string): THREE.PixelFormat {
+    switch (format) {
+      case 'HalfFloat': return THREE.RGBAFormat; // THREE.js uses RGBAFormat with FloatType
+      case 'Float': return THREE.RGBAFormat;
+      case 'UnsignedByte': return THREE.RGBAFormat;
+      default: return THREE.RGBAFormat;
+    }
+  }
+
+  @logMethod
+  @catchError
+  private async buildPipelines(): Promise<void> {
+    this.logger.debug("Building pipelines from configuration");
+
+    for (const pipelineConfig of this.config.pipelines) {
+      const composer = new EffectComposer(this.renderer);
+
+      // Add passes to the pipeline
+      for (const passConfig of pipelineConfig.passes) {
+        if (!passConfig.enabled) continue;
+
+        try {
+          const pass = await this.createPass(passConfig);
+          if (pass) {
+            composer.addPass(pass);
+            this.logger.debug(`Added pass ${passConfig.type} to pipeline ${pipelineConfig.name}`);
+          }
+        } catch (error) {
+          this.logger.error(`Failed to create pass ${passConfig.type} in pipeline ${pipelineConfig.name}`, { error });
+        }
+      }
+
+      this.pipelines.set(pipelineConfig.name, composer);
+      this.logger.debug(`Built pipeline: ${pipelineConfig.name} with ${composer.passes.length} passes`);
+    }
+
+    this.logger.info(`Built ${this.pipelines.size} pipelines`);
+  }
+
+  @logMethod
+  @catchError
+  private connectPipelines(): void {
+    this.logger.debug("Connecting pipeline dependencies");
+
+    for (const [pipelineName, composer] of this.pipelines) {
+      const pipelineConfig = this.config.pipelines.find(p => p.name === pipelineName);
+      if (!pipelineConfig) continue;
+
+      // Connect pass dependencies within this pipeline
+      for (let i = 0; i < composer.passes.length; i++) {
+        const pass = composer.passes[i];
+        const passConfig = pipelineConfig.passes[i];
+
+        // Handle ShaderPass uniform connections
+        if (pass instanceof ShaderPass && passConfig.uniforms) {
+          for (const uniformName in passConfig.uniforms) {
+            const uniformValue = passConfig.uniforms[uniformName].value;
+
+            // If uniform references a render target by name
+            if (typeof uniformValue === 'string' && this.renderTargets.has(uniformValue)) {
+              pass.uniforms[uniformName].value = this.renderTargets.get(uniformValue)!.texture;
+              this.logger.debug(`Connected render target ${uniformValue} to uniform ${uniformName} in pipeline ${pipelineName}`);
             }
           }
-
-          this.logger.debug(`Added pass: ${passConfig.type}`);
-        }
-      } catch (error) {
-        this.logger.error(`Failed to create pass ${passConfig.type}`, { error });
-      }
-    }
-
-    // Connect dependencies between passes
-    this.connectPassDependencies();
-
-    this.logger.info(`Built post-processing pipeline with ${this.composer.passes.length} passes`);
-  }
-
-  @logMethod
-  @catchError
-  private connectPassDependencies(): void {
-    // Iterate through passes to connect dependencies
-    for (let i = 0; i < this.composer.passes.length; i++) {
-      const pass = this.composer.passes[i];
-      const passConfig = this.config.passes[i];
-
-      // Handle ShaderPass dependencies
-      if (pass instanceof ShaderPass && passConfig.uniforms) {
-        for (const uniformName in passConfig.uniforms) {
-          const uniformValue = passConfig.uniforms[uniformName].value;
-
-          // If uniform value is null and we have a stored pass result with that name
-          if (uniformValue === null && this.passResults.has(uniformName)) {
-            pass.uniforms[uniformName].value = this.passResults.get(uniformName);
-            this.logger.debug(`Connected dependency: ${uniformName} for pass ${passConfig.type}`);
-          }
         }
       }
     }
+
+    this.logger.info("Pipeline dependencies connected");
   }
 
   @logMethod
@@ -222,8 +257,16 @@ export class PostProcessingService implements IPostProcessingService {
 
     const startTime = performance.now();
 
-    // Render through the pipeline
-    this.composer.render();
+    // Execute pipelines in the order defined in configuration
+    for (const pipelineName of this.config.pipelineOrder || []) {
+      const composer = this.pipelines.get(pipelineName);
+      if (composer) {
+        composer.render();
+        this.logger.debug(`Rendered pipeline: ${pipelineName}`);
+      } else {
+        this.logger.warn(`Pipeline not found: ${pipelineName}`);
+      }
+    }
 
     this.renderTime = performance.now() - startTime;
   }
@@ -232,32 +275,44 @@ export class PostProcessingService implements IPostProcessingService {
   resize(width: number, height: number): void {
     if (!this.isInitialized) return;
 
-    this.composer.setSize(width, height);
+    // Resize all render targets
+    for (const [name, renderTarget] of this.renderTargets) {
+      renderTarget.setSize(width, height);
+      this.logger.debug(`Resized render target: ${name}`);
+    }
 
-    // Update render target if needed
-    if (this.renderTarget) {
-      this.renderTarget.setSize(width, height);
+    // Resize all composers
+    for (const [name, composer] of this.pipelines) {
+      composer.setSize(width, height);
+      this.logger.debug(`Resized pipeline: ${name}`);
     }
   }
 
   @logMethod
   dispose(): void {
-    if (this.composer) {
-      this.composer.dispose();
+    // Dispose all render targets
+    for (const [name, renderTarget] of this.renderTargets) {
+      renderTarget.dispose();
+      this.logger.debug(`Disposed render target: ${name}`);
     }
+    this.renderTargets.clear();
 
-    if (this.renderTarget) {
-      this.renderTarget.dispose();
+    // Dispose all composers
+    for (const [name, composer] of this.pipelines) {
+      composer.dispose();
+      this.logger.debug(`Disposed pipeline: ${name}`);
     }
+    this.pipelines.clear();
 
     this.isInitialized = false;
     this.logger.info("PostProcessingService disposed");
   }
 
   @logMethod
-  getStats(): { passes: number; renderTime: number } {
+  getStats(): { pipelines: number; renderTargets: number; renderTime: number } {
     return {
-      passes: this.composer?.passes.length || 0,
+      pipelines: this.pipelines.size,
+      renderTargets: this.renderTargets.size,
       renderTime: this.renderTime,
     };
   }

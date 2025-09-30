@@ -5,5 +5,5 @@ export interface IPostProcessingService {
   render(): void;
   resize(width: number, height: number): void;
   dispose(): void;
-  getStats(): { passes: number; renderTime: number };
+  getStats(): { pipelines: number; renderTargets: number; renderTime: number };
 }
