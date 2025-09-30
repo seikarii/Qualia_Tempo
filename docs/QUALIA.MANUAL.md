@@ -232,6 +232,43 @@ public async loadConfiguration(): Promise<void> {
 this.logger.info('Service started');
 ```
 
+### 4.3. Uso de @BrowserOnly para Abstracción de Entorno
+
+El decorador `@BrowserOnly` simplifica radicalmente los servicios que interactúan con APIs del navegador, eliminando la necesidad de comprobaciones repetitivas.
+
+#### **ANTES (Patrón Prohibido): Comprobación Manual**
+```typescript
+// Lógica de comprobación de entorno mezclada con la lógica de negocio.
+// Esto es repetitivo y propenso a errores.
+
+@logMethod
+public getWindowDimensions(): { width: number; height: number } {
+  if (typeof window === 'undefined') {
+    this.logger.warn("Window object not available, cannot get dimensions");
+    return { width: 0, height: 0 };
+  }
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight
+  };
+}
+```
+
+#### **DESPUÉS (Patrón Correcto): Uso Declarativo del Decorador**
+```typescript
+// La responsabilidad de la comprobación del entorno se delega al decorador.
+// El método es ahora más limpio y se centra únicamente en su tarea.
+
+@logMethod
+@BrowserOnly
+public getWindowDimensions(): { width: number; height: number } {
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight
+  };
+}
+```
+
 ---
 
 ## 5. Testing Implementation

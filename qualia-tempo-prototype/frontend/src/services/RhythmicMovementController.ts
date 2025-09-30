@@ -225,11 +225,11 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private setupInputListener(): void {
     this.eventBus.subscribe<PlayerInputEvent>(
       "PlayerInput",
-      this.onPlayerInput,
+      this.onPlayerInput.bind(this),
     );
     this.eventBus.subscribe<PlayerDirectionEvent>(
       "PlayerDirectionInput",
-      this.handleDirectionInput,
+      this.handleDirectionInput.bind(this),
     );
   }
 
