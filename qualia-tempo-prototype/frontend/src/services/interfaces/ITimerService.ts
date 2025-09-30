@@ -40,6 +40,18 @@ export interface ITimerService {
    * Abstraction for new Date()
    */
   getCurrentDate(): Date;
+
+  /**
+   * Request animation frame callback
+   * Abstraction for requestAnimationFrame()
+   */
+  requestAnimationFrame(callback: (time: number) => void): number;
+
+  /**
+   * Cancel animation frame
+   * Abstraction for cancelAnimationFrame()
+   */
+  cancelAnimationFrame(animationId: number): void;
 }
 
 /**

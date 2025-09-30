@@ -26,7 +26,7 @@ export class BrowserTimerProvider implements ITimerProvider {
     window.clearInterval(id);
   }
 
-  requestAnimationFrame(callback: () => void): number {
+  requestAnimationFrame(callback: (time: number) => void): number {
     return window.requestAnimationFrame(callback);
   }
 

@@ -36,10 +36,10 @@ export interface ITimerProvider {
 
   /**
    * Requests animation frame for smooth animations
-   * @param callback Function to execute on next animation frame
+   * @param callback Function to execute on next animation frame (receives timestamp)
    * @returns Animation frame ID for canceling
    */
-  requestAnimationFrame(callback: () => void): number;
+  requestAnimationFrame(callback: (time: number) => void): number;
 
   /**
    * Cancels a previously requested animation frame
