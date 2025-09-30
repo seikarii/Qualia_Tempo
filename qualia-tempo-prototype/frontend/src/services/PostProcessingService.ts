@@ -28,8 +28,10 @@ export class PostProcessingService implements IPostProcessingService {
   private renderTarget!: THREE.WebGLRenderTarget;
   private isInitialized = false;
 
+  // Map to store pass results for dependency management
+  private readonly passResults = new Map<string, THREE.Texture>();
+
   // Shared objects from FrontendRenderingService
-  private renderer!: THREE.WebGLRenderer;
   private scene!: THREE.Scene;
   private camera!: THREE.Camera;
 
@@ -58,7 +60,6 @@ export class PostProcessingService implements IPostProcessingService {
     this.logger.info("Initializing PostProcessingService");
 
     // Store shared objects
-    this.renderer = renderer;
     this.scene = scene;
     this.camera = camera;
 
@@ -81,8 +82,9 @@ export class PostProcessingService implements IPostProcessingService {
   @logMethod
   @catchError
   private async buildPipeline(): Promise<void> {
-    // Clear existing passes
+    // Clear existing passes and results
     this.composer.passes = [];
+    this.passResults.clear();
 
     for (const passConfig of this.config.passes) {
       if (!passConfig.enabled) continue;
@@ -91,6 +93,16 @@ export class PostProcessingService implements IPostProcessingService {
         const pass = await this.createPass(passConfig);
         if (pass) {
           this.composer.addPass(pass);
+
+          // Store pass result if it has a name
+          if (passConfig.name) {
+            // For passes that have render targets (like UnrealBloomPass), store their texture
+            if ('renderTarget' in pass && (pass as unknown as { renderTarget: THREE.WebGLRenderTarget }).renderTarget) {
+              this.passResults.set(passConfig.name, (pass as unknown as { renderTarget: THREE.WebGLRenderTarget }).renderTarget.texture);
+              this.logger.debug(`Stored pass result: ${passConfig.name}`);
+            }
+          }
+
           this.logger.debug(`Added pass: ${passConfig.type}`);
         }
       } catch (error) {
@@ -98,7 +110,33 @@ export class PostProcessingService implements IPostProcessingService {
       }
     }
 
+    // Connect dependencies between passes
+    this.connectPassDependencies();
+
     this.logger.info(`Built post-processing pipeline with ${this.composer.passes.length} passes`);
+  }
+
+  @logMethod
+  @catchError
+  private connectPassDependencies(): void {
+    // Iterate through passes to connect dependencies
+    for (let i = 0; i < this.composer.passes.length; i++) {
+      const pass = this.composer.passes[i];
+      const passConfig = this.config.passes[i];
+
+      // Handle ShaderPass dependencies
+      if (pass instanceof ShaderPass && passConfig.uniforms) {
+        for (const uniformName in passConfig.uniforms) {
+          const uniformValue = passConfig.uniforms[uniformName].value;
+
+          // If uniform value is null and we have a stored pass result with that name
+          if (uniformValue === null && this.passResults.has(uniformName)) {
+            pass.uniforms[uniformName].value = this.passResults.get(uniformName);
+            this.logger.debug(`Connected dependency: ${uniformName} for pass ${passConfig.type}`);
+          }
+        }
+      }
+    }
   }
 
   @logMethod

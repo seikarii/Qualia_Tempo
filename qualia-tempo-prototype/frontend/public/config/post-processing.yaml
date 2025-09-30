@@ -6,15 +6,18 @@ passes:
     enabled: true
   - type: 'UnrealBloomPass'
     enabled: true
+    name: 'BloomResult' # Nombre para identificar el resultado
     params:
-      strength: 1.5
-      radius: 0.4
-      threshold: 0.85
+      strength: 0.8
+      radius: 0.6
+      threshold: 0.75
   - type: 'ShaderPass'
     enabled: true
-    shader: 'vignette'
+    shader: 'composite_pass' # El nuevo shader adaptado
     uniforms:
-      darkness:
-        value: 0.8
-      offset:
-        value: 1.0
+      # tDiffuse se asigna automáticamente
+      tBloom: { value: null } # Se asignará dinámicamente
+      exposure: { value: 1.0 }
+      contrast: { value: 1.1 }
+      saturation: { value: 1.2 }
+      gamma: { value: 2.2 }

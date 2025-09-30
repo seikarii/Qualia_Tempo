@@ -6,6 +6,7 @@
 export interface PostProcessingPass {
   type: string; // e.g., 'UnrealBloomPass', 'ShaderPass'
   enabled: boolean;
+  name?: string; // Optional name for pass result identification
   params?: Record<string, any>; // Parameters for the pass
   shader?: string; // Shader name for ShaderPass
   uniforms?: Record<string, { value: any }>; // Uniforms for ShaderPass
