@@ -29,7 +29,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator (DEPRECATED)
   private inputStateService: IInputStateService; // NUEVA FUENTE DE VERDAD
 
-  private playerPosition: [number, number] = [8, 8]; // Center of 16x16 grid
+  private playerPosition!: [number, number]; // Will be initialized from config in loadConfigurationValues
   private isListening: boolean = false;
   private hasMovedThisBeat: boolean = false; // Movement lock for one move per beat
 
@@ -89,6 +89,12 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.gridSize = this.config.gridSize;
     this.slowdownFactor = this.config.slowdownFactor;
     // QUALIA.CODE: keyThrottleMs eliminado - No necesario en modelo de sondeo
+
+    // Initialize playerPosition from gridSize and optional offset
+    this.playerPosition = [
+      this.config.gridSize / 2 + (this.config.initialPlayerPositionOffset?.[0] || 0),
+      this.config.gridSize / 2 + (this.config.initialPlayerPositionOffset?.[1] || 0)
+    ];
   }
 
   @logMethod
@@ -413,7 +419,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.currentIntensity = qualiaState.intensity;
 
     // Update BPM based on flow and intensity
-    const dynamicBPM = this.config.bpm * (1 + qualiaState.flow * 0.3);
+    const dynamicBPM = this.config.bpm * (1 + qualiaState.flow * this.config.flowBpmMultiplier);
     this.setBPM(dynamicBPM);
 
     // Track performance metrics
@@ -638,7 +644,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     const avgAmplitude =
       Array.from(audioData).reduce((sum, val) => sum + Math.abs(val), 0) /
       audioData.length;
-    const threshold = 0.5; // Configuration-driven threshold would be better
+    const threshold = this.config.audioBeatDetectionThreshold;
 
     const beatDetected = avgAmplitude > threshold;
 
@@ -677,7 +683,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   public async getUpcomingMovements(count: number = 4): Promise<string[]> {
     this.logger.debug("Generating upcoming movement predictions", { count });
 
-    const movements = ["dash", "attack", "defense", "special"];
+    const movements = this.config.availableMovements;
     const upcoming: string[] = [];
 
     for (let i = 0; i < count; i++) {
@@ -700,7 +706,9 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.logger.debug("Predicting optimal timing", { action });
 
     const nextBeatTime = this.lastBeatTime + this.beatInterval;
-    const confidence = this.gameIsPlaying ? 0.85 : 0.5;
+    const confidence = this.gameIsPlaying
+      ? this.config.optimalTimingPredictionConfidencePlaying
+      : this.config.optimalTimingPredictionConfidenceNotPlaying;
 
     return {
       nextBeat: nextBeatTime,
@@ -723,8 +731,8 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.logger.debug("Calculating sequence difficulty", { sequence });
 
     // Simple difficulty calculation based on sequence complexity
-    const baseComplexity = sequence.length * 0.1;
-    const varietyBonus = new Set(sequence).size * 0.05;
+    const baseComplexity = sequence.length * this.config.sequenceDifficultyBaseComplexityMultiplier;
+    const varietyBonus = new Set(sequence).size * this.config.sequenceDifficultyVarietyBonusMultiplier;
     const difficultyScore = Math.min(1, baseComplexity + varietyBonus);
 
     return difficultyScore;

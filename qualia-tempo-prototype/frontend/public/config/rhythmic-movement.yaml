@@ -60,6 +60,16 @@ input:
   gamepadDeadzone: 0.1
   touchSensitivity: 1.2
 
+# Externalized hardcoded values
+audioBeatDetectionThreshold: 0.5
+availableMovements: ["dash", "attack", "defense", "special"]
+optimalTimingPredictionConfidencePlaying: 0.85
+optimalTimingPredictionConfidenceNotPlaying: 0.5
+sequenceDifficultyBaseComplexityMultiplier: 0.1
+sequenceDifficultyVarietyBonusMultiplier: 0.05
+flowBpmMultiplier: 0.3
+# initialPlayerPositionOffset: [0, 0] # Uncomment if specific offset needed
+
 # Service messages for logging
 messages:
   serviceInitialized: "RhythmicMovementController initialized successfully"

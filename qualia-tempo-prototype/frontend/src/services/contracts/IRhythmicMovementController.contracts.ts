@@ -27,4 +27,14 @@ export interface RhythmicMovementConfig {
     serviceInitialized: string;
     invalidTimeWarning: string;
   };
+
+  // Externalized hardcoded values
+  audioBeatDetectionThreshold: number;
+  availableMovements: string[];
+  optimalTimingPredictionConfidencePlaying: number;
+  optimalTimingPredictionConfidenceNotPlaying: number;
+  sequenceDifficultyBaseComplexityMultiplier: number;
+  sequenceDifficultyVarietyBonusMultiplier: number;
+  initialPlayerPositionOffset?: [number, number]; // Optional offset from center
+  flowBpmMultiplier: number; // Multiplier for qualiaState.flow in dynamic BPM calculation
 }
