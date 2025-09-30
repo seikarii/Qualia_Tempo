@@ -23,17 +23,18 @@ export interface CompositionRootConfig {
   };
   
   // Messages for logging
-  messages: {
-    alreadyRunning: string;
-    initializationStarted: string;
-    configurationLoaded: string;
-    httpServiceConfigured: string;
-    gameStateServiceStarted: string;
-    transversalServicesStarted: string;
-    gameControllerStarted: string;
-    rhythmicControllerStarted: string;
-    initializationCompleted: string;
-    initializationFailed: string;
+  logging: {
+    serviceInitMessage: string;
+    serviceInitCompleteMessage: string;
+    appStartMessage: string;
+    appStartCompleteMessage: string;
+    uiBridgeSuccessMessage: string;
+    uiBridgeErrorMessage: string;
+    debugAttachMessage: string;
+    debugAttachErrorMessage: string;
+    shutdownStartMessage: string;
+    shutdownCompleteMessage: string;
+    shutdownErrorMessage: string;
   };
   
   // Steps for initialization logging

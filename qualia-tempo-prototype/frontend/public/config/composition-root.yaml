@@ -9,6 +9,19 @@ serviceShutdownTimeoutMs: 5000
 enableServiceLifecycleLogging: true
 enablePerformanceMonitoring: true
 
+logging:
+  serviceInitMessage: "Application Bootstrap: Initializing services..."
+  serviceInitCompleteMessage: "✅ [BOOTSTRAP] Service layer initialization completed successfully"
+  appStartMessage: "Application Bootstrap: Starting application..."
+  appStartCompleteMessage: "✅ [BOOTSTRAP] Application startup completed successfully"
+  uiBridgeSuccessMessage: "✅ [BOOTSTRAP] UI-Service bridge established successfully"
+  uiBridgeErrorMessage: "❌ [BOOTSTRAP] Failed to connect store to services:"
+  debugAttachMessage: "🌐 [BOOTSTRAP] Debug interface attached to window."
+  debugAttachErrorMessage: "⚠️ [BOOTSTRAP] Failed to attach debug interface:"
+  shutdownStartMessage: "Application Shutdown: Cleaning up services..."
+  shutdownCompleteMessage: "Application Shutdown: Complete."
+  shutdownErrorMessage: "[SHUTDOWN ERROR]"
+
 http:
   defaultTimeout: 30000
   maxRetries: 3

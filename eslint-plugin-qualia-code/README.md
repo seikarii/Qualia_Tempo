@@ -12,6 +12,7 @@ This plugin automatically validates compliance with the architectural patterns d
 - ✅ **Proper service usage patterns** with hooks
 - ✅ **Contract generation enforcement** from shared schemas
 - ✅ **Method decorator compliance** for transversal logic
+- ✅ **Platform abstraction** (no direct API usage)
 
 ## Installation
 
@@ -65,7 +66,7 @@ const service = new QualiaService(); // ERROR
 **✅ Correct:**
 ```typescript
 // In CompositionRoot.ts (allowed)
-const service = new QualiaService(); 
+const service = new QualiaService();
 
 // In React components
 const { qualiaService } = useServices();
@@ -189,6 +190,18 @@ class QualiaService {
 
 **Exempt methods:** `constructor`, `start`, `stop`, `initialize`, `shutdown`, `destroy`, private methods
 
+### `enforce-inversify-conventions`
+
+**What it does:** Validates InversifyJS IoC container setup and usage.
+
+**Why:** Ensures proper dependency injection patterns and container configuration.
+
+**Checks:**
+- Services must be decorated with `@injectable()`
+- Dependencies must use `@inject(TYPES.Identifier)`
+- Container bindings must use proper scopes
+- No direct instantiation of injected services
+
 ## Scripts
 
 ```bash
@@ -216,7 +229,8 @@ lib/
     ├── no-hardcoded-config.js
     ├── no-manual-contract-edit.js
     ├── deprecate-api-client.js
-    └── enforce-method-decorators.js
+    ├── enforce-method-decorators.js
+    └── enforce-inversify-conventions.js
 tests/                    # Test files for each rule
 docs/                     # Additional documentation
 ```
@@ -235,6 +249,26 @@ npm test
 3. Create test file in `tests/your-rule.test.js`
 4. Add rule to recommended configuration
 5. Update this README
+
+## Integration with QUALIA.CODE
+
+This plugin is part of the comprehensive QUALIA.CODE enforcement system:
+
+- **Frontend**: ESLint plugin for TypeScript/React compliance
+- **Backend**: Ruff + MyPy plugins for Python architectural validation
+- **Unified**: `./scripts/lint-architecture.sh` runs all tools
+
+## Architecture Compliance
+
+Enforces these QUALIA.CODE v1.1 principles:
+
+- **IoC Container**: Mandatory dependency injection patterns
+- **Event-Driven**: Communication via EventBus only
+- **Configuration**: All values externalized to YAML
+- **Platform Abstraction**: No direct browser API usage
+- **Service Layer**: Clean separation between UI and business logic
+- **Type Safety**: Strict TypeScript compliance
+- **Testing**: Mockable service architecture
 
 ## License
 

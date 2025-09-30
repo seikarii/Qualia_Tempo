@@ -37,12 +37,6 @@ export interface IAudioService {
   stopSound(soundId: string): void;
 
   /**
-   * Set the master volume for all audio.
-   * @param volume Volume level (0.0 to 1.0)
-   */
-  setMasterVolume(volume: number): void;
-
-  /**
    * Get the current master volume.
    * @returns The current master volume (0.0 to 1.0)
    */

@@ -102,17 +102,30 @@ Add to your `pyproject.toml`:
 ```toml
 [tool.mypy]
 plugins = ["mypy_qualia_code.plugin"]
-python_version = "3.8"
-
-# QUALIA.CODE specific settings
+python_version = "3.12"
 qualia_code = true
+
+# Strict type checking
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
 ```
 
 Or in `mypy.ini`:
 ```ini
 [mypy]
 plugins = mypy_qualia_code.plugin
-python_version = 3.8
+python_version = 3.12
+qualia_code = true
 ```
 
 ## Integration with QUALIA.CODE Toolchain
@@ -120,9 +133,9 @@ python_version = 3.8
 MyPy-Qualia-Code is Phase 3 in the architectural linting pipeline:
 
 ```
-Phase 1: ESLint (Frontend) → QUALIA.CODE rules
-Phase 2: Ruff (Backend) → QUALIA.CODE patterns
-Phase 3: MyPy (Backend) → QUALIA.CODE type architecture
+Phase 1: ESLint (Frontend) → QUALIA.CODE rules for TypeScript/React
+Phase 2: Ruff (Backend) → QUALIA.CODE patterns for Python syntax
+Phase 3: MyPy (Backend) → QUALIA.CODE type architecture validation
 ```
 
 Run all phases with:
@@ -165,3 +178,22 @@ These rules enforce architectural decisions that cannot be validated through syn
 - **Decorator Semantics:** Correctly types decorator behavior changes
 
 Together with Ruff-Qualia-Code, this provides complete architectural enforcement from syntax to semantics.
+
+## Development
+
+### Running Tests
+```bash
+python -m pytest tests/ -v
+```
+
+### Adding New Rules
+1. Implement rule logic in the plugin
+2. Add comprehensive test cases
+3. Update documentation
+4. Test integration with existing pipeline
+
+### Architecture Notes
+- Uses MyPy's plugin system for deep type analysis
+- Integrates with existing QUALIA.CODE error reporting
+- Maintains compatibility with standard MyPy configurations
+- Provides detailed error messages with fix suggestions

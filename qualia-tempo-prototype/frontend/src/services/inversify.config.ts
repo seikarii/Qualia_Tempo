@@ -32,6 +32,7 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { IHttpService } from "./interfaces/IHttpService";
 import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
+import type { ITimerProvider } from "./interfaces/ITimerProvider";
 import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
 import type { IBackendSyncService } from "./interfaces/IBackendSyncService";
 import type { IAudioService } from "./interfaces/IAudioService";
@@ -57,6 +58,7 @@ import { QualiaLogger } from "./Logger";
 import { ConfigurationService } from "./ConfigurationService";
 import { HttpService } from "./HttpService";
 import { TimerService, PerformanceService } from "./TimerService";
+import { BrowserTimerProvider } from "./providers/BrowserTimerProvider";
 import { QualiaStateCalculatorService } from "./QualiaStateCalculatorService";
 import { BackendSyncService } from "./BackendSyncService";
 import { AudioService } from "./AudioService";
@@ -128,6 +130,11 @@ container
 container
   .bind<IPerformanceService>(TYPES.IPerformanceService)
   .to(PerformanceService)
+  .inSingletonScope();
+
+container
+  .bind<ITimerProvider>(TYPES.ITimerProvider)
+  .to(BrowserTimerProvider)
   .inSingletonScope();
 
 // ===== SPECIAL BINDINGS =====

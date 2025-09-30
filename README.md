@@ -14,6 +14,7 @@ Qualia Tempo is a rhythm-action boss rush game that transforms music into a livi
 - **👹 Boss Rush Format**: Each boss IS the song - their life is the track duration
 - **🎨 Synesthetic Visuals**: Sound becomes light, music becomes matter, rhythm becomes reality
 - **⚡ Extreme Visual Preview**: Advanced shader systems with god rays, bloom, and particle effects
+- **🏗️ QUALIA.CODE v1.1**: Enterprise-grade architecture with strict compliance standards
 
 ### 🎮 Core Gameplay Loop
 
@@ -30,6 +31,8 @@ Qualia Tempo is a rhythm-action boss rush game that transforms music into a livi
 - **QualiaState Processing**: Backend computation of player mastery metrics
 - **API Endpoints**: RESTful communication with frontend
 - **Shader Pipeline**: GLSL vertex/fragment shaders for advanced visuals
+- **CompositionRoot Pattern**: IoC container for service management
+- **EventBus Architecture**: Type-safe event-driven communication
 
 ### Frontend (TypeScript/React)
 - **React Three Fiber**: 3D rendering with Three.js
@@ -37,39 +40,49 @@ Qualia Tempo is a rhythm-action boss rush game that transforms music into a livi
 - **EventBus Architecture**: Type-safe event-driven communication
 - **Zustand State Management**: Reactive state management with slices
 - **Tone.js**: Advanced audio processing and synthesis
+- **Platform Abstraction**: No direct API usage, all through services
 
-### Quality Assurance
+### Quality Assurance & Architectural Enforcement
 - **QUALIA.CODE v1.1 Compliance**: Strict architectural standards enforcement
 - **Integrated Linting Suite**: ESLint + Python AST analysis + QUALIA.CODE custom rules
 - **Unified Command**: `./scripts/lint-architecture.sh` runs all linting tools
-- **ESLint Plugin**: Custom rules for frontend architectural compliance (@qualia-tempo/qualia-code)
-- **Python AST Analysis**: Backend QUALIA.CODE rule enforcement via AST parsing
-- **Ruff Plugin Development**: Native Rust plugin in progress (ruff-qualia-code-rust/)
+- **ESLint Plugin**: Custom rules for frontend architectural compliance (`@qualia-tempo/qualia-code`)
+- **MyPy Plugin**: Type-safe architectural validation (`mypy-qualia-code`)
+- **Ruff Plugin**: Python linting with QUALIA.CODE rules (`ruff-qualia-code`)
 - **Comprehensive Testing**: 56+ unit tests with 100% service coverage
 - **TypeScript**: Strict type checking with zero errors
 
 ## 📁 Project Structure
 
 ```
-qualia-tempo-prototype/
-├── backend/                    # Python FastAPI server
-│   ├── api/                   # REST API endpoints
-│   ├── engine/                # Visual processing engine
-│   └── shaders/               # GLSL shader programs
-├── frontend/                  # TypeScript React application
-│   ├── src/
-│   │   ├── components/        # React UI components
+qualia-tempo/
+├── qualia-tempo-prototype/    # Main application prototype
+│   ├── backend/               # Python FastAPI server
+│   │   ├── api/               # REST API endpoints & models
+│   │   ├── engine/            # Visual processing engine
 │   │   ├── services/          # Business logic services
-│   │   ├── state/             # Zustand store slices
-│   │   ├── types/             # TypeScript definitions
-│   │   ├── utils/             # Utility functions
-│   │   └── config/            # YAML configuration files
-│   ├── public/                # Static assets
-│   └── tests/                 # Test files
-├── combat_data/               # JSON combat scenarios
+│   │   └── shaders/           # GLSL shader programs
+│   ├── frontend/              # TypeScript React application
+│   │   ├── src/
+│   │   │   ├── components/    # React UI components
+│   │   │   ├── services/      # IoC-managed business services
+│   │   │   ├── state/         # Zustand store slices
+│   │   │   ├── types/         # TypeScript definitions
+│   │   │   ├── utils/         # Utility functions & decorators
+│   │   │   └── config/        # Externalized YAML configurations
+│   │   ├── public/            # Static assets & config files
+│   │   └── tests/             # Comprehensive test suite
+│   └── combat_data/           # JSON combat scenarios
 ├── docs/                      # Documentation and design docs
+│   ├── QUALIA.CODE.md         # Architectural standards
+│   ├── GDD.md                 # Game Design Document
+│   └── architecture/          # Technical architecture docs
 ├── eslint-plugin-qualia-code/ # Custom ESLint rules
-└── examples/                  # Code examples and demos
+├── mypy-qualia-code/          # MyPy architectural plugin
+├── ruff-qualia-code/          # Ruff QUALIA.CODE plugin
+├── shared_contracts/          # JSON Schema contracts
+├── examples/                  # Code examples and demos
+└── scripts/                   # Build and development scripts
 ```
 
 ## 🚀 Quick Start
@@ -86,7 +99,7 @@ python3 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install dependencies
-cd backend
+cd qualia-tempo-prototype/backend
 pip install -r requirements.txt
 
 # Start backend server
@@ -97,7 +110,7 @@ python main.py
 ### Frontend Setup
 ```bash
 # Install dependencies
-cd frontend
+cd qualia-tempo-prototype/frontend
 pnpm install
 
 # Start development server
@@ -108,14 +121,14 @@ pnpm run dev
 ### Full System Startup
 ```bash
 # Start both frontend and backend
-./start.sh
+./debug-full-system.sh
 
 # Or manually:
 # Terminal 1: Backend
-cd backend && python main.py
+cd qualia-tempo-prototype/backend && python main.py
 
 # Terminal 2: Frontend
-cd frontend && pnpm run dev
+cd qualia-tempo-prototype/frontend && pnpm run dev
 ```
 
 ## 🎮 Development Workflow
@@ -123,19 +136,19 @@ cd frontend && pnpm run dev
 ### Code Quality
 ```bash
 # Run all tests
-pnpm test
+cd qualia-tempo-prototype/frontend && pnpm test
 
-# Lint code
-pnpm run lint
+# Lint code with QUALIA.CODE enforcement
+./scripts/lint-architecture.sh
 
 # Type checking
-pnpm run typecheck
+cd qualia-tempo-prototype/frontend && pnpm run typecheck
 
 # Format code
 pnpm run format
 
 # Full quality check
-pnpm test && pnpm run lint && pnpm run typecheck
+pnpm test && ./scripts/lint-architecture.sh && pnpm run typecheck
 ```
 
 ### Architecture Compliance
@@ -146,21 +159,25 @@ The project enforces **QUALIA.CODE v1.1** standards:
 - ✅ **Configuration Externalization**: All parameters in YAML files
 - ✅ **Service Decorators**: Logging, error handling, and performance monitoring
 - ✅ **Platform Abstraction**: No direct API usage, all through services
+- ✅ **Shared Contracts**: JSON Schema-based data contracts
+- ✅ **Testing Isolation**: Mocked dependencies for focused testing
 
 ### Testing Strategy
-- **Unit Tests**: 56+ tests covering all services
+- **Unit Tests**: 56+ tests covering all services with 100% coverage
 - **Integration Tests**: Service interaction validation
-- **E2E Tests**: Full system workflow testing
+- **E2E Tests**: Full system workflow testing with Playwright
 - **Test Isolation**: Mocked dependencies for focused testing
+- **IoC Testing**: Container-based test factories for proper isolation
 
 ## 🎨 Visual Systems
 
 ### Current Implementation
 - **God Rays**: Volumetric lighting effects
-- **Bloom**: HDR post-processing effects
 - **Particle Systems**: 220+ particles with audio reactivity
+- **Bloom**: HDR post-processing effects
 - **FFT Analysis**: Real-time audio frequency analysis
 - **Lightning Effects**: Dynamic energy discharges
+- **Shader Pipeline**: Custom GLSL shaders for advanced visuals
 
 ### Future Visual Phases
 1. **Phase 2**: Deep synesthesia with FFT-driven visuals
@@ -212,7 +229,7 @@ audio:
 curl http://localhost:8000/health
 
 # Frontend connection test
-pnpm run test:connection
+cd qualia-tempo-prototype/frontend && pnpm run test:connection
 ```
 
 ### Debug Interface
@@ -244,6 +261,8 @@ pnpm run test:connection
 - **Visual Preview**: Extreme visual effects system
 - **Architecture**: QUALIA.CODE v1.1 compliance
 - **Testing**: Comprehensive test suite (56/56 passing)
+- **IoC Implementation**: Full InversifyJS container setup
+- **EventBus**: Type-safe event communication system
 
 ### 🚧 In Progress
 - **Phase 3**: Advanced gameplay mechanics
@@ -256,7 +275,7 @@ pnpm run test:connection
 - Advanced visual effects pipeline
 - Performance optimization for 60fps
 
-## � Development Workflow
+## 🔧 Development Workflow
 
 ### Architectural Compliance
 
@@ -269,27 +288,29 @@ Qualia Tempo enforces strict architectural standards through an integrated linti
 
 This unified command executes:
 - **Frontend**: ESLint with QUALIA.CODE custom rules
-- **Backend**: Ruff standard linting + QUALIA.CODE Python rules
-- **Integration**: Ruff configured with external QUALIA.CODE linter
+- **Backend**: Ruff standard linting + QUALIA.CODE Python rules + MyPy type checking
+- **Integration**: Cross-system architectural validation
 
 #### Linting Tools
 
 - **ESLint Plugin**: `@qualia-tempo/eslint-plugin-qualia-code`
-  - `no-global-api-calls`: Prevents direct use of browser APIs in services
+  - `no-direct-service-instantiation`: Prevents direct service instantiation
   - `enforce-use-services-hook`: Enforces IoC container usage
   - `no-complex-use-state`: Prevents complex state in React components
+  - `no-hardcoded-config`: Prevents hardcoded configuration values
+  - `enforce-method-decorators`: Ensures proper decorator usage
 
-- **Ruff Integration**: Python linting with external tool support
+- **Ruff Integration**: Python linting with QUALIA.CODE rules
   - Standard Ruff rules (E, F) for code quality
-  - QUALIA.CODE rules (QLA001, QLA002, QLA003) for architecture
+  - QUALIA.CODE rules (QLA001-QLA011) for architecture
   - Configured in `pyproject.toml` with external tool settings
 
-- **QUALIA.CODE Rules**:
-  - **QLA001**: Prohibit direct service instantiation
-  - **QLA002**: Enforce service method decorators
-  - **QLA003**: Forbid concrete FastAPI route dependencies
+- **MyPy Plugin**: `mypy-qualia-code`
+  - MQA001-MQA004: Deep semantic architectural validation
+  - Type-safe IoC binding validation
+  - Interface adherence checking
 
-## �📚 Documentation
+## 📚 Documentation
 
 - **GDD**: [Game Design Document](docs/GDD.md)
 - **Architecture**: [QUALIA.CODE Standards](docs/QUALIA.CODE.md)
@@ -306,4 +327,5 @@ Qualia Tempo represents a new paradigm in rhythm gaming - where music isn't just
 
 **Status**: ✅ **Active Development** - Core systems operational, gameplay mechanics in progress
 **Version**: 2.0 - Extreme Visual Preview System
+**Architecture**: QUALIA.CODE v1.1 compliant with enterprise standards
 **Last Updated**: September 2025

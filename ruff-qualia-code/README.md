@@ -30,9 +30,6 @@ This plugin provides **10 production-ready rules** covering all major QUALIA.COD
 - **QLA005**: Platform Abstraction Enforcement
 - **QLA006**: EventBus Contract Validation
 
-### Important Note: QLA008 Removed
-**QLA008 (State Management Pattern Validation)** has been removed from this plugin as it was architecturally inappropriate. React useState patterns should be validated by the ESLint plugin, not the Python AST parser. This maintains proper separation of concerns between frontend and backend tooling.
-
 ## Detailed Rule Documentation
 
 ### QLA001: Prohibit Direct Service Instantiation

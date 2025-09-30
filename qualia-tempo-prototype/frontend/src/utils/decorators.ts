@@ -2,7 +2,6 @@
 // Mandatory transversal logic implementation for TypeScript
 // Updated for TypeScript 5.9.2 compatibility with stage-3 decorators
 
-import { LoggerProvider } from "../services/Logger";
 import { schemaRegistry } from "../schemas";
 
 // ==================== STAGE-3 DECORATOR IMPLEMENTATIONS ====================
@@ -26,29 +25,19 @@ export function logMethod(
 
     // Access logger from instance (this) at runtime
     const instanceLogger = (this as any).logger;
-    let logger: any;
-
     if (instanceLogger && typeof instanceLogger.debug === 'function') {
-      logger = instanceLogger;
+      instanceLogger.debug(`→ ENTER ${fullMethodName}`, {
+        arguments: args.length > 0 ? args : "no arguments",
+        timestamp: new Date().toISOString(),
+      });
     } else {
-      // Try global logger as secondary option
-      try {
-        logger = LoggerProvider.getLogger();
-      } catch (error) {
-        // Final fallback: console (only when no instance logger available)
-        console.debug(`→ ENTER ${fullMethodName}`, {
-          arguments: args.length > 0 ? args : "no arguments",
-          timestamp: new Date().toISOString(),
-          note: "Logger not found on instance, using console fallback",
-        });
-        return method.apply(this, args);
-      }
+      // Fallback to console only when no instance logger available
+      console.debug(`→ ENTER ${fullMethodName}`, {
+        arguments: args.length > 0 ? args : "no arguments",
+        timestamp: new Date().toISOString(),
+        note: "Logger not found on instance, using console fallback",
+      });
     }
-
-    logger.debug(`→ ENTER ${fullMethodName}`, {
-      arguments: args.length > 0 ? args : "no arguments",
-      timestamp: new Date().toISOString(),
-    });
 
     try {
       const result = method.apply(this, args);
@@ -57,31 +46,63 @@ export function logMethod(
       if (result instanceof Promise) {
         return result
           .then((res) => {
-            logger.debug(`← EXIT ${fullMethodName}`, {
-              result: res,
-              timestamp: new Date().toISOString(),
-            });
+            if (instanceLogger && typeof instanceLogger.debug === 'function') {
+              instanceLogger.debug(`← EXIT ${fullMethodName}`, {
+                result: res,
+                timestamp: new Date().toISOString(),
+              });
+            } else {
+              console.debug(`← EXIT ${fullMethodName}`, {
+                result: res,
+                timestamp: new Date().toISOString(),
+                note: "Logger not found on instance, using console fallback",
+              });
+            }
             return res;
           })
           .catch((error) => {
-            logger.error(`✗ ERROR ${fullMethodName}`, {
-              error: error.message,
-              timestamp: new Date().toISOString(),
-            });
+            if (instanceLogger && typeof instanceLogger.error === 'function') {
+              instanceLogger.error(`✗ ERROR ${fullMethodName}`, {
+                error: error.message,
+                timestamp: new Date().toISOString(),
+              });
+            } else {
+              console.error(`✗ ERROR ${fullMethodName}`, {
+                error: error.message,
+                timestamp: new Date().toISOString(),
+                note: "Logger not found on instance, using console fallback",
+              });
+            }
             throw error;
           });
       } else {
-        logger.debug(`← EXIT ${fullMethodName}`, {
-          result,
-          timestamp: new Date().toISOString(),
-        });
+        if (instanceLogger && typeof instanceLogger.debug === 'function') {
+          instanceLogger.debug(`← EXIT ${fullMethodName}`, {
+            result,
+            timestamp: new Date().toISOString(),
+          });
+        } else {
+          console.debug(`← EXIT ${fullMethodName}`, {
+            result,
+            timestamp: new Date().toISOString(),
+            note: "Logger not found on instance, using console fallback",
+          });
+        }
         return result;
       }
     } catch (error) {
-      logger.error(`✗ ERROR ${fullMethodName}`, {
-        error: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString(),
-      });
+      if (instanceLogger && typeof instanceLogger.error === 'function') {
+        instanceLogger.error(`✗ ERROR ${fullMethodName}`, {
+          error: error instanceof Error ? error.message : String(error),
+          timestamp: new Date().toISOString(),
+        });
+      } else {
+        console.error(`✗ ERROR ${fullMethodName}`, {
+          error: error instanceof Error ? error.message : String(error),
+          timestamp: new Date().toISOString(),
+          note: "Logger not found on instance, using console fallback",
+        });
+      }
       throw error;
     }
   };
@@ -108,32 +129,27 @@ export function throttle(milliseconds: number) {
       const now = Date.now();
       const lastCall = throttleMap.get(methodKey) || 0;
 
-      // Safe logger access with fallback
-      let logger: any;
-      try {
-        logger = LoggerProvider.getLogger();
-      } catch (error) {
-        // Fallback: still throttle but use console for logging
-        if (now - lastCall < milliseconds) {
-          console.debug(
+      // Access logger from instance (this) at runtime
+      const instanceLogger = (this as any).logger;
+      if (now - lastCall < milliseconds) {
+        if (instanceLogger && typeof instanceLogger.debug === 'function') {
+          instanceLogger.debug(
             `Skipping ${methodKey} (${now - lastCall}ms < ${milliseconds}ms)`,
           );
-          return;
+        } else {
+          console.debug(
+            `Skipping ${methodKey} (${now - lastCall}ms < ${milliseconds}ms)`,
+            { note: "Logger not found on instance, using console fallback" }
+          );
         }
-        throttleMap.set(methodKey, now);
-        console.debug(`Executing ${methodKey}`);
-        return value.apply(this, args);
-      }
-
-      if (now - lastCall < milliseconds) {
-        logger.debug(
-          `Skipping ${methodKey} (${now - lastCall}ms < ${milliseconds}ms)`,
-        );
         return;
       }
-
       throttleMap.set(methodKey, now);
-      logger.debug(`Executing ${methodKey}`);
+      if (instanceLogger && typeof instanceLogger.debug === 'function') {
+        instanceLogger.debug(`Executing ${methodKey}`);
+      } else {
+        console.debug(`Executing ${methodKey}`, { note: "Logger not found on instance, using console fallback" });
+      }
 
       return value.apply(this, args);
     };
@@ -157,19 +173,6 @@ export function catchError(
 
     // Access logger from instance (this) at runtime
     const instanceLogger = (this as any).logger;
-    let logger: any;
-
-    if (instanceLogger && typeof instanceLogger.error === 'function') {
-      logger = instanceLogger;
-    } else {
-      // Try global logger as secondary option
-      try {
-        logger = LoggerProvider.getLogger();
-      } catch (error) {
-        // Logger not available, proceed with execution and use console fallback if needed
-        logger = null;
-      }
-    }
 
     try {
       const result = method.apply(this, args);
@@ -177,8 +180,8 @@ export function catchError(
       // Handle async methods
       if (result instanceof Promise) {
         return result.catch((error: any) => {
-          if (logger) {
-            logger.error(`${fullMethodName}:`, {
+          if (instanceLogger && typeof instanceLogger.error === 'function') {
+            instanceLogger.error(`${fullMethodName}:`, {
               error: error instanceof Error ? error.message : String(error),
               stack: error instanceof Error ? error.stack : "No stack trace",
               arguments: args,
@@ -201,8 +204,8 @@ export function catchError(
 
       return result;
     } catch (methodError) {
-      if (logger) {
-        logger.error(`${fullMethodName}:`, {
+      if (instanceLogger && typeof instanceLogger.error === 'function') {
+        instanceLogger.error(`${fullMethodName}:`, {
           error:
             methodError instanceof Error
               ? methodError.message
@@ -253,6 +256,7 @@ export function measureTime(
     const className = this.constructor.name;
     const fullMethodName = `${className}.${propertyKey}`;
     const startTime = performance.now();
+    const instanceLogger = (this as any).logger;
 
     try {
       const result = method.apply(this, args);
@@ -262,19 +266,19 @@ export function measureTime(
         return result.finally(() => {
           const endTime = performance.now();
           const duration = endTime - startTime;
-          logPerformance(fullMethodName, duration);
+          logPerformance(fullMethodName, duration, false, instanceLogger);
         });
       }
 
       const endTime = performance.now();
       const duration = endTime - startTime;
-      logPerformance(fullMethodName, duration);
+      logPerformance(fullMethodName, duration, false, instanceLogger);
 
       return result;
     } catch (error) {
       const endTime = performance.now();
       const duration = endTime - startTime;
-      logPerformance(fullMethodName, duration, true);
+      logPerformance(fullMethodName, duration, true, instanceLogger);
       throw error;
     }
   };
@@ -289,6 +293,7 @@ function logPerformance(
   methodName: string,
   duration: number,
   hasError = false,
+  instanceLogger?: any,
 ): void {
   let category = "";
   let level: "log" | "warn" | "error" = "log";
@@ -312,14 +317,17 @@ function logPerformance(
 
   const errorIndicator = hasError ? " ✗" : "";
   const logMessage = `${category} ${methodName}: ${duration.toFixed(2)}ms${errorIndicator}`;
-  const logger = LoggerProvider.getLogger();
 
-  if (level === "error") {
-    logger.error(logMessage);
-  } else if (level === "warn") {
-    logger.warn(logMessage);
+  if (instanceLogger && typeof instanceLogger[level === "error" ? "error" : level === "warn" ? "warn" : "info"] === 'function') {
+    if (level === "error") {
+      instanceLogger.error(logMessage);
+    } else if (level === "warn") {
+      instanceLogger.warn(logMessage);
+    } else {
+      instanceLogger.info(logMessage);
+    }
   } else {
-    logger.info(logMessage);
+    console[level === "error" ? "error" : level === "warn" ? "warn" : "info"](logMessage, { note: "Logger not found on instance, using console fallback" });
   }
 }
 
@@ -337,7 +345,7 @@ export function validate(schemaName: string) {
     return function (this: any, ...args: any[]) {
       const className = this.constructor.name;
       const fullMethodName = `${className}.${methodName}`;
-      const logger = LoggerProvider.getLogger();
+      const instanceLogger = (this as any).logger;
 
       // Validate first argument if present
       if (args.length > 0) {
@@ -347,10 +355,17 @@ export function validate(schemaName: string) {
             schemaRegistry[schemaName as keyof typeof schemaRegistry];
           if (!schema) {
             const errorMessage = `Schema '${schemaName}' not found in registry`;
-            logger.error(
-              `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-              { error: errorMessage },
-            );
+            if (instanceLogger && typeof instanceLogger.error === 'function') {
+              instanceLogger.error(
+                `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
+                { error: errorMessage },
+              );
+            } else {
+              console.error(
+                `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
+                { error: errorMessage, note: "Logger not found on instance, using console fallback" },
+              );
+            }
             throw new Error(errorMessage);
           }
 
@@ -359,27 +374,53 @@ export function validate(schemaName: string) {
 
           if (!validationResult.success) {
             const errorMessage = `Schema validation failed: ${validationResult.error.message}`;
-            logger.error(
-              `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-              {
-                error: errorMessage,
-                issues: validationResult.error.issues,
-                receivedData: args[0],
-              },
-            );
+            if (instanceLogger && typeof instanceLogger.error === 'function') {
+              instanceLogger.error(
+                `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
+                {
+                  error: errorMessage,
+                  issues: validationResult.error.issues,
+                  receivedData: args[0],
+                },
+              );
+            } else {
+              console.error(
+                `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
+                {
+                  error: errorMessage,
+                  issues: validationResult.error.issues,
+                  receivedData: args[0],
+                  note: "Logger not found on instance, using console fallback",
+                },
+              );
+            }
             throw new Error(errorMessage);
           }
 
-          logger.debug(
-            `✅ Schema validation passed for ${schemaName} in ${fullMethodName}`,
-          );
+          if (instanceLogger && typeof instanceLogger.debug === 'function') {
+            instanceLogger.debug(
+              `✅ Schema validation passed for ${schemaName} in ${fullMethodName}`,
+            );
+          } else {
+            console.debug(
+              `✅ Schema validation passed for ${schemaName} in ${fullMethodName}`,
+              { note: "Logger not found on instance, using console fallback" },
+            );
+          }
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
-          logger.error(
-            `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-            { error: errorMessage },
-          );
+          if (instanceLogger && typeof instanceLogger.error === 'function') {
+            instanceLogger.error(
+              `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
+              { error: errorMessage },
+            );
+          } else {
+            console.error(
+              `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
+              { error: errorMessage, note: "Logger not found on instance, using console fallback" },
+            );
+          }
           throw new Error(`Schema validation failed: ${errorMessage}`);
         }
       }
@@ -408,7 +449,7 @@ export function validateEventProperty(
     descriptor.value = function (this: any, ...args: any[]) {
       const className = this.constructor.name;
       const fullMethodName = `${className}.${propertyKey}`;
-      const logger = LoggerProvider.getLogger();
+      const instanceLogger = (this as any).logger;
 
       // Validate property of first argument if present
       if (args.length > 0 && args[0] && typeof args[0] === "object") {
@@ -418,10 +459,17 @@ export function validateEventProperty(
             schemaRegistry[schemaName as keyof typeof schemaRegistry];
           if (!schema) {
             const errorMessage = `Schema '${schemaName}' not found in registry`;
-            logger.error(
-              `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-              { error: errorMessage },
-            );
+            if (instanceLogger && typeof instanceLogger.error === 'function') {
+              instanceLogger.error(
+                `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
+                { error: errorMessage },
+              );
+            } else {
+              console.error(
+                `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
+                { error: errorMessage, note: "Logger not found on instance, using console fallback" },
+              );
+            }
             throw new Error(errorMessage);
           }
 
@@ -429,10 +477,17 @@ export function validateEventProperty(
           const propertyValue = args[0][propertyName];
           if (propertyValue === undefined) {
             const errorMessage = `Property '${propertyName}' not found in event object`;
-            logger.error(
-              `Event property validation failed for ${propertyName} in ${fullMethodName}:`,
-              { error: errorMessage },
-            );
+            if (instanceLogger && typeof instanceLogger.error === 'function') {
+              instanceLogger.error(
+                `Event property validation failed for ${propertyName} in ${fullMethodName}:`,
+                { error: errorMessage },
+              );
+            } else {
+              console.error(
+                `Event property validation failed for ${propertyName} in ${fullMethodName}:`,
+                { error: errorMessage, note: "Logger not found on instance, using console fallback" },
+              );
+            }
             throw new Error(errorMessage);
           }
 
@@ -441,27 +496,53 @@ export function validateEventProperty(
 
           if (!validationResult.success) {
             const errorMessage = `Schema validation failed: ${validationResult.error.message}`;
-            logger.error(
-              `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
-              {
-                error: errorMessage,
-                issues: validationResult.error.issues,
-                receivedPropertyData: propertyValue,
-              },
-            );
+            if (instanceLogger && typeof instanceLogger.error === 'function') {
+              instanceLogger.error(
+                `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
+                {
+                  error: errorMessage,
+                  issues: validationResult.error.issues,
+                  receivedPropertyData: propertyValue,
+                },
+              );
+            } else {
+              console.error(
+                `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
+                {
+                  error: errorMessage,
+                  issues: validationResult.error.issues,
+                  receivedPropertyData: propertyValue,
+                  note: "Logger not found on instance, using console fallback",
+                },
+              );
+            }
             throw new Error(errorMessage);
           }
 
-          logger.debug(
-            `✅ Event property validation passed for ${propertyName}.${schemaName} in ${fullMethodName}`,
-          );
+          if (instanceLogger && typeof instanceLogger.debug === 'function') {
+            instanceLogger.debug(
+              `✅ Event property validation passed for ${propertyName}.${schemaName} in ${fullMethodName}`,
+            );
+          } else {
+            console.debug(
+              `✅ Event property validation passed for ${propertyName}.${schemaName} in ${fullMethodName}`,
+              { note: "Logger not found on instance, using console fallback" },
+            );
+          }
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
-          logger.error(
-            `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
-            { error: errorMessage },
-          );
+          if (instanceLogger && typeof instanceLogger.error === 'function') {
+            instanceLogger.error(
+              `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
+              { error: errorMessage },
+            );
+          } else {
+            console.error(
+              `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
+              { error: errorMessage, note: "Logger not found on instance, using console fallback" },
+            );
+          }
           throw new Error(`Event property validation failed: ${errorMessage}`);
         }
       }
@@ -516,24 +597,13 @@ export function qualiaMethod(
         const fullMethodName = `${className}.${propertyKey}`;
 
         const instanceLogger = (this as any).logger;
-        let logger: any;
-
-        if (instanceLogger && typeof instanceLogger.error === 'function') {
-          logger = instanceLogger;
-        } else {
-          try {
-            logger = LoggerProvider.getLogger();
-          } catch (error) {
-            logger = null;
-          }
-        }
 
         try {
           const result = method.apply(this, args);
           if (result instanceof Promise) {
             return result.catch((error: any) => {
-              if (logger) {
-                logger.error(`${fullMethodName}:`, {
+              if (instanceLogger && typeof instanceLogger.error === 'function') {
+                instanceLogger.error(`${fullMethodName}:`, {
                   error: error instanceof Error ? error.message : String(error),
                   stack: error instanceof Error ? error.stack : "No stack trace",
                   arguments: args,
@@ -553,8 +623,8 @@ export function qualiaMethod(
           }
           return result;
         } catch (methodError) {
-          if (logger) {
-            logger.error(`${fullMethodName}:`, {
+          if (instanceLogger && typeof instanceLogger.error === 'function') {
+            instanceLogger.error(`${fullMethodName}:`, {
               error: methodError instanceof Error ? methodError.message : String(methodError),
               stack: methodError instanceof Error ? methodError.stack : "No stack trace",
               arguments: args,

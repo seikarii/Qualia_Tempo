@@ -11,16 +11,37 @@ import { TYPES } from "./inversify.types";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
 import type { NotificationServiceConfig } from "./contracts/INotificationService.contracts";
 import type { ExtendedNotification } from "./NotificationService";
-import { gameStoreApi, type Notification } from "../state/useGameStore";
+
+// Define the type for the game store API
+type GameStoreApi = {
+  setState: (_fn: (state: any) => any) => void;
+  getState: () => any;
+};
+
+// Define the Notification type locally to avoid direct dependency
+type Notification = {
+  id: string;
+  type: "info" | "success" | "warning" | "error";
+  title: string;
+  message: string;
+  timestamp: number;
+  autoHide?: boolean;
+  duration?: number;
+};
 
 @injectable()
 export class GameStateStore implements IGameStateStore {
   private readonly config: NotificationServiceConfig;
+  private storeApi!: GameStoreApi;
 
   constructor(
     @inject(TYPES.NotificationServiceConfig) config: NotificationServiceConfig
   ) {
     this.config = config;
+  }
+
+  public setStoreApi(api: GameStoreApi): void {
+    this.storeApi = api;
   }
   /**
    * Set notifications in the store.
@@ -42,7 +63,7 @@ export class GameStateStore implements IGameStateStore {
         duration: notification.metadata?.duration ?? this.config.display.notificationDuration,
       }));
 
-    gameStoreApi.setState((state) => ({
+    this.storeApi.setState((state) => ({
       ...state,
       notifications: storeNotifications,
     }));
@@ -52,7 +73,7 @@ export class GameStateStore implements IGameStateStore {
    * Get current notifications from the store.
    */
   getNotifications(): ExtendedNotification[] {
-    const state = gameStoreApi.getState();
+    const state = this.storeApi.getState();
     return state.notifications.map((notification: Notification) => ({
       id: notification.id,
       type: notification.type,
@@ -71,7 +92,7 @@ export class GameStateStore implements IGameStateStore {
    * Update game state in the store.
    */
   updateGameState(state: any): void {
-    gameStoreApi.setState((currentState) => ({
+    this.storeApi.setState((currentState) => ({
       ...currentState,
       ...state,
     }));
@@ -81,14 +102,14 @@ export class GameStateStore implements IGameStateStore {
    * Get current game state from the store.
    */
   getGameState(): any {
-    return gameStoreApi.getState();
+    return this.storeApi.getState();
   }
 
   /**
    * Update qualia state in the store.
    */
   updateQualiaState(state: any): void {
-    gameStoreApi.setState((currentState) => ({
+    this.storeApi.setState((currentState) => ({
       ...currentState,
       qualiaState: { ...state },
     }));
@@ -98,7 +119,7 @@ export class GameStateStore implements IGameStateStore {
    * Get current qualia state from the store.
    */
   getQualiaState(): any {
-    const state = gameStoreApi.getState();
+    const state = this.storeApi.getState();
     return state.qualiaState;
   }
 }

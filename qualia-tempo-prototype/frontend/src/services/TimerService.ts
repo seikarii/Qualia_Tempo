@@ -3,6 +3,7 @@ import { TYPES } from "./inversify.types";
 import { logMethod, catchError } from "../utils/decorators";
 import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
+import type { ITimerProvider } from "./interfaces/ITimerProvider";
 
 // QUALIA.CODE: Module-level constants for initialization messages
 const TIMER_SERVICE_INIT_MESSAGE = "TimerService initialized with timer abstraction";
@@ -11,11 +12,16 @@ const PERFORMANCE_SERVICE_INIT_MESSAGE = "PerformanceService initialized with pe
 @injectable()
 export class TimerService implements ITimerService {
   private readonly logger: ILogger;
+  private readonly timerProvider: ITimerProvider;
   private readonly activeTimeouts = new Set<number>();
   private readonly activeIntervals = new Set<number>();
 
-  constructor(@inject(TYPES.ILogger) logger: ILogger) {
+  constructor(
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.ITimerProvider) timerProvider: ITimerProvider
+  ) {
     this.logger = logger;
+    this.timerProvider = timerProvider;
     this.logger.info(TIMER_SERVICE_INIT_MESSAGE);
   }
 
@@ -23,7 +29,7 @@ export class TimerService implements ITimerService {
   public setTimeout(callback: () => void, delay: number): number {
     this.logger.debug("Setting timeout", { delay });
 
-    const id = window.setTimeout(() => {
+    const id = this.timerProvider.setTimeout(() => {
       this.activeTimeouts.delete(id);
       try {
         callback();
@@ -40,7 +46,7 @@ export class TimerService implements ITimerService {
   public clearTimeout(id: number): void {
     if (this.activeTimeouts.has(id)) {
       this.logger.debug("Clearing timeout", { id });
-      window.clearTimeout(id);
+      this.timerProvider.clearTimeout(id);
       this.activeTimeouts.delete(id);
     }
   }
@@ -49,7 +55,7 @@ export class TimerService implements ITimerService {
   public setInterval(callback: () => void, interval: number): number {
     this.logger.debug("Setting interval", { interval });
 
-    const id = window.setInterval(() => {
+    const id = this.timerProvider.setInterval(() => {
       try {
         callback();
       } catch (error) {
@@ -65,7 +71,7 @@ export class TimerService implements ITimerService {
   public clearInterval(id: number): void {
     if (this.activeIntervals.has(id)) {
       this.logger.debug("Clearing interval", { id });
-      window.clearInterval(id);
+      this.timerProvider.clearInterval(id);
       this.activeIntervals.delete(id);
     }
   }
@@ -120,13 +126,13 @@ export class TimerService implements ITimerService {
 
     // Clear all timeouts
     for (const id of this.activeTimeouts) {
-      window.clearTimeout(id);
+      this.timerProvider.clearTimeout(id);
     }
     this.activeTimeouts.clear();
 
     // Clear all intervals
     for (const id of this.activeIntervals) {
-      window.clearInterval(id);
+      this.timerProvider.clearInterval(id);
     }
     this.activeIntervals.clear();
   }
@@ -162,14 +168,14 @@ export class TimerService implements ITimerService {
 @injectable()
 export class PerformanceService implements IPerformanceService {
   private readonly logger: ILogger;
-  private readonly timerService: ITimerService;
+  private readonly timerProvider: ITimerProvider;
 
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.ITimerService) timerService: ITimerService
+    @inject(TYPES.ITimerProvider) timerProvider: ITimerProvider
   ) {
     this.logger = logger;
-    this.timerService = timerService;
+    this.timerProvider = timerProvider;
     this.logger.info(PERFORMANCE_SERVICE_INIT_MESSAGE);
   }
 
@@ -233,19 +239,11 @@ export class PerformanceService implements IPerformanceService {
 
   @logMethod
   public requestAnimationFrame(callback: () => void): number {
-    if (typeof window !== 'undefined' && window.requestAnimationFrame) {
-      return window.requestAnimationFrame(callback);
-    }
-    // Fallback for environments without requestAnimationFrame
-    return this.timerService.setTimeout(callback, 16); // ~60fps fallback
+    return this.timerProvider.requestAnimationFrame(callback);
   }
 
   @logMethod
   public cancelAnimationFrame(animationId: number): void {
-    if (typeof window !== 'undefined' && window.cancelAnimationFrame) {
-      window.cancelAnimationFrame(animationId);
-    } else {
-      this.timerService.clearTimeout(animationId);
-    }
+    this.timerProvider.cancelAnimationFrame(animationId);
   }
 }

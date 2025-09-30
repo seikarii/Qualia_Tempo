@@ -9,10 +9,11 @@ import { TYPES } from "./inversify.types";
 // Environment check handled by Vite's import.meta.env
 import type { IApplicationInitializerService } from "./interfaces/IApplicationInitializerService";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
+import type { IGameStateStore } from "./interfaces/IGameStateStore";
 import { ILogger } from "./interfaces/ILogger";
 import { IDebugService } from "./interfaces/IDebugService";
 import type { DebugServiceConfig } from "./contracts/IDebugService.contracts";
-import { LoggerProvider, QualiaLogger } from "./Logger";
+import type { CompositionRootConfig } from "./contracts/IApplicationCompositionRoot.contracts";
 import type { GameState } from "../state/useGameStore";
 
 /**
@@ -20,8 +21,8 @@ import type { GameState } from "../state/useGameStore";
  */
 type GameStoreApi = {
   getState: () => GameState;
-  setState: (partial: GameState | Partial<GameState> | ((state: GameState) => GameState | Partial<GameState>), replace?: boolean) => void;
-  subscribe: (listener: (state: GameState, prevState: GameState) => void) => () => void;
+  setState: (_partial: GameState | Partial<GameState> | ((state: GameState) => GameState | Partial<GameState>), _replace?: boolean) => void;
+  subscribe: (_listener: (state: GameState, _prevState: GameState) => void) => () => void;
 };
 
 /**
@@ -42,13 +43,19 @@ export class ApplicationCompositionRoot {
       // CRITICAL: gameStoreApi.setState is the non-hook API method
       gameStateStoreService.setStoreSetter(gameStoreApi.setState);
 
+      // Get GameStateStore and inject the store API
+      const gameStateStore = container.get<IGameStateStore>(TYPES.IGameStateStore);
+      (gameStateStore as any).setStoreApi(gameStoreApi);
+
       // Get logger for confirmation
       const logger = container.get<ILogger>(TYPES.ILogger);
-      logger.info("✅ [BOOTSTRAP] UI-Service bridge established successfully");
+      const config = container.get<CompositionRootConfig>(TYPES.CompositionRootConfig);
+      logger.info(config.logging.uiBridgeSuccessMessage);
 
     } catch (error) {
       const logger = container.get<ILogger>(TYPES.ILogger);
-      logger.error("❌ [BOOTSTRAP] Failed to connect store to services:", error);
+      const config = container.get<CompositionRootConfig>(TYPES.CompositionRootConfig);
+      logger.error(config.logging.uiBridgeErrorMessage, error);
       throw error;
     }
   }
@@ -65,14 +72,12 @@ export class ApplicationCompositionRoot {
 
     // Step 1: NOW resolve core services from IoC container (they have direct config access)
     const logger = container.get<ILogger>(TYPES.ILogger);
+    const config = container.get<CompositionRootConfig>(TYPES.CompositionRootConfig);
 
-    // Step 2: Register logger for decorator access
-    LoggerProvider.register(logger as QualiaLogger);
-
-    logger.info("Application Bootstrap: Initializing services...");
+    logger.info(config.logging.serviceInitMessage);
 
     // Application service layer initialization completed (without starting app)
-    logger.info("✅ [BOOTSTRAP] Service layer initialization completed successfully");
+    logger.info(config.logging.serviceInitCompleteMessage);
   }
 
   /**
@@ -80,11 +85,12 @@ export class ApplicationCompositionRoot {
    */
   public async startApplication(): Promise<void> {
     const logger = container.get<ILogger>(TYPES.ILogger);
+    const config = container.get<CompositionRootConfig>(TYPES.CompositionRootConfig);
     const appInitializer = container.get<IApplicationInitializerService>(
       TYPES.IApplicationInitializerService,
     );
 
-    logger.info("Application Bootstrap: Starting application...");
+    logger.info(config.logging.appStartMessage);
 
     // Step 3: Start application services (NOW that UI bridge is established)
     await appInitializer.start();
@@ -101,15 +107,15 @@ export class ApplicationCompositionRoot {
           const globalApiService = debugInterface.getGlobalApiService();
           const debugKey = 'QA_DEBUG';
           globalApiService.attachToWindow(debugKey, debugInterface);
-          logger.info(`🌐 [BOOTSTRAP] Debug interface attached to window.${debugKey}`);
+          logger.info(`${config.logging.debugAttachMessage}${debugKey}`);
         }
       } catch (error) {
-        logger.warn("⚠️ [BOOTSTRAP] Failed to attach debug interface:", error);
+        logger.warn(config.logging.debugAttachErrorMessage, error);
       }
     }
 
     // Application completion message
-    logger.info("✅ [BOOTSTRAP] Application startup completed successfully");
+    logger.info(config.logging.appStartCompleteMessage);
   }
 
   /**
@@ -119,18 +125,20 @@ export class ApplicationCompositionRoot {
   public async shutdownApplication(): Promise<void> {
     try {
       const logger = container.get<ILogger>(TYPES.ILogger);
-      logger.info("Application Shutdown: Cleaning up services...");
+      const config = container.get<CompositionRootConfig>(TYPES.CompositionRootConfig);
+      logger.info(config.logging.shutdownStartMessage);
       
       // TODO: Add service cleanup logic here
       // const appInitializer = container.get<IApplicationInitializerService>(TYPES.IApplicationInitializerService);
       // await appInitializer.stop();
       
-      logger.info("Application Shutdown: Complete.");
+      logger.info(config.logging.shutdownCompleteMessage);
     } catch (error) {
       // Emergency fallback - should not reach here in production
       try {
         const logger = container.get<ILogger>(TYPES.ILogger);
-        logger.error("[SHUTDOWN ERROR]", error);
+        const config = container.get<CompositionRootConfig>(TYPES.CompositionRootConfig);
+        logger.error(config.logging.shutdownErrorMessage, error);
       } catch {
         // Last resort - log to external error tracking service
         // In production, this would integrate with error monitoring
