@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { useCoordinateSystemService } from "../../services/hooks";
 
 interface Player {
   id: string;
@@ -37,13 +38,16 @@ const PlayerRenderer: React.FC<PlayerRendererProps> = ({
   const playerMeshRef = useRef<THREE.Group>(null);
   const auraMeshRef = useRef<THREE.Mesh>(null);
   const powerCoreRef = useRef<THREE.Mesh>(null);
+  
+  // QUALIA.CODE v1.1: Use CoordinateSystemService for proper grid-to-world transformation
+  const coordinateSystemService = useCoordinateSystemService();
 
-  // Convert grid coordinates [x, z] to 3D coordinates [x, 0, z]
-  const player3DPosition: [number, number, number] = [
-    player.position[0], // X coordinate from grid
-    0, // Y coordinate (height) - always 0 for ground level
-    player.position[1], // Z coordinate from grid
-  ];
+  // FIXED: Use the canonical GridRenderer transformation via CoordinateSystemService
+  // This eliminates the desynchronization issue between PlayerRenderer and GridRenderer
+  const player3DPosition: [number, number, number] = coordinateSystemService.gridToWorld(
+    player.position[0], // Grid X coordinate
+    player.position[2]  // Grid Z coordinate (player.position[1] was incorrect)
+  );
 
   // Calculate dynamic visual properties based on player state
   const powerLevel = player.power_level / 100; // Normalize to 0-1

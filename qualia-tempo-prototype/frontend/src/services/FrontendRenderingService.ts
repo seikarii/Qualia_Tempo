@@ -34,13 +34,15 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
-  private canvas!: HTMLCanvasElement;
+  // @ts-ignore - Stored for potential future use
+  private _canvas!: HTMLCanvasElement;
 
   // Rendering state
   private isInitialized = false;
   private isRunning = false;
   private animationId: number | null = null;
-  private isContextLost = false;
+  // @ts-ignore - Stored for potential future use
+  private _isContextLost = false;
 
   // Particle system
   private particleSystem!: THREE.Points;
@@ -78,7 +80,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     }
 
     this.logger.info("Initializing FrontendRenderingService");
-    this.canvas = canvas;
+    this._canvas = canvas;
 
     // Create scene
     this.scene = new THREE.Scene();
@@ -145,7 +147,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   private handleContextLost = (event: Event): void => {
     event.preventDefault();
     this.stop();
-    this.isContextLost = true;
+    this._isContextLost = true;
     this.logger.warn(this.config.messages.contextLost);
   };
 
@@ -182,7 +184,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
       this.initializeParticleSystem();
 
       // Reset context loss flag
-      this.isContextLost = false;
+      this._isContextLost = false;
       this.contextLossRetries = 0;
 
       // Restart rendering loop

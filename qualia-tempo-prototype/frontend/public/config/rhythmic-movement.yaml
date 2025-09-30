@@ -15,6 +15,20 @@ movement:
   friction: 0.9
   maxVelocity: 10.0
 
+# Grid coordinate system configuration
+# Used by CoordinateSystemService for grid-to-world transformations
+coordinate_system:
+  gridSize: 8  # Grid dimensions (8x8)
+  tileSize: 1  # Size of each tile in world units
+  
+  # Service messages for logging
+  messages:
+    serviceInitialized: "CoordinateSystemService initialized with grid configuration"
+    gridToWorldCalculated: "Grid coordinates transformed to world coordinates"
+    worldToScreenCalculated: "World coordinates projected to screen coordinates"
+    invalidGridCoordinates: "Invalid grid coordinates provided"
+    cameraProjectionFailed: "Camera projection failed - using fallback coordinates"
+
 rhythm:
   beatDetection: true
   tempo: 120

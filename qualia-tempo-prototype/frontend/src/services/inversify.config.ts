@@ -26,6 +26,7 @@ import type { QualiaCalculatorConfig } from "./contracts/IQualiaStateCalculatorS
 import type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementController.contracts";
 import type { StreamingConfig } from "./contracts/IStateStreamingService.contracts";
 import type { FrontendRenderingConfig } from "./contracts/IFrontendRenderingService.contracts";
+import type { CoordinateSystemConfig } from "./contracts/ICoordinateSystemService.contracts";
 
 // ===== IMPORT ALL INTERFACES =====
 import type { IEventBus } from "./interfaces/IEventBus";
@@ -53,6 +54,7 @@ import type { IFrontendRenderingService } from "./interfaces/IFrontendRenderingS
 import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
 import type { IWebSocketService } from "./interfaces/IWebSocketService";
 import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
+import type { ICoordinateSystemService } from "./interfaces/ICoordinateSystemService";
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { EventBus } from "./EventBus";
@@ -81,6 +83,7 @@ import { WebSocketService } from "./WebSocketService";
 import { BrowserEventsService } from "./BrowserEventsService";
 import { ThrottlingManager } from "./utils/ThrottlingManager";
 import { InputStateService } from "./InputStateService";
+import { CoordinateSystemService } from "./CoordinateSystemService";
 
 // ===== PROTOCOL ADAPTER IMPORTS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
@@ -231,6 +234,12 @@ container
   .to(BrowserEventsService)
   .inSingletonScope();
 
+// ===== COORDINATE SYSTEM SERVICE BINDING =====
+container
+  .bind<ICoordinateSystemService>(TYPES.ICoordinateSystemService)
+  .to(CoordinateSystemService)
+  .inSingletonScope();
+
 // ===== PROTOCOL ADAPTER BINDINGS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
 container
@@ -299,6 +308,9 @@ export async function configureServices(): Promise<void> {
   
   // Bind ThrottlingConfig from NotificationService config
   safeBindConstant(TYPES.ThrottlingConfig, fullConfig.notificationService.throttling);
+  
+  // Bind CoordinateSystemConfig from RhythmicMovement config
+  safeBindConstant<CoordinateSystemConfig>(TYPES.CoordinateSystemConfig, fullConfig.rhythmicMovement.coordinate_system);
 }
 
 // ===== CONTAINER VERIFICATION =====

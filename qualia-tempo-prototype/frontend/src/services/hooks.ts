@@ -26,6 +26,7 @@ import type { ITimerService } from './interfaces/ITimerService';
 import type { IWebSocketService } from './interfaces/IWebSocketService';
 import type { IBrowserEventsService } from './interfaces/IBrowserEventsService';
 import type { IInputStateService } from './interfaces/IInputStateService';
+import type { ICoordinateSystemService } from './interfaces/ICoordinateSystemService';
 
 /**
  * Generic hook to resolve a service from the IoC container
@@ -121,3 +122,6 @@ export const useRhythmicMovementController = (): IRhythmicMovementController =>
 
 export const useInputStateService = () => 
   useService<IInputStateService>(TYPES.IInputStateService);
+
+export const useCoordinateSystemService = (): ICoordinateSystemService => 
+  useService<ICoordinateSystemService>(TYPES.ICoordinateSystemService);

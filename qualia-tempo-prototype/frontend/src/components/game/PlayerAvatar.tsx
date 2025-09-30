@@ -2,16 +2,12 @@ import React from "react";
 import type { QualiaState } from "../../types/contracts";
 
 interface PlayerAvatarProps {
-  position: [number, number, number];
   qualiaState: QualiaState;
 }
 
 const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
-  position,
   qualiaState,
 }) => {
-  const [x, y, z] = position; // Extract position coordinates (x, y, z for 3D positioning)
-
   // Map QualiaState to visual properties
   const intensityHue = qualiaState.intensity * 360;
   // const flowOpacity = 0.3 + (qualiaState.flow * 0.7); // Reserved for future use
@@ -19,11 +15,11 @@ const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   const chaosRotation = qualiaState.chaos * 180;
   const transcendenceGlow = qualiaState.transcendence * 20;
 
-    // Avatar style based on QualiaState
+  // QUALIA.CODE v1.1: MAGIC NUMBERS ELIMINATED
+  // Position is now handled by Three.js Html component and coordinate service
+  // Avatar style based on QualiaState (NO POSITIONING)
   const avatarStyle: React.CSSProperties = {
-    position: "fixed",
-    left: `${400 + x * 80 + z * 20}px`, // X for horizontal, Z for depth offset
-    top: `${300 + y * 80}px`, // Y for vertical positioning
+    position: "relative", // Changed from "fixed" - positioning handled by Three.js
     width: `${precisionSize}px`,
     height: `${precisionSize}px`,
     borderRadius: "50%",

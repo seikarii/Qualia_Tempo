@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, Html } from "@react-three/drei";
 import {
   EffectComposer,
   Bloom,
@@ -8,7 +8,7 @@ import {
 } from "@react-three/postprocessing";
 import { Vector2 } from "three";
 import { useGameStore } from "../../state/useGameStore";
-import { useEventBus, useService } from "../../services/hooks";
+import { useEventBus, useService, useCoordinateSystemService } from "../../services/hooks";
 import { TYPES } from "../../services/inversify.types";
 import type { IInputStateService } from "../../services/interfaces/IInputStateService";
 import type {
@@ -41,6 +41,65 @@ interface QualiaTempoGameProps {
   onGameAction?: (_action: string, _data: any) => void;
   isActive?: boolean;
 }
+
+// QUALIA.CODE v1.1: PlayerAvatar wrapper that uses CoordinateSystemService
+// This component lives inside the Canvas and uses Html for proper positioning
+interface PlayerAvatarWithCoordinatesProps {
+  playerPosition: [number, number]; // Grid coordinates [x, z]
+  qualiaState: {
+    intensity: number;
+    precision: number;
+    aggression: number;
+    flow: number;
+    chaos: number;
+    recovery: number;
+    transcendence: number;
+  };
+}
+
+const PlayerAvatarWithCoordinates: React.FC<PlayerAvatarWithCoordinatesProps> = ({ 
+  playerPosition, 
+  qualiaState 
+}) => {
+  const coordinateSystemService = useCoordinateSystemService();
+  
+  // Convert grid position to world position using the canonical transformation
+  const worldPosition = coordinateSystemService.gridToWorld(playerPosition[0], playerPosition[1]);
+  
+  return (
+    <group position={worldPosition}>
+      <Html center>
+        {/* The PlayerAvatar now renders with proper positioning handled by Three.js */}
+        <PlayerAvatar qualiaState={qualiaState} />
+      </Html>
+    </group>
+  );
+};
+
+// QUALIA.CODE v1.1: GridRenderer wrapper that uses configuration instead of hardcoded values
+interface ConfigurableGridRendererProps {
+  playerPosition: [number, number];
+  activePositions: [number, number][];
+}
+
+const ConfigurableGridRenderer: React.FC<ConfigurableGridRendererProps> = ({ 
+  playerPosition, 
+  activePositions 
+}) => {
+  const coordinateSystemService = useCoordinateSystemService();
+  
+  // Get grid configuration from the coordinate system service
+  const { gridSize, tileSize } = coordinateSystemService.getGridConfig();
+  
+  return (
+    <GridRenderer
+      gridSize={gridSize}
+      tileSize={tileSize}
+      playerPosition={playerPosition}
+      activePositions={activePositions}
+    />
+  );
+};
 
 const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   onGameAction: _onGameAction,
@@ -321,10 +380,8 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
           onNoteHit={handleNoteHit}
         />
 
-        {/* Game Grid - The core playfield */}
-        <GridRenderer
-          gridSize={8}
-          tileSize={1}
+        {/* Game Grid - The core playfield with configuration-driven parameters */}
+        <ConfigurableGridRenderer
           playerPosition={[
             zustandState.player.position.x,
             zustandState.player.position.y,
@@ -336,6 +393,20 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
           enablePan={false}
           enableZoom={false}
           enableRotate={false}
+        />
+
+        {/* QUALIA.CODE v1.1: PlayerAvatar moved inside Canvas for coordinate synchronization */}
+        <PlayerAvatarWithCoordinates
+          playerPosition={[zustandState.player.position.x, zustandState.player.position.y]}
+          qualiaState={{
+            intensity: zustandState.qualiaState.intensity,
+            precision: zustandState.notesHit / Math.max(1, zustandState.totalNotes),
+            aggression: 0,
+            flow: zustandState.qualiaState.flow,
+            chaos: zustandState.qualiaState.chaos,
+            recovery: 0,
+            transcendence: zustandState.qualiaState.transcendence / 100,
+          }}
         />
 
         {/* Post-processing effects */}
@@ -373,24 +444,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
         }}
       />
 
-      {/* Player Avatar */}
-      <PlayerAvatar
-        position={[
-          zustandState.player.position.x,
-          0,
-          zustandState.player.position.y,
-        ]}
-        qualiaState={{
-          intensity: zustandState.qualiaState.intensity,
-          precision:
-            zustandState.notesHit / Math.max(1, zustandState.totalNotes),
-          aggression: 0,
-          flow: zustandState.qualiaState.flow,
-          chaos: zustandState.qualiaState.chaos,
-          recovery: 0,
-          transcendence: zustandState.qualiaState.transcendence / 100,
-        }}
-      />
+      {/* QUALIA.CODE v1.1: PlayerAvatar moved inside Canvas - this eliminates magic numbers */}
 
       {/* Gameplay Instructions */}
       <div className="absolute bottom-5 left-5 bg-black bg-opacity-70 text-white p-2.5 rounded-md text-xs">

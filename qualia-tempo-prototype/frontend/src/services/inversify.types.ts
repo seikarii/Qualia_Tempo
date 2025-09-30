@@ -40,6 +40,9 @@ export const TYPES = {
   IRawToParticleEventAdapter: Symbol.for("IRawToParticleEventAdapter"),
   IKeyToDirectionAdapter: Symbol.for("IKeyToDirectionAdapter"),
 
+  // ===== COORDINATE SYSTEM SERVICES =====
+  ICoordinateSystemService: Symbol.for("ICoordinateSystemService"),
+
   // ===== SPECIAL TYPES =====
   IGameStateStore: Symbol.for("IGameStateStore"),
   ThrottlingManager: Symbol.for("ThrottlingManager"),
@@ -48,6 +51,7 @@ export const TYPES = {
   // Configuration values for services
   ConfigBasePath: Symbol.for("ConfigBasePath"),
   ConfigManifest: Symbol.for("ConfigManifest"),
+  CoordinateSystemConfig: Symbol.for("CoordinateSystemConfig"),
 
   // ===== CONFIGURATION CONTRACTS =====
   // Direct injection of typed configuration objects - eliminates Service Locator antipattern

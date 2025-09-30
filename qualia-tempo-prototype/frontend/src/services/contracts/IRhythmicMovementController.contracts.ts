@@ -6,6 +6,8 @@
  * Architecture: Contract definitions extracted from service implementation for clarity and reusability
  */
 
+import type { CoordinateSystemConfig } from "./ICoordinateSystemService.contracts";
+
 // Configuration interface for RhythmicMovementController
 export interface RhythmicMovementConfig {
   bpm: number;
@@ -15,6 +17,10 @@ export interface RhythmicMovementConfig {
   slowdownFactor: number;
   slowdownDuration: number;
   keyThrottleMs: number; // CRISALIDA.CODE: Configuration-driven throttling
+  
+  // QUALIA.CODE v1.1: Coordinate system configuration
+  // This provides the CoordinateSystemService with its required configuration
+  coordinate_system: CoordinateSystemConfig;
   
   // Messages for logging
   messages: {
