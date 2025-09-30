@@ -1,12 +1,18 @@
 /**
- * QUALIA.CODE v4.1 - GBufferPass
- * Custom pass for generating Geometry Buffer using Multiple Render Targets (MRT).
+ * QUALIA.CODE v4.2 - GBufferPass
+ * Custom pass for generating Geometry Buffer using manual MRT implementation.
  * Generates color, normal, and depth textures in a single render pass for maximum performance.
- * Implements MRT manually using WEBGL_draw_buffers extension for Three.js 0.180.0 compatibility.
+ * Compatible with Three.js 0.180.0 - uses manual WebGL MRT setup.
  */
 
 import * as THREE from "three";
 import { Pass } from "three/examples/jsm/postprocessing/Pass.js";
+
+export interface GBufferTargets {
+  color: THREE.Texture;
+  normal: THREE.Texture;
+  depth: THREE.Texture;
+}
 
 export interface GBufferTargets {
   color: THREE.Texture;
@@ -20,7 +26,6 @@ export class GBufferPass extends Pass {
   private originalOverrideMaterial: THREE.Material | null = null;
   private scene: THREE.Scene;
   private camera: THREE.Camera;
-  private renderer: THREE.WebGLRenderer | null = null;
 
   // MRT textures
   private _colorTexture!: THREE.Texture;
@@ -127,9 +132,7 @@ export class GBufferPass extends Pass {
     });
   }
 
-  render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget, readBuffer: THREE.WebGLRenderTarget): void {
-    this.renderer = renderer;
-
+  render(renderer: THREE.WebGLRenderer, _writeBuffer: THREE.WebGLRenderTarget, _readBuffer: THREE.WebGLRenderTarget): void {
     // Check for MRT extension support
     const gl = renderer.getContext();
     const ext = gl.getExtension('WEBGL_draw_buffers');

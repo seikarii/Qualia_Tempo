@@ -30,7 +30,6 @@ export class PostProcessingService implements IPostProcessingService {
   // Dynamic pipeline graph storage
   private readonly pipelines = new Map<string, EffectComposer>();
   private readonly renderTargets = new Map<string, THREE.WebGLRenderTarget>();
-  private readonly gbufferTextures = new Map<string, THREE.Texture>();
 
   // Shared objects from FrontendRenderingService
   private renderer!: THREE.WebGLRenderer;
@@ -192,14 +191,11 @@ export class PostProcessingService implements IPostProcessingService {
           for (const uniformName in passConfig.uniforms) {
             const uniformValue = passConfig.uniforms[uniformName].value;
 
-            // If uniform references a render target or G-Buffer texture by name
+            // If uniform references a render target by name
             if (typeof uniformValue === 'string') {
               if (this.renderTargets.has(uniformValue)) {
                 pass.uniforms[uniformName].value = this.renderTargets.get(uniformValue)!.texture;
                 this.logger.debug(`Connected render target ${uniformValue} to uniform ${uniformName} in pipeline ${pipelineName}`);
-              } else if (this.gbufferTextures.has(uniformValue)) {
-                pass.uniforms[uniformName].value = this.gbufferTextures.get(uniformValue)!;
-                this.logger.debug(`Connected G-Buffer texture ${uniformValue} to uniform ${uniformName} in pipeline ${pipelineName}`);
               }
             }
           }
@@ -288,6 +284,34 @@ export class PostProcessingService implements IPostProcessingService {
     };
   }
 
+  /**
+   * QUALIA.CODE v4.2: Just-in-time pipeline input connections
+   * Connects G-Buffer textures directly from GBufferPass to dependent passes
+   * Eliminates frame lag by connecting textures immediately before rendering
+   */
+  private _connectPipelineInputs(composer: EffectComposer): void {
+    const gbufferPass = composer.passes.find(p => p instanceof GBufferPass) as GBufferPass;
+    if (!gbufferPass) return;
+
+    // Connect G-Buffer textures to all passes that need them
+    for (const pass of composer.passes) {
+      if (pass instanceof ShaderPass && pass.uniforms) {
+        // Connect color texture
+        if ('tDiffuse' in pass.uniforms) {
+          pass.uniforms.tDiffuse.value = gbufferPass.targets.color;
+        }
+        // Connect normal texture
+        if ('tNormal' in pass.uniforms) {
+          pass.uniforms.tNormal.value = gbufferPass.targets.normal;
+        }
+        // Connect depth texture
+        if ('tDepth' in pass.uniforms) {
+          pass.uniforms.tDepth.value = gbufferPass.targets.depth;
+        }
+      }
+    }
+  }
+
   @logMethod
   @catchError
   render(): void {
@@ -301,19 +325,11 @@ export class PostProcessingService implements IPostProcessingService {
     for (const pipelineName of this.config.pipelineOrder || []) {
       const composer = this.pipelines.get(pipelineName);
       if (composer) {
+        // QUALIA.CODE v4.2: Just-in-time pipeline connections
+        // Connect G-Buffer textures directly before rendering each pipeline
+        this._connectPipelineInputs(composer);
+
         composer.render();
-
-        // Dynamic connection logic: Update G-Buffer textures after gbuffer-pipeline execution
-        if (pipelineName === 'gbuffer-pipeline') {
-          const gbufferPass = composer.passes.find(p => p instanceof GBufferPass) as GBufferPass;
-          if (gbufferPass) {
-            this.gbufferTextures.set('gBuffer-Color', gbufferPass.targets.color);
-            this.gbufferTextures.set('gBuffer-Normal', gbufferPass.targets.normal);
-            this.gbufferTextures.set('gBuffer-Depth', gbufferPass.targets.depth);
-            this.logger.debug(`Updated G-Buffer textures after ${pipelineName} execution`);
-          }
-        }
-
         this.logger.debug(`Rendered pipeline: ${pipelineName}`);
       } else {
         this.logger.warn(`Pipeline not found: ${pipelineName}`);
@@ -348,13 +364,6 @@ export class PostProcessingService implements IPostProcessingService {
       this.logger.debug(`Disposed render target: ${name}`);
     }
     this.renderTargets.clear();
-
-    // Dispose all G-Buffer textures
-    for (const [name, texture] of this.gbufferTextures) {
-      texture.dispose();
-      this.logger.debug(`Disposed G-Buffer texture: ${name}`);
-    }
-    this.gbufferTextures.clear();
 
     // Dispose all composers
     for (const [name, composer] of this.pipelines) {
