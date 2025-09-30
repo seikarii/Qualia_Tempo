@@ -6,7 +6,7 @@ import { useCoordinateSystemService } from "../../services/hooks";
 interface GridRendererProps {
   gridSize: number;
   tileSize: number;
-  playerAvatarRef: React.RefObject<THREE.Group>;
+  playerPosition: { x: number; y: number };
   activePositions?: [number, number][];
 }
 
@@ -17,7 +17,7 @@ interface GridRendererProps {
 const GridRenderer: React.FC<GridRendererProps> = ({
   gridSize = 8,
   tileSize = 1,
-  playerAvatarRef,
+  playerPosition,
   activePositions = [],
 }) => {
   const gridRef = useRef<THREE.Group>(null);
@@ -26,24 +26,20 @@ const GridRenderer: React.FC<GridRendererProps> = ({
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
 
-    // Get player position from avatar ref using CoordinateSystemService
-    let playerGridPos = { x: 0, y: 0 };
-    if (playerAvatarRef.current) {
-      const worldPos = playerAvatarRef.current.position;
-      // Use CoordinateSystemService for canonical world-to-grid transformation
-      playerGridPos = coordinateSystemService.worldToGrid(worldPos.x, worldPos.z);
-    }
+    // QUALIA.CODE: Use player position directly from GameStateStore via props
+    // This eliminates coupling to PlayerRenderer's visual state
+    const playerGridPos = playerPosition;
 
     // Gentle pulsing animation for the grid
     if (gridRef.current) {
       gridRef.current.children.forEach((tile, index) => {
-        const x = index % gridSize;
-        const z = Math.floor(index / gridSize);
+        // DELEGAR A SERVICIO: Obtener coordenadas de la baldosa desde el servicio centralizado
+        const tileCoords = coordinateSystemService.indexToGrid(index);
 
         // Check if this tile is active (player position or combo positions)
-        const isPlayerTile = playerGridPos.x === x && playerGridPos.y === z;
+        const isPlayerTile = playerGridPos.x === tileCoords.x && playerGridPos.y === tileCoords.y;
         const isActiveTile = activePositions.some(
-          (pos) => pos[0] === x && pos[1] === z,
+          (pos) => pos[0] === tileCoords.x && pos[1] === tileCoords.y,
         );
 
         if (

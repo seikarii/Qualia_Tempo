@@ -56,4 +56,14 @@ export interface ICoordinateSystemService {
    * @returns Current grid configuration values.
    */
   getGridConfig(): { gridSize: number; tileSize: number };
+
+  /**
+   * Converts array index to grid coordinates.
+   * This method centralizes the logic for deriving grid coordinates from array indices,
+   * ensuring consistency across all components that work with grid data structures.
+   * 
+   * @param index - The array index (0-based) representing a tile position.
+   * @returns An object { x, y } representing grid coordinates.
+   */
+  indexToGrid(index: number): { x: number; y: number };
 }

@@ -135,4 +135,26 @@ export class CoordinateSystemService implements ICoordinateSystemService {
       tileSize: this.config.tileSize
     };
   }
+
+  /**
+   * INDEX-TO-GRID TRANSFORMATION
+   * Converts array index to grid coordinates using the canonical grid generation logic.
+   * This centralizes the coordinate derivation logic that was previously scattered in components.
+   */
+  @logMethod
+  @catchError
+  public indexToGrid(index: number): { x: number; y: number } {
+    if (index < 0 || index >= this.config.gridSize * this.config.gridSize) {
+      this.logger.warn('Invalid index provided for indexToGrid transformation', { index });
+      return { x: 0, y: 0 };
+    }
+
+    // Lógica correcta que coincide con la generación de la grilla (for x { for z })
+    const x = Math.floor(index / this.config.gridSize);
+    const y = index % this.config.gridSize; // En nuestro sistema, la 'y' lógica es el eje 'z' de la grilla
+
+    this.logger.debug('indexToGrid calculated', { input: { index }, output: { x, y } });
+
+    return { x, y };
+  }
 }

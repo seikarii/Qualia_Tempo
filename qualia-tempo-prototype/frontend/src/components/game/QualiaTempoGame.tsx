@@ -47,12 +47,12 @@ interface QualiaTempoGameProps {
 
 // QUALIA.CODE v1.1: GridRenderer wrapper that uses configuration instead of hardcoded values
 interface ConfigurableGridRendererProps {
-  playerAvatarRef: React.RefObject<THREE.Group>;
+  playerPosition: { x: number; y: number };
   activePositions: [number, number][];
 }
 
 const ConfigurableGridRenderer: React.FC<ConfigurableGridRendererProps> = ({ 
-  playerAvatarRef, 
+  playerPosition, 
   activePositions 
 }) => {
   const coordinateSystemService = useCoordinateSystemService();
@@ -64,7 +64,7 @@ const ConfigurableGridRenderer: React.FC<ConfigurableGridRendererProps> = ({
     <GridRenderer
       gridSize={gridSize}
       tileSize={tileSize}
-      playerAvatarRef={playerAvatarRef}
+      playerPosition={playerPosition}
       activePositions={activePositions}
     />
   );
@@ -355,7 +355,10 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
 
         {/* Game Grid - The core playfield with configuration-driven parameters */}
         <ConfigurableGridRenderer
-          playerAvatarRef={playerAvatarRef}
+          playerPosition={{
+            x: zustandState.player.position.x,
+            y: zustandState.player.position.y
+          }}
           activePositions={[]}
         />
 
