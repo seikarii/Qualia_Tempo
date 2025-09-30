@@ -4,6 +4,7 @@
  */
 
 export interface BossVisualData {
+  // Main boss properties
   position: [number, number, number];
   scale: [number, number, number];
   rotation: [number, number, number];
@@ -11,6 +12,26 @@ export interface BossVisualData {
   opacity: number;
   intensity: number;
   phase: number;
+  
+  // Core-specific properties
+  core: {
+    scale: number;
+    rotation: [number, number, number];
+    color: [number, number, number];
+    emissiveColor: [number, number, number]; 
+    emissiveIntensity: number;
+  };
+  
+  // Tentacles/appendages
+  tentacles: Array<{
+    position: [number, number, number];
+    rotation: [number, number, number];
+    scale: number;
+  }>;
+  
+  // Attack states
+  shouldShowAttack: boolean;
+  attackIntensity: number;
 }
 
 export interface PlayerVisualData {

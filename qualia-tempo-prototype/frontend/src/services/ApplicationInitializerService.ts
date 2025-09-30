@@ -16,7 +16,11 @@ import type { IStateStreamingService } from "./interfaces/IStateStreamingService
 import type { ILogger } from "./interfaces/ILogger";
 import type { IApplicationInitializerService } from "./interfaces/IApplicationInitializerService";
 import type { AppInitializerConfig } from "./contracts/IApplicationInitializerService.contracts";
-import { logMethod, catchError } from "../utils/decorators";
+import type { IGameplayMechanicsService } from "./interfaces/IGameplayMechanicsService";
+import type { IViewLogicService } from "./interfaces/IViewLogicService";
+import type { ISubtitleService } from "./interfaces/ISubtitleService";
+import type { IDebugOrchestratorService } from "./interfaces/IDebugOrchestratorService";
+import { logMethod, catchError, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 
 // QUALIA.CODE: Module-level constant for pre-config initialization message
 const SERVICE_INIT_MESSAGE = "ApplicationInitializerService constructed - awaiting start()";
@@ -35,7 +39,15 @@ export class ApplicationInitializerService
   private readonly debugService: IDebugService;
   private readonly stateStreamingService: IStateStreamingService;
   private readonly logger: ILogger;
+
+  // QUALIA.CODE v1.1: New Services with @OnEvent lifecycle
+  private readonly gameplayMechanicsService: IGameplayMechanicsService;
+  private readonly viewLogicService: IViewLogicService;
+  private readonly subtitleService: ISubtitleService;
+  private readonly debugOrchestratorService: IDebugOrchestratorService;
+
   private isStarted = false;
+  private readonly managedServices: IBaseService[] = [];
 
   constructor(
     @inject(TYPES.AppInitializerConfig) config: AppInitializerConfig,
@@ -53,6 +65,11 @@ export class ApplicationInitializerService
     @inject(TYPES.IDebugService) debugService: IDebugService,
     @inject(TYPES.IStateStreamingService) stateStreamingService: IStateStreamingService,
     @inject(TYPES.ILogger) logger: ILogger,
+    // QUALIA.CODE v1.1: New service injections
+    @inject(TYPES.IGameplayMechanicsService) gameplayMechanicsService: IGameplayMechanicsService,
+    @inject(TYPES.IViewLogicService) viewLogicService: IViewLogicService,
+    @inject(TYPES.ISubtitleService) subtitleService: ISubtitleService,
+    @inject(TYPES.IDebugOrchestratorService) debugOrchestratorService: IDebugOrchestratorService,
   ) {
     this.config = config;
     this.backendSyncService = backendSyncService;
@@ -64,6 +81,12 @@ export class ApplicationInitializerService
     this.debugService = debugService;
     this.stateStreamingService = stateStreamingService;
     this.logger = logger;
+    
+    // QUALIA.CODE v1.1: Initialize new services
+    this.gameplayMechanicsService = gameplayMechanicsService;
+    this.viewLogicService = viewLogicService;
+    this.subtitleService = subtitleService;
+    this.debugOrchestratorService = debugOrchestratorService;
     
     // Configuration will be accessed in start() method after it's loaded
     // Note: Using pre-loaded constant since ConfigService may not be ready yet
@@ -118,9 +141,47 @@ export class ApplicationInitializerService
     this.notificationService.start();
     this.logger.info(this.config.messages.transversalServicesStarted);
 
-    // Step 4: Start state streaming service (needs EventBus to be available)
+    // Step 4: QUALIA.CODE v1.1 - Initialize new services with @OnEvent lifecycle
+    this.initializeNewServices();
+
+    // Step 5: Start state streaming service (needs EventBus to be available)
     await this.stateStreamingService.start();
     this.logger.info("State streaming service started");
+  }
+
+  private initializeNewServices(): void {
+    this.logger.debug('Initializing QUALIA.CODE v1.1 services with @OnEvent lifecycle...');
+    
+    // Initialize services that implement IBaseService with @OnEvent decorators
+    const newServices = [
+      this.gameplayMechanicsService,
+      this.viewLogicService,
+      this.subtitleService,
+      this.debugOrchestratorService
+    ];
+
+    newServices.forEach(service => {
+      if (this.implementsIBaseService(service)) {
+        // Initialize @OnEvent subscriptions
+        initializeEventSubscriptions(service);
+        
+        // Call service initialize method
+        service.initialize();
+        
+        // Track for cleanup
+        this.managedServices.push(service);
+        
+        this.logger.debug(`✅ Initialized service: ${service.constructor.name}`);
+      }
+    });
+
+    this.logger.info(`🚀 Initialized ${this.managedServices.length} QUALIA.CODE v1.1 services`);
+  }
+
+  private implementsIBaseService(service: any): service is IBaseService {
+    return service && 
+           typeof service.initialize === 'function' && 
+           typeof service.cleanup === 'function';
   }
 
   private async startGameServices(): Promise<void> {
@@ -145,5 +206,29 @@ export class ApplicationInitializerService
     this.gameStateStoreService.updateGameState({
       backendConnected: isConnected,
     });
+  }
+
+  @logMethod
+  @catchError
+  public cleanup(): void {
+    this.logger.info('🧹 Starting application cleanup...');
+
+    // Cleanup all managed services with @OnEvent decorators
+    this.managedServices.forEach(service => {
+      try {
+        // Cleanup @OnEvent subscriptions
+        cleanupEventSubscriptions(service);
+        
+        // Call service cleanup method
+        service.cleanup();
+        
+        this.logger.debug(`✅ Cleaned up service: ${service.constructor.name}`);
+      } catch (error) {
+        this.logger.error(`❌ Failed to cleanup service: ${service.constructor.name}`, { error });
+      }
+    });
+
+    this.logger.info(`🧹 Cleaned up ${this.managedServices.length} managed services`);
+    this.isStarted = false;
   }
 }

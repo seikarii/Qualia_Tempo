@@ -25,6 +25,12 @@ import type { QualiaCalculatorConfig } from '../services/contracts/IQualiaStateC
 import type { RhythmicMovementConfig } from '../services/contracts/IRhythmicMovementController.contracts';
 import type { FrontendRenderingConfig } from '../services/contracts/IFrontendRenderingService.contracts';
 
+// QUALIA.CODE v1.1: New service configuration contracts
+import type { GameplayMechanicsConfig } from '../services/contracts/IGameplayMechanicsService.contracts';
+import type { ViewLogicConfig } from '../services/contracts/IViewLogicService.contracts';
+import type { SubtitleConfig } from '../services/contracts/ISubtitleService.contracts';
+import type { DebugOrchestratorConfig } from '../services/contracts/IDebugOrchestratorService.contracts';
+
 /**
  * Gameplay Configuration Interface
  * Defines timing windows and gameplay parameters
@@ -72,6 +78,12 @@ export interface FullGameConfig {
   notificationService: NotificationServiceConfig;
   errorReporting: ErrorReportingConfig;
   debugService: DebugServiceConfig;
+
+  // QUALIA.CODE v1.1: New Service Configurations
+  gameplayMechanics: GameplayMechanicsConfig;
+  viewLogic: ViewLogicConfig;
+  subtitle: SubtitleConfig;
+  debugOrchestrator: DebugOrchestratorConfig;
 
   // Optional Features
   visualEffects?: VisualEffectsConfig;

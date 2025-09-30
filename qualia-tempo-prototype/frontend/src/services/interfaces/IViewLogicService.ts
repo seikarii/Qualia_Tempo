@@ -54,24 +54,4 @@ export interface IViewLogicService {
    * @returns Grid visual data
    */
   getGridVisuals(playerPosition: { x: number; y: number }, activePositions: [number, number][], time: number): any;
-
-  /**
-   * Add window event listener (delegates to browser events service)
-   * @param event Window event type (e.g., 'resize', 'scroll')
-   * @param handler Event handler function
-   */
-  addWindowEventListener<K extends keyof WindowEventMap>(
-    event: K,
-    handler: (event: WindowEventMap[K]) => void
-  ): void;
-
-  /**
-   * Remove window event listener (delegates to browser events service)
-   * @param event Window event type (e.g., 'resize', 'scroll')
-   * @param handler Event handler function
-   */
-  removeWindowEventListener<K extends keyof WindowEventMap>(
-    event: K,
-    handler: (event: WindowEventMap[K]) => void
-  ): void;
 }

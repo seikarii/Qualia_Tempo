@@ -4,6 +4,19 @@
 
 import { schemaRegistry } from "../schemas";
 
+// QUALIA.CODE v1.1: Base Service Interface for Lifecycle Management
+export interface IBaseService {
+  /**
+   * Initialize service lifecycle, including event subscriptions
+   */
+  initialize(): void;
+  
+  /**
+   * Cleanup service resources, including event subscriptions
+   */
+  cleanup(): void;
+}
+
 // ==================== STAGE-3 DECORATOR IMPLEMENTATIONS ====================
 // Compatible with TypeScript 5.9.2 and stage-3 decorator proposal
 

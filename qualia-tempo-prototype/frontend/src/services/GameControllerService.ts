@@ -11,13 +11,12 @@
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import {
-  EventBus,
-  EventHandler,
+import type {
   PlayerActionEvent,
   GameStateChangedEvent,
 } from "./EventBus";
-import { logMethod, catchError } from "../utils/decorators";
+import { EventBus } from "./EventBus";
+import { logMethod, catchError, OnEvent, IBaseService } from "../utils/decorators";
 import { QualiaLogger } from "./Logger";
 import type { GameState, GameControllerConfig } from "./contracts/IGameControllerService.contracts";
 import type { IGameControllerService } from "./interfaces/IGameControllerService";
@@ -34,12 +33,12 @@ import type { ITimerService } from "./interfaces/ITimerService";
  * - No direct UI coupling
  */
 @injectable()
-export class GameControllerService implements IGameControllerService {
+export class GameControllerService implements IGameControllerService, IBaseService {
   private eventBus: EventBus;
   private gameStateStoreService: IGameStateStoreService;
   private timerService: ITimerService;
   private config: GameControllerConfig;
-  private eventListenerIds: string[] = [];
+  private _eventListeners: string[] = []; // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
   private isRunning = false;
   private logger: QualiaLogger;
   private gameClockInterval: number | null = null;
@@ -215,45 +214,18 @@ export class GameControllerService implements IGameControllerService {
   // === PRIVATE METHODS ===
 
   private subscribeToEvents(): void {
-    // Subscribe to PlayerAction events
-    const playerActionHandler: EventHandler<PlayerActionEvent> = (event) => {
-      this.handlePlayerAction(event);
-    };
-
-    const playerActionListenerId = this.eventBus.subscribe(
-      "PlayerAction",
-      playerActionHandler,
-      { priority: "high" },
-    );
-    this.eventListenerIds.push(playerActionListenerId);
-
-    // Subscribe to GameStateChanged events for game clock management
-    const gameStateChangedHandler: EventHandler<GameStateChangedEvent> = (
-      event,
-    ) => {
-      this.handleGameStateChanged(event);
-    };
-
-    const gameStateListenerId = this.eventBus.subscribe(
-      "GameStateChanged",
-      gameStateChangedHandler,
-      { priority: "normal" },
-    );
-    this.eventListenerIds.push(gameStateListenerId);
-
-    const config = this.config;
-    this.logger.info(config.messages.eventsSubscribed);
+    // QUALIA.CODE v1.1: Event subscriptions now handled by @OnEvent decorators
+    // This method is deprecated but kept for backward compatibility during transition
+    this.logger.info('⚠️  [GameController] subscribeToEvents is deprecated - using @OnEvent decorators');
   }
 
   private unsubscribeFromEvents(): void {
-    for (const listenerId of this.eventListenerIds) {
-      this.eventBus.unsubscribe(listenerId);
-    }
-    this.eventListenerIds = [];
-
-    this.logger.info("📡 [GameController] Unsubscribed from all events");
+    // QUALIA.CODE v1.1: Event cleanup now handled by @OnEvent lifecycle via cleanupEventSubscriptions
+    // This method is deprecated but kept for backward compatibility during transition
+    this.logger.info('⚠️  [GameController] unsubscribeFromEvents is deprecated - using @OnEvent lifecycle');
   }
 
+  @OnEvent('PlayerAction')
   private handlePlayerAction(event: PlayerActionEvent): void {
     this.logger.info(
       `🎮 [GameController] Handling PlayerAction: ${event.action}`,
@@ -369,6 +341,7 @@ export class GameControllerService implements IGameControllerService {
     this.emitGameStateChanged("Playing");
   }
 
+  @OnEvent('GameStateChanged')
   private handleGameStateChanged(event: GameStateChangedEvent): void {
     this.logger.debug(
       `🎮 [GameController] Game state changed: ${event.previousState} -> ${event.newState}`,
@@ -426,5 +399,27 @@ export class GameControllerService implements IGameControllerService {
     if (this.gameState.isPaused) return "Paused";
     if (this.gameState.health <= 0) return "GameOver";
     return "Playing";
+  }
+
+  // QUALIA.CODE v1.1: IBaseService implementation
+  @logMethod
+  public initialize(): void {
+    this.logger.info('🚀 [GameController] Initializing service with @OnEvent lifecycle...');
+    // @OnEvent subscriptions are handled automatically by initializeEventSubscriptions
+    // No manual eventBus.subscribe calls needed
+  }
+
+  @logMethod
+  public cleanup(): void {
+    this.logger.info('🧹 [GameController] Cleaning up service...');
+    // @OnEvent subscriptions are cleaned up automatically by cleanupEventSubscriptions
+    
+    // Clean up game clock
+    if (this.gameClockInterval !== null) {
+      this.timerService.clearInterval(this.gameClockInterval);
+      this.gameClockInterval = null;
+    }
+    
+    this.isRunning = false;
   }
 }

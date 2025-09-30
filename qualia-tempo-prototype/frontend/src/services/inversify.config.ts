@@ -357,10 +357,10 @@ export async function configureServices(): Promise<void> {
   safeBindConstant<CoordinateSystemConfig>(TYPES.CoordinateSystemConfig, fullConfig.rhythmicMovement.coordinate_system);
 
   // NEW SERVICES CONFIGURATION BINDINGS - Using any for now until FullGameConfig is updated
-  safeBindConstant(TYPES.GameplayMechanicsConfig, (fullConfig as any).gameplayMechanics);
-  safeBindConstant(TYPES.ViewLogicConfig, (fullConfig as any).viewLogic);
-  safeBindConstant(TYPES.SubtitleConfig, (fullConfig as any).subtitle);
-  safeBindConstant(TYPES.DebugOrchestratorConfig, (fullConfig as any).debugOrchestrator);
+  safeBindConstant(TYPES.GameplayMechanicsConfig, fullConfig.gameplayMechanics);
+  safeBindConstant(TYPES.ViewLogicConfig, fullConfig.viewLogic);
+  safeBindConstant(TYPES.SubtitleConfig, fullConfig.subtitle);
+  safeBindConstant(TYPES.DebugOrchestratorConfig, fullConfig.debugOrchestrator);
 }
 
 // ===== CONTAINER VERIFICATION =====

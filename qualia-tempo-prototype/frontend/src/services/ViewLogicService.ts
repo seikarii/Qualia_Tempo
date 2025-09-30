@@ -17,7 +17,6 @@ import type {
 import type { QualiaState } from '../types/contracts';
 import type { ILogger } from './interfaces/ILogger';
 import type { ITimerService } from './interfaces/ITimerService';
-import type { IBrowserEventsService } from './interfaces/IBrowserEventsService';
 import { logMethod, catchError } from '../utils/decorators';
 
 @injectable()
@@ -25,7 +24,6 @@ export class ViewLogicService implements IViewLogicService {
   private readonly config: ViewLogicConfig;
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
-  private readonly browserEventsService: IBrowserEventsService;
   
   private particleIdCounter = 0;
   private activeParticles: ParticleData[] = [];
@@ -33,13 +31,11 @@ export class ViewLogicService implements IViewLogicService {
   constructor(
     @inject(TYPES.ViewLogicConfig) config: ViewLogicConfig,
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IBrowserEventsService) browserEventsService: IBrowserEventsService
+    @inject(TYPES.ITimerService) timerService: ITimerService
   ) {
     this.config = config;
     this.logger = logger;
     this.timerService = timerService;
-    this.browserEventsService = browserEventsService;
     this.logger.info('ViewLogicService initialized', {
       maxParticles: this.config.particles.maxCount,
       spawnRate: this.config.particles.spawnRate
@@ -49,25 +45,117 @@ export class ViewLogicService implements IViewLogicService {
   @logMethod
   @catchError
   getBossVisuals(bossState: any, time: number): BossVisualData {
-    const phase = Math.sin(time * 0.001) * 0.5 + 0.5; // Oscillate between 0 and 1
-    const intensity = bossState?.intensity || 0.5;
+    // QUALIA.CODE v1.1: REAL visual logic extracted from BossRenderer
+    const boss = bossState;
+    const powerRatio = boss.power_level / 200; // Assuming max 200
+    const stressIntensity = boss.stress_level;
+    const phaseMultiplier = boss.phase;
+
+    // Calculate phase-based movement patterns (extracted from useFrame)
+    let calculatedPosition: [number, number, number];
+    let rotationIncrement: [number, number, number];
     
+    if (boss.phase === 1) {
+      // Slow, menacing movement  
+      calculatedPosition = [
+        boss.position[0],
+        boss.position[1] + Math.sin(time * 0.5) * 0.3,
+        boss.position[2]
+      ];
+      rotationIncrement = [0, 0.005, 0];
+    } else if (boss.phase === 2) {
+      // More aggressive movement
+      calculatedPosition = [
+        boss.position[0] + Math.cos(time * 0.8) * 0.5,
+        boss.position[1] + Math.sin(time * 1.5) * 0.5,
+        boss.position[2]
+      ];
+      rotationIncrement = [0, 0.01, Math.sin(time) * 0.01];
+    } else {
+      // Chaotic final phase movement
+      calculatedPosition = [
+        boss.position[0] + Math.cos(time * 2.1) * 1.0,
+        boss.position[1] + Math.sin(time * 3) * 0.8,
+        boss.position[2]
+      ];
+      rotationIncrement = [Math.sin(time * 1.3) * 0.02, 0.02, 0];
+    }
+
+    // Scale based on stress level (boss grows when stressed)
+    const stressScale = 1 + stressIntensity * 0.3;
+
+    // Boss color based on qualia state and stress
+    const emotionalValence = boss.qualia_state?.emotional_valence || 0;
+    const bossColor: [number, number, number] = [
+      (emotionalValence + 1) * 0.15, // Red-ish hue for negative valence
+      0.8 + stressIntensity * 0.2,
+      0.3 + (1 - stressIntensity) * 0.4
+    ];
+
+    const stressColor: [number, number, number] = [
+      0, // H
+      1, // S  
+      0.5 + stressIntensity * 0.3 // L
+    ];
+
+    // Core animation calculations
+    const pulseScale = 1 + Math.sin(time * 4 * phaseMultiplier) * 0.2 * stressIntensity;
+    const coreRotation: [number, number, number] = [
+      time * 0.02 * phaseMultiplier,
+      time * 0.015 * phaseMultiplier,
+      0
+    ];
+
+    // Generate tentacle data
+    const tentacleCount = 4 + boss.phase;
+    const tentacles = Array.from({ length: tentacleCount }, (_, i) => {
+      const angle = (i / tentacleCount) * Math.PI * 2;
+      const radius = 2 + phaseMultiplier * 0.5;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      
+      const tentacleTime = time + i * 0.5;
+      const tentacleScale = 0.8 + phaseMultiplier * 0.3;
+      
+      return {
+        position: [x, 0, z] as [number, number, number],
+        rotation: [
+          0,
+          angle + Math.sin(tentacleTime) * 0.01 * stressIntensity,
+          Math.cos(tentacleTime * 1.2) * 0.015 * stressIntensity
+        ] as [number, number, number],
+        scale: tentacleScale
+      };
+    });
+
+    // Attack pattern calculation
+    const shouldShowAttack = Math.floor(time) % (4 / boss.phase) < 0.5;
+
     return {
-      position: [0, 2, -5] as [number, number, number],
-      scale: [
-        this.config.boss.baseScale * (1 + intensity * this.config.boss.intensityMultiplier),
-        this.config.boss.baseScale * (1 + intensity * this.config.boss.intensityMultiplier),
-        this.config.boss.baseScale * (1 + intensity * this.config.boss.intensityMultiplier)
-      ] as [number, number, number],
-      rotation: [0, time * 0.0005, 0] as [number, number, number],
-      color: [
-        0.8 + intensity * 0.2,
-        0.3 + phase * 0.4,
-        0.9 - intensity * 0.3
-      ] as [number, number, number],
-      opacity: 0.8 + intensity * 0.2,
-      intensity: intensity,
-      phase: phase
+      position: calculatedPosition,
+      scale: [stressScale, stressScale, stressScale],
+      rotation: rotationIncrement,
+      color: bossColor,
+      opacity: 0.8 + stressIntensity * 0.2,
+      intensity: stressIntensity,
+      phase: phaseMultiplier,
+      
+      core: {
+        scale: pulseScale,
+        rotation: coreRotation,
+        color: stressColor,
+        emissiveColor: [
+          stressColor[0],
+          stressColor[1],
+          stressColor[2] * stressIntensity
+        ],
+        emissiveIntensity: stressIntensity
+      },
+      
+      tentacles,
+      
+      shouldShowAttack,
+      attackIntensity: stressIntensity * (shouldShowAttack ? 1.0 : 0.0)
     };
   }
 
@@ -216,19 +304,5 @@ export class ViewLogicService implements IViewLogicService {
     return 'qualia';
   }
 
-  @logMethod
-  addWindowEventListener<K extends keyof WindowEventMap>(
-    event: K,
-    handler: (event: WindowEventMap[K]) => void
-  ): void {
-    this.browserEventsService.addWindowEventListener(event, handler);
-  }
 
-  @logMethod
-  removeWindowEventListener<K extends keyof WindowEventMap>(
-    event: K,
-    handler: (event: WindowEventMap[K]) => void
-  ): void {
-    this.browserEventsService.removeWindowEventListener(event, handler);
-  }
 }
