@@ -31,7 +31,6 @@
     "@react-three/fiber": "^8.18.0",
     "@react-three/postprocessing": "^2.19.1",
     "framer-motion": "^12.23.15",
-    "glsl-tokenizer": "^2.1.5",
     "inversify": "^7.10.0",
     "js-yaml": "^4.1.0",
     "lodash-es": "^4.17.21",
