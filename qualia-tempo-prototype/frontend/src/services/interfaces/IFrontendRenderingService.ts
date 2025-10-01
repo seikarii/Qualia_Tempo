@@ -3,7 +3,7 @@ export interface IFrontendRenderingService {
   /**
    * Initialize the Three.js scene and renderer
    */
-  initialize(canvas: HTMLCanvasElement): Promise<void>;
+  initializeRenderer(canvas: HTMLCanvasElement): Promise<void>;
 
   /**
    * Start the rendering loop

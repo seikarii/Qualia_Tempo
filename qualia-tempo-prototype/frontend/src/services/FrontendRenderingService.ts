@@ -36,10 +36,10 @@ import type { IPostProcessingService } from "./interfaces/IPostProcessingService
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { FrontendRenderingConfig, FrontendRenderingServiceParams } from "./contracts/IFrontendRenderingService.contracts";
 import type { QualiaParticleDataReceivedEvent } from "./contracts/events.contracts";
-import { logMethod, catchError, BrowserOnly } from "../utils/decorators";
+import { logMethod, catchError, BrowserOnly, OnEvent, IBaseService } from "../utils/decorators";
 
 @injectable()
-export class FrontendRenderingService implements IFrontendRenderingService {
+export class FrontendRenderingService implements IFrontendRenderingService, IBaseService {
   private readonly logger: ILogger;
   private readonly performanceService: IPerformanceService;
   private readonly postProcessingService: IPostProcessingService;
@@ -70,6 +70,9 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   // Event handling
   private particleDataListenerId: string | null = null;
 
+  // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
+  private _eventListeners: string[] = [];
+
   constructor(
     @inject(TYPES.FrontendRenderingServiceParams) params: FrontendRenderingServiceParams
   ) {
@@ -85,7 +88,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   @logMethod
   @catchError
   @BrowserOnly
-  async initialize(canvas: HTMLCanvasElement): Promise<void> {
+  async initializeRenderer(canvas: HTMLCanvasElement): Promise<void> {
     if (this.isInitialized) {
       this.logger.warn(this.config.messages.alreadyInitialized);
       return;
@@ -316,10 +319,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     this.animate();
 
     // Subscribe to particle data events
-    this.particleDataListenerId = this.eventBus.subscribe(
-      "QualiaParticleDataReceived",
-      this.handleParticleDataReceived.bind(this)
-    );
+    // QUALIA.CODE v1.1: @OnEvent subscriptions handled automatically
 
     this.logger.info("FrontendRenderingService started");
   }
@@ -414,12 +414,36 @@ export class FrontendRenderingService implements IFrontendRenderingService {
     this.postProcessingService.render(this.camera);
   };
 
-  @logMethod
+  @OnEvent('QualiaParticleDataReceived')
   private handleParticleDataReceived(event: QualiaParticleDataReceivedEvent): void {
     try {
       this.updateParticleBuffer(event.particleData);
     } catch (error) {
       this.logger.error("Failed to process particle data", { error, event });
+    }
+  }
+
+  // QUALIA.CODE v1.1: IBaseService implementation
+  public initialize(): void {
+    this.logger.info('🚀 [FrontendRenderingService] Initializing service with @OnEvent lifecycle...');
+    // @OnEvent subscriptions are handled automatically by the decorator
+  }
+
+  public cleanup(): void {
+    this.logger.info('🧹 [FrontendRenderingService] Cleaning up service...');
+    // @OnEvent subscriptions are cleaned up automatically by the decorator
+    // Additional cleanup for rendering resources
+    if (this.isRunning) {
+      this.stop();
+    }
+    if (this.renderer) {
+      this.renderer.dispose();
+    }
+    if (this.particleGeometry) {
+      this.particleGeometry.dispose();
+    }
+    if (this.particleMaterial) {
+      this.particleMaterial.dispose();
     }
   }
 }

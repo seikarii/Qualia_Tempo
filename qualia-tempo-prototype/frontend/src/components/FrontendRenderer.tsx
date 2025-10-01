@@ -55,7 +55,7 @@ const FrontendRenderer: React.FC<FrontendRendererProps> = ({
 
       try {
         // Initialize Three.js renderer
-        await renderingService.initialize(canvasRef.current);
+        await renderingService.initializeRenderer(canvasRef.current);
         setIsInitialized(true);
 
         // Start rendering

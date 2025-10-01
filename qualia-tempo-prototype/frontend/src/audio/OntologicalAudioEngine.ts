@@ -10,7 +10,7 @@ import type {
   EmergentBehavior,
 } from "./IOntologicalAudioEngine";
 import type { IToneFactoryService } from "./interfaces/IToneFactoryService";
-import { logMethod, catchError } from "../utils/decorators";
+import { logMethod, catchError, OnEvent, IBaseService } from "../utils/decorators";
 
 export type OscillatorType =
   | "sine"
@@ -24,7 +24,7 @@ export type OscillatorType =
  * Audio engine that generates sound based on ontological states.
  */
 @injectable()
-export class OntologicalAudioEngine implements IOntologicalAudioEngine {
+export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseService {
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
   private readonly toneFactory: IToneFactoryService;
@@ -34,6 +34,9 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
   private globalReverb: Tone.Reverb | null = null;
   private globalDelay: Tone.FeedbackDelay | null = null;
   private masterVolume: Tone.Volume | null = null;
+
+  // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
+  private _eventListeners: string[] = [];
 
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
@@ -48,9 +51,6 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
 
     // NO inicializar nodos de Tone.js aquí.
     this.logger.info("OntologicalAudioEngine constructed. Waiting for AudioContext...");
-
-    // Suscribirse al evento que indica que el AudioContext está listo.
-    this.eventBus.subscribe('System.Audio.Ready', this.initializeEngine.bind(this));
   }
 
   /**
@@ -58,6 +58,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
    * Solo se ejecuta DESPUÉS de que el AudioContext esté activo.
    */
   @logMethod
+  @OnEvent('System.Audio.Ready')
   private initializeEngine(): void {
     if (this.isEngineReady) return;
 
@@ -329,6 +330,33 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
     }
 
     this.masterVolume.volume.value = volume;
+  }
+
+  // QUALIA.CODE v1.1: IBaseService implementation
+  public initialize(): void {
+    this.logger.info('🚀 [OntologicalAudioEngine] Initializing service with @OnEvent lifecycle...');
+    // @OnEvent subscriptions are handled automatically by the decorator
+  }
+
+  public cleanup(): void {
+    this.logger.info('🧹 [OntologicalAudioEngine] Cleaning up service...');
+    // @OnEvent subscriptions are cleaned up automatically by the decorator
+    // Additional cleanup for audio nodes if needed
+    if (this.globalReverb) {
+      this.globalReverb.dispose();
+      this.globalReverb = null;
+    }
+    if (this.globalDelay) {
+      this.globalDelay.dispose();
+      this.globalDelay = null;
+    }
+    if (this.masterVolume) {
+      this.masterVolume.dispose();
+      this.masterVolume = null;
+    }
+    this.synthPool.forEach(synth => synth.dispose());
+    this.synthPool.clear();
+    this.isEngineReady = false;
   }
 }
 

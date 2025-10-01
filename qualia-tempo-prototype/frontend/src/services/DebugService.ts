@@ -14,7 +14,7 @@
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import { logMethod, catchError } from "../utils/decorators";
+import { logMethod, catchError, OnEvent, IBaseService } from "../utils/decorators";
 import type {
   IDebugService,
   DebugConfig,
@@ -58,7 +58,7 @@ export type {
  * Now with full InversifyJS dependency injection support.
  */
 @injectable()
-export class DebugService implements IDebugService {
+export class DebugService implements IDebugService, IBaseService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
@@ -68,6 +68,9 @@ export class DebugService implements IDebugService {
   private config!: DebugServiceConfig;
   private isStarted = false;
   private eventListenerIds: string[] = [];
+
+  // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
+  private _eventListeners: string[] = [];
 
   // Debug session management
   private currentSession: DebugSession | null = null;
@@ -149,7 +152,7 @@ export class DebugService implements IDebugService {
       this.startNewSession();
 
       // Subscribe to all events for comprehensive monitoring
-      this.subscribeToAllEvents();
+      // QUALIA.CODE v1.1: @OnEvent subscriptions handled automatically
 
       // Start monitoring intervals
       this.startPerformanceMonitoring();
@@ -189,7 +192,7 @@ export class DebugService implements IDebugService {
       this.endCurrentSession();
 
       // Unsubscribe from events
-      this.unsubscribeFromAllEvents();
+      // QUALIA.CODE v1.1: @OnEvent subscriptions cleaned up automatically
 
       // Stop monitoring intervals
       this.stopAllIntervals();
@@ -466,24 +469,7 @@ export class DebugService implements IDebugService {
     }
   }
 
-  private subscribeToAllEvents(): void {
-    // Subscribe to all event types for comprehensive monitoring
-    const listenerId = this.eventBus.subscribe("*", (event: BaseEvent) => {
-      this.handleGenericEvent(event);
-    });
-    this.eventListenerIds.push(listenerId);
-
-    this.logger.info(`📡 [DebugService] Subscribed to all event types`);
-  }
-
-  private unsubscribeFromAllEvents(): void {
-    for (const listenerId of this.eventListenerIds) {
-      this.eventBus.unsubscribe(listenerId);
-    }
-    this.eventListenerIds = [];
-    this.logger.info("📡 [DebugService] Unsubscribed from all events");
-  }
-
+  @OnEvent('*')
   private handleGenericEvent(event: BaseEvent): void {
     this.recordEvent(event);
     this.updateEventPatterns(event.type);
@@ -871,5 +857,22 @@ export class DebugService implements IDebugService {
       enableGlobalInterface: this.config.development.enableDebugOverlay,
       memoryCleanupThreshold: 1000, // Default value
     });
+  }
+
+  // QUALIA.CODE v1.1: IBaseService implementation
+  public initialize(): void {
+    this.logger.info('🚀 [DebugService] Initializing service with @OnEvent lifecycle...');
+    // @OnEvent subscriptions are handled automatically by the decorator
+  }
+
+  public cleanup(): void {
+    this.logger.info('🧹 [DebugService] Cleaning up service...');
+    // @OnEvent subscriptions are cleaned up automatically by the decorator
+    // Additional cleanup for intervals and sessions
+    this.stopAllIntervals();
+    this.performMemoryCleanup();
+    if (this.currentSession) {
+      this.endCurrentSession();
+    }
   }
 }

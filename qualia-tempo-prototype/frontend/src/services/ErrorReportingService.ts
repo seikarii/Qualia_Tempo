@@ -14,7 +14,7 @@
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import { logMethod, catchError } from "../utils/decorators";
+import { logMethod, catchError, OnEvent, IBaseService } from "../utils/decorators";
 import type {
   IErrorReportingService,
   ErrorStatistics,
@@ -72,7 +72,7 @@ export type {
  * Now with full InversifyJS dependency injection support.
  */
 @injectable()
-export class ErrorReportingService implements IErrorReportingService {
+export class ErrorReportingService implements IErrorReportingService, IBaseService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
   private readonly httpService: IHttpService;
@@ -80,6 +80,9 @@ export class ErrorReportingService implements IErrorReportingService {
   private config: ErrorReportingConfig;
   private isStarted = false;
   private eventListenerIds: string[] = [];
+
+  // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
+  private _eventListeners: string[] = [];
 
   // Error processing state
   private errorQueue: ExtendedErrorReport[] = [];
@@ -184,7 +187,7 @@ export class ErrorReportingService implements IErrorReportingService {
       );
 
       // Subscribe to error events
-      this.subscribeToErrorEvents();
+      // QUALIA.CODE v1.1: @OnEvent subscriptions handled automatically
 
       // Start processing intervals
       this.startBatchProcessing();
@@ -223,7 +226,7 @@ export class ErrorReportingService implements IErrorReportingService {
       this.processRemainingErrors();
 
       // Unsubscribe from events
-      this.unsubscribeFromErrorEvents();
+      // QUALIA.CODE v1.1: @OnEvent subscriptions cleaned up automatically
 
       // Stop processing intervals
       this.stopAllIntervals();
@@ -415,25 +418,7 @@ export class ErrorReportingService implements IErrorReportingService {
     };
   }
 
-  private subscribeToErrorEvents(): void {
-    const listenerId = this.eventBus.subscribe("Error", (event: ErrorEvent) => {
-      this.handleErrorEvent(event);
-    });
-    this.eventListenerIds.push(listenerId);
-
-    this.logger.info("📡 [ErrorReportingService] Subscribed to Error events");
-  }
-
-  private unsubscribeFromErrorEvents(): void {
-    for (const listenerId of this.eventListenerIds) {
-      this.eventBus.unsubscribe(listenerId);
-    }
-    this.eventListenerIds = [];
-    this.logger.info(
-      "📡 [ErrorReportingService] Unsubscribed from Error events",
-    );
-  }
-
+  @OnEvent('Error')
   private handleErrorEvent(event: ErrorEvent): void {
     const errorReport = this.createErrorReport(
       event.error,
@@ -808,5 +793,20 @@ export class ErrorReportingService implements IErrorReportingService {
       enableDeduplication: this.config.enableDeduplication,
       externalServiceEnabled: this.config.externalService.enabled,
     });
+  }
+
+  // QUALIA.CODE v1.1: IBaseService implementation
+  public initialize(): void {
+    this.logger.info('🚀 [ErrorReportingService] Initializing service with @OnEvent lifecycle...');
+    // @OnEvent subscriptions are handled automatically by the decorator
+  }
+
+  public cleanup(): void {
+    this.logger.info('🧹 [ErrorReportingService] Cleaning up service...');
+    // @OnEvent subscriptions are cleaned up automatically by the decorator
+    // Additional cleanup for intervals and pending batches
+    this.stopAllIntervals();
+    this.processRemainingErrors();
+    this.performMemoryCleanup();
   }
 }
