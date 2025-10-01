@@ -46,11 +46,20 @@ export interface SystemSnapshot {
   eventHistory: DebugEvent[];
 }
 
-export interface AnalysisResult {
-  type: "error_pattern" | "state_anomaly" | "recommendation";
-  severity: "low" | "medium" | "high";
-  message: string;
-  metadata?: Record<string, unknown>;
+export interface ExportedDebugData {
+  stats: DebugStats;
+  snapshot: SystemSnapshot;
+  analysis: AnalysisResult[];
+  exportTimestamp: number;
+  version: string;
+}
+
+export interface DebugInterface {
+  logServiceStatus(): void;
+  getMetrics(): Record<string, unknown>;
+  getSystemSnapshot(): SystemSnapshot;
+  performAIAnalysis(): AnalysisResult[];
+  exportDebugData(): ExportedDebugData;
 }
 
 export interface IDebugService {
@@ -104,7 +113,7 @@ export interface IDebugService {
   /**
    * Export debug data for external analysis.
    */
-  exportDebugData(): any;
+  exportDebugData(): ExportedDebugData;
 
   /**
    * Update debug configuration.
@@ -132,5 +141,5 @@ export interface IDebugService {
    * Get the debug interface for external access (development only).
    * Returns null if debug interface is disabled.
    */
-  getDebugInterface(): any;
+  getDebugInterface(): DebugInterface | null;
 }

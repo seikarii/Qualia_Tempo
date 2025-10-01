@@ -15,6 +15,7 @@
 
 import React from "react";
 import { useGameStore } from "../../state/useGameStore";
+import type { GameState } from "../../state/useGameStore";
 import { Atmosphere } from "../Atmosphere";
 import QualiaMainMenu from "../QualiaMainMenu";
 import QualiaTempoGame from "../game/QualiaTempoGame";
@@ -22,7 +23,7 @@ import FrontendRenderer from "../FrontendRenderer";
 
 const MainLayout: React.FC = () => {
   // QUALIA.CODE: State-driven UI rendering via Zustand store
-  const isPlaying = useGameStore((state: any) => state.isPlaying);
+  const isPlaying = useGameStore((state: GameState) => state.isPlaying);
 
   return (
     <div className="h-screen w-screen relative overflow-hidden">

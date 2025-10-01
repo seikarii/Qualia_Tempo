@@ -11,6 +11,14 @@ interface MusicData {
   emotional_valence?: number;
 }
 
+interface QualiaOrbData {
+  id: string;
+  x: number;
+  y: number;
+  intensity: number;
+  color: string;
+}
+
 interface QualiaTempoHUDProps {
   qualiaState: QualiaState;
   playerHealth: number;
@@ -236,7 +244,7 @@ const QualiaTempoHUD: React.FC<QualiaTempoHUDProps> = ({
         timerService.setTimeout(() => {
           setQualiaOrbsData((prevData) => {
             const prev = JSON.parse(prevData);
-            return JSON.stringify(prev.filter((orb: any) => orb.id !== newOrb.id));
+            return JSON.stringify(prev.filter((orb: QualiaOrbData) => orb.id !== newOrb.id));
           });
         }, 2000);
       }

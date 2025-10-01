@@ -3,6 +3,9 @@
  * Bridge service between EventBus and Zustand store interface.
  */
 
+import type { GameState } from "../../state/useGameStore";
+import type { QualiaState } from "../../types/contracts";
+
 export interface IGameStateStoreService {
   /**
    * Initialize event subscriptions to GameStateChanged and QualiaStateUpdated.
@@ -18,13 +21,13 @@ export interface IGameStateStoreService {
    * Update the game state in the store.
    * @param state Partial game state to update
    */
-  updateGameState(state: any): void;
+  updateGameState(state: Partial<GameState>): void;
 
   /**
    * Update the qualia state in the store.
    * @param state Qualia state to update
    */
-  updateQualiaState(state: any): void;
+  updateQualiaState(state: QualiaState): void;
 
   /**
    * Get current service status.
@@ -42,7 +45,7 @@ export interface IGameStateStoreService {
    * Get the current game state from the store.
    * @returns Current game state object
    */
-  getGameState(): any;
+  getGameState(): GameState;
 
   /**
    * Provide the store setter dependency from the UI layer.
@@ -50,5 +53,5 @@ export interface IGameStateStoreService {
    * after the service is constructed, breaking the React context collision.
    * @param setStore Zustand store setter function
    */
-  setStoreSetter(setStore: (state: any) => void): void;
+  setStoreSetter(setStore: (updater: (state: GameState) => GameState) => void): void;
 }

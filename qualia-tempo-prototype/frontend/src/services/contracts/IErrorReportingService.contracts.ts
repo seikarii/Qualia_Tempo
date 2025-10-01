@@ -41,7 +41,7 @@ export interface ExtendedErrorReport extends ErrorReport {
   userAgent: string;
   url: string;
   stackTrace?: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   fingerprint: string;
   attempts: number;
   lastAttempt?: Date;

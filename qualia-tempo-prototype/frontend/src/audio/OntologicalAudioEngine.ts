@@ -75,7 +75,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
       wet: 0.18,
     });
 
-    this.masterVolume = this.toneFactory.createVolume(-8);
+    this.masterVolume = this.toneFactory.createVolume({ volume: -8 });
 
     // Cadena de efectos
     this.globalDelay.connect(this.globalReverb);

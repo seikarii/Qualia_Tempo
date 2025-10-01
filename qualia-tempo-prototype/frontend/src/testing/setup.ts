@@ -4,13 +4,13 @@ import { cleanup } from "@testing-library/react";
 
 // ÚNICA FUENTE DE VERDAD PARA MOCKS DE DECORADORES
 vi.mock("../utils/decorators", () => ({
-  logMethod: vi.fn().mockImplementation(() => (d: any) => d),
-  catchError: vi.fn().mockImplementation(() => (d: any) => d),
-  validate: vi.fn().mockImplementation(() => (d: any) => d),
-  throttle: vi.fn().mockImplementation(() => (d: any) => d),
-  validateEventProperty: vi.fn().mockImplementation(() => (d: any) => d),
-  measureTime: vi.fn().mockImplementation(() => (d: any) => d),
-  qualiaMethod: vi.fn().mockImplementation(() => (d: any) => d),
+  logMethod: vi.fn().mockImplementation(() => (d: unknown) => d),
+  catchError: vi.fn().mockImplementation(() => (d: unknown) => d),
+  validate: vi.fn().mockImplementation(() => (d: unknown) => d),
+  throttle: vi.fn().mockImplementation(() => (d: unknown) => d),
+  validateEventProperty: vi.fn().mockImplementation(() => (d: unknown) => d),
+  measureTime: vi.fn().mockImplementation(() => (d: unknown) => d),
+  qualiaMethod: vi.fn().mockImplementation(() => (d: unknown) => d),
 }));
 
 // QUALIA.CODE Global Tone.js Mock - Prevent audio module import errors in tests
@@ -285,7 +285,7 @@ vi.mock("electron", () => ({
 // Comprehensive browser APIs mocking for test environment
 // Ensure global window object exists
 if (typeof window === "undefined") {
-  global.window = {} as any;
+  (global as any).window = {} as any;
 }
 
 // Mock browser timing APIs with enhanced stability
@@ -359,7 +359,7 @@ Object.defineProperty(window, "requestAnimationFrame", {
 Object.defineProperty(window, "cancelAnimationFrame", {
   writable: true,
   value: vi.fn((id: number) => {
-    globalThis.clearTimeout(id as any);
+    globalThis.clearTimeout(id);
   }),
 });
 

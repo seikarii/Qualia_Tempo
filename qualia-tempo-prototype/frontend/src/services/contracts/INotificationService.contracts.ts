@@ -140,7 +140,7 @@ export interface ExtendedNotification extends Notification {
   priority: NotificationPriority;
   category: string;
   source: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   displayed: boolean;
   dismissed: boolean;
   expiresAt?: Date;
@@ -190,7 +190,7 @@ export interface NotificationLogData {
   message: string;
   timestamp: Date;
   source: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   processingTime?: number;
 }
 

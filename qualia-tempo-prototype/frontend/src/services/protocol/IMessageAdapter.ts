@@ -7,6 +7,11 @@
 import { BaseEvent } from '../contracts/events.contracts';
 
 /**
+ * Raw data types that can be received from external sources
+ */
+export type RawMessageData = string | ArrayBuffer | Blob | Uint8Array | Record<string, unknown>;
+
+/**
  * Universal message adapter interface.
  * Implementations convert raw data from external sources (WebSockets, HTTP, etc.)
  * into typed domain events for internal consumption.
@@ -17,5 +22,5 @@ export interface IMessageAdapter {
    * @param rawData - Raw data from external source
    * @returns Typed domain event ready for EventBus emission
    */
-  adapt(rawData: any): BaseEvent;
+  adapt(rawData: RawMessageData): BaseEvent;
 }

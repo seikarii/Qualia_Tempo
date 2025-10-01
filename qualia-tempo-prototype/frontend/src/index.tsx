@@ -24,7 +24,7 @@ import { gameStoreApi } from "./state/useGameStore";
  * QUALIA.CODE COMPLIANT: Minimal logging for pre-container critical errors only
  */
 class BootstrapLogger {
-  static error(message: string, error?: any): void {
+  static error(message: string, error?: unknown): void {
     // QUALIA.CODE EXCEPTION: Critical bootstrap failures require direct console access
     // This is the ONLY allowed use of console methods outside the Logger service
     console.error(`[BOOTSTRAP ERROR] ${message}`, error);

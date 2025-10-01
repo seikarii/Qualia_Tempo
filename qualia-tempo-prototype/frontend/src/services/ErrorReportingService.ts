@@ -31,6 +31,7 @@ import type {
   CircuitBreakerState,
   RateLimitState,
   ErrorSeverity,
+  ErrorReportingExportData,
 } from "./contracts/IErrorReportingService.contracts";
 
 
@@ -299,7 +300,7 @@ export class ErrorReportingService implements IErrorReportingService {
    */
   @logMethod
   @catchError
-  public exportErrorData(): any {
+  public exportErrorData(): ErrorReportingExportData {
     return {
       timestamp: this.timerService.now(),
       sessionId: this.sessionId,

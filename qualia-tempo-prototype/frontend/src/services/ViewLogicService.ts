@@ -18,7 +18,7 @@ import type {
   TileVisualData,
   GetGridVisualsParams
 } from './contracts/IViewLogicService.contracts';
-import type { QualiaState } from '../types/contracts';
+import type { QualiaState, NoteData } from '../types/contracts';
 import type { ILogger } from './interfaces/ILogger';
 import type { ICoordinateSystemService } from './interfaces/ICoordinateSystemService';
 import { logMethod, catchError } from '../utils/decorators';
@@ -341,9 +341,9 @@ export class ViewLogicService implements IViewLogicService {
 
   @logMethod
   @catchError
-  getQualiaFieldVisuals(qualiaField: any, musicData: MusicData, time: number): QualiaFieldVisualData {
+  getQualiaFieldVisuals(qualiaField: QualiaState, musicData: MusicData, time: number): QualiaFieldVisualData {
     // Extract particle generation logic from QualiaFieldRenderer
-    const particleCount = Math.floor(1000 * qualiaField.coherence + 500);
+    const particleCount = Math.floor(1000 * qualiaField.flow + 500);
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
     const sizes = new Float32Array(particleCount);
@@ -374,8 +374,8 @@ export class ViewLogicService implements IViewLogicService {
 
       // Color based on emotional valence and field parameters
       const hue = (musicData.emotional_valence * 360 + i * 10) % 360;
-      const saturation = 0.7 + qualiaField.alpha * 0.3;
-      const lightness = 0.4 + qualiaField.beta * 0.4;
+      const saturation = 0.7 + qualiaField.intensity * 0.3;
+      const lightness = 0.4 + qualiaField.precision * 0.4;
 
       const [r, g, b] = this.hslToRgb(hue / 360, saturation, lightness);
       colors[i3] = r;
@@ -403,7 +403,7 @@ export class ViewLogicService implements IViewLogicService {
       const colorIndex = i;
       const hueShift = (time * 0.1 + i * 0.01) % 1;
       const baseHue = (musicData.emotional_valence + hueShift) % 1;
-      const [r, g, b] = this.hslToRgb(baseHue, 0.7, 0.5 + qualiaField.alpha * 0.3);
+      const [r, g, b] = this.hslToRgb(baseHue, 0.7, 0.5 + qualiaField.intensity * 0.3);
 
       colors[colorIndex] = r;
       colors[colorIndex + 1] = g;
@@ -423,7 +423,7 @@ export class ViewLogicService implements IViewLogicService {
         const distance = Math.sqrt(worldX * worldX + worldZ * worldZ);
 
         wavePositions[posIndex] = worldX;
-        wavePositions[posIndex + 1] = Math.sin(distance * this.config.qualiaField.waveFrequency - time * this.config.qualiaField.waveTimeMultiplier) * qualiaField.alpha * this.config.qualiaField.waveAmplitudeAlpha + Math.cos(worldX * this.config.qualiaField.waveFrequencyX + time) * qualiaField.beta * this.config.qualiaField.waveAmplitudeBeta;
+        wavePositions[posIndex + 1] = Math.sin(distance * this.config.qualiaField.waveFrequency - time * this.config.qualiaField.waveTimeMultiplier) * qualiaField.intensity * this.config.qualiaField.waveAmplitudeAlpha + Math.cos(worldX * this.config.qualiaField.waveFrequencyX + time) * qualiaField.precision * this.config.qualiaField.waveAmplitudeBeta;
         wavePositions[posIndex + 2] = worldZ;
         posIndex += 3;
       }
@@ -443,7 +443,7 @@ export class ViewLogicService implements IViewLogicService {
       return {
         position: [x, y, z] as [number, number, number],
         color: [r, g, b] as [number, number, number],
-        opacity: 0.4 + qualiaField.alpha * 0.4,
+        opacity: 0.4 + qualiaField.intensity * 0.4,
         scale: 0.5
       };
     });
@@ -460,7 +460,7 @@ export class ViewLogicService implements IViewLogicService {
           0
         ],
         materialSize: 0.1 + musicData.intensity * 0.3,
-        materialOpacity: 0.6 + qualiaField.coherence * 0.4
+        materialOpacity: 0.6 + qualiaField.flow * 0.4
       },
       wavePlane: {
         positions: wavePositions,
@@ -475,7 +475,7 @@ export class ViewLogicService implements IViewLogicService {
 
   @logMethod
   @catchError
-  getQualiaFieldParticles(qualiaState: QualiaState, musicData: any, time: number): ParticleData[] {
+  getQualiaFieldParticles(qualiaState: QualiaState, musicData: MusicData, time: number): ParticleData[] {
     // Update existing particles
     this.updateExistingParticles(time);
     
@@ -487,7 +487,7 @@ export class ViewLogicService implements IViewLogicService {
 
   @logMethod
   @catchError
-  getMusicalNoteVisuals(notes: any[], currentTime: number): NoteVisualData[] {
+  getMusicalNoteVisuals(notes: NoteData[], currentTime: number): NoteVisualData[] {
     return notes.map((note, index) => {
       // Handle lifecycle states first
       if (note.state === 'hit') {
@@ -760,7 +760,7 @@ export class ViewLogicService implements IViewLogicService {
     });
   }
 
-  private spawnQualiaParticles(qualiaState: QualiaState, _musicData: any, _time: number): void {
+  private spawnQualiaParticles(qualiaState: QualiaState, _musicData: MusicData, _time: number): void {
     if (this.activeParticles.length >= this.config.particles.maxCount) {
       return;
     }

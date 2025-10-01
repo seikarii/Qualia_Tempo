@@ -45,7 +45,7 @@ import { mockBrowserEventsService } from "./mocks/browser-events-service.mock";
 import { mockDebugOrchestratorService } from "./mocks/debug-orchestrator-service.mock";
 import { mockShaderIntrospectionService } from "./mocks/shader-introspection-service.mock";
 
-export interface MockOverride<T = any> {
+export interface MockOverride<T = unknown> {
   type: symbol;
   value: T;
 }
@@ -58,8 +58,8 @@ export interface MockOverride<T = any> {
 export interface MockServices {
   mockLogger: ILogger;
   mockEventBus: IEventBus;
-  mockGameStateStore: any;
-  mockGameStateStoreService: any;
+  mockGameStateStore: IGameStateStore;
+  mockGameStateStoreService: IGameStateStoreService;
   mockHttpService: IHttpService;
   mockTimerService: ITimerService;
   mockPerformanceService: IPerformanceService;

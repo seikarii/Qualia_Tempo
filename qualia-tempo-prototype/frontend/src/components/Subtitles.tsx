@@ -61,7 +61,7 @@ export const Subtitles: React.FC<SubtitlesProps> = ({ className = "" }) => {
             color: config.styling.color,
             fontSize: config.styling.fontSize,
             fontWeight: config.styling.fontWeight,
-            textAlign: config.styling.textAlign as any,
+            textAlign: config.styling.textAlign as React.CSSProperties['textAlign'],
             margin: 0,
             lineHeight: 1.5
           }}

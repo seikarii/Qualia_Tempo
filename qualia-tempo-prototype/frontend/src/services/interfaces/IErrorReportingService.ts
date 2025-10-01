@@ -49,6 +49,15 @@ export interface ErrorReportingConfig {
   memoryCleanupThreshold?: number;
 }
 
+// Exported error data interface
+export interface ExportedErrorData {
+  statistics: ErrorStatistics;
+  recentErrors: ErrorReport[];
+  batches: ErrorBatch[];
+  exportTimestamp: Date;
+  version: string;
+}
+
 // Service interface
 export interface IErrorReportingService {
   start(): void;
@@ -60,7 +69,7 @@ export interface IErrorReportingService {
   ): Promise<void>;
   updateConfig(newConfig: Partial<ErrorReportingConfig>): void;
   getStatistics(): ErrorStatistics;
-  exportErrorData(): any;
+  exportErrorData(): ExportedErrorData;
   forceFlush(): Promise<void>;
   clearHistory(): void;
   clearStatistics(): void;

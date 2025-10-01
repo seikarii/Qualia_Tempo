@@ -17,7 +17,7 @@ export interface GBufferTargets {
 }
 
 export class GBufferPass extends Pass {
-  private gbuffer: any;
+  private gbuffer: THREE.WebGLRenderTarget & { texture: THREE.Texture[] };
   private gbufferMaterial!: THREE.ShaderMaterial;
   private originalOverrideMaterial: THREE.Material | null = null;
   private scene: THREE.Scene;
@@ -39,7 +39,7 @@ export class GBufferPass extends Pass {
     this.initializeTextures();
 
     // Create render target
-    this.gbuffer = new (THREE as any).WebGLMultipleRenderTargets(params.width, params.height, 4, {
+    this.gbuffer = new THREE.WebGLMultipleRenderTargets(params.width, params.height, 4, {
       type: THREE.UnsignedByteType,
       format: THREE.RGBAFormat,
       minFilter: THREE.LinearFilter,

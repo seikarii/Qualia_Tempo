@@ -20,6 +20,19 @@ import PlayerRenderer from "./PlayerRenderer";
 import GridRenderer from "./GridRenderer";
 
 /**
+ * Game action data types for callback communication
+ */
+type GameActionData =
+  | { type: "note_hit"; noteId: string; timing: number; accuracy: number }
+  | { type: "note_miss"; noteId: string; expectedTiming: number }
+  | { type: "player_move"; position: { x: number; y: number } }
+  | { type: "game_start" }
+  | { type: "game_pause" }
+  | { type: "game_resume" }
+  | { type: "game_end"; score: number }
+  | Record<string, unknown>; // Fallback for unknown action data
+
+/**
  * QualiaTempoGame - Main Qualia Tempo game component integrated within MetacosmosViewer
  *
  * Features:
@@ -31,7 +44,7 @@ import GridRenderer from "./GridRenderer";
  */
 
 interface QualiaTempoGameProps {
-  onGameAction?: (_action: string, _data: any) => void;
+  onGameAction?: (_action: string, _data: GameActionData) => void;
   isActive?: boolean;
 }
 

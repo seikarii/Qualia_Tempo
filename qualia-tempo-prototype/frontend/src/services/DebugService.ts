@@ -25,7 +25,14 @@ import type {
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
-import type { DebugSession, PerformanceMetrics, AIAnalysisResult, DebugServiceConfig } from "./contracts/IDebugService.contracts";
+import type { 
+  DebugSession, 
+  PerformanceMetrics, 
+  AIAnalysisResult, 
+  DebugServiceConfig, 
+  DebugInterface, 
+  DebugExportData 
+} from "./contracts/IDebugService.contracts";
 import type {
   BaseEvent,
   QualiaStateCalculatedEvent,
@@ -78,7 +85,7 @@ export class DebugService implements IDebugService {
   private memoryCleanupInterval: number | null = null;
 
   // Debug interface for external access
-  private debugInterface: any = null;
+  private debugInterface: DebugInterface | null = null;
 
   // State tracking for advanced analysis
   private lastQualiaState: QualiaState | any | null = null; // Binary protocol: stores debug info
@@ -361,7 +368,7 @@ export class DebugService implements IDebugService {
    */
   @logMethod
   @catchError
-  public exportDebugData(): any {
+  public exportDebugData(): DebugExportData {
     return {
       timestamp: Date.now(),
       sessions: this.sessionHistory,
@@ -795,7 +802,7 @@ export class DebugService implements IDebugService {
     return results;
   }
 
-  private setupGlobalInterface(): any {
+  private setupGlobalInterface(): DebugInterface | null {
     // Only setup if enabled in config
     if (!this.config.development.enableDebugOverlay) {
       return null;
@@ -832,7 +839,7 @@ export class DebugService implements IDebugService {
       },
 
       // Helper for quick debugging
-      log: (message: string, data?: any) => {
+      log: (message: string, data?: unknown) => {
         this.logger.info(`🔧 [QA_DEBUG] ${message}`, data ?? "");
       },
     };
@@ -848,7 +855,7 @@ export class DebugService implements IDebugService {
    * Get the debug interface for external access (development only).
    */
   @logMethod
-  public getDebugInterface(): any {
+  public getDebugInterface(): DebugInterface | null {
     return this.debugInterface;
   }
 

@@ -12,7 +12,7 @@ import type { IWebSocketService } from "./interfaces/IWebSocketService";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IMessageAdapter } from "./protocol/IMessageAdapter";
 import type { StreamingConfig, StateStreamingServiceParams } from "./contracts/IStateStreamingService.contracts";
-import type { ConnectionStatus, StreamingStatusChangedEvent } from "./contracts/events.contracts";
+import type { ConnectionStatus, StreamingStatusChangedEvent, ConnectionStateType } from "./contracts/events.contracts";
 import { logMethod, catchError, AdaptAndEmit } from "../utils/decorators";
 import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
 
@@ -134,7 +134,7 @@ export class StateStreamingService implements IStateStreamingService {
   getConnectionStatus(): ConnectionStatus {
     return {
       connected: this.state === "CONNECTED",
-      state: this.state as any, // Type assertion for compatibility
+      state: this.state as ConnectionStateType,
       url: this.connectionUrl,
       connectedAt: this.connectionStartTime ? new Date(this.connectionStartTime) : undefined,
       reconnectAttempts: this.reconnectAttempts,

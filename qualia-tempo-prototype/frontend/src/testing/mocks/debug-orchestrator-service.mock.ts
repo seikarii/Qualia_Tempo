@@ -6,7 +6,7 @@
 import { vi } from "vitest";
 import type { IDebugOrchestratorService } from "../../services/interfaces/IDebugOrchestratorService";
 
-export const mockDebugOrchestratorService: IDebugOrchestratorService & { initialize: any; cleanup: any } = {
+export const mockDebugOrchestratorService: IDebugOrchestratorService & { initialize: () => void; cleanup: () => void } = {
   gatherServiceDiagnostics: vi.fn(),
   getServiceStatuses: vi.fn(),
   isDebugModeEnabled: vi.fn(),
