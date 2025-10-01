@@ -186,7 +186,7 @@ export class AudioService implements IAudioService, IBaseService {
       const feedbackConfig = this.config.rhythmicFeedback[timing];
       this.webAudioAPIService.playTone(
         feedbackConfig.frequency,
-        feedbackConfig.duration / 1000, // duration in seconds
+        feedbackConfig.duration / this.config.millisecondsToSecondsConversion, // duration in seconds
         feedbackConfig.gain,
         "sine"
       );

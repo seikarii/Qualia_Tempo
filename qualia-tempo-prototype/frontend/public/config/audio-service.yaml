@@ -90,6 +90,9 @@ transcendenceThreshold: 0.8
 # Default volume for audio operations
 defaultVolume: 1.0
 
+# Time conversion constants
+millisecondsToSecondsConversion: 1000
+
 messages:
   audioContextNotAvailable: "AudioContext not available - cannot play audio"
   audioNotInitialized: "Cannot play rhythmic feedback: audio not initialized"

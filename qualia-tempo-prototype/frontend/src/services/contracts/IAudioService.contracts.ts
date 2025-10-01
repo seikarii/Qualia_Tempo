@@ -73,6 +73,9 @@ export interface AudioServiceConfig {
   // Default volume for audio operations
   defaultVolume: number;
   
+  // Time conversion constants
+  millisecondsToSecondsConversion: number;
+  
   // Messages for logging
   messages: {
     audioContextNotAvailable: string;
