@@ -78,7 +78,7 @@ const createWindow = (): BrowserWindow => {
     title: "Qualia Tempo - A Charlie Hellsinger Story",
 
     // macOS specific - use valid vibrancy value
-    vibrancy: "fullscreen-ui" as any, // Type assertion for compatibility
+    vibrancy: "fullscreen-ui" as "fullscreen-ui", // Type assertion for compatibility
     visualEffectState: "active",
   });
 
@@ -103,9 +103,9 @@ const createWindow = (): BrowserWindow => {
   });
 
   // Load the application
-  if (env.isDev && (globalThis as any).process.env["ELECTRON_RENDERER_URL"]) {
+  if (env.isDev && (globalThis as Record<string, unknown>).process.env["ELECTRON_RENDERER_URL"]) {
     mainWindow.loadURL(
-      (globalThis as any).process.env["ELECTRON_RENDERER_URL"],
+      (globalThis as Record<string, unknown>).process.env["ELECTRON_RENDERER_URL"] as string,
     );
   } else {
     mainWindow.loadFile(join(__dirname, "../index.html"));

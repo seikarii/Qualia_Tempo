@@ -26,18 +26,18 @@ export interface IBaseService {
  * Usage: @logMethod
  */
 export function logMethod(
-  _target: any,
+  _target: unknown,
   propertyKey: string,
   descriptor: PropertyDescriptor
 ): PropertyDescriptor {
   const method = descriptor.value;
 
-  descriptor.value = function (this: any, ...args: any[]) {
-    const className = this.constructor.name;
+  descriptor.value = function (this: unknown, ...args: unknown[]) {
+    const className = (this as Record<string, unknown>).constructor.name;
     const fullMethodName = `${className}.${propertyKey}`;
 
     // Access logger from instance (this) at runtime
-    const instanceLogger = (this as any).logger;
+    const instanceLogger = (this as Record<string, unknown>).logger;
     if (instanceLogger && typeof instanceLogger.debug === 'function') {
       instanceLogger.debug(`→ ENTER ${fullMethodName}`, {
         arguments: args.length > 0 ? args : "no arguments",
@@ -131,19 +131,19 @@ export function throttle(milliseconds: number) {
   const throttleMap = new Map<string, number>();
 
   return function (
-    value: any,
+    value: (...args: unknown[]) => unknown,
     context: ClassMethodDecoratorContext
-  ): any {
+  ): (...args: unknown[]) => unknown {
     const methodName = String(context.name);
 
-    return function (this: any, ...args: any[]) {
-      const className = this.constructor.name;
+    return function (this: unknown, ...args: unknown[]) {
+      const className = (this as Record<string, unknown>).constructor.name;
       const methodKey = `${className}.${methodName}`;
       const now = Date.now();
       const lastCall = throttleMap.get(methodKey) || 0;
 
       // Access logger from instance (this) at runtime
-      const instanceLogger = (this as any).logger;
+      const instanceLogger = (this as Record<string, unknown>).logger;
       if (now - lastCall < milliseconds) {
         if (instanceLogger && typeof instanceLogger.debug === 'function') {
           instanceLogger.debug(
@@ -174,25 +174,25 @@ export function throttle(milliseconds: number) {
  * Usage: @catchError
  */
 export function catchError(
-  _target: any,
+  _target: unknown,
   propertyKey: string,
   descriptor: PropertyDescriptor
 ): PropertyDescriptor {
   const method = descriptor.value;
 
-  descriptor.value = function (this: any, ...args: any[]) {
-    const className = this.constructor.name;
+  descriptor.value = function (this: unknown, ...args: unknown[]) {
+    const className = (this as Record<string, unknown>).constructor.name;
     const fullMethodName = `${className}.${propertyKey}`;
 
     // Access logger from instance (this) at runtime
-    const instanceLogger = (this as any).logger;
+    const instanceLogger = (this as Record<string, unknown>).logger;
 
     try {
       const result = method.apply(this, args);
 
       // Handle async methods
       if (result instanceof Promise) {
-        return result.catch((error: any) => {
+        return result.catch((error: unknown) => {
           if (instanceLogger && typeof instanceLogger.error === 'function') {
             instanceLogger.error(`${fullMethodName}:`, {
               error: error instanceof Error ? error.message : String(error),
@@ -259,17 +259,17 @@ export function catchError(
  * Usage: @measureTime
  */
 export function measureTime(
-  _target: any,
+  _target: unknown,
   propertyKey: string,
   descriptor: PropertyDescriptor
 ): PropertyDescriptor {
   const method = descriptor.value;
 
-  descriptor.value = function (this: any, ...args: any[]) {
-    const className = this.constructor.name;
+  descriptor.value = function (this: unknown, ...args: unknown[]) {
+    const className = (this as Record<string, unknown>).constructor.name;
     const fullMethodName = `${className}.${propertyKey}`;
     const startTime = performance.now();
-    const instanceLogger = (this as any).logger;
+    const instanceLogger = (this as Record<string, unknown>).logger;
 
     try {
       const result = method.apply(this, args);
@@ -306,7 +306,7 @@ function logPerformance(
   methodName: string,
   duration: number,
   hasError = false,
-  instanceLogger?: any,
+  instanceLogger?: unknown,
 ): void {
   let category = "";
   let level: "log" | "warn" | "error" = "log";
@@ -350,15 +350,15 @@ function logPerformance(
  */
 export function validate(schemaName: string) {
   return function (
-    value: any,
+    value: (...args: unknown[]) => unknown,
     context: ClassMethodDecoratorContext
-  ): any {
+  ): (...args: unknown[]) => unknown {
     const methodName = String(context.name);
 
-    return function (this: any, ...args: any[]) {
-      const className = this.constructor.name;
+    return function (this: unknown, ...args: unknown[]) {
+      const className = (this as Record<string, unknown>).constructor.name;
       const fullMethodName = `${className}.${methodName}`;
-      const instanceLogger = (this as any).logger;
+      const instanceLogger = (this as Record<string, unknown>).logger;
 
       // Validate first argument if present
       if (args.length > 0) {
@@ -453,16 +453,16 @@ export function validateEventProperty(
   schemaName: string,
 ) {
   return function (
-    _target: any,
+    _target: unknown,
     propertyKey: string,
     descriptor: PropertyDescriptor
   ): PropertyDescriptor {
     const method = descriptor.value;
 
-    descriptor.value = function (this: any, ...args: any[]) {
-      const className = this.constructor.name;
+    descriptor.value = function (this: unknown, ...args: unknown[]) {
+      const className = (this as Record<string, unknown>).constructor.name;
       const fullMethodName = `${className}.${propertyKey}`;
-      const instanceLogger = (this as any).logger;
+      const instanceLogger = (this as Record<string, unknown>).logger;
 
       // Validate property of first argument if present
       if (args.length > 0 && args[0] && typeof args[0] === "object") {
@@ -574,16 +574,16 @@ export function validateEventProperty(
 export function qualiaMethod(
   options: {
     throttleMs?: number;
-    fallbackValue?: any;
+    fallbackValue?: unknown;
     skipLogging?: boolean;
     skipTiming?: boolean;
     schema?: string;
   } = {},
 ) {
   return function (
-    value: any,
+    value: (...args: unknown[]) => unknown,
     context: ClassMethodDecoratorContext
-  ): any {
+  ): (...args: unknown[]) => unknown {
     // Start with the original method
     let decoratedMethod = value;
 
@@ -600,21 +600,21 @@ export function qualiaMethod(
 
     // Always apply catchError
     const catchErrorDecorator = (
-      _target: any,
+      _target: unknown,
       propertyKey: string,
       descriptor: PropertyDescriptor
     ) => {
       const method = descriptor.value;
-      descriptor.value = function (this: any, ...args: any[]) {
-        const className = this.constructor.name;
+      descriptor.value = function (this: unknown, ...args: unknown[]) {
+        const className = (this as Record<string, unknown>).constructor.name;
         const fullMethodName = `${className}.${propertyKey}`;
 
-        const instanceLogger = (this as any).logger;
+        const instanceLogger = (this as Record<string, unknown>).logger;
 
         try {
           const result = method.apply(this, args);
           if (result instanceof Promise) {
-            return result.catch((error: any) => {
+            return result.catch((error: unknown) => {
               if (instanceLogger && typeof instanceLogger.error === 'function') {
                 instanceLogger.error(`${fullMethodName}:`, {
                   error: error instanceof Error ? error.message : String(error),
@@ -678,13 +678,13 @@ export function qualiaMethod(
 
     if (!options.skipTiming) {
       const measureDecorator = (
-        _target: any,
+        _target: unknown,
         propertyKey: string,
         descriptor: PropertyDescriptor
       ) => {
         const method = descriptor.value;
-        descriptor.value = function (this: any, ...args: any[]) {
-          const className = this.constructor.name;
+        descriptor.value = function (this: unknown, ...args: unknown[]) {
+          const className = (this as Record<string, unknown>).constructor.name;
           const fullMethodName = `${className}.${propertyKey}`;
           const startTime = performance.now();
 
@@ -734,19 +734,19 @@ export function qualiaMethod(
  * @param adapterPropertyKey - Name of the property containing the injected adapter
  * @returns Method decorator that intercepts, adapts, and emits data
  */
-export function AdaptAndEmit(adapterPropertyKey: keyof any) {
-  return function (_target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+export function AdaptAndEmit(adapterPropertyKey: string | symbol) {
+  return function (_target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = function (this: any, ...args: any[]) {
+    descriptor.value = function (this: unknown, ...args: unknown[]) {
       const rawData = args[0];
       const className = this.constructor.name;
       const fullMethodName = `${className}.${propertyKey}`;
 
       try {
         // ARCHITECTURAL PURITY: Get dependencies from instance (this), not from container
-        const adapter: any = this[adapterPropertyKey];
-        const eventBus: any = this.eventBus;
+        const adapter = (this as Record<string | symbol, unknown>)[adapterPropertyKey];
+        const eventBus = (this as Record<string, unknown>).eventBus;
 
         // VALIDACIÓN ARQUITECTÓNICA EN TIEMPO DE EJECUCIÓN
         if (!adapter) {
@@ -762,7 +762,7 @@ export function AdaptAndEmit(adapterPropertyKey: keyof any) {
         }
 
         // Access instance logger if available
-        const instanceLogger = (this as any).logger;
+        const instanceLogger = (this as Record<string, unknown>).logger;
         if (instanceLogger && typeof instanceLogger.debug === 'function') {
           instanceLogger.debug(`🔄 @AdaptAndEmit processing in ${fullMethodName}`, {
             adapterProperty: adapterPropertyKey,
@@ -790,7 +790,7 @@ export function AdaptAndEmit(adapterPropertyKey: keyof any) {
 
       } catch (error) {
         // Error boundary: Log and re-throw for proper error handling
-        const instanceLogger = (this as any).logger;
+        const instanceLogger = (this as Record<string, unknown>).logger;
         if (instanceLogger && typeof instanceLogger.error === 'function') {
           instanceLogger.error(`🚨 @AdaptAndEmit failed in ${fullMethodName}`, {
             error: error instanceof Error ? error.message : String(error),
@@ -817,17 +817,17 @@ export function AdaptAndEmit(adapterPropertyKey: keyof any) {
  * Usage: @BrowserOnly
  */
 export function BrowserOnly(
-  _target: any,
+  _target: unknown,
   propertyKey: string,
   descriptor: PropertyDescriptor
 ): PropertyDescriptor {
   const originalMethod = descriptor.value;
 
-  descriptor.value = function (this: any, ...args: any[]) {
+  descriptor.value = function (this: unknown, ...args: unknown[]) {
     // Comprobad si `typeof window` es `'undefined'`.
     if (typeof window === 'undefined') {
       // Obtened el logger de la instancia (`this.logger`) y registrad un `warn`.
-      const instanceLogger = (this as any).logger;
+      const instanceLogger = (this as Record<string, unknown>).logger;
       if (instanceLogger && typeof instanceLogger.warn === 'function') {
         instanceLogger.warn(`Cannot execute ${propertyKey} in a non-browser environment.`);
       } else {
@@ -857,28 +857,29 @@ export function BrowserOnly(
  */
 export function OnEvent(eventType: string) {
   return function (
-    target: any,
+    target: unknown,
     propertyKey: string,
     descriptor: PropertyDescriptor
   ): PropertyDescriptor {
     const originalMethod = descriptor.value;
 
     // Store the event subscription metadata on the class prototype
-    if (!target.constructor._eventSubscriptions) {
-      target.constructor._eventSubscriptions = [];
+    const targetConstructor = (target as Record<string, unknown>).constructor as Record<string, unknown>;
+    if (!targetConstructor._eventSubscriptions) {
+      targetConstructor._eventSubscriptions = [];
     }
     
-    target.constructor._eventSubscriptions.push({
+    (targetConstructor._eventSubscriptions as unknown[]).push({
       eventType,
       methodName: propertyKey,
       originalMethod
     });
 
     // Enhanced method that includes logging
-    descriptor.value = function (this: any, ...args: any[]) {
-      const instanceLogger = (this as any).logger;
+    descriptor.value = function (this: unknown, ...args: unknown[]) {
+      const instanceLogger = (this as Record<string, unknown>).logger;
       if (instanceLogger && typeof instanceLogger.debug === 'function') {
-        instanceLogger.debug(`📡 [${this.constructor.name}] Event received: ${eventType}`, {
+        instanceLogger.debug(`📡 [${(this as Record<string, unknown>).constructor.name}] Event received: ${eventType}`, {
           method: propertyKey,
           eventData: args[0]
         });
@@ -893,9 +894,9 @@ export function OnEvent(eventType: string) {
 
 // Helper function to set up event subscriptions for a service instance
 // This should be called during service initialization
-export function initializeEventSubscriptions(serviceInstance: any): void {
-  const eventBus = (serviceInstance as any).eventBus;
-  const logger = (serviceInstance as any).logger;
+export function initializeEventSubscriptions(serviceInstance: unknown): void {
+  const eventBus = (serviceInstance as Record<string, unknown>).eventBus;
+  const logger = (serviceInstance as Record<string, unknown>).logger;
   
   if (!eventBus) {
     if (logger && typeof logger.error === 'function') {
@@ -905,14 +906,14 @@ export function initializeEventSubscriptions(serviceInstance: any): void {
   }
 
   // Initialize listeners array if not exists
-  if (!(serviceInstance as any)._eventListeners) {
-    (serviceInstance as any)._eventListeners = [];
+  if (!(serviceInstance as Record<string, unknown>)._eventListeners) {
+    (serviceInstance as Record<string, unknown>)._eventListeners = [];
   }
 
-  const subscriptions = serviceInstance.constructor._eventSubscriptions || [];
+  const subscriptions = ((serviceInstance as Record<string, unknown>).constructor as Record<string, unknown>)._eventSubscriptions || [];
   
-  for (const subscription of subscriptions) {
-    const method = (serviceInstance as any)[subscription.methodName];
+  for (const subscription of (subscriptions as {eventType: string; methodName: string; originalMethod: unknown}[])) {
+    const method = (serviceInstance as Record<string, unknown>)[subscription.methodName];
     if (method) {
       const listenerId = eventBus.subscribe(
         subscription.eventType,
@@ -920,10 +921,10 @@ export function initializeEventSubscriptions(serviceInstance: any): void {
         { priority: 'normal' }
       );
       
-      (serviceInstance as any)._eventListeners.push(listenerId);
+      ((serviceInstance as Record<string, unknown>)._eventListeners as string[]).push(listenerId);
       
       if (logger && typeof logger.debug === 'function') {
-        logger.debug(`📡 [${serviceInstance.constructor.name}] Subscribed to event: ${subscription.eventType}`, {
+        logger.debug(`📡 [${((serviceInstance as Record<string, unknown>).constructor as Record<string, unknown>).name}] Subscribed to event: ${subscription.eventType}`, {
           method: subscription.methodName,
           listenerId
         });
@@ -933,20 +934,20 @@ export function initializeEventSubscriptions(serviceInstance: any): void {
 }
 
 // Helper function to clean up event subscriptions
-export function cleanupEventSubscriptions(serviceInstance: any): void {
-  const eventBus = (serviceInstance as any).eventBus;
-  const listeners = (serviceInstance as any)._eventListeners || [];
-  const logger = (serviceInstance as any).logger;
+export function cleanupEventSubscriptions(serviceInstance: unknown): void {
+  const eventBus = (serviceInstance as Record<string, unknown>).eventBus;
+  const listeners = ((serviceInstance as Record<string, unknown>)._eventListeners || []) as string[];
+  const logger = (serviceInstance as Record<string, unknown>).logger;
 
   if (eventBus && listeners.length > 0) {
     listeners.forEach((listenerId: string) => {
       eventBus.unsubscribe(listenerId);
     });
     
-    (serviceInstance as any)._eventListeners = [];
+    (serviceInstance as Record<string, unknown>)._eventListeners = [];
     
     if (logger && typeof logger.debug === 'function') {
-      logger.debug(`📡 [${serviceInstance.constructor.name}] Cleaned up ${listeners.length} event subscriptions`);
+      logger.debug(`📡 [${((serviceInstance as Record<string, unknown>).constructor as Record<string, unknown>).name}] Cleaned up ${listeners.length} event subscriptions`);
     }
   }
 }

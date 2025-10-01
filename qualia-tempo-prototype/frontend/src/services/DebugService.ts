@@ -91,7 +91,7 @@ export class DebugService implements IDebugService, IBaseService {
   private debugInterface: DebugInterface | null = null;
 
   // State tracking for advanced analysis
-  private lastQualiaState: QualiaState | any | null = null; // Binary protocol: stores debug info
+  private lastQualiaState: QualiaState | unknown | null = null; // Binary protocol: stores debug info
   private gameStateHistory: string[] = [];
   private eventPatterns: Map<string, number[]> = new Map();
 
@@ -657,7 +657,7 @@ export class DebugService implements IDebugService, IBaseService {
 
   private collectPerformanceMetrics(): void {
     // Collect memory usage
-    const perfMemory = (performance as any).memory;
+    const perfMemory = (performance as Record<string, unknown>).memory;
     if (perfMemory && typeof perfMemory.usedJSHeapSize === "number") {
       this.performanceMetrics.memoryUsage.push(perfMemory.usedJSHeapSize);
       if (this.performanceMetrics.memoryUsage.length > 100) {
@@ -737,7 +737,7 @@ export class DebugService implements IDebugService, IBaseService {
       if (avgTime > 50) {
         // 50ms threshold
         results.push({
-          type: "performance_issue" as any,
+          type: "performance_issue" as "performance_issue",
           severity: avgTime > 100 ? "high" : "medium",
           message: `Slow event processing detected for ${eventType}`,
           metadata: {

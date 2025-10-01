@@ -40,7 +40,7 @@ import type {
 export class ErrorFingerprinter {
   static generateFingerprint(
     error: Error | null | undefined,
-    context?: Record<string, any>,
+    context?: Record<string, unknown>,
     fingerprintLength: number = 16,
   ): string {
     // Handle null/undefined errors gracefully
@@ -251,7 +251,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   public async reportError(
     error: Error,
     severity: ErrorSeverity = "medium",
-    context?: Record<string, any>,
+    context?: Record<string, unknown>,
   ): Promise<void> {
     if (!this.isStarted || !this.config.enabled) {
       return;
@@ -431,7 +431,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   private createErrorReport(
     error: Error | null | undefined,
     severity: ErrorSeverity,
-    context?: Record<string, any>,
+    context?: Record<string, unknown>,
   ): ExtendedErrorReport {
     const fingerprint = ErrorFingerprinter.generateFingerprint(error, context, this.config.fingerprintLength ?? 16);
 

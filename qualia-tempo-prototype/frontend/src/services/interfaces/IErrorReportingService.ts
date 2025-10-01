@@ -65,7 +65,7 @@ export interface IErrorReportingService {
   reportError(
     error: Error,
     severity?: ErrorSeverity,
-    context?: Record<string, any>,
+    context?: Record<string, unknown>,
   ): Promise<void>;
   updateConfig(newConfig: Partial<ErrorReportingConfig>): void;
   getStatistics(): ErrorStatistics;
