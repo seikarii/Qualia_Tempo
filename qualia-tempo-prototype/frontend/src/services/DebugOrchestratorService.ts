@@ -28,9 +28,9 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
   private readonly timerService: ITimerService;
   private readonly notificationService: INotificationService;
   private readonly errorReportingService: IErrorReportingService;
-  // @ts-expect-error - Reserved for future debug orchestration functionality
   private readonly _eventBus: IEventBus;
   
+  private _eventListeners: string[] = [];
   private lastUpdateTime: Date;
   // @ts-expect-error - Reserved for diagnostic caching functionality
   private _cachedDiagnostics: ServiceDiagnosticData | null = null;

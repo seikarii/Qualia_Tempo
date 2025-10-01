@@ -28,6 +28,7 @@ import type { ITimerService, IPerformanceService } from "../services/interfaces/
 import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { IWebSocketService } from "../services/interfaces/IWebSocketService";
 import type { IBrowserEventsService } from "../services/interfaces/IBrowserEventsService";
+import type { IDebugOrchestratorService } from "../services/interfaces/IDebugOrchestratorService";
 
 // Import centralized mocks
 import { mockLogger } from "./mocks/logger.mock";
@@ -40,6 +41,7 @@ import { mockTimerService } from "./mocks/timer-service.mock";
 import { mockPerformanceService } from "./mocks/performance-service.mock";
 import { mockWebSocketService } from "./mocks/web-socket-service.mock";
 import { mockBrowserEventsService } from "./mocks/browser-events-service.mock";
+import { mockDebugOrchestratorService } from "./mocks/debug-orchestrator-service.mock";
 
 export interface MockOverride<T = any> {
   type: symbol;
@@ -62,6 +64,7 @@ export interface MockServices {
   mockOntologicalAudioEngine: IOntologicalAudioEngine;
   mockWebSocketService: IWebSocketService;
   mockBrowserEventsService: IBrowserEventsService;
+  mockDebugOrchestratorService: IDebugOrchestratorService;
 }
 
 /**
@@ -83,6 +86,7 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   testContainer.bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).toConstantValue(mockOntologicalAudioEngine);
   testContainer.bind<IWebSocketService>(TYPES.IWebSocketService).toConstantValue(mockWebSocketService);
   testContainer.bind<IBrowserEventsService>(TYPES.IBrowserEventsService).toConstantValue(mockBrowserEventsService);
+  testContainer.bind<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService).toConstantValue(mockDebugOrchestratorService);
 
   // STEP 3: Apply any test-specific overrides.
   for (const override of overrides) {

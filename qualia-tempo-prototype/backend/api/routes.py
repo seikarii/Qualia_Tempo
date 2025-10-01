@@ -3,6 +3,7 @@
 
 from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from .models import QualiaState, QualiaUpdateResponse
 from ..CompositionRoot import get_composition_root, CompositionRoot
 from typing import Dict, Any
@@ -126,6 +127,64 @@ async def diagnose_particle_buffer(services: CompositionRoot = Depends(get_servi
 
     except Exception as e:
         logger.error(f"🚨 Error en el endpoint de diagnóstico: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/particles/optimized")
+async def get_optimized_particles(services: CompositionRoot = Depends(get_services)) -> Response:
+    """
+    GOLD.CODE: Stream optimized particle data in compact binary format.
+    Returns 26% less data than original format (62 bytes vs 84 bytes per particle).
+    
+    Binary format uses structured NumPy array with:
+    - float32 for vectors (position, velocity, acceleration, force_accumulator)
+    - uint8 for colors (RGBA 0-255)
+    - float16 for scalars (lifetime, size, resonance, mass, charge)
+    
+    Metadata is provided in response headers for client-side decoding.
+    """
+    try:
+        particle_engine = services.get_particle_system()
+        
+        # Get compact binary data (GOLD.CODE format)
+        particle_bytes = particle_engine.get_optimized_particle_data()
+        metadata = particle_engine.get_particle_metadata()
+        
+        logger.info(f"📦 Streaming {len(particle_bytes)} bytes of optimized particle data (GOLD.CODE)")
+        
+        # Return binary response with metadata in headers
+        return Response(
+            content=particle_bytes,
+            media_type="application/octet-stream",
+            headers={
+                "X-Particle-Format": "GOLD.CODE-1.0",
+                "X-Particle-Count": str(metadata["count"]),
+                "X-Bytes-Per-Particle": str(metadata["bytes_per_particle"]),
+                "X-Memory-Savings": metadata["memory_savings"],
+                "X-Particle-Metadata": json.dumps(metadata),
+                "Access-Control-Expose-Headers": "X-Particle-Format,X-Particle-Count,X-Bytes-Per-Particle,X-Memory-Savings,X-Particle-Metadata"
+            }
+        )
+    except Exception as e:
+        logger.error(f"🚨 Failed to stream optimized particles: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/particles/metadata")
+async def get_particle_metadata(services: CompositionRoot = Depends(get_services)) -> Dict[str, Any]:
+    """
+    GOLD.CODE: Get particle format metadata without downloading binary data.
+    Useful for clients to understand the data structure before fetching.
+    """
+    try:
+        particle_engine = services.get_particle_system()
+        metadata = particle_engine.get_particle_metadata()
+        
+        logger.info("📋 Returning particle metadata (GOLD.CODE)")
+        return metadata
+        
+    except Exception as e:
+        logger.error(f"🚨 Failed to get particle metadata: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

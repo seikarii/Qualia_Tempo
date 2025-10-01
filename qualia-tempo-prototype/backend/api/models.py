@@ -9,8 +9,67 @@ from typing import List, Optional, Annotated
 
 from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, RootModel
 from typing import Annotated
 from typing import Annotated, List
+
+class ColorItem(RootModel[int]):
+    root: Annotated[int, Field(ge=0, le=255)]
+    """
+    RGBA component (uint8)
+    """
+
+
+
+class OptimizedParticle(BaseModel):
+    """
+    GOLD.CODE: Memory-optimized particle structure with precision-matched types. Achieves 26% memory reduction (84→62 bytes per particle) through structured NumPy array with uint8 colors and float16 scalars.
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    position: Annotated[List[float], Field(max_length=3, min_length=3)]
+    """
+    3D position vector in world space (float32 for precision)
+    """
+    velocity: Annotated[List[float], Field(max_length=3, min_length=3)]
+    """
+    3D velocity vector (float32 for physics accuracy)
+    """
+    acceleration: Annotated[List[float], Field(max_length=3, min_length=3)]
+    """
+    3D acceleration vector (float32 for physics calculations)
+    """
+    force_accumulator: Annotated[List[float], Field(max_length=3, min_length=3)]
+    """
+    Accumulated forces for integration (float32)
+    """
+    color: Annotated[List[ColorItem], Field(max_length=4, min_length=4)]
+    """
+    RGBA color with uint8 components (0-255 range). 75% memory savings vs float32.
+    """
+    lifetime: Annotated[float, Field(ge=0.0)]
+    """
+    Remaining lifetime in seconds (float16). 50% memory savings vs float32.
+    """
+    size: Annotated[float, Field(ge=0.0)]
+    """
+    Visual size multiplier (float16). 50% memory savings vs float32.
+    """
+    resonance: Annotated[float, Field(ge=0.0, le=1.0)]
+    """
+    Performance resonance factor (float16). Range: 0.0 (low) to 1.0 (high).
+    """
+    mass: Annotated[float, Field(ge=0.0)]
+    """
+    Particle mass for gravitational physics (float16). 50% memory savings vs float32.
+    """
+    charge: float
+    """
+    Electromagnetic charge for force field interactions (float16). Can be negative.
+    """
+
 
 class Position(BaseModel):
     model_config = ConfigDict(

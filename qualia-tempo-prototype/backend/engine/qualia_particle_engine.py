@@ -38,6 +38,32 @@ logger = logging.getLogger(__name__)
 # Availability flag
 QUALIA_GPU_AVAILABLE = moderngl is not None and np is not None
 
+# GOLD.CODE: Optimized particle data structure
+# Memory-efficient structured array with precision-matched types
+# Achieves 26% memory reduction (84 → 62 bytes per particle)
+if np is not None:
+    OPTIMIZED_PARTICLE_DTYPE = np.dtype([
+        # High-precision vector fields: position, velocity, acceleration (float32)
+        ('position', 'f4', (3,)),          # vec3: 12 bytes
+        ('velocity', 'f4', (3,)),          # vec3: 12 bytes  
+        ('acceleration', 'f4', (3,)),      # vec3: 12 bytes
+        ('force_accumulator', 'f4', (3,)), # vec3: 12 bytes
+        
+        # Color: uint8 RGBA (0-255 range, GPU-standard)
+        ('color', 'u1', (4,)),             # uvec4: 4 bytes (75% savings from float32)
+        
+        # Scalar properties: float16 (sufficient precision for visual effects)
+        ('lifetime', 'f2'),                # float16: 2 bytes (50% savings)
+        ('size', 'f2'),                    # float16: 2 bytes
+        ('resonance', 'f2'),               # float16: 2 bytes
+        ('mass', 'f2'),                    # float16: 2 bytes
+        ('charge', 'f2'),                  # float16: 2 bytes
+    ])
+    # Memory Layout: 62 bytes per particle (vs 84 bytes original)
+    # Savings: 22 bytes per particle (26.2% reduction)
+else:
+    OPTIMIZED_PARTICLE_DTYPE = None
+
 
 class BufferState(Enum):
     """Buffer states for ping-pong management."""
@@ -241,18 +267,24 @@ class QualiaParticleEngine:
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=False)
     def initialize_buffers(self, particles_data: Any = None) -> bool:
-        """Initialize ping-pong buffer pairs with particle data."""
+        """
+        GOLD.CODE: Initialize ping-pong buffers with optimized particle data.
+        Maintains structured format on CPU, converts to GPU format for upload.
+        """
         if not self.ctx or not self.compute_shader:
             logger.error("Cannot initialize buffers without valid context and shader")
             return False
 
         try:
-            # Create initial particle data if not provided
+            # Create initial particle data with optimized structure (GOLD.CODE)
             if particles_data is None:
-                particles_data = self._create_initial_particles()
+                self._cpu_particles = self._create_initial_particles()  # Structured array
+            else:
+                self._cpu_particles = particles_data
 
-            # Convert to proper format
-            particle_bytes = particles_data.astype(np.float32).tobytes()
+            # Convert to GPU-compatible format (flat float32 array)
+            gpu_particles = self._convert_particles_to_gpu_format(self._cpu_particles)
+            particle_bytes = gpu_particles.tobytes()
             particle_size = len(particle_bytes)
 
             # Create dual buffers for ping-pong operation
@@ -261,22 +293,22 @@ class QualiaParticleEngine:
                 b"\x00" * particle_size
             )  # Empty buffer of same size
             self.particle_buffers.size = particle_size
-            self.particle_buffers.element_count = len(particles_data)
+            self.particle_buffers.element_count = len(self._cpu_particles)
+
+            # Store structured array for later access (API serialization, updates)
+            self._structured_particles_cache = self._cpu_particles
 
             # CRITICAL: Create ForceFieldsBuffer for binding = 2
-            # Create placeholder force fields data (empty for now)
             force_fields_data = self._create_initial_force_fields()
             force_fields_bytes = force_fields_data.astype(np.float32).tobytes()
             self.force_fields_buffer = self.ctx.buffer(force_fields_bytes)
 
             self.particles_initialized = True
 
-            logger.info(
-                f"✅ Ping-pong particle buffers initialized: {len(particles_data)} particles"
-            )
-            logger.info(
-                f"✅ ForceFieldsBuffer initialized with {len(force_fields_data)} force fields"
-            )
+            logger.info(f"✅ GOLD.CODE: Ping-pong buffers initialized with {len(self._cpu_particles)} particles")
+            logger.info(f"📊 CPU memory: {self._cpu_particles.nbytes / 1024:.2f} KB (optimized)")
+            logger.info(f"📊 GPU memory: {particle_size / 1024:.2f} KB (expanded for compatibility)")
+            logger.info(f"✅ ForceFieldsBuffer initialized with {len(force_fields_data)} force fields")
             return True
 
         except Exception as e:
@@ -284,45 +316,84 @@ class QualiaParticleEngine:
             return False
 
     def _create_initial_particles(self) -> Any:
-        """Create initial particle data with enhanced physics properties."""
+        """
+        GOLD.CODE: Create optimized particle data with precision-matched types.
+        Uses structured NumPy array for 26% memory reduction (84→62 bytes per particle).
+        """
         if not np:
             raise ImportError("NumPy is required for particle data generation")
 
-        # CRITICAL: Must match QualiaParticle struct in qualia_particles.glsl
-        # position(3) + velocity(3) + acceleration(3) + color(4) + lifetime(1) + size(1) + resonance(1) + mass(1) + charge(1) + force_accumulator(3) = 21 components
-        particles = np.zeros((self.max_particles, 21), dtype=np.float32)
+        if OPTIMIZED_PARTICLE_DTYPE is None:
+            raise ImportError("NumPy not available, cannot create optimized particles")
 
-        # Random positions in a cube around origin
-        particles[:, 0:3] = np.random.uniform(-10.0, 10.0, (self.max_particles, 3))
+        # Create structured array with optimized dtype (GOLD.CODE)
+        particles = np.zeros(self.max_particles, dtype=OPTIMIZED_PARTICLE_DTYPE)
 
-        # Small random velocities
-        particles[:, 3:6] = np.random.uniform(-1.0, 1.0, (self.max_particles, 3))
+        # Initialize high-precision vector fields (float32)
+        particles['position'] = np.random.uniform(-10.0, 10.0, (self.max_particles, 3)).astype(np.float32)
+        particles['velocity'] = np.random.uniform(-1.0, 1.0, (self.max_particles, 3)).astype(np.float32)
+        particles['acceleration'] = np.zeros((self.max_particles, 3), dtype=np.float32)
+        particles['force_accumulator'] = np.zeros((self.max_particles, 3), dtype=np.float32)
 
-        # Zero initial acceleration
-        particles[:, 6:9] = 0.0
+        # Initialize color with uint8 (0-255 range, standard for GPUs)
+        particles['color'] = np.array([255, 255, 255, 255], dtype=np.uint8)
 
-        # Initial colors (white with alpha)
-        particles[:, 9:13] = [1.0, 1.0, 1.0, 1.0]
+        # Initialize scalar properties with float16 (sufficient for visual effects)
+        particles['lifetime'] = np.random.uniform(0.5, 2.0, self.max_particles).astype(np.float16)
+        particles['size'] = np.random.uniform(0.1, 1.0, self.max_particles).astype(np.float16)
+        particles['resonance'] = np.zeros(self.max_particles, dtype=np.float16)
+        particles['mass'] = np.random.uniform(0.5, 2.0, self.max_particles).astype(np.float16)
+        particles['charge'] = np.random.uniform(-1.0, 1.0, self.max_particles).astype(np.float16)
 
-        # Random lifetimes (0.5 to 2.0 seconds)
-        particles[:, 13] = np.random.uniform(0.5, 2.0, self.max_particles)
-
-        # Random sizes (0.1 to 1.0)
-        particles[:, 14] = np.random.uniform(0.1, 1.0, self.max_particles)
-
-        # Initial resonance (0.0)
-        particles[:, 15] = 0.0
-
-        # Random mass (0.5 to 2.0)
-        particles[:, 16] = np.random.uniform(0.5, 2.0, self.max_particles)
-
-        # Random charge (-1.0 to 1.0)
-        particles[:, 17] = np.random.uniform(-1.0, 1.0, self.max_particles)
-
-        # Zero initial force accumulator
-        particles[:, 18:21] = 0.0
-
+        logger.info(f"✅ GOLD.CODE: Initialized {self.max_particles} particles with optimized dtype")
+        logger.info(f"📊 Memory footprint: {particles.nbytes / (1024**2):.2f} MB (26% reduction achieved)")
+        
         return particles
+
+    @log_execution(level="DEBUG")
+    def _convert_particles_to_gpu_format(self, structured_particles: Any) -> Any:
+        """
+        GOLD.CODE: Convert structured particles to GPU-compatible flat array.
+        Expands uint8 colors to float32 and float16 to float32 for shader consumption.
+        
+        This conversion happens only during GPU upload, maintaining memory savings on CPU side.
+        
+        Args:
+            structured_particles: NumPy structured array with OPTIMIZED_PARTICLE_DTYPE
+            
+        Returns:
+            Flat NumPy array (N, 21) with float32 for GPU buffer upload
+        """
+        if not np:
+            raise ImportError("NumPy required for conversion")
+        
+        num_particles = len(structured_particles)
+        
+        # Allocate flat GPU buffer (21 float32 components per particle)
+        gpu_particles = np.zeros((num_particles, 21), dtype=np.float32)
+        
+        # Copy high-precision vectors (already float32)
+        gpu_particles[:, 0:3] = structured_particles['position']
+        gpu_particles[:, 3:6] = structured_particles['velocity']
+        gpu_particles[:, 6:9] = structured_particles['acceleration']
+        
+        # Expand uint8 colors to float32 (normalize 0-255 → 0.0-1.0)
+        colors_u8 = structured_particles['color']
+        gpu_particles[:, 9:13] = colors_u8.astype(np.float32) / 255.0
+        
+        # Convert float16 scalars to float32
+        gpu_particles[:, 13] = structured_particles['lifetime'].astype(np.float32)
+        gpu_particles[:, 14] = structured_particles['size'].astype(np.float32)
+        gpu_particles[:, 15] = structured_particles['resonance'].astype(np.float32)
+        gpu_particles[:, 16] = structured_particles['mass'].astype(np.float32)
+        gpu_particles[:, 17] = structured_particles['charge'].astype(np.float32)
+        
+        # Copy force accumulator
+        gpu_particles[:, 18:21] = structured_particles['force_accumulator']
+        
+        logger.debug(f"🔄 Converted {num_particles} particles to GPU format (flat float32 array)")
+        
+        return gpu_particles
 
     def _create_initial_force_fields(self) -> Any:
         """Create initial force fields data for physics simulation."""
@@ -695,6 +766,55 @@ class QualiaParticleEngine:
         except Exception as e:
             logger.error(f"🚨 Failed to read particles data: {e}")
             return None
+
+    @log_execution(level="DEBUG")
+    def get_optimized_particle_data(self) -> bytes:
+        """
+        GOLD.CODE: Export particles in optimized structured format for API transfer.
+        Returns compact binary representation (62 bytes per particle vs 84 original).
+        
+        Returns:
+            bytes: Compact structured array in binary format (26% smaller)
+        """
+        if not self.particles_initialized or not hasattr(self, '_structured_particles_cache'):
+            logger.warning("Particles not initialized or cache unavailable, returning empty data")
+            return b""
+        
+        # Return structured array as compact bytes (26% smaller than GPU format)
+        return self._structured_particles_cache.tobytes()
+
+    @log_execution(level="DEBUG")
+    def get_particle_metadata(self) -> Dict[str, Any]:
+        """
+        GOLD.CODE: Return metadata for frontend to decode optimized format.
+        Provides complete schema information for binary decoding.
+        
+        Returns:
+            Dict containing dtype, size, and field offset information
+        """
+        if OPTIMIZED_PARTICLE_DTYPE is None:
+            return {"error": "NumPy not available"}
+            
+        return {
+            "dtype": str(OPTIMIZED_PARTICLE_DTYPE),
+            "count": self.max_particles,
+            "bytes_per_particle": OPTIMIZED_PARTICLE_DTYPE.itemsize,
+            "total_bytes": self.max_particles * OPTIMIZED_PARTICLE_DTYPE.itemsize,
+            "format_version": "GOLD.CODE-1.0",
+            "memory_savings": "26.2%",
+            "fields": {
+                "position": {"type": "float32", "shape": [3], "offset": 0, "bytes": 12},
+                "velocity": {"type": "float32", "shape": [3], "offset": 12, "bytes": 12},
+                "acceleration": {"type": "float32", "shape": [3], "offset": 24, "bytes": 12},
+                "force_accumulator": {"type": "float32", "shape": [3], "offset": 36, "bytes": 12},
+                "color": {"type": "uint8", "shape": [4], "offset": 48, "bytes": 4},
+                "lifetime": {"type": "float16", "shape": [], "offset": 52, "bytes": 2},
+                "size": {"type": "float16", "shape": [], "offset": 54, "bytes": 2},
+                "resonance": {"type": "float16", "shape": [], "offset": 56, "bytes": 2},
+                "mass": {"type": "float16", "shape": [], "offset": 58, "bytes": 2},
+                "charge": {"type": "float16", "shape": [], "offset": 60, "bytes": 2},
+            }
+        }
 
     def get_current_parameters(self) -> Dict[str, Any]:
         """Get current engine parameters for compatibility."""

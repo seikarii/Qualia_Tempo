@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OptimizedParticle",
+  "description": "GOLD.CODE: Memory-optimized particle structure with precision-matched types. Achieves 26% memory reduction (84→62 bytes per particle) through structured NumPy array with uint8 colors and float16 scalars.",
+  "type": "object",
+  "properties": {
+    "position": {
+      "type": "array",
+      "items": { "type": "number", "format": "float32" },
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "3D position vector in world space (float32 for precision)"
+    },
+    "velocity": {
+      "type": "array",
+      "items": { "type": "number", "format": "float32" },
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "3D velocity vector (float32 for physics accuracy)"
+    },
+    "acceleration": {
+      "type": "array",
+      "items": { "type": "number", "format": "float32" },
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "3D acceleration vector (float32 for physics calculations)"
+    },
+    "force_accumulator": {
+      "type": "array",
+      "items": { "type": "number", "format": "float32" },
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "Accumulated forces for integration (float32)"
+    },
+    "color": {
+      "type": "array",
+      "items": { 
+        "type": "integer", 
+        "minimum": 0, 
+        "maximum": 255,
+        "description": "RGBA component (uint8)"
+      },
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "RGBA color with uint8 components (0-255 range). 75% memory savings vs float32."
+    },
+    "lifetime": {
+      "type": "number",
+      "format": "float16",
+      "minimum": 0.0,
+      "description": "Remaining lifetime in seconds (float16). 50% memory savings vs float32."
+    },
+    "size": {
+      "type": "number",
+      "format": "float16",
+      "minimum": 0.0,
+      "description": "Visual size multiplier (float16). 50% memory savings vs float32."
+    },
+    "resonance": {
+      "type": "number",
+      "format": "float16",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Performance resonance factor (float16). Range: 0.0 (low) to 1.0 (high)."
+    },
+    "mass": {
+      "type": "number",
+      "format": "float16",
+      "minimum": 0.0,
+      "description": "Particle mass for gravitational physics (float16). 50% memory savings vs float32."
+    },
+    "charge": {
+      "type": "number",
+      "format": "float16",
+      "description": "Electromagnetic charge for force field interactions (float16). Can be negative."
+    }
+  },
+  "required": [
+    "position", 
+    "velocity", 
+    "acceleration", 
+    "force_accumulator",
+    "color", 
+    "lifetime", 
+    "size", 
+    "resonance", 
+    "mass", 
+    "charge"
+  ],
+  "additionalProperties": false,
+  "x-gold-code": {
+    "version": "1.0",
+    "memory_per_particle": 62,
+    "memory_savings_percent": 26.2,
+    "cpu_dtype": "structured_numpy",
+    "gpu_format": "flat_float32_array",
+    "conversion_required": true
+  }
+}

@@ -3,21 +3,28 @@
 // QUALIA.CODE v1.0 - Enhanced Qualia Particles Compute Shader
 // Real-time particle simulation driven by QualiaState with resonance system
 // Features: Weighted force blending, resonance evolution, intelligent respawning, breathing effects
+//
+// GOLD.CODE OPTIMIZATION NOTE:
+// CPU-side uses optimized types (uint8 colors, float16 scalars) for 26% memory savings (84→62 bytes).
+// Conversion layer expands to GPU-compatible float32 during buffer upload.
+// This struct maintains standard types for maximum GPU compatibility and performance.
+// Future enhancement: Investigate GL_NV_gpu_shader5 for native float16 support on GPU side.
 
 layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
 // Enhanced QualiaParticle structure with additional physics properties
+// Memory Layout: 21 float32 components = 84 bytes per particle (GPU format)
 struct QualiaParticle {
-    vec3 position;          // x, y, z coordinates
-    vec3 velocity;          // velocity vector
-    vec3 acceleration;      // acceleration vector for advanced physics
-    vec4 color;             // RGBA color
-    float lifetime;         // remaining lifetime
-    float size;             // particle size
-    float resonance;        // accumulated player performance resonance (0-1)
-    float mass;             // particle mass for gravitational effects
-    float charge;           // particle charge for electromagnetic effects
-    vec3 force_accumulator; // accumulated forces for integration
+    vec3 position;          // float32 (precision required for spatial accuracy)
+    vec3 velocity;          // float32 (precision required for physics)
+    vec3 acceleration;      // float32 (precision required for physics)
+    vec4 color;             // float32 (normalized from uint8 on CPU: 0-255 → 0.0-1.0)
+    float lifetime;         // float32 (converted from float16 on CPU)
+    float size;             // float32 (converted from float16 on CPU)
+    float resonance;        // float32 (converted from float16 on CPU, range 0-1)
+    float mass;             // float32 (converted from float16 on CPU)
+    float charge;           // float32 (converted from float16 on CPU)
+    vec3 force_accumulator; // float32 (precision required for force integration)
 };
 
 // Input and output buffers for ping-pong operation
