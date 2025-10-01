@@ -14,7 +14,7 @@
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import { logMethod, catchError } from "../utils/decorators";
+import { logMethod, catchError, IBaseService, OnEvent } from "../utils/decorators";
 import type {
   INotificationService,
 } from "./interfaces/INotificationService";
@@ -30,7 +30,6 @@ import type {
   NotificationLogData,
   FlexibleNotificationConfig,
 } from "./contracts/INotificationService.contracts";
-import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
 import type { ITimerService } from "./interfaces/ITimerService";
@@ -70,8 +69,7 @@ export type {
  * Now with full InversifyJS dependency injection support and Zustand store bridging.
  */
 @injectable()
-export class NotificationService implements INotificationService {
-  private readonly eventBus: IEventBus;
+export class NotificationService implements INotificationService, IBaseService {
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
   // Configuration service for future extensibility
@@ -80,7 +78,9 @@ export class NotificationService implements INotificationService {
   private readonly gameStateStore: IGameStateStore;
   private config: NotificationServiceConfig;
   private isStarted = false;
-  private eventListenerIds: string[] = [];
+
+  // @ts-expect-error - Utilizado por el ciclo de vida del decorador @OnEvent
+  private _eventListeners: string[] = [];
 
   // Notification processing state
   private notificationQueue: NotificationQueue;
@@ -122,19 +122,12 @@ export class NotificationService implements INotificationService {
   constructor(
     @inject(TYPES.NotificationServiceParams) params: NotificationServiceParams,
   ) {
-    if (!params.eventBus) {
-      throw new Error(
-        "🚨 [NotificationService] EventBus is required for QUALIA.CODE v1.1 compliance",
-      );
-    }
-
     if (!params.gameStateStore) {
       throw new Error(
         "🚨 [NotificationService] GameStateStore is required for decoupled architecture",
       );
     }
 
-    this.eventBus = params.eventBus;
     this.logger = params.logger;
     this.timerService = params.timerService;
     this.config = params.config;
@@ -177,7 +170,7 @@ export class NotificationService implements INotificationService {
       );
 
       // Subscribe to all relevant events
-      this.subscribeToEvents();
+      // REMOVED: Now handled by @OnEvent decorators
 
       // Start processing intervals
       this.startQueueProcessing();
@@ -211,7 +204,7 @@ export class NotificationService implements INotificationService {
       this.processRemainingNotifications();
 
       // Unsubscribe from events
-      this.unsubscribeFromEvents();
+      // REMOVED: Now handled by @OnEvent decorators
 
       // Stop processing intervals
       this.stopAllIntervals();
@@ -226,6 +219,18 @@ export class NotificationService implements INotificationService {
         error,
       });
     }
+  }
+
+  @logMethod
+  public initialize(): void {
+    this.logger.info('🚀 [NotificationService] Initializing service with @OnEvent lifecycle...');
+    // Las suscripciones de @OnEvent se gestionan automáticamente.
+  }
+
+  @logMethod
+  public cleanup(): void {
+    this.logger.info('🧹 [NotificationService] Cleaning up service...');
+    // La limpieza de @OnEvent es automática.
   }
 
   /**
@@ -268,7 +273,7 @@ export class NotificationService implements INotificationService {
     message: string,
     type: NotificationType = "info",
     duration?: number,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
   ): string {
     // Validate input using extracted method
     const validationResult = this._isValidShowRequest(message, type);
@@ -508,7 +513,7 @@ export class NotificationService implements INotificationService {
       this.fullConfig = newConfig;
 
       // Handle nested notification config structure from tests
-      let configToMerge: any = newConfig;
+      let configToMerge = newConfig as Record<string, unknown>;
       if (newConfig.notifications) {
         configToMerge = newConfig.notifications;
       }
@@ -602,55 +607,10 @@ export class NotificationService implements INotificationService {
 
   // Private implementation methods
 
-  private subscribeToEvents(): void {
-    // Subscribe to specific event types that should trigger notifications
-    this.eventListenerIds.push(
-      this.eventBus.subscribe("Error", (event: ErrorEvent) => {
-        this.handleErrorEvent(event);
-      }),
-    );
-
-    this.eventListenerIds.push(
-      this.eventBus.subscribe(
-        "GameStateChanged",
-        (event: GameStateChangedEvent) => {
-          this.handleGameStateEvent(event);
-        },
-      ),
-    );
-
-    this.eventListenerIds.push(
-      this.eventBus.subscribe(
-        "QualiaStateCalculated",
-        (event: QualiaStateCalculatedEvent) => {
-          this.handleQualiaStateCalculatedEvent(event);
-        },
-      ),
-    );
-
-    this.eventListenerIds.push(
-      this.eventBus.subscribe("BackendSync", (event: BackendSyncEvent) => {
-        this.handleBackendSyncEvent(event);
-      }),
-    );
-
-    this.logger.info(
-      "📡 [NotificationService] Subscribed to notification events",
-    );
-  }
-
-  private unsubscribeFromEvents(): void {
-    for (const listenerId of this.eventListenerIds) {
-      this.eventBus.unsubscribe(listenerId);
-    }
-    this.eventListenerIds = [];
-    this.logger.info(
-      "📡 [NotificationService] Unsubscribed from notification events",
-    );
-  }
-
-  private handleErrorEvent(event: ErrorEvent): void {
-    const priority =
+  @OnEvent('Error')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private _handleErrorEvent(event: ErrorEvent): void {
+    const errorPriority =
       event.severity === "critical"
         ? "urgent"
         : event.severity === "high"
@@ -663,7 +623,7 @@ export class NotificationService implements INotificationService {
     const notification = this.createNotification(
       `Error: ${errorMessage}`,
       "error",
-      priority,
+      errorPriority,
       {
         source: "ErrorEvent",
         category: "system",
@@ -677,7 +637,9 @@ export class NotificationService implements INotificationService {
     this.processNotification(notification);
   }
 
-  private handleGameStateEvent(event: GameStateChangedEvent): void {
+  @OnEvent('GameStateChanged')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private _handleGameStateEvent(event: GameStateChangedEvent): void {
     const notification = this.createNotification(
       `Game state changed to: ${event.newState}`,
       "info",
@@ -695,7 +657,9 @@ export class NotificationService implements INotificationService {
     this.processNotification(notification);
   }
 
-  private handleQualiaStateCalculatedEvent(event: QualiaStateCalculatedEvent): void {
+  @OnEvent('QualiaStateCalculated')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private _handleQualiaStateCalculatedEvent(event: QualiaStateCalculatedEvent): void {
     // Only show notifications for significant qualia changes
     const hasSignificantChange = Object.values(event.qualiaState).some(
       (value) => typeof value === "number" && (value > 0.8 || value < 0.2),
@@ -719,7 +683,9 @@ export class NotificationService implements INotificationService {
     }
   }
 
-  private handleBackendSyncEvent(event: BackendSyncEvent): void {
+  @OnEvent('BackendSync')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private _handleBackendSyncEvent(event: BackendSyncEvent): void {
     if (event.status === "error") {
       const notification = this.createNotification(
         "Backend synchronization failed",
@@ -1009,7 +975,7 @@ export class NotificationService implements INotificationService {
 
       // Also call setState for test compatibility
       if ("setState" in this.gameStateStore) {
-        (this.gameStateStore as any).setState({ notifications });
+        (this.gameStateStore as unknown as { setState: (state: unknown) => void }).setState({ notifications });
       }
 
       this.logger.debug(

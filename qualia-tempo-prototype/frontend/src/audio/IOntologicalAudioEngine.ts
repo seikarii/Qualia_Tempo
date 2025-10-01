@@ -26,7 +26,7 @@ export interface IOntologicalAudioEngine {
   /**
    * Update the sound of an entity based on its qualia state.
    */
-  updateEntitySound(_entityId: string, _qualiaState: QualiaState): void;
+  updateEntitySound(_entityId: string, _qualiaState: Record<string, unknown>): void;
 
   /**
    * Remove an entity's voice from the audio engine.

@@ -1,15 +1,15 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import { EventBus } from "./EventBus";
-import type { QualiaStateCalculatedEvent } from "./contracts/events.contracts";
+import type { QualiaStateCalculatedEvent, RhythmicDashEvent, MetronomeTickEvent } from "./contracts/events.contracts";
 import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { QualiaState } from "../types/contracts";
-import { logMethod, catchError, measureTime } from "../utils/decorators";
+import { logMethod, catchError, measureTime, IBaseService, OnEvent } from "../utils/decorators";
 import { QualiaLogger } from "./Logger";
 import * as Tone from "tone";
 
 import type { IAudioService } from "./interfaces/IAudioService";
-import type { AudioServiceConfig } from "./contracts/IAudioService.contracts";
+import type { AudioServiceConfig, AudioServiceParams } from "./contracts/IAudioService.contracts";
 import type { IWebAudioAPIService } from "./interfaces/IWebAudioAPIService";
 import type { ITimerService } from "./interfaces/ITimerService";
 
@@ -17,31 +17,28 @@ import type { ITimerService } from "./interfaces/ITimerService";
  * AudioService - QUALIA.CODE compliant service for audio management
  */
 @injectable()
-export class AudioService implements IAudioService {
+export class AudioService implements IAudioService, IBaseService {
   private audioEngine: IOntologicalAudioEngine;
   private eventBus: EventBus;
   private logger: QualiaLogger;
   private config: AudioServiceConfig;
   private webAudioAPIService: IWebAudioAPIService;
   private timerService: ITimerService;
-  private qualiaStateListenerId: string | null = null;
   private isInitialized: boolean = false;
   private isAudioContextStarted: boolean = false;
 
+  // @ts-expect-error - Utilizado por el ciclo de vida del decorador @OnEvent
+  private _eventListeners: string[] = [];
+
   constructor(
-    @inject(TYPES.IEventBus) eventBus: EventBus,
-    @inject(TYPES.ILogger) logger: QualiaLogger,
-    @inject(TYPES.AudioServiceConfig) config: AudioServiceConfig,
-    @inject(TYPES.IOntologicalAudioEngine) audioEngine: IOntologicalAudioEngine,
-    @inject(TYPES.IWebAudioAPIService) webAudioAPIService: IWebAudioAPIService,
-    @inject(TYPES.ITimerService) timerService: ITimerService,
+    @inject(TYPES.AudioServiceParams) params: AudioServiceParams,
   ) {
-    this.eventBus = eventBus;
-    this.logger = logger;
-    this.config = config;
-    this.audioEngine = audioEngine;
-    this.webAudioAPIService = webAudioAPIService;
-    this.timerService = timerService;
+    this.eventBus = params.eventBus;
+    this.logger = params.logger;
+    this.config = params.config;
+    this.audioEngine = params.audioEngine;
+    this.webAudioAPIService = params.webAudioAPIService;
+    this.timerService = params.timerService;
   }
 
   @logMethod
@@ -56,12 +53,6 @@ export class AudioService implements IAudioService {
     // Create entity voices for game entities
     this.createEntityVoices();
 
-    const listenerId = this.eventBus.subscribe<QualiaStateCalculatedEvent>(
-      "QualiaStateCalculated",
-      this.handleQualiaStateUpdate.bind(this),
-    );
-    this.qualiaStateListenerId = listenerId;
-
     this.isInitialized = true;
     this.logger.info("✅ AudioService initialized successfully");
   }
@@ -74,16 +65,22 @@ export class AudioService implements IAudioService {
       return;
     }
 
-    // Unsubscribe from events
-    if (this.qualiaStateListenerId) {
-      this.eventBus.unsubscribe(this.qualiaStateListenerId);
-      this.qualiaStateListenerId = null;
-    }
-
     // Clean up audio engine
     this.isInitialized = false;
 
     this.logger.info("✅ AudioService stopped successfully");
+  }
+
+  @logMethod
+  public initialize(): void {
+    this.logger.info('🚀 [AudioService] Initializing service with @OnEvent lifecycle...');
+    // Las suscripciones de @OnEvent se gestionan automáticamente.
+  }
+
+  @logMethod
+  public cleanup(): void {
+    this.logger.info('🧹 [AudioService] Cleaning up service...');
+    // La limpieza de @OnEvent es automática.
   }
 
   @logMethod
@@ -114,17 +111,18 @@ export class AudioService implements IAudioService {
     };
   }
 
-  @logMethod
-  @catchError
+  @OnEvent('QualiaStateCalculated')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handleQualiaStateUpdate(event: QualiaStateCalculatedEvent): void {
     // Use the real qualiaState from frontend calculation
     const { qualiaState } = event;
+    const qualiaStateRecord = qualiaState as unknown as Record<string, unknown>;
 
-    this.audioEngine.updateEntitySound("player", qualiaState);
+    this.audioEngine.updateEntitySound("player", qualiaStateRecord);
     
     this.logger.debug(
       "🎵 [AudioService] QualiaState calculated from player actions:",
-      qualiaState
+      qualiaState as unknown as Record<string, unknown>
     );
 
     // Patrón emergente basado en el estado
@@ -160,22 +158,19 @@ export class AudioService implements IAudioService {
     this.audioEngine.createEntityVoice("boss", baseState);
     this.audioEngine.createEntityVoice("environment", baseState);
 
-    // Setup rhythmic feedback listeners
-    this.setupRhythmicFeedback();
+    // Setup rhythmic feedback listeners - REMOVED: Now handled by @OnEvent decorators
   }
 
-  @logMethod
-  @catchError
-  private setupRhythmicFeedback(): void {
-    // Listen for rhythmic dash events to provide audio feedback
-    this.eventBus.subscribe<any>("RhythmicDash", (event) => {
-      this.playRhythmicFeedback(event.timing);
-    });
+  @OnEvent('RhythmicDash')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private _handleRhythmicDash(event: RhythmicDashEvent): void {
+    this.playRhythmicFeedback(event.timing);
+  }
 
-    // Listen for metronome ticks for beat audio
-    this.eventBus.subscribe<any>("MetronomeTick", (_event) => {
-      this.playMetronomeTick();
-    });
+  @OnEvent('MetronomeTick')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private _handleMetronomeTick(event: MetronomeTickEvent): void {
+    this.playMetronomeTick();
   }
 
   @logMethod

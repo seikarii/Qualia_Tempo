@@ -432,7 +432,6 @@ export async function configureServices(): Promise<void> {
   // QUALIA.CODE v1.1: Bind NotificationServiceParams factory
   // Consolidates 6 constructor parameters into a single object to comply with IoC limits
   safeBindConstant<NotificationServiceParams>(TYPES.NotificationServiceParams, {
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
     config: fullConfig.notificationService,
     gameStateStore: container.get<IGameStateStore>(TYPES.IGameStateStore),

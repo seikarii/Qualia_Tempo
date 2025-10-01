@@ -6,7 +6,7 @@ import type {
   MetronomeTickEvent,
   RhythmicDashEvent,
 } from "./contracts/events.contracts";
-import { logMethod, catchError } from "../utils/decorators";
+import { logMethod, catchError, IBaseService, OnEvent } from "../utils/decorators";
 import type { QualiaState } from "../types/contracts";
 import type { RhythmicMovementConfig, RhythmicMovementControllerParams } from "./contracts/IRhythmicMovementController.contracts";
 import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovementController";
@@ -23,7 +23,7 @@ import type { IGameplayMechanicsService } from "./interfaces/IGameplayMechanicsS
  * QUALIA.CODE v7: InversifyJS Compliant - Uses ConfigurationService for settings
  */
 @injectable()
-export class RhythmicMovementController implements IRhythmicMovementController {
+export class RhythmicMovementController implements IRhythmicMovementController, IBaseService {
   private eventBus: IEventBus;
   private logger: ILogger;
   private config: RhythmicMovementConfig;
@@ -32,6 +32,9 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private inputStateService: IInputStateService; // NUEVA FUENTE DE VERDAD
   private gameStateStore: IGameStateStoreService;
   private gameplayMechanicsService: IGameplayMechanicsService;
+
+  // @ts-expect-error - Utilizado por el ciclo de vida del decorador @OnEvent
+  private _eventListeners: string[] = [];
 
   private playerPosition!: [number, number]; // Will be initialized from config in loadConfigurationValues
   private isListening: boolean = false;
@@ -52,7 +55,6 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private gameIsPlaying: boolean = false;
   private slowdownFactor!: number;
   private slowdownTimeout: number | null = null;
-  private gameStateListenerId: string | null = null;
 
   // QUALIA.CODE: Throttling eliminado - El sondeo de estado es inherentemente controlado
 
@@ -111,7 +113,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     this.beatInterval = (60 / this.bpm) * 1000; // Convert BPM to milliseconds
 
     this.setupInputListener();
-    this.setupGameStateListener();
+    // REMOVED: setupGameStateListener - Now handled by @OnEvent decorators
     this.startMetronome();
     this.isListening = true;
     this.logger.info("RhythmicMovementController started successfully");
@@ -126,31 +128,27 @@ export class RhythmicMovementController implements IRhythmicMovementController {
     }
 
     this.removeInputListener();
-    this.removeGameStateListener();
+    // REMOVED: removeGameStateListener - Now handled by @OnEvent decorators
     this.stopMetronome();
     this.isListening = false;
     this.logger.info("🎵 RhythmicMovementController stopped");
   }
 
-  private setupGameStateListener(): void {
-    // Listen for game state changes to handle pause/resume
-    this.gameStateListenerId = this.eventBus.subscribe<GameStateChangedEvent>(
-      "GameStateChanged",
-      (event) => {
-        this.handleGameStateChange(event);
-      },
-    );
-  }
-
-  private removeGameStateListener(): void {
-    if (this.gameStateListenerId) {
-      this.eventBus.unsubscribe(this.gameStateListenerId);
-      this.gameStateListenerId = null;
-    }
+  @logMethod
+  public initialize(): void {
+    this.logger.info('🚀 [RhythmicMovementController] Initializing service with @OnEvent lifecycle...');
+    // Las suscripciones de @OnEvent se gestionan automáticamente.
   }
 
   @logMethod
-  private handleGameStateChange(event: GameStateChangedEvent): void {
+  public cleanup(): void {
+    this.logger.info('🧹 [RhythmicMovementController] Cleaning up service...');
+    // La limpieza de @OnEvent es automática.
+  }
+
+  @OnEvent('GameStateChanged')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private _handleGameStateChange(event: GameStateChangedEvent): void {
     const newState = event.newState;
 
     // Update playing state
@@ -506,7 +504,7 @@ export class RhythmicMovementController implements IRhythmicMovementController {
    */
   @logMethod
   @catchError
-  public updateConfig(config: any): void {
+  public updateConfig(config: RhythmicMovementConfig): void {
     this.config = { ...this.config, ...config };
     this.loadConfigurationValues();
     this.logger.info("RhythmicMovementController configuration updated");

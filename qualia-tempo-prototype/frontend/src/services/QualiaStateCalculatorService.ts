@@ -234,7 +234,7 @@ export class QualiaStateCalculatorService
     this.logger.info("❌ [QualiaCalculator] Note Miss! Chaos+, Focus-, Flow-");
   }
 
-  private onDash(_context?: Record<string, any>): void {
+  private onDash(_context?: Record<string, unknown>): void {
     this.currentState.intensity = this.clamp(
       this.currentState.intensity + this.config.performanceMultipliers.good,
     );
@@ -245,7 +245,7 @@ export class QualiaStateCalculatorService
     this.logger.info("🌊 [QualiaCalculator] Dash! Intensity+, Aggression+");
   }
 
-  private onFastForward(_context?: Record<string, any>): void {
+  private onFastForward(_context?: Record<string, unknown>): void {
     this.currentState.aggression = this.clamp(
       this.currentState.aggression + this.config.aggression.comboMultiplier,
     );
@@ -258,7 +258,7 @@ export class QualiaStateCalculatorService
     );
   }
 
-  private onRewind(_context?: Record<string, any>): void {
+  private onRewind(_context?: Record<string, unknown>): void {
     this.currentState.recovery = this.clamp(
       this.currentState.recovery + this.config.performanceMultipliers.good,
     );

@@ -5,14 +5,15 @@
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import { EventHandler } from "./EventBus";
 import type { BackendSyncEvent, ErrorEvent, QualiaStateCalculatedEvent } from "./contracts/events.contracts";
 import {
   logMethod,
   catchError,
   validateEventProperty,
+  IBaseService,
+  OnEvent,
 } from "../utils/decorators";
-import type { BackendSyncConfig, QualiaStateRequest, HealthCheckResponse, QualiaSyncResponse } from "./contracts/IBackendSyncService.contracts";
+import type { BackendSyncConfig, BackendSyncServiceParams, QualiaStateRequest, HealthCheckResponse, QualiaSyncResponse } from "./contracts/IBackendSyncService.contracts";
 import type { IBackendSyncService } from "./interfaces/IBackendSyncService";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
@@ -35,9 +36,8 @@ import type { QualiaState } from "../types/contracts";
  * Handles throttled requests, error recovery, and connection management.
  */
 @injectable()
-export class BackendSyncService implements IBackendSyncService {
+export class BackendSyncService implements IBackendSyncService, IBaseService {
   private config: BackendSyncConfig;
-  private eventListenerIds: string[] = [];
   private isRunning = false;
   private connected = false;
   private eventBus: IEventBus;
@@ -45,6 +45,9 @@ export class BackendSyncService implements IBackendSyncService {
   private httpService: IHttpService;
   private timerService: ITimerService;
   private performanceService: IPerformanceService;
+
+  // @ts-expect-error - Utilizado por el ciclo de vida del decorador @OnEvent
+  private _eventListeners: string[] = [];
 
   // Throttling state
   private lastSyncTime = 0;
@@ -62,19 +65,14 @@ export class BackendSyncService implements IBackendSyncService {
   private lastSyncTimestamp: Date | null = null;
 
   constructor(
-    @inject(TYPES.IEventBus) eventBus: IEventBus,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.BackendSyncConfig) config: BackendSyncConfig,
-    @inject(TYPES.IHttpService) httpService: IHttpService,
-    @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IPerformanceService) performanceService: IPerformanceService,
+    @inject(TYPES.BackendSyncServiceParams) params: BackendSyncServiceParams,
   ) { // QUALIA.CODE EXCEPTION: 6 parameters required for full functionality - all services are essential for backend sync operations
-    this.eventBus = eventBus;
-    this.logger = logger;
-    this.config = config;
-    this.httpService = httpService;
-    this.timerService = timerService;
-    this.performanceService = performanceService;
+    this.eventBus = params.eventBus;
+    this.logger = params.logger;
+    this.config = params.config;
+    this.httpService = params.httpService;
+    this.timerService = params.timerService;
+    this.performanceService = params.performanceService;
 
     this.logger.info(this.config.messages.serviceInitialized);
   }
@@ -98,7 +96,6 @@ export class BackendSyncService implements IBackendSyncService {
     }
 
     this.healthCheckInterval = this.config.connection.healthCheckInterval;
-    this.subscribeToEvents();
     this.startHealthChecking();
     this.isRunning = true;
     
@@ -128,7 +125,6 @@ export class BackendSyncService implements IBackendSyncService {
         return;
       }
 
-      this.unsubscribeFromEvents();
       this.stopHealthChecking();
       this.clearPendingSync();
       this.isRunning = false;
@@ -171,6 +167,18 @@ export class BackendSyncService implements IBackendSyncService {
       );
       throw error;
     }
+  }
+
+  @logMethod
+  public initialize(): void {
+    this.logger.info('🚀 [BackendSyncService] Initializing service with @OnEvent lifecycle...');
+    // Las suscripciones de @OnEvent se gestionan automáticamente.
+  }
+
+  @logMethod
+  public cleanup(): void {
+    this.logger.info('🧹 [BackendSyncService] Cleaning up service...');
+    // La limpieza de @OnEvent es automática.
   }
 
   /**
@@ -221,34 +229,9 @@ export class BackendSyncService implements IBackendSyncService {
 
   // Private methods
 
-  private subscribeToEvents(): void {
-    // Subscribe to QualiaStateCalculated events from frontend calculator
-    const qualiaStateListener: EventHandler<QualiaStateCalculatedEvent> = (
-      event,
-    ) => {
-      this.handleQualiaStateUpdate(event);
-    };
-
-    const listenerId = this.eventBus.subscribe(
-      "QualiaStateCalculated",
-      qualiaStateListener,
-      { priority: "high" },
-    );
-    this.eventListenerIds.push(listenerId);
-
-    this.logger.info("📡 [BackendSync] Subscribed to events");
-  }
-
-  private unsubscribeFromEvents(): void {
-    for (const listenerId of this.eventListenerIds) {
-      this.eventBus.unsubscribe(listenerId);
-    }
-    this.eventListenerIds = [];
-
-    this.logger.info("📡 [BackendSync] Unsubscribed from events");
-  }
-
+  @OnEvent('QualiaStateCalculated')
   @validateEventProperty("qualiaState", "QualiaState")
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handleQualiaStateUpdate(event: QualiaStateCalculatedEvent): void {
     this.logger.info(this.config.messages.qualiaStateCalculated);
 
@@ -342,7 +325,7 @@ export class BackendSyncService implements IBackendSyncService {
       // Emit backend sync event
       this.eventBus.emit<BackendSyncEvent>({
         type: "BackendSync",
-        data: response,
+        data: qualiaRequest,
         syncType: "qualiaState",
       });
 

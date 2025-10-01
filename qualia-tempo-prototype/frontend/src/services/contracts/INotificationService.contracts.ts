@@ -6,7 +6,6 @@
  * Architecture: Contract definitions extracted from service implementation for clarity and reusability
  */
 
-import type { IEventBus } from "../interfaces/IEventBus";
 import type { ILogger } from "../interfaces/ILogger";
 import type { IGameStateStore } from "../interfaces/IGameStateStore";
 import type { ITimerService } from "../interfaces/ITimerService";
@@ -81,7 +80,6 @@ export interface NotificationServiceConfig {
 // QUALIA.CODE v1.1: Constructor Parameter Object
 // Consolidates 6 constructor parameters into a single object to comply with IoC limits
 export interface NotificationServiceParams {
-  eventBus: IEventBus;
   logger: ILogger;
   config: NotificationServiceConfig;
   gameStateStore: IGameStateStore;

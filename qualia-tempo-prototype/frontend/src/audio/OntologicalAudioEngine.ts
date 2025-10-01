@@ -122,7 +122,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
    */
   @logMethod
   @catchError
-  public updateEntitySound(entityId: string, qualiaState: QualiaState): void {
+  public updateEntitySound(entityId: string, qualiaState: Record<string, unknown>): void {
     // AÑADIR ESTA GUARDIA
     if (!this.isEngineReady) {
       // No registrar advertencia aquí para evitar spam, simplemente salir.
@@ -132,16 +132,18 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine {
     const synth = this.synthPool.get(entityId);
     if (!synth) return;
 
-    const baseFreq = this.mapConsciousnessToFrequency(qualiaState.intensity);
+    // Cast to QualiaState for type safety
+    const state = qualiaState as unknown as QualiaState;
+    const baseFreq = this.mapConsciousnessToFrequency(state.intensity);
     const harmonic = this.mapValenceToHarmonic(
-      qualiaState.flow - qualiaState.chaos,
+      state.flow - state.chaos,
     );
-    const rhythm = this.mapArousalToRhythm(qualiaState.aggression);
+    const rhythm = this.mapArousalToRhythm(state.aggression);
 
-    if (qualiaState.aggression > 0.2) {
+    if (state.aggression > 0.2) {
       const note = Tone.Frequency(baseFreq * harmonic).toNote();
       const velocity = Math.min(
-        qualiaState.aggression + qualiaState.precision * 0.25,
+        state.aggression + state.precision * 0.25,
         1.0,
       );
       const duration = rhythm;
