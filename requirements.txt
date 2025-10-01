@@ -6,6 +6,7 @@ moderngl==5.8.2
 pyrr==0.10.3
 pygame==2.5.2
 numpy>=1.26.0
+pyparsing>=3.0.0
 
 
 # Development tools

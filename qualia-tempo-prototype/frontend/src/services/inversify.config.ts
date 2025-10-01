@@ -291,12 +291,14 @@ import { ViewLogicService } from './ViewLogicService';
 import { SubtitleService } from './SubtitleService';
 import { DebugOrchestratorService } from './DebugOrchestratorService';
 import { ShaderLoaderService } from './ShaderLoaderService';
+import { ShaderIntrospectionService } from './ShaderIntrospectionService';
 import { PostProcessingService } from './PostProcessingService';
 import type { IGameplayMechanicsService } from './interfaces/IGameplayMechanicsService';
 import type { IViewLogicService } from './interfaces/IViewLogicService';
 import type { ISubtitleService } from './interfaces/ISubtitleService';
 import type { IDebugOrchestratorService } from './interfaces/IDebugOrchestratorService';
 import type { IShaderLoaderService } from './interfaces/IShaderLoaderService';
+import type { IShaderIntrospectionService } from './interfaces/IShaderIntrospectionService';
 import type { IPostProcessingService } from './interfaces/IPostProcessingService';
 
 container
@@ -323,6 +325,11 @@ container
 container
   .bind<IShaderLoaderService>(TYPES.IShaderLoaderService)
   .to(ShaderLoaderService)
+  .inSingletonScope();
+
+container
+  .bind<IShaderIntrospectionService>(TYPES.IShaderIntrospectionService)
+  .to(ShaderIntrospectionService)
   .inSingletonScope();
 
 container

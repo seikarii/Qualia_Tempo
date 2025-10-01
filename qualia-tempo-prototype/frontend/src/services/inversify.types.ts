@@ -38,6 +38,7 @@ export const TYPES = {
 
   // ===== NEW SERVICES =====
   IShaderLoaderService: Symbol.for("IShaderLoaderService"),
+  IShaderIntrospectionService: Symbol.for("IShaderIntrospectionService"),
   IPostProcessingService: Symbol.for("IPostProcessingService"),
   IGameplayMechanicsService: Symbol.for("IGameplayMechanicsService"),
   IViewLogicService: Symbol.for("IViewLogicService"),

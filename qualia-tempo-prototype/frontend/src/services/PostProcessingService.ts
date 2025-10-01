@@ -14,7 +14,7 @@ import { Pass } from "three/examples/jsm/postprocessing/Pass.js";
 import { TYPES } from "./inversify.types";
 import type { IPostProcessingService } from "./interfaces/IPostProcessingService";
 import type { ILogger } from "./interfaces/ILogger";
-import type { IShaderLoaderService } from "./interfaces/IShaderLoaderService";
+import type { IShaderIntrospectionService } from "./interfaces/IShaderIntrospectionService";
 import type { PostProcessingConfig, PostProcessingPass } from "./contracts/IPostProcessingService.contracts";
 import { logMethod, catchError, BrowserOnly } from "../utils/decorators";
 import { GBufferPass } from "./postprocessing/GBufferPass.js";
@@ -23,6 +23,7 @@ import { GBufferPass } from "./postprocessing/GBufferPass.js";
 export class PostProcessingService implements IPostProcessingService {
   private readonly logger: ILogger;
   private readonly shaderLoader: IShaderLoaderService;
+  private readonly shaderIntrospection: IShaderIntrospectionService;
   private readonly config: PostProcessingConfig;
 
   private isInitialized = false;
@@ -42,10 +43,12 @@ export class PostProcessingService implements IPostProcessingService {
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.IShaderLoaderService) shaderLoader: IShaderLoaderService,
+    @inject(TYPES.IShaderIntrospectionService) shaderIntrospection: IShaderIntrospectionService,
     @inject(TYPES.PostProcessingConfig) config: PostProcessingConfig
   ) {
     this.logger = logger;
     this.shaderLoader = shaderLoader;
+    this.shaderIntrospection = shaderIntrospection;
     this.config = config;
   }
 
@@ -228,7 +231,7 @@ export class PostProcessingService implements IPostProcessingService {
         }
 
         const shaderSource = await this.shaderLoader.load(passConfig.shader);
-        const shader = this.parseShader(shaderSource);
+        const shader = this.shaderIntrospection.introspect(shaderSource);
 
         // Merge uniforms from config
         shader.uniforms = { ...shader.uniforms, ...passConfig.uniforms };
@@ -246,47 +249,15 @@ export class PostProcessingService implements IPostProcessingService {
       }
 
       case 'GBufferPass': {
-        return new GBufferPass(this.scene, this.camera, this.config.renderTargetWidth, this.config.renderTargetHeight);
+        const shaderSource = await this.shaderLoader.load('gbuffer');
+        const shader = this.shaderIntrospection.introspect(shaderSource);
+        return new GBufferPass(this.scene, this.camera, this.config.renderTargetWidth, this.config.renderTargetHeight, shader.vertexShader, shader.fragmentShader, shader.uniforms);
       }
 
       default:
         this.logger.warn(`Unknown pass type: ${passConfig.type}`);
         return null;
     }
-  }
-
-  @logMethod
-  @catchError
-  private parseShader(shaderSource: string): { uniforms: Record<string, { value: unknown }>, vertexShader: string, fragmentShader: string } {
-    // For ShaderPass, we need both vertex and fragment shaders
-    // If the file contains ---FRAGMENT--- separator, split it
-    // Otherwise, assume it's just a fragment shader and use default vertex shader
-    let vertexShader: string;
-    let fragmentShader: string;
-
-    if (shaderSource.includes('---FRAGMENT---')) {
-      const parts = shaderSource.split('---FRAGMENT---');
-      vertexShader = parts[0].trim();
-      fragmentShader = parts[1].trim();
-    } else {
-      // Use default pass-through vertex shader
-      vertexShader = `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `.trim();
-      fragmentShader = shaderSource.trim();
-    }
-
-    return {
-      uniforms: {
-        tDiffuse: { value: null }
-      },
-      vertexShader,
-      fragmentShader,
-    };
   }
 
   /**
