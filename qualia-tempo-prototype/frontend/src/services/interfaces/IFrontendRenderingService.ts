@@ -18,7 +18,7 @@ export interface IFrontendRenderingService {
   /**
    * Update particle buffer with binary data from backend
    */
-  updateParticleBuffer(data: ArrayBuffer): void;
+  updateParticleBuffer(data: Float32Array): void;
 
   /**
    * Resize the renderer

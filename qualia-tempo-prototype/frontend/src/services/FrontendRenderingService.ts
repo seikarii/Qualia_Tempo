@@ -133,7 +133,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
 
   @logMethod
   @catchError
-  updateParticleBuffer(data: ArrayBuffer): void {
+  updateParticleBuffer(data: Float32Array): void {
     if (!this.isInitialized) {
       this.logger.warn("Cannot update particle buffer: service not initialized");
       return;
@@ -150,9 +150,9 @@ export class FrontendRenderingService implements IFrontendRenderingService {
    * Decode binary particle data and update geometry buffers
    */
   @logMethod
-  private decodeParticleData(data: ArrayBuffer): void {
-    // Decode binary data (Float32Array from numpy.tobytes())
-    const floatArray = new Float32Array(data);
+  private decodeParticleData(data: Float32Array): void {
+    // Data is already a Float32Array from the event
+    const floatArray = data;
     
     // Validate data length
     if (floatArray.length % this.config.componentsPerParticle !== 0) {
