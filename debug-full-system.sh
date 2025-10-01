@@ -188,6 +188,48 @@ start_backend() {
     for i in {1..5}; do
         if curl -s http://localhost:8000/health > /dev/null 2>&1; then
             log_success "Backend is ready (http://localhost:8000)"
+            
+            # Query particle buffer diagnostic endpoint
+            log_info "Querying particle buffer diagnostic endpoint..."
+            if PARTICLE_DIAG_RESPONSE=$(curl -s http://localhost:8000/diag/particle_buffer 2>/dev/null); then
+                log_success "Particle buffer diagnostic data retrieved"
+                
+                # Extract key metrics for logging
+                if command -v jq &> /dev/null && echo "$PARTICLE_DIAG_RESPONSE" | jq . >/dev/null 2>&1; then
+                    # Parse JSON response
+                    SOURCE=$(echo "$PARTICLE_DIAG_RESPONSE" | jq -r '.source // "unknown"')
+                    METHOD=$(echo "$PARTICLE_DIAG_RESPONSE" | jq -r '.method // "unknown"')
+                    SHAPE=$(echo "$PARTICLE_DIAG_RESPONSE" | jq -r '.shape // "unknown"')
+                    DTYPE=$(echo "$PARTICLE_DIAG_RESPONSE" | jq -r '.dtype // "unknown"')
+                    BYTE_SIZE=$(echo "$PARTICLE_DIAG_RESPONSE" | jq -r '.byte_size // "unknown"')
+                    EXPECTED_SIZE=$(echo "$PARTICLE_DIAG_RESPONSE" | jq -r '.expected_byte_size // "unknown"')
+                    
+                    log_info "🔬 Particle Buffer Diagnostics:"
+                    log_info "  📊 Source: $SOURCE"
+                    log_info "  🔧 Method: $METHOD"
+                    log_info "  📏 Shape: $SHAPE"
+                    log_info "  💾 Data Type: $DTYPE"
+                    log_info "  📦 Byte Size: $BYTE_SIZE"
+                    log_info "  🎯 Expected Size: $EXPECTED_SIZE"
+                    
+                    # Check if byte size matches expected
+                    if [ "$BYTE_SIZE" = "$EXPECTED_SIZE" ]; then
+                        log_success "✅ Particle buffer size matches expected value"
+                    else
+                        log_warning "⚠️ Particle buffer size mismatch: got $BYTE_SIZE, expected $EXPECTED_SIZE"
+                    fi
+                else
+                    # Fallback for non-JSON response
+                    log_info "🔬 Raw particle buffer diagnostic response: $PARTICLE_DIAG_RESPONSE"
+                fi
+                
+                # Save full response to debug report
+                echo "$PARTICLE_DIAG_RESPONSE" > "$LOG_DIR/particle-buffer-diagnostic.json"
+                log_debug "Full diagnostic response saved to: $LOG_DIR/particle-buffer-diagnostic.json"
+            else
+                log_warning "Failed to query particle buffer diagnostic endpoint"
+            fi
+            
             return 0
         fi
         sleep 1
@@ -457,6 +499,7 @@ $(if [ -n "${FRONTEND_PID:-}" ] && kill -0 "$FRONTEND_PID" 2>/dev/null; then ech
 - Backend Log: \`$BACKEND_LOG\`
 - Frontend Log: \`$FRONTEND_LOG\`
 - Browser Console Log: \`$BROWSER_LOG\`
+- Particle Buffer Diagnostic: \`$LOG_DIR/particle-buffer-diagnostic.json\`
 
 ## Recent Backend Log (last 20 lines)
 \`\`\`
@@ -511,6 +554,43 @@ EOF
 - **Root Element:** $(jq -r '.hasRoot' "$LOG_DIR/browser-test-report-movement-test.json")
 EOF
             fi
+        fi
+    fi
+    
+    # Add particle buffer diagnostic section
+    if [ -f "$LOG_DIR/particle-buffer-diagnostic.json" ]; then
+        cat >> "$DEBUG_REPORT" << EOF
+
+## Particle Buffer Diagnostics
+EOF
+        
+        if command -v jq &> /dev/null; then
+            cat >> "$DEBUG_REPORT" << EOF
+- **Source:** $(jq -r '.source // "N/A"' "$LOG_DIR/particle-buffer-diagnostic.json")
+- **Method:** $(jq -r '.method // "N/A"' "$LOG_DIR/particle-buffer-diagnostic.json")
+- **Shape:** $(jq -r '.shape // "N/A"' "$LOG_DIR/particle-buffer-diagnostic.json")
+- **Data Type:** $(jq -r '.dtype // "N/A"' "$LOG_DIR/particle-buffer-diagnostic.json")
+- **Byte Size:** $(jq -r '.byte_size // "N/A"' "$LOG_DIR/particle-buffer-diagnostic.json")
+- **Expected Size:** $(jq -r '.expected_byte_size // "N/A"' "$LOG_DIR/particle-buffer-diagnostic.json")
+
+### Validation
+EOF
+            
+            # Check if sizes match
+            ACTUAL_SIZE=$(jq -r '.byte_size // 0' "$LOG_DIR/particle-buffer-diagnostic.json")
+            EXPECTED_SIZE=$(jq -r '.expected_byte_size // 0' "$LOG_DIR/particle-buffer-diagnostic.json")
+            
+            if [ "$ACTUAL_SIZE" = "$EXPECTED_SIZE" ] && [ "$ACTUAL_SIZE" != "0" ]; then
+                echo "- ✅ **Buffer size validation:** PASSED (actual: $ACTUAL_SIZE, expected: $EXPECTED_SIZE)" >> "$DEBUG_REPORT"
+            else
+                echo "- ❌ **Buffer size validation:** FAILED (actual: $ACTUAL_SIZE, expected: $EXPECTED_SIZE)" >> "$DEBUG_REPORT"
+            fi
+        else
+            # Fallback if jq is not available
+            echo "Raw diagnostic data:" >> "$DEBUG_REPORT"
+            echo "\`\`\`json" >> "$DEBUG_REPORT"
+            cat "$LOG_DIR/particle-buffer-diagnostic.json" >> "$DEBUG_REPORT"
+            echo "\`\`\`" >> "$DEBUG_REPORT"
         fi
     fi
     

@@ -8,6 +8,7 @@ from ..CompositionRoot import get_composition_root, CompositionRoot
 from typing import Dict, Any
 import logging
 import json
+import numpy as np
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -93,6 +94,39 @@ async def health_check(services: CompositionRoot = Depends(get_services)) -> Dic
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return {"status": "degraded", "error": str(e)}
+
+
+@app.get("/diag/particle_buffer")
+async def diagnose_particle_buffer(services: CompositionRoot = Depends(get_services)) -> Dict[str, Any]:
+    """
+    Endpoint de diagnóstico para inspeccionar el buffer de partículas.
+    No interfiere con los servicios de producción.
+    """
+    try:
+        # 1. Obtener la instancia del motor de partículas desde el CompositionRoot.
+        particle_engine = services.get_particle_system()
+
+        # 2. Obtener el array de datos crudos.
+        particle_data = particle_engine.get_particle_data_as_numpy_array()
+
+        # 3. Extraer metadatos para el diagnóstico.
+        shape = particle_data.shape
+        dtype = str(particle_data.dtype)
+        byte_size = particle_data.nbytes
+        
+        # 4. Devolver los metadatos como respuesta JSON.
+        return {
+            "source": "QualiaParticleEngine",
+            "method": "get_particle_data_as_numpy_array",
+            "shape": shape,
+            "dtype": dtype,
+            "byte_size": byte_size,
+            "expected_byte_size": 10000 * 21 * 4
+        }
+
+    except Exception as e:
+        logger.error(f"🚨 Error en el endpoint de diagnóstico: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/update_qualia", response_model=QualiaUpdateResponse)
