@@ -16,6 +16,23 @@ rateLimitRefillInterval: 1000  # 1 second
 fingerprintLength: 16  # Hash length for error deduplication
 memoryCleanupRatio: 0.8  # Ratio of history to keep during cleanup
 
+# Random ID generation settings
+randomIdBase: 36  # Base for random ID generation (36 = alphanumeric)
+randomIdStart: 2  # Start position for substring extraction
+randomIdLength: 8  # Length of random ID suffix
+
+# Retry processing settings
+retryDelayMultiplier: 2  # Multiplier for retry processing interval
+
+# Time conversion
+millisecondsToSecondsConversion: 1000  # Convert milliseconds to seconds
+
+# Advanced cleanup settings
+oldHistoryCleanupRatio: 0.6  # Ratio of old history to keep during aggressive cleanup
+duplicateRegistryMaxSize: 500  # Max size before duplicate registry cleanup
+duplicateCleanupCount: 250  # Number of duplicates to remove during cleanup
+completedBatchesCleanupCount: 10  # Number of completed batches to remove during cleanup
+
 # Rate limiting (legacy compatibility)
 rateLimitWindow: 60000
 maxErrorsPerWindow: 100

@@ -118,6 +118,23 @@ export interface ErrorReportingConfig {
   fingerprintLength: number;
   memoryCleanupRatio: number;  // Ratio of history to keep during cleanup
   
+  // Random ID generation settings
+  randomIdBase: number;  // Base for random ID generation (36 = alphanumeric)
+  randomIdStart: number;  // Start position for substring extraction
+  randomIdLength: number;  // Length of random ID suffix
+  
+  // Retry processing settings
+  retryDelayMultiplier: number;  // Multiplier for retry processing interval
+  
+  // Time conversion
+  millisecondsToSecondsConversion: number;  // Convert milliseconds to seconds
+  
+  // Advanced cleanup settings
+  oldHistoryCleanupRatio: number;  // Ratio of old history to keep during aggressive cleanup
+  duplicateRegistryMaxSize: number;  // Max size before duplicate registry cleanup
+  duplicateCleanupCount: number;  // Number of duplicates to remove during cleanup
+  completedBatchesCleanupCount: number;  // Number of completed batches to remove during cleanup
+  
   // Properties expected by validator
   rateLimitWindow: number;
   maxErrorsPerWindow: number;

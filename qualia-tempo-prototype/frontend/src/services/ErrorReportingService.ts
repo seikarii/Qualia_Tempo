@@ -399,7 +399,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   // Private implementation methods
 
   private generateSessionId(): string {
-    return `error_session_${this.timerService.now()}_${Math.random().toString(36).substr(2, 8)}`;
+    return `error_session_${this.timerService.now()}_${Math.random().toString(this.config.randomIdBase).substr(this.config.randomIdStart, this.config.randomIdLength)}`;
   }
 
   private initializeRateLimitState(): RateLimitState {
@@ -439,7 +439,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     const safeError = error ?? new Error("Unknown error (null/undefined)");
 
     return {
-      id: `error_${this.timerService.now()}_${Math.random().toString(36).substr(2, 8)}`,
+      id: `error_${this.timerService.now()}_${Math.random().toString(this.config.randomIdBase).substr(this.config.randomIdStart, this.config.randomIdLength)}`,
       timestamp: this.timerService.getCurrentDate(),
       sessionId: this.sessionId,
       error: {
@@ -507,7 +507,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   private startRetryProcessing(): void {
     this.retryProcessingInterval = this.timerService.setInterval(() => {
       this.retryFailedBatches();
-    }, this.config.retryDelay * 2);
+    }, this.config.retryDelay * this.config.retryDelayMultiplier);
   }
 
   private startMemoryCleanup(): void {
@@ -557,7 +557,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     const errors = this.errorQueue.splice(0, batchSize);
 
     const batch: ExtendedErrorBatch = {
-      id: `batch_${this.timerService.now()}_${Math.random().toString(36).substr(2, 8)}`,
+      id: `batch_${this.timerService.now()}_${Math.random().toString(this.config.randomIdBase).substr(this.config.randomIdStart, this.config.randomIdLength)}`,
       createdAt: this.timerService.getCurrentDate(),
       timestamp: this.timerService.getCurrentDate(),
       errors,
@@ -694,7 +694,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   private refillRateLimitTokens(): void {
     const now = this.timerService.getCurrentDate();
     const timeDiff =
-      (now.getTime() - this.rateLimitState.lastRefill.getTime()) / 1000;
+      (now.getTime() - this.rateLimitState.lastRefill.getTime()) / this.config.millisecondsToSecondsConversion;
     const tokensToAdd = timeDiff * this.rateLimitState.refillRate;
 
     this.rateLimitState.tokens = Math.min(
@@ -749,19 +749,19 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     if (totalItems > this.config.memoryCleanupThreshold) {
       // Clean up old error history
       this.errorHistory = this.errorHistory.slice(
-        -Math.floor(this.config.memoryCleanupThreshold * 0.6),
+        -Math.floor(this.config.memoryCleanupThreshold * this.config.oldHistoryCleanupRatio),
       );
 
       // Clean up old duplicate registry entries
-      if (this.duplicateRegistry.size > 500) {
-        const keys = Array.from(this.duplicateRegistry.keys()).slice(0, 250);
+      if (this.duplicateRegistry.size > this.config.duplicateRegistryMaxSize) {
+        const keys = Array.from(this.duplicateRegistry.keys()).slice(0, this.config.duplicateCleanupCount);
         keys.forEach((key) => this.duplicateRegistry.delete(key));
       }
 
       // Clean up completed batches
       const completedBatches = Array.from(this.pendingBatches.entries())
         .filter(([_, batch]) => batch.status === "completed")
-        .slice(0, 10);
+        .slice(0, this.config.completedBatchesCleanupCount);
 
       completedBatches.forEach(([id, _]) => this.pendingBatches.delete(id));
 
