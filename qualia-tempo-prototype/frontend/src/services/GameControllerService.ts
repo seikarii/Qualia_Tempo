@@ -18,7 +18,7 @@ import type {
 import { EventBus } from "./EventBus";
 import { logMethod, catchError, OnEvent, IBaseService } from "../utils/decorators";
 import { QualiaLogger } from "./Logger";
-import type { GameState, GameControllerConfig, HitNoteContext } from "./contracts/IGameControllerService.contracts";
+import type { GameState, GameControllerConfig, GameControllerServiceParams, HitNoteContext } from "./contracts/IGameControllerService.contracts";
 import type { IGameControllerService } from "./interfaces/IGameControllerService";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 import type { IGameInfrastructureService } from "./interfaces/IGameInfrastructureService";
@@ -48,18 +48,13 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   private gameState!: GameState;
 
   constructor(
-    @inject(TYPES.IEventBus) eventBus: EventBus,
-    @inject(TYPES.ILogger) logger: QualiaLogger,
-    @inject(TYPES.GameControllerConfig) config: GameControllerConfig,
-    @inject(TYPES.IGameStateStoreService)
-    gameStateStoreService: IGameStateStoreService,
-    @inject(TYPES.IGameInfrastructureService) infrastructureService: IGameInfrastructureService
+    @inject(TYPES.GameControllerServiceParams) params: GameControllerServiceParams
   ) {
-    this.eventBus = eventBus;
-    this.logger = logger;
-    this.config = config;
-    this.gameStateStoreService = gameStateStoreService;
-    this.infrastructureService = infrastructureService;
+    this.eventBus = params.eventBus;
+    this.logger = params.logger;
+    this.config = params.config;
+    this.gameStateStoreService = params.gameStateStoreService;
+    this.infrastructureService = params.infrastructureService;
     // gameState is initialized in initialize() to avoid redundancy
     this.logger.info("🎮 [GameController] Service initialized");
   }

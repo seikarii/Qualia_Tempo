@@ -11,7 +11,7 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { IWebSocketService } from "./interfaces/IWebSocketService";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IMessageAdapter } from "./protocol/IMessageAdapter";
-import type { StreamingConfig } from "./contracts/IStateStreamingService.contracts";
+import type { StreamingConfig, StateStreamingServiceParams } from "./contracts/IStateStreamingService.contracts";
 import type { ConnectionStatus, StreamingStatusChangedEvent } from "./contracts/events.contracts";
 import { logMethod, catchError, AdaptAndEmit } from "../utils/decorators";
 import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
@@ -40,17 +40,13 @@ export class StateStreamingService implements IStateStreamingService {
   private connectionStartTime = 0;
 
   constructor(
-    @inject(TYPES.IWebSocketService) webSocketService: IWebSocketService,
-    @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.StreamingConfig) config: StreamingConfig,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IRawToParticleEventAdapter) messageAdapter: IMessageAdapter
+    @inject(TYPES.StateStreamingServiceParams) params: StateStreamingServiceParams
   ) {
-    this.webSocketService = webSocketService;
-    this.timerService = timerService;
-    this.config = config;
-    this.logger = logger;
-    this.messageAdapter = messageAdapter;
+    this.webSocketService = params.webSocketService;
+    this.timerService = params.timerService;
+    this.config = params.config;
+    this.logger = params.logger;
+    this.messageAdapter = params.messageAdapter;
     // Ensure messageAdapter is used by decorator (TypeScript workaround)
     void this.messageAdapter;
 

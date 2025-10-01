@@ -17,6 +17,7 @@ import type {
   PlayerActionEvent,
   RhythmicDashEvent,
 } from "./contracts/events.contracts";
+import type { EventTypes } from "./EventBus";
 import type { QualiaState } from "../types/contracts";
 import {
   logMethod,
@@ -242,11 +243,11 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
 
     // Binary protocol: Store particle data buffer directly
     // QualiaState reconstruction is handled by specialized particle processing services
-    this.setStore((state: any) => ({
+    this.setStore((state: GameState) => ({
       ...state,
       particleData: {
-        buffer: event.particleData,
-        timestamp: event.timestamp,
+        buffer: event.particleData.buffer as ArrayBuffer,
+        timestamp: event.timestamp.getTime(),
         size: event.particleData.byteLength,
       },
     }));
@@ -264,7 +265,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
       timing: event.timing,
     });
 
-    this.setStore((state: any) => ({
+    this.setStore((state: GameState) => ({
       ...state,
       player: {
         ...state.player,
@@ -304,11 +305,11 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
 
       // Emitir evento para limpiar la nota de la vista en lugar de usar setTimeout
       this._eventBus.emit({
-        type: 'ClearNoteFromViewRequest' as any,
+        type: 'ClearNoteFromViewRequest' as unknown as EventTypes['type'],
         noteId,
         timestamp: Date.now(),
         source: 'GameStateStoreService'
-      } as any);
+      } as unknown as Omit<EventTypes, "timestamp">);
     }
   }
 

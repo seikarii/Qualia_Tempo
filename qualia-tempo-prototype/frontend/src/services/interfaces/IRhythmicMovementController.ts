@@ -1,7 +1,9 @@
 /**
  * QUALIA.CODE v1.1 - IRhythmicMovementController Interface
- * Rhythmic movement and visual effects interface.
+ * Rhythmic movement control and player positioning.
  */
+
+import type { RhythmicMovementConfig } from "../contracts/IRhythmicMovementController.contracts";
 
 import type { QualiaState } from "../../types/contracts";
 
@@ -44,7 +46,7 @@ export interface IRhythmicMovementController {
    * Update the movement configuration.
    * @param config New configuration to apply
    */
-  updateConfig(config: any): void;
+  updateConfig(config: RhythmicMovementConfig): void;
 
   /**
    * Get current movement statistics.

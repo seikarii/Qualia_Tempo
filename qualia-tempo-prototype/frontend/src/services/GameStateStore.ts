@@ -11,11 +11,13 @@ import { TYPES } from "./inversify.types";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
 import type { NotificationServiceConfig } from "./contracts/INotificationService.contracts";
 import type { ExtendedNotification } from "./NotificationService";
+import type { GameState } from "./contracts/IGameControllerService.contracts";
+import type { QualiaState } from "../types/contracts";
 
 // Define the type for the game store API
 type GameStoreApi = {
-  setState: (_fn: (_state: any) => any) => void;
-  getState: () => any;
+  setState: (fn: (state: Record<string, unknown>) => Record<string, unknown>) => void;
+  getState: () => Record<string, unknown>;
 };
 
 // Define the Notification type locally to avoid direct dependency
@@ -73,8 +75,9 @@ export class GameStateStore implements IGameStateStore {
    * Get current notifications from the store.
    */
   getNotifications(): ExtendedNotification[] {
-    const state = this.storeApi.getState();
-    return state.notifications.map((notification: Notification) => ({
+    const state = this.storeApi.getState() as { notifications?: Notification[] };
+    const notifications = state.notifications || [];
+    return notifications.map((notification: Notification) => ({
       id: notification.id,
       type: notification.type,
       message: notification.message,
@@ -91,35 +94,39 @@ export class GameStateStore implements IGameStateStore {
   /**
    * Update game state in the store.
    */
-  updateGameState(state: any): void {
+  updateGameState(state: Partial<GameState>): void {
     this.storeApi.setState((currentState) => ({
       ...currentState,
       ...state,
     }));
   }
 
-  /**
+    /**
    * Get current game state from the store.
    */
-  getGameState(): any {
-    return this.storeApi.getState();
+  getGameState(): GameState {
+    const state = this.storeApi.getState();
+    return (state as { gameState?: GameState }).gameState || ({} as GameState);
   }
 
   /**
    * Update qualia state in the store.
    */
-  updateQualiaState(state: any): void {
+  updateQualiaState(state: Partial<QualiaState>): void {
     this.storeApi.setState((currentState) => ({
       ...currentState,
-      qualiaState: { ...state },
+      qualiaState: {
+        ...((currentState as { qualiaState?: QualiaState }).qualiaState || {}),
+        ...state,
+      },
     }));
   }
 
   /**
    * Get current qualia state from the store.
    */
-  getQualiaState(): any {
+  getQualiaState(): QualiaState {
     const state = this.storeApi.getState();
-    return state.qualiaState;
+    return (state as { qualiaState?: QualiaState }).qualiaState || ({} as QualiaState);
   }
 }

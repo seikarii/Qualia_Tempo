@@ -1,19 +1,26 @@
 /**
  * QUALIA.CODE v1.1 - IViewLogicService Interface
- * Service responsible for processing game state and transforming it into visual properties.
- * Decouples useFrame logic from React components for better testability and reusability.
+ * Game state to visual properties transformation service.
  */
 
-import type { 
-  BossVisualData, 
-  PlayerVisualData, 
-  ParticleData, 
+import type { QualiaState, PlayerState, NoteData } from "../../types/contracts";
+import type {
+  BossVisualData,
+  PlayerVisualData,
   NoteVisualData,
-  QualiaFieldVisualData,
   GridVisualData,
-  GetGridVisualsParams
-} from '../contracts/IViewLogicService.contracts';
-import type { QualiaState } from '../../types/contracts';
+  QualiaFieldVisualData,
+  GetGridVisualsParams,
+  ParticleData
+} from "../contracts/IViewLogicService.contracts";
+
+// Local type definitions for music data
+export interface MusicData {
+  bpm: number;
+  beatPosition: number;
+  intensity: number;
+  frequency: number[];
+}
 
 // Local type definitions for state processing
 export interface BossState {
@@ -81,7 +88,7 @@ export interface IViewLogicService {
    * @param time Current game time
    * @returns Qualia field visual properties for rendering
    */
-  getQualiaFieldVisuals(qualiaField: any, musicData: MusicData, time: number): QualiaFieldVisualData;
+  getQualiaFieldVisuals(qualiaField: QualiaState, musicData: MusicData, time: number): QualiaFieldVisualData;
 
   /**
    * Generate qualia field particle data based on state and music
@@ -90,7 +97,7 @@ export interface IViewLogicService {
    * @param time Current game time
    * @returns Array of particle data for rendering
    */
-  getQualiaFieldParticles(qualiaState: QualiaState, musicData: any, time: number): ParticleData[];
+  getQualiaFieldParticles(qualiaState: QualiaState, musicData: MusicData, time: number): ParticleData[];
 
   /**
    * Generate musical note visual data for rendering
@@ -98,7 +105,7 @@ export interface IViewLogicService {
    * @param time Current game time
    * @returns Array of note visual data for rendering
    */
-  getMusicalNoteVisuals(notes: any[], time: number): NoteVisualData[];
+  getMusicalNoteVisuals(notes: NoteData[], time: number): NoteVisualData[];
 
   /**
    * Calculate grid visual properties

@@ -3,6 +3,8 @@
  * Game state management and control logic interface.
  */
 
+import type { GameState } from "../contracts/IGameControllerService.contracts";
+
 export interface IGameControllerService {
   /**
    * Start the game and begin gameplay.
@@ -28,7 +30,7 @@ export interface IGameControllerService {
    * Get the current game state.
    * @returns The current game state object
    */
-  getGameState(): any;
+  getGameState(): GameState;
 
   /**
    * Check if the game is currently playing.

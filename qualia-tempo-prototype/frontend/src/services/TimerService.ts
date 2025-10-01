@@ -9,6 +9,15 @@ import type { ITimerProvider } from "./interfaces/ITimerProvider";
 const TIMER_SERVICE_INIT_MESSAGE = "TimerService initialized with timer abstraction";
 const PERFORMANCE_SERVICE_INIT_MESSAGE = "PerformanceService initialized with performance abstraction";
 
+// QUALIA.CODE: Extended performance interface for memory information
+interface PerformanceWithMemory extends Performance {
+  memory?: {
+    usedJSHeapSize: number;
+    totalJSHeapSize: number;
+    jsHeapSizeLimit: number;
+  };
+}
+
 @injectable()
 export class TimerService implements ITimerService {
   private readonly logger: ILogger;
@@ -78,7 +87,7 @@ export class TimerService implements ITimerService {
 
   @logMethod
   @catchError
-  public debounce<T extends (..._args: any[]) => any>(func: T, wait: number): T {
+  public debounce<T extends (..._args: unknown[]) => unknown>(func: T, wait: number): T {
     this.logger.debug("Creating debounced function", { wait });
 
     let timeoutId: number | undefined;
@@ -99,7 +108,7 @@ export class TimerService implements ITimerService {
 
   @logMethod
   @catchError
-  public throttle<T extends (..._args: any[]) => any>(func: T, wait: number): T {
+  public throttle<T extends (..._args: unknown[]) => unknown>(func: T, wait: number): T {
     this.logger.debug("Creating throttled function", { wait });
 
     let lastCallTime = 0;
@@ -199,8 +208,8 @@ export class PerformanceService implements IPerformanceService {
 
   @logMethod
   public getMemoryInfo(): { usedJSHeapSize?: number; totalJSHeapSize?: number; jsHeapSizeLimit?: number } {
-    if (typeof performance !== 'undefined' && (performance as any).memory) {
-      const memory = (performance as any).memory;
+    if (typeof performance !== 'undefined' && (performance as PerformanceWithMemory).memory) {
+      const memory = (performance as PerformanceWithMemory).memory!;
       return {
         usedJSHeapSize: memory.usedJSHeapSize,
         totalJSHeapSize: memory.totalJSHeapSize,

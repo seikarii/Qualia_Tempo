@@ -15,7 +15,7 @@ export interface ErrorReport {
   };
   severity: ErrorSeverity;
   timestamp: Date;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 // Error batch interface

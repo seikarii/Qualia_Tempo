@@ -23,7 +23,7 @@ export interface IWebSocketService {
   /**
    * Register a message handler callback
    */
-  onMessage(callback: (data: any) => void): void;
+  onMessage(callback: (data: string | ArrayBuffer | Blob) => void): void;
 
   /**
    * Register an open connection handler

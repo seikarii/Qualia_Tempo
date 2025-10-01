@@ -1,8 +1,9 @@
 /**
  * QUALIA.CODE v1.1 - IQualiaStateCalculatorService Interface
- * Real-time calculation of player performance metrics interface.
+ * Real-time calculation of player performance metrics.
  */
 
+import type { QualiaCalculatorConfig } from "../contracts/IQualiaStateCalculatorService.contracts";
 import type { QualiaState } from "../../types/contracts";
 import type { PlayerActionEvent } from "../contracts/events.contracts";
 
@@ -51,7 +52,7 @@ export interface IQualiaStateCalculatorService {
    * Update the configuration for the calculator.
    * @param config New configuration to apply
    */
-  updateConfig(config: any): void;
+  updateConfig(config: QualiaCalculatorConfig): void;
 
   /**
    * Get performance statistics for the calculator.

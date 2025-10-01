@@ -487,7 +487,7 @@ export class QualiaEvents {
 
   public playerAction(
     action: PlayerActionEvent["action"],
-    context?: Record<string, any>,
+    context?: Record<string, unknown>,
   ): void {
     this._eventBus.emit({
       type: "PlayerAction",
@@ -508,7 +508,7 @@ export class QualiaEvents {
   public gameStateChanged(
     newState: GameStateChangedEvent["newState"],
     previousState: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
   ): void {
     this._eventBus.emit({
       type: "GameStateChanged",
@@ -531,7 +531,7 @@ export class QualiaEvents {
     } as Omit<ErrorEvent, "timestamp">);
   }
 
-  public backendSync(data: any, syncType: BackendSyncEvent["syncType"]): void {
+  public backendSync(data: QualiaState | Record<string, unknown>, syncType: BackendSyncEvent["syncType"]): void {
     this._eventBus.emit({
       type: "BackendSync",
       data,

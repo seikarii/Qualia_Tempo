@@ -121,10 +121,10 @@ export interface ErrorEvent extends BaseEvent {
 
 export interface BackendSyncEvent extends BaseEvent {
   type: "BackendSync";
-  data: any;
+  data: QualiaState | Record<string, unknown>;
   syncType: "qualiaState" | "gameState" | "config";
   status?: "success" | "error" | "pending";
-  error?: any;
+  error?: Error | string;
 }
 
 export interface VisualImpactRequestedEvent extends BaseEvent {

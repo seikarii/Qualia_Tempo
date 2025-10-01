@@ -462,9 +462,9 @@ export async function configureServices(): Promise<void> {
 
   // QUALIA.CODE v1.1: Bind QualiaStateCalculatorServiceParams factory
   // Consolidates 5 constructor parameters into a single object to comply with IoC limits
-  safeBindConstant(TYPES.QualiaStateCalculatorServiceParams, {
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    logger: container.get<ILogger>(TYPES.ILogger),
+  safeBindConstant<QualiaStateCalculatorServiceParams>(TYPES.QualiaStateCalculatorServiceParams, {
+    eventBus: container.get(TYPES.IEventBus) as EventBus,
+    logger: container.get(TYPES.ILogger) as QualiaLogger,
     config: fullConfig.qualiaCalculator,
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
@@ -472,11 +472,11 @@ export async function configureServices(): Promise<void> {
 
   // QUALIA.CODE v1.1: Bind StateStreamingServiceParams factory
   // Consolidates 5 constructor parameters into a single object to comply with IoC limits
-  safeBindConstant(TYPES.StateStreamingServiceParams, {
+  safeBindConstant<StateStreamingServiceParams>(TYPES.StateStreamingServiceParams, {
     webSocketService: container.get<IWebSocketService>(TYPES.IWebSocketService),
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     config: fullConfig.backendSync.streaming,
-    logger: container.get<ILogger>(TYPES.ILogger),
+    logger: container.get(TYPES.ILogger) as QualiaLogger,
     messageAdapter: container.get<IMessageAdapter>(TYPES.IRawToParticleEventAdapter),
   });
 

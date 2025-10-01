@@ -13,30 +13,44 @@ export interface DebugConfig {
   memoryCleanupInterval?: number;
 }
 
+export interface DebugEvent {
+  timestamp: number;
+  type: string;
+  source: string;
+  data?: Record<string, unknown>;
+}
+
+export interface ServiceStatus {
+  name: string;
+  status: 'running' | 'stopped' | 'error';
+  lastActivity?: number;
+  errorCount?: number;
+}
+
 export interface DebugStats {
   isRunning: boolean;
   eventsLogged: number;
   memoryUsage: number;
   uptime: number;
   profilingEnabled: boolean;
-  eventHistory: any[];
+  eventHistory: DebugEvent[];
 }
 
 export interface SystemSnapshot {
   timestamp: number;
-  services: Record<string, any>;
+  services: Record<string, ServiceStatus>;
   performance: {
     memoryUsage: number;
     uptime: number;
   };
-  eventHistory: any[];
+  eventHistory: DebugEvent[];
 }
 
 export interface AnalysisResult {
   type: "error_pattern" | "state_anomaly" | "recommendation";
   severity: "low" | "medium" | "high";
   message: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export interface IDebugService {

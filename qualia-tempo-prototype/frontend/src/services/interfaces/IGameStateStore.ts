@@ -7,6 +7,8 @@
  */
 
 import type { ExtendedNotification } from "../NotificationService";
+import type { GameState } from "../contracts/IGameControllerService.contracts";
+import type { QualiaState } from "../../types/contracts";
 
 export interface IGameStateStore {
   /**
@@ -23,20 +25,20 @@ export interface IGameStateStore {
   /**
    * Update game state in the store.
    */
-  updateGameState(state: any): void;
+  updateGameState(state: GameState): void;
 
   /**
    * Get current game state from the store.
    */
-  getGameState(): any;
+  getGameState(): GameState;
 
   /**
    * Update qualia state in the store.
    */
-  updateQualiaState(state: any): void;
+  updateQualiaState(state: QualiaState): void;
 
   /**
    * Get current qualia state from the store.
    */
-  getQualiaState(): any;
+  getQualiaState(): QualiaState;
 }

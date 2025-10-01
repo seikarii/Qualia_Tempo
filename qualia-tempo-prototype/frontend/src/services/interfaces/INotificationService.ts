@@ -29,7 +29,7 @@ export interface INotificationService {
     message: string,
     type?: NotificationType,
     duration?: number,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): string;
   dismissNotification(id: string): void;
   clearAllNotifications(): void;
