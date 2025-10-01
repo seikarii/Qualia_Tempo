@@ -112,21 +112,33 @@ export interface DebugServiceConfig {
     logRequestBodies: boolean;
   };
   // QUALIA.CODE: Additional DebugService configuration properties
-  maxSessionHistory?: number;
-  maxEventHistory?: number;
-  performanceMonitoringInterval?: number;
-  aiAnalysisInterval?: number;
-  enableAIAnalysis?: boolean;
-  memoryCleanupThreshold?: number;
-  sessionIdLength?: number;
-  sessionIdPrefixLength?: number;
-  memoryCleanupInterval?: number;
-  eventProcessingTimeThreshold?: number;
-  memoryCleanupRatio?: number;
-  maxAIAnalysisHistory?: number;
-  maxErrorHistory?: number;
-  maxMemoryUsageHistory?: number;  // Maximum memory usage samples to keep
-  eventProcessingTimeHighThreshold?: number;  // High threshold for event processing time (ms)
+  maxSessionHistory: number;
+  maxEventHistory: number;
+  performanceMonitoringInterval: number;
+  aiAnalysisInterval: number;
+  enableAIAnalysis: boolean;
+  aiAnalysis: {
+    errorPatternThresholds: {
+      medium: number;
+      high: number;
+    };
+    recommendationThresholds: {
+      highErrorRate: number;
+    };
+  };
+  memoryCleanupThreshold: number;
+  sessionIdLength: number;
+  sessionIdPrefixLength: number;
+  sessionIdBase: number;  // Base for random string generation (default: 36 for alphanumeric)
+  memoryCleanupInterval: number;
+  eventProcessingTimeThreshold: number;
+  memoryCleanupRatio: number;
+  maxAIAnalysisHistory: number;
+  maxErrorHistory: number;
+  maxMemoryUsageHistory: number;  // Maximum memory usage samples to keep
+  eventProcessingTimeHighThreshold: number;  // High threshold for event processing time (ms)
+  maxEventPatternTimestamps: number;  // Maximum timestamps to keep per event pattern
+  maxEventProcessingTimeMeasurements: number;  // Maximum processing time measurements per event type
   aiAnalysisIntervalDefault?: string;
   enableAIAnalysisDefault?: boolean;
   memoryCleanupThresholdDefault?: number;

@@ -435,7 +435,7 @@ export class DebugService implements IDebugService, IBaseService {
 
   private startNewSession(): void {
     this.currentSession = {
-      id: `debug_session_${Date.now()}_${Math.random().toString(36).substr(2, this.config.sessionIdLength ?? 8)}`,
+      id: `debug_session_${Date.now()}_${Math.random().toString(this.config.sessionIdBase).substr(this.config.sessionIdPrefixLength, this.config.sessionIdLength)}`,
       startTime: new Date(),
       events: [],
       errors: [],
@@ -457,9 +457,9 @@ export class DebugService implements IDebugService, IBaseService {
       this.sessionHistory.push(this.currentSession);
 
       // Maintain session history limit
-      if (this.sessionHistory.length > (this.config.maxSessionHistory ?? 10)) {
+      if (this.sessionHistory.length > this.config.maxSessionHistory) {
         // Use configured maxSessionHistory
-        this.sessionHistory = this.sessionHistory.slice(-(this.config.maxSessionHistory ?? 10));
+        this.sessionHistory = this.sessionHistory.slice(-this.config.maxSessionHistory);
       }
 
       this.logger.info(
@@ -585,8 +585,8 @@ export class DebugService implements IDebugService, IBaseService {
     timestamps.push(Date.now());
 
     // Keep only configured timestamps
-    if (timestamps.length > (this.config.maxEventHistory ?? 100)) {
-      timestamps.splice(0, timestamps.length - (this.config.maxEventHistory ?? 100));
+    if (timestamps.length > this.config.maxEventPatternTimestamps) {
+      timestamps.splice(0, timestamps.length - this.config.maxEventPatternTimestamps);
     }
 
     this.eventPatterns.set(key, timestamps);
@@ -600,7 +600,7 @@ export class DebugService implements IDebugService, IBaseService {
     const times =
       this.performanceMetrics.eventProcessingTimes.get(eventType) ?? [];
     times.push(processingTime);
-    if (times.length > (this.config.maxEventHistory ?? 50)) times.shift(); // Keep configured measurements
+    if (times.length > this.config.maxEventProcessingTimeMeasurements) times.shift(); // Keep configured measurements
     this.performanceMetrics.eventProcessingTimes.set(eventType, times);
 
     // Update event frequency
@@ -629,13 +629,13 @@ export class DebugService implements IDebugService, IBaseService {
 
     this.aiAnalysisInterval = this.timerService.setInterval(() => {
       this.performAIAnalysis();
-    }, this.config.aiAnalysisInterval ?? 30000); // Use configuration interval with fallback
+    }, this.config.aiAnalysisInterval); // Use configuration interval
   }
 
   private startMemoryCleanup(): void {
     this.memoryCleanupInterval = this.timerService.setInterval(() => {
       this.performMemoryCleanup();
-    }, this.config.memoryCleanupInterval ?? 60000); // Use configuration interval with fallback
+    }, this.config.memoryCleanupInterval); // Use configuration interval
   }
 
   private stopAllIntervals(): void {
@@ -661,7 +661,7 @@ export class DebugService implements IDebugService, IBaseService {
     const memoryInfo = this._performanceService.getMemoryInfo();
     if (memoryInfo.usedJSHeapSize !== undefined) {
       this.performanceMetrics.memoryUsage.push(memoryInfo.usedJSHeapSize);
-      if (this.performanceMetrics.memoryUsage.length > (this.config.maxMemoryUsageHistory ?? 100)) {
+      if (this.performanceMetrics.memoryUsage.length > this.config.maxMemoryUsageHistory) {
         this.performanceMetrics.memoryUsage.shift();
       }
     }
@@ -671,15 +671,15 @@ export class DebugService implements IDebugService, IBaseService {
     const totalEvents =
       this.eventHistory.length + this.aiAnalysisResults.length;
 
-    if (totalEvents > (this.config.memoryCleanupThreshold ?? 1000)) {
+    if (totalEvents > this.config.memoryCleanupThreshold) {
       // Use configuration threshold
       // Clean up old events
       this.eventHistory = this.eventHistory.slice(
-        -Math.floor(this.config.eventMonitoring.maxEventHistory * 0.8),
+        -Math.floor(this.config.eventMonitoring.maxEventHistory * this.config.memoryCleanupRatio),
       );
 
       // Clean up old AI analysis
-      this.aiAnalysisResults = this.aiAnalysisResults.slice(-(this.config.maxAIAnalysisHistory ?? 50));
+      this.aiAnalysisResults = this.aiAnalysisResults.slice(-this.config.maxAIAnalysisHistory);
 
       // Clean up error history
       this.errorHistory = this.errorHistory.slice(-(this.config.maxErrorHistory ?? 100));
@@ -716,10 +716,10 @@ export class DebugService implements IDebugService, IBaseService {
 
     // Identify frequent errors
     errorGroups.forEach((errors, message) => {
-      if (errors.length > 3) {
+      if (errors.length > this.config.aiAnalysis.errorPatternThresholds.medium) {
         results.push({
           type: "error_pattern",
-          severity: errors.length > 10 ? "high" : "medium",
+          severity: errors.length > this.config.aiAnalysis.errorPatternThresholds.high ? "high" : "medium",
           message: `Recurring error pattern detected: "${message}"`,
           metadata: { message, count: errors.length, errors },
         });
@@ -735,11 +735,11 @@ export class DebugService implements IDebugService, IBaseService {
     // Check for slow event processing
     this.performanceMetrics.eventProcessingTimes.forEach((times, eventType) => {
       const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
-      if (avgTime > (this.config.eventProcessingTimeThreshold ?? 50)) {
+      if (avgTime > this.config.eventProcessingTimeThreshold) {
         // Configurable threshold for event processing time
         results.push({
           type: "performance_issue" as "performance_issue",
-          severity: avgTime > (this.config.eventProcessingTimeHighThreshold ?? 100) ? "high" : "medium",
+          severity: avgTime > this.config.eventProcessingTimeHighThreshold ? "high" : "medium",
           message: `Slow event processing detected for ${eventType}`,
           metadata: {
             eventType,
@@ -777,7 +777,7 @@ export class DebugService implements IDebugService, IBaseService {
     const results: AnalysisResult[] = [];
 
     // High error rate recommendation
-    if (this.performanceMetrics.errorRate > 0.1) {
+    if (this.performanceMetrics.errorRate > this.config.aiAnalysis.recommendationThresholds.highErrorRate) {
       results.push({
         type: "recommendation",
         severity: "medium",
@@ -849,16 +849,16 @@ export class DebugService implements IDebugService, IBaseService {
   private logCurrentConfig(): void {
     // QUALIA.CODE v1.1: Log ACTUAL config values instead of hardcoded defaults
     this.logger.info("📊 [DebugService] Current Configuration:", {
-      maxSessionHistory: this.config.maxSessionHistory ?? 10,
+      maxSessionHistory: this.config.maxSessionHistory,
       maxEventHistory: this.config.eventMonitoring.maxEventHistory,
       performanceMonitoringInterval: `${this.config.performance.metricsUpdateInterval}ms`,
-      aiAnalysisInterval: `${this.config.aiAnalysisInterval ?? 30000}ms`,
-      enableAIAnalysis: this.config.enableAIAnalysis ?? true,
+      aiAnalysisInterval: `${this.config.aiAnalysisInterval}ms`,
+      enableAIAnalysis: this.config.enableAIAnalysis,
       enablePerformanceMonitoring:
         this.config.performance.enablePerformanceTracking,
       enableGlobalInterface: this.config.development.enableDebugOverlay,
-      memoryCleanupThreshold: this.config.memoryCleanupThreshold ?? 1000,
-      memoryCleanupInterval: `${this.config.memoryCleanupInterval ?? 60000}ms`,
+      memoryCleanupThreshold: this.config.memoryCleanupThreshold,
+      memoryCleanupInterval: `${this.config.memoryCleanupInterval}ms`,
       maxMemoryUsageHistory: this.config.maxMemoryUsageHistory ?? 100,
       maxAIAnalysisHistory: this.config.maxAIAnalysisHistory ?? 50,
       maxErrorHistory: this.config.maxErrorHistory ?? 100,

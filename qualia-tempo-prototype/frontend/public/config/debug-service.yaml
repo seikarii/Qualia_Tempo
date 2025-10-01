@@ -44,8 +44,15 @@ maxEventHistory: 500
 performanceMonitoringInterval: 5000
 aiAnalysisInterval: 30000
 enableAIAnalysis: true
+aiAnalysis:
+  errorPatternThresholds:
+    medium: 3
+    high: 10
+  recommendationThresholds:
+    highErrorRate: 0.1
 sessionIdLength: 8  # Random part length for session IDs
 sessionIdPrefixLength: 2  # Characters to skip in random string (for "0." prefix)
+sessionIdBase: 36  # Base for random string generation (36 = alphanumeric)
 memoryCleanupThreshold: 1000  # Threshold for memory cleanup
 memoryCleanupInterval: 60000  # Memory cleanup interval in milliseconds
 eventProcessingTimeThreshold: 50  # Threshold for event processing time warnings (ms)
@@ -58,6 +65,8 @@ eventProcessingTimeThreshold: 50  # Threshold for slow event processing in ms
 memoryCleanupRatio: 0.8  # Ratio of history to keep during cleanup
 maxAIAnalysisHistory: 50  # Maximum number of AI analysis results to keep
 maxErrorHistory: 100  # Maximum number of error history entries to keep
+maxEventPatternTimestamps: 100  # Maximum timestamps to keep per event pattern
+maxEventProcessingTimeMeasurements: 50  # Maximum processing time measurements per event type
 aiAnalysisIntervalDefault: "30000ms"  # Default AI analysis interval string
 enableAIAnalysisDefault: true  # Default AI analysis enabled state
 memoryCleanupThresholdDefault: 1000  # Default memory cleanup threshold
