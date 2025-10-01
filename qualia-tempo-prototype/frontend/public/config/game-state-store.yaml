@@ -1,5 +1,6 @@
 resetValues:
   player:
+    position: { x: 4, y: 4 }
     health: 100
     combo: 0
     score: 0

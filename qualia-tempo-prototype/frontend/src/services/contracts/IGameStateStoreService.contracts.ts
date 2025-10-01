@@ -6,6 +6,7 @@
 export interface GameStateStoreConfig {
   resetValues: {
     player: {
+      position: { x: number; y: number };
       health: number;
       combo: number;
       score: number;
