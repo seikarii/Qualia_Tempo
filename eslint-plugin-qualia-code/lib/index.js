@@ -1,8 +1,8 @@
 /**
  * @qualia-tempo/eslint-plugin-qualia-code
- * 
+ *
  * ESLint plugin to enforce QUALIA.CODE v1.0 architectural principles
- * 
+ *
  * This plugin ensures compliance with the architectural patterns defined in
  * QUALIA.CODE.md, specifically:
  * - IoC/DI patterns with CompositionRoot
@@ -25,6 +25,7 @@ const noGlobalApiCalls = require('./rules/no-global-api-calls');
 const noConsoleInServices = require('./rules/no-console-in-services');
 const noDirectServiceImportInComponents = require('./rules/no-direct-service-import-in-components');
 const enforceConfigDrivenValues = require('./rules/enforce-config-driven-values');
+const noManualEventSubscription = require('./rules/no-manual-event-subscription');
 
 module.exports = {
   rules: {
@@ -40,7 +41,8 @@ module.exports = {
     // NEW RULES - Enhanced QUALIA.CODE v1.1 Compliance
     'no-console-in-services': noConsoleInServices,
     'no-direct-service-import-in-components': noDirectServiceImportInComponents,
-    'enforce-config-driven-values': enforceConfigDrivenValues
+    'enforce-config-driven-values': enforceConfigDrivenValues,
+    'no-manual-event-subscription': noManualEventSubscription,
   },
   configs: {
     recommended: {
@@ -58,7 +60,8 @@ module.exports = {
         // NEW RULES - Enhanced QUALIA.CODE v1.1 Compliance
         '@qualia-tempo/qualia-code/no-console-in-services': 'error',
         '@qualia-tempo/qualia-code/no-direct-service-import-in-components': 'error',
-        '@qualia-tempo/qualia-code/enforce-config-driven-values': 'warn'
+        '@qualia-tempo/qualia-code/enforce-config-driven-values': 'warn',
+        '@qualia-tempo/qualia-code/no-manual-event-subscription': 'error',
       }
     }
   }
