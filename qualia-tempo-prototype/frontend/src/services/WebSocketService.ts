@@ -96,6 +96,7 @@ export class WebSocketService implements IWebSocketService {
   }
 
   @logMethod
+  @catchError
   public send(data: string | ArrayBuffer | Blob): void {
     if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
       this.logger.error("Cannot send message: WebSocket not connected");

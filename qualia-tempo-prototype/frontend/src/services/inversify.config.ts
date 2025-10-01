@@ -12,6 +12,7 @@ import { TYPES } from "./inversify.types";
 // ===== IMPORT CONFIGURATION CONTRACTS =====
 import type { FullGameConfig } from "../types/config";
 import type { AppInitializerConfig } from "./contracts/IApplicationInitializerService.contracts";
+import type { ApplicationInitializerServiceParams } from "./contracts/IApplicationInitializerService.contracts";
 import type { AudioServiceConfig } from "./contracts/IAudioService.contracts";
 import type { BackendSyncConfig } from "./contracts/IBackendSyncService.contracts";
 import type { CompositionRootConfig } from "./contracts/IApplicationCompositionRoot.contracts";
@@ -29,6 +30,12 @@ import type { RhythmicMovementControllerParams } from "./contracts/IRhythmicMove
 import type { StreamingConfig } from "./contracts/IStateStreamingService.contracts";
 import type { FrontendRenderingConfig } from "./contracts/IFrontendRenderingService.contracts";
 import type { FrontendRenderingServiceParams } from "./contracts/IFrontendRenderingService.contracts";
+import type { GameControllerServiceParams } from "./contracts/IGameControllerService.contracts";
+import type { QualiaStateCalculatorServiceParams } from "./contracts/IQualiaStateCalculatorService.contracts";
+import type { StateStreamingServiceParams } from "./contracts/IStateStreamingService.contracts";
+import type { DebugOrchestratorServiceParams } from "./contracts/IDebugOrchestratorService.contracts";
+import type { AudioServiceParams } from "./contracts/IAudioService.contracts";
+import type { BackendSyncServiceParams } from "./contracts/IBackendSyncService.contracts";
 import type { CoordinateSystemConfig } from "./contracts/ICoordinateSystemService.contracts";
 
 // NEW SERVICES CONFIGURATION IMPORTS
@@ -45,6 +52,8 @@ import type { ConfigurationLoadedEvent } from "./contracts/events.contracts";
 // ===== IMPORT ALL INTERFACES =====
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
+import { EventBus } from "./EventBus";
+import { QualiaLogger } from "./Logger";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { IHttpService } from "./interfaces/IHttpService";
 import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
@@ -74,8 +83,6 @@ import type { IToneFactoryService } from "../audio/interfaces/IToneFactoryServic
 import type { IGameInfrastructureService } from "./interfaces/IGameInfrastructureService";
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
-import { EventBus } from "./EventBus";
-import { QualiaLogger } from "./Logger";
 import { ConfigurationService } from "./ConfigurationService";
 import { HttpService } from "./HttpService";
 import { TimerService, PerformanceService } from "./TimerService";
@@ -443,6 +450,36 @@ export async function configureServices(): Promise<void> {
     config: fullConfig.frontendRendering,
   });
 
+  // QUALIA.CODE v1.1: Bind GameControllerServiceParams factory
+  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant<GameControllerServiceParams>(TYPES.GameControllerServiceParams, {
+    eventBus: container.get(TYPES.IEventBus) as EventBus,
+    logger: container.get(TYPES.ILogger) as QualiaLogger,
+    config: fullConfig.gameController,
+    gameStateStoreService: container.get<IGameStateStoreService>(TYPES.IGameStateStoreService),
+    infrastructureService: container.get<IGameInfrastructureService>(TYPES.IGameInfrastructureService),
+  });
+
+  // QUALIA.CODE v1.1: Bind QualiaStateCalculatorServiceParams factory
+  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant(TYPES.QualiaStateCalculatorServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    config: fullConfig.qualiaCalculator,
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+  });
+
+  // QUALIA.CODE v1.1: Bind StateStreamingServiceParams factory
+  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant(TYPES.StateStreamingServiceParams, {
+    webSocketService: container.get<IWebSocketService>(TYPES.IWebSocketService),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    config: fullConfig.backendSync.streaming,
+    logger: container.get<ILogger>(TYPES.ILogger),
+    messageAdapter: container.get<IMessageAdapter>(TYPES.IRawToParticleEventAdapter),
+  });
+
   // NEW SERVICES CONFIGURATION BINDINGS - Using any for now until FullGameConfig is updated
   safeBindConstant(TYPES.GameplayMechanicsConfig, fullConfig.gameplayMechanics);
   safeBindConstant<ViewLogicConfig>(TYPES.ViewLogicConfig, fullConfig.viewLogic);
@@ -450,6 +487,57 @@ export async function configureServices(): Promise<void> {
   safeBindConstant(TYPES.DebugOrchestratorConfig, fullConfig.debugOrchestrator);
   safeBindConstant<GameStateStoreConfig>(TYPES.GameStateStoreConfig, fullConfig.gameStateStore);
   safeBindConstant(TYPES.PostProcessingConfig, (fullConfig as any).postProcessing);
+
+  // QUALIA.CODE v1.1: Bind ApplicationInitializerServiceParams factory
+  // Consolidates 14 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant<ApplicationInitializerServiceParams>(TYPES.ApplicationInitializerServiceParams, {
+    config: fullConfig.applicationInitializer,
+    backendSyncService: container.get<IBackendSyncService>(TYPES.IBackendSyncService),
+    gameStateStoreService: container.get<IGameStateStoreService>(TYPES.IGameStateStoreService),
+    gameControllerService: container.get<IGameControllerService>(TYPES.IGameControllerService),
+    rhythmicMovementController: container.get<IRhythmicMovementController>(TYPES.IRhythmicMovementController),
+    notificationService: container.get<INotificationService>(TYPES.INotificationService),
+    errorReportingService: container.get<IErrorReportingService>(TYPES.IErrorReportingService),
+    debugService: container.get<IDebugService>(TYPES.IDebugService),
+    stateStreamingService: container.get<IStateStreamingService>(TYPES.IStateStreamingService),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    gameplayMechanicsService: container.get<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService),
+    viewLogicService: container.get<IViewLogicService>(TYPES.IViewLogicService),
+    subtitleService: container.get<ISubtitleService>(TYPES.ISubtitleService),
+    debugOrchestratorService: container.get<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService),
+  });
+
+  // QUALIA.CODE v1.1: Bind DebugOrchestratorServiceParams factory
+  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant<DebugOrchestratorServiceParams>(TYPES.DebugOrchestratorServiceParams, {
+    config: fullConfig.debugOrchestrator,
+    logger: container.get<ILogger>(TYPES.ILogger),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    notificationService: container.get<INotificationService>(TYPES.INotificationService),
+    errorReportingService: container.get<IErrorReportingService>(TYPES.IErrorReportingService),
+  });
+
+  // QUALIA.CODE v1.1: Bind AudioServiceParams factory
+  // Consolidates 6 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant<AudioServiceParams>(TYPES.AudioServiceParams, {
+    eventBus: container.get<EventBus>(TYPES.IEventBus),
+    logger: container.get<QualiaLogger>(TYPES.ILogger),
+    config: fullConfig.audioService,
+    audioEngine: container.get<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine),
+    webAudioAPIService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+  });
+
+  // QUALIA.CODE v1.1: Bind BackendSyncServiceParams factory
+  // Consolidates 6 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant<BackendSyncServiceParams>(TYPES.BackendSyncServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    config: fullConfig.backendSync,
+    httpService: container.get<IHttpService>(TYPES.IHttpService),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+  });
 
   // ===== EMIT CONFIGURATION LOADED EVENT =====
   // CRITICAL: Emit ConfigurationLoadedEvent to notify all services that configuration is ready

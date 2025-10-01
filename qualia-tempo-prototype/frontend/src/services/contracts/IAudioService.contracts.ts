@@ -4,6 +4,22 @@
  * This file is manually maintained for AudioService-specific contracts.
  */
 
+import type { EventBus } from "../EventBus";
+import type { QualiaLogger } from "../Logger";
+import type { IOntologicalAudioEngine } from "../../audio/IOntologicalAudioEngine";
+import type { IWebAudioAPIService } from "../interfaces/IWebAudioAPIService";
+import type { ITimerService } from "../interfaces/ITimerService";
+
+// Parameter object for AudioService constructor
+export interface AudioServiceParams {
+  eventBus: EventBus;
+  logger: QualiaLogger;
+  config: AudioServiceConfig;
+  audioEngine: IOntologicalAudioEngine;
+  webAudioAPIService: IWebAudioAPIService;
+  timerService: ITimerService;
+}
+
 // AudioService Configuration - Migrated from ConfigurationService.ts
 export interface AudioServiceConfig {
   rhythmicFeedback: {

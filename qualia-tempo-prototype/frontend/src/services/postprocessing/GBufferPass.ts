@@ -7,6 +7,7 @@
 
 import * as THREE from "three";
 import { Pass } from "three/examples/jsm/postprocessing/Pass.js";
+import type { GBufferPassParams } from "../contracts/IGBufferPass.contracts";
 
 export interface GBufferTargets {
   color: THREE.Texture;
@@ -28,17 +29,17 @@ export class GBufferPass extends Pass {
   private _depthTexture!: THREE.Texture;
   private _materialTexture!: THREE.Texture;
 
-  constructor(scene: THREE.Scene, camera: THREE.Camera, width: number, height: number, vertexShader: string, fragmentShader: string, uniforms: Record<string, THREE.IUniform>) {
+  constructor(params: GBufferPassParams) {
     super();
 
-    this.scene = scene;
-    this.camera = camera;
+    this.scene = params.scene;
+    this.camera = params.camera;
 
     // Initialize MRT textures
     this.initializeTextures();
 
     // Create render target
-    this.gbuffer = new (THREE as any).WebGLMultipleRenderTargets(width, height, 4, {
+    this.gbuffer = new (THREE as any).WebGLMultipleRenderTargets(params.width, params.height, 4, {
       type: THREE.UnsignedByteType,
       format: THREE.RGBAFormat,
       minFilter: THREE.LinearFilter,
@@ -53,7 +54,7 @@ export class GBufferPass extends Pass {
     this.gbuffer.texture[3] = this._materialTexture;
 
     // Create and configure G-Buffer shader material
-    this.initializeShaderMaterial(vertexShader, fragmentShader, uniforms);
+    this.initializeShaderMaterial(params.vertexShader, params.fragmentShader, params.uniforms);
 
     this.needsSwap = false;
   }

@@ -15,7 +15,8 @@ import type {
   NoteVisualData,
   QualiaFieldVisualData,
   GridVisualData,
-  TileVisualData
+  TileVisualData,
+  GetGridVisualsParams
 } from './contracts/IViewLogicService.contracts';
 import type { QualiaState } from '../types/contracts';
 import type { ILogger } from './interfaces/ILogger';
@@ -637,32 +638,54 @@ export class ViewLogicService implements IViewLogicService {
     return baseColor;
   }
 
+  getGridVisuals(params: GetGridVisualsParams): GridVisualData;
+  getGridVisuals(gridSize: number, tileSize: number, playerPosition: {x: number, y: number}, activePositions: [number, number][], currentTime: number): GridVisualData;
   @logMethod
   @catchError
-  getGridVisuals(gridSize: number, tileSize: number, playerPosition: {x: number, y: number}, activePositions: [number, number][], currentTime: number): GridVisualData {
+  getGridVisuals(
+    paramsOrGridSize: GetGridVisualsParams | number,
+    tileSize?: number,
+    playerPosition?: {x: number, y: number},
+    activePositions?: [number, number][],
+    currentTime?: number
+  ): GridVisualData {
+    let params: GetGridVisualsParams;
+    
+    if (typeof paramsOrGridSize === 'object') {
+      params = paramsOrGridSize;
+    } else {
+      params = {
+        gridSize: paramsOrGridSize,
+        tileSize: tileSize!,
+        playerPosition: playerPosition!,
+        activePositions: activePositions!,
+        currentTime: currentTime!
+      };
+    }
+
     const tiles: TileVisualData[] = [];
     
     // Generate tile visual data
-    for (let x = 0; x < gridSize; x++) {
-      for (let z = 0; z < gridSize; z++) {
-        const tileCoords = this.coordinateSystemService.indexToGrid(x * gridSize + z);
-        const isPlayerTile = playerPosition.x === tileCoords.x && playerPosition.y === tileCoords.y;
-        const isActiveTile = activePositions.some(pos => pos[0] === tileCoords.x && pos[1] === tileCoords.y);
+    for (let x = 0; x < params.gridSize; x++) {
+      for (let z = 0; z < params.gridSize; z++) {
+        const tileCoords = this.coordinateSystemService.indexToGrid(x * params.gridSize + z);
+        const isPlayerTile = params.playerPosition.x === tileCoords.x && params.playerPosition.y === tileCoords.y;
+        const isActiveTile = params.activePositions.some(pos => pos[0] === tileCoords.x && pos[1] === tileCoords.y);
         
         let emissiveColor: [number, number, number];
         let yPosition: number;
         
         if (isPlayerTile) {
           // Player tile glows
-          const pulse = 0.3 + Math.sin(currentTime * 4) * 0.2;
+          const pulse = 0.3 + Math.sin(params.currentTime * 4) * 0.2;
           emissiveColor = this.hslToRgb(0.6, 1, pulse);
-          yPosition = Math.sin(currentTime * 3) * 0.05;
+          yPosition = Math.sin(params.currentTime * 3) * 0.05;
         } else if (isActiveTile) {
           // Active tiles pulse
-          const index = x * gridSize + z;
-          const pulse = 0.2 + Math.sin(currentTime * 2 + index * 0.5) * 0.1;
+          const index = x * params.gridSize + z;
+          const pulse = 0.2 + Math.sin(params.currentTime * 2 + index * 0.5) * 0.1;
           emissiveColor = this.hslToRgb(0.1, 0.8, pulse);
-          yPosition = Math.sin(currentTime * 2 + index * 0.5) * 0.02;
+          yPosition = Math.sin(params.currentTime * 2 + index * 0.5) * 0.02;
         } else {
           // Default tiles
           emissiveColor = this.hslToRgb(0, 0, 0.05);
@@ -672,9 +695,9 @@ export class ViewLogicService implements IViewLogicService {
         tiles.push({
           key: `tile-${x}-${z}`,
           position: [
-            (x - gridSize / 2 + 0.5) * tileSize,
+            (x - params.gridSize / 2 + 0.5) * params.tileSize,
             yPosition,
-            (z - gridSize / 2 + 0.5) * tileSize
+            (z - params.gridSize / 2 + 0.5) * params.tileSize
           ],
           emissiveColor,
           baseColor: [0.2, 0.2, 0.3],
@@ -687,7 +710,7 @@ export class ViewLogicService implements IViewLogicService {
     return {
       tiles,
       gridBorders: {
-        size: gridSize * tileSize,
+        size: params.gridSize * params.tileSize,
         color: [0.267, 0.267, 0.267] // #444444
       }
     };

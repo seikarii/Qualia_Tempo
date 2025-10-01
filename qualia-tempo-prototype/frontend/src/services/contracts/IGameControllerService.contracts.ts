@@ -6,6 +6,20 @@
  * Architecture: Contract definitions extracted from service implementation for clarity and reusability
  */
 
+import type { EventBus } from '../EventBus';
+import type { QualiaLogger } from '../Logger';
+import type { IGameStateStoreService } from '../interfaces/IGameStateStoreService';
+import type { IGameInfrastructureService } from '../interfaces/IGameInfrastructureService';
+
+// QUALIA.CODE v1.1: Constructor parameter object pattern (max 4 parameters rule)
+export interface GameControllerServiceParams {
+  eventBus: EventBus;
+  logger: QualiaLogger;
+  config: GameControllerConfig;
+  gameStateStoreService: IGameStateStoreService;
+  infrastructureService: IGameInfrastructureService;
+}
+
 // Game state interface
 export interface GameState {
   isPlaying: boolean;

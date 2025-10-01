@@ -256,7 +256,15 @@ export class PostProcessingService implements IPostProcessingService {
       case 'GBufferPass': {
         const shaderSource = await this.shaderLoader.load('gbuffer');
         const shader = this.shaderIntrospection.introspect(shaderSource);
-        return new GBufferPass(this.scene, this.camera, this.config.renderTargetWidth, this.config.renderTargetHeight, shader.vertexShader, shader.fragmentShader, shader.uniforms);
+        return new GBufferPass({
+          scene: this.scene,
+          camera: this.camera,
+          width: this.config.renderTargetWidth,
+          height: this.config.renderTargetHeight,
+          vertexShader: shader.vertexShader,
+          fragmentShader: shader.fragmentShader,
+          uniforms: shader.uniforms
+        });
       }
 
       default:

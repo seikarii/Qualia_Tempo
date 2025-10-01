@@ -3,6 +3,15 @@
  * Type definitions for visual data processing and rendering properties.
  */
 
+// Parameter object for getGridVisuals method
+export interface GetGridVisualsParams {
+  gridSize: number;
+  tileSize: number;
+  playerPosition: {x: number, y: number};
+  activePositions: [number, number][];
+  currentTime: number;
+}
+
 export interface BossVisualData {
   // Main boss properties
   position: [number, number, number];

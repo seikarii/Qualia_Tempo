@@ -10,7 +10,8 @@ import type {
   ParticleData, 
   NoteVisualData,
   QualiaFieldVisualData,
-  GridVisualData
+  GridVisualData,
+  GetGridVisualsParams
 } from '../contracts/IViewLogicService.contracts';
 import type { QualiaState } from '../../types/contracts';
 
@@ -106,5 +107,6 @@ export interface IViewLogicService {
    * @param time Current game time
    * @returns Grid visual data
    */
+  getGridVisuals(params: GetGridVisualsParams): GridVisualData;
   getGridVisuals(gridSize: number, tileSize: number, playerPosition: { x: number; y: number }, activePositions: [number, number][], time: number): GridVisualData;
 }

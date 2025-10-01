@@ -10,7 +10,8 @@ import type { IDebugOrchestratorService } from './interfaces/IDebugOrchestratorS
 import type { 
   ServiceDiagnosticData, 
   ServiceStatus, 
-  DebugOrchestratorConfig 
+  DebugOrchestratorConfig,
+  DebugOrchestratorServiceParams
 } from './contracts/IDebugOrchestratorService.contracts';
 import type { ILogger } from './interfaces/ILogger';
 import type { ITimerService } from './interfaces/ITimerService';
@@ -34,17 +35,13 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
   private configLoaded: boolean = false;
 
   constructor(
-    @inject(TYPES.DebugOrchestratorConfig) config: DebugOrchestratorConfig,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.INotificationService) notificationService: INotificationService,
-    @inject(TYPES.IErrorReportingService) errorReportingService: IErrorReportingService
+    @inject(TYPES.DebugOrchestratorServiceParams) params: DebugOrchestratorServiceParams,
   ) {
-    this.config = config;
-    this.logger = logger;
-    this.timerService = timerService;
-    this.notificationService = notificationService;
-    this.errorReportingService = errorReportingService;
+    this.config = params.config;
+    this.logger = params.logger;
+    this.timerService = params.timerService;
+    this.notificationService = params.notificationService;
+    this.errorReportingService = params.errorReportingService;
     
     this.lastUpdateTime = this.timerService.getCurrentDate();
     this.logger.info('DebugOrchestratorService initialized', {

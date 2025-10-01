@@ -3,6 +3,20 @@
  * Type definitions for debug orchestration service.
  */
 
+import type { ILogger } from "../interfaces/ILogger";
+import type { ITimerService } from "../interfaces/ITimerService";
+import type { INotificationService } from "../interfaces/INotificationService";
+import type { IErrorReportingService } from "../interfaces/IErrorReportingService";
+
+// Parameter object for DebugOrchestratorService constructor
+export interface DebugOrchestratorServiceParams {
+  config: DebugOrchestratorConfig;
+  logger: ILogger;
+  timerService: ITimerService;
+  notificationService: INotificationService;
+  errorReportingService: IErrorReportingService;
+}
+
 export interface ServiceStatus {
   name: string;
   isRunning: boolean;

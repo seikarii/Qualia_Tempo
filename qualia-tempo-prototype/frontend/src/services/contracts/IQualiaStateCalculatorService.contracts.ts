@@ -4,6 +4,19 @@
  * This file is manually maintained for QualiaStateCalculatorService-specific contracts.
  */
 
+import type { IEventBus } from '../interfaces/IEventBus';
+import type { ILogger } from '../interfaces/ILogger';
+import type { ITimerService, IPerformanceService } from '../interfaces/ITimerService';
+
+// QUALIA.CODE v1.1: Constructor parameter object pattern (max 4 parameters rule)
+export interface QualiaStateCalculatorServiceParams {
+  eventBus: IEventBus;
+  logger: ILogger;
+  config: QualiaCalculatorConfig;
+  timerService: ITimerService;
+  performanceService: IPerformanceService;
+}
+
 // QualiaCalculator Configuration - Migrated from ConfigurationService.ts
 export interface QualiaCalculatorConfig {
   baseQualiaState: {

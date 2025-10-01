@@ -17,6 +17,7 @@ import { TYPES } from "./inversify.types";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { QualiaCalculatorConfig } from "./contracts/IQualiaStateCalculatorService.contracts";
+import type { QualiaStateCalculatorServiceParams } from "./contracts/IQualiaStateCalculatorService.contracts";
 import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
 import { QualiaStateCalculatedEvent } from "./contracts/events.contracts";
 import type { PlayerActionEvent } from "./contracts/events.contracts";
@@ -57,17 +58,13 @@ export class QualiaStateCalculatorService
   private totalCalculationTime = 0;
 
   constructor(
-    @inject(TYPES.IEventBus) eventBus: IEventBus,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.QualiaCalculatorConfig) config: QualiaCalculatorConfig,
-    @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IPerformanceService) performanceService: IPerformanceService,
+    @inject(TYPES.QualiaStateCalculatorServiceParams) params: QualiaStateCalculatorServiceParams
   ) {
-    this.eventBus = eventBus;
-    this.logger = logger;
-    this.config = config;
-    this.timerService = timerService;
-    this.performanceService = performanceService;
+    this.eventBus = params.eventBus;
+    this.logger = params.logger;
+    this.config = params.config;
+    this.timerService = params.timerService;
+    this.performanceService = params.performanceService;
 
     // QUALIA.CODE: Configuration is now injected directly via constructor
     // Always ensure currentState is initialized

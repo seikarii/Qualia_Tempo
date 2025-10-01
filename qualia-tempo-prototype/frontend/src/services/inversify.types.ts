@@ -87,6 +87,14 @@ export const TYPES = {
 
   // QUALIA.CODE v1.1: Constructor Parameter Objects
   FrontendRenderingServiceParams: Symbol.for("FrontendRenderingServiceParams"),
+  GameControllerServiceParams: Symbol.for("GameControllerServiceParams"),
+  QualiaStateCalculatorServiceParams: Symbol.for("QualiaStateCalculatorServiceParams"),
+  StateStreamingServiceParams: Symbol.for("StateStreamingServiceParams"),
+  GBufferPassParams: Symbol.for("GBufferPassParams"),
+  ApplicationInitializerServiceParams: Symbol.for("ApplicationInitializerServiceParams"),
+  DebugOrchestratorServiceParams: Symbol.for("DebugOrchestratorServiceParams"),
+  AudioServiceParams: Symbol.for("AudioServiceParams"),
+  BackendSyncServiceParams: Symbol.for("BackendSyncServiceParams"),
   IToneFactoryService: Symbol.for("IToneFactoryService"),
   VisualEffectsConfig: Symbol.for("VisualEffectsConfig"),
   StreamingConfig: Symbol.for("StreamingConfig"),

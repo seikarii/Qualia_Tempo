@@ -16,6 +16,7 @@ import type { IStateStreamingService } from "./interfaces/IStateStreamingService
 import type { ILogger } from "./interfaces/ILogger";
 import type { IApplicationInitializerService } from "./interfaces/IApplicationInitializerService";
 import type { AppInitializerConfig } from "./contracts/IApplicationInitializerService.contracts";
+import type { ApplicationInitializerServiceParams } from "./contracts/IApplicationInitializerService.contracts";
 import type { IGameplayMechanicsService } from "./interfaces/IGameplayMechanicsService";
 import type { IViewLogicService } from "./interfaces/IViewLogicService";
 import type { ISubtitleService } from "./interfaces/ISubtitleService";
@@ -50,43 +51,24 @@ export class ApplicationInitializerService
   private readonly managedServices: IBaseService[] = [];
 
   constructor(
-    @inject(TYPES.AppInitializerConfig) config: AppInitializerConfig,
-    @inject(TYPES.IBackendSyncService) backendSyncService: IBackendSyncService,
-    @inject(TYPES.IGameStateStoreService)
-    gameStateStoreService: IGameStateStoreService,
-    @inject(TYPES.IGameControllerService)
-    gameControllerService: IGameControllerService,
-    @inject(TYPES.IRhythmicMovementController)
-    rhythmicMovementController: IRhythmicMovementController,
-    @inject(TYPES.INotificationService)
-    notificationService: INotificationService,
-    @inject(TYPES.IErrorReportingService)
-    errorReportingService: IErrorReportingService,
-    @inject(TYPES.IDebugService) debugService: IDebugService,
-    @inject(TYPES.IStateStreamingService) stateStreamingService: IStateStreamingService,
-    @inject(TYPES.ILogger) logger: ILogger,
-    // QUALIA.CODE v1.1: New service injections
-    @inject(TYPES.IGameplayMechanicsService) gameplayMechanicsService: IGameplayMechanicsService,
-    @inject(TYPES.IViewLogicService) viewLogicService: IViewLogicService,
-    @inject(TYPES.ISubtitleService) subtitleService: ISubtitleService,
-    @inject(TYPES.IDebugOrchestratorService) debugOrchestratorService: IDebugOrchestratorService,
+    @inject(TYPES.ApplicationInitializerServiceParams) params: ApplicationInitializerServiceParams,
   ) {
-    this.config = config;
-    this.backendSyncService = backendSyncService;
-    this.gameStateStoreService = gameStateStoreService;
-    this.gameControllerService = gameControllerService;
-    this.rhythmicMovementController = rhythmicMovementController;
-    this.notificationService = notificationService;
-    this.errorReportingService = errorReportingService;
-    this.debugService = debugService;
-    this.stateStreamingService = stateStreamingService;
-    this.logger = logger;
+    this.config = params.config;
+    this.backendSyncService = params.backendSyncService;
+    this.gameStateStoreService = params.gameStateStoreService;
+    this.gameControllerService = params.gameControllerService;
+    this.rhythmicMovementController = params.rhythmicMovementController;
+    this.notificationService = params.notificationService;
+    this.errorReportingService = params.errorReportingService;
+    this.debugService = params.debugService;
+    this.stateStreamingService = params.stateStreamingService;
+    this.logger = params.logger;
     
     // QUALIA.CODE v1.1: Initialize new services
-    this.gameplayMechanicsService = gameplayMechanicsService;
-    this.viewLogicService = viewLogicService;
-    this.subtitleService = subtitleService;
-    this.debugOrchestratorService = debugOrchestratorService;
+    this.gameplayMechanicsService = params.gameplayMechanicsService;
+    this.viewLogicService = params.viewLogicService;
+    this.subtitleService = params.subtitleService;
+    this.debugOrchestratorService = params.debugOrchestratorService;
     
     // Configuration will be accessed in start() method after it's loaded
     // Note: Using pre-loaded constant since ConfigService may not be ready yet

@@ -4,6 +4,38 @@
  * This file is manually maintained for ApplicationInitializerService-specific contracts.
  */
 
+import type { IBackendSyncService } from "../interfaces/IBackendSyncService";
+import type { IGameStateStoreService } from "../interfaces/IGameStateStoreService";
+import type { IGameControllerService } from "../interfaces/IGameControllerService";
+import type { IRhythmicMovementController } from "../interfaces/IRhythmicMovementController";
+import type { INotificationService } from "../interfaces/INotificationService";
+import type { IErrorReportingService } from "../interfaces/IErrorReportingService";
+import type { IDebugService } from "../interfaces/IDebugService";
+import type { IStateStreamingService } from "../interfaces/IStateStreamingService";
+import type { ILogger } from "../interfaces/ILogger";
+import type { IGameplayMechanicsService } from "../interfaces/IGameplayMechanicsService";
+import type { IViewLogicService } from "../interfaces/IViewLogicService";
+import type { ISubtitleService } from "../interfaces/ISubtitleService";
+import type { IDebugOrchestratorService } from "../interfaces/IDebugOrchestratorService";
+
+// Parameter object for ApplicationInitializerService constructor
+export interface ApplicationInitializerServiceParams {
+  config: AppInitializerConfig;
+  backendSyncService: IBackendSyncService;
+  gameStateStoreService: IGameStateStoreService;
+  gameControllerService: IGameControllerService;
+  rhythmicMovementController: IRhythmicMovementController;
+  notificationService: INotificationService;
+  errorReportingService: IErrorReportingService;
+  debugService: IDebugService;
+  stateStreamingService: IStateStreamingService;
+  logger: ILogger;
+  gameplayMechanicsService: IGameplayMechanicsService;
+  viewLogicService: IViewLogicService;
+  subtitleService: ISubtitleService;
+  debugOrchestratorService: IDebugOrchestratorService;
+}
+
 // Specific state update interfaces for type safety
 export interface ConfigLoadedStateUpdate {
   configurationLoaded: boolean;
