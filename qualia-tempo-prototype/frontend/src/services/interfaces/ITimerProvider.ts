@@ -1,6 +1,9 @@
 // QUALIA.CODE v1.1 - Timer Provider Interface
 // Abstraction for timer-related browser APIs to enable platform independence
 
+/* eslint-disable @qualia-tempo/qualia-code/no-global-api-calls */
+// This interface DEFINES platform abstractions - exempt from global API rules
+
 /**
  * Interface for timer operations, abstracting browser-specific APIs
  * Allows for platform-independent timer management and testing

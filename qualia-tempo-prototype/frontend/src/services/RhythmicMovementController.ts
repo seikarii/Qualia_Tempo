@@ -8,7 +8,7 @@ import type {
 } from "./contracts/events.contracts";
 import { logMethod, catchError } from "../utils/decorators";
 import type { QualiaState } from "../types/contracts";
-import type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementController.contracts";
+import type { RhythmicMovementConfig, RhythmicMovementControllerParams } from "./contracts/IRhythmicMovementController.contracts";
 import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovementController";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
@@ -62,23 +62,16 @@ export class RhythmicMovementController implements IRhythmicMovementController {
   private totalUpdateTime: number = 0;
 
   constructor(
-    @inject(TYPES.IEventBus) eventBus: IEventBus,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.RhythmicMovementConfig) config: RhythmicMovementConfig,
-    @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IKeyToDirectionAdapter) keyAdapter: IMessageAdapter,
-    @inject(TYPES.IInputStateService) inputStateService: IInputStateService,
-    @inject(TYPES.IGameStateStoreService) gameStateStore: IGameStateStoreService,
-    @inject(TYPES.IGameplayMechanicsService) gameplayMechanicsService: IGameplayMechanicsService,
+    @inject(TYPES.RhythmicMovementControllerParams) params: RhythmicMovementControllerParams,
   ) {
-    this.eventBus = eventBus;
-    this.logger = logger;
-    this.config = config;
-    this.timerService = timerService;
-    this.keyAdapter = keyAdapter;
-    this.inputStateService = inputStateService;
-    this.gameStateStore = gameStateStore;
-    this.gameplayMechanicsService = gameplayMechanicsService;
+    this.eventBus = params.eventBus;
+    this.logger = params.logger;
+    this.config = params.config;
+    this.timerService = params.timerService;
+    this.keyAdapter = params.keyAdapter;
+    this.inputStateService = params.inputStateService;
+    this.gameStateStore = params.gameStateStore;
+    this.gameplayMechanicsService = params.gameplayMechanicsService;
     // Ensure keyAdapter is used by decorator (TypeScript workaround) - DEPRECATED
     void this.keyAdapter;
 

@@ -26,6 +26,7 @@ cameraOrbitRadius: 8.0
 # Renderer configuration
 backgroundColor: 0x000000
 antialias: true
+devicePixelRatio: 1  # Will be overridden by actual device pixel ratio at runtime if needed
 
 # Performance configuration
 fpsUpdateInterval: 1000

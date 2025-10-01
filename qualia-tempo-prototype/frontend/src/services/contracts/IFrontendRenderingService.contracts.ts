@@ -3,6 +3,11 @@
  * QUALIA.CODE v1.1 Compliant - Externalized Configuration
  */
 
+import type { ILogger } from "../interfaces/ILogger";
+import type { IPerformanceService } from "../interfaces/ITimerService";
+import type { IPostProcessingService } from "../interfaces/IPostProcessingService";
+import type { IEventBus } from "../interfaces/IEventBus";
+
 export interface FrontendRenderingConfig {
   // Particle system configuration
   particleCount: number;
@@ -29,6 +34,7 @@ export interface FrontendRenderingConfig {
   // Renderer configuration
   backgroundColor: number;
   antialias: boolean;
+  devicePixelRatio: number;
   
   // Performance configuration
   fpsUpdateInterval: number;
@@ -50,4 +56,14 @@ export interface FrontendRenderingConfig {
     disposed: string;
     mustInitializeFirst: string;
   };
+}
+
+// QUALIA.CODE v1.1: Constructor Parameter Object
+// Consolidates 5 constructor parameters into a single object to comply with IoC limits
+export interface FrontendRenderingServiceParams {
+  logger: ILogger;
+  performanceService: IPerformanceService;
+  postProcessingService: IPostProcessingService;
+  eventBus: IEventBus;
+  config: FrontendRenderingConfig;
 }

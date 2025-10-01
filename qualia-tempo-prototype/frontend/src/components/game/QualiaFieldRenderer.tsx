@@ -11,11 +11,14 @@ interface QualiaFieldRendererProps {
     coherence: number;
   };
   musicData: {
+    tempo: number;
+    beat_position: number;
     intensity: number;
-    harmony: number;
-    emotional_valence: number;
+    frequency_bands: number[];
     order_influence: number;
     chaos_influence: number;
+    emotional_valence: number;
+    harmony: number;
   };
 }
 

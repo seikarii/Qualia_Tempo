@@ -74,11 +74,18 @@ export const TYPES = {
   GameControllerConfig: Symbol.for("GameControllerConfig"),
   QualiaCalculatorConfig: Symbol.for("QualiaCalculatorConfig"),
   RhythmicMovementConfig: Symbol.for("RhythmicMovementConfig"),
+  RhythmicMovementControllerParams: Symbol.for("RhythmicMovementControllerParams"),
   AudioServiceConfig: Symbol.for("AudioServiceConfig"),
   NotificationServiceConfig: Symbol.for("NotificationServiceConfig"),
+
+  // QUALIA.CODE v1.1: Constructor Parameter Objects
+  NotificationServiceParams: Symbol.for("NotificationServiceParams"),
   ErrorReportingConfig: Symbol.for("ErrorReportingConfig"),
   DebugServiceConfig: Symbol.for("DebugServiceConfig"),
   FrontendRenderingConfig: Symbol.for("FrontendRenderingConfig"),
+
+  // QUALIA.CODE v1.1: Constructor Parameter Objects
+  FrontendRenderingServiceParams: Symbol.for("FrontendRenderingServiceParams"),
   IToneFactoryService: Symbol.for("IToneFactoryService"),
   VisualEffectsConfig: Symbol.for("VisualEffectsConfig"),
   StreamingConfig: Symbol.for("StreamingConfig"),

@@ -16,7 +16,6 @@ import type { ILogger } from './interfaces/ILogger';
 import type { ITimerService } from './interfaces/ITimerService';
 import type { INotificationService } from './interfaces/INotificationService';
 import type { IErrorReportingService } from './interfaces/IErrorReportingService';
-import type { IEventBus } from './interfaces/IEventBus';
 import { logMethod, catchError, OnEvent } from '../utils/decorators';
 import type { ConfigurationLoadedEvent } from './contracts/events.contracts';
 import type { IBaseService } from './interfaces/IBaseService';
@@ -28,9 +27,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
   private readonly timerService: ITimerService;
   private readonly notificationService: INotificationService;
   private readonly errorReportingService: IErrorReportingService;
-  private readonly _eventBus: IEventBus;
   
-  private _eventListeners: string[] = [];
   private lastUpdateTime: Date;
   // @ts-expect-error - Reserved for diagnostic caching functionality
   private _cachedDiagnostics: ServiceDiagnosticData | null = null;
@@ -41,15 +38,13 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerService) timerService: ITimerService,
     @inject(TYPES.INotificationService) notificationService: INotificationService,
-    @inject(TYPES.IErrorReportingService) errorReportingService: IErrorReportingService,
-    @inject(TYPES.IEventBus) eventBus: IEventBus
+    @inject(TYPES.IErrorReportingService) errorReportingService: IErrorReportingService
   ) {
     this.config = config;
     this.logger = logger;
     this.timerService = timerService;
     this.notificationService = notificationService;
     this.errorReportingService = errorReportingService;
-    this._eventBus = eventBus;
     
     this.lastUpdateTime = this.timerService.getCurrentDate();
     this.logger.info('DebugOrchestratorService initialized', {

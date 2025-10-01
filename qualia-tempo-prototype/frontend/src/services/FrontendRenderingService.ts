@@ -34,7 +34,7 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { IPerformanceService } from "./interfaces/ITimerService";
 import type { IPostProcessingService } from "./interfaces/IPostProcessingService";
 import type { IEventBus } from "./interfaces/IEventBus";
-import type { FrontendRenderingConfig } from "./contracts/IFrontendRenderingService.contracts";
+import type { FrontendRenderingConfig, FrontendRenderingServiceParams } from "./contracts/IFrontendRenderingService.contracts";
 import type { QualiaParticleDataReceivedEvent } from "./contracts/events.contracts";
 import { logMethod, catchError, BrowserOnly } from "../utils/decorators";
 
@@ -71,17 +71,13 @@ export class FrontendRenderingService implements IFrontendRenderingService {
   private particleDataListenerId: string | null = null;
 
   constructor(
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IPerformanceService) performanceService: IPerformanceService,
-    @inject(TYPES.IPostProcessingService) postProcessingService: IPostProcessingService,
-    @inject(TYPES.IEventBus) eventBus: IEventBus,
-    @inject(TYPES.FrontendRenderingConfig) config: FrontendRenderingConfig
+    @inject(TYPES.FrontendRenderingServiceParams) params: FrontendRenderingServiceParams
   ) {
-    this.logger = logger;
-    this.performanceService = performanceService;
-    this.postProcessingService = postProcessingService;
-    this.eventBus = eventBus;
-    this.config = config;
+    this.logger = params.logger;
+    this.performanceService = params.performanceService;
+    this.postProcessingService = params.postProcessingService;
+    this.eventBus = params.eventBus;
+    this.config = params.config;
 
     this.logger.info(this.config.messages.serviceInitialized);
   }
@@ -103,7 +99,7 @@ export class FrontendRenderingService implements IFrontendRenderingService {
       antialias: this.config.antialias
     });
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setPixelRatio(this.config.devicePixelRatio);
     this.renderer.setClearColor(this.config.backgroundColor);
 
     // Create scene

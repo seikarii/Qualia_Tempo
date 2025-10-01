@@ -1,6 +1,9 @@
 // QUALIA.CODE v1.1 - Browser Timer Provider
 // Concrete implementation of ITimerProvider for browser environments
 
+/* eslint-disable @qualia-tempo/qualia-code/no-global-api-calls */
+// This IS the platform abstraction layer - direct API access is intentional
+
 import { injectable } from "inversify";
 import { ITimerProvider } from "../interfaces/ITimerProvider";
 
@@ -26,7 +29,7 @@ export class BrowserTimerProvider implements ITimerProvider {
     window.clearInterval(id);
   }
 
-  requestAnimationFrame(callback: (time: number) => void): number {
+  requestAnimationFrame(callback: (_time: number) => void): number {
     return window.requestAnimationFrame(callback);
   }
 

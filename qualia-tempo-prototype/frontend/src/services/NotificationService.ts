@@ -25,6 +25,7 @@ import type {
   NotificationStatistics,
   ExtendedNotification,
   NotificationServiceConfig,
+  NotificationServiceParams,
   NotificationServiceExport,
   NotificationLogData,
   FlexibleNotificationConfig,
@@ -119,31 +120,26 @@ export class NotificationService implements INotificationService {
    * NO @unmanaged parameters, NO hardcoded configuration
    */
   constructor(
-    @inject(TYPES.IEventBus) eventBus: IEventBus,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.NotificationServiceConfig) config: NotificationServiceConfig,
-    @inject(TYPES.IGameStateStore) gameStateStore: IGameStateStore,
-    @inject(TYPES.ITimerService) _timerService: ITimerService,
-    @inject(TYPES.ThrottlingManager) throttlingManager: ThrottlingManager,
+    @inject(TYPES.NotificationServiceParams) params: NotificationServiceParams,
   ) {
-    if (!eventBus) {
+    if (!params.eventBus) {
       throw new Error(
         "🚨 [NotificationService] EventBus is required for QUALIA.CODE v1.1 compliance",
       );
     }
 
-    if (!gameStateStore) {
+    if (!params.gameStateStore) {
       throw new Error(
         "🚨 [NotificationService] GameStateStore is required for decoupled architecture",
       );
     }
 
-    this.eventBus = eventBus;
-    this.logger = logger;
-    this.timerService = _timerService;
-    this.config = config;
-    this.gameStateStore = gameStateStore;
-    this.throttlingManager = throttlingManager;
+    this.eventBus = params.eventBus;
+    this.logger = params.logger;
+    this.timerService = params.timerService;
+    this.config = params.config;
+    this.gameStateStore = params.gameStateStore;
+    this.throttlingManager = params.throttlingManager;
 
     // Initialize processing components
     this.notificationQueue = new NotificationQueue();

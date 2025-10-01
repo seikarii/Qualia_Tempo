@@ -8,6 +8,8 @@ interface Player {
   id: string;
   name: string;
   position: [number, number, number];
+  velocity: [number, number, number];
+  health: number;
   power_level: number;
   consciousness_level: number;
   qualia_state: {
@@ -19,6 +21,8 @@ interface Player {
 
 interface Performance {
   accuracy: number;
+  rhythm_score: number;
+  combo_multiplier: number;
   rhythm_sync: number;
   qualia_coherence: number;
 }

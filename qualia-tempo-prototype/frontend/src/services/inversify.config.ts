@@ -22,10 +22,13 @@ import type { GameControllerConfig } from "./contracts/IGameControllerService.co
 import type { HttpConfig } from "./contracts/IHttpService.contracts";
 import type { LoggerConfig } from "./contracts/ILogger.contracts";
 import type { NotificationServiceConfig } from "./contracts/INotificationService.contracts";
+import type { NotificationServiceParams } from "./contracts/INotificationService.contracts";
 import type { QualiaCalculatorConfig } from "./contracts/IQualiaStateCalculatorService.contracts";
 import type { RhythmicMovementConfig } from "./contracts/IRhythmicMovementController.contracts";
+import type { RhythmicMovementControllerParams } from "./contracts/IRhythmicMovementController.contracts";
 import type { StreamingConfig } from "./contracts/IStateStreamingService.contracts";
 import type { FrontendRenderingConfig } from "./contracts/IFrontendRenderingService.contracts";
+import type { FrontendRenderingServiceParams } from "./contracts/IFrontendRenderingService.contracts";
 import type { CoordinateSystemConfig } from "./contracts/ICoordinateSystemService.contracts";
 
 // NEW SERVICES CONFIGURATION IMPORTS
@@ -398,6 +401,40 @@ export async function configureServices(): Promise<void> {
   
   // Bind CoordinateSystemConfig from RhythmicMovement config
   safeBindConstant<CoordinateSystemConfig>(TYPES.CoordinateSystemConfig, fullConfig.rhythmicMovement.coordinate_system);
+
+  // QUALIA.CODE v1.1: Bind RhythmicMovementControllerParams factory
+  // Consolidates 8 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant<RhythmicMovementControllerParams>(TYPES.RhythmicMovementControllerParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    config: fullConfig.rhythmicMovement,
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    keyAdapter: container.get<IMessageAdapter>(TYPES.IKeyToDirectionAdapter),
+    inputStateService: container.get<IInputStateService>(TYPES.IInputStateService),
+    gameStateStore: container.get<IGameStateStoreService>(TYPES.IGameStateStoreService),
+    gameplayMechanicsService: container.get<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService),
+  });
+
+  // QUALIA.CODE v1.1: Bind NotificationServiceParams factory
+  // Consolidates 6 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant<NotificationServiceParams>(TYPES.NotificationServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    config: fullConfig.notificationService,
+    gameStateStore: container.get<IGameStateStore>(TYPES.IGameStateStore),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    throttlingManager: container.get<ThrottlingManager>(TYPES.ThrottlingManager),
+  });
+
+  // QUALIA.CODE v1.1: Bind FrontendRenderingServiceParams factory
+  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant<FrontendRenderingServiceParams>(TYPES.FrontendRenderingServiceParams, {
+    logger: container.get<ILogger>(TYPES.ILogger),
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+    postProcessingService: container.get<IPostProcessingService>(TYPES.IPostProcessingService),
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    config: fullConfig.frontendRendering,
+  });
 
   // NEW SERVICES CONFIGURATION BINDINGS - Using any for now until FullGameConfig is updated
   safeBindConstant(TYPES.GameplayMechanicsConfig, fullConfig.gameplayMechanics);
