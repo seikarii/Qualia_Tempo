@@ -11,7 +11,7 @@ export interface EmergentBehavior {
     | "SYNCHRONIZATION"
     | "STATE_PROPAGATOR"
     | "NARRATIVE_EVENT";
-  entities: any[];
+  entities: Array<{ id: string; qualiaState: QualiaState }>;
   strength?: number;
   description?: string;
   timestamp?: number;

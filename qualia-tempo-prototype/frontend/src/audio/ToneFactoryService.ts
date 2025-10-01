@@ -1,22 +1,28 @@
 import * as Tone from 'tone';
 import { injectable } from 'inversify';
-import { IToneFactoryService } from './interfaces/IToneFactoryService';
+import { 
+  IToneFactoryService, 
+  PolySynthOptions, 
+  ReverbOptions, 
+  FeedbackDelayOptions, 
+  VolumeOptions 
+} from './interfaces/IToneFactoryService';
 
 @injectable()
 export class ToneFactoryService implements IToneFactoryService {
-  createPolySynth(options?: any): Tone.PolySynth {
+  createPolySynth(options?: PolySynthOptions): Tone.PolySynth {
     return new Tone.PolySynth(Tone.Synth, options);
   }
 
-  createReverb(options?: any): Tone.Reverb {
+  createReverb(options?: ReverbOptions): Tone.Reverb {
     return new Tone.Reverb(options);
   }
 
-  createFeedbackDelay(options?: any): Tone.FeedbackDelay {
+  createFeedbackDelay(options?: FeedbackDelayOptions): Tone.FeedbackDelay {
     return new Tone.FeedbackDelay(options);
   }
 
-  createVolume(options?: any): Tone.Volume {
+  createVolume(options?: VolumeOptions): Tone.Volume {
     return new Tone.Volume(options);
   }
 }

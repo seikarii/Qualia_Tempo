@@ -16,7 +16,7 @@ export class WebSocketService implements IWebSocketService {
   private binaryType: 'blob' | 'arraybuffer' = 'blob'; // Default binary type
 
   // Event handlers
-  private messageHandler?: (_data: any) => void;
+  private messageHandler?: (_data: string | ArrayBuffer | Blob) => void;
   private openHandler?: () => void;
   private closeHandler?: (_event: CloseEvent) => void;
   private errorHandler?: (_error: Event) => void;
@@ -111,7 +111,7 @@ export class WebSocketService implements IWebSocketService {
   }
 
   @logMethod
-  public onMessage(callback: (_data: any) => void): void {
+  public onMessage(callback: (_data: string | ArrayBuffer | Blob) => void): void {
     this.messageHandler = callback;
     this.logger.debug("Message handler registered");
   }

@@ -11,6 +11,25 @@ export interface ExternalServiceConfig {
   enabled: boolean;
 }
 
+// Error reporting export data structure
+export interface ErrorReportingExportData {
+  timestamp: number;
+  sessionId: string;
+  statistics: {
+    totalErrors: number;
+    totalBatches: number;
+    successfulReports: number;
+    failedReports: number;
+    duplicatesFiltered: number;
+    averageRetries: number;
+  };
+  errorHistory: ExtendedErrorReport[];
+  pendingBatches: ExtendedErrorBatch[];
+  circuitBreakerState: CircuitBreakerState;
+  rateLimitState: RateLimitState;
+  config: ErrorReportingConfig;
+}
+
 // Error severity levels with priority ordering
 export type ErrorSeverity = "low" | "medium" | "high" | "critical";
 

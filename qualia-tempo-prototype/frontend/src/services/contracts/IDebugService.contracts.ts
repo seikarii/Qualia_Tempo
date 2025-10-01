@@ -36,8 +36,36 @@ export interface AIAnalysisResult {
     | "recommendation";
   severity: "low" | "medium" | "high" | "critical";
   description: string;
-  data: any;
+  data: Record<string, unknown>;
   suggestions: string[];
+}
+
+// Debug interface exposed globally for development
+export interface DebugInterface {
+  service: unknown; // Reference to DebugService (avoiding circular dependency)
+  getStats: () => unknown;
+  getSnapshot: () => unknown;
+  performAnalysis: () => unknown;
+  exportData: () => DebugExportData;
+  startSession: () => void;
+  endSession: () => void;
+  clearHistory: () => void;
+  enableAI: () => void;
+  disableAI: () => void;
+  log: (message: string, data?: unknown) => void;
+}
+
+// Debug data export structure
+export interface DebugExportData {
+  timestamp: number;
+  sessions: DebugSession[];
+  eventHistory: BaseEvent[];
+  errorHistory: ErrorEvent[];
+  aiAnalysis: AIAnalysisResult[];
+  config: DebugServiceConfig;
+  debugStats: unknown;
+  systemSnapshot: unknown;
+  analysis: unknown;
 }
 
 // DebugService Configuration - Migrated from ConfigurationService.ts
