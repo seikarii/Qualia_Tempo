@@ -1,6 +1,14 @@
 # QUALIA.CODE v1.1 - Architectural Remediation Plan
 # TARGET: Qualia Tempo Prototype
-# STATUS: 400 violations detected, build functional (141 any types fixed, Phase 3 Round 4 completed)
+# STATUS: 400 violations detected, build functional (141 any types fixed, Phase 3 Rounds 5-6 completed)
+**Phase 3 Round 6: Configuration Externalization - QualiaStateCalculatorService (7 values fixed):**
+- ✅ **qualia-calculator.yaml** - Added 4 new config properties (transcendenceActivationValue: 1.0, millisecondsToSecondsConversion: 1000, transcendenceDecayRate: 0.99, transcendenceCheckValue: 0.0)
+- ✅ **IQualiaStateCalculatorService.contracts.ts** - Added 4 new config property types for externalized hardcoded values
+- ✅ **QualiaStateCalculatorService.ts** - Externalized 7 hardcoded values (transcendence activation value 1.0, milliseconds-to-seconds conversion 1000 in 2 locations, transcendence decay rate separate from flow.decayRate in 2 locations, transcendence check value 0)
+- ✅ **eslint rule fix** - Updated no-hardcoded-config.js to properly detect logger method calls (this.logger.info) and not flag log messages as hardcoded configuration
+- ✅ **Violations reduced from 355 to 292** (63 violations fixed, 7 actual hardcoded values externalized + 56 false positives from logger detection fix)
+- ⏳ **Remaining hardcoded values:** ~55 instances across remaining services
+
 **Phase 3 Round 4: Configuration Externalization - ErrorReportingService (10 values fixed):**
 - ✅ **error-reporting.yaml** - Added 10 new config properties (randomIdBase: 36, randomIdStart: 2, randomIdLength: 8, retryDelayMultiplier: 2, millisecondsToSecondsConversion: 1000, oldHistoryCleanupRatio: 0.6, duplicateRegistryMaxSize: 500, duplicateCleanupCount: 250, completedBatchesCleanupCount: 10)
 - ✅ **IErrorReportingService.contracts.ts** - Added 10 new properties for random ID generation, retry multipliers, time conversion, and cleanup thresholds
@@ -77,14 +85,14 @@
 - ✅ **Total 'any' types eliminated: 141** (78.3% of any type violations eliminated)
 - ✅ **Violations reduced from 579 to 401** (30.7% total violation reduction)
 - ✅ Build remains functional, TypeScript compilation improved significantly
-# LAST UPDATED: 2025-10-02 (Phase 3 Round 4 completed - Configuration Externalization ongoing)
+# LAST UPDATED: 2025-10-02 (Phase 3 Rounds 5-6 completed - Configuration Externalization ongoing)
 
 ## EXECUTIVE SUMMARY
 
 **Current Status:** ✅ Build functional, ⚠️ TypeScript has ~20 type errors (down from baseline)
-**Violations:** 356 total (248 errors, 108 warnings) - DOWN from 362 (6 violations fixed in Round 4)
-**Progress:** 141 any types fixed (78.3% of any type violations eliminated) + 47 hardcoded config values externalized (Rounds 3-4)
-**Impact:** Phase 3 Round 4 completed - ErrorReportingService configuration externalization achieved (10 hardcoded values → config properties)
+**Violations:** 292 total (186 errors, 106 warnings) - DOWN from 355 (63 more violations fixed in Round 6)
+**Progress:** 141 any types fixed (78.3% of any type violations eliminated) + 59 hardcoded config values externalized (Rounds 3-6)
+**Impact:** Phase 3 Rounds 5-6 completed - NotificationService and QualiaStateCalculatorService configuration externalization achieved (12 hardcoded values → config properties)
 
 ## VIOLATION ANALYSIS
 

@@ -53,3 +53,17 @@ performanceMultipliers:
 
 updateIntervalMs: 100
 historySize: 1000
+
+transcendenceThresholds:
+  intensity: 0.8
+  precision: 0.8
+  flow: 0.8
+
+minValue: 0.0
+maxValue: 1.0
+
+# New externalized configuration values for hardcoded constants
+transcendenceActivationValue: 1.0
+millisecondsToSecondsConversion: 1000
+transcendenceDecayRate: 0.99
+transcendenceCheckValue: 0.0

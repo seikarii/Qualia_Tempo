@@ -292,7 +292,7 @@ export class QualiaStateCalculatorService
    */
   private updateStateWithDecay(): void {
     const now = this.performanceService.now();
-    const deltaTime = (now - this.lastUpdateTime) / 1000; // Convert to seconds
+    const deltaTime = (now - this.lastUpdateTime) / this.config.millisecondsToSecondsConversion; // Convert to seconds
     this.lastUpdateTime = now;
 
     // Apply decay to all values
@@ -315,7 +315,7 @@ export class QualiaStateCalculatorService
       this.currentState.recovery - this.config.flow.decayRate * deltaTime, // Using flow decay for recovery
     );
     this.currentState.transcendence = this.clamp(
-      this.currentState.transcendence - this.config.flow.decayRate * deltaTime, // Using flow decay for transcendence
+      this.currentState.transcendence - this.config.transcendenceDecayRate * deltaTime,
     );
 
     // Only emit state update if there's significant change
@@ -332,9 +332,9 @@ export class QualiaStateCalculatorService
       this.currentState.intensity >= thresholds.intensity &&
       this.currentState.precision >= thresholds.precision &&
       this.currentState.flow >= thresholds.flow &&
-      this.currentState.transcendence === 0
+      this.currentState.transcendence === config.transcendenceCheckValue
     ) {
-      this.currentState.transcendence = 1.0;
+      this.currentState.transcendence = config.transcendenceActivationValue;
       this.logger.info(
         "🌟 [QualiaCalculator] TRANSCENDENCE ACTIVATED! Ultimate mode triggered!",
       );
@@ -408,7 +408,7 @@ export class QualiaStateCalculatorService
   @catchError
   public applyTimeDecay(): void {
     const now = this.performanceService.now();
-    const deltaTime = (now - this.lastUpdateTime) / 1000;
+    const deltaTime = (now - this.lastUpdateTime) / this.config.millisecondsToSecondsConversion;
     this.lastUpdateTime = now;
 
     this.applyDecayToAllValues(deltaTime);
@@ -427,7 +427,7 @@ export class QualiaStateCalculatorService
     this.currentState.flow *= Math.exp(-this.config.flow.decayRate * deltaTime);
     this.currentState.chaos *= Math.exp(-this.config.chaos.decayRate * deltaTime);
     this.currentState.recovery *= Math.exp(-this.config.flow.decayRate * deltaTime); // Using flow decay for recovery
-    this.currentState.transcendence *= Math.exp(-this.config.flow.decayRate * deltaTime); // Using flow decay for transcendence
+    this.currentState.transcendence *= Math.exp(-this.config.transcendenceDecayRate * deltaTime);
 
     this.logger.debug("Applied temporal decay", { deltaTime });
   }

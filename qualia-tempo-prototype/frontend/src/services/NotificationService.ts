@@ -635,7 +635,7 @@ export class NotificationService implements INotificationService, IBaseService {
   private _handleQualiaStateCalculatedEvent(event: QualiaStateCalculatedEvent): void {
     // Only show notifications for significant qualia changes
     const hasSignificantChange = Object.values(event.qualiaState).some(
-      (value) => typeof value === "number" && (value > 0.8 || value < 0.2),
+      (value) => typeof value === "number" && (value > this.config.qualiaChangeThresholds.significantHigh || value < this.config.qualiaChangeThresholds.significantLow),
     );
 
     if (hasSignificantChange) {
@@ -686,7 +686,7 @@ export class NotificationService implements INotificationService, IBaseService {
   ): ExtendedNotification {
     const now = new Date(this.timerService.now());
     return {
-      id: `notification_${this.timerService.now()}_${Math.random().toString(36).substr(2, 8)}`,
+      id: `notification_${this.timerService.now()}_${Math.random().toString(this.config.randomId.base).substr(this.config.randomId.start, this.config.randomId.length)}`,
       timestamp: now,
       message,
       type,
@@ -746,7 +746,7 @@ export class NotificationService implements INotificationService, IBaseService {
     this.notificationHistory.push(notification);
     if (this.notificationHistory.length > this.config.maxHistorySize) {
       this.notificationHistory = this.notificationHistory.slice(
-        -Math.floor(this.config.maxHistorySize * 0.8),
+        -Math.floor(this.config.maxHistorySize * this.config.historyCleanupRatio),
       );
     }
 

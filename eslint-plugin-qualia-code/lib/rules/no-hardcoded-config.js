@@ -84,6 +84,12 @@ module.exports = {
               parent.callee.object?.name === 'console') {
             return true;
           }
+          // Handle logger.* calls (e.g., this.logger.info, logger.error)
+          if (parent.callee.type === 'MemberExpression' && 
+              parent.callee.property && 
+              ['error', 'warn', 'log', 'info', 'debug'].includes(parent.callee.property.name)) {
+            return true;
+          }
           // Handle direct function calls for logging
           const functionName = parent.callee.name;
           if (functionName && ['error', 'warn', 'log', 'info', 'debug'].includes(functionName)) {

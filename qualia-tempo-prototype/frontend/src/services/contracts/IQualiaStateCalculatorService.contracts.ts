@@ -81,4 +81,9 @@ export interface QualiaCalculatorConfig {
   };
   minValue: number;
   maxValue: number;
+  // New externalized configuration values for hardcoded constants
+  transcendenceActivationValue: number;
+  millisecondsToSecondsConversion: number;
+  transcendenceDecayRate: number;
+  transcendenceCheckValue: number;
 }

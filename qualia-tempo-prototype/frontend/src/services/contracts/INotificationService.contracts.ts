@@ -75,6 +75,22 @@ export interface NotificationServiceConfig {
   filter: NotificationFilter;
   throttling: ThrottlingConfig;
   enabled: boolean;
+  
+  // Qualia change detection thresholds
+  qualiaChangeThresholds: {
+    significantHigh: number;  // Values above this are considered significant
+    significantLow: number;   // Values below this are considered significant
+  };
+  
+  // Random ID generation settings
+  randomId: {
+    base: number;    // Base for random ID generation (36 = alphanumeric)
+    start: number;   // Start position for substring extraction
+    length: number;  // Length of random ID suffix
+  };
+  
+  // History cleanup
+  historyCleanupRatio: number;  // Ratio of history to keep during cleanup
 }
 
 // QUALIA.CODE v1.1: Constructor Parameter Object

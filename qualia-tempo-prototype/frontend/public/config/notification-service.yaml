@@ -91,3 +91,17 @@ throttling:
 
 maxNotifications: 5
 defaultDuration: 3000
+
+# Qualia change detection thresholds
+qualiaChangeThresholds:
+  significantHigh: 0.8  # Values above this are significant
+  significantLow: 0.2   # Values below this are significant
+
+# Random ID generation settings
+randomId:
+  base: 36      # Base for random ID generation (36 = alphanumeric)
+  start: 2      # Start position for substring extraction
+  length: 8     # Length of random ID suffix
+
+# History cleanup
+historyCleanupRatio: 0.8  # Ratio of history to keep during cleanup

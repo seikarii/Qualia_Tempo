@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **[Phase 3 Round 6] QualiaStateCalculatorService**: Externalized 7 hardcoded configuration values to achieve QUALIA.CODE compliance with configuration sovereignty principle. Violations reduced from 355 to 292 (63 violations fixed, 7 actual hardcoded values externalized + 56 false positives from logger detection fix).
+  - Added 4 new configuration properties to `qualia-calculator.yaml`: transcendenceActivationValue: 1.0, millisecondsToSecondsConversion: 1000, transcendenceDecayRate: 0.99, transcendenceCheckValue: 0.0
+  - Updated `IQualiaStateCalculatorService.contracts.ts` with 4 new typed properties for all externalized values
+  - Refactored `QualiaStateCalculatorService.ts` to use configuration values in: `checkTranscendenceActivation()` (transcendence activation/check values), `updateStateWithDecay()` and `applyTimeDecay()` (milliseconds-to-seconds conversion), and exponential decay calculations (separate transcendence decay rate)
+  - Fixed eslint rule `no-hardcoded-config.js` to properly detect logger method calls (`this.logger.info`) and not flag log messages as hardcoded configuration violations
+  - Replaced magic numbers with `this.config.*` references for improved maintainability and runtime configurability
 - **[Phase 3 Round 4] ErrorReportingService**: Externalized 10 hardcoded configuration values to achieve QUALIA.CODE compliance with configuration sovereignty principle. Violations reduced from 21 to 4 (17 violations fixed).
   - Added 10 new configuration properties to `error-reporting.yaml`: random ID generation settings (randomIdBase: 36, randomIdStart: 2, randomIdLength: 8), retry processing (retryDelayMultiplier: 2), time conversion (millisecondsToSecondsConversion: 1000), and advanced cleanup thresholds (oldHistoryCleanupRatio: 0.6, duplicateRegistryMaxSize: 500, duplicateCleanupCount: 250, completedBatchesCleanupCount: 10)
   - Updated `IErrorReportingService.contracts.ts` with 10 new typed properties for all externalized values
