@@ -1,10 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { Container } from 'inversify';
 import { createTestContainer } from '../../testing/test-container-factory';
 import { RhythmicMovementController } from '../RhythmicMovementController';
 import { TYPES } from '../inversify.types';
+import type { IEventBus } from '../interfaces/IEventBus';
+import type { ILogger } from '../interfaces/ILogger';
+import type { ITimerService } from '../interfaces/ITimerService';
+import type { IInputStateService } from '../interfaces/IInputStateService';
+import type { IGameStateStore } from '../interfaces/IGameStateStore';
+import type { IGameplayMechanicsService } from '../interfaces/IGameplayMechanicsService';
 
 describe('RhythmicMovementController', () => {
-  let container: any;
+  let container: Container;
   let controller: RhythmicMovementController;
   let mockEventBus: any;
   let mockLogger: any;

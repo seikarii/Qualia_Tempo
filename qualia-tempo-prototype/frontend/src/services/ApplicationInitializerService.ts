@@ -160,10 +160,13 @@ export class ApplicationInitializerService
     this.logger.info(`🚀 Initialized ${this.managedServices.length} QUALIA.CODE v1.1 services`);
   }
 
-  private implementsIBaseService(service: any): service is IBaseService {
-    return service && 
-           typeof service.initialize === 'function' && 
-           typeof service.cleanup === 'function';
+  private implementsIBaseService(service: unknown): service is IBaseService {
+    return typeof service === 'object' &&
+           service !== null &&
+           'initialize' in service &&
+           'cleanup' in service &&
+           typeof (service as Record<string, unknown>).initialize === 'function' &&
+           typeof (service as Record<string, unknown>).cleanup === 'function';
   }
 
   private async startGameServices(): Promise<void> {

@@ -21,7 +21,7 @@ export interface ServiceStatus {
   name: string;
   isRunning: boolean;
   status: string;
-  stats?: any;
+  stats?: Record<string, unknown>;
   error?: string;
   lastUpdate?: Date;
 }

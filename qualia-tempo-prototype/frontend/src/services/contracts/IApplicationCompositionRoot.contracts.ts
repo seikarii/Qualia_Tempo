@@ -50,8 +50,8 @@ export interface CompositionRootConfig {
   
   // State updates for game state store
   stateUpdates: {
-    configLoaded: any;
-    initializationComplete: any;
+    configLoaded: boolean;
+    initializationComplete: boolean;
   };
 }
 

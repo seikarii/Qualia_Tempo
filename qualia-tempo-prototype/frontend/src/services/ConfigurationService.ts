@@ -66,7 +66,7 @@ export class ConfigurationService implements IConfigurationService {
     this.logger.info("Loading configuration from multiple YAML files...");
 
     // Load all configuration files with individual error handling
-    const loadedConfigs: { key: string; config: any }[] = [];
+    const loadedConfigs: { key: string; config: unknown }[] = [];
     const configFiles = Object.entries(this.configFileManifest);
 
     for (const [key, path] of configFiles) {

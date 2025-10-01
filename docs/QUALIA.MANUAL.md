@@ -10,9 +10,7 @@ This manual provides practical implementation examples and step-by-step guides f
 
 **WARNING:** This manual contains implementation examples only. For architectural rules and principles, refer to QUALIA.CODE.md.
 
----
-
-## 1. IoC Container Setup and Service Implementation
+## 1. IoC y Inyección de Dependencias
 
 ### 1.1. Type Definitions (inversify.types.ts)
 
@@ -94,7 +92,408 @@ async function main() {
 
 ---
 
-## 2. Event-Driven Architecture Implementation
+## 4. Estrategias de Testing Avanzadas
+
+### 4.1. Pruebas de Lógica Visual
+
+#### Configuración de Pruebas para ViewLogicService
+
+```typescript
+// frontend/src/services/__tests__/ViewLogicService.test.ts
+import { createTestContainer } from '../../testing/test-container-factory';
+import { IViewLogicService } from '../interfaces/IViewLogicService';
+import { TYPES } from '../inversify.types';
+
+describe('ViewLogicService', () => {
+  let viewLogicService: IViewLogicService;
+
+  beforeEach(() => {
+    const container = createTestContainer();
+    viewLogicService = container.get<IViewLogicService>(TYPES.IViewLogicService);
+  });
+
+  describe('getBossVisuals', () => {
+    it('should calculate phase 1 boss visuals correctly', () => {
+      const bossState = {
+        position: [0, 0, 0] as [number, number, number],
+        power_level: 150,
+        phase: 1,
+        stress_level: 0.8,
+        qualia_state: { emotional_valence: 0.2 }
+      };
+
+      const result = viewLogicService.getBossVisuals(bossState, 1.5);
+
+      expect(result.position).toEqual([0, 0.3, 0]);
+      expect(result.scale).toEqual([1.64, 1.64, 1.64]);
+      expect(result.tentacles).toHaveLength(5);
+    });
+  });
+});
+```
+
+### 4.2. Pruebas de Integración de Eventos
+
+#### Prueba de Flujo Completo Input → Store
+
+```typescript
+// frontend/src/integration-tests/__tests__/input-to-store.integration.test.ts
+import { createTestContainer } from '../../testing/test-container-factory';
+import { TYPES } from '../../services/inversify.types';
+
+describe('Input to Store Integration', () => {
+  let container: Container;
+  let inputController: IGameInputControllerService;
+  let gameController: IGameControllerService;
+  let gameStateStore: IGameStateStoreService;
+  let eventBus: IEventBus;
+
+  beforeEach(async () => {
+    container = createTestContainer();
+    inputController = container.get(TYPES.IGameInputControllerService);
+    gameController = container.get(TYPES.IGameControllerService);
+    gameStateStore = container.get(TYPES.IGameStateStoreService);
+    eventBus = container.get(TYPES.IEventBus);
+
+    await Promise.all([
+      gameController.start(),
+      gameStateStore.start(),
+      inputController.start()
+    ]);
+  });
+
+  it('should process key input and update game state', async () => {
+    // Simular input
+    const keyEvent = new KeyboardEvent('keydown', { key: ' ' });
+    inputController.handleKeyDown(keyEvent);
+
+    // Esperar procesamiento de eventos
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Verificar estado actualizado
+    const state = gameStateStore.getGameState();
+    expect(state.isPlaying).toBe(true);
+  });
+});
+```
+
+---
+
+*"La arquitectura sin implementación es teoría vacía. La implementación sin arquitectura es caos inevitable."*
+
+### 1.1. Type Definitions (inversify.types.ts)
+
+```typescript
+export const TYPES = {
+  // --- Core Services ---
+  Logger: Symbol.for("Logger"),
+  EventBus: Symbol.for("EventBus"),
+  ConfigurationService: Symbol.for("ConfigurationService"),
+  IHttpService: Symbol.for("IHttpService"),
+  ITimerService: Symbol.for("ITimerService"),
+
+  // --- Feature Services ---
+  IQualiaService: Symbol.for("IQualiaService"),
+  IBackendSyncService: Symbol.for("IBackendSyncService"),
+  IGameControllerService: Symbol.for("IGameControllerService"),
+};
+```
+
+### 1.2. Container Configuration (inversify.config.ts)
+
+```typescript
+import { container } from './inversify.container';
+import { TYPES } from './inversify.types';
+import { QualiaService } from './QualiaService';
+import { IQualiaService } from './interfaces/IQualiaService';
+
+container.bind<IQualiaService>(TYPES.IQualiaService).to(QualiaService).inSingletonScope();
+```
+
+### 1.3. Service Implementation with Direct Configuration Injection
+
+```typescript
+import { injectable, inject } from 'inversify';
+import { TYPES } from './inversify.types';
+import { IQualiaService } from './interfaces/IQualiaService';
+import { MyNewServiceConfig } from './contracts/IMyNewService.contracts';
+import { ILogger } from './interfaces/ILogger';
+
+@injectable()
+export class MyNewService implements IMyNewService {
+  private readonly config: MyNewServiceConfig;
+  private readonly logger: ILogger;
+
+  constructor(
+    // CRITICAL CHANGE: Inject the specific config object, NOT IConfigurationService
+    @inject(TYPES.MyNewServiceConfig) config: MyNewServiceConfig,
+    @inject(TYPES.ILogger) logger: ILogger
+  ) {
+    this.config = config;
+    this.logger = logger;
+    this.logger.info('MyNewService Initialized with timeout:', this.config.timeout);
+  }
+
+  @logMethod()
+  public async execute(params: any): Promise<void> {
+    if (!this.config.featureFlags.newFeature) {
+        this.logger.warn('New feature is disabled by configuration.');
+        return;
+    }
+    // ... logic using this.config.apiUrl
+  }
+}
+```
+
+### 1.4. ApplicationCompositionRoot Usage
+
+```typescript
+// index.tsx - Application Entry Point
+import { ApplicationCompositionRoot } from './services/ApplicationCompositionRoot';
+
+async function main() {
+  const compositionRoot = new ApplicationCompositionRoot();
+  await compositionRoot.initializeApplication();
+  
+  // React app initialization...
+}
+```
+
+---
+
+## 2. Arquitectura Dirigida por Eventos
+
+### 2.1. Event Contracts Definition
+
+```typescript
+export interface BaseEvent {
+  type: string;
+  timestamp: Date;
+  source?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface PlayerActionEvent extends BaseEvent {
+  type: "PlayerAction";
+  action: "Dash" | "HitNote" | "MissNote" | "FastForward" | "Rewind" | "StartGame" | "PauseGame" | "ResetGame" | "scoreIncrease";
+  context?: Record<string, any>;
+  value?: number;
+}
+```
+
+### 2.2. @AdaptAndEmit Decorator Usage
+
+```typescript
+@injectable()
+export class WebSocketMessageHandler {
+  constructor(
+    @inject(TYPES.IEventBus) private eventBus: IEventBus,
+    @inject(TYPES.IRawToParticleEventAdapter) private messageAdapter: IMessageAdapter
+  ) {}
+
+  @AdaptAndEmit('messageAdapter')
+  private onRawMessage(rawData: ArrayBuffer): void {
+    // The body of this method can be empty or contain logic
+    // that executes AFTER the event has been emitted,
+    // such as tracking statistics.
+    this.messagesReceived++;
+  }
+}
+```
+
+### 2.3. Implementación del Decorador @OnEvent
+
+#### Definición de Eventos
+
+```typescript
+// frontend/src/services/contracts/events.contracts.ts
+export interface PlayerActionEvent {
+  type: 'PlayerAction';
+  action: 'StartGame' | 'PauseGame' | 'HitNote' | 'MissNote';
+  context?: Record<string, any>;
+  timestamp: Date;
+}
+
+export interface GameStateChangedEvent {
+  type: 'GameStateChanged';
+  newState: string;
+  oldState: string;
+  source: string;
+}
+```
+
+#### Servicio con @OnEvent
+
+```typescript
+// frontend/src/services/GameControllerService.ts
+import { OnEvent, IBaseService } from '../utils/decorators';
+
+@injectable()
+export class GameControllerService implements IGameControllerService, IBaseService {
+  private _eventListeners: string[] = [];
+
+  @OnEvent('PlayerAction')
+  private _handlePlayerAction(event: PlayerActionEvent): void {
+    switch (event.action) {
+      case 'StartGame':
+        this.startGame();
+        break;
+      case 'HitNote':
+        this.handleHitNote(event.context);
+        break;
+    }
+  }
+
+  @OnEvent('GameStateChanged')
+  private _handleGameStateChanged(event: GameStateChangedEvent): void {
+    if (event.newState === 'Playing') {
+      this.startGameClock();
+    }
+  }
+
+  // Implementación IBaseService
+  public initialize(): void {
+    // @OnEvent subscriptions se crean automáticamente aquí
+  }
+
+  public cleanup(): void {
+    // @OnEvent subscriptions se limpian automáticamente aquí
+  }
+}
+```
+
+#### ApplicationInitializerService
+
+```typescript
+// frontend/src/services/ApplicationInitializerService.ts
+@injectable()
+export class ApplicationInitializerService {
+  constructor(
+    @inject(TYPES.IGameControllerService) private gameController: IGameControllerService,
+    @inject(TYPES.IViewLogicService) private viewLogic: IViewLogicService,
+    // ... otros servicios
+  ) {}
+
+  public async initializeApplication(): Promise<void> {
+    // Inicializar todos los servicios que implementan IBaseService
+    const baseServices = [
+      this.gameController,
+      this.viewLogic,
+      // ... otros servicios con @OnEvent
+    ];
+
+    for (const service of baseServices) {
+      if ('initialize' in service) {
+        await service.initialize();
+      }
+    }
+  }
+
+  public async cleanupApplication(): Promise<void> {
+    const baseServices = [this.gameController, this.viewLogic];
+
+    for (const service of baseServices) {
+      if ('cleanup' in service) {
+        await service.cleanup();
+      }
+    }
+  }
+}
+```
+
+---
+
+## 3. Arquitectura de la Capa Visual
+
+### 3.1. Implementación del Patrón Stateless View-Logic
+
+#### Configuración del Servicio ViewLogicService
+
+```typescript
+// frontend/src/services/inversify.config.ts
+container.bind<ViewLogicConfig>(TYPES.ViewLogicConfig).toConstantValue({
+  particles: {
+    maxCount: 1000,
+    spawnRate: 0.1,
+    baseLifetime: 2000
+  },
+  notes: {
+    rotationSpeed: 0.01,
+    pulseIntensity: 0.3
+  }
+});
+container.bind<IViewLogicService>(TYPES.IViewLogicService).to(ViewLogicService).inSingletonScope();
+```
+
+#### Uso en Componentes React
+
+```typescript
+// frontend/src/components/game/BossRenderer.tsx
+import { useViewLogicService } from '../../services/hooks';
+
+const BossRenderer: React.FC<BossRendererProps> = ({ boss }) => {
+  const viewLogicService = useViewLogicService();
+  const [visuals, setVisuals] = useState<BossVisualData | null>(null);
+
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+    const newVisuals = viewLogicService.getBossVisuals(boss, time);
+    setVisuals(newVisuals);
+
+    // Aplicar solo propiedades calculadas
+    if (bossGroupRef.current && newVisuals) {
+      bossGroupRef.current.position.set(...newVisuals.position);
+      bossGroupRef.current.scale.set(...newVisuals.scale);
+      bossGroupRef.current.rotation.set(...newVisuals.rotation);
+    }
+  });
+
+  if (!visuals) return null;
+
+  return (
+    <group position={visuals.position}>
+      <mesh scale={[visuals.core.scale, visuals.core.scale, visuals.core.scale]}>
+        <icosahedronGeometry args={[1.5, 2]} />
+        <meshPhongMaterial
+          color={new THREE.Color(...visuals.core.color)}
+          emissive={new THREE.Color(...visuals.core.emissiveColor)}
+        />
+      </mesh>
+    </group>
+  );
+};
+```
+
+#### Flujo de Datos Visuales - Ejemplo Completo
+
+```typescript
+// frontend/src/components/game/QualiaTempoGame.tsx - Componente Orquestador
+import { useGameStore } from '../../state/useGameStore';
+import { useViewLogicService } from '../../services/hooks';
+
+const QualiaTempoGame: React.FC = () => {
+  const gameState = useGameStore();
+  const viewLogicService = useViewLogicService();
+
+  // Obtener datos del store
+  const bossData = gameState.boss;
+  const playerData = gameState.player;
+
+  return (
+    <Canvas>
+      {/* Pasar datos del store al servicio de lógica visual */}
+      <BossRenderer boss={bossData} />
+      <PlayerRenderer player={playerData} />
+
+      {/* El servicio calcula los visuals internamente */}
+      <GridRenderer
+        gridSize={gameState.grid.size}
+        playerPosition={gameState.player.position}
+      />
+    </Canvas>
+  );
+};
+```
 
 ### 2.1. Event Contracts Definition
 
