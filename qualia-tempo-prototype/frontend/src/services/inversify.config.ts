@@ -45,6 +45,8 @@ import type { ViewLogicConfig } from "./contracts/IViewLogicService.contracts";
 // import type { SubtitleConfig } from "./contracts/ISubtitleService.contracts";
 // import type { DebugOrchestratorConfig } from "./contracts/IDebugOrchestratorService.contracts";
 import type { GameStateStoreConfig } from "./contracts/IGameStateStoreService.contracts";
+import type { PostProcessingConfig } from "./contracts/IPostProcessingService.contracts";
+import type { ProtocolAdapterConfig } from "./contracts/IProtocolAdapter.contracts";
 
 // ===== IMPORT EVENT CONTRACTS =====
 import type { ConfigurationLoadedEvent } from "./contracts/events.contracts";
@@ -476,14 +478,14 @@ export async function configureServices(): Promise<void> {
     messageAdapter: container.get<IMessageAdapter>(TYPES.IRawToParticleEventAdapter),
   });
 
-  // NEW SERVICES CONFIGURATION BINDINGS - Using any for now until FullGameConfig is updated
+  // NEW SERVICES CONFIGURATION BINDINGS - QUALIA.CODE v1.1 Compliant (no 'as any' casts)
   safeBindConstant(TYPES.GameplayMechanicsConfig, fullConfig.gameplayMechanics);
   safeBindConstant<ViewLogicConfig>(TYPES.ViewLogicConfig, fullConfig.viewLogic);
   safeBindConstant(TYPES.SubtitleConfig, fullConfig.subtitle);
   safeBindConstant(TYPES.DebugOrchestratorConfig, fullConfig.debugOrchestrator);
   safeBindConstant<GameStateStoreConfig>(TYPES.GameStateStoreConfig, fullConfig.gameStateStore);
-  safeBindConstant(TYPES.PostProcessingConfig, (fullConfig as any).postProcessing);
-  safeBindConstant(TYPES.ProtocolAdapterConfig, (fullConfig as any).protocolAdapter);
+  safeBindConstant<PostProcessingConfig>(TYPES.PostProcessingConfig, fullConfig.postProcessing);
+  safeBindConstant<ProtocolAdapterConfig>(TYPES.ProtocolAdapterConfig, fullConfig.protocolAdapter);
 
   // QUALIA.CODE v1.1: Bind ApplicationInitializerServiceParams factory
   // Consolidates 14 constructor parameters into a single object to comply with IoC limits
@@ -505,11 +507,12 @@ export async function configureServices(): Promise<void> {
   });
 
   // QUALIA.CODE v1.1: Bind DebugOrchestratorServiceParams factory
-  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
+  // Consolidates 6 constructor parameters into a single object to comply with IoC limits
   safeBindConstant<DebugOrchestratorServiceParams>(TYPES.DebugOrchestratorServiceParams, {
     config: fullConfig.debugOrchestrator,
     logger: container.get<ILogger>(TYPES.ILogger),
     timerService: container.get<ITimerService>(TYPES.ITimerService),
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
     notificationService: container.get<INotificationService>(TYPES.INotificationService),
     errorReportingService: container.get<IErrorReportingService>(TYPES.IErrorReportingService),
   });

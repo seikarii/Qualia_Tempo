@@ -4,7 +4,7 @@
  */
 
 import type { ILogger } from "../interfaces/ILogger";
-import type { ITimerService } from "../interfaces/ITimerService";
+import type { ITimerService, IPerformanceService } from "../interfaces/ITimerService";
 import type { INotificationService } from "../interfaces/INotificationService";
 import type { IErrorReportingService } from "../interfaces/IErrorReportingService";
 
@@ -13,6 +13,7 @@ export interface DebugOrchestratorServiceParams {
   config: DebugOrchestratorConfig;
   logger: ILogger;
   timerService: ITimerService;
+  performanceService: IPerformanceService;
   notificationService: INotificationService;
   errorReportingService: IErrorReportingService;
 }

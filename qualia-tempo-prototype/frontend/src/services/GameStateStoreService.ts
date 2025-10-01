@@ -58,7 +58,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
     @inject(TYPES.GameStateStoreConfig) config: GameStateStoreConfig,
   ) {
     this.config = config;
-    this._logger.info("GameStateStoreService constructed. Awaiting store setter.");
+    this._logger.info(this.config.messages.constructed);
   }
 
   // --- IGameStateStoreService Interface Implementation ---
@@ -133,9 +133,9 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   @OnEvent('GameStateChanged')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handleGameStateChange(event: GameStateChangedEvent): void {
-    this._logger.info(
-      "🎮 [GameStateStoreService] Processing GameStateChanged:",
-      { newState: event.newState },
+    this._logger.debug(
+      this.config.messages.processingGameStateChanged,
+      event
     );
 
     switch (event.newState) {
@@ -182,9 +182,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
           }),
         }));
         if (event.newState === "GameOver") {
-          this._logger.info(
-            "💀 [GameStateStoreService] Game Over - State reset",
-          );
+          this._logger.info(this.config.messages.gameOver);
         }
         break;
 
@@ -222,7 +220,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
 
       default:
         this._logger.warn(
-          "⚠️ [GameStateStoreService] Unhandled game state:",
+          this.config.messages.unhandledState,
           event.newState,
         );
     }
@@ -237,7 +235,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handleParticleDataReceived(event: QualiaParticleDataReceivedEvent): void {
     this._logger.info(
-      "🌟 [GameStateStoreService] Processing QualiaStateUpdated (Binary):",
+      this.config.messages.processingQualiaUpdated,
       { particleDataSize: event.particleData.byteLength, timestamp: event.timestamp },
     );
 
@@ -323,6 +321,6 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   @logMethod
   public setStoreSetter(setStore: StoreSetter): void {
     this.setStore = setStore;
-    this._logger.info("Zustand store setter has been provided to GameStateStoreService.");
+    this._logger.info(this.config.messages.storeSetter);
   }
 }

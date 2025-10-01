@@ -31,6 +31,8 @@ import type { ViewLogicConfig } from '../services/contracts/IViewLogicService.co
 import type { SubtitleConfig } from '../services/contracts/ISubtitleService.contracts';
 import type { DebugOrchestratorConfig } from '../services/contracts/IDebugOrchestratorService.contracts';
 import type { GameStateStoreConfig } from '../services/contracts/IGameStateStoreService.contracts';
+import type { PostProcessingConfig } from '../services/contracts/IPostProcessingService.contracts';
+import type { ProtocolAdapterConfig } from '../services/contracts/IProtocolAdapter.contracts';
 
 /**
  * Gameplay Configuration Interface
@@ -86,6 +88,8 @@ export interface FullGameConfig {
   subtitle: SubtitleConfig;
   debugOrchestrator: DebugOrchestratorConfig;
   gameStateStore: GameStateStoreConfig;
+  postProcessing: PostProcessingConfig;
+  protocolAdapter: ProtocolAdapterConfig;
 
   // Optional Features
   visualEffects?: VisualEffectsConfig;

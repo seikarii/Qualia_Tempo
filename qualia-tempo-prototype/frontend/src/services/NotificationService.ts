@@ -28,7 +28,6 @@ import type {
   NotificationServiceParams,
   NotificationServiceExport,
   NotificationLogData,
-  FlexibleNotificationConfig,
 } from "./contracts/INotificationService.contracts";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
@@ -108,9 +107,6 @@ export class NotificationService implements INotificationService, IBaseService {
 
   // Disabled types from config
   private disabledTypes: Set<string> = new Set();
-
-  // Store full configuration for priority override
-  private fullConfig: FlexibleNotificationConfig = {};
 
   // Store update throttling
   private pendingStoreUpdate = false;
@@ -504,43 +500,20 @@ export class NotificationService implements INotificationService, IBaseService {
 
   /**
    * Update NotificationService configuration.
+   * QUALIA.CODE v1.1: Unified configuration schema - accepts only NotificationServiceConfig
    */
   @logMethod
   @catchError
-  public updateConfig(newConfig: FlexibleNotificationConfig): void {
+  public updateConfig(newConfig: Partial<NotificationServiceConfig>): void {
     try {
-      // Store the full configuration for priority override logic
-      this.fullConfig = newConfig;
-
-      // Handle nested notification config structure from tests
-      let configToMerge = newConfig as Record<string, unknown>;
-      if (newConfig.notifications) {
-        configToMerge = newConfig.notifications;
-      }
-
-      // Create a properly typed config for merging
-      const mergedConfig: Partial<NotificationServiceConfig> = {};
-
-      // Copy over the compatible properties
-      if (configToMerge.display) mergedConfig.display = configToMerge.display;
-      if (configToMerge.positioning) mergedConfig.positioning = configToMerge.positioning;
-      if (configToMerge.styling) mergedConfig.styling = configToMerge.styling;
-      if (configToMerge.sound) mergedConfig.sound = configToMerge.sound;
-      if (configToMerge.queue) mergedConfig.queue = configToMerge.queue;
-      if (configToMerge.accessibility) mergedConfig.accessibility = configToMerge.accessibility;
-
-      // Handle types - if it's the detailed type, use it directly
-      if (configToMerge.types && typeof configToMerge.types === 'object' && 'success' in configToMerge.types) {
-        mergedConfig.types = configToMerge.types;
-      }
-
-      this.config = { ...this.config, ...mergedConfig };
+      // QUALIA.CODE v1.1: Simple merge with typed config only
+      this.config = { ...this.config, ...newConfig };
 
       // Process types configuration if present
-      if (configToMerge.types && typeof configToMerge.types === "object") {
+      if (newConfig.types && typeof newConfig.types === "object") {
         this.disabledTypes.clear();
-        for (const [type, enabled] of Object.entries(configToMerge.types)) {
-          if (enabled === false) {
+        for (const [type, config] of Object.entries(newConfig.types)) {
+          if (config && 'enabled' in config && config.enabled === false) {
             this.disabledTypes.add(type);
           }
         }
@@ -806,12 +779,14 @@ export class NotificationService implements INotificationService, IBaseService {
   }
 
   private _isHighPriorityOverride(notification: ExtendedNotification): boolean {
+    // QUALIA.CODE v1.1: Use typed config instead of flexible fullConfig
     const isHighPriority = 
       notification.priority === "high" || notification.priority === "urgent";
+    // Check if high/urgent priority notifications are always allowed (bypass filters)
     const allowHighPriority = 
-      this.fullConfig?.notifications?.allowHighPriority || false;
+      this.config.enablePriorityQueuing && isHighPriority;
     
-    return isHighPriority && allowHighPriority;
+    return allowHighPriority;
   }
 
   private _isTypeDisabled(notification: ExtendedNotification): boolean {

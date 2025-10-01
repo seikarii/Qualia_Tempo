@@ -1,5 +1,7 @@
 # 📋 DEUDA TÉCNICA - QUALIA TEMPO
-*Generado automáticamente el 1 de octubre de 2025*
+*Última actualización: 2 de octubre de 2025*
+
+---
 
 ## 📊 Resumen Ejecutivo
 

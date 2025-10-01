@@ -656,10 +656,11 @@ export class DebugService implements IDebugService, IBaseService {
   }
 
   private collectPerformanceMetrics(): void {
+    // QUALIA.CODE v1.1: Use abstracted IPerformanceService instead of direct platform API
     // Collect memory usage
-    const perfMemory = (performance as Record<string, unknown>).memory;
-    if (perfMemory && typeof perfMemory.usedJSHeapSize === "number") {
-      this.performanceMetrics.memoryUsage.push(perfMemory.usedJSHeapSize);
+    const memoryInfo = this._performanceService.getMemoryInfo();
+    if (memoryInfo.usedJSHeapSize !== undefined) {
+      this.performanceMetrics.memoryUsage.push(memoryInfo.usedJSHeapSize);
       if (this.performanceMetrics.memoryUsage.length > (this.config.maxMemoryUsageHistory ?? 100)) {
         this.performanceMetrics.memoryUsage.shift();
       }
@@ -846,16 +847,21 @@ export class DebugService implements IDebugService, IBaseService {
   }
 
   private logCurrentConfig(): void {
+    // QUALIA.CODE v1.1: Log ACTUAL config values instead of hardcoded defaults
     this.logger.info("📊 [DebugService] Current Configuration:", {
-      maxSessionHistory: 10, // Default value
+      maxSessionHistory: this.config.maxSessionHistory ?? 10,
       maxEventHistory: this.config.eventMonitoring.maxEventHistory,
       performanceMonitoringInterval: `${this.config.performance.metricsUpdateInterval}ms`,
-      aiAnalysisInterval: "30000ms", // Default value
-      enableAIAnalysis: true, // Default value
+      aiAnalysisInterval: `${this.config.aiAnalysisInterval ?? 30000}ms`,
+      enableAIAnalysis: this.config.enableAIAnalysis ?? true,
       enablePerformanceMonitoring:
         this.config.performance.enablePerformanceTracking,
       enableGlobalInterface: this.config.development.enableDebugOverlay,
-      memoryCleanupThreshold: 1000, // Default value
+      memoryCleanupThreshold: this.config.memoryCleanupThreshold ?? 1000,
+      memoryCleanupInterval: `${this.config.memoryCleanupInterval ?? 60000}ms`,
+      maxMemoryUsageHistory: this.config.maxMemoryUsageHistory ?? 100,
+      maxAIAnalysisHistory: this.config.maxAIAnalysisHistory ?? 50,
+      maxErrorHistory: this.config.maxErrorHistory ?? 100,
     });
   }
 

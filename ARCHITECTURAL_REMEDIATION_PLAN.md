@@ -1,6 +1,18 @@
 # QUALIA.CODE v1.1 - Architectural Remediation Plan
 # TARGET: Qualia Tempo Prototype
 # STATUS: 400 violations detected, build functional (141 any types fixed, Phase 3 Round 2 in progress)
+**Phase 3 Round 3: Configuration Externalization - Protocol Adapter & GameStateStoreService (37 values fixed):**
+- ✅ **protocol-adapter.yaml** - Created comprehensive config for binary protocol translation (62 bytes/particle, field offsets, GPU offsets, validation rules)
+- ✅ **IProtocolAdapter.contracts.ts** - Created typed interfaces for protocol configuration (ProtocolAdapterConfig, ParticleProtocolConfig, field offsets, validation)
+- ✅ **RawToParticleEventAdapter.ts** - Externalized 27 hardcoded values (BYTES_PER_PARTICLE: 62, FLOATS_PER_GPU_PARTICLE: 21, all field offsets, color normalization: 255.0, protocol version, optimization metrics)
+- ✅ **game-state-store.yaml** - Added 6 new message keys (constructed, processingGameStateChanged, processingQualiaUpdated, gameOver, unhandledState, storeSetter)
+- ✅ **IGameStateStoreService.contracts.ts** - Added 6 message properties to config interface
+- ✅ **GameStateStoreService.ts** - Replaced 5 hardcoded log messages with this.config.messages references
+- ✅ **inversify.types.ts** - Added ProtocolAdapterConfig symbol
+- ✅ **inversify.config.ts** - Added protocol-adapter.yaml to ConfigManifest, bound ProtocolAdapterConfig
+- ✅ **Violations reduced from 398 to 364** (34 violations fixed in RawToParticleEventAdapter alone)
+- ⏳ **Remaining hardcoded values:** ~75 instances across remaining services
+
 **Phase 3 Round 2: Configuration Externalization - AudioService & DebugOrchestratorService:**
 - ✅ **audio-service.yaml** - Added baseQualiaState, transcendenceThreshold: 0.8, defaultVolume: 1.0
 - ✅ **debug-orchestrator.yaml** - Added defaultMetrics.temperature: 60, defaultMetrics.frameTime: 16.67, defaultMetrics.memoryConversionFactor: 1048576
@@ -8,7 +20,6 @@
 - ✅ **IDebugOrchestratorService.contracts.ts** - Added defaultMetrics section
 - ✅ **AudioService.ts** - Replaced hardcoded transcendence > 0.8 with this.config.transcendenceThreshold, base QualiaState values with this.config.baseQualiaState, default volume 1.0 with this.config.defaultVolume
 - ✅ **DebugOrchestratorService.ts** - Replaced hardcoded temperature 60 with this.config.defaultMetrics.temperature, frame time 16.67 with this.config.defaultMetrics.frameTime, memory conversion factor with this.config.defaultMetrics.memoryConversionFactor
-- ⏳ **Remaining hardcoded values:** ~112 instances across remaining services
 
 **Phase 3 Round 1: Configuration Externalization - Initial Implementation:**
 - ✅ **error-reporting.yaml** - Added memoryCleanupRatio: 0.8 for history cleanup
@@ -59,14 +70,14 @@
 - ✅ **Total 'any' types eliminated: 141** (78.3% of any type violations eliminated)
 - ✅ **Violations reduced from 579 to 401** (30.7% total violation reduction)
 - ✅ Build remains functional, TypeScript compilation improved significantly
-# LAST UPDATED: 2025-10-01 (Phase 2 Round 5 completed - 68 any types fixed, 14.5% additional violation reduction)
+# LAST UPDATED: 2025-10-02 (Phase 3 Round 3 in progress - Configuration Externalization)
 
 ## EXECUTIVE SUMMARY
 
 **Current Status:** ✅ Build functional, ⚠️ TypeScript has ~20 type errors (down from baseline)
-**Violations:** 401 total (285 errors, 116 warnings) - DOWN from 579 (30.7% reduction)
-**Progress:** 141 any types fixed (78.3% of any type violations eliminated)
-**Impact:** MAJOR progress on type safety - decorators, services, components, mocks, contracts, and interfaces complete
+**Violations:** 364 total (254 errors, 110 warnings) - DOWN from 401 (37 more violations fixed)
+**Progress:** 141 any types fixed (78.3% of any type violations eliminated) + 37 hardcoded config values externalized
+**Impact:** MAJOR progress on configuration externalization - RawToParticleEventAdapter (27 fixes), GameStateStoreService (5 fixes)
 
 ## VIOLATION ANALYSIS
 

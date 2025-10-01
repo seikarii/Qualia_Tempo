@@ -7,7 +7,7 @@ import type {
   NotificationType,
   Notification,
   NotificationStatistics,
-  FlexibleNotificationConfig,
+  NotificationServiceConfig,
   NotificationServiceExport,
 } from '../contracts/INotificationService.contracts';
 
@@ -36,7 +36,8 @@ export interface INotificationService {
   hideNotification(id: string): void;
   hideAllNotifications(): void;
   getActiveNotifications(): Notification[];
-  updateConfig(newConfig: FlexibleNotificationConfig): void;
+  // QUALIA.CODE v1.1: Unified configuration schema
+  updateConfig(newConfig: Partial<NotificationServiceConfig>): void;
   getStatistics(): NotificationStatistics;
   getStatus(): { isRunning: boolean; queueSize: number };
   exportNotificationData(): NotificationServiceExport;

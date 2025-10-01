@@ -14,7 +14,7 @@ import type {
   DebugOrchestratorServiceParams
 } from './contracts/IDebugOrchestratorService.contracts';
 import type { ILogger } from './interfaces/ILogger';
-import type { ITimerService } from './interfaces/ITimerService';
+import type { ITimerService, IPerformanceService } from './interfaces/ITimerService';
 import type { INotificationService } from './interfaces/INotificationService';
 import type { IErrorReportingService } from './interfaces/IErrorReportingService';
 import { logMethod, catchError, OnEvent } from '../utils/decorators';
@@ -26,6 +26,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
   private readonly config: DebugOrchestratorConfig;
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
+  private readonly performanceService: IPerformanceService;
   private readonly notificationService: INotificationService;
   private readonly errorReportingService: IErrorReportingService;
   
@@ -40,6 +41,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
     this.config = params.config;
     this.logger = params.logger;
     this.timerService = params.timerService;
+    this.performanceService = params.performanceService;
     this.notificationService = params.notificationService;
     this.errorReportingService = params.errorReportingService;
     
@@ -203,8 +205,10 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
 
   // Private helper methods
   private getMemoryUsage(): number {
-    if (typeof performance !== 'undefined' && (performance as any).memory) {
-      return (performance as any).memory.usedJSHeapSize / this.config.defaultMetrics.memoryConversionFactor; // MB
+    // QUALIA.CODE v1.1: Use abstracted IPerformanceService instead of direct platform API
+    const memoryInfo = this.performanceService.getMemoryInfo();
+    if (memoryInfo.usedJSHeapSize) {
+      return memoryInfo.usedJSHeapSize / this.config.defaultMetrics.memoryConversionFactor; // MB
     }
     return 0;
   }

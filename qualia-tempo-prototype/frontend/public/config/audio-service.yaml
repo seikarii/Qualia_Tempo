@@ -2,15 +2,15 @@ rhythmicFeedback:
   perfect:
     frequency: 800
     duration: 200
-    volume: 0.8
+    gain: 0.8
   good:
     frequency: 600
     duration: 150
-    volume: 0.6
+    gain: 0.6
   miss:
     frequency: 200
     duration: 300
-    volume: 0.4
+    gain: 0.4
 
 backgroundMusic:
   enabled: true
@@ -27,13 +27,52 @@ metronome:
   frequency: 440
   enabled: true
   volume: 0.5
+  duration: 0.05
+  gain: 0.5
 
 audioEngine:
   sampleRate: 44100
+  channels: 2
   bufferSize: 256
 
+# Entity voices configuration
+entityVoices:
+  player:
+    baseFrequency: 440
+    modulationRange: 200
+  boss:
+    baseFrequency: 220
+    modulationRange: 150
+  environment:
+    baseFrequency: 330
+    modulationRange: 100
+  defaultEntities:
+    - player
+    - boss
+    - environment
+
+# Audio pooling and performance
+enableAudioPooling: true
+maxConcurrentSounds: 32
+audioFadeTime: 0.5
+
+# Master settings
 volume: 0.7
 soundEnabled: true
+musicEnabled: true
+enableSubtitles: false
+muteDuringDevelopment: false
+
+# Sound configuration
+defaultSoundDuration: 1.0
+preloadSimulationDelay: 100
+soundFrequencies:
+  hit: 800
+  miss: 200
+  dash: 600
+  pause: 440
+  resume: 550
+defaultFrequency: 440
 
 # Base qualia state for entity voices
 baseQualiaState:

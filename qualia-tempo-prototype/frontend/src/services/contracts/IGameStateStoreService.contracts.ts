@@ -48,5 +48,11 @@ export interface GameStateStoreConfig {
     stateUpdated: string;
     qualiaUpdated: string;
     rhythmicDash: string;
+    constructed: string;
+    processingGameStateChanged: string;
+    processingQualiaUpdated: string;
+    gameOver: string;
+    unhandledState: string;
+    storeSetter: string;
   };
 }
