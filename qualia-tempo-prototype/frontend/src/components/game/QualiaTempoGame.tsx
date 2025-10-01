@@ -137,11 +137,14 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
             coherence: zustandState.qualiaState.precision,
           }}
           musicData={{
+            tempo: 120, // TODO: Get from audio service
+            beat_position: 0, // TODO: Get from audio service
             intensity: zustandState.qualiaState.intensity,
-            harmony: zustandState.qualiaState.flow,
-            emotional_valence: zustandState.qualiaState.recovery,
+            frequency_bands: [0, 0, 0, 0], // TODO: Get from audio service
             order_influence: zustandState.qualiaState.precision,
             chaos_influence: zustandState.qualiaState.chaos,
+            emotional_valence: zustandState.qualiaState.recovery,
+            harmony: zustandState.qualiaState.flow,
           }}
         />
 
@@ -155,6 +158,8 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
               0,
               zustandState.player.position.y,
             ],
+            velocity: [0, 0, 0], // TODO: Get from physics service
+            health: zustandState.player.health,
             power_level: zustandState.player.health,
             consciousness_level: zustandState.qualiaState.transcendence,
             qualia_state: {
@@ -166,6 +171,8 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
           performance={{
             accuracy:
               zustandState.notesHit / Math.max(1, zustandState.totalNotes),
+            rhythm_score: zustandState.player.score,
+            combo_multiplier: zustandState.player.combo,
             rhythm_sync: zustandState.qualiaState.flow,
             qualia_coherence: zustandState.qualiaState.precision,
           }}
