@@ -86,31 +86,31 @@ export class RawToParticleEventAdapter implements IMessageAdapter {
       gpuBuffer[floatOffset + 7] = view.getFloat32(byteOffset + 28, true); // y
       gpuBuffer[floatOffset + 8] = view.getFloat32(byteOffset + 32, true); // z
 
-      // Force Accumulator (offset 36-47, 12 bytes) -> float32[3]
-      gpuBuffer[floatOffset + 9] = view.getFloat32(byteOffset + 36, true); // x
-      gpuBuffer[floatOffset + 10] = view.getFloat32(byteOffset + 40, true); // y
-      gpuBuffer[floatOffset + 11] = view.getFloat32(byteOffset + 44, true); // z
-
       // Color (offset 48-51, 4 bytes) -> uint8[4] normalized to float32[4]
-      gpuBuffer[floatOffset + 12] = view.getUint8(byteOffset + 48) / 255.0; // r
-      gpuBuffer[floatOffset + 13] = view.getUint8(byteOffset + 49) / 255.0; // g
-      gpuBuffer[floatOffset + 14] = view.getUint8(byteOffset + 50) / 255.0; // b
-      gpuBuffer[floatOffset + 15] = view.getUint8(byteOffset + 51) / 255.0; // a
+      gpuBuffer[floatOffset + 9] = view.getUint8(byteOffset + 48) / 255.0; // r
+      gpuBuffer[floatOffset + 10] = view.getUint8(byteOffset + 49) / 255.0; // g
+      gpuBuffer[floatOffset + 11] = view.getUint8(byteOffset + 50) / 255.0; // b
+      gpuBuffer[floatOffset + 12] = view.getUint8(byteOffset + 51) / 255.0; // a
 
       // Lifetime (offset 52-53, 2 bytes) -> float16 to float32
-      gpuBuffer[floatOffset + 16] = decodeFloat16(view.getUint16(byteOffset + 52, true));
+      gpuBuffer[floatOffset + 13] = decodeFloat16(view.getUint16(byteOffset + 52, true));
 
       // Size (offset 54-55, 2 bytes) -> float16 to float32
-      gpuBuffer[floatOffset + 17] = decodeFloat16(view.getUint16(byteOffset + 54, true));
+      gpuBuffer[floatOffset + 14] = decodeFloat16(view.getUint16(byteOffset + 54, true));
 
       // Resonance (offset 56-57, 2 bytes) -> float16 to float32
-      gpuBuffer[floatOffset + 18] = decodeFloat16(view.getUint16(byteOffset + 56, true));
+      gpuBuffer[floatOffset + 15] = decodeFloat16(view.getUint16(byteOffset + 56, true));
 
       // Mass (offset 58-59, 2 bytes) -> float16 to float32
-      gpuBuffer[floatOffset + 19] = decodeFloat16(view.getUint16(byteOffset + 58, true));
+      gpuBuffer[floatOffset + 16] = decodeFloat16(view.getUint16(byteOffset + 58, true));
 
       // Charge (offset 60-61, 2 bytes) -> float16 to float32
-      gpuBuffer[floatOffset + 20] = decodeFloat16(view.getUint16(byteOffset + 60, true));
+      gpuBuffer[floatOffset + 17] = decodeFloat16(view.getUint16(byteOffset + 60, true));
+
+      // Force Accumulator (offset 36-47, 12 bytes) -> float32[3]
+      gpuBuffer[floatOffset + 18] = view.getFloat32(byteOffset + 36, true); // x
+      gpuBuffer[floatOffset + 19] = view.getFloat32(byteOffset + 40, true); // y
+      gpuBuffer[floatOffset + 20] = view.getFloat32(byteOffset + 44, true); // z
     }
 
     // PROTOCOL TRANSLATION: Convert decoded data to typed domain event

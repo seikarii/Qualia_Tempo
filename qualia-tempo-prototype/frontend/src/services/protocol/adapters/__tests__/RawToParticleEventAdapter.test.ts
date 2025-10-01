@@ -113,18 +113,18 @@ describe('RawToParticleEventAdapter', () => {
       expect(data[6]).toBeCloseTo(0.01, 6);  // acceleration.x
       expect(data[7]).toBeCloseTo(0.02, 6);  // acceleration.y
       expect(data[8]).toBeCloseTo(0.03, 6);  // acceleration.z
-      expect(data[9]).toBeCloseTo(0.001, 6); // force.x
-      expect(data[10]).toBeCloseTo(0.002, 6); // force.y
-      expect(data[11]).toBeCloseTo(0.003, 6); // force.z
-      expect(data[12]).toBeCloseTo(128/255, 6);    // color.r (128/255)
-      expect(data[13]).toBeCloseTo(64/255, 6);   // color.g (64/255)
-      expect(data[14]).toBeCloseTo(32/255, 6);  // color.b (32/255)
-      expect(data[15]).toBe(1.0);  // color.a (255/255)
-      expect(data[16]).toBe(1.0);  // lifetime
-      expect(data[17]).toBe(2.0);  // size
-      expect(data[18]).toBe(3.0);  // resonance
-      expect(data[19]).toBe(4.0);  // mass
-      expect(data[20]).toBe(5.0);  // charge
+      expect(data[9]).toBeCloseTo(128/255, 6);    // color.r (128/255)
+      expect(data[10]).toBeCloseTo(64/255, 6);   // color.g (64/255)
+      expect(data[11]).toBeCloseTo(32/255, 6);  // color.b (32/255)
+      expect(data[12]).toBe(1.0);  // color.a (255/255)
+      expect(data[13]).toBe(1.0);  // lifetime
+      expect(data[14]).toBe(2.0);  // size
+      expect(data[15]).toBe(3.0);  // resonance
+      expect(data[16]).toBe(4.0);  // mass
+      expect(data[17]).toBe(5.0);  // charge
+      expect(data[18]).toBeCloseTo(0.001, 6); // force_accumulator.x
+      expect(data[19]).toBeCloseTo(0.002, 6); // force_accumulator.y
+      expect(data[20]).toBeCloseTo(0.003, 6); // force_accumulator.z
     });
 
     it('should handle multiple particles correctly', () => {
