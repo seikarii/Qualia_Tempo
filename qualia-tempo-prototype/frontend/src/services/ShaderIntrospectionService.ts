@@ -33,7 +33,7 @@ export class ShaderIntrospectionService implements IShaderIntrospectionService {
 
     // Split shader source by pragmas
     const vertexMatch = shaderSource.match(/#pragma VERTEX\s*\n([\s\S]*?)(?=#pragma FRAGMENT|$)/);
-    const fragmentMatch = shaderSource.match(/#pragma FRAGMENT\s*\n([\s\S]*)/);
+    const fragmentMatch = shaderSource.match(/#pragma FRAGMENT\s*\n([\s\S]*?)$/);
 
     if (!vertexMatch || !fragmentMatch) {
       throw new Error('Shader source must contain #pragma VERTEX and #pragma FRAGMENT sections');

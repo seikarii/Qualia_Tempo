@@ -146,7 +146,7 @@ pipelines:
 
       # Optional: Add bloom for enhanced visuals
       - type: UnrealBloomPass
-        enabled: false  # Enable for extra visual flair
+        enabled: true  # Enable for extra visual flair
         params:
           strength: 0.5
           radius: 0.3

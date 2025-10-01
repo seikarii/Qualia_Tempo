@@ -12,6 +12,7 @@ This document lists all active shader files (.glsl, .vert) used in the post-proc
 
 ### Composite Pipeline
 - **composite_pass.glsl**: Used in ShaderPass for final image composition combining base color with reflections
+- **UnrealBloomPass**: Three.js built-in bloom effect for enhanced visual flair (now enabled)
 
 ### Shared Vertex Shaders
 - **fullscreen_quad.vert**: Vertex shader for full-screen quad rendering (used by various ShaderPasses)
@@ -20,7 +21,7 @@ This document lists all active shader files (.glsl, .vert) used in the post-proc
 
 1. **gbuffer_pipeline**: Generates G-Buffer textures
 2. **ssr_pipeline**: Computes screen-space reflections using G-Buffer
-3. **composite_pipeline**: Combines base rendering with reflections for final output
+3. **composite_pipeline**: Combines base rendering with reflections and applies bloom effect for final output
 
 ## Notes
 

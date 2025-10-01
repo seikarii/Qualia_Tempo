@@ -15,8 +15,10 @@ import { TYPES } from "./inversify.types";
 import type { IPostProcessingService } from "./interfaces/IPostProcessingService";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IShaderIntrospectionService } from "./interfaces/IShaderIntrospectionService";
+import type { IShaderLoaderService } from "./interfaces/IShaderLoaderService";
 import type { PostProcessingConfig, PostProcessingPass } from "./contracts/IPostProcessingService.contracts";
 import { logMethod, catchError, BrowserOnly } from "../utils/decorators";
+import { env } from "../utils/env";
 import { GBufferPass } from "./postprocessing/GBufferPass.js";
 
 @injectable()
@@ -165,6 +167,9 @@ export class PostProcessingService implements IPostProcessingService {
           }
         } catch (error) {
           this.logger.error(`Failed to create pass ${passConfig.type} in pipeline ${pipelineConfig.name}`, { error });
+          if (env.isDev) {
+            throw error;
+          }
         }
       }
 
