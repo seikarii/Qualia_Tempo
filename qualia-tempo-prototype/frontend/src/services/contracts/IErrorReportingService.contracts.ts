@@ -116,6 +116,7 @@ export interface ErrorReportingConfig {
   memoryCleanupInterval: number;
   rateLimitRefillInterval: number;
   fingerprintLength: number;
+  memoryCleanupRatio: number;  // Ratio of history to keep during cleanup
   
   // Properties expected by validator
   rateLimitWindow: number;

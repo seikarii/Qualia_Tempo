@@ -1,0 +1,53 @@
+# QUALIA.CODE v1.1 - Protocol Adapter Configuration
+# Configuration for binary protocol translation and particle data decoding
+
+particleProtocol:
+  # Binary format constants
+  bytesPerParticle: 62  # Optimized GOLD.CODE format
+  floatsPerGpuParticle: 21  # Expanded GPU format
+  
+  # Protocol version
+  version: "GOLD.CODE_v1.0"
+  
+  # Memory optimization metrics
+  optimization:
+    originalBytesPerParticle: 84
+    optimizedBytesPerParticle: 62
+    memorySavingsPercent: 26.2
+  
+  # Binary field offsets (bytes)
+  fieldOffsets:
+    position: 0        # 12 bytes (float32[3])
+    velocity: 12       # 12 bytes (float32[3])
+    acceleration: 24   # 12 bytes (float32[3])
+    forceAccumulator: 36  # 12 bytes (float32[3])
+    color: 48          # 4 bytes (uint8[4])
+    lifetime: 52       # 2 bytes (float16)
+    size: 54           # 2 bytes (float16)
+    resonance: 56      # 2 bytes (float16)
+    mass: 58           # 2 bytes (float16)
+    charge: 60         # 2 bytes (float16)
+  
+  # GPU buffer field offsets (float32 indices)
+  gpuFieldOffsets:
+    position: 0        # float32[3]
+    velocity: 3        # float32[3]
+    acceleration: 6    # float32[3]
+    color: 9           # float32[4]
+    lifetime: 13       # float32
+    size: 14           # float32
+    resonance: 15      # float32
+    mass: 16           # float32
+    charge: 17         # float32
+    forceAccumulator: 18  # float32[3]
+
+  # Color normalization
+  colorNormalizationFactor: 255.0
+  
+  # Validation
+  validation:
+    minBufferSize: 0
+    requireMultipleOf: 62
+
+# Source identifier for protocol adapter events
+eventSource: "ProtocolAdapter:Raw"

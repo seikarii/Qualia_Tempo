@@ -889,7 +889,7 @@ export class NotificationService implements INotificationService, IBaseService {
   private startQueueProcessing(): void {
     this.queueProcessingInterval = this.timerService.setInterval(() => {
       this.processQueue();
-    }, 100); // Process every 100ms
+    }, this.config.queue.queueProcessingInterval); // Use configured processing interval
   }
 
   private startAutoCleanup(): void {

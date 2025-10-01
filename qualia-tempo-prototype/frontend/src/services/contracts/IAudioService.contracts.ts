@@ -56,6 +56,23 @@ export interface AudioServiceConfig {
   soundFrequencies: Record<string, number>;
   defaultFrequency: number;
   
+  // Base qualia state for entity voices
+  baseQualiaState: {
+    intensity: number;
+    precision: number;
+    aggression: number;
+    flow: number;
+    chaos: number;
+    recovery: number;
+    transcendence: number;
+  };
+  
+  // Thresholds for emergent audio behaviors
+  transcendenceThreshold: number;
+  
+  // Default volume for audio operations
+  defaultVolume: number;
+  
   // Messages for logging
   messages: {
     audioContextNotAvailable: string;

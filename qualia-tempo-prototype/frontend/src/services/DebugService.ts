@@ -635,7 +635,7 @@ export class DebugService implements IDebugService, IBaseService {
   private startMemoryCleanup(): void {
     this.memoryCleanupInterval = this.timerService.setInterval(() => {
       this.performMemoryCleanup();
-    }, 60000); // Default memory cleanup interval: 1 minute
+    }, this.config.memoryCleanupInterval ?? 60000); // Use configuration interval with fallback
   }
 
   private stopAllIntervals(): void {
@@ -660,7 +660,7 @@ export class DebugService implements IDebugService, IBaseService {
     const perfMemory = (performance as Record<string, unknown>).memory;
     if (perfMemory && typeof perfMemory.usedJSHeapSize === "number") {
       this.performanceMetrics.memoryUsage.push(perfMemory.usedJSHeapSize);
-      if (this.performanceMetrics.memoryUsage.length > 100) {
+      if (this.performanceMetrics.memoryUsage.length > (this.config.maxMemoryUsageHistory ?? 100)) {
         this.performanceMetrics.memoryUsage.shift();
       }
     }
@@ -678,10 +678,10 @@ export class DebugService implements IDebugService, IBaseService {
       );
 
       // Clean up old AI analysis
-      this.aiAnalysisResults = this.aiAnalysisResults.slice(-50);
+      this.aiAnalysisResults = this.aiAnalysisResults.slice(-(this.config.maxAIAnalysisHistory ?? 50));
 
       // Clean up error history
-      this.errorHistory = this.errorHistory.slice(-100);
+      this.errorHistory = this.errorHistory.slice(-(this.config.maxErrorHistory ?? 100));
 
       this.logger.info("🧹 [DebugService] Memory cleanup performed");
     }
@@ -734,11 +734,11 @@ export class DebugService implements IDebugService, IBaseService {
     // Check for slow event processing
     this.performanceMetrics.eventProcessingTimes.forEach((times, eventType) => {
       const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
-      if (avgTime > 50) {
-        // 50ms threshold
+      if (avgTime > (this.config.eventProcessingTimeThreshold ?? 50)) {
+        // Configurable threshold for event processing time
         results.push({
           type: "performance_issue" as "performance_issue",
-          severity: avgTime > 100 ? "high" : "medium",
+          severity: avgTime > (this.config.eventProcessingTimeHighThreshold ?? 100) ? "high" : "medium",
           message: `Slow event processing detected for ${eventType}`,
           metadata: {
             eventType,

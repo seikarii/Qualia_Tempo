@@ -126,7 +126,7 @@ export class AudioService implements IAudioService, IBaseService {
     );
 
     // Patrón emergente basado en el estado
-    if (qualiaState.transcendence > 0.8) {
+    if (qualiaState.transcendence > this.config.transcendenceThreshold) {
       const emergentBehavior = {
         type: "NARRATIVE_EVENT" as const,
         entities: [],
@@ -145,13 +145,13 @@ export class AudioService implements IAudioService, IBaseService {
 
     // Crear voces para entidades del juego con estado base
     const baseState: QualiaState = {
-      intensity: 0.5,
-      precision: 0.5,
-      aggression: 0.0,
-      flow: 0.5,
-      chaos: 0.0,
-      recovery: 0.0,
-      transcendence: 0.0,
+      intensity: this.config.baseQualiaState.intensity,
+      precision: this.config.baseQualiaState.precision,
+      aggression: this.config.baseQualiaState.aggression,
+      flow: this.config.baseQualiaState.flow,
+      chaos: this.config.baseQualiaState.chaos,
+      recovery: this.config.baseQualiaState.recovery,
+      transcendence: this.config.baseQualiaState.transcendence,
     };
 
     this.audioEngine.createEntityVoice("player", baseState);
@@ -269,7 +269,7 @@ export class AudioService implements IAudioService, IBaseService {
       return;
     }
 
-    const volume = options?.volume ?? 1.0;
+    const volume = options?.volume ?? this.config.defaultVolume;
     const loop = options?.loop ?? false;
 
     try {

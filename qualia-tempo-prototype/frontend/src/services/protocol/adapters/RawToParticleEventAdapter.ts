@@ -6,9 +6,11 @@
  * GOLD.CODE v1.0: Binary protocol translator for optimized particle data (62 bytes per particle).
  */
 
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../../inversify.types';
 import { IMessageAdapter } from '../IMessageAdapter';
 import { QualiaParticleDataReceivedEvent } from '../../contracts/events.contracts';
+import type { ProtocolAdapterConfig } from '../../contracts/IProtocolAdapter.contracts';
 
 /**
  * Decode IEEE 754 half-precision (16-bit) float to JavaScript number.
@@ -30,9 +32,15 @@ function decodeFloat16(binary: number): number {
 
 @injectable()
 export class RawToParticleEventAdapter implements IMessageAdapter {
+  private readonly config: ProtocolAdapterConfig;
+
+  constructor(@inject(TYPES.ProtocolAdapterConfig) config: ProtocolAdapterConfig) {
+    this.config = config;
+  }
+
   /**
    * Convert raw ArrayBuffer particle data to typed event.
-   * GOLD.CODE: Decodes optimized binary format (62 bytes per particle) to GPU-compatible Float32Array (84 bytes per particle).
+   * GOLD.CODE: Decodes optimized binary format to GPU-compatible Float32Array.
    */
   public adapt(rawData: ArrayBuffer): QualiaParticleDataReceivedEvent {
     // VALIDATION: Ensure we have the expected ArrayBuffer format
@@ -43,20 +51,20 @@ export class RawToParticleEventAdapter implements IMessageAdapter {
     }
 
     // VALIDATION: Ensure minimum data size for particle data
-    if (rawData.byteLength === 0) {
+    if (rawData.byteLength === this.config.particleProtocol.validation.minBufferSize) {
       throw new Error(
         'Invalid particle data: ArrayBuffer is empty'
       );
     }
 
-    // GOLD.CODE CONSTANTS
-    const BYTES_PER_PARTICLE = 62;
-    const FLOATS_PER_GPU_PARTICLE = 21;
+    // GOLD.CODE CONSTANTS from configuration
+    const BYTES_PER_PARTICLE = this.config.particleProtocol.bytesPerParticle;
+    const FLOATS_PER_GPU_PARTICLE = this.config.particleProtocol.floatsPerGpuParticle;
 
     // VALIDATION: Ensure buffer size is multiple of optimized particle size
-    if (rawData.byteLength % BYTES_PER_PARTICLE !== 0) {
+    if (rawData.byteLength % this.config.particleProtocol.validation.requireMultipleOf !== 0) {
       throw new Error(
-        `Invalid buffer size: ${rawData.byteLength}. Must be a multiple of ${BYTES_PER_PARTICLE} bytes per particle (GOLD.CODE format).`
+        `Invalid buffer size: ${rawData.byteLength}. Must be a multiple of ${this.config.particleProtocol.validation.requireMultipleOf} bytes per particle (${this.config.particleProtocol.version} format).`
       );
     }
 
@@ -67,66 +75,70 @@ export class RawToParticleEventAdapter implements IMessageAdapter {
     const gpuBuffer = new Float32Array(numParticles * FLOATS_PER_GPU_PARTICLE);
 
     // PROTOCOL TRANSLATION: Decode each optimized particle and expand to GPU format
+    const fieldOffsets = this.config.particleProtocol.fieldOffsets;
+    const gpuOffsets = this.config.particleProtocol.gpuFieldOffsets;
+    const colorNorm = this.config.particleProtocol.colorNormalizationFactor;
+
     for (let i = 0; i < numParticles; i++) {
       const byteOffset = i * BYTES_PER_PARTICLE;
       const floatOffset = i * FLOATS_PER_GPU_PARTICLE;
 
-      // Position (offset 0-11, 12 bytes) -> float32[3]
-      gpuBuffer[floatOffset + 0] = view.getFloat32(byteOffset + 0, true); // x
-      gpuBuffer[floatOffset + 1] = view.getFloat32(byteOffset + 4, true); // y
-      gpuBuffer[floatOffset + 2] = view.getFloat32(byteOffset + 8, true); // z
+      // Position -> float32[3]
+      gpuBuffer[floatOffset + gpuOffsets.position + 0] = view.getFloat32(byteOffset + fieldOffsets.position + 0, true);
+      gpuBuffer[floatOffset + gpuOffsets.position + 1] = view.getFloat32(byteOffset + fieldOffsets.position + 4, true);
+      gpuBuffer[floatOffset + gpuOffsets.position + 2] = view.getFloat32(byteOffset + fieldOffsets.position + 8, true);
 
-      // Velocity (offset 12-23, 12 bytes) -> float32[3]
-      gpuBuffer[floatOffset + 3] = view.getFloat32(byteOffset + 12, true); // x
-      gpuBuffer[floatOffset + 4] = view.getFloat32(byteOffset + 16, true); // y
-      gpuBuffer[floatOffset + 5] = view.getFloat32(byteOffset + 20, true); // z
+      // Velocity -> float32[3]
+      gpuBuffer[floatOffset + gpuOffsets.velocity + 0] = view.getFloat32(byteOffset + fieldOffsets.velocity + 0, true);
+      gpuBuffer[floatOffset + gpuOffsets.velocity + 1] = view.getFloat32(byteOffset + fieldOffsets.velocity + 4, true);
+      gpuBuffer[floatOffset + gpuOffsets.velocity + 2] = view.getFloat32(byteOffset + fieldOffsets.velocity + 8, true);
 
-      // Acceleration (offset 24-35, 12 bytes) -> float32[3]
-      gpuBuffer[floatOffset + 6] = view.getFloat32(byteOffset + 24, true); // x
-      gpuBuffer[floatOffset + 7] = view.getFloat32(byteOffset + 28, true); // y
-      gpuBuffer[floatOffset + 8] = view.getFloat32(byteOffset + 32, true); // z
+      // Acceleration -> float32[3]
+      gpuBuffer[floatOffset + gpuOffsets.acceleration + 0] = view.getFloat32(byteOffset + fieldOffsets.acceleration + 0, true);
+      gpuBuffer[floatOffset + gpuOffsets.acceleration + 1] = view.getFloat32(byteOffset + fieldOffsets.acceleration + 4, true);
+      gpuBuffer[floatOffset + gpuOffsets.acceleration + 2] = view.getFloat32(byteOffset + fieldOffsets.acceleration + 8, true);
 
-      // Color (offset 48-51, 4 bytes) -> uint8[4] normalized to float32[4]
-      gpuBuffer[floatOffset + 9] = view.getUint8(byteOffset + 48) / 255.0; // r
-      gpuBuffer[floatOffset + 10] = view.getUint8(byteOffset + 49) / 255.0; // g
-      gpuBuffer[floatOffset + 11] = view.getUint8(byteOffset + 50) / 255.0; // b
-      gpuBuffer[floatOffset + 12] = view.getUint8(byteOffset + 51) / 255.0; // a
+      // Color -> uint8[4] normalized to float32[4]
+      gpuBuffer[floatOffset + gpuOffsets.color + 0] = view.getUint8(byteOffset + fieldOffsets.color + 0) / colorNorm;
+      gpuBuffer[floatOffset + gpuOffsets.color + 1] = view.getUint8(byteOffset + fieldOffsets.color + 1) / colorNorm;
+      gpuBuffer[floatOffset + gpuOffsets.color + 2] = view.getUint8(byteOffset + fieldOffsets.color + 2) / colorNorm;
+      gpuBuffer[floatOffset + gpuOffsets.color + 3] = view.getUint8(byteOffset + fieldOffsets.color + 3) / colorNorm;
 
-      // Lifetime (offset 52-53, 2 bytes) -> float16 to float32
-      gpuBuffer[floatOffset + 13] = decodeFloat16(view.getUint16(byteOffset + 52, true));
+      // Lifetime -> float16 to float32
+      gpuBuffer[floatOffset + gpuOffsets.lifetime] = decodeFloat16(view.getUint16(byteOffset + fieldOffsets.lifetime, true));
 
-      // Size (offset 54-55, 2 bytes) -> float16 to float32
-      gpuBuffer[floatOffset + 14] = decodeFloat16(view.getUint16(byteOffset + 54, true));
+      // Size -> float16 to float32
+      gpuBuffer[floatOffset + gpuOffsets.size] = decodeFloat16(view.getUint16(byteOffset + fieldOffsets.size, true));
 
-      // Resonance (offset 56-57, 2 bytes) -> float16 to float32
-      gpuBuffer[floatOffset + 15] = decodeFloat16(view.getUint16(byteOffset + 56, true));
+      // Resonance -> float16 to float32
+      gpuBuffer[floatOffset + gpuOffsets.resonance] = decodeFloat16(view.getUint16(byteOffset + fieldOffsets.resonance, true));
 
-      // Mass (offset 58-59, 2 bytes) -> float16 to float32
-      gpuBuffer[floatOffset + 16] = decodeFloat16(view.getUint16(byteOffset + 58, true));
+      // Mass -> float16 to float32
+      gpuBuffer[floatOffset + gpuOffsets.mass] = decodeFloat16(view.getUint16(byteOffset + fieldOffsets.mass, true));
 
-      // Charge (offset 60-61, 2 bytes) -> float16 to float32
-      gpuBuffer[floatOffset + 17] = decodeFloat16(view.getUint16(byteOffset + 60, true));
+      // Charge -> float16 to float32
+      gpuBuffer[floatOffset + gpuOffsets.charge] = decodeFloat16(view.getUint16(byteOffset + fieldOffsets.charge, true));
 
-      // Force Accumulator (offset 36-47, 12 bytes) -> float32[3]
-      gpuBuffer[floatOffset + 18] = view.getFloat32(byteOffset + 36, true); // x
-      gpuBuffer[floatOffset + 19] = view.getFloat32(byteOffset + 40, true); // y
-      gpuBuffer[floatOffset + 20] = view.getFloat32(byteOffset + 44, true); // z
+      // Force Accumulator -> float32[3]
+      gpuBuffer[floatOffset + gpuOffsets.forceAccumulator + 0] = view.getFloat32(byteOffset + fieldOffsets.forceAccumulator + 0, true);
+      gpuBuffer[floatOffset + gpuOffsets.forceAccumulator + 1] = view.getFloat32(byteOffset + fieldOffsets.forceAccumulator + 4, true);
+      gpuBuffer[floatOffset + gpuOffsets.forceAccumulator + 2] = view.getFloat32(byteOffset + fieldOffsets.forceAccumulator + 8, true);
     }
 
     // PROTOCOL TRANSLATION: Convert decoded data to typed domain event
     return {
       type: "QualiaParticleDataReceived",
       particleData: gpuBuffer, // Expanded GPU-compatible buffer
-      source: "ProtocolAdapter:Raw",
+      source: this.config.eventSource,
       timestamp: new Date(), // Adapter generates timestamp for traceability
       metadata: {
         byteLength: rawData.byteLength,
         particleCount: numParticles,
-        protocolVersion: "GOLD.CODE_v1.0",
+        protocolVersion: this.config.particleProtocol.version,
         optimization: {
-          originalBytesPerParticle: 84,
-          optimizedBytesPerParticle: 62,
-          memorySavingsPercent: 26.2
+          originalBytesPerParticle: this.config.particleProtocol.optimization.originalBytesPerParticle,
+          optimizedBytesPerParticle: this.config.particleProtocol.optimization.optimizedBytesPerParticle,
+          memorySavingsPercent: this.config.particleProtocol.optimization.memorySavingsPercent
         }
       }
     };

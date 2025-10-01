@@ -204,7 +204,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
   // Private helper methods
   private getMemoryUsage(): number {
     if (typeof performance !== 'undefined' && (performance as any).memory) {
-      return (performance as any).memory.usedJSHeapSize / 1024 / 1024; // MB
+      return (performance as any).memory.usedJSHeapSize / this.config.defaultMetrics.memoryConversionFactor; // MB
     }
     return 0;
   }
@@ -212,13 +212,13 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
   private getFpsAverage(): number {
     // This would need to be integrated with a performance monitoring system
     // For now, return a default value
-    return 60;
+    return this.config.defaultMetrics.fps;
   }
 
   private getRenderTime(): number {
     // This would need to be integrated with the rendering system
     // For now, return a default value
-    return 16.67; // ~60fps
+    return this.config.defaultMetrics.frameTime; // ~60fps
   }
 
   // IBaseService implementation

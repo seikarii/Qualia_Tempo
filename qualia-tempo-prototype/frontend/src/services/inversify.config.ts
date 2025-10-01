@@ -126,32 +126,29 @@ container.bind<ILogger>(TYPES.ILogger).to(QualiaLogger).inSingletonScope();
 // Bind configuration values for ConfigurationService
 container.bind<string>(TYPES.ConfigBasePath).toConstantValue("/config/");
 container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
-  "gameController": "game-controller.yaml",
-  "gameInputController": "game-input-controller.yaml",
-  "gameplay": "gameplay.yaml",
-  "audioService": "audio-service.yaml",
-  "debugService": "debug-service.yaml",
-  "errorReporting": "error-reporting.yaml",
-  "qualiaCalculator": "qualia-calculator.yaml",
-  "backendSync": "backend-sync.yaml",
-  "notificationService": "notification-service.yaml",
-  "rhythmicMovement": "rhythmic-movement.yaml",
-  "frontendRendering": "frontend-rendering.yaml",
-  "visualEffects": "visual-effects.yaml",
-  "compositionRoot": "composition-root.yaml",
-  "eventBus": "eventbus.yaml",
-  "applicationInitializer": "application-initializer.yaml",
-  "mainMenu": "main-menu.yaml",
-  "http": "http-service.yaml",
+  "appInitializer": "application-initializer.yaml",
   "logger": "logger.yaml",
-  
-  // NEW SERVICES CONFIGURATION FILES
+  "http": "http-service.yaml",
+  "eventBus": "eventbus.yaml",
+  "backendSync": "backend-sync.yaml",
+  "gameController": "game-controller.yaml",
+  "qualiaCalculator": "qualia-calculator.yaml",
+  "rhythmicMovement": "rhythmic-movement.yaml",
+  "audioService": "audio-service.yaml",
+  "notificationService": "notification-service.yaml",
+  "errorReporting": "error-reporting.yaml",
+  "debugService": "debug-service.yaml",
+  "frontendRendering": "frontend-rendering.yaml",
   "gameplayMechanics": "gameplay-mechanics.yaml",
   "viewLogic": "view-logic.yaml",
   "subtitle": "subtitle.yaml",
   "debugOrchestrator": "debug-orchestrator.yaml",
   "gameStateStore": "game-state-store.yaml",
-  "postProcessing": "post-processing.yaml"
+  "postProcessing": "post-processing.yaml",
+  "streaming": "backend-sync.yaml",
+  "visualEffects": "visual-effects.yaml",
+  "coordinateSystem": "game-config.yaml",
+  "protocolAdapter": "protocol-adapter.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
@@ -486,6 +483,7 @@ export async function configureServices(): Promise<void> {
   safeBindConstant(TYPES.DebugOrchestratorConfig, fullConfig.debugOrchestrator);
   safeBindConstant<GameStateStoreConfig>(TYPES.GameStateStoreConfig, fullConfig.gameStateStore);
   safeBindConstant(TYPES.PostProcessingConfig, (fullConfig as any).postProcessing);
+  safeBindConstant(TYPES.ProtocolAdapterConfig, (fullConfig as any).protocolAdapter);
 
   // QUALIA.CODE v1.1: Bind ApplicationInitializerServiceParams factory
   // Consolidates 14 constructor parameters into a single object to comply with IoC limits

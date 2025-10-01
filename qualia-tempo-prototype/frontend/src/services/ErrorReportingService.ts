@@ -484,7 +484,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     this.errorHistory.push(errorReport);
     if (this.errorHistory.length > this.config.memoryCleanupThreshold) {
       this.errorHistory = this.errorHistory.slice(
-        -Math.floor(this.config.memoryCleanupThreshold * 0.8),
+        -Math.floor(this.config.memoryCleanupThreshold * (this.config.memoryCleanupRatio ?? 0.8)),
       );
     }
 

@@ -1,12 +1,24 @@
 # QUALIA.CODE v1.1 - Architectural Remediation Plan
 # TARGET: Qualia Tempo Prototype
-# STATUS: 401 violations detected, build functional (141 any types fixed in Phase 2)
-**Phase 2 Round 5 Completion - Major 'any' Type Elimination:**
-- ✅ **decorators.ts** - Eliminated ALL 67 'any' types (replaced with 'unknown', 'Record<string, unknown>', proper function types)
-- ✅ **ErrorReportingService.ts** - Fixed 3 'any' types (Record<string, unknown> for context parameters)
-- ✅ **DebugService.ts** - Fixed 3 'any' types (unknown for lastQualiaState, Record<string, unknown> for performance.memory, proper type assertion)
-- ✅ **main.ts** - Fixed 2 'any' types (proper type assertions for Electron vibrancy)
-- ✅ **IErrorReportingService.ts** - Fixed 1 'any' type (Record<string, unknown> for context)
+# STATUS: 400 violations detected, build functional (141 any types fixed, Phase 3 Round 2 in progress)
+**Phase 3 Round 2: Configuration Externalization - AudioService & DebugOrchestratorService:**
+- ✅ **audio-service.yaml** - Added baseQualiaState, transcendenceThreshold: 0.8, defaultVolume: 1.0
+- ✅ **debug-orchestrator.yaml** - Added defaultMetrics.temperature: 60, defaultMetrics.frameTime: 16.67, defaultMetrics.memoryConversionFactor: 1048576
+- ✅ **IAudioService.contracts.ts** - Added baseQualiaState, transcendenceThreshold, defaultVolume
+- ✅ **IDebugOrchestratorService.contracts.ts** - Added defaultMetrics section
+- ✅ **AudioService.ts** - Replaced hardcoded transcendence > 0.8 with this.config.transcendenceThreshold, base QualiaState values with this.config.baseQualiaState, default volume 1.0 with this.config.defaultVolume
+- ✅ **DebugOrchestratorService.ts** - Replaced hardcoded temperature 60 with this.config.defaultMetrics.temperature, frame time 16.67 with this.config.defaultMetrics.frameTime, memory conversion factor with this.config.defaultMetrics.memoryConversionFactor
+- ⏳ **Remaining hardcoded values:** ~112 instances across remaining services
+
+**Phase 3 Round 1: Configuration Externalization - Initial Implementation:**
+- ✅ **error-reporting.yaml** - Added memoryCleanupRatio: 0.8 for history cleanup
+- ✅ **debug-service.yaml** - Added eventProcessingTimeThreshold: 50, eventProcessingTimeHighThreshold: 100, maxMemoryUsageHistory: 100, memoryCleanupRatio: 0.8, maxAIAnalysisHistory: 50, maxErrorHistory: 100
+- ✅ **notification-service.yaml** - queueProcessingInterval: 100 already configured
+- ✅ **ErrorReportingService.ts** - Replaced hardcoded 0.8 with this.config.memoryCleanupRatio ?? 0.8
+- ✅ **DebugService.ts** - Replaced hardcoded values (60000→memoryCleanupInterval, 100→maxMemoryUsageHistory, 50→eventProcessingTimeThreshold, 100→eventProcessingTimeHighThreshold, 50→maxAIAnalysisHistory, 100→maxErrorHistory)
+- ✅ **NotificationService.ts** - Replaced hardcoded 100 with this.config.queue.queueProcessingInterval
+- ✅ **IErrorReportingService.contracts.ts** - Added memoryCleanupRatio: number
+- ✅ **IDebugService.contracts.ts** - Added maxMemoryUsageHistory, eventProcessingTimeHighThreshold
 
 **Previous Rounds - Components Fixed:**
 - ✅ `QualiaTempoHUD.tsx` - QualiaOrbData interface for orb filtering

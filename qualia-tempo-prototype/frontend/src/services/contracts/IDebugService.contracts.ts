@@ -125,6 +125,8 @@ export interface DebugServiceConfig {
   memoryCleanupRatio?: number;
   maxAIAnalysisHistory?: number;
   maxErrorHistory?: number;
+  maxMemoryUsageHistory?: number;  // Maximum memory usage samples to keep
+  eventProcessingTimeHighThreshold?: number;  // High threshold for event processing time (ms)
   aiAnalysisIntervalDefault?: string;
   enableAIAnalysisDefault?: boolean;
   memoryCleanupThresholdDefault?: number;

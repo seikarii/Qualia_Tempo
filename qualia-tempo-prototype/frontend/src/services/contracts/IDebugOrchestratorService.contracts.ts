@@ -58,4 +58,12 @@ export interface DebugOrchestratorConfig {
       priority: number;
     };
   };
+  
+  // Default values for system metrics
+  defaultMetrics: {
+    temperature: number;        // Default temperature in Celsius
+    frameTime: number;          // Default frame time in milliseconds (~60fps)
+    memoryConversionFactor: number; // Factor to convert bytes to MB (1024*1024)
+    fps: number;                // Default FPS average
+  };
 }

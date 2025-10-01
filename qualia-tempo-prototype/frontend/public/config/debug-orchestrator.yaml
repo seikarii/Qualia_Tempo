@@ -5,6 +5,13 @@ refreshInterval: 5000        # Auto-refresh interval in milliseconds
 maxHistoryLength: 100        # Maximum diagnostic history to keep
 enablePerformanceTracking: true
 
+# Default values for system metrics
+defaultMetrics:
+  temperature: 60             # Default temperature in Celsius
+  frameTime: 16.67            # Default frame time in milliseconds (~60fps)
+  memoryConversionFactor: 1048576  # 1024 * 1024 for bytes to MB conversion
+  fps: 60                     # Default FPS average
+
 services:
   NotificationService:
     enabled: true

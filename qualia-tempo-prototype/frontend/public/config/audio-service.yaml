@@ -35,6 +35,22 @@ audioEngine:
 volume: 0.7
 soundEnabled: true
 
+# Base qualia state for entity voices
+baseQualiaState:
+  intensity: 0.5
+  precision: 0.5
+  aggression: 0.0
+  flow: 0.5
+  chaos: 0.0
+  recovery: 0.0
+  transcendence: 0.0
+
+# Thresholds for emergent audio behaviors
+transcendenceThreshold: 0.8
+
+# Default volume for audio operations
+defaultVolume: 1.0
+
 messages:
   audioContextNotAvailable: "AudioContext not available - cannot play audio"
   audioNotInitialized: "Cannot play rhythmic feedback: audio not initialized"
