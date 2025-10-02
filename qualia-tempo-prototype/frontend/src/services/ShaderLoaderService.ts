@@ -30,8 +30,11 @@ export class ShaderLoaderService implements IShaderLoaderService {
   async load(shaderName: string): Promise<string> {
     // Check cache first
     if (this.cache.has(shaderName)) {
-      this.logger.debug(`Shader '${shaderName}' loaded from cache`);
-      return this.cache.get(shaderName)!;
+      const cachedShader = this.cache.get(shaderName);
+      if (cachedShader) {
+        this.logger.debug(`Shader '${shaderName}' loaded from cache`);
+        return cachedShader;
+      }
     }
 
     const shaderPath = `/shaders/${shaderName}.glsl`;

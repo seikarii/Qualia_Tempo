@@ -3,6 +3,11 @@
  * Configuration contracts for dynamic post-processing pipeline graph.
  */
 
+import type { ILogger } from "../interfaces/ILogger";
+import type { IShaderLoaderService } from "../interfaces/IShaderLoaderService";
+import type { IShaderIntrospectionService } from "../interfaces/IShaderIntrospectionService";
+import type { IPerformanceService } from "../interfaces/IPerformanceService";
+
 export interface PostProcessingPass {
   type: string; // e.g., 'UnrealBloomPass', 'ShaderPass'
   enabled: boolean;
@@ -40,4 +45,12 @@ export interface PostProcessingConfig {
   renderTargets: RenderTargetDefinition[];
   pipelines: PipelineDefinition[];
   pipelineOrder: string[]; // Order in which pipelines should be executed
+}
+
+export interface PostProcessingServiceParams {
+  logger: ILogger;
+  shaderLoader: IShaderLoaderService;
+  shaderIntrospection: IShaderIntrospectionService;
+  config: PostProcessingConfig;
+  performanceService: IPerformanceService;
 }

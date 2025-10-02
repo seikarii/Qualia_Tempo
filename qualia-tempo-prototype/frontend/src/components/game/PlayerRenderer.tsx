@@ -49,7 +49,12 @@ const PlayerRenderer = React.forwardRef<THREE.Group, PlayerRendererProps>(({
   const powerCoreRef = useRef<THREE.Mesh>(null);
 
   // Expose the player mesh to parent via ref
-  useImperativeHandle(ref, () => playerMeshRef.current!, []);
+  useImperativeHandle(ref, () => {
+    if (playerMeshRef.current) {
+      return playerMeshRef.current;
+    }
+    throw new Error('Player mesh not initialized');
+  }, []);
   
   // Store current visual state for JSX rendering
   const [currentVisuals, setCurrentVisuals] = useState<PlayerVisualData | null>(null);

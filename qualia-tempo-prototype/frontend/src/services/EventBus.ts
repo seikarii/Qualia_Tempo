@@ -135,7 +135,10 @@ export class EventBus implements IEventBus {
         this.listeners.set(eventType, []);
       }
 
-      const eventListeners = this.listeners.get(eventType)!;
+      const eventListeners = this.listeners.get(eventType);
+      if (!eventListeners) {
+        throw new Error(`Failed to initialize listeners array for event type: ${eventType}`);
+      }
       eventListeners.push(listener);
 
       // Sort by priority (higher priority first)
@@ -237,10 +240,7 @@ export class EventBus implements IEventBus {
       }
 
       // Complete the event with timestamp
-      const completeEvent: T = {
-        ...event,
-        timestamp: new Date(),
-      } as T;
+      const completeEvent = this.completeEventWithTimestamp(event);
 
       // Add to history
       this.addToHistory(completeEvent);
@@ -258,53 +258,13 @@ export class EventBus implements IEventBus {
       );
 
       // Execute handlers with error isolation
-      const promises: Promise<void>[] = [];
-      const listenersToRemove: string[] = [];
-
-      for (const listener of listeners) {
-        const handlerPromise = this.executeHandler(
-          listener,
-          completeEvent,
-        ).catch((error) => {
-          this.logger.error(
-            `🚨 [EventBus] Handler error for ${completeEvent.type}: ${error}`,
-            { error, eventType: completeEvent.type },
-          );
-          // Emit error event (async to avoid recursion)
-          this.timerService.setTimeout(() => {
-            this.emit({
-              type: "Error",
-              error: error instanceof Error ? error : new Error(String(error)),
-              severity: "medium",
-              source: "EventBus",
-              metadata: {
-                eventType: completeEvent.type,
-                listenerId: listener.id,
-              },
-            } as Omit<ErrorEvent, "timestamp">);
-          }, 0);
-        });
-
-        promises.push(handlerPromise);
-
-        // Mark for removal if it's a once listener
-        if (listener.once) {
-          listenersToRemove.push(listener.id);
-        }
-      }
-
-      // Wait for all handlers to complete
-      await Promise.all(promises);
+      const listenersToRemove = await this.executeHandlers(completeEvent, listeners);
 
       // Remove once listeners
-      for (const listenerId of listenersToRemove) {
-        this.unsubscribe(listenerId);
-      }
+      this.removeOnceListeners(listenersToRemove);
 
       const duration = this.timerService.performanceNow() - startTime;
-      this.logger.info(
-        `📢 [EventBus] Emit completed for ${completeEvent.type} - ${duration.toFixed(2)}ms`,
-      );
+      this.logEmitCompletion(completeEvent.type, duration);
     } catch (error) {
       const duration = this.timerService.performanceNow() - startTime;
       this.logger.error(
@@ -316,8 +276,91 @@ export class EventBus implements IEventBus {
   }
 
   /**
-   * Get event history for debugging and analysis.
+   * Complete an event with a timestamp.
    */
+  private completeEventWithTimestamp<T extends EventTypes>(
+    event: Omit<T, "timestamp">,
+  ): T {
+    return {
+      ...event,
+      timestamp: new Date(),
+    } as T;
+  }
+
+  /**
+   * Handle errors from event handlers.
+   */
+  private handleHandlerError(
+    error: unknown,
+    eventType: string,
+    listenerId: string,
+  ): void {
+    this.logger.error(
+      `🚨 [EventBus] Handler error for ${eventType}: ${error}`,
+      { error, eventType, listenerId },
+    );
+
+    // Emit error event (async to avoid recursion)
+    this.timerService.setTimeout(() => {
+      this.emit({
+        type: "Error",
+        error: error instanceof Error ? error : new Error(String(error)),
+        severity: "medium",
+        source: "EventBus",
+        metadata: {
+          eventType,
+          listenerId,
+        },
+      } as Omit<ErrorEvent, "timestamp">);
+    }, 0);
+  }
+
+  /**
+   * Execute all handlers for an event with error isolation.
+   */
+  private async executeHandlers<T extends EventTypes>(
+    completeEvent: T,
+    listeners: EventListener[],
+  ): Promise<string[]> {
+    const promises: Promise<void>[] = [];
+    const listenersToRemove: string[] = [];
+
+    for (const listener of listeners) {
+      const handlerPromise = this.executeHandler(listener, completeEvent).catch(
+        (error) => this.handleHandlerError(error, completeEvent.type, listener.id),
+      );
+
+      promises.push(handlerPromise);
+
+      // Mark for removal if it's a once listener
+      if (listener.once) {
+        listenersToRemove.push(listener.id);
+      }
+    }
+
+    // Wait for all handlers to complete
+    await Promise.all(promises);
+
+    return listenersToRemove;
+  }
+
+  /**
+   * Remove listeners that were marked for one-time execution.
+   */
+  private removeOnceListeners(listenersToRemove: string[]): void {
+    for (const listenerId of listenersToRemove) {
+      this.unsubscribe(listenerId);
+    }
+  }
+
+  /**
+   * Log the completion of an emit operation.
+   */
+  private logEmitCompletion(eventType: string, duration: number): void {
+    this.logger.info(
+      `📢 [EventBus] Emit completed for ${eventType} - ${duration.toFixed(2)}ms`,
+    );
+  }
   @logMethod
   @catchError
   public getEventHistory(eventType?: string, limit?: number): BaseEvent[] {

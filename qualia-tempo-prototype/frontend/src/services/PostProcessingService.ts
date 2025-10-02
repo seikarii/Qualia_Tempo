@@ -16,7 +16,8 @@ import type { IPostProcessingService } from "./interfaces/IPostProcessingService
 import type { ILogger } from "./interfaces/ILogger";
 import type { IShaderIntrospectionService } from "./interfaces/IShaderIntrospectionService";
 import type { IShaderLoaderService } from "./interfaces/IShaderLoaderService";
-import type { PostProcessingConfig, PostProcessingPass } from "./contracts/IPostProcessingService.contracts";
+import type { IPerformanceService } from "./interfaces/IPerformanceService";
+import type { PostProcessingConfig, PostProcessingPass, PostProcessingServiceParams } from "./contracts/IPostProcessingService.contracts";
 import { logMethod, catchError, BrowserOnly } from "../utils/decorators";
 import { env } from "../utils/env";
 import { GBufferPass } from "./postprocessing/GBufferPass.js";
@@ -27,6 +28,7 @@ export class PostProcessingService implements IPostProcessingService {
   private readonly shaderLoader: IShaderLoaderService;
   private readonly shaderIntrospection: IShaderIntrospectionService;
   private readonly config: PostProcessingConfig;
+  private readonly performanceService: IPerformanceService;
 
   private isInitialized = false;
 
@@ -43,15 +45,13 @@ export class PostProcessingService implements IPostProcessingService {
   private renderTime = 0;
 
   constructor(
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IShaderLoaderService) shaderLoader: IShaderLoaderService,
-    @inject(TYPES.IShaderIntrospectionService) shaderIntrospection: IShaderIntrospectionService,
-    @inject(TYPES.PostProcessingConfig) config: PostProcessingConfig
+    @inject(TYPES.PostProcessingServiceParams) params: PostProcessingServiceParams
   ) {
-    this.logger = logger;
-    this.shaderLoader = shaderLoader;
-    this.shaderIntrospection = shaderIntrospection;
-    this.config = config;
+    this.logger = params.logger;
+    this.shaderLoader = params.shaderLoader;
+    this.shaderIntrospection = params.shaderIntrospection;
+    this.config = params.config;
+    this.performanceService = params.performanceService;
   }
 
   @logMethod
@@ -201,8 +201,9 @@ export class PostProcessingService implements IPostProcessingService {
 
             // If uniform references a render target by name
             if (typeof uniformValue === 'string') {
-              if (this.renderTargets.has(uniformValue)) {
-                pass.uniforms[uniformName].value = this.renderTargets.get(uniformValue)!.texture;
+              const renderTarget = this.renderTargets.get(uniformValue);
+              if (renderTarget) {
+                pass.uniforms[uniformName].value = renderTarget.texture;
                 this.logger.debug(`Connected render target ${uniformValue} to uniform ${uniformName} in pipeline ${pipelineName}`);
               }
             }
@@ -283,9 +284,12 @@ export class PostProcessingService implements IPostProcessingService {
         if (pass instanceof ShaderPass && pass.uniforms) {
           for (const uniformName in pass.uniforms) {
             const uniformValue = pass.uniforms[uniformName].value;
-            if (typeof uniformValue === 'string' && this.renderTargets.has(uniformValue)) {
-              pass.uniforms[uniformName].value = this.renderTargets.get(uniformValue)!.texture;
-              this.logger.debug(`Updated uniform ${uniformName} in pipeline ${pipelineName} from map`);
+            if (typeof uniformValue === 'string') {
+              const renderTarget = this.renderTargets.get(uniformValue);
+              if (renderTarget) {
+                pass.uniforms[uniformName].value = renderTarget.texture;
+                this.logger.debug(`Updated uniform ${uniformName} in pipeline ${pipelineName} from map`);
+              }
             }
           }
         }
@@ -328,7 +332,7 @@ export class PostProcessingService implements IPostProcessingService {
       throw new Error("PostProcessingService must be initialized before rendering");
     }
 
-    const startTime = performance.now();
+    const startTime = this.performanceService.now();
 
     // Producer: Render gbuffer pipeline to produce textures
     const gbufferPipeline = 'gbuffer_pipeline';
@@ -363,7 +367,7 @@ export class PostProcessingService implements IPostProcessingService {
       }
     }
 
-    this.renderTime = performance.now() - startTime;
+    this.renderTime = this.performanceService.now() - startTime;
   }
 
   @logMethod

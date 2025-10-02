@@ -122,12 +122,15 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   getGameState(): GameState {
     // Access the store state through the setter function
     // This is a bit of a hack, but necessary due to the passive store pattern
-    let currentState: GameState;
+    let currentState: GameState | undefined;
     this.setStore((state: GameState) => {
       currentState = state;
       return state; // No-op, just to get the current state
     });
-    return currentState!;
+    if (!currentState) {
+      throw new Error('Failed to retrieve current game state from store');
+    }
+    return currentState;
   }
 
   // === PRIVATE EVENT HANDLERS ===
@@ -301,10 +304,16 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
       const newNoteMap = [...currentGameState.combatData.noteMap];
       newNoteMap[noteIndex] = { ...newNoteMap[noteIndex], state: newNoteState };
 
-      this.setStore((state: GameState) => ({
-        ...state,
-        combatData: { ...state.combatData!, noteMap: newNoteMap }
-      }));
+      this.setStore((state: GameState) => {
+        if (!state.combatData) {
+          this._logger.warn('Cannot update note state: combatData is missing from game state');
+          return state;
+        }
+        return {
+          ...state,
+          combatData: { ...state.combatData, noteMap: newNoteMap }
+        };
+      });
 
       // Emitir evento para limpiar la nota de la vista en lugar de usar setTimeout
       this._eventBus.emit({

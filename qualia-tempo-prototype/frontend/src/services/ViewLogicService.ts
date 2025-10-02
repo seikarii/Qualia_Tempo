@@ -679,10 +679,10 @@ export class ViewLogicService implements IViewLogicService {
     } else {
       params = {
         gridSize: paramsOrGridSize,
-        tileSize: tileSize!,
-        playerPosition: playerPosition!,
-        activePositions: activePositions!,
-        currentTime: currentTime!
+        tileSize: tileSize ?? 1,
+        playerPosition: playerPosition ?? {x: 0, y: 0},
+        activePositions: activePositions ?? [],
+        currentTime: currentTime ?? 0
       };
     }
 

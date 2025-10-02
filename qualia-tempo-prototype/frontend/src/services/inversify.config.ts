@@ -46,7 +46,7 @@ import type { ViewLogicConfig } from "./contracts/IViewLogicService.contracts";
 // import type { SubtitleConfig } from "./contracts/ISubtitleService.contracts";
 // import type { DebugOrchestratorConfig } from "./contracts/IDebugOrchestratorService.contracts";
 import type { GameStateStoreConfig } from "./contracts/IGameStateStoreService.contracts";
-import type { PostProcessingConfig } from "./contracts/IPostProcessingService.contracts";
+import type { PostProcessingConfig, PostProcessingServiceParams } from "./contracts/IPostProcessingService.contracts";
 import type { ProtocolAdapterConfig } from "./contracts/IProtocolAdapter.contracts";
 import type { TimerServiceConfig } from "./contracts/ITimerService.contracts";
 
@@ -513,6 +513,16 @@ export async function configureServices(): Promise<void> {
   safeBindConstant(TYPES.DebugOrchestratorConfig, fullConfig.debugOrchestrator);
   safeBindConstant<GameStateStoreConfig>(TYPES.GameStateStoreConfig, fullConfig.gameStateStore);
   safeBindConstant<PostProcessingConfig>(TYPES.PostProcessingConfig, fullConfig.postProcessing);
+
+  // QUALIA.CODE v1.1: Bind PostProcessingServiceParams factory
+  safeBindConstant<PostProcessingServiceParams>(TYPES.PostProcessingServiceParams, {
+    logger: container.get<ILogger>(TYPES.ILogger),
+    shaderLoader: container.get<IShaderLoaderService>(TYPES.IShaderLoaderService),
+    shaderIntrospection: container.get<IShaderIntrospectionService>(TYPES.IShaderIntrospectionService),
+    config: fullConfig.postProcessing,
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+  });
+
   safeBindConstant<ProtocolAdapterConfig>(TYPES.ProtocolAdapterConfig, fullConfig.protocolAdapter);
 
   // QUALIA.CODE v1.1: Bind ApplicationInitializerServiceParams factory
@@ -574,7 +584,6 @@ export async function configureServices(): Promise<void> {
   // QUALIA.CODE v1.1: Bind DebugServiceParams factory
   // Consolidates 5 constructor parameters into a single object to comply with IoC limits
   safeBindConstant<DebugServiceParams>(TYPES.DebugServiceParams, {
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     config: fullConfig.debugService,

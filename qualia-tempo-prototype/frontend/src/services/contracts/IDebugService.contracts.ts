@@ -5,7 +5,6 @@
  */
 
 import type { BaseEvent, ErrorEvent } from "./events.contracts";
-import type { IEventBus } from "../interfaces/IEventBus";
 import type { ILogger } from "../interfaces/ILogger";
 import type { ITimerService } from "../interfaces/ITimerService";
 import type { IPerformanceService } from "../interfaces/IPerformanceService";
@@ -150,7 +149,6 @@ export interface DebugServiceConfig {
  * Consolidates 5 constructor parameters into a single object to comply with IoC limits
  */
 export interface DebugServiceParams {
-  eventBus: IEventBus;
   logger: ILogger;
   timerService: ITimerService;
   config: DebugServiceConfig;

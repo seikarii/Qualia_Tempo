@@ -43,6 +43,7 @@ export const TYPES = {
   IShaderLoaderService: Symbol.for("IShaderLoaderService"),
   IShaderIntrospectionService: Symbol.for("IShaderIntrospectionService"),
   IPostProcessingService: Symbol.for("IPostProcessingService"),
+  PostProcessingServiceParams: Symbol.for("PostProcessingServiceParams"),
   IGameplayMechanicsService: Symbol.for("IGameplayMechanicsService"),
   IViewLogicService: Symbol.for("IViewLogicService"),
   ISubtitleService: Symbol.for("ISubtitleService"),

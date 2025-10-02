@@ -76,15 +76,16 @@ export class WebSocketService implements IWebSocketService {
           return;
         }
 
-        const originalOnOpen = this.websocket.onopen;
-        this.websocket.onopen = (event) => {
-          if (originalOnOpen) originalOnOpen.call(this.websocket!, event);
+        const websocket = this.websocket;
+        const originalOnOpen = websocket.onopen;
+        websocket.onopen = (event) => {
+          if (originalOnOpen) originalOnOpen.call(websocket, event);
           resolve();
         };
 
-        const originalOnError = this.websocket.onerror;
-        this.websocket.onerror = (event) => {
-          if (originalOnError) originalOnError.call(this.websocket!, event);
+        const originalOnError = websocket.onerror;
+        websocket.onerror = (event) => {
+          if (originalOnError) originalOnError.call(websocket, event);
           reject(new Error("WebSocket connection failed"));
         };
       });

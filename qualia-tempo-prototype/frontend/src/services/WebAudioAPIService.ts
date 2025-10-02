@@ -62,9 +62,9 @@ export class WebAudioAPIService implements IWebAudioAPIService {
     } else {
       params = {
         frequency: paramsOrFrequency,
-        duration: duration!,
-        gain: gain!,
-        type: type!,
+        duration: duration ?? 0.5,
+        gain: gain ?? 0.3,
+        type: type ?? 'sine',
         loop
       };
     }

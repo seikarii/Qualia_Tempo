@@ -26,7 +26,6 @@ import type {
   ExportedDebugData,
   DebugInterface,
 } from "./interfaces/IDebugService";
-import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IPerformanceService } from "./interfaces/IPerformanceService";
@@ -59,7 +58,6 @@ export type {
  * QUALIA.CODE v1.1: Constructor parameters object to comply with max 4 parameters rule
  */
 export interface DebugServiceParams {
-  eventBus: IEventBus;
   logger: ILogger;
   timerService: ITimerService;
   config: DebugServiceConfig;
@@ -73,7 +71,6 @@ export interface DebugServiceParams {
  */
 @injectable()
 export class DebugService implements IDebugService, IBaseService {
-  private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
   private readonly _performanceService: IPerformanceService;
@@ -115,13 +112,6 @@ export class DebugService implements IDebugService, IBaseService {
   constructor(
     @inject(TYPES.DebugServiceParams) params: DebugServiceParams,
   ) {
-    if (!params.eventBus) {
-      throw new Error(
-        "🚨 [DebugService] EventBus is required for QUALIA.CODE v1.1 compliance",
-      );
-    }
-
-    this.eventBus = params.eventBus;
     this.logger = params.logger;
     this.timerService = params.timerService;
     this.config = params.config;
@@ -887,7 +877,7 @@ export class DebugService implements IDebugService, IBaseService {
       clearHistory: () => void;
       enableAI: () => void;
       disableAI: () => void;
-      log: (message: string, data?: unknown) => void;
+      log: (_message: string, _data?: unknown) => void;
     };
 
     this.logger.info(
