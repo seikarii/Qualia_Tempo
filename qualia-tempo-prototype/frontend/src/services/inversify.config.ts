@@ -467,8 +467,8 @@ export async function configureServices(): Promise<void> {
   // ARCHITECTURAL FIX: Explicit dependency injection - no Service Locator anti-pattern
   // Each service is injected individually for complete transparency of dependencies
   safeBindConstant<GameControllerServiceParams>(TYPES.GameControllerServiceParams, {
-    eventBus: container.get(TYPES.IEventBus) as EventBus,
-    logger: container.get(TYPES.ILogger) as QualiaLogger,
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
     config: fullConfig.gameController,
     gameStateStoreService: container.get<IGameStateStoreService>(TYPES.IGameStateStoreService),
     timerService: container.get<ITimerService>(TYPES.ITimerService),
@@ -479,8 +479,8 @@ export async function configureServices(): Promise<void> {
   // QUALIA.CODE v1.1: Bind QualiaStateCalculatorServiceParams factory
   // Consolidates 5 constructor parameters into a single object to comply with IoC limits
   safeBindConstant<QualiaStateCalculatorServiceParams>(TYPES.QualiaStateCalculatorServiceParams, {
-    eventBus: container.get(TYPES.IEventBus) as EventBus,
-    logger: container.get(TYPES.ILogger) as QualiaLogger,
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
     config: fullConfig.qualiaCalculator,
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
@@ -492,7 +492,7 @@ export async function configureServices(): Promise<void> {
     webSocketService: container.get<IWebSocketService>(TYPES.IWebSocketService),
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     config: fullConfig.backendSync.streaming,
-    logger: container.get(TYPES.ILogger) as QualiaLogger,
+    logger: container.get<ILogger>(TYPES.ILogger),
     messageAdapter: container.get<IMessageAdapter>(TYPES.IRawToParticleEventAdapter),
   });
 
@@ -535,11 +535,13 @@ export async function configureServices(): Promise<void> {
   // QUALIA.CODE v1.1: Bind DebugOrchestratorServiceParams factory
   // Event-driven pattern: Services no longer injected directly
   // Pattern: Push (event-driven) instead of Pull (method calls)
+  // DIRECTIVA 03: eventBus added for getStats() access
   safeBindConstant<DebugOrchestratorServiceParams>(TYPES.DebugOrchestratorServiceParams, {
     config: fullConfig.debugOrchestrator,
     logger: container.get<ILogger>(TYPES.ILogger),
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
     // REMOVED: notificationService, errorReportingService
     // Services will emit ServiceStatusUpdateEvent for passive aggregation
   });

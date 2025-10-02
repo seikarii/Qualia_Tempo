@@ -7,6 +7,55 @@
  */
 
 /**
+ * Event type identifiers for EventBus
+ * Used throughout the application for type-safe event communication
+ * ARCHITECTURAL MANDATE: Single source of truth for all event type strings
+ */
+export const EVENT_TYPES = {
+  PLAYER_ACTION: "PlayerAction" as const,
+  GAME_STATE_CHANGED: "GameStateChanged" as const,
+  QUALIA_STATE_CALCULATED: "QualiaStateCalculated" as const,
+  QUALIA_STATE_UPDATED: "QualiaStateUpdated" as const,
+  SERVICE_STATUS_UPDATE: "ServiceStatusUpdate" as const,
+  CONFIGURATION_LOADED: "ConfigurationLoaded" as const,
+  ERROR: "Error" as const,
+  BACKEND_SYNC_COMPLETE: "BackendSyncComplete" as const,
+  AUDIO_EVENT: "AudioEvent" as const,
+  RHYTHMIC_MOVEMENT_UPDATE: "RhythmicMovementUpdate" as const,
+} as const;
+
+/**
+ * Game state identifiers
+ * Used by GameControllerService and related systems
+ * ARCHITECTURAL MANDATE: Single source of truth for game state strings
+ */
+export const GAME_STATES = {
+  PLAYING: "Playing" as const,
+  PAUSED: "Paused" as const,
+  MENU: "Menu" as const,
+  GAME_OVER: "GameOver" as const,
+  LOADING: "Loading" as const,
+  INITIALIZING: "Initializing" as const,
+} as const;
+
+/**
+ * Player action identifiers
+ * Used in PlayerActionEvent for type-safe action handling
+ * ARCHITECTURAL MANDATE: Single source of truth for player action strings
+ */
+export const PLAYER_ACTIONS = {
+  START_GAME: "StartGame" as const,
+  PAUSE_GAME: "PauseGame" as const,
+  RESET_GAME: "ResetGame" as const,
+  HIT_NOTE: "HitNote" as const,
+  MISS_NOTE: "MissNote" as const,
+  DASH: "Dash" as const,
+  FAST_FORWARD: "FastForward" as const,
+  REWIND: "Rewind" as const,
+  SCORE_INCREASE: "scoreIncrease" as const,
+} as const;
+
+/**
  * Notification system default values
  * Used by GameStateStore and NotificationService
  */
@@ -52,6 +101,9 @@ export const NOTE_GEOMETRY_TYPES = {
 /**
  * Type exports for type safety
  */
+export type EventType = typeof EVENT_TYPES[keyof typeof EVENT_TYPES];
+export type GameState = typeof GAME_STATES[keyof typeof GAME_STATES];
+export type PlayerAction = typeof PLAYER_ACTIONS[keyof typeof PLAYER_ACTIONS];
 export type NotificationPriority = typeof NOTIFICATION_DEFAULTS.PRIORITY;
 export type NotificationCategory = typeof NOTIFICATION_DEFAULTS.CATEGORY;
 export type AudioWaveformType = typeof AUDIO_WAVEFORM_TYPES[keyof typeof AUDIO_WAVEFORM_TYPES];

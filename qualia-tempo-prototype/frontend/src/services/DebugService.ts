@@ -15,6 +15,7 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions, BrowserOnly } from "../utils/decorators";
+import { EVENT_TYPES } from "./contracts/constants";
 import type {
   IDebugService,
   DebugConfig,
@@ -393,7 +394,7 @@ export class DebugService implements IDebugService, IBaseService {
       snapshot: this.getSystemSnapshot(),
       analysis: this.performAIAnalysis(),
       exportTimestamp: Date.now(),
-      version: "1.0.0",
+      version: this.config.version,
     };
   }
 
@@ -489,19 +490,19 @@ export class DebugService implements IDebugService, IBaseService {
 
     // Type-specific handling
     switch (event.type) {
-      case "QualiaStateCalculated":
+      case EVENT_TYPES.QUALIA_STATE_CALCULATED:
         this.handleQualiaStateCalculatedEvent(event as QualiaStateCalculatedEvent);
         break;
       case "QualiaParticleDataReceived":
         this.handleQualiaParticleDataReceivedEvent(event as QualiaParticleDataReceivedEvent);
         break;
-      case "Error":
+      case EVENT_TYPES.ERROR:
         this.handleErrorEvent(event as ErrorEvent);
         break;
-      case "GameStateChanged":
+      case EVENT_TYPES.GAME_STATE_CHANGED:
         this.handleGameStateEvent(event as GameStateChangedEvent);
         break;
-      case "PlayerAction":
+      case EVENT_TYPES.PLAYER_ACTION:
         this.handlePlayerActionEvent(event as PlayerActionEvent);
         break;
       case "BackendSync":
@@ -512,13 +513,13 @@ export class DebugService implements IDebugService, IBaseService {
 
   private handlePlayerActionEvent(event: PlayerActionEvent): void {
     this.updateEventPatterns(event.type, event.action);
-    this.updatePerformanceMetrics("PlayerAction", this._performanceService.now());
+    this.updatePerformanceMetrics(EVENT_TYPES.PLAYER_ACTION, this._performanceService.now());
   }
 
   private handleQualiaStateCalculatedEvent(event: QualiaStateCalculatedEvent): void {
     // Store the calculated qualia state for debugging
     this.lastQualiaState = event.qualiaState;
-    this.updatePerformanceMetrics("QualiaStateCalculated", this._performanceService.now());
+    this.updatePerformanceMetrics(EVENT_TYPES.QUALIA_STATE_CALCULATED, this._performanceService.now());
 
     // Track QualiaState calculation rate
     this.performanceMetrics.qualiaStateUpdateRate++;

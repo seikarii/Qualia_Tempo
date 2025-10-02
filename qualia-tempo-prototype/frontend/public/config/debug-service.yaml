@@ -1,3 +1,6 @@
+# QUALIA.CODE v1.1: Application version (sourced from package.json)
+version: "1.0.0"
+
 logging:
   enableConsoleOutput: true
   enableFileOutput: false

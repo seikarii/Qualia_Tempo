@@ -94,6 +94,7 @@ export interface DebugServiceConfig {
     logRequestBodies: boolean;
   };
   // QUALIA.CODE: Additional DebugService configuration properties
+  version: string; // Application version for debug exports
   maxSessionHistory: number;
   maxEventHistory: number;
   performanceMonitoringInterval: number;

@@ -15,10 +15,11 @@ import type {
   PlayerActionEvent,
   GameStateChangedEvent,
 } from "./EventBus";
-import { EventBus } from "./EventBus";
+import type { IEventBus } from "./interfaces/IEventBus";
 import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
-import { QualiaLogger } from "./Logger";
+import type { ILogger } from "./interfaces/ILogger";
 import type { GameState, GameControllerConfig, GameControllerServiceParams, HitNoteContext } from "./contracts/IGameControllerService.contracts";
+import { EVENT_TYPES, GAME_STATES, PLAYER_ACTIONS } from "./contracts/constants";
 import type { IGameControllerService } from "./interfaces/IGameControllerService";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 import type { ITimerService } from "./interfaces/ITimerService";
@@ -36,7 +37,7 @@ import type { IAudioService } from "./interfaces/IAudioService";
  */
 @injectable()
 export class GameControllerService implements IGameControllerService, IBaseService {
-  private eventBus: EventBus;
+  private eventBus: IEventBus;
   private gameStateStoreService: IGameStateStoreService;
   private timerService: ITimerService;
   private performanceService: IPerformanceService;
@@ -45,7 +46,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   // @ts-expect-error - Used by @OnEvent decorator lifecycle
   private _eventListeners: string[] = []; // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
   private isRunning = false;
-  private logger: QualiaLogger;
+  private logger: ILogger;
   private gameClockInterval: number | null = null;
 
   // Internal game state - initialized in initialize()
@@ -147,7 +148,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     // PASO 2: Proceder con la lógica original una vez el audio está listo.
     this.gameState.isPlaying = true;
     this.gameState.isPaused = false;
-    this.emitGameStateChanged("Playing");
+    this.emitGameStateChanged(GAME_STATES.PLAYING);
   }
 
   @logMethod
@@ -157,7 +158,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
 
     this.logger.info("⏸️ [GameController] Pausing game");
     this.gameState.isPaused = true;
-    this.emitGameStateChanged("Paused");
+    this.emitGameStateChanged(GAME_STATES.PAUSED);
   }
 
   @logMethod
@@ -167,7 +168,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
 
     this.logger.info("▶️ [GameController] Resuming game");
     this.gameState.isPaused = false;
-    this.emitGameStateChanged("Playing");
+    this.emitGameStateChanged(GAME_STATES.PLAYING);
   }
 
   @logMethod
@@ -183,7 +184,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
       level: 1,
       gameMode: "normal",
     };
-    this.emitGameStateChanged("Menu");
+    this.emitGameStateChanged(GAME_STATES.MENU);
   }
 
   @logMethod
@@ -221,28 +222,28 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     );
 
     switch (event.action) {
-      case "StartGame":
+      case PLAYER_ACTIONS.START_GAME:
         await this.startGame();
         break;
-      case "PauseGame":
+      case PLAYER_ACTIONS.PAUSE_GAME:
         this.pauseGame();
         break;
-      case "ResetGame":
+      case PLAYER_ACTIONS.RESET_GAME:
         this.resetGame();
         break;
-      case "Dash":
+      case PLAYER_ACTIONS.DASH:
         this.handleDash(event.context);
         break;
-      case "HitNote":
+      case PLAYER_ACTIONS.HIT_NOTE:
         this.handleHitNote(event.context);
         break;
-      case "MissNote":
+      case PLAYER_ACTIONS.MISS_NOTE:
         this.handleMissNote();
         break;
-      case "FastForward":
+      case PLAYER_ACTIONS.FAST_FORWARD:
         this.handleFastForward(event.context);
         break;
-      case "Rewind":
+      case PLAYER_ACTIONS.REWIND:
         this.handleRewind(event.context);
         break;
       default:
@@ -256,7 +257,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     this.logger.info("💨 [GameController] Dash action performed");
     // Dash could give a temporary speed boost or score multiplier
     this.gameState.currentScore += this.config.mechanics.dashScoreBonus;
-    this.emitGameStateChanged("Playing");
+    this.emitGameStateChanged(GAME_STATES.PLAYING);
   }
 
   private handleHitNote(context?: HitNoteContext): void {
@@ -285,7 +286,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     this.logger.info(
       `🎯 [GameController] Note hit! Score: ${this.gameState.currentScore}, Combo: ${this.gameState.comboCount}`,
     );
-    this.emitGameStateChanged("Playing");
+    this.emitGameStateChanged(GAME_STATES.PLAYING);
   }
 
   private handleMissNote(): void {
@@ -300,11 +301,11 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     this.logger.info(
       `❌ [GameController] Note missed! Health: ${this.gameState.health}`,
     );
-    this.emitGameStateChanged("Playing");
+    this.emitGameStateChanged(GAME_STATES.PLAYING);
 
     // Check for game over
     if (this.gameState.health <= 0) {
-      this.emitGameStateChanged("GameOver");
+      this.emitGameStateChanged(GAME_STATES.GAME_OVER);
     }
   }
 
@@ -315,7 +316,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     this.logger.info(config.messages.fastForwardActivated);
     // Fast forward could give temporary score boost
     this.gameState.currentScore += config.mechanics.fastForwardScoreBoost;
-    this.emitGameStateChanged("Playing");
+    this.emitGameStateChanged(GAME_STATES.PLAYING);
   }
 
   private handleRewind(_context?: Record<string, unknown>): void {
@@ -327,7 +328,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
       this.config.health.maxHealth,
       this.gameState.health + this.config.mechanics.rewindHealthBonus,
     );
-    this.emitGameStateChanged("Playing");
+    this.emitGameStateChanged(GAME_STATES.PLAYING);
   }
 
   @OnEvent('GameStateChanged')
@@ -338,7 +339,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     );
 
     // Manage game clock based on state changes
-    if (event.newState === "Playing") {
+    if (event.newState === GAME_STATES.PLAYING) {
       this.startGameClock();
     } else {
       this.stopGameClock();
@@ -376,7 +377,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   ): void {
     const currentState = this.getCurrentStateString();
     this.eventBus.emit<GameStateChangedEvent>({
-      type: "GameStateChanged",
+      type: EVENT_TYPES.GAME_STATE_CHANGED,
       newState,
       oldState: currentState,
       previousState: currentState,
@@ -385,10 +386,10 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   }
 
   private getCurrentStateString(): string {
-    if (!this.gameState.isPlaying) return "Menu";
-    if (this.gameState.isPaused) return "Paused";
-    if (this.gameState.health <= 0) return "GameOver";
-    return "Playing";
+    if (!this.gameState.isPlaying) return GAME_STATES.MENU;
+    if (this.gameState.isPaused) return GAME_STATES.PAUSED;
+    if (this.gameState.health <= 0) return GAME_STATES.GAME_OVER;
+    return GAME_STATES.PLAYING;
   }
 
   // QUALIA.CODE v1.1: IBaseService implementation

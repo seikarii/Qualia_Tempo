@@ -10,6 +10,7 @@
 import type { ILogger } from "../interfaces/ILogger";
 import type { ITimerService } from "../interfaces/ITimerService";
 import type { IPerformanceService } from "../interfaces/IPerformanceService";
+import type { IEventBus } from "../interfaces/IEventBus";
 // QUALIA.CODE v1.1: Service imports removed - event-driven pattern eliminates coupling
 // import type { INotificationService } from "../interfaces/INotificationService";
 // import type { IErrorReportingService } from "../interfaces/IErrorReportingService";
@@ -20,12 +21,15 @@ import type { IPerformanceService } from "../interfaces/IPerformanceService";
  * QUALIA.CODE v1.1: Services removed from parameters
  * The service now operates in event-driven mode, listening for
  * ServiceStatusUpdateEvent instead of calling service methods directly.
+ * 
+ * DIRECTIVA 03: IEventBus added for getStats() access
  */
 export interface DebugOrchestratorServiceParams {
   config: DebugOrchestratorConfig;
   logger: ILogger;
   timerService: ITimerService;
   performanceService: IPerformanceService;
+  eventBus: IEventBus;
   // REMOVED: notificationService, errorReportingService
   // Pattern: Event-driven aggregation (push model)
 }

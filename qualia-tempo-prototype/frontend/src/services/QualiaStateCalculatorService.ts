@@ -25,6 +25,7 @@ import type { QualiaState } from "../types/contracts";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IPerformanceService } from "./interfaces/IPerformanceService";
 import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
+import { EVENT_TYPES, PLAYER_ACTIONS } from "./contracts/constants";
 
 // Configuration interface - REMOVED: Using ConfigurationService interface
 
@@ -171,19 +172,19 @@ export class QualiaStateCalculatorService
     const { action, context } = event;
 
     switch (action) {
-      case "HitNote":
+      case PLAYER_ACTIONS.HIT_NOTE:
         this.onNoteHit(context);
         break;
-      case "MissNote":
+      case PLAYER_ACTIONS.MISS_NOTE:
         this.onNoteMiss(context);
         break;
-      case "Dash":
+      case PLAYER_ACTIONS.DASH:
         this.onDash(context);
         break;
-      case "FastForward":
+      case PLAYER_ACTIONS.FAST_FORWARD:
         this.onFastForward(context);
         break;
-      case "Rewind":
+      case PLAYER_ACTIONS.REWIND:
         this.onRewind(context);
         break;
       default:
@@ -361,7 +362,7 @@ export class QualiaStateCalculatorService
    */
   private emitStateUpdate(): void {
     this.eventBus.emit<QualiaStateCalculatedEvent>({
-      type: "QualiaStateCalculated",
+      type: EVENT_TYPES.QUALIA_STATE_CALCULATED,
       qualiaState: this.currentState,
     });
   }

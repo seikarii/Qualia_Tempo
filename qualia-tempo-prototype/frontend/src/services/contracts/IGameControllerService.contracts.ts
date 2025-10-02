@@ -6,8 +6,8 @@
  * Architecture: Contract definitions extracted from service implementation for clarity and reusability
  */
 
-import type { EventBus } from '../EventBus';
-import type { QualiaLogger } from '../Logger';
+import type { IEventBus } from '../interfaces/IEventBus';
+import type { ILogger } from '../interfaces/ILogger';
 import type { IGameStateStoreService } from '../interfaces/IGameStateStoreService';
 import type { ITimerService } from '../interfaces/ITimerService';
 import type { IPerformanceService } from '../interfaces/IPerformanceService';
@@ -16,8 +16,8 @@ import type { IAudioService } from '../interfaces/IAudioService';
 // QUALIA.CODE v1.1: Constructor parameter object pattern (max 4 parameters rule)
 // ARCHITECTURAL FIX: Explicit dependency injection - no Service Locator anti-pattern
 export interface GameControllerServiceParams {
-  eventBus: EventBus;
-  logger: QualiaLogger;
+  eventBus: IEventBus;
+  logger: ILogger;
   config: GameControllerConfig;
   gameStateStoreService: IGameStateStoreService;
   timerService: ITimerService;
