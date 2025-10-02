@@ -46,7 +46,7 @@ export class WebAudioAPIService implements IWebAudioAPIService {
   }
 
   public playTone(params: PlayToneParams): void;
-  public playTone(frequency: number, duration: number, gain: number, type: OscillatorType, loop?: boolean): void;
+  public playTone(_frequency: number, _duration: number, _gain: number, _type: OscillatorType, _loop?: boolean): void;
   @logMethod
   public playTone(
     paramsOrFrequency: PlayToneParams | number,

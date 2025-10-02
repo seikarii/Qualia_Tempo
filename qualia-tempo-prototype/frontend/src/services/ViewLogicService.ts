@@ -344,7 +344,7 @@ export class ViewLogicService implements IViewLogicService {
   @catchError
   getQualiaFieldVisuals(qualiaField: QualiaState, musicData: MusicData, time: number): QualiaFieldVisualData {
     // Extract particle generation logic from QualiaFieldRenderer
-    const particleCount = Math.floor(1000 * qualiaField.flow + 500);
+    const particleCount = Math.floor(this.config.qualiaField.particleCountMultiplier * qualiaField.flow + this.config.qualiaField.particleCountBase);
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
     const sizes = new Float32Array(particleCount);
@@ -374,9 +374,9 @@ export class ViewLogicService implements IViewLogicService {
       }
 
       // Color based on emotional valence and field parameters
-      const hue = (musicData.emotional_valence * 360 + i * 10) % 360;
-      const saturation = 0.7 + qualiaField.intensity * 0.3;
-      const lightness = 0.4 + qualiaField.precision * 0.4;
+      const hue = (musicData.emotional_valence * this.config.qualiaField.colorHueRange + i * 10) % this.config.qualiaField.colorHueRange;
+      const saturation = this.config.qualiaField.colorSaturationBase + qualiaField.intensity * this.config.qualiaField.colorSaturationIntensityMultiplier;
+      const lightness = this.config.qualiaField.colorLightnessBase + qualiaField.precision * this.config.qualiaField.colorLightnessPrecisionMultiplier;
 
       const [r, g, b] = this.hslToRgb(hue / 360, saturation, lightness);
       colors[i3] = r;
@@ -662,7 +662,7 @@ export class ViewLogicService implements IViewLogicService {
   }
 
   getGridVisuals(params: GetGridVisualsParams): GridVisualData;
-  getGridVisuals(gridSize: number, tileSize: number, playerPosition: {x: number, y: number}, activePositions: [number, number][], currentTime: number): GridVisualData;
+  getGridVisuals(_gridSize: number, _tileSize: number, _playerPosition: {x: number, y: number}, _activePositions: [number, number][], _currentTime: number): GridVisualData;
   @logMethod
   @catchError
   getGridVisuals(
@@ -811,7 +811,7 @@ export class ViewLogicService implements IViewLogicService {
         ] as [number, number, number, number],
         size: 0.1 + Math.random() * 0.2,
         life: 0,
-        maxLife: this.config.particles.baseLifetime + Math.random() * 1000,
+        maxLife: this.config.particles.baseLifetime + Math.random() * this.config.particles.lifetimeVariation,
         type: this.determineParticleType(qualiaState)
       };
       

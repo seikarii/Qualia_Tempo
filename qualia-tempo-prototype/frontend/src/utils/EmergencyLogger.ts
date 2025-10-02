@@ -77,10 +77,10 @@ class EmergencyLoggerClass {
    * Flush buffered messages to a real logger
    */
   public flushTo(logger: {
-    debug: (msg: string, data?: unknown) => void;
-    info: (msg: string, data?: unknown) => void;
-    warn: (msg: string, data?: unknown) => void;
-    error: (msg: string, data?: unknown) => void;
+    debug: (_msg: string, _data?: unknown) => void;
+    info: (_msg: string, _data?: unknown) => void;
+    warn: (_msg: string, _data?: unknown) => void;
+    error: (_msg: string, _data?: unknown) => void;
   }): void {
     const messages = [...this.buffer];
     this.buffer = [];

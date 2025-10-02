@@ -52,7 +52,7 @@ export class ThrottlingManager {
     }
 
     // Check per-second limit
-    const secondAgo = now - (this._config.rateLimitWindow ?? 1000);
+    const secondAgo = now - (this._config.rateLimitWindow ?? this._config.millisecondsPerSecond);
     const recentCount = this.recentNotifications.filter(
       (time) => time.getTime() > secondAgo,
     ).length;
@@ -61,7 +61,7 @@ export class ThrottlingManager {
     }
 
     // Check per-minute limit
-    const minuteAgo = now - (this._config.burstWindow ?? 60000);
+    const minuteAgo = now - (this._config.burstWindow ?? this._config.millisecondsPerMinute);
     const minuteCount = this.recentNotifications.filter(
       (time) => time.getTime() > minuteAgo,
     ).length;

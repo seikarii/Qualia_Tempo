@@ -35,7 +35,7 @@ import type { GameState } from "../state/useGameStore";
 
 // Store setter type (from Zustand)
 // Note: Parameters prefixed with _ to indicate they are part of callback signature
-type StoreSetter = (updater: (state: GameState) => GameState) => void;
+type StoreSetter = (_updater: (_state: GameState) => GameState) => void;
 
 // QUALIA.CODE: Externalized message constants - REMOVED, now in config
 

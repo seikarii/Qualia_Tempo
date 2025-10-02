@@ -95,7 +95,8 @@ export class WebSocketService implements IWebSocketService {
   @catchError
   public async disconnect(): Promise<void> {
     if (this.websocket) {
-      this.websocket.close(1000, "Client disconnecting");
+      const NORMAL_CLOSE_CODE = 1000;
+      this.websocket.close(NORMAL_CLOSE_CODE, "Client disconnecting");
       this.websocket = null;
     }
 

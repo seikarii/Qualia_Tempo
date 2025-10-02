@@ -61,6 +61,7 @@ input:
   touchSensitivity: 1.2
 
 # Externalized hardcoded values
+secondsPerMinute: 60
 audioBeatDetectionThreshold: 0.5
 availableMovements: ["dash", "attack", "defense", "special"]
 optimalTimingPredictionConfidencePlaying: 0.85

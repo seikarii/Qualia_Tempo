@@ -56,7 +56,7 @@ export interface DebugInterface {
   clearHistory: () => void;
   enableAI: () => void;
   disableAI: () => void;
-  log: (message: string, data?: unknown) => void;
+  log: (_message: string, _data?: unknown) => void;
 }
 
 // Debug data export structure

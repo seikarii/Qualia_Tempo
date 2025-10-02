@@ -88,6 +88,8 @@ performance:
   gcInterval: 60000
 
 throttling:
+  millisecondsPerSecond: 1000
+  millisecondsPerMinute: 60000
   enabled: true
   maxNotificationsPerSecond: 5
   maxNotificationsPerMinute: 30

@@ -184,6 +184,8 @@ export interface NotificationFilter {
 
 // Throttling configuration
 export interface ThrottlingConfig {
+  millisecondsPerSecond: number;
+  millisecondsPerMinute: number;
   maxNotificationsPerSecond: number;
   maxNotificationsPerMinute: number;
   burstLimit: number;

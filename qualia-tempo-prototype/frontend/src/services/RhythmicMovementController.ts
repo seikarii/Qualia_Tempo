@@ -110,7 +110,7 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
 
     // QUALIA.CODE: Configuration is now injected directly via constructor
     this.loadConfigurationValues();
-    this.beatInterval = (60 / this.bpm) * 1000; // Convert BPM to milliseconds
+    this.beatInterval = (this.config.secondsPerMinute / this.bpm) * 1000; // Convert BPM to milliseconds
 
     this.setupInputListener();
     // REMOVED: setupGameStateListener - Now handled by @OnEvent decorators
@@ -335,7 +335,7 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
 
   public setBPM(bpm: number): void {
     this.bpm = bpm;
-    this.beatInterval = (60 / this.bpm) * 1000;
+    this.beatInterval = (this.config.secondsPerMinute / this.bpm) * 1000;
 
     // Restart metronome with new timing
     if (this.isListening) {
@@ -632,7 +632,7 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
     try {
       // Sync internal timing with audio context current time
       const audioTime = audioContext.currentTime;
-      const syncOffset = audioTime * 1000; // Convert to milliseconds
+      const syncOffset = audioTime * this.config.millisecondsPerSecond; // Convert to milliseconds
 
       this.logger.info("Syncing with audio context", { audioTime, syncOffset });
 

@@ -5,6 +5,7 @@ particles:
   maxCount: 1000
   spawnRate: 10
   baseLifetime: 2000  # milliseconds
+  lifetimeVariation: 1000  # random variation in milliseconds
   assumedFrameTime: 16  # assumed frame time in milliseconds for 60fps
   frameTimeSeconds: 0.016  # frame time in seconds
 
@@ -32,6 +33,13 @@ notes:
   rotationSpeed: 0.01
 
 qualiaField:
+  particleCountMultiplier: 1000
+  particleCountBase: 500
+  colorHueRange: 360
+  colorSaturationBase: 0.7
+  colorSaturationIntensityMultiplier: 0.3
+  colorLightnessBase: 0.4
+  colorLightnessPrecisionMultiplier: 0.4
   gridSpacing: 2.0
   chaosSpread: 40.0
   orderRandomness: 0.3

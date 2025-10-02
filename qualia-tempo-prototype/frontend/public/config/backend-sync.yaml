@@ -12,6 +12,7 @@ streaming:
     pingInterval: 8000
     pingTimeout: 6000
     connectionTimeout: 10000
+    normalCloseCode: 1000
 
 sync:
   throttleDelay: 100

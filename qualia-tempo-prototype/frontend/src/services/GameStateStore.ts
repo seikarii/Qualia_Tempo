@@ -17,7 +17,7 @@ import { NOTIFICATION_DEFAULTS } from "./contracts/constants";
 
 // Define the type for the game store API
 type GameStoreApi = {
-  setState: (fn: (state: Record<string, unknown>) => Record<string, unknown>) => void;
+  setState: (_fn: (_state: Record<string, unknown>) => Record<string, unknown>) => void;
   getState: () => Record<string, unknown>;
 };
 

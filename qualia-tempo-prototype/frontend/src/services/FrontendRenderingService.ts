@@ -425,8 +425,8 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
 
     // Update FPS calculation
     this.frameCount++;
-    if (deltaTime >= 1000) {
-      this.fps = (this.frameCount * 1000) / deltaTime;
+    if (deltaTime >= this.config.fpsUpdateInterval) {
+      this.fps = (this.frameCount * this.config.fpsUpdateInterval) / deltaTime;
       this.frameTime = deltaTime / this.frameCount;
       this.frameCount = 0;
       this.lastTime = currentTime;

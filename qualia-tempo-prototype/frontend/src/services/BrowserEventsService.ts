@@ -25,7 +25,7 @@ export class BrowserEventsService implements IBrowserEventsService {
     listener: (_event: WindowEventMap[K]) => void,
     options?: boolean | AddEventListenerOptions
   ): void {
-    window.addEventListener(type, listener, options); // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
+    window.addEventListener(type, listener, options);
     this.logger.debug("Window event listener added", { type });
   }
 
@@ -36,7 +36,7 @@ export class BrowserEventsService implements IBrowserEventsService {
     listener: (_event: WindowEventMap[K]) => void,
     options?: boolean | EventListenerOptions
   ): void {
-    window.removeEventListener(type, listener, options); // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
+    window.removeEventListener(type, listener, options);
     this.logger.debug("Window event listener removed", { type });
   }
 
@@ -66,8 +66,8 @@ export class BrowserEventsService implements IBrowserEventsService {
   @BrowserOnly
   public getWindowDimensions(): { width: number; height: number } {
     return {
-      width: window.innerWidth, // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
-      height: window.innerHeight // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
+      width: window.innerWidth,
+      height: window.innerHeight
     };
   }
 
@@ -75,8 +75,8 @@ export class BrowserEventsService implements IBrowserEventsService {
   @BrowserOnly
   public getViewportDimensions(): { width: number; height: number } {
     return {
-      width: window.innerWidth, // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
-      height: window.innerHeight // eslint-disable-line @qualia-tempo/qualia-code/no-global-api-calls
+      width: window.innerWidth,
+      height: window.innerHeight
     };
   }
 }

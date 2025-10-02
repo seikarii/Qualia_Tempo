@@ -30,6 +30,8 @@ export interface RhythmicMovementControllerParams {
 
 // Configuration interface for RhythmicMovementController
 export interface RhythmicMovementConfig {
+  secondsPerMinute: number;
+  millisecondsPerSecond: number;
   bpm: number;
   perfectTiming: number;
   goodTiming: number;

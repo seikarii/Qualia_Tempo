@@ -37,7 +37,7 @@ export class PostProcessingService implements IPostProcessingService {
   // Shared objects from FrontendRenderingService
   private renderer!: THREE.WebGLRenderer;
   private scene!: THREE.Scene;
-  private camera!: THREE.Camera;
+  private camera!: THREE.PerspectiveCamera;
 
   // Performance tracking
   private renderTime = 0;
@@ -244,8 +244,8 @@ export class PostProcessingService implements IPostProcessingService {
         // Add auto-connected uniforms
         shader.uniforms.projectionMatrix = { value: new THREE.Matrix4() };
         shader.uniforms.viewMatrix = { value: new THREE.Matrix4() };
-        shader.uniforms.cameraNear = { value: 0.1 };
-        shader.uniforms.cameraFar = { value: 1000 };
+        shader.uniforms.cameraNear = { value: this.camera.near };
+        shader.uniforms.cameraFar = { value: this.camera.far };
         shader.uniforms.resolution = { value: new THREE.Vector2(this.config.renderTargetWidth, this.config.renderTargetHeight) };
 
         const pass = new ShaderPass(shader);

@@ -186,6 +186,7 @@ export interface ViewLogicConfig {
     maxCount: number;
     spawnRate: number;
     baseLifetime: number;
+    lifetimeVariation: number;
     assumedFrameTime: number;  // assumed frame time in milliseconds for 60fps
     frameTimeSeconds: number;  // frame time in seconds
   };
@@ -213,6 +214,13 @@ export interface ViewLogicConfig {
     rotationSpeed: number;
   };
   qualiaField: {
+    particleCountMultiplier: number;
+    particleCountBase: number;
+    colorHueRange: number;
+    colorSaturationBase: number;
+    colorSaturationIntensityMultiplier: number;
+    colorLightnessBase: number;
+    colorLightnessPrecisionMultiplier: number;
     gridSpacing: number;
     chaosSpread: number;
     orderRandomness: number;
