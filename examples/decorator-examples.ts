@@ -1,7 +1,7 @@
 // QUALIA.CODE v1.0 - Decorator Usage Examples
 // Demonstration of the universal decorator system
 
-import { logMethod, catchError, validate, qualiaMethod } from '../qualia-tempo-prototype/frontend/src/utils/decorators';
+import { logMethod, catchError, validate } from '../qualia-tempo-prototype/frontend/src/utils/decorators';
 import type { QualiaState } from '../qualia-tempo-prototype/frontend/src/schemas';
 
 export class ExampleService {
@@ -18,20 +18,6 @@ export class ExampleService {
     await new Promise(resolve => setTimeout(resolve, 10));
   }
 
-  /**
-   * Example using @qualiaMethod for common patterns
-   */
-  @qualiaMethod({
-    schema: 'QualiaState',
-    throttleMs: 100,
-    fallbackValue: null
-  })
-  async throttledQualiaUpdate(state: QualiaState): Promise<string> {
-    // Simulate processing with throttling
-    await new Promise(resolve => setTimeout(resolve, 5));
-
-    return `Processed: ${JSON.stringify(state)}`;
-  }
 
   /**
    * Example with custom validation and error handling

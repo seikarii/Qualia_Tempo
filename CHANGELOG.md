@@ -2,6 +2,19 @@
 
 All notable changes to the Qualia Tempo project will be documented in this file.
 
+## [2025-10-02] - Code Cleanup: Removed Unused qualiaMethod Decorator
+
+### Removed
+
+#### Frontend Decorators Cleanup
+- **`decorators.ts`**: Removed unused `qualiaMethod` decorator function
+  - **Removed**: Complete `qualiaMethod` function and its JSDoc documentation (lines 608-764)
+  - **Reason**: Decorator was not being used anywhere in the codebase
+  - **Impact**: Reduced bundle size and eliminated dead code
+  - **Verification**: Confirmed no references remain in the project
+
+---
+
 ## [2025-01-03] - ESLint Plugin Test Suite Completeness Resolution
 
 ### Fixed

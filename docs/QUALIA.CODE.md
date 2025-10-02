@@ -152,7 +152,6 @@ The linting system integrates with continuous integration pipelines to ensure on
 - `@measureTime()`: Measures and logs execution time of methods for performance monitoring.
 - `@validate(schemaName)`: Validates method arguments against a registered schema. The first argument of the method is validated against the specified schema from the schema registry.
 - `@validateEventProperty()`: Validates event properties against predefined schemas for EventBus events.
-- `@qualiaMethod()`: Comprehensive decorator that combines logging, error handling, and performance monitoring for critical qualia operations.
 - `@AdaptAndEmit(adapterPropertyKey: string)`: **CRÍTICO PARA LA ADAPTACIÓN DE PROTOCOLOS.** Este decorador es el núcleo del `ProtocolAdapterBundle`. DEBE usarse en métodos que sirven como puntos de entrada para datos crudos de fuentes externas (ej. WebSockets). Traduce automáticamente los datos crudos a un evento de dominio tipado y lo emite en el `EventBus`.
 
 // Aplicación del decorador de adaptación:

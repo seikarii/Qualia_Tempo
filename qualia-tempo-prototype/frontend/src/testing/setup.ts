@@ -10,7 +10,6 @@ vi.mock("../utils/decorators", () => ({
   throttle: vi.fn().mockImplementation(() => (d: unknown) => d),
   validateEventProperty: vi.fn().mockImplementation(() => (d: unknown) => d),
   measureTime: vi.fn().mockImplementation(() => (d: unknown) => d),
-  qualiaMethod: vi.fn().mockImplementation(() => (d: unknown) => d),
   OnEvent: vi.fn().mockImplementation(() => (d: unknown) => d),
   BrowserOnly: vi.fn().mockImplementation(() => (d: unknown) => d),
   AdaptAndEmit: vi.fn().mockImplementation(() => (d: unknown) => d),

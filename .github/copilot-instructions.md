@@ -239,7 +239,7 @@ Decorators apply cross-cutting concerns. Use MANDATORY.
 - `@AdaptAndEmit(adapterPropertyKey)`: CRITICAL for protocol adaptation. Translates raw external data to typed domain events, emits on EventBus. Use on raw data entry points (WebSockets).
 - `@BrowserOnly`: CRITICAL for platform abstraction. Methods using browser-exclusive APIs (window, document). Aborts execution in non-browser environments (SSR, tests), logs warning.
 - `@OnEvent`: Automates EventBus subscription. Services using it MUST implement IBaseService. ApplicationInitializerService manages lifecycle.
-- `@qualiaMethod()`: Comprehensive decorator combining logging, error handling, performance for critical qualia operations.
+
 
 ```typescript
 // CORRECT USAGE
