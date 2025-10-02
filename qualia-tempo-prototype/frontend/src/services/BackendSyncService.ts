@@ -12,6 +12,8 @@ import {
   validateEventProperty,
   IBaseService,
   OnEvent,
+  initializeEventSubscriptions,
+  cleanupEventSubscriptions,
 } from "../utils/decorators";
 import type { BackendSyncConfig, BackendSyncServiceParams, QualiaStateRequest, HealthCheckResponse, QualiaSyncResponse } from "./contracts/IBackendSyncService.contracts";
 import type { IBackendSyncService } from "./interfaces/IBackendSyncService";
@@ -172,13 +174,15 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
   @logMethod
   public initialize(): void {
     this.logger.info('🚀 [BackendSyncService] Initializing service with @OnEvent lifecycle...');
-    // Las suscripciones de @OnEvent se gestionan automáticamente.
+    // Activa todas las suscripciones de eventos declaradas con @OnEvent
+    initializeEventSubscriptions(this);
   }
 
   @logMethod
   public cleanup(): void {
     this.logger.info('🧹 [BackendSyncService] Cleaning up service...');
-    // La limpieza de @OnEvent es automática.
+    // Limpia todas las suscripciones de eventos para prevenir memory leaks
+    cleanupEventSubscriptions(this);
   }
 
   /**

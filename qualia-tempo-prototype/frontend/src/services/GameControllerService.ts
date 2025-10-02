@@ -16,7 +16,7 @@ import type {
   GameStateChangedEvent,
 } from "./EventBus";
 import { EventBus } from "./EventBus";
-import { logMethod, catchError, OnEvent, IBaseService } from "../utils/decorators";
+import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 import { QualiaLogger } from "./Logger";
 import type { GameState, GameControllerConfig, GameControllerServiceParams, HitNoteContext } from "./contracts/IGameControllerService.contracts";
 import type { IGameControllerService } from "./interfaces/IGameControllerService";
@@ -399,14 +399,15 @@ export class GameControllerService implements IGameControllerService, IBaseServi
       level: this.config.gameStates.initial.level,
       gameMode: this.config.gameStates.initial.gameMode as "normal" | "hard" | "qualia",
     };
-    // @OnEvent subscriptions are handled automatically by initializeEventSubscriptions
-    // No manual eventBus.subscribe calls needed
+    // Activa todas las suscripciones de eventos declaradas con @OnEvent
+    initializeEventSubscriptions(this);
   }
 
   @logMethod
   public cleanup(): void {
     this.logger.info('🧹 [GameController] Cleaning up service...');
-    // @OnEvent subscriptions are cleaned up automatically by cleanupEventSubscriptions
+    // Limpia todas las suscripciones de eventos para prevenir memory leaks
+    cleanupEventSubscriptions(this);
     
     // Clean up game clock
     if (this.gameClockInterval !== null) {

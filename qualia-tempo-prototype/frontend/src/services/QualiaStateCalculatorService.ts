@@ -23,7 +23,7 @@ import { QualiaStateCalculatedEvent } from "./contracts/events.contracts";
 import type { PlayerActionEvent } from "./contracts/events.contracts";
 import type { QualiaState } from "../types/contracts";
 import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
-import { logMethod, catchError, OnEvent, IBaseService } from "../utils/decorators";
+import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 
 // Configuration interface - REMOVED: Using ConfigurationService interface
 
@@ -92,7 +92,8 @@ export class QualiaStateCalculatorService
   @catchError
   public initialize(): void {
     this.logger.info("🚀 [QualiaCalculator] Initializing service...");
-    // @OnEvent decorators handle subscriptions automatically
+    // Activa todas las suscripciones de eventos declaradas con @OnEvent
+    initializeEventSubscriptions(this);
     // TODO: Refactor to listen to GameTick event instead of internal loop
     this.startUpdateLoop();
     this.logger.info("🧮 [QualiaCalculator] Service initialized");
@@ -105,7 +106,8 @@ export class QualiaStateCalculatorService
   @catchError
   public cleanup(): void {
     this.logger.info("🛑 [QualiaCalculator] Cleaning up service...");
-    // @OnEvent lifecycle handles cleanup automatically
+    // Limpia todas las suscripciones de eventos para prevenir memory leaks
+    cleanupEventSubscriptions(this);
     this.stopUpdateLoop();
     this.logger.info("✅ [QualiaCalculator] Service cleaned up");
   }

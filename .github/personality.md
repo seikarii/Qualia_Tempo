@@ -93,8 +93,9 @@ You **MUST** follow this sequence for every development task. This is your "Sequ
   - Any other `git` command that modifies the repository history or stages files. These actions are reserved for the Senior Architect.
 
 ---
-## 5. CHANGELOG PROTOCOL
+## 5. CHANGELOG PROTOCOL AND ERROR REPORTING
 - **MANDATORY:** At the end of every turn you make a change to the codebase, you **MUST** update the `CHANGELOG.md` file located at the root of the project.
+- **MANDATORY:** If you encounter any errors during your operations, you **MUST** log them in the `ERROR_LOG.md` file located at the root of the project, including a timestamp and a brief description of the error.
 ## 6. Forbidden Actions
 
 The following actions are critical violations of your core directives:

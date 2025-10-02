@@ -14,7 +14,7 @@
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import { logMethod, catchError, OnEvent, IBaseService } from "../utils/decorators";
+import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 import type {
   IDebugService,
   DebugConfig,
@@ -877,13 +877,15 @@ export class DebugService implements IDebugService, IBaseService {
   // QUALIA.CODE v1.1: IBaseService implementation
   public initialize(): void {
     this.logger.info('🚀 [DebugService] Initializing service with @OnEvent lifecycle...');
-    // @OnEvent subscriptions are handled automatically by the decorator
+    // Activa todas las suscripciones de eventos declaradas con @OnEvent
+    initializeEventSubscriptions(this);
   }
 
   @logMethod
   public cleanup(): void {
     this.logger.info('🧹 [DebugService] Cleaning up service...');
-    // @OnEvent subscriptions are cleaned up automatically by the decorator
+    // Limpia todas las suscripciones de eventos para prevenir memory leaks
+    cleanupEventSubscriptions(this);
     // Additional cleanup for intervals and sessions
     this.stopAllIntervals();
     this.performMemoryCleanup();

@@ -14,7 +14,7 @@
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import { logMethod, catchError, IBaseService, OnEvent } from "../utils/decorators";
+import { logMethod, catchError, IBaseService, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 import type {
   INotificationService,
 } from "./interfaces/INotificationService";
@@ -242,7 +242,8 @@ export class NotificationService implements INotificationService, IBaseService {
   @logMethod
   public initialize(): void {
     this.logger.info('🚀 [NotificationService] Initializing service with @OnEvent lifecycle...');
-    // Las suscripciones de @OnEvent se gestionan automáticamente.
+    // Activa todas las suscripciones de eventos declaradas con @OnEvent
+    initializeEventSubscriptions(this);
     
     // QUALIA.CODE v1.1: Event-Driven Diagnostics - Start periodic status emission
     if (this.config.statusEmission?.enabled && this.config.statusEmission.interval > 0) {
@@ -262,7 +263,8 @@ export class NotificationService implements INotificationService, IBaseService {
   @logMethod
   public cleanup(): void {
     this.logger.info('🧹 [NotificationService] Cleaning up service...');
-    // La limpieza de @OnEvent es automática.
+    // Limpia todas las suscripciones de eventos para prevenir memory leaks
+    cleanupEventSubscriptions(this);
     
     // QUALIA.CODE v1.1: Event-Driven Diagnostics - Stop status emission
     if (this.statusEmissionInterval !== null) {

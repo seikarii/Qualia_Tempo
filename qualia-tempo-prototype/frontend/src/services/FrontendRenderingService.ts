@@ -40,7 +40,7 @@ import type {
   WebGLContextLostEvent,
   WebGLContextRestoredEvent 
 } from "./contracts/events.contracts";
-import { logMethod, catchError, BrowserOnly, OnEvent, IBaseService } from "../utils/decorators";
+import { logMethod, catchError, BrowserOnly, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 
 @injectable()
 export class FrontendRenderingService implements IFrontendRenderingService, IBaseService {
@@ -457,13 +457,15 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
   // QUALIA.CODE v1.1: IBaseService implementation
   public initialize(): void {
     this.logger.info('🚀 [FrontendRenderingService] Initializing service with @OnEvent lifecycle...');
-    // @OnEvent subscriptions are handled automatically by the decorator
+    // Activa todas las suscripciones de eventos declaradas con @OnEvent
+    initializeEventSubscriptions(this);
   }
 
   @logMethod
   public cleanup(): void {
     this.logger.info('🧹 [FrontendRenderingService] Cleaning up service...');
-    // @OnEvent subscriptions are cleaned up automatically by the decorator
+    // Limpia todas las suscripciones de eventos para prevenir memory leaks
+    cleanupEventSubscriptions(this);
     // Additional cleanup for rendering resources
     if (this.isRunning) {
       this.stop();

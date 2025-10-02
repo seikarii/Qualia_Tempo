@@ -24,6 +24,8 @@ import {
   catchError,
   OnEvent,
   IBaseService,
+  initializeEventSubscriptions,
+  cleanupEventSubscriptions,
 } from "../utils/decorators";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 import type { IEventBus } from "./interfaces/IEventBus";
@@ -70,7 +72,8 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   @catchError
   initialize(): void {
     this._logger.info(this.config.messages.startingListeners);
-    // @OnEvent decorators handle subscriptions automatically
+    // Activa todas las suscripciones de eventos declaradas con @OnEvent
+    initializeEventSubscriptions(this);
     this._logger.info(this.config.messages.listenersActive);
   }
 
@@ -81,7 +84,8 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   @catchError
   cleanup(): void {
     this._logger.info(this.config.messages.stoppingListeners);
-    // @OnEvent lifecycle handles cleanup automatically
+    // Limpia todas las suscripciones de eventos para prevenir memory leaks
+    cleanupEventSubscriptions(this);
     this._logger.info(this.config.messages.listenersStopped);
   }
 

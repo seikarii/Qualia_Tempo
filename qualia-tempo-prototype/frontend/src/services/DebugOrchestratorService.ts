@@ -18,7 +18,7 @@ import type { ITimerService, IPerformanceService } from './interfaces/ITimerServ
 // QUALIA.CODE v1.1: Service imports removed - event-driven pattern eliminates coupling
 // import type { INotificationService } from './interfaces/INotificationService';
 // import type { IErrorReportingService } from './interfaces/IErrorReportingService';
-import { logMethod, catchError, OnEvent } from '../utils/decorators';
+import { logMethod, catchError, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from '../utils/decorators';
 import type { ConfigurationLoadedEvent, ServiceStatusUpdateEvent } from './contracts/events.contracts';
 import type { IBaseService } from './interfaces/IBaseService';
 
@@ -259,13 +259,15 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
 
   // IBaseService implementation
   public initialize(): void {
-    // @OnEvent subscriptions are set up automatically by the decorator
+    // Activa todas las suscripciones de eventos declaradas con @OnEvent
+    initializeEventSubscriptions(this);
     this.logger.info('DebugOrchestratorService initialized and event subscriptions active');
   }
 
   @logMethod
   public cleanup(): void {
-    // @OnEvent subscriptions are cleaned up automatically by the decorator
+    // Limpia todas las suscripciones de eventos para prevenir memory leaks
+    cleanupEventSubscriptions(this);
     this.logger.info('DebugOrchestratorService cleanup completed');
   }
 }

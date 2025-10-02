@@ -89,7 +89,8 @@ import type { IGameInfrastructureService } from "./interfaces/IGameInfrastructur
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { ConfigurationService } from "./ConfigurationService";
 import { HttpService } from "./HttpService";
-import { TimerService, PerformanceService } from "./TimerService";
+import { TimerService } from "./TimerService";
+import { PerformanceService } from "./PerformanceService";
 import { BrowserTimerProvider } from "./providers/BrowserTimerProvider";
 import { QualiaStateCalculatorService } from "./QualiaStateCalculatorService";
 import { BackendSyncService } from "./BackendSyncService";

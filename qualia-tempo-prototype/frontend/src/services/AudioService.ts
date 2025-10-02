@@ -4,7 +4,7 @@ import { EventBus } from "./EventBus";
 import type { QualiaStateCalculatedEvent, RhythmicDashEvent, MetronomeTickEvent } from "./contracts/events.contracts";
 import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { QualiaState } from "../types/contracts";
-import { logMethod, catchError, measureTime, IBaseService, OnEvent } from "../utils/decorators";
+import { logMethod, catchError, measureTime, IBaseService, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 import { QualiaLogger } from "./Logger";
 
 import type { IAudioService } from "./interfaces/IAudioService";
@@ -73,13 +73,15 @@ export class AudioService implements IAudioService, IBaseService {
   @logMethod
   public initialize(): void {
     this.logger.info('🚀 [AudioService] Initializing service with @OnEvent lifecycle...');
-    // Las suscripciones de @OnEvent se gestionan automáticamente.
+    // Activa todas las suscripciones de eventos declaradas con @OnEvent
+    initializeEventSubscriptions(this);
   }
 
   @logMethod
   public cleanup(): void {
     this.logger.info('🧹 [AudioService] Cleaning up service...');
-    // La limpieza de @OnEvent es automática.
+    // Limpia todas las suscripciones de eventos para prevenir memory leaks
+    cleanupEventSubscriptions(this);
   }
 
   /**

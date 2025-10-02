@@ -14,7 +14,7 @@
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import { logMethod, catchError, OnEvent, IBaseService } from "../utils/decorators";
+import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 import type {
   IErrorReportingService,
   ErrorStatistics,
@@ -812,7 +812,8 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   // QUALIA.CODE v1.1: IBaseService implementation
   public initialize(): void {
     this.logger.info('🚀 [ErrorReportingService] Initializing service with @OnEvent lifecycle...');
-    // @OnEvent subscriptions are handled automatically by the decorator
+    // Activa todas las suscripciones de eventos declaradas con @OnEvent
+    initializeEventSubscriptions(this);
     
     // QUALIA.CODE v1.1: Event-Driven Diagnostics - Start periodic status emission
     if (this.config.statusEmission?.enabled && this.config.statusEmission.interval > 0) {
@@ -832,7 +833,8 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   @logMethod
   public cleanup(): void {
     this.logger.info('🧹 [ErrorReportingService] Cleaning up service...');
-    // @OnEvent subscriptions are cleaned up automatically by the decorator
+    // Limpia todas las suscripciones de eventos para prevenir memory leaks
+    cleanupEventSubscriptions(this);
     // Additional cleanup for intervals and pending batches
     this.stopAllIntervals();
     this.processRemainingErrors();
