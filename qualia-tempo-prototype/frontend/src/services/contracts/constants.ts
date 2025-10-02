@@ -99,6 +99,37 @@ export const NOTE_GEOMETRY_TYPES = {
 } as const;
 
 /**
+ * AI analysis types for DebugService
+ * Used to categorize different types of automated analysis results
+ * ARCHITECTURAL MANDATE: Single source of truth for AI analysis type strings
+ */
+export const AI_ANALYSIS_TYPES = {
+  ERROR_PATTERN: "error_pattern" as const,
+  PERFORMANCE_ISSUE: "performance_issue" as const,
+  STATE_ANOMALY: "state_anomaly" as const,
+  RECOMMENDATION: "recommendation" as const,
+} as const;
+
+/**
+ * Severity levels for analysis results and diagnostics
+ * Used across DebugService and related diagnostic systems
+ * ARCHITECTURAL MANDATE: Single source of truth for severity level strings
+ */
+export const SEVERITY_LEVELS = {
+  LOW: "low" as const,
+  MEDIUM: "medium" as const,
+  HIGH: "high" as const,
+  CRITICAL: "critical" as const,
+} as const;
+
+/**
+ * Debug session configuration constants
+ * Used for generating unique session identifiers
+ * ARCHITECTURAL MANDATE: Single source of truth for debug session prefixes
+ */
+export const DEBUG_SESSION_PREFIX = "debug_session_" as const;
+
+/**
  * Type exports for type safety
  */
 export type EventType = typeof EVENT_TYPES[keyof typeof EVENT_TYPES];

@@ -16,6 +16,7 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
 import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions, BrowserOnly } from "../utils/decorators";
 import { EVENT_TYPES } from "./contracts/constants";
+import { AI_ANALYSIS_TYPES, SEVERITY_LEVELS, DEBUG_SESSION_PREFIX } from "./contracts/constants";
 import type {
   IDebugService,
   DebugConfig,
@@ -76,9 +77,6 @@ export class DebugService implements IDebugService, IBaseService {
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
   private readonly _performanceService: IPerformanceService;
-  // Configuration service for future extensibility
-  // @ts-expect-error - Unused parameter for future configuration features
-  private readonly _configService: IConfigurationService;
   private config!: DebugServiceConfig;
   private isStarted = false;
   // @ts-expect-error - eventListenerIds used in future EventBus subscription cleanup
@@ -448,7 +446,7 @@ export class DebugService implements IDebugService, IBaseService {
 
   private startNewSession(): void {
     this.currentSession = {
-      id: `debug_session_${Date.now()}_${Math.random().toString(this.config.sessionIdBase).substr(this.config.sessionIdPrefixLength, this.config.sessionIdLength)}`,
+      id: `${DEBUG_SESSION_PREFIX}${Date.now()}_${Math.random().toString(this.config.sessionIdBase).substr(this.config.sessionIdPrefixLength, this.config.sessionIdLength)}`,
       startTime: new Date(),
       events: [],
       errors: [],
@@ -732,8 +730,8 @@ export class DebugService implements IDebugService, IBaseService {
       if (errors.length > this.config.aiAnalysis.errorPatternThresholds.medium) {
         results.push({
           timestamp: new Date(),
-          type: "error_pattern",
-          severity: errors.length > this.config.aiAnalysis.errorPatternThresholds.high ? "high" : "medium",
+          type: AI_ANALYSIS_TYPES.ERROR_PATTERN,
+          severity: errors.length > this.config.aiAnalysis.errorPatternThresholds.high ? SEVERITY_LEVELS.HIGH : SEVERITY_LEVELS.MEDIUM,
           description: `Recurring error pattern detected: "${message}"`,
           data: { message, count: errors.length, errors },
           suggestions: ["Review error handling for this operation", "Consider adding retry logic", "Check input validation"],
@@ -756,8 +754,8 @@ export class DebugService implements IDebugService, IBaseService {
         // Configurable threshold for event processing time
         results.push({
           timestamp: new Date(),
-          type: "performance_issue" as const,
-          severity: avgTime > this.config.eventProcessingTimeHighThreshold ? "high" : "medium",
+          type: AI_ANALYSIS_TYPES.PERFORMANCE_ISSUE,
+          severity: avgTime > this.config.eventProcessingTimeHighThreshold ? SEVERITY_LEVELS.HIGH : SEVERITY_LEVELS.MEDIUM,
           description: `Slow event processing detected for ${eventType}`,
           data: {
             eventType,
@@ -787,8 +785,8 @@ export class DebugService implements IDebugService, IBaseService {
         if (typeof value === "number" && (value < 0 || value > 1)) {
           results.push({
             timestamp: new Date(),
-            type: "state_anomaly",
-            severity: "medium",
+            type: AI_ANALYSIS_TYPES.STATE_ANOMALY,
+            severity: SEVERITY_LEVELS.MEDIUM,
             description: `QualiaState ${key} out of bounds: ${value}`,
             data: {
               property: key,
@@ -813,8 +811,8 @@ export class DebugService implements IDebugService, IBaseService {
     if (this.performanceMetrics.errorRate > this.config.aiAnalysis.recommendationThresholds.highErrorRate) {
       results.push({
         timestamp: new Date(),
-        type: "recommendation",
-        severity: "medium",
+        type: AI_ANALYSIS_TYPES.RECOMMENDATION,
+        severity: SEVERITY_LEVELS.MEDIUM,
         description: "High error rate detected in system",
         data: {
           errorRate: this.performanceMetrics.errorRate,

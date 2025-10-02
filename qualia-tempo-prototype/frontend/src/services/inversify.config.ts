@@ -549,8 +549,8 @@ export async function configureServices(): Promise<void> {
   // QUALIA.CODE v1.1: Bind AudioServiceParams factory
   // Consolidates 6 constructor parameters into a single object to comply with IoC limits
   safeBindConstant<AudioServiceParams>(TYPES.AudioServiceParams, {
-    eventBus: container.get<EventBus>(TYPES.IEventBus),
-    logger: container.get<QualiaLogger>(TYPES.ILogger),
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
     config: fullConfig.audioService,
     audioEngine: container.get<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine),
     webAudioAPIService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),

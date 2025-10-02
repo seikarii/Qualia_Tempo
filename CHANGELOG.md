@@ -7,6 +7,72 @@ and this project adheres to Semantic Versioning.
 
 ## [2025-10-02] - QUALIA.CODE v1.1: Remediaciones Arquitectónicas Críticas (COMPLETED)
 
+### 🎯 DIRECTIVA 04: Corrección de Regresión en Inversión de Control (FIXED)
+
+**Análisis**: La factoría de AudioServiceParams en inversify.config.ts seguía acoplada a las implementaciones concretas EventBus y QualiaLogger, violando el DIP. Esta era la misma naturaleza de violación corregida en DIRECTIVA 01.
+
+#### Archivos Corregidos:
+1. **`/frontend/src/services/contracts/IAudioService.contracts.ts`**
+   - Cambió imports: `EventBus` → `IEventBus`, `QualiaLogger` → `ILogger`
+   - Actualizado interface `AudioServiceParams` para usar interfaces
+
+2. **`/frontend/src/services/inversify.config.ts`**
+   - Corregida factoría AudioServiceParams:
+     - `eventBus: container.get<EventBus>(TYPES.IEventBus)` → `eventBus: container.get<IEventBus>(TYPES.IEventBus)`
+     - `logger: container.get<QualiaLogger>(TYPES.ILogger)` → `logger: container.get<ILogger>(TYPES.ILogger)`
+
+**Impacto**: Eliminación completa del acoplamiento residual en AudioService. El sistema ahora mantiene consistencia total en el uso de interfaces para IoC.
+
+### 🎯 DIRECTIVA 05: Completar Centralización de Constantes (FIXED)
+
+**Análisis**: La refactorización de constantes fue incompleta. DebugService.ts seguía conteniendo "magic strings" para los resultados de sus análisis internos.
+
+#### Cambios Implementados:
+1. **`/frontend/src/services/contracts/constants.ts`** - Nuevas constantes añadidas:
+   ```typescript
+   export const AI_ANALYSIS_TYPES = {
+     ERROR_PATTERN: "error_pattern",
+     PERFORMANCE_ISSUE: "performance_issue", 
+     STATE_ANOMALY: "state_anomaly",
+     RECOMMENDATION: "recommendation",
+   } as const;
+   
+   export const SEVERITY_LEVELS = {
+     LOW: "low",
+     MEDIUM: "medium",
+     HIGH: "high",
+     CRITICAL: "critical",
+   } as const;
+   ```
+
+2. **`/frontend/src/services/DebugService.ts`**
+   - Importadas nuevas constantes: `AI_ANALYSIS_TYPES, SEVERITY_LEVELS`
+   - Reemplazados strings hardcodeados en métodos de análisis:
+     - `analyzeErrorPatterns()`: `"error_pattern"` → `AI_ANALYSIS_TYPES.ERROR_PATTERN`, `"high"/"medium"` → `SEVERITY_LEVELS.HIGH/MEDIUM`
+     - `analyzePerformanceIssues()`: `"performance_issue"` → `AI_ANALYSIS_TYPES.PERFORMANCE_ISSUE`
+     - `generateRecommendations()`: `"recommendation"` → `AI_ANALYSIS_TYPES.RECOMMENDATION`, `"medium"` → `SEVERITY_LEVELS.MEDIUM`
+
+**Impacto**: Eliminación completa de magic strings en DebugService. Sistema ahora tiene centralización total de constantes, facilitando mantenimiento y evitando errores tipográficos.
+
+### 🎯 DIRECTIVA 06: Finalizar Refactorización de Constantes en DebugService (COMPLETED)
+
+**Análisis**: La refactorización de constantes en DebugService.ts fue incompleta. Aún contenía strings hardcodeados para tipos de análisis de IA y niveles de severidad, además de un prefijo de sesión de debug no centralizado.
+
+#### Cambios Implementados:
+1. **`/frontend/src/services/contracts/constants.ts`** - Nueva constante añadida:
+   ```typescript
+   export const DEBUG_SESSION_PREFIX = "debug_session_";
+   ```
+
+2. **`/frontend/src/services/DebugService.ts`**
+   - Importada nueva constante: `DEBUG_SESSION_PREFIX`
+   - Reemplazados strings hardcodeados restantes:
+     - `analyzeQualiaStateAnomalies()`: `"state_anomaly"` → `AI_ANALYSIS_TYPES.STATE_ANOMALY`, `"medium"` → `SEVERITY_LEVELS.MEDIUM`
+     - `generateDebugSessionId()`: `"debug_session_"` → `DEBUG_SESSION_PREFIX`
+   - Eliminada propiedad no utilizada: `_configService` (ya no necesaria tras centralización de constantes)
+
+**Impacto**: Completada la centralización total de constantes en DebugService. Eliminados todos los magic strings y código no utilizado. Sistema ahora mantiene consistencia perfecta en el manejo de constantes críticas.
+
 ### 🎯 DIRECTIVA 01: Violación Crítica - Acoplamiento a Implementaciones Concretas (FIXED)
 
 **Análisis**: GameControllerService y su contrato de parámetros dependían directamente de clases concretas (EventBus, QualiaLogger) en lugar de sus abstracciones (IEventBus, ILogger), violando el Principio de Inversión de Dependencias.
