@@ -231,6 +231,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
     this.logger.info('DebugOrchestratorService initialized and event subscriptions active');
   }
 
+  @logMethod
   public cleanup(): void {
     // @OnEvent subscriptions are cleaned up automatically by the decorator
     this.logger.info('DebugOrchestratorService cleanup completed');

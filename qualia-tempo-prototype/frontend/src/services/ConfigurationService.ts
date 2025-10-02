@@ -14,6 +14,7 @@
 import { injectable, inject } from "inversify";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { ILogger } from "./interfaces/ILogger";
+import type { IHttpService } from "./interfaces/IHttpService";
 import type { FullGameConfig } from "../types/config";
 import { TYPES } from "./inversify.types";
 import * as yaml from "js-yaml";
@@ -34,16 +35,19 @@ export class ConfigurationService implements IConfigurationService {
   private configBasePath: string;
   private loadedConfig: FullGameConfig | null = null;
   private logger: ILogger;
+  private httpService: IHttpService;
 
   // Configuration files discovery - NO HARDCODING
   private configFileManifest: Record<string, string> = {};
 
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.IHttpService) httpService: IHttpService,
     @inject(TYPES.ConfigBasePath) configBasePath: string,
     @inject(TYPES.ConfigManifest) configManifest: Record<string, string>,
   ) {
     this.logger = logger;
+    this.httpService = httpService;
     this.configBasePath = configBasePath;
 
     // Accept configuration file manifest externally
@@ -57,11 +61,11 @@ export class ConfigurationService implements IConfigurationService {
    * @returns Promise that resolves with the loaded configuration
    */
 
-  // QUALIA.CODE EXCEPTION: @catchError decorator is intentionally omitted from loadConfig method.
-  // This method is part of critical application bootstrap. Failures here must be fatal and stop the application.
-  // The try...catch block within the method handles logging but re-throws the exception for proper fatal error handling.
+  // QUALIA.CODE: @catchError decorator ensures proper error boundaries for critical bootstrap.
+  // The internal try...catch handles specific error logging while @catchError provides system-level protection.
 
   @logMethod
+  @catchError
   public async loadConfig(): Promise<FullGameConfig> {
     this.logger.info("Loading configuration from multiple YAML files...");
 
@@ -74,11 +78,7 @@ export class ConfigurationService implements IConfigurationService {
         const fullPath = this.configBasePath + path;
         this.logger.debug(`Loading ${key} from ${fullPath}`);
 
-        const response = await fetch(fullPath);
-        if (!response.ok) {
-          throw new Error(`Failed to load ${key} from ${fullPath}: ${response.status} ${response.statusText}`);
-        }
-        const yamlText = await response.text();
+        const yamlText = await this.httpService.get<string>(fullPath);
         const config = yaml.load(yamlText);
         loadedConfigs.push({ key, config });
       } catch (error) {

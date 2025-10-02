@@ -53,6 +53,17 @@ export type {
 } from "./interfaces/IDebugService";
 
 /**
+ * QUALIA.CODE v1.1: Constructor parameters object to comply with max 4 parameters rule
+ */
+export interface DebugServiceParams {
+  eventBus: IEventBus;
+  logger: ILogger;
+  timerService: ITimerService;
+  config: DebugServiceConfig;
+  performanceService: IPerformanceService;
+}
+
+/**
  * QUALIA.CODE v1.1 Compliant DebugService
  * AI-powered debugging and system analysis with event-driven architecture.
  * Now with full InversifyJS dependency injection support.
@@ -97,24 +108,22 @@ export class DebugService implements IDebugService, IBaseService {
 
   /**
    * QUALIA.CODE v1.1: Pure Dependency Injection Constructor
+   * Refactored to use parameter object to comply with max 4 parameters rule
    */
   constructor(
-    @inject(TYPES.IEventBus) eventBus: IEventBus,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.DebugServiceConfig) config: DebugServiceConfig,
-    @inject(TYPES.IPerformanceService) private readonly _performanceService: IPerformanceService,
+    @inject(TYPES.DebugServiceParams) params: DebugServiceParams,
   ) {
-    if (!eventBus) {
+    if (!params.eventBus) {
       throw new Error(
         "🚨 [DebugService] EventBus is required for QUALIA.CODE v1.1 compliance",
       );
     }
 
-    this.eventBus = eventBus;
-    this.logger = logger;
-    this.timerService = timerService;
-    this.config = config;
+    this.eventBus = params.eventBus;
+    this.logger = params.logger;
+    this.timerService = params.timerService;
+    this.config = params.config;
+    this._performanceService = params.performanceService;
     this.performanceMetrics = this.initializePerformanceMetrics();
 
     this.logger.info(
@@ -871,6 +880,7 @@ export class DebugService implements IDebugService, IBaseService {
     // @OnEvent subscriptions are handled automatically by the decorator
   }
 
+  @logMethod
   public cleanup(): void {
     this.logger.info('🧹 [DebugService] Cleaning up service...');
     // @OnEvent subscriptions are cleaned up automatically by the decorator

@@ -1,4 +1,8 @@
 import type { ErrorReport, ErrorBatch } from "../interfaces/IErrorReportingService";
+import type { IEventBus } from "../interfaces/IEventBus";
+import type { ILogger } from "../interfaces/ILogger";
+import type { IHttpService } from "../interfaces/IHttpService";
+import type { ITimerService } from "../interfaces/ITimerService";
 
 // External service configuration for error reporting
 export interface ExternalServiceConfig {
@@ -142,4 +146,16 @@ export interface ErrorReportingConfig {
   
   // External service configuration
   externalService: ExternalServiceConfig;
+}
+
+/**
+ * QUALIA.CODE v1.1: Constructor parameters object for ErrorReportingService
+ * Consolidates 5 constructor parameters into a single object to comply with IoC limits
+ */
+export interface ErrorReportingServiceParams {
+  eventBus: IEventBus;
+  logger: ILogger;
+  httpService: IHttpService;
+  timerService: ITimerService;
+  config: ErrorReportingConfig;
 }

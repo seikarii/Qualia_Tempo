@@ -345,3 +345,17 @@ private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator (DEPRECA
 
 ---
 
+### 29. ✅ FIXED - Regla ESLint enforce-use-services-hook corregida
+**Archivo:** `eslint-plugin-qualia-code/lib/rules/enforce-use-services-hook.js`  
+**Severidad:** Media  
+**Estado:** Completado  
+**Descripción:**
+```
+Regla ESLint estaba bloqueando importaciones legítimas de contratos e interfaces
+```
+**Contexto:** La regla `enforce-use-services-hook` estaba flagging importaciones de `/services/contracts/` y `/services/interfaces/` como violaciones, cuando estas importaciones son permitidas según QUALIA.CODE.  
+**Solución:** Modificada la regla para permitir explícitamente importaciones de directorios `contracts` e `interfaces`.  
+**Impacto:** Resuelve 5 violaciones falsas positivas en componentes React (BossRenderer, GridRenderer, MusicalNotesRenderer, PlayerRenderer, QualiaFieldRenderer).  
+**Prioridad:** Media - Crítico para remediación arquitectural.
+
+

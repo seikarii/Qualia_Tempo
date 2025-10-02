@@ -84,6 +84,7 @@ export class AudioService implements IAudioService, IBaseService {
   }
 
   @logMethod
+  @catchError
   public async initializeAudioContext(): Promise<void> {
     if (this.isAudioContextStarted) return;
 

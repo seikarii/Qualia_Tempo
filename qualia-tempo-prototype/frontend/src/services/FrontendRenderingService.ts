@@ -429,6 +429,7 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
     // @OnEvent subscriptions are handled automatically by the decorator
   }
 
+  @logMethod
   public cleanup(): void {
     this.logger.info('🧹 [FrontendRenderingService] Cleaning up service...');
     // @OnEvent subscriptions are cleaned up automatically by the decorator

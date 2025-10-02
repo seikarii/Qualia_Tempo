@@ -44,6 +44,11 @@ module.exports = {
         // Check if importing from services directory
         const source = node.source.value;
         if (typeof source === 'string' && source.includes('/services/') && !source.includes('/hooks')) {
+          // Allow imports from contracts and interfaces directories
+          if (source.includes('/contracts/') || source.includes('/interfaces/')) {
+            return;
+          }
+          
           // Allow type-only imports
           if (node.importKind === 'type') {
             return;

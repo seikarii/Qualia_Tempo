@@ -19,7 +19,7 @@ import type {
   IErrorReportingService,
   ErrorStatistics,
 } from "./interfaces/IErrorReportingService";
-import type { ErrorReportingConfig } from "./contracts/IErrorReportingService.contracts";
+import type { ErrorReportingConfig, ErrorReportingServiceParams } from "./contracts/IErrorReportingService.contracts";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ErrorEvent } from "./contracts/events.contracts";
 import type { ILogger } from "./interfaces/ILogger";
@@ -116,26 +116,22 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
 
   /**
    * QUALIA.CODE v1.1: Pure Dependency Injection Constructor
-   * NO @unmanaged parameters, NO hardcoded configuration
+   * Refactored to use parameter object to comply with max 4 parameters rule
    */
   constructor(
-    @inject(TYPES.IEventBus) eventBus: IEventBus,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IHttpService) httpService: IHttpService,
-    @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.ErrorReportingConfig) config: ErrorReportingConfig,
+    @inject(TYPES.ErrorReportingServiceParams) params: ErrorReportingServiceParams,
   ) {
-    if (!eventBus) {
+    if (!params.eventBus) {
       throw new Error(
         "🚨 [ErrorReportingService] EventBus is required for QUALIA.CODE v1.1 compliance",
       );
     }
 
-    this.eventBus = eventBus;
-    this.logger = logger;
-    this.httpService = httpService;
-    this.timerService = timerService;
-    this.config = config;
+    this.eventBus = params.eventBus;
+    this.logger = params.logger;
+    this.httpService = params.httpService;
+    this.timerService = params.timerService;
+    this.config = params.config;
     this.sessionId = this.generateSessionId();
 
     // Initialize rate limiting and circuit breaker to minimal state
@@ -801,6 +797,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     // @OnEvent subscriptions are handled automatically by the decorator
   }
 
+  @logMethod
   public cleanup(): void {
     this.logger.info('🧹 [ErrorReportingService] Cleaning up service...');
     // @OnEvent subscriptions are cleaned up automatically by the decorator

@@ -23,9 +23,6 @@ import type { ISubtitleService } from "./interfaces/ISubtitleService";
 import type { IDebugOrchestratorService } from "./interfaces/IDebugOrchestratorService";
 import { logMethod, catchError, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 
-// QUALIA.CODE: Module-level constant for pre-config initialization message
-const SERVICE_INIT_MESSAGE = "ApplicationInitializerService constructed - awaiting start()";
-
 @injectable()
 export class ApplicationInitializerService
   implements IApplicationInitializerService
@@ -70,9 +67,8 @@ export class ApplicationInitializerService
     this.subtitleService = params.subtitleService;
     this.debugOrchestratorService = params.debugOrchestratorService;
     
-    // Configuration will be accessed in start() method after it's loaded
-    // Note: Using pre-loaded constant since ConfigService may not be ready yet
-    this.logger.info(SERVICE_INIT_MESSAGE);
+    // Configuration is injected and available immediately
+    this.logger.info(this.config.messages.serviceConstructed);
   }
 
   @logMethod

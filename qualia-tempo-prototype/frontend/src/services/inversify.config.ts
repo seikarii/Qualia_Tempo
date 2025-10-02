@@ -16,8 +16,8 @@ import type { ApplicationInitializerServiceParams } from "./contracts/IApplicati
 import type { AudioServiceConfig } from "./contracts/IAudioService.contracts";
 import type { BackendSyncConfig } from "./contracts/IBackendSyncService.contracts";
 import type { CompositionRootConfig } from "./contracts/IApplicationCompositionRoot.contracts";
-import type { DebugServiceConfig } from "./contracts/IDebugService.contracts";
-import type { ErrorReportingConfig } from "./contracts/IErrorReportingService.contracts";
+import type { DebugServiceConfig, DebugServiceParams } from "./contracts/IDebugService.contracts";
+import type { ErrorReportingConfig, ErrorReportingServiceParams } from "./contracts/IErrorReportingService.contracts";
 import type { EventBusConfig } from "./contracts/IEventBus.contracts";
 import type { GameControllerConfig } from "./contracts/IGameControllerService.contracts";
 import type { HttpConfig } from "./contracts/IHttpService.contracts";
@@ -537,6 +537,26 @@ export async function configureServices(): Promise<void> {
     httpService: container.get<IHttpService>(TYPES.IHttpService),
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+  });
+
+  // QUALIA.CODE v1.1: Bind DebugServiceParams factory
+  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant<DebugServiceParams>(TYPES.DebugServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    config: fullConfig.debugService,
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+  });
+
+  // QUALIA.CODE v1.1: Bind ErrorReportingServiceParams factory
+  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant<ErrorReportingServiceParams>(TYPES.ErrorReportingServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    httpService: container.get<IHttpService>(TYPES.IHttpService),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    config: fullConfig.errorReporting,
   });
 
   // ===== EMIT CONFIGURATION LOADED EVENT =====

@@ -129,6 +129,7 @@ export class CoordinateSystemService implements ICoordinateSystemService {
   /**
    * Get current grid configuration for debugging/inspection.
    */
+  @logMethod
   public getGridConfig(): { gridSize: number; tileSize: number } {
     return {
       gridSize: this.config.gridSize,

@@ -82,7 +82,9 @@ export const TYPES = {
   // QUALIA.CODE v1.1: Constructor Parameter Objects
   NotificationServiceParams: Symbol.for("NotificationServiceParams"),
   ErrorReportingConfig: Symbol.for("ErrorReportingConfig"),
+  ErrorReportingServiceParams: Symbol.for("ErrorReportingServiceParams"),
   DebugServiceConfig: Symbol.for("DebugServiceConfig"),
+  DebugServiceParams: Symbol.for("DebugServiceParams"),
   FrontendRenderingConfig: Symbol.for("FrontendRenderingConfig"),
 
   // QUALIA.CODE v1.1: Constructor Parameter Objects

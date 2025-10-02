@@ -145,6 +145,7 @@ export class WebSocketService implements IWebSocketService {
   }
 
   @logMethod
+  @catchError
   public async setBinaryType(type: 'blob' | 'arraybuffer'): Promise<void> {
     // Store the binary type for use during connection
     this.binaryType = type;
