@@ -516,13 +516,13 @@ export class ViewLogicService implements IViewLogicService {
       if (note.state === 'hit') {
         return {
           id: note.id || `note_${index}`,
-          position: note.position || [0, 0, 0],
+          position: [note.position.x, note.position.y, 0],
           scale: [2, 2, 2], // Explosion effect
           color: [1, 1, 1], // White flash
           opacity: 0, // Immediate fade
           pulseIntensity: 1,
           approachProgress: 1,
-          geometryType: note.type || 'default',
+          geometryType: this.mapNoteTypeToGeometry(note.qualia_signature),
           rotation: [0, 0, 0],
           trail: { visible: true, color: [1, 1, 1], intensity: 1, scale: 2, opacity: 0.8 },
           isActive: true,
@@ -535,13 +535,13 @@ export class ViewLogicService implements IViewLogicService {
       if (note.state === 'missed') {
         return {
           id: note.id || `note_${index}`,
-          position: note.position || [0, 0, 0],
+          position: [note.position.x, note.position.y, 0],
           scale: [0.8, 0.8, 0.8], // Shrink effect
           color: [0.3, 0.3, 0.3], // Grayish color
           opacity: 0, // Fade out
           pulseIntensity: 0,
           approachProgress: 1,
-          geometryType: note.type || 'default',
+          geometryType: this.mapNoteTypeToGeometry(note.qualia_signature),
           rotation: [0, 0, 0],
           trail: { visible: false, color: [0.3, 0.3, 0.3], intensity: 0, scale: 0, opacity: 0 },
           isActive: true,
@@ -553,7 +553,7 @@ export class ViewLogicService implements IViewLogicService {
 
       // Existing logic for 'active' notes
       // Extract timing calculations from MusicalNotesRenderer
-      const timeDiff = note.timing - currentTime;
+      const timeDiff = note.timestamp - currentTime;
       const isActive = timeDiff > -1 && timeDiff < 5; // Show notes 5 seconds before and 1 second after
       const isInHitWindow = Math.abs(timeDiff) < 0.5; // 0.5 second hit window
       const isMissed = timeDiff < -0.5;
@@ -563,13 +563,13 @@ export class ViewLogicService implements IViewLogicService {
         // Return inactive note
         return {
           id: note.id || `note_${index}`,
-          position: note.position || [0, 0, 0],
+          position: [note.position.x, note.position.y, 0],
           scale: [0, 0, 0],
           color: [0, 0, 0],
           opacity: 0,
           pulseIntensity: 0,
           approachProgress: 0,
-          geometryType: note.type || 'default',
+          geometryType: this.mapNoteTypeToGeometry(note.qualia_signature),
           rotation: [0, 0, 0],
           trail: { visible: false, color: [0, 0, 0], intensity: 0, scale: 0, opacity: 0 },
           isActive: false,
@@ -582,9 +582,9 @@ export class ViewLogicService implements IViewLogicService {
       // Calculate approach progress (notes move toward player)
       const progress = (5 - timeDiff) / 5; // 0 to 1 as note approaches
       const finalPosition: [number, number, number] = [
-        note.position[0],
-        note.position[1],
-        note.position[2] - progress * 8
+        note.position.x,
+        note.position.y,
+        -progress * 8
       ];
 
       // Scale animation - pulse effect in hit window
@@ -619,7 +619,7 @@ export class ViewLogicService implements IViewLogicService {
         opacity,
         pulseIntensity,
         approachProgress: progress,
-        geometryType: note.type || 'default',
+        geometryType: this.mapNoteTypeToGeometry(note.qualia_signature),
         rotation,
         trail: {
           visible: trailVisible,
