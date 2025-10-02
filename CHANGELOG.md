@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to Semantic Versioning.
 
+## [2025-10-02] - Architectural Refactoring: Debug Interface Encapsulation
+
+### 🏗️ Architecture Improvements
+- **DebugService.ts**: Added `attachToGlobalScope()` method to encapsulate debug interface attachment logic
+  - Moved responsibility from ApplicationCompositionRoot to DebugService for SRP compliance
+  - Added @BrowserOnly decorator and proper error handling
+- **IDebugService.ts**: Added `attachToGlobalScope(): void` method to interface
+- **ApplicationCompositionRoot.ts**: Simplified debug interface attachment to single method call
+  - Removed direct window manipulation and config checks
+  - Improved separation of concerns
+- **DebugService.test.ts**: Added comprehensive unit tests for `attachToGlobalScope()` method
+  - Tests browser environment attachment, disabled overlay, and non-browser warnings
+
+### 🔒 Null Safety Improvements (6 violations fixed)
+- **ThrottlingManager.ts**: Replaced 3 `||` operators with `??` for proper nullish coalescing
+  - `rateLimitWindow ?? 1000` (line 55)
+  - `burstWindow ?? 60000` (line 64)
+  - `historyRetention ?? 60000` (line 82)
+- **GameStateStore.ts**: Replaced 3 `||` operators with `??` for proper nullish coalescing
+  - `gameState ?? ({} as GameState)` (line 111)
+  - `qualiaState ?? {}` (line 122)
+  - `qualiaState ?? ({} as QualiaState)` (line 133)
+- **GameStateStore.ts**: Fixed autoHide/duration type safety with proper typeof checks
+  - Replaced `metadata?.autoHide ?? true` with `typeof metadata?.autoHide === 'boolean' ? metadata.autoHide : true`
+
+### 🔒 Null Safety Improvements (6 violations fixed)
+- **ThrottlingManager.ts**: Replaced 3 `||` operators with `??` for proper nullish coalescing
+  - `rateLimitWindow ?? 1000` (line 55)
+  - `burstWindow ?? 60000` (line 64)
+  - `historyRetention ?? 60000` (line 82)
+- **GameStateStore.ts**: Replaced 3 `||` operators with `??` for proper nullish coalescing
+  - `gameState ?? ({} as GameState)` (line 111)
+  - `qualiaState ?? {}` (line 122)
+  - `qualiaState ?? ({} as QualiaState)` (line 133)
+- **GameStateStore.ts**: Fixed autoHide/duration type safety with proper typeof checks
+  - Replaced `metadata?.autoHide ?? true` with `typeof metadata?.autoHide === 'boolean' ? metadata.autoHide : true`
+  - Replaced `metadata?.duration ?? config` with `typeof metadata?.duration === 'number' ? metadata.duration : config`
+  - **Rationale**: `metadata` is `Record<string, unknown>`, so TypeScript cannot verify types with `??` alone
+
+### 📐 Type Safety Improvements (2 violations fixed)
+- **main.ts**: Replaced `as "fullscreen-ui"` with `as const` for vibrancy property (prefer-as-const compliance)
+- **DebugService.ts**: Replaced `as "performance_issue"` with `as const` for issue type (prefer-as-const compliance)
+
+### 🧹 Code Cleanup (3 violations fixed)
+- **ApplicationCompositionRoot.ts**: Prefixed unused parameters with underscore in GameStoreApi type definition
+- **NotificationService.ts**: Prefixed unused _state parameter with underscore
+- **ThrottlingManager.ts**: Renamed `timerService` to `_timerService` (injected dependency used in methods)
+
+### 📊 Metrics
+- **Violations Before**: 229 (160 errors, 69 warnings)
+- **Violations After**: 218 (152 errors, 66 warnings)
+- **Violations Fixed**: 11 (8 errors, 3 warnings)
+- **Total Reduction from Baseline**: 62.3% (from 579 to 218)
+
+---
+
 ## [2025-10-02] - CRITICAL ARCHITECTURAL REMEDIATION: Service Locator Anti-Pattern Elimination
 
 ### 🚨 CRITICAL ARCHITECTURAL FIX: Dismantling the Infrastructure Facade

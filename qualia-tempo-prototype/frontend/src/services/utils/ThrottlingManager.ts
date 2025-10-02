@@ -20,7 +20,7 @@ export class ThrottlingManager {
 
   constructor(
     @inject(TYPES.ThrottlingConfig) private _config: ThrottlingConfig,
-    @inject(TYPES.ITimerService) private timerService: ITimerService
+    @inject(TYPES.ITimerService) private _timerService: ITimerService
   ) {}
 
   canProcess(): boolean {
@@ -28,7 +28,7 @@ export class ThrottlingManager {
       return true;
     }
 
-    const now = this.timerService.now();
+    const now = this._timerService.now();
 
     // Clean old notifications
     this.cleanOldNotifications();
@@ -52,7 +52,7 @@ export class ThrottlingManager {
     }
 
     // Check per-second limit
-    const secondAgo = now - (this._config.rateLimitWindow || 1000);
+    const secondAgo = now - (this._config.rateLimitWindow ?? 1000);
     const recentCount = this.recentNotifications.filter(
       (time) => time.getTime() > secondAgo,
     ).length;
@@ -61,7 +61,7 @@ export class ThrottlingManager {
     }
 
     // Check per-minute limit
-    const minuteAgo = now - (this._config.burstWindow || 60000);
+    const minuteAgo = now - (this._config.burstWindow ?? 60000);
     const minuteCount = this.recentNotifications.filter(
       (time) => time.getTime() > minuteAgo,
     ).length;
@@ -73,13 +73,13 @@ export class ThrottlingManager {
   }
 
   recordNotification(): void {
-    const now = new Date(this.timerService.now());
+    const now = new Date(this._timerService.now());
     this.recentNotifications.push(now);
     this.burstCount++;
   }
 
   private cleanOldNotifications(): void {
-    const cutoff = this.timerService.now() - (this._config.historyRetention || 60000); // Use configured retention
+    const cutoff = this._timerService.now() - (this._config.historyRetention ?? 60000); // Use configured retention
     this.recentNotifications = this.recentNotifications.filter(
       (time) => time.getTime() > cutoff,
     );

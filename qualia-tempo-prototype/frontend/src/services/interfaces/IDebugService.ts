@@ -142,4 +142,10 @@ export interface IDebugService {
    * Returns null if debug interface is disabled.
    */
   getDebugInterface(): DebugInterface | null;
+
+  /**
+   * Attach the debug interface to the global scope (window.QA_DEBUG).
+   * Only available in development mode with debug overlay enabled.
+   */
+  attachToGlobalScope(): void;
 }

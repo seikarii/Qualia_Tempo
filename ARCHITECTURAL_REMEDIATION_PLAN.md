@@ -1,6 +1,17 @@
 # QUALIA.CODE v1.1 - Architectural Remediation Plan
 # TARGET: Qualia Tempo Prototype
-# STATUS: 229 violations detected, build functional (Phase 3 Round 14 completed - Null Safety Improvements)
+# STATUS: 218 violations detected, build functional (Phase 3 Round 15 completed - Null Safety & Type Safety)
+
+**Phase 3 Round 15: Null Safety & Type Safety Improvements (11 violations fixed):**
+- ✅ **ThrottlingManager.ts** - Replaced 3 `||` operators with `??` for proper nullish coalescing (rateLimitWindow, burstWindow, historyRetention fallbacks)
+- ✅ **GameStateStore.ts** - Replaced 3 `||` operators with `??` for proper nullish coalescing (gameState, qualiaState fallbacks)
+- ✅ **GameStateStore.ts** - Fixed autoHide/duration type safety with proper typeof checks instead of nullish coalescing (metadata is Record<string, unknown>)
+- ✅ **main.ts** - Replaced `as "literal"` with `as const` for vibrancy property (prefer-as-const compliance)
+- ✅ **DebugService.ts** - Replaced `as "literal"` with `as const` for performance_issue type (prefer-as-const compliance)
+- ✅ **ApplicationCompositionRoot.ts** - Prefixed unused parameters with underscore in GameStoreApi type definition
+- ✅ **NotificationService.ts** - Prefixed unused _state parameter with underscore
+- ✅ **Violations reduced from 229 to 218** (11 violations fixed - 6 nullish coalescing + 2 prefer-as-const + 3 unused vars)
+- ⏳ **Remaining issues:** 2 direct window access violations in ApplicationCompositionRoot, ~29 hardcoded config values, 49 function complexity violations, 34 unused vars
 
 **Phase 3 Round 14: Null Safety Improvements (26 violations fixed):**
 - ✅ **EventBus.ts** - Replaced 3 `||` operators with `??` for proper nullish coalescing (priority sorting, listeners array, event type logging)
@@ -134,10 +145,10 @@
 ## EXECUTIVE SUMMARY
 
 **Current Status:** ✅ Build functional, ⚠️ TypeScript has ~15 type errors (down from baseline)
-**Violations:** 229 total (160 errors, 69 warnings) - DOWN from 579 (60.3% total violation reduction)
-**Progress:** 144 any types fixed (80% of any type violations eliminated) + 77 hardcoded config values externalized + 6 missing decorators added + ESLint rule fixed + 2 constructor parameter objects created + direct platform API usage eliminated + TimerService configuration externalized + 26 null safety improvements
-**Impact:** Phase 3 Round 14 completed - Null safety violations systematically replaced `||` with `??` across codebase
-# LAST UPDATED: 2025-10-02 (Phase 3 Round 14 completed - Null safety improvements)
+**Violations:** 218 total (152 errors, 66 warnings) - DOWN from 579 (62.3% total violation reduction)
+**Progress:** 144 any types fixed (80% of any type violations eliminated) + 77 hardcoded config values externalized + 6 missing decorators added + ESLint rule fixed + 2 constructor parameter objects created + direct platform API usage eliminated + TimerService configuration externalized + 32 null safety improvements + 2 prefer-as-const fixes
+**Impact:** Phase 3 Round 15 completed - Additional null safety improvements in ThrottlingManager and GameStateStore, type safety improvements with prefer-as-const
+# LAST UPDATED: 2025-10-02 (Phase 3 Round 15 completed - Null safety & type safety improvements)
 
 ## VIOLATION ANALYSIS
 

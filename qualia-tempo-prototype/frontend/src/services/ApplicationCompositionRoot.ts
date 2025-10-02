@@ -12,7 +12,6 @@ import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
 import { ILogger } from "./interfaces/ILogger";
 import { IDebugService } from "./interfaces/IDebugService";
-import type { DebugServiceConfig } from "./contracts/IDebugService.contracts";
 import type { CompositionRootConfig } from "./contracts/IApplicationCompositionRoot.contracts";
 import type { GameState } from "../state/useGameStore";
 
@@ -21,8 +20,8 @@ import type { GameState } from "../state/useGameStore";
  */
 type GameStoreApi = {
   getState: () => GameState;
-  setState: (_partial: GameState | Partial<GameState> | ((state: GameState) => GameState | Partial<GameState>), _replace?: boolean) => void;
-  subscribe: (_listener: (state: GameState, _prevState: GameState) => void) => () => void;
+  setState: (_partial: GameState | Partial<GameState> | ((_state: GameState) => GameState | Partial<GameState>), _replace?: boolean) => void;
+  subscribe: (_listener: (_state: GameState, _prevState: GameState) => void) => () => void;
 };
 
 /**
@@ -47,7 +46,7 @@ export class ApplicationCompositionRoot {
       const gameStateStore = container.get<IGameStateStore>(TYPES.IGameStateStore);
       // Type-safe access to setStoreApi method (part of GameStateStore implementation)
       if ('setStoreApi' in gameStateStore && typeof gameStateStore.setStoreApi === 'function') {
-        (gameStateStore as { setStoreApi: (api: unknown) => void }).setStoreApi(gameStoreApi);
+        (gameStateStore as { setStoreApi: (_api: unknown) => void }).setStoreApi(gameStoreApi);
       }
 
       // Get logger for confirmation
@@ -100,23 +99,8 @@ export class ApplicationCompositionRoot {
     await appInitializer.start();
 
     // Step 4: Attach debug interface in development mode
-    // Get debug configuration via direct injection
-    const debugConfig = container.get<DebugServiceConfig>(TYPES.DebugServiceConfig);
-    if (debugConfig?.logging?.enableConsoleOutput) {
-      try {
-        const debugService = container.get<IDebugService>(TYPES.IDebugService);
-        const debugInterface = debugService.getDebugInterface();
-        if (debugInterface && typeof window !== 'undefined') {
-          // Attach debug interface directly to window for development
-          const debugKey = 'QA_DEBUG';
-          (window as unknown as Record<string, unknown>)[debugKey] = debugInterface;
-          logger.info(`${config.logging.debugAttachMessage}${debugKey}`);
-        }
-      } catch (error) {
-        const errorContext = error instanceof Error ? { message: error.message } : { error: String(error) };
-        logger.warn(config.logging.debugAttachErrorMessage, errorContext);
-      }
-    }
+    const debugService = container.get<IDebugService>(TYPES.IDebugService);
+    debugService.attachToGlobalScope();
 
     // Application completion message
     logger.info(config.logging.appStartCompleteMessage);

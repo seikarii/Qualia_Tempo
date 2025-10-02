@@ -78,7 +78,7 @@ const createWindow = (): BrowserWindow => {
     title: "Qualia Tempo - A Charlie Hellsinger Story",
 
     // macOS specific - use valid vibrancy value
-    vibrancy: "fullscreen-ui" as "fullscreen-ui", // Type assertion for compatibility
+    vibrancy: "fullscreen-ui" as const, // Type assertion for compatibility
     visualEffectState: "active",
   });
 

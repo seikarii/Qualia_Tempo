@@ -61,10 +61,13 @@ export class GameStateStore implements IGameStateStore {
         title: notification.message, // Use message as title since ExtendedNotification doesn't have title
         message: notification.message,
         timestamp: notification.timestamp.getTime(),
-        autoHide: notification.metadata?.autoHide ?? true,
-        duration: notification.metadata?.duration ?? this.config.display.notificationDuration,
+        autoHide: typeof notification.metadata?.autoHide === 'boolean' ? notification.metadata.autoHide : true,
+        duration: typeof notification.metadata?.duration === 'number' ? notification.metadata.duration : this.config.display.notificationDuration,
       }));
 
+    setState(
+    fn: (state: GameState) => Partial<GameState>,
+  ): void {
     this.storeApi.setState((state) => ({
       ...state,
       notifications: storeNotifications,
@@ -106,7 +109,7 @@ export class GameStateStore implements IGameStateStore {
    */
   getGameState(): GameState {
     const state = this.storeApi.getState();
-    return (state as { gameState?: GameState }).gameState || ({} as GameState);
+    return (state as { gameState?: GameState }).gameState ?? ({} as GameState);
   }
 
   /**
@@ -116,7 +119,7 @@ export class GameStateStore implements IGameStateStore {
     this.storeApi.setState((currentState) => ({
       ...currentState,
       qualiaState: {
-        ...((currentState as { qualiaState?: QualiaState }).qualiaState || {}),
+        ...((currentState as { qualiaState?: QualiaState }).qualiaState ?? {}),
         ...state,
       },
     }));
@@ -127,6 +130,6 @@ export class GameStateStore implements IGameStateStore {
    */
   getQualiaState(): QualiaState {
     const state = this.storeApi.getState();
-    return (state as { qualiaState?: QualiaState }).qualiaState || ({} as QualiaState);
+    return (state as { qualiaState?: QualiaState }).qualiaState ?? ({} as QualiaState);
   }
 }

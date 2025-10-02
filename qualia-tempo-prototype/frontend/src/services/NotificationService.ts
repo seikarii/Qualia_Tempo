@@ -1013,7 +1013,7 @@ export class NotificationService implements INotificationService, IBaseService {
 
       // Also call setState for test compatibility
       if ("setState" in this.gameStateStore) {
-        (this.gameStateStore as unknown as { setState: (state: unknown) => void }).setState({ notifications });
+        (this.gameStateStore as unknown as { setState: (_state: unknown) => void }).setState({ notifications });
       }
 
       this.logger.debug(

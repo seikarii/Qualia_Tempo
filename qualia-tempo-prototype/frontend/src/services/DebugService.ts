@@ -14,7 +14,7 @@
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
+import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions, BrowserOnly } from "../utils/decorators";
 import type {
   IDebugService,
   DebugConfig,
@@ -747,7 +747,7 @@ export class DebugService implements IDebugService, IBaseService {
       if (avgTime > this.config.eventProcessingTimeThreshold) {
         // Configurable threshold for event processing time
         results.push({
-          type: "performance_issue" as "performance_issue",
+          type: "performance_issue" as const,
           severity: avgTime > this.config.eventProcessingTimeHighThreshold ? "high" : "medium",
           message: `Slow event processing detected for ${eventType}`,
           metadata: {
@@ -853,6 +853,27 @@ export class DebugService implements IDebugService, IBaseService {
   @logMethod
   public getDebugInterface(): DebugInterface | null {
     return this.debugInterface;
+  }
+
+  /**
+   * Attach the debug interface to the global scope (window.QA_DEBUG).
+   * Only available in development mode with debug overlay enabled.
+   */
+  @logMethod
+  @catchError
+  @BrowserOnly
+  public attachToGlobalScope(): void {
+    if (!this.config.development.enableDebugOverlay) {
+      return;
+    }
+
+    if (this.debugInterface && typeof window !== 'undefined') {
+      const debugKey = 'QA_DEBUG';
+      (window as unknown as Record<string, unknown>)[debugKey] = this.debugInterface;
+      this.logger.info(`🌐 [DebugService] Debug interface attached to window.${debugKey}`);
+    } else {
+      this.logger.warn('🌐 [DebugService] Cannot attach debug interface: interface not available or not in browser environment');
+    }
   }
 
   private logCurrentConfig(): void {
