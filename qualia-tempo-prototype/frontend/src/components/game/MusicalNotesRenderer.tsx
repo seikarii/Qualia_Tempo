@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useViewLogicService } from '../../services/hooks';
 import { NoteVisualData } from '../../services/contracts/IViewLogicService.contracts';
+import { NOTE_GEOMETRY_TYPES } from '../../services/contracts/constants';
 
 interface Note {
   id: string;
@@ -76,17 +77,22 @@ const MusicalNotesRenderer: React.FC<MusicalNotesRendererProps> = ({
 
 export default MusicalNotesRenderer;
 
-// Helper function to get geometry based on note type
-function getGeometryForType(type: string): THREE.BufferGeometry {
-  switch (type) {
-    case "harmony":
+/**
+ * QUALIA.CODE v1.1 Compliant: Geometry Factory
+ * Maps geometry type constants to Three.js geometries
+ * NO BUSINESS LOGIC - Pure rendering concern
+ */
+function getGeometryForType(geometryType: string): THREE.BufferGeometry {
+  switch (geometryType) {
+    case NOTE_GEOMETRY_TYPES.HARMONY:
       return new THREE.OctahedronGeometry(0.5);
-    case "chaos":
+    case NOTE_GEOMETRY_TYPES.CHAOS:
       return new THREE.IcosahedronGeometry(0.5);
-    case "power":
+    case NOTE_GEOMETRY_TYPES.POWER:
       return new THREE.BoxGeometry(0.8, 0.8, 0.8);
-    case "grace":
+    case NOTE_GEOMETRY_TYPES.GRACE:
       return new THREE.SphereGeometry(0.5, 16, 16);
+    case NOTE_GEOMETRY_TYPES.DEFAULT:
     default:
       return new THREE.ConeGeometry(0.5, 1, 8);
   }

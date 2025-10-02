@@ -1,8 +1,9 @@
-// QUALIA.CODE v1.0 - Frontend Decorators
+// QUALIA.CODE v1.1 - Frontend Decorators
 // Mandatory transversal logic implementation for TypeScript
 // Updated for TypeScript 5.9.2 compatibility with stage-3 decorators
 
 import { schemaRegistry } from "../schemas";
+import { EmergencyLogger } from "./EmergencyLogger";
 
 // QUALIA.CODE v1.1: Base Service Interface for Lifecycle Management
 export interface IBaseService {
@@ -44,11 +45,11 @@ export function logMethod(
         timestamp: new Date().toISOString(),
       });
     } else {
-      // Fallback to console only when no instance logger available
-      console.debug(`→ ENTER ${fullMethodName}`, {
+      // QUALIA.CODE v1.1: Use EmergencyLogger instead of console
+      EmergencyLogger.debug(`→ ENTER ${fullMethodName}`, {
         arguments: args.length > 0 ? args : "no arguments",
         timestamp: new Date().toISOString(),
-        note: "Logger not found on instance, using console fallback",
+        note: "Logger not found on instance, using EmergencyLogger",
       });
     }
 
@@ -65,10 +66,10 @@ export function logMethod(
                 timestamp: new Date().toISOString(),
               });
             } else {
-              console.debug(`← EXIT ${fullMethodName}`, {
+              EmergencyLogger.debug(`← EXIT ${fullMethodName}`, {
                 result: res,
                 timestamp: new Date().toISOString(),
-                note: "Logger not found on instance, using console fallback",
+                note: "Logger not found on instance, using EmergencyLogger",
               });
             }
             return res;
@@ -80,10 +81,10 @@ export function logMethod(
                 timestamp: new Date().toISOString(),
               });
             } else {
-              console.error(`✗ ERROR ${fullMethodName}`, {
+              EmergencyLogger.error(`✗ ERROR ${fullMethodName}`, {
                 error: error.message,
                 timestamp: new Date().toISOString(),
-                note: "Logger not found on instance, using console fallback",
+                note: "Logger not found on instance, using EmergencyLogger",
               });
             }
             throw error;
@@ -95,10 +96,10 @@ export function logMethod(
             timestamp: new Date().toISOString(),
           });
         } else {
-          console.debug(`← EXIT ${fullMethodName}`, {
+          EmergencyLogger.debug(`← EXIT ${fullMethodName}`, {
             result,
             timestamp: new Date().toISOString(),
-            note: "Logger not found on instance, using console fallback",
+            note: "Logger not found on instance, using EmergencyLogger",
           });
         }
         return result;
@@ -110,10 +111,10 @@ export function logMethod(
           timestamp: new Date().toISOString(),
         });
       } else {
-        console.error(`✗ ERROR ${fullMethodName}`, {
+        EmergencyLogger.error(`✗ ERROR ${fullMethodName}`, {
           error: error instanceof Error ? error.message : String(error),
           timestamp: new Date().toISOString(),
-          note: "Logger not found on instance, using console fallback",
+          note: "Logger not found on instance, using EmergencyLogger",
         });
       }
       throw error;
@@ -150,7 +151,7 @@ export function throttle(milliseconds: number) {
             `Skipping ${methodKey} (${now - lastCall}ms < ${milliseconds}ms)`,
           );
         } else {
-          console.debug(
+          EmergencyLogger.debug(
             `Skipping ${methodKey} (${now - lastCall}ms < ${milliseconds}ms)`,
             { note: "Logger not found on instance, using console fallback" }
           );
@@ -161,7 +162,7 @@ export function throttle(milliseconds: number) {
       if (instanceLogger && typeof instanceLogger.debug === 'function') {
         instanceLogger.debug(`Executing ${methodKey}`);
       } else {
-        console.debug(`Executing ${methodKey}`, { note: "Logger not found on instance, using console fallback" });
+        EmergencyLogger.debug(`Executing ${methodKey}`, { note: "Logger not found on instance, using console fallback" });
       }
 
       return value.apply(this, args);
@@ -201,7 +202,7 @@ export function catchError(
               timestamp: new Date().toISOString(),
             });
           } else {
-            console.error(`${fullMethodName}:`, {
+            EmergencyLogger.error(`${fullMethodName}:`, {
               error: error instanceof Error ? error.message : String(error),
               stack: error instanceof Error ? error.stack : "No stack trace",
               arguments: args,
@@ -232,7 +233,7 @@ export function catchError(
         });
       } else {
         // Final fallback to console only when no logger available
-        console.error(`${fullMethodName}:`, {
+        EmergencyLogger.error(`${fullMethodName}:`, {
           error:
             methodError instanceof Error
               ? methodError.message
@@ -340,7 +341,7 @@ function logPerformance(
       instanceLogger.info(logMessage);
     }
   } else {
-    console[level === "error" ? "error" : level === "warn" ? "warn" : "info"](logMessage, { note: "Logger not found on instance, using console fallback" });
+    EmergencyLogger[level === "error" ? "error" : level === "warn" ? "warn" : "info"](logMessage, { note: "Logger not found on instance, using console fallback" });
   }
 }
 
@@ -374,7 +375,7 @@ export function validate(schemaName: string) {
                 { error: errorMessage },
               );
             } else {
-              console.error(
+              EmergencyLogger.error(
                 `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
                 { error: errorMessage, note: "Logger not found on instance, using console fallback" },
               );
@@ -397,7 +398,7 @@ export function validate(schemaName: string) {
                 },
               );
             } else {
-              console.error(
+              EmergencyLogger.error(
                 `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
                 {
                   error: errorMessage,
@@ -415,7 +416,7 @@ export function validate(schemaName: string) {
               `✅ Schema validation passed for ${schemaName} in ${fullMethodName}`,
             );
           } else {
-            console.debug(
+            EmergencyLogger.debug(
               `✅ Schema validation passed for ${schemaName} in ${fullMethodName}`,
               { note: "Logger not found on instance, using console fallback" },
             );
@@ -429,7 +430,7 @@ export function validate(schemaName: string) {
               { error: errorMessage },
             );
           } else {
-            console.error(
+            EmergencyLogger.error(
               `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
               { error: errorMessage, note: "Logger not found on instance, using console fallback" },
             );
@@ -478,7 +479,7 @@ export function validateEventProperty(
                 { error: errorMessage },
               );
             } else {
-              console.error(
+              EmergencyLogger.error(
                 `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
                 { error: errorMessage, note: "Logger not found on instance, using console fallback" },
               );
@@ -496,7 +497,7 @@ export function validateEventProperty(
                 { error: errorMessage },
               );
             } else {
-              console.error(
+              EmergencyLogger.error(
                 `Event property validation failed for ${propertyName} in ${fullMethodName}:`,
                 { error: errorMessage, note: "Logger not found on instance, using console fallback" },
               );
@@ -519,7 +520,7 @@ export function validateEventProperty(
                 },
               );
             } else {
-              console.error(
+              EmergencyLogger.error(
                 `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
                 {
                   error: errorMessage,
@@ -537,7 +538,7 @@ export function validateEventProperty(
               `✅ Event property validation passed for ${propertyName}.${schemaName} in ${fullMethodName}`,
             );
           } else {
-            console.debug(
+            EmergencyLogger.debug(
               `✅ Event property validation passed for ${propertyName}.${schemaName} in ${fullMethodName}`,
               { note: "Logger not found on instance, using console fallback" },
             );
@@ -551,7 +552,7 @@ export function validateEventProperty(
               { error: errorMessage },
             );
           } else {
-            console.error(
+            EmergencyLogger.error(
               `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
               { error: errorMessage, note: "Logger not found on instance, using console fallback" },
             );
@@ -623,7 +624,7 @@ export function qualiaMethod(
                   timestamp: new Date().toISOString(),
                 });
               } else {
-                console.error(`${fullMethodName}:`, {
+                EmergencyLogger.error(`${fullMethodName}:`, {
                   error: error instanceof Error ? error.message : String(error),
                   stack: error instanceof Error ? error.stack : "No stack trace",
                   arguments: args,
@@ -644,7 +645,7 @@ export function qualiaMethod(
               timestamp: new Date().toISOString(),
             });
           } else {
-            console.error(`${fullMethodName}:`, {
+            EmergencyLogger.error(`${fullMethodName}:`, {
               error: methodError instanceof Error ? methodError.message : String(methodError),
               stack: methodError instanceof Error ? methodError.stack : "No stack trace",
               arguments: args,
@@ -751,13 +752,13 @@ export function AdaptAndEmit(adapterPropertyKey: string | symbol) {
         // VALIDACIÓN ARQUITECTÓNICA EN TIEMPO DE EJECUCIÓN
         if (!adapter) {
           const errorMsg = `Architectural Violation: Decorated class ${className} is missing required property '${String(adapterPropertyKey)}'. Ensure the adapter is injected and assigned in the constructor.`;
-          console.error(errorMsg);
+          EmergencyLogger.error(errorMsg);
           throw new Error(errorMsg);
         }
 
         if (!eventBus) {
           const errorMsg = `Architectural Violation: Decorated class ${className} is missing required property 'eventBus'. Ensure IEventBus is injected and assigned.`;
-          console.error(errorMsg);
+          EmergencyLogger.error(errorMsg);
           throw new Error(errorMsg);
         }
 
@@ -798,7 +799,7 @@ export function AdaptAndEmit(adapterPropertyKey: string | symbol) {
             timestamp: new Date().toISOString()
           });
         } else {
-          console.error(`🚨 @AdaptAndEmit failed in ${fullMethodName}:`, error);
+          EmergencyLogger.error(`🚨 @AdaptAndEmit failed in ${fullMethodName}:`, error);
         }
         throw error;
       }
@@ -831,7 +832,7 @@ export function BrowserOnly(
       if (instanceLogger && typeof instanceLogger.warn === 'function') {
         instanceLogger.warn(`Cannot execute ${propertyKey} in a non-browser environment.`);
       } else {
-        console.warn(`Cannot execute ${propertyKey} in a non-browser environment.`);
+        EmergencyLogger.warn(`Cannot execute ${propertyKey} in a non-browser environment.`);
       }
       return; // No ejecutar el método original
     }

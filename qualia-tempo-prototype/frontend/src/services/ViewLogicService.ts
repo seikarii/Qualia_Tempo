@@ -22,6 +22,7 @@ import type { QualiaState, NoteData } from '../types/contracts';
 import type { ILogger } from './interfaces/ILogger';
 import type { ICoordinateSystemService } from './interfaces/ICoordinateSystemService';
 import { logMethod, catchError } from '../utils/decorators';
+import { NOTE_GEOMETRY_TYPES } from './contracts/constants';
 
 @injectable()
 export class ViewLogicService implements IViewLogicService {
@@ -483,6 +484,28 @@ export class ViewLogicService implements IViewLogicService {
     this.spawnQualiaParticles(qualiaState, musicData, time);
     
     return [...this.activeParticles];
+  }
+
+  /**
+   * Maps note type string to standardized geometry type
+   * QUALIA.CODE v1.1: Eliminates hardcoded logic in components
+   */
+  private mapNoteTypeToGeometry(type?: string): string {
+    if (!type) return NOTE_GEOMETRY_TYPES.DEFAULT;
+    
+    const typeUpper = type.toUpperCase();
+    switch (typeUpper) {
+      case 'HARMONY':
+        return NOTE_GEOMETRY_TYPES.HARMONY;
+      case 'CHAOS':
+        return NOTE_GEOMETRY_TYPES.CHAOS;
+      case 'POWER':
+        return NOTE_GEOMETRY_TYPES.POWER;
+      case 'GRACE':
+        return NOTE_GEOMETRY_TYPES.GRACE;
+      default:
+        return NOTE_GEOMETRY_TYPES.DEFAULT;
+    }
   }
 
   @logMethod

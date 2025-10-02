@@ -3,14 +3,17 @@ rhythmicFeedback:
     frequency: 800
     duration: 200
     gain: 0.8
+    waveform: "sine"
   good:
     frequency: 600
     duration: 150
     gain: 0.6
+    waveform: "sine"
   miss:
     frequency: 200
     duration: 300
     gain: 0.4
+    waveform: "sine"
 
 backgroundMusic:
   enabled: true
@@ -29,6 +32,7 @@ metronome:
   volume: 0.5
   duration: 0.05
   gain: 0.5
+  waveform: "square"
 
 audioEngine:
   sampleRate: 44100
@@ -86,6 +90,9 @@ baseQualiaState:
 
 # Thresholds for emergent audio behaviors
 transcendenceThreshold: 0.8
+
+# Event type configuration
+emergentEventType: "NARRATIVE_EVENT"
 
 # Default volume for audio operations
 defaultVolume: 1.0

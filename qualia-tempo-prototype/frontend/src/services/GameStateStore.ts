@@ -13,6 +13,7 @@ import type { NotificationServiceConfig } from "./contracts/INotificationService
 import type { ExtendedNotification } from "./NotificationService";
 import type { GameState } from "./contracts/IGameControllerService.contracts";
 import type { QualiaState } from "../types/contracts";
+import { NOTIFICATION_DEFAULTS } from "./contracts/constants";
 
 // Define the type for the game store API
 type GameStoreApi = {
@@ -82,9 +83,9 @@ export class GameStateStore implements IGameStateStore {
       type: notification.type,
       message: notification.message,
       timestamp: new Date(notification.timestamp),
-      priority: "normal" as const,
-      category: "general",
-      source: "GameStateStore",
+      priority: NOTIFICATION_DEFAULTS.PRIORITY,
+      category: NOTIFICATION_DEFAULTS.CATEGORY,
+      source: NOTIFICATION_DEFAULTS.SOURCE,
       displayed: true,
       dismissed: false,
       retryCount: 0,

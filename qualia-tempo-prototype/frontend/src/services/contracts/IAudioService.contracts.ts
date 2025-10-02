@@ -23,14 +23,15 @@ export interface AudioServiceParams {
 // AudioService Configuration - Migrated from ConfigurationService.ts
 export interface AudioServiceConfig {
   rhythmicFeedback: {
-    perfect: { frequency: number; gain: number; duration: number };
-    good: { frequency: number; gain: number; duration: number };
-    miss: { frequency: number; gain: number; duration: number };
+    perfect: { frequency: number; gain: number; duration: number; waveform: string };
+    good: { frequency: number; gain: number; duration: number; waveform: string };
+    miss: { frequency: number; gain: number; duration: number; waveform: string };
   };
   metronome: {
     frequency: number;
     gain: number;
     duration: number;
+    waveform: string;
   };
   audioEngine: {
     sampleRate: number;
@@ -69,6 +70,9 @@ export interface AudioServiceConfig {
   
   // Thresholds for emergent audio behaviors
   transcendenceThreshold: number;
+  
+  // Event type configuration
+  emergentEventType: string;
   
   // Default volume for audio operations
   defaultVolume: number;

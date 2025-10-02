@@ -6,6 +6,7 @@ import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError, measureTime, IBaseService, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 import { QualiaLogger } from "./Logger";
+import { AUDIO_WAVEFORM_TYPES, AUDIO_EVENT_TYPES, type AudioWaveformType } from "./contracts/constants";
 
 import type { IAudioService } from "./interfaces/IAudioService";
 import type { AudioServiceConfig, AudioServiceParams } from "./contracts/IAudioService.contracts";
@@ -136,7 +137,7 @@ export class AudioService implements IAudioService, IBaseService {
     // Patrón emergente basado en el estado
     if (qualiaState.transcendence > this.config.transcendenceThreshold) {
       const emergentBehavior = {
-        type: "NARRATIVE_EVENT" as const,
+        type: this.config.emergentEventType as typeof AUDIO_EVENT_TYPES.NARRATIVE_EVENT,
         entities: [],
         strength: qualiaState.intensity,
         description: "Transcendence achievement",
@@ -196,7 +197,7 @@ export class AudioService implements IAudioService, IBaseService {
         feedbackConfig.frequency,
         feedbackConfig.duration / this.config.millisecondsToSecondsConversion, // duration in seconds
         feedbackConfig.gain,
-        "sine"
+        feedbackConfig.waveform as AudioWaveformType
       );
 
       this.logger.info(`🔊 Rhythmic feedback: ${timing}`);
@@ -217,7 +218,7 @@ export class AudioService implements IAudioService, IBaseService {
         this.config.metronome.frequency,
         this.config.metronome.duration,
         this.config.metronome.gain,
-        "square"
+        this.config.metronome.waveform as AudioWaveformType
       );
     } catch (error) {
       // Silent fail for metronome
@@ -285,11 +286,12 @@ export class AudioService implements IAudioService, IBaseService {
       const gain = volume * this.config.volume;
       const duration = loop ? 0 : this.config.defaultSoundDuration; // For loop, duration is ignored
 
+      // Use default waveform from config (sine is a good default for general sounds)
       this.webAudioAPIService.playTone(
         frequency,
         duration,
         gain,
-        "sine",
+        AUDIO_WAVEFORM_TYPES.SINE as AudioWaveformType,
         loop
       );
 
