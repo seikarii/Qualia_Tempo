@@ -56,6 +56,9 @@ export const TYPES = {
   // ===== COORDINATE SYSTEM SERVICES =====
   ICoordinateSystemService: Symbol.for("ICoordinateSystemService"),
 
+  // ===== COLOR SERVICES =====
+  IColorService: Symbol.for("IColorService"),
+
   // ===== SPECIAL TYPES =====
   IGameStateStore: Symbol.for("IGameStateStore"),
   ThrottlingManager: Symbol.for("ThrottlingManager"),

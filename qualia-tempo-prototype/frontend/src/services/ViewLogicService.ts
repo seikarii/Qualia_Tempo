@@ -21,6 +21,7 @@ import type {
 import type { QualiaState, NoteData } from '../types/contracts';
 import type { ILogger } from './interfaces/ILogger';
 import type { ICoordinateSystemService } from './interfaces/ICoordinateSystemService';
+import type { IColorService } from './interfaces/IColorService';
 import { logMethod, catchError } from '../utils/decorators';
 import { NOTE_GEOMETRY_TYPES } from './contracts/constants';
 
@@ -29,6 +30,7 @@ export class ViewLogicService implements IViewLogicService {
   private readonly config: ViewLogicConfig;
   private readonly logger: ILogger;
   private readonly coordinateSystemService: ICoordinateSystemService;
+  private readonly colorService: IColorService;
   
   private particleIdCounter = 0;
   private activeParticles: ParticleData[] = [];
@@ -36,11 +38,13 @@ export class ViewLogicService implements IViewLogicService {
   constructor(
     @inject(TYPES.ViewLogicConfig) config: ViewLogicConfig,
     @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.ICoordinateSystemService) coordinateSystemService: ICoordinateSystemService
+    @inject(TYPES.ICoordinateSystemService) coordinateSystemService: ICoordinateSystemService,
+    @inject(TYPES.IColorService) colorService: IColorService
   ) {
     this.config = config;
     this.logger = logger;
     this.coordinateSystemService = coordinateSystemService;
+    this.colorService = colorService;
     this.logger.info('ViewLogicService initialized', {
       maxParticles: this.config.particles.maxCount,
       spawnRate: this.config.particles.spawnRate
@@ -85,129 +89,22 @@ export class ViewLogicService implements IViewLogicService {
   @logMethod
   @catchError
   getBossVisuals(bossState: BossState, time: number): BossVisualData {
-    // QUALIA.CODE v1.1: REAL visual logic extracted from BossRenderer
     const boss = bossState;
-    // Power ratio calculation for future use
-    // const powerRatio = boss.power_level / 200; // Assuming max 200
     const stressIntensity = boss.stress_level;
     const phaseMultiplier = boss.phase;
-
-    // Calculate phase-based movement patterns (extracted from useFrame)
+    
     const calculatedPosition = this.calculateBossPosition(boss, time);
     const absoluteRotation = this.calculateBossRotation(boss, time);
-
-    // Scale based on stress level (boss grows when stressed)
     const stressScale = 1 + stressIntensity * 0.3;
-
-    // Boss color based on qualia state and stress
-    const emotionalValence = boss.qualia_state?.emotional_valence ?? 0;
-    const bossColor: [number, number, number] = [
-      (emotionalValence + 1) * 0.15, // Red-ish hue for negative valence
-      0.8 + stressIntensity * 0.2,
-      0.3 + (1 - stressIntensity) * 0.4
-    ];
-
-    const stressColor: [number, number, number] = [
-      0, // H
-      1, // S  
-      0.5 + stressIntensity * 0.3 // L
-    ];
-
-    // Core animation calculations
-    const pulseScale = 1 + Math.sin(time * 4 * phaseMultiplier) * 0.2 * stressIntensity;
-    const coreRotation: [number, number, number] = [
-      time * 0.02 * phaseMultiplier,
-      time * 0.015 * phaseMultiplier,
-      0
-    ];
-
-    // Generate tentacle data with segments
-    const tentacleCount = 4 + boss.phase;
-    const tentacles = Array.from({ length: tentacleCount }, (_, i) => {
-      const angle = (i / tentacleCount) * Math.PI * 2;
-      const radius = 2 + phaseMultiplier * 0.5;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      
-      const tentacleTime = time + i * 0.5;
-      const tentacleScale = 0.8 + phaseMultiplier * 0.3;
-      
-      // Generate segments for each tentacle
-      const segments = Array.from({ length: 6 }, (_, segmentIndex) => {
-        const segmentY = segmentIndex * 0.8;
-        const segmentSway = Math.sin(tentacleTime + segmentIndex * 0.3) * 0.2;
-        
-        return {
-          position: [segmentSway, segmentY, 0] as [number, number, number],
-          rotation: [0, 0, segmentSway * 0.1] as [number, number, number],
-          scale: 1 - segmentIndex * 0.1
-        };
-      });
-      
-      return {
-        position: [x, 0, z] as [number, number, number],
-        rotation: [
-          0,
-          angle + Math.sin(tentacleTime) * 0.01 * stressIntensity,
-          Math.cos(tentacleTime * 1.2) * 0.015 * stressIntensity
-        ] as [number, number, number],
-        scale: tentacleScale,
-        segments
-      };
-    });
-
-    // Generate power level particles
-    const particleCount = Math.floor(boss.power_level * this.config.boss.particleMultiplier);
-    const powerParticles = Array.from({ length: particleCount }, (_, i) => {
-      const angle = (i / this.config.boss.particleAngleDivisor) * Math.PI * 2;
-      const radius = this.config.boss.baseRadius + Math.sin(time + i) * this.config.boss.radiusVariation;
-      const height = Math.cos(time * 0.5 + i) * this.config.boss.heightMultiplier;
-      
-      return {
-        position: [
-          Math.cos(angle) * radius,
-          height,
-          Math.sin(angle) * radius
-        ] as [number, number, number],
-        scale: this.config.boss.particleScale,
-        opacity: this.config.boss.particleOpacity
-      };
-    });
-
-    // Generate attack waves (only if attack is active)
-    const shouldShowAttack = Math.floor(time) % (4 / boss.phase) < 0.5;
-    const attackWaves = shouldShowAttack ? Array.from({ length: boss.phase * 2 }, (_, i) => {
-      const angle = (i / (boss.phase * 2)) * Math.PI * 2;
-      const radius = 5 + Math.sin(time * 2 + i) * 2;
-      
-      // Attack rotation based on phase
-      let attackRotation: [number, number, number];
-      if (boss.phase === 1) {
-        attackRotation = [0, time * 0.05, 0];
-      } else if (boss.phase === 2) {
-        attackRotation = [time * 0.03, time * 0.08, 0];
-      } else {
-        attackRotation = [
-          Math.cos(time * 1.7) * 0.08,
-          Math.sin(time * 2) * 0.1,
-          Math.sin(time * 2.3) * 0.05
-        ];
-      }
-      
-      return {
-        position: [Math.cos(angle) * radius, 0, Math.sin(angle) * radius] as [number, number, number],
-        rotation: attackRotation,
-        scale: 1,
-        opacity: 0.6
-      };
-    }) : [];
-
-    // Chaos aura calculation
-    const chaosAura = {
-      scale: 3 + boss.phase,
-      opacity: 0.1 + stressIntensity * 0.2,
-      color: stressColor
-    };
+    
+    const bossColor = this.calculateBossColor(boss, stressIntensity);
+    const stressColor = this.calculateStressColor(stressIntensity);
+    const coreData = this.calculateBossCoreData(time, phaseMultiplier, stressIntensity, stressColor);
+    
+    const tentacles = this.generateBossTentacles(boss, time, phaseMultiplier, stressIntensity);
+    const powerParticles = this.generateBossPowerParticles(boss, time);
+    const { shouldShowAttack, attackWaves } = this.generateBossAttackWaves(boss, time);
+    const chaosAura = this.calculateBossChaosAura(boss, stressIntensity, stressColor);
 
     return {
       position: calculatedPosition,
@@ -217,26 +114,134 @@ export class ViewLogicService implements IViewLogicService {
       opacity: 0.8 + stressIntensity * 0.2,
       intensity: stressIntensity,
       phase: phaseMultiplier,
-      
-      core: {
-        scale: pulseScale,
-        rotation: coreRotation,
-        color: stressColor,
-        emissiveColor: [
-          stressColor[0],
-          stressColor[1],
-          stressColor[2] * stressIntensity
-        ],
-        emissiveIntensity: stressIntensity
-      },
-      
+      core: coreData,
       tentacles,
       powerParticles,
       attackWaves,
       chaosAura,
-      
       shouldShowAttack,
       attackIntensity: stressIntensity * (shouldShowAttack ? 1.0 : 0.0)
+    };
+  }
+
+  private calculateBossColor(boss: BossState, stressIntensity: number): [number, number, number] {
+    const emotionalValence = boss.qualia_state?.emotional_valence ?? 0;
+    return [
+      (emotionalValence + 1) * 0.15,
+      0.8 + stressIntensity * 0.2,
+      0.3 + (1 - stressIntensity) * 0.4
+    ];
+  }
+
+  private calculateStressColor(stressIntensity: number): [number, number, number] {
+    return [0, 1, 0.5 + stressIntensity * 0.3];
+  }
+
+  private calculateBossCoreData(time: number, phaseMultiplier: number, stressIntensity: number, stressColor: [number, number, number]) {
+    const pulseScale = 1 + Math.sin(time * 4 * phaseMultiplier) * 0.2 * stressIntensity;
+    const coreRotation: [number, number, number] = [
+      time * 0.02 * phaseMultiplier,
+      time * 0.015 * phaseMultiplier,
+      0
+    ];
+    
+    return {
+      scale: pulseScale,
+      rotation: coreRotation,
+      color: stressColor,
+      emissiveColor: [stressColor[0], stressColor[1], stressColor[2] * stressIntensity] as [number, number, number],
+      emissiveIntensity: stressIntensity
+    };
+  }
+
+  private generateBossTentacles(boss: BossState, time: number, phaseMultiplier: number, stressIntensity: number) {
+    const tentacleCount = 4 + boss.phase;
+    return Array.from({ length: tentacleCount }, (_, i) => {
+      const angle = (i / tentacleCount) * Math.PI * 2;
+      const radius = 2 + phaseMultiplier * 0.5;
+      const tentacleTime = time + i * 0.5;
+      const tentacleScale = 0.8 + phaseMultiplier * 0.3;
+      
+      const segments = this.generateTentacleSegments(tentacleTime);
+      
+      return {
+        position: [Math.cos(angle) * radius, 0, Math.sin(angle) * radius] as [number, number, number],
+        rotation: [
+          0,
+          angle + Math.sin(tentacleTime) * 0.01 * stressIntensity,
+          Math.cos(tentacleTime * 1.2) * 0.015 * stressIntensity
+        ] as [number, number, number],
+        scale: tentacleScale,
+        segments
+      };
+    });
+  }
+
+  private generateTentacleSegments(tentacleTime: number) {
+    return Array.from({ length: 6 }, (_, segmentIndex) => {
+      const segmentY = segmentIndex * 0.8;
+      const segmentSway = Math.sin(tentacleTime + segmentIndex * 0.3) * 0.2;
+      
+      return {
+        position: [segmentSway, segmentY, 0] as [number, number, number],
+        rotation: [0, 0, segmentSway * 0.1] as [number, number, number],
+        scale: 1 - segmentIndex * 0.1
+      };
+    });
+  }
+
+  private generateBossPowerParticles(boss: BossState, time: number) {
+    const particleCount = Math.floor(boss.power_level * this.config.boss.particleMultiplier);
+    return Array.from({ length: particleCount }, (_, i) => {
+      const angle = (i / this.config.boss.particleAngleDivisor) * Math.PI * 2;
+      const radius = this.config.boss.baseRadius + Math.sin(time + i) * this.config.boss.radiusVariation;
+      const height = Math.cos(time * 0.5 + i) * this.config.boss.heightMultiplier;
+      
+      return {
+        position: [Math.cos(angle) * radius, height, Math.sin(angle) * radius] as [number, number, number],
+        scale: this.config.boss.particleScale,
+        opacity: this.config.boss.particleOpacity
+      };
+    });
+  }
+
+  private generateBossAttackWaves(boss: BossState, time: number) {
+    const shouldShowAttack = Math.floor(time) % (4 / boss.phase) < 0.5;
+    const attackWaves = shouldShowAttack ? Array.from({ length: boss.phase * 2 }, (_, i) => {
+      const angle = (i / (boss.phase * 2)) * Math.PI * 2;
+      const radius = 5 + Math.sin(time * 2 + i) * 2;
+      const attackRotation = this.calculateAttackRotation(boss.phase, time);
+      
+      return {
+        position: [Math.cos(angle) * radius, 0, Math.sin(angle) * radius] as [number, number, number],
+        rotation: attackRotation,
+        scale: 1,
+        opacity: 0.6
+      };
+    }) : [];
+    
+    return { shouldShowAttack, attackWaves };
+  }
+
+  private calculateAttackRotation(phase: number, time: number): [number, number, number] {
+    if (phase === 1) {
+      return [0, time * 0.05, 0];
+    } else if (phase === 2) {
+      return [time * 0.03, time * 0.08, 0];
+    } else {
+      return [
+        Math.cos(time * 1.7) * 0.08,
+        Math.sin(time * 2) * 0.1,
+        Math.sin(time * 2.3) * 0.05
+      ];
+    }
+  }
+
+  private calculateBossChaosAura(boss: BossState, stressIntensity: number, stressColor: [number, number, number]) {
+    return {
+      scale: 3 + boss.phase,
+      opacity: 0.1 + stressIntensity * 0.2,
+      color: stressColor
     };
   }
 
@@ -244,76 +249,17 @@ export class ViewLogicService implements IViewLogicService {
   @catchError
   getPlayerVisuals(playerState: PlayerState, performance: PerformanceData, time: number): PlayerVisualData {
     const player = playerState;
-    
-    // Extract calculations from PlayerRenderer useFrame
-    const powerLevel = player.power_level / 100; // Normalize to 0-1
+    const powerLevel = player.power_level / 100;
     const consciousnessLevel = player.consciousness_level;
     const performanceLevel = (performance.accuracy + performance.rhythm_sync + performance.qualia_coherence) / 3;
     
-    // QUALIA.CODE v1.1: Use CoordinateSystemService for proper grid-to-world transformation
-    // This eliminates the desynchronization issue between PlayerRenderer and GridRenderer
-    const basePlayer3DPosition = this.coordinateSystemService.gridToWorld(
-      player.position[0], // Grid X coordinate
-      player.position[2]  // Grid Z coordinate (player.position[1] was incorrect)
-    );
-    
-    // Apply floating animation based on consciousness level (extracted from PlayerRenderer)
-    const player3DPosition: [number, number, number] = [
-      basePlayer3DPosition[0],
-      basePlayer3DPosition[1] + Math.sin(time * 2) * 0.1 * consciousnessLevel,
-      basePlayer3DPosition[2]
-    ];
-    
-    // Player colors based on qualia state (extracted from PlayerRenderer HSL to RGB conversion)
-    const hsl = {
-      h: player.qualia_state.emotional_valence * 0.8 + 0.1, // Hue based on valence
-      s: 0.7 + player.qualia_state.arousal * 0.3, // Saturation based on arousal
-      l: 0.4 + player.qualia_state.coherence * 0.4 // Lightness based on coherence
-    };
-    const baseColor: [number, number, number] = this.hslToRgb(hsl.h, hsl.s, hsl.l);
-    
-    const auraHsl = {
-      h: (player.qualia_state.emotional_valence * 0.8 + 0.3) % 1,
-      s: 0.8,
-      l: 0.5 + performanceLevel * 0.3
-    };
-    const auraColor: [number, number, number] = this.hslToRgb(auraHsl.h, auraHsl.s, auraHsl.l);
-    
-    // Scale pulsing based on performance (extracted from PlayerRenderer)
+    const player3DPosition = this.calculatePlayer3DPosition(player, time, consciousnessLevel);
+    const { baseColor, auraColor } = this.calculatePlayerColors(player, performanceLevel);
     const scale = 1 + Math.sin(time * 4) * 0.05 * performanceLevel;
+    const absoluteRotation = this.calculatePlayerRotation(player, time);
     
-    // Rotation based on qualia state - ABSOLUTE value, not delta (extracted from PlayerRenderer)
-    const absoluteRotation: [number, number, number] = [
-      0,
-      time * (player.qualia_state.emotional_valence - 0.5) * 0.005,
-      0
-    ];
-    
-    // Aura calculations (extracted from PlayerRenderer)
-    const auraScale = 1 + powerLevel * 0.5 + performanceLevel * 0.3;
-    const auraOpacity = 0.3 + Math.sin(time * 3) * 0.1 * performanceLevel;
-    const auraRotation: [number, number, number] = [
-      Math.sin(time * 0.5) * 0.002,
-      time * 0.01,
-      0
-    ];
-    
-    // Power core calculations (extracted from PlayerRenderer)
-    const coreIntensity = powerLevel * performanceLevel;
-    const coreScale = 0.5 + coreIntensity * 0.5;
-    const coreRotation: [number, number, number] = [
-      time * 0.03,
-      time * 0.02,
-      0
-    ];
-    
-    // Core color shifting (extracted from PlayerRenderer)
-    const coreHsl = {
-      h: (player.qualia_state.emotional_valence + time * 0.1) % 1,
-      s: 0.9,
-      l: 0.6 + coreIntensity * 0.4
-    };
-    const coreColor: [number, number, number] = this.hslToRgb(coreHsl.h, coreHsl.s, coreHsl.l);
+    const auraData = this.calculatePlayerAura(powerLevel, performanceLevel, time, auraColor);
+    const powerCoreData = this.calculatePlayerPowerCore(player, powerLevel, performanceLevel, time);
     
     return {
       position: player3DPosition,
@@ -323,100 +269,201 @@ export class ViewLogicService implements IViewLogicService {
       glowIntensity: performanceLevel,
       trailOpacity: performanceLevel > 0.5 ? 0.7 : 0.3,
       isMoving: performanceLevel > 0.1,
-      
-      aura: {
-        scale: auraScale,
-        rotation: auraRotation,
-        color: auraColor,
-        opacity: auraOpacity
-      },
-      
-      powerCore: {
-        scale: coreScale,
-        rotation: coreRotation,
-        color: coreColor,
-        emissiveIntensity: coreIntensity
-      }
+      aura: auraData,
+      powerCore: powerCoreData
+    };
+  }
+
+  private calculatePlayer3DPosition(player: PlayerState, time: number, consciousnessLevel: number): [number, number, number] {
+    const basePlayer3DPosition = this.coordinateSystemService.gridToWorld(
+      player.position[0],
+      player.position[2]
+    );
+    
+    return [
+      basePlayer3DPosition[0],
+      basePlayer3DPosition[1] + Math.sin(time * 2) * 0.1 * consciousnessLevel,
+      basePlayer3DPosition[2]
+    ];
+  }
+
+  private calculatePlayerColors(player: PlayerState, performanceLevel: number) {
+    const hsl = {
+      h: player.qualia_state.emotional_valence * 0.8 + 0.1,
+      s: 0.7 + player.qualia_state.arousal * 0.3,
+      l: 0.4 + player.qualia_state.coherence * 0.4
+    };
+    const baseColor = this.colorService.hslToRgb(hsl.h, hsl.s, hsl.l);
+    
+    const auraHsl = {
+      h: (player.qualia_state.emotional_valence * 0.8 + 0.3) % 1,
+      s: 0.8,
+      l: 0.5 + performanceLevel * 0.3
+    };
+    const auraColor = this.colorService.hslToRgb(auraHsl.h, auraHsl.s, auraHsl.l);
+    
+    return { baseColor, auraColor };
+  }
+
+  private calculatePlayerRotation(player: PlayerState, time: number): [number, number, number] {
+    return [
+      0,
+      time * (player.qualia_state.emotional_valence - 0.5) * 0.005,
+      0
+    ];
+  }
+
+  private calculatePlayerAura(powerLevel: number, performanceLevel: number, time: number, auraColor: [number, number, number]) {
+    const auraScale = 1 + powerLevel * 0.5 + performanceLevel * 0.3;
+    const auraOpacity = 0.3 + Math.sin(time * 3) * 0.1 * performanceLevel;
+    const auraRotation: [number, number, number] = [
+      Math.sin(time * 0.5) * 0.002,
+      time * 0.01,
+      0
+    ];
+    
+    return {
+      scale: auraScale,
+      rotation: auraRotation,
+      color: auraColor,
+      opacity: auraOpacity
+    };
+  }
+
+  private calculatePlayerPowerCore(player: PlayerState, powerLevel: number, performanceLevel: number, time: number) {
+    const coreIntensity = powerLevel * performanceLevel;
+    const coreScale = 0.5 + coreIntensity * 0.5;
+    const coreRotation: [number, number, number] = [time * 0.03, time * 0.02, 0];
+    
+    const coreHsl = {
+      h: (player.qualia_state.emotional_valence + time * 0.1) % 1,
+      s: 0.9,
+      l: 0.6 + coreIntensity * 0.4
+    };
+    const coreColor = this.colorService.hslToRgb(coreHsl.h, coreHsl.s, coreHsl.l);
+    
+    return {
+      scale: coreScale,
+      rotation: coreRotation,
+      color: coreColor,
+      emissiveIntensity: coreIntensity
     };
   }
 
   @logMethod
   @catchError
   getQualiaFieldVisuals(qualiaField: QualiaState, musicData: MusicData, time: number): QualiaFieldVisualData {
-    // Extract particle generation logic from QualiaFieldRenderer
     const particleCount = Math.floor(this.config.qualiaField.particleCountMultiplier * qualiaField.flow + this.config.qualiaField.particleCountBase);
+    const { positions, colors, sizes } = this.generateFieldParticleData(particleCount, qualiaField, musicData, time);
+    const wavePositions = this.generateWavePlanePositions(qualiaField, time);
+    const ambientSpheres = this.generateAmbientSpheres(qualiaField, musicData, time);
+
+    return {
+      fieldParticles: {
+        positions,
+        colors,
+        sizes,
+        count: particleCount,
+        rotation: [Math.sin(time * 0.5) * 0.002, time * (musicData.order_influence - 0.5) * 0.005, 0] as [number, number, number],
+        materialSize: 0.1 + musicData.intensity * 0.3,
+        materialOpacity: 0.6 + qualiaField.flow * 0.4
+      },
+      wavePlane: {
+        positions: wavePositions,
+        position: [0, -2, 0] as [number, number, number],
+        rotation: [-Math.PI / 2, 0, 0] as [number, number, number],
+        color: this.colorService.hslToRgb(musicData.emotional_valence, 0.6, 0.4),
+        opacity: 0.3 + musicData.intensity * 0.4
+      },
+      ambientSpheres
+    };
+  }
+
+  private generateFieldParticleData(particleCount: number, qualiaField: QualiaState, musicData: MusicData, time: number) {
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
     const sizes = new Float32Array(particleCount);
 
     for (let i = 0; i < particleCount; i++) {
-      const i3 = i * 3;
-
-      // Distribute particles in 3D space with some structure based on order_influence
-      const orderFactor = musicData.order_influence;
-      const chaosFactor = musicData.chaos_influence;
-
-      if (orderFactor > chaosFactor) {
-        // More structured, grid-like distribution
-        const gridSize = Math.ceil(Math.pow(particleCount, 1 / 3));
-        const x = (i % gridSize) - gridSize / 2;
-        const y = (Math.floor(i / gridSize) % gridSize) - gridSize / 2;
-        const z = Math.floor(i / (gridSize * gridSize)) - gridSize / 2;
-
-        positions[i3] = x * this.config.qualiaField.gridSpacing + (Math.random() - 0.5) * this.config.qualiaField.orderRandomness * (1 - orderFactor);
-        positions[i3 + 1] = y * this.config.qualiaField.gridSpacing + (Math.random() - 0.5) * this.config.qualiaField.orderRandomness * (1 - orderFactor);
-        positions[i3 + 2] = z * this.config.qualiaField.gridSpacing + (Math.random() - 0.5) * this.config.qualiaField.orderRandomness * (1 - orderFactor);
-      } else {
-        // More chaotic distribution
-        positions[i3] = (Math.random() - 0.5) * this.config.qualiaField.chaosSpread * chaosFactor;
-        positions[i3 + 1] = (Math.random() - 0.5) * this.config.qualiaField.chaosSpread * chaosFactor;
-        positions[i3 + 2] = (Math.random() - 0.5) * this.config.qualiaField.chaosSpread * chaosFactor;
-      }
-
-      // Color based on emotional valence and field parameters
-      const hue = (musicData.emotional_valence * this.config.qualiaField.colorHueRange + i * 10) % this.config.qualiaField.colorHueRange;
-      const saturation = this.config.qualiaField.colorSaturationBase + qualiaField.intensity * this.config.qualiaField.colorSaturationIntensityMultiplier;
-      const lightness = this.config.qualiaField.colorLightnessBase + qualiaField.precision * this.config.qualiaField.colorLightnessPrecisionMultiplier;
-
-      const [r, g, b] = this.hslToRgb(hue / 360, saturation, lightness);
-      colors[i3] = r;
-      colors[i3 + 1] = g;
-      colors[i3 + 2] = b;
-
-      // Size based on intensity and distance from center
-      const distance = Math.sqrt(
-        positions[i3] * positions[i3] +
-        positions[i3 + 1] * positions[i3 + 1] +
-        positions[i3 + 2] * positions[i3 + 2],
-      );
-      sizes[i] = (0.1 + musicData.intensity * 0.5) * (1 + Math.sin(distance * 0.1) * 0.3);
+      this.setParticlePosition(i, positions, musicData);
+      this.setParticleColor(i, colors, qualiaField, musicData);
+      this.setParticleSize(i, positions, sizes, musicData);
     }
 
-    // Apply wave animation to particles
+    this.applyWaveAnimation({ positions, colors, qualiaField, musicData, time });
+    return { positions, colors, sizes };
+  }
+
+  private setParticlePosition(i: number, positions: Float32Array, musicData: MusicData) {
+    const i3 = i * 3;
+    const orderFactor = musicData.order_influence;
+    const chaosFactor = musicData.chaos_influence;
+
+    if (orderFactor > chaosFactor) {
+      const gridSize = Math.ceil(Math.pow(positions.length / 3, 1 / 3));
+      const x = (i % gridSize) - gridSize / 2;
+      const y = (Math.floor(i / gridSize) % gridSize) - gridSize / 2;
+      const z = Math.floor(i / (gridSize * gridSize)) - gridSize / 2;
+
+      positions[i3] = x * this.config.qualiaField.gridSpacing + (Math.random() - 0.5) * this.config.qualiaField.orderRandomness * (1 - orderFactor);
+      positions[i3 + 1] = y * this.config.qualiaField.gridSpacing + (Math.random() - 0.5) * this.config.qualiaField.orderRandomness * (1 - orderFactor);
+      positions[i3 + 2] = z * this.config.qualiaField.gridSpacing + (Math.random() - 0.5) * this.config.qualiaField.orderRandomness * (1 - orderFactor);
+    } else {
+      positions[i3] = (Math.random() - 0.5) * this.config.qualiaField.chaosSpread * chaosFactor;
+      positions[i3 + 1] = (Math.random() - 0.5) * this.config.qualiaField.chaosSpread * chaosFactor;
+      positions[i3 + 2] = (Math.random() - 0.5) * this.config.qualiaField.chaosSpread * chaosFactor;
+    }
+  }
+
+  private setParticleColor(i: number, colors: Float32Array, qualiaField: QualiaState, musicData: MusicData) {
+    const i3 = i * 3;
+    const hue = (musicData.emotional_valence * this.config.qualiaField.colorHueRange + i * 10) % this.config.qualiaField.colorHueRange;
+    const saturation = this.config.qualiaField.colorSaturationBase + qualiaField.intensity * this.config.qualiaField.colorSaturationIntensityMultiplier;
+    const lightness = this.config.qualiaField.colorLightnessBase + qualiaField.precision * this.config.qualiaField.colorLightnessPrecisionMultiplier;
+
+    const [r, g, b] = this.colorService.hslToRgb(hue / 360, saturation, lightness);
+    colors[i3] = r;
+    colors[i3 + 1] = g;
+    colors[i3 + 2] = b;
+  }
+
+  private setParticleSize(i: number, positions: Float32Array, sizes: Float32Array, musicData: MusicData) {
+    const i3 = i * 3;
+    const distance = Math.sqrt(positions[i3] * positions[i3] + positions[i3 + 1] * positions[i3 + 1] + positions[i3 + 2] * positions[i3 + 2]);
+    sizes[i] = (0.1 + musicData.intensity * 0.5) * (1 + Math.sin(distance * 0.1) * 0.3);
+  }
+
+  private applyWaveAnimation(animationData: {
+    positions: Float32Array;
+    colors: Float32Array;
+    qualiaField: QualiaState;
+    musicData: MusicData;
+    time: number;
+  }) {
+    const { positions, colors, qualiaField, musicData, time } = animationData;
     const waveAmplitude = musicData.intensity * 0.5;
     const waveFrequency = musicData.harmony * 2 + 1;
 
     for (let i = 0; i < positions.length; i += 3) {
-      // Add wave motion based on music
       positions[i + 1] += Math.sin(time * waveFrequency + positions[i] * 0.1) * waveAmplitude * 0.01;
 
-      // Color shifting based on field dynamics
-      const colorIndex = i;
       const hueShift = (time * 0.1 + i * 0.01) % 1;
       const baseHue = (musicData.emotional_valence + hueShift) % 1;
-      const [r, g, b] = this.hslToRgb(baseHue, 0.7, 0.5 + qualiaField.intensity * 0.3);
+      const [r, g, b] = this.colorService.hslToRgb(baseHue, 0.7, 0.5 + qualiaField.intensity * 0.3);
 
-      colors[colorIndex] = r;
-      colors[colorIndex + 1] = g;
-      colors[colorIndex + 2] = b;
+      colors[i] = r;
+      colors[i + 1] = g;
+      colors[i + 2] = b;
     }
+  }
 
-    // Generate wave plane positions
+  private generateWavePlanePositions(qualiaField: QualiaState, time: number): Float32Array {
     const gridSize = this.config.qualiaField.waveGridSize;
     const planeSize = this.config.qualiaField.wavePlaneSize;
     const centerOffset = this.config.qualiaField.waveCenterOffset;
-    const wavePositions = new Float32Array((gridSize + 1) * (gridSize + 1) * 3); // (gridSize+1)x(gridSize+1) plane geometry
+    const wavePositions = new Float32Array((gridSize + 1) * (gridSize + 1) * 3);
     let posIndex = 0;
+
     for (let x = 0; x <= gridSize; x++) {
       for (let z = 0; z <= gridSize; z++) {
         const worldX = (x - centerOffset) * (planeSize / gridSize);
@@ -430,8 +477,11 @@ export class ViewLogicService implements IViewLogicService {
       }
     }
 
-    // Generate ambient spheres
-    const ambientSpheres = Array.from({ length: 5 }, (_, i) => {
+    return wavePositions;
+  }
+
+  private generateAmbientSpheres(qualiaField: QualiaState, musicData: MusicData, time: number) {
+    return Array.from({ length: 5 }, (_, i) => {
       const angle = (i / 5) * Math.PI * 2;
       const radius = 8;
       const x = Math.cos(angle) * radius;
@@ -439,7 +489,7 @@ export class ViewLogicService implements IViewLogicService {
       const y = Math.sin(time * 0.001 + i) * 2;
 
       const sphereHue = (musicData.emotional_valence + i * 0.2) % 1;
-      const [r, g, b] = this.hslToRgb(sphereHue, 0.8, 0.6);
+      const [r, g, b] = this.colorService.hslToRgb(sphereHue, 0.8, 0.6);
 
       return {
         position: [x, y, z] as [number, number, number],
@@ -448,30 +498,6 @@ export class ViewLogicService implements IViewLogicService {
         scale: 0.5
       };
     });
-
-    return {
-      fieldParticles: {
-        positions,
-        colors,
-        sizes,
-        count: particleCount,
-        rotation: [
-          Math.sin(time * 0.5) * 0.002,
-          time * (musicData.order_influence - 0.5) * 0.005,
-          0
-        ],
-        materialSize: 0.1 + musicData.intensity * 0.3,
-        materialOpacity: 0.6 + qualiaField.flow * 0.4
-      },
-      wavePlane: {
-        positions: wavePositions,
-        position: [0, -2, 0],
-        rotation: [-Math.PI / 2, 0, 0],
-        color: this.hslToRgb(musicData.emotional_valence, 0.6, 0.4),
-        opacity: 0.3 + musicData.intensity * 0.4
-      },
-      ambientSpheres
-    };
   }
 
   @logMethod
@@ -512,128 +538,134 @@ export class ViewLogicService implements IViewLogicService {
   @catchError
   getMusicalNoteVisuals(notes: NoteData[], currentTime: number): NoteVisualData[] {
     return notes.map((note, index) => {
-      // Handle lifecycle states first
       if (note.state === 'hit') {
-        return {
-          id: note.id || `note_${index}`,
-          position: [note.position.x, note.position.y, 0],
-          scale: [2, 2, 2], // Explosion effect
-          color: [1, 1, 1], // White flash
-          opacity: 0, // Immediate fade
-          pulseIntensity: 1,
-          approachProgress: 1,
-          geometryType: this.mapNoteTypeToGeometry(note.qualia_signature),
-          rotation: [0, 0, 0],
-          trail: { visible: true, color: [1, 1, 1], intensity: 1, scale: 2, opacity: 0.8 },
-          isActive: true,
-          isInHitWindow: true,
-          isMissed: false,
-          isPerfectTiming: true
-        };
+        return this.createHitNoteVisual(note, index);
       }
-
       if (note.state === 'missed') {
-        return {
-          id: note.id || `note_${index}`,
-          position: [note.position.x, note.position.y, 0],
-          scale: [0.8, 0.8, 0.8], // Shrink effect
-          color: [0.3, 0.3, 0.3], // Grayish color
-          opacity: 0, // Fade out
-          pulseIntensity: 0,
-          approachProgress: 1,
-          geometryType: this.mapNoteTypeToGeometry(note.qualia_signature),
-          rotation: [0, 0, 0],
-          trail: { visible: false, color: [0.3, 0.3, 0.3], intensity: 0, scale: 0, opacity: 0 },
-          isActive: true,
-          isInHitWindow: false,
-          isMissed: true,
-          isPerfectTiming: false
-        };
+        return this.createMissedNoteVisual(note, index);
       }
-
-      // Existing logic for 'active' notes
-      // Extract timing calculations from MusicalNotesRenderer
-      const timeDiff = note.timestamp - currentTime;
-      const isActive = timeDiff > -1 && timeDiff < 5; // Show notes 5 seconds before and 1 second after
-      const isInHitWindow = Math.abs(timeDiff) < 0.5; // 0.5 second hit window
-      const isMissed = timeDiff < -0.5;
-      const isPerfectTiming = Math.abs(timeDiff) < 0.1;
-
-      if (!isActive) {
-        // Return inactive note
-        return {
-          id: note.id || `note_${index}`,
-          position: [note.position.x, note.position.y, 0],
-          scale: [0, 0, 0],
-          color: [0, 0, 0],
-          opacity: 0,
-          pulseIntensity: 0,
-          approachProgress: 0,
-          geometryType: this.mapNoteTypeToGeometry(note.qualia_signature),
-          rotation: [0, 0, 0],
-          trail: { visible: false, color: [0, 0, 0], intensity: 0, scale: 0, opacity: 0 },
-          isActive: false,
-          isInHitWindow: false,
-          isMissed: false,
-          isPerfectTiming: false
-        };
-      }
-
-      // Calculate approach progress (notes move toward player)
-      const progress = (5 - timeDiff) / 5; // 0 to 1 as note approaches
-      const finalPosition: [number, number, number] = [
-        note.position.x,
-        note.position.y,
-        -progress * 8
-      ];
-
-      // Scale animation - pulse effect in hit window
-      const baseScale = isInHitWindow ? 1.2 + Math.sin(currentTime * 0.01) * 0.2 : 1;
-
-      // Rotation animation
-      const rotationSpeed = this.config.notes.rotationSpeed || 0.01;
-      const rotation: [number, number, number] = [
-        currentTime * rotationSpeed,
-        currentTime * rotationSpeed * 0.7,
-        currentTime * rotationSpeed * 0.3
-      ];
-
-      // Opacity calculation
-      const opacity = isMissed ? 0.3 : Math.max(0.1, 1 - Math.abs(timeDiff) / 5);
-
-      // Color calculation based on qualia signature
-      const noteColor = this.getNoteColorBySignature(note.qualia_signature, timeDiff, currentTime);
-
-      // Pulse intensity for perfect timing
-      const pulseIntensity = isPerfectTiming ? Math.sin(currentTime * 0.01) * 0.3 + 0.7 : 0;
-
-      // Trail effect calculation
-      const trailVisible = isInHitWindow || progress > 0.8;
-      const trailIntensity = Math.max(0, Math.min(1, progress * 2));
-
-      return {
-        id: note.id || `note_${index}`,
-        position: finalPosition,
-        scale: [baseScale, baseScale, baseScale],
-        color: noteColor,
-        opacity,
-        pulseIntensity,
-        approachProgress: progress,
-        geometryType: this.mapNoteTypeToGeometry(note.qualia_signature),
-        rotation,
-        trail: {
-          visible: trailVisible,
-          color: noteColor,
-          intensity: trailIntensity,
-          scale: 0.5 + Math.sin(currentTime * 2) * 0.2,
-          opacity: 0.3 + Math.sin(currentTime * 3) * 0.2
-        },
-        isActive,
-        isInHitWindow,
-        isMissed,
-        isPerfectTiming
-      };
+      return this.createActiveNoteVisual(note, index, currentTime);
     });
+  }
+
+  private createHitNoteVisual(note: NoteData, index: number): NoteVisualData {
+    return {
+      id: note.id || `note_${index}`,
+      position: [note.position.x, note.position.y, 0] as [number, number, number],
+      scale: [2, 2, 2] as [number, number, number],
+      color: [1, 1, 1] as [number, number, number],
+      opacity: 0,
+      pulseIntensity: 1,
+      approachProgress: 1,
+      geometryType: this.mapNoteTypeToGeometry(note.qualia_signature),
+      rotation: [0, 0, 0] as [number, number, number],
+      trail: { visible: true, color: [1, 1, 1] as [number, number, number], intensity: 1, scale: 2, opacity: 0.8 },
+      isActive: true,
+      isInHitWindow: true,
+      isMissed: false,
+      isPerfectTiming: true
+    };
+  }
+
+  private createMissedNoteVisual(note: NoteData, index: number): NoteVisualData {
+    return {
+      id: note.id || `note_${index}`,
+      position: [note.position.x, note.position.y, 0] as [number, number, number],
+      scale: [0.8, 0.8, 0.8] as [number, number, number],
+      color: [0.3, 0.3, 0.3] as [number, number, number],
+      opacity: 0,
+      pulseIntensity: 0,
+      approachProgress: 1,
+      geometryType: this.mapNoteTypeToGeometry(note.qualia_signature),
+      rotation: [0, 0, 0] as [number, number, number],
+      trail: { visible: false, color: [0.3, 0.3, 0.3] as [number, number, number], intensity: 0, scale: 0, opacity: 0 },
+      isActive: true,
+      isInHitWindow: false,
+      isMissed: true,
+      isPerfectTiming: false
+    };
+  }
+
+  private createActiveNoteVisual(note: NoteData, index: number, currentTime: number): NoteVisualData {
+    const timeDiff = note.timestamp - currentTime;
+    const timingData = this.calculateNoteTiming(timeDiff);
+    
+    if (!timingData.isActive) {
+      return this.createInactiveNoteVisual(note, index);
+    }
+
+    const progress = (5 - timeDiff) / 5;
+    const finalPosition: [number, number, number] = [note.position.x, note.position.y, -progress * 8];
+    const baseScale = timingData.isInHitWindow ? 1.2 + Math.sin(currentTime * 0.01) * 0.2 : 1;
+    const rotation = this.calculateNoteRotation(currentTime);
+    const opacity = timingData.isMissed ? 0.3 : Math.max(0.1, 1 - Math.abs(timeDiff) / 5);
+    const noteColor = this.getNoteColorBySignature(note.qualia_signature, timeDiff, currentTime);
+    const pulseIntensity = timingData.isPerfectTiming ? Math.sin(currentTime * 0.01) * 0.3 + 0.7 : 0;
+    const trailData = this.calculateNoteTrail(timingData.isInHitWindow, progress, noteColor, currentTime);
+
+    return {
+      id: note.id || `note_${index}`,
+      position: finalPosition,
+      scale: [baseScale, baseScale, baseScale] as [number, number, number],
+      color: noteColor,
+      opacity,
+      pulseIntensity,
+      approachProgress: progress,
+      geometryType: this.mapNoteTypeToGeometry(note.qualia_signature),
+      rotation,
+      trail: trailData,
+      ...timingData
+    };
+  }
+
+  private calculateNoteTiming(timeDiff: number) {
+    return {
+      isActive: timeDiff > -1 && timeDiff < 5,
+      isInHitWindow: Math.abs(timeDiff) < 0.5,
+      isMissed: timeDiff < -0.5,
+      isPerfectTiming: Math.abs(timeDiff) < 0.1
+    };
+  }
+
+  private createInactiveNoteVisual(note: NoteData, index: number): NoteVisualData {
+    return {
+      id: note.id || `note_${index}`,
+      position: [note.position.x, note.position.y, 0] as [number, number, number],
+      scale: [0, 0, 0] as [number, number, number],
+      color: [0, 0, 0] as [number, number, number],
+      opacity: 0,
+      pulseIntensity: 0,
+      approachProgress: 0,
+      geometryType: this.mapNoteTypeToGeometry(note.qualia_signature),
+      rotation: [0, 0, 0] as [number, number, number],
+      trail: { visible: false, color: [0, 0, 0] as [number, number, number], intensity: 0, scale: 0, opacity: 0 },
+      isActive: false,
+      isInHitWindow: false,
+      isMissed: false,
+      isPerfectTiming: false
+    };
+  }
+
+  private calculateNoteRotation(currentTime: number): [number, number, number] {
+    const rotationSpeed = this.config.notes.rotationSpeed || 0.01;
+    return [
+      currentTime * rotationSpeed,
+      currentTime * rotationSpeed * 0.7,
+      currentTime * rotationSpeed * 0.3
+    ];
+  }
+
+  private calculateNoteTrail(isInHitWindow: boolean, progress: number, noteColor: [number, number, number], currentTime: number) {
+    const trailVisible = isInHitWindow || progress > 0.8;
+    const trailIntensity = Math.max(0, Math.min(1, progress * 2));
+    
+    return {
+      visible: trailVisible,
+      color: noteColor,
+      intensity: trailIntensity,
+      scale: 0.5 + Math.sin(currentTime * 2) * 0.2,
+      opacity: 0.3 + Math.sin(currentTime * 3) * 0.2
+    };
   }
 
   private getNoteColorBySignature(signature: string, timeDiff: number, currentTime: number): [number, number, number] {
@@ -712,7 +744,14 @@ export class ViewLogicService implements IViewLogicService {
         const tileCoords = this.coordinateSystemService.indexToGrid(x * params.gridSize + z);
         const tileState = this.calculateTileState(tileCoords, params);
         const appearance = this.calculateTileAppearance(tileState, x, z, params);
-        const tileData = this.createTileData(x, z, tileCoords, appearance, tileState, params);
+        const tileData = this.createTileData({
+          x,
+          z,
+          tileCoords,
+          appearance,
+          tileState,
+          params
+        });
 
         tiles.push(tileData);
       }
@@ -751,7 +790,7 @@ export class ViewLogicService implements IViewLogicService {
   private calculatePlayerTileAppearance(currentTime: number): { emissiveColor: [number, number, number]; yPosition: number } {
     const pulse = 0.3 + Math.sin(currentTime * 4) * 0.2;
     return {
-      emissiveColor: this.hslToRgb(0.6, 1, pulse),
+      emissiveColor: this.colorService.hslToRgb(0.6, 1, pulse),
       yPosition: Math.sin(currentTime * 3) * 0.05
     };
   }
@@ -764,68 +803,42 @@ export class ViewLogicService implements IViewLogicService {
     const index = x * params.gridSize + z;
     const pulse = 0.2 + Math.sin(params.currentTime * 2 + index * 0.5) * 0.1;
     return {
-      emissiveColor: this.hslToRgb(0.1, 0.8, pulse),
+      emissiveColor: this.colorService.hslToRgb(0.1, 0.8, pulse),
       yPosition: Math.sin(params.currentTime * 2 + index * 0.5) * 0.02
     };
   }
 
   private calculateDefaultTileAppearance(): { emissiveColor: [number, number, number]; yPosition: number } {
     return {
-      emissiveColor: this.hslToRgb(0, 0, 0.05),
+      emissiveColor: this.colorService.hslToRgb(0, 0, 0.05),
       yPosition: 0
     };
   }
 
-  private createTileData(
-    x: number,
-    z: number,
-    _tileCoords: {x: number, y: number},
-    appearance: { emissiveColor: [number, number, number]; yPosition: number },
-    tileState: { isPlayerTile: boolean; isActiveTile: boolean },
-    params: GetGridVisualsParams
-  ): TileVisualData {
+  private createTileData(tileData: {
+    x: number;
+    z: number;
+    tileCoords: {x: number, y: number};
+    appearance: { emissiveColor: [number, number, number]; yPosition: number };
+    tileState: { isPlayerTile: boolean; isActiveTile: boolean };
+    params: GetGridVisualsParams;
+  }): TileVisualData {
+    const { x, z, appearance, tileState, params } = tileData;
     return {
       key: `tile-${x}-${z}`,
       position: [
         (x - params.gridSize / 2 + 0.5) * params.tileSize,
         appearance.yPosition,
         (z - params.gridSize / 2 + 0.5) * params.tileSize
-      ],
+      ] as [number, number, number],
       emissiveColor: appearance.emissiveColor,
-      baseColor: [0.2, 0.2, 0.3],
+      baseColor: [0.2, 0.2, 0.3] as [number, number, number],
       isPlayerTile: tileState.isPlayerTile,
       isActiveTile: tileState.isActiveTile
     };
   }
 
   // Private helper methods
-  private hslToRgb(h: number, s: number, l: number): [number, number, number] {
-    // Simplified HSL to RGB conversion to reduce complexity
-    // This is an approximation that works well for our use cases
-    const hue = h * 6; // Convert to 0-6 range
-    const sector = Math.floor(hue);
-
-    let r = l, g = l, b = l;
-
-    if (s > 0) {
-      const chroma = (1 - Math.abs(2 * l - 1)) * s;
-      const x = chroma * (1 - Math.abs((hue % 2) - 1));
-
-      switch (sector) {
-        case 0: r += chroma; g += x; break;      // Red to Yellow
-        case 1: r += x; g += chroma; break;      // Yellow to Green
-        case 2: g += chroma; b += x; break;      // Green to Cyan
-        case 3: g += x; b += chroma; break;      // Cyan to Blue
-        case 4: r += x; b += chroma; break;      // Blue to Magenta
-        case 5: r += chroma; b += x; break;      // Magenta to Red
-      }
-    }
-
-    return [Math.max(0, Math.min(1, r)), Math.max(0, Math.min(1, g)), Math.max(0, Math.min(1, b))];
-  }
-
-
-
   private updateExistingParticles(_time: number): void {
     this.activeParticles = this.activeParticles.filter(particle => {
       particle.life += this.config.particles.assumedFrameTime; // Assume 60fps, so ~16ms per frame

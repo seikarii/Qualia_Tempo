@@ -304,6 +304,17 @@ container
   .to(CoordinateSystemService)
   .inSingletonScope();
 
+// ===== COLOR SERVICE BINDING =====
+// QUALIA.CODE v1.1 Remediation: Centralized color conversion service
+// Replaces ad-hoc "simplified" implementations with industry-standard library
+import { ColorService } from './ColorService';
+import type { IColorService } from './interfaces/IColorService';
+
+container
+  .bind<IColorService>(TYPES.IColorService)
+  .to(ColorService)
+  .inSingletonScope();
+
 // ===== NEW ARCHITECTURAL SERVICES =====
 // QUALIA.CODE v1.1 - Business Logic Extraction Services
 import { GameplayMechanicsService } from './GameplayMechanicsService';

@@ -31,6 +31,10 @@ import type { IWebSocketService } from "../services/interfaces/IWebSocketService
 import type { IBrowserEventsService } from "../services/interfaces/IBrowserEventsService";
 import type { IDebugOrchestratorService } from "../services/interfaces/IDebugOrchestratorService";
 import type { IShaderIntrospectionService } from "../services/interfaces/IShaderIntrospectionService";
+import type { IColorService } from "../services/interfaces/IColorService";
+
+// Import real services for pure utilities (no side effects)
+import { ColorService } from "../services/ColorService";
 
 // Import centralized mocks
 import { mockLogger } from "./mocks/logger.mock";
@@ -92,6 +96,10 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   testContainer.bind<IBrowserEventsService>(TYPES.IBrowserEventsService).toConstantValue(mockBrowserEventsService);
   testContainer.bind<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService).toConstantValue(mockDebugOrchestratorService);
   testContainer.bind<IShaderIntrospectionService>(TYPES.IShaderIntrospectionService).toConstantValue(mockShaderIntrospectionService);
+
+  // STEP 2.5: Bind real services for pure utilities (no side effects, no external dependencies)
+  // ColorService is a pure utility that only performs mathematical color conversions
+  testContainer.bind<IColorService>(TYPES.IColorService).to(ColorService).inSingletonScope();
 
   // STEP 3: Apply any test-specific overrides.
   for (const override of overrides) {
