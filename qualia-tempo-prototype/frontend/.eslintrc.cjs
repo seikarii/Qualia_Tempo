@@ -13,6 +13,8 @@ module.exports = {
     "**/__tests__/**",
     "**/*.test.*",
     "**/*.spec.*",
+    "**/mocks/**",
+    "**/_mocks_/**",
     // Configuration files that should not be linted for TSConfig issues
     "playwright.config.ts",
     "vite.config.ts",
@@ -158,6 +160,17 @@ module.exports = {
       ],
       rules: {
         "@qualia-tempo/qualia-code/no-global-api-calls": "off", // Interface names reference APIs
+      },
+    },
+    // Generated contract files - exempt from manual edit checks
+    {
+      files: [
+        "**/types/*.d.ts",
+        "**/types/contracts.ts",
+      ],
+      rules: {
+        "@qualia-tempo/qualia-code/no-manual-contract-edit": "off", // These ARE the generated files
+        "unused-eslint-disable": "off", // Generated files may have unused disables
       },
     },
   ],

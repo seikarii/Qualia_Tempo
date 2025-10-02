@@ -4,16 +4,16 @@ import { cleanup } from "@testing-library/react";
 
 // ÚNICA FUENTE DE VERDAD PARA MOCKS DE DECORADORES
 vi.mock("../utils/decorators", () => ({
-  initializeEventSubscriptions: vi.fn().mockImplementation((serviceInstance: any) => {
+  initializeEventSubscriptions: vi.fn().mockImplementation((serviceInstance: unknown) => {
     // Mock implementation that sets up _eventListeners array for @OnEvent decorator testing
     if (serviceInstance && typeof serviceInstance === 'object') {
-      serviceInstance._eventListeners = [];
+      (serviceInstance as Record<string, unknown>)._eventListeners = [];
     }
   }),
-  cleanupEventSubscriptions: vi.fn().mockImplementation((serviceInstance: any) => {
+  cleanupEventSubscriptions: vi.fn().mockImplementation((serviceInstance: unknown) => {
     // Mock cleanup that clears _eventListeners
     if (serviceInstance && typeof serviceInstance === 'object') {
-      serviceInstance._eventListeners = [];
+      (serviceInstance as Record<string, unknown>)._eventListeners = [];
     }
   }),
   logMethod: vi.fn().mockImplementation(() => (d: unknown) => d),
@@ -299,7 +299,7 @@ vi.mock("electron", () => ({
 // Comprehensive browser APIs mocking for test environment
 // Ensure global window object exists
 if (typeof window === "undefined") {
-  (global as any).window = {} as any;
+  (global as unknown as { window: Window }).window = {} as unknown as Window;
 }
 
 // Mock browser timing APIs with enhanced stability

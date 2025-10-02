@@ -404,7 +404,37 @@ export async function configureServices(): Promise<void> {
   await configService.loadConfig();
   const fullConfig = configService.getConfig();
   
-  // 3. Bind each configuration object using safe binding pattern
+  // 3. Bind configuration objects
+  bindBasicConfigurations(fullConfig);
+  bindServiceParameterObjects(fullConfig);
+
+  // 4. Emit configuration loaded event
+  // CRITICAL: Emit ConfigurationLoadedEvent to notify all services that configuration is ready
+  // This breaks the circular dependency by centralizing event emission in IoC setup
+  const eventBus = container.get<IEventBus>(TYPES.IEventBus);
+  const configManifest = container.get<Record<string, string>>(TYPES.ConfigManifest);
+  const loadedConfigs = Object.keys(configManifest);
+  const totalConfigs = loadedConfigs.length;
+
+  const configLoadedEvent: ConfigurationLoadedEvent = {
+    type: "ConfigurationLoaded",
+    timestamp: new Date(),
+    source: "ConfigurationService",
+    loadedConfigs,
+    totalConfigs,
+  };
+
+  eventBus.emit(configLoadedEvent);
+}
+
+// ===== HELPER FUNCTIONS FOR CONFIGURATION BINDING =====
+
+/**
+ * Binds all basic configuration objects to the container.
+ * This function handles the core configuration bindings that are required by most services.
+ */
+function bindBasicConfigurations(fullConfig: FullGameConfig): void {
+  // Bind each configuration object using safe binding pattern
   // This prevents duplicate bindings even under React.StrictMode
   safeBindConstant<FullGameConfig>(TYPES.FullGameConfig, fullConfig);
   safeBindConstant<CompositionRootConfig>(TYPES.CompositionRootConfig, fullConfig.compositionRoot);
@@ -429,7 +459,13 @@ export async function configureServices(): Promise<void> {
   
   // Bind CoordinateSystemConfig from RhythmicMovement config
   safeBindConstant<CoordinateSystemConfig>(TYPES.CoordinateSystemConfig, fullConfig.rhythmicMovement.coordinate_system);
+}
 
+/**
+ * Binds all service parameter objects to the container.
+ * These are the consolidated parameter objects that reduce constructor parameter counts.
+ */
+function bindServiceParameterObjects(fullConfig: FullGameConfig): void {
   // QUALIA.CODE v1.1: Bind RhythmicMovementControllerParams factory
   // Consolidates 8 constructor parameters into a single object to comply with IoC limits
   safeBindConstant<RhythmicMovementControllerParams>(TYPES.RhythmicMovementControllerParams, {
@@ -599,24 +635,6 @@ export async function configureServices(): Promise<void> {
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     config: fullConfig.errorReporting,
   });
-
-  // ===== EMIT CONFIGURATION LOADED EVENT =====
-  // CRITICAL: Emit ConfigurationLoadedEvent to notify all services that configuration is ready
-  // This breaks the circular dependency by centralizing event emission in IoC setup
-  const eventBus = container.get<IEventBus>(TYPES.IEventBus);
-  const configManifest = container.get<Record<string, string>>(TYPES.ConfigManifest);
-  const loadedConfigs = Object.keys(configManifest);
-  const totalConfigs = loadedConfigs.length;
-
-  const configLoadedEvent: ConfigurationLoadedEvent = {
-    type: "ConfigurationLoaded",
-    timestamp: new Date(),
-    source: "ConfigurationService",
-    loadedConfigs,
-    totalConfigs,
-  };
-
-  eventBus.emit(configLoadedEvent);
 }
 
 // ===== CONTAINER VERIFICATION =====

@@ -45,7 +45,7 @@ export class WebAudioAPIService implements IWebAudioAPIService {
     await Tone.start();
   }
 
-  public playTone(params: PlayToneParams): void;
+  public playTone(_params: PlayToneParams): void;
   public playTone(_frequency: number, _duration: number, _gain: number, _type: OscillatorType, _loop?: boolean): void;
   @logMethod
   public playTone(

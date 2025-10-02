@@ -7,6 +7,8 @@
  * into the CoordinateSystemService, not accessed via Service Locator pattern.
  */
 
+import * as THREE from 'three';
+
 /**
  * Configuration interface for CoordinateSystemService
  * Contains the parameters needed for grid-to-world coordinate transformations.
@@ -28,4 +30,21 @@ export interface CoordinateSystemConfig {
     invalidWorldCoordinates: string;
     cameraProjectionFailed: string;
   };
+}
+
+/**
+ * Parameter object for worldToScreen method
+ * Encapsulates the 5 parameters needed for world-to-screen projection.
+ */
+export interface WorldToScreenParams {
+  /** X coordinate in world space */
+  worldX: number;
+  /** Y coordinate in world space */
+  worldY: number;
+  /** Z coordinate in world space */
+  worldZ: number;
+  /** Three.js camera for projection */
+  camera: THREE.Camera;
+  /** DOM element dimensions for screen coordinate calculation */
+  domElementSize: { width: number; height: number };
 }

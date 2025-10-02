@@ -20,7 +20,7 @@ interface IMessageAdapter {
 // QUALIA.CODE v1.1: Type helper for event bus
 interface IEventBus {
   emit(_event: unknown): void;
-  subscribe(_eventType: string, _handler: (...args: unknown[]) => void, _options?: unknown): string;
+  subscribe(_eventType: string, _handler: (..._args: unknown[]) => void, _options?: unknown): string;
   unsubscribe(_listenerId: string): void;
 }
 
@@ -619,74 +619,123 @@ export function AdaptAndEmit(adapterPropertyKey: string | symbol) {
     const originalMethod = descriptor.value;
 
     descriptor.value = function (this: unknown, ...args: unknown[]) {
-      const rawData = args[0];
-      const instance = this as InstanceWithDependencies;
-      const className = instance.constructor.name;
-      const fullMethodName = `${className}.${propertyKey}`;
-
-      try {
-        // ARCHITECTURAL PURITY: Get dependencies from instance (this), not from container
-        const adapter = instance[adapterPropertyKey] as IMessageAdapter;
-        const eventBus = instance.eventBus;
-
-        // VALIDACIÓN ARQUITECTÓNICA EN TIEMPO DE EJECUCIÓN
-        if (!adapter) {
-          const errorMsg = `Architectural Violation: Decorated class ${className} is missing required property '${String(adapterPropertyKey)}'. Ensure the adapter is injected and assigned in the constructor.`;
-          EmergencyLogger.error(errorMsg);
-          throw new Error(errorMsg);
-        }
-
-        if (!eventBus) {
-          const errorMsg = `Architectural Violation: Decorated class ${className} is missing required property 'eventBus'. Ensure IEventBus is injected and assigned.`;
-          EmergencyLogger.error(errorMsg);
-          throw new Error(errorMsg);
-        }
-
-        // Access instance logger if available
-        const instanceLogger = getLogger(this);
-        if (instanceLogger) {
-          instanceLogger.debug(`🔄 @AdaptAndEmit processing in ${fullMethodName}`, {
-            adapterProperty: adapterPropertyKey,
-            rawDataType: typeof rawData,
-            timestamp: new Date().toISOString()
-          });
-        }
-
-        // 2. Adapt the raw message using the injected adapter
-        const adaptedEvent = adapter.adapt(rawData);
-
-        // 3. Emit the adapted event through the EventBus
-        eventBus.emit(adaptedEvent);
-
-        if (instanceLogger) {
-          instanceLogger.debug(`✅ @AdaptAndEmit completed in ${fullMethodName}`, {
-            eventType: adaptedEvent.type,
-            eventSource: adaptedEvent.source,
-            timestamp: new Date().toISOString()
-          });
-        }
-
-        // Execute the original method (for logic like 'this.messagesReceived++')
-        return originalMethod.apply(this, args);
-
-      } catch (error) {
-        // Error boundary: Log and re-throw for proper error handling
-        const instanceLogger = getLogger(this);
-        if (instanceLogger) {
-          instanceLogger.error(`🚨 @AdaptAndEmit failed in ${fullMethodName}`, {
-            error: error instanceof Error ? error.message : String(error),
-            adapterProperty: adapterPropertyKey,
-            timestamp: new Date().toISOString()
-          });
-        } else {
-          EmergencyLogger.error(`🚨 @AdaptAndEmit failed in ${fullMethodName}:`, error);
-        }
-        throw error;
-      }
+      const params = {
+        instance: this,
+        propertyKey,
+        adapterPropertyKey,
+        originalMethod,
+        args
+      };
+      return adaptAndEmitImpl(params);
     };
 
     return descriptor;
   };
+}
+
+function adaptAndEmitImpl(params: {
+  instance: unknown;
+  propertyKey: string;
+  adapterPropertyKey: string | symbol;
+  originalMethod: (...args: unknown[]) => unknown;
+  args: unknown[];
+}): unknown {
+  const { instance, propertyKey, adapterPropertyKey, originalMethod, args } = params;
+  const rawData = args[0];
+  const instanceWithDeps = instance as InstanceWithDependencies;
+  const className = instanceWithDeps.constructor.name;
+  const fullMethodName = `${className}.${propertyKey}`;
+
+  try {
+    validateDependencies(instanceWithDeps, adapterPropertyKey, className);
+    const adapter = instanceWithDeps[adapterPropertyKey] as IMessageAdapter;
+    const eventBus = instanceWithDeps.eventBus; // Validated above, no non-null assertion needed
+
+    if (!eventBus) {
+      throw new Error('EventBus should be validated by validateDependencies');
+    }
+
+    logAdaptAndEmitStart(instance, fullMethodName, adapterPropertyKey, rawData);
+
+    const adaptedEvent = adapter.adapt(rawData);
+    eventBus.emit(adaptedEvent);
+
+    logAdaptAndEmitSuccess(instance, fullMethodName, adaptedEvent);
+
+    return originalMethod.apply(instance, args);
+
+  } catch (error) {
+    handleAdaptAndEmitError(instance, fullMethodName, adapterPropertyKey, error);
+    throw error;
+  }
+}
+
+function validateDependencies(
+  instance: InstanceWithDependencies,
+  adapterPropertyKey: string | symbol,
+  className: string
+): void {
+  const adapter = instance[adapterPropertyKey];
+  if (!adapter) {
+    const errorMsg = `Architectural Violation: Decorated class ${className} is missing required property '${String(adapterPropertyKey)}'. Ensure the adapter is injected and assigned in the constructor.`;
+    EmergencyLogger.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+
+  if (!instance.eventBus) {
+    const errorMsg = `Architectural Violation: Decorated class ${className} is missing required property 'eventBus'. Ensure IEventBus is injected and assigned.`;
+    EmergencyLogger.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+}
+
+function logAdaptAndEmitStart(
+  instance: unknown,
+  fullMethodName: string,
+  adapterPropertyKey: string | symbol,
+  rawData: unknown
+): void {
+  const instanceLogger = getLogger(instance);
+  if (instanceLogger) {
+    instanceLogger.debug(`🔄 @AdaptAndEmit processing in ${fullMethodName}`, {
+      adapterProperty: adapterPropertyKey,
+      rawDataType: typeof rawData,
+      timestamp: new Date().toISOString()
+    });
+  }
+}
+
+function logAdaptAndEmitSuccess(
+  instance: unknown,
+  fullMethodName: string,
+  adaptedEvent: { type: string; source?: string; [key: string]: unknown }
+): void {
+  const instanceLogger = getLogger(instance);
+  if (instanceLogger) {
+    instanceLogger.debug(`✅ @AdaptAndEmit completed in ${fullMethodName}`, {
+      eventType: adaptedEvent.type,
+      eventSource: adaptedEvent.source,
+      timestamp: new Date().toISOString()
+    });
+  }
+}
+
+function handleAdaptAndEmitError(
+  instance: unknown,
+  fullMethodName: string,
+  adapterPropertyKey: string | symbol,
+  error: unknown
+): void {
+  const instanceLogger = getLogger(instance);
+  if (instanceLogger) {
+    instanceLogger.error(`🚨 @AdaptAndEmit failed in ${fullMethodName}`, {
+      error: error instanceof Error ? error.message : String(error),
+      adapterProperty: adapterPropertyKey,
+      timestamp: new Date().toISOString()
+    });
+  } else {
+    EmergencyLogger.error(`🚨 @AdaptAndEmit failed in ${fullMethodName}:`, error);
+  }
 }
 
 // ==================== BROWSER ENVIRONMENT DECORATORS ====================
@@ -799,7 +848,7 @@ export function initializeEventSubscriptions(serviceInstance: unknown): void {
     _eventSubscriptions?: Array<{ eventType: string; methodName: string }>;
   }
   
-  const subscriptions = (instance.constructor as ConstructorWithSubscriptions)._eventSubscriptions || [];
+  const subscriptions = (instance.constructor as ConstructorWithSubscriptions)._eventSubscriptions ?? [];
   
   for (const subscription of (subscriptions as {eventType: string; methodName: string; originalMethod: unknown}[])) {
     const method = instance[subscription.methodName] as ((..._args: unknown[]) => void) | undefined;

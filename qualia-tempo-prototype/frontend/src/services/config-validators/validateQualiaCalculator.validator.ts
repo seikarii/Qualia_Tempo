@@ -17,7 +17,7 @@ export function validateQualiaCalculatorConfig(config: Partial<QualiaCalculatorC
   
   const requiredBaseFields = ['intensity', 'precision', 'aggression', 'flow', 'chaos', 'recovery', 'transcendence'];
   for (const field of requiredBaseFields) {
-    if (typeof (config.baseQualiaState as any)?.[field] !== 'number') {
+    if (typeof (config.baseQualiaState as Record<string, unknown>)?.[field] !== 'number') {
       throw new Error(`Invalid qualiaCalculator.baseQualiaState.${field} configuration: must be number`);
     }
   }

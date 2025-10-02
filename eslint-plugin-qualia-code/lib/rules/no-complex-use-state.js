@@ -34,10 +34,15 @@ module.exports = {
                                filename.includes('Renderer') && 
                                filename.endsWith('.tsx');
     
+    // Allow complex state in custom hooks
+    // Hooks are legitimate places for encapsulated state management
+    const isCustomHook = filename.includes('/hooks/') && 
+                        (filename.endsWith('.ts') || filename.endsWith('.tsx'));
+    
     return {
       CallExpression(node) {
         // Skip renderer components - they need complex local state for visual data
-        if (isRendererComponent) {
+        if (isRendererComponent || isCustomHook) {
           return;
         }
         

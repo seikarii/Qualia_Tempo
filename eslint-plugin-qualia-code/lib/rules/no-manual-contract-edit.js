@@ -31,12 +31,13 @@ module.exports = {
     // Check if this is a generated contract file
     // Only flag files in /types/ directory that are generated from /shared_contracts
     // Do NOT flag hand-written service contracts in /services/contracts/
-    const isGeneratedContractFile =
+    // Do NOT flag manual type definition files (electron.d.ts, glsl-parser.d.ts, etc.)
+    const isPotentiallyGeneratedFile =
       filename.includes('api/models.py') ||
       (filename.includes('/types/') && filename.endsWith('.d.ts')) ||
       (filename.includes('/types/contracts.ts'));
 
-    if (!isGeneratedContractFile) {
+    if (!isPotentiallyGeneratedFile) {
       return {}; // No rules to apply for non-generated contract files
     }
 
@@ -45,19 +46,20 @@ module.exports = {
         const sourceCode = context.getSourceCode();
         const text = sourceCode.getText();
         
-        // Check for the @generated marker
-        if (!text.includes('@generated DO NOT EDIT')) {
+        // Only report if the file has generation markers
+        // This distinguishes auto-generated files from manual type definitions
+        const hasGenerationMarker = 
+          text.includes('GENERATED FILE - DO NOT EDIT') ||
+          text.includes('@generated DO NOT EDIT') ||
+          text.includes('automatically generated from JSON schema');
+        
+        if (hasGenerationMarker) {
           context.report({
             node,
             messageId: 'noManualEdit',
             loc: { line: 1, column: 0 }
           });
-          return;
         }
-
-        // Additional check: if the file has been modified after generation,
-        // we could potentially check timestamps or content hashes here
-        // For now, we rely on the @generated marker being present
       }
     };
   }

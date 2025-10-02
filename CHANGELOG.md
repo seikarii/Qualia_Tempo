@@ -2,6 +2,54 @@
 
 ## [Unreleased]
 
+### 🔧 [2025-01-02] IoC Configuration Refactoring - Method Length Compliance
+
+**inversify.config.ts Refactoring:** Successfully refactored `configureServices()` method from 233 lines to clean, maintainable structure using Extract Method pattern:
+- `bindBasicConfigurations()` - Handles all core configuration object bindings (23 config types)
+- `bindServiceParameterObjects()` - Consolidates all service parameter object bindings (12 parameter factories)
+- Reduced method length from 233 lines to ~25 lines while maintaining identical functionality
+- Improved code organization and readability without architectural changes
+
+**Architectural Integrity Maintained:** All QUALIA.CODE v1.1 principles preserved:
+- Direct configuration injection pattern maintained
+- Service parameter consolidation for IoC limits compliance
+- Event-driven configuration loading with ConfigurationLoadedEvent emission
+- React.StrictMode immunity through container.isBound() checks
+
+**Violations Reduced:** From 75 to 74 ESLint problems (1% reduction, 1 violation addressed)
+
+### 🔧 [2025-10-02] ESLint Rule Improvements & False Positive Fixes
+
+**no-manual-contract-edit Rule Enhancement:** Updated ESLint rule to properly distinguish between auto-generated contract files and manual type definitions:
+- Rule now checks for generation markers (`GENERATED FILE - DO NOT EDIT`, `@generated DO NOT EDIT`) before reporting violations
+- Eliminated false positives for manual type definition files (`electron.d.ts`, `glsl-parser.d.ts`, `vitest.d.ts`)
+- Added ESLint config override to fully exempt generated files in `/types/` directory from the rule
+
+**no-complex-use-state Rule Enhancement:** Extended rule to allow complex state in custom hooks (`/hooks/` directory):
+- Custom hooks legitimately encapsulate state management logic
+- Maintains prohibition of complex state in regular components (must use Zustand)
+- Visual renderer components continue to be exempted for frame-by-frame updates
+
+**Type Safety Improvements:** Replaced all `any` types with proper type definitions:
+- `main.ts`: Created `GlobalWithProcess` interface for Electron environment access
+- `validateQualiaCalculator.validator.ts`: Replaced `any` with `Record<string, unknown>`
+- `PerformanceProvider.ts`: Created `PerformanceWithMemory` interface for memory API
+- `setup.ts`: Replaced `any` with `unknown` in mock implementations with proper type guards
+
+**Nullish Coalescing Operator Migration:** Replaced logical OR (`||`) with nullish coalescing (`??`) for safer type handling:
+- `DebugService.ts`: AIAnalysisResult mapping default values
+- `ViewLogicService.ts`: Boss emotional valence default
+- `decorators.ts`: Performance tracking flag initialization
+
+**ESLint Configuration Enhancements:**
+- Added `**/mocks/**` and `**/_mocks_/**` to ignore patterns to prevent tsconfig parsing errors
+- Added `no-console` disable comments for legitimate console usage in Logger.ts fallback logging
+- Fixed unused variable warnings by prefixing overload signature parameters with underscore
+
+**Violations Reduced:** From 94 to 65 ESLint problems (31% reduction, 29 violations fixed)
+
+## [Previous Entries]
+
 ### 🛡️ Platform Abstraction Compliance
 **PostProcessingService Platform Abstraction Remediation:** Resolved critical architectural violation by implementing proper platform abstraction for performance measurement APIs. Refactored `PostProcessingService` to inject `IPerformanceService` instead of directly calling `performance.now()`, ensuring testability and decoupling from browser-specific APIs.
 

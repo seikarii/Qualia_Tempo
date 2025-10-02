@@ -35,7 +35,14 @@ export class PerformanceProvider implements IPerformanceProvider {
     jsHeapSizeLimit?: number;
   } {
     // Type assertion for performance.memory which may not exist in all environments
-    const perfWithMemory = performance as any;
+    interface PerformanceWithMemory extends Performance {
+      memory?: {
+        usedJSHeapSize: number;
+        totalJSHeapSize: number;
+        jsHeapSizeLimit: number;
+      };
+    }
+    const perfWithMemory = performance as PerformanceWithMemory;
     if (perfWithMemory.memory) {
       return {
         usedJSHeapSize: perfWithMemory.memory.usedJSHeapSize,

@@ -372,34 +372,31 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
       return;
     }
 
-    // Convertir el vector a una dirección nominal (8 direcciones)
-    let direction: 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest';
-
-    // LÓGICA CORREGIDA: z controla north/south, x controla east/west
-    if (directionVector.z === -1 && directionVector.x === 0) {
-      direction = 'north';
-    } else if (directionVector.z === 1 && directionVector.x === 0) {
-      direction = 'south';
-    } else if (directionVector.x === 1 && directionVector.z === 0) {
-      direction = 'east';
-    } else if (directionVector.x === -1 && directionVector.z === 0) {
-      direction = 'west';
-    } else if (directionVector.z === -1 && directionVector.x === 1) {
-      direction = 'northeast';
-    } else if (directionVector.z === -1 && directionVector.x === -1) {
-      direction = 'northwest';
-    } else if (directionVector.z === 1 && directionVector.x === 1) {
-      direction = 'southeast';
-    } else if (directionVector.z === 1 && directionVector.x === -1) {
-      direction = 'southwest';
-    } else {
-      // Vector inválido - no debería ocurrir
+    const direction = this.vectorToDirection(directionVector);
+    if (!direction) {
       this.logger.warn('Invalid direction vector', { directionVector });
       return;
     }
 
     // Procesar el movimiento con la dirección calculada
     this.processDashInput(direction);
+  }
+
+  private vectorToDirection(vector: {x: number, z: number}): ('north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest') | null {
+    // Map of direction vectors to movement directions
+    const directionMap: Record<string, 'north' | 'south' | 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest'> = {
+      '0,-1': 'north',      // z: -1, x: 0
+      '0,1': 'south',       // z: 1, x: 0
+      '1,0': 'east',        // x: 1, z: 0
+      '-1,0': 'west',       // x: -1, z: 0
+      '1,-1': 'northeast',  // x: 1, z: -1
+      '-1,-1': 'northwest', // x: -1, z: -1
+      '1,1': 'southeast',   // x: 1, z: 1
+      '-1,1': 'southwest'   // x: -1, z: 1
+    };
+
+    const key = `${vector.x},${vector.z}`;
+    return directionMap[key] || null;
   }
 
   /**

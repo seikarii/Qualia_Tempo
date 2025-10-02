@@ -13,6 +13,7 @@ import { injectable, inject } from 'inversify';
 import * as THREE from 'three';
 import { TYPES } from './inversify.types';
 import type { ICoordinateSystemService } from './interfaces/ICoordinateSystemService';
+import type { WorldToScreenParams } from './contracts/ICoordinateSystemService.contracts';
 import type { CoordinateSystemConfig } from './contracts/ICoordinateSystemService.contracts';
 import type { ILogger } from './interfaces/ILogger';
 import { logMethod, catchError } from '../utils/decorators';
@@ -65,39 +66,84 @@ export class CoordinateSystemService implements ICoordinateSystemService {
    * WORLD-TO-SCREEN PROJECTION
    * Uses Three.js Vector3.project() for accurate camera projection.
    */
-  @logMethod
-  @catchError
+  // Overload signatures
+  public worldToScreen(params: WorldToScreenParams): { x: number; y: number };
   public worldToScreen(
     worldX: number,
-    worldY: number, 
+    worldY: number,
     worldZ: number,
     camera: THREE.Camera,
     domElementSize: { width: number; height: number }
+  ): { x: number; y: number };
+  
+  // Implementation
+  @logMethod
+  @catchError
+  public worldToScreen(
+    paramsOrWorldX: WorldToScreenParams | number,
+    worldY?: number,
+    worldZ?: number,
+    camera?: THREE.Camera,
+    domElementSize?: { width: number; height: number }
   ): { x: number; y: number } {
+    const params = this.normalizeWorldToScreenParams(paramsOrWorldX, worldY, worldZ, camera, domElementSize);
+
     try {
-      // Create vector and project it through the camera
-      const vector = new THREE.Vector3(worldX, worldY, worldZ);
-      vector.project(camera);
-
-      // Convert from normalized device coordinates (-1 to 1) to screen pixels
-      const screenX = (vector.x * 0.5 + 0.5) * domElementSize.width;
-      const screenY = (vector.y * -0.5 + 0.5) * domElementSize.height;
-
-      this.logger.debug(this.config.messages.worldToScreenCalculated, {
-        input: { worldX, worldY, worldZ },
-        output: { screenX, screenY },
-        domSize: domElementSize
-      });
-
-      return { x: screenX, y: screenY };
+      const screenCoords = this.projectWorldToScreen(params);
+      this.logProjectionResult(params, screenCoords);
+      return screenCoords;
     } catch (error) {
       this.logger.error(this.config.messages.cameraProjectionFailed, { error });
-      // Fallback to center of screen
-      return { 
-        x: domElementSize.width / 2, 
-        y: domElementSize.height / 2 
-      };
+      return this.getFallbackScreenPosition(params.domElementSize);
     }
+  }
+
+  private normalizeWorldToScreenParams(
+    paramsOrWorldX: WorldToScreenParams | number,
+    worldY?: number,
+    worldZ?: number,
+    camera?: THREE.Camera,
+    domElementSize?: { width: number; height: number }
+  ): WorldToScreenParams {
+    if (typeof paramsOrWorldX === 'object') {
+      return paramsOrWorldX;
+    }
+
+    return {
+      worldX: paramsOrWorldX,
+      worldY: worldY!,
+      worldZ: worldZ!,
+      camera: camera!,
+      domElementSize: domElementSize!
+    };
+  }
+
+  private projectWorldToScreen(params: WorldToScreenParams): { x: number; y: number } {
+    const vector = new THREE.Vector3(params.worldX, params.worldY, params.worldZ);
+    vector.project(params.camera);
+
+    const screenX = (vector.x * 0.5 + 0.5) * params.domElementSize.width;
+    const screenY = (vector.y * -0.5 + 0.5) * params.domElementSize.height;
+
+    return { x: screenX, y: screenY };
+  }
+
+  private logProjectionResult(
+    params: WorldToScreenParams,
+    result: { x: number; y: number }
+  ): void {
+    this.logger.debug(this.config.messages.worldToScreenCalculated, {
+      input: { worldX: params.worldX, worldY: params.worldY, worldZ: params.worldZ },
+      output: { screenX: result.x, screenY: result.y },
+      domSize: params.domElementSize
+    });
+  }
+
+  private getFallbackScreenPosition(domElementSize: { width: number; height: number }): { x: number; y: number } {
+    return {
+      x: domElementSize.width / 2,
+      y: domElementSize.height / 2
+    };
   }
 
   /**

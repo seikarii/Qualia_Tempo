@@ -103,9 +103,14 @@ const createWindow = (): BrowserWindow => {
   });
 
   // Load the application
-  if (env.isDev && (globalThis as any).process?.env?.["ELECTRON_RENDERER_URL"]) {
+  interface GlobalWithProcess {
+    process?: { env?: Record<string, string | undefined> };
+  }
+  const globalWithProcess = globalThis as unknown as GlobalWithProcess;
+  
+  if (env.isDev && globalWithProcess.process?.env?.["ELECTRON_RENDERER_URL"]) {
     mainWindow.loadURL(
-      (globalThis as any).process.env["ELECTRON_RENDERER_URL"] as string,
+      globalWithProcess.process.env["ELECTRON_RENDERER_URL"] as string,
     );
   } else {
     mainWindow.loadFile(join(__dirname, "../index.html"));

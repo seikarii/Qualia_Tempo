@@ -75,19 +75,19 @@ export class QualiaLogger implements ILogger {
 
     switch (entry.level) {
       case LogLevel.DEBUG:
-        // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services
+        // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services, no-console
         console.debug(`🔍 ${prefix}: ${entry.message}`, entry.context ?? {});
         break;
       case LogLevel.INFO:
-        // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services
+        // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services, no-console
         console.info(`ℹ️ ${prefix}: ${entry.message}`, entry.context ?? {});
         break;
       case LogLevel.WARN:
-        // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services
+        // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services, no-console
         console.warn(`⚠️ ${prefix}: ${entry.message}`, entry.context ?? {});
         break;
       case LogLevel.ERROR:
-        // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services
+        // eslint-disable-next-line @qualia-tempo/qualia-code/no-console-in-services, no-console
         console.error(`🚨 ${prefix}: ${entry.message}`, entry.context ?? {});
         break;
     }
