@@ -46,8 +46,7 @@ export const TYPES = {
   ISubtitleService: Symbol.for("ISubtitleService"),
   IDebugOrchestratorService: Symbol.for("IDebugOrchestratorService"),
 
-  // ===== INFRASTRUCTURE SERVICE BUNDLES =====
-  IGameInfrastructureService: Symbol.for("IGameInfrastructureService"),
+  // ===== PROTOCOL ADAPTERS =====
   IKeyToDirectionAdapter: Symbol.for("IKeyToDirectionAdapter"),
   IRawToParticleEventAdapter: Symbol.for("IRawToParticleEventAdapter"),
 

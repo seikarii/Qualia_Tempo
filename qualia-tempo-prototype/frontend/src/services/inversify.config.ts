@@ -84,7 +84,6 @@ import type { IWebSocketFactory } from "./interfaces/IWebSocketFactory";
 import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
 import type { ICoordinateSystemService } from "./interfaces/ICoordinateSystemService";
 import type { IToneFactoryService } from "../audio/interfaces/IToneFactoryService";
-import type { IGameInfrastructureService } from "./interfaces/IGameInfrastructureService";
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { ConfigurationService } from "./ConfigurationService";
@@ -116,7 +115,6 @@ import { ThrottlingManager } from "./utils/ThrottlingManager";
 import { InputStateService } from "./InputStateService";
 import { CoordinateSystemService } from "./CoordinateSystemService";
 import { ToneFactoryService } from "../audio/ToneFactoryService";
-import { GameInfrastructureService } from './GameInfrastructureService';
 
 // ===== PROTOCOL ADAPTER IMPORTS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
@@ -295,12 +293,6 @@ container
   .to(CoordinateSystemService)
   .inSingletonScope();
 
-// ===== INFRASTRUCTURE SERVICE BUNDLES =====
-container
-  .bind<IGameInfrastructureService>(TYPES.IGameInfrastructureService)
-  .to(GameInfrastructureService)
-  .inSingletonScope();
-
 // ===== NEW ARCHITECTURAL SERVICES =====
 // QUALIA.CODE v1.1 - Business Logic Extraction Services
 import { GameplayMechanicsService } from './GameplayMechanicsService';
@@ -463,13 +455,16 @@ export async function configureServices(): Promise<void> {
   });
 
   // QUALIA.CODE v1.1: Bind GameControllerServiceParams factory
-  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
+  // ARCHITECTURAL FIX: Explicit dependency injection - no Service Locator anti-pattern
+  // Each service is injected individually for complete transparency of dependencies
   safeBindConstant<GameControllerServiceParams>(TYPES.GameControllerServiceParams, {
     eventBus: container.get(TYPES.IEventBus) as EventBus,
     logger: container.get(TYPES.ILogger) as QualiaLogger,
     config: fullConfig.gameController,
     gameStateStoreService: container.get<IGameStateStoreService>(TYPES.IGameStateStoreService),
-    infrastructureService: container.get<IGameInfrastructureService>(TYPES.IGameInfrastructureService),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+    audioService: container.get<IAudioService>(TYPES.IAudioService),
   });
 
   // QUALIA.CODE v1.1: Bind QualiaStateCalculatorServiceParams factory

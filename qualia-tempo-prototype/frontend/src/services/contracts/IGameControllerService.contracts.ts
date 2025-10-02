@@ -9,15 +9,19 @@
 import type { EventBus } from '../EventBus';
 import type { QualiaLogger } from '../Logger';
 import type { IGameStateStoreService } from '../interfaces/IGameStateStoreService';
-import type { IGameInfrastructureService } from '../interfaces/IGameInfrastructureService';
+import type { ITimerService, IPerformanceService } from '../interfaces/ITimerService';
+import type { IAudioService } from '../interfaces/IAudioService';
 
 // QUALIA.CODE v1.1: Constructor parameter object pattern (max 4 parameters rule)
+// ARCHITECTURAL FIX: Explicit dependency injection - no Service Locator anti-pattern
 export interface GameControllerServiceParams {
   eventBus: EventBus;
   logger: QualiaLogger;
   config: GameControllerConfig;
   gameStateStoreService: IGameStateStoreService;
-  infrastructureService: IGameInfrastructureService;
+  timerService: ITimerService;
+  performanceService: IPerformanceService;
+  audioService: IAudioService;
 }
 
 // Game state interface

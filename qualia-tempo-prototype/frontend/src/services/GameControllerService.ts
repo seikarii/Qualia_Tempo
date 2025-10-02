@@ -21,7 +21,8 @@ import { QualiaLogger } from "./Logger";
 import type { GameState, GameControllerConfig, GameControllerServiceParams, HitNoteContext } from "./contracts/IGameControllerService.contracts";
 import type { IGameControllerService } from "./interfaces/IGameControllerService";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
-import type { IGameInfrastructureService } from "./interfaces/IGameInfrastructureService";
+import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
+import type { IAudioService } from "./interfaces/IAudioService";
 
 /**
  * GameControllerService: Manages game state and control logic
@@ -36,7 +37,9 @@ import type { IGameInfrastructureService } from "./interfaces/IGameInfrastructur
 export class GameControllerService implements IGameControllerService, IBaseService {
   private eventBus: EventBus;
   private gameStateStoreService: IGameStateStoreService;
-  private infrastructureService: IGameInfrastructureService;
+  private timerService: ITimerService;
+  private performanceService: IPerformanceService;
+  private audioService: IAudioService;
   private config: GameControllerConfig;
   // @ts-expect-error - Used by @OnEvent decorator lifecycle
   private _eventListeners: string[] = []; // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
@@ -54,9 +57,11 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     this.logger = params.logger;
     this.config = params.config;
     this.gameStateStoreService = params.gameStateStoreService;
-    this.infrastructureService = params.infrastructureService;
+    this.timerService = params.timerService;
+    this.performanceService = params.performanceService;
+    this.audioService = params.audioService;
     // gameState is initialized in initialize() to avoid redundancy
-    this.logger.info("🎮 [GameController] Service initialized");
+    this.logger.info("🎮 [GameController] Service initialized with explicit dependencies");
   }
 
   /**
@@ -69,7 +74,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   @logMethod
   @catchError
   public start(): void {
-    const startTime = this.infrastructureService.performanceService.now();
+    const startTime = this.performanceService.now();
     this.logger.info("🚀 [GameController] Starting service...");
 
     try {
@@ -80,12 +85,12 @@ export class GameControllerService implements IGameControllerService, IBaseServi
 
       this.isRunning = true;
 
-      const duration = this.infrastructureService.performanceService.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.info(
         `🎮 [GameController] Service started successfully - ${duration.toFixed(2)}ms`,
       );
     } catch (error) {
-      const duration = this.infrastructureService.performanceService.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.error(
         `🚨 [GameController] Start failed - ${duration.toFixed(2)}ms`,
         { error },
@@ -100,7 +105,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   @logMethod
   @catchError
   public stop(): void {
-    const startTime = this.infrastructureService.performanceService.now();
+    const startTime = this.performanceService.now();
     this.logger.info("🛑 [GameController] Stopping service...");
 
     try {
@@ -112,12 +117,12 @@ export class GameControllerService implements IGameControllerService, IBaseServi
       this.stopGameClock();
       this.isRunning = false;
 
-      const duration = this.infrastructureService.performanceService.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.info(
         `✅ [GameController] Service stopped - ${duration.toFixed(2)}ms`,
       );
     } catch (error) {
-      const duration = this.infrastructureService.performanceService.now() - startTime;
+      const duration = this.performanceService.now() - startTime;
       this.logger.error(
         `❌ [GameController] Stop failed - ${duration.toFixed(2)}ms:`,
         { error },
@@ -134,7 +139,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     this.logger.info("🎮 [GameController] Starting game sequence...");
 
     // PASO 1: Esperar a que el AudioContext se inicie. ESTO ES CRÍTICO.
-    await this.infrastructureService.audioService.initializeAudioContext();
+    await this.audioService.initializeAudioContext();
 
     this.logger.info("AudioContext ready. Proceeding to start game state.");
 
@@ -347,9 +352,9 @@ export class GameControllerService implements IGameControllerService, IBaseServi
 
     this.logger.info("⏰ [GameController] Starting game clock");
 
-    this.gameClockInterval = this.infrastructureService.timerService.setInterval(() => {
+    this.gameClockInterval = this.timerService.setInterval(() => {
       // Update game time in the store
-      const currentTime = this.infrastructureService.performanceService.now();
+      const currentTime = this.performanceService.now();
       this.gameStateStoreService.updateGameState({ currentTime });
     }, this.config.performance.updateIntervalMs);
   }
@@ -361,7 +366,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
 
     this.logger.info("⏰ [GameController] Stopping game clock");
 
-    this.infrastructureService.timerService.clearInterval(this.gameClockInterval);
+    this.timerService.clearInterval(this.gameClockInterval);
     this.gameClockInterval = null;
   }
 
@@ -411,7 +416,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     
     // Clean up game clock
     if (this.gameClockInterval !== null) {
-      this.infrastructureService.timerService.clearInterval(this.gameClockInterval);
+      this.timerService.clearInterval(this.gameClockInterval);
       this.gameClockInterval = null;
     }
     
