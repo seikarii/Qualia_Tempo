@@ -28,6 +28,9 @@ import type {
   BackendSyncEvent,
   VisualImpactRequestedEvent,
   StreamingStatusChangedEvent,
+  WebGLContextLostEvent,
+  WebGLContextRestoredEvent,
+  ServiceStatusUpdateEvent,
   SystemAudioReadyEvent,
   ConfigurationLoadedEvent,
 } from "./contracts/events.contracts";
@@ -51,7 +54,10 @@ export type EventTypes =
   | VisualImpactRequestedEvent
   | RhythmicDashEvent
   | SystemAudioReadyEvent
-  | ConfigurationLoadedEvent;
+  | ConfigurationLoadedEvent
+  | WebGLContextLostEvent
+  | WebGLContextRestoredEvent
+  | ServiceStatusUpdateEvent;
 
 // Event handler types
 export type EventHandler<T extends BaseEvent = BaseEvent> = (

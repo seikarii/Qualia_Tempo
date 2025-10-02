@@ -1,6 +1,7 @@
 import { injectable } from "inversify";
 import { IWebAudioAPIService } from "./interfaces/IWebAudioAPIService";
-import { logMethod } from "../utils/decorators";
+import { logMethod, catchError } from "../utils/decorators";
+import * as Tone from "tone";
 
 // Parameter object for playTone method
 export interface PlayToneParams {
@@ -28,6 +29,17 @@ export class WebAudioAPIService implements IWebAudioAPIService {
       throw new Error("AudioContext is not available in this environment.");
     }
     return this.audioContext;
+  }
+
+  /**
+   * QUALIA.CODE v1.1: Platform Abstraction for Tone.js
+   * Start the audio context - abstracts Tone.start()
+   * This enables testing without Tone.js and maintains platform abstraction.
+   */
+  @logMethod
+  @catchError
+  public async startContext(): Promise<void> {
+    await Tone.start();
   }
 
   public playTone(params: PlayToneParams): void;

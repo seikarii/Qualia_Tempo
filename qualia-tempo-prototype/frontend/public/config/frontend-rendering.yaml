@@ -23,6 +23,10 @@ cameraDistance: 5.0
 cameraOrbitSpeed: 0.0005
 cameraOrbitRadius: 8.0
 
+# Scene configuration
+scene:
+  lookAtTarget: [0, 0, 0]  # QUALIA.CODE v1.1: Externalized camera look-at target
+
 # Renderer configuration
 backgroundColor: 0x000000
 antialias: true

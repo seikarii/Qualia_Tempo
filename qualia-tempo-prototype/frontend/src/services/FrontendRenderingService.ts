@@ -35,7 +35,11 @@ import type { IPerformanceService } from "./interfaces/ITimerService";
 import type { IPostProcessingService } from "./interfaces/IPostProcessingService";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { FrontendRenderingConfig, FrontendRenderingServiceParams } from "./contracts/IFrontendRenderingService.contracts";
-import type { QualiaParticleDataReceivedEvent } from "./contracts/events.contracts";
+import type { 
+  QualiaParticleDataReceivedEvent,
+  WebGLContextLostEvent,
+  WebGLContextRestoredEvent 
+} from "./contracts/events.contracts";
 import { logMethod, catchError, BrowserOnly, OnEvent, IBaseService } from "../utils/decorators";
 
 @injectable()
@@ -261,33 +265,50 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
     this.scene.add(this.particleSystem);
   }
 
+  /**
+   * QUALIA.CODE v1.1: Platform Abstraction - WebGL Context Handlers
+   * 
+   * Setup handlers for WebGL context loss/restoration.
+   * While these are canvas-specific events (not global browser events),
+   * we emit events on the EventBus for system-wide observability.
+   */
   @logMethod
+  @BrowserOnly
   private setupContextHandlers(): void {
     const canvas = this.renderer.domElement;
 
     canvas.addEventListener('webglcontextlost', (event) => {
       this.logger.warn(this.config.messages.contextLost);
       event.preventDefault();
-      this.handleContextLost();
+      this.handleContextLost(canvas);
     });
 
     canvas.addEventListener('webglcontextrestored', () => {
       this.logger.info(this.config.messages.contextRestored);
-      this.handleContextRestored();
+      this.handleContextRestored(canvas);
     });
   }
 
   @logMethod
-  private handleContextLost(): void {
+  private handleContextLost(canvas: HTMLCanvasElement): void {
     this.isRunning = false;
     if (this.animationId !== null) {
       this.performanceService.cancelAnimationFrame(this.animationId);
       this.animationId = null;
     }
+
+    // QUALIA.CODE v1.1: Emit event for system-wide observability
+    const lostEvent: WebGLContextLostEvent = {
+      type: 'WebGLContextLost',
+      timestamp: new Date(),
+      source: 'FrontendRenderingService',
+      canvas
+    };
+    this.eventBus.emit(lostEvent);
   }
 
   @logMethod
-  private async handleContextRestored(): Promise<void> {
+  private async handleContextRestored(canvas: HTMLCanvasElement): Promise<void> {
     try {
       this.logger.info(this.config.messages.reinitializing);
 
@@ -298,6 +319,15 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
       await this.postProcessingService.initialize(this.renderer, this.scene, this.camera);
 
       this.logger.info("WebGL context restored successfully");
+
+      // QUALIA.CODE v1.1: Emit event for system-wide observability
+      const restoredEvent: WebGLContextRestoredEvent = {
+        type: 'WebGLContextRestored',
+        timestamp: new Date(),
+        source: 'FrontendRenderingService',
+        canvas
+      };
+      this.eventBus.emit(restoredEvent);
     } catch (error) {
       this.logger.error("Failed to restore WebGL context", { error });
     }
@@ -406,9 +436,10 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
     // NOTE: Removed time uniform as we switched from ShaderMaterial to PointsMaterial
 
     // Rotate camera slowly for dynamic view
-    this.camera.position.x = Math.cos(currentTime * 0.0005) * 8;
-    this.camera.position.z = Math.sin(currentTime * 0.0005) * 8;
-    this.camera.lookAt(0, 0, 0);
+    this.camera.position.x = Math.cos(currentTime * this.config.cameraOrbitSpeed) * this.config.cameraOrbitRadius;
+    this.camera.position.z = Math.sin(currentTime * this.config.cameraOrbitSpeed) * this.config.cameraOrbitRadius;
+    // QUALIA.CODE v1.1: Use externalized configuration for camera look-at target
+    this.camera.lookAt(...this.config.scene.lookAtTarget);
 
     // Render through post-processing pipeline
     this.postProcessingService.render(this.camera);

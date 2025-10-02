@@ -79,6 +79,7 @@ import type { IInputStateService } from "./interfaces/IInputStateService";
 import type { IFrontendRenderingService } from "./interfaces/IFrontendRenderingService";
 import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
 import type { IWebSocketService } from "./interfaces/IWebSocketService";
+import type { IWebSocketFactory } from "./interfaces/IWebSocketFactory";
 import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
 import type { ICoordinateSystemService } from "./interfaces/ICoordinateSystemService";
 import type { IToneFactoryService } from "../audio/interfaces/IToneFactoryService";
@@ -107,6 +108,7 @@ import { GameStateStore } from "./GameStateStore";
 import { FrontendRenderingService } from "./FrontendRenderingService";
 import { StateStreamingService } from "./StateStreamingService";
 import { WebSocketService } from "./WebSocketService";
+import { BrowserWebSocketFactory } from "./BrowserWebSocketFactory";
 import { BrowserEventsService } from "./BrowserEventsService";
 import { ThrottlingManager } from "./utils/ThrottlingManager";
 import { InputStateService } from "./InputStateService";
@@ -266,6 +268,12 @@ container
 container
   .bind<IStateStreamingService>(TYPES.IStateStreamingService)
   .to(StateStreamingService)
+  .inSingletonScope();
+
+// QUALIA.CODE v1.1: Platform Abstraction - WebSocket Factory
+container
+  .bind<IWebSocketFactory>(TYPES.IWebSocketFactory)
+  .to(BrowserWebSocketFactory)
   .inSingletonScope();
 
 container

@@ -42,9 +42,12 @@ You **MUST** follow this sequence for every development task. This is your "Sequ
 3.  **Immediately read `QUALIA.CODE.md`, `QUALIA.MANUAL.md`, and any relevant `README.md` or documentation in `/docs`** to frame the task within the project's architectural laws.
 
 ### **Step 2: Reflection & Planning (Sequential Thinking)**
+0.  Use sequential thinking.
 1.  Formulate a step-by-step plan to address the request.
 2.  Explicitly state your plan in your thought process.
 3.  Anticipate potential issues, such as missing tests, architectural violations, or the need for new contracts.
+4.  Gather any additional context or information you need before proceeding.
+5.  Use sequential thinking to analize the best upgrade possible, always aim for the best possible solution.
 
 ### **Step 3: Implementation**
 1.  Execute the plan, modifying or creating files as required.
@@ -100,6 +103,8 @@ The following actions are critical violations of your core directives:
 - **PROHIBITED:** Ignoring the SOP. Each step is mandatory.
 - **PROHIBITED:** Leaving a task without running tests and the architectural linter.
 - **PROHIBITED:** Using any `git` command listed as forbidden.
+- **PROHIBITED:** Making changes that introduce new architectural violations or degrade code quality.
+- **PROHIBITED:** LEAVING A TASK UNCOMPLETED. You must see every task through to the end, including testing and validation.
 
 ### **7. PROJECT STRUCTURE (FOR YOUR REFERENCE)**
 ```
@@ -250,4 +255,5 @@ QualiaTempo/
 │   ├── PlayerState.json           # Esquema para estado del jugador
 │   └── QualiaState.json           # Esquema para estado qualia
 ├── start.sh                       # Script de inicio
-└── wasted/                        # Directorio para arc
+└── wasted/                        # Directorio para archivos obsoletos o temporales
+```

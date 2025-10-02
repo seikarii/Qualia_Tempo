@@ -6,7 +6,6 @@ import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError, measureTime, IBaseService, OnEvent } from "../utils/decorators";
 import { QualiaLogger } from "./Logger";
-import * as Tone from "tone";
 
 import type { IAudioService } from "./interfaces/IAudioService";
 import type { AudioServiceConfig, AudioServiceParams } from "./contracts/IAudioService.contracts";
@@ -83,13 +82,19 @@ export class AudioService implements IAudioService, IBaseService {
     // La limpieza de @OnEvent es automática.
   }
 
+  /**
+   * QUALIA.CODE v1.1: Platform Abstraction for Audio Context
+   * Uses IWebAudioAPIService.startContext() instead of direct Tone.start()
+   * This maintains platform abstraction and enables complete testing.
+   */
   @logMethod
   @catchError
   public async initializeAudioContext(): Promise<void> {
     if (this.isAudioContextStarted) return;
 
     try {
-      await Tone.start();
+      // QUALIA.CODE v1.1: Use abstracted startContext() method
+      await this.webAudioAPIService.startContext();
       this.isAudioContextStarted = true;
       this.logger.info("AudioContext started successfully after user gesture.");
       this.eventBus.emit({ type: 'System.Audio.Ready' });

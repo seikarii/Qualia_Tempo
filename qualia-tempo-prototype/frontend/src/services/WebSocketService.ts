@@ -3,15 +3,22 @@ import { TYPES } from "./inversify.types";
 import { logMethod, catchError } from "../utils/decorators";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IWebSocketService } from "./interfaces/IWebSocketService";
+import type { IWebSocketFactory } from "./interfaces/IWebSocketFactory";
 
 /**
  * QUALIA.CODE v1.1 Compliant WebSocketService
  * Abstraction layer for WebSocket operations
  * Provides a testable and mockable WebSocket implementation.
+ * 
+ * ARCHITECTURE COMPLIANCE:
+ * - Uses IWebSocketFactory for platform abstraction (no direct `new WebSocket()`)
+ * - Fully testable through dependency injection
+ * - Platform-independent design
  */
 @injectable()
 export class WebSocketService implements IWebSocketService {
   private readonly logger: ILogger;
+  private readonly webSocketFactory: IWebSocketFactory;
   private websocket: WebSocket | null = null;
   private binaryType: 'blob' | 'arraybuffer' = 'blob'; // Default binary type
 
@@ -21,9 +28,13 @@ export class WebSocketService implements IWebSocketService {
   private closeHandler?: (_event: CloseEvent) => void;
   private errorHandler?: (_error: Event) => void;
 
-  constructor(@inject(TYPES.ILogger) logger: ILogger) {
+  constructor(
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.IWebSocketFactory) webSocketFactory: IWebSocketFactory
+  ) {
     this.logger = logger;
-    this.logger.info("WebSocketService initialized");
+    this.webSocketFactory = webSocketFactory;
+    this.logger.info("WebSocketService initialized with factory pattern");
   }
 
   @logMethod
@@ -40,7 +51,9 @@ export class WebSocketService implements IWebSocketService {
     }
 
     try {
-      this.websocket = new WebSocket(url);
+      // QUALIA.CODE v1.1: Use factory instead of direct instantiation
+      // This enables complete test isolation and platform abstraction
+      this.websocket = this.webSocketFactory.create(url);
 
       // BINARY PROTOCOL: Apply configured binary type
       this.websocket.binaryType = this.binaryType;

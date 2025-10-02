@@ -31,6 +31,11 @@ export interface FrontendRenderingConfig {
   cameraOrbitSpeed: number;
   cameraOrbitRadius: number;
   
+  // Scene configuration
+  scene: {
+    lookAtTarget: [number, number, number];  // QUALIA.CODE v1.1: Externalized camera look-at target
+  };
+  
   // Renderer configuration
   backgroundColor: number;
   antialias: boolean;

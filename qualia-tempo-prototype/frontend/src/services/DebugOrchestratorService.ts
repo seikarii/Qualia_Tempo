@@ -74,8 +74,9 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
       },
       configuration: {
         debugMode: this.isDebugModeEnabled(),
-        environment: process.env.NODE_ENV || 'unknown',
-        version: process.env.REACT_APP_VERSION || 'unknown'
+        // QUALIA.CODE v1.1: Use injected config instead of process.env (Platform Abstraction)
+        environment: this.config.environment,
+        version: this.config.version
       }
     };
 
@@ -180,7 +181,8 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
 
   @logMethod
   isDebugModeEnabled(): boolean {
-    return process.env.NODE_ENV === 'development';
+    // QUALIA.CODE v1.1: Use injected config instead of process.env
+    return this.config.environment === 'development';
   }
 
   @logMethod

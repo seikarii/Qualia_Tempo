@@ -34,6 +34,7 @@ export const TYPES = {
   IFrontendRenderingService: Symbol.for("IFrontendRenderingService"),
   IStateStreamingService: Symbol.for("IStateStreamingService"),
   IWebSocketService: Symbol.for("IWebSocketService"),
+  IWebSocketFactory: Symbol.for("IWebSocketFactory"),
   IBrowserEventsService: Symbol.for("IBrowserEventsService"),
 
   // ===== NEW SERVICES =====

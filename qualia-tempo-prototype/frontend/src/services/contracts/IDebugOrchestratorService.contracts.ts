@@ -53,6 +53,11 @@ export interface DebugOrchestratorConfig {
   refreshInterval: number;     // Auto-refresh interval in milliseconds
   maxHistoryLength: number;    // Maximum diagnostic history to keep
   enablePerformanceTracking: boolean;
+  
+  // QUALIA.CODE v1.1: Environment information (replaces process.env access)
+  environment: string;         // Application environment (development, production, test)
+  version: string;             // Application version
+  
   services: {
     [serviceName: string]: {
       enabled: boolean;

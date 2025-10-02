@@ -5,6 +5,10 @@ refreshInterval: 5000        # Auto-refresh interval in milliseconds
 maxHistoryLength: 100        # Maximum diagnostic history to keep
 enablePerformanceTracking: true
 
+# QUALIA.CODE v1.1: Environment information (externalized from process.env)
+environment: "development"   # Application environment (development, production, test)
+version: "0.1.0"             # Application version
+
 # Default values for system metrics
 defaultMetrics:
   temperature: 60             # Default temperature in Celsius

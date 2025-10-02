@@ -150,3 +150,25 @@ export interface ConfigurationLoadedEvent extends BaseEvent {
 export interface SystemAudioReadyEvent extends BaseEvent {
   type: "System.Audio.Ready";
 }
+
+// QUALIA.CODE v1.1: WebGL Context Events for Platform Abstraction
+export interface WebGLContextLostEvent extends BaseEvent {
+  type: "WebGLContextLost";
+  canvas: HTMLCanvasElement;
+}
+
+export interface WebGLContextRestoredEvent extends BaseEvent {
+  type: "WebGLContextRestored";
+  canvas: HTMLCanvasElement;
+}
+
+// QUALIA.CODE v1.1: Service Status Events for Decoupled Diagnostics
+export interface ServiceStatusUpdateEvent extends BaseEvent {
+  type: "ServiceStatusUpdate";
+  serviceName: string;
+  status: {
+    isRunning: boolean;
+    stats?: Record<string, unknown>;
+    error?: string;
+  };
+}

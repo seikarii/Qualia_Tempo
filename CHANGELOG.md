@@ -8,6 +8,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **[CRITICAL REMEDIATION] Platform Abstraction Violations**: Fixed 6 critical architectural violations per QUALIA.CODE mandatory principles. Violations fixed: WebSocketService platform coupling, DebugOrchestratorService environment coupling, FrontendRenderingService hardcoded configuration, AudioService Tone.js coupling, and DebugOrchestratorService service coupling.
+  - **WebSocketService.ts**: 
+    * Created `IWebSocketFactory` interface to abstract native WebSocket instantiation
+    * Implemented `BrowserWebSocketFactory` with `@BrowserOnly` decorator for browser environment safety
+    * Injected factory into WebSocketService constructor replacing direct `new WebSocket(url)` calls
+    * Updated inversify.types.ts and inversify.config.ts to bind factory
+    * **Impact**: Complete test isolation without global mocking, platform independence, full IoC compliance
+  - **DebugOrchestratorService.ts**:
+    * Eliminated direct `process.env.NODE_ENV` and `process.env.REACT_APP_VERSION` access
+    * Added `environment` and `version` properties to debug-orchestrator.yaml configuration
+    * Updated DebugOrchestratorConfig contract with new environment fields
+    * Refactored service to use `this.config.environment` and `this.config.version`
+    * **Impact**: Zero platform API coupling, full configuration sovereignty, improved testability
+  - **FrontendRenderingService.ts**:
+    * Externalized hardcoded camera lookAt target `(0, 0, 0)` to frontend-rendering.yaml
+    * Added `scene.lookAtTarget: [0, 0, 0]` configuration property
+    * Updated FrontendRenderingConfig contract with scene configuration section
+    * Refactored animate() method to use `this.camera.lookAt(...this.config.scene.lookAtTarget)`
+    * Added `WebGLContextLostEvent` and `WebGLContextRestoredEvent` to events.contracts.ts
+    * Refactored WebGL context handlers to emit events on EventBus for system-wide observability
+    * Updated camera orbit to use `this.config.cameraOrbitSpeed` and `this.config.cameraOrbitRadius`
+    * **Impact**: Complete configuration externalization, improved event-driven observability
+  - **WebAudioAPIService.ts & AudioService.ts**:
+    * Added `startContext(): Promise<void>` method to IWebAudioAPIService interface
+    * Implemented startContext() in WebAudioAPIService wrapping `Tone.start()`
+    * Refactored AudioService.initializeAudioContext() to call `this.webAudioAPIService.startContext()`
+    * Removed direct Tone.js import from AudioService
+    * **Impact**: Complete Tone.js abstraction, improved testability, maintained platform independence
+  - **EventBus.ts**:
+    * Added `WebGLContextLostEvent`, `WebGLContextRestoredEvent`, and `ServiceStatusUpdateEvent` to EventTypes union
+    * Updated imports to include new event contracts
+    * **Impact**: Type-safe event system with full WebGL resilience observability
+  - **events.contracts.ts**:
+    * Defined ServiceStatusUpdateEvent for decoupled service diagnostics
+    * Defined WebGLContextLostEvent and WebGLContextRestoredEvent for rendering observability
+    * **Impact**: Event-driven architecture compliance, eliminated service coupling
+  - **Architecture Impact**: Eliminated 3 critical violations (direct platform API usage), 2 medium violations (environment coupling, service coupling), 1 low violation (hardcoded configuration). Improved testability, maintainability, and QUALIA.CODE compliance across 6 services.
 - **[Phase 3 Round 12] Direct Platform API Usage - ConfigurationService**: Eliminated direct platform API usage by replacing fetch() with injected IHttpService. Violations reduced from 265 to 262 (3 violations fixed).
   - **ConfigurationService.ts**: Replaced direct `fetch(fullPath)` calls with `this.httpService.get<string>(fullPath)` for loading YAML configuration files
   - **Constructor updated**: Added `IHttpService` as fourth parameter to maintain IoC compliance while staying under the 4 parameter limit
