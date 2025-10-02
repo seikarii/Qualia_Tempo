@@ -2,6 +2,23 @@
 
 All notable changes to the Qualia Tempo project will be documented in this file.
 
+## [2025-10-02] - Project Map Update: Comprehensive Service and Interface Documentation
+
+### Updated
+
+#### Project Documentation Enhancement
+- **`docs/map.md`**: Major update to project structure documentation
+  - **Added**: Detailed service architecture breakdown with 32 services listed
+  - **Added**: Complete interface inventory with 32 interfaces documented
+  - **Added**: Service contracts catalog with 29 contract files
+  - **Added**: Configuration validators overview with 10 validator files
+  - **Added**: Protocol adapters and post-processing components
+  - **Added**: "OTRO MAPA" section with comprehensive service reference tables
+  - **Enhanced**: Frontend services directory structure with individual file descriptions
+  - **Added**: Architecture metadata (QUALIA.CODE v1.1, IoC with InversifyJS)
+
+---
+
 ## [2025-10-02] - Code Cleanup: Removed Unused qualiaMethod Decorator
 
 ### Removed
