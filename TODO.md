@@ -3,14 +3,6 @@
 
 ---
 
-## 🎉 CORRECCIÓN ARQUITECTÓNICA CRÍTICA COMPLETADA
-
-**✅ SISTEMA @OnEvent ACTIVADO** - El decorador `@OnEvent` ahora está completamente funcional en todos los servicios que lo utilizan. Las suscripciones declarativas al EventBus se activan automáticamente mediante `initializeEventSubscriptions()` y se limpian con `cleanupEventSubscriptions()`.
-
-**✅ PRINCIPIO DE RESPONSABILIDAD ÚNICA RESTAURADO** - `PerformanceService` ha sido extraído de `TimerService.ts` a su propio archivo, cumpliendo con el SRP.
-
----
-
 ## 📊 Resumen Ejecutivo
 
 **Estado General: EXCELENTE** - Solo 28 instancias de deuda técnica identificadas (24 entradas agrupadas)
@@ -33,8 +25,7 @@
 7. AGREGAR TEST Y MEJORAR LA FACTORY Y EL SETUP
 8. INSPECCIONAR NUEVOS DECORADORES Y DEPRECATED (UNUSED)
 9. REVISAR DEBUGSERVICE,NOTIFICATION,ERRORSERVICE Y SU INTEGRACION CON EL RESTO DEL PROJECTO
-10. ~~ACTIVAR CICLO DE VIDA @OnEvent EN TODOS LOS SERVICIOS~~ ✅ **COMPLETADO**
-11. ~~REFACTORIZAR PerformanceService A SU PROPIO ARCHIVO~~ ✅ **COMPLETADO**
+
 
 ---
 
