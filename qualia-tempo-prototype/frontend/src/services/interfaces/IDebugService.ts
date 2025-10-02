@@ -3,6 +3,11 @@
  * Development-time debugging and monitoring interface.
  */
 
+import type { AIAnalysisResult } from "../contracts/IDebugService.contracts";
+
+// Export AnalysisResult as an alias for AIAnalysisResult for compatibility
+export type AnalysisResult = AIAnalysisResult;
+
 export interface DebugConfig {
   maxEventHistory: number;
   enableGlobalInterface: boolean;

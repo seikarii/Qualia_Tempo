@@ -14,6 +14,7 @@ export const TYPES = {
   IHttpService: Symbol.for("IHttpService"),
   ITimerService: Symbol.for("ITimerService"),
   IPerformanceService: Symbol.for("IPerformanceService"),
+  IPerformanceProvider: Symbol.for("IPerformanceProvider"),
   ITimerProvider: Symbol.for("ITimerProvider"),
 
   // ===== FEATURE SERVICES =====

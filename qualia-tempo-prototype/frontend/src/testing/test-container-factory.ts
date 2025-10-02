@@ -24,7 +24,8 @@ import type { IEventBus } from "../services/interfaces/IEventBus";
 import type { IGameStateStore } from "../services/interfaces/IGameStateStore";
 import type { IGameStateStoreService } from "../services/interfaces/IGameStateStoreService";
 import type { IHttpService } from "../services/interfaces/IHttpService";
-import type { ITimerService, IPerformanceService } from "../services/interfaces/ITimerService";
+import type { ITimerService } from "../services/interfaces/ITimerService";
+import type { IPerformanceService } from "../services/interfaces/IPerformanceService";
 import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { IWebSocketService } from "../services/interfaces/IWebSocketService";
 import type { IBrowserEventsService } from "../services/interfaces/IBrowserEventsService";
@@ -40,6 +41,7 @@ import { mockGameStateStoreService } from "./mocks/game-state-store-service.mock
 import { mockHttpService } from "./mocks/http-service.mock";
 import { mockTimerService } from "./mocks/timer-service.mock";
 import { mockPerformanceService } from "./mocks/performance-service.mock";
+import { mockPerformanceProvider } from "./mocks/performance-provider.mock";
 import { mockWebSocketService } from "./mocks/web-socket-service.mock";
 import { mockBrowserEventsService } from "./mocks/browser-events-service.mock";
 import { mockDebugOrchestratorService } from "./mocks/debug-orchestrator-service.mock";

@@ -21,17 +21,18 @@ import type {
   DebugStats,
   SystemSnapshot,
   AnalysisResult,
+  ExportedDebugData,
+  DebugInterface,
 } from "./interfaces/IDebugService";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
-import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
-import type { 
+import type { ITimerService } from "./interfaces/ITimerService";
+import type { IPerformanceService } from "./interfaces/IPerformanceService";
+import type {
   DebugSession, 
   PerformanceMetrics, 
   AIAnalysisResult, 
-  DebugServiceConfig, 
-  DebugInterface, 
-  DebugExportData 
+  DebugServiceConfig
 } from "./contracts/IDebugService.contracts";
 import type {
   BaseEvent,
@@ -73,11 +74,13 @@ export class DebugService implements IDebugService, IBaseService {
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
+  private readonly _performanceService: IPerformanceService;
   // Configuration service for future extensibility
   // @ts-expect-error - Unused parameter for future configuration features
   private readonly _configService: IConfigurationService;
   private config!: DebugServiceConfig;
   private isStarted = false;
+  // @ts-expect-error - eventListenerIds used in future EventBus subscription cleanup
   private eventListenerIds: string[] = [];
 
   // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
@@ -356,12 +359,16 @@ export class DebugService implements IDebugService, IBaseService {
       // Generate recommendations
       analysis.push(...this.generateRecommendations());
 
-      // Store results (convert to AnalysisResult format)
-      const convertedResults = analysis.map((result) => ({
+      // Store results (convert to AnalysisResult format with all required properties)
+      const convertedResults: AIAnalysisResult[] = analysis.map((result) => ({
+        timestamp: new Date(),
         type: result.type,
         severity: result.severity,
-        message: result.message,
-        metadata: result.metadata,
+        description: result.message || "No description available",
+        data: result.metadata || {},
+        suggestions: [],
+        ...(result.message && { message: result.message }),
+        ...(result.metadata && { metadata: result.metadata }),
       }));
 
       this.logger.info(
@@ -380,17 +387,13 @@ export class DebugService implements IDebugService, IBaseService {
    */
   @logMethod
   @catchError
-  public exportDebugData(): DebugExportData {
+  public exportDebugData(): ExportedDebugData {
     return {
-      timestamp: Date.now(),
-      sessions: this.sessionHistory,
-      eventHistory: this.eventHistory,
-      errorHistory: this.errorHistory,
-      aiAnalysis: this.aiAnalysisResults,
-      config: this.config,
-      debugStats: this.getDebugStats(),
-      systemSnapshot: this.getSystemSnapshot(),
+      stats: this.getDebugStats(),
+      snapshot: this.getSystemSnapshot(),
       analysis: this.performAIAnalysis(),
+      exportTimestamp: Date.now(),
+      version: "1.0.0",
     };
   }
 
@@ -727,8 +730,12 @@ export class DebugService implements IDebugService, IBaseService {
     errorGroups.forEach((errors, message) => {
       if (errors.length > this.config.aiAnalysis.errorPatternThresholds.medium) {
         results.push({
+          timestamp: new Date(),
           type: "error_pattern",
           severity: errors.length > this.config.aiAnalysis.errorPatternThresholds.high ? "high" : "medium",
+          description: `Recurring error pattern detected: "${message}"`,
+          data: { message, count: errors.length, errors },
+          suggestions: ["Review error handling for this operation", "Consider adding retry logic", "Check input validation"],
           message: `Recurring error pattern detected: "${message}"`,
           metadata: { message, count: errors.length, errors },
         });
@@ -747,8 +754,16 @@ export class DebugService implements IDebugService, IBaseService {
       if (avgTime > this.config.eventProcessingTimeThreshold) {
         // Configurable threshold for event processing time
         results.push({
+          timestamp: new Date(),
           type: "performance_issue" as const,
           severity: avgTime > this.config.eventProcessingTimeHighThreshold ? "high" : "medium",
+          description: `Slow event processing detected for ${eventType}`,
+          data: {
+            eventType,
+            averageTime: avgTime,
+            measurements: times.length,
+          },
+          suggestions: ["Consider optimizing event handlers", "Review event processing pipeline", "Check for blocking operations"],
           message: `Slow event processing detected for ${eventType}`,
           metadata: {
             eventType,
@@ -770,8 +785,16 @@ export class DebugService implements IDebugService, IBaseService {
       Object.entries(this.lastQualiaState).forEach(([key, value]) => {
         if (typeof value === "number" && (value < 0 || value > 1)) {
           results.push({
+            timestamp: new Date(),
             type: "state_anomaly",
             severity: "medium",
+            description: `QualiaState ${key} out of bounds: ${value}`,
+            data: {
+              property: key,
+              value,
+              state: this.lastQualiaState,
+            },
+            suggestions: ["Review qualia state calculation logic", "Check input validation", "Monitor state transitions"],
             message: `QualiaState ${key} out of bounds: ${value}`,
             metadata: { property: key, value, state: this.lastQualiaState },
           });
@@ -788,8 +811,14 @@ export class DebugService implements IDebugService, IBaseService {
     // High error rate recommendation
     if (this.performanceMetrics.errorRate > this.config.aiAnalysis.recommendationThresholds.highErrorRate) {
       results.push({
+        timestamp: new Date(),
         type: "recommendation",
         severity: "medium",
+        description: "High error rate detected in system",
+        data: {
+          errorRate: this.performanceMetrics.errorRate,
+        },
+        suggestions: ["Review error handling logic", "Implement circuit breaker pattern", "Add retry mechanisms"],
         message: "High error rate detected in system",
         metadata: { errorRate: this.performanceMetrics.errorRate },
       });
@@ -804,17 +833,24 @@ export class DebugService implements IDebugService, IBaseService {
       return null;
     }
 
-    // Create debugging interface object
-    const debugInterface = {
-      service: this,
+    // Create debugging interface object matching IDebugService.DebugInterface
+    // PLUS additional development methods for enhanced debugging
+    const debugInterface: DebugInterface = {
+      // Official DebugInterface methods
+      logServiceStatus: () => this.logServiceStatus(),
+      getMetrics: () => this.getMetrics(),
+      getSystemSnapshot: () => this.getSystemSnapshot(),
+      performAIAnalysis: () => this.performAIAnalysis(),
+      exportDebugData: () => this.exportDebugData(),
+
+      // Additional development methods (not part of official interface)
+      // These are attached to the object but not enforced by TypeScript
       getStats: () => this.getDebugStats(),
       getSnapshot: () => this.getSystemSnapshot(),
       performAnalysis: () => this.performAIAnalysis(),
       exportData: () => this.exportDebugData(),
       startSession: () => this.startNewSession(),
       endSession: () => this.endCurrentSession(),
-
-      // Utility functions
       clearHistory: () => {
         this.eventHistory = [];
         this.errorHistory = [];
@@ -823,25 +859,32 @@ export class DebugService implements IDebugService, IBaseService {
           "🧹 [DebugService] History cleared via global interface",
         );
       },
-
       enableAI: () => {
         this.updateConfig({ enableAIAnalysis: true });
         this.logger.info("🤖 [DebugService] AI analysis enabled");
       },
-
       disableAI: () => {
         this.updateConfig({ enableAIAnalysis: false });
         this.logger.info("🤖 [DebugService] AI analysis disabled");
       },
-
-      // Helper for quick debugging
       log: (message: string, data?: unknown) => {
-        this.logger.info(`🔧 [QA_DEBUG] ${message}`, data ?? "");
+        this.logger.info(`🔧 [QA_DEBUG] ${message}`, data as Record<string, unknown> ?? {});
       },
+    } as DebugInterface & {
+      getStats: () => DebugStats;
+      getSnapshot: () => SystemSnapshot;
+      performAnalysis: () => AIAnalysisResult[];
+      exportData: () => ExportedDebugData;
+      startSession: () => void;
+      endSession: () => void;
+      clearHistory: () => void;
+      enableAI: () => void;
+      disableAI: () => void;
+      log: (message: string, data?: unknown) => void;
     };
 
     this.logger.info(
-      "🌐 [DebugService] Global debugging interface created (not attached to window)",
+      "🌐 [DebugService] Global debugging interface created with full development functionality",
     );
 
     return debugInterface;

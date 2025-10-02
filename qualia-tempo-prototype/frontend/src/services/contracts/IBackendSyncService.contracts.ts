@@ -7,7 +7,8 @@
 import type { IEventBus } from "../interfaces/IEventBus";
 import type { ILogger } from "../interfaces/ILogger";
 import type { IHttpService } from "../interfaces/IHttpService";
-import type { ITimerService, IPerformanceService } from "../interfaces/ITimerService";
+import type { ITimerService } from "../interfaces/ITimerService";
+import type { IPerformanceService } from "../interfaces/IPerformanceService";
 
 // Parameter object for BackendSyncService constructor
 export interface BackendSyncServiceParams {

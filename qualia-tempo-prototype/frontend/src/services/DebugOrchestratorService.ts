@@ -14,7 +14,8 @@ import type {
   DebugOrchestratorServiceParams
 } from './contracts/IDebugOrchestratorService.contracts';
 import type { ILogger } from './interfaces/ILogger';
-import type { ITimerService, IPerformanceService } from './interfaces/ITimerService';
+import type { ITimerService } from './interfaces/ITimerService';
+import type { IPerformanceService } from './interfaces/IPerformanceService';
 // QUALIA.CODE v1.1: Service imports removed - event-driven pattern eliminates coupling
 // import type { INotificationService } from './interfaces/INotificationService';
 // import type { IErrorReportingService } from './interfaces/IErrorReportingService';

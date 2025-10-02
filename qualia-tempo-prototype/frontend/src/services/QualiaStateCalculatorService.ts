@@ -22,7 +22,8 @@ import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCal
 import { QualiaStateCalculatedEvent } from "./contracts/events.contracts";
 import type { PlayerActionEvent } from "./contracts/events.contracts";
 import type { QualiaState } from "../types/contracts";
-import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
+import type { ITimerService } from "./interfaces/ITimerService";
+import type { IPerformanceService } from "./interfaces/IPerformanceService";
 import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 
 // Configuration interface - REMOVED: Using ConfigurationService interface

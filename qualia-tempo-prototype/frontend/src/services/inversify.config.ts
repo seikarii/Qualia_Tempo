@@ -60,7 +60,9 @@ import { EventBus } from "./EventBus";
 import { QualiaLogger } from "./Logger";
 import type { IConfigurationService } from "./interfaces/IConfigurationService";
 import type { IHttpService } from "./interfaces/IHttpService";
-import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
+import type { ITimerService } from "./interfaces/ITimerService";
+import type { IPerformanceService } from "./interfaces/IPerformanceService";
+import type { IPerformanceProvider } from "./interfaces/IPerformanceProvider";
 import type { ITimerProvider } from "./interfaces/ITimerProvider";
 import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
 import type { IBackendSyncService } from "./interfaces/IBackendSyncService";
@@ -91,6 +93,7 @@ import { ConfigurationService } from "./ConfigurationService";
 import { HttpService } from "./HttpService";
 import { TimerService } from "./TimerService";
 import { PerformanceService } from "./PerformanceService";
+import { PerformanceProvider } from "./providers/PerformanceProvider";
 import { BrowserTimerProvider } from "./providers/BrowserTimerProvider";
 import { QualiaStateCalculatorService } from "./QualiaStateCalculatorService";
 import { BackendSyncService } from "./BackendSyncService";
@@ -177,6 +180,11 @@ container
 container
   .bind<IPerformanceService>(TYPES.IPerformanceService)
   .to(PerformanceService)
+  .inSingletonScope();
+
+container
+  .bind<IPerformanceProvider>(TYPES.IPerformanceProvider)
+  .to(PerformanceProvider)
   .inSingletonScope();
 
 container

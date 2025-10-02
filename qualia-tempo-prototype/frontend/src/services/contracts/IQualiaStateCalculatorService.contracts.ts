@@ -6,7 +6,8 @@
 
 import type { IEventBus } from '../interfaces/IEventBus';
 import type { ILogger } from '../interfaces/ILogger';
-import type { ITimerService, IPerformanceService } from '../interfaces/ITimerService';
+import type { ITimerService } from '../interfaces/ITimerService';
+import type { IPerformanceService } from '../interfaces/IPerformanceService';
 
 // QUALIA.CODE v1.1: Constructor parameter object pattern (max 4 parameters rule)
 export interface QualiaStateCalculatorServiceParams {

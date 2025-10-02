@@ -42,35 +42,13 @@ export interface AIAnalysisResult {
   description: string;
   data: Record<string, unknown>;
   suggestions: string[];
+  // Optional properties for backward compatibility
+  message?: string;
+  metadata?: Record<string, unknown>;
 }
 
-// Debug interface exposed globally for development
-export interface DebugInterface {
-  service: unknown; // Reference to DebugService (avoiding circular dependency)
-  getStats: () => unknown;
-  getSnapshot: () => unknown;
-  performAnalysis: () => unknown;
-  exportData: () => DebugExportData;
-  startSession: () => void;
-  endSession: () => void;
-  clearHistory: () => void;
-  enableAI: () => void;
-  disableAI: () => void;
-  log: (_message: string, _data?: unknown) => void;
-}
-
-// Debug data export structure
-export interface DebugExportData {
-  timestamp: number;
-  sessions: DebugSession[];
-  eventHistory: BaseEvent[];
-  errorHistory: ErrorEvent[];
-  aiAnalysis: AIAnalysisResult[];
-  config: DebugServiceConfig;
-  debugStats: unknown;
-  systemSnapshot: unknown;
-  analysis: unknown;
-}
+// Note: DebugInterface and ExportedDebugData are defined in IDebugService.ts interface
+// This avoids duplication and ensures single source of truth for API contracts
 
 // DebugService Configuration - Migrated from ConfigurationService.ts
 export interface DebugServiceConfig {

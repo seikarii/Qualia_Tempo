@@ -4,7 +4,7 @@
  */
 
 import type { ILogger } from "../interfaces/ILogger";
-import type { IPerformanceService } from "../interfaces/ITimerService";
+import type { IPerformanceService } from "../interfaces/IPerformanceService";
 import type { IPostProcessingService } from "../interfaces/IPostProcessingService";
 import type { IEventBus } from "../interfaces/IEventBus";
 

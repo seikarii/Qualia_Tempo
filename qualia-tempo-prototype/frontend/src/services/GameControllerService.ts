@@ -21,7 +21,8 @@ import { QualiaLogger } from "./Logger";
 import type { GameState, GameControllerConfig, GameControllerServiceParams, HitNoteContext } from "./contracts/IGameControllerService.contracts";
 import type { IGameControllerService } from "./interfaces/IGameControllerService";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
-import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
+import type { ITimerService } from "./interfaces/ITimerService";
+import type { IPerformanceService } from "./interfaces/IPerformanceService";
 import type { IAudioService } from "./interfaces/IAudioService";
 
 /**

@@ -1,7 +1,7 @@
 import { vi } from "vitest";
-import type { IPerformanceService } from "../../services/interfaces/IPerformanceService";
+import type { IPerformanceProvider } from "../../services/interfaces/IPerformanceProvider";
 
-export const mockPerformanceService: IPerformanceService = {
+export const mockPerformanceProvider: IPerformanceProvider = {
   now: vi.fn(),
   getMemoryInfo: vi.fn(),
   mark: vi.fn(),
