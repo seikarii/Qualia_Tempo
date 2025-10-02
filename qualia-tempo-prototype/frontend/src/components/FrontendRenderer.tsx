@@ -7,6 +7,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useFrontendRenderingService, useStateStreamingService, useLogger } from "../services/hooks";
 import type { ConnectionStateType } from "../services/contracts/events.contracts";
+import type { IFrontendRenderingService } from "../services/interfaces/IFrontendRenderingService";
 
 interface FrontendRendererProps {
   /** Canvas width (default: full viewport) */
@@ -16,6 +17,170 @@ interface FrontendRendererProps {
   /** CSS class name for styling */
   className?: string;
 }
+
+interface ConnectionStatusOverlayProps {
+  connectionStatus: ConnectionStateType;
+}
+
+interface PerformanceStatsOverlayProps {
+  isInitialized: boolean;
+  renderingService: IFrontendRenderingService;
+}
+
+/**
+ * Connection status overlay component
+ */
+const ConnectionStatusOverlay: React.FC<ConnectionStatusOverlayProps> = ({ connectionStatus }) => {
+  if (connectionStatus === "CONNECTED") return null;
+
+  const getStatusColor = () => connectionStatus === "ERROR" ? '#ff4444' : '#444444';
+  const getStatusText = () => {
+    switch (connectionStatus) {
+      case "CONNECTING": return "Connecting...";
+      case "RECONNECTING": return "Reconnecting...";
+      case "DISCONNECTED": return "Disconnected";
+      case "ERROR": return "Connection Error";
+      case "IDLE": return "Idle";
+      default: return "Unknown";
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: '10px',
+        right: '10px',
+        padding: '8px 12px',
+        background: getStatusColor(),
+        color: 'white',
+        borderRadius: '4px',
+        fontSize: '12px',
+        fontFamily: 'monospace',
+      }}
+    >
+      {getStatusText()}
+    </div>
+  );
+};
+
+/**
+ * Performance stats overlay component
+ */
+const PerformanceStatsOverlay: React.FC<PerformanceStatsOverlayProps> = ({ isInitialized, renderingService }) => {
+  if (process.env.NODE_ENV !== 'development' || !isInitialized) return null;
+
+  const stats = renderingService.getStats();
+  const statsText = `FPS: ${stats.fps.toFixed(1)} | Triangles: ${stats.triangles} | Draw Calls: ${stats.drawCalls}`;
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        bottom: '10px',
+        left: '10px',
+        padding: '8px 12px',
+        background: 'rgba(0, 0, 0, 0.7)',
+        color: 'white',
+        borderRadius: '4px',
+        fontSize: '11px',
+        fontFamily: 'monospace',
+      }}
+    >
+      {statsText}
+    </div>
+  );
+};
+
+/**
+ * Custom hook for renderer initialization logic
+ */
+const useRendererInitialization = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const initializedRef = useRef(false);
+  const renderingService = useFrontendRenderingService();
+  const streamingService = useStateStreamingService();
+  const logger = useLogger();
+
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    const initializeRenderer = async () => {
+      if (initializedRef.current) return;
+      initializedRef.current = true;
+
+      if (!canvasRef.current) return;
+
+      try {
+        await renderingService.initializeRenderer(canvasRef.current);
+        setIsInitialized(true);
+        renderingService.start();
+        await streamingService.connect();
+        logger.info("FrontendRenderer initialized and connected to state stream");
+      } catch (error) {
+        logger.error("Failed to initialize FrontendRenderer", { error });
+      }
+    };
+
+    initializeRenderer();
+
+    return () => {
+      renderingService.stop();
+      streamingService.disconnect();
+    };
+  }, [renderingService, streamingService, logger]);
+
+  return { canvasRef, isInitialized, renderingService };
+};
+
+/**
+ * Custom hook for connection status monitoring
+ */
+const useConnectionStatus = () => {
+  const streamingService = useStateStreamingService();
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStateType>("IDLE");
+
+  useEffect(() => {
+    const status = streamingService.getConnectionStatus();
+    setConnectionStatus(status.state);
+  }, [streamingService]);
+
+  return connectionStatus;
+};
+
+/**
+ * Custom hook for canvas sizing
+ */
+const useCanvasSizing = (isInitialized: boolean, width?: number, height?: number) => {
+  const renderingService = useFrontendRenderingService();
+
+  useEffect(() => {
+    if (isInitialized) {
+      const canvas = document.querySelector('canvas');
+      if (canvas) {
+        const rect = canvas.getBoundingClientRect();
+        renderingService.resize(rect.width, rect.height);
+      }
+    }
+  }, [width, height, isInitialized, renderingService]);
+};
+
+/**
+ * Custom hook for FrontendRenderer business logic
+ * Handles initialization, connection status, and canvas sizing
+ */
+const useFrontendRenderer = (width?: number, height?: number) => {
+  const { canvasRef, isInitialized, renderingService } = useRendererInitialization();
+  const connectionStatus = useConnectionStatus();
+  useCanvasSizing(isInitialized, width, height);
+
+  return {
+    canvasRef,
+    isInitialized,
+    connectionStatus,
+    renderingService,
+  };
+};
 
 /**
  * FrontendRenderer - The definitive visual renderer for Qualia Tempo.
@@ -36,61 +201,7 @@ const FrontendRenderer: React.FC<FrontendRendererProps> = ({
   height,
   className = "",
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const initializedRef = useRef(false);
-  const renderingService = useFrontendRenderingService();
-  const streamingService = useStateStreamingService();
-  const logger = useLogger();
-
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStateType>("IDLE");
-
-  // Initialize rendering service and connect to state stream
-  useEffect(() => {
-    const initializeRenderer = async () => {
-      if (initializedRef.current) return;
-      initializedRef.current = true;
-
-      if (!canvasRef.current) return;
-
-      try {
-        // Initialize Three.js renderer
-        await renderingService.initializeRenderer(canvasRef.current);
-        setIsInitialized(true);
-
-        // Start rendering
-        renderingService.start();
-
-        // Connect to state streaming
-        await streamingService.connect();
-
-        logger.info("FrontendRenderer initialized and connected to state stream");
-      } catch (error) {
-        logger.error("Failed to initialize FrontendRenderer", { error });
-      }
-    };
-
-    initializeRenderer();
-
-    return () => {
-      renderingService.stop();
-      streamingService.disconnect();
-    };
-  }, [renderingService, streamingService, logger]);
-
-  // Monitor connection status
-  useEffect(() => {
-    const status = streamingService.getConnectionStatus();
-    setConnectionStatus(status.state);
-  }, [streamingService]);
-
-  // Handle canvas sizing
-  useEffect(() => {
-    if (canvasRef.current && isInitialized) {
-      const rect = canvasRef.current.getBoundingClientRect();
-      renderingService.resize(rect.width, rect.height);
-    }
-  }, [width, height, isInitialized, renderingService]);
+  const { canvasRef, isInitialized, connectionStatus, renderingService } = useFrontendRenderer(width, height);
 
   return (
     <div className={`frontend-renderer ${className}`}>
@@ -106,50 +217,8 @@ const FrontendRenderer: React.FC<FrontendRendererProps> = ({
         }}
       />
 
-      {/* Connection status overlay */}
-      {connectionStatus !== "CONNECTED" && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '10px',
-            right: '10px',
-            padding: '8px 12px',
-            background: connectionStatus === "ERROR" ? '#ff4444' : '#444444',
-            color: 'white',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontFamily: 'monospace',
-          }}
-        >
-          {connectionStatus === "CONNECTING" && "Connecting..."}
-          {connectionStatus === "RECONNECTING" && "Reconnecting..."}
-          {connectionStatus === "DISCONNECTED" && "Disconnected"}
-          {connectionStatus === "ERROR" && "Connection Error"}
-          {connectionStatus === "IDLE" && "Idle"}
-        </div>
-      )}
-
-      {/* Performance stats overlay (debug mode) */}
-      {process.env.NODE_ENV === 'development' && isInitialized && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '10px',
-            left: '10px',
-            padding: '8px 12px',
-            background: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            borderRadius: '4px',
-            fontSize: '11px',
-            fontFamily: 'monospace',
-          }}
-        >
-          {(() => {
-            const stats = renderingService.getStats();
-            return `FPS: ${stats.fps.toFixed(1)} | Triangles: ${stats.triangles} | Draw Calls: ${stats.drawCalls}`;
-          })()}
-        </div>
-      )}
+      <ConnectionStatusOverlay connectionStatus={connectionStatus} />
+      <PerformanceStatsOverlay isInitialized={isInitialized} renderingService={renderingService} />
     </div>
   );
 };

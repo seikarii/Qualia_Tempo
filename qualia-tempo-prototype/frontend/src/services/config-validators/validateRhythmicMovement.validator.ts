@@ -11,52 +11,37 @@ import type { RhythmicMovementConfig } from '../contracts/IRhythmicMovementContr
  * @throws Error if configuration is invalid
  */
 export function validateRhythmicMovementConfig(config: Partial<RhythmicMovementConfig> | undefined): void {
-  if (typeof config?.bpm !== 'number' || config.bpm <= 0) {
-    throw new Error('Invalid rhythmicMovement.bpm configuration: must be positive number');
-  }
-  
-  if (typeof config?.perfectTiming !== 'number' || config.perfectTiming <= 0) {
-    throw new Error('Invalid rhythmicMovement.perfectTiming configuration: must be positive number');
-  }
-  
-  if (typeof config?.goodTiming !== 'number' || config.goodTiming <= 0) {
-    throw new Error('Invalid rhythmicMovement.goodTiming configuration: must be positive number');
-  }
-  
-  if (typeof config?.gridSize !== 'number' || config.gridSize <= 0) {
-    throw new Error('Invalid rhythmicMovement.gridSize configuration: must be positive number');
-  }
-  
-  if (typeof config?.keyThrottleMs !== 'number' || config.keyThrottleMs < 0) {
-    throw new Error('Invalid rhythmicMovement.keyThrottleMs configuration: must be non-negative number');
-  }
+  validateBasicNumericFields(config);
+  validateTimingFields(config);
+  validateDifficultyFields(config);
+  validateOptionalFields(config);
+}
 
-  if (typeof config?.audioBeatDetectionThreshold !== 'number' || config.audioBeatDetectionThreshold <= 0) {
-    throw new Error('Invalid rhythmicMovement.audioBeatDetectionThreshold configuration: must be positive number');
-  }
+function validateBasicNumericFields(config: Partial<RhythmicMovementConfig> | undefined): void {
+  validatePositiveNumber(config?.bpm, 'bpm');
+  validatePositiveNumber(config?.gridSize, 'gridSize');
+  validateNonNegativeNumber(config?.keyThrottleMs, 'keyThrottleMs');
+  validatePositiveNumber(config?.audioBeatDetectionThreshold, 'audioBeatDetectionThreshold');
 
   if (!Array.isArray(config?.availableMovements) || config.availableMovements.length === 0) {
     throw new Error('Invalid rhythmicMovement.availableMovements configuration: must be non-empty array');
   }
+}
 
-  if (typeof config?.optimalTimingPredictionConfidencePlaying !== 'number' ||
-      config.optimalTimingPredictionConfidencePlaying < 0 || config.optimalTimingPredictionConfidencePlaying > 1) {
-    throw new Error('Invalid rhythmicMovement.optimalTimingPredictionConfidencePlaying configuration: must be number between 0 and 1');
-  }
+function validateTimingFields(config: Partial<RhythmicMovementConfig> | undefined): void {
+  validatePositiveNumber(config?.perfectTiming, 'perfectTiming');
+  validatePositiveNumber(config?.goodTiming, 'goodTiming');
+  
+  validateRangeNumber(config?.optimalTimingPredictionConfidencePlaying, 'optimalTimingPredictionConfidencePlaying', 0, 1);
+  validateRangeNumber(config?.optimalTimingPredictionConfidenceNotPlaying, 'optimalTimingPredictionConfidenceNotPlaying', 0, 1);
+}
 
-  if (typeof config?.optimalTimingPredictionConfidenceNotPlaying !== 'number' ||
-      config.optimalTimingPredictionConfidenceNotPlaying < 0 || config.optimalTimingPredictionConfidenceNotPlaying > 1) {
-    throw new Error('Invalid rhythmicMovement.optimalTimingPredictionConfidenceNotPlaying configuration: must be number between 0 and 1');
-  }
+function validateDifficultyFields(config: Partial<RhythmicMovementConfig> | undefined): void {
+  validatePositiveNumber(config?.sequenceDifficultyBaseComplexityMultiplier, 'sequenceDifficultyBaseComplexityMultiplier');
+  validatePositiveNumber(config?.sequenceDifficultyVarietyBonusMultiplier, 'sequenceDifficultyVarietyBonusMultiplier');
+}
 
-  if (typeof config?.sequenceDifficultyBaseComplexityMultiplier !== 'number' || config.sequenceDifficultyBaseComplexityMultiplier <= 0) {
-    throw new Error('Invalid rhythmicMovement.sequenceDifficultyBaseComplexityMultiplier configuration: must be positive number');
-  }
-
-  if (typeof config?.sequenceDifficultyVarietyBonusMultiplier !== 'number' || config.sequenceDifficultyVarietyBonusMultiplier <= 0) {
-    throw new Error('Invalid rhythmicMovement.sequenceDifficultyVarietyBonusMultiplier configuration: must be positive number');
-  }
-
+function validateOptionalFields(config: Partial<RhythmicMovementConfig> | undefined): void {
   if (config?.initialPlayerPositionOffset !== undefined) {
     if (!Array.isArray(config.initialPlayerPositionOffset) || config.initialPlayerPositionOffset.length !== 2) {
       throw new Error('Invalid rhythmicMovement.initialPlayerPositionOffset configuration: must be array of 2 numbers');
@@ -66,7 +51,23 @@ export function validateRhythmicMovementConfig(config: Partial<RhythmicMovementC
     }
   }
 
-  if (typeof config?.flowBpmMultiplier !== 'number' || config.flowBpmMultiplier < 0) {
-    throw new Error('Invalid rhythmicMovement.flowBpmMultiplier configuration: must be non-negative number');
+  validateNonNegativeNumber(config?.flowBpmMultiplier, 'flowBpmMultiplier');
+}
+
+function validatePositiveNumber(value: number | undefined, fieldName: string): void {
+  if (typeof value !== 'number' || value <= 0) {
+    throw new Error(`Invalid rhythmicMovement.${fieldName} configuration: must be positive number`);
+  }
+}
+
+function validateNonNegativeNumber(value: number | undefined, fieldName: string): void {
+  if (typeof value !== 'number' || value < 0) {
+    throw new Error(`Invalid rhythmicMovement.${fieldName} configuration: must be non-negative number`);
+  }
+}
+
+function validateRangeNumber(value: number | undefined, fieldName: string, min: number, max: number): void {
+  if (typeof value !== 'number' || value < min || value > max) {
+    throw new Error(`Invalid rhythmicMovement.${fieldName} configuration: must be number between ${min} and ${max}`);
   }
 }

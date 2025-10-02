@@ -69,104 +69,134 @@ export class HttpService implements IHttpService {
     options?: HttpRequestOptions,
   ): Promise<T> {
     const startTime = performance.now();
-
-    // QUALIA.CODE v1.1: Platform Abstraction - Timeout management encapsulated in HttpService
     const { timeout, ...fetchOptions } = options ?? {};
-    const effectiveTimeout = timeout ?? this.config.timeout; // QUALIA.CODE: Configuration externalized to avoid circular dependency
+    const effectiveTimeout = timeout ?? this.config.timeout;
 
+    const { controller, timeoutId } = this.setupRequestTimeout(method, url, effectiveTimeout);
+
+    try {
+      const requestInit = this.buildRequestInit(method, fetchOptions, controller.signal);
+      this.logger.debug(`HTTP ${method} request to ${url}`, { options: requestInit });
+
+      const response = await fetch(url, requestInit);
+      this.timerService.clearTimeout(timeoutId);
+
+      const data = await this.handleResponse<T>(response, method, url, startTime);
+      return data;
+    } catch (error) {
+      this.timerService.clearTimeout(timeoutId);
+      this.handleRequestError({ error, method, url, timeout: effectiveTimeout, startTime });
+      throw error;
+    }
+  }
+
+  private setupRequestTimeout(method: string, url: string, timeout: number) {
     const controller = new AbortController();
     const timeoutId = this.timerService.setTimeout(() => {
       this.logger.error(
-        `HTTP ${method} request timeout triggered after ${effectiveTimeout}ms for URL: ${url}`,
+        `HTTP ${method} request timeout triggered after ${timeout}ms for URL: ${url}`,
       );
       controller.abort();
-    }, effectiveTimeout);
+    }, timeout);
 
-    try {
-      const requestInit: RequestInit = {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          ...fetchOptions.headers,
-        },
-        signal: controller.signal,
-      };
+    return { controller, timeoutId };
+  }
 
-      if (fetchOptions.body && method !== "GET" && method !== "HEAD") {
-        requestInit.body =
-          typeof fetchOptions.body === "string"
-            ? fetchOptions.body
-            : JSON.stringify(fetchOptions.body);
-      }
+  private buildRequestInit(
+    method: string,
+    fetchOptions: Omit<HttpRequestOptions, 'timeout'>,
+    signal: AbortSignal
+  ): RequestInit {
+    const requestInit: RequestInit = {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...fetchOptions.headers,
+      },
+      signal,
+    };
 
-      this.logger.debug(`HTTP ${method} request to ${url}`, {
-        options: requestInit,
-      });
+    if (fetchOptions.body && method !== "GET" && method !== "HEAD") {
+      requestInit.body =
+        typeof fetchOptions.body === "string"
+          ? fetchOptions.body
+          : JSON.stringify(fetchOptions.body);
+    }
 
-      const response = await fetch(url, requestInit);
-      const duration = performance.now() - startTime;
+    return requestInit;
+  }
 
-      // Clear timeout on successful response
-      this.timerService.clearTimeout(timeoutId);
+  private async handleResponse<T>(
+    response: Response,
+    method: string,
+    url: string,
+    startTime: number
+  ): Promise<T> {
+    const duration = performance.now() - startTime;
 
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => "Unknown error");
-        this.logger.error(
-          `HTTP ${method} failed: ${response.status} ${response.statusText}`,
-          {
-            url,
-            status: response.status,
-            statusText: response.statusText,
-            error: errorText,
-            duration: `${duration.toFixed(2)}ms`,
-          },
-        );
-        throw new Error(
-          `HTTP ${response.status}: ${response.statusText} - ${errorText}`,
-        );
-      }
-
-      const contentType = response.headers.get("content-type");
-      let data: T;
-
-      if (contentType?.includes("application/json")) {
-        data = await response.json();
-      } else {
-        data = (await response.text()) as unknown as T;
-      }
-
-      this.logger.debug(`HTTP ${method} success: ${response.status}`, {
-        url,
-        status: response.status,
-        duration: `${duration.toFixed(2)}ms`,
-      });
-
-      return data;
-    } catch (error) {
-      // Clear timeout on error
-      this.timerService.clearTimeout(timeoutId);
-
-      const duration = performance.now() - startTime;
-
-      // QUALIA.CODE v1.1: Platform Abstraction - Handle timeout errors specifically
-      if (error instanceof Error && error.name === "AbortError") {
-        const timeoutError = new RequestTimeoutError(
-          `HTTP ${method} request timed out after ${effectiveTimeout}ms`,
-        );
-        this.logger.error(`HTTP ${method} request failed`, {
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Unknown error");
+      this.logger.error(
+        `HTTP ${method} failed: ${response.status} ${response.statusText}`,
+        {
           url,
-          error: timeoutError.message,
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText,
           duration: `${duration.toFixed(2)}ms`,
-        });
-        throw timeoutError;
-      }
+        },
+      );
+      throw new Error(
+        `HTTP ${response.status}: ${response.statusText} - ${errorText}`,
+      );
+    }
 
+    const data = await this.parseResponseData<T>(response);
+    this.logger.debug(`HTTP ${method} success: ${response.status}`, {
+      url,
+      status: response.status,
+      duration: `${duration.toFixed(2)}ms`,
+    });
+
+    return data;
+  }
+
+  private async parseResponseData<T>(response: Response): Promise<T> {
+    const contentType = response.headers.get("content-type");
+    
+    if (contentType?.includes("application/json")) {
+      return await response.json();
+    }
+    
+    return (await response.text()) as unknown as T;
+  }
+
+  private handleRequestError(params: {
+    error: unknown;
+    method: string;
+    url: string;
+    timeout: number;
+    startTime: number;
+  }): void {
+    const { error, method, url, timeout, startTime } = params;
+    const duration = performance.now() - startTime;
+
+    if (error instanceof Error && error.name === "AbortError") {
+      const timeoutError = new RequestTimeoutError(
+        `HTTP ${method} request timed out after ${timeout}ms`,
+      );
       this.logger.error(`HTTP ${method} request failed`, {
         url,
-        error: error instanceof Error ? error.message : String(error),
+        error: timeoutError.message,
         duration: `${duration.toFixed(2)}ms`,
       });
-      throw error;
+      throw timeoutError;
     }
+
+    this.logger.error(`HTTP ${method} request failed`, {
+      url,
+      error: error instanceof Error ? error.message : String(error),
+      duration: `${duration.toFixed(2)}ms`,
+    });
   }
 }

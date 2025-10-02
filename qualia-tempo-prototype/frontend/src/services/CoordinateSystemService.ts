@@ -67,13 +67,13 @@ export class CoordinateSystemService implements ICoordinateSystemService {
    * Uses Three.js Vector3.project() for accurate camera projection.
    */
   // Overload signatures
-  public worldToScreen(params: WorldToScreenParams): { x: number; y: number };
+  public worldToScreen(_params: WorldToScreenParams): { x: number; y: number };
   public worldToScreen(
-    worldX: number,
-    worldY: number,
-    worldZ: number,
-    camera: THREE.Camera,
-    domElementSize: { width: number; height: number }
+    _worldX: number,
+    _worldY: number,
+    _worldZ: number,
+    _camera: THREE.Camera,
+    _domElementSize: { width: number; height: number }
   ): { x: number; y: number };
   
   // Implementation
@@ -109,12 +109,17 @@ export class CoordinateSystemService implements ICoordinateSystemService {
       return paramsOrWorldX;
     }
 
+    // Guard clause: ensure all required parameters are provided
+    if (worldY === undefined || worldZ === undefined || !camera || !domElementSize) {
+      throw new Error('worldToScreen requires all parameters when called with positional arguments');
+    }
+
     return {
       worldX: paramsOrWorldX,
-      worldY: worldY!,
-      worldZ: worldZ!,
-      camera: camera!,
-      domElementSize: domElementSize!
+      worldY,
+      worldZ,
+      camera,
+      domElementSize
     };
   }
 

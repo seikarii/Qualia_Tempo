@@ -11,6 +11,13 @@ import type { EventBusConfig } from '../contracts/IEventBus.contracts';
  * @throws Error if configuration is invalid
  */
 export function validateEventBusConfig(config: Partial<EventBusConfig> | undefined): void {
+  validateConfigExists(config);
+  validatePerformanceConfig(config);
+  validateErrorHandlingConfig(config);
+  validateDevelopmentConfig(config);
+}
+
+function validateConfigExists(config: Partial<EventBusConfig> | undefined): void {
   if (!config) {
     throw new Error('EventBus configuration is missing');
   }
@@ -18,8 +25,10 @@ export function validateEventBusConfig(config: Partial<EventBusConfig> | undefin
   if (!config.performance) {
     throw new Error('EventBus performance configuration is missing');
   }
+}
 
-  if (typeof config.performance.maxEventHistory !== 'number' || config.performance.maxEventHistory <= 0) {
+function validatePerformanceConfig(config: Partial<EventBusConfig> | undefined): void {
+  if (typeof config?.performance?.maxEventHistory !== 'number' || config.performance.maxEventHistory <= 0) {
     throw new Error('Invalid eventbus.performance.maxEventHistory configuration: must be positive number');
   }
   
@@ -30,11 +39,15 @@ export function validateEventBusConfig(config: Partial<EventBusConfig> | undefin
   if (typeof config?.performance?.cleanupInterval !== 'number' || config.performance.cleanupInterval <= 0) {
     throw new Error('Invalid eventbus.performance.cleanupInterval configuration: must be positive number');
   }
-  
+}
+
+function validateErrorHandlingConfig(config: Partial<EventBusConfig> | undefined): void {
   if (typeof config?.errorHandling?.maxRetries !== 'number' || config.errorHandling.maxRetries < 0) {
     throw new Error('Invalid eventbus.errorHandling.maxRetries configuration: must be non-negative number');
   }
-  
+}
+
+function validateDevelopmentConfig(config: Partial<EventBusConfig> | undefined): void {
   if (typeof config?.development?.enableEventLogging !== 'boolean') {
     throw new Error('Invalid eventbus.development.enableEventLogging configuration: must be boolean');
   }
