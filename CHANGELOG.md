@@ -2,6 +2,40 @@
 
 All notable changes to the Qualia Tempo project will be documented in this file.
 
+## [2025-01-XX] - CRITICAL: Push-Based Diagnostics Implementation
+
+### 🔴 Critical Architectural Compliance: DIRECTIVA 13-DIAGNOSTICS-PURITY
+
+This is a **MANDATORY** architectural remediation that enforces QUALIA.CODE Section 11.2 "Push-Based Diagnostics" principle.
+
+#### Problem Analysis
+DebugOrchestratorService was **violating the core decoupling principle** by:
+1. Directly calling `eventBus.getStats()` (pull-based diagnostics)
+2. Creating tight coupling between diagnostic aggregator and EventBus
+3. Violating "Components are Islands" law by direct method calls between services
+
+#### Solution Implemented
+- **EventBus Lifecycle Management**: EventBus now implements `IBaseService` with `initialize()` and `cleanup()` methods
+- **Periodic Status Emission**: EventBus emits `ServiceStatusUpdateEvent` every 5 seconds via configurable `statusUpdateInterval`
+- **Pure Push-Based Aggregation**: DebugOrchestratorService removed pull calls, now only listens to status events
+- **ApplicationInitializerService Integration**: Manages EventBus lifecycle explicitly before other services
+- **Configuration Sovereignty**: Added `statusUpdateInterval` to `eventbus.yaml` (default: 5000ms)
+
+#### Files Modified
+- `EventBus.ts`: Added IBaseService implementation, periodic status emission
+- `IEventBus.ts`: Extended IBaseService interface
+- `DebugOrchestratorService.ts`: Removed pull call to eventBus.getStats()
+- `ApplicationInitializerService.ts`: Added EventBus lifecycle management
+- `inversify.config.ts`: Removed eventBus from DebugOrchestratorServiceParams
+- `event-bus.mock.ts`: Added initialize/cleanup mocks
+- `IApplicationInitializerService.contracts.ts`: Updated ConfigLoadedStateUpdate interface
+- `eventbus.yaml`: Added statusUpdateInterval configuration
+
+#### Validation
+- TypeScript compilation successful
+- Architectural linter passes for EventBus/DebugOrchestratorService changes
+- EventBus now participates equally in passive diagnostic ecosystem
+
 ## [2025-10-02] - CRITICAL: Platform Abstraction Architectural Remediation
 
 ### 🔴 Critical Architectural Violations Fixed
@@ -73,6 +107,25 @@ Engineers were incorrectly using `@BrowserOnly` decorator to bypass platform abs
   - Line: 245
   - Rationale: Method only performs mathematical transformations using CoordinateSystemService
   - Never accessed browser APIs directly - decorator was added by mistake
+
+#### BrowserEventsService.ts - LIFECYCLE REFACTOR (DIRECTIVA 12-BROWSER-EVENTS-REFACTOR)
+- **REFACTORED**: Converted from passive utility service to active lifecycle service
+  - **Interface Change**: `IBrowserEventsService` now extends `IBaseService`
+  - **Added Lifecycle**: `initialize()` and `cleanup()` methods implemented
+  - **EventBus Integration**: Added `IEventBus` injection for domain event emission
+  - **Global Error Handling**: Now captures `unhandledrejection` events and emits `ErrorEvent` on EventBus
+  - **Location**: `/frontend/src/services/BrowserEventsService.ts`
+
+- **INTEGRATION**: ApplicationInitializerService now manages BrowserEventsService lifecycle
+  - Added to `ApplicationInitializerServiceParams`
+  - Added to `managedServices` array for automatic initialize/cleanup
+  - Location: `/frontend/src/services/ApplicationInitializerService.ts`
+
+- **MOCK UPDATED**: Added `initialize` and `cleanup` to mock implementation
+  - Location: `/frontend/src/testing/mocks/browser-events-service.mock.ts`
+
+- **EVENTBUS CLEANUP**: Removed TODO comment - BrowserEventsService now handles global events
+  - Location: `/frontend/src/services/EventBus.ts:456`
 
 ### Configuration Changes
 

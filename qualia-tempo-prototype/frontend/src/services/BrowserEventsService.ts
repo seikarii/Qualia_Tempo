@@ -3,18 +3,25 @@ import { TYPES } from "./inversify.types";
 import { logMethod, BrowserOnly } from "../utils/decorators";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
+import type { IEventBus } from "./interfaces/IEventBus";
+import type { ErrorEvent } from "./contracts/events.contracts";
 
 /**
  * QUALIA.CODE v1.1 Compliant BrowserEventsService
- * Abstraction layer for browser global event handling
- * Provides a testable and mockable interface for window/document events.
+ * Active lifecycle service for browser global event handling
+ * Manages global event listeners and emits domain events on EventBus.
  */
 @injectable()
 export class BrowserEventsService implements IBrowserEventsService {
   private readonly logger: ILogger;
+  private readonly eventBus: IEventBus;
 
-  constructor(@inject(TYPES.ILogger) logger: ILogger) {
+  constructor(
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.IEventBus) eventBus: IEventBus
+  ) {
     this.logger = logger;
+    this.eventBus = eventBus;
     this.logger.info("BrowserEventsService initialized");
   }
 
@@ -79,4 +86,30 @@ export class BrowserEventsService implements IBrowserEventsService {
       height: window.innerHeight
     };
   }
+
+  @logMethod
+  public initialize(): void {
+    this.addWindowEventListener('unhandledrejection', this.handleUnhandledRejection);
+    this.logger.info('BrowserEventsService initialized and listening for global events.');
+  }
+
+  @logMethod
+  public cleanup(): void {
+    this.removeWindowEventListener('unhandledrejection', this.handleUnhandledRejection);
+    this.logger.info('BrowserEventsService cleaned up global event listeners.');
+  }
+
+  private handleUnhandledRejection = (event: PromiseRejectionEvent): void => {
+    this.logger.warn('Caught unhandled promise rejection at global level.', { reason: event.reason });
+    const error = event.reason instanceof Error
+      ? event.reason
+      : new Error('Unhandled promise rejection: ' + String(event.reason));
+
+    this.eventBus.emit<ErrorEvent>({
+      type: 'Error',
+      source: 'BrowserGlobal',
+      error,
+      severity: 'high'
+    });
+  };
 }

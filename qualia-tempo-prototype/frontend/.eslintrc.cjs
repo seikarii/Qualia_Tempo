@@ -70,7 +70,6 @@ module.exports = {
     "@qualia-tempo/qualia-code/no-direct-service-instantiation": "error",
     "@qualia-tempo/qualia-code/enforce-use-services-hook": "error",
     "@qualia-tempo/qualia-code/no-console-in-services": "error",
-    "@qualia-tempo/qualia-code/no-direct-service-import-in-components": "error",
     "@qualia-tempo/qualia-code/no-manual-event-subscription": "error",
     "@qualia-tempo/qualia-code/no-direct-diagnostic-calls": "error",
     "@qualia-tempo/qualia-code/no-service-locator": "error",

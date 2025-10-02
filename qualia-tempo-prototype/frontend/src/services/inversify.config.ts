@@ -528,23 +528,24 @@ export async function configureServices(): Promise<void> {
     debugService: container.get<IDebugService>(TYPES.IDebugService),
     stateStreamingService: container.get<IStateStreamingService>(TYPES.IStateStreamingService),
     logger: container.get<ILogger>(TYPES.ILogger),
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
     gameplayMechanicsService: container.get<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService),
     viewLogicService: container.get<IViewLogicService>(TYPES.IViewLogicService),
     subtitleService: container.get<ISubtitleService>(TYPES.ISubtitleService),
     debugOrchestratorService: container.get<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService),
+    browserEventsService: container.get<IBrowserEventsService>(TYPES.IBrowserEventsService),
   });
 
   // QUALIA.CODE v1.1: Bind DebugOrchestratorServiceParams factory
   // Event-driven pattern: Services no longer injected directly
   // Pattern: Push (event-driven) instead of Pull (method calls)
-  // DIRECTIVA 03: eventBus added for getStats() access
+  // DIRECTIVA 13-DIAGNOSTICS-PURITY: Pure push-based diagnostics, no pull calls
   safeBindConstant<DebugOrchestratorServiceParams>(TYPES.DebugOrchestratorServiceParams, {
     config: fullConfig.debugOrchestrator,
     logger: container.get<ILogger>(TYPES.ILogger),
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    // REMOVED: notificationService, errorReportingService
+    // REMOVED: eventBus - no longer needed for pull-based diagnostics
     // Services will emit ServiceStatusUpdateEvent for passive aggregation
   });
 

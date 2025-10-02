@@ -4,6 +4,18 @@ import { cleanup } from "@testing-library/react";
 
 // ÚNICA FUENTE DE VERDAD PARA MOCKS DE DECORADORES
 vi.mock("../utils/decorators", () => ({
+  initializeEventSubscriptions: vi.fn().mockImplementation((serviceInstance: any) => {
+    // Mock implementation that sets up _eventListeners array for @OnEvent decorator testing
+    if (serviceInstance && typeof serviceInstance === 'object') {
+      serviceInstance._eventListeners = [];
+    }
+  }),
+  cleanupEventSubscriptions: vi.fn().mockImplementation((serviceInstance: any) => {
+    // Mock cleanup that clears _eventListeners
+    if (serviceInstance && typeof serviceInstance === 'object') {
+      serviceInstance._eventListeners = [];
+    }
+  }),
   logMethod: vi.fn().mockImplementation(() => (d: unknown) => d),
   catchError: vi.fn().mockImplementation(() => (d: unknown) => d),
   validate: vi.fn().mockImplementation(() => (d: unknown) => d),

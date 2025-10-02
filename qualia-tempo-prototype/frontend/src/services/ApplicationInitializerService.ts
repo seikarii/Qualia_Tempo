@@ -21,6 +21,8 @@ import type { IGameplayMechanicsService } from "./interfaces/IGameplayMechanicsS
 import type { IViewLogicService } from "./interfaces/IViewLogicService";
 import type { ISubtitleService } from "./interfaces/ISubtitleService";
 import type { IDebugOrchestratorService } from "./interfaces/IDebugOrchestratorService";
+import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
+import type { IEventBus } from "./interfaces/IEventBus";
 import { logMethod, catchError, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 
 @injectable()
@@ -37,12 +39,14 @@ export class ApplicationInitializerService
   private readonly debugService: IDebugService;
   private readonly stateStreamingService: IStateStreamingService;
   private readonly logger: ILogger;
+  private readonly eventBus: IEventBus;
 
   // QUALIA.CODE v1.1: New Services with @OnEvent lifecycle
   private readonly gameplayMechanicsService: IGameplayMechanicsService;
   private readonly viewLogicService: IViewLogicService;
   private readonly subtitleService: ISubtitleService;
   private readonly debugOrchestratorService: IDebugOrchestratorService;
+  private readonly browserEventsService: IBrowserEventsService;
 
   private isStarted = false;
   private readonly managedServices: IBaseService[] = [];
@@ -60,12 +64,14 @@ export class ApplicationInitializerService
     this.debugService = params.debugService;
     this.stateStreamingService = params.stateStreamingService;
     this.logger = params.logger;
+    this.eventBus = params.eventBus;
     
     // QUALIA.CODE v1.1: Initialize new services
     this.gameplayMechanicsService = params.gameplayMechanicsService;
     this.viewLogicService = params.viewLogicService;
     this.subtitleService = params.subtitleService;
     this.debugOrchestratorService = params.debugOrchestratorService;
+    this.browserEventsService = params.browserEventsService;
     
     // Configuration is injected and available immediately
     this.logger.info(this.config.messages.serviceConstructed);
@@ -104,6 +110,10 @@ export class ApplicationInitializerService
   }
 
   private async startCoreServices(): Promise<void> {
+    // Step 0: Initialize EventBus - fundamental dependency for all services
+    this.logger.debug("Initializing EventBus with status monitoring");
+    this.eventBus.initialize();
+
     // Step 1: Start GameStateStoreService - it must listen to all events
     this.logger.debug(this.config.steps.startGameStateService);
     this.gameStateStoreService.initialize();
@@ -135,7 +145,8 @@ export class ApplicationInitializerService
       this.gameplayMechanicsService,
       this.viewLogicService,
       this.subtitleService,
-      this.debugOrchestratorService
+      this.debugOrchestratorService,
+      this.browserEventsService
     ];
 
     newServices.forEach(service => {
@@ -210,6 +221,15 @@ export class ApplicationInitializerService
     });
 
     this.logger.info(`🧹 Cleaned up ${this.managedServices.length} managed services`);
+    
+    // Cleanup EventBus
+    try {
+      this.eventBus.cleanup();
+      this.logger.debug('✅ Cleaned up EventBus');
+    } catch (error) {
+      this.logger.error('❌ Failed to cleanup EventBus', { error });
+    }
+    
     this.isStarted = false;
   }
 }

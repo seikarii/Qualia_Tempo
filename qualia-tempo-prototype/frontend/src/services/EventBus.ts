@@ -78,6 +78,7 @@ export type EventListener = {
 export class EventBus implements IEventBus {
   private listeners: Map<string, EventListener[]> = new Map();
   private eventHistory: BaseEvent[] = [];
+  private statusIntervalId: number | null = null;
   private maxHistorySize: number;
   private isDestroyed = false;
   private logger: ILogger;
@@ -453,8 +454,7 @@ export class EventBus implements IEventBus {
   private setupErrorHandling(): void {
     // QUALIA.CODE COMPLIANCE: Global error handling moved to BrowserEventsService
     // Direct window.addEventListener access violates platform abstraction mandate
-    // TODO: Implement BrowserEventsService to handle unhandledrejection events
-    // and emit them through the EventBus via proper service abstraction
+    // BrowserEventsService now handles unhandledrejection events and emits them through EventBus
     this.logger.debug("EventBus error handling initialized (global error handling delegated to BrowserEventsService)");
   }
 
@@ -473,6 +473,42 @@ export class EventBus implements IEventBus {
         );
       }
     }, this.config.performance.cleanupInterval);
+  }
+
+  @logMethod
+  public initialize(): void {
+    this.statusIntervalId = this.timerService.setInterval(
+      () => this.emitStatusUpdate(),
+      this.config.performance.statusUpdateInterval
+    );
+    this.logger.info("EventBus initialized with status monitoring");
+  }
+
+  @logMethod
+  public cleanup(): void {
+    if (this.statusIntervalId !== null) {
+      this.timerService.clearInterval(this.statusIntervalId);
+      this.statusIntervalId = null;
+    }
+    this.logger.info("EventBus cleaned up");
+  }
+
+  private emitStatusUpdate(): void {
+    const stats = this.getStats();
+    const statusEvent: ServiceStatusUpdateEvent = {
+      type: 'ServiceStatusUpdate',
+      serviceName: 'EventBus',
+      timestamp: new Date(),
+      status: {
+        isRunning: !stats.isDestroyed,
+        stats: {
+          totalListeners: stats.totalListeners,
+          eventTypes: stats.eventTypes.length,
+          historySize: stats.historySize,
+        }
+      }
+    };
+    this.emit(statusEvent);
   }
 }
 

@@ -9,6 +9,7 @@ export interface EventBusConfig {
   performance: {
     maxEventHistory: number;
     maxConcurrentEvents: number;
+    statusUpdateInterval: number;
     throttle: {
       enable: boolean;
       windowMs: number;

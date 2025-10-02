@@ -8,4 +8,6 @@ export const mockBrowserEventsService: IBrowserEventsService = {
   removeElementEventListener: vi.fn(),
   getWindowDimensions: vi.fn(),
   getViewportDimensions: vi.fn(),
+  initialize: vi.fn(),
+  cleanup: vi.fn(),
 };

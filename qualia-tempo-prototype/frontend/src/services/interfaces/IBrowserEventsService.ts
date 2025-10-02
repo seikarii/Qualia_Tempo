@@ -4,7 +4,9 @@
  * Provides a testable and mockable interface for window/document events.
  */
 
-export interface IBrowserEventsService {
+import type { IBaseService } from './IBaseService';
+
+export interface IBrowserEventsService extends IBaseService {
   /**
    * Add an event listener to the window object
    */

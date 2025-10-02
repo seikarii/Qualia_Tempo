@@ -4,8 +4,9 @@
  */
 
 import type { EventTypes } from "../EventBus";
+import type { IBaseService } from "./IBaseService";
 
-export interface IEventBus {
+export interface IEventBus extends IBaseService {
   /**
    * Subscribe to events of a specific type with type safety.
    * @param eventType The type of event to listen for

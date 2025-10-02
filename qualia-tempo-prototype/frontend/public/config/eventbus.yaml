@@ -10,6 +10,9 @@ performance:
   # Event processing configuration
   maxConcurrentEvents: 100
   
+  # Status update interval for diagnostic monitoring (milliseconds)
+  statusUpdateInterval: 5000  # 5 seconds
+  
   # Throttling configuration
   throttle:
     enable: true

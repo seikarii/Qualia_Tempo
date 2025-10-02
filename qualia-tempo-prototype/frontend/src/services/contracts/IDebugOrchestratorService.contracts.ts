@@ -10,7 +10,6 @@
 import type { ILogger } from "../interfaces/ILogger";
 import type { ITimerService } from "../interfaces/ITimerService";
 import type { IPerformanceService } from "../interfaces/IPerformanceService";
-import type { IEventBus } from "../interfaces/IEventBus";
 // QUALIA.CODE v1.1: Service imports removed - event-driven pattern eliminates coupling
 // import type { INotificationService } from "../interfaces/INotificationService";
 // import type { IErrorReportingService } from "../interfaces/IErrorReportingService";
@@ -29,8 +28,7 @@ export interface DebugOrchestratorServiceParams {
   logger: ILogger;
   timerService: ITimerService;
   performanceService: IPerformanceService;
-  eventBus: IEventBus;
-  // REMOVED: notificationService, errorReportingService
+  // REMOVED: notificationService, errorReportingService, eventBus
   // Pattern: Event-driven aggregation (push model)
 }
 
@@ -57,11 +55,6 @@ export interface ServiceDiagnosticData {
       environment: string;
       version: string;
     };
-  };
-  eventBusStats: {
-    totalEvents: number;
-    activeListeners: number;
-    eventTypes: string[];
   };
 }
 

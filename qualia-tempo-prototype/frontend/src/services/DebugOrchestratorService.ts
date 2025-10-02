@@ -16,7 +16,6 @@ import type {
 import type { ILogger } from './interfaces/ILogger';
 import type { ITimerService } from './interfaces/ITimerService';
 import type { IPerformanceService } from './interfaces/IPerformanceService';
-import type { IEventBus } from './interfaces/IEventBus';
 // QUALIA.CODE v1.1: Service imports removed - event-driven pattern eliminates coupling
 // import type { INotificationService } from './interfaces/INotificationService';
 // import type { IErrorReportingService } from './interfaces/IErrorReportingService';
@@ -30,7 +29,6 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
   private readonly performanceService: IPerformanceService;
-  private readonly eventBus: IEventBus;
   // QUALIA.CODE v1.1: Services no longer directly injected - event-driven pattern
   // private readonly notificationService: INotificationService;
   // private readonly errorReportingService: IErrorReportingService;
@@ -58,7 +56,6 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
     this.logger = params.logger;
     this.timerService = params.timerService;
     this.performanceService = params.performanceService;
-    this.eventBus = params.eventBus;
     // QUALIA.CODE v1.1: Services no longer injected - event-driven pattern eliminates coupling
     
     this.lastUpdateTime = this.timerService.getCurrentDate();
@@ -75,14 +72,6 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
   @BrowserOnly
   async gatherServiceDiagnostics(): Promise<ServiceDiagnosticData> {
     const serviceStatuses = await this.getServiceStatuses();
-    
-    // DIRECTIVA 03: Get EventBus statistics using getStats() method
-    const stats = this.eventBus.getStats();
-    const eventBusStats = {
-      totalEvents: stats.historySize,
-      activeListeners: stats.totalListeners,
-      eventTypes: stats.eventTypes
-    };
     
     // Get system information
     const systemInfo = {
@@ -102,8 +91,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
 
     const diagnosticData: ServiceDiagnosticData = {
       services: serviceStatuses,
-      systemInfo,
-      eventBusStats
+      systemInfo
     };
 
     this._cachedDiagnostics = diagnosticData;

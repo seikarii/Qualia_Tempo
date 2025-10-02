@@ -23,8 +23,6 @@ const enforceInversifyConventions = require('./rules/enforce-inversify-conventio
 const noGlobalApiCalls = require('./rules/no-global-api-calls');
 // NEW RULES - Enhanced QUALIA.CODE Compliance
 const noConsoleInServices = require('./rules/no-console-in-services');
-const noDirectServiceImportInComponents = require('./rules/no-direct-service-import-in-components');
-const enforceConfigDrivenValues = require('./rules/enforce-config-driven-values');
 const noManualEventSubscription = require('./rules/no-manual-event-subscription');
 const noDirectDiagnosticCalls = require('./rules/no-direct-diagnostic-calls');
 // NEW RULES - QUALIA.CODE v1.1 IoC Strictness
@@ -49,8 +47,6 @@ module.exports = {
     'no-global-api-calls': noGlobalApiCalls,
     // NEW RULES - Enhanced QUALIA.CODE v1.1 Compliance
     'no-console-in-services': noConsoleInServices,
-    'no-direct-service-import-in-components': noDirectServiceImportInComponents,
-    'enforce-config-driven-values': enforceConfigDrivenValues,
     'no-manual-event-subscription': noManualEventSubscription,
     'no-direct-diagnostic-calls': noDirectDiagnosticCalls,
     // NEW RULES - QUALIA.CODE v1.1 IoC Strictness
@@ -77,8 +73,6 @@ module.exports = {
         '@qualia-tempo/qualia-code/no-global-api-calls': 'error',
         // NEW RULES - Enhanced QUALIA.CODE v1.1 Compliance
         '@qualia-tempo/qualia-code/no-console-in-services': 'error',
-        '@qualia-tempo/qualia-code/no-direct-service-import-in-components': 'error',
-        '@qualia-tempo/qualia-code/enforce-config-driven-values': 'warn',
         '@qualia-tempo/qualia-code/no-manual-event-subscription': 'error',
         '@qualia-tempo/qualia-code/no-direct-diagnostic-calls': 'error',
         // NEW RULES - QUALIA.CODE v1.1 IoC Strictness

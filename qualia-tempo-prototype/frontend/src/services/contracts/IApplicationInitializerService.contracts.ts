@@ -17,6 +17,8 @@ import type { IGameplayMechanicsService } from "../interfaces/IGameplayMechanics
 import type { IViewLogicService } from "../interfaces/IViewLogicService";
 import type { ISubtitleService } from "../interfaces/ISubtitleService";
 import type { IDebugOrchestratorService } from "../interfaces/IDebugOrchestratorService";
+import type { IBrowserEventsService } from "../interfaces/IBrowserEventsService";
+import type { IEventBus } from "../interfaces/IEventBus";
 
 // Parameter object for ApplicationInitializerService constructor
 export interface ApplicationInitializerServiceParams {
@@ -30,16 +32,17 @@ export interface ApplicationInitializerServiceParams {
   debugService: IDebugService;
   stateStreamingService: IStateStreamingService;
   logger: ILogger;
+  eventBus: IEventBus;
   gameplayMechanicsService: IGameplayMechanicsService;
   viewLogicService: IViewLogicService;
   subtitleService: ISubtitleService;
   debugOrchestratorService: IDebugOrchestratorService;
+  browserEventsService: IBrowserEventsService;
 }
 
 // Specific state update interfaces for type safety
 export interface ConfigLoadedStateUpdate {
-  configurationLoaded: boolean;
-  lastConfigLoadTime: number | null;
+  isConfigLoaded: boolean;
 }
 
 export interface InitializationCompleteStateUpdate {
