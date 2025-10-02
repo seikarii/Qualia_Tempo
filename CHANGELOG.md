@@ -2,6 +2,36 @@
 
 All notable changes to the Qualia Tempo project will be documented in this file.
 
+## [2025-10-02] - DOCUMENTATION: Arquitectura de Hooks de Dos Niveles Codificada
+
+### 📚 CRISALIDA.CODE Enforcement: Formalización de Patrón Arquitectónico
+
+Esta actualización del manual de arquitectura formaliza el patrón de "hooks de dos niveles" establecido por la implementación del hook `useServiceHealth`, convirtiéndolo en el estándar GOLD.CODE oficial para la separación de responsabilidades en la capa de hooks.
+
+#### Patrón Arquitectónico Formalizado
+
+**Hooks de Infraestructura (`/services/hooks.ts`):**
+- Hooks puros y sin estado
+- Única función: resolver servicios del contenedor IoC
+- Prohibido añadir lógica de negocio, `useState` o `useEffect`
+- Ejemplo: `useDebugOrchestratorService()`, `useLogger()`
+
+**Hooks de Aplicación (`/hooks/`):**
+- Hooks con estado (`useState`) y lógica de negocio (`useEffect`)
+- Componen hooks de infraestructura para crear funcionalidades reutilizables
+- Ejemplo: `useServiceHealth()` (polling + estado local)
+
+#### Archivos Modificados
+- `docs/QUALIA.CODE.md`: Añadida subsección 9.8.1 "Arquitectura de Hooks de Dos Niveles (MANDATORIO)"
+
+#### Impacto Arquitectónico
+- ✅ Separación clara entre infraestructura y lógica de negocio
+- ✅ Prevención de contaminación de hooks de infraestructura con estado
+- ✅ Estándar oficial para futuras implementaciones de hooks
+- ✅ Mejora de mantenibilidad y testabilidad
+
+---
+
 ## [2025-10-02] - ENHANCEMENT: Real-Time Event-Driven Health Monitoring
 
 ### 🎯 Architectural Evolution: DebugOrchestratorService → 100% Passive Monitor

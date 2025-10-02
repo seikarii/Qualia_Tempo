@@ -481,6 +481,15 @@ export class OptimizedService {
 - `useServices<T[]>(identifiers: symbol[])`: Resolve multiple services at once
 - `useContainer()`: Access the InversifyJS container directly (advanced use only)
 
+### 9.8.1. Arquitectura de Hooks de Dos Niveles (MANDATORIO)
+
+Se establece una arquitectura de dos niveles para la gestión de hooks, garantizando la separación de responsabilidades.
+
+- **Hooks de Infraestructura (`/services/hooks.ts`):** Hooks puros y sin estado cuya **única función** es resolver servicios del contenedor IoC. Prohibido
+  añadir lógica de negocio, `useState` o `useEffect` aquí.
+- **Hooks de Aplicación (`/hooks/`):** Hooks con estado (`useState`) y lógica de negocio (`useEffect`) que **componen** los hooks de infraestructura para
+  crear funcionalidades reutilizables para la UI.
+
 ### 9.9. ConfigurationService (`frontend/src/services/ConfigurationService.ts`)
 **Purpose:** External configuration management and loading.
 **Responsibilities:**
