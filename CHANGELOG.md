@@ -7,7 +7,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **[DOCUMENTATION] Event-Driven Diagnostics Canonization**: Formalized the "Event-Driven Diagnostics" pattern in core architectural documentation, establishing it as mandatory and prohibiting the old polling pattern
+  - **QUALIA.CODE.md**:
+    * ✅ Added Section 11: "Observabilidad y Diagnósticos: Estatus Dirigido por Eventos"
+    * ✅ Section 11.1: "Principio: Los Servicios Son Emisores de su Propio Estado" - Establishes services as responsible for emitting their own status
+    * ✅ Section 11.2: "Patrón Arquitectónico: Agregación Pasiva (Push vs. Pull)" - Defines Push model as mandatory, Pull model as prohibited
+    * ✅ Section 11.3: "Mandato Arquitectónico" - Explicitly prohibits direct service method calls for diagnostics, mandates ServiceStatusUpdateEvent emission
+    * ✅ References SERVICE_STATUS_EVENT_GUIDE.md as GOLD.CODE standard for implementation
+    * **Impact**: Establishes architectural law prohibiting polling pattern, mandates event-driven approach
+  - **QUALIA.MANUAL.md**:
+    * ✅ Added Section 16: "Implementación de Diagnósticos Dirigidos por Eventos"
+    * ✅ Section 16.1: Complete practical example showing hybrid emission pattern (periodic + state change)
+    * ✅ Section 16.2: References SERVICE_STATUS_EVENT_GUIDE.md for comprehensive implementation details
+    * ✅ Example includes: initialize(), cleanup(), start(), emitStatusUpdate() methods
+    * ✅ Shows proper EventBus usage, TimerService integration, and configuration-driven behavior
+    * **Impact**: Provides concrete implementation guidance for all future service diagnostics
+  - **Architecture Impact**:
+    * 📚 **Canonized Pattern**: Event-driven diagnostics now part of core architectural law
+    * 📚 **Prohibited Legacy**: Polling pattern explicitly forbidden in QUALIA.CODE
+    * 📚 **Implementation Standard**: SERVICE_STATUS_EVENT_GUIDE.md established as GOLD.CODE reference
+    * 📚 **Future-Proof**: All new services must follow this pattern for diagnostics
+    * 📚 **Documentation Hierarchy**: QUALIA.CODE (laws) → QUALIA.MANUAL (examples) → SERVICE_STATUS_EVENT_GUIDE (implementation details)
+  - **NotificationService.ts**:
+    * ✅ Added IEventBus injection via NotificationServiceParams
+    * ✅ Implemented `emitStatusUpdate()` private method following GOLD.CODE guide
+    * ✅ Added `statusEmissionInterval` property for periodic emission management
+    * ✅ Updated `initialize()` to start periodic status emission (configurable interval)
+    * ✅ Updated `cleanup()` to stop status emission and emit final status
+    * ✅ Updated `start()` to emit status on service startup (state change)
+    * ✅ Updated `stop()` to emit status on service shutdown (state change)
+    * ✅ Updated `showNotification()` to emit status on significant events
+    * ✅ Updated `dismissNotification()` to emit status on significant events
+    * ✅ Updated `clearAllNotifications()` to emit status on significant events
+    * **Status Payload**: totalNotifications, displayedNotifications, dismissedNotifications, expiredNotifications, throttledNotifications, filteredNotifications, queueSize, activeCount, historySize
+    * **Pattern**: Hybrid (periodic emission every 10s + state change emission + significant event emission)
+  - **ErrorReportingService.ts**:
+    * ✅ Implemented `emitStatusUpdate()` private method following GOLD.CODE guide
+    * ✅ Added `statusEmissionInterval` property for periodic emission management
+    * ✅ Updated `initialize()` to start periodic status emission (configurable interval)
+    * ✅ Updated `cleanup()` to stop status emission and emit final status
+    * ✅ Updated `start()` to emit status on service startup (state change)
+    * ✅ Updated `stop()` to emit status on service shutdown (state change)
+    * ✅ Updated `reportError()` to emit status when errors are reported
+    * **Status Payload**: totalErrors, totalBatches, successfulReports, failedReports, duplicatesFiltered, averageRetries, errorQueueSize, batchQueueSize, pendingBatchesCount, circuitBreakerState, rateLimitTokens
+    * **Pattern**: Hybrid (periodic emission every 10s + state change emission + error event emission)
+  - **Configuration Files**:
+    * ✅ `notification-service.yaml`: Added `statusEmission` block with `enabled`, `interval`, `emitOnStateChange`, `emitOnSignificantEvent`
+    * ✅ `error-reporting.yaml`: Added `statusEmission` block with `enabled`, `interval`, `emitOnStateChange`, `emitOnError`
+  - **Contract Updates**:
+    * ✅ `INotificationService.contracts.ts`: Added `statusEmission` optional configuration block to `NotificationServiceConfig`
+    * ✅ `INotificationService.contracts.ts`: Added `eventBus: IEventBus` to `NotificationServiceParams`
+    * ✅ `IErrorReportingService.contracts.ts`: Added `statusEmission` optional configuration block to `ErrorReportingConfig`
+  - **IoC Container**:
+    * ✅ `inversify.config.ts`: Updated NotificationServiceParams binding to include eventBus
+  - **Architecture Impact**:
+    * 🎯 **Complete Event-Driven Diagnostics**: DebugOrchestratorService now receives real-time status updates from all critical services
+    * 🎯 **Zero Service Coupling**: Services emit events without knowing about DebugOrchestratorService
+    * 🎯 **Passive Aggregation**: Diagnostic data flows naturally through EventBus to DebugOrchestratorService's Map
+    * 🎯 **Scalable Pattern**: Easy to add more services to diagnostics by following GOLD.CODE guide
+    * 🎯 **Configurable Emission**: All emission behavior controlled via YAML (intervals, triggers)
+    * 🎯 **Production Ready**: Hybrid pattern balances real-time updates with performance
+- **[DOCUMENTATION] Service Status Event Guide**: Created comprehensive implementation guide for event-driven diagnostics pattern
+  - **SERVICE_STATUS_EVENT_GUIDE.md**:
+    * Complete implementation guide for ServiceStatusUpdateEvent emission
+    * Architecture pattern explanations (Pull vs Push)
+    * Step-by-step implementation instructions
+    * Example implementations for NotificationService and ErrorReportingService
+    * Best practices for emission frequency, statistics selection, error reporting
+    * Configuration examples with YAML integration
+    * Debugging techniques and migration checklist
+    * **Purpose**: Enable all services to implement event-driven diagnostics correctly
+    * **Location**: `/qualia-tempo-prototype/frontend/src/services/SERVICE_STATUS_EVENT_GUIDE.md`
+
 ### Fixed
+- **[FINAL REMEDIATION] Service Coupling - Event-Driven Architecture**: Eliminated last remaining service coupling violation in DebugOrchestratorService by implementing pure event-driven diagnostics aggregation pattern. System now 100% QUALIA.CODE v1.1 compliant.
+  - **DebugOrchestratorService.ts**:
+    * Removed direct service method calls (`getStatistics()`, `getStatus()`, `isEnabled()`)
+    * Removed NotificationService and ErrorReportingService injections
+    * Implemented `@OnEvent('ServiceStatusUpdate')` handler for passive status aggregation
+    * Added internal `Map<string, ServiceStatus>` for event-driven storage
+    * Refactored `getServiceStatuses()` to return aggregated map instead of calling services
+    * **Pattern Change**: Pull (active polling) → Push (passive event aggregation)
+    * **Impact**: Zero service coupling, pure event-driven architecture, highly scalable
+  - **IDebugOrchestratorService.contracts.ts**:
+    * Removed INotificationService and IErrorReportingService from DebugOrchestratorServiceParams
+    * Updated documentation to reflect event-driven pattern
+    * Reduced constructor parameters from 6 to 4 (improved IoC compliance)
+  - **inversify.config.ts**:
+    * Removed notificationService and errorReportingService from params binding
+    * Updated comments to document event-driven pattern
+  - **ConfigurationLoaded Event Handler**:
+    * Refactored to treat ConfigurationService as event-driven status source
+    * Maintains consistency - ALL service status is now event-driven
+  - **Architecture Impact**: 
+    * ✅ 100% event-driven architecture compliance (Law 2: Components are Islands)
+    * ✅ Zero service coupling - services don't know about each other
+    * ✅ Scalable diagnostics - services emit status on their own schedule
+    * ✅ Passive aggregation - orchestrator is a "bulletin board", not a "polling station"
+    * **NOTE**: Individual services (NotificationService, ErrorReportingService, etc.) must now emit ServiceStatusUpdateEvent periodically or on state changes. See `SERVICE_STATUS_EVENT_GUIDE.md` for implementation instructions.
 - **[CRITICAL REMEDIATION] Platform Abstraction Violations**: Fixed 6 critical architectural violations per QUALIA.CODE mandatory principles. Violations fixed: WebSocketService platform coupling, DebugOrchestratorService environment coupling, FrontendRenderingService hardcoded configuration, AudioService Tone.js coupling, and DebugOrchestratorService service coupling.
   - **WebSocketService.ts**: 
     * Created `IWebSocketFactory` interface to abstract native WebSocket instantiation

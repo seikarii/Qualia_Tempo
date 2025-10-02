@@ -118,6 +118,14 @@ export interface ErrorReportingConfig {
   enableDeduplication: boolean;
   memoryCleanupThreshold: number;
   memoryCleanupInterval: number;
+  
+  // QUALIA.CODE v1.1: Event-Driven Diagnostics Configuration
+  statusEmission?: {
+    enabled: boolean;
+    interval: number;  // Interval in milliseconds for periodic status emission
+    emitOnStateChange: boolean;  // Emit when service starts/stops
+    emitOnError: boolean;  // Emit when errors are reported
+  };
   rateLimitRefillInterval: number;
   fingerprintLength: number;
   memoryCleanupRatio: number;  // Ratio of history to keep during cleanup

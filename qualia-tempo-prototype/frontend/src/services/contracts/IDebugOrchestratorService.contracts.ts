@@ -1,21 +1,32 @@
 /**
  * QUALIA.CODE v1.1 - IDebugOrchestratorService Contracts
  * Type definitions for debug orchestration service.
+ * 
+ * ARCHITECTURE UPDATE: Event-Driven Pattern (Push Model)
+ * Service no longer requires direct service injections.
+ * All diagnostics collected via ServiceStatusUpdateEvent.
  */
 
 import type { ILogger } from "../interfaces/ILogger";
 import type { ITimerService, IPerformanceService } from "../interfaces/ITimerService";
-import type { INotificationService } from "../interfaces/INotificationService";
-import type { IErrorReportingService } from "../interfaces/IErrorReportingService";
+// QUALIA.CODE v1.1: Service imports removed - event-driven pattern eliminates coupling
+// import type { INotificationService } from "../interfaces/INotificationService";
+// import type { IErrorReportingService } from "../interfaces/IErrorReportingService";
 
-// Parameter object for DebugOrchestratorService constructor
+/**
+ * Parameter object for DebugOrchestratorService constructor
+ * 
+ * QUALIA.CODE v1.1: Services removed from parameters
+ * The service now operates in event-driven mode, listening for
+ * ServiceStatusUpdateEvent instead of calling service methods directly.
+ */
 export interface DebugOrchestratorServiceParams {
   config: DebugOrchestratorConfig;
   logger: ILogger;
   timerService: ITimerService;
   performanceService: IPerformanceService;
-  notificationService: INotificationService;
-  errorReportingService: IErrorReportingService;
+  // REMOVED: notificationService, errorReportingService
+  // Pattern: Event-driven aggregation (push model)
 }
 
 export interface ServiceStatus {

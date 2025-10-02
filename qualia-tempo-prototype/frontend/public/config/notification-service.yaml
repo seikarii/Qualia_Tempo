@@ -44,6 +44,14 @@ sound:
   defaultSoundVolume: 0.7
   enableSoundVariations: true
 
+# QUALIA.CODE v1.1 - Event-Driven Diagnostics Configuration
+# Status emission settings for DebugOrchestratorService integration
+statusEmission:
+  enabled: true
+  interval: 10000  # Emit status every 10 seconds
+  emitOnStateChange: true  # Emit when service starts/stops
+  emitOnSignificantEvent: true  # Emit when notifications are shown/dismissed
+
 types:
   success:
     duration: 3000

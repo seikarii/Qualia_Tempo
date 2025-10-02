@@ -91,11 +91,20 @@ export interface NotificationServiceConfig {
   
   // History cleanup
   historyCleanupRatio: number;  // Ratio of history to keep during cleanup
+  
+  // QUALIA.CODE v1.1: Event-Driven Diagnostics Configuration
+  statusEmission?: {
+    enabled: boolean;
+    interval: number;  // Interval in milliseconds for periodic status emission
+    emitOnStateChange: boolean;  // Emit when service starts/stops
+    emitOnSignificantEvent: boolean;  // Emit when notifications are shown/dismissed
+  };
 }
 
 // QUALIA.CODE v1.1: Constructor Parameter Object
-// Consolidates 6 constructor parameters into a single object to comply with IoC limits
+// Consolidates constructor parameters into a single object to comply with IoC limits
 export interface NotificationServiceParams {
+  eventBus: import("../interfaces/IEventBus").IEventBus;  // Required for event-driven diagnostics
   logger: ILogger;
   config: NotificationServiceConfig;
   gameStateStore: IGameStateStore;

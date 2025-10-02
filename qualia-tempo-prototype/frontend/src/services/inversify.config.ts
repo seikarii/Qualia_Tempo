@@ -437,8 +437,10 @@ export async function configureServices(): Promise<void> {
   });
 
   // QUALIA.CODE v1.1: Bind NotificationServiceParams factory
-  // Consolidates 6 constructor parameters into a single object to comply with IoC limits
+  // Consolidates constructor parameters into a single object to comply with IoC limits
+  // UPDATED: Added eventBus for event-driven diagnostics pattern
   safeBindConstant<NotificationServiceParams>(TYPES.NotificationServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
     config: fullConfig.notificationService,
     gameStateStore: container.get<IGameStateStore>(TYPES.IGameStateStore),
@@ -515,14 +517,15 @@ export async function configureServices(): Promise<void> {
   });
 
   // QUALIA.CODE v1.1: Bind DebugOrchestratorServiceParams factory
-  // Consolidates 6 constructor parameters into a single object to comply with IoC limits
+  // Event-driven pattern: Services no longer injected directly
+  // Pattern: Push (event-driven) instead of Pull (method calls)
   safeBindConstant<DebugOrchestratorServiceParams>(TYPES.DebugOrchestratorServiceParams, {
     config: fullConfig.debugOrchestrator,
     logger: container.get<ILogger>(TYPES.ILogger),
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
-    notificationService: container.get<INotificationService>(TYPES.INotificationService),
-    errorReportingService: container.get<IErrorReportingService>(TYPES.IErrorReportingService),
+    // REMOVED: notificationService, errorReportingService
+    // Services will emit ServiceStatusUpdateEvent for passive aggregation
   });
 
   // QUALIA.CODE v1.1: Bind AudioServiceParams factory

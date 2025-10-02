@@ -15,10 +15,11 @@ import type {
 } from './contracts/IDebugOrchestratorService.contracts';
 import type { ILogger } from './interfaces/ILogger';
 import type { ITimerService, IPerformanceService } from './interfaces/ITimerService';
-import type { INotificationService } from './interfaces/INotificationService';
-import type { IErrorReportingService } from './interfaces/IErrorReportingService';
+// QUALIA.CODE v1.1: Service imports removed - event-driven pattern eliminates coupling
+// import type { INotificationService } from './interfaces/INotificationService';
+// import type { IErrorReportingService } from './interfaces/IErrorReportingService';
 import { logMethod, catchError, OnEvent } from '../utils/decorators';
-import type { ConfigurationLoadedEvent } from './contracts/events.contracts';
+import type { ConfigurationLoadedEvent, ServiceStatusUpdateEvent } from './contracts/events.contracts';
 import type { IBaseService } from './interfaces/IBaseService';
 
 @injectable()
@@ -27,13 +28,25 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
   private readonly performanceService: IPerformanceService;
-  private readonly notificationService: INotificationService;
-  private readonly errorReportingService: IErrorReportingService;
+  // QUALIA.CODE v1.1: Services no longer directly injected - event-driven pattern
+  // private readonly notificationService: INotificationService;
+  // private readonly errorReportingService: IErrorReportingService;
   
   private lastUpdateTime: Date;
   // @ts-expect-error - Reserved for diagnostic caching functionality
   private _cachedDiagnostics: ServiceDiagnosticData | null = null;
-  private configLoaded: boolean = false;
+
+  /**
+   * QUALIA.CODE v1.1: Event-Driven Service Status Aggregation
+   * 
+   * This map serves as the passive storage for service statuses.
+   * It is populated by incoming ServiceStatusUpdateEvents, implementing
+   * the "push" pattern instead of the "pull" pattern.
+   * 
+   * ARCHITECTURE: This eliminates service coupling - DebugOrchestratorService
+   * no longer calls methods on other services. It simply aggregates events.
+   */
+  private serviceStatuses: Map<string, ServiceStatus> = new Map();
 
   constructor(
     @inject(TYPES.DebugOrchestratorServiceParams) params: DebugOrchestratorServiceParams,
@@ -42,13 +55,14 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
     this.logger = params.logger;
     this.timerService = params.timerService;
     this.performanceService = params.performanceService;
-    this.notificationService = params.notificationService;
-    this.errorReportingService = params.errorReportingService;
+    // QUALIA.CODE v1.1: Services no longer injected - event-driven pattern eliminates coupling
     
     this.lastUpdateTime = this.timerService.getCurrentDate();
-    this.logger.info('DebugOrchestratorService initialized', {
+    this.logger.info('DebugOrchestratorService initialized (event-driven mode)', {
       refreshInterval: this.config.refreshInterval,
-      enablePerformanceTracking: this.config.enablePerformanceTracking
+      enablePerformanceTracking: this.config.enablePerformanceTracking,
+      pattern: 'push (event-driven)',
+      note: 'Services will emit ServiceStatusUpdateEvent for passive aggregation'
     });
   }
 
@@ -92,91 +106,83 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
     return diagnosticData;
   }
 
+  /**
+   * QUALIA.CODE v1.1: Event-Driven Service Status Retrieval
+   * 
+   * ARCHITECTURE PATTERN: Passive Aggregation (Push Model)
+   * 
+   * This method NO LONGER calls other services directly. Instead, it simply
+   * returns the aggregated status information that has been collected via
+   * ServiceStatusUpdateEvent events.
+   * 
+   * BENEFITS:
+   * - Zero coupling to other services
+   * - No knowledge of other services' internal methods
+   * - Highly scalable - services emit on their own schedule
+   * - Event-driven architecture compliance
+   * 
+   * NOTE: If a service hasn't emitted a status update yet, it won't appear
+   * in this list. This is by design - services are responsible for their
+   * own status broadcasting.
+   */
   @logMethod
   @catchError
   async getServiceStatuses(): Promise<ServiceStatus[]> {
-    const statuses: ServiceStatus[] = [];
-
-    // Notification Service diagnostics
-    try {
-      const notificationStats = this.notificationService.getStatistics();
-      const notificationStatus = this.notificationService.getStatus();
-
-      statuses.push({
-        name: 'NotificationService',
-        isRunning: notificationStatus.isRunning,
-        status: `Active: ${notificationStatus.isRunning ? 'YES' : 'NO'} | Queue: ${notificationStatus.queueSize}`,
-        stats: {
-          totalNotifications: notificationStats.totalNotifications,
-          displayedNotifications: notificationStats.displayedNotifications,
-          throttledNotifications: notificationStats.throttledNotifications,
-          filteredNotifications: notificationStats.filteredNotifications
-        },
-        lastUpdate: this.timerService.getCurrentDate()
-      });
-    } catch (error) {
-      statuses.push({
-        name: 'NotificationService',
-        isRunning: false,
-        status: 'ERROR',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        lastUpdate: this.timerService.getCurrentDate()
-      });
-    }
-
-    // Error Reporting Service diagnostics
-    try {
-      const errorStats = this.errorReportingService.getStatistics();
-      const isEnabled = this.errorReportingService.isEnabled();
-
-      statuses.push({
-        name: 'ErrorReportingService',
-        isRunning: isEnabled,
-        status: `Enabled: ${isEnabled ? 'YES' : 'NO'} | Errors: ${errorStats.totalErrors}`,
-        stats: {
-          totalErrors: errorStats.totalErrors,
-          reportedErrors: errorStats.totalErrors, // Use totalErrors as fallback
-          throttledErrors: 0, // Fallback until interface is extended
-          successRate: 1.0 // Fallback until interface is extended
-        },
-        lastUpdate: this.timerService.getCurrentDate()
-      });
-    } catch (error) {
-      statuses.push({
-        name: 'ErrorReportingService',
-        isRunning: false,
-        status: 'ERROR',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        lastUpdate: this.timerService.getCurrentDate()
-      });
-    }
-
-    // Configuration Service diagnostics
-    try {
-      const configLoaded = this.configLoaded;
-      const configStatus = configLoaded ? 'LOADED' : 'NOT_LOADED';
-
-      statuses.push({
-        name: 'ConfigurationService',
-        isRunning: configLoaded,
-        status: `Status: ${configStatus}`,
-        stats: {
-          configLoaded,
-          configSections: [] // Cannot access config sections without service injection
-        },
-        lastUpdate: this.timerService.getCurrentDate()
-      });
-    } catch (error) {
-      statuses.push({
-        name: 'ConfigurationService',
-        isRunning: false,
-        status: 'ERROR',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        lastUpdate: this.timerService.getCurrentDate()
-      });
-    }
+    // QUALIA.CODE v1.1: Simply convert the internal map to an array
+    // No direct service method calls - pure event-driven aggregation
+    const statuses: ServiceStatus[] = Array.from(this.serviceStatuses.values());
+    
+    this.logger.debug('Retrieved service statuses from event aggregation', {
+      totalServices: statuses.length,
+      pattern: 'event-driven (push)',
+      services: statuses.map(s => s.name)
+    });
 
     return statuses;
+  }
+
+  /**
+   * QUALIA.CODE v1.1: Event Handler for Service Status Updates
+   * 
+   * ARCHITECTURE PATTERN: Passive Aggregator
+   * 
+   * This handler is automatically invoked by the @OnEvent decorator whenever
+   * ANY service in the system emits a ServiceStatusUpdateEvent. The service
+   * passively collects and stores this information in its internal map.
+   * 
+   * DECOUPLING: DebugOrchestratorService has ZERO knowledge of:
+   * - Which services exist
+   * - What methods they have
+   * - When they update their status
+   * 
+   * Services are responsible for emitting their own status updates.
+   * This service is merely a "bulletin board" for status information.
+   */
+  @OnEvent('ServiceStatusUpdate')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private handleServiceStatusUpdate(event: ServiceStatusUpdateEvent): void {
+    const { serviceName, status } = event;
+    
+    // Convert event data to ServiceStatus format
+    const serviceStatus: ServiceStatus = {
+      name: serviceName,
+      isRunning: status.isRunning,
+      status: status.isRunning ? 'RUNNING' : 'STOPPED',
+      stats: status.stats,
+      error: status.error,
+      lastUpdate: event.timestamp
+    };
+
+    // Update the internal map with the latest status
+    this.serviceStatuses.set(serviceName, serviceStatus);
+    
+    this.logger.debug('Service status updated via event', {
+      serviceName,
+      isRunning: status.isRunning,
+      hasStats: !!status.stats,
+      hasError: !!status.error,
+      pattern: 'event-driven (push)'
+    });
   }
 
   @logMethod
@@ -198,11 +204,35 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
     await this.gatherServiceDiagnostics();
   }
 
+  /**
+   * QUALIA.CODE v1.1: Configuration Loaded Event Handler
+   * 
+   * When configuration is loaded, we treat ConfigurationService as another
+   * service and add its status to our internal map via the same event-driven
+   * pattern. This maintains consistency - ALL service status is event-driven.
+   */
   @OnEvent('ConfigurationLoaded')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private onConfigurationLoaded(event: ConfigurationLoadedEvent): void {
-    this.configLoaded = true;
-    this.logger.info('Configuration loaded', { loadedConfigs: event.loadedConfigs });
+    // Treat ConfigurationService status as an event-driven update
+    const configServiceStatus: ServiceStatus = {
+      name: 'ConfigurationService',
+      isRunning: true,
+      status: `LOADED | Configs: ${event.totalConfigs}`,
+      stats: {
+        configLoaded: true,
+        loadedConfigs: event.loadedConfigs,
+        totalConfigs: event.totalConfigs
+      },
+      lastUpdate: event.timestamp
+    };
+
+    this.serviceStatuses.set('ConfigurationService', configServiceStatus);
+    
+    this.logger.info('Configuration loaded and status updated', { 
+      loadedConfigs: event.loadedConfigs,
+      pattern: 'event-driven'
+    });
   }
 
   // Private helper methods

@@ -37,7 +37,9 @@ import type {
   GameStateChangedEvent,
   ErrorEvent,
   BackendSyncEvent,
+  ServiceStatusUpdateEvent,
 } from "./contracts/events.contracts";
+import type { IEventBus } from "./interfaces/IEventBus";
 import { NotificationQueue } from "./utils/NotificationQueue";
 import { ThrottlingManager } from "./utils/ThrottlingManager";
 
@@ -69,6 +71,7 @@ export type {
  */
 @injectable()
 export class NotificationService implements INotificationService, IBaseService {
+  private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
   // Configuration service for future extensibility
@@ -91,6 +94,9 @@ export class NotificationService implements INotificationService, IBaseService {
   private queueProcessingInterval: number | null = null;
   private cleanupInterval: number | null = null;
   private storeUpdateThrottleTimeout: number | null = null;
+  
+  // QUALIA.CODE v1.1: Event-Driven Diagnostics - Status emission interval
+  private statusEmissionInterval: number | null = null;
 
   // Statistics tracking
   private statistics: NotificationStatistics = {
@@ -123,7 +129,13 @@ export class NotificationService implements INotificationService, IBaseService {
         "🚨 [NotificationService] GameStateStore is required for decoupled architecture",
       );
     }
+    if (!params.eventBus) {
+      throw new Error(
+        "🚨 [NotificationService] EventBus is required for event-driven diagnostics",
+      );
+    }
 
+    this.eventBus = params.eventBus;
     this.logger = params.logger;
     this.timerService = params.timerService;
     this.config = params.config;
@@ -174,6 +186,11 @@ export class NotificationService implements INotificationService, IBaseService {
 
       this.isStarted = true;
       this.logger.info("NotificationService started");
+      
+      // QUALIA.CODE v1.1: Event-Driven Diagnostics - Emit status on state change
+      if (this.config.statusEmission?.emitOnStateChange) {
+        this.emitStatusUpdate();
+      }
     } catch (error) {
       this.logger.error("🚨 [NotificationService] Failed to start service:", {
         error,
@@ -210,6 +227,11 @@ export class NotificationService implements INotificationService, IBaseService {
 
       this.isStarted = false;
       this.logger.info("NotificationService stopped");
+      
+      // QUALIA.CODE v1.1: Event-Driven Diagnostics - Emit status on state change
+      if (this.config.statusEmission?.emitOnStateChange) {
+        this.emitStatusUpdate();
+      }
     } catch (error) {
       this.logger.error("🚨 [NotificationService] Error stopping service:", {
         error,
@@ -221,12 +243,36 @@ export class NotificationService implements INotificationService, IBaseService {
   public initialize(): void {
     this.logger.info('🚀 [NotificationService] Initializing service with @OnEvent lifecycle...');
     // Las suscripciones de @OnEvent se gestionan automáticamente.
+    
+    // QUALIA.CODE v1.1: Event-Driven Diagnostics - Start periodic status emission
+    if (this.config.statusEmission?.enabled && this.config.statusEmission.interval > 0) {
+      this.statusEmissionInterval = this.timerService.setInterval(
+        () => this.emitStatusUpdate(),
+        this.config.statusEmission.interval
+      );
+      this.logger.info('📡 [NotificationService] Status emission started', {
+        interval: this.config.statusEmission.interval
+      });
+    }
+    
+    // Emit initial status
+    this.emitStatusUpdate();
   }
 
   @logMethod
   public cleanup(): void {
     this.logger.info('🧹 [NotificationService] Cleaning up service...');
     // La limpieza de @OnEvent es automática.
+    
+    // QUALIA.CODE v1.1: Event-Driven Diagnostics - Stop status emission
+    if (this.statusEmissionInterval !== null) {
+      this.timerService.clearInterval(this.statusEmissionInterval);
+      this.statusEmissionInterval = null;
+      this.logger.info('📡 [NotificationService] Status emission stopped');
+    }
+    
+    // Final status emission
+    this.emitStatusUpdate();
   }
 
   /**
@@ -255,6 +301,11 @@ export class NotificationService implements INotificationService, IBaseService {
 
     // Process immediately for showNotification calls
     this.displayNotification(notification);
+    
+    // QUALIA.CODE v1.1: Event-Driven Diagnostics - Emit status on significant event
+    if (this.config.statusEmission?.emitOnSignificantEvent) {
+      this.emitStatusUpdate();
+    }
 
     return notification.id;
   }
@@ -411,6 +462,11 @@ export class NotificationService implements INotificationService, IBaseService {
       this.logger.debug("❌ [NotificationService] Notification dismissed", {
         id,
       });
+      
+      // QUALIA.CODE v1.1: Event-Driven Diagnostics - Emit status on significant event
+      if (this.config.statusEmission?.emitOnSignificantEvent) {
+        this.emitStatusUpdate();
+      }
     }
   }
 
@@ -435,6 +491,11 @@ export class NotificationService implements INotificationService, IBaseService {
     this.logger.info(
       `🧹 [NotificationService] Cleared ${count} active notifications`,
     );
+    
+    // QUALIA.CODE v1.1: Event-Driven Diagnostics - Emit status on significant event
+    if (this.config.statusEmission?.emitOnSignificantEvent) {
+      this.emitStatusUpdate();
+    }
   }
 
   /**
@@ -998,6 +1059,49 @@ export class NotificationService implements INotificationService, IBaseService {
       throttlingMaxPerMinute: this.config.throttling.maxNotificationsPerMinute,
       filterEnabled: this.config.filter.enabled,
       storeUpdateThrottleMs: this.config.storeUpdateThrottleMs,
+    });
+  }
+
+  /**
+   * QUALIA.CODE v1.1: Event-Driven Diagnostics Pattern
+   * Emit service status update event for passive aggregation by DebugOrchestratorService
+   * 
+   * This method broadcasts service status to the EventBus, allowing
+   * DebugOrchestratorService to passively aggregate diagnostics without direct coupling.
+   * 
+   * Implementation follows SERVICE_STATUS_EVENT_GUIDE.md (GOLD.CODE)
+   */
+  @logMethod
+  private emitStatusUpdate(): void {
+    if (!this.config.statusEmission?.enabled) {
+      return;
+    }
+
+    const statusEvent: ServiceStatusUpdateEvent = {
+      type: 'ServiceStatusUpdate',
+      timestamp: new Date(),
+      source: 'NotificationService',
+      serviceName: 'NotificationService',
+      status: {
+        isRunning: this.isStarted,
+        stats: {
+          totalNotifications: this.statistics.totalNotifications,
+          displayedNotifications: this.statistics.displayedNotifications,
+          dismissedNotifications: this.statistics.dismissedNotifications,
+          expiredNotifications: this.statistics.expiredNotifications,
+          throttledNotifications: this.statistics.throttledNotifications,
+          filteredNotifications: this.statistics.filteredNotifications,
+          queueSize: this.notificationQueue.size(),
+          activeCount: this.activeNotifications.size,
+          historySize: this.notificationHistory.length,
+        }
+      }
+    };
+
+    this.eventBus.emit(statusEvent);
+    this.logger.debug('📡 [NotificationService] Status update emitted', { 
+      isRunning: statusEvent.status.isRunning,
+      totalNotifications: this.statistics.totalNotifications 
     });
   }
 }

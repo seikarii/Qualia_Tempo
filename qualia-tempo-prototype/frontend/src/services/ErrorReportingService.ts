@@ -100,6 +100,9 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   private retryProcessingInterval: number | null = null;
   private memoryCleanupInterval: number | null = null;
   private rateLimitRefillInterval: number | null = null;
+  
+  // QUALIA.CODE v1.1: Event-Driven Diagnostics - Status emission interval
+  private statusEmissionInterval: number | null = null;
 
   // Statistics tracking
   private statistics: ErrorStatistics = {
@@ -196,6 +199,11 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
         "🚀 [ErrorReportingService] Service started - Production error handling active",
       );
       this.logCurrentConfig();
+      
+      // QUALIA.CODE v1.1: Event-Driven Diagnostics - Emit status on state change
+      if (this.config.statusEmission?.emitOnStateChange) {
+        this.emitStatusUpdate();
+      }
     } catch (error) {
       this.logger.error("🚨 [ErrorReportingService] Failed to start service:", {
         error,
@@ -232,6 +240,11 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
 
       this.isStarted = false;
       this.logger.info("🛑 [ErrorReportingService] Service stopped");
+      
+      // QUALIA.CODE v1.1: Event-Driven Diagnostics - Emit status on state change
+      if (this.config.statusEmission?.emitOnStateChange) {
+        this.emitStatusUpdate();
+      }
     } catch (error) {
       this.logger.error("🚨 [ErrorReportingService] Error stopping service:", {
         error,
@@ -260,6 +273,11 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
       context,
     );
     await this.processErrorReport(errorReport);
+    
+    // QUALIA.CODE v1.1: Event-Driven Diagnostics - Emit status on error
+    if (this.config.statusEmission?.emitOnError) {
+      this.emitStatusUpdate();
+    }
   }
 
   /**
@@ -795,6 +813,20 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   public initialize(): void {
     this.logger.info('🚀 [ErrorReportingService] Initializing service with @OnEvent lifecycle...');
     // @OnEvent subscriptions are handled automatically by the decorator
+    
+    // QUALIA.CODE v1.1: Event-Driven Diagnostics - Start periodic status emission
+    if (this.config.statusEmission?.enabled && this.config.statusEmission.interval > 0) {
+      this.statusEmissionInterval = this.timerService.setInterval(
+        () => this.emitStatusUpdate(),
+        this.config.statusEmission.interval
+      );
+      this.logger.info('📡 [ErrorReportingService] Status emission started', {
+        interval: this.config.statusEmission.interval
+      });
+    }
+    
+    // Emit initial status
+    this.emitStatusUpdate();
   }
 
   @logMethod
@@ -805,5 +837,60 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     this.stopAllIntervals();
     this.processRemainingErrors();
     this.performMemoryCleanup();
+    
+    // QUALIA.CODE v1.1: Event-Driven Diagnostics - Stop status emission
+    if (this.statusEmissionInterval !== null) {
+      this.timerService.clearInterval(this.statusEmissionInterval);
+      this.statusEmissionInterval = null;
+      this.logger.info('📡 [ErrorReportingService] Status emission stopped');
+    }
+    
+    // Final status emission
+    this.emitStatusUpdate();
+  }
+
+  /**
+   * QUALIA.CODE v1.1: Event-Driven Diagnostics Pattern
+   * Emit service status update event for passive aggregation by DebugOrchestratorService
+   * 
+   * This method broadcasts service status to the EventBus, allowing
+   * DebugOrchestratorService to passively aggregate diagnostics without direct coupling.
+   * 
+   * Implementation follows SERVICE_STATUS_EVENT_GUIDE.md (GOLD.CODE)
+   */
+  @logMethod
+  private emitStatusUpdate(): void {
+    if (!this.config.statusEmission?.enabled) {
+      return;
+    }
+
+    const statusEvent: import("./contracts/events.contracts").ServiceStatusUpdateEvent = {
+      type: 'ServiceStatusUpdate',
+      timestamp: new Date(),
+      source: 'ErrorReportingService',
+      serviceName: 'ErrorReportingService',
+      status: {
+        isRunning: this.isStarted,
+        stats: {
+          totalErrors: this.statistics.totalErrors,
+          totalBatches: this.statistics.totalBatches,
+          successfulReports: this.statistics.successfulReports,
+          failedReports: this.statistics.failedReports,
+          duplicatesFiltered: this.statistics.duplicatesFiltered,
+          averageRetries: this.statistics.averageRetries,
+          errorQueueSize: this.errorQueue.length,
+          batchQueueSize: this.batchQueue.length,
+          pendingBatchesCount: this.pendingBatches.size,
+          circuitBreakerState: this.circuitBreakerState.state,
+          rateLimitTokens: this.rateLimitState.tokens,
+        }
+      }
+    };
+
+    this.eventBus.emit(statusEvent);
+    this.logger.debug('📡 [ErrorReportingService] Status update emitted', { 
+      isRunning: statusEvent.status.isRunning,
+      totalErrors: this.statistics.totalErrors 
+    });
   }
 }
