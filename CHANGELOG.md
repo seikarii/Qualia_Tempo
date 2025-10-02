@@ -2,6 +2,81 @@
 
 All notable changes to the Qualia Tempo project will be documented in this file.
 
+## [2025-10-02] - ENHANCEMENT: Real-Time Event-Driven Health Monitoring
+
+### 🎯 Architectural Evolution: DebugOrchestratorService → 100% Passive Monitor
+
+This enhancement completes the event-driven architecture evolution for service diagnostics by:
+1. Eliminating "pull" pattern in favor of pure "push" pattern
+2. Providing synchronous, ultra-fast health reporting from cached data
+3. Creating reusable business logic hook for UI components
+4. Marking legacy async diagnostic gathering for future removal
+
+#### Implementation Details
+
+**New Method: `getHealthReport()`**
+- Synchronous method that returns cached service statuses from the internal Map
+- Ultra-fast: No async operations, no service method calls
+- Pure event-driven: Simply reads from data populated by `ServiceStatusUpdateEvent`
+- Returns: `ServiceStatus[]` directly (no Promise)
+
+**New Hook: `useServiceHealth()`**
+- Business logic hook for real-time service health monitoring
+- Polls `getHealthReport()` every 500ms (configurable) for near-real-time updates
+- Located in `/hooks/` directory (application-level hooks)
+- Type-safe: Returns `ServiceStatus[]` with full TypeScript support
+
+**Deprecated Method: `gatherServiceDiagnostics()`**
+- Marked with `@deprecated` JSDoc tag
+- Promotes "pull" pattern (to be eliminated in future)
+- Maintained for backward compatibility with existing UI
+- Will be removed once all consumers migrate to `getHealthReport()`
+
+**Component Refactor: `ServiceDiagnosticsPanel`**
+- Replaced async `gatherServiceDiagnostics()` with `useServiceHealth()` hook
+- Eliminated complex state management and async operations
+- Reduced component from ~75 lines to ~50 lines
+- Improved user experience: 500ms updates vs 5000ms updates (10x faster)
+- Updated architecture validation section to reflect event-driven pattern
+
+#### Files Modified
+- `src/services/interfaces/IDebugOrchestratorService.ts`: Added `getHealthReport()` method signature, deprecated `gatherServiceDiagnostics()`
+- `src/services/DebugOrchestratorService.ts`: Implemented `getHealthReport()` synchronous method
+- `src/hooks/useServiceHealth.ts`: **NEW** - Business logic hook for real-time health monitoring
+- `src/hooks/index.ts`: **NEW** - Export barrel for application hooks
+- `src/components/debug/ServiceDiagnosticsPanel.tsx`: Refactored to use `useServiceHealth()` hook
+- `src/services/__tests__/DebugOrchestratorService.test.ts`: Added 4 new tests for `getHealthReport()`
+- `src/testing/mocks/debug-orchestrator-service.mock.ts`: Added `getHealthReport` mock
+
+#### Test Results
+- ✅ 8/8 tests passed for DebugOrchestratorService
+- ✅ New tests validate synchronous behavior
+- ✅ No new architectural violations introduced
+
+#### Performance Impact
+- **Before**: 5-second polling interval, async operations
+- **After**: 500ms polling interval, synchronous cache reads
+- **Improvement**: 10x faster UI updates, zero latency from cache reads
+
+#### Migration Path
+Consumers of `gatherServiceDiagnostics()` should migrate to `getHealthReport()`:
+```typescript
+// OLD (deprecated):
+const data = await debugOrchestratorService.gatherServiceDiagnostics();
+const statuses = data.services;
+
+// NEW (recommended):
+const statuses = debugOrchestratorService.getHealthReport();
+```
+
+For React components, use the hook:
+```typescript
+// NEW (recommended):
+const serviceStatuses = useServiceHealth(500); // 500ms polling
+```
+
+---
+
 ## [2025-01-XX] - CRITICAL: Push-Based Diagnostics Implementation
 
 ### 🔴 Critical Architectural Compliance: DIRECTIVA 13-DIAGNOSTICS-PURITY

@@ -1,77 +1,40 @@
 /**
- * QUALIA.CODE v1.1 - Servic  const timerService = useTimerService();
-
-  const [serviceData, setServiceData] = useState<string>("{}"); // Store as JSON string to comply with ESLint rule
-  const [lastUpdate, setLastUpdate] = useState<Date>(() => timerService.getCurrentDate());csPanel Component
+ * QUALIA.CODE v1.1 - ServiceDiagnosticsPanel Component
  * Diagnostic panel for validating end-to-end service architecture integration.
  *
  * ARCHITECTURAL VALIDATION:
  * This component serves as the proof-of-concept for the UI → Hooks → Services flow.
- * It exclusively uses hooks from hooks.ts to access services, never directly
- * instantiating or accessing the IoC container.
+ * It exclusively uses hooks to access services, never directly instantiating
+ * or accessing the IoC container.
  *
- * PURPOSE: Validate that our IoC architecture works correctly in practice
- * by showing real-time service statistics and status information.
+ * ARCHITECTURE EVOLUTION (Event-Driven Pattern):
+ * - Uses useServiceHealth() hook for real-time service status monitoring
+ * - Hook polls cached service statuses every 500ms (configurable)
+ * - Service statuses are populated via ServiceStatusUpdateEvent (push pattern)
+ * - No direct service method calls - pure event-driven aggregation
+ *
+ * PURPOSE: Validate that our IoC and event-driven architecture work correctly
+ * in practice by showing real-time service statistics and status information.
  */
 
-import React, { useState, useEffect } from "react";
-import {
-  useDebugOrchestratorService,
-  useLogger,
-  useTimerService,
-} from "../../services/hooks";
-import type { ServiceStatus } from "../../services/contracts/IDebugOrchestratorService.contracts";
+import React, { useState } from "react";
+import { useServiceHealth } from "../../hooks";
+import { useLogger, useTimerService } from "../../services/hooks";
 
 export const ServiceDiagnosticsPanel: React.FC = () => {
   // QUALIA.CODE COMPLIANCE: Using hooks exclusively - NO direct IoC access
-  const debugOrchestratorService = useDebugOrchestratorService();
+  // ARCHITECTURE: Event-driven pattern - useServiceHealth polls cached statuses
+  const serviceStatuses = useServiceHealth(500); // Poll every 500ms for near-real-time updates
   const logger = useLogger();
   const timerService = useTimerService();
 
-  const [serviceData, setServiceData] = useState<string>("{}"); // Store as JSON string to comply with ESLint rule
-  const [lastUpdate, setLastUpdate] = useState<Date>(() => timerService.getCurrentDate());
+  const [lastManualRefresh, setLastManualRefresh] = useState<Date>(() => timerService.getCurrentDate());
 
-  const gatherServiceDiagnostics = async (): Promise<void> => {
-    try {
-      // QUALIA.CODE v1.1: Business logic extracted to DebugOrchestratorService
-      const diagnosticData = await debugOrchestratorService.gatherServiceDiagnostics();
-      
-      // Store only the services array as JSON string to comply with ESLint rules
-      setServiceData(JSON.stringify(diagnosticData.services));
-    } catch (error) {
-      logger.error('Failed to gather service diagnostics', { error });
-      
-      // Fallback: Show error state
-      const errorStatus: ServiceStatus[] = [{
-        name: "DebugOrchestratorService",
-        isRunning: false,
-        status: "ERROR",
-        error: error instanceof Error ? error.message : "Unknown error",
-      }];
-      
-      setServiceData(JSON.stringify(errorStatus));
-    }
+  const handleManualRefresh = () => {
+    // Manual refresh just updates the timestamp - the hook automatically provides fresh data
+    setLastManualRefresh(timerService.getCurrentDate());
+    logger.info('Manual refresh triggered - displaying current cached service statuses');
   };
-
-  const refreshDiagnostics = async () => {
-    await gatherServiceDiagnostics();
-    setLastUpdate(timerService.getCurrentDate());
-  };
-
-  // QUALIA.CODE v1.1: Test methods removed to maintain architectural purity
-  // Testing should be handled by dedicated test services or test utilities
-
-  // Auto-refresh diagnostics every 5 seconds
-  useEffect(() => {
-    refreshDiagnostics();
-    const interval = timerService.setInterval(refreshDiagnostics, 5000);
-    return () => timerService.clearInterval(interval);
-  }, [timerService]);
-
-  // Parse service data for rendering
-  const serviceStatuses: ServiceStatus[] = serviceData
-    ? JSON.parse(serviceData)
-    : [];
 
   return (
     <div
@@ -87,13 +50,13 @@ export const ServiceDiagnosticsPanel: React.FC = () => {
     >
       <h2>🔧 SERVICE DIAGNOSTICS PANEL</h2>
       <p style={{ color: "#ffff00" }}>
-        QUALIA.CODE v1.1 Architecture Validation | Last Update:{" "}
-        {lastUpdate.toLocaleTimeString()}
+        QUALIA.CODE v1.1 Event-Driven Architecture | Real-Time Monitoring (500ms polling) | Last Manual Refresh:{" "}
+        {lastManualRefresh.toLocaleTimeString()}
       </p>
 
       <div style={{ marginBottom: "20px" }}>
         <button
-          onClick={refreshDiagnostics}
+          onClick={handleManualRefresh}
           style={{
             marginRight: "10px",
             padding: "8px 16px",
@@ -103,9 +66,11 @@ export const ServiceDiagnosticsPanel: React.FC = () => {
             cursor: "pointer",
           }}
         >
-          🔄 Refresh
+          🔄 Manual Refresh
         </button>
-        {/* QUALIA.CODE v1.1: Test buttons removed to maintain architectural purity */}
+        <span style={{ color: "#cccccc", fontSize: "12px" }}>
+          (Auto-refreshing every 500ms from event-driven cache)
+        </span>
       </div>
 
       {serviceStatuses.map((service, index) => (
@@ -167,16 +132,18 @@ export const ServiceDiagnosticsPanel: React.FC = () => {
           borderRadius: "4px",
         }}
       >
-        <h4 style={{ color: "#0099ff" }}>🏗️ ARCHITECTURE VALIDATION</h4>
+        <h4 style={{ color: "#0099ff" }}>🏗️ ARCHITECTURE VALIDATION (Event-Driven Pattern)</h4>
         <ul style={{ color: "#cccccc", fontSize: "12px" }}>
           <li>
-            ✅ All services accessed via hooks.ts (NO direct IoC container
-            access)
+            ✅ All services accessed via hooks (NO direct IoC container access)
           </li>
           <li>✅ React functional component pattern</li>
           <li>✅ Type-safe service method invocation</li>
-          <li>✅ Real-time service statistics display</li>
-          <li>✅ Error boundary handling for service failures</li>
+          <li>✅ Real-time service statistics display (500ms polling)</li>
+          <li>✅ Event-driven architecture: Services emit ServiceStatusUpdateEvent</li>
+          <li>✅ DebugOrchestratorService passively aggregates events (push pattern)</li>
+          <li>✅ useServiceHealth() polls cached data (ultra-fast, synchronous)</li>
+          <li>✅ Zero coupling: No direct service-to-service method calls</li>
         </ul>
       </div>
     </div>

@@ -8,7 +8,17 @@ import type { ServiceDiagnosticData, ServiceStatus } from '../contracts/IDebugOr
 
 export interface IDebugOrchestratorService {
   /**
+   * Get real-time health report from cached service statuses
+   * QUALIA.CODE v1.1: Event-Driven Pattern (Push Model)
+   * This method returns the current state of service statuses that have been
+   * passively aggregated via ServiceStatusUpdateEvent events.
+   * @returns Array of current service status information (synchronous)
+   */
+  getHealthReport(): ServiceStatus[];
+
+  /**
    * Gather comprehensive diagnostic data from all services
+   * @deprecated Use getHealthReport() instead. This method promotes a "pull" pattern.
    * @returns Promise resolving to complete diagnostic data
    */
   gatherServiceDiagnostics(): Promise<ServiceDiagnosticData>;

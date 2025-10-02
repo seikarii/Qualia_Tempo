@@ -101,4 +101,71 @@ describe('DebugOrchestratorService', () => {
       }).not.toThrow();
     });
   });
+
+  describe('getHealthReport() - Event-Driven Health Monitoring', () => {
+    beforeEach(() => {
+      (debugOrchestratorService as any).initialize();
+    });
+
+    it('should return empty array when no services have emitted status events', () => {
+      // Act
+      const healthReport = debugOrchestratorService.getHealthReport();
+
+      // Assert
+      expect(Array.isArray(healthReport)).toBe(true);
+      expect(healthReport.length).toBe(0);
+    });
+
+    it('should return cached service statuses synchronously', () => {
+      // Arrange - Simulate a service status update event by directly populating the internal map
+      const mockServiceStatus = {
+        name: 'TestService',
+        isRunning: true,
+        status: 'RUNNING',
+        stats: { testStat: 42 },
+        lastUpdate: new Date()
+      };
+      
+      // Access the private serviceStatuses map (only for testing)
+      (debugOrchestratorService as any).serviceStatuses.set('TestService', mockServiceStatus);
+
+      // Act
+      const healthReport = debugOrchestratorService.getHealthReport();
+
+      // Assert
+      expect(healthReport).toHaveLength(1);
+      expect(healthReport[0]).toEqual(mockServiceStatus);
+      expect(healthReport[0].name).toBe('TestService');
+      expect(healthReport[0].isRunning).toBe(true);
+    });
+
+    it('should return multiple service statuses when multiple services have reported', () => {
+      // Arrange
+      const services = [
+        { name: 'ServiceA', isRunning: true, status: 'RUNNING', lastUpdate: new Date() },
+        { name: 'ServiceB', isRunning: false, status: 'STOPPED', lastUpdate: new Date() },
+        { name: 'ServiceC', isRunning: true, status: 'RUNNING', stats: { count: 100 }, lastUpdate: new Date() }
+      ];
+
+      services.forEach(service => {
+        (debugOrchestratorService as any).serviceStatuses.set(service.name, service);
+      });
+
+      // Act
+      const healthReport = debugOrchestratorService.getHealthReport();
+
+      // Assert
+      expect(healthReport).toHaveLength(3);
+      expect(healthReport.map(s => s.name)).toEqual(['ServiceA', 'ServiceB', 'ServiceC']);
+    });
+
+    it('should be synchronous and not return a Promise', () => {
+      // Act
+      const result = debugOrchestratorService.getHealthReport();
+
+      // Assert - Verify it's NOT a Promise
+      expect(result).not.toBeInstanceOf(Promise);
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
 });

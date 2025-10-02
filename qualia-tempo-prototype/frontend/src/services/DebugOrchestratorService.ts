@@ -67,6 +67,34 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
     });
   }
 
+  /**
+   * QUALIA.CODE v1.1: Real-Time Health Report (Event-Driven)
+   * 
+   * Returns the current cached state of all service statuses.
+   * This method is SYNCHRONOUS and ultra-fast because it simply reads
+   * from the internal Map that is populated by incoming events.
+   * 
+   * ARCHITECTURE: Pure "push" pattern - no service calls, no async operations.
+   * @returns Array of current service statuses
+   */
+  @logMethod
+  public getHealthReport(): ServiceStatus[] {
+    // Simply return the current state of the Map. Ultra-fast and synchronous.
+    const report = Array.from(this.serviceStatuses.values());
+    
+    this.logger.debug('Health report retrieved from cache', {
+      totalServices: report.length,
+      pattern: 'event-driven (push)',
+      services: report.map(s => s.name)
+    });
+
+    return report;
+  }
+
+  /**
+   * @deprecated This method promotes a "pull" pattern. Use getHealthReport() instead to read cached state.
+   * Marked for future removal once all consumers migrate to the event-driven pattern.
+   */
   @logMethod
   @catchError
   @BrowserOnly
