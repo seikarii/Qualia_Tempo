@@ -242,8 +242,8 @@ export class ViewLogicService implements IViewLogicService {
 
   @logMethod
   @catchError
-  getPlayerVisuals(playerData: PlayerState, performance: PerformanceData, time: number): PlayerVisualData {
-    const player = playerData;
+  getPlayerVisuals(playerState: PlayerState, performance: PerformanceData, time: number): PlayerVisualData {
+    const player = playerState;
     
     // Extract calculations from PlayerRenderer useFrame
     const powerLevel = player.power_level / 100; // Normalize to 0-1

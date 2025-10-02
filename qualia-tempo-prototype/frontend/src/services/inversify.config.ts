@@ -123,8 +123,10 @@ import { ToneFactoryService } from "../audio/ToneFactoryService";
 // ===== PROTOCOL ADAPTER IMPORTS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
 import type { IMessageAdapter } from "./protocol/IMessageAdapter";
+import type { IEventTransformer } from "./protocol/IEventTransformer";
 import { RawToParticleEventAdapter } from "./protocol/adapters/RawToParticleEventAdapter";
 import { KeyToDirectionAdapter } from "./protocol/adapters/KeyToDirectionAdapter";
+import type { PlayerInputEvent, PlayerDirectionEvent } from "./contracts/events.contracts";
 
 // ===== CORE SERVICE BINDINGS =====
 // These services have no dependencies and can be bound directly
@@ -363,7 +365,7 @@ container
   .inSingletonScope();
 
 container
-  .bind<IMessageAdapter>(TYPES.IKeyToDirectionAdapter)
+  .bind<IEventTransformer<PlayerInputEvent, PlayerDirectionEvent>>(TYPES.IKeyToDirectionAdapter)
   .to(KeyToDirectionAdapter)
   .inSingletonScope();
 
@@ -435,7 +437,7 @@ export async function configureServices(): Promise<void> {
     logger: container.get<ILogger>(TYPES.ILogger),
     config: fullConfig.rhythmicMovement,
     timerService: container.get<ITimerService>(TYPES.ITimerService),
-    keyAdapter: container.get<IMessageAdapter>(TYPES.IKeyToDirectionAdapter),
+    keyAdapter: container.get<IEventTransformer<PlayerInputEvent, PlayerDirectionEvent>>(TYPES.IKeyToDirectionAdapter),
     inputStateService: container.get<IInputStateService>(TYPES.IInputStateService),
     gameStateStore: container.get<IGameStateStoreService>(TYPES.IGameStateStoreService),
     gameplayMechanicsService: container.get<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService),

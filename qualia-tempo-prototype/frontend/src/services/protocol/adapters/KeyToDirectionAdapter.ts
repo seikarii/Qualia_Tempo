@@ -1,11 +1,11 @@
-// ESQUELETO - COMPLETAR
+// QUALIA.CODE v1.2 - Event Transformer Implementation
 import { injectable } from 'inversify';
-import { IMessageAdapter } from '../IMessageAdapter';
+import { IEventTransformer } from '../IEventTransformer';
 import { PlayerInputEvent, PlayerDirectionEvent } from '../../contracts/events.contracts';
 
 @injectable()
-export class KeyToDirectionAdapter implements IMessageAdapter {
-  public adapt(rawEvent: PlayerInputEvent): PlayerDirectionEvent {
+export class KeyToDirectionAdapter implements IEventTransformer<PlayerInputEvent, PlayerDirectionEvent> {
+  public transform(rawEvent: PlayerInputEvent): PlayerDirectionEvent {
     const key = rawEvent.key.toLowerCase();
     let direction: 'north' | 'south' | 'east' | 'west' | null = null;
 

@@ -121,6 +121,11 @@ module.exports = {
           return;
         }
 
+        // Skip TypeScript overload declarations (they don't have a body)
+        if (!node.value?.body) {
+          return;
+        }
+
         // Only check public methods
         if (!isPublicMethod(node)) {
           return;

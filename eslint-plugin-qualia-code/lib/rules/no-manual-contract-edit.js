@@ -29,13 +29,15 @@ module.exports = {
     const filename = context.getFilename();
     
     // Check if this is a generated contract file
-    const isContractFile = 
-      filename.includes('api/models.py') || 
-      filename.includes('types/contracts.ts') ||
-      filename.includes('contracts.ts');
+    // Only flag files in /types/ directory that are generated from /shared_contracts
+    // Do NOT flag hand-written service contracts in /services/contracts/
+    const isGeneratedContractFile =
+      filename.includes('api/models.py') ||
+      (filename.includes('/types/') && filename.endsWith('.d.ts')) ||
+      (filename.includes('/types/contracts.ts'));
 
-    if (!isContractFile) {
-      return {}; // No rules to apply for non-contract files
+    if (!isGeneratedContractFile) {
+      return {}; // No rules to apply for non-generated contract files
     }
 
     return {

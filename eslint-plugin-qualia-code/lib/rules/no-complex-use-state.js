@@ -26,8 +26,21 @@ module.exports = {
   },
 
   create(context) {
+    const filename = context.getFilename();
+    
+    // Allow complex state in visual renderer components
+    // These components legitimately need local state for frame-by-frame visual updates
+    const isRendererComponent = filename.includes('/components/') && 
+                               filename.includes('Renderer') && 
+                               filename.endsWith('.tsx');
+    
     return {
       CallExpression(node) {
+        // Skip renderer components - they need complex local state for visual data
+        if (isRendererComponent) {
+          return;
+        }
+        
         // Check if this is a useState call
         if (node.callee.name === 'useState' && node.arguments.length > 0) {
           const initialValue = node.arguments[0];

@@ -41,7 +41,6 @@ import { mockGameStateStoreService } from "./mocks/game-state-store-service.mock
 import { mockHttpService } from "./mocks/http-service.mock";
 import { mockTimerService } from "./mocks/timer-service.mock";
 import { mockPerformanceService } from "./mocks/performance-service.mock";
-import { mockPerformanceProvider } from "./mocks/performance-provider.mock";
 import { mockWebSocketService } from "./mocks/web-socket-service.mock";
 import { mockBrowserEventsService } from "./mocks/browser-events-service.mock";
 import { mockDebugOrchestratorService } from "./mocks/debug-orchestrator-service.mock";

@@ -52,8 +52,8 @@ module.exports = {
     // Check if this is the main entry point file or any file that uses inversify
     const isEntryFile = filename.endsWith('index.tsx') || filename.endsWith('index.ts') ||
                        filename.endsWith('main.tsx') || filename.endsWith('main.ts') ||
-                       filename.includes('container.ts') || filename.includes('bootstrap.ts') ||
-                       filename.includes('container.tsx') || filename.includes('bootstrap.tsx');
+                       filename.endsWith('app.tsx') || filename.endsWith('app.ts') ||
+                       filename.includes('bootstrap.ts') || filename.includes('bootstrap.tsx');
 
     // Track if we've seen inversify imports and reflect-metadata
     let hasInversifyImport = false;

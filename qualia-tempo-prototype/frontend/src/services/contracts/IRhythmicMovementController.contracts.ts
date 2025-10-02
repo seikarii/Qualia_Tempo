@@ -10,10 +10,11 @@ import type { CoordinateSystemConfig } from "./ICoordinateSystemService.contract
 import type { IEventBus } from "../interfaces/IEventBus";
 import type { ILogger } from "../interfaces/ILogger";
 import type { ITimerService } from "../interfaces/ITimerService";
-import type { IMessageAdapter } from "../protocol/IMessageAdapter";
+import type { IEventTransformer } from "../protocol/IEventTransformer";
 import type { IInputStateService } from "../interfaces/IInputStateService";
 import type { IGameStateStoreService } from "../interfaces/IGameStateStoreService";
 import type { IGameplayMechanicsService } from "../interfaces/IGameplayMechanicsService";
+import type { PlayerInputEvent, PlayerDirectionEvent } from "./events.contracts";
 
 // QUALIA.CODE v1.1: Constructor Parameter Object
 // Consolidates 8 constructor parameters into a single object to comply with IoC limits
@@ -22,7 +23,7 @@ export interface RhythmicMovementControllerParams {
   logger: ILogger;
   config: RhythmicMovementConfig;
   timerService: ITimerService;
-  keyAdapter: IMessageAdapter;
+  keyAdapter: IEventTransformer<PlayerInputEvent, PlayerDirectionEvent>;
   inputStateService: IInputStateService;
   gameStateStore: IGameStateStoreService;
   gameplayMechanicsService: IGameplayMechanicsService;

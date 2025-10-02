@@ -3,7 +3,7 @@
  * Game state to visual properties transformation service.
  */
 
-import type { QualiaState, PlayerState, NoteData } from "../../types/contracts";
+import type { QualiaState, NoteData } from "../../types/contracts";
 import type {
   BossVisualData,
   PlayerVisualData,

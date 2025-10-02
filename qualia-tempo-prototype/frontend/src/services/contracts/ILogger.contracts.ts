@@ -16,10 +16,15 @@ export interface LogEntry {
 }
 
 // Log levels for filtering and prioritization
+// eslint-disable-next-line no-unused-vars
 export enum LogLevel {
+  // eslint-disable-next-line no-unused-vars
   DEBUG = 0,
+  // eslint-disable-next-line no-unused-vars
   INFO = 1,
+  // eslint-disable-next-line no-unused-vars
   WARN = 2,
+  // eslint-disable-next-line no-unused-vars
   ERROR = 3,
   // eslint-disable-next-line no-unused-vars
   NONE = 4,
