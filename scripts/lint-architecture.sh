@@ -23,7 +23,8 @@ BACKEND_PATH="$PROJECT_ROOT/qualia-tempo-prototype/backend"
 # Error tracking
 CONTRACT_ERRORS=0
 CONFIG_ERRORS=0
-FRONTEND_ERRORS=0
+FRONTEND_TYPE_ERRORS=0
+FRONTEND_COMPLIANCE_ERRORS=0
 BACKEND_ERRORS=0
 TYPE_ERRORS=0
 
@@ -49,16 +50,31 @@ if [ $CONTRACT_ERRORS -eq 1 ] || [ $CONFIG_ERRORS -eq 1 ]; then
     exit 1
 fi
 
-echo -e "${BLUE}📋 Phase 1: Frontend ESLint Rules${NC}"
+echo -e "${BLUE}📋 Phase 1A: Frontend TypeScript Type Checking${NC}"
+if [ -d "$FRONTEND_PATH" ]; then
+    cd "$FRONTEND_PATH"
+    echo "   Running TypeScript compiler for type validation..."
+
+    if npx tsc --noEmit; then
+        echo -e "   ${GREEN}✅ Frontend type checking: PASSED${NC}"
+    else
+        echo -e "   ${RED}❌ Frontend type errors detected (build-breaking)${NC}"
+        FRONTEND_TYPE_ERRORS=1
+    fi
+else
+    echo -e "   ${YELLOW}⚠️  Frontend path not found, skipping TypeScript${NC}"
+fi
+
+echo -e "${BLUE}📋 Phase 1B: Frontend QUALIA.CODE Compliance${NC}"
 if [ -d "$FRONTEND_PATH" ]; then
     cd "$FRONTEND_PATH"
     echo "   Running ESLint with QUALIA.CODE rules..."
-    
-    if npm run lint 2>/dev/null; then
+
+    if npm run lint; then
         echo -e "   ${GREEN}✅ Frontend architectural compliance: PASSED${NC}"
     else
         echo -e "   ${RED}❌ Frontend architectural violations detected${NC}"
-        FRONTEND_ERRORS=1
+        FRONTEND_COMPLIANCE_ERRORS=1
     fi
 else
     echo -e "   ${YELLOW}⚠️  Frontend path not found, skipping ESLint${NC}"
@@ -68,21 +84,21 @@ echo -e "${BLUE}📋 Phase 2: Backend Python Rules${NC}"
 if [ -d "$BACKEND_PATH" ]; then
     cd "$PROJECT_ROOT"
     echo "   Running QUALIA.CODE Python linter..."
-    
+
     # Activate virtual environment if it exists
     if [ -f "$PROJECT_ROOT/.venv/bin/activate" ]; then
         source "$PROJECT_ROOT/.venv/bin/activate"
     fi
-    
+
     # QUALIA.CODE Native Ruff Plugin Integration
     echo "   Running Ruff with QUALIA.CODE plugin..."
-    
+
     # Install the plugin in development mode if not already installed
     if ! python -c "import ruff_qualia_code" 2>/dev/null; then
         echo "   Installing ruff-qualia-code plugin..."
         pip install -e "$PROJECT_ROOT/ruff-qualia-code" > /dev/null 2>&1
     fi
-    
+
     # Run Ruff with QUALIA.CODE rules on backend Python files
     if python -m ruff_qualia_code "$BACKEND_PATH" --format=concise; then
         echo "   ✅ Backend architectural compliance: PASSED"
@@ -91,7 +107,7 @@ if [ -d "$BACKEND_PATH" ]; then
         echo "   Run 'python -m ruff_qualia_code $BACKEND_PATH --verbose' for details"
         BACKEND_ERRORS=1
     fi
-    
+
     # CRITICAL FIX: Capture the exit code from the Python linter
     if [ $? -ne 0 ]; then
         BACKEND_ERRORS=1
@@ -99,6 +115,7 @@ if [ -d "$BACKEND_PATH" ]; then
 else
     echo -e "   ${YELLOW}⚠️  Backend path not found, skipping Python linter${NC}"
 fi
+
 echo -e "${BLUE}📋 Phase 3: Backend Type Architecture Analysis${NC}"
 if [ -d "$BACKEND_PATH" ]; then
     cd "$PROJECT_ROOT"
@@ -129,16 +146,16 @@ else
     TYPE_ERRORS=0
 fi
 
-
 echo
 echo -e "${BLUE}📋 Phase 4: Summary${NC}"
-echo "   Contract Integrity:   $([ $CONTRACT_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
-echo "   Config Integrity:     $([ $CONFIG_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
-echo "   Frontend Compliance:  $([ $FRONTEND_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
-echo "   Backend Patterns:     $([ $BACKEND_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
-echo "   Backend Types:        $([ $TYPE_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
+echo "   Contract Integrity:        $([ $CONTRACT_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
+echo "   Config Integrity:          $([ $CONFIG_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
+echo "   Frontend TypeScript:       $([ $FRONTEND_TYPE_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
+echo "   Frontend QUALIA.CODE:      $([ $FRONTEND_COMPLIANCE_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
+echo "   Backend Patterns:          $([ $BACKEND_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
+echo "   Backend Types:             $([ $TYPE_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
 
-TOTAL_ERRORS=$((CONTRACT_ERRORS + CONFIG_ERRORS + FRONTEND_ERRORS + BACKEND_ERRORS + TYPE_ERRORS))
+TOTAL_ERRORS=$((CONTRACT_ERRORS + CONFIG_ERRORS + FRONTEND_TYPE_ERRORS + FRONTEND_COMPLIANCE_ERRORS + BACKEND_ERRORS + TYPE_ERRORS))
 
 if [ $TOTAL_ERRORS -eq 0 ]; then
     echo
@@ -151,7 +168,12 @@ else
     echo -e "${RED}   $TOTAL_ERRORS system(s) have architectural violations${NC}"
     echo
     echo -e "${YELLOW}💡 Quick Fixes:${NC}"
-    echo "   • Frontend: Use useService() hooks instead of direct imports"
+    if [ $FRONTEND_TYPE_ERRORS -eq 1 ]; then
+        echo "   • Frontend TypeScript: Fix type errors to enable building"
+    fi
+    if [ $FRONTEND_COMPLIANCE_ERRORS -eq 1 ]; then
+        echo "   • Frontend QUALIA.CODE: Use useService() hooks instead of direct imports"
+    fi
     echo "   • Backend: Add @log_execution decorators to service methods"
     echo "   • Backend: Inject services via CompositionRoot, never 'new Service()'"
     exit 1

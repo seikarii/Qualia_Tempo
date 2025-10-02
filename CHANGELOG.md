@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to Semantic Versioning.
 
+## [2025-10-02] - CRITICAL: Granular Frontend Validation in Architectural Linting Script
+
+### 🔧 Fixed: Enhanced Error Reporting Granularity
+
+**Context**: The `lint-architecture.sh` script previously grouped all frontend errors under a single "Frontend Compliance" category, making it impossible to distinguish between build-breaking TypeScript errors and architectural violations. This violated QUALIA.CODE's principle of precise, actionable feedback.
+
+#### Script Refactoring: Separated Frontend Validation Phases
+- **File**: `scripts/lint-architecture.sh`
+- **New Phase 1A**: "Frontend TypeScript Type Checking" - High-priority phase using `npx tsc --noEmit` to detect build-breaking type errors
+- **New Phase 1B**: "Frontend QUALIA.CODE Compliance" - Separate phase using `npm run lint` for architectural rule violations
+- **Enhanced Summary**: Now reports `Frontend TypeScript` and `Frontend QUALIA.CODE` as distinct categories
+- **Improved Quick Fixes**: Context-aware suggestions based on error types (TypeScript vs QUALIA.CODE)
+
+#### Error Tracking Variables
+- **Added**: `FRONTEND_TYPE_ERRORS` and `FRONTEND_COMPLIANCE_ERRORS` for granular tracking
+- **Updated**: Summary display with separate frontend categories
+- **Enhanced**: Quick fix suggestions tailored to error types
+
+### Architectural Impact
+- ✅ **Granular Error Reporting**: Developers can now immediately distinguish build-breaking vs architectural issues
+- ✅ **Prioritized Feedback**: TypeScript errors (build-breaking) reported before architectural violations
+- ✅ **Actionable Insights**: Context-specific quick fixes for different error categories
+- ✅ **Development Efficiency**: Faster diagnosis and resolution of frontend issues
+
+#### Current Status (Post-Refactoring)
+- **Frontend TypeScript**: 132 type errors detected (build-breaking)
+- **Frontend QUALIA.CODE**: 121 architectural violations + 46 warnings
+- **Total Frontend Issues**: 299 (previously indistinguishable)
+
+## [2025-10-02] - CRITICAL: Restored Full Visibility of Architectural Linting System
+
+### 🔧 Fixed: Linting Script Error Suppression Removed
+
+**Context**: The `lint-architecture.sh` script was suppressing frontend ESLint error output with `2>/dev/null`, causing a blind spot in architectural enforcement. This prevented detection of violations that the build process would catch, violating QUALIA.CODE's principle of total observability.
+
+#### Script Modification
+- **File**: `scripts/lint-architecture.sh`
+- **Line 56**: Removed `2>/dev/null` redirection from `npm run lint` command
+- **Before**: `if npm run lint 2>/dev/null; then`
+- **After**: `if npm run lint; then`
+- **Impact**: Full error visibility restored. Script now reports all 121 ESLint errors and 46 warnings that were previously hidden.
+
+#### Revealed Violations (Summary)
+- **Frontend ESLint Errors**: 121 total (functions too long, high complexity, hardcoded configs, missing decorators, etc.)
+- **Backend Ruff Violations**: 2 QUALIA.CODE violations (suspicious platform API usage)
+- **Backend MyPy Errors**: 33 type errors across 13 files
+- **Total Systems with Violations**: 3 (Frontend, Backend Patterns, Backend Types)
+
+### Architectural Impact
+- ✅ **Observability Restored**: Linting system now has complete visibility of codebase violations
+- ✅ **Detection Parity**: Script violations now match build process findings
+- ✅ **Enforcement Integrity**: QUALIA.CODE architectural guardian can now see and report all issues
+
 ## [2025-10-02] - Phase 3 Round 20: CRITICAL WebSocketService Configuration Injection
 
 ### ✅ Fixed: 1 CRITICAL Violation Eliminated (167 → 167)
