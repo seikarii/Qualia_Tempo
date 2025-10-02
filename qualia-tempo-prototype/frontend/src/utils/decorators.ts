@@ -65,95 +65,69 @@ export function logMethod(
   const method = descriptor.value;
 
   descriptor.value = function (this: unknown, ...args: unknown[]) {
-    const instance = this as InstanceWithLogger;
-    const className = instance.constructor.name;
-    const fullMethodName = `${className}.${propertyKey}`;
-
-    // Access logger from instance (this) at runtime
+    const fullMethodName = `${(this as InstanceWithLogger).constructor.name}.${propertyKey}`;
     const instanceLogger = getLogger(this);
-    if (instanceLogger) {
-      instanceLogger.debug(`→ ENTER ${fullMethodName}`, {
-        arguments: args.length > 0 ? args : "no arguments",
-        timestamp: new Date().toISOString(),
-      });
-    } else {
-      // QUALIA.CODE v1.1: Use EmergencyLogger instead of console
-      EmergencyLogger.debug(`→ ENTER ${fullMethodName}`, {
-        arguments: args.length > 0 ? args : "no arguments",
-        timestamp: new Date().toISOString(),
-        note: "Logger not found on instance, using EmergencyLogger",
-      });
-    }
-
+    
+    logMethodEntry(instanceLogger, fullMethodName, args);
+    
     try {
       const result = method.apply(this, args);
-
-      // Handle both sync and async results
-      if (result instanceof Promise) {
-        return result
-          .then((res) => {
-            if (instanceLogger) {
-              instanceLogger.debug(`← EXIT ${fullMethodName}`, {
-                result: res,
-                timestamp: new Date().toISOString(),
-              });
-            } else {
-              EmergencyLogger.debug(`← EXIT ${fullMethodName}`, {
-                result: res,
-                timestamp: new Date().toISOString(),
-                note: "Logger not found on instance, using EmergencyLogger",
-              });
-            }
-            return res;
-          })
-          .catch((error) => {
-            if (instanceLogger) {
-              instanceLogger.error(`✗ ERROR ${fullMethodName}`, {
-                error: error.message,
-                timestamp: new Date().toISOString(),
-              });
-            } else {
-              EmergencyLogger.error(`✗ ERROR ${fullMethodName}`, {
-                error: error.message,
-                timestamp: new Date().toISOString(),
-                note: "Logger not found on instance, using EmergencyLogger",
-              });
-            }
-            throw error;
-          });
-      } else {
-        if (instanceLogger) {
-          instanceLogger.debug(`← EXIT ${fullMethodName}`, {
-            result,
-            timestamp: new Date().toISOString(),
-          });
-        } else {
-          EmergencyLogger.debug(`← EXIT ${fullMethodName}`, {
-            result,
-            timestamp: new Date().toISOString(),
-            note: "Logger not found on instance, using EmergencyLogger",
-          });
-        }
-        return result;
-      }
+      return result instanceof Promise 
+        ? handleAsyncResult(result, instanceLogger, fullMethodName)
+        : handleSyncResult(result, instanceLogger, fullMethodName);
     } catch (error) {
-      if (instanceLogger) {
-        instanceLogger.error(`✗ ERROR ${fullMethodName}`, {
-          error: error instanceof Error ? error.message : String(error),
-          timestamp: new Date().toISOString(),
-        });
-      } else {
-        EmergencyLogger.error(`✗ ERROR ${fullMethodName}`, {
-          error: error instanceof Error ? error.message : String(error),
-          timestamp: new Date().toISOString(),
-          note: "Logger not found on instance, using EmergencyLogger",
-        });
-      }
+      logMethodError(instanceLogger, fullMethodName, error);
       throw error;
     }
   };
 
   return descriptor;
+}
+
+function logMethodEntry(logger: ILogger | null | undefined, methodName: string, args: unknown[]) {
+  const logData = {
+    arguments: args.length > 0 ? args : "no arguments",
+    timestamp: new Date().toISOString()
+  };
+  
+  if (logger) {
+    logger.debug(`→ ENTER ${methodName}`, logData);
+  } else {
+    EmergencyLogger.debug(`→ ENTER ${methodName}`, { ...logData, note: "Logger not found on instance, using EmergencyLogger" });
+  }
+}
+
+function handleSyncResult(result: unknown, logger: ILogger | null | undefined, methodName: string) {
+  const logData = { result, timestamp: new Date().toISOString() };
+  
+  if (logger) {
+    logger.debug(`← EXIT ${methodName}`, logData);
+  } else {
+    EmergencyLogger.debug(`← EXIT ${methodName}`, { ...logData, note: "Logger not found on instance, using EmergencyLogger" });
+  }
+  return result;
+}
+
+function handleAsyncResult(promise: Promise<unknown>, logger: ILogger | null | undefined, methodName: string) {
+  return promise
+    .then((res) => handleSyncResult(res, logger, methodName))
+    .catch((error) => {
+      logMethodError(logger, methodName, error);
+      throw error;
+    });
+}
+
+function logMethodError(logger: ILogger | null | undefined, methodName: string, error: unknown) {
+  const logData = {
+    error: error instanceof Error ? error.message : String(error),
+    timestamp: new Date().toISOString()
+  };
+  
+  if (logger) {
+    logger.error(`✗ ERROR ${methodName}`, logData);
+  } else {
+    EmergencyLogger.error(`✗ ERROR ${methodName}`, { ...logData, note: "Logger not found on instance, using EmergencyLogger" });
+  }
 }
 
 /**
@@ -214,77 +188,38 @@ export function catchError(
   const method = descriptor.value;
 
   descriptor.value = function (this: unknown, ...args: unknown[]) {
-    const className = (this as Record<string, unknown>).constructor.name;
-    const fullMethodName = `${className}.${propertyKey}`;
-
-    // Access logger from instance (this) at runtime
+    const fullMethodName = `${(this as Record<string, unknown>).constructor.name}.${propertyKey}`;
     const instanceLogger = getLogger(this);
 
     try {
       const result = method.apply(this, args);
-
-      // Handle async methods
-      if (result instanceof Promise) {
-        return result.catch((error: unknown) => {
-          if (instanceLogger) {
-            instanceLogger.error(`${fullMethodName}:`, {
-              error: error instanceof Error ? error.message : String(error),
-              stack: error instanceof Error ? error.stack : "No stack trace",
-              arguments: args,
-              timestamp: new Date().toISOString(),
-            });
-          } else {
-            EmergencyLogger.error(`${fullMethodName}:`, {
-              error: error instanceof Error ? error.message : String(error),
-              stack: error instanceof Error ? error.stack : "No stack trace",
-              arguments: args,
-              timestamp: new Date().toISOString(),
-              note: "Logger not found on instance, using console fallback",
-            });
-          }
-
-          // Re-throw the error after logging
-          throw error;
-        });
-      }
-
-      return result;
+      return result instanceof Promise
+        ? result.catch((error: unknown) => handleCatchError(instanceLogger, fullMethodName, args, error))
+        : result;
     } catch (methodError) {
-      if (instanceLogger) {
-        instanceLogger.error(`${fullMethodName}:`, {
-          error:
-            methodError instanceof Error
-              ? methodError.message
-              : String(methodError),
-          stack:
-            methodError instanceof Error
-              ? methodError.stack
-              : "No stack trace",
-          arguments: args,
-          timestamp: new Date().toISOString(),
-        });
-      } else {
-        // Final fallback to console only when no logger available
-        EmergencyLogger.error(`${fullMethodName}:`, {
-          error:
-            methodError instanceof Error
-              ? methodError.message
-              : String(methodError),
-          stack:
-            methodError instanceof Error
-              ? methodError.stack
-              : "No stack trace",
-          arguments: args,
-          timestamp: new Date().toISOString(),
-          note: "Logger not found on instance, using console fallback",
-        });
-      }
-
+      handleCatchError(instanceLogger, fullMethodName, args, methodError);
       throw methodError;
     }
   };
 
   return descriptor;
+}
+
+function handleCatchError(logger: ILogger | null | undefined, methodName: string, args: unknown[], error: unknown) {
+  const errorData = {
+    error: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : "No stack trace",
+    arguments: args,
+    timestamp: new Date().toISOString()
+  };
+
+  if (logger) {
+    logger.error(`${methodName}:`, errorData);
+  } else {
+    EmergencyLogger.error(`${methodName}:`, { ...errorData, note: "Logger not found on instance, using console fallback" });
+  }
+  
+  throw error;
 }
 
 /**
@@ -637,7 +572,7 @@ function adaptAndEmitImpl(params: {
   instance: unknown;
   propertyKey: string;
   adapterPropertyKey: string | symbol;
-  originalMethod: (...args: unknown[]) => unknown;
+  originalMethod: (..._args: unknown[]) => unknown;
   args: unknown[];
 }): unknown {
   const { instance, propertyKey, adapterPropertyKey, originalMethod, args } = params;

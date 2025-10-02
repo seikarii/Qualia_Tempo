@@ -45,11 +45,7 @@ export class BrowserTimerProvider implements ITimerProvider {
 
   @BrowserOnly
   performanceNow(): number {
-    if (typeof performance !== 'undefined' && performance.now) {
-      return performance.now();
-    }
-    // Fallback to Date.now() if performance.now() is not available
-    return Date.now();
+    return performance?.now?.() ?? Date.now();
   }
 
   public now(): number {
