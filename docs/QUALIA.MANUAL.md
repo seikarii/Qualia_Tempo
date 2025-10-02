@@ -880,6 +880,42 @@ export class MyNewService {
 }
 ```
 
+### 8.3. Anti-Pattern: Inyección de Clases Concretas (FORBIDDEN)
+
+Inyectar una clase concreta en lugar de su interfaz es una violación directa del Principio de Inversión de Dependencias.
+
+```typescript
+// FORBIDDEN - VIOLACIÓN DE INVERSIÓN DE DEPENDENCIAS
+import { ConcreteLogger } from './ConcreteLogger'; // Importación de una clase concreta
+
+@injectable()
+export class MyServiceWithConcreteDependency {
+  constructor(
+    // VIOLACIÓN CRÍTICA: El constructor depende de una clase, no de una interfaz.
+    @inject(TYPES.ConcreteLogger) private logger: ConcreteLogger
+  ) {}
+
+  public doWork(): void {
+    this.logger.log("Doing work..."); // Acoplado a la implementación de ConcreteLogger
+  }
+}
+
+// CORRECTO - INYECCIÓN BASADA EN INTERFACES
+import { ILogger } from './interfaces/ILogger'; // Importación de una interfaz
+
+@injectable()
+export class MyServiceWithInterfaceDependency {
+  constructor(
+    // CORRECTO: El constructor depende de una abstracción (ILogger).
+    @inject(TYPES.ILogger) private logger: ILogger
+  ) {}
+
+  public doWork(): void {
+    this.logger.info("Doing work..."); // Desacoplado de la implementación
+  }
+}
+```
+
 ---
 
 ## 9. Global API Abstraction Examples

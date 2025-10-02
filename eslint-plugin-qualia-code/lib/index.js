@@ -27,6 +27,9 @@ const noDirectServiceImportInComponents = require('./rules/no-direct-service-imp
 const enforceConfigDrivenValues = require('./rules/enforce-config-driven-values');
 const noManualEventSubscription = require('./rules/no-manual-event-subscription');
 const noDirectDiagnosticCalls = require('./rules/no-direct-diagnostic-calls');
+// NEW RULES - QUALIA.CODE v1.1 IoC Strictness
+const noServiceLocator = require('./rules/no-service-locator');
+const enforceInterfaceBasedInjection = require('./rules/enforce-interface-based-injection');
 
 module.exports = {
   rules: {
@@ -45,6 +48,9 @@ module.exports = {
     'enforce-config-driven-values': enforceConfigDrivenValues,
     'no-manual-event-subscription': noManualEventSubscription,
     'no-direct-diagnostic-calls': noDirectDiagnosticCalls,
+    // NEW RULES - QUALIA.CODE v1.1 IoC Strictness
+    'no-service-locator': noServiceLocator,
+    'enforce-interface-based-injection': enforceInterfaceBasedInjection,
   },
   configs: {
     recommended: {
@@ -65,6 +71,9 @@ module.exports = {
         '@qualia-tempo/qualia-code/enforce-config-driven-values': 'warn',
         '@qualia-tempo/qualia-code/no-manual-event-subscription': 'error',
         '@qualia-tempo/qualia-code/no-direct-diagnostic-calls': 'error',
+        // NEW RULES - QUALIA.CODE v1.1 IoC Strictness
+        '@qualia-tempo/qualia-code/no-service-locator': 'error',
+        '@qualia-tempo/qualia-code/enforce-interface-based-injection': 'error',
       }
     }
   }

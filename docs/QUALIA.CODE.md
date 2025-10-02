@@ -30,6 +30,12 @@
 // Principio de Inyección:
 constructor(@inject(TYPES.IDependency) private dep: IDependency) {}
 
+### 2.3. Prohibición del Service Locator y la Inyección Concreta (MANDATORIO)
+
+- **PROHIBIDO EL SERVICE LOCATOR:** El uso directo de `container.get()` fuera de los archivos de composición (`inversify.config.ts`, `ApplicationCompositionRoot.ts`) y los archivos de prueba (`*.test.ts`, `*.spec.ts`) está terminantemente prohibido. Los servicios y componentes deben recibir sus dependencias exclusivamente a través del constructor (`@inject`). El acceso directo al contenedor es un anti-patrón que oculta las dependencias y viola los principios de la IoC.
+
+- **PROHIBIDA LA INYECCIÓN DE CLASES CONCRETAS:** Los constructores de las clases decoradas con `@injectable()` solo deben aceptar **interfaces** como dependencias. Inyectar una clase concreta (`@inject(TYPES.MiClase) private dep: MiClaseConcreta`) está prohibido. Esto asegura que nuestras clases dependan de abstracciones, no de implementaciones, permitiendo la sustitución y el mocking sin fricción.
+
 ---
 
 ## 3. Shared Contracts: The Single Source of Truth

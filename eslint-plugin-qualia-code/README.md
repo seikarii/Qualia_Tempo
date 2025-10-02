@@ -44,7 +44,9 @@ module.exports = {
     '@qualia-tempo/qualia-code/no-manual-contract-edit': 'error',
     '@qualia-tempo/qualia-code/deprecate-api-client': 'error',
     '@qualia-tempo/qualia-code/enforce-method-decorators': 'error',
-    '@qualia-tempo/qualia-code/enforce-inversify-conventions': 'error'
+    '@qualia-tempo/qualia-code/enforce-inversify-conventions': 'error',
+    '@qualia-tempo/qualia-code/no-service-locator': 'error',
+    '@qualia-tempo/qualia-code/enforce-interface-based-injection': 'error'
   }
 };
 ```
@@ -249,6 +251,56 @@ npm test
 3. Create test file in `tests/your-rule.test.js`
 4. Add rule to recommended configuration
 5. Update this README
+
+### `no-service-locator`
+
+**What it does:** Prohibits the Service Locator anti-pattern by forbidding `container.get()` usage outside of composition roots and tests.
+
+**Why:** Service Locator hides dependencies and violates IoC principles. Dependencies should be injected through constructors.
+
+**❌ Incorrect:**
+```typescript
+// In MyService.ts
+const logger = container.get<ILogger>(TYPES.ILogger); // ERROR
+```
+
+**✅ Correct:**
+```typescript
+// In inversify.config.ts or ApplicationCompositionRoot.ts (allowed)
+const logger = container.get<ILogger>(TYPES.ILogger);
+
+// In services (correct pattern)
+@injectable()
+export class MyService {
+  constructor(@inject(TYPES.ILogger) private logger: ILogger) {}
+}
+```
+
+### `enforce-interface-based-injection`
+
+**What it does:** Enforces Dependency Inversion Principle by requiring interface-based dependency injection in `@injectable` classes.
+
+**Why:** Injecting concrete classes creates tight coupling. Dependencies should be interfaces to enable mocking and substitution.
+
+**❌ Incorrect:**
+```typescript
+import { ConcreteLogger } from './ConcreteLogger';
+
+@injectable()
+export class MyService {
+  constructor(@inject(TYPES.Logger) private logger: ConcreteLogger) {} // ERROR
+}
+```
+
+**✅ Correct:**
+```typescript
+import { ILogger } from './interfaces/ILogger';
+
+@injectable()
+export class MyService {
+  constructor(@inject(TYPES.ILogger) private logger: ILogger) {} // Correct
+}
+```
 
 ## Integration with QUALIA.CODE
 
