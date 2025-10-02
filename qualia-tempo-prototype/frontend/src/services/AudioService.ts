@@ -1,17 +1,17 @@
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import { EventBus } from "./EventBus";
 import type { QualiaStateCalculatedEvent, RhythmicDashEvent, MetronomeTickEvent } from "./contracts/events.contracts";
 import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { QualiaState } from "../types/contracts";
 import { logMethod, catchError, measureTime, IBaseService, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
-import { QualiaLogger } from "./Logger";
 import { AUDIO_WAVEFORM_TYPES, AUDIO_EVENT_TYPES, type AudioWaveformType } from "./contracts/constants";
 
 import type { IAudioService } from "./interfaces/IAudioService";
 import type { AudioServiceConfig, AudioServiceParams } from "./contracts/IAudioService.contracts";
 import type { IWebAudioAPIService } from "./interfaces/IWebAudioAPIService";
 import type { ITimerService } from "./interfaces/ITimerService";
+import type { IEventBus } from "./interfaces/IEventBus";
+import type { ILogger } from "./interfaces/ILogger";
 
 /**
  * AudioService - QUALIA.CODE compliant service for audio management
@@ -19,8 +19,8 @@ import type { ITimerService } from "./interfaces/ITimerService";
 @injectable()
 export class AudioService implements IAudioService, IBaseService {
   private audioEngine: IOntologicalAudioEngine;
-  private eventBus: EventBus;
-  private logger: QualiaLogger;
+  private eventBus: IEventBus;
+  private logger: ILogger;
   private config: AudioServiceConfig;
   private webAudioAPIService: IWebAudioAPIService;
   private timerService: ITimerService;

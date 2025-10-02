@@ -899,7 +899,7 @@ export class NotificationService implements INotificationService, IBaseService {
       logData.metadata = notification.metadata;
     }
 
-    this.logger.info("Showing notification", logData);
+    this.logger.info("Showing notification", logData as unknown as Record<string, unknown>);
 
     this.logger.info("📢 [NotificationService] Notification displayed", {
       id: notification.id,

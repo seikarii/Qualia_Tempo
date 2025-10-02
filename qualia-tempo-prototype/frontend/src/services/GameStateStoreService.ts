@@ -140,7 +140,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   private handleGameStateChange(event: GameStateChangedEvent): void {
     this._logger.debug(
       this.config.messages.processingGameStateChanged,
-      event
+      event as unknown as Record<string, unknown>
     );
 
     switch (event.newState) {

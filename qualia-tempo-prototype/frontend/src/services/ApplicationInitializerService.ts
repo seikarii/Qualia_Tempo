@@ -95,7 +95,7 @@ export class ApplicationInitializerService
         backendConnected: this.backendSyncService.isBackendConnected(),
       });
     } catch (error) {
-      this.logger.error(this.config.messages.initializationFailed, error);
+      this.logger.error(this.config.messages.initializationFailed, error as Record<string, unknown>);
       throw error;
     }
   }

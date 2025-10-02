@@ -17,6 +17,7 @@ import { TYPES } from "./inversify.types";
 import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 import type {
   IErrorReportingService,
+  ExportedErrorData,
   ErrorStatistics,
 } from "./interfaces/IErrorReportingService";
 import type { ErrorReportingConfig, ErrorReportingServiceParams } from "./contracts/IErrorReportingService.contracts";
@@ -31,7 +32,6 @@ import type {
   CircuitBreakerState,
   RateLimitState,
   ErrorSeverity,
-  ErrorReportingExportData,
 } from "./contracts/IErrorReportingService.contracts";
 
 
@@ -79,10 +79,9 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   private readonly timerService: ITimerService;
   private config: ErrorReportingConfig;
   private isStarted = false;
-  private eventListenerIds: string[] = [];
 
   // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
-  private _eventListeners: string[] = [];
+  public _eventListeners: string[] = [];
 
   // Error processing state
   private errorQueue: ExtendedErrorReport[] = [];
@@ -317,16 +316,16 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
    */
   @logMethod
   @catchError
-  public exportErrorData(): ErrorReportingExportData {
+  public exportErrorData(): ExportedErrorData {
     return {
-      timestamp: this.timerService.now(),
-      sessionId: this.sessionId,
       statistics: this.getStatistics(),
-      errorHistory: this.errorHistory,
-      pendingBatches: Array.from(this.pendingBatches.values()),
-      circuitBreakerState: this.circuitBreakerState,
-      rateLimitState: this.rateLimitState,
-      config: this.config,
+      recentErrors: this.errorHistory.slice(-100),
+      batches: Array.from(this.pendingBatches.values()).map(batch => ({
+        errors: batch.errors,
+        timestamp: batch.createdAt,
+      })),
+      exportTimestamp: new Date(),
+      version: '1.0.0',
     };
   }
 
@@ -432,8 +431,9 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     };
   }
 
-  @OnEvent('Error')
-  private handleErrorEvent(event: ErrorEvent): void {
+  @logMethod
+  @OnEvent('Error.Occurred')
+  public _handleErrorEvent(event: ErrorEvent): void {
     const errorReport = this.createErrorReport(
       event.error,
       event.severity,
@@ -462,8 +462,8 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
         stack: safeError.stack,
       },
       severity,
-      userAgent: context?.userAgent ?? "Unknown",
-      url: context?.url ?? "Unknown",
+      userAgent: (context?.userAgent as string) ?? "Unknown",
+      url: (context?.url as string) ?? "Unknown",
       stackTrace: safeError.stack,
       context,
       fingerprint,

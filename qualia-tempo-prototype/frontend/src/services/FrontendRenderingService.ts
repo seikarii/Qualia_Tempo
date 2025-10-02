@@ -75,7 +75,7 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
   private particleDataListenerId: string | null = null;
 
   // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
-  private _eventListeners: string[] = [];
+  public _eventListeners: string[] = [];
 
   constructor(
     @inject(TYPES.FrontendRenderingServiceParams) params: FrontendRenderingServiceParams
@@ -445,8 +445,9 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
     this.postProcessingService.render(this.camera);
   };
 
-  @OnEvent('QualiaParticleDataReceived')
-  private handleParticleDataReceived(event: QualiaParticleDataReceivedEvent): void {
+  @logMethod
+  @OnEvent('Qualia.ParticleData.Received')
+  public _handleParticleDataReceived(event: QualiaParticleDataReceivedEvent): void {
     try {
       this.updateParticleBuffer(event.particleData);
     } catch (error) {

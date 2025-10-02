@@ -32,7 +32,16 @@ const MusicalNotesRenderer: React.FC<MusicalNotesRendererProps> = ({
 
   // Get visual data from ViewLogicService
   useFrame(() => {
-    const visuals = viewLogicService.getMusicalNoteVisuals(notes, currentTime);
+    // Convert Note[] to NoteData[] for ViewLogicService
+    const noteDataArray = notes.map(note => ({
+      id: note.id,
+      timestamp: note.timing,
+      position: { x: note.position[0], y: note.position[1] },
+      duration: 1.0, // Default duration
+      qualia_signature: note.qualia_signature,
+      state: 'active' as const,
+    }));
+    const visuals = viewLogicService.getMusicalNoteVisuals(noteDataArray, currentTime);
     setNoteVisuals(visuals);
   });
 

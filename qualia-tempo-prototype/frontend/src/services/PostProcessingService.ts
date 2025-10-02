@@ -225,9 +225,9 @@ export class PostProcessingService implements IPostProcessingService {
       case 'UnrealBloomPass':
         return new UnrealBloomPass(
           new THREE.Vector2(this.config.renderTargetWidth, this.config.renderTargetHeight),
-          passConfig.params?.strength || 1.5,
-          passConfig.params?.radius || 0.4,
-          passConfig.params?.threshold || 0.85
+          (typeof passConfig.params?.strength === 'number' ? passConfig.params.strength : 1.5),
+          (typeof passConfig.params?.radius === 'number' ? passConfig.params.radius : 0.4),
+          (typeof passConfig.params?.threshold === 'number' ? passConfig.params.threshold : 0.85)
         );
 
       case 'ShaderPass': {

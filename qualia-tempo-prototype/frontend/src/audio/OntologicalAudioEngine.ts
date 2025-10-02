@@ -3,7 +3,6 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../services/inversify.types";
 import type { ILogger } from "../services/interfaces/ILogger";
 import type { ITimerService } from "../services/interfaces/ITimerService";
-import type { IEventBus } from "../services/interfaces/IEventBus";
 import type { QualiaState } from "../types/contracts";
 import type {
   IOntologicalAudioEngine,
@@ -28,7 +27,6 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
   private readonly toneFactory: IToneFactoryService;
-  private readonly eventBus: IEventBus;
   private isEngineReady: boolean = false;
   private synthPool: Map<string, Tone.PolySynth> = new Map();
   private globalReverb: Tone.Reverb | null = null;
@@ -36,18 +34,16 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
   private masterVolume: Tone.Volume | null = null;
 
   // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
-  private _eventListeners: string[] = [];
+  public _eventListeners: string[] = [];
 
   constructor(
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerService) timerService: ITimerService,
-    @inject(TYPES.IToneFactoryService) toneFactory: IToneFactoryService,
-    @inject(TYPES.IEventBus) eventBus: IEventBus
+    @inject(TYPES.IToneFactoryService) toneFactory: IToneFactoryService
   ) {
     this.logger = logger;
     this.timerService = timerService;
     this.toneFactory = toneFactory;
-    this.eventBus = eventBus;
 
     // NO inicializar nodos de Tone.js aquí.
     this.logger.info("OntologicalAudioEngine constructed. Waiting for AudioContext...");
@@ -56,10 +52,11 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
   /**
    * MÉTODO CRÍTICO: Contiene toda la lógica de creación de nodos de Tone.js.
    * Solo se ejecuta DESPUÉS de que el AudioContext esté activo.
+   * NOTE: Public because @OnEvent decorator registers it as event handler.
    */
   @logMethod
   @OnEvent('System.Audio.Ready')
-  private initializeEngine(): void {
+  public _initializeEngine(): void {
     if (this.isEngineReady) return;
 
     this.logger.info("AudioContext is ready. Initializing OntologicalAudioEngine nodes...");
@@ -114,7 +111,9 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
       volume: -7 + qualiaState.precision * 7,
     });
 
-    synth.connect(this.globalDelay!);
+    if (this.globalDelay) {
+      synth.connect(this.globalDelay);
+    }
     this.synthPool.set(entityId, synth);
   }
 
@@ -228,7 +227,9 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
       .map((_entity, index) => Tone.Frequency(200 + index * 100).toNote());
 
     const clusteredSynth = this.toneFactory.createPolySynth();
-    clusteredSynth.connect(this.globalReverb!);
+    if (this.globalReverb) {
+      clusteredSynth.connect(this.globalReverb);
+    }
 
     clusteredSynth.triggerAttackRelease(chord, "2n");
 
@@ -243,7 +244,9 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
       .map((_entity, idx) => Tone.Frequency(320 + idx * 70).toNote());
 
     const syncSynth = this.toneFactory.createPolySynth();
-    syncSynth.connect(this.globalReverb!);
+    if (this.globalReverb) {
+      syncSynth.connect(this.globalReverb);
+    }
 
     const velocity = Math.min(behavior.strength ?? 0.8, 1.0);
     syncSynth.triggerAttackRelease(chord, "1n", undefined, velocity);
@@ -258,7 +261,9 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
     );
 
     const arpeggioSynth = this.toneFactory.createPolySynth();
-    arpeggioSynth.connect(this.globalReverb!);
+    if (this.globalReverb) {
+      arpeggioSynth.connect(this.globalReverb);
+    }
 
     arpeggioNotes.forEach((note, idx) => {
       this.timerService.setTimeout(() => {
@@ -276,7 +281,9 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
       .map((_entity, idx) => Tone.Frequency(400 + idx * 150).toNote());
 
     const eventSynth = this.toneFactory.createPolySynth();
-    eventSynth.connect(this.globalReverb!);
+    if (this.globalReverb) {
+      eventSynth.connect(this.globalReverb);
+    }
 
     const velocity = Math.min(behavior.strength ?? 1.0, 1.0);
     eventSynth.triggerAttackRelease(chord, "2n", undefined, velocity);

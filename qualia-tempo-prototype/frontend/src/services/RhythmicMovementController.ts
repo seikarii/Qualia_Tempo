@@ -5,6 +5,8 @@ import type {
   GameStateChangedEvent,
   MetronomeTickEvent,
   RhythmicDashEvent,
+  PlayerInputEvent,
+  PlayerDirectionEvent,
 } from "./contracts/events.contracts";
 import { logMethod, catchError, IBaseService, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 import type { QualiaState } from "../types/contracts";
@@ -13,7 +15,7 @@ import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovement
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService } from "./interfaces/ITimerService";
-import type { IMessageAdapter } from "./protocol/IMessageAdapter";
+import type { IEventTransformer } from "./protocol/IEventTransformer";
 import type { IInputStateService } from "./interfaces/IInputStateService";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 import type { IGameplayMechanicsService } from "./interfaces/IGameplayMechanicsService";
@@ -28,7 +30,7 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
   private logger: ILogger;
   private config: RhythmicMovementConfig;
   private timerService: ITimerService;
-  private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator (DEPRECATED)
+  private keyAdapter: IEventTransformer<PlayerInputEvent, PlayerDirectionEvent>; // Used by @AdaptAndEmit decorator (DEPRECATED)
   private inputStateService: IInputStateService; // NUEVA FUENTE DE VERDAD
   private gameStateStore: IGameStateStoreService;
   private gameplayMechanicsService: IGameplayMechanicsService;
@@ -414,6 +416,10 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
     const currentTime = this.timerService.now();
 
     // Usar el GameplayMechanicsService para encontrar la nota más cercana
+    if (!gameState.combatData) {
+      this.logger.warn("No combat data available for note detection");
+      return;
+    }
     const nearestNote = this.gameplayMechanicsService.findNearestNote(gameState.combatData.noteMap, currentTime);
     if (!nearestNote) {
       this.eventBus.emit({

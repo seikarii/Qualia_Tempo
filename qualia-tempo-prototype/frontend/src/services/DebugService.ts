@@ -83,7 +83,7 @@ export class DebugService implements IDebugService, IBaseService {
   private eventListenerIds: string[] = [];
 
   // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
-  private _eventListeners: string[] = [];
+  public _eventListeners: string[] = [];
 
   // Debug session management
   private currentSession: DebugSession | null = null;
@@ -323,7 +323,12 @@ export class DebugService implements IDebugService, IBaseService {
         debugService: {
           isRunning: this.isStarted,
           eventsLogged: this.eventHistory.length,
-          config: this.config,
+          memoryUsage: this.calculateMemoryUsage(),
+          uptime: this.currentSession
+            ? Date.now() - this.currentSession.startTime.getTime()
+            : 0,
+          profilingEnabled: this.config.performance.enablePerformanceTracking,
+          eventHistory: [...this.eventHistory],
         },
       },
       performance: {
@@ -481,9 +486,10 @@ export class DebugService implements IDebugService, IBaseService {
     }
   }
 
-  // @ts-ignore - Used by @OnEvent decorator
+  // @ts-expect-error - Used by @OnEvent decorator
+  @logMethod()
   @OnEvent('*')
-  private handleGenericEvent(event: BaseEvent): void {
+  public handleGenericEvent(event: BaseEvent): void {
     this.recordEvent(event);
     this.updateEventPatterns(event.type);
     this.updatePerformanceMetrics(event.type, this._performanceService.now());

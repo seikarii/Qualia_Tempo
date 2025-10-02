@@ -16,10 +16,14 @@ import type {
 
 // Local type definitions for music data
 export interface MusicData {
-  bpm: number;
-  beatPosition: number;
+  tempo: number;
+  beat_position: number;
   intensity: number;
-  frequency: number[];
+  frequency_bands: number[];
+  order_influence: number;
+  chaos_influence: number;
+  emotional_valence: number;
+  harmony: number;
 }
 
 // Local type definitions for state processing
@@ -50,17 +54,6 @@ export interface PerformanceData {
   combo_multiplier: number;
   rhythm_sync: number;
   qualia_coherence: number;
-}
-
-export interface MusicData {
-  tempo: number;
-  beat_position: number;
-  intensity: number;
-  frequency_bands: number[];
-  order_influence: number;
-  chaos_influence: number;
-  emotional_valence: number;
-  harmony: number;
 }
 
 export interface IViewLogicService {

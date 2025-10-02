@@ -91,7 +91,13 @@ export class StateStreamingService implements IStateStreamingService {
 
       // Register event handlers
       this.webSocketService.onOpen(() => this.handleOpen());
-      this.webSocketService.onMessage((data) => this.onRawMessage(data));
+      this.webSocketService.onMessage((data) => {
+        if (data instanceof ArrayBuffer) {
+          this.onRawMessage(data);
+        } else {
+          this.logger.warn("Received non-ArrayBuffer data from WebSocket", { type: typeof data });
+        }
+      });
       this.webSocketService.onClose((event) => this.handleClose(event));
       this.webSocketService.onError((error) => this.handleError(error));
 

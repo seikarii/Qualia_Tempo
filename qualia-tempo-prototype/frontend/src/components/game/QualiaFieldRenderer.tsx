@@ -3,6 +3,8 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useViewLogicService } from "../../services/hooks";
 import { QualiaFieldVisualData } from "../../services/contracts/IViewLogicService.contracts";
+import type { QualiaState } from "../../types/contracts";
+import type { MusicData } from "../../services/interfaces/IViewLogicService";
 
 interface QualiaFieldRendererProps {
   qualiaField: {
@@ -10,16 +12,7 @@ interface QualiaFieldRendererProps {
     beta: number;
     coherence: number;
   };
-  musicData: {
-    tempo: number;
-    beat_position: number;
-    intensity: number;
-    frequency_bands: number[];
-    order_influence: number;
-    chaos_influence: number;
-    emotional_valence: number;
-    harmony: number;
-  };
+  musicData: MusicData;
 }
 
 /**
@@ -46,14 +39,25 @@ const QualiaFieldRenderer: React.FC<QualiaFieldRendererProps> = ({
   // Store current visual state for JSX rendering
   const [currentVisuals, setCurrentVisuals] = useState<QualiaFieldVisualData | null>(null);
   
+  // Convert qualiaField props to proper QualiaState interface
+  const qualiaState: QualiaState = {
+    intensity: 0.5,
+    precision: 0.5,
+    aggression: 0.5,
+    flow: qualiaField.coherence,  // Map coherence to flow
+    chaos: 0.5,
+    recovery: 0.5,
+    transcendence: 0.5,
+  };
+  
   // Get default visuals if no current state available
-  const visuals = currentVisuals ?? viewLogicService.getQualiaFieldVisuals(qualiaField, musicData, 0);
+  const visuals = currentVisuals ?? viewLogicService.getQualiaFieldVisuals(qualiaState, musicData, 0);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
     
     // QUALIA.CODE v1.1: Business logic extracted to ViewLogicService
-    const fieldVisuals = viewLogicService.getQualiaFieldVisuals(qualiaField, musicData, time);
+    const fieldVisuals = viewLogicService.getQualiaFieldVisuals(qualiaState, musicData, time);
     
     // Store visual data for JSX rendering
     setCurrentVisuals(fieldVisuals);
