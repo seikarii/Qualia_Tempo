@@ -36,6 +36,7 @@ import type { StateStreamingServiceParams } from "./contracts/IStateStreamingSer
 import type { DebugOrchestratorServiceParams } from "./contracts/IDebugOrchestratorService.contracts";
 import type { AudioServiceParams } from "./contracts/IAudioService.contracts";
 import type { BackendSyncServiceParams } from "./contracts/IBackendSyncService.contracts";
+import type { WebSocketServiceParams } from "./contracts/IWebSocketService.contracts";
 import type { CoordinateSystemConfig } from "./contracts/ICoordinateSystemService.contracts";
 
 // NEW SERVICES CONFIGURATION IMPORTS
@@ -485,6 +486,14 @@ export async function configureServices(): Promise<void> {
     config: fullConfig.backendSync.streaming,
     logger: container.get(TYPES.ILogger) as QualiaLogger,
     messageAdapter: container.get<IMessageAdapter>(TYPES.IRawToParticleEventAdapter),
+  });
+
+  // QUALIA.CODE v1.1: Bind WebSocketServiceParams factory
+  // Consolidates constructor parameters into a single object to comply with IoC limits
+  safeBindConstant<WebSocketServiceParams>(TYPES.WebSocketServiceParams, {
+    logger: container.get<ILogger>(TYPES.ILogger),
+    webSocketFactory: container.get<IWebSocketFactory>(TYPES.IWebSocketFactory),
+    config: fullConfig.backendSync,
   });
 
   // NEW SERVICES CONFIGURATION BINDINGS - QUALIA.CODE v1.1 Compliant (no 'as any' casts)

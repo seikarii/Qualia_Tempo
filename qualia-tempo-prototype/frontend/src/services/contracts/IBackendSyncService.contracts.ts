@@ -35,6 +35,7 @@ export interface BackendSyncConfig {
       pingInterval: number;
       pingTimeout: number;
       connectionTimeout: number;
+      normalCloseCode: number;
     };
   };
   sync: {

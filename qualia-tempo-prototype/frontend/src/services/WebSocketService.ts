@@ -4,6 +4,8 @@ import { logMethod, catchError } from "../utils/decorators";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IWebSocketService } from "./interfaces/IWebSocketService";
 import type { IWebSocketFactory } from "./interfaces/IWebSocketFactory";
+import type { WebSocketServiceParams } from "./contracts/IWebSocketService.contracts";
+import type { BackendSyncConfig } from "./contracts/IBackendSyncService.contracts";
 
 /**
  * QUALIA.CODE v1.1 Compliant WebSocketService
@@ -19,6 +21,7 @@ import type { IWebSocketFactory } from "./interfaces/IWebSocketFactory";
 export class WebSocketService implements IWebSocketService {
   private readonly logger: ILogger;
   private readonly webSocketFactory: IWebSocketFactory;
+  private readonly config: BackendSyncConfig;
   private websocket: WebSocket | null = null;
   private binaryType: 'blob' | 'arraybuffer' = 'blob'; // Default binary type
 
@@ -29,11 +32,11 @@ export class WebSocketService implements IWebSocketService {
   private errorHandler?: (_error: Event) => void;
 
   constructor(
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IWebSocketFactory) webSocketFactory: IWebSocketFactory
+    @inject(TYPES.WebSocketServiceParams) params: WebSocketServiceParams
   ) {
-    this.logger = logger;
-    this.webSocketFactory = webSocketFactory;
+    this.logger = params.logger;
+    this.webSocketFactory = params.webSocketFactory;
+    this.config = params.config;
     this.logger.info("WebSocketService initialized with factory pattern");
   }
 
@@ -95,8 +98,7 @@ export class WebSocketService implements IWebSocketService {
   @catchError
   public async disconnect(): Promise<void> {
     if (this.websocket) {
-      const NORMAL_CLOSE_CODE = 1000;
-      this.websocket.close(NORMAL_CLOSE_CODE, "Client disconnecting");
+      this.websocket.close(this.config.streaming.websocket.normalCloseCode, "Client disconnecting");
       this.websocket = null;
     }
 

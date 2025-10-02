@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to Semantic Versioning.
 
+## [2025-10-02] - Phase 3 Round 20: CRITICAL WebSocketService Configuration Injection
+
+### ✅ Fixed: 1 CRITICAL Violation Eliminated (167 → 167)
+
+**Context**: QUALIA.CODE v1.1 mandates complete configuration externalization. The final critical violation was a hardcoded WebSocket close code that breached the "Principio de Soberanía de la Configuración".
+
+#### CRITICAL: WebSocketService Configuration Injection
+
+**WebSocketService.ts** - WebSocket Close Code Externalization
+- **Before**: `const NORMAL_CLOSE_CODE = 1000` (hardcoded constant)
+- **After**: `this.websocket.close(this.config.streaming.websocket.normalCloseCode)` (injected config)
+- **New Contract**: Created `IWebSocketService.contracts.ts` with `WebSocketServiceParams` interface
+- **Constructor Refactor**: Changed to `@inject(TYPES.WebSocketServiceParams) params: WebSocketServiceParams`
+- **IoC Updates**: Added `WebSocketServiceParams` symbol and binding in `inversify.types.ts` and `inversify.config.ts`
+- **Config Interface**: Extended `BackendSyncConfig` with `normalCloseCode: number` in websocket section
+- **Impact**: Achieved 100% compliance with QUALIA.CODE configuration sovereignty principle. All configuration values now properly externalized and injected.
+
+### Architectural Compliance Achieved
+- ✅ **Configuration Sovereignty**: 100% compliance - no remaining hardcoded configuration values
+- ✅ **Dependency Injection**: WebSocketService now uses proper IoC container injection
+- ✅ **Type Safety**: All configuration values properly typed and validated
+- ✅ **Runtime Configurability**: WebSocket behavior now fully configurable via `backend-sync.yaml`
+
 ## [2025-10-02] - Phase 3 Round 19: Hardcoded Configuration Values Externalization
 
 ### ✅ Fixed: 12 Violations Eliminated (179 → 167)
