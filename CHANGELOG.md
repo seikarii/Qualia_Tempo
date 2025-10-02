@@ -3,7 +3,25 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semanti  - **GameStateStoreService**: Remediated QUALIA.CODE architectural violation by externalizing hardcoded configuration values in the "Menu" case of `handleGameStateChange` method. All reset values now use `this.config.resetValues` instead of hardcoded literals, ensuring compliance with configuration sovereignty principle.
+and this project adheres to [Semanti
+
+## [2025-10-02] - Phase 3 Round 14: Null Safety Improvements
+
+### Architectural Remediation
+- **Null Safety Enforcement**: Systematically replaced `||` operators with `??` (nullish coalescing) across the entire codebase to improve type safety and prevent unintended falsy value handling
+  - **EventBus.ts**: Fixed 3 instances in priority sorting, listeners array access, and event type logging
+  - **FrontendRenderer.tsx**: Fixed width/height style property fallbacks
+  - **BossRenderer.tsx, PlayerRenderer.tsx, QualiaFieldRenderer.tsx**: Fixed currentVisuals state fallbacks
+  - **GameControllerService.ts**: Fixed hit context property fallbacks (points, perfect)
+  - **GameStateStore.ts**: Fixed notifications array fallback
+  - **HttpService.ts**: Fixed options destructuring fallback
+  - **Logger.ts**: Fixed context logging fallbacks in all 4 log levels (DEBUG, INFO, WARN, ERROR)
+  - **QualiaStateCalculatorService.ts**: Fixed config object spreading fallbacks
+  - **RhythmicMovementController.ts**: Fixed initial position offset fallbacks
+  - **NotificationQueue.ts**: Fixed 3 queue operation fallbacks
+  - **decorators.ts**: Fixed throttle timing fallback
+  - **Impact**: 26 null safety violations eliminated, improved type safety, reduced potential runtime errors
+  - **Violations Reduced**: 255 → 229 (26 violations fixed, 60.3% total reduction from baseline)  - **GameStateStoreService**: Remediated QUALIA.CODE architectural violation by externalizing hardcoded configuration values in the "Menu" case of `handleGameStateChange` method. All reset values now use `this.config.resetValues` instead of hardcoded literals, ensuring compliance with configuration sovereignty principle.
     - Added `position` property to `GameStateStoreConfig.resetValues.player` interface
     - Updated `game-state-store.yaml` to include `position: { x: 4, y: 4 }` in reset values
     - Refactored "Menu" case to use configuration-driven values for all state resets
@@ -30,6 +48,18 @@ and this project adheres to [Semanti  - **GameStateStoreService**: Remediated QU
 ## [Unreleased]
 
 ### Added
+- **[PHASE 3 ROUND 13] TimerService Configuration Externalization & Type Safety Improvements** (2025-10-02)
+  - **timer-service.yaml**: Added messages section for initialization messages (timerServiceInitialized, performanceServiceInitialized)
+  - **ITimerService.contracts.ts**: Created new contract file defining TimerServiceConfig interface structure
+  - **TimerService.ts & PerformanceService.ts**: Replaced hardcoded initialization message constants with config injection
+  - **inversify.types.ts**: Added TimerServiceConfig symbol for IoC container binding
+  - **inversify.config.ts**: Added timer-service.yaml to ConfigManifest, bound TimerServiceConfig in configureServices
+  - **config.ts (FullGameConfig)**: Added timerService property to central configuration type
+  - **ErrorReportingService.ts**: Removed hardcoded fallback values (16, 60000, 1000) per QUALIA.CODE strict compliance
+  - **ApplicationCompositionRoot.ts**: Fixed 'any' type in setStoreApi call with proper type assertion and existence check
+  - **ConfigurationService.ts**: Fixed 'any' type in config object indexing, replaced with Record<string, unknown>
+  - **WebAudioAPIService.ts**: Fixed 'any' type for webkitAudioContext with proper Window interface extension
+  - **Impact**: 4 violations fixed (1 hardcoded config + 3 'any' types), violations reduced from 262 to 258 (55.4% total reduction from baseline)
 - **[DOCUMENTATION] Event-Driven Diagnostics Canonization**: Formalized the "Event-Driven Diagnostics" pattern in core architectural documentation, establishing it as mandatory and prohibiting the old polling pattern
   - **QUALIA.CODE.md**:
     * ✅ Added Section 11: "Observabilidad y Diagnósticos: Estatus Dirigido por Eventos"

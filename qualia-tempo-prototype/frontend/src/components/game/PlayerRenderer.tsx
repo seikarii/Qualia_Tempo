@@ -55,7 +55,7 @@ const PlayerRenderer = React.forwardRef<THREE.Group, PlayerRendererProps>(({
   const [currentVisuals, setCurrentVisuals] = useState<PlayerVisualData | null>(null);
   
   // Get default visuals if no current state available
-  const visuals = currentVisuals || viewLogicService.getPlayerVisuals(player, performance, 0);
+  const visuals = currentVisuals ?? viewLogicService.getPlayerVisuals(player, performance, 0);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();

@@ -47,7 +47,7 @@ const QualiaFieldRenderer: React.FC<QualiaFieldRendererProps> = ({
   const [currentVisuals, setCurrentVisuals] = useState<QualiaFieldVisualData | null>(null);
   
   // Get default visuals if no current state available
-  const visuals = currentVisuals || viewLogicService.getQualiaFieldVisuals(qualiaField, musicData, 0);
+  const visuals = currentVisuals ?? viewLogicService.getQualiaFieldVisuals(qualiaField, musicData, 0);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();

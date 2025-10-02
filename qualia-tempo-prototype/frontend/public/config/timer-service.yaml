@@ -1,6 +1,11 @@
 # Timer Service Configuration  
 # QUALIA.CODE Compliant: All timing-related configuration externalized
 
+# Initialization messages for TimerService and PerformanceService
+messages:
+  timerServiceInitialized: "TimerService initialized with timer abstraction"
+  performanceServiceInitialized: "PerformanceService initialized with performance abstraction"
+
 timer:
   # Performance monitoring
   performance:

@@ -95,8 +95,8 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
 
     // Initialize playerPosition from gridSize and optional offset
     this.playerPosition = [
-      this.config.gridSize / 2 + (this.config.initialPlayerPositionOffset?.[0] || 0),
-      this.config.gridSize / 2 + (this.config.initialPlayerPositionOffset?.[1] || 0)
+      this.config.gridSize / 2 + (this.config.initialPlayerPositionOffset?.[0] ?? 0),
+      this.config.gridSize / 2 + (this.config.initialPlayerPositionOffset?.[1] ?? 0)
     ];
   }
 

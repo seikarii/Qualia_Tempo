@@ -110,6 +110,7 @@ export const TYPES = {
   GameStateStoreConfig: Symbol.for("GameStateStoreConfig"),
   PostProcessingConfig: Symbol.for("PostProcessingConfig"),
   ProtocolAdapterConfig: Symbol.for("ProtocolAdapterConfig"),
+  TimerServiceConfig: Symbol.for("TimerServiceConfig"),
 } as const;
 
 // Type-safe access to TYPES

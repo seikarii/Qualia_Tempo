@@ -45,7 +45,10 @@ export class ApplicationCompositionRoot {
 
       // Get GameStateStore and inject the store API
       const gameStateStore = container.get<IGameStateStore>(TYPES.IGameStateStore);
-      (gameStateStore as any).setStoreApi(gameStoreApi);
+      // Type-safe access to setStoreApi method (part of GameStateStore implementation)
+      if ('setStoreApi' in gameStateStore && typeof gameStateStore.setStoreApi === 'function') {
+        (gameStateStore as { setStoreApi: (api: unknown) => void }).setStoreApi(gameStoreApi);
+      }
 
       // Get logger for confirmation
       const logger = container.get<ILogger>(TYPES.ILogger);
@@ -55,7 +58,8 @@ export class ApplicationCompositionRoot {
     } catch (error) {
       const logger = container.get<ILogger>(TYPES.ILogger);
       const config = container.get<CompositionRootConfig>(TYPES.CompositionRootConfig);
-      logger.error(config.logging.uiBridgeErrorMessage, error);
+      const errorContext = error instanceof Error ? { message: error.message, stack: error.stack } : { error: String(error) };
+      logger.error(config.logging.uiBridgeErrorMessage, errorContext);
       throw error;
     }
   }
@@ -102,15 +106,15 @@ export class ApplicationCompositionRoot {
       try {
         const debugService = container.get<IDebugService>(TYPES.IDebugService);
         const debugInterface = debugService.getDebugInterface();
-        if (debugInterface) {
-          // Global API access is handled by dedicated service
-          const globalApiService = debugInterface.getGlobalApiService();
+        if (debugInterface && typeof window !== 'undefined') {
+          // Attach debug interface directly to window for development
           const debugKey = 'QA_DEBUG';
-          globalApiService.attachToWindow(debugKey, debugInterface);
+          (window as unknown as Record<string, unknown>)[debugKey] = debugInterface;
           logger.info(`${config.logging.debugAttachMessage}${debugKey}`);
         }
       } catch (error) {
-        logger.warn(config.logging.debugAttachErrorMessage, error);
+        const errorContext = error instanceof Error ? { message: error.message } : { error: String(error) };
+        logger.warn(config.logging.debugAttachErrorMessage, errorContext);
       }
     }
 
@@ -138,7 +142,8 @@ export class ApplicationCompositionRoot {
       try {
         const logger = container.get<ILogger>(TYPES.ILogger);
         const config = container.get<CompositionRootConfig>(TYPES.CompositionRootConfig);
-        logger.error(config.logging.shutdownErrorMessage, error);
+        const errorContext = error instanceof Error ? { message: error.message, stack: error.stack } : { error: String(error) };
+        logger.error(config.logging.shutdownErrorMessage, errorContext);
       } catch {
         // Last resort - log to external error tracking service
         // In production, this would integrate with error monitoring

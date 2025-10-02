@@ -4,10 +4,7 @@ import { logMethod, catchError } from "../utils/decorators";
 import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService, IPerformanceService } from "./interfaces/ITimerService";
 import type { ITimerProvider } from "./interfaces/ITimerProvider";
-
-// QUALIA.CODE: Module-level constants for initialization messages
-const TIMER_SERVICE_INIT_MESSAGE = "TimerService initialized with timer abstraction";
-const PERFORMANCE_SERVICE_INIT_MESSAGE = "PerformanceService initialized with performance abstraction";
+import type { TimerServiceConfig } from "./contracts/ITimerService.contracts";
 
 // QUALIA.CODE: Extended performance interface for memory information
 interface PerformanceWithMemory extends Performance {
@@ -22,16 +19,19 @@ interface PerformanceWithMemory extends Performance {
 export class TimerService implements ITimerService {
   private readonly logger: ILogger;
   private readonly timerProvider: ITimerProvider;
+  private readonly config: TimerServiceConfig;
   private readonly activeTimeouts = new Set<number>();
   private readonly activeIntervals = new Set<number>();
 
   constructor(
+    @inject(TYPES.TimerServiceConfig) config: TimerServiceConfig,
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerProvider) timerProvider: ITimerProvider
   ) {
+    this.config = config;
     this.logger = logger;
     this.timerProvider = timerProvider;
-    this.logger.info(TIMER_SERVICE_INIT_MESSAGE);
+    this.logger.info(this.config.messages.timerServiceInitialized);
   }
 
   @logMethod
@@ -190,14 +190,17 @@ export class TimerService implements ITimerService {
 export class PerformanceService implements IPerformanceService {
   private readonly logger: ILogger;
   private readonly timerProvider: ITimerProvider;
+  private readonly config: TimerServiceConfig;
 
   constructor(
+    @inject(TYPES.TimerServiceConfig) config: TimerServiceConfig,
     @inject(TYPES.ILogger) logger: ILogger,
     @inject(TYPES.ITimerProvider) timerProvider: ITimerProvider
   ) {
+    this.config = config;
     this.logger = logger;
     this.timerProvider = timerProvider;
-    this.logger.info(PERFORMANCE_SERVICE_INIT_MESSAGE);
+    this.logger.info(this.config.messages.performanceServiceInitialized);
   }
 
   @logMethod

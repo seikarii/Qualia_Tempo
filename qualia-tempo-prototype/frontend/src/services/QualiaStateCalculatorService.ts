@@ -131,13 +131,13 @@ export class QualiaStateCalculatorService
       ...newConfig,
       // Ensure baseQualiaState is never undefined
       baseQualiaState: {
-        ...(this.config?.baseQualiaState || {}),
-        ...(newConfig.baseQualiaState || {}),
+        ...(this.config?.baseQualiaState ?? {}),
+        ...(newConfig.baseQualiaState ?? {}),
       },
       // Ensure performanceMultipliers is never undefined
       performanceMultipliers: {
-        ...(this.config?.performanceMultipliers || {}),
-        ...(newConfig.performanceMultipliers || {}),
+        ...(this.config?.performanceMultipliers ?? {}),
+        ...(newConfig.performanceMultipliers ?? {}),
       },
     } as QualiaCalculatorConfig;
     this.logger.info("⚙️ [QualiaCalculator] Configuration updated");

@@ -40,7 +40,7 @@ const BossRenderer: React.FC<BossRendererProps> = ({ boss }) => {
   const [currentVisuals, setCurrentVisuals] = useState<BossVisualData | null>(null);
   
   // Get default visuals if no current state available
-  const visuals = currentVisuals || viewLogicService.getBossVisuals(boss, 0);
+  const visuals = currentVisuals ?? viewLogicService.getBossVisuals(boss, 0);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();

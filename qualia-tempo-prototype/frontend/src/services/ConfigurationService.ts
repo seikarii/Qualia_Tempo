@@ -90,7 +90,7 @@ export class ConfigurationService implements IConfigurationService {
     // Merge all configurations with proper typing
     const mergedConfig = {} as Partial<FullGameConfig>;
     loadedConfigs.forEach(({ key, config }) => {
-      (mergedConfig as any)[key] = config;
+      (mergedConfig as Record<string, unknown>)[key] = config;
     });
 
     // Validate configuration using modular validators

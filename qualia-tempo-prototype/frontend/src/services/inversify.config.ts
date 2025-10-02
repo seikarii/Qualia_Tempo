@@ -47,6 +47,7 @@ import type { ViewLogicConfig } from "./contracts/IViewLogicService.contracts";
 import type { GameStateStoreConfig } from "./contracts/IGameStateStoreService.contracts";
 import type { PostProcessingConfig } from "./contracts/IPostProcessingService.contracts";
 import type { ProtocolAdapterConfig } from "./contracts/IProtocolAdapter.contracts";
+import type { TimerServiceConfig } from "./contracts/ITimerService.contracts";
 
 // ===== IMPORT EVENT CONTRACTS =====
 import type { ConfigurationLoadedEvent } from "./contracts/events.contracts";
@@ -152,7 +153,8 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "streaming": "backend-sync.yaml",
   "visualEffects": "visual-effects.yaml",
   "coordinateSystem": "game-config.yaml",
-  "protocolAdapter": "protocol-adapter.yaml"
+  "protocolAdapter": "protocol-adapter.yaml",
+  "timerService": "timer-service.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
@@ -416,6 +418,7 @@ export async function configureServices(): Promise<void> {
   safeBindConstant<DebugServiceConfig>(TYPES.DebugServiceConfig, fullConfig.debugService);
   safeBindConstant<FrontendRenderingConfig>(TYPES.FrontendRenderingConfig, fullConfig.frontendRendering);
   safeBindConstant<StreamingConfig>(TYPES.StreamingConfig, fullConfig.backendSync.streaming);
+  safeBindConstant<TimerServiceConfig>(TYPES.TimerServiceConfig, fullConfig.timerService);
   
   // Bind ThrottlingConfig from NotificationService config
   safeBindConstant(TYPES.ThrottlingConfig, fullConfig.notificationService.throttling);

@@ -33,6 +33,7 @@ import type { DebugOrchestratorConfig } from '../services/contracts/IDebugOrches
 import type { GameStateStoreConfig } from '../services/contracts/IGameStateStoreService.contracts';
 import type { PostProcessingConfig } from '../services/contracts/IPostProcessingService.contracts';
 import type { ProtocolAdapterConfig } from '../services/contracts/IProtocolAdapter.contracts';
+import type { TimerServiceConfig } from '../services/contracts/ITimerService.contracts';
 
 /**
  * Gameplay Configuration Interface
@@ -68,6 +69,7 @@ export interface FullGameConfig {
   http: HttpConfig;
   eventBus: EventBusConfig;
   backendSync: BackendSyncConfig;
+  timerService: TimerServiceConfig;
 
   // Game Logic Services
   gameController: GameControllerConfig;

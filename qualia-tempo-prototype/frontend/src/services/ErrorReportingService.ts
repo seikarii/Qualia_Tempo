@@ -40,8 +40,8 @@ import type {
 export class ErrorFingerprinter {
   static generateFingerprint(
     error: Error | null | undefined,
+    fingerprintLength: number,
     context?: Record<string, unknown>,
-    fingerprintLength: number = 16,
   ): string {
     // Handle null/undefined errors gracefully
     if (!error) {
@@ -447,7 +447,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     severity: ErrorSeverity,
     context?: Record<string, unknown>,
   ): ExtendedErrorReport {
-    const fingerprint = ErrorFingerprinter.generateFingerprint(error, context, this.config.fingerprintLength ?? 16);
+    const fingerprint = ErrorFingerprinter.generateFingerprint(error, this.config.fingerprintLength, context);
 
     // Handle null/undefined errors gracefully
     const safeError = error ?? new Error("Unknown error (null/undefined)");
@@ -527,13 +527,13 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   private startMemoryCleanup(): void {
     this.memoryCleanupInterval = this.timerService.setInterval(() => {
       this.performMemoryCleanup();
-    }, this.config.memoryCleanupInterval ?? 60000); // Use configured interval
+    }, this.config.memoryCleanupInterval); // Use configured interval
   }
 
   private startRateLimitRefill(): void {
     this.rateLimitRefillInterval = this.timerService.setInterval(() => {
       this.refillRateLimitTokens();
-    }, this.config.rateLimitRefillInterval ?? 1000); // Use configured interval
+    }, this.config.rateLimitRefillInterval); // Use configured interval
   }
 
   private stopAllIntervals(): void {

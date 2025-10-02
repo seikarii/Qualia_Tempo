@@ -76,7 +76,7 @@ export class GameStateStore implements IGameStateStore {
    */
   getNotifications(): ExtendedNotification[] {
     const state = this.storeApi.getState() as { notifications?: Notification[] };
-    const notifications = state.notifications || [];
+    const notifications = state.notifications ?? [];
     return notifications.map((notification: Notification) => ({
       id: notification.id,
       type: notification.type,

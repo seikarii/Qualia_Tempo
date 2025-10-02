@@ -71,7 +71,7 @@ export class HttpService implements IHttpService {
     const startTime = performance.now();
 
     // QUALIA.CODE v1.1: Platform Abstraction - Timeout management encapsulated in HttpService
-    const { timeout, ...fetchOptions } = options || {};
+    const { timeout, ...fetchOptions } = options ?? {};
     const effectiveTimeout = timeout ?? this.config.timeout; // QUALIA.CODE: Configuration externalized to avoid circular dependency
 
     const controller = new AbortController();

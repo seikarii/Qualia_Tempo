@@ -99,8 +99,8 @@ const FrontendRenderer: React.FC<FrontendRendererProps> = ({
         width={width}
         height={height}
         style={{
-          width: width || '100%',
-          height: height || '100%',
+          width: width ?? '100%',
+          height: height ?? '100%',
           display: 'block',
           background: '#000000',
         }}

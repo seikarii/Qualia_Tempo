@@ -138,7 +138,7 @@ export class EventBus implements IEventBus {
       eventListeners.push(listener);
 
       // Sort by priority (higher priority first)
-      eventListeners.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+      eventListeners.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
 
       const duration = performance.now() - startTime;
       this.logger.info(
@@ -242,7 +242,7 @@ export class EventBus implements IEventBus {
       // Add to history
       this.addToHistory(completeEvent);
 
-      const listeners = this.listeners.get(completeEvent.type) || [];
+      const listeners = this.listeners.get(completeEvent.type) ?? [];
       if (listeners.length === 0) {
         this.logger.debug(
           `📢 [EventBus] No listeners for event: ${completeEvent.type}`,
@@ -317,7 +317,7 @@ export class EventBus implements IEventBus {
    */
   public getEventHistory(eventType?: string, limit?: number): BaseEvent[] {
     this.logger.debug(
-      `📚 [EventBus] GetEventHistory called for ${eventType || "all"} events`,
+      `📚 [EventBus] GetEventHistory called for ${eventType ?? "all"} events`,
     );
 
     try {

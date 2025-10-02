@@ -25,16 +25,16 @@ export class NotificationQueue {
   }
 
   enqueue(notification: ExtendedNotification): void {
-    const queue = this.queues.get(notification.priority) || [];
+    const queue = this.queues.get(notification.priority) ?? [];
     queue.push(notification);
     this.queues.set(notification.priority, queue);
   }
 
   dequeue(): ExtendedNotification | null {
     for (const priority of this.priorities) {
-      const queue = this.queues.get(priority) || [];
+      const queue = this.queues.get(priority) ?? [];
       if (queue.length > 0) {
-        return queue.shift() || null;
+        return queue.shift() ?? null;
       }
     }
     return null;
@@ -52,6 +52,6 @@ export class NotificationQueue {
   }
 
   getByPriority(priority: NotificationPriority): ExtendedNotification[] {
-    return [...(this.queues.get(priority) || [])];
+    return [...(this.queues.get(priority) ?? [])];
   }
 }

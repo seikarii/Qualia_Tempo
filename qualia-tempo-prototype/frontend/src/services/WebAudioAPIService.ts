@@ -18,8 +18,11 @@ export class WebAudioAPIService implements IWebAudioAPIService {
 
   constructor() {
     if (typeof window !== "undefined") {
-      this.audioContext = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+      // Handle webkit prefixed AudioContext for older browsers
+      const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (AudioContextClass) {
+        this.audioContext = new AudioContextClass();
+      }
     }
   }
 

@@ -140,7 +140,7 @@ export function throttle(milliseconds: number) {
       const className = (this as Record<string, unknown>).constructor.name;
       const methodKey = `${className}.${methodName}`;
       const now = Date.now();
-      const lastCall = throttleMap.get(methodKey) || 0;
+      const lastCall = throttleMap.get(methodKey) ?? 0;
 
       // Access logger from instance (this) at runtime
       const instanceLogger = (this as Record<string, unknown>).logger;

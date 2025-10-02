@@ -256,8 +256,8 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   private handleHitNote(context?: HitNoteContext): void {
     if (!this.gameState.isPlaying || this.gameState.isPaused) return;
 
-    const points = context?.points || this.config.scoring.baseScorePerHit;
-    const isPerfect = context?.perfect || false;
+    const points = context?.points ?? this.config.scoring.baseScorePerHit;
+    const isPerfect = context?.perfect ?? false;
 
     // Update score
     this.gameState.currentScore += points;
