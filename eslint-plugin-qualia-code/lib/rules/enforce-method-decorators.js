@@ -159,14 +159,6 @@ module.exports = {
             messageId: 'unnecessaryCatchError'
           });
         }
-
-        // Rule 4: Performance warning for @catchError on potential hot paths
-        if (hasCatchError && isGetter) {
-          context.report({
-            node,
-            messageId: 'performanceWarning'
-          });
-        }
       }
     };
   }

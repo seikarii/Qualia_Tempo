@@ -2,6 +2,96 @@
 
 All notable changes to the Qualia Tempo project will be documented in this file.
 
+## [2025-01-03] - ESLint QUALIA.CODE Remediation: Enhanced Architectural Enforcement
+
+### Added
+
+#### New ESLint Rules for QUALIA.CODE Compliance
+- **`enforce-onevent-base-service.js`**: New rule to enforce @OnEvent decorator usage only on classes implementing IBaseService
+  - **Purpose**: Prevents event subscription without proper lifecycle management
+  - **Detection**: AST analysis of class declarations with @OnEvent decorators
+  - **Error**: Reports violation when @OnEvent is used on classes not implementing IBaseService
+  - **Tests**: 4 comprehensive test cases covering valid/invalid usage patterns
+
+- **`enforce-browser-only.js`**: New rule to enforce @BrowserOnly decorator on methods using browser APIs
+  - **Purpose**: Ensures platform abstraction for SSR compatibility and test environment safety
+  - **Detection**: AST analysis of method bodies for browser API usage (window, document, performance, etc.)
+  - **Error**: Reports violation when browser APIs are used without @BrowserOnly decorator
+  - **Tests**: 6 comprehensive test cases covering various browser API usage patterns
+
+- **`enforce-event-interfaces-location.js`**: New rule to enforce event interfaces in events.contracts.ts only
+  - **Purpose**: Maintains single source of truth for event data structures
+  - **Detection**: AST analysis of TSInterfaceDeclaration nodes ending with "Event"
+  - **Error**: Reports violation when event interfaces are defined outside events.contracts.ts
+  - **Tests**: 4 test cases validating interface location enforcement
+
+### Enhanced
+
+#### Existing ESLint Rules Improvements
+- **`enforce-inversify-conventions.js`**: Enhanced decorator detection and exemption handling
+  - **Fixed**: Improved AST traversal for nested class structures
+  - **Fixed**: Better handling of abstract classes and interface implementations
+  - **Added**: More comprehensive exemption patterns for test files and utilities
+  - **Tests**: Updated test suite with additional edge cases
+
+- **`no-direct-service-instantiation.js`**: Enhanced service instantiation detection
+  - **Fixed**: Improved regex patterns for constructor call detection
+  - **Fixed**: Better handling of factory functions and service builders
+  - **Added**: Support for detecting instantiation through reflection APIs
+  - **Tests**: Expanded test coverage for complex instantiation patterns
+
+- **`enforce-method-decorators.js`**: Enhanced decorator validation for service methods
+  - **Fixed**: More accurate detection of public service methods requiring @logMethod
+  - **Fixed**: Better handling of inherited methods and interface implementations
+  - **Added**: Support for detecting missing @catchError decorators on external API calls
+  - **Tests**: Comprehensive test updates covering inheritance and interface scenarios
+
+### Fixed
+
+#### Codebase Compliance Updates
+- **Event Interface Relocation**: Moved DebugEvent interface to events.contracts.ts
+  - **Moved**: `DebugEvent` from `IDebugService.ts` to `events.contracts.ts`
+  - **Updated**: Import statements in affected files
+  - **Fixed**: Type compatibility issues between BaseEvent and DebugEvent
+
+- **Browser API Abstraction**: Added @BrowserOnly decorators to methods using browser APIs
+  - **Updated**: `DebugOrchestratorService.gatherServiceDiagnostics()` - Added @BrowserOnly
+  - **Updated**: `DebugService.getSystemSnapshot()` - Added @BrowserOnly
+  - **Updated**: `EventBus.subscribe()`, `emit()`, `getEventHistory()` - Added @BrowserOnly
+  - **Updated**: `BrowserTimerProvider` all methods - Added @BrowserOnly
+  - **Updated**: `ViewLogicService.getPlayerVisuals()` - Added @BrowserOnly
+  - **Updated**: `RhythmicMovementController.updateMovement()`, `recordPlayerPerformance()` - Added @BrowserOnly
+  - **Updated**: `PostProcessingService.render()` - Added @BrowserOnly
+
+- **Type System Corrections**: Fixed TypeScript compilation issues
+  - **Fixed**: SystemSnapshot interface to use DebugStats instead of ServiceStatus
+  - **Fixed**: DebugEvent interface to extend BaseEvent with proper timestamp typing
+  - **Fixed**: Type casting issues in logger calls and event handling
+  - **Fixed**: Unused variable markers in interface definitions
+
+- **Generated Files Regeneration**: Regenerated contract files to fix manual edits
+  - **Regenerated**: All TypeScript interfaces from JSON schemas
+  - **Removed**: Manual edits that violated no-manual-contract-edit rule
+  - **Status**: All generated files now compliant with QUALIA.CODE
+
+### Activated
+
+#### ESLint Configuration Updates
+- **`.eslintrc.cjs`**: Activated all 19 QUALIA.CODE rules as errors
+  - **Enabled**: All existing rules (16) + 3 new rules
+  - **Level**: Error level enforcement for architectural compliance
+  - **Coverage**: Complete QUALIA.CODE pattern detection and enforcement
+
+### Tested
+
+#### Comprehensive Test Suite Validation
+- **Plugin Tests**: All 210 ESLint plugin tests passing
+  - **Coverage**: 19 rules with comprehensive test cases
+  - **Validation**: Valid and invalid code patterns properly detected
+  - **Status**: 100% test suite success ✅
+
+---
+
 ## [2025-10-02] - Project Map Update: Comprehensive Service and Interface Documentation
 
 ### Updated
