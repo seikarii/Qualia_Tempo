@@ -411,6 +411,12 @@ class QLA005Checker:
    def __init__(self, filepath: Path):
        self.filepath = filepath
        self.is_service_file = "services" in str(filepath)
+       # QUALIA.CODE: Whitelist platform abstraction services themselves
+       # These services ARE the abstraction layer and are allowed to use platform APIs
+       self.platform_abstraction_services = {
+           "FileSystemService", "SystemEnvironmentService", 
+           "HttpService", "TimerService", "DatabaseService"
+       }
        # Focus on the most critical platform APIs that should be abstracted
        self.critical_platform_apis = {
            # HTTP/Network APIs - high priority for abstraction
@@ -437,9 +443,13 @@ class QLA005Checker:
            old_in_service = self.in_service_class
            
            self.current_class = node.name
-           self.in_service_class = any(
-               suffix in node.name for suffix in ["Service", "Engine", "Manager", "Processor", "Handler"]
-           )
+           # Skip platform abstraction services - they are ALLOWED to use platform APIs
+           if node.name in self.platform_abstraction_services:
+               self.in_service_class = False
+           else:
+               self.in_service_class = any(
+                   suffix in node.name for suffix in ["Service", "Engine", "Manager", "Processor", "Handler"]
+               )
            
            for child in ast.iter_child_nodes(node):
                self.visit(child)

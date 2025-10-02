@@ -381,3 +381,66 @@ Regla ESLint estaba bloqueando importaciones legítimas de contratos e interface
 **Prioridad:** Alta - Esencial para validación de cambios arquitectónicos.
 
 
+
+---
+
+## 🏗️ ARCHITECTURAL REMEDIATION (2025-10-02)
+
+### ✅ PHASE 1 COMPLETED: Backend Platform Abstraction
+- [x] Created IFileSystemService interface and implementation
+- [x] Created ISystemEnvironmentService interface and implementation  
+- [x] Refactored SecurityService to use ISystemEnvironmentService
+- [x] Refactored RenderingService to use IFileSystemService
+- [x] Updated CompositionRoot with platform abstraction services
+- [x] Enhanced Ruff QLA005 rule to whitelist abstraction services
+- [x] Enhanced ESLint enforce-method-decorators for performance exemptions
+- [x] Fixed all backend platform abstraction violations (QLA005)
+
+### �� PHASE 2 IN PROGRESS: Frontend Complexity Reduction (39 violations)
+
+#### High Priority - Component Extraction
+- [ ] FIXME: QualiaMainMenu.tsx (217 lines) - Extract menu rendering into sub-components - in /qualia-tempo-prototype/frontend/src/components/QualiaMainMenu.tsx:18
+- [ ] FIXME: QualiaTempoGame.tsx (212 lines) - Extract game orchestration logic to services - in /qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx:79
+- [ ] FIXME: main.ts (211 lines) - Extract initialization steps into separate functions - in /qualia-tempo-prototype/frontend/src/main.ts:11
+- [ ] FIXME: PlayerRenderer.tsx (174 lines) - Extract rendering sub-components - in /qualia-tempo-prototype/frontend/src/components/game/PlayerRenderer.tsx:40
+- [ ] FIXME: inversify.config.ts bindServiceParameterObjects (171 lines) - Extract parameter binding to separate module - in /qualia-tempo-prototype/frontend/src/services/inversify.config.ts:479
+
+#### Medium Priority - Service Method Extraction
+- [ ] FIXME: QualiaFieldRenderer.tsx (138 lines) - Apply Stateless View-Logic Pattern - in /qualia-tempo-prototype/frontend/src/components/game/QualiaFieldRenderer.tsx:28
+- [ ] FIXME: BossRenderer.tsx (145 lines) - Move visual calculations to ViewLogicService - in /qualia-tempo-prototype/frontend/src/components/game/BossRenderer.tsx:31
+- [ ] FIXME: ServiceDiagnosticsPanel.tsx (128 lines) - Extract diagnostic rendering sections - in /qualia-tempo-prototype/frontend/src/components/debug/ServiceDiagnosticsPanel.tsx:24
+- [ ] FIXME: RawToParticleEventAdapter.ts adapt() (101 lines) - Extract protocol transformation logic - in /qualia-tempo-prototype/frontend/src/services/protocol/adapters/RawToParticleEventAdapter.ts:45
+- [ ] FIXME: GameStateStoreService handleGameStateChange (95 lines) - Extract state transition logic - in /qualia-tempo-prototype/frontend/src/services/GameStateStoreService.ts:141
+
+#### Parameter Object Pattern (4 violations)
+- [ ] FIXME: Create WorldToScreenParams interface for CoordinateSystemService.worldToScreen - in /qualia-tempo-prototype/frontend/src/services/CoordinateSystemService.ts:80
+- [ ] FIXME: Create GridVisualsParams interface for ViewLogicService.getGridVisuals - in /qualia-tempo-prototype/frontend/src/services/ViewLogicService.ts:698
+- [ ] FIXME: Create ToneParams interface for WebAudioAPIService.playTone - in /qualia-tempo-prototype/frontend/src/services/WebAudioAPIService.ts:50
+
+#### Decorator Complexity Reduction
+- [ ] FIXME: decorators.ts validate() (94 lines) - Extract validation logic to utility functions - in /qualia-tempo-prototype/frontend/src/utils/decorators.ts:325
+- [ ] FIXME: decorators.ts validateEventProperty() (118 lines) - Extract event validation to utility - in /qualia-tempo-prototype/frontend/src/utils/decorators.ts:425
+
+### 🔄 PHASE 3 IN PROGRESS: Backend Type Safety (31 violations remaining)
+
+#### Import/Type Conflicts
+- [ ] FIXME: ShaderIntrospectionService.py - Fix Dict import conflict with pyparsing - in /qualia-tempo-prototype/backend/services/ShaderIntrospectionService.py:6
+
+#### Unreachable Statements
+- [ ] FIXME: qualia_particle_engine.py - Remove or fix 3 unreachable statements - in /qualia-tempo-prototype/backend/engine/qualia_particle_engine.py
+- [ ] FIXME: StreamingWebService.py - Remove or fix 3 unreachable statements - in /qualia-tempo-prototype/backend/services/StreamingWebService.py
+- [ ] FIXME: StateStreamingService.py - Remove or fix unreachable statement - in /qualia-tempo-prototype/backend/services/StateStreamingService.py:103
+
+#### Return Type Annotations (no-any-return)
+- [ ] FIXME: main.py - Add explicit return type annotation - in /qualia-tempo-prototype/backend/main.py:28
+- [ ] FIXME: qualia_particle_engine.py - Add explicit return type annotation - in /qualia-tempo-prototype/backend/engine/qualia_particle_engine.py:784
+- [ ] FIXME: RenderingService.py - Add explicit return type annotation - in /qualia-tempo-prototype/backend/services/RenderingService.py:178
+- [ ] FIXME: SecurityService.py - Add explicit return type annotation - in /qualia-tempo-prototype/backend/services/SecurityService.py:89
+- [ ] FIXME: CompositionRoot.py - Add explicit return type annotation - in /qualia-tempo-prototype/backend/CompositionRoot.py:315
+- [ ] FIXME: routes.py - Add explicit return type annotation - in /qualia-tempo-prototype/backend/api/routes.py:184
+
+#### Union Attribute Access
+- [ ] FIXME: RenderingService.py - Add null checks for moderngl operations (5 occurrences) - in /qualia-tempo-prototype/backend/services/RenderingService.py
+
+---
+

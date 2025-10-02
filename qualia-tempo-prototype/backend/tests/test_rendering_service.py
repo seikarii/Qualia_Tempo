@@ -175,7 +175,7 @@ class TestRenderingService:
             mock_image.save = mock_save
             yield mock_image_class
 
-    def test_initialization_with_dependencies_available(
+    def test_initialization_with_dependencies_available_ioc(
         self, rendering_service, mock_event_bus
     ):
         """Test RenderingService initialization using IoC fixture."""
@@ -189,7 +189,7 @@ class TestRenderingService:
         # Verify the mock was called
         rendering_service.initialize.assert_called_once()
 
-    def test_render_frame_returns_jpeg_bytes(self, rendering_service):
+    def test_render_frame_returns_jpeg_bytes_ioc(self, rendering_service):
         """Test that render_frame returns valid JPEG bytes using IoC fixture."""
         # Call the mock method - it's configured to return frame data
         result = rendering_service.render_frame()
@@ -198,7 +198,7 @@ class TestRenderingService:
         assert result == b"fake_frame_data"
         rendering_service.render_frame.assert_called_once()
 
-    def test_render_frame_behavior_validation(self, rendering_service):
+    def test_render_frame_behavior_validation_ioc(self, rendering_service):
         """Test that render_frame properly orchestrates GPU operations using IoC fixture."""
         # Use the service from IoC container (already mocked with proper behavior)
 
@@ -209,7 +209,7 @@ class TestRenderingService:
         assert result == b"fake_frame_data"
         rendering_service.render_frame.assert_called_once()
 
-    def test_rendering_service_interface(self, rendering_service):
+    def test_rendering_service_interface_ioc(self, rendering_service):
         """Test that RenderingService mock has expected interface."""
         # Verify the mock has the expected methods
         assert hasattr(rendering_service, "initialize")

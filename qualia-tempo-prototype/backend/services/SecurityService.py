@@ -6,6 +6,7 @@ from typing import Optional, Dict, Any
 from fastapi import WebSocket
 from urllib.parse import parse_qs
 from .interfaces.ISecurityService import ISecurityService
+from .interfaces.ISystemEnvironmentService import ISystemEnvironmentService
 from .exceptions import SecurityException
 from ..utils.decorators import log_execution, handle_errors
 
@@ -16,19 +17,23 @@ class SecurityService(ISecurityService):
     """
     Configurable security service for WebSocket authentication.
     Supports disabled authentication for development/testing environments.
+    
+    QUALIA.CODE §4: Uses injected SystemEnvironmentService for platform abstraction.
     """
 
-    def __init__(self, config: Dict[str, Any]) -> None:
+    def __init__(self, config: Dict[str, Any], env_service: ISystemEnvironmentService) -> None:
         """
-        Initialize SecurityService with configuration.
+        Initialize SecurityService with configuration and injected dependencies.
         
         Args:
             config: Configuration dictionary containing security settings
+            env_service: Injected SystemEnvironmentService for environment access
         """
         self._config = config
         self._security_config = config.get("security", {})
         self._websocket_config = self._security_config.get("websockets", {})
         self._auth_enabled = self._websocket_config.get("auth_enabled", False)
+        self._env_service = env_service
         
         logger.info(f"SecurityService initialized with auth_enabled={self._auth_enabled}")
 
@@ -96,11 +101,8 @@ class SecurityService(ISecurityService):
         Raises:
             SecurityException: If token is invalid
         """
-        # QUALIA.CODE v1.1: Secure token validation with externalized configuration
-        import os
-        
-        # Get validation method from environment/config
-        auth_method = os.getenv("AUTH_METHOD", "jwt")
+        # QUALIA.CODE §4: Use injected SystemEnvironmentService instead of direct os.getenv
+        auth_method = self._env_service.get_env("AUTH_METHOD", "jwt")
         
         if auth_method == "jwt":
             return await self._validate_jwt_token(token)
@@ -113,9 +115,9 @@ class SecurityService(ISecurityService):
         """Validate JWT token (requires PyJWT)."""
         try:
             import jwt
-            import os
             
-            secret_key = os.getenv("JWT_SECRET_KEY")
+            # QUALIA.CODE §4: Use injected SystemEnvironmentService
+            secret_key = self._env_service.get_env("JWT_SECRET_KEY")
             if not secret_key:
                 raise SecurityException("JWT_SECRET_KEY not configured")
             
@@ -134,9 +136,11 @@ class SecurityService(ISecurityService):
     
     async def _validate_env_token(self, token: str) -> Dict[str, Any]:
         """Validate token against environment variable."""
-        import os
-        
-        valid_tokens = os.getenv("VALID_TOKENS", "").split(",")
+        # QUALIA.CODE §4: Use injected SystemEnvironmentService
+        valid_tokens_str = self._env_service.get_env("VALID_TOKENS", "")
+        if valid_tokens_str is None:
+            valid_tokens_str = ""
+        valid_tokens = valid_tokens_str.split(",")
         valid_tokens = [t.strip() for t in valid_tokens if t.strip()]
         
         if not valid_tokens:

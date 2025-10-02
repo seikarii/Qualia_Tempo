@@ -123,7 +123,7 @@ class TestShaderIntrospectionService:
         assert uniforms[1] == ("position", "vec2", 8)
         assert result is not None
 
-    def test_introspect_malformed_uniforms(self, shader_service):
+    def test_introspect_malformed_uniforms_with_extra_data(self, shader_service):
         """Test introspection with malformed uniform declarations."""
         shader_source = """
         #version 430

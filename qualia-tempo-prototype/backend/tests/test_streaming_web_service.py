@@ -469,8 +469,8 @@ class TestStreamingWebService:
         assert "fps" in status
 
     @pytest.mark.asyncio
-    async def test_stop_streaming(self, streaming_service):
-        """Test stop_streaming functionality."""
+    async def test_stop_streaming_side_effect(self, streaming_service):
+        """Test stop_streaming functionality with side effects."""
         streaming_service._is_streaming = True
 
         # Set up the side_effect to change _is_streaming

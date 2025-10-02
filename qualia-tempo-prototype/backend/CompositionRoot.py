@@ -40,6 +40,10 @@ class CompositionRoot:
         # GOLD.CODE: Initialize shared OpenGL context FIRST
         await self._initialize_shared_context()
 
+        # Initialize platform abstraction services (QUALIA.CODE §4 - Platform Abstraction)
+        await self._initialize_filesystem_service()
+        await self._initialize_system_environment_service()
+
         # Initialize core services
         await self._initialize_event_bus()
         await self._initialize_security_service()
@@ -103,21 +107,60 @@ class CompositionRoot:
         self._services["event_bus"] = self._event_bus
         self._logger.debug("📡 EventBus service registered")
 
+    async def _initialize_filesystem_service(self) -> None:
+        """Initialize FileSystemService for platform abstraction (QUALIA.CODE §4)."""
+        try:
+            from .services.FileSystemService import FileSystemService
+
+            filesystem_service = FileSystemService()
+            self._services["filesystem_service"] = filesystem_service
+            self._logger.debug("📁 FileSystemService registered")
+
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize FileSystemService: {e}")
+            raise
+
+    async def _initialize_system_environment_service(self) -> None:
+        """Initialize SystemEnvironmentService for platform abstraction (QUALIA.CODE §4)."""
+        try:
+            from .services.SystemEnvironmentService import SystemEnvironmentService
+
+            env_service = SystemEnvironmentService()
+            self._services["system_environment_service"] = env_service
+            self._logger.debug("🌍 SystemEnvironmentService registered")
+
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize SystemEnvironmentService: {e}")
+            raise
+
     async def _initialize_security_service(self) -> None:
-        """Initialize SecurityService with configuration."""
+        """Initialize SecurityService with configuration and injected dependencies."""
         try:
             from .services.SecurityService import SecurityService
             import yaml
-            from pathlib import Path
 
-            # Load configuration
-            config_path = Path(__file__).parent / "config" / "server.yaml"
-            with open(config_path, "r") as file:
-                config = yaml.safe_load(file)
+            # QUALIA.CODE: Use injected FileSystemService instead of direct open()
+            filesystem_service = self._services.get("filesystem_service")
+            if filesystem_service is None:
+                raise RuntimeError("FileSystemService not available for SecurityService")
 
-            security_service = SecurityService(config)
+            # Load configuration using abstracted service
+            config_path = filesystem_service.join_path(
+                filesystem_service.get_absolute_path(__file__).rsplit('/', 1)[0],
+                "config",
+                "server.yaml"
+            )
+            config_content = filesystem_service.read_file(config_path)
+            config = yaml.safe_load(config_content)
+
+            # Inject SystemEnvironmentService into SecurityService
+            env_service = self._services.get("system_environment_service")
+            if env_service is None:
+                raise RuntimeError("SystemEnvironmentService not available for SecurityService")
+            
+            security_service = SecurityService(config, env_service)
             self._services["security_service"] = security_service
-            self._logger.debug("🔒 SecurityService registered with configuration")
+            self._logger.debug("🔒 SecurityService registered with injected dependencies")
 
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize SecurityService: {e}")
@@ -179,11 +222,17 @@ class CompositionRoot:
 
         particle_engine = self._services.get("particle_system")
         
-        # Create the actual rendering service
+        # QUALIA.CODE: Inject FileSystemService for shader loading
+        filesystem_service = self._services.get("filesystem_service")
+        if filesystem_service is None:
+            raise RuntimeError("FileSystemService not available for RenderingService")
+        
+        # Create the actual rendering service with injected dependencies
         rendering_service = RenderingService(
             ctx=self._services.get("shared_opengl_context"),
             particle_engine=particle_engine,
-            event_bus=self._event_bus
+            event_bus=self._event_bus,
+            filesystem_service=filesystem_service
         )
 
         streaming_web_service = StreamingWebService(

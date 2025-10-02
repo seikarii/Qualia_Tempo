@@ -2,11 +2,11 @@
 # GPU-accelerated rendering service for producing video frames
 
 import logging
-import os
 from typing import Optional, Any
 
 from ..utils.decorators import log_execution, handle_errors
 from .interfaces.IRenderingService import IRenderingService
+from .interfaces.IFileSystemService import IFileSystemService
 from .EventBus import SystemResourcesReadyEvent
 
 try:
@@ -25,20 +25,30 @@ logger = logging.getLogger(__name__)
 class RenderingService(IRenderingService):
     """
     GPU-accelerated rendering service that produces video frames for WebSocket streaming.
+    
+    QUALIA.CODE §4: Uses injected FileSystemService for platform abstraction.
     """
 
-    def __init__(self, ctx: Any, particle_engine: Any, event_bus: Any) -> None:
+    def __init__(
+        self, 
+        ctx: Any, 
+        particle_engine: Any, 
+        event_bus: Any,
+        filesystem_service: IFileSystemService
+    ) -> None:
         """
-        Initialize the rendering service.
+        Initialize the rendering service with injected dependencies.
 
         Args:
             ctx: ModernGL context
             particle_engine: Particle engine for particle data
             event_bus: EventBus for system communication
+            filesystem_service: Injected FileSystemService for file operations
         """
         self._ctx = ctx
         self._particle_engine = particle_engine
         self._event_bus = event_bus
+        self._filesystem_service = filesystem_service
         self._logger = logging.getLogger(__name__)
 
         # Rendering resources
@@ -64,19 +74,18 @@ class RenderingService(IRenderingService):
                 color_attachments=[self._ctx.texture((800, 600), 4)]
             )
 
-            # QUALIA.CODE v1.1: Load shaders from files instead of hardcoded strings
-            shader_dir = os.path.join(os.path.dirname(__file__), "..", "engine", "shaders")
+            # QUALIA.CODE §4: Load shaders using injected FileSystemService
+            current_dir = self._filesystem_service.get_absolute_path(__file__).rsplit('/', 1)[0]
+            shader_dir = self._filesystem_service.join_path(current_dir, "..", "engine", "shaders")
             
-            vertex_shader_path = os.path.join(shader_dir, "particle.vert")
-            fragment_shader_path = os.path.join(shader_dir, "particle.frag")
+            vertex_shader_path = self._filesystem_service.join_path(shader_dir, "particle.vert")
+            fragment_shader_path = self._filesystem_service.join_path(shader_dir, "particle.frag")
             
-            # Load vertex shader
-            with open(vertex_shader_path, 'r') as f:
-                vertex_shader = f.read()
+            # Load vertex shader using abstracted service
+            vertex_shader = self._filesystem_service.read_file(vertex_shader_path)
             
-            # Load fragment shader  
-            with open(fragment_shader_path, 'r') as f:
-                fragment_shader = f.read()
+            # Load fragment shader using abstracted service
+            fragment_shader = self._filesystem_service.read_file(fragment_shader_path)
 
             self._program = self._ctx.program(
                 vertex_shader=vertex_shader,

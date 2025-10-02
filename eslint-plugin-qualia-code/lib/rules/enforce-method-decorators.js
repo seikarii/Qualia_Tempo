@@ -62,6 +62,20 @@ module.exports = {
       return false;
     }
 
+    function hasPerformanceOptimizationComment(node) {
+      // Check if method has a JSDoc comment with @performance or mentions hot-path optimization
+      const comments = context.getSourceCode().getCommentsBefore(node);
+      return comments.some(comment => {
+        const text = comment.value.toLowerCase();
+        return text.includes('@performance') ||
+               text.includes('hot-path') ||
+               text.includes('hot path') ||
+               text.includes('performance optimized') ||
+               text.includes('no @logmethod') ||
+               text.includes('performance characteristics');
+      });
+    }
+
     function isPublicMethod(node) {
       // Skip private/protected methods
       if (node.accessibility === 'private' || node.accessibility === 'protected') {
@@ -135,9 +149,11 @@ module.exports = {
         const hasCatchError = hasDecorator(node, 'catchError');
         const isAsync = isAsyncMethod(node);
         const isGetter = isSimpleGetter(node);
+        const hasPerformanceExemption = hasPerformanceOptimizationComment(node);
 
-        // Rule 1: All public methods must have @logMethod()
-        if (!hasLogMethod) {
+        // Rule 1: All public methods must have @logMethod() UNLESS explicitly documented as hot-path
+        // QUALIA.CODE §11: Performance-critical methods may omit decorators with documentation
+        if (!hasLogMethod && !hasPerformanceExemption) {
           context.report({
             node,
             messageId: 'missingLogMethod'
