@@ -18,5 +18,5 @@ export interface IEventTransformer<TInput extends BaseEvent, TOutput extends Bas
    * @param inputEvent - Typed input event
    * @returns Transformed output event
    */
-  transform(inputEvent: TInput): TOutput;
+  transform(_inputEvent: TInput): TOutput;
 }

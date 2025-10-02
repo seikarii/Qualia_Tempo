@@ -14,14 +14,14 @@ interface InstanceWithLogger {
 
 // QUALIA.CODE v1.1: Type helper for adapters
 interface IMessageAdapter {
-  adapt(rawData: unknown): { type: string; source?: string; [key: string]: unknown };
+  adapt(_rawData: unknown): { type: string; source?: string; [key: string]: unknown };
 }
 
 // QUALIA.CODE v1.1: Type helper for event bus
 interface IEventBus {
-  emit(event: unknown): void;
-  subscribe(eventType: string, handler: (...args: unknown[]) => void, options?: unknown): string;
-  unsubscribe(listenerId: string): void;
+  emit(_event: unknown): void;
+  subscribe(_eventType: string, _handler: (...args: unknown[]) => void, _options?: unknown): string;
+  unsubscribe(_listenerId: string): void;
 }
 
 // QUALIA.CODE v1.1: Type helper for instances with eventBus and adapter
@@ -802,7 +802,7 @@ export function initializeEventSubscriptions(serviceInstance: unknown): void {
   const subscriptions = (instance.constructor as ConstructorWithSubscriptions)._eventSubscriptions || [];
   
   for (const subscription of (subscriptions as {eventType: string; methodName: string; originalMethod: unknown}[])) {
-    const method = instance[subscription.methodName] as ((...args: unknown[]) => void) | undefined;
+    const method = instance[subscription.methodName] as ((..._args: unknown[]) => void) | undefined;
     if (method && typeof method === 'function') {
       const listenerId = eventBus.subscribe(
         subscription.eventType,

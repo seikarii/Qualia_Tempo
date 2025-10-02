@@ -22,5 +22,5 @@ export interface IMessageAdapter {
    * @param rawData - Raw data from external source
    * @returns Typed domain event ready for EventBus emission
    */
-  adapt(rawData: RawMessageData): BaseEvent;
+  adapt(_rawData: RawMessageData): BaseEvent;
 }
