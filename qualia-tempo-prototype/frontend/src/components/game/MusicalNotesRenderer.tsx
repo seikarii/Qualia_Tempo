@@ -15,7 +15,7 @@ interface Note {
 interface MusicalNotesRendererProps {
   notes: Note[];
   currentTime: number;
-  onNoteHit?: (noteId: string, accuracy: number) => void;
+  onNoteHit?: (_noteId: string, _accuracy: number) => void;
 }
 
 /**

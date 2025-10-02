@@ -177,7 +177,7 @@ export class AudioService implements IAudioService, IBaseService {
 
   @OnEvent('MetronomeTick')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
-  private _handleMetronomeTick(event: MetronomeTickEvent): void {
+  private _handleMetronomeTick(_event: MetronomeTickEvent): void {
     this.playMetronomeTick();
   }
 

@@ -131,9 +131,9 @@ export function throttle(milliseconds: number) {
   const throttleMap = new Map<string, number>();
 
   return function (
-    value: (...args: unknown[]) => unknown,
+    value: (..._args: unknown[]) => unknown,
     context: ClassMethodDecoratorContext
-  ): (...args: unknown[]) => unknown {
+  ): (..._args: unknown[]) => unknown {
     const methodName = String(context.name);
 
     return function (this: unknown, ...args: unknown[]) {
@@ -350,9 +350,9 @@ function logPerformance(
  */
 export function validate(schemaName: string) {
   return function (
-    value: (...args: unknown[]) => unknown,
+    value: (..._args: unknown[]) => unknown,
     context: ClassMethodDecoratorContext
-  ): (...args: unknown[]) => unknown {
+  ): (..._args: unknown[]) => unknown {
     const methodName = String(context.name);
 
     return function (this: unknown, ...args: unknown[]) {
@@ -581,9 +581,9 @@ export function qualiaMethod(
   } = {},
 ) {
   return function (
-    value: (...args: unknown[]) => unknown,
+    value: (..._args: unknown[]) => unknown,
     context: ClassMethodDecoratorContext
-  ): (...args: unknown[]) => unknown {
+  ): (..._args: unknown[]) => unknown {
     // Start with the original method
     let decoratedMethod = value;
 

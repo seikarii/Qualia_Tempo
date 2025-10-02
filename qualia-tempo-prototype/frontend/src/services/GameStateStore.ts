@@ -65,9 +65,6 @@ export class GameStateStore implements IGameStateStore {
         duration: typeof notification.metadata?.duration === 'number' ? notification.metadata.duration : this.config.display.notificationDuration,
       }));
 
-    setState(
-    fn: (state: GameState) => Partial<GameState>,
-  ): void {
     this.storeApi.setState((state) => ({
       ...state,
       notifications: storeNotifications,

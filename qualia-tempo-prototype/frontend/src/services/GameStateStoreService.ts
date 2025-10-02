@@ -34,7 +34,8 @@ import type { GameStateStoreConfig } from "./contracts/IGameStateStoreService.co
 import type { GameState } from "../state/useGameStore";
 
 // Store setter type (from Zustand)
-type StoreSetter = (updater: (state: GameState) => Partial<GameState>) => void;
+// Note: Parameters prefixed with _ to indicate they are part of callback signature
+type StoreSetter = (updater: (state: GameState) => GameState) => void;
 
 // QUALIA.CODE: Externalized message constants - REMOVED, now in config
 
@@ -91,10 +92,10 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
 
   @logMethod
   @catchError
-  updateGameState(state: QualiaState): void {
+  updateGameState(state: Partial<GameState>): void {
     this.setStore((currentState: GameState) => ({
       ...currentState,
-      qualiaState: { ...state },
+      ...state,
     }));
   }
 
