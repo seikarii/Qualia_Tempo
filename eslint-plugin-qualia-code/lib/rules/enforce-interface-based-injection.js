@@ -29,9 +29,10 @@ module.exports = {
     // Get TypeScript parser services if available
     const parserServices = context.parserServices;
     
-    // If TypeScript parser services are not available, we can't perform semantic analysis
+    // If TypeScript parser services are not available, disable the rule gracefully
+    // This allows the rule to work in test environments without full TypeScript setup
     if (!parserServices || !parserServices.program || !parserServices.esTreeNodeToTSNodeMap) {
-      return {};
+      return {}; // No rules to apply when TypeScript services are unavailable
     }
 
     const checker = parserServices.program.getTypeChecker();

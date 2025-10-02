@@ -37,6 +37,19 @@ ruleTester.run('no-complex-use-state', rule, {
     // Simple function calls that return primitives
     {
       code: 'const [id, setId] = useState(Number("123"));'
+    },
+    // Complex state allowed in renderer components
+    {
+      code: 'const [particles, setParticles] = useState([{x: 0, y: 0}]);',
+      filename: 'src/components/ParticleRenderer.tsx'
+    },
+    {
+      code: 'const [gridData, setGridData] = useState({width: 100, height: 100});',
+      filename: 'src/components/GridRenderer.tsx'
+    },
+    {
+      code: 'const [notes, setNotes] = useState([]);',
+      filename: 'src/components/MusicalNotesRenderer.tsx'
     }
   ],
 

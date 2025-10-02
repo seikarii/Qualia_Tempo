@@ -44,6 +44,28 @@ ruleTester.run('no-hardcoded-config', rule, {
     {
       code: 'const gameConfig = { speed: 100, difficulty: 5 };',
       filename: 'MyService.ts'
+    },
+    // Hexadecimal literals (allowed)
+    {
+      code: 'const mask = 0x8000;',
+      filename: 'ProtocolService.ts'
+    },
+    {
+      code: 'const flag = 0x7C00;',
+      filename: 'DataAdapterService.ts'
+    },
+    // Mathematical expressions (allowed)
+    {
+      code: 'const result = Math.pow(2, 16);',
+      filename: 'CalculationService.ts'
+    },
+    {
+      code: 'const shifted = value >> 8;',
+      filename: 'BitwiseService.ts'
+    },
+    {
+      code: 'const combined = (a << 16) | b;',
+      filename: 'ProtocolService.ts'
     }
   ],
 

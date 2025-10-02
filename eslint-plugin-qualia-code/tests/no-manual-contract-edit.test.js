@@ -40,7 +40,7 @@ ruleTester.run('no-manual-contract-edit', rule, {
   invalid: [
     {
       code: 'export interface QualiaState {}',
-      filename: 'types/contracts.ts',
+      filename: 'src/types/contracts.ts',
       errors: [{
         messageId: 'noManualEdit'
       }]

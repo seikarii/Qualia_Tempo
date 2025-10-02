@@ -365,4 +365,19 @@ Regla ESLint estaba bloqueando importaciones legítimas de contratos e interface
 **Impacto:** Resuelve 5 violaciones falsas positivas en componentes React (BossRenderer, GridRenderer, MusicalNotesRenderer, PlayerRenderer, QualiaFieldRenderer).  
 **Prioridad:** Media - Crítico para remediación arquitectural.
 
+### 30. ✅ COMPLETED - Tests de reglas ESLint actualizados para refinamientos de reglas
+**Archivos:** 
+- `eslint-plugin-qualia-code/tests/enforce-method-decorators.test.js`
+- `eslint-plugin-qualia-code/tests/no-complex-use-state.test.js` 
+- `eslint-plugin-qualia-code/tests/no-hardcoded-config.test.js`
+
+**Contexto:** Tras actualizar las reglas ESLint para eliminar falsos positivos (sobrecargas TypeScript, componentes renderer, expresiones matemáticas), era necesario actualizar los tests correspondientes.  
+**Solución:** 
+- Agregados tests para sobrecargas TypeScript en `enforce-method-decorators`
+- Agregados tests para componentes renderer en `no-complex-use-state`
+- Agregados tests para literales hexadecimales y expresiones matemáticas en `no-hardcoded-config`
+- Corregidos messageIds y rutas de archivos en todos los tests
+**Impacto:** Todos los tests pasan (38/38), cobertura completa de nuevos comportamientos de reglas.  
+**Prioridad:** Alta - Esencial para validación de cambios arquitectónicos.
+
 

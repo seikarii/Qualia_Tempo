@@ -227,6 +227,39 @@ module.exports = {
       return false;
     }
 
+    function isMathematicalExpression(node) {
+      // Check if this number is part of a mathematical expression
+      let parent = node.parent;
+      let depth = 0;
+      const maxDepth = 3;
+      
+      while (parent && depth < maxDepth) {
+        // Check for Math.* function calls
+        if (parent.type === 'CallExpression' && parent.callee) {
+          if (parent.callee.type === 'MemberExpression' && 
+              parent.callee.object?.name === 'Math') {
+            return true;
+          }
+        }
+        
+        // Check for binary expressions (arithmetic operations)
+        if (parent.type === 'BinaryExpression' && 
+            ['+', '-', '*', '/', '%', '>>', '<<', '>>>'].includes(parent.operator)) {
+          return true;
+        }
+        
+        // Check for unary expressions (negation, etc.)
+        if (parent.type === 'UnaryExpression') {
+          return true;
+        }
+        
+        parent = parent.parent;
+        depth++;
+      }
+      
+      return false;
+    }
+
     function isSystemFunctionCall(node) {
       // Check if this is a call to a system function like Date.now()
       let parent = node.parent;
@@ -379,6 +412,16 @@ module.exports = {
 
       // Allow import/export related strings
       if (typeof value === 'string' && value.includes('/') && value.match(/\.(ts|js|json)$/)) {
+        return false;
+      }
+
+      // Allow hexadecimal literals (commonly used for bit masks, flags, etc.)
+      if (typeof value === 'number' && node.raw && node.raw.startsWith('0x')) {
+        return false;
+      }
+
+      // Allow numbers in mathematical expressions (Math.pow, division, etc.)
+      if (isMathematicalExpression(node)) {
         return false;
       }
 

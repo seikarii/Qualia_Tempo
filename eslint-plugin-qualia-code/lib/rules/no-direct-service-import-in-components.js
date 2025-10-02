@@ -34,11 +34,12 @@ module.exports = {
         const sourcePath = node.source.value;
         
         // Check if importing from services directory
-        // Allow: /interfaces/, /hooks, /contracts/, and type-only imports
+        // Allow: /interfaces/, /hooks, /contracts/, /inversify.types, and type-only imports
         const isServicesImport = sourcePath.includes('/services/');
         const isAllowedPath = sourcePath.includes('/interfaces/') || 
                              sourcePath.includes('/hooks') || 
-                             sourcePath.includes('/contracts/');
+                             sourcePath.includes('/contracts/') ||
+                             sourcePath.includes('/inversify.types');
         const isTypeOnlyImport = node.importKind === 'type';
         
         if (typeof sourcePath === 'string' && isServicesImport && !isAllowedPath && !isTypeOnlyImport) {
