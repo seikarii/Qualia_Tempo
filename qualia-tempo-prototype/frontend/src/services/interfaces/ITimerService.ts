@@ -52,4 +52,10 @@ export interface ITimerService {
    * Abstraction for cancelAnimationFrame()
    */
   cancelAnimationFrame(animationId: number): void;
+
+  /**
+   * Get high-resolution performance timestamp
+   * Abstraction for performance.now()
+   */
+  performanceNow(): number;
 }

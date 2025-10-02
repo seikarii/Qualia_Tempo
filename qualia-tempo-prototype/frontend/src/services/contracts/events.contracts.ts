@@ -172,3 +172,8 @@ export interface ServiceStatusUpdateEvent extends BaseEvent {
     error?: string;
   };
 }
+
+// Moved from IDebugService.ts
+export interface DebugEvent extends BaseEvent {
+  data?: Record<string, unknown>;
+}

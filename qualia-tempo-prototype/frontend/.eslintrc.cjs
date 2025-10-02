@@ -76,7 +76,9 @@ module.exports = {
     "@qualia-tempo/qualia-code/no-service-locator": "error",
     "@qualia-tempo/qualia-code/enforce-interface-based-injection": "error",
     "@qualia-tempo/qualia-code/enforce-onevent-base-service": "error",
-    "@qualia-tempo/qualia-code/enforce-browser-only": "error",
+    // DISABLED: enforce-browser-only leads to using @BrowserOnly as a band-aid for violations
+    // instead of using proper platform abstraction services (ITimerService, etc.)
+    "@qualia-tempo/qualia-code/enforce-browser-only": "off",
     "@qualia-tempo/qualia-code/enforce-event-interfaces-location": "error",
   },
   settings: {
@@ -94,16 +96,18 @@ module.exports = {
         // Keep QUALIA.CODE rules active even in interfaces
       },
     },
-    // Abstraction services - allowed to use global APIs they encapsulate
+    // Platform abstraction layer - allowed to use global APIs they encapsulate
+    // CRITICAL: Only files that IMPLEMENT the abstraction layer should be here
+    // Services that USE abstractions (like EventBus) must NOT be in this list
     {
       files: [
         "**/services/TimerService.ts",
         "**/services/HttpService.ts", 
         "**/services/WebAudioAPIService.ts",
-        "**/services/EventBus.ts",
+        "**/services/providers/*.ts", // Provider implementations (BrowserTimerProvider, etc.)
       ],
       rules: {
-        "@qualia-tempo/qualia-code/no-global-api-calls": "off", // These services abstract global APIs
+        "@qualia-tempo/qualia-code/no-global-api-calls": "off", // These ARE the platform abstraction layer
       },
     },
     // Static utility classes - don't require IoC decorators (but still enforce other rules)

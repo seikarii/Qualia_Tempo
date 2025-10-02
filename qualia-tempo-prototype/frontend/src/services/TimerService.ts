@@ -178,4 +178,9 @@ export class TimerService implements ITimerService {
     this.logger.debug("Cancelling animation frame", { animationId });
     this.timerProvider.cancelAnimationFrame(animationId);
   }
+
+  @logMethod
+  public performanceNow(): number {
+    return this.timerProvider.performanceNow();
+  }
 }

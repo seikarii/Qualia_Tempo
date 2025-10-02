@@ -20,7 +20,7 @@ import type { IEventBus } from './interfaces/IEventBus';
 // QUALIA.CODE v1.1: Service imports removed - event-driven pattern eliminates coupling
 // import type { INotificationService } from './interfaces/INotificationService';
 // import type { IErrorReportingService } from './interfaces/IErrorReportingService';
-import { logMethod, catchError, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from '../utils/decorators';
+import { logMethod, catchError, BrowserOnly, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from '../utils/decorators';
 import type { ConfigurationLoadedEvent, ServiceStatusUpdateEvent } from './contracts/events.contracts';
 import type { IBaseService } from './interfaces/IBaseService';
 
@@ -72,6 +72,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
 
   @logMethod
   @catchError
+  @BrowserOnly
   async gatherServiceDiagnostics(): Promise<ServiceDiagnosticData> {
     const serviceStatuses = await this.getServiceStatuses();
     

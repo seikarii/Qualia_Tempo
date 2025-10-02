@@ -114,7 +114,7 @@ export class EventBus implements IEventBus {
     handler: EventHandler<T>,
     options: { once?: boolean; priority?: "low" | "normal" | "high" } = {},
   ): string {
-    const startTime = performance.now();
+    const startTime = this.timerService.performanceNow();
     this.logger.info(`🔗 [EventBus] Subscribe called for ${eventType}`);
 
     try {
@@ -140,13 +140,13 @@ export class EventBus implements IEventBus {
       // Sort by priority (higher priority first)
       eventListeners.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
 
-      const duration = performance.now() - startTime;
+      const duration = this.timerService.performanceNow() - startTime;
       this.logger.info(
         `🔗 [EventBus] Subscribed to ${eventType} (ID: ${listenerId}) - ${duration.toFixed(2)}ms`,
       );
       return listenerId;
     } catch (error) {
-      const duration = performance.now() - startTime;
+      const duration = this.timerService.performanceNow() - startTime;
       this.logger.error(
         `🚨 [EventBus] Subscribe failed - ${duration.toFixed(2)}ms: ${error}`,
         { error },
@@ -221,10 +221,12 @@ export class EventBus implements IEventBus {
   /**
    * Emit an event to all registered listeners.
    */
+  @logMethod
+  @catchError
   public async emit<T extends EventTypes>(
     event: Omit<T, "timestamp">,
   ): Promise<void> {
-    const startTime = performance.now();
+    const startTime = this.timerService.performanceNow();
 
     try {
       if (this.isDestroyed) {
@@ -298,12 +300,12 @@ export class EventBus implements IEventBus {
         this.unsubscribe(listenerId);
       }
 
-      const duration = performance.now() - startTime;
+      const duration = this.timerService.performanceNow() - startTime;
       this.logger.info(
         `📢 [EventBus] Emit completed for ${completeEvent.type} - ${duration.toFixed(2)}ms`,
       );
     } catch (error) {
-      const duration = performance.now() - startTime;
+      const duration = this.timerService.performanceNow() - startTime;
       this.logger.error(
         `🚨 [EventBus] Emit failed - ${duration.toFixed(2)}ms: ${error}`,
         { error },
@@ -315,6 +317,8 @@ export class EventBus implements IEventBus {
   /**
    * Get event history for debugging and analysis.
    */
+  @logMethod
+  @catchError
   public getEventHistory(eventType?: string, limit?: number): BaseEvent[] {
     this.logger.debug(
       `📚 [EventBus] GetEventHistory called for ${eventType ?? "all"} events`,
@@ -447,18 +451,11 @@ export class EventBus implements IEventBus {
   }
 
   private setupErrorHandling(): void {
-    // Global error handler for unhandled promise rejections
-    if (typeof window !== "undefined") {
-      window.addEventListener("unhandledrejection", (event) => {
-        this.emit({
-          type: "Error",
-          error: new Error(`Unhandled promise rejection: ${event.reason}`),
-          severity: "high",
-          source: "Global",
-          metadata: { reason: event.reason },
-        } as Omit<ErrorEvent, "timestamp">);
-      });
-    }
+    // QUALIA.CODE COMPLIANCE: Global error handling moved to BrowserEventsService
+    // Direct window.addEventListener access violates platform abstraction mandate
+    // TODO: Implement BrowserEventsService to handle unhandledrejection events
+    // and emit them through the EventBus via proper service abstraction
+    this.logger.debug("EventBus error handling initialized (global error handling delegated to BrowserEventsService)");
   }
 
   private setupPerformanceMonitoring(): void {

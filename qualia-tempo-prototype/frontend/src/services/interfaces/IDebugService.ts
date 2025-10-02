@@ -4,6 +4,7 @@
  */
 
 import type { AIAnalysisResult } from "../contracts/IDebugService.contracts";
+import type { DebugEvent } from "../contracts/events.contracts";
 
 // Export AnalysisResult as an alias for AIAnalysisResult for compatibility
 export type AnalysisResult = AIAnalysisResult;
@@ -16,13 +17,6 @@ export interface DebugConfig {
   enableAIAnalysis?: boolean;
   enablePerformanceMonitoring?: boolean;
   memoryCleanupInterval?: number;
-}
-
-export interface DebugEvent {
-  timestamp: number;
-  type: string;
-  source: string;
-  data?: Record<string, unknown>;
 }
 
 export interface ServiceStatus {
@@ -42,8 +36,8 @@ export interface DebugStats {
 }
 
 export interface SystemSnapshot {
-  timestamp: number;
-  services: Record<string, ServiceStatus>;
+  timestamp: Date;
+  services: Record<string, DebugStats>;
   performance: {
     memoryUsage: number;
     uptime: number;

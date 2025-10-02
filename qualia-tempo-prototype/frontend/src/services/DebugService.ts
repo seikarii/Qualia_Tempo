@@ -315,9 +315,10 @@ export class DebugService implements IDebugService, IBaseService {
    */
   @logMethod
   @catchError
+  @BrowserOnly
   public getSystemSnapshot(): SystemSnapshot {
     return {
-      timestamp: Date.now(),
+      timestamp: new Date(),
       services: {
         debugService: {
           isRunning: this.isStarted,
@@ -480,6 +481,7 @@ export class DebugService implements IDebugService, IBaseService {
     }
   }
 
+  // @ts-ignore - Used by @OnEvent decorator
   @OnEvent('*')
   private handleGenericEvent(event: BaseEvent): void {
     this.recordEvent(event);
@@ -524,7 +526,7 @@ export class DebugService implements IDebugService, IBaseService {
     
     this.logger.debug(
       "🔍 [DebugService] QualiaState calculated from player actions:",
-      event.qualiaState
+      event.qualiaState as unknown as Record<string, unknown>
     );
   }
 

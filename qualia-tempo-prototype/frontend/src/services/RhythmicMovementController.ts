@@ -455,7 +455,7 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
   @logMethod
   @catchError
   public updateMovement(qualiaState: QualiaState): void {
-    const startTime = performance.now();
+    const startTime = this.timerService.performanceNow();
 
     // Update internal state based on qualia
     this.currentIntensity = qualiaState.intensity;
@@ -466,7 +466,7 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
 
     // Track performance metrics
     this.updatesPerformed++;
-    this.totalUpdateTime += performance.now() - startTime;
+    this.totalUpdateTime += this.timerService.performanceNow() - startTime;
 
     this.logger.debug("Movement updated based on QualiaState", {
       intensity: qualiaState.intensity,

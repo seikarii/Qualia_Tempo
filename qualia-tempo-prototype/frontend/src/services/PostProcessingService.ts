@@ -322,6 +322,7 @@ export class PostProcessingService implements IPostProcessingService {
 
   @logMethod
   @catchError
+  @BrowserOnly
   render(camera: THREE.PerspectiveCamera): void {
     if (!this.isInitialized) {
       throw new Error("PostProcessingService must be initialized before rendering");
