@@ -62,6 +62,22 @@ module.exports = {
 
     // Import rules (require eslint-plugin-import which is not installed)
     // "import/no-unused-modules": "off", // Can be too aggressive
+
+    // QUALIA.CODE CRITICAL RULES - ACTIVATED FOR FULL COMPLIANCE DETECTION
+    "@qualia-tempo/qualia-code/enforce-method-decorators": "error",
+    "@qualia-tempo/qualia-code/enforce-inversify-conventions": "error",
+    "@qualia-tempo/qualia-code/no-global-api-calls": "error",
+    "@qualia-tempo/qualia-code/no-direct-service-instantiation": "error",
+    "@qualia-tempo/qualia-code/enforce-use-services-hook": "error",
+    "@qualia-tempo/qualia-code/no-console-in-services": "error",
+    "@qualia-tempo/qualia-code/no-direct-service-import-in-components": "error",
+    "@qualia-tempo/qualia-code/no-manual-event-subscription": "error",
+    "@qualia-tempo/qualia-code/no-direct-diagnostic-calls": "error",
+    "@qualia-tempo/qualia-code/no-service-locator": "error",
+    "@qualia-tempo/qualia-code/enforce-interface-based-injection": "error",
+    "@qualia-tempo/qualia-code/enforce-onevent-base-service": "error",
+    "@qualia-tempo/qualia-code/enforce-browser-only": "error",
+    "@qualia-tempo/qualia-code/enforce-event-interfaces-location": "error",
   },
   settings: {
     "import/resolver": {
@@ -75,8 +91,7 @@ module.exports = {
       rules: {
         "no-unused-vars": "off",
         "@typescript-eslint/no-unused-vars": "off",
-        "@qualia-tempo/qualia-code/enforce-method-decorators": "off",
-        "@qualia-tempo/qualia-code/enforce-inversify-conventions": "off",
+        // Keep QUALIA.CODE rules active even in interfaces
       },
     },
     // Abstraction services - allowed to use global APIs they encapsulate
@@ -88,16 +103,16 @@ module.exports = {
         "**/services/EventBus.ts",
       ],
       rules: {
-        "@qualia-tempo/qualia-code/no-global-api-calls": "off",
+        "@qualia-tempo/qualia-code/no-global-api-calls": "off", // These services abstract global APIs
       },
     },
-    // Static utility classes - don't require IoC decorators
+    // Static utility classes - don't require IoC decorators (but still enforce other rules)
     {
       files: [
         "**/services/Logger.ts",
       ],
       rules: {
-        "@qualia-tempo/qualia-code/enforce-inversify-conventions": "off",
+        "@qualia-tempo/qualia-code/enforce-inversify-conventions": "off", // Logger is static utility
       },
     },
     // Auto-generated files - should not be manually edited
@@ -110,7 +125,7 @@ module.exports = {
         "@qualia-tempo/qualia-code/no-manual-contract-edit": "error",
       },
     },
-    // Testing files - more relaxed rules
+    // Testing files - more relaxed rules for IoC patterns
     {
       files: [
         "**/testing/**/*.ts",
@@ -118,8 +133,8 @@ module.exports = {
         "**/*.spec.ts",
       ],
       rules: {
-        "@qualia-tempo/qualia-code/no-direct-service-instantiation": "off",
-        "@qualia-tempo/qualia-code/enforce-use-services-hook": "off",
+        "@qualia-tempo/qualia-code/no-direct-service-instantiation": "off", // Tests need to instantiate services
+        "@qualia-tempo/qualia-code/enforce-use-services-hook": "off", // Tests don't use React hooks
         "no-unused-vars": "off",
       },
     },
@@ -130,7 +145,7 @@ module.exports = {
         "**/main.ts",
       ],
       rules: {
-        "@qualia-tempo/qualia-code/enforce-use-services-hook": "off",
+        "@qualia-tempo/qualia-code/enforce-use-services-hook": "off", // Entry points access container
       },
     },
     // Interface files - method names can reference global APIs for abstraction
@@ -139,7 +154,7 @@ module.exports = {
         "**/interfaces/ITimerService.ts",
       ],
       rules: {
-        "@qualia-tempo/qualia-code/no-global-api-calls": "off",
+        "@qualia-tempo/qualia-code/no-global-api-calls": "off", // Interface names reference APIs
       },
     },
   ],

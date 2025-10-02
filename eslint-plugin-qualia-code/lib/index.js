@@ -30,6 +30,11 @@ const noDirectDiagnosticCalls = require('./rules/no-direct-diagnostic-calls');
 // NEW RULES - QUALIA.CODE v1.1 IoC Strictness
 const noServiceLocator = require('./rules/no-service-locator');
 const enforceInterfaceBasedInjection = require('./rules/enforce-interface-based-injection');
+// NEW RULES - QUALIA.CODE v1.1 Decorator Enforcement
+const enforceOnEventBaseService = require('./rules/enforce-onevent-base-service');
+const enforceBrowserOnly = require('./rules/enforce-browser-only');
+// NEW RULES - QUALIA.CODE v1.1 Event Architecture
+const enforceEventInterfacesLocation = require('./rules/enforce-event-interfaces-location');
 
 module.exports = {
   rules: {
@@ -51,6 +56,11 @@ module.exports = {
     // NEW RULES - QUALIA.CODE v1.1 IoC Strictness
     'no-service-locator': noServiceLocator,
     'enforce-interface-based-injection': enforceInterfaceBasedInjection,
+    // NEW RULES - QUALIA.CODE v1.1 Decorator Enforcement
+    'enforce-onevent-base-service': enforceOnEventBaseService,
+    'enforce-browser-only': enforceBrowserOnly,
+    // NEW RULES - QUALIA.CODE v1.1 Event Architecture
+    'enforce-event-interfaces-location': enforceEventInterfacesLocation,
   },
   configs: {
     recommended: {
@@ -74,7 +84,13 @@ module.exports = {
         // NEW RULES - QUALIA.CODE v1.1 IoC Strictness
         '@qualia-tempo/qualia-code/no-service-locator': 'error',
         '@qualia-tempo/qualia-code/enforce-interface-based-injection': 'error',
+        // NEW RULES - QUALIA.CODE v1.1 Decorator Enforcement
+        '@qualia-tempo/qualia-code/enforce-onevent-base-service': 'error',
+        '@qualia-tempo/qualia-code/enforce-browser-only': 'error',
+        // NEW RULES - QUALIA.CODE v1.1 Event Architecture
+        '@qualia-tempo/qualia-code/enforce-event-interfaces-location': 'error',
       }
     }
   }
 };
+

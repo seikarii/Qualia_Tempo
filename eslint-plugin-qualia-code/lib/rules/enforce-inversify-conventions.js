@@ -61,8 +61,32 @@ module.exports = {
     let firstImportNode = null;
 
     function isServiceClass(className) {
+      // Exempt ApplicationCompositionRoot and test factories
+      if (className === 'ApplicationCompositionRoot' ||
+          className.includes('CompositionRoot') ||
+          className.includes('TestFactory') ||
+          className.includes('MockFactory')) {
+        return false;
+      }
+
       const serviceSuffixes = ['Service', 'Controller', 'Repository', 'Provider', 'Calculator'];
       return serviceSuffixes.some(suffix => className.endsWith(suffix));
+    }
+
+    function extendsThirdPartyClass(node) {
+      // Check if class extends from a third-party library
+      if (!node.superClass) {
+        return false;
+      }
+
+      // Common third-party base classes that should be exempted
+      const thirdPartyBases = ['Pass', 'Effect', 'Material', 'Geometry', 'BufferGeometry', 
+                               'Object3D', 'Group', 'Mesh', 'Component', 'PureComponent'];
+      
+      const superClassName = node.superClass.name || 
+                            (node.superClass.property && node.superClass.property.name);
+      
+      return thirdPartyBases.includes(superClassName);
     }
 
     function hasInjectDecorator(param) {
@@ -141,6 +165,11 @@ module.exports = {
         }
 
         const className = node.id.name;
+
+        // Skip if extends third-party class
+        if (extendsThirdPartyClass(node)) {
+          return;
+        }
 
         if (isServiceClass(className) && !hasInjectableDecorator(node)) {
           context.report({

@@ -90,6 +90,75 @@ ruleTester.run('enforce-inversify-conventions', rule, {
         import { createRoot } from 'react-dom/client';
       `,
       filename: 'index.tsx'
+    },
+
+    // ApplicationCompositionRoot exemption (CRITICAL)
+    {
+      code: `
+        export class ApplicationCompositionRoot {
+          constructor() {
+            this.services = new Map();
+          }
+        }
+      `,
+      filename: 'ApplicationCompositionRoot.ts'
+    },
+
+    // Third-party class extension exemption (CRITICAL)
+    {
+      code: `
+        import { Pass } from 'three/examples/jsm/postprocessing/Pass';
+        
+        export class GBufferPass extends Pass {
+          constructor(scene, camera) {
+            super();
+            this.scene = scene;
+            this.camera = camera;
+          }
+        }
+      `,
+      filename: 'GBufferPass.ts'
+    },
+
+    // Another third-party extension
+    {
+      code: `
+        import { Effect } from 'postprocessing';
+        
+        export class CustomEffect extends Effect {
+          constructor(options) {
+            super('CustomEffect', fragmentShader, { uniforms });
+          }
+        }
+      `,
+      filename: 'CustomEffect.ts'
+    },
+
+    // Test factory exemption
+    {
+      code: `
+        export class TestCompositionRootFactory {
+          static create() {
+            return new CompositionRoot();
+          }
+        }
+      `,
+      filename: 'TestFactory.ts'
+    },
+
+    // Service with no constructor parameters
+    {
+      code: `
+        import { injectable } from 'inversify';
+
+        @injectable()
+        export class SimpleService {
+          constructor() {
+            this.data = [];
+          }
+        }
+      `,
+      filename: 'SimpleService.ts'
     }
   ],
 
@@ -192,3 +261,5 @@ ruleTester.run('enforce-inversify-conventions', rule, {
     }
   ]
 });
+
+console.log('✅ All enforce-inversify-conventions tests passed!');

@@ -102,6 +102,65 @@ ruleTester.run('enforce-method-decorators', rule, {
         }
       `,
       filename: 'src/services/BackendSyncService.ts'
+    },
+    // Async method with @catchError (REQUIRED)
+    {
+      code: `
+        class BackendSyncService {
+          @logMethod()
+          @catchError()
+          async syncToBackend(data: any) {
+            await this.httpService.post('/api/sync', data);
+          }
+        }
+      `,
+      filename: 'src/services/BackendSyncService.ts'
+    },
+    // Simple getter (no @catchError needed)
+    {
+      code: `
+        class QualiaService {
+          @logMethod()
+          getCurrentState() {
+            return this.state;
+          }
+        }
+      `,
+      filename: 'src/services/QualiaService.ts'
+    },
+    // Getter starting with 'is'
+    {
+      code: `
+        class GameControllerService {
+          @logMethod()
+          isRunning() {
+            return this.running;
+          }
+        }
+      `,
+      filename: 'src/services/GameControllerService.ts'
+    },
+    // Protected method (exempt)
+    {
+      code: `
+        class QualiaService {
+          protected calculateInternal() {
+            return this.data;
+          }
+        }
+      `,
+      filename: 'src/services/QualiaService.ts'
+    },
+    // Private method with underscore prefix (exempt)
+    {
+      code: `
+        class EventBusService {
+          private _emit(event: any) {
+            // implementation
+          }
+        }
+      `,
+      filename: 'src/services/EventBusService.ts'
     }
   ],
 
@@ -140,6 +199,63 @@ ruleTester.run('enforce-method-decorators', rule, {
         { messageId: 'missingLogMethod' },
         { messageId: 'missingLogMethod' }
       ]
+    },
+    // Async method without @catchError (VIOLATION)
+    {
+      code: `
+        class BackendSyncService {
+          @logMethod()
+          async syncData(data: any) {
+            await this.httpService.post('/api/sync', data);
+          }
+        }
+      `,
+      filename: 'src/services/BackendSyncService.ts',
+      errors: [
+        { messageId: 'missingCatchError' }
+      ]
+    },
+    // Simple getter with unnecessary @catchError (PERFORMANCE VIOLATION)
+    {
+      code: `
+        class QualiaService {
+          @logMethod()
+          @catchError()
+          getCurrentState() {
+            return this.state;
+          }
+        }
+      `,
+      filename: 'src/services/QualiaService.ts',
+      errors: [
+        { messageId: 'unnecessaryCatchError' }
+      ]
+    },
+    // Multiple decorator violations
+    {
+      code: `
+        class ComplexService {
+          processData() {}
+          @logMethod()
+          async fetchData() {
+            return await fetch('/api/data');
+          }
+          @logMethod()
+          @catchError()
+          getConfig() {
+            return this.config;
+          }
+        }
+      `,
+      filename: 'src/services/ComplexService.ts',
+      errors: [
+        { messageId: 'missingLogMethod' },
+        { messageId: 'missingCatchError' },
+        { messageId: 'unnecessaryCatchError' }
+      ]
     }
   ]
 });
+
+console.log('✅ All enforce-method-decorators tests passed!');
+

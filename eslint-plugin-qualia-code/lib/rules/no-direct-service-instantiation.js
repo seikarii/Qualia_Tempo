@@ -38,12 +38,20 @@ module.exports = {
         if (filename.includes('.test.') ||
             filename.includes('.spec.') ||
             filename.includes('__tests__') ||
-            filename.includes('/tests/')) {
+            filename.includes('/tests/') ||
+            filename.includes('/testing/') ||
+            filename.endsWith('.test.ts') ||
+            filename.endsWith('.test.tsx') ||
+            filename.endsWith('.spec.ts') ||
+            filename.endsWith('.spec.tsx')) {
           return;
         }
 
         // Skip if we're in CompositionRoot.ts (allowed to instantiate services)
-        if (filename.includes('CompositionRoot.ts') || filename.includes('CompositionRoot.tsx')) {
+        if (filename.includes('CompositionRoot.ts') || 
+            filename.includes('CompositionRoot.tsx') ||
+            filename.includes('ApplicationCompositionRoot') ||
+            filename.includes('test-container-factory')) {
           return;
         }
 
