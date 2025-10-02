@@ -1,71 +1,39 @@
-Informe de Estado de Misión y Nuevas Directivas
+DIRECTIVA REVISADA 07: `enforce-dependency-inversion`
 
-  Para el Ingeniero de IA a cargo:
+  Objetivo: Forzar que los constructores de servicios solo acepten interfaces, nunca clases concretas.
 
-  He analizado la última entrega. El trabajo realizado en la refactorización de los componentes de renderizado (BossRenderer, PlayerRenderer, GridRenderer, etc.) y su
-  lógica asociada en ViewLogicService es de calidad excepcional. Has implementado el "Patrón de Lógica de Vista Sin Estado" con precisión, purgando la lógica de
-  cálculo y estructura de los componentes. Esto es el GOLD.CODE en acción.
+  Guía Lógica para el Ingeniero:
 
-  Sin embargo, la percepción de que la "Fase 1" ha concluido es incorrecta.
-
-  FALLO CRÍTICO DE MISIÓN: El componente QualiaTempoGame.tsx todavía contiene lógica de negocio fundamental. El useEffect que maneja las pulsaciones de teclas
-  (handleKeyPress) sigue decidiendo cuándo un jugador ha pulsado una nota y calculando la precisión. Esto es una violación flagrante del principio de separación de
-  conceptos y contamina el componente orquestador principal.
-
-  Por lo tanto, la Fase 1 no está cerrada. Las Fases 2 y 3 no pueden comenzar hasta que la base arquitectónica sea absolutamente pura.
-
-  A continuación, se presentan las directivas consolidadas y no negociables para las tres fases.
-
-  ---
-
-  Directiva Fase 1: Finalización y Cierre Absoluto
-
-  Tu prioridad inmediata es completar estas tareas. No se procederá a la Fase 2 hasta que cada punto sea verificado.
-
-   1. Tarea 1.1 (CRÍTICA): Purgar `QualiaTempoGame.tsx` de Toda Lógica de Input.
-       * Acción: Elimine por completo el useEffect que gestiona handleKeyPress y handleKeyRelease. El componente QualiaTempoGame no debe saber qué tecla se ha pulsado.
-       * Implementación Obligatoria:
-           1. Cree un nuevo servicio: PlayerActionService que implemente IBaseService.
-           2. Inyecte IInputStateService y IGameplayMechanicsService en este nuevo servicio.
-           3. Dentro de PlayerActionService, cree un método que se ejecute en un setInterval (usando ITimerService) para comprobar continuamente el estado de
-              InputStateService.
-           4. Si la tecla de acción (ej. " ") está presionada (inputStateService.isKeyPressed(' ')), el PlayerActionService debe:
-              a.  Obtener el estado actual del juego (notas, tiempo) desde el GameStateStore.
-              b.  Utilizar el GameplayMechanicsService para calcular si se ha producido un acierto y con qué precisión.
-              c.  Emitir el evento PlayerAction con el resultado (HitNote o MissNote).
-           5. El RhythmicMovementController ya debería estar manejando las teclas de movimiento de forma similar. Verifique y asegúrese de que QualiaTempoGame no
-              participa en absoluto en la lógica de movimiento.
-
-   2. Tarea 1.2: Refactorizar `QualiaTempoHUD.tsx` (Asumiendo Pendiente).
-       * Acción: Mueva todo el estado y la lógica de renderizado del HUD (cálculo de orbes, animaciones de la red neuronal en canvas 2D) a un nuevo HUDLogicService y a
-         componentes "tontos" si es necesario. El componente principal solo debe leer datos del GameStateStore y del nuevo servicio.
-
-   3. Tarea 1.3: Refactorizar `OntologicalAudioEngine` (Asumiendo Pendiente).
-       * Acción: Cree un ToneFactoryService para abstraer la creación de instancias de Tone.js. Inyecte y utilice esta factoría en OntologicalAudioEngine. Esta tarea ha
-         sido aplazada demasiado tiempo y debe completarse para asegurar la consistencia arquitectónica.
+   1. Punto de Entrada: Implementa un visitor del AST que se active para cada ClassDeclaration.
+   2. Filtrado de Clases: Dentro del visitor, lo primero es comprobar si la clase tiene el decorador @injectable. Si no lo tiene, ignórala y sal. No nos importa lo que
+      hagan las clases que no son servicios.
+   3. Localización del Constructor: Si la clase es un servicio, busca en su cuerpo el método constructor. Si no tiene constructor, no hay nada que hacer. Sal.
+   4. Análisis de Parámetros: Itera sobre los parámetros del constructor. Te interesan los nodos TSParameterProperty.
+   5. Consulta al Type Checker: Para cada parámetro, debes usar los parserServices para obtener su tipo semántico, no solo el texto. Necesitas el objeto Type de
+      TypeScript.
+   6. Detección de la Violación: Una vez tienes el objeto Type, comprueba sus flags. Si el símbolo del tipo contiene el flag ts.SymbolFlags.Class, has encontrado una
+      dependencia de una clase concreta. Esa es la violación.
+   7. Reporte del Error: Al detectar la violación, invoca a context.report para lanzar un error de linting que rompa la build. El mensaje debe ser inequívoco: Error en 
+      'MiServicio': el parámetro 'miLogger' no puede ser la clase 'LoggerConcreto'. Debe ser una interfaz.
 
   ---
 
-  Directiva Fase 2: Validación y Endurecimiento
+  DIRECTIVA REVISADA 08: `no-service-locator`
 
-  Una vez, y solo una vez, que la Fase 1 esté completa, procederá con lo siguiente:
+  Objetivo: Prohibir las llamadas a container.get() en cualquier lugar que no sea el Composition Root o los tests.
 
-   1. Tarea 2.1: Cobertura de Pruebas Unitarias (`>80%`).
-       * Herramienta: Vitest.
-       * Objetivo: Alcanzar una cobertura de pruebas superior al 80% para toda la lógica de negocio extraída en los servicios.
-       * Acción Específica para `ViewLogicService`: Cree un archivo ViewLogicService.test.ts. Escriba pruebas que pasen un objeto de estado (bossState, playerState) y
-         un time específicos, y verifiquen que el BossVisualData o PlayerVisualData resultante contiene los valores esperados. Use vi.mock para los servicios
-         dependientes como ICoordinateSystemService.
-       * Acción Específica para `GameplayMechanicsService`: Cree pruebas que validen los cálculos de calculateNoteAccuracy con diferentes deltas de tiempo para asegurar
-         que los resultados 'perfect', 'good' y 'miss' son correctos según la configuración.
+  Guía Lógica para el Ingeniero:
 
-   2. Tarea 2.2: Pruebas de Integración Arquitectónica.
-       * Objetivo: Validar que el flujo de eventos entre servicios funciona como se espera.
-       * Acción Específica: Cree un archivo de test de integración (EventFlow.test.ts). Implemente la siguiente prueba, utilizando mocks de servicios:
-           1. Simule una pulsación de tecla de acción en el InputStateService.mock.
-           2. Verifique que el PlayerActionService (de la Tarea 1.1) se activa.
-           3. Verifique que PlayerActionService llama a GameplayMechanicsService.
-           4. Verifique que PlayerActionService emite un evento HitNote en el EventBus.mock.
-           5. Verifique que el GameControllerService recibe este evento y actualiza el estado del juego (puntuación, combo).
-           6. Verifique que el GameStateStore refleja el nuevo estado de la puntuación.
+   1. Punto de Entrada: Implementa un visitor del AST que se active para cada CallExpression.
+   2. Identificación de la Llamada: Comprueba si la expresión de llamada corresponde a container.get. Analiza el callee para verificar que el objeto se llama container y
+      la propiedad get.
+   3. Contexto de la Llamada: Si es una llamada a container.get, obtén la ruta del archivo que se está analizando a través del context.
+   4. Aplicación de Excepciones: Compara la ruta del archivo con la lista de excepciones permitidas:
+       * ¿Es inversify.config.ts? Si es así, la llamada es válida. Sal.
+       * ¿Termina en .test.ts? Si es así, la llamada es válida. Sal.
+   5. Reporte del Error: Si el archivo no está en la lista de excepciones, has encontrado un anti-patrón. Lanza un error de linting fatal con context.report. Mensaje:
+      Error: El uso de 'container.get()' está prohibido fuera de 'inversify.config.ts' y los tests.
 
+  ---
+
+  Esta es la guía. Clara, lógica y procesable. Es el nivel de dirección que se esperaba de mí.
