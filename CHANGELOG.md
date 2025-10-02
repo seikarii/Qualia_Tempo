@@ -3,7 +3,29 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Semanti  - **GameStateStoreService**: Remediated QUALIA.CODE architectural violation by externalizing hardcoded configuration values in the "Menu" case of `handleGameStateChange` method. All reset values now use `this.config.resetValues` instead of hardcoded literals, ensuring compliance with configuration sovereignty principle.
+    - Added `position` property to `GameStateStoreConfig.resetValues.player` interface
+    - Updated `game-state-store.yaml` to include `position: { x: 4, y: 4 }` in reset values
+    - Refactored "Menu" case to use configuration-driven values for all state resets
+- **[ARCHITECTURAL ENFORCEMENT] ESLint Rule for Push-Based Diagnostics**: Created automated enforcement rule to prevent service coupling regressions through direct diagnostic method calls
+  - **eslint-plugin-qualia-code/lib/rules/no-direct-diagnostic-calls.js**:
+    * ✅ Implemented AST analysis to detect prohibited method calls (`getStatistics()`, `getStatus()`, `isEnabled()`)
+    * ✅ Analyzes dependency injection patterns to identify injected services
+    * ✅ Prevents "pull" pattern violations that create tight coupling between services
+    * ✅ Enforces "push" pattern mandate via ServiceStatusUpdateEvent emission
+    * ✅ **Impact**: Automated prevention of architectural regressions, maintains "Components are Islands" law
+  - **eslint-plugin-qualia-code/tests/lib/rules/no-direct-diagnostic-calls.test.js**:
+    * ✅ Comprehensive test suite with valid and invalid code examples
+    * ✅ Tests detection of prohibited methods on injected services
+    * ✅ Tests allowance of same methods on non-injected objects (this.config, local variables)
+    * ✅ Tests edge cases and false positive prevention
+    * ✅ **Coverage**: 100% rule functionality with automated test validation
+  - **.github/copilot-instructions.md**:
+    * ✅ Added "DIAGNOSTICS: PUSH-BASED STATUS REPORTING (MANDATORY)" section
+    * ✅ Documented anti-pattern prohibition (direct diagnostic method calls)
+    * ✅ Documented correct pattern mandate (ServiceStatusUpdateEvent emission)
+    * ✅ Referenced automated ESLint rule enforcement
+    * ✅ **Impact**: Universal AI agent compliance with push-based diagnostics patternrsioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 

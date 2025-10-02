@@ -715,4 +715,30 @@ Direct service instantiation and direct container access in tests are forbidden.
 
 ---
 
+## 11. Observabilidad y Diagnósticos: Estatus Dirigido por Eventos
+
+### 11.1. Principio: Los Servicios Son Emisores de su Propio Estado
+
+Para mantener un desacoplamiento absoluto, los servicios no deben ser interrogados activamente sobre su estado por un orquestador central. En su lugar,
+cada servicio es responsable de emitir, periódicamente o en respuesta a cambios de estado internos, un evento `ServiceStatusUpdateEvent`.
+
+### 11.2. Patrón Arquitectónico: Agregación Pasiva (Push vs. Pull)
+
+- **Modelo Pull (PROHIBIDO):** Un servicio de diagnóstico (`DebugOrchestratorService`) llamando a métodos como `getStatistics()` o `getStatus()` en otros
+servicios. Este patrón crea un acoplamiento fuerte, ya que el agregador debe conocer la interfaz de cada servicio que monitorea.
+
+- **Modelo Push (MANDATORIO):** Cada servicio "empuja" su estado al `EventBus` a través del evento `ServiceStatusUpdateEvent`. El
+`DebugOrchestratorService` actúa como un suscriptor pasivo que simplemente escucha estos eventos y los agrega, sin tener conocimiento alguno de los
+emisores.
+
+### 11.3. Mandato Arquitectónico
+
+- **PROHIBIDO:** La llamada directa a métodos de un servicio desde otro para obtener datos de diagnóstico o estado.
+- **OBLIGATORIO:** Todos los servicios que requieran exponer su estado para diagnósticos DEBEN implementar la emisión del evento `ServiceStatusUpdateEvent`
+.
+- **REFERENCIA:** La implementación detallada, mejores prácticas y ejemplos de este patrón están documentados en la guía `SERVICE_STATUS_EVENT_GUIDE.md`,
+que se considera el estándar GOLD.CODE para esta funcionalidad.
+
+---
+
 *"Code is the architecture of thought. Choose the language that best expresses your computational intent."*

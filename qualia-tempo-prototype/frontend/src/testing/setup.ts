@@ -11,6 +11,9 @@ vi.mock("../utils/decorators", () => ({
   validateEventProperty: vi.fn().mockImplementation(() => (d: unknown) => d),
   measureTime: vi.fn().mockImplementation(() => (d: unknown) => d),
   qualiaMethod: vi.fn().mockImplementation(() => (d: unknown) => d),
+  OnEvent: vi.fn().mockImplementation(() => (d: unknown) => d),
+  BrowserOnly: vi.fn().mockImplementation(() => (d: unknown) => d),
+  AdaptAndEmit: vi.fn().mockImplementation(() => (d: unknown) => d),
 }));
 
 // QUALIA.CODE Global Tone.js Mock - Prevent audio module import errors in tests

@@ -26,6 +26,7 @@ const noConsoleInServices = require('./rules/no-console-in-services');
 const noDirectServiceImportInComponents = require('./rules/no-direct-service-import-in-components');
 const enforceConfigDrivenValues = require('./rules/enforce-config-driven-values');
 const noManualEventSubscription = require('./rules/no-manual-event-subscription');
+const noDirectDiagnosticCalls = require('./rules/no-direct-diagnostic-calls');
 
 module.exports = {
   rules: {
@@ -43,6 +44,7 @@ module.exports = {
     'no-direct-service-import-in-components': noDirectServiceImportInComponents,
     'enforce-config-driven-values': enforceConfigDrivenValues,
     'no-manual-event-subscription': noManualEventSubscription,
+    'no-direct-diagnostic-calls': noDirectDiagnosticCalls,
   },
   configs: {
     recommended: {
@@ -62,6 +64,7 @@ module.exports = {
         '@qualia-tempo/qualia-code/no-direct-service-import-in-components': 'error',
         '@qualia-tempo/qualia-code/enforce-config-driven-values': 'warn',
         '@qualia-tempo/qualia-code/no-manual-event-subscription': 'error',
+        '@qualia-tempo/qualia-code/no-direct-diagnostic-calls': 'error',
       }
     }
   }

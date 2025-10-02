@@ -205,6 +205,17 @@ export async function configureServices(): Promise<void> {
 
 **PROHIBITED:** Defining event interfaces in service files or EventBus.ts.
 
+**DIAGNOSTICS: PUSH-BASED STATUS REPORTING (MANDATORY)**
+
+- **ANTI-PATTERN (FORBIDDEN):** Services MUST NOT call diagnostic methods (e.g., `getStatistics()`, `getStatus()`, `isEnabled()`) on other injected
+  services. This "pull" pattern creates tight coupling and violates the "Components are Islands" law.
+
+- **CORRECT PATTERN (MANDATORY):** Services MUST "push" their status by emitting a `ServiceStatusUpdateEvent` on the `EventBus`. Diagnostic orchestrators
+  listen passively to these events. This maintains absolute decoupling.
+
+- **AUTOMATED ENFORCEMENT:** This rule is automatically enforced by the `@qualia-tempo/qualia-code/no-direct-diagnostic-calls` ESLint rule. Violations will
+  fail the build.
+
 **Frontend Flow:**
 1. Player actions emit events on EventBus.
 2. QualiaStateCalculatorService listens, computes QualiaState.

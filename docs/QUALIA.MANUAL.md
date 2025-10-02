@@ -1377,4 +1377,92 @@ export class BrowserEventsService {
 
 ---
 
+## 16. Implementación de Diagnósticos Dirigidos por Eventos
+
+Esta sección muestra cómo implementar el patrón de emisión de estado, siguiendo el mandato de la sección 11 de `QUALIA.CODE.md`.
+
+### 16.1. Ejemplo de Implementación en un Servicio
+
+El siguiente ejemplo muestra un servicio que emite su estado tanto periódicamente como en respuesta a cambios de estado, utilizando un enfoque híbrido.
+
+```typescript
+import { injectable, inject } from 'inversify';
+import { OnEvent, IBaseService } from '../utils/decorators';
+import { TYPES } from '../inversify.types';
+import type { IEventBus } from '../interfaces/IEventBus';
+import type { ITimerService } from '../interfaces/ITimerService';
+import type { ServiceStatusUpdateEvent } from '../contracts/events.contracts';
+
+@injectable()
+export class MyStatusEmitterService implements IBaseService {
+  private isRunning = false;
+  private statusEmissionInterval: number | null = null;
+
+  constructor(
+    @inject(TYPES.IEventBus) private eventBus: IEventBus,
+    @inject(TYPES.ITimerService) private timerService: ITimerService,
+    @inject(TYPES.MyServiceConfig) private config: MyServiceConfig
+  ) {}
+
+  public initialize(): void {
+    // Iniciar emisión periódica si está configurado
+    if (this.config.statusEmission?.enabled && this.config.statusEmission.interval > 0) {
+      this.statusEmissionInterval = this.timerService.setInterval(
+        () => this.emitStatusUpdate(),
+        this.config.statusEmission.interval
+      );
+    }
+    // Emitir estado inicial
+    this.emitStatusUpdate();
+  }
+
+  public cleanup(): void {
+    // Detener emisión periódica
+    if (this.statusEmissionInterval !== null) {
+      this.timerService.clearInterval(this.statusEmissionInterval);
+    }
+    // Emitir estado final
+    this.isRunning = false;
+    this.emitStatusUpdate();
+  }
+
+  public start(): void {
+    this.isRunning = true;
+    // Emitir en cambio de estado
+    if (this.config.statusEmission?.emitOnStateChange) {
+      this.emitStatusUpdate();
+    }
+  }
+
+  private emitStatusUpdate(): void {
+    if (!this.config.statusEmission?.enabled) return;
+
+    const statusEvent: ServiceStatusUpdateEvent = {
+      type: 'ServiceStatusUpdate',
+      timestamp: new Date(),
+      source: 'MyStatusEmitterService',
+      serviceName: 'MyStatusEmitterService',
+      status: {
+        isRunning: this.isRunning,
+        stats: {
+          // ...poblar con estadísticas relevantes
+          queueSize: this.getQueueSize(),
+          activeConnections: this.getActiveConnections(),
+        }
+      }
+    };
+
+    this.eventBus.emit(statusEvent);
+  }
+
+  // ... resto de la lógica del servicio
+}
+```
+
+### 16.2. Referencia Completa
+
+Para una guía exhaustiva que incluye configuración, mejores prácticas y ejemplos detallados, consulte el documento `frontend/src/services/SERVICE_STATUS_EVENT_GUIDE.md`.
+
+---
+
 *"La arquitectura sin implementación es teoría vacía. La implementación sin arquitectura es caos inevitable."*
