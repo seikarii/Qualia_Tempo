@@ -31,7 +31,7 @@
 13. DEPENDENCY INJECTOR PARA EL BACKEND
 14. PASAR EL ENGINE DEL BACKEND A RUST
 15. FALTAN INTERFACES EN EL BACKEND
-
+16. Agregar concurrency,performance,cache,workers y demas
 ---
 
 ## 🔍 Metodología de Análisis
