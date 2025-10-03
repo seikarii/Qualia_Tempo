@@ -457,3 +457,10 @@ Regla ESLint estaba bloqueando importaciones legítimas de contratos e interface
 - [ ] FIXME: Fix type errors in auto-generated mocks - in /qualia-tempo-prototype/frontend/src/testing/mocks/audio-service.mock.ts (missing 'playSound' property)
 - [ ] FIXME: Fix BackendSyncConfig mock to match full contract structure - in /qualia-tempo-prototype/frontend/src/testing/mocks/backend-sync-service.mock.ts:22
 - [ ] TODO: Enhance mock generation script to parse TypeScript interfaces more accurately using @typescript-eslint/typescript-estree
+
+## CRITICAL TEST FAILURES (2025-01-13 Analysis)
+- [X] ✅ RESOLVED (2025-10-03 15:06): BackendSyncService tests - 100% pass rate achieved (7/7) - Refactored to test business logic through public API instead of decorator mechanisms - in /qualia-tempo-prototype/frontend/src/services/__tests__/BackendSyncService.test.ts
+- [ ] FIXME: RhythmicMovementController tests failing (0/6 pass - 0%) - IoC binding conflicts - in /qualia-tempo-prototype/frontend/src/services/__tests__/RhythmicMovementController.test.ts
+- [ ] FIXME: GameStateStoreService tests failing (0/2 pass - 0%) - Missing start/stop methods - in /qualia-tempo-prototype/frontend/src/services/__tests__/GameStateStoreService.test.ts
+- [ ] FIXME: EventBus test failing (15/16 pass - 93.8%) - One test case failing - in /qualia-tempo-prototype/frontend/src/services/__tests__/EventBus.test.ts
+- [ ] FIXME: DebugOrchestratorService tests failing (6/8 pass - 75%) - Two test cases failing - in /qualia-tempo-prototype/frontend/src/services/__tests__/DebugOrchestratorService.test.ts

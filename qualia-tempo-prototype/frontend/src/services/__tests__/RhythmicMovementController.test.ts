@@ -40,7 +40,13 @@ describe('RhythmicMovementController', () => {
       },
     });
     
-    // Bind additional mocks
+    // ARCHITECTURAL NOTE: Get mocks from container BEFORE replacing bindings
+    mockEventBus = container.get(TYPES.IEventBus);
+    mockLogger = container.get(TYPES.ILogger);
+    mockTimerService = container.get(TYPES.ITimerService);
+    mockGameStateStore = container.get(TYPES.IGameStateStoreService);
+    
+    // Create specialized mocks
     const mockKeyAdapter = { adapt: vi.fn() };
     const mockInputStateServiceLocal = {
       wasActionJustPressed: vi.fn(),
@@ -55,20 +61,37 @@ describe('RhythmicMovementController', () => {
       calculateScoreForHit: vi.fn(),
     };
     
+    // ARCHITECTURAL NOTE: Unbind + bind pattern to replace test container mocks
+    container.unbind(TYPES.IKeyToDirectionAdapter);
     container.bind(TYPES.IKeyToDirectionAdapter).toConstantValue(mockKeyAdapter);
+    
+    container.unbind(TYPES.IInputStateService);
     container.bind(TYPES.IInputStateService).toConstantValue(mockInputStateServiceLocal);
+    
+    container.unbind(TYPES.IGameplayMechanicsService);
     container.bind(TYPES.IGameplayMechanicsService).toConstantValue(mockGameplayMechanicsServiceLocal);
     
+    // ARCHITECTURAL NOTE: Rebuild RhythmicMovementControllerParams with updated config and mocks
+    const config = container.get(TYPES.RhythmicMovementConfig);
+    container.unbind(TYPES.RhythmicMovementControllerParams);
+    container.bind(TYPES.RhythmicMovementControllerParams).toConstantValue({
+      eventBus: mockEventBus,
+      logger: mockLogger,
+      config,
+      timerService: mockTimerService,
+      keyAdapter: mockKeyAdapter,
+      inputStateService: mockInputStateServiceLocal,
+      gameStateStore: mockGameStateStore,
+      gameplayMechanicsService: mockGameplayMechanicsServiceLocal
+    });
+    
     // Bind the Service Under Test (SUT)
+    container.unbind(TYPES.IRhythmicMovementController);
     container.bind(TYPES.IRhythmicMovementController).to(RhythmicMovementController).inSingletonScope();
     
     controller = container.get(TYPES.IRhythmicMovementController);
 
-    // Get mocks from container
-    mockEventBus = container.get(TYPES.IEventBus);
-    mockLogger = container.get(TYPES.ILogger);
-    mockTimerService = container.get(TYPES.ITimerService);
-    mockGameStateStore = container.get(TYPES.IGameStateStoreService);
+    // Store references
     mockInputStateService = mockInputStateServiceLocal;
     mockGameplayMechanicsService = mockGameplayMechanicsServiceLocal;
   });
@@ -76,8 +99,16 @@ describe('RhythmicMovementController', () => {
   describe('processActionInputFromState', () => {
     it('should emit MissNote event when no notes are available', () => {
       // Arrange
+      mockInputStateService.wasActionJustPressed.mockClear();
       mockInputStateService.wasActionJustPressed.mockReturnValue(true);
+      
+      mockGameStateStore.getGameState.mockClear();
       mockGameStateStore.getGameState.mockReturnValue({ combatData: { noteMap: [] } });
+      
+      mockTimerService.now.mockClear();
+      mockTimerService.now.mockReturnValue(1000);
+      
+      mockGameplayMechanicsService.findNearestNote.mockClear();
       mockGameplayMechanicsService.findNearestNote.mockReturnValue(null);
 
       // Act
@@ -94,16 +125,27 @@ describe('RhythmicMovementController', () => {
 
     it('should emit HitNote event with correct accuracy and score', () => {
       // Arrange
-      const mockNote = { timestamp: 1000 };
+      const mockNote = { id: 'note1', timestamp: 1000 };
       const mockAccuracy = 0.9;
       const mockHitResult = 'good';
       const mockScore = 45;
 
+      mockInputStateService.wasActionJustPressed.mockClear();
       mockInputStateService.wasActionJustPressed.mockReturnValue(true);
+      
+      mockGameStateStore.getGameState.mockClear();
       mockGameStateStore.getGameState.mockReturnValue({ combatData: { noteMap: [mockNote] } });
+      
+      mockTimerService.now.mockClear();
+      mockTimerService.now.mockReturnValue(1000);
+      
+      mockGameplayMechanicsService.findNearestNote.mockClear();
       mockGameplayMechanicsService.findNearestNote.mockReturnValue(mockNote);
+      mockGameplayMechanicsService.calculateNoteAccuracy.mockClear();
       mockGameplayMechanicsService.calculateNoteAccuracy.mockReturnValue(mockAccuracy);
+      mockGameplayMechanicsService.determineHitResult.mockClear();
       mockGameplayMechanicsService.determineHitResult.mockReturnValue(mockHitResult);
+      mockGameplayMechanicsService.calculateScoreForHit.mockClear();
       mockGameplayMechanicsService.calculateScoreForHit.mockReturnValue(mockScore);
 
       // Act
@@ -113,21 +155,31 @@ describe('RhythmicMovementController', () => {
       expect(mockEventBus.emit).toHaveBeenCalledWith({
         type: 'PlayerAction',
         action: 'HitNote',
-        context: { accuracy: mockAccuracy, result: mockHitResult, score: mockScore },
+        context: { noteId: 'note1', accuracy: mockAccuracy, result: mockHitResult, score: mockScore },
         timestamp: expect.any(Date)
       });
     });
 
     it('should emit MissNote event when timing is poor', () => {
       // Arrange
-      const mockNote = { timestamp: 1000 };
+      const mockNote = { id: 'note2', timestamp: 1000 };
       const mockAccuracy = 0.1;
       const mockHitResult = 'miss';
 
+      mockInputStateService.wasActionJustPressed.mockClear();
       mockInputStateService.wasActionJustPressed.mockReturnValue(true);
+      
+      mockGameStateStore.getGameState.mockClear();
       mockGameStateStore.getGameState.mockReturnValue({ combatData: { noteMap: [mockNote] } });
+      
+      mockTimerService.now.mockClear();
+      mockTimerService.now.mockReturnValue(1000);
+      
+      mockGameplayMechanicsService.findNearestNote.mockClear();
       mockGameplayMechanicsService.findNearestNote.mockReturnValue(mockNote);
+      mockGameplayMechanicsService.calculateNoteAccuracy.mockClear();
       mockGameplayMechanicsService.calculateNoteAccuracy.mockReturnValue(mockAccuracy);
+      mockGameplayMechanicsService.determineHitResult.mockClear();
       mockGameplayMechanicsService.determineHitResult.mockReturnValue(mockHitResult);
 
       // Act
@@ -137,7 +189,7 @@ describe('RhythmicMovementController', () => {
       expect(mockEventBus.emit).toHaveBeenCalledWith({
         type: 'PlayerAction',
         action: 'MissNote',
-        context: { reason: 'poor_timing' },
+        context: { noteId: 'note2', reason: 'poor_timing' },
         timestamp: expect.any(Date)
       });
     });
@@ -156,16 +208,25 @@ describe('RhythmicMovementController', () => {
 
     it('should call gameplay mechanics service with correct parameters', () => {
       // Arrange
-      const mockNote = { timestamp: 1000 };
+      const mockNote = { id: 'note3', timestamp: 1000 };
       const currentTime = 1500;
       const mockAccuracy = 0.8;
       const mockHitResult = 'good';
 
+      mockInputStateService.wasActionJustPressed.mockClear();
       mockInputStateService.wasActionJustPressed.mockReturnValue(true);
+      
+      mockGameStateStore.getGameState.mockClear();
       mockGameStateStore.getGameState.mockReturnValue({ combatData: { noteMap: [mockNote] } });
+      
+      mockTimerService.now.mockClear();
       mockTimerService.now.mockReturnValue(currentTime);
+      
+      mockGameplayMechanicsService.findNearestNote.mockClear();
       mockGameplayMechanicsService.findNearestNote.mockReturnValue(mockNote);
+      mockGameplayMechanicsService.calculateNoteAccuracy.mockClear();
       mockGameplayMechanicsService.calculateNoteAccuracy.mockReturnValue(mockAccuracy);
+      mockGameplayMechanicsService.determineHitResult.mockClear();
       mockGameplayMechanicsService.determineHitResult.mockReturnValue(mockHitResult);
 
       // Act

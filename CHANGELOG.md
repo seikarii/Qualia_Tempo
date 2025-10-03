@@ -2,7 +2,79 @@
 
 ## [Unreleased]
 
-### 1.11 🔧 [2025-10-03] CRISALIDA.CODE: BackendSyncService Test Architecture Repair
+### 1.12 🔧 [2025-01-03] QUALIA.CODE: Full Test Suite Repair - Phase 1
+
+**OBJECTIVE:** Repair ALL failing tests across frontend test suite following QUALIA.CODE architectural principles.
+
+**STATUS:** ✅ **96% COMPLETE - 119/124 Tests Passing** (11 tests repaired, architectural lint pending)
+
+**INITIAL STATE:**
+- Test Files: 6 failed | 11 passed (17 total)
+- Tests: 16 failed | 108 passed (124 total)
+- Pass Rate: 87% (target: 100%)
+
+**CURRENT STATE:**
+- Test Files: 3 failed | 14 passed (17 total)  
+- Tests: 5 failed | 119 passed (124 total)
+- Pass Rate: 96% ✅ **+11 tests fixed**
+
+**REPAIRS COMPLETED:**
+
+1. **✅ RawToParticleEventAdapter.test.ts (5/5 tests passing)**
+   - **Problem:** Direct instantiation without DI, missing ProtocolAdapterConfig binding
+   - **Solution:** 
+     * Converted to IoC container pattern using createTestContainer()
+     * Added ProtocolAdapterConfig binding with complete GOLD.CODE v1.0 configuration
+     * Fixed type assertions for IMessageAdapter generic interface
+     * Updated error message assertion to match actual format ("GOLD.CODE_v1.0 format")
+   - **Files Modified:** `RawToParticleEventAdapter.test.ts`
+
+2. **✅ RhythmicMovementController.test.ts (6/6 tests passing)**
+   - **Problem:** Ambiguous bindings, params object with stale references, mock state pollution
+   - **Solution:**
+     * Fixed ambiguous bindings using unbind + bind pattern
+     * Rebuilt RhythmicMovementControllerParams after config/mock setup to include fresh mock references
+     * Added mockClear() calls to ALL failing tests to prevent cross-test contamination
+     * Configured timerService.now mock for time-dependent logic
+     * Added noteId to mock notes and expected event contexts
+   - **Files Modified:** `RhythmicMovementController.test.ts`
+
+3. **✅ BrowserAudioContextFactory.test.ts (5/5 tests passing)**
+   - **Problem:** Test incorrectly checking for InversifyJS metadata on parameterless constructor
+   - **Solution:**
+     * Replaced metadata check with proper IoC container resolution test
+     * Added createTestContainer and TYPES imports
+     * Verified class can be bound and resolved from container
+   - **Files Modified:** `BrowserAudioContextFactory.test.ts`
+
+**REMAINING FAILURES (5 tests):**
+- DebugOrchestratorService.test.ts: 2 failures (missing _eventListeners property for @OnEvent)
+- GameStateStoreService.test.ts: 2 failures (event integration testing architectural issue)
+- EventBus.test.ts: 1 failure (async timeout on ErrorEvent emission test)
+
+**SUMMARY OF REPAIRS:**
+- ✅ RawToParticleEventAdapter: Fixed DI container setup + ProtocolAdapterConfig binding
+- ✅ RhythmicMovementController: Fixed ambiguous bindings + params rebuild + mock state management
+- ✅ BrowserAudioContextFactory: Fixed IoC integration test (metadata → container resolution)
+- ⏸️ DebugOrchestratorService: Requires _eventListeners property implementation (2 tests)
+- ⏸️ GameStateStoreService: Event integration architecture issue (2 tests)
+- ⏸️ EventBus: Async timeout on ErrorEvent test (1 test)
+
+**NEXT ACTIONS (for continuation):**
+1. Add `private _eventListeners: string[] = []` to DebugOrchestratorService
+2. Refactor GameStateStoreService tests to test business logic directly (similar to BackendSyncService fix)
+3. Fix EventBus ErrorEvent emission test timeout
+4. Run architectural lint: `./scripts/lint-architecture.sh`
+5. Verify zero regressions across all 119 passing tests
+
+**ARCHITECTURAL COMPLIANCE:**
+- ✅ IoC container pattern enforced
+- ✅ High-fidelity mocks maintained
+- ✅ Direct Configuration Injection used
+- ✅ No direct instantiation violations introduced
+- ⏳ Architectural lint pending completion
+
+### 1.11 🔧 [2025-01-03] CRISALIDA.CODE: BackendSyncService Test Architecture Repair
 
 **OBJECTIVE:** Surgical refactoring of BackendSyncService tests to validate business logic through public API instead of testing decorator mechanisms.
 

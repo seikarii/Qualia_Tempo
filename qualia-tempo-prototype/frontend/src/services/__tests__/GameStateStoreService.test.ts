@@ -12,21 +12,22 @@ describe('GameStateStoreService - PlayerAction Handling', () => {
 
   beforeEach(() => {
     container = createTestContainer();
-    gameStateStoreService = container.get<IGameStateStoreService>(TYPES.IGameStateStoreService);
-    eventBus = container.get<IEventBus>(TYPES.IEventBus);
+    gameStateStoreService = container.get(TYPES.IGameStateStoreService) as IGameStateStoreService;
+    eventBus = container.get(TYPES.IEventBus) as IEventBus;
     
     // Create a mock store setter that tracks calls
     const mockStoreSetter = vi.fn((updater: any) => {
-      // Call the updater with initial state to simulate Zustand behavior
-      updater(initialState);
+      // Call the updater to simulate Zustand behavior
+      // The actual state is managed by each test
+      return updater({});
     });
     gameStateStoreService.setStoreSetter(mockStoreSetter);
     
-    gameStateStoreService.start(); // Start listening to events
+    gameStateStoreService.initialize(); // Initialize service and event subscriptions
   });
 
   afterEach(() => {
-    gameStateStoreService.stop();
+    gameStateStoreService.cleanup(); // Clean up event subscriptions
   });
 
   it('should update note state on HitNote event', () => {

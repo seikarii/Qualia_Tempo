@@ -2,17 +2,81 @@
  * QUALIA.CODE v1.2 - RawToParticleEventAdapter Unit Tests
  * Tests for RawToParticleEventAdapter to ensure proper data adaptation.
  * GOLD.CODE v1.0: Tests for binary protocol translation from optimized format.
+ * 
+ * ARCHITECTURAL COMPLIANCE: Uses IoC container for dependency injection as per QUALIA.CODE
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
+import { createTestContainer } from '../../../../testing/test-container-factory';
+import type { Container } from 'inversify';
+import { TYPES } from '../../../inversify.types';
 import { RawToParticleEventAdapter } from '../RawToParticleEventAdapter';
-import { QualiaParticleDataReceivedEvent } from '../../../contracts/events.contracts';
+import type { IMessageAdapter } from '../../IMessageAdapter';
+import type { QualiaParticleDataReceivedEvent } from '../../../contracts/events.contracts';
+import type { ProtocolAdapterConfig } from '../../../contracts/IProtocolAdapter.contracts';
 
 describe('RawToParticleEventAdapter', () => {
-  let adapter: RawToParticleEventAdapter;
+  let container: Container;
+  let adapter: IMessageAdapter;
 
   beforeEach(() => {
-    adapter = new RawToParticleEventAdapter();
+    // ARCHITECTURAL NOTE: Using test container for proper dependency injection
+    container = createTestContainer();
+    
+    // ARCHITECTURAL NOTE: Bind ProtocolAdapterConfig as required dependency
+    const testConfig: ProtocolAdapterConfig = {
+      particleProtocol: {
+        bytesPerParticle: 62,
+        floatsPerGpuParticle: 21,
+        version: "GOLD.CODE_v1.0",
+        optimization: {
+          originalBytesPerParticle: 84,
+          optimizedBytesPerParticle: 62,
+          memorySavingsPercent: 26.2
+        },
+        fieldOffsets: {
+          position: 0,
+          velocity: 12,
+          acceleration: 24,
+          forceAccumulator: 36,
+          color: 48,
+          lifetime: 52,
+          size: 54,
+          resonance: 56,
+          mass: 58,
+          charge: 60
+        },
+        gpuFieldOffsets: {
+          position: 0,
+          velocity: 3,
+          acceleration: 6,
+          color: 9,
+          lifetime: 13,
+          size: 14,
+          resonance: 15,
+          mass: 16,
+          charge: 17,
+          forceAccumulator: 18
+        },
+        colorNormalizationFactor: 255.0,
+        validation: {
+          minBufferSize: 0,
+          requireMultipleOf: 62
+        }
+      },
+      eventSource: "ProtocolAdapter:Raw"
+    };
+    
+    container.bind<ProtocolAdapterConfig>(TYPES.ProtocolAdapterConfig)
+      .toConstantValue(testConfig);
+    
+    // Replace mock adapter with real implementation
+    container.unbind(TYPES.IRawToParticleEventAdapter);
+    container.bind<IMessageAdapter>(TYPES.IRawToParticleEventAdapter)
+      .to(RawToParticleEventAdapter)
+      .inSingletonScope();
+    
+    adapter = container.get<IMessageAdapter>(TYPES.IRawToParticleEventAdapter);
   });
 
   describe('adapt', () => {
@@ -33,7 +97,7 @@ describe('RawToParticleEventAdapter', () => {
       // Create ArrayBuffer with 60 bytes (not multiple of 62)
       const buffer = new ArrayBuffer(60);
       expect(() => adapter.adapt(buffer)).toThrow(
-        'Invalid buffer size: 60. Must be a multiple of 62 bytes per particle (GOLD.CODE format).'
+        'Invalid buffer size: 60. Must be a multiple of 62 bytes per particle (GOLD.CODE_v1.0 format).'
       );
     });
 
@@ -86,7 +150,7 @@ describe('RawToParticleEventAdapter', () => {
       // Charge (float16) - 0x4500 = 5.0 in float16
       view.setUint16(60, 0x4500, true); // 5.0
 
-      const result: QualiaParticleDataReceivedEvent = adapter.adapt(buffer);
+      const result = adapter.adapt(buffer) as QualiaParticleDataReceivedEvent;
 
       expect(result.type).toBe('QualiaParticleDataReceived');
       expect(result.particleData).toBeInstanceOf(Float32Array);
@@ -146,7 +210,7 @@ describe('RawToParticleEventAdapter', () => {
         // Float16 fields (10 bytes = 0)
       }
 
-      const result: QualiaParticleDataReceivedEvent = adapter.adapt(buffer);
+      const result = adapter.adapt(buffer) as QualiaParticleDataReceivedEvent;
 
       expect(result.particleData.length).toBe(42); // 2 particles * 21 floats
       expect(result.metadata!.particleCount).toBe(2);

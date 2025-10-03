@@ -5,6 +5,8 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BrowserAudioContextFactory } from '../BrowserAudioContextFactory';
+import { createTestContainer } from '../../testing/test-container-factory';
+import { TYPES } from '../inversify.types';
 
 describe('BrowserAudioContextFactory', () => {
   let factory: BrowserAudioContextFactory;
@@ -77,9 +79,16 @@ describe('BrowserAudioContextFactory', () => {
 
   describe('IoC Container Integration', () => {
     it('should be injectable via @injectable decorator', () => {
-      // Verify class has injectable metadata
-      const metadata = Reflect.getMetadata('inversify:paramtypes', BrowserAudioContextFactory);
-      expect(metadata).toBeDefined();
+      // ARCHITECTURAL NOTE: Services with no constructor params don't have paramtypes metadata
+      // The correct test is to verify the class can be resolved from a container
+      const container = createTestContainer();
+      
+      // Bind the factory (as it's not bound by default in test container)
+      container.bind(TYPES.IAudioContextFactory).to(BrowserAudioContextFactory);
+      
+      // Verify it can be resolved
+      const resolvedFactory = container.get(TYPES.IAudioContextFactory);
+      expect(resolvedFactory).toBeInstanceOf(BrowserAudioContextFactory);
     });
   });
 });
