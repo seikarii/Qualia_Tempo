@@ -1,18 +1,18 @@
 # 📋 DEUDA TÉCNICA - QUALIA TEMPO
-*Última actualización: 2 de octubre de 2025 - 23:47*
+*Última actualización: 3 de octubre de 2025 - 12:00*
 
 ---
 
 ## 📊 Resumen Ejecutivo
 
-**Estado General: EXCELENTE** - Solo 28 instancias de deuda técnica identificadas (24 entradas agrupadas)
+**Estado General: EXCELENTE** - Solo 26 instancias de deuda técnica identificadas (23 entradas agrupadas)
 **Puntuación de Calidad: 9.0/10** ⭐⭐⭐⭐⭐⭐⭐⭐⭐⚫ (mejorado tras corrección arquitectónica)
 
 ### Estadísticas por Severidad
-- **Baja**: 14 instancias (50%)
-- **Media**: 14 instancias (50%)
+- **Baja**: 13 instancias (50%)
+- **Media**: 13 instancias (50%)
 - **Media-Alta**: 0 instancias (0%)
-- **TOTAL**: 28 instancias
+- **TOTAL**: 26 instancias
 
 
 
@@ -50,19 +50,22 @@
 
 ## 📋 Lista de Deuda Técnica
 
-### 1. 📝 TODO - Integración de Servicios de Audio
-**Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:202`  
+### 1. � TODO - Integración de Datos de Audio en Componente de Juego (DIFFICULT)
+**Archivo:** `qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx:140-143,161`  
 **Severidad:** Media  
 **Estado:** Pendiente  
 **Descripción:**
 ```typescript
-// TODO: Implement Windows-specific audio session configuration
+tempo: 120, // TODO: Get from audio service
+beat_position: 0, // TODO: Get from audio service
+frequency_bands: [0, 0, 0, 0], // TODO: Get from audio service
+velocity: [0, 0, 0], // TODO: Get from physics service
 ```
-**Contexto:** Configuración específica para sesiones de audio en Windows.  
-**Impacto:** Funcionalidad de audio limitada en plataformas Windows.  
-**Prioridad:** Media - Implementar configuración específica por plataforma.
+**Contexto:** Datos hardcodeados que deberían provenir de servicios de audio y física.  
+**Impacto:** Componente no refleja estado real del juego.  
+**Prioridad:** Media - Integrar servicios de audio y física.
 
-### 2. � TODO - Integración de Datos de Audio en Componente de Juego
+### 2. 📝 TODO - Refactor de Bucle Interno en Calculadora de Estado
 **Archivo:** `qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx:140-143,161`  
 **Severidad:** Media  
 **Estado:** Pendiente  
@@ -139,19 +142,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Funcionalidad básica presente.  
 **Prioridad:** Baja - Implementar cuando se expanda soporte de audio.
 
-### 8. 🏗️ PLACEHOLDER - Propiedades de Material Placeholder
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/postprocessing/GBufferPass.ts:136`  
-**Severidad:** Media  
-**Estado:** Funcional  
-**Descripción:**
-```typescript
-// Output 3: Material properties (placeholder)
-```
-**Contexto:** Propiedades de material placeholder en GBuffer.  
-**Impacto:** Sistema de post-procesamiento incompleto.  
-**Prioridad:** Media - Implementar propiedades de material reales.
-
-### 9. 🏗️ PLACEHOLDER - Buffer de Vértices Placeholder
+### 8. 🏗️ PLACEHOLDER - Buffer de Vértices Placeholder
 **Archivo:** `qualia-tempo-prototype/backend/services/RenderingService.py:86`  
 **Severidad:** Media  
 **Estado:** Funcional  
@@ -163,7 +154,19 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Sistema de rendering básico funcional.  
 **Prioridad:** Media - Implementar buffer de vértices real.
 
-### 10. 🔮 FUTURE - Configuración Futura de Servicios
+### 9. 🔮 FUTURE - Configuración Futura de Servicios
+**Archivo:** `qualia-tempo-prototype/backend/services/RenderingService.py:86`  
+**Severidad:** Media  
+**Estado:** Funcional  
+**Descripción:**
+```python
+# Create vertex buffer for particles (placeholder)
+```
+**Contexto:** Buffer de vértices placeholder para partículas.  
+**Impacto:** Sistema de rendering básico funcional.  
+**Prioridad:** Media - Implementar buffer de vértices real.
+
+### 9. 🔮 FUTURE - Configuración Futura de Servicios
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/inversify.config.ts:35`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -175,7 +178,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Preparación para expansión.  
 **Prioridad:** Baja - Implementar cuando se agreguen nuevos servicios.
 
-### 11. 🔮 FUTURE - Extensibilidad Futura en Servicios
+### 10. 🔮 FUTURE - Extensibilidad Futura en Servicios
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/NotificationService.ts:77,78`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -188,7 +191,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Diseño extensible.  
 **Prioridad:** Baja - Implementar cuando se expanda funcionalidad.
 
-### 12. 🔮 FUTURE - Manejo Futuro de Acciones del Jugador
+### 11. 🔮 FUTURE - Manejo Futuro de Acciones del Jugador
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/GameControllerService.ts:216,333`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -201,7 +204,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Arquitectura preparada para expansión.  
 **Prioridad:** Baja - Implementar cuando se agreguen nuevas acciones.
 
-### 13. 🔮 FUTURE - Contexto de Contenedor Futuro
+### 12. 🔮 FUTURE - Contexto de Contenedor Futuro
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/CompositionRoot.provider.ts:17`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -213,7 +216,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Flexibilidad arquitectónica.  
 **Prioridad:** Baja - Implementar si se requiere contexto.
 
-### 14. 🔮 FUTURE - Extensibilidad en Servicio de Debug
+### 13. 🔮 FUTURE - Extensibilidad en Servicio de Debug
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/DebugService.ts:58,59`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -226,7 +229,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Debugging futuro más robusto.  
 **Prioridad:** Baja - Implementar cuando se expanda debugging.
 
-### 15. 🔮 FUTURE - Cálculo Basado en Longitud de Letra
+### 14. 🔮 FUTURE - Cálculo Basado en Longitud de Letra
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/SubtitleService.ts:76`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -238,7 +241,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Sistema de subtítulos extensible.  
 **Prioridad:** Baja - Implementar cuando se mejore timing.
 
-### 16. 🔮 FUTURE - Ratio de Poder para Uso Futuro
+### 15. 🔮 FUTURE - Ratio de Poder para Uso Futuro
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/ViewLogicService.ts:88`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -250,7 +253,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Lógica de vista preparada.  
 **Prioridad:** Baja - Implementar cuando se use.
 
-### 17. 🔮 FUTURE - Opacidad de Flujo Reservada
+### 16. 🔮 FUTURE - Opacidad de Flujo Reservada
 **Archivo:** `qualia-tempo-prototype/frontend/src/components/game/PlayerAvatar.tsx:13`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -261,6 +264,18 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Contexto:** Opacidad de flujo comentada para uso futuro.  
 **Impacto:** Efectos visuales preparados.  
 **Prioridad:** Baja - Implementar cuando se agreguen efectos.
+
+### 17. 🔮 FUTURE - Timing de Subtítulos Basado en Longitud
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/SubtitleService.ts:76`  
+**Severidad:** Baja  
+**Estado:** Planificado  
+**Descripción:**
+```typescript
+// based on lyric length or other factors in the future
+```
+**Contexto:** Cálculo de timing de subtítulos basado en longitud de letra para futuro.  
+**Impacto:** Sistema de subtítulos más dinámico.  
+**Prioridad:** Baja - Implementar cuando se mejore timing.
 
 ### 18. 📱 DEPRECATED - Método de Rendering Obsoleto
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/FrontendRenderingService.ts:349`  
@@ -349,16 +364,91 @@ private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator (DEPRECA
 **Contexto:** Solución temporal similar en servicio de streaming.  
 **Impacto:** Patrón repetido de workaround.  
 **Prioridad:** Media - Resolver de manera consistente.
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/FrontendRenderingService.ts:349`  
+**Severidad:** Baja  
+**Estado:** Documentado  
+**Descripción:**
+```typescript
+// DEPRECATED: This method is no longer used. Particle data comes from backend via updateParticleBuffer.
+```
+**Contexto:** Método obsoleto reemplazado por nueva implementación.  
+**Impacto:** Código legacy documentado.  
+**Prioridad:** Baja - Remover en futura refactorización.
 
----
+### 19. 📱 DEPRECATED - Configuración de Electron Obsoleta
+**Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:63,64`  
+**Severidad:** Baja  
+**Estado:** Documentado  
+**Descripción:**
+```typescript
+// Audio enhancements - removed deprecated enableRemoteModule
+// enableRemoteModule: false, // DEPRECATED in newer Electron versions
+```
+**Contexto:** Configuración obsoleta en versiones modernas de Electron.  
+**Impacto:** No afecta funcionalidad actual, pero debe actualizarse en futuras versiones.  
+**Prioridad:** Baja - Actualizar cuando se migre a versiones más nuevas de Electron.
 
+### 20. 📱 DEPRECATED - Migración Arquitectónica de Configuración
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/ConfigurationService.ts:117,118,139`  
+**Severidad:** Baja  
+**Estado:** En Migración  
+**Descripción:**
+```typescript
+// @deprecated ARCHITECTURAL MIGRATION: Service Locator antipattern elimination
+// This method is deprecated. Services should inject their configuration directly.
+// === DEPRECATED GETTERS REMOVED ===
+```
+**Contexto:** Métodos obsoletos en migración a inyección directa de configuración.  
+**Impacto:** Transición a mejor arquitectura.  
+**Prioridad:** Baja - Completar migración.
 
----
+### 21. 📱 DEPRECATED - Adaptador de Mensajes Obsoleto
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/RhythmicMovementController.ts:31,75`  
+**Severidad:** Baja  
+**Estado:** Documentado  
+**Descripción:**
+```typescript
+private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator (DEPRECATED)
+// Ensure keyAdapter is used by decorator (TypeScript workaround) - DEPRECATED
+```
+**Contexto:** Adaptador obsoleto usado por decorador deprecated.  
+**Impacto:** Código legacy en transición.  
+**Prioridad:** Baja - Remover cuando se elimine decorador.
 
+### 22. 📱 DEPRECATED - Interfaz de Configuración Obsoleta
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/interfaces/IConfigurationService.ts:34`  
+**Severidad:** Baja  
+**Estado:** En Migración  
+**Descripción:**
+```typescript
+// @deprecated ARCHITECTURAL MIGRATION: This method is deprecated as part of the
+```
+**Contexto:** Método obsoleto en interfaz de configuración.  
+**Impacto:** Parte de migración arquitectónica.  
+**Prioridad:** Baja - Actualizar cuando se complete migración.
 
-## DIRECTIVE 003 Follow-up: Fix Auto-Generated Mock Type Errors
-- [ ] FIXME: Fix type errors in auto-generated mocks - in /qualia-tempo-prototype/frontend/src/testing/mocks/audio-service.mock.ts (missing 'playSound' property)
-- [ ] FIXME: Fix BackendSyncConfig mock to match full contract structure - in /qualia-tempo-prototype/frontend/src/testing/mocks/backend-sync-service.mock.ts:22
-- [ ] TODO: Enhance mock generation script to parse TypeScript interfaces more accurately using @typescript-eslint/typescript-estree
+### 23. 🔧 WORKAROUND - Workaround de TypeScript
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/RhythmicMovementController.ts:75`  
+**Severidad:** Media  
+**Estado:** Funcional  
+**Descripción:**
+```typescript
+// Ensure keyAdapter is used by decorator (TypeScript workaround) - DEPRECATED
+```
+**Contexto:** Solución temporal para limitaciones de TypeScript.  
+**Impacto:** Código menos limpio.  
+**Prioridad:** Media - Resolver cuando se actualice decorador.
+
+### 24. 🔧 WORKAROUND - Workaround de TypeScript en Streaming
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/StateStreamingService.ts:54`  
+**Severidad:** Media  
+**Estado:** Funcional  
+**Descripción:**
+```typescript
+// Ensure messageAdapter is used by decorator (TypeScript workaround)
+```
+**Contexto:** Solución temporal similar en servicio de streaming.  
+**Impacto:** Patrón repetido de workaround.  
+**Prioridad:** Media - Resolver de manera consistente.
 
 
