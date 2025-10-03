@@ -32,6 +32,20 @@ import type { IBrowserEventsService } from "../services/interfaces/IBrowserEvent
 import type { IDebugOrchestratorService } from "../services/interfaces/IDebugOrchestratorService";
 import type { IShaderIntrospectionService } from "../services/interfaces/IShaderIntrospectionService";
 import type { IColorService } from "../services/interfaces/IColorService";
+// DIRECTIVE 003: New interface imports for comprehensive mock coverage
+import type { IApplicationInitializerService } from "../services/interfaces/IApplicationInitializerService";
+import type { INotificationService } from "../services/interfaces/INotificationService";
+import type { IViewLogicService } from "../services/interfaces/IViewLogicService";
+import type { IStateStreamingService } from "../services/interfaces/IStateStreamingService";
+import type { IGameplayMechanicsService } from "../services/interfaces/IGameplayMechanicsService";
+import type { IAudioService } from "../services/interfaces/IAudioService";
+import type { IGameControllerService } from "../services/interfaces/IGameControllerService";
+import type { IQualiaStateCalculatorService } from "../services/interfaces/IQualiaStateCalculatorService";
+import type { IErrorReportingService } from "../services/interfaces/IErrorReportingService";
+import type { IDebugService } from "../services/interfaces/IDebugService";
+import type { ISubtitleService } from "../services/interfaces/ISubtitleService";
+import type { IRhythmicMovementController } from "../services/interfaces/IRhythmicMovementController";
+import type { IBackendSyncService } from "../services/interfaces/IBackendSyncService";
 
 // Import real services for pure utilities (no side effects)
 import { ColorService } from "../services/ColorService";
@@ -49,6 +63,20 @@ import { mockWebSocketService } from "./mocks/web-socket-service.mock";
 import { mockBrowserEventsService } from "./mocks/browser-events-service.mock";
 import { mockDebugOrchestratorService } from "./mocks/debug-orchestrator-service.mock";
 import { mockShaderIntrospectionService } from "./mocks/shader-introspection-service.mock";
+// DIRECTIVE 003: New mock imports for comprehensive coverage
+import { mockApplicationInitializerService } from "./mocks/application-initializer-service.mock";
+import { mockNotificationService } from "./mocks/notification-service.mock";
+import { mockViewLogicService } from "./mocks/view-logic-service.mock";
+import { mockStateStreamingService } from "./mocks/state-streaming-service.mock";
+import { mockGameplayMechanicsService } from "./mocks/gameplay-mechanics-service.mock";
+import { mockAudioService } from "./mocks/audio-service.mock";
+import { mockGameControllerService } from "./mocks/game-controller-service.mock";
+import { mockQualiaStateCalculatorService } from "./mocks/qualia-state-calculator-service.mock";
+import { mockErrorReportingService } from "./mocks/error-reporting-service.mock";
+import { mockDebugService } from "./mocks/debug-service.mock";
+import { mockSubtitleService } from "./mocks/subtitle-service.mock";
+import { mockRhythmicMovementController } from "./mocks/rhythmic-movement-controller.mock";
+import { mockBackendSyncService } from "./mocks/backend-sync-service.mock";
 
 export interface MockOverride<T = unknown> {
   type: symbol;
@@ -73,6 +101,20 @@ export interface MockServices {
   mockBrowserEventsService: IBrowserEventsService;
   mockDebugOrchestratorService: IDebugOrchestratorService;
   mockShaderIntrospectionService: IShaderIntrospectionService;
+  // DIRECTIVE 003: New mock services
+  mockApplicationInitializerService: IApplicationInitializerService;
+  mockNotificationService: INotificationService;
+  mockViewLogicService: IViewLogicService;
+  mockStateStreamingService: IStateStreamingService;
+  mockGameplayMechanicsService: IGameplayMechanicsService;
+  mockAudioService: IAudioService;
+  mockGameControllerService: IGameControllerService;
+  mockQualiaStateCalculatorService: IQualiaStateCalculatorService;
+  mockErrorReportingService: IErrorReportingService;
+  mockDebugService: IDebugService;
+  mockSubtitleService: ISubtitleService;
+  mockRhythmicMovementController: IRhythmicMovementController;
+  mockBackendSyncService: IBackendSyncService;
 }
 
 /**
@@ -96,6 +138,21 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   testContainer.bind<IBrowserEventsService>(TYPES.IBrowserEventsService).toConstantValue(mockBrowserEventsService);
   testContainer.bind<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService).toConstantValue(mockDebugOrchestratorService);
   testContainer.bind<IShaderIntrospectionService>(TYPES.IShaderIntrospectionService).toConstantValue(mockShaderIntrospectionService);
+  
+  // DIRECTIVE 003: Bind all newly created high-fidelity mocks
+  testContainer.bind<IApplicationInitializerService>(TYPES.IApplicationInitializerService).toConstantValue(mockApplicationInitializerService);
+  testContainer.bind<INotificationService>(TYPES.INotificationService).toConstantValue(mockNotificationService);
+  testContainer.bind<IViewLogicService>(TYPES.IViewLogicService).toConstantValue(mockViewLogicService);
+  testContainer.bind<IStateStreamingService>(TYPES.IStateStreamingService).toConstantValue(mockStateStreamingService);
+  testContainer.bind<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService).toConstantValue(mockGameplayMechanicsService);
+  testContainer.bind<IAudioService>(TYPES.IAudioService).toConstantValue(mockAudioService);
+  testContainer.bind<IGameControllerService>(TYPES.IGameControllerService).toConstantValue(mockGameControllerService);
+  testContainer.bind<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService).toConstantValue(mockQualiaStateCalculatorService);
+  testContainer.bind<IErrorReportingService>(TYPES.IErrorReportingService).toConstantValue(mockErrorReportingService);
+  testContainer.bind<IDebugService>(TYPES.IDebugService).toConstantValue(mockDebugService);
+  testContainer.bind<ISubtitleService>(TYPES.ISubtitleService).toConstantValue(mockSubtitleService);
+  testContainer.bind<IRhythmicMovementController>(TYPES.IRhythmicMovementController).toConstantValue(mockRhythmicMovementController);
+  testContainer.bind<IBackendSyncService>(TYPES.IBackendSyncService).toConstantValue(mockBackendSyncService);
 
   // STEP 2.5: Bind real services for pure utilities (no side effects, no external dependencies)
   // ColorService is a pure utility that only performs mathematical color conversions

@@ -225,55 +225,58 @@ vi.mock("tone/build/esm/index", () => ({
 /**
  * createElectronMock - Factory for Electron module mock
  * QUALIA.CODE COMPLIANT: Extract Function Pattern
+ * NOTE: Using function declaration to avoid TDZ issues with vi.mock hoisting
  */
-const createElectronMock = () => ({
-  app: {
-    requestSingleInstanceLock: vi.fn(() => true),
-    on: vi.fn(),
-    quit: vi.fn(),
-    getVersion: vi.fn(() => "1.0.0"),
-    getName: vi.fn(() => "Qualia Tempo"),
-    getPath: vi.fn(() => "/tmp"),
-    setAppUserModelId: vi.fn(),
-    commandLine: { appendSwitch: vi.fn() },
-  },
-  BrowserWindow: vi.fn().mockImplementation(() => ({
-    loadURL: vi.fn(),
-    loadFile: vi.fn(),
-    on: vi.fn(),
-    once: vi.fn(),
-    show: vi.fn(),
-    hide: vi.fn(),
-    close: vi.fn(),
-    destroy: vi.fn(),
-    isDestroyed: vi.fn(() => false),
-    webContents: {
+function createElectronMock() {
+  return {
+    app: {
+      requestSingleInstanceLock: vi.fn(() => true),
+      on: vi.fn(),
+      quit: vi.fn(),
+      getVersion: vi.fn(() => "1.0.0"),
+      getName: vi.fn(() => "Qualia Tempo"),
+      getPath: vi.fn(() => "/tmp"),
+      setAppUserModelId: vi.fn(),
+      commandLine: { appendSwitch: vi.fn() },
+    },
+    BrowserWindow: vi.fn().mockImplementation(() => ({
+      loadURL: vi.fn(),
+      loadFile: vi.fn(),
       on: vi.fn(),
       once: vi.fn(),
-      send: vi.fn(),
-      openDevTools: vi.fn(),
-      closeDevTools: vi.fn(),
-      setWindowOpenHandler: vi.fn(),
-    },
-    setMenuBarVisibility: vi.fn(),
-    setFullScreen: vi.fn(),
-    isFullScreen: vi.fn(() => false),
-    getBounds: vi.fn(() => ({ x: 0, y: 0, width: 1920, height: 1080 })),
-    setBounds: vi.fn(),
-  })),
-  ipcMain: { on: vi.fn(), handle: vi.fn(), removeHandler: vi.fn() },
-  Menu: { setApplicationMenu: vi.fn(), buildFromTemplate: vi.fn(() => ({})) },
-  dialog: { showMessageBox: vi.fn(), showOpenDialog: vi.fn(), showSaveDialog: vi.fn() },
-  screen: {
-    getPrimaryDisplay: vi.fn(() => ({
-      workAreaSize: { width: 1920, height: 1080 },
-      size: { width: 1920, height: 1080 },
+      show: vi.fn(),
+      hide: vi.fn(),
+      close: vi.fn(),
+      destroy: vi.fn(),
+      isDestroyed: vi.fn(() => false),
+      webContents: {
+        on: vi.fn(),
+        once: vi.fn(),
+        send: vi.fn(),
+        openDevTools: vi.fn(),
+        closeDevTools: vi.fn(),
+        setWindowOpenHandler: vi.fn(),
+      },
+      setMenuBarVisibility: vi.fn(),
+      setFullScreen: vi.fn(),
+      isFullScreen: vi.fn(() => false),
+      getBounds: vi.fn(() => ({ x: 0, y: 0, width: 1920, height: 1080 })),
+      setBounds: vi.fn(),
     })),
-    getAllDisplays: vi.fn(() => [{ workAreaSize: { width: 1920, height: 1080 }, size: { width: 1920, height: 1080 } }]),
-  },
-  shell: { openExternal: vi.fn() },
-  globalShortcut: { register: vi.fn(() => true), unregister: vi.fn(), isRegistered: vi.fn(() => false) },
-});
+    ipcMain: { on: vi.fn(), handle: vi.fn(), removeHandler: vi.fn() },
+    Menu: { setApplicationMenu: vi.fn(), buildFromTemplate: vi.fn(() => ({})) },
+    dialog: { showMessageBox: vi.fn(), showOpenDialog: vi.fn(), showSaveDialog: vi.fn() },
+    screen: {
+      getPrimaryDisplay: vi.fn(() => ({
+        workAreaSize: { width: 1920, height: 1080 },
+        size: { width: 1920, height: 1080 },
+      })),
+      getAllDisplays: vi.fn(() => [{ workAreaSize: { width: 1920, height: 1080 }, size: { width: 1920, height: 1080 } }]),
+    },
+    shell: { openExternal: vi.fn() },
+    globalShortcut: { register: vi.fn(() => true), unregister: vi.fn(), isRegistered: vi.fn(() => false) },
+  };
+}
 
 // QUALIA.CODE Global Electron Mock - Prevent electron module import errors in tests
 vi.mock("electron", createElectronMock);
