@@ -23,7 +23,15 @@ export const mockGameControllerService: IGameControllerService = {
   pauseGame: vi.fn().mockReturnValue(undefined),
   resumeGame: vi.fn().mockReturnValue(undefined),
   resetGame: vi.fn().mockReturnValue(undefined),
-  getGameState: vi.fn().mockReturnValue({}),
+  getGameState: vi.fn().mockReturnValue({
+    isPlaying: false,
+    isPaused: false,
+    currentScore: 0,
+    comboCount: 0,
+    health: 100,
+    level: 1,
+    gameMode: "normal"
+  }),
   isPlaying: vi.fn().mockReturnValue(false),
   isPaused: vi.fn().mockReturnValue(false),
   start: vi.fn().mockReturnValue(undefined),

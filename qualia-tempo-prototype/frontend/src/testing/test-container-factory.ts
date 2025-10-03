@@ -78,6 +78,7 @@ import { mockSubtitleService } from "./mocks/subtitle-service.mock";
 import { mockRhythmicMovementController } from "./mocks/rhythmic-movement-controller.mock";
 import { mockBackendSyncService } from "./mocks/backend-sync-service.mock";
 import { mockInputStateService } from "./mocks/input-state-service.mock";
+import { mockKeyAdapter } from './mocks/key-adapter.mock'; // AÑADIR ESTA LÍNEA
 
 // ===================================================================================
 // DIRECTIVE 006: DEFAULT TEST CONFIGURATION BINDINGS
@@ -91,8 +92,6 @@ import type { BackendSyncConfig, BackendSyncServiceParams } from '../services/co
 import type { GameControllerConfig, GameControllerServiceParams } from '../services/contracts/IGameControllerService.contracts';
 import type { QualiaCalculatorConfig, QualiaStateCalculatorServiceParams } from '../services/contracts/IQualiaStateCalculatorService.contracts';
 import type { RhythmicMovementConfig, RhythmicMovementControllerParams } from '../services/contracts/IRhythmicMovementController.contracts';
-import type { IEventTransformer } from '../services/protocol/IEventTransformer';
-import type { PlayerInputEvent, PlayerDirectionEvent } from '../services/contracts/events.contracts';
 
 // --- Default Config Objects ---
 
@@ -177,11 +176,6 @@ const defaultRhythmicMovementConfig: RhythmicMovementConfig = {
   sequenceDifficultyVarietyBonusMultiplier: 0.5,
   flowBpmMultiplier: 1.2
 } as RhythmicMovementConfig;
-
-// Simple mock for KeyToDirectionAdapter
-const mockKeyAdapter: IEventTransformer<PlayerInputEvent, PlayerDirectionEvent> = {
-  transform: vi.fn().mockReturnValue({ type: 'PlayerDirection', direction: 'up', timestamp: new Date() })
-};
 
 // --- Default Params Objects ---
 
