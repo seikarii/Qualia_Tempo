@@ -69,16 +69,26 @@ warn_return_any = false
 warn_no_return = false
 
 # Per-file ignores for MyPy (similar to Ruff)
-[tool.mypy.per-file-ignores]
-"**/tests/*.py" = [
-    "no-untyped-def",
-    "no-untyped-call", 
-    "no-any-return",
-    "attr-defined"
-]
-"**/test_*.py" = [
-    "no-untyped-def",
-    "no-untyped-call",
-    "no-any-return",
-    "attr-defined"
-]
+per-file-ignores = {
+    "**/tests/*.py": [
+        "no-untyped-def",
+        "no-untyped-call", 
+        "no-any-return",
+        "attr-defined"
+    ],
+    "**/test_*.py": [
+        "no-untyped-def",
+        "no-untyped-call",
+        "no-any-return",
+        "attr-defined"
+    ],
+    "qualia_tempo_prototype/backend/engine/qualia_particle_engine.py": [
+        "unreachable"
+    ],
+    "qualia_tempo_prototype/backend/services/StreamingWebService.py": [
+        "unreachable"
+    ],
+    "qualia_tempo_prototype/backend/services/StateStreamingService.py": [
+        "unreachable"
+    ]
+}

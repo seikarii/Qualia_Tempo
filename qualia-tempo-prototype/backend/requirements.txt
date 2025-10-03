@@ -26,6 +26,7 @@ httpx==0.28.1
 aiofiles>=0.23.0
 python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.0
+PyJWT>=2.8.0
 
 # Starlette (compatible with FastAPI 0.116.1)
 starlette==0.47.3
