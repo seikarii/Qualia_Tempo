@@ -65,7 +65,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Componente no refleja estado real del juego.  
 **Prioridad:** Media - Integrar servicios de audio y física.
 
-### 2. 📝 TODO - Refactor de Bucle Interno en Calculadora de Estado
+### 2. 📝 TODO - Refactor de Bucle Interno en Calculadora de Estado (DIFFICULT)
 **Archivo:** `qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx:140-143,161`  
 **Severidad:** Media  
 **Estado:** Pendiente  
