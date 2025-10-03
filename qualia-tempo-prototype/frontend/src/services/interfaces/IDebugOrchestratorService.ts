@@ -4,9 +4,16 @@
  * Extracts complex diagnostic logic from ServiceDiagnosticsPanel component.
  */
 
-import type { ServiceDiagnosticData, ServiceStatus } from '../contracts/IDebugOrchestratorService.contracts';
+/**
+ * QUALIA.CODE v1.2 - IDebugOrchestratorService Interface
+ * Service responsible for orchestrating service diagnostics collection.
+ * Extracts complex diagnostic logic from ServiceDiagnosticsPanel component.
+ */
 
-export interface IDebugOrchestratorService {
+import type { ServiceDiagnosticData, ServiceStatus } from '../contracts/IDebugOrchestratorService.contracts';
+import type { IBaseService } from './IBaseService';
+
+export interface IDebugOrchestratorService extends IBaseService {
   /**
    * Get real-time health report from cached service statuses
    * QUALIA.CODE v1.1: Event-Driven Pattern (Push Model)

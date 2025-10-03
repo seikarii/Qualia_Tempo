@@ -338,6 +338,13 @@ service = mocked_root.get_service("my_service")
 - View Logic: Test calculations in isolation, no component rendering.
 - Event Integration: Test full flow Input → Store via EventBus.
 
+**High-Fidelity Mocking (MANDATORY):**
+- RATIONALE: Low-fidelity mocks (`vi.fn()`) return `undefined` by default, causing unpredictable test failures and violating interface contracts.
+- MANDATE: All mocks for interface methods MUST be "High-Fidelity".
+  - If a method returns a value, the mock MUST use `.mockReturnValue(...)` or `.mockResolvedValue(...)` to provide a type-safe default.
+  - Bare `vi.fn()` is FORBIDDEN for any method that does not have a `void` return type.
+- REFERENCE: Detailed rules are codified in `QUALIA.CODE.md` (Section 10.3.1) and examples exist in `QUALIA.MANUAL.md` (Section 10.4).
+
 ---
 
 ### **IX. PERFORMANCE OPTIMIZATION**

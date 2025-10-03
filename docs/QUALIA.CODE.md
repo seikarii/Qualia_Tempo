@@ -254,6 +254,36 @@ The pillar of our backend service testing is the `TestCompositionRootFactory`.
 - **Global Mocks (`src/testing/setup.ts`):** Handle environment-wide mocking (decorators, browser APIs, external libraries like Tone.js) that should never execute real logic in any test.
 - **Service Mocks (`src/testing/mocks/`):** Provide controlled implementations of our interfaces (ILogger, IEventBus, etc.) for asserting service interactions and behaviors.
 
+#### 10.3.1. High-Fidelity Mocking Standard (MANDATORY)
+
+All service mocks created under `src/testing/mocks/` MUST adhere to the "High-Fidelity" standard. A low-fidelity mock (e.g., `vi.fn()`) that does not
+respect its interface contract is a critical architectural violation.
+
+**Principle:** A mock must be a faithful, predictable, and type-safe representation of the interface it simulates. Its default behavior should never cause
+a `TypeError: Cannot read properties of undefined` in a test.
+
+**MANDATORY RULES:**
+
+1.  **Respect Return Types:** Mocks for interface methods MUST return a default value that matches the contract's return type.
+    *   Methods returning `string`: MUST default to `mockReturnValue('')`.
+    *   Methods returning `number`: MUST default to `mockReturnValue(0)`.
+    *   Methods returning `boolean`: MUST default to `mockReturnValue(false)`.
+    *   Methods returning `object`: MUST default to `mockReturnValue({})`.
+    *   Methods returning `Array`: MUST default to `mockReturnValue([])`.
+    *   Methods returning `void`: Can remain a simple `vi.fn()`.
+
+2.  **Simulate Asynchronicity:** If an interface method returns a `Promise<T>`, the mock implementation MUST be asynchronous and return a resolved promise.
+    *   **Correct:** `vi.fn().mockResolvedValue(...)`
+    *   **PROHIBITED:** `vi.fn().mockReturnValue(Promise.resolve(...))`
+    *   **PROHIBITED:** `vi.fn()` (which returns `Promise<undefined>`)
+
+3.  **Provide Sensible Defaults for Complex Objects:** If a method returns a complex object, the mock MUST return a default object that satisfies the
+interface's shape, preventing downstream errors. For a method returning `{ width: number; height: number }`, the mock MUST be `vi.fn().mockReturnValue({
+width: 0, height: 0 })`.
+
+4.  **Prohibition of Ambiguous Mocks:** The use of a bare `vi.fn()` for any method that does not have a `void` return type is strictly **FORBIDDEN**. Every
+function mock with a return value must explicitly define it via `.mockReturnValue()` or `.mockResolvedValue()`.
+
 ### 10.4. Estrategia de Pruebas de Lógica de Vista.
 
 La estrategia de pruebas de lógica de vista se centra en probar los métodos de cálculo visual en aislamiento, asegurando que los servicios retornen los datos visuales correctos sin necesidad de renderizar componentes. Esta estrategia permite pruebas rápidas sin renderizado de componentes Three.js, aislamiento de lógica pura sin dependencias de UI, cobertura completa de todos los cálculos visuales, y detección inmediata de cambios en lógica visual.

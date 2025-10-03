@@ -130,17 +130,31 @@ module.exports = {
         "@qualia-tempo/qualia-code/no-manual-contract-edit": "error",
       },
     },
-    // Testing files - more relaxed rules for IoC patterns
+    // Overrides para el entorno de pruebas (QUALIA.CODE v1.1 COMPLIANT)
     {
       files: [
         "**/testing/**/*.ts",
+        "**/__tests__/**/*.ts",
+        "**/__tests__/**/*.tsx",
         "**/*.test.ts",
+        "**/*.test.tsx",
         "**/*.spec.ts",
+        "**/*.spec.tsx",
       ],
       rules: {
-        "@qualia-tempo/qualia-code/no-direct-service-instantiation": "off", // Tests need to instantiate services
-        "@qualia-tempo/qualia-code/enforce-use-services-hook": "off", // Tests don't use React hooks
-        "no-unused-vars": "off",
+        // ACTIVA nuestra nueva regla como la autoridad máxima para la arquitectura de tests.
+        '@qualia-tempo/qualia-code/enforce-isolated-test-container': 'error',
+
+        // DESACTIVA reglas que son irrelevantes o contradictorias en un entorno de test.
+        '@qualia-tempo/qualia-code/no-direct-service-instantiation': 'off', // Redundante, 'enforce-isolated-test-container' es más específico.
+        '@qualia-tempo/qualia-code/enforce-use-services-hook': 'off', // Los tests no usan hooks de React.
+        '@qualia-tempo/qualia-code/no-service-locator': 'off', // El service locator se permite en tests para extraer mocks.
+
+        // Relaja reglas genéricas para la conveniencia en los tests.
+        'no-unused-vars': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
+        '@typescript-eslint/no-explicit-any': 'off', // Permitir 'any' es a menudo necesario para mockear.
+        'max-lines-per-function': 'off', // Los tests pueden ser largos.
       },
     },
     // Application entry point - allowed to access container directly

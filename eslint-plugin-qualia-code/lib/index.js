@@ -33,6 +33,8 @@ const enforceOnEventBaseService = require('./rules/enforce-onevent-base-service'
 const enforceBrowserOnly = require('./rules/enforce-browser-only');
 // NEW RULES - QUALIA.CODE v1.1 Event Architecture
 const enforceEventInterfacesLocation = require('./rules/enforce-event-interfaces-location');
+// NEW RULES - QUALIA.CODE v1.1 Testing Architecture
+const enforceIsolatedTestContainer = require('./rules/enforce-isolated-test-container');
 
 module.exports = {
   rules: {
@@ -57,6 +59,8 @@ module.exports = {
     'enforce-browser-only': enforceBrowserOnly,
     // NEW RULES - QUALIA.CODE v1.1 Event Architecture
     'enforce-event-interfaces-location': enforceEventInterfacesLocation,
+    // NEW RULES - QUALIA.CODE v1.1 Testing Architecture
+    'enforce-isolated-test-container': enforceIsolatedTestContainer,
   },
   configs: {
     recommended: {
@@ -83,6 +87,8 @@ module.exports = {
         '@qualia-tempo/qualia-code/enforce-browser-only': 'error',
         // NEW RULES - QUALIA.CODE v1.1 Event Architecture
         '@qualia-tempo/qualia-code/enforce-event-interfaces-location': 'error',
+        // NEW RULES - QUALIA.CODE v1.1 Testing Architecture
+        '@qualia-tempo/qualia-code/enforce-isolated-test-container': 'error',
       }
     }
   }

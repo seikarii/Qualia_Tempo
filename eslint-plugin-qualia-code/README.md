@@ -302,6 +302,41 @@ export class MyService {
 }
 ```
 
+### `enforce-isolated-test-container` 🆕
+
+**What it does:** Enforces the Isolated Container Pattern in test files (Section 10.3 of QUALIA.CODE).
+
+**Why:** Ensures absolute test isolation by preventing:
+1. Direct service instantiation with `new XxxService()` in tests
+2. Usage of the main application container in tests
+
+**❌ Incorrect:**
+```typescript
+// In a .test.ts file
+import { MyService } from '../services/MyService';
+const service = new MyService(); // ERROR
+
+// Or using main container
+import { container } from '../services/inversify.config';
+const service = container.get(TYPES.IMyService); // ERROR
+```
+
+**✅ Correct:**
+```typescript
+// In a .test.ts file
+import { createTestContainer } from '../testing/test-container-factory';
+
+describe('MyService', () => {
+  let container;
+  beforeEach(() => {
+    container = createTestContainer(); // Isolated instance
+    service = container.get(TYPES.IMyService);
+  });
+});
+```
+
+**Read more:** [Full documentation](./docs/enforce-isolated-test-container.md)
+
 ## Integration with QUALIA.CODE
 
 This plugin is part of the comprehensive QUALIA.CODE enforcement system:

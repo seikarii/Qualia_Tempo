@@ -1,18 +1,13 @@
-/**
- * QUALIA.CODE v1.1 - DebugOrchestratorService Mock
- * Centralized mock implementation for DebugOrchestratorService testing.
- */
-
 import { vi } from "vitest";
 import type { IDebugOrchestratorService } from "../../services/interfaces/IDebugOrchestratorService";
 
-export const mockDebugOrchestratorService: IDebugOrchestratorService & { initialize: () => void; cleanup: () => void } = {
-  getHealthReport: vi.fn(() => []), // QUALIA.CODE v1.1: Event-driven method returns empty array by default
-  gatherServiceDiagnostics: vi.fn(),
-  getServiceStatuses: vi.fn(),
-  isDebugModeEnabled: vi.fn(),
-  getLastUpdateTime: vi.fn(),
-  forceRefresh: vi.fn(),
+export const mockDebugOrchestratorService: IDebugOrchestratorService = {
   initialize: vi.fn(),
   cleanup: vi.fn(),
+  getHealthReport: vi.fn().mockReturnValue([]),
+  gatherServiceDiagnostics: vi.fn().mockResolvedValue({ services: [] }),
+  getServiceStatuses: vi.fn().mockResolvedValue([]),
+  isDebugModeEnabled: vi.fn().mockReturnValue(false),
+  getLastUpdateTime: vi.fn().mockReturnValue(new Date()),
+  forceRefresh: vi.fn().mockResolvedValue(undefined),
 };

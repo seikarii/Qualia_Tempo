@@ -2,8 +2,8 @@ import { vi } from "vitest";
 import type { IHttpService } from "../../services/interfaces/IHttpService";
 
 export const mockHttpService: IHttpService = {
-  get: vi.fn(),
-  post: vi.fn(),
-  put: vi.fn(),
-  delete: vi.fn(),
+  get: vi.fn().mockResolvedValue({ data: null }),
+  post: vi.fn().mockResolvedValue({ data: null }),
+  put: vi.fn().mockResolvedValue({ data: null }),
+  delete: vi.fn().mockResolvedValue({ success: true }),
 };

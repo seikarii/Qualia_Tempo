@@ -1043,6 +1043,51 @@ const service = testContainer.get<IMyService>(TYPES.IMyService);
 
 ---
 
+### 10.4. High-Fidelity Mock Implementation
+
+This section provides a practical example of refactoring a "Low-Fidelity" mock to the mandatory "High-Fidelity" standard as defined in `QUALIA.CODE.md`.
+
+#### **BEFORE: Low-Fidelity Mock (FORBIDDEN)**
+
+This mock is dangerous. It does not respect the `IHttpService` contract. Calls to `mockHttpService.get()` in tests will return `undefined`, leading to
+unpredictable errors when the test code attempts to destructure the result or chain a `.then()`.
+// RUTA: src/testing/mocks/http-service.mock.ts
+// ESTADO: VIOLACIÓN ARQUITECTÓNICA
+
+import { vi } from "vitest";
+import type { IHttpService } from "../../services/interfaces/IHttpService";
+
+// PROHIBIDO: Este mock es de baja fidelidad.
+export const mockHttpService: IHttpService = {
+  get: vi.fn(), // Devuelve Promise<undefined>, viola el contrato Promise<T>
+  post: vi.fn(),
+  put: vi.fn(),
+  delete: vi.fn(),
+};
+
+
+#### **AFTER: High-Fidelity Mock (GOLD.CODE STANDARD)**
+
+This mock is robust, predictable, and contract-compliant. It correctly simulates the asynchronous nature of the `IHttpService` and provides a type-safe
+default return value, ensuring that tests are stable and predictable.
+// RUTA: src/testing/mocks/http-service.mock.ts
+// ESTADO: GOLD.CODE COMPLIANT
+
+import { vi } from "vitest";
+import type { IHttpService } from "../../services/interfaces/IHttpService";
+
+// CORRECTO: Este mock es de alta fidelidad.
+export const mockHttpService: IHttpService = {
+  // Simula la naturaleza asíncrona y devuelve un valor por defecto seguro.
+  get: vi.fn().mockResolvedValue({ data: null }),
+  post: vi.fn().mockResolvedValue({ data: null }),
+  put: vi.fn().mockResolvedValue({ data: null }),
+  delete: vi.fn().mockResolvedValue({ success: true }),
+};
+
+
+---
+
 ## 11. AI Protocol Implementation Examples
 
 ### 11.1. Language Selection Example
