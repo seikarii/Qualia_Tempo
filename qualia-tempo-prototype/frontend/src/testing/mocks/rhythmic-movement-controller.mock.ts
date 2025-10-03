@@ -21,6 +21,12 @@ export const mockRhythmicMovementController: IRhythmicMovementController = {
   getIntensity: vi.fn().mockReturnValue(0),
   isRunning: vi.fn().mockReturnValue(false),
   updateConfig: vi.fn().mockReturnValue(undefined),
+  getStats: vi.fn().mockReturnValue({
+    isRunning: false,
+    currentIntensity: 0,
+    updatesPerformed: 0,
+    averageUpdateTime: 0,
+  }),
   getCurrentBPM: vi.fn().mockReturnValue(0),
   getCurrentBeat: vi.fn().mockReturnValue(0),
   isPlaying: vi.fn().mockReturnValue(false),

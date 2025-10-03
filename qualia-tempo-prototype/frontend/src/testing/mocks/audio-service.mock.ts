@@ -17,6 +17,7 @@ export const mockAudioService: IAudioService = {
   start: vi.fn().mockResolvedValue(undefined),
   initializeAudioContext: vi.fn().mockResolvedValue(undefined),
   stop: vi.fn().mockResolvedValue(undefined),
+  playSound: vi.fn().mockReturnValue(undefined),
   stopSound: vi.fn().mockReturnValue(undefined),
   getMasterVolume: vi.fn().mockReturnValue(0),
   isRunning: vi.fn().mockReturnValue(false),

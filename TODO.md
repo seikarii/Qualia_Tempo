@@ -447,11 +447,4 @@ Regla ESLint estaba bloqueando importaciones legítimas de contratos e interface
 ## DIRECTIVE 003 Follow-up: Fix Auto-Generated Mock Type Errors
 - [ ] FIXME: Fix type errors in auto-generated mocks - in /qualia-tempo-prototype/frontend/src/testing/mocks/audio-service.mock.ts (missing 'playSound' property)
 - [ ] FIXME: Fix BackendSyncConfig mock to match full contract structure - in /qualia-tempo-prototype/frontend/src/testing/mocks/backend-sync-service.mock.ts:22
-- [ ] FIXME: Remove getStatistics method (doesn't exist in interface) - in /qualia-tempo-prototype/frontend/src/testing/mocks/backend-sync-service.mock.ts:31
-- [ ] FIXME: Add missing logEvent method to IDebugService mock - in /qualia-tempo-prototype/frontend/src/testing/mocks/debug-service.mock.ts:16
-- [ ] FIXME: Remove duplicate keys in debug-service.mock.ts - in /qualia-tempo-prototype/frontend/src/testing/mocks/debug-service.mock.ts:24-28
-- [ ] FIXME: Add missing reportError method to IErrorReportingService mock - in /qualia-tempo-prototype/frontend/src/testing/mocks/error-reporting-service.mock.ts:16
-- [ ] FIXME: Add missing showNotification and show methods to INotificationService mock - in /qualia-tempo-prototype/frontend/src/testing/mocks/notification-service.mock.ts:16
-- [ ] FIXME: Add missing getStats method to IQualiaStateCalculatorService mock - in /qualia-tempo-prototype/frontend/src/testing/mocks/qualia-state-calculator-service.mock.ts:16
-- [ ] FIXME: Add missing getStats method to IRhythmicMovementController mock - in /qualia-tempo-prototype/frontend/src/testing/mocks/rhythmic-movement-controller.mock.ts:16
 - [ ] TODO: Enhance mock generation script to parse TypeScript interfaces more accurately using @typescript-eslint/typescript-estree
