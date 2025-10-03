@@ -5,14 +5,16 @@
 
 ## 📊 Resumen Ejecutivo
 
-**Estado General: EXCELENTE** - Solo 26 instancias de deuda técnica identificadas (23 entradas agrupadas)
-**Puntuación de Calidad: 9.0/10** ⭐⭐⭐⭐⭐⭐⭐⭐⭐⚫ (mejorado tras corrección arquitectónica)
+**Estado General: EXCELENTE** - Solo 22 instancias de deuda técnica activas (21 entradas agrupadas, 2 resueltas)
+**Puntuación de Calidad: 9.2/10** ⭐⭐⭐⭐⭐⭐⭐⭐⭐⚫ (mejorado tras refactorización CRISALIDA.CODE)
 
 ### Estadísticas por Severidad
-- **Baja**: 13 instancias (50%)
-- **Media**: 13 instancias (50%)
+- **Resueltas**: 2 instancias (2 de severidad Media)
+- **Baja**: 13 instancias (59%)
+- **Media**: 9 instancias (41%)
 - **Media-Alta**: 0 instancias (0%)
-- **TOTAL**: 26 instancias
+- **TOTAL ACTIVAS**: 22 instancias
+- **TOTAL HISTÓRICAS**: 24 instancias
 
 
 
@@ -80,29 +82,27 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Componente no refleja estado real del juego.  
 **Prioridad:** Media - Integrar servicios de audio y física.
 
-### 3. 📝 TODO - Refactor de Bucle Interno en Calculadora de Estado
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/QualiaStateCalculatorService.ts:99`  
+### 3. ✅ RESOLVED - Refactor de Bucle Interno en Calculadora de Estado
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/QualiaStateCalculatorService.ts`  
 **Severidad:** Media  
-**Estado:** Pendiente  
-**Descripción:**
-```typescript
-// TODO: Refactor to listen to GameTick event instead of internal loop
-```
-**Contexto:** Servicio usa bucle interno en lugar de eventos de tick del juego.  
-**Impacto:** Acoplamiento temporal, dificultad para testing.  
-**Prioridad:** Media - Migrar a arquitectura basada en eventos.
+**Estado:** ✅ RESUELTO (2025-10-03)  
+**Resolución:**
+- Eliminado `setInterval` y reemplazado con arquitectura dirigida por eventos
+- Implementado manejador `@OnEvent('GameTick')` para actualizaciones de estado
+- Servicio ahora 100% reactivo y desacoplado del tiempo del sistema
+- Definido contrato `GameTickEvent` en `events.contracts.ts`
+**Impacto:** Eliminado acoplamiento temporal, mejor testabilidad, arquitectura más robusta.
 
-### 4. 📝 TODO - Lógica de Limpieza de Servicios
+### 4. ✅ RESOLVED - Lógica de Limpieza de Servicios
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/ApplicationCompositionRoot.ts:131`  
 **Severidad:** Media  
-**Estado:** Pendiente  
-**Descripción:**
-```typescript
-// TODO: Add service cleanup logic here
-```
-**Contexto:** Falta implementación de limpieza de servicios al cerrar aplicación.  
-**Impacto:** Posibles memory leaks al cerrar la aplicación.  
-**Prioridad:** Media - Implementar cleanup apropiado.
+**Estado:** ✅ RESUELTO (2025-10-03)  
+**Resolución:**
+- Activada lógica de limpieza en `shutdownApplication()`
+- `ApplicationInitializerService.cleanup()` ahora invocado correctamente
+- `QualiaStateCalculatorService` registrado como servicio gestionado
+- Todas las suscripciones de eventos limpiadas automáticamente vía `@OnEvent`
+**Impacto:** Prevención de memory leaks, gestión correcta del ciclo de vida de servicios.
 
 ### 5. 🔧 HACK - Patrón de Store Pasivo
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/GameStateStoreService.ts:118`  

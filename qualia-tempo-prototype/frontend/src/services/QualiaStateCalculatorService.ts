@@ -22,7 +22,6 @@ import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCal
 import { QualiaStateCalculatedEvent } from "./contracts/events.contracts";
 import type { PlayerActionEvent } from "./contracts/events.contracts";
 import type { QualiaState } from "../types/contracts";
-import type { ITimerService } from "./interfaces/ITimerService";
 import type { IPerformanceService } from "./interfaces/IPerformanceService";
 import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 import { EVENT_TYPES, PLAYER_ACTIONS } from "./contracts/constants";
@@ -48,11 +47,9 @@ export class QualiaStateCalculatorService
   private currentState!: QualiaState;
   private config: QualiaCalculatorConfig; // QUALIA.CODE: Injected directly via constructor
   private lastUpdateTime: number;
-  private updateIntervalId: number | null = null;
   private _isRunning = false; // Renamed to avoid conflict with method
   private eventBus: IEventBus;
   private logger: ILogger;
-  private timerService: ITimerService;
   private performanceService: IPerformanceService;
 
   // Statistics tracking
@@ -65,7 +62,6 @@ export class QualiaStateCalculatorService
     this.eventBus = params.eventBus;
     this.logger = params.logger;
     this.config = params.config;
-    this.timerService = params.timerService;
     this.performanceService = params.performanceService;
 
     // QUALIA.CODE: Configuration is now injected directly via constructor
@@ -89,6 +85,7 @@ export class QualiaStateCalculatorService
 
   /**
    * Initialize the calculator service and set up event listeners.
+   * QUALIA.CODE v1.1: Pure event-driven architecture - no internal loops
    */
   @logMethod
   @catchError
@@ -96,13 +93,12 @@ export class QualiaStateCalculatorService
     this.logger.info("🚀 [QualiaCalculator] Initializing service...");
     // Activa todas las suscripciones de eventos declaradas con @OnEvent
     initializeEventSubscriptions(this);
-    // TODO: Refactor to listen to GameTick event instead of internal loop
-    this.startUpdateLoop();
-    this.logger.info("🧮 [QualiaCalculator] Service initialized");
+    this.logger.info("🧮 [QualiaCalculator] Service initialized - listening to GameTick events");
   }
 
   /**
    * Clean up the calculator service and remove event listeners.
+   * QUALIA.CODE v1.1: Pure event-driven architecture - no internal loops to stop
    */
   @logMethod
   @catchError
@@ -110,7 +106,6 @@ export class QualiaStateCalculatorService
     this.logger.info("🛑 [QualiaCalculator] Cleaning up service...");
     // Limpia todas las suscripciones de eventos para prevenir memory leaks
     cleanupEventSubscriptions(this);
-    this.stopUpdateLoop();
     this.logger.info("✅ [QualiaCalculator] Service cleaned up");
   }
 
@@ -275,29 +270,15 @@ export class QualiaStateCalculatorService
 
   // ==================== STATE MANAGEMENT ====================
 
-  private startUpdateLoop(): void {
-    this.stopUpdateLoop(); // Ensure no duplicate intervals
-
-    const config = this.config;
-    this.updateIntervalId = this.timerService.setInterval(() => {
-      this.updateStateWithDecay();
-    }, config.updateIntervalMs);
-  }
-
-  private stopUpdateLoop(): void {
-    if (this.updateIntervalId !== null) {
-      this.timerService.clearInterval(this.updateIntervalId);
-      this.updateIntervalId = null;
-    }
-  }
-
   /**
-   * Apply time-based decay to all state values.
+   * Handle GameTick events for time-based state decay.
+   * QUALIA.CODE v1.1: Pure event-driven architecture replaces internal setInterval.
+   * This method is automatically subscribed via @OnEvent decorator.
    */
-  private updateStateWithDecay(): void {
-    const now = this.performanceService.now();
-    const deltaTime = (now - this.lastUpdateTime) / this.config.millisecondsToSecondsConversion; // Convert to seconds
-    this.lastUpdateTime = now;
+  @OnEvent('GameTick')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private _handleGameTick(event: { deltaTime: number }): void {
+    const deltaTime = event.deltaTime; // Already in seconds from GameTick event
 
     // Apply decay to all values
     this.currentState.intensity = this.clamp(

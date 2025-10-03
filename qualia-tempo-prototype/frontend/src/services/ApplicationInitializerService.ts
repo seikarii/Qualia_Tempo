@@ -23,6 +23,7 @@ import type { ISubtitleService } from "./interfaces/ISubtitleService";
 import type { IDebugOrchestratorService } from "./interfaces/IDebugOrchestratorService";
 import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
 import type { IEventBus } from "./interfaces/IEventBus";
+import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
 import { logMethod, catchError, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 
 @injectable()
@@ -47,6 +48,7 @@ export class ApplicationInitializerService
   private readonly subtitleService: ISubtitleService;
   private readonly debugOrchestratorService: IDebugOrchestratorService;
   private readonly browserEventsService: IBrowserEventsService;
+  private readonly qualiaStateCalculatorService: IQualiaStateCalculatorService;
 
   private isStarted = false;
   private readonly managedServices: IBaseService[] = [];
@@ -72,6 +74,7 @@ export class ApplicationInitializerService
     this.subtitleService = params.subtitleService;
     this.debugOrchestratorService = params.debugOrchestratorService;
     this.browserEventsService = params.browserEventsService;
+    this.qualiaStateCalculatorService = params.qualiaStateCalculatorService;
     
     // Configuration is injected and available immediately
     this.logger.info(this.config.messages.serviceConstructed);
@@ -146,7 +149,8 @@ export class ApplicationInitializerService
       this.viewLogicService,
       this.subtitleService,
       this.debugOrchestratorService,
-      this.browserEventsService
+      this.browserEventsService,
+      this.qualiaStateCalculatorService
     ];
 
     newServices.forEach(service => {

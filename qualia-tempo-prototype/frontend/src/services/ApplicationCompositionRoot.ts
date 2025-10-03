@@ -109,6 +109,7 @@ export class ApplicationCompositionRoot {
   /**
    * Shutdown the application gracefully
    * Handles cleanup of services and resources
+   * QUALIA.CODE v1.1: Properly invokes service cleanup to prevent memory leaks
    */
   public async shutdownApplication(): Promise<void> {
     try {
@@ -116,9 +117,9 @@ export class ApplicationCompositionRoot {
       const config = container.get<CompositionRootConfig>(TYPES.CompositionRootConfig);
       logger.info(config.logging.shutdownStartMessage);
       
-      // TODO: Add service cleanup logic here
-      // const appInitializer = container.get<IApplicationInitializerService>(TYPES.IApplicationInitializerService);
-      // await appInitializer.stop();
+      // QUALIA.CODE v1.1: Invoke service cleanup via ApplicationInitializerService
+      const appInitializer = container.get<IApplicationInitializerService>(TYPES.IApplicationInitializerService);
+      appInitializer.cleanup();
       
       logger.info(config.logging.shutdownCompleteMessage);
     } catch (error) {

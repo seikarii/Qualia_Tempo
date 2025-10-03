@@ -196,7 +196,8 @@ const createDefaultAppInitializerParams = (
   viewLogicService: IViewLogicService,
   subtitleService: ISubtitleService,
   debugOrchestratorService: IDebugOrchestratorService,
-  browserEventsService: IBrowserEventsService
+  browserEventsService: IBrowserEventsService,
+  qualiaStateCalculatorService: IQualiaStateCalculatorService
 ): ApplicationInitializerServiceParams => ({ // eslint-disable-line max-params
   config: defaultAppInitializerConfig,
   backendSyncService,
@@ -213,7 +214,8 @@ const createDefaultAppInitializerParams = (
   viewLogicService,
   subtitleService,
   debugOrchestratorService,
-  browserEventsService
+  browserEventsService,
+  qualiaStateCalculatorService
 });
 
 const createDefaultBackendSyncParams = (
@@ -251,13 +253,11 @@ const createDefaultGameControllerParams = (
 const createDefaultQualiaCalculatorParams = (
   eventBus: IEventBus,
   logger: ILogger,
-  timerService: ITimerService,
   performanceService: IPerformanceService
 ): QualiaStateCalculatorServiceParams => ({
   eventBus,
   logger,
   config: defaultQualiaCalculatorConfig,
-  timerService,
   performanceService
 });
 
@@ -383,7 +383,8 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
     mockViewLogicService,
     mockSubtitleService,
     mockDebugOrchestratorService,
-    mockBrowserEventsService
+    mockBrowserEventsService,
+    mockQualiaStateCalculatorService
   );
   const backendSyncParams = createDefaultBackendSyncParams(
     freshMockEventBus,
@@ -403,7 +404,6 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   const qualiaCalculatorParams = createDefaultQualiaCalculatorParams(
     freshMockEventBus,
     mockLogger,
-    mockTimerService,
     mockPerformanceService
   );
   const rhythmicMovementParams = createDefaultRhythmicMovementParams(

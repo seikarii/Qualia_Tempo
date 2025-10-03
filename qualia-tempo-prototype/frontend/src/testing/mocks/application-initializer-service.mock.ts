@@ -15,4 +15,5 @@ import type { IApplicationInitializerService } from '../../services/interfaces/I
  */
 export const mockApplicationInitializerService: IApplicationInitializerService = {
   start: vi.fn().mockResolvedValue(undefined),
+  cleanup: vi.fn(),
 };

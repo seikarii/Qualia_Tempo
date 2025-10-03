@@ -522,7 +522,6 @@ function bindGameplayServiceParams(fullConfig: FullGameConfig): void {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
     config: fullConfig.qualiaCalculator,
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
   });
 
@@ -650,6 +649,7 @@ function bindApplicationInitializerParams(fullConfig: FullGameConfig): void {
     subtitleService: container.get<ISubtitleService>(TYPES.ISubtitleService),
     debugOrchestratorService: container.get<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService),
     browserEventsService: container.get<IBrowserEventsService>(TYPES.IBrowserEventsService),
+    qualiaStateCalculatorService: container.get<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService),
   });
 }
 

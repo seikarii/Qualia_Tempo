@@ -19,6 +19,7 @@ import type { ISubtitleService } from "../interfaces/ISubtitleService";
 import type { IDebugOrchestratorService } from "../interfaces/IDebugOrchestratorService";
 import type { IBrowserEventsService } from "../interfaces/IBrowserEventsService";
 import type { IEventBus } from "../interfaces/IEventBus";
+import type { IQualiaStateCalculatorService } from "../interfaces/IQualiaStateCalculatorService";
 
 // Parameter object for ApplicationInitializerService constructor
 export interface ApplicationInitializerServiceParams {
@@ -38,6 +39,7 @@ export interface ApplicationInitializerServiceParams {
   subtitleService: ISubtitleService;
   debugOrchestratorService: IDebugOrchestratorService;
   browserEventsService: IBrowserEventsService;
+  qualiaStateCalculatorService: IQualiaStateCalculatorService;
 }
 
 // Specific state update interfaces for type safety

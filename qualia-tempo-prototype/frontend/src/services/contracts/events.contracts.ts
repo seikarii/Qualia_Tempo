@@ -177,3 +177,10 @@ export interface ServiceStatusUpdateEvent extends BaseEvent {
 export interface DebugEvent extends BaseEvent {
   data?: Record<string, unknown>;
 }
+
+// QUALIA.CODE v1.1: Game Loop Tick Event for Event-Driven State Updates
+export interface GameTickEvent extends BaseEvent {
+  type: "GameTick";
+  deltaTime: number; // Time elapsed since last tick in seconds
+  totalTime: number; // Total elapsed time since game start in seconds
+}
