@@ -256,7 +256,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Estado:** Planificado  
 **Descripción:**
 ```typescript
-// const flowOpacity = 0.3 + (qualiaState.flow * 0.7); // Reserved for future use
+
 ```
 **Contexto:** Opacidad de flujo comentada para uso futuro.  
 **Impacto:** Efectos visuales preparados.  
