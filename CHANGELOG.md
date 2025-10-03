@@ -2,6 +2,70 @@
 
 ## [Unreleased]
 
+### 1.6 🎯 [2025-10-03] DIRECTIVE 005: OPERATION CRITICAL COVERAGE - PHASE 1
+
+**OBJECTIVE:** Erradicate testing debt in the 5 most critical services of the system through comprehensive unit test coverage following QUALIA.CODE architectural principles.
+
+**COMPLETED IMPLEMENTATION:**
+
+1. **EventBus.test.ts** ✅
+   - **Coverage Areas:**
+     - Subscription and emission flow
+     - Unsubscription and cleanup
+     - Once subscription (single execution)
+     - Error isolation (handler failures don't affect others)
+     - Priority handling (high/normal/low execution order)
+     - Lifecycle management (clear, destroy)
+     - Statistics and monitoring
+   - **Test Count:** 17 comprehensive tests
+   - **Architecture Compliance:** 100% - Uses createTestContainer(), no manual instantiation
+
+2. **ApplicationInitializerService.test.ts** ✅
+   - **Coverage Areas:**
+     - Service orchestration and initialization order
+     - Idempotency (prevents double initialization)
+     - Error propagation from dependent services
+     - IBaseService lifecycle (initialize/cleanup calls)
+     - Service dependency verification
+   - **Test Count:** 11 critical tests
+   - **Architecture Compliance:** 100% - Proper IoC container usage
+
+3. **BackendSyncService.test.ts** ✅
+   - **Coverage Areas:**
+     - Event reaction (QualiaStateCalculated handling)
+     - Throttling logic (immediate + delayed requests)
+     - Health check mechanism
+   - **Test Count:** 6 critical tests
+   - **Architecture Compliance:** 100% - Uses fake timers correctly
+
+4. **GameControllerService.test.ts** ✅
+   - **Coverage Areas:**
+     - State machine transitions (StartGame, PauseGame)
+     - Scoring and combo logic (HitNote)
+     - Damage and game over logic (MissNote)
+     - Audio service dependency coordination
+   - **Test Count:** 7 critical tests
+   - **Architecture Compliance:** 100% - Verifies business logic without implementation details
+
+5. **QualiaStateCalculatorService.test.ts** ✅
+   - **Coverage Areas:**
+     - Calculation per action type (HitNote, MissNote, Dash)
+     - Time decay mechanism
+     - Value clamping (min/max boundaries)
+     - Transcendence activation logic
+   - **Test Count:** 8 critical tests
+   - **Architecture Compliance:** 100% - Tests pure calculation logic in isolation
+
+**TOTAL TEST COVERAGE ADDED:** 49 comprehensive unit tests across 5 critical services
+
+**ARCHITECTURAL COMPLIANCE:**
+- ✅ All tests use createTestContainer() for isolation
+- ✅ Zero manual service instantiation
+- ✅ High-fidelity mocks used as oracles
+- ✅ Tests verify business logic, not implementation
+- ✅ Proper async/await handling
+- ✅ Fake timers for time-dependent tests
+
 ### 1.5 🎯 [2025-10-03] DIRECTIVE 004: High-Fidelity Mock Infrastructure Completion
 
 **OBJECTIVE:** Achieve 100% type purity in mock infrastructure by correcting all TypeScript errors identified in DIRECTIVE 003 execution report, establishing a pre-condition for scalable unit testing.
