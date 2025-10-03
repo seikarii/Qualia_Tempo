@@ -4,11 +4,15 @@ QualiaTempo/
 ├── .github/                       # Configuraciones de GitHub (workflows, issues, etc.)
 ├── .gitignore                     # Archivo de ignorados de Git
 ├── .kilocodemodes                 # Configuraciones de Kilocode
-├── .venv/                         # Entorno virtual de Python
+├── .mypy_cache/                   # Cache de MyPy
+├── .ruff_cache/                   # Cache de Ruff
+├── .vscode/                       # Configuraciones de VS Code
+├── =2.8.0                         # Archivo de versión
+├── CHANGELOG.md                   # Registro de cambios
+├── ERROR_LOG.md                   # Log de errores
 ├── README.md                      # Documentación principal del proyecto
 ├── TODO.md                        # Lista de tareas pendientes
 ├── debug-full-system.sh           # Script de depuración del sistema completo
-├── debuglogs/                     # Logs de depuración
 ├── docs/                          # Documentación general del proyecto
 │   ├── GDD.md                     # Game Design Document
 │   ├── Performance.txt            # Notas de rendimiento
@@ -50,9 +54,18 @@ QualiaTempo/
 │   │   ├── __init__.py
 │   │   ├── __pycache__/           # Bytecode Python
 │   │   ├── api/                   # Endpoints de la API, modelos de datos y rutas
+│   │   │   ├── README.md
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__/
+│   │   │   ├── models.py
+│   │   │   └── routes.py
 │   │   ├── backend.log            # Logs del backend
 │   │   ├── config/                # Configuraciones del backend
 │   │   ├── engine/                # Motor principal del backend (lógica de partículas, etc.)
+│   │   ├── handlers/              # Manejadores del backend
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__/
+│   │   │   └── engine_handlers.py
 │   │   ├── htmlcov/               # Cobertura HTML del backend
 │   │   ├── main.py                # Punto de entrada del backend
 │   │   ├── pytest.ini             # Configuración de pytest
@@ -64,21 +77,12 @@ QualiaTempo/
 │   ├── combat_data/               # Archivos de datos para escenarios de combate (JSONs)
 │   ├── frontend/                  # Código de la aplicación cliente (TypeScript/React)
 │   │   ├── .eslintrc.cjs           # Configuración ESLint CJS
-│   │   ├── .eslintrc.json         # Configuración ESLint JSON
 │   │   ├── README.md              # README del frontend
-│   │   ├── add-vitest-imports.sh  # Script para agregar imports de Vitest
-│   │   ├── browser-test-failure.json # Resultados de pruebas de navegador fallidas
-│   │   ├── browser-test-report-game-view.json # Reporte de pruebas de vista de juego
-│   │   ├── browser-test-report-main-menu.json # Reporte de pruebas de menú principal
-│   │   ├── browser-test.js        # Pruebas de navegador
-│   │   ├── config/                # Configuraciones del frontend
+│   │   ├── coverage/              # Reportes de cobertura
 │   │   ├── debug-console.js       # Script de depuración de consola
-│   │   ├── debug-page-content-game-view.html # Contenido de depuración de vista de juego
-│   │   ├── debug-page-content-main-menu.html # Contenido de depuración de menú principal
-│   │   ├── debug-screenshot-game-view.png # Captura de pantalla de depuración
-│   │   ├── debug-screenshot-main-menu.png # Captura de pantalla de menú
 │   │   ├── dist/                  # Archivos compilados/distribuidos
 │   │   ├── e2e-test.js            # Pruebas end-to-end
+│   │   ├── fix-centering-test.js  # Script de prueba de centrado
 │   │   ├── index.html             # HTML principal
 │   │   ├── jest.config.js         # Configuración de Jest
 │   │   ├── main.js                # Punto de entrada JavaScript
@@ -94,49 +98,69 @@ QualiaTempo/
 │   │   │   ├── config/            # Archivos de configuración del juego para el frontend
 │   │   │   ├── fonts/             # Fuentes
 │   │   │   └── shaders/           # Shaders
+│   │   ├── race-condition-test.js # Script de prueba de condición de carrera
 │   │   ├── src/                   # Código fuente del frontend
+│   │   │   ├── App.tsx            # Componente principal de la aplicación
 │   │   │   ├── assets/            # Assets
 │   │   │   ├── audio/             # Audio
-│   │   │   ├── components/        # Componentes reutilizables de la interfaz de usuario (HUD, etc.)
+│   │   │   ├── components/        # Componentes reutilizables de la interfaz de usuario
+│   │   │   │   ├── Atmosphere.tsx
+│   │   │   │   ├── FrontendRenderer.tsx
+│   │   │   │   ├── QualiaMainMenu.tsx
+│   │   │   │   ├── Subtitles.tsx
+│   │   │   │   ├── debug/
+│   │   │   │   ├── game/
+│   │   │   │   └── layout/
+│   │   │   ├── hooks/             # Hooks de React
+│   │   │   │   ├── README.md
+│   │   │   │   ├── index.ts
+│   │   │   │   └── useServiceHealth.ts
+│   │   │   ├── index.css          # Estilos CSS principales
+│   │   │   ├── index.tsx          # Punto de entrada React
+│   │   │   ├── main.ts            # Punto de entrada TypeScript
+│   │   │   ├── providers.ts       # Proveedores de contexto
 │   │   │   ├── schemas/           # Esquemas
-│   │   │   ├── services/          # Servicios (IoC con InversifyJS: EventBus, QualiaService, etc.)
-│   │   │   │   ├── ApplicationCompositionRoot.ts        # Raíz de composición de aplicación
-│   │   │   │   ├── ApplicationInitializerService.ts     # Inicializador de aplicación
-│   │   │   │   ├── AudioService.ts                       # Servicio de audio
-│   │   │   │   ├── BackendSyncService.ts                # Sincronización con backend
-│   │   │   │   ├── BrowserEventsService.ts              # Eventos del navegador
-│   │   │   │   ├── BrowserWebSocketFactory.ts           # Fábrica de WebSockets
-│   │   │   │   ├── ConfigurationService.ts              # Servicio de configuración
-│   │   │   │   ├── CoordinateSystemService.ts           # Sistema de coordenadas
-│   │   │   │   ├── DebugOrchestratorService.ts          # Orquestador de depuración
-│   │   │   │   ├── DebugService.ts                      # Servicio de depuración
-│   │   │   │   ├── ErrorReportingService.ts             # Reporte de errores
-│   │   │   │   ├── EventBus.ts                          # Bus de eventos
-│   │   │   │   ├── FrontendRenderingService.ts          # Renderizado frontend
-│   │   │   │   ├── GameControllerService.ts             # Controlador del juego
-│   │   │   │   ├── GameInputControllerService.ts        # Controlador de entrada
-│   │   │   │   ├── GameStateStore.ts                    # Store de estado del juego
-│   │   │   │   ├── GameStateStoreService.ts             # Servicio del store de estado
-│   │   │   │   ├── GameplayMechanicsService.ts          # Mecánicas de juego
-│   │   │   │   ├── HttpService.ts                       # Servicio HTTP
-│   │   │   │   ├── InputStateService.ts                 # Servicio de estado de entrada
-│   │   │   │   ├── Logger.ts                            # Logger
-│   │   │   │   ├── NotificationService.ts               # Servicio de notificaciones
-│   │   │   │   ├── PerformanceService.ts                # Servicio de rendimiento
-│   │   │   │   ├── PostProcessingService.ts             # Servicio de post-procesamiento
-│   │   │   │   ├── QualiaStateCalculatorService.ts      # Calculador de estado qualia
-│   │   │   │   ├── RhythmicMovementController.ts        # Controlador de movimiento rítmico
-│   │   │   │   ├── ShaderIntrospectionService.ts        # Servicio de introspección de shaders
-│   │   │   │   ├── ShaderLoaderService.ts               # Servicio de carga de shaders
-│   │   │   │   ├── StateStreamingService.ts             # Servicio de streaming de estado
-│   │   │   │   ├── SubtitleService.ts                   # Servicio de subtítulos
-│   │   │   │   ├── TimerService.ts                      # Servicio de temporizador
-│   │   │   │   ├── ToneFactoryService.ts               # Servicio de fábrica de tonos
-│   │   │   │   ├── ViewLogicService.ts                  # Servicio de lógica de vista
-│   │   │   │   ├── WebAudioAPIService.ts                # Servicio de Web Audio API
-│   │   │   │   ├── WebSocketService.ts                  # Servicio de WebSocket
-│   │   │   │   ├── __tests__/                           # Pruebas de servicios
-│   │   │   │   ├── config-validators/                   # Validadores de configuración
+│   │   │   ├── services/          # Servicios (IoC con InversifyJS)
+│   │   │   │   ├── ApplicationCompositionRoot.ts
+│   │   │   │   ├── ApplicationInitializerService.ts
+│   │   │   │   ├── AudioService.ts
+│   │   │   │   ├── BackendSyncService.ts
+│   │   │   │   ├── BrowserAudioContextFactory.ts
+│   │   │   │   ├── BrowserEventsService.ts
+│   │   │   │   ├── BrowserWebSocketFactory.ts
+│   │   │   │   ├── ColorService.ts
+│   │   │   │   ├── CompositionRoot.provider.ts
+│   │   │   │   ├── ConfigurationService.ts
+│   │   │   │   ├── CoordinateSystemService.ts
+│   │   │   │   ├── DebugOrchestratorService.ts
+│   │   │   │   ├── DebugService.ts
+│   │   │   │   ├── ErrorReportingService.ts
+│   │   │   │   ├── EventBus.ts
+│   │   │   │   ├── FrontendRenderingService.ts
+│   │   │   │   ├── GameControllerService.ts
+│   │   │   │   ├── GameInputControllerService.ts
+│   │   │   │   ├── GameStateStore.ts
+│   │   │   │   ├── GameStateStoreService.ts
+│   │   │   │   ├── GameplayMechanicsService.ts
+│   │   │   │   ├── HttpService.ts
+│   │   │   │   ├── InputStateService.ts
+│   │   │   │   ├── Logger.ts
+│   │   │   │   ├── NotificationService.ts
+│   │   │   │   ├── PerformanceService.ts
+│   │   │   │   ├── PostProcessingService.ts
+│   │   │   │   ├── QualiaStateCalculatorService.ts
+│   │   │   │   ├── RhythmicMovementController.ts
+│   │   │   │   ├── ShaderIntrospectionService.ts
+│   │   │   │   ├── ShaderLoaderService.ts
+│   │   │   │   ├── StateStreamingService.ts
+│   │   │   │   ├── SubtitleService.ts
+│   │   │   │   ├── TimerService.ts
+│   │   │   │   ├── ToneFactoryService.ts
+│   │   │   │   ├── ViewLogicService.ts
+│   │   │   │   ├── WebAudioAPIService.ts
+│   │   │   │   ├── WebSocketService.ts
+│   │   │   │   ├── __tests__/
+│   │   │   │   ├── config-validators/
 │   │   │   │   │   ├── index.ts
 │   │   │   │   │   ├── validateAudioService.validator.ts
 │   │   │   │   │   ├── validateBackendSync.validator.ts
@@ -148,7 +172,8 @@ QualiaTempo/
 │   │   │   │   │   ├── validateNotificationService.validator.ts
 │   │   │   │   │   ├── validateQualiaCalculator.validator.ts
 │   │   │   │   │   └── validateRhythmicMovement.validator.ts
-│   │   │   │   ├── contracts/                           # Contratos de servicios
+│   │   │   │   ├── constants.ts
+│   │   │   │   ├── contracts/
 │   │   │   │   │   ├── IApplicationCompositionRoot.contracts.ts
 │   │   │   │   │   ├── IApplicationInitializerService.contracts.ts
 │   │   │   │   │   ├── IAudioService.contracts.ts
@@ -177,21 +202,24 @@ QualiaTempo/
 │   │   │   │   │   ├── IViewLogicService.contracts.ts
 │   │   │   │   │   ├── IWebSocketService.contracts.ts
 │   │   │   │   │   ├── constants.ts
-│   │   │   │   │   └── events.contracts.ts
-│   │   │   │   ├── hooks.ts                           # Hooks de React para servicios
-│   │   │   │   ├── index.ts                           # Exportaciones de servicios
-│   │   │   │   ├── interfaces/                        # Interfaces de servicios
+│   │   │   │   └── events.contracts.ts
+│   │   │   │   ├── hooks.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── interfaces/
 │   │   │   │   │   ├── IApplicationInitializerService.ts
+│   │   │   │   │   ├── IAudioContextFactory.ts
 │   │   │   │   │   ├── IAudioService.ts
 │   │   │   │   │   ├── IBackendSyncService.ts
 │   │   │   │   │   ├── IBaseService.ts
 │   │   │   │   │   ├── IBrowserEventsService.ts
+│   │   │   │   │   ├── IColorService.ts
 │   │   │   │   │   ├── IConfigurationService.ts
 │   │   │   │   │   ├── ICoordinateSystemService.ts
 │   │   │   │   │   ├── IDebugOrchestratorService.ts
 │   │   │   │   │   ├── IDebugService.ts
 │   │   │   │   │   ├── IErrorReportingService.ts
 │   │   │   │   │   ├── IEventBus.ts
+│   │   │   │   │   ├── IEventTransformer.ts
 │   │   │   │   │   ├── IFrontendRenderingService.ts
 │   │   │   │   │   ├── IGameControllerService.ts
 │   │   │   │   │   ├── IGameInputControllerService.ts
@@ -201,10 +229,12 @@ QualiaTempo/
 │   │   │   │   │   ├── IHttpService.ts
 │   │   │   │   │   ├── IInputStateService.ts
 │   │   │   │   ├── ILogger.ts
+│   │   │   │   ├── IMessageAdapter.ts
 │   │   │   │   ├── INotificationService.ts
 │   │   │   │   ├── IPerformanceProvider.ts
 │   │   │   │   ├── IPerformanceService.ts
 │   │   │   │   ├── IPostProcessingService.ts
+│   │   │   │   ├── IProtocolAdapter.contracts.ts
 │   │   │   │   ├── IQualiaStateCalculatorService.ts
 │   │   │   │   ├── IRhythmicMovementController.ts
 │   │   │   │   ├── IShaderIntrospectionService.ts
@@ -218,41 +248,43 @@ QualiaTempo/
 │   │   │   │   ├── IWebAudioAPIService.ts
 │   │   │   │   ├── IWebSocketFactory.ts
 │   │   │   │   └── IWebSocketService.ts
-│   │   │   │   ├── inversify.config.ts               # Configuración de InversifyJS
-│   │   │   │   ├── inversify.container.ts             # Contenedor IoC
-│   │   │   │   ├── inversify.types.ts                 # Tipos de InversifyJS
-│   │   │   │   ├── postprocessing/                    # Post-procesamiento
+│   │   │   │   ├── inversify.config.ts
+│   │   │   │   ├── inversify.container.ts
+│   │   │   │   ├── inversify.types.ts
+│   │   │   │   ├── postprocessing/
 │   │   │   │   │   └── GBufferPass.ts
-│   │   │   │   ├── protocol/                          # Protocolo
+│   │   │   │   ├── protocol/
 │   │   │   │   │   ├── IEventTransformer.ts
 │   │   │   │   │   ├── IMessageAdapter.ts
-│   │   │   │   │   └── adapters/                      # Adaptadores de protocolo
+│   │   │   │   │   └── adapters/
 │   │   │   │   │       ├── KeyToDirectionAdapter.ts
 │   │   │   │   │       ├── RawToParticleEventAdapter.ts
 │   │   │   │   │       └── __tests__/
-│   │   │   │   ├── providers/                         # Proveedores
+│   │   │   │   ├── providers/
 │   │   │   │   │   ├── BrowserTimerProvider.ts
 │   │   │   │   │   └── PerformanceProvider.ts
-│   │   │   │   ├── utils/                             # Utilidades de servicios
+│   │   │   │   ├── utils/
 │   │   │   │   │   ├── NotificationQueue.ts
 │   │   │   │   │   └── ThrottlingManager.ts
-│   │   │   │   ├── CompositionRoot.provider.ts        # Proveedor de CompositionRoot
-│   │   │   │   ├── README.md                           # README de servicios
-│   │   │   │   ├── SERVICE_STATUS_EVENT_GUIDE.md      # Guía de eventos de estado de servicio
-│   │   │   │   ├── ServiceContext.tsx                  # Contexto de React para servicios
-│   │   │   │   └── ToneFactoryService.ts               # Servicio de fábrica de tonos
-│   │   │   ├── state/             # Manejo del estado global (Zustand stores)
-│   │   │   │   └── __tests__/     # Pruebas de estado
-│   │   │   ├── testing/           # Utilidades de testing
-│   │   │   │   └── mocks/         # Mocks
-│   │   │   ├── types/             # Definiciones de tipos TypeScript
-│   │   │   └── utils/             # Funciones y utilidades auxiliares
-│   │   ├── tailwind.config.js     # Configuración Tailwind CSS
-│   │   ├── tsconfig.json          # Configuración TypeScript
-│   │   ├── vite.config.ts         # Configuración Vite
-│   │   └── vite.log               # Logs de Vite
-│   ├── htmlcov/                   # Cobertura HTML
-│   └── htmlcov_backend/           # Cobertura HTML del backend
+│   │   │   │   ├── CompositionRoot.provider.ts
+│   │   │   │   ├── README.md
+│   │   │   │   ├── SERVICE_STATUS_EVENT_GUIDE.md
+│   │   │   │   ├── ServiceContext.tsx
+│   │   │   │   └── ToneFactoryService.ts
+│   │   │   ├── state/
+│   │   │   │   └── __tests__/
+│   │   │   ├── testing/
+│   │   │   │   └── mocks/
+│   │   │   ├── types/
+│   │   │   └── utils/
+│   │   ├── tailwind.config.js
+│   │   ├── test-results/
+│   │   ├── tests/
+│   │   ├── tsconfig.json
+│   │   ├── vite.config.ts
+│   │   └── vite.log
+│   ├── htmlcov/
+│   └── htmlcov_backend/
 ├── requirements.txt               # Dependencias Python generales
 ├── ruff-qualia-code/              # Configuraciones Ruff personalizadas
 ├── scripts/                       # Scripts de automatización
@@ -273,8 +305,10 @@ QualiaTempo/
 | **ApplicationInitializerService** | `ApplicationInitializerService.ts` | Inicializador de aplicación |
 | **AudioService** | `AudioService.ts` | Servicio de audio |
 | **BackendSyncService** | `BackendSyncService.ts` | Sincronización con backend |
+| **BrowserAudioContextFactory** | `BrowserAudioContextFactory.ts` | Fábrica de contexto de audio del navegador |
 | **BrowserEventsService** | `BrowserEventsService.ts` | Eventos del navegador |
 | **BrowserWebSocketFactory** | `BrowserWebSocketFactory.ts` | Fábrica de WebSockets |
+| **ColorService** | `ColorService.ts` | Servicio de colores |
 | **ConfigurationService** | `ConfigurationService.ts` | Servicio de configuración |
 | **CoordinateSystemService** | `CoordinateSystemService.ts` | Sistema de coordenadas |
 | **DebugOrchestratorService** | `DebugOrchestratorService.ts` | Orquestador de depuración |
@@ -309,16 +343,19 @@ QualiaTempo/
 | Interfaz | Archivo | Descripción |
 |----------|---------|-------------|
 | **IApplicationInitializerService** | `IApplicationInitializerService.ts` | Interfaz del inicializador de aplicación |
+| **IAudioContextFactory** | `IAudioContextFactory.ts` | Interfaz de la fábrica de contexto de audio |
 | **IAudioService** | `IAudioService.ts` | Interfaz del servicio de audio |
 | **IBackendSyncService** | `IBackendSyncService.ts` | Interfaz de sincronización con backend |
 | **IBaseService** | `IBaseService.ts` | Interfaz base para servicios |
 | **IBrowserEventsService** | `IBrowserEventsService.ts` | Interfaz de eventos del navegador |
+| **IColorService** | `IColorService.ts` | Interfaz del servicio de colores |
 | **IConfigurationService** | `IConfigurationService.ts` | Interfaz del servicio de configuración |
 | **ICoordinateSystemService** | `ICoordinateSystemService.ts` | Interfaz del sistema de coordenadas |
 | **IDebugOrchestratorService** | `IDebugOrchestratorService.ts` | Interfaz del orquestador de depuración |
 | **IDebugService** | `IDebugService.ts` | Interfaz del servicio de depuración |
 | **IErrorReportingService** | `IErrorReportingService.ts` | Interfaz del reporte de errores |
 | **IEventBus** | `IEventBus.ts` | Interfaz del bus de eventos |
+| **IEventTransformer** | `IEventTransformer.ts` | Interfaz del transformador de eventos |
 | **IFrontendRenderingService** | `IFrontendRenderingService.ts` | Interfaz del renderizado frontend |
 | **IGameControllerService** | `IGameControllerService.ts` | Interfaz del controlador del juego |
 | **IGameInputControllerService** | `IGameInputControllerService.ts` | Interfaz del controlador de entrada |
@@ -328,6 +365,7 @@ QualiaTempo/
 | **IHttpService** | `IHttpService.ts` | Interfaz del servicio HTTP |
 | **IInputStateService** | `IInputStateService.ts` | Interfaz del servicio de estado de entrada |
 | **ILogger** | `ILogger.ts` | Interfaz del logger |
+| **IMessageAdapter** | `IMessageAdapter.ts` | Interfaz del adaptador de mensajes |
 | **INotificationService** | `INotificationService.ts` | Interfaz del servicio de notificaciones |
 | **IPerformanceProvider** | `IPerformanceProvider.ts` | Interfaz del proveedor de rendimiento |
 | **IPerformanceService** | `IPerformanceService.ts` | Interfaz del servicio de rendimiento |
@@ -414,9 +452,9 @@ QualiaTempo/
 
 ---
 
-**Última actualización:** 2 de octubre de 2025
-**Total de servicios:** 32
-**Total de interfaces:** 32
+**Última actualización:** 3 de octubre de 2025
+**Total de servicios:** 34
+**Total de interfaces:** 35
 **Total de contratos:** 29
 **Total de validadores:** 10
 **Arquitectura:** QUALIA.CODE v1.1 - IoC con InversifyJS
