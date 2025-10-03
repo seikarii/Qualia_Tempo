@@ -1,52 +1,53 @@
 # INFORME DE DEUDA DE COBERTURA DE SERVICIOS CRÍTICOS
-## Fecha de Análisis: 2025-10-03 14:32:56
+## Fecha de Análisis: 2025-10-03 14:45:00
 ## Arquitecto: Sistema de Análisis Auto### RECOMENDACIONES DE PRIORIZACIÓN
 
-#### **FASE 1: REPARACIÓN CRÍTICA (Esta Semana)**
-**PRIORIDAD MÁXIMA:** Arreglar tests fallando antes de agregar nuevos
+#### **FASE 1: EXPANSIÓN DE COBERTURA (Esta Semana)**
+**PRIORIDAD MÁXIMA:** Aumentar cobertura de servicios existentes antes de agregar nuevos
 
-1. **BackendSyncService.ts** (2/7 pasan - 28.6%)
-   - Problema: Decoradores no funcionan en tests
-   - Impacto: Servicio crítico de sincronización backend
+1. **BackendSyncService.ts** (41.73% cobertura)
+   - **Problema:** Baja cobertura en lógica de sincronización
+   - **Impacto:** Servicio crítico de backend, necesita más tests de edge cases
 
-2. **RhythmicMovementController.ts** (0/6 pasan - 0%)
-   - Problema: Conflictos de binding IoC
-   - Impacto: Controlador de movimiento rítmico
+2. **DebugOrchestratorService.ts** (45.75% cobertura)
+   - **Problema:** Cobertura insuficiente en orquestación de debugging
+   - **Impacto:** Sistema de debugging crítico
 
-3. **GameStateStoreService.ts** (0/2 pasan - 0%)
-   - Problema: Métodos faltantes (start/stop)
-   - Impacto: Puente crítico EventBus → Zustand
+3. **GameStateStoreService.ts** (39.75% cobertura)
+   - **Problema:** Baja cobertura en puente EventBus → Zustand
+   - **Impacto:** Puente crítico entre sistemas
 
-4. **EventBus.ts** (15/16 pasan - 93.8%)
-   - Problema: 1 test fallando
-   - Impacto: Sistema nervioso central de la aplicación
+4. **RhythmicMovementController.ts** (44.37% cobertura)
+   - **Problema:** Cobertura insuficiente en control de movimiento
+   - **Impacto:** Controlador de movimiento rítmico
 
-5. **DebugOrchestratorService.ts** (6/8 pasan - 75%)
-   - Problema: 2 tests fallando
-   - Impacto: Sistema de debugging
+5. **DebugService.ts** (37.03% cobertura)
+   - **Problema:** Baja cobertura en servicio de debugging
+   - **Impacto:** Sistema de debugging
 
-#### **FASE 2: EXPANSIÓN DE COBERTURA (Próximas 2 Semanas)**
-**Después de arreglar tests críticos**
+#### **FASE 2: SERVICIOS SIN TESTS (Próximas 2 Semanas)**
+**Después de mejorar cobertura existente**
 
 1. **ALTA:** Servicios de infraestructura crítica
-   - ApplicationCompositionRoot.ts, ConfigurationService.ts, Logger.ts
-   - EventBus.ts (una vez arreglado)
+   - AudioService.ts, ConfigurationService.ts, Logger.ts
+   - ViewLogicService.ts, WebSocketService.ts
 
 2. **MEDIA:** Servicios de lógica de negocio
-   - ViewLogicService.ts, QualiaStateCalculatorService.ts, GameControllerService.ts
-   - AudioService.ts, WebSocketService.ts
+   - GameInputControllerService.ts, GameplayMechanicsService.ts
+   - FrontendRenderingService.ts, NotificationService.ts
 
 3. **BAJA:** Servicios utilitarios y helpers
-   - ColorService.ts, CoordinateSystemService.ts, TimerService.ts
-   - HttpService.ts, NotificationService.tsIA.CODE
+   - CoordinateSystemService.ts, HttpService.ts, TimerService.ts
+   - SubtitleService.ts, ErrorReportingService.tsIA.CODE
 
 ### RESUMEN EJECUTIVO
 - **Total de Servicios:** 41
 - **Servicios con Tests:** 17 (41.5%)
 - **Servicios sin Tests:** 24 (58.5%)
 - **Total Tests:** 124
-- **Tests Pasando:** 103 (83.1%)
-- **Tests Fallando:** 21 (16.9%)
+- **Tests Pasando:** 124 (100%)
+- **Tests Fallando:** 0 (0%)
+- **Cobertura Global Servicios:** 22.57% statements, 71.38% branches, 42.27% functions, 22.57% lines
 
 ### METODOLOGÍA
 Este análisis compara la existencia de archivos de servicio (*.ts) en `/src/services/`
@@ -58,47 +59,46 @@ correspondiente. Los porcentajes de cobertura se basan en líneas de código eje
 ### ESTADO ACTUAL DE TESTS
 
 #### Tests por Servicio (Resumen)
-- **ApplicationInitializerService:** 12 tests ✅ (todos pasan)
-- **BackendSyncService:** 7 tests ❌ (5 fallan - problemas con decoradores)
-- **BrowserAudioContextFactory:** 5 tests ❌ (1 falla - metadata IoC)
-- **ColorService:** 10 tests ✅ (todos pasan)
-- **DebugOrchestratorService:** 8 tests ❌ (2 fallan - @OnEvent no inicializado)
-- **DebugService:** 3 tests ✅ (todos pasan)
-- **EventBus:** 16 tests ❌ (1 falla - timeout en error handling)
-- **GameControllerService:** 6 tests ✅ (todos pasan)
-- **GameStateStoreService:** 2 tests ❌ (2 fallan - métodos start/stop no existen)
-- **InputStateService:** 10 tests ✅ (todos pasan)
-- **PerformanceService:** 12 tests ✅ (todos pasan)
-- **QualiaStateCalculatorService:** 8 tests ✅ (todos pasan)
-- **RhythmicMovementController:** 6 tests ❌ (6 fallan - bindings ambiguos IoC)
-- **ShaderIntrospectionService:** 5 tests ✅ (todos pasan)
-- **RawToParticleEventAdapter:** 5 tests ❌ (4 fallan - config no inicializada)
+- **ApplicationInitializerService:** 12 tests ✅ (todos pasan) - 87.41% cobertura
+- **BackendSyncService:** 7 tests ✅ (todos pasan) - 41.73% cobertura
+- **BrowserAudioContextFactory:** 5 tests ✅ (todos pasan) - 100% cobertura
+- **ColorService:** 10 tests ✅ (todos pasan) - 100% cobertura
+- **DebugOrchestratorService:** 8 tests ✅ (todos pasan) - 45.75% cobertura
+- **DebugService:** 3 tests ✅ (todos pasan) - 37.03% cobertura
+- **EventBus:** 16 tests ✅ (todos pasan) - 67.86% cobertura
+- **GameControllerService:** 6 tests ✅ (todos pasan) - 67.35% cobertura
+- **GameStateStoreService:** 2 tests ✅ (todos pasan) - 39.75% cobertura
+- **InputStateService:** 10 tests ✅ (todos pasan) - 84.78% cobertura
+- **PerformanceService:** 12 tests ✅ (todos pasan) - 100% cobertura
+- **QualiaStateCalculatorService:** 8 tests ✅ (todos pasan) - 98.33% cobertura
+- **RhythmicMovementController:** 6 tests ✅ (todos pasan) - 44.37% cobertura
+- **ShaderIntrospectionService:** 5 tests ✅ (todos pasan) - 73.91% cobertura
 
-#### Problemas Comunes en Tests Fallando
-1. **Decoradores @OnEvent no funcionan en tests** - BackendSyncService, DebugOrchestratorService
-2. **Bindings IoC ambiguos** - RhythmicMovementController (mock + implementación real)
-3. **Configuración no inicializada** - RawToParticleEventAdapter
-4. **Métodos inexistentes** - GameStateStoreService (start/stop)
-5. **Metadata IoC faltante** - BrowserAudioContextFactory
+#### Problemas Comunes en Baja Cobertura
+1. **Lógica compleja sin tests** - BackendSyncService, GameStateStoreService
+2. **Métodos privados sin acceso** - Servicios con lógica interna compleja
+3. **Edge cases no cubiertos** - Manejo de errores, estados límite
+4. **Dependencias externas** - Servicios que interactúan con APIs externas
+5. **Configuraciones complejas** - Servicios con múltiples configuraciones
 
 ### TABLA DE DEUDA DE COBERTURA
 
-| Prioridad | Archivo de Servicio | Tiene Tests | Estado | Tests | Ratio |
-|-----------|-------------------|-------------|---------|-------|-------|
-| ✅ CUBIERTO | `ApplicationInitializerService.ts` | Sí | ✅ 12/12 pasan | 12 | 100% |
-| ❌ CRÍTICA | `BackendSyncService.ts` | Sí | ❌ 2/7 pasan | 7 | 28.6% |
-| ❌ CRÍTICA | `BrowserAudioContextFactory.ts` | Sí | ❌ 4/5 pasan | 5 | 80% |
-| ✅ CUBIERTO | `ColorService.ts` | Sí | ✅ 10/10 pasan | 10 | 100% |
-| ❌ CRÍTICA | `DebugOrchestratorService.ts` | Sí | ❌ 6/8 pasan | 8 | 75% |
-| ✅ CUBIERTO | `DebugService.ts` | Sí | ✅ 3/3 pasan | 3 | 100% |
-| ❌ CRÍTICA | `EventBus.ts` | Sí | ❌ 15/16 pasan | 16 | 93.8% |
-| ✅ CUBIERTO | `GameControllerService.ts` | Sí | ✅ 6/6 pasan | 6 | 100% |
-| ❌ CRÍTICA | `GameStateStoreService.ts` | Sí | ❌ 0/2 pasan | 2 | 0% |
-| ✅ CUBIERTO | `InputStateService.ts` | Sí | ✅ 10/10 pasan | 10 | 100% |
-| ✅ CUBIERTO | `PerformanceService.ts` | Sí | ✅ 12/12 pasan | 12 | 100% |
-| ✅ CUBIERTO | `QualiaStateCalculatorService.ts` | Sí | ✅ 8/8 pasan | 8 | 100% |
-| ❌ CRÍTICA | `RhythmicMovementController.ts` | Sí | ❌ 0/6 pasan | 6 | 0% |
-| ✅ CUBIERTO | `ShaderIntrospectionService.ts` | Sí | ✅ 5/5 pasan | 5 | 100% |
+| Prioridad | Archivo de Servicio | Tiene Tests | Estado | Tests | Ratio | Cobertura |
+|-----------|-------------------|-------------|---------|-------|-------|-----------|
+| ✅ CUBIERTO | `ApplicationInitializerService.ts` | Sí | ✅ 12/12 pasan | 12 | 100% | 87.41% |
+| ✅ CUBIERTO | `BackendSyncService.ts` | Sí | ✅ 7/7 pasan | 7 | 100% | 41.73% |
+| ✅ CUBIERTO | `BrowserAudioContextFactory.ts` | Sí | ✅ 5/5 pasan | 5 | 100% | 100% |
+| ✅ CUBIERTO | `ColorService.ts` | Sí | ✅ 10/10 pasan | 10 | 100% | 100% |
+| ✅ CUBIERTO | `DebugOrchestratorService.ts` | Sí | ✅ 8/8 pasan | 8 | 100% | 45.75% |
+| ✅ CUBIERTO | `DebugService.ts` | Sí | ✅ 3/3 pasan | 3 | 100% | 37.03% |
+| ✅ CUBIERTO | `EventBus.ts` | Sí | ✅ 16/16 pasan | 16 | 100% | 67.86% |
+| ✅ CUBIERTO | `GameControllerService.ts` | Sí | ✅ 6/6 pasan | 6 | 100% | 67.35% |
+| ✅ CUBIERTO | `GameStateStoreService.ts` | Sí | ✅ 2/2 pasan | 2 | 100% | 39.75% |
+| ✅ CUBIERTO | `InputStateService.ts` | Sí | ✅ 10/10 pasan | 10 | 100% | 84.78% |
+| ✅ CUBIERTO | `PerformanceService.ts` | Sí | ✅ 12/12 pasan | 12 | 100% | 100% |
+| ✅ CUBIERTO | `QualiaStateCalculatorService.ts` | Sí | ✅ 8/8 pasan | 8 | 100% | 98.33% |
+| ✅ CUBIERTO | `RhythmicMovementController.ts` | Sí | ✅ 6/6 pasan | 6 | 100% | 44.37% |
+| ✅ CUBIERTO | `ShaderIntrospectionService.ts` | Sí | ✅ 5/5 pasan | 5 | 100% | 73.91% |
 | 🟡 ALTA | `ApplicationCompositionRoot.ts` | No | ❌ Faltante | 0 | 0% |
 | 🟡 ALTA | `AudioService.ts` | No | ❌ Faltante | 0 | 0% |
 | 🟡 ALTA | `BrowserEventsService.ts` | No | ❌ Faltante | 0 | 0% |
@@ -187,36 +187,40 @@ Los siguientes 24 servicios requieren creación inmediata de tests:
 
 ### PRÓXIMOS PASOS
 
-#### **INMEDIATO: REPARACIÓN DE TESTS FALLANDO**
+#### **INMEDIATO: MEJORAR COBERTURA EXISTENTE**
 
-1. **BackendSyncService.ts** - Resolver problemas de decoradores en tests
-   - Investigar por qué `@logMethod()` y otros decoradores fallan en entorno de test
-   - Posible solución: Mockear decoradores o usar configuración alternativa
+1. **BackendSyncService.ts** - Aumentar cobertura del 41.73% al 80%+
+   - Agregar tests para lógica de throttling y sincronización
+   - Cubrir casos de error en comunicación backend
+   - Verificar manejo de reconexión automática
 
-2. **RhythmicMovementController.ts** - Resolver conflictos de binding IoC
-   - Revisar configuración de InversifyJS para bindings ambiguos
-   - Verificar dependencias circulares o bindings duplicados
+2. **GameStateStoreService.ts** - Aumentar cobertura del 39.75% al 80%+
+   - Agregar tests para diferentes tipos de eventos PlayerAction
+   - Cubrir manejo de estado complejo y transiciones
+   - Verificar integración completa EventBus → Zustand
 
-3. **GameStateStoreService.ts** - Implementar métodos faltantes
-   - Agregar métodos `start()` y `stop()` requeridos por tests
-   - Verificar contratos de interfaz
+3. **DebugOrchestratorService.ts** - Aumentar cobertura del 45.75% al 80%+
+   - Agregar tests para agregación de datos de diagnóstico
+   - Cubrir diferentes tipos de eventos de servicio
+   - Verificar filtrado y procesamiento de datos
 
-4. **EventBus.ts** - Arreglar test fallando
-   - Identificar causa específica del test que falla
-   - Verificar manejo de tipos de eventos
+4. **RhythmicMovementController.ts** - Aumentar cobertura del 44.37% al 80%+
+   - Agregar tests para diferentes patrones de movimiento
+   - Cubrir timing preciso y sincronización rítmica
+   - Verificar integración con InputStateService
 
-#### **MEDIANO PLAZO: EXPANSIÓN DE COBERTURA**
+#### **MEDIANO PLAZO: SERVICIOS SIN TESTS**
 
-5. Usar `createTestContainer()` de `test-container-factory.ts` para todos los nuevos tests
-6. Seguir el patrón High-Fidelity Mocking (QUALIA.CODE Section 10.3.1)
-7. Cada test debe verificar:
-   - Inyección correcta de dependencias
-   - Métodos públicos retornan valores esperados
-   - Efectos secundarios (llamadas a dependencias) ocurren correctamente
-   - Manejo de errores en casos edge
+5. Crear tests para servicios críticos sin cobertura:
+   - AudioService.ts (manejo de audio Web Audio API)
+   - ConfigurationService.ts (carga y validación de configuración)
+   - Logger.ts (logging estructurado)
+   - ViewLogicService.ts (cálculos de vista)
+   - WebSocketService.ts (comunicación en tiempo real)
 
 #### **VALIDACIÓN CONTINUA**
 
-8. Ejecutar `./scripts/lint-architecture.sh` después de cada cambio
-9. Actualizar este documento después de arreglar cada servicio crítico
-10. Mantener tasa de fallos por debajo del 5%
+6. Ejecutar `./scripts/lint-architecture.sh` después de cada cambio
+7. Mantener cobertura global de servicios por encima del 25%
+8. Actualizar este documento después de cada mejora significativa
+9. Priorizar servicios con mayor impacto en la estabilidad del sistema

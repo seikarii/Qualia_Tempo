@@ -15,14 +15,6 @@
 - **TOTAL**: 28 instancias
 
 
-## 🎯 DIRECTIVE 006 COMPLETED (2025-10-03)
-- ✅ Test infrastructure configuration bindings added
-- ✅ 16 tests fixed (49 → 33 failures, 73% pass rate)
-- ✅ Architectural linter passes with 0 errors
-- ✅ @OnEvent decorator infrastructure fixed - decorators now work in tests
-- ✅ EventBus mock refactored to factory pattern for test isolation
-- ✅ AD-FE-002 and AD-FE-001 directives completed successfully
-- 📋 Next phase: Investigate remaining test failures (likely service initialization issues)
 
 ## DEV NOTES: 
 1. ARREGLAR/MEJORAR PARTE DE SHADERS Y RENDERIZADO FRONTEND (ESTADO CATASTROFICO)
@@ -31,7 +23,6 @@
 4. AGREGAR SERVICIO DE BENCHMARKING
 5. ARREGLAR EL PANDEL DE DIAGNOSTICO,MOSTRARLO Y AÑADIR LA PARTE DE BENCHMARK
 6. MEJORAR EL MENU INICIAL
-7. ~~AGREGAR TEST Y MEJORAR LA FACTORY Y EL SETUP~~ ✅ COMPLETED (DIRECTIVE 006)
 8. INSPECCIONAR NUEVOS DECORADORES Y DEPRECATED (refactorizar adaptandemit para que no contenga un patron de service locator, agregar problamemente algun decorador de cache o de workers)
 9. REVISAR DEBUGSERVICE,NOTIFICATION,ERRORSERVICE Y SU INTEGRACION CON EL RESTO DEL PROJECTO
 10. MEJORAR MENU INICIAL, UTILIZAR LETRAS NEON
@@ -361,94 +352,6 @@ private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator (DEPRECA
 
 ---
 
-### 29. ✅ FIXED - Regla ESLint enforce-use-services-hook corregida
-**Archivo:** `eslint-plugin-qualia-code/lib/rules/enforce-use-services-hook.js`  
-**Severidad:** Media  
-**Estado:** Completado  
-**Descripción:**
-```
-Regla ESLint estaba bloqueando importaciones legítimas de contratos e interfaces
-```
-**Contexto:** La regla `enforce-use-services-hook` estaba flagging importaciones de `/services/contracts/` y `/services/interfaces/` como violaciones, cuando estas importaciones son permitidas según QUALIA.CODE.  
-**Solución:** Modificada la regla para permitir explícitamente importaciones de directorios `contracts` e `interfaces`.  
-**Impacto:** Resuelve 5 violaciones falsas positivas en componentes React (BossRenderer, GridRenderer, MusicalNotesRenderer, PlayerRenderer, QualiaFieldRenderer).  
-**Prioridad:** Media - Crítico para remediación arquitectural.
-
-### 30. ✅ COMPLETED - Tests de reglas ESLint actualizados para refinamientos de reglas
-**Archivos:** 
-- `eslint-plugin-qualia-code/tests/enforce-method-decorators.test.js`
-- `eslint-plugin-qualia-code/tests/no-complex-use-state.test.js` 
-- `eslint-plugin-qualia-code/tests/no-hardcoded-config.test.js`
-
-**Contexto:** Tras actualizar las reglas ESLint para eliminar falsos positivos (sobrecargas TypeScript, componentes renderer, expresiones matemáticas), era necesario actualizar los tests correspondientes.  
-**Solución:** 
-- Agregados tests para sobrecargas TypeScript en `enforce-method-decorators`
-- Agregados tests para componentes renderer en `no-complex-use-state`
-- Agregados tests para literales hexadecimales y expresiones matemáticas en `no-hardcoded-config`
-- Corregidos messageIds y rutas de archivos en todos los tests
-**Impacto:** Todos los tests pasan (38/38), cobertura completa de nuevos comportamientos de reglas.  
-**Prioridad:** Alta - Esencial para validación de cambios arquitectónicos.
-
-
-
----
-
-## 🏗️ ARCHITECTURAL REMEDIATION (2025-10-02)
-
-### ✅ PHASE 1 COMPLETED: Backend Platform Abstraction
-- [x] Created IFileSystemService interface and implementation
-- [x] Created ISystemEnvironmentService interface and implementation  
-- [x] Refactored SecurityService to use ISystemEnvironmentService
-- [x] Refactored RenderingService to use IFileSystemService
-- [x] Updated CompositionRoot with platform abstraction services
-- [x] Enhanced Ruff QLA005 rule to whitelist abstraction services
-- [x] Enhanced ESLint enforce-method-decorators for performance exemptions
-- [x] Fixed all backend platform abstraction violations (QLA005)
-
-### �� PHASE 2 IN PROGRESS: Frontend Complexity Reduction (39 violations)
-
-#### High Priority - Component Extraction
-- [ ] FIXME: QualiaMainMenu.tsx (217 lines) - Extract menu rendering into sub-components - in /qualia-tempo-prototype/frontend/src/components/QualiaMainMenu.tsx:18
-- [ ] FIXME: QualiaTempoGame.tsx (212 lines) - Extract game orchestration logic to services - in /qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx:79
-- [ ] FIXME: main.ts (211 lines) - Extract initialization steps into separate functions - in /qualia-tempo-prototype/frontend/src/main.ts:11
-- [ ] FIXME: PlayerRenderer.tsx (174 lines) - Extract rendering sub-components - in /qualia-tempo-prototype/frontend/src/components/game/PlayerRenderer.tsx:40
-- [ ] FIXME: inversify.config.ts bindServiceParameterObjects (171 lines) - Extract parameter binding to separate module - in /qualia-tempo-prototype/frontend/src/services/inversify.config.ts:479
-
-#### Medium Priority - Service Method Extraction
-- [ ] FIXME: BossRenderer.tsx (145 lines) - Move visual calculations to ViewLogicService - in /qualia-tempo-prototype/frontend/src/components/game/BossRenderer.tsx:31
-- [ ] FIXME: ServiceDiagnosticsPanel.tsx (128 lines) - Extract diagnostic rendering sections - in /qualia-tempo-prototype/frontend/src/components/debug/ServiceDiagnosticsPanel.tsx:24
-- [ ] FIXME: RawToParticleEventAdapter.ts adapt() (101 lines) - Extract protocol transformation logic - in /qualia-tempo-prototype/frontend/src/services/protocol/adapters/RawToParticleEventAdapter.ts:45
-- [ ] FIXME: GameStateStoreService handleGameStateChange (95 lines) - Extract state transition logic - in /qualia-tempo-prototype/frontend/src/services/GameStateStoreService.ts:141
-
-#### Parameter Object Pattern (4 violations)
-- [ ] FIXME: Create WorldToScreenParams interface for CoordinateSystemService.worldToScreen - in /qualia-tempo-prototype/frontend/src/services/CoordinateSystemService.ts:80
-- [ ] FIXME: Create GridVisualsParams interface for ViewLogicService.getGridVisuals - in /qualia-tempo-prototype/frontend/src/services/ViewLogicService.ts:698
-- [ ] FIXME: Create ToneParams interface for WebAudioAPIService.playTone - in /qualia-tempo-prototype/frontend/src/services/WebAudioAPIService.ts:50
-
-#### Decorator Complexity Reduction
-- [ ] FIXME: decorators.ts validate() (94 lines) - Extract validation logic to utility functions - in /qualia-tempo-prototype/frontend/src/utils/decorators.ts:325
-- [ ] FIXME: decorators.ts validateEventProperty() (118 lines) - Extract event validation to utility - in /qualia-tempo-prototype/frontend/src/utils/decorators.ts:425
-
-### 🔄 PHASE 3 IN PROGRESS: Backend Type Safety (31 violations remaining)
-
-#### Import/Type Conflicts
-- [ ] FIXME: ShaderIntrospectionService.py - Fix Dict import conflict with pyparsing - in /qualia-tempo-prototype/backend/services/ShaderIntrospectionService.py:6
-
-#### Unreachable Statements
-- [ ] FIXME: qualia_particle_engine.py - Remove or fix 3 unreachable statements - in /qualia-tempo-prototype/backend/engine/qualia_particle_engine.py
-- [ ] FIXME: StreamingWebService.py - Remove or fix 3 unreachable statements - in /qualia-tempo-prototype/backend/services/StreamingWebService.py
-- [ ] FIXME: StateStreamingService.py - Remove or fix unreachable statement - in /qualia-tempo-prototype/backend/services/StateStreamingService.py:103
-
-#### Return Type Annotations (no-any-return)
-- [ ] FIXME: main.py - Add explicit return type annotation - in /qualia-tempo-prototype/backend/main.py:28
-- [ ] FIXME: qualia_particle_engine.py - Add explicit return type annotation - in /qualia-tempo-prototype/backend/engine/qualia_particle_engine.py:784
-- [ ] FIXME: RenderingService.py - Add explicit return type annotation - in /qualia-tempo-prototype/backend/services/RenderingService.py:178
-- [ ] FIXME: SecurityService.py - Add explicit return type annotation - in /qualia-tempo-prototype/backend/services/SecurityService.py:89
-- [ ] FIXME: CompositionRoot.py - Add explicit return type annotation - in /qualia-tempo-prototype/backend/CompositionRoot.py:315
-- [ ] FIXME: routes.py - Add explicit return type annotation - in /qualia-tempo-prototype/backend/api/routes.py:184
-
-#### Union Attribute Access
-- [ ] FIXME: RenderingService.py - Add null checks for moderngl operations (5 occurrences) - in /qualia-tempo-prototype/backend/services/RenderingService.py
 
 ---
 
@@ -458,9 +361,4 @@ Regla ESLint estaba bloqueando importaciones legítimas de contratos e interface
 - [ ] FIXME: Fix BackendSyncConfig mock to match full contract structure - in /qualia-tempo-prototype/frontend/src/testing/mocks/backend-sync-service.mock.ts:22
 - [ ] TODO: Enhance mock generation script to parse TypeScript interfaces more accurately using @typescript-eslint/typescript-estree
 
-## CRITICAL TEST FAILURES (2025-01-13 Analysis)
-- [X] ✅ RESOLVED (2025-10-03 15:06): BackendSyncService tests - 100% pass rate achieved (7/7) - Refactored to test business logic through public API instead of decorator mechanisms - in /qualia-tempo-prototype/frontend/src/services/__tests__/BackendSyncService.test.ts
-- [ ] FIXME: RhythmicMovementController tests failing (0/6 pass - 0%) - IoC binding conflicts - in /qualia-tempo-prototype/frontend/src/services/__tests__/RhythmicMovementController.test.ts
-- [ ] FIXME: GameStateStoreService tests failing (0/2 pass - 0%) - Missing start/stop methods - in /qualia-tempo-prototype/frontend/src/services/__tests__/GameStateStoreService.test.ts
-- [ ] FIXME: EventBus test failing (15/16 pass - 93.8%) - One test case failing - in /qualia-tempo-prototype/frontend/src/services/__tests__/EventBus.test.ts
-- [ ] FIXME: DebugOrchestratorService tests failing (6/8 pass - 75%) - Two test cases failing - in /qualia-tempo-prototype/frontend/src/services/__tests__/DebugOrchestratorService.test.ts
+
