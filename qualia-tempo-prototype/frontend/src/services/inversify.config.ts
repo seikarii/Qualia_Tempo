@@ -88,6 +88,7 @@ import type { IWebSocketFactory } from "./interfaces/IWebSocketFactory";
 import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
 import type { ICoordinateSystemService } from "./interfaces/ICoordinateSystemService";
 import type { IToneFactoryService } from "../audio/interfaces/IToneFactoryService";
+import type { IStateMergerService } from "./interfaces/IStateMergerService";
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { ConfigurationService } from "./ConfigurationService";
@@ -121,6 +122,7 @@ import { ThrottlingManager } from "./utils/ThrottlingManager";
 import { InputStateService } from "./InputStateService";
 import { CoordinateSystemService } from "./CoordinateSystemService";
 import { ToneFactoryService } from "../audio/ToneFactoryService";
+import { StateMergerService } from "./StateMergerService";
 
 // ===== PROTOCOL ADAPTER IMPORTS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
@@ -239,6 +241,11 @@ container
 container
   .bind<INotificationService>(TYPES.INotificationService)
   .to(NotificationService)
+  .inSingletonScope();
+// QUALIA.CODE v1.1: StateMergerService - Deep merge for state integrity
+container
+  .bind<IStateMergerService>(TYPES.IStateMergerService)
+  .to(StateMergerService)
   .inSingletonScope();
 container
   .bind<IErrorReportingService>(TYPES.IErrorReportingService)

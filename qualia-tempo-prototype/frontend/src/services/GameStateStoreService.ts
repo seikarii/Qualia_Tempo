@@ -30,8 +30,10 @@ import {
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
+import type { IStateMergerService } from "./interfaces/IStateMergerService";
 import type { GameStateStoreConfig } from "./contracts/IGameStateStoreService.contracts";
 import type { GameState } from "../state/useGameStore";
+import type { CombatData, PlayerState, NoteData } from "../types/contracts";
 
 // Store setter type (from Zustand)
 // Note: Parameters prefixed with _ to indicate they are part of callback signature
@@ -56,14 +58,19 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   private _eventListeners: string[] = [];
   // QUALIA.CODE: Expose eventBus for @OnEvent decorator (requires 'eventBus' property)
   private eventBus: IEventBus;
+  private readonly stateMergerService: IStateMergerService;
+  // QUALIA.CODE v1.1: Internal combat data tracking to eliminate getGameState() hack
+  private currentCombatData: CombatData | null = null;
 
   constructor(
     @inject(TYPES.IEventBus) _eventBus: IEventBus,
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
+    @inject(TYPES.IStateMergerService) stateMergerService: IStateMergerService,
     @inject(TYPES.GameStateStoreConfig) config: GameStateStoreConfig,
   ) {
     this.config = config;
     this.eventBus = _eventBus;
+    this.stateMergerService = stateMergerService;
     this._logger.info(this.config.messages.constructed);
   }
 
@@ -96,19 +103,22 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   @logMethod
   @catchError
   updateGameState(state: Partial<GameState>): void {
-    this.setStore((currentState: GameState) => ({
-      ...currentState,
-      ...state,
-    }));
+    // Track combat data updates internally to avoid getGameState() hack
+    if (state.combatData !== undefined) {
+      this.currentCombatData = state.combatData;
+    }
+    
+    this.setStore((currentState: GameState) => 
+      this.stateMergerService.deepMerge(currentState, state)
+    );
   }
 
   @logMethod
   @catchError
   updateQualiaState(state: QualiaState): void {
-    this.setStore((currentState: GameState) => ({
-      ...currentState,
-      qualiaState: { ...state },
-    }));
+    this.setStore((currentState: GameState) => 
+      this.stateMergerService.deepMerge(currentState, { qualiaState: { ...state } })
+    );
   }
 
   @logMethod
@@ -121,6 +131,12 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
     return true; // Service is always running after initialize
   }
 
+  /**
+   * @deprecated QUALIA.CODE v1.1: This method violates unidirectional data flow.
+   * Services should listen to events and maintain internal state instead of pulling from store.
+   * Currently kept for backward compatibility with RhythmicMovementController.
+   * TODO: Refactor all consumers to use event-driven state tracking, then remove this method.
+   */
   @logMethod
   getGameState(): GameState {
     // Access the store state through the setter function
@@ -174,21 +190,23 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
    * Handle transition to Playing state
    */
   private handlePlayingState(): void {
-    this.setStore((state: GameState) => ({
-      ...state,
-      isPlaying: true,
-      gameStartTime: Date.now(),
-    }));
+    this.setStore((state: GameState) => 
+      this.stateMergerService.deepMerge(state, {
+        isPlaying: true,
+        gameStartTime: Date.now(),
+      })
+    );
   }
 
   /**
    * Handle transition to Paused state
    */
   private handlePausedState(): void {
-    this.setStore((state: GameState) => ({
-      ...state,
-      isPlaying: false,
-    }));
+    this.setStore((state: GameState) => 
+      this.stateMergerService.deepMerge(state, {
+        isPlaying: false,
+      })
+    );
   }
 
   /**
@@ -197,15 +215,20 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   private handleGameOverState(): void {
     this.setStore((state: GameState) => {
       const resetState = this.buildGameResetState();
-      return {
-        ...state,
+      // Deep merge preserves nested player.position from state while resetting other player properties
+      return this.stateMergerService.deepMerge(state, {
         isPlaying: false,
-        ...resetState,
-        player: {
-          ...state.player,
-          ...resetState.player,
-        },
-      };
+        currentTime: resetState.currentTime,
+        gameStartTime: resetState.gameStartTime,
+        player: resetState.player as Partial<PlayerState>,
+        qualiaState: resetState.qualiaState,
+        totalNotes: resetState.totalNotes,
+        notesHit: resetState.notesHit,
+        notesMissed: resetState.notesMissed,
+        currentStreak: resetState.currentStreak,
+        maxStreak: resetState.maxStreak,
+        pauseCooldownRemaining: resetState.pauseCooldownRemaining,
+      } as Partial<GameState>);
     });
     this._logger.info(this.config.messages.gameOver);
   }
@@ -215,11 +238,12 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
    */
   private handleMenuState(): void {
     const resetState = this.buildFullResetState();
-    this.setStore((state: GameState) => ({
-      ...state,
-      isPlaying: false,
-      ...resetState,
-    }));
+    this.setStore((state: GameState) => 
+      this.stateMergerService.deepMerge(state, {
+        isPlaying: false,
+        ...resetState,
+      })
+    );
   }
 
   /**
@@ -308,14 +332,15 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
 
     // Binary protocol: Store particle data buffer directly
     // QualiaState reconstruction is handled by specialized particle processing services
-    this.setStore((state: GameState) => ({
-      ...state,
-      particleData: {
-        buffer: event.particleData.buffer as ArrayBuffer,
-        timestamp: event.timestamp.getTime(),
-        size: event.particleData.byteLength,
-      },
-    }));
+    this.setStore((state: GameState) => 
+      this.stateMergerService.deepMerge(state, {
+        particleData: {
+          buffer: event.particleData.buffer as ArrayBuffer,
+          timestamp: event.timestamp.getTime(),
+          size: event.particleData.byteLength,
+        },
+      })
+    );
   }
 
   /**
@@ -330,20 +355,21 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
       timing: event.timing,
     });
 
-    this.setStore((state: GameState) => ({
-      ...state,
-      player: {
-        ...state.player,
-        position: {
-          x: event.newPosition[0],
-          y: event.newPosition[1],
+    this.setStore((state: GameState) => 
+      this.stateMergerService.deepMerge(state, {
+        player: {
+          position: {
+            x: event.newPosition[0],
+            y: event.newPosition[1],
+          },
         },
-      },
-    }));
+      } as Partial<GameState>)
+    );
   }
 
   /**
    * Handle PlayerAction events to update note states
+   * QUALIA.CODE v1.1: Uses internal currentCombatData tracking instead of getGameState() hack
    */
   @OnEvent('PlayerAction')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
@@ -353,35 +379,91 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
 
     if (!noteId || (action !== 'HitNote' && action !== 'MissNote')) return;
 
-    const currentGameState = this.getGameState();
-    const noteIndex = currentGameState.combatData?.noteMap.findIndex((n: { id: string }) => n.id === noteId) ?? -1;
-
-    if (noteIndex > -1 && currentGameState.combatData?.noteMap) {
-      const newNoteState = (action === 'HitNote') ? 'hit' : 'missed';
-
-      // Actualización inmutable del estado
-      const newNoteMap = [...currentGameState.combatData.noteMap];
-      newNoteMap[noteIndex] = { ...newNoteMap[noteIndex], state: newNoteState };
-
-      this.setStore((state: GameState) => {
-        if (!state.combatData) {
-          this._logger.warn('Cannot update note state: combatData is missing from game state');
-          return state;
-        }
-        return {
-          ...state,
-          combatData: { ...state.combatData, noteMap: newNoteMap }
-        };
-      });
-
-      // Emitir evento para limpiar la nota de la vista en lugar de usar setTimeout
-      this.eventBus.emit({
-        type: 'ClearNoteFromViewRequest' as unknown as EventTypes['type'],
-        noteId,
-        timestamp: Date.now(),
-        source: 'GameStateStoreService'
-      } as unknown as Omit<EventTypes, "timestamp">);
+    // Ensure combat data is initialized
+    this.ensureCombatDataInitialized();
+    if (!this.currentCombatData?.noteMap) {
+      this._logger.warn('Cannot update note state: no combat data available');
+      return;
     }
+
+    // Find and update the note
+    const noteIndex = this.currentCombatData.noteMap.findIndex((n: { id: string }) => n.id === noteId);
+    if (noteIndex === -1) {
+      this._logger.warn(`Cannot update note state: note ${noteId} not found in combat data`);
+      return;
+    }
+
+    const newNoteState = (action === 'HitNote') ? 'hit' : 'missed';
+    const newNoteMap = this.createUpdatedNoteMap(noteIndex, newNoteState);
+
+    // Update internal tracking and store
+    this.updateCombatDataTracking(newNoteMap);
+    this.updateStoreWithNewNoteMap(newNoteMap);
+
+    // Emit cleanup event
+    this.emitNoteCleanupEvent(noteId);
+  }
+
+  /**
+   * Ensure combat data is initialized (lazy loading from store)
+   */
+  private ensureCombatDataInitialized(): void {
+    if (!this.currentCombatData) {
+      const gameState = this.getGameState();
+      this.currentCombatData = gameState.combatData;
+    }
+  }
+
+  /**
+   * Create updated note map with new note state
+   */
+  private createUpdatedNoteMap(noteIndex: number, newState: 'hit' | 'missed'): NoteData[] {
+    if (!this.currentCombatData) {
+      throw new Error('Cannot create note map: combat data not initialized');
+    }
+    const newNoteMap = [...this.currentCombatData.noteMap];
+    newNoteMap[noteIndex] = { ...newNoteMap[noteIndex], state: newState };
+    return newNoteMap;
+  }
+
+  /**
+   * Update internal combat data tracking
+   */
+  private updateCombatDataTracking(newNoteMap: NoteData[]): void {
+    if (!this.currentCombatData) {
+      throw new Error('Cannot update tracking: combat data not initialized');
+    }
+    this.currentCombatData = {
+      ...this.currentCombatData,
+      noteMap: newNoteMap
+    };
+  }
+
+  /**
+   * Update store with new note map using deep merge
+   */
+  private updateStoreWithNewNoteMap(newNoteMap: NoteData[]): void {
+    this.setStore((state: GameState) => {
+      if (!state.combatData) {
+        this._logger.warn('Cannot update note state: combatData is missing from game state');
+        return state;
+      }
+      return this.stateMergerService.deepMerge(state, {
+        combatData: { noteMap: newNoteMap }
+      } as Partial<GameState>);
+    });
+  }
+
+  /**
+   * Emit event to clear note from view
+   */
+  private emitNoteCleanupEvent(noteId: string): void {
+    this.eventBus.emit({
+      type: 'ClearNoteFromViewRequest' as unknown as EventTypes['type'],
+      noteId,
+      timestamp: Date.now(),
+      source: 'GameStateStoreService'
+    } as unknown as Omit<EventTypes, "timestamp">);
   }
 
   // === UTILITY METHODS ===

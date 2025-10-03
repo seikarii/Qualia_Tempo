@@ -49,6 +49,9 @@ import type { IBackendSyncService } from "../services/interfaces/IBackendSyncSer
 
 // Import real services for pure utilities (no side effects)
 import { ColorService } from "../services/ColorService";
+// QUALIA.CODE v1.1: StateMergerService - Pure utility, no side effects, use real implementation in tests
+import type { IStateMergerService } from "../services/interfaces/IStateMergerService";
+import { StateMergerService } from "../services/StateMergerService";
 
 // Import centralized mocks
 import { mockLogger } from "./mocks/logger.mock";
@@ -335,6 +338,8 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   testContainer.bind<IGameStateStore>(TYPES.IGameStateStore).toConstantValue(mockGameStateStore);
   testContainer.bind<IGameStateStoreService>(TYPES.IGameStateStoreService).toConstantValue(mockGameStateStoreService);
   testContainer.bind<IHttpService>(TYPES.IHttpService).toConstantValue(mockHttpService);
+  // QUALIA.CODE v1.1: StateMergerService for deep merge testing (real service, no mocking needed)
+  testContainer.bind<IStateMergerService>(TYPES.IStateMergerService).to(StateMergerService).inSingletonScope();
   testContainer.bind<ITimerService>(TYPES.ITimerService).toConstantValue(mockTimerService);
   testContainer.bind<IPerformanceService>(TYPES.IPerformanceService).toConstantValue(mockPerformanceService);
   testContainer.bind<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine).toConstantValue(mockOntologicalAudioEngine);

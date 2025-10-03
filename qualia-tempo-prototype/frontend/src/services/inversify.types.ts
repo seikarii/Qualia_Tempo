@@ -49,6 +49,7 @@ export const TYPES = {
   IViewLogicService: Symbol.for("IViewLogicService"),
   ISubtitleService: Symbol.for("ISubtitleService"),
   IDebugOrchestratorService: Symbol.for("IDebugOrchestratorService"),
+  IStateMergerService: Symbol.for("IStateMergerService"),
 
   // ===== PROTOCOL ADAPTERS =====
   IKeyToDirectionAdapter: Symbol.for("IKeyToDirectionAdapter"),
