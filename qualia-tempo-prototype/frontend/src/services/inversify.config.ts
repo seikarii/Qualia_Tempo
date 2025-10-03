@@ -78,6 +78,7 @@ import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovement
 import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { IApplicationInitializerService } from "./interfaces/IApplicationInitializerService";
 import type { IWebAudioAPIService } from "./interfaces/IWebAudioAPIService";
+import type { IAudioContextFactory } from "./interfaces/IAudioContextFactory";
 import type { IGameStateStore } from "./interfaces/IGameStateStore";
 import type { IInputStateService } from "./interfaces/IInputStateService";
 import type { IFrontendRenderingService } from "./interfaces/IFrontendRenderingService";
@@ -109,6 +110,7 @@ import { RhythmicMovementController } from "./RhythmicMovementController";
 import { OntologicalAudioEngine } from "../audio/OntologicalAudioEngine";
 import { ApplicationInitializerService } from "./ApplicationInitializerService";
 import { WebAudioAPIService } from "./WebAudioAPIService";
+import { BrowserAudioContextFactory } from "./BrowserAudioContextFactory";
 import { GameStateStore } from "./GameStateStore";
 import { FrontendRenderingService } from "./FrontendRenderingService";
 import { StateStreamingService } from "./StateStreamingService";
@@ -266,6 +268,13 @@ container
   .bind<IInputStateService>(TYPES.IInputStateService)
   .to(InputStateService)
   .inSingletonScope();
+
+// QUALIA.CODE v1.2: Factory Pattern for Platform Abstraction
+container
+  .bind<IAudioContextFactory>(TYPES.IAudioContextFactory)
+  .to(BrowserAudioContextFactory)
+  .inSingletonScope();
+
 container
   .bind<IWebAudioAPIService>(TYPES.IWebAudioAPIService)
   .to(WebAudioAPIService)

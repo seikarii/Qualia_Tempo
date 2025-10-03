@@ -3,7 +3,7 @@
  * Single source of truth for coordinate system transformations.
  *
  * Purpose: Provides centralized coordinate transformation logic to eliminate
- * desynchronization between GridRenderer, PlayerRenderer, and PlayerAvatar.
+ * desynchronization between GridRenderer and PlayerRenderer.
  * 
  * Architecture: Injectable service with Direct Configuration Injection pattern.
  * Uses the exact coordinate transformation logic from GridRenderer as canonical.
@@ -67,27 +67,23 @@ export class CoordinateSystemService implements ICoordinateSystemService {
    * Uses Three.js Vector3.project() for accurate camera projection.
    */
   // Overload signatures
+  /**
+   * Convert world coordinates to screen coordinates.
+   * @param _params - WorldToScreenParams object containing all required parameters
+   * @returns Screen coordinates {x, y}
+   */
   public worldToScreen(_params: WorldToScreenParams): { x: number; y: number };
-  public worldToScreen(
-    _worldX: number,
-    _worldY: number,
-    _worldZ: number,
-    _camera: THREE.Camera,
-    _domElementSize: { width: number; height: number }
-  ): { x: number; y: number };
   
-  // Implementation
+  /**
+   * @deprecated Use parameter object form instead: worldToScreen({ worldX, worldY, worldZ, camera, domElementSize })
+   */
+  /**
+   * Convert world coordinates to screen coordinates
+   * QUALIA.CODE COMPLIANT: Parameter Object Pattern (4 params max)
+   */
   @logMethod
   @catchError
-  public worldToScreen(
-    paramsOrWorldX: WorldToScreenParams | number,
-    worldY?: number,
-    worldZ?: number,
-    camera?: THREE.Camera,
-    domElementSize?: { width: number; height: number }
-  ): { x: number; y: number } {
-    const params = this.normalizeWorldToScreenParams(paramsOrWorldX, worldY, worldZ, camera, domElementSize);
-
+  public worldToScreen(params: WorldToScreenParams): { x: number; y: number } {
     try {
       const screenCoords = this.projectWorldToScreen(params);
       this.logProjectionResult(params, screenCoords);
@@ -96,31 +92,6 @@ export class CoordinateSystemService implements ICoordinateSystemService {
       this.logger.error(this.config.messages.cameraProjectionFailed, { error });
       return this.getFallbackScreenPosition(params.domElementSize);
     }
-  }
-
-  private normalizeWorldToScreenParams(
-    paramsOrWorldX: WorldToScreenParams | number,
-    worldY?: number,
-    worldZ?: number,
-    camera?: THREE.Camera,
-    domElementSize?: { width: number; height: number }
-  ): WorldToScreenParams {
-    if (typeof paramsOrWorldX === 'object') {
-      return paramsOrWorldX;
-    }
-
-    // Guard clause: ensure all required parameters are provided
-    if (worldY === undefined || worldZ === undefined || !camera || !domElementSize) {
-      throw new Error('worldToScreen requires all parameters when called with positional arguments');
-    }
-
-    return {
-      worldX: paramsOrWorldX,
-      worldY,
-      worldZ,
-      camera,
-      domElementSize
-    };
   }
 
   private projectWorldToScreen(params: WorldToScreenParams): { x: number; y: number } {
@@ -155,10 +126,25 @@ export class CoordinateSystemService implements ICoordinateSystemService {
    * CANONICAL WORLD-TO-GRID TRANSFORMATION
    * Inverse of gridToWorld transformation for converting world coordinates back to grid coordinates.
    * This is the exact inverse mathematical operation of gridToWorld.
+   * 
+   * QUALIA.CODE v1.2: Full 3D Support
+   * Now validates worldY against grid plane tolerance (config.gridPlaneTolerance).
+   * Returns null if the Y coordinate indicates the position is not on the grid plane.
    */
   @logMethod
   @catchError
-  public worldToGrid(worldX: number, worldZ: number): { x: number; y: number } {
+  public worldToGrid(worldX: number, worldY: number, worldZ: number): { x: number; y: number } | null {
+    // Validate Y coordinate is on the grid plane
+    if (Math.abs(worldY) > this.config.gridPlaneTolerance) {
+      this.logger.warn(this.config.messages.worldYOutOfPlane, { 
+        worldX, 
+        worldY, 
+        worldZ, 
+        tolerance: this.config.gridPlaneTolerance 
+      });
+      return null;
+    }
+
     // Apply the inverse transformation of gridToWorld
     const gridX = Math.round((worldX / this.config.tileSize) + this.config.gridSize / 2 - 0.5);
     const gridY = Math.round((worldZ / this.config.tileSize) + this.config.gridSize / 2 - 0.5);
@@ -166,11 +152,12 @@ export class CoordinateSystemService implements ICoordinateSystemService {
     // Validate output coordinates
     if (gridX < 0 || gridX >= this.config.gridSize || 
         gridY < 0 || gridY >= this.config.gridSize) {
-      this.logger.warn(this.config.messages.invalidWorldCoordinates, { worldX, worldZ, gridX, gridY });
+      this.logger.warn(this.config.messages.invalidWorldCoordinates, { worldX, worldY, worldZ, gridX, gridY });
+      return null;
     }
 
     this.logger.debug(this.config.messages.worldToGridCalculated, {
-      input: { worldX, worldZ },
+      input: { worldX, worldY, worldZ },
       output: { gridX, gridY }
     });
 

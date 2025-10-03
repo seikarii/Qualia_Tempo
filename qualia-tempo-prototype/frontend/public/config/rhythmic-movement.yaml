@@ -20,6 +20,7 @@ movement:
 coordinate_system:
   gridSize: 16  # Grid dimensions (16x16)
   tileSize: 1  # Size of each tile in world units
+  gridPlaneTolerance: 0.1  # Tolerance for Y-axis validation in worldToGrid (world units)
   
   # Service messages for logging
   messages:
@@ -30,6 +31,7 @@ coordinate_system:
     invalidGridCoordinates: "Invalid grid coordinates provided"
     invalidWorldCoordinates: "Invalid world coordinates provided - outside grid bounds"
     cameraProjectionFailed: "Camera projection failed - using fallback coordinates"
+    worldYOutOfPlane: "World Y coordinate is outside grid plane tolerance"
 
 rhythm:
   beatDetection: true

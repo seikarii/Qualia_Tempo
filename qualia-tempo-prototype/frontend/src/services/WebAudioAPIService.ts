@@ -1,5 +1,7 @@
-import { injectable } from "inversify";
+import { injectable, inject } from "inversify";
+import { TYPES } from "./inversify.types";
 import { IWebAudioAPIService } from "./interfaces/IWebAudioAPIService";
+import type { IAudioContextFactory } from "./interfaces/IAudioContextFactory";
 import { logMethod, catchError } from "../utils/decorators";
 import * as Tone from "tone";
 
@@ -12,18 +14,25 @@ export interface PlayToneParams {
   loop?: boolean;
 }
 
+/**
+ * QUALIA.CODE v1.2 - WebAudioAPIService Implementation
+ * Platform-abstracted audio service using Factory Pattern
+ * 
+ * ARCHITECTURAL FIX: Platform Abstraction
+ * - Eliminates direct new AudioContext() instantiation
+ * - Uses injected IAudioContextFactory for decoupled creation
+ * - Enables testing in non-browser environments
+ */
 @injectable()
 export class WebAudioAPIService implements IWebAudioAPIService {
   private audioContext: AudioContext | null = null;
+  private readonly factory: IAudioContextFactory;
 
-  constructor() {
-    if (typeof window !== "undefined") {
-      // Handle webkit prefixed AudioContext for older browsers
-      const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (AudioContextClass) {
-        this.audioContext = new AudioContextClass();
-      }
-    }
+  constructor(
+    @inject(TYPES.IAudioContextFactory) factory: IAudioContextFactory
+  ) {
+    this.factory = factory;
+    this.audioContext = this.factory.create();
   }
 
   @logMethod
@@ -48,26 +57,8 @@ export class WebAudioAPIService implements IWebAudioAPIService {
   public playTone(_params: PlayToneParams): void;
   public playTone(_frequency: number, _duration: number, _gain: number, _type: OscillatorType, _loop?: boolean): void;
   @logMethod
-  public playTone(
-    paramsOrFrequency: PlayToneParams | number,
-    duration?: number,
-    gain?: number,
-    type?: OscillatorType,
-    loop: boolean = false
-  ): void {
-    let params: PlayToneParams;
-    
-    if (typeof paramsOrFrequency === 'object') {
-      params = paramsOrFrequency;
-    } else {
-      params = {
-        frequency: paramsOrFrequency,
-        duration: duration ?? 0.5,
-        gain: gain ?? 0.3,
-        type: type ?? 'sine',
-        loop
-      };
-    }
+  public playTone(...args: [PlayToneParams] | [number, number, number, OscillatorType, boolean?]): void {
+    const params = this.normalizePlayToneParams(args);
 
     const audioContext = this.getAudioContext();
     const oscillator = audioContext.createOscillator();
@@ -84,5 +75,22 @@ export class WebAudioAPIService implements IWebAudioAPIService {
     if (!params.loop) {
       oscillator.stop(audioContext.currentTime + params.duration);
     }
+  }
+
+  private normalizePlayToneParams(
+    args: [PlayToneParams] | [number, number, number, OscillatorType, boolean?]
+  ): PlayToneParams {
+    if (args.length === 1 && typeof args[0] === 'object') {
+      return args[0];
+    }
+    
+    const [frequency, duration = 0.5, gain = 0.3, type = 'sine' as OscillatorType, loop = false] = args as [number, number, number, OscillatorType, boolean?];
+    return {
+      frequency,
+      duration,
+      gain,
+      type,
+      loop
+    };
   }
 }

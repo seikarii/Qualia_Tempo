@@ -406,7 +406,6 @@ Regla ESLint estaba bloqueando importaciones legítimas de contratos e interface
 - [ ] FIXME: inversify.config.ts bindServiceParameterObjects (171 lines) - Extract parameter binding to separate module - in /qualia-tempo-prototype/frontend/src/services/inversify.config.ts:479
 
 #### Medium Priority - Service Method Extraction
-- [ ] FIXME: QualiaFieldRenderer.tsx (138 lines) - Apply Stateless View-Logic Pattern - in /qualia-tempo-prototype/frontend/src/components/game/QualiaFieldRenderer.tsx:28
 - [ ] FIXME: BossRenderer.tsx (145 lines) - Move visual calculations to ViewLogicService - in /qualia-tempo-prototype/frontend/src/components/game/BossRenderer.tsx:31
 - [ ] FIXME: ServiceDiagnosticsPanel.tsx (128 lines) - Extract diagnostic rendering sections - in /qualia-tempo-prototype/frontend/src/components/debug/ServiceDiagnosticsPanel.tsx:24
 - [ ] FIXME: RawToParticleEventAdapter.ts adapt() (101 lines) - Extract protocol transformation logic - in /qualia-tempo-prototype/frontend/src/services/protocol/adapters/RawToParticleEventAdapter.ts:45

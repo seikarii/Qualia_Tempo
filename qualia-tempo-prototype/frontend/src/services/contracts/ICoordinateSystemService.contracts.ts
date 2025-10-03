@@ -20,6 +20,9 @@ export interface CoordinateSystemConfig {
   /** Size of each tile in world units (e.g., 1.0) */
   tileSize: number;
   
+  /** Tolerance for Y-axis validation in worldToGrid (e.g., 0.1) */
+  gridPlaneTolerance: number;
+  
   /** Service messages for logging */
   messages: {
     serviceInitialized: string;
@@ -29,6 +32,7 @@ export interface CoordinateSystemConfig {
     invalidGridCoordinates: string;
     invalidWorldCoordinates: string;
     cameraProjectionFailed: string;
+    worldYOutOfPlane: string;
   };
 }
 

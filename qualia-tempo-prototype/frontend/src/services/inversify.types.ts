@@ -32,6 +32,7 @@ export const TYPES = {
   IApplicationInitializerService: Symbol.for("IApplicationInitializerService"),
   IInputStateService: Symbol.for("IInputStateService"),
   IWebAudioAPIService: Symbol.for("IWebAudioAPIService"),
+  IAudioContextFactory: Symbol.for("IAudioContextFactory"),
   IFrontendRenderingService: Symbol.for("IFrontendRenderingService"),
   IStateStreamingService: Symbol.for("IStateStreamingService"),
   IWebSocketService: Symbol.for("IWebSocketService"),

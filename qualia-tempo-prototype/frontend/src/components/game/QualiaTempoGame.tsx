@@ -168,11 +168,7 @@ const GameCanvasContent: React.FC<GameCanvasContentProps> = ({
 
 // Helper functions to build prop objects (Extract Method Pattern)
 const buildQualiaFieldProps = (qualiaState: GameState['qualiaState']) => ({
-  qualiaField: {
-    alpha: qualiaState.intensity,
-    beta: qualiaState.flow,
-    coherence: qualiaState.precision,
-  },
+  qualiaState,
   musicData: {
     tempo: 120, // TODO: Get from audio service
     beat_position: 0, // TODO: Get from audio service
