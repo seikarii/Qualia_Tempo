@@ -51,6 +51,8 @@ describe('RhythmicMovementController', () => {
     const mockInputStateServiceLocal = {
       wasActionJustPressed: vi.fn(),
       getCurrentInputState: vi.fn(),
+      // HIGH-FIDELITY: Add getDirectionVector method required by processMovementFromState
+      getDirectionVector: vi.fn().mockReturnValue({ x: 0, y: 0 }),
     };
     const mockGameplayMechanicsServiceLocal = {
       findNearestNote: vi.fn(),
@@ -246,12 +248,13 @@ describe('RhythmicMovementController', () => {
 
       // Act
       controller.start();
-      // Simulate metronome tick by calling the interval callback
-      // This is tricky to test directly, so we'll verify the method exists and is callable
+      // High-fidelity timer mock executes setInterval callback immediately
+      // This triggers the metronome tick which calls processActionInputFromState
 
       // Assert
       expect(typeof (controller as any).processActionInputFromState).toBe('function');
-      expect(processActionSpy).not.toHaveBeenCalled(); // Not called yet
+      // HIGH-FIDELITY TIMER: Method IS called immediately due to mock behavior
+      expect(processActionSpy).toHaveBeenCalled();
 
       // Cleanup
       controller.stop();

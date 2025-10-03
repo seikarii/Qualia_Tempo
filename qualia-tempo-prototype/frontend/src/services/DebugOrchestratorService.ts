@@ -16,6 +16,7 @@ import type {
 import type { ILogger } from './interfaces/ILogger';
 import type { ITimerService } from './interfaces/ITimerService';
 import type { IPerformanceService } from './interfaces/IPerformanceService';
+import type { IEventBus } from './interfaces/IEventBus';
 // QUALIA.CODE v1.1: Service imports removed - event-driven pattern eliminates coupling
 // import type { INotificationService } from './interfaces/INotificationService';
 // import type { IErrorReportingService } from './interfaces/IErrorReportingService';
@@ -29,6 +30,9 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
   private readonly performanceService: IPerformanceService;
+  // QUALIA.CODE v1.1: EventBus required for @OnEvent decorator lifecycle management
+  // @ts-expect-error - Used by @OnEvent decorator infrastructure
+  private readonly eventBus: IEventBus;
   // QUALIA.CODE v1.1: Services no longer directly injected - event-driven pattern
   // private readonly notificationService: INotificationService;
   // private readonly errorReportingService: IErrorReportingService;
@@ -36,6 +40,8 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
   private lastUpdateTime: Date;
   // @ts-expect-error - Reserved for diagnostic caching functionality
   private _cachedDiagnostics: ServiceDiagnosticData | null = null;
+  // @ts-expect-error - Reserved for @OnEvent decorator lifecycle management
+  private _eventListeners: string[] = [];
 
   /**
    * QUALIA.CODE v1.1: Event-Driven Service Status Aggregation
@@ -51,11 +57,13 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
 
   constructor(
     @inject(TYPES.DebugOrchestratorServiceParams) params: DebugOrchestratorServiceParams,
+    @inject(TYPES.IEventBus) eventBus: IEventBus,
   ) {
     this.config = params.config;
     this.logger = params.logger;
     this.timerService = params.timerService;
     this.performanceService = params.performanceService;
+    this.eventBus = eventBus;
     // QUALIA.CODE v1.1: Services no longer injected - event-driven pattern eliminates coupling
     
     this.lastUpdateTime = this.timerService.getCurrentDate();

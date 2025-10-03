@@ -196,15 +196,15 @@ describe('EventBus - Critical Test Coverage', () => {
       
       await eventBus.emit(testEvent);
       
-      // Wait for async error emission (EventBus uses setTimeout for error events)
-      await new Promise(resolve => setTimeout(resolve, 10));
+      // High-fidelity mock timer executes callbacks immediately - no wait needed
+      // EventBus uses setTimeout for error events, but mock executes synchronously
 
       // Assert: ErrorEvent should be emitted
       expect(errorHandler).toHaveBeenCalled();
       const emittedError = errorHandler.mock.calls[0][0] as ErrorEvent;
       expect(emittedError.type).toBe('Error');
       expect(emittedError.error.message).toBe('Critical failure');
-    });
+    }, 2000);
   });
 
   describe('5. Priority Handling', () => {

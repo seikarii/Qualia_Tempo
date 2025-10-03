@@ -17,6 +17,7 @@ export const mockInputStateService: IInputStateService = {
   pressKey: vi.fn().mockReturnValue(undefined),
   releaseKey: vi.fn().mockReturnValue(undefined),
   isKeyPressed: vi.fn().mockReturnValue(false),
-  getDirectionVector: vi.fn().mockReturnValue({}),
+  // HIGH-FIDELITY: Return valid direction vector with x, y coordinates
+  getDirectionVector: vi.fn().mockReturnValue({ x: 0, y: 0 }),
   wasActionJustPressed: vi.fn().mockReturnValue(false),
 };

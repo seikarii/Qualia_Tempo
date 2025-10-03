@@ -54,13 +54,16 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   private config: GameStateStoreConfig;
   // @ts-expect-error - Reserved for @OnEvent decorator lifecycle management
   private _eventListeners: string[] = [];
+  // QUALIA.CODE: Expose eventBus for @OnEvent decorator (requires 'eventBus' property)
+  private eventBus: IEventBus;
 
   constructor(
-    @inject(TYPES.IEventBus) private readonly _eventBus: IEventBus,
+    @inject(TYPES.IEventBus) _eventBus: IEventBus,
     @inject(TYPES.ILogger) private readonly _logger: ILogger,
     @inject(TYPES.GameStateStoreConfig) config: GameStateStoreConfig,
   ) {
     this.config = config;
+    this.eventBus = _eventBus;
     this._logger.info(this.config.messages.constructed);
   }
 
@@ -372,7 +375,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
       });
 
       // Emitir evento para limpiar la nota de la vista en lugar de usar setTimeout
-      this._eventBus.emit({
+      this.eventBus.emit({
         type: 'ClearNoteFromViewRequest' as unknown as EventTypes['type'],
         noteId,
         timestamp: Date.now(),
