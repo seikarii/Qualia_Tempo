@@ -24,6 +24,8 @@ describe('QualiaStateCalculatorService - Critical Test Coverage', () => {
     mockEventBus = container.get<IEventBus>(TYPES.IEventBus);
     mockPerformanceService = container.get<IPerformanceService>(TYPES.IPerformanceService);
 
+    // Replace mock with real implementation
+    container.unbind(TYPES.IQualiaStateCalculatorService);
     container.bind<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService)
       .to(QualiaStateCalculatorService)
       .inSingletonScope();

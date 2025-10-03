@@ -24,6 +24,8 @@ describe('GameControllerService - Critical Test Coverage', () => {
     mockEventBus = container.get<IEventBus>(TYPES.IEventBus);
     mockAudioService = container.get<IAudioService>(TYPES.IAudioService);
 
+    // Replace mock with real implementation
+    container.unbind(TYPES.IGameControllerService);
     container.bind<IGameControllerService>(TYPES.IGameControllerService)
       .to(GameControllerService)
       .inSingletonScope();

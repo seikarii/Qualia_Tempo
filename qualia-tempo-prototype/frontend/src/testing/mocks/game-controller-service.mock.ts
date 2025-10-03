@@ -14,6 +14,11 @@ import type { IGameControllerService } from '../../services/interfaces/IGameCont
  * All methods return type-safe default values
  */
 export const mockGameControllerService: IGameControllerService = {
+  // IBaseService lifecycle methods
+  initialize: vi.fn().mockReturnValue(undefined),
+  cleanup: vi.fn().mockReturnValue(undefined),
+  
+  // IGameControllerService methods
   startGame: vi.fn().mockResolvedValue(undefined),
   pauseGame: vi.fn().mockReturnValue(undefined),
   resumeGame: vi.fn().mockReturnValue(undefined),

@@ -44,7 +44,8 @@ describe('ApplicationInitializerService - Critical Test Coverage', () => {
     mockEventBus = container.get<IEventBus>(TYPES.IEventBus);
     mockLogger = container.get<ILogger>(TYPES.ILogger);
 
-    // STEP 3: Bind and resolve SUT
+    // STEP 3: Replace mock with real implementation
+    container.unbind(TYPES.IApplicationInitializerService);
     container.bind<IApplicationInitializerService>(TYPES.IApplicationInitializerService)
       .to(ApplicationInitializerService)
       .inSingletonScope();

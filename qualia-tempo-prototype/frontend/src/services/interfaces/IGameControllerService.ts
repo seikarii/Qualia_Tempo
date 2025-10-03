@@ -4,8 +4,9 @@
  */
 
 import type { GameState } from "../contracts/IGameControllerService.contracts";
+import type { IBaseService } from "../../utils/decorators";
 
-export interface IGameControllerService {
+export interface IGameControllerService extends IBaseService {
   /**
    * Start the game and begin gameplay.
    */

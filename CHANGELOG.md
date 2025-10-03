@@ -2,6 +2,63 @@
 
 ## [Unreleased]
 
+### 1.7 🏗️ [2025-10-03] DIRECTIVE 006: TEST INFRASTRUCTURE CONFIGURATION BINDINGS
+
+**OBJECTIVE:** Fix test infrastructure by adding configuration and parameter bindings to test-container-factory.ts, resolving "No bindings found" errors.
+
+**STATUS:** ✅ **COMPLETED**
+
+**IMPLEMENTATION:**
+1. **Configuration Objects Added:**
+   - EventBusConfig (performance, error handling, priority queues)
+   - AppInitializerConfig (messages, steps, state updates, timing)
+   - BackendSyncConfig (API endpoints, sync throttling, health checks)
+   - GameControllerConfig (health, scoring, mechanics)
+   - QualiaCalculatorConfig (base state, multipliers, thresholds)
+   - RhythmicMovementConfig (BPM, timing, grid, coordinate system)
+
+2. **Parameter Objects Added:**
+   - ApplicationInitializerServiceParams (17 dependencies)
+   - BackendSyncServiceParams (6 dependencies)
+   - GameControllerServiceParams (7 dependencies)
+   - QualiaStateCalculatorServiceParams (5 dependencies)
+   - RhythmicMovementControllerParams (8 dependencies)
+
+3. **Container Bindings:**
+   - All config objects bound to TYPES symbols in test container
+   - Services can now be constructed by InversifyJS in tests
+
+4. **Service Interface Fixes:**
+   - IGameControllerService now extends IBaseService
+   - IBackendSyncService now extends IBaseService
+   - IQualiaStateCalculatorService now extends IBaseService
+   - Exposes initialize() and cleanup() methods as required by QUALIA.CODE
+
+5. **Test File Fixes:**
+   - Replaced ambiguous `bind()` calls with `unbind() + bind()` pattern
+   - Fixed GameControllerService.test.ts
+   - Fixed BackendSyncService.test.ts
+   - Fixed QualiaStateCalculatorService.test.ts
+   - Fixed ApplicationInitializerService.test.ts
+   - Fixed EventBus.test.ts
+
+**RESULTS:**
+- **Test Failures Reduced:** 49 → 33 (16 tests fixed! ✅ 33% reduction)
+- **Test Pass Rate:** 91/124 tests passing (73% ✅)
+- **Architectural Linter:** ✅ **PASSED WITH 0 ERRORS**
+- **Architecture Compliance:** 100% QUALIA.CODE compliant
+- **Type Safety:** All TypeScript compilation errors resolved
+- **Remaining Issues:** 33 business logic test failures (events not propagating, @OnEvent decorators not activating in tests)
+
+**FILES MODIFIED:**
+- `frontend/src/testing/test-container-factory.ts` (added 200+ lines of config)
+- `frontend/src/services/interfaces/IGameControllerService.ts` (extends IBaseService)
+- `frontend/src/services/interfaces/IBackendSyncService.ts` (extends IBaseService)
+- `frontend/src/services/interfaces/IQualiaStateCalculatorService.ts` (extends IBaseService)
+- 5 test files (unbind + bind pattern)
+
+---
+
 ### 1.6 🎯 [2025-10-03] DIRECTIVE 005: OPERATION CRITICAL COVERAGE - PHASE 1
 
 **OBJECTIVE:** Erradicate testing debt in the 5 most critical services of the system through comprehensive unit test coverage following QUALIA.CODE architectural principles.

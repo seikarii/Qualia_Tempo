@@ -14,6 +14,11 @@ import type { BackendSyncConfig } from '../../services/contracts/IBackendSyncSer
  * All methods return type-safe default values
  */
 export const mockBackendSyncService: IBackendSyncService = {
+  // IBaseService lifecycle methods
+  initialize: vi.fn().mockReturnValue(undefined),
+  cleanup: vi.fn().mockReturnValue(undefined),
+  
+  // IBackendSyncService methods
   start: vi.fn().mockResolvedValue(undefined),
   stop: vi.fn().mockResolvedValue(undefined),
   syncQualiaState: vi.fn().mockResolvedValue(undefined),

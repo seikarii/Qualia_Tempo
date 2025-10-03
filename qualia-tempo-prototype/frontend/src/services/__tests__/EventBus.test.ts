@@ -32,7 +32,8 @@ describe('EventBus - Critical Test Coverage', () => {
     mockLogger = container.get<ILogger>(TYPES.ILogger);
     mockTimerService = container.get<ITimerService>(TYPES.ITimerService);
     
-    // STEP 3: Bind and resolve the SUT
+    // STEP 3: Replace mock with real implementation
+    container.unbind(TYPES.IEventBus);
     container.bind<IEventBus>(TYPES.IEventBus).to(EventBus).inSingletonScope();
     eventBus = container.get<IEventBus>(TYPES.IEventBus);
   });

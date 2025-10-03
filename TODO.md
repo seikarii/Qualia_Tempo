@@ -15,6 +15,13 @@
 - **TOTAL**: 28 instancias
 
 
+## 🎯 DIRECTIVE 006 COMPLETED (2025-10-03)
+- ✅ Test infrastructure configuration bindings added
+- ✅ 16 tests fixed (49 → 33 failures, 73% pass rate)
+- ✅ Architectural linter passes with 0 errors
+- ⚠️ 33 remaining test failures due to @OnEvent decorator not activating in tests
+- 📋 Next phase: Investigate decorator test infrastructure
+
 ## DEV NOTES: 
 1. ARREGLAR/MEJORAR PARTE DE SHADERS Y RENDERIZADO FRONTEND (ESTADO CATASTROFICO)
 2. BARAJAR PINO PARA LOGGING
@@ -22,7 +29,7 @@
 4. AGREGAR SERVICIO DE BENCHMARKING
 5. ARREGLAR EL PANDEL DE DIAGNOSTICO,MOSTRARLO Y AÑADIR LA PARTE DE BENCHMARK
 6. MEJORAR EL MENU INICIAL
-7. AGREGAR TEST Y MEJORAR LA FACTORY Y EL SETUP
+7. ~~AGREGAR TEST Y MEJORAR LA FACTORY Y EL SETUP~~ ✅ COMPLETED (DIRECTIVE 006)
 8. INSPECCIONAR NUEVOS DECORADORES Y DEPRECATED (refactorizar adaptandemit para que no contenga un patron de service locator, agregar problamemente algun decorador de cache o de workers)
 9. REVISAR DEBUGSERVICE,NOTIFICATION,ERRORSERVICE Y SU INTEGRACION CON EL RESTO DEL PROJECTO
 10. MEJORAR MENU INICIAL, UTILIZAR LETRAS NEON

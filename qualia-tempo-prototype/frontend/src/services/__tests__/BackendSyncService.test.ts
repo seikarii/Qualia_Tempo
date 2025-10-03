@@ -2,7 +2,7 @@
  * DIRECTIVE 005 - PHASE 1: BackendSyncService Critical Test Coverage
  */
 
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 import { createTestContainer } from '../../testing/test-container-factory';
 import type { Container } from 'inversify';
 import { TYPES } from '../inversify.types';
@@ -31,6 +31,8 @@ describe('BackendSyncService - Critical Test Coverage', () => {
     mockTimerService = container.get<ITimerService>(TYPES.ITimerService);
     mockLogger = container.get<ILogger>(TYPES.ILogger);
 
+    // Replace mock with real implementation
+    container.unbind(TYPES.IBackendSyncService);
     container.bind<IBackendSyncService>(TYPES.IBackendSyncService)
       .to(BackendSyncService)
       .inSingletonScope();

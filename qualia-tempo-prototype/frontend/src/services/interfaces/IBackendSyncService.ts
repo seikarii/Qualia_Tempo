@@ -5,8 +5,9 @@
 
 import type { QualiaState } from "../../types/contracts";
 import type { BackendSyncConfig } from "../contracts/IBackendSyncService.contracts";
+import type { IBaseService } from "../../utils/decorators";
 
-export interface IBackendSyncService {
+export interface IBackendSyncService extends IBaseService {
   /**
    * Initialize sync process and health checking.
    * @returns Promise that resolves when service is started

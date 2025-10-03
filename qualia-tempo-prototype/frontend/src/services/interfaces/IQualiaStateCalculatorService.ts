@@ -6,8 +6,9 @@
 import type { QualiaCalculatorConfig } from "../contracts/IQualiaStateCalculatorService.contracts";
 import type { QualiaState } from "../../types/contracts";
 import type { PlayerActionEvent } from "../contracts/events.contracts";
+import type { IBaseService } from "../../utils/decorators";
 
-export interface IQualiaStateCalculatorService {
+export interface IQualiaStateCalculatorService extends IBaseService {
   /**
    * Initialize event subscriptions and start the calculation service.
    */
