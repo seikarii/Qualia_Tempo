@@ -12,6 +12,27 @@ interface GridRendererProps {
 }
 
 /**
+ * GridTile - Individual tile renderer component
+ * QUALIA.CODE COMPLIANT: Extract Component Pattern
+ */
+interface GridTileProps {
+  tile: { key: string; position: [number, number, number]; baseColor: [number, number, number]; emissiveColor: [number, number, number] };
+  tileSize: number;
+}
+
+const GridTile: React.FC<GridTileProps> = ({ tile, tileSize }) => (
+  <mesh key={tile.key} position={tile.position}>
+    <boxGeometry args={[tileSize * 0.9, 0.1, tileSize * 0.9]} />
+    <meshStandardMaterial
+      color={new THREE.Color(...tile.baseColor)}
+      emissive={new THREE.Color(...tile.emissiveColor)}
+      roughness={0.7}
+      metalness={0.3}
+    />
+  </mesh>
+);
+
+/**
  * GridRenderer - Stateless 2.5D game arena renderer
  * Uses ViewLogicService for all calculations, renders absolute values
  */
@@ -27,29 +48,22 @@ const GridRenderer: React.FC<GridRendererProps> = ({
   // Get visual data from ViewLogicService
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
-    const visuals = viewLogicService.getGridVisuals(gridSize, tileSize, playerPosition, activePositions, time);
+    const visuals = viewLogicService.getGridVisuals({
+      gridSize,
+      tileSize,
+      playerPosition,
+      activePositions,
+      currentTime: time
+    });
     setGridVisuals(visuals);
   });
 
   return (
     <group>
-      {/* Render tiles from visual data */}
       {gridVisuals.tiles.map((tile) => (
-        <mesh
-          key={tile.key}
-          position={tile.position}
-        >
-          <boxGeometry args={[tileSize * 0.9, 0.1, tileSize * 0.9]} />
-          <meshStandardMaterial
-            color={new THREE.Color(...tile.baseColor)}
-            emissive={new THREE.Color(...tile.emissiveColor)}
-            roughness={0.7}
-            metalness={0.3}
-          />
-        </mesh>
+        <GridTile key={tile.key} tile={tile} tileSize={tileSize} />
       ))}
 
-      {/* Grid borders */}
       <lineSegments>
         <edgesGeometry
           args={[

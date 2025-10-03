@@ -6,6 +6,7 @@ import logging
 import yaml
 import sys
 from pathlib import Path
+from typing import Any
 
 # Ensure the parent directory is in the Python path for proper module resolution
 backend_dir = Path(__file__).parent
@@ -20,12 +21,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def load_server_config() -> dict:
+def load_server_config() -> dict[str, Any]:
     """Load server configuration from YAML file."""
     config_path = Path(__file__).parent / "config" / "server.yaml"
     try:
         with open(config_path, "r") as file:
-            return yaml.safe_load(file)
+            config: dict[str, Any] = yaml.safe_load(file)
+            return config
     except FileNotFoundError:
         logger.warning(f"Configuration file not found at {config_path}, using defaults")
         return {

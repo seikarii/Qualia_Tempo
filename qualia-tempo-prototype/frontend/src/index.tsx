@@ -59,6 +59,50 @@ const initializeApplication = async (): Promise<boolean> => {
 };
 
 /**
+ * ErrorScreen - Fatal initialization error UI
+ * QUALIA.CODE COMPLIANT: Extract Component Pattern
+ */
+const ErrorScreen: React.FC = () => (
+  <div
+    style={{
+      backgroundColor: "black",
+      color: "red",
+      height: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: "monospace",
+      fontSize: "24px",
+      border: "2px solid red",
+      margin: "20px",
+    }}
+  >
+    FATAL: NEURAL CORE OFFLINE. CHECK CONSOLE.
+  </div>
+);
+
+/**
+ * LoadingScreen - Initialization loading UI
+ * QUALIA.CODE COMPLIANT: Extract Component Pattern
+ */
+const LoadingScreen: React.FC = () => (
+  <div
+    style={{
+      backgroundColor: "black",
+      color: "cyan",
+      height: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: "monospace",
+      fontSize: "18px",
+    }}
+  >
+    INITIALIZING NEURAL CORE...
+  </div>
+);
+
+/**
  * AppBootstrap Component - Manages application lifecycle
  */
 const AppBootstrap: React.FC = () => {
@@ -67,7 +111,6 @@ const AppBootstrap: React.FC = () => {
   const initialized = React.useRef(false);
 
   React.useEffect(() => {
-
     const init = async () => {
       if (initialized.current) return;
       initialized.current = true;
@@ -83,45 +126,8 @@ const AppBootstrap: React.FC = () => {
     init();
   }, []);
 
-  if (initError) {
-    return (
-      <div
-        style={{
-          backgroundColor: "black",
-          color: "red",
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: "monospace",
-          fontSize: "24px",
-          border: "2px solid red",
-          margin: "20px",
-        }}
-      >
-        FATAL: NEURAL CORE OFFLINE. CHECK CONSOLE.
-      </div>
-    );
-  }
-
-  if (!isInitialized) {
-    return (
-      <div
-        style={{
-          backgroundColor: "black",
-          color: "cyan",
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: "monospace",
-          fontSize: "18px",
-        }}
-      >
-        INITIALIZING NEURAL CORE...
-      </div>
-    );
-  }
+  if (initError) return <ErrorScreen />;
+  if (!isInitialized) return <LoadingScreen />;
 
   return (
     <ServiceProvider container={container}>

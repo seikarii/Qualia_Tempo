@@ -86,7 +86,7 @@ class SecurityService(ISecurityService):
         Returns:
             bool: True if authentication is required, False otherwise
         """
-        return self._auth_enabled
+        return bool(self._auth_enabled)
 
     async def _validate_token(self, token: str) -> Dict[str, Any]:
         """

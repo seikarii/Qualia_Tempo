@@ -30,7 +30,7 @@ try:
 except ImportError:
     from typing import Any
 
-    QualiaState = Any  # type: ignore[misc]
+    QualiaState = Any  # type: ignore[assignment,misc]
     QUALIA_STATE_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
@@ -781,7 +781,8 @@ class QualiaParticleEngine:
             return b""
         
         # Return structured array as compact bytes (26% smaller than GPU format)
-        return self._structured_particles_cache.tobytes()
+        particle_bytes: bytes = self._structured_particles_cache.tobytes()
+        return particle_bytes
 
     @log_execution(level="DEBUG")
     def get_particle_metadata(self) -> Dict[str, Any]:

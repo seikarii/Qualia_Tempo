@@ -170,15 +170,17 @@ async def get_optimized_particles(services: CompositionRoot = Depends(get_servic
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/particles/metadata")
-async def get_particle_metadata(services: CompositionRoot = Depends(get_services)) -> Dict[str, Any]:
+@app.get("/particle_metadata")
+async def get_particle_metadata(
+    services: CompositionRoot = Depends(get_services),
+) -> dict[str, Any]:
     """
     GOLD.CODE: Get particle format metadata without downloading binary data.
     Useful for clients to understand the data structure before fetching.
     """
     try:
         particle_engine = services.get_particle_system()
-        metadata = particle_engine.get_particle_metadata()
+        metadata: dict[str, Any] = particle_engine.get_particle_metadata()
         
         logger.info("📋 Returning particle metadata (GOLD.CODE)")
         return metadata

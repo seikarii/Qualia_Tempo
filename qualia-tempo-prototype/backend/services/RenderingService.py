@@ -2,7 +2,7 @@
 # GPU-accelerated rendering service for producing video frames
 
 import logging
-from typing import Optional, Any
+from typing import Optional, Any, TYPE_CHECKING
 
 from ..utils.decorators import log_execution, handle_errors
 from .interfaces.IRenderingService import IRenderingService
@@ -12,12 +12,12 @@ from .EventBus import SystemResourcesReadyEvent
 try:
     import moderngl
 except ImportError:
-    moderngl = None
+    moderngl = None  # type: ignore[assignment]
 
 try:
     import numpy as np
 except ImportError:
-    np = None
+    np = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +134,15 @@ class RenderingService(IRenderingService):
         if not self._is_ready():
             logger.warning("Rendering service not ready")
             return None
+        
+        if not moderngl or not np:
+            logger.error("moderngl or numpy not available")
+            return None
+        
+        # Type narrowing: assert moderngl is available for type checker
+        assert moderngl is not None
+        assert self._fbo is not None
+        assert self._program is not None
             
         try:
             # QUALIA.CODE v1.1: Use particle engine's current particle buffer as data source
@@ -175,7 +184,8 @@ class RenderingService(IRenderingService):
             self._vao.render(mode=moderngl.POINTS)
             
             # Read back the framebuffer data
-            return self._fbo.color_attachments[0].read()
+            frame_data: bytes = self._fbo.color_attachments[0].read()
+            return frame_data
             
         except Exception as e:
             logger.error(f"Error during frame rendering: {e}")

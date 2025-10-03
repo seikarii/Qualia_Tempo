@@ -17,7 +17,7 @@ from ..utils.decorators import (
 try:
     import moderngl
 except ImportError:
-    moderngl = None
+    moderngl = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -478,7 +478,7 @@ class StreamingWebService:
                     if self._connected_clients == 0 and self._is_streaming:
                         await self._stop_streaming()
 
-    async def _send_bytes_to_client(self, websocket: WebSocket, data: bytes):
+    async def _send_bytes_to_client(self, websocket: WebSocket, data: bytes) -> None:
         """Sends bytes to a single client and handles exceptions."""
         try:
             # ¡LA LLAMADA CORRECTA Y ÚNICA ACEPTABLE!

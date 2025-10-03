@@ -2,7 +2,7 @@
 # Dynamically parses GLSL shaders to extract uniform information
 
 from __future__ import annotations
-from typing import Dict, List, Tuple, Any
+from typing import Dict as TypingDict, List, Tuple, Any
 from pyparsing import *
 from backend.services.interfaces.IShaderIntrospectionService import (
     IShaderIntrospectionService,

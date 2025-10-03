@@ -7,26 +7,36 @@ import log from "electron-log";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Enhanced window configuration for modern gaming experience
-const createWindow = (): BrowserWindow => {
-  // Get primary display dimensions
+/**
+ * Calculate optimal window dimensions based on screen size
+ * QUALIA.CODE COMPLIANT: Extracted method pattern
+ */
+const calculateWindowDimensions = (): { width: number; height: number } => {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth, height: screenHeight } =
     primaryDisplay.workAreaSize;
 
-  // Calculate optimal window size (80% of screen, minimum 1200x800)
-  const windowWidth = Math.max(Math.floor(screenWidth * 0.8), 1200);
-  const windowHeight = Math.max(Math.floor(screenHeight * 0.8), 800);
+  return {
+    width: Math.max(Math.floor(screenWidth * 0.8), 1200),
+    height: Math.max(Math.floor(screenHeight * 0.8), 800),
+  };
+};
 
-  // Create the main browser window with enhanced gaming features
-  const mainWindow = new BrowserWindow({
+/**
+ * Create BrowserWindow configuration object
+ * QUALIA.CODE COMPLIANT: Extracted method pattern
+ */
+const createBrowserWindowConfig = (
+  windowWidth: number,
+  windowHeight: number
+): Electron.BrowserWindowConstructorOptions => {
+  return {
     width: windowWidth,
     height: windowHeight,
     minWidth: 1024,
     minHeight: 720,
     center: true,
 
-    // Enhanced visual settings
     titleBarStyle: "hidden",
     titleBarOverlay: {
       color: "#000000",
@@ -34,36 +44,23 @@ const createWindow = (): BrowserWindow => {
       height: 30,
     },
 
-    // Window behavior
     resizable: true,
     maximizable: true,
     fullscreenable: true,
 
-    // Visual enhancements
     transparent: false,
     opacity: 1.0,
     backgroundColor: "#000000",
-
-    // Performance optimizations
-    show: false, // Show only when ready to prevent flash
+    show: false,
 
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       nodeIntegration: false,
       contextIsolation: true,
-
-      // Enhanced security and performance
       sandbox: false,
       webSecurity: true,
       allowRunningInsecureContent: false,
-
-      // Graphics acceleration
       experimentalFeatures: true,
-
-      // Audio enhancements - removed deprecated enableRemoteModule
-      // enableRemoteModule: false, // DEPRECATED in newer Electron versions
-
-      // Additional flags for better performance
       additionalArguments: [
         "--enable-features=VaapiVideoDecoder",
         "--disable-features=VizDisplayCompositor",
@@ -73,139 +70,92 @@ const createWindow = (): BrowserWindow => {
       ],
     },
 
-    // Window styling
     icon: join(__dirname, "../assets/icon.png"),
     title: "Qualia Tempo - A Charlie Hellsinger Story",
-
-    // macOS specific - use valid vibrancy value
-    vibrancy: "fullscreen-ui" as const, // Type assertion for compatibility
+    vibrancy: "fullscreen-ui" as const,
     visualEffectState: "active",
-  });
+  };
+};
 
-  // Enhanced window loading with splash effect
-  mainWindow.once("ready-to-show", () => {
-    mainWindow.show();
-
-    // Smooth fade-in effect
-    mainWindow.setOpacity(0);
-
-    let opacity = 0;
-    const fadeIn = setInterval(() => {
-      opacity += 0.05;
-      if (opacity >= 1) {
-        opacity = 1;
-        clearInterval(fadeIn);
-      }
-      mainWindow.setOpacity(opacity);
-    }, 16); // ~60fps
-
-    log.info("🎮 Qualia Tempo Window Ready - Neural Interface Activated");
-  });
-
-  // Load the application
-  interface GlobalWithProcess {
-    process?: { env?: Record<string, string | undefined> };
-  }
-  const globalWithProcess = globalThis as unknown as GlobalWithProcess;
+/**
+ * Setup window fade-in animation
+ * QUALIA.CODE COMPLIANT: Extracted method pattern
+ */
+const setupWindowFadeIn = (window: BrowserWindow): void => {
+  window.setOpacity(0);
+  let opacity = 0;
   
-  if (env.isDev && globalWithProcess.process?.env?.["ELECTRON_RENDERER_URL"]) {
-    mainWindow.loadURL(
-      globalWithProcess.process.env["ELECTRON_RENDERER_URL"] as string,
-    );
-  } else {
-    mainWindow.loadFile(join(__dirname, "../index.html"));
-  }
+  const fadeIn = setInterval(() => {
+    opacity += 0.05;
+    if (opacity >= 1) {
+      opacity = 1;
+      clearInterval(fadeIn);
+    }
+    window.setOpacity(opacity);
+  }, 16);
+};
 
-  // Enhanced development tools
-  if (env.isDev) {
-    mainWindow.webContents.openDevTools({
-      mode: "detach",
-      activate: false,
-    });
-
-    // Hot reload support
-    mainWindow.webContents.on("before-input-event", (_, input) => {
-      if (input.control && input.key === "r") {
-        mainWindow.reload();
-      }
-    });
-  }
-
-  // Window event handlers
-  mainWindow.on("closed", () => {
+/**
+ * Setup window event handlers
+ * QUALIA.CODE COMPLIANT: Extracted method pattern
+ */
+const setupWindowEventHandlers = (window: BrowserWindow): void => {
+  window.on("closed", () => {
     log.info("🔌 Neural Interface Disconnected");
   });
 
-  // Prevent navigation to external sites (security)
-  mainWindow.webContents.on("will-navigate", (event, navigationUrl) => {
+  window.webContents.on("will-navigate", (event, navigationUrl) => {
     const parsedUrl = new URL(navigationUrl);
-    const currentUrl = new URL(mainWindow.webContents.getURL());
+    const currentUrl = new URL(window.webContents.getURL());
 
     if (parsedUrl.origin !== currentUrl.origin) {
       event.preventDefault();
       shell.openExternal(navigationUrl);
     }
   });
+};
 
-  // Enhanced fullscreen handling with smooth transitions
+/**
+ * Setup IPC handlers for window control
+ * QUALIA.CODE COMPLIANT: Extracted method pattern
+ */
+const setupWindowIPCHandlers = (window: BrowserWindow): void => {
   ipcMain.handle("toggle-fullscreen", () => {
-    const isFullScreen = mainWindow.isFullScreen();
-
-    if (isFullScreen) {
-      // Exit fullscreen with fade effect
-      mainWindow.setFullScreen(false);
-    } else {
-      // Enter fullscreen with preparation
-      mainWindow.setFullScreen(true);
-    }
-
-    // Notify renderer of fullscreen state change
-    mainWindow.webContents.send("fullscreen-changed", !isFullScreen);
-
+    const isFullScreen = window.isFullScreen();
+    window.setFullScreen(!isFullScreen);
+    window.webContents.send("fullscreen-changed", !isFullScreen);
     return !isFullScreen;
   });
 
-  // Window control handlers
   ipcMain.handle("minimize-window", () => {
-    mainWindow.minimize();
+    window.minimize();
     return true;
   });
 
   ipcMain.handle("close-window", () => {
-    mainWindow.close();
+    window.close();
     return true;
   });
 
-  // Enhanced window state management
-  ipcMain.handle("get-window-state", () => {
-    return {
-      isMaximized: mainWindow.isMaximized(),
-      isMinimized: mainWindow.isMinimized(),
-      isFullScreen: mainWindow.isFullScreen(),
-      bounds: mainWindow.getBounds(),
-      isVisible: mainWindow.isVisible(),
-      isFocused: mainWindow.isFocused(),
-    };
-  });
+  ipcMain.handle("get-window-state", () => ({
+    isMaximized: window.isMaximized(),
+    isMinimized: window.isMinimized(),
+    isFullScreen: window.isFullScreen(),
+    bounds: window.getBounds(),
+    isVisible: window.isVisible(),
+    isFocused: window.isFocused(),
+  }));
 
-  // Performance monitoring
-  ipcMain.handle("get-performance-info", () => {
-    const webContents = mainWindow.webContents;
-    return {
-      memory: process.memoryUsage(),
-      cpu: process.cpuUsage(),
-      gpu: webContents.getProcessId(),
-      zoom: webContents.getZoomLevel(),
-    };
-  });
+  ipcMain.handle("get-performance-info", () => ({
+    memory: process.memoryUsage(),
+    cpu: process.cpuUsage(),
+    gpu: window.webContents.getProcessId(),
+    zoom: window.webContents.getZoomLevel(),
+  }));
 
-  // Audio session management (Windows)
   if (process.platform === "win32") {
     ipcMain.handle("set-audio-session", (_, _options) => {
-      // Enhanced audio session handling for Windows
       try {
-        // TODO: Implement Windows-specific audio session configuration
-        // For now, return success as this is a placeholder
         if (_options) {
           // Placeholder for future audio session configuration
         }
@@ -216,6 +166,58 @@ const createWindow = (): BrowserWindow => {
       }
     });
   }
+};
+
+/**
+ * Load application URL based on environment
+ * QUALIA.CODE COMPLIANT: Extracted method pattern
+ */
+const loadApplicationURL = (window: BrowserWindow): void => {
+  interface GlobalWithProcess {
+    process?: { env?: Record<string, string | undefined> };
+  }
+  const globalWithProcess = globalThis as unknown as GlobalWithProcess;
+  
+  if (env.isDev && globalWithProcess.process?.env?.["ELECTRON_RENDERER_URL"]) {
+    window.loadURL(
+      globalWithProcess.process.env["ELECTRON_RENDERER_URL"] as string,
+    );
+  } else {
+    window.loadFile(join(__dirname, "../index.html"));
+  }
+
+  if (env.isDev) {
+    window.webContents.openDevTools({
+      mode: "detach",
+      activate: false,
+    });
+
+    window.webContents.on("before-input-event", (_, input) => {
+      if (input.control && input.key === "r") {
+        window.reload();
+      }
+    });
+  }
+};
+
+/**
+ * Enhanced window configuration for modern gaming experience
+ * QUALIA.CODE COMPLIANT: Orchestrator pattern with extracted methods
+ */
+const createWindow = (): BrowserWindow => {
+  const { width, height } = calculateWindowDimensions();
+  const config = createBrowserWindowConfig(width, height);
+  const mainWindow = new BrowserWindow(config);
+
+  mainWindow.once("ready-to-show", () => {
+    mainWindow.show();
+    setupWindowFadeIn(mainWindow);
+    log.info("🎮 Qualia Tempo Window Ready - Neural Interface Activated");
+  });
+
+  loadApplicationURL(mainWindow);
+  setupWindowEventHandlers(mainWindow);
+  setupWindowIPCHandlers(mainWindow);
 
   return mainWindow;
 };

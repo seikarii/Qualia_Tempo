@@ -227,7 +227,7 @@ class TestCompositionRootFactory:
         composition_root._initialized = True
 
         # Helper to retrieve all mocks at once
-        composition_root.get_all_mocks = lambda: {
+        composition_root.get_all_mocks = lambda: {  # type: ignore[attr-defined]
             "event_bus": mock_event_bus,
             "shader_inspector": mock_shader_inspector,
             "ctx": mock_ctx,

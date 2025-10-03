@@ -315,7 +315,8 @@ class CompositionRoot:
 
     def get_event_bus(self) -> EventBus:
         """Get the EventBus service."""
-        return self.get_service("event_bus")
+        from backend.services.EventBus import EventBus as EventBusClass
+        return self.get_service("event_bus")  # type: ignore[no-any-return]
 
     def get_particle_system(self) -> Any:
         """Get the ParticleSystem service."""

@@ -20,6 +20,57 @@ interface MusicalNotesRendererProps {
 }
 
 /**
+ * Convert Note[] to NoteData[] for ViewLogicService
+ */
+const convertNotesToNoteData = (notes: Note[]) => {
+  return notes.map(note => ({
+    id: note.id,
+    timestamp: note.timing,
+    position: { x: note.position[0], y: note.position[1] },
+    duration: 1.0, // Default duration
+    qualia_signature: note.qualia_signature,
+    state: 'active' as const,
+  }));
+};
+
+/**
+ * Individual note renderer component
+ */
+const NoteRenderer: React.FC<{ visual: NoteVisualData }> = ({ visual }) => {
+  if (!visual.isActive) return null;
+
+  const geometry = getGeometryForType(visual.geometryType);
+
+  return (
+    <mesh
+      key={visual.id}
+      position={visual.position}
+      scale={visual.scale}
+      rotation={visual.rotation}
+    >
+      <primitive object={geometry} />
+      <meshStandardMaterial
+        color={visual.color}
+        transparent
+        opacity={visual.opacity}
+        emissive={visual.isPerfectTiming ? [0.2, 0.2, 0.2] : [0, 0, 0]}
+      />
+
+      {/* Trail effect */}
+      {visual.trail.visible && (
+        <TrailEffect
+          position={visual.position}
+          color={new THREE.Color(...visual.trail.color)}
+          scale={visual.trail.scale}
+          opacity={visual.trail.opacity}
+          rotation={0}
+        />
+      )}
+    </mesh>
+  );
+};
+
+/**
  * MusicalNotesRenderer - Stateless 3D note renderer
  * Uses ViewLogicService for all calculations, renders absolute values
  */
@@ -32,54 +83,16 @@ const MusicalNotesRenderer: React.FC<MusicalNotesRendererProps> = ({
 
   // Get visual data from ViewLogicService
   useFrame(() => {
-    // Convert Note[] to NoteData[] for ViewLogicService
-    const noteDataArray = notes.map(note => ({
-      id: note.id,
-      timestamp: note.timing,
-      position: { x: note.position[0], y: note.position[1] },
-      duration: 1.0, // Default duration
-      qualia_signature: note.qualia_signature,
-      state: 'active' as const,
-    }));
+    const noteDataArray = convertNotesToNoteData(notes);
     const visuals = viewLogicService.getMusicalNoteVisuals(noteDataArray, currentTime);
     setNoteVisuals(visuals);
   });
 
   return (
     <group>
-      {noteVisuals.map((visual) => {
-        if (!visual.isActive) return null;
-
-        const geometry = getGeometryForType(visual.geometryType);
-
-        return (
-          <mesh
-            key={visual.id}
-            position={visual.position}
-            scale={visual.scale}
-            rotation={visual.rotation}
-          >
-            <primitive object={geometry} />
-            <meshStandardMaterial
-              color={visual.color}
-              transparent
-              opacity={visual.opacity}
-              emissive={visual.isPerfectTiming ? [0.2, 0.2, 0.2] : [0, 0, 0]}
-            />
-            
-            {/* Trail effect */}
-            {visual.trail.visible && (
-              <TrailEffect
-                position={visual.position}
-                color={new THREE.Color(...visual.trail.color)}
-                scale={visual.trail.scale}
-                opacity={visual.trail.opacity}
-                rotation={0}
-              />
-            )}
-          </mesh>
-        );
-      })}
+      {noteVisuals.map((visual) => (
+        <NoteRenderer key={visual.id} visual={visual} />
+      ))}
     </group>
   );
 };
