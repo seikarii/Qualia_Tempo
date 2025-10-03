@@ -102,11 +102,9 @@ export interface IViewLogicService {
 
   /**
    * Calculate grid visual properties
-   * @param playerPosition Current player position
-   * @param activePositions Array of active grid positions
-   * @param time Current game time
+   * QUALIA.CODE COMPLIANT: Parameter Object Pattern (max 4 params)
+   * @param params - GetGridVisualsParams object containing all required parameters
    * @returns Grid visual data
    */
   getGridVisuals(params: GetGridVisualsParams): GridVisualData;
-  getGridVisuals(gridSize: number, tileSize: number, playerPosition: { x: number; y: number }, activePositions: [number, number][], time: number): GridVisualData;
 }

@@ -222,8 +222,11 @@ vi.mock("tone/build/esm/index", () => ({
   },
 }));
 
-// QUALIA.CODE Global Electron Mock - Prevent electron module import errors in tests
-vi.mock("electron", () => ({
+/**
+ * createElectronMock - Factory for Electron module mock
+ * QUALIA.CODE COMPLIANT: Extract Function Pattern
+ */
+const createElectronMock = () => ({
   app: {
     requestSingleInstanceLock: vi.fn(() => true),
     on: vi.fn(),
@@ -232,9 +235,7 @@ vi.mock("electron", () => ({
     getName: vi.fn(() => "Qualia Tempo"),
     getPath: vi.fn(() => "/tmp"),
     setAppUserModelId: vi.fn(),
-    commandLine: {
-      appendSwitch: vi.fn(),
-    },
+    commandLine: { appendSwitch: vi.fn() },
   },
   BrowserWindow: vi.fn().mockImplementation(() => ({
     loadURL: vi.fn(),
@@ -260,41 +261,110 @@ vi.mock("electron", () => ({
     getBounds: vi.fn(() => ({ x: 0, y: 0, width: 1920, height: 1080 })),
     setBounds: vi.fn(),
   })),
-  ipcMain: {
-    on: vi.fn(),
-    handle: vi.fn(),
-    removeHandler: vi.fn(),
-  },
-  Menu: {
-    setApplicationMenu: vi.fn(),
-    buildFromTemplate: vi.fn(() => ({})),
-  },
-  dialog: {
-    showMessageBox: vi.fn(),
-    showOpenDialog: vi.fn(),
-    showSaveDialog: vi.fn(),
-  },
+  ipcMain: { on: vi.fn(), handle: vi.fn(), removeHandler: vi.fn() },
+  Menu: { setApplicationMenu: vi.fn(), buildFromTemplate: vi.fn(() => ({})) },
+  dialog: { showMessageBox: vi.fn(), showOpenDialog: vi.fn(), showSaveDialog: vi.fn() },
   screen: {
     getPrimaryDisplay: vi.fn(() => ({
       workAreaSize: { width: 1920, height: 1080 },
       size: { width: 1920, height: 1080 },
     })),
-    getAllDisplays: vi.fn(() => [
-      {
-        workAreaSize: { width: 1920, height: 1080 },
-        size: { width: 1920, height: 1080 },
-      },
-    ]),
+    getAllDisplays: vi.fn(() => [{ workAreaSize: { width: 1920, height: 1080 }, size: { width: 1920, height: 1080 } }]),
   },
-  shell: {
-    openExternal: vi.fn(),
-  },
-  globalShortcut: {
-    register: vi.fn(() => true),
-    unregister: vi.fn(),
-    isRegistered: vi.fn(() => false),
-  },
-}));
+  shell: { openExternal: vi.fn() },
+  globalShortcut: { register: vi.fn(() => true), unregister: vi.fn(), isRegistered: vi.fn(() => false) },
+});
+
+// QUALIA.CODE Global Electron Mock - Prevent electron module import errors in tests
+vi.mock("electron", createElectronMock);
+
+/**
+ * setupBrowserTimingMocks - Configure timing API mocks
+ * QUALIA.CODE COMPLIANT: Extract Method Pattern
+ */
+const setupBrowserTimingMocks = (): void => {
+  const mockSetInterval = vi.fn(() => 123);
+  const mockClearInterval = vi.fn();
+  const mockSetTimeout = vi.fn(() => 456);
+  const mockClearTimeout = vi.fn();
+
+  Object.defineProperty(window, "setInterval", { writable: true, configurable: true, value: mockSetInterval });
+  Object.defineProperty(window, "clearInterval", { writable: true, configurable: true, value: mockClearInterval });
+  Object.defineProperty(window, "setTimeout", { writable: true, configurable: true, value: mockSetTimeout });
+  Object.defineProperty(window, "clearTimeout", { writable: true, configurable: true, value: mockClearTimeout });
+  Object.defineProperty(global, "setInterval", { writable: true, configurable: true, value: mockSetInterval });
+  Object.defineProperty(global, "clearInterval", { writable: true, configurable: true, value: mockClearInterval });
+};
+
+/**
+ * setupBrowserAPIMocks - Configure browser API mocks
+ * QUALIA.CODE COMPLIANT: Extract Method Pattern
+ */
+const setupBrowserAPIMocks = (): void => {
+  Object.defineProperty(window, "performance", {
+    writable: true,
+    value: {
+      now: vi.fn(() => Date.now()),
+      mark: vi.fn(),
+      measure: vi.fn(),
+      getEntriesByType: vi.fn(() => []),
+      getEntriesByName: vi.fn(() => []),
+      timeOrigin: 0,
+      timing: { navigationStart: Date.now(), loadEventEnd: Date.now() },
+    },
+  });
+
+  Object.defineProperty(window, "requestAnimationFrame", {
+    writable: true,
+    value: vi.fn((callback: FrameRequestCallback) => globalThis.setTimeout(callback, 16)),
+  });
+
+  Object.defineProperty(window, "cancelAnimationFrame", {
+    writable: true,
+    value: vi.fn((id: number) => globalThis.clearTimeout(id)),
+  });
+
+  Object.defineProperty(window, "localStorage", {
+    writable: true,
+    value: {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+      length: 0,
+      key: vi.fn(),
+    },
+  });
+};
+
+/**
+ * setupAudioContextMocks - Configure Web Audio API mocks
+ * QUALIA.CODE COMPLIANT: Extract Method Pattern
+ */
+const setupAudioContextMocks = (): void => {
+  Object.defineProperty(window, "AudioContext", {
+    writable: true,
+    value: vi.fn().mockImplementation(() => ({
+      createGain: vi.fn(() => ({ connect: vi.fn(), gain: { value: 1 } })),
+      createOscillator: vi.fn(() => ({
+        connect: vi.fn(),
+        frequency: { value: 440 },
+        start: vi.fn(),
+        stop: vi.fn(),
+      })),
+      destination: {},
+      state: "running",
+      resume: vi.fn(),
+      suspend: vi.fn(),
+      close: vi.fn(),
+    })),
+  });
+
+  Object.defineProperty(window, "webkitAudioContext", {
+    writable: true,
+    value: window.AudioContext,
+  });
+};
 
 // Comprehensive browser APIs mocking for test environment
 // Ensure global window object exists
@@ -302,121 +372,10 @@ if (typeof window === "undefined") {
   (global as unknown as { window: Window }).window = {} as unknown as Window;
 }
 
-// Mock browser timing APIs with enhanced stability
-const mockSetInterval = vi.fn(() => 123); // Return a mock timer ID
-const mockClearInterval = vi.fn(); // No-op function
-const mockSetTimeout = vi.fn(() => 456); // Return a mock timer ID
-const mockClearTimeout = vi.fn(); // No-op function
-
-Object.defineProperty(window, "setInterval", {
-  writable: true,
-  configurable: true,
-  value: mockSetInterval,
-});
-
-Object.defineProperty(window, "clearInterval", {
-  writable: true,
-  configurable: true,
-  value: mockClearInterval,
-});
-
-Object.defineProperty(window, "setTimeout", {
-  writable: true,
-  configurable: true,
-  value: mockSetTimeout,
-});
-
-Object.defineProperty(window, "clearTimeout", {
-  writable: true,
-  configurable: true,
-  value: mockClearTimeout,
-});
-
-// Also mock on global for maximum compatibility
-Object.defineProperty(global, "setInterval", {
-  writable: true,
-  configurable: true,
-  value: mockSetInterval,
-});
-
-Object.defineProperty(global, "clearInterval", {
-  writable: true,
-  configurable: true,
-  value: mockClearInterval,
-});
-
-// Mock performance API
-Object.defineProperty(window, "performance", {
-  writable: true,
-  value: {
-    now: vi.fn(() => Date.now()),
-    mark: vi.fn(),
-    measure: vi.fn(),
-    getEntriesByType: vi.fn(() => []),
-    getEntriesByName: vi.fn(() => []),
-    timeOrigin: 0,
-    timing: {
-      navigationStart: Date.now(),
-      loadEventEnd: Date.now(),
-    },
-  },
-});
-
-// Mock requestAnimationFrame/cancelAnimationFrame
-Object.defineProperty(window, "requestAnimationFrame", {
-  writable: true,
-  value: vi.fn((callback: FrameRequestCallback) => {
-    return globalThis.setTimeout(callback, 16); // ~60fps
-  }),
-});
-
-Object.defineProperty(window, "cancelAnimationFrame", {
-  writable: true,
-  value: vi.fn((id: number) => {
-    globalThis.clearTimeout(id);
-  }),
-});
-
-// Mock localStorage
-Object.defineProperty(window, "localStorage", {
-  writable: true,
-  value: {
-    getItem: vi.fn(),
-    setItem: vi.fn(),
-    removeItem: vi.fn(),
-    clear: vi.fn(),
-    length: 0,
-    key: vi.fn(),
-  },
-});
-
-// Mock AudioContext for WebAudioAPIService
-Object.defineProperty(window, "AudioContext", {
-  writable: true,
-  value: vi.fn().mockImplementation(() => ({
-    createGain: vi.fn(() => ({
-      connect: vi.fn(),
-      gain: { value: 1 },
-    })),
-    createOscillator: vi.fn(() => ({
-      connect: vi.fn(),
-      frequency: { value: 440 },
-      start: vi.fn(),
-      stop: vi.fn(),
-    })),
-    destination: {},
-    state: "running",
-    resume: vi.fn(),
-    suspend: vi.fn(),
-    close: vi.fn(),
-  })),
-});
-
-// Also add webkitAudioContext fallback
-Object.defineProperty(window, "webkitAudioContext", {
-  writable: true,
-  value: window.AudioContext,
-});
+// Initialize all browser mocks
+setupBrowserTimingMocks();
+setupBrowserAPIMocks();
+setupAudioContextMocks();
 
 afterEach(() => {
   cleanup();

@@ -768,16 +768,39 @@ export class NotificationService implements INotificationService, IBaseService {
     };
   }
 
+  /**
+   * Process notification through filtering, throttling, and queuing
+   * QUALIA.CODE COMPLIANT: Extract Method Pattern (51→18 lines, 65% reduction)
+   */
   private async processNotification(
     notification: ExtendedNotification,
   ): Promise<void> {
     this.statistics.totalNotifications++;
 
+    if (!this.validateNotificationForProcessing(notification)) {
+      return;
+    }
+
+    this.throttlingManager.recordNotification();
+    this.enqueueOrDisplayNotification(notification);
+    this.addToNotificationHistory(notification);
+
+    this.logger.debug("📝 [NotificationService] Notification queued", {
+      id: notification.id,
+      type: notification.type,
+      priority: notification.priority,
+    });
+  }
+
+  /**
+   * Validate notification through filters and throttling
+   */
+  private validateNotificationForProcessing(notification: ExtendedNotification): boolean {
     // Apply filters
     if (this.shouldFilterNotification(notification)) {
       this.statistics.filteredNotifications++;
       this.logger.debug(`Notification filtered: ${notification.message}`);
-      return;
+      return false;
     }
 
     // Check throttling
@@ -787,15 +810,17 @@ export class NotificationService implements INotificationService, IBaseService {
         id: notification.id,
         type: notification.type,
       });
-      // Log compatible message for tests
       this.logger.debug(`Notification throttled: ${notification.message}`);
-      return;
+      return false;
     }
 
-    // Record notification for throttling
-    this.throttlingManager.recordNotification();
+    return true;
+  }
 
-    // Add to queue or process immediately
+  /**
+   * Enqueue notification or display immediately based on configuration
+   */
+  private enqueueOrDisplayNotification(notification: ExtendedNotification): void {
     if (this.config.enablePriorityQueuing) {
       this.notificationQueue.enqueue(notification);
       // Process queue immediately to ensure notifications are displayed for tests
@@ -804,20 +829,18 @@ export class NotificationService implements INotificationService, IBaseService {
       // Process immediately
       this.displayNotification(notification);
     }
+  }
 
-    // Add to history
+  /**
+   * Add notification to history with cleanup
+   */
+  private addToNotificationHistory(notification: ExtendedNotification): void {
     this.notificationHistory.push(notification);
     if (this.notificationHistory.length > this.config.maxHistorySize) {
       this.notificationHistory = this.notificationHistory.slice(
         -Math.floor(this.config.maxHistorySize * this.config.historyCleanupRatio),
       );
     }
-
-    this.logger.debug("📝 [NotificationService] Notification queued", {
-      id: notification.id,
-      type: notification.type,
-      priority: notification.priority,
-    });
   }
 
   /**
@@ -869,7 +892,20 @@ export class NotificationService implements INotificationService, IBaseService {
     return age > this.config.filter.maxAge;
   }
 
+  /**
+   * Display notification and setup auto-dismiss
+   * QUALIA.CODE COMPLIANT: Extract Method Pattern (54→19 lines, 65% reduction)
+   */
   private displayNotification(notification: ExtendedNotification): void {
+    this.markNotificationAsDisplayed(notification);
+    this.logNotificationDisplay(notification);
+    this.setupAutoDismiss(notification);
+  }
+
+  /**
+   * Mark notification as displayed and update statistics
+   */
+  private markNotificationAsDisplayed(notification: ExtendedNotification): void {
     notification.displayed = true;
     this.activeNotifications.set(notification.id, notification);
     this.statistics.displayedNotifications++;
@@ -880,8 +916,12 @@ export class NotificationService implements INotificationService, IBaseService {
 
     // For immediate store update (test compatibility)
     this.updateStore();
+  }
 
-    // Log for test compatibility - include metadata and duration if available
+  /**
+   * Log notification display with metadata
+   */
+  private logNotificationDisplay(notification: ExtendedNotification): void {
     const logData: NotificationLogData = {
       notificationId: notification.id,
       type: notification.type,
@@ -906,21 +946,25 @@ export class NotificationService implements INotificationService, IBaseService {
       type: notification.type,
       message: notification.message,
     });
+  }
 
-    // Auto-dismiss functionality: Set up timer if expiresAt is defined
-    if (notification.expiresAt) {
-      const timeToExpire = notification.expiresAt.getTime() - this.timerService.now();
-      if (timeToExpire > 0) {
-        this.timerService.setTimeout(() => {
-          // Only dismiss if notification is still active
-          if (this.activeNotifications.has(notification.id)) {
-            this.logger.debug(
-              `Auto-dismissed notification: ${notification.id}`,
-            );
-            this.hideNotification(notification.id);
-          }
-        }, timeToExpire);
-      }
+  /**
+   * Setup auto-dismiss timer if notification has expiration
+   */
+  private setupAutoDismiss(notification: ExtendedNotification): void {
+    if (!notification.expiresAt) {
+      return;
+    }
+
+    const timeToExpire = notification.expiresAt.getTime() - this.timerService.now();
+    if (timeToExpire > 0) {
+      this.timerService.setTimeout(() => {
+        // Only dismiss if notification is still active
+        if (this.activeNotifications.has(notification.id)) {
+          this.logger.debug(`Auto-dismissed notification: ${notification.id}`);
+          this.hideNotification(notification.id);
+        }
+      }, timeToExpire);
     }
   }
 

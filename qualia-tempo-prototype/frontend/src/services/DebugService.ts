@@ -824,67 +824,95 @@ export class DebugService implements IDebugService, IBaseService {
     return results;
   }
 
+  /**
+   * Setup global debugging interface for external access
+   * QUALIA.CODE COMPLIANT: Extract Method Pattern (62→25 lines, 60% reduction)
+   */
   private setupGlobalInterface(): DebugInterface | null {
-    // Only setup if enabled in config
     if (!this.config.development.enableDebugOverlay) {
       return null;
     }
 
-    // Create debugging interface object matching IDebugService.DebugInterface
-    // PLUS additional development methods for enhanced debugging
-    const debugInterface: DebugInterface = {
-      // Official DebugInterface methods
+    const debugInterface = this.buildDebugInterface();
+    this.logger.info(
+      "🌐 [DebugService] Global debugging interface created with full development functionality",
+    );
+
+    return debugInterface;
+  }
+
+  /**
+   * Build the complete debug interface object with official and development methods
+   */
+  private buildDebugInterface(): DebugInterface & Record<string, unknown> {
+    return {
+      ...this.buildOfficialMethods(),
+      ...this.buildDevelopmentMethods(),
+    } as DebugInterface & Record<string, unknown>;
+  }
+
+  /**
+   * Build official DebugInterface methods
+   */
+  private buildOfficialMethods() {
+    return {
       logServiceStatus: () => this.logServiceStatus(),
       getMetrics: () => this.getMetrics(),
       getSystemSnapshot: () => this.getSystemSnapshot(),
       performAIAnalysis: () => this.performAIAnalysis(),
       exportDebugData: () => this.exportDebugData(),
+    };
+  }
 
-      // Additional development methods (not part of official interface)
-      // These are attached to the object but not enforced by TypeScript
+  /**
+   * Build additional development methods for enhanced debugging
+   */
+  private buildDevelopmentMethods() {
+    return {
       getStats: () => this.getDebugStats(),
       getSnapshot: () => this.getSystemSnapshot(),
       performAnalysis: () => this.performAIAnalysis(),
       exportData: () => this.exportDebugData(),
       startSession: () => this.startNewSession(),
       endSession: () => this.endCurrentSession(),
-      clearHistory: () => {
-        this.eventHistory = [];
-        this.errorHistory = [];
-        this.aiAnalysisResults = [];
-        this.logger.info(
-          "🧹 [DebugService] History cleared via global interface",
-        );
-      },
-      enableAI: () => {
-        this.updateConfig({ enableAIAnalysis: true });
-        this.logger.info("🤖 [DebugService] AI analysis enabled");
-      },
-      disableAI: () => {
-        this.updateConfig({ enableAIAnalysis: false });
-        this.logger.info("🤖 [DebugService] AI analysis disabled");
-      },
-      log: (message: string, data?: unknown) => {
-        this.logger.info(`🔧 [QA_DEBUG] ${message}`, data as Record<string, unknown> ?? {});
-      },
-    } as DebugInterface & {
-      getStats: () => DebugStats;
-      getSnapshot: () => SystemSnapshot;
-      performAnalysis: () => AIAnalysisResult[];
-      exportData: () => ExportedDebugData;
-      startSession: () => void;
-      endSession: () => void;
-      clearHistory: () => void;
-      enableAI: () => void;
-      disableAI: () => void;
-      log: (_message: string, _data?: unknown) => void;
+      clearHistory: () => this.clearDebugHistory(),
+      enableAI: () => this.enableAIAnalysis(),
+      disableAI: () => this.disableAIAnalysis(),
+      log: (message: string, data?: unknown) => this.logDebugMessage(message, data),
     };
+  }
 
-    this.logger.info(
-      "🌐 [DebugService] Global debugging interface created with full development functionality",
-    );
+  /**
+   * Clear all debug history
+   */
+  private clearDebugHistory(): void {
+    this.eventHistory = [];
+    this.errorHistory = [];
+    this.aiAnalysisResults = [];
+    this.logger.info("🧹 [DebugService] History cleared via global interface");
+  }
 
-    return debugInterface;
+  /**
+   * Enable AI analysis
+   */
+  private enableAIAnalysis(): void {
+    this.updateConfig({ enableAIAnalysis: true });
+    this.logger.info("🤖 [DebugService] AI analysis enabled");
+  }
+
+  /**
+   * Disable AI analysis
+   */
+  private disableAIAnalysis(): void {
+    this.updateConfig({ enableAIAnalysis: false });
+    this.logger.info("🤖 [DebugService] AI analysis disabled");
+  }
+
+  /**
+   * Log debug message with optional data
+   */
+  private logDebugMessage(message: string, data?: unknown): void {
+    this.logger.info(`🔧 [QA_DEBUG] ${message}`, data as Record<string, unknown> ?? {});
   }
 
   /**

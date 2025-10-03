@@ -268,6 +268,36 @@ export function measureTime(
 }
 
 /**
+ * Helper function to determine performance category and log level based on duration.
+ */
+function getCategoryAndLevel(duration: number): { category: string; level: "log" | "warn" | "error" } {
+  if (duration < 1) return { category: "🚀 FAST", level: "log" };
+  if (duration < 10) return { category: "⚡ GOOD", level: "log" };
+  if (duration < 100) return { category: "⏱️ OK", level: "warn" };
+  if (duration < 1000) return { category: "🐌 SLOW", level: "warn" };
+  return { category: "🚨 VERY SLOW", level: "error" };
+}
+
+/**
+ * Helper function to log message with appropriate level.
+ */
+function logWithLevel(
+  logger: ILogger | undefined,
+  message: string,
+  level: "log" | "warn" | "error"
+): void {
+  if (logger) {
+    if (level === "error") logger.error(message);
+    else if (level === "warn") logger.warn(message);
+    else logger.info(message);
+  } else {
+    if (level === "error") EmergencyLogger.error(message, { note: "Logger not found on instance, using EmergencyLogger" });
+    else if (level === "warn") EmergencyLogger.warn(message, { note: "Logger not found on instance, using EmergencyLogger" });
+    else EmergencyLogger.info(message, { note: "Logger not found on instance, using EmergencyLogger" });
+  }
+}
+
+/**
  * Helper function to log performance metrics with categorization.
  */
 function logPerformance(
@@ -276,45 +306,70 @@ function logPerformance(
   hasError = false,
   instanceLogger?: ILogger,
 ): void {
-  let category = "";
-  let level: "log" | "warn" | "error" = "log";
-
-  if (duration < 1) {
-    category = "🚀 FAST";
-    level = "log";
-  } else if (duration < 10) {
-    category = "⚡ GOOD";
-    level = "log";
-  } else if (duration < 100) {
-    category = "⏱️ OK";
-    level = "warn";
-  } else if (duration < 1000) {
-    category = "🐌 SLOW";
-    level = "warn";
-  } else {
-    category = "🚨 VERY SLOW";
-    level = "error";
-  }
-
+  const { category, level } = getCategoryAndLevel(duration);
   const errorIndicator = hasError ? " ✗" : "";
   const logMessage = `${category} ${methodName}: ${duration.toFixed(2)}ms${errorIndicator}`;
+  logWithLevel(instanceLogger, logMessage, level);
+}
 
-  if (instanceLogger) {
-    if (level === "error") {
-      instanceLogger.error(logMessage);
-    } else if (level === "warn") {
-      instanceLogger.warn(logMessage);
+/**
+ * Helper: Get schema from registry with error handling.
+ */
+function getSchemaFromRegistry(schemaName: string, logger?: ILogger) {
+  const schema = schemaRegistry[schemaName as keyof typeof schemaRegistry];
+  if (!schema) {
+    const errorMessage = `Schema '${schemaName}' not found in registry`;
+    if (logger) {
+      logger.error(`Schema not found: ${schemaName}`, { error: errorMessage });
     } else {
-      instanceLogger.info(logMessage);
+      EmergencyLogger.error(`Schema not found: ${schemaName}`, { error: errorMessage });
     }
+    throw new Error(errorMessage);
+  }
+  return schema;
+}
+
+/**
+ * Helper: Perform schema validation.
+ */
+function performValidation(
+  schema: { safeParse: (_data: unknown) => { success: boolean; error?: { message: string; issues: unknown[] } } },
+  data: unknown,
+  context: { schemaName: string; methodName: string; logger?: ILogger }
+) {
+  const validationResult = schema.safeParse(data);
+  
+  if (!validationResult.success) {
+    const error = validationResult.error ?? { message: 'Unknown validation error', issues: [] };
+    const errorMessage = `Schema validation failed: ${error.message}`;
+    const errorData = {
+      error: errorMessage,
+      issues: error.issues,
+      receivedData: data
+    };
+    
+    if (context.logger) {
+      context.logger.error(
+        `Schema validation failed for ${context.schemaName} in ${context.methodName}:`,
+        errorData
+      );
+    } else {
+      EmergencyLogger.error(
+        `Schema validation failed for ${context.schemaName} in ${context.methodName}:`,
+        { ...errorData, note: "Logger not found on instance, using console fallback" }
+      );
+    }
+    throw new Error(errorMessage);
+  }
+  
+  // Log success
+  if (context.logger) {
+    context.logger.debug(`✅ Schema validation passed for ${context.schemaName} in ${context.methodName}`);
   } else {
-    if (level === "error") {
-      EmergencyLogger.error(logMessage, { note: "Logger not found on instance, using EmergencyLogger" });
-    } else if (level === "warn") {
-      EmergencyLogger.warn(logMessage, { note: "Logger not found on instance, using EmergencyLogger" });
-    } else {
-      EmergencyLogger.info(logMessage, { note: "Logger not found on instance, using EmergencyLogger" });
-    }
+    EmergencyLogger.debug(
+      `✅ Schema validation passed for ${context.schemaName} in ${context.methodName}`,
+      { note: "Logger not found on instance, using console fallback" }
+    );
   }
 }
 
@@ -337,75 +392,23 @@ export function validate(schemaName: string) {
       // Validate first argument if present
       if (args.length > 0) {
         try {
-          // Use statically imported schema registry
-          const schema =
-            schemaRegistry[schemaName as keyof typeof schemaRegistry];
-          if (!schema) {
-            const errorMessage = `Schema '${schemaName}' not found in registry`;
-            if (instanceLogger) {
-              instanceLogger.error(
-                `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-                { error: errorMessage },
-              );
-            } else {
-              EmergencyLogger.error(
-                `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-                { error: errorMessage, note: "Logger not found on instance, using console fallback" },
-              );
-            }
-            throw new Error(errorMessage);
-          }
-
-          // Validate the data
-          const validationResult = schema.safeParse(args[0]);
-
-          if (!validationResult.success) {
-            const errorMessage = `Schema validation failed: ${validationResult.error.message}`;
-            if (instanceLogger) {
-              instanceLogger.error(
-                `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-                {
-                  error: errorMessage,
-                  issues: validationResult.error.issues,
-                  receivedData: args[0],
-                },
-              );
-            } else {
-              EmergencyLogger.error(
-                `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-                {
-                  error: errorMessage,
-                  issues: validationResult.error.issues,
-                  receivedData: args[0],
-                  note: "Logger not found on instance, using console fallback",
-                },
-              );
-            }
-            throw new Error(errorMessage);
-          }
-
-          if (instanceLogger) {
-            instanceLogger.debug(
-              `✅ Schema validation passed for ${schemaName} in ${fullMethodName}`,
-            );
-          } else {
-            EmergencyLogger.debug(
-              `✅ Schema validation passed for ${schemaName} in ${fullMethodName}`,
-              { note: "Logger not found on instance, using console fallback" },
-            );
-          }
+          const schema = getSchemaFromRegistry(schemaName, instanceLogger);
+          performValidation(schema, args[0], {
+            schemaName,
+            methodName: fullMethodName,
+            logger: instanceLogger
+          });
         } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
+          const errorMessage = error instanceof Error ? error.message : String(error);
           if (instanceLogger) {
             instanceLogger.error(
               `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-              { error: errorMessage },
+              { error: errorMessage }
             );
           } else {
             EmergencyLogger.error(
               `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-              { error: errorMessage, note: "Logger not found on instance, using console fallback" },
+              { error: errorMessage, note: "Logger not found on instance, using console fallback" }
             );
           }
           throw new Error(`Schema validation failed: ${errorMessage}`);
@@ -415,6 +418,77 @@ export function validate(schemaName: string) {
       return value.apply(this, args);
     };
   };
+}
+
+/**
+ * Helper: Extract property from event object.
+ */
+function extractPropertyFromEvent(
+  event: unknown,
+  propertyName: string,
+  methodName: string,
+  logger?: ILogger
+): unknown {
+  if (!event || typeof event !== "object") {
+    throw new Error(`Invalid event object in ${methodName}`);
+  }
+  
+  const propertyValue = (event as Record<string, unknown>)[propertyName];
+  if (propertyValue === undefined) {
+    const errorMessage = `Property '${propertyName}' not found in event object`;
+    if (logger) {
+      logger.error(`Event property validation failed for ${propertyName} in ${methodName}:`, { error: errorMessage });
+    } else {
+      EmergencyLogger.error(`Event property validation failed for ${propertyName} in ${methodName}:`, { error: errorMessage });
+    }
+    throw new Error(errorMessage);
+  }
+  
+  return propertyValue;
+}
+
+/**
+ * Helper: Perform property validation.
+ */
+function performPropertyValidation(
+  schema: { safeParse: (_data: unknown) => { success: boolean; error?: { message: string; issues: unknown[] } } },
+  propertyValue: unknown,
+  context: { propertyName: string; schemaName: string; methodName: string; logger?: ILogger }
+) {
+  const validationResult = schema.safeParse(propertyValue);
+  
+  if (!validationResult.success) {
+    const error = validationResult.error ?? { message: 'Unknown validation error', issues: [] };
+    const errorMessage = `Schema validation failed: ${error.message}`;
+    const errorData = {
+      error: errorMessage,
+      issues: error.issues,
+      receivedPropertyData: propertyValue
+    };
+    
+    if (context.logger) {
+      context.logger.error(
+        `Event property validation failed for ${context.propertyName}.${context.schemaName} in ${context.methodName}:`,
+        errorData
+      );
+    } else {
+      EmergencyLogger.error(
+        `Event property validation failed for ${context.propertyName}.${context.schemaName} in ${context.methodName}:`,
+        { ...errorData, note: "Logger not found on instance, using console fallback" }
+      );
+    }
+    throw new Error(errorMessage);
+  }
+  
+  // Log success
+  if (context.logger) {
+    context.logger.debug(`✅ Event property validation passed for ${context.propertyName}.${context.schemaName} in ${context.methodName}`);
+  } else {
+    EmergencyLogger.debug(
+      `✅ Event property validation passed for ${context.propertyName}.${context.schemaName} in ${context.methodName}`,
+      { note: "Logger not found on instance, using console fallback" }
+    );
+  }
 }
 
 /**
@@ -441,93 +515,25 @@ export function validateEventProperty(
       // Validate property of first argument if present
       if (args.length > 0 && args[0] && typeof args[0] === "object") {
         try {
-          // Use statically imported schema registry
-          const schema =
-            schemaRegistry[schemaName as keyof typeof schemaRegistry];
-          if (!schema) {
-            const errorMessage = `Schema '${schemaName}' not found in registry`;
-            if (instanceLogger) {
-              instanceLogger.error(
-                `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-                { error: errorMessage },
-              );
-            } else {
-              EmergencyLogger.error(
-                `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-                { error: errorMessage, note: "Logger not found on instance, using console fallback" },
-              );
-            }
-            throw new Error(errorMessage);
-          }
-
-          // Extract the property to validate
-          const propertyValue = (args[0] as Record<string, unknown>)[propertyName];
-          if (propertyValue === undefined) {
-            const errorMessage = `Property '${propertyName}' not found in event object`;
-            if (instanceLogger) {
-              instanceLogger.error(
-                `Event property validation failed for ${propertyName} in ${fullMethodName}:`,
-                { error: errorMessage },
-              );
-            } else {
-              EmergencyLogger.error(
-                `Event property validation failed for ${propertyName} in ${fullMethodName}:`,
-                { error: errorMessage, note: "Logger not found on instance, using console fallback" },
-              );
-            }
-            throw new Error(errorMessage);
-          }
-
-          // Validate the property data
-          const validationResult = schema.safeParse(propertyValue);
-
-          if (!validationResult.success) {
-            const errorMessage = `Schema validation failed: ${validationResult.error.message}`;
-            if (instanceLogger) {
-              instanceLogger.error(
-                `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
-                {
-                  error: errorMessage,
-                  issues: validationResult.error.issues,
-                  receivedPropertyData: propertyValue,
-                },
-              );
-            } else {
-              EmergencyLogger.error(
-                `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
-                {
-                  error: errorMessage,
-                  issues: validationResult.error.issues,
-                  receivedPropertyData: propertyValue,
-                  note: "Logger not found on instance, using console fallback",
-                },
-              );
-            }
-            throw new Error(errorMessage);
-          }
-
-          if (instanceLogger) {
-            instanceLogger.debug(
-              `✅ Event property validation passed for ${propertyName}.${schemaName} in ${fullMethodName}`,
-            );
-          } else {
-            EmergencyLogger.debug(
-              `✅ Event property validation passed for ${propertyName}.${schemaName} in ${fullMethodName}`,
-              { note: "Logger not found on instance, using console fallback" },
-            );
-          }
+          const schema = getSchemaFromRegistry(schemaName, instanceLogger);
+          const propertyValue = extractPropertyFromEvent(args[0], propertyName, fullMethodName, instanceLogger);
+          performPropertyValidation(schema, propertyValue, {
+            propertyName,
+            schemaName,
+            methodName: fullMethodName,
+            logger: instanceLogger
+          });
         } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
+          const errorMessage = error instanceof Error ? error.message : String(error);
           if (instanceLogger) {
             instanceLogger.error(
               `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
-              { error: errorMessage },
+              { error: errorMessage }
             );
           } else {
             EmergencyLogger.error(
               `Event property validation failed for ${propertyName}.${schemaName} in ${fullMethodName}:`,
-              { error: errorMessage, note: "Logger not found on instance, using console fallback" },
+              { error: errorMessage, note: "Logger not found on instance, using console fallback" }
             );
           }
           throw new Error(`Event property validation failed: ${errorMessage}`);

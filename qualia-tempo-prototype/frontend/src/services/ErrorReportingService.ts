@@ -154,7 +154,8 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   }
 
   /**
-   * Start the ErrorReportingService and begin monitoring error events.
+   * Start the ErrorReportingService and begin monitoring error events
+   * QUALIA.CODE COMPLIANT: Extract Method Pattern (54→24 lines, 56% reduction)
    */
   @logMethod
   @catchError
@@ -165,49 +166,59 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     }
 
     try {
-      // QUALIA.CODE v1.1: Load configuration from pure YAML in start() method
-      this.logger.debug("Loading ErrorReporting configuration from YAML");
-      this.logger.info("ErrorReporting configuration loaded from YAML successfully");
+      this.initializeServiceState();
       
-      // Reinitialize state objects with actual configuration
-      this.rateLimitState = this.initializeRateLimitState();
-      this.circuitBreakerState = this.initializeCircuitBreakerState();
-
       if (!this.config.enabled) {
-        this.logger.info(
-          "⚠️ [ErrorReportingService] Service disabled in configuration",
-        );
+        this.logger.info("⚠️ [ErrorReportingService] Service disabled in configuration");
         return;
       }
 
-      this.logger.info(
-        "🚀 [ErrorReportingService] Starting production error reporting...",
-      );
-
-      // Subscribe to error events
-      // QUALIA.CODE v1.1: @OnEvent subscriptions handled automatically
-
-      // Start processing intervals
-      this.startBatchProcessing();
-      this.startRetryProcessing();
-      this.startMemoryCleanup();
-      this.startRateLimitRefill();
-
-      this.isStarted = true;
-      this.logger.info(
-        "🚀 [ErrorReportingService] Service started - Production error handling active",
-      );
-      this.logCurrentConfig();
-      
-      // QUALIA.CODE v1.1: Event-Driven Diagnostics - Emit status on state change
-      if (this.config.statusEmission?.emitOnStateChange) {
-        this.emitStatusUpdate();
-      }
+      this.startErrorMonitoring();
+      this.finalizeStart();
     } catch (error) {
-      this.logger.error("🚨 [ErrorReportingService] Failed to start service:", {
-        error,
-      });
+      this.logger.error("🚨 [ErrorReportingService] Failed to start service:", { error });
       throw error;
+    }
+  }
+
+  /**
+   * Initialize service state from configuration
+   */
+  private initializeServiceState(): void {
+    this.logger.debug("Loading ErrorReporting configuration from YAML");
+    this.logger.info("ErrorReporting configuration loaded from YAML successfully");
+    
+    // Reinitialize state objects with actual configuration
+    this.rateLimitState = this.initializeRateLimitState();
+    this.circuitBreakerState = this.initializeCircuitBreakerState();
+  }
+
+  /**
+   * Start error monitoring with processing intervals
+   */
+  private startErrorMonitoring(): void {
+    this.logger.info("🚀 [ErrorReportingService] Starting production error reporting...");
+
+    // QUALIA.CODE v1.1: @OnEvent subscriptions handled automatically
+
+    // Start processing intervals
+    this.startBatchProcessing();
+    this.startRetryProcessing();
+    this.startMemoryCleanup();
+    this.startRateLimitRefill();
+  }
+
+  /**
+   * Finalize service start and emit status
+   */
+  private finalizeStart(): void {
+    this.isStarted = true;
+    this.logger.info("🚀 [ErrorReportingService] Service started - Production error handling active");
+    this.logCurrentConfig();
+    
+    // QUALIA.CODE v1.1: Event-Driven Diagnostics - Emit status on state change
+    if (this.config.statusEmission?.emitOnStateChange) {
+      this.emitStatusUpdate();
     }
   }
 
@@ -591,26 +602,12 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     await this.processBatch(batch);
   }
 
+  /**
+   * Process error batch with circuit breaker and rate limiting
+   * QUALIA.CODE COMPLIANT: Extract Method Pattern (52→18 lines, 65% reduction)
+   */
   private async processBatch(batch: ExtendedErrorBatch): Promise<void> {
-    // Check circuit breaker
-    if (this.circuitBreakerState.state === "open") {
-      if (
-        this.timerService.now() < (this.circuitBreakerState.nextAttemptTime?.getTime() ?? 0)
-      ) {
-        this.logger.warn(
-          "⚡ [ErrorReportingService] Circuit breaker open, skipping batch processing",
-        );
-        return;
-      } else {
-        this.circuitBreakerState.state = "half-open";
-      }
-    }
-
-    // Check rate limiting
-    if (!this.checkRateLimit()) {
-      this.logger.warn(
-        "🚦 [ErrorReportingService] Rate limit exceeded, deferring batch processing",
-      );
+    if (!this.canProcessBatch()) {
       return;
     }
 
@@ -618,30 +615,64 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     this.pendingBatches.set(batch.id, batch);
 
     try {
-      const success = await this.submitBatch(batch);
-
-      if (success) {
-        batch.status = "completed";
-        this.statistics.successfulReports += batch.size;
-        this.onBatchSuccess(batch);
-        this.pendingBatches.delete(batch.id);
-        this.logger.info(
-          `✅ [ErrorReportingService] Batch processed successfully: ${batch.id}`,
-        );
-      } else {
-        throw new Error("Batch submission failed");
-      }
+      await this.executeBatchSubmission(batch);
     } catch (error) {
-      batch.status = "failed";
-      batch.totalRetries++;
-      batch.lastRetryAt = this.timerService.getCurrentDate();
-      this.statistics.failedReports += batch.size;
-      this.onBatchFailure(batch, error as Error);
-      this.logger.error(
-        `❌ [ErrorReportingService] Batch processing failed: ${batch.id}`,
-        { error },
-      );
+      this.handleBatchFailure(batch, error as Error);
     }
+  }
+
+  /**
+   * Check if batch can be processed (circuit breaker + rate limit)
+   */
+  private canProcessBatch(): boolean {
+    // Check circuit breaker
+    if (this.circuitBreakerState.state === "open") {
+      if (
+        this.timerService.now() < (this.circuitBreakerState.nextAttemptTime?.getTime() ?? 0)
+      ) {
+        this.logger.warn("⚡ [ErrorReportingService] Circuit breaker open, skipping batch processing");
+        return false;
+      } else {
+        this.circuitBreakerState.state = "half-open";
+      }
+    }
+
+    // Check rate limiting
+    if (!this.checkRateLimit()) {
+      this.logger.warn("🚦 [ErrorReportingService] Rate limit exceeded, deferring batch processing");
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Execute batch submission and handle success
+   */
+  private async executeBatchSubmission(batch: ExtendedErrorBatch): Promise<void> {
+    const success = await this.submitBatch(batch);
+
+    if (success) {
+      batch.status = "completed";
+      this.statistics.successfulReports += batch.size;
+      this.onBatchSuccess(batch);
+      this.pendingBatches.delete(batch.id);
+      this.logger.info(`✅ [ErrorReportingService] Batch processed successfully: ${batch.id}`);
+    } else {
+      throw new Error("Batch submission failed");
+    }
+  }
+
+  /**
+   * Handle batch processing failure
+   */
+  private handleBatchFailure(batch: ExtendedErrorBatch, error: Error): void {
+    batch.status = "failed";
+    batch.totalRetries++;
+    batch.lastRetryAt = this.timerService.getCurrentDate();
+    this.statistics.failedReports += batch.size;
+    this.onBatchFailure(batch, error);
+    this.logger.error(`❌ [ErrorReportingService] Batch processing failed: ${batch.id}`, { error });
   }
 
   private async submitBatch(batch: ExtendedErrorBatch): Promise<boolean> {

@@ -40,59 +40,96 @@ export class WebSocketService implements IWebSocketService {
     this.logger.info("WebSocketService initialized with factory pattern");
   }
 
+  /**
+   * Connect to WebSocket server
+   * QUALIA.CODE COMPLIANT: Extract Method Pattern (54→22 lines, 59% reduction)
+   */
   @logMethod
   @catchError
   public async connect(url: string): Promise<void> {
-    if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-      this.logger.info("WebSocket already connected");
-      return;
-    }
-
-    if (this.websocket && this.websocket.readyState === WebSocket.CONNECTING) {
-      this.logger.info("WebSocket connection already in progress");
+    if (this.isConnectionActive()) {
       return;
     }
 
     try {
-      // QUALIA.CODE v1.1: Use factory instead of direct instantiation
-      // This enables complete test isolation and platform abstraction
-      this.websocket = this.webSocketFactory.create(url);
-
-      // BINARY PROTOCOL: Apply configured binary type
-      this.websocket.binaryType = this.binaryType;
-
-      // Bind event handlers
-      this.websocket.onopen = this.handleOpen.bind(this);
-      this.websocket.onmessage = this.handleMessage.bind(this);
-      this.websocket.onclose = this.handleClose.bind(this);
-      this.websocket.onerror = this.handleError.bind(this);
-
-      this.logger.info("WebSocket connection initiated", { url });
-
-      // Wait for connection to open
-      return new Promise((resolve, reject) => {
-        if (!this.websocket) {
-          reject(new Error("WebSocket not initialized"));
-          return;
-        }
-
-        const websocket = this.websocket;
-        const originalOnOpen = websocket.onopen;
-        websocket.onopen = (event) => {
-          if (originalOnOpen) originalOnOpen.call(websocket, event);
-          resolve();
-        };
-
-        const originalOnError = websocket.onerror;
-        websocket.onerror = (event) => {
-          if (originalOnError) originalOnError.call(websocket, event);
-          reject(new Error("WebSocket connection failed"));
-        };
-      });
+      this.createWebSocket(url);
+      this.configureWebSocket(url);
+      await this.awaitConnectionReady();
     } catch (error) {
       this.logger.error("Failed to create WebSocket connection", { error, url });
       throw error;
     }
+  }
+
+  /**
+   * Check if connection is already active or in progress
+   */
+  private isConnectionActive(): boolean {
+    if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+      this.logger.info("WebSocket already connected");
+      return true;
+    }
+
+    if (this.websocket && this.websocket.readyState === WebSocket.CONNECTING) {
+      this.logger.info("WebSocket connection already in progress");
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Create WebSocket instance using factory
+   */
+  private createWebSocket(url: string): void {
+    // QUALIA.CODE v1.1: Use factory instead of direct instantiation
+    // This enables complete test isolation and platform abstraction
+    this.websocket = this.webSocketFactory.create(url);
+
+    // BINARY PROTOCOL: Apply configured binary type
+    this.websocket.binaryType = this.binaryType;
+  }
+
+  /**
+   * Configure WebSocket event handlers
+   */
+  private configureWebSocket(url: string): void {
+    if (!this.websocket) {
+      throw new Error("WebSocket not initialized");
+    }
+
+    // Bind event handlers
+    this.websocket.onopen = this.handleOpen.bind(this);
+    this.websocket.onmessage = this.handleMessage.bind(this);
+    this.websocket.onclose = this.handleClose.bind(this);
+    this.websocket.onerror = this.handleError.bind(this);
+
+    this.logger.info("WebSocket connection initiated", { url });
+  }
+
+  /**
+   * Wait for WebSocket connection to complete
+   */
+  private awaitConnectionReady(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.websocket) {
+        reject(new Error("WebSocket not initialized"));
+        return;
+      }
+
+      const websocket = this.websocket;
+      const originalOnOpen = websocket.onopen;
+      websocket.onopen = (event) => {
+        if (originalOnOpen) originalOnOpen.call(websocket, event);
+        resolve();
+      };
+
+      const originalOnError = websocket.onerror;
+      websocket.onerror = (event) => {
+        if (originalOnError) originalOnError.call(websocket, event);
+        reject(new Error("WebSocket connection failed"));
+      };
+    });
   }
 
   @logMethod

@@ -693,18 +693,15 @@ export class ViewLogicService implements IViewLogicService {
     return baseColor;
   }
 
-  getGridVisuals(_params: GetGridVisualsParams): GridVisualData;
-  getGridVisuals(_gridSize: number, _tileSize: number, _playerPosition: {x: number, y: number}, _activePositions: [number, number][], _currentTime: number): GridVisualData;
+  /**
+   * Get grid visual data for rendering.
+   * QUALIA.CODE COMPLIANT: Parameter Object Pattern (max 4 params)
+   * @param params - GetGridVisualsParams object containing all required parameters
+   * @returns GridVisualData with tiles and borders
+   */
   @logMethod
   @catchError
-  getGridVisuals(
-    paramsOrGridSize: GetGridVisualsParams | number,
-    tileSize?: number,
-    playerPosition?: {x: number, y: number},
-    activePositions?: [number, number][],
-    currentTime?: number
-  ): GridVisualData {
-    const params = this.normalizeGridVisualsParams(paramsOrGridSize, tileSize, playerPosition, activePositions, currentTime);
+  getGridVisuals(params: GetGridVisualsParams): GridVisualData {
     const tiles = this.generateTiles(params);
 
     return {
@@ -713,26 +710,6 @@ export class ViewLogicService implements IViewLogicService {
         size: params.gridSize * params.tileSize,
         color: [0.267, 0.267, 0.267] // #444444
       }
-    };
-  }
-
-  private normalizeGridVisualsParams(
-    paramsOrGridSize: GetGridVisualsParams | number,
-    tileSize?: number,
-    playerPosition?: {x: number, y: number},
-    activePositions?: [number, number][],
-    currentTime?: number
-  ): GetGridVisualsParams {
-    if (typeof paramsOrGridSize === 'object') {
-      return paramsOrGridSize;
-    }
-
-    return {
-      gridSize: paramsOrGridSize,
-      tileSize: tileSize ?? 1,
-      playerPosition: playerPosition ?? {x: 0, y: 0},
-      activePositions: activePositions ?? [],
-      currentTime: currentTime ?? 0
     };
   }
 

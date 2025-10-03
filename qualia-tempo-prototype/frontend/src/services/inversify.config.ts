@@ -477,8 +477,17 @@ function bindBasicConfigurations(fullConfig: FullGameConfig): void {
  * These are the consolidated parameter objects that reduce constructor parameter counts.
  */
 function bindServiceParameterObjects(fullConfig: FullGameConfig): void {
-  // QUALIA.CODE v1.1: Bind RhythmicMovementControllerParams factory
-  // Consolidates 8 constructor parameters into a single object to comply with IoC limits
+  bindGameplayServiceParams(fullConfig);
+  bindRenderingServiceParams(fullConfig);
+  bindCommunicationServiceParams(fullConfig);
+  bindDiagnosticServiceParams(fullConfig);
+  bindDirectConfigs(fullConfig);
+}
+
+/**
+ * Bind gameplay-related service parameter objects.
+ */
+function bindGameplayServiceParams(fullConfig: FullGameConfig): void {
   safeBindConstant<RhythmicMovementControllerParams>(TYPES.RhythmicMovementControllerParams, {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -490,31 +499,6 @@ function bindServiceParameterObjects(fullConfig: FullGameConfig): void {
     gameplayMechanicsService: container.get<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService),
   });
 
-  // QUALIA.CODE v1.1: Bind NotificationServiceParams factory
-  // Consolidates constructor parameters into a single object to comply with IoC limits
-  // UPDATED: Added eventBus for event-driven diagnostics pattern
-  safeBindConstant<NotificationServiceParams>(TYPES.NotificationServiceParams, {
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    logger: container.get<ILogger>(TYPES.ILogger),
-    config: fullConfig.notificationService,
-    gameStateStore: container.get<IGameStateStore>(TYPES.IGameStateStore),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
-    throttlingManager: container.get<ThrottlingManager>(TYPES.ThrottlingManager),
-  });
-
-  // QUALIA.CODE v1.1: Bind FrontendRenderingServiceParams factory
-  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
-  safeBindConstant<FrontendRenderingServiceParams>(TYPES.FrontendRenderingServiceParams, {
-    logger: container.get<ILogger>(TYPES.ILogger),
-    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
-    postProcessingService: container.get<IPostProcessingService>(TYPES.IPostProcessingService),
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    config: fullConfig.frontendRendering,
-  });
-
-  // QUALIA.CODE v1.1: Bind GameControllerServiceParams factory
-  // ARCHITECTURAL FIX: Explicit dependency injection - no Service Locator anti-pattern
-  // Each service is injected individually for complete transparency of dependencies
   safeBindConstant<GameControllerServiceParams>(TYPES.GameControllerServiceParams, {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -525,8 +509,6 @@ function bindServiceParameterObjects(fullConfig: FullGameConfig): void {
     audioService: container.get<IAudioService>(TYPES.IAudioService),
   });
 
-  // QUALIA.CODE v1.1: Bind QualiaStateCalculatorServiceParams factory
-  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
   safeBindConstant<QualiaStateCalculatorServiceParams>(TYPES.QualiaStateCalculatorServiceParams, {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -535,8 +517,50 @@ function bindServiceParameterObjects(fullConfig: FullGameConfig): void {
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
   });
 
-  // QUALIA.CODE v1.1: Bind StateStreamingServiceParams factory
-  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant<AudioServiceParams>(TYPES.AudioServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    config: fullConfig.audioService,
+    audioEngine: container.get<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine),
+    webAudioAPIService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+  });
+}
+
+/**
+ * Bind rendering-related service parameter objects.
+ */
+function bindRenderingServiceParams(fullConfig: FullGameConfig): void {
+  safeBindConstant<FrontendRenderingServiceParams>(TYPES.FrontendRenderingServiceParams, {
+    logger: container.get<ILogger>(TYPES.ILogger),
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+    postProcessingService: container.get<IPostProcessingService>(TYPES.IPostProcessingService),
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    config: fullConfig.frontendRendering,
+  });
+
+  safeBindConstant<PostProcessingServiceParams>(TYPES.PostProcessingServiceParams, {
+    logger: container.get<ILogger>(TYPES.ILogger),
+    shaderLoader: container.get<IShaderLoaderService>(TYPES.IShaderLoaderService),
+    shaderIntrospection: container.get<IShaderIntrospectionService>(TYPES.IShaderIntrospectionService),
+    config: fullConfig.postProcessing,
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+  });
+}
+
+/**
+ * Bind communication-related service parameter objects.
+ */
+function bindCommunicationServiceParams(fullConfig: FullGameConfig): void {
+  safeBindConstant<BackendSyncServiceParams>(TYPES.BackendSyncServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    config: fullConfig.backendSync,
+    httpService: container.get<IHttpService>(TYPES.IHttpService),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+  });
+
   safeBindConstant<StateStreamingServiceParams>(TYPES.StateStreamingServiceParams, {
     webSocketService: container.get<IWebSocketService>(TYPES.IWebSocketService),
     timerService: container.get<ITimerService>(TYPES.ITimerService),
@@ -545,35 +569,61 @@ function bindServiceParameterObjects(fullConfig: FullGameConfig): void {
     messageAdapter: container.get<IMessageAdapter>(TYPES.IRawToParticleEventAdapter),
   });
 
-  // QUALIA.CODE v1.1: Bind WebSocketServiceParams factory
-  // Consolidates constructor parameters into a single object to comply with IoC limits
   safeBindConstant<WebSocketServiceParams>(TYPES.WebSocketServiceParams, {
     logger: container.get<ILogger>(TYPES.ILogger),
     webSocketFactory: container.get<IWebSocketFactory>(TYPES.IWebSocketFactory),
     config: fullConfig.backendSync,
   });
+}
 
-  // NEW SERVICES CONFIGURATION BINDINGS - QUALIA.CODE v1.1 Compliant (no 'as any' casts)
-  safeBindConstant(TYPES.GameplayMechanicsConfig, fullConfig.gameplayMechanics);
-  safeBindConstant<ViewLogicConfig>(TYPES.ViewLogicConfig, fullConfig.viewLogic);
-  safeBindConstant(TYPES.SubtitleConfig, fullConfig.subtitle);
-  safeBindConstant(TYPES.DebugOrchestratorConfig, fullConfig.debugOrchestrator);
-  safeBindConstant<GameStateStoreConfig>(TYPES.GameStateStoreConfig, fullConfig.gameStateStore);
-  safeBindConstant<PostProcessingConfig>(TYPES.PostProcessingConfig, fullConfig.postProcessing);
+/**
+ * Bind diagnostic and monitoring service parameter objects.
+ */
+function bindDiagnosticServiceParams(fullConfig: FullGameConfig): void {
+  bindBasicDiagnosticServices(fullConfig);
+  bindApplicationInitializerParams(fullConfig);
+}
 
-  // QUALIA.CODE v1.1: Bind PostProcessingServiceParams factory
-  safeBindConstant<PostProcessingServiceParams>(TYPES.PostProcessingServiceParams, {
+/**
+ * Bind basic diagnostic service parameters (notification, debug, error reporting).
+ */
+function bindBasicDiagnosticServices(fullConfig: FullGameConfig): void {
+  safeBindConstant<NotificationServiceParams>(TYPES.NotificationServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
-    shaderLoader: container.get<IShaderLoaderService>(TYPES.IShaderLoaderService),
-    shaderIntrospection: container.get<IShaderIntrospectionService>(TYPES.IShaderIntrospectionService),
-    config: fullConfig.postProcessing,
+    config: fullConfig.notificationService,
+    gameStateStore: container.get<IGameStateStore>(TYPES.IGameStateStore),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    throttlingManager: container.get<ThrottlingManager>(TYPES.ThrottlingManager),
+  });
+
+  safeBindConstant<DebugServiceParams>(TYPES.DebugServiceParams, {
+    logger: container.get<ILogger>(TYPES.ILogger),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    config: fullConfig.debugService,
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
   });
 
-  safeBindConstant<ProtocolAdapterConfig>(TYPES.ProtocolAdapterConfig, fullConfig.protocolAdapter);
+  safeBindConstant<DebugOrchestratorServiceParams>(TYPES.DebugOrchestratorServiceParams, {
+    config: fullConfig.debugOrchestrator,
+    logger: container.get<ILogger>(TYPES.ILogger),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+  });
 
-  // QUALIA.CODE v1.1: Bind ApplicationInitializerServiceParams factory
-  // Consolidates 14 constructor parameters into a single object to comply with IoC limits
+  safeBindConstant<ErrorReportingServiceParams>(TYPES.ErrorReportingServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    httpService: container.get<IHttpService>(TYPES.IHttpService),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    config: fullConfig.errorReporting,
+  });
+}
+
+/**
+ * Bind ApplicationInitializerService parameters (consolidates 14+ dependencies).
+ */
+function bindApplicationInitializerParams(fullConfig: FullGameConfig): void {
   safeBindConstant<ApplicationInitializerServiceParams>(TYPES.ApplicationInitializerServiceParams, {
     config: fullConfig.applicationInitializer,
     backendSyncService: container.get<IBackendSyncService>(TYPES.IBackendSyncService),
@@ -592,60 +642,19 @@ function bindServiceParameterObjects(fullConfig: FullGameConfig): void {
     debugOrchestratorService: container.get<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService),
     browserEventsService: container.get<IBrowserEventsService>(TYPES.IBrowserEventsService),
   });
+}
 
-  // QUALIA.CODE v1.1: Bind DebugOrchestratorServiceParams factory
-  // Event-driven pattern: Services no longer injected directly
-  // Pattern: Push (event-driven) instead of Pull (method calls)
-  // DIRECTIVA 13-DIAGNOSTICS-PURITY: Pure push-based diagnostics, no pull calls
-  safeBindConstant<DebugOrchestratorServiceParams>(TYPES.DebugOrchestratorServiceParams, {
-    config: fullConfig.debugOrchestrator,
-    logger: container.get<ILogger>(TYPES.ILogger),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
-    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
-    // REMOVED: eventBus - no longer needed for pull-based diagnostics
-    // Services will emit ServiceStatusUpdateEvent for passive aggregation
-  });
-
-  // QUALIA.CODE v1.1: Bind AudioServiceParams factory
-  // Consolidates 6 constructor parameters into a single object to comply with IoC limits
-  safeBindConstant<AudioServiceParams>(TYPES.AudioServiceParams, {
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    logger: container.get<ILogger>(TYPES.ILogger),
-    config: fullConfig.audioService,
-    audioEngine: container.get<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine),
-    webAudioAPIService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
-  });
-
-  // QUALIA.CODE v1.1: Bind BackendSyncServiceParams factory
-  // Consolidates 6 constructor parameters into a single object to comply with IoC limits
-  safeBindConstant<BackendSyncServiceParams>(TYPES.BackendSyncServiceParams, {
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    logger: container.get<ILogger>(TYPES.ILogger),
-    config: fullConfig.backendSync,
-    httpService: container.get<IHttpService>(TYPES.IHttpService),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
-    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
-  });
-
-  // QUALIA.CODE v1.1: Bind DebugServiceParams factory
-  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
-  safeBindConstant<DebugServiceParams>(TYPES.DebugServiceParams, {
-    logger: container.get<ILogger>(TYPES.ILogger),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
-    config: fullConfig.debugService,
-    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
-  });
-
-  // QUALIA.CODE v1.1: Bind ErrorReportingServiceParams factory
-  // Consolidates 5 constructor parameters into a single object to comply with IoC limits
-  safeBindConstant<ErrorReportingServiceParams>(TYPES.ErrorReportingServiceParams, {
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    logger: container.get<ILogger>(TYPES.ILogger),
-    httpService: container.get<IHttpService>(TYPES.IHttpService),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
-    config: fullConfig.errorReporting,
-  });
+/**
+ * Bind direct configuration objects (not wrapped in parameter objects).
+ */
+function bindDirectConfigs(fullConfig: FullGameConfig): void {
+  safeBindConstant(TYPES.GameplayMechanicsConfig, fullConfig.gameplayMechanics);
+  safeBindConstant<ViewLogicConfig>(TYPES.ViewLogicConfig, fullConfig.viewLogic);
+  safeBindConstant(TYPES.SubtitleConfig, fullConfig.subtitle);
+  safeBindConstant(TYPES.DebugOrchestratorConfig, fullConfig.debugOrchestrator);
+  safeBindConstant<GameStateStoreConfig>(TYPES.GameStateStoreConfig, fullConfig.gameStateStore);
+  safeBindConstant<PostProcessingConfig>(TYPES.PostProcessingConfig, fullConfig.postProcessing);
+  safeBindConstant<ProtocolAdapterConfig>(TYPES.ProtocolAdapterConfig, fullConfig.protocolAdapter);
 }
 
 // ===== CONTAINER VERIFICATION =====
