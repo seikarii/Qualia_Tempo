@@ -43,6 +43,17 @@ describe('ApplicationInitializerService - Critical Test Coverage', () => {
     mockRhythmicController = container.get<IRhythmicMovementController>(TYPES.IRhythmicMovementController);
     mockEventBus = container.get<IEventBus>(TYPES.IEventBus);
     mockLogger = container.get<ILogger>(TYPES.ILogger);
+    
+    // STEP 3: Reset all mocks to clean state and default implementations
+    vi.clearAllMocks();
+    
+    // STEP 4: Reset mock implementations to default state
+    (mockBackendSync.start as Mock).mockResolvedValue(undefined);
+    (mockGameStateStore.initialize as Mock).mockResolvedValue(undefined);
+    (mockGameStateStore.updateGameState as Mock).mockResolvedValue(undefined);
+    (mockGameController.start as Mock).mockResolvedValue(undefined);
+    (mockRhythmicController.start as Mock).mockResolvedValue(undefined);
+    (mockEventBus.initialize as Mock).mockResolvedValue(undefined);
 
     // STEP 3: Replace mock with real implementation
     container.unbind(TYPES.IApplicationInitializerService);

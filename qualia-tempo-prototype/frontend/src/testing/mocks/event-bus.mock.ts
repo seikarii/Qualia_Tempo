@@ -48,4 +48,6 @@ class TestEventBus implements IEventBus {
   });
 }
 
-export const mockEventBus = new TestEventBus();
+export function createMockEventBus(): IEventBus {
+  return new TestEventBus();
+}

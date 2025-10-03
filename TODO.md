@@ -19,8 +19,10 @@
 - ✅ Test infrastructure configuration bindings added
 - ✅ 16 tests fixed (49 → 33 failures, 73% pass rate)
 - ✅ Architectural linter passes with 0 errors
-- ⚠️ 33 remaining test failures due to @OnEvent decorator not activating in tests
-- 📋 Next phase: Investigate decorator test infrastructure
+- ✅ @OnEvent decorator infrastructure fixed - decorators now work in tests
+- ✅ EventBus mock refactored to factory pattern for test isolation
+- ✅ AD-FE-002 and AD-FE-001 directives completed successfully
+- 📋 Next phase: Investigate remaining test failures (likely service initialization issues)
 
 ## DEV NOTES: 
 1. ARREGLAR/MEJORAR PARTE DE SHADERS Y RENDERIZADO FRONTEND (ESTADO CATASTROFICO)

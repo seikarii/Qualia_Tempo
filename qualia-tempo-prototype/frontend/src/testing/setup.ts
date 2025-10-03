@@ -3,29 +3,24 @@ import { afterEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
 // ÚNICA FUENTE DE VERDAD PARA MOCKS DE DECORADORES
-vi.mock("../utils/decorators", () => ({
-  initializeEventSubscriptions: vi.fn().mockImplementation((serviceInstance: unknown) => {
-    // Mock implementation that sets up _eventListeners array for @OnEvent decorator testing
-    if (serviceInstance && typeof serviceInstance === 'object') {
-      (serviceInstance as Record<string, unknown>)._eventListeners = [];
-    }
-  }),
-  cleanupEventSubscriptions: vi.fn().mockImplementation((serviceInstance: unknown) => {
-    // Mock cleanup that clears _eventListeners
-    if (serviceInstance && typeof serviceInstance === 'object') {
-      (serviceInstance as Record<string, unknown>)._eventListeners = [];
-    }
-  }),
-  logMethod: vi.fn().mockImplementation(() => (d: unknown) => d),
-  catchError: vi.fn().mockImplementation(() => (d: unknown) => d),
-  validate: vi.fn().mockImplementation(() => (d: unknown) => d),
-  throttle: vi.fn().mockImplementation(() => (d: unknown) => d),
-  validateEventProperty: vi.fn().mockImplementation(() => (d: unknown) => d),
-  measureTime: vi.fn().mockImplementation(() => (d: unknown) => d),
-  OnEvent: vi.fn().mockImplementation(() => (d: unknown) => d),
-  BrowserOnly: vi.fn().mockImplementation(() => (d: unknown) => d),
-  AdaptAndEmit: vi.fn().mockImplementation(() => (d: unknown) => d),
-}));
+vi.mock("../utils/decorators", async (importOriginal) => {
+  const actualDecorators = await importOriginal() as Record<string, unknown>;
+
+  return {
+    // Expose all actual implementations first
+    ...actualDecorators,
+
+    // Override only non-critical decorators for test environment
+    logMethod: vi.fn().mockImplementation(() => (d: unknown) => d),
+    catchError: vi.fn().mockImplementation(() => (d: unknown) => d),
+    validate: vi.fn().mockImplementation(() => (d: unknown) => d),
+    throttle: vi.fn().mockImplementation(() => (d: unknown) => d),
+    validateEventProperty: vi.fn().mockImplementation(() => (d: unknown) => d),
+    measureTime: vi.fn().mockImplementation(() => (d: unknown) => d),
+    BrowserOnly: vi.fn().mockImplementation(() => (d: unknown) => d),
+    AdaptAndEmit: vi.fn().mockImplementation(() => (d: unknown) => d),
+  };
+});
 
 // QUALIA.CODE Global Tone.js Mock - Prevent audio module import errors in tests
 vi.mock("tone", () => ({

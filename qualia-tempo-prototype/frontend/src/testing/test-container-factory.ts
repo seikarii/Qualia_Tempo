@@ -52,7 +52,7 @@ import { ColorService } from "../services/ColorService";
 
 // Import centralized mocks
 import { mockLogger } from "./mocks/logger.mock";
-import { mockEventBus } from "./mocks/event-bus.mock";
+import { createMockEventBus } from "./mocks/event-bus.mock";
 import { mockOntologicalAudioEngine } from "./mocks/ontological-audio-engine.mock";
 import { mockGameStateStore } from "./mocks/game-state-store.mock";
 import { mockGameStateStoreService } from "./mocks/game-state-store-service.mock";
@@ -177,64 +177,107 @@ const defaultRhythmicMovementConfig: RhythmicMovementConfig = {
   flowBpmMultiplier: 1.2
 } as RhythmicMovementConfig;
 
-// --- Default Params Objects ---
+// --- Default Params Factory Functions ---
 
-const defaultAppInitializerParams: ApplicationInitializerServiceParams = {
+// --- Default Params Factory Functions ---
+
+const createDefaultAppInitializerParams = (
+  eventBus: IEventBus,
+  logger: ILogger,
+  backendSyncService: IBackendSyncService,
+  gameStateStoreService: IGameStateStoreService,
+  gameControllerService: IGameControllerService,
+  rhythmicMovementController: IRhythmicMovementController,
+  notificationService: INotificationService,
+  errorReportingService: IErrorReportingService,
+  debugService: IDebugService,
+  stateStreamingService: IStateStreamingService,
+  gameplayMechanicsService: IGameplayMechanicsService,
+  viewLogicService: IViewLogicService,
+  subtitleService: ISubtitleService,
+  debugOrchestratorService: IDebugOrchestratorService,
+  browserEventsService: IBrowserEventsService
+): ApplicationInitializerServiceParams => ({ // eslint-disable-line max-params
   config: defaultAppInitializerConfig,
-  backendSyncService: mockBackendSyncService,
-  gameStateStoreService: mockGameStateStoreService,
-  gameControllerService: mockGameControllerService,
-  rhythmicMovementController: mockRhythmicMovementController,
-  notificationService: mockNotificationService,
-  errorReportingService: mockErrorReportingService,
-  debugService: mockDebugService,
-  stateStreamingService: mockStateStreamingService,
-  logger: mockLogger,
-  eventBus: mockEventBus,
-  gameplayMechanicsService: mockGameplayMechanicsService,
-  viewLogicService: mockViewLogicService,
-  subtitleService: mockSubtitleService,
-  debugOrchestratorService: mockDebugOrchestratorService,
-  browserEventsService: mockBrowserEventsService
-};
+  backendSyncService,
+  gameStateStoreService,
+  gameControllerService,
+  rhythmicMovementController,
+  notificationService,
+  errorReportingService,
+  debugService,
+  stateStreamingService,
+  logger,
+  eventBus,
+  gameplayMechanicsService,
+  viewLogicService,
+  subtitleService,
+  debugOrchestratorService,
+  browserEventsService
+});
 
-const defaultBackendSyncParams: BackendSyncServiceParams = {
-  eventBus: mockEventBus,
-  logger: mockLogger,
+const createDefaultBackendSyncParams = (
+  eventBus: IEventBus,
+  logger: ILogger,
+  httpService: IHttpService,
+  timerService: ITimerService,
+  performanceService: IPerformanceService
+): BackendSyncServiceParams => ({ // eslint-disable-line max-params
+  eventBus,
+  logger,
   config: defaultBackendSyncConfig,
-  httpService: mockHttpService,
-  timerService: mockTimerService,
-  performanceService: mockPerformanceService
-};
+  httpService,
+  timerService,
+  performanceService
+});
 
-const defaultGameControllerParams: GameControllerServiceParams = {
-  eventBus: mockEventBus,
-  logger: mockLogger,
+const createDefaultGameControllerParams = (
+  eventBus: IEventBus,
+  logger: ILogger,
+  gameStateStoreService: IGameStateStoreService,
+  timerService: ITimerService,
+  performanceService: IPerformanceService,
+  audioService: IAudioService
+): GameControllerServiceParams => ({ // eslint-disable-line max-params
+  eventBus,
+  logger,
   config: defaultGameControllerConfig,
-  gameStateStoreService: mockGameStateStoreService,
-  timerService: mockTimerService,
-  performanceService: mockPerformanceService,
-  audioService: mockAudioService
-};
+  gameStateStoreService,
+  timerService,
+  performanceService,
+  audioService
+});
 
-const defaultQualiaCalculatorParams: QualiaStateCalculatorServiceParams = {
-  eventBus: mockEventBus,
-  logger: mockLogger,
+const createDefaultQualiaCalculatorParams = (
+  eventBus: IEventBus,
+  logger: ILogger,
+  timerService: ITimerService,
+  performanceService: IPerformanceService
+): QualiaStateCalculatorServiceParams => ({
+  eventBus,
+  logger,
   config: defaultQualiaCalculatorConfig,
-  timerService: mockTimerService,
-  performanceService: mockPerformanceService
-};
+  timerService,
+  performanceService
+});
 
-const defaultRhythmicMovementParams: RhythmicMovementControllerParams = {
-  eventBus: mockEventBus,
-  logger: mockLogger,
+const createDefaultRhythmicMovementParams = (
+  eventBus: IEventBus,
+  logger: ILogger,
+  timerService: ITimerService,
+  inputStateService: any, // Using any for now since the type might be complex
+  gameStateStore: IGameStateStoreService,
+  gameplayMechanicsService: IGameplayMechanicsService
+): RhythmicMovementControllerParams => ({ // eslint-disable-line max-params
+  eventBus,
+  logger,
   config: defaultRhythmicMovementConfig,
-  timerService: mockTimerService,
+  timerService,
   keyAdapter: mockKeyAdapter,
-  inputStateService: mockInputStateService,
-  gameStateStore: mockGameStateStoreService,
-  gameplayMechanicsService: mockGameplayMechanicsService
-};
+  inputStateService,
+  gameStateStore,
+  gameplayMechanicsService
+});
 
 export interface MockOverride<T = unknown> {
   type: symbol;
@@ -283,9 +326,12 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   // STEP 1: Create a new isolated container for testing
   const testContainer = new Container();
 
-  // STEP 2: Bind all mock services to the test container
+  // STEP 2: Create fresh mock instances for this test
+  const freshMockEventBus = createMockEventBus();
+
+  // STEP 3: Bind all mock services to the test container
   testContainer.bind<ILogger>(TYPES.ILogger).toConstantValue(mockLogger);
-  testContainer.bind<IEventBus>(TYPES.IEventBus).toConstantValue(mockEventBus);
+  testContainer.bind<IEventBus>(TYPES.IEventBus).toConstantValue(freshMockEventBus);
   testContainer.bind<IGameStateStore>(TYPES.IGameStateStore).toConstantValue(mockGameStateStore);
   testContainer.bind<IGameStateStoreService>(TYPES.IGameStateStoreService).toConstantValue(mockGameStateStoreService);
   testContainer.bind<IHttpService>(TYPES.IHttpService).toConstantValue(mockHttpService);
@@ -320,11 +366,60 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   // DIRECTIVE 006: Bind default configs and params for SUT construction
   // ===================================================================================
   testContainer.bind<EventBusConfig>(TYPES.EventBusConfig).toConstantValue(defaultEventBusConfig);
-  testContainer.bind<ApplicationInitializerServiceParams>(TYPES.ApplicationInitializerServiceParams).toConstantValue(defaultAppInitializerParams);
-  testContainer.bind<BackendSyncServiceParams>(TYPES.BackendSyncServiceParams).toConstantValue(defaultBackendSyncParams);
-  testContainer.bind<GameControllerServiceParams>(TYPES.GameControllerServiceParams).toConstantValue(defaultGameControllerParams);
-  testContainer.bind<QualiaStateCalculatorServiceParams>(TYPES.QualiaStateCalculatorServiceParams).toConstantValue(defaultQualiaCalculatorParams);
-  testContainer.bind<RhythmicMovementControllerParams>(TYPES.RhythmicMovementControllerParams).toConstantValue(defaultRhythmicMovementParams);
+
+  // Create parameter objects using the same fresh mock instances
+  const appInitializerParams = createDefaultAppInitializerParams(
+    freshMockEventBus,
+    mockLogger,
+    mockBackendSyncService,
+    mockGameStateStoreService,
+    mockGameControllerService,
+    mockRhythmicMovementController,
+    mockNotificationService,
+    mockErrorReportingService,
+    mockDebugService,
+    mockStateStreamingService,
+    mockGameplayMechanicsService,
+    mockViewLogicService,
+    mockSubtitleService,
+    mockDebugOrchestratorService,
+    mockBrowserEventsService
+  );
+  const backendSyncParams = createDefaultBackendSyncParams(
+    freshMockEventBus,
+    mockLogger,
+    mockHttpService,
+    mockTimerService,
+    mockPerformanceService
+  );
+  const gameControllerParams = createDefaultGameControllerParams(
+    freshMockEventBus,
+    mockLogger,
+    mockGameStateStoreService,
+    mockTimerService,
+    mockPerformanceService,
+    mockAudioService
+  );
+  const qualiaCalculatorParams = createDefaultQualiaCalculatorParams(
+    freshMockEventBus,
+    mockLogger,
+    mockTimerService,
+    mockPerformanceService
+  );
+  const rhythmicMovementParams = createDefaultRhythmicMovementParams(
+    freshMockEventBus,
+    mockLogger,
+    mockTimerService,
+    mockInputStateService,
+    mockGameStateStoreService,
+    mockGameplayMechanicsService
+  );
+
+  testContainer.bind<ApplicationInitializerServiceParams>(TYPES.ApplicationInitializerServiceParams).toConstantValue(appInitializerParams);
+  testContainer.bind<BackendSyncServiceParams>(TYPES.BackendSyncServiceParams).toConstantValue(backendSyncParams);
+  testContainer.bind<GameControllerServiceParams>(TYPES.GameControllerServiceParams).toConstantValue(gameControllerParams);
+  testContainer.bind<QualiaStateCalculatorServiceParams>(TYPES.QualiaStateCalculatorServiceParams).toConstantValue(qualiaCalculatorParams);
+  testContainer.bind<RhythmicMovementControllerParams>(TYPES.RhythmicMovementControllerParams).toConstantValue(rhythmicMovementParams);
 
   // STEP 3: Apply any test-specific overrides.
   for (const override of overrides) {
