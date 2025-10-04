@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [2025-10-04] - Critical Binary Protocol Fix: StateStreamingService GOLD.CODE Alignment
+
+### 🎯 MISSION: Restore Contract Integrity in Particle Data Streaming
+- **OBJECTIVE:** Fix StateStreamingService to transmit 62-byte GOLD.CODE particle data instead of 84-byte GPU format, ensuring frontend RawToParticleEventAdapter can decode correctly
+- **STATUS:** ✅ **MISSION ACCOMPLISHED** - Binary protocol aligned, architectural linting passed, contract integrity restored
+- **PRINCIPLE:** Direct transmission of optimized binary data without unnecessary serialization
+
+### 🔧 Technical Implementation
+- **FILE MODIFIED:** `backend/services/StateStreamingService.py`
+- **CHANGE:** Replaced `get_particle_data_as_numpy_array().tobytes()` with direct `get_optimized_particle_data()` call
+- **IMPACT:** Eliminates 22 bytes per particle overhead, restores real-time visualization
+- **VALIDATION:** Architectural compliance verified, binary contract integrity confirmed
+
 ## [2025-10-04] - Metadata Enrichment: SEO, Branding & PWA Foundation
 
 ### 🎯 MISSION: Enrich index.html with Industry-Standard Metadata

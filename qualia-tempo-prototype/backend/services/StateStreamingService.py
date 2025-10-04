@@ -112,15 +112,11 @@ class StateStreamingService:
                 loop_start = asyncio.get_event_loop().time()
 
                 try:
-                    # CRITICAL FIX: Call correct method that actually exists
-                    particle_data = self._particle_engine.get_particle_data_as_numpy_array()
+                    # CORRECTO: Obtiene el formato GOLD.CODE (62 bytes) directamente como bytes
+                    binary_payload = self._particle_engine.get_optimized_particle_data()
 
-                    if particle_data is not None:
-                        # BINARY PROTOCOL: Convert numpy array directly to bytes
-                        # NO JSON SERIALIZATION - Maximum performance
-                        binary_payload = particle_data.tobytes()
-
-                        # Send binary state update to all connected clients
+                    if binary_payload:
+                        # Transmite la carga útil correcta sin serialización adicional
                         await self._broadcast_state_update(binary_payload)
 
                         # Update statistics
