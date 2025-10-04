@@ -22,7 +22,7 @@ import type { QualiaState, NoteData } from '../types/contracts';
 import type { ILogger } from './interfaces/ILogger';
 import type { ICoordinateSystemService } from './interfaces/ICoordinateSystemService';
 import type { IColorService } from './interfaces/IColorService';
-import { logMethod, catchError } from '../utils/decorators';
+import { logMethod, catchError, measureTime } from '../utils/decorators';
 import { NOTE_GEOMETRY_TYPES } from './contracts/constants';
 
 @injectable()
@@ -88,6 +88,7 @@ export class ViewLogicService implements IViewLogicService {
 
   @logMethod
   @catchError
+  @measureTime
   getBossVisuals(bossState: BossState, time: number): BossVisualData {
     const boss = bossState;
     const stressIntensity = boss.stress_level;
@@ -352,6 +353,7 @@ export class ViewLogicService implements IViewLogicService {
 
   @logMethod
   @catchError
+  @measureTime
   getQualiaFieldVisuals(qualiaField: QualiaState, musicData: MusicData, time: number): QualiaFieldVisualData {
     const particleCount = Math.floor(this.config.qualiaField.particleCountMultiplier * qualiaField.flow + this.config.qualiaField.particleCountBase);
     const { positions, colors, sizes } = this.generateFieldParticleData(particleCount, qualiaField, musicData, time);
@@ -701,6 +703,7 @@ export class ViewLogicService implements IViewLogicService {
    */
   @logMethod
   @catchError
+  @measureTime
   getGridVisuals(params: GetGridVisualsParams): GridVisualData {
     const tiles = this.generateTiles(params);
 

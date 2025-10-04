@@ -35,6 +35,9 @@ const enforceBrowserOnly = require('./rules/enforce-browser-only');
 const enforceEventInterfacesLocation = require('./rules/enforce-event-interfaces-location');
 // NEW RULES - QUALIA.CODE v1.1 Testing Architecture
 const enforceIsolatedTestContainer = require('./rules/enforce-isolated-test-container');
+// NEW RULES - QUALIA.CODE v1.2 Data Integrity & Performance
+const enforceValidationOnBoundaries = require('./rules/enforce-validation-on-boundaries');
+const enforcePerformanceBestPractices = require('./rules/enforce-performance-best-practices');
 
 module.exports = {
   rules: {
@@ -61,6 +64,9 @@ module.exports = {
     'enforce-event-interfaces-location': enforceEventInterfacesLocation,
     // NEW RULES - QUALIA.CODE v1.1 Testing Architecture
     'enforce-isolated-test-container': enforceIsolatedTestContainer,
+    // NEW RULES - QUALIA.CODE v1.2 Data Integrity & Performance
+    'enforce-validation-on-boundaries': enforceValidationOnBoundaries,
+    'enforce-performance-best-practices': enforcePerformanceBestPractices,
   },
   configs: {
     recommended: {
@@ -89,6 +95,9 @@ module.exports = {
         '@qualia-tempo/qualia-code/enforce-event-interfaces-location': 'error',
         // NEW RULES - QUALIA.CODE v1.1 Testing Architecture
         '@qualia-tempo/qualia-code/enforce-isolated-test-container': 'error',
+        // NEW RULES - QUALIA.CODE v1.2 Data Integrity & Performance
+        '@qualia-tempo/qualia-code/enforce-validation-on-boundaries': 'error',
+        '@qualia-tempo/qualia-code/enforce-performance-best-practices': 'error',
       }
     }
   }

@@ -83,6 +83,9 @@ module.exports = {
     // instead of using proper platform abstraction services (ITimerService, etc.)
     "@qualia-tempo/qualia-code/enforce-browser-only": "off",
     "@qualia-tempo/qualia-code/enforce-event-interfaces-location": "error",
+    // NEW RULES - QUALIA.CODE v1.2 Data Integrity & Performance
+    "@qualia-tempo/qualia-code/enforce-validation-on-boundaries": "error",
+    "@qualia-tempo/qualia-code/enforce-performance-best-practices": "error",
   },
   settings: {
     "import/resolver": {
