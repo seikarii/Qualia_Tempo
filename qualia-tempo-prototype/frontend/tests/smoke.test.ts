@@ -11,9 +11,9 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestContainer, resetAllMocks } from '../testing/test-container-factory';
-import { TYPES } from '../services/inversify.types';
-import type { IApplicationInitializerService } from '../services/interfaces/IApplicationInitializerService';
+import { createTestContainer, resetAllMocks } from '../src/testing/test-container-factory';
+import { TYPES } from '../src/services/inversify.types';
+import type { IApplicationInitializerService } from '../src/services/interfaces/IApplicationInitializerService';
 import type { Container } from 'inversify';
 
 describe('ApplicationCompositionRoot Integration Smoke Test', () => {

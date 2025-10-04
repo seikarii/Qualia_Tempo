@@ -83,21 +83,6 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Prioridad:** Media - Integrar servicios de audio y física.
 
 
-
-
-### 3. 📝 NOTE: - Render Target Gestionado por Servicio (EASY)
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/FrontendRenderingService.ts:4,406`  
-**Severidad:** Media  
-**Estado:** Documentado  
-**Descripción:**
-```typescript
-// NOTE: Render target is managed by PostProcessingService
-// NOTE: Removed time uniform as we switched from ShaderMaterial to PointsMaterial
-```
-**Contexto:** Notas sobre gestión de render targets y cambios en materiales.  
-**Impacto:** Documentación de decisiones arquitectónicas.  
-**Prioridad:** Media - Considerar si estas notas necesitan acción.
-
 ### 4. 🏗️ PLACEHOLDER - Configuración de Audio Placeholder (EASY)
 **Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:203,205`  
 **Severidad:** Baja  
