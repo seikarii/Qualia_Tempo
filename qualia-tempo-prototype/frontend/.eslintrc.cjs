@@ -18,6 +18,8 @@ module.exports = {
     // Configuration files that should not be linted for TSConfig issues
     "playwright.config.ts",
     "vite.config.ts",
+    // Preload scripts (not included in main tsconfig)
+    "preload/**",
   ],
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint", "@qualia-tempo/qualia-code", "react-hooks"],

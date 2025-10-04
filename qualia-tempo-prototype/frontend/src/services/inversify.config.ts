@@ -49,6 +49,7 @@ import type { GameStateStoreConfig } from "./contracts/IGameStateStoreService.co
 import type { PostProcessingConfig, PostProcessingServiceParams } from "./contracts/IPostProcessingService.contracts";
 import type { ProtocolAdapterConfig } from "./contracts/IProtocolAdapter.contracts";
 import type { TimerServiceConfig } from "./contracts/ITimerService.contracts";
+import type { AudioSessionConfig } from "./contracts/IAudioSystemBridge.contracts";
 
 // ===== IMPORT EVENT CONTRACTS =====
 import type { ConfigurationLoadedEvent } from "./contracts/events.contracts";
@@ -89,6 +90,7 @@ import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
 import type { ICoordinateSystemService } from "./interfaces/ICoordinateSystemService";
 import type { IToneFactoryService } from "../audio/interfaces/IToneFactoryService";
 import type { IStateMergerService } from "./interfaces/IStateMergerService";
+import type { IAudioSystemBridge } from "./interfaces/IAudioSystemBridge";
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { ConfigurationService } from "./ConfigurationService";
@@ -123,6 +125,7 @@ import { InputStateService } from "./InputStateService";
 import { CoordinateSystemService } from "./CoordinateSystemService";
 import { ToneFactoryService } from "../audio/ToneFactoryService";
 import { StateMergerService } from "./StateMergerService";
+import { AudioSystemBridge } from "./AudioSystemBridge";
 
 // ===== PROTOCOL ADAPTER IMPORTS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
@@ -163,7 +166,8 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "visualEffects": "visual-effects.yaml",
   "coordinateSystem": "game-config.yaml",
   "protocolAdapter": "protocol-adapter.yaml",
-  "timerService": "timer-service.yaml"
+  "timerService": "timer-service.yaml",
+  "audioSession": "audio-session.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
@@ -312,6 +316,13 @@ container
 container
   .bind<IBrowserEventsService>(TYPES.IBrowserEventsService)
   .to(BrowserEventsService)
+  .inSingletonScope();
+
+// ===== AUDIO SYSTEM BRIDGE BINDING =====
+// QUALIA.CODE v1.1: Audio session management bridge to Electron main process
+container
+  .bind<IAudioSystemBridge>(TYPES.IAudioSystemBridge)
+  .to(AudioSystemBridge)
   .inSingletonScope();
 
 // ===== COORDINATE SYSTEM SERVICE BINDING =====
@@ -479,6 +490,7 @@ function bindBasicConfigurations(fullConfig: FullGameConfig): void {
   safeBindConstant<FrontendRenderingConfig>(TYPES.FrontendRenderingConfig, fullConfig.frontendRendering);
   safeBindConstant<StreamingConfig>(TYPES.StreamingConfig, fullConfig.backendSync.streaming);
   safeBindConstant<TimerServiceConfig>(TYPES.TimerServiceConfig, fullConfig.timerService);
+  safeBindConstant<AudioSessionConfig>(TYPES.AudioSessionConfig, fullConfig.audioSession);
   
   // Bind ThrottlingConfig from NotificationService config
   safeBindConstant(TYPES.ThrottlingConfig, fullConfig.notificationService.throttling);
@@ -521,6 +533,7 @@ function bindGameplayServiceParams(fullConfig: FullGameConfig): void {
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
     audioService: container.get<IAudioService>(TYPES.IAudioService),
+    audioSystemBridge: container.get<IAudioSystemBridge>(TYPES.IAudioSystemBridge),
   });
 
   safeBindConstant<QualiaStateCalculatorServiceParams>(TYPES.QualiaStateCalculatorServiceParams, {

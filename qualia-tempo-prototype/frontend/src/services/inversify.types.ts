@@ -61,6 +61,9 @@ export const TYPES = {
   // ===== COLOR SERVICES =====
   IColorService: Symbol.for("IColorService"),
 
+  // ===== AUDIO SYSTEM BRIDGE =====
+  IAudioSystemBridge: Symbol.for("IAudioSystemBridge"),
+
   // ===== SPECIAL TYPES =====
   IGameStateStore: Symbol.for("IGameStateStore"),
   ThrottlingManager: Symbol.for("ThrottlingManager"),
@@ -118,6 +121,7 @@ export const TYPES = {
   PostProcessingConfig: Symbol.for("PostProcessingConfig"),
   ProtocolAdapterConfig: Symbol.for("ProtocolAdapterConfig"),
   TimerServiceConfig: Symbol.for("TimerServiceConfig"),
+  AudioSessionConfig: Symbol.for("AudioSessionConfig"),
 } as const;
 
 // Type-safe access to TYPES

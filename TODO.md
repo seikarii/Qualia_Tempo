@@ -54,62 +54,8 @@
 
 ---
 
-## 📋 Lista de Deuda Técnica
 
-### 1. 📱 DEPRECATED - Método getConfig() Service Locator Anti-Pattern
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/interfaces/IConfigurationService.ts` y `ConfigurationService.ts`  
-**Severidad:** Baja  
-**Estado:** ⚠️ DEPRECATION WARNING ACTIVE - Preparando eliminación futura  
-**Descripción:**
-```typescript
-* @deprecated ARCHITECTURAL MANDATE: This method enables the Service Locator anti-pattern.
-* All services MUST inject their specific configuration slice directly, not the entire config object.
-* This method will be removed in a future version. Migrate all usages immediately.
-* See QUALIA.MANUAL.md Section 8 for the correct Direct Configuration Injection pattern.
-```
-**Contexto:** Método permite Service Locator anti-pattern. Servicios deben inyectar config específica.  
-**Impacto:** Eliminación forzará arquitectura IoC pura.  
-**Análisis:** ✅ ZERO usages found in codebase - arquitectura ya en buen estado  
-**Prioridad:** Baja - Planear eliminación en próxima major version
-
----
-
-### ✅ RESOLVED (2025-10-04): Deprecated Methods Completely Purged
-
-#### ~~2. DEPRECATED - Método gatherServiceDiagnostics Obsoleto~~
-**ELIMINADO COMPLETAMENTE** - Método y toda su implementación purgados de DebugOrchestratorService
-
-#### ~~3. DEPRECATED - Método getServiceStatuses Obsoleto~~
-**ELIMINADO COMPLETAMENTE** - Método y toda su implementación purgados de DebugOrchestratorService
-
-#### ~~4. DEPRECATED - Método worldToScreen overload~~
-**ELIMINADO COMPLETAMENTE** - Sobrecarga obsoleta eliminada, solo Parameter Object Pattern permanece
-
-### 5. 📱 DEPRECATED - Método gatherServiceDiagnostics en DebugOrchestratorService
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/DebugOrchestratorService.ts:103`  
-**Severidad:** Baja  
-**Estado:** En Migración  
-**Descripción:**
-```typescript
-* @deprecated This method promotes a "pull" pattern. Use getHealthReport() instead to read cached state.
-```
-**Contexto:** Método que promueve patrón "pull" en lugar del patrón "push" event-driven.  
-**Impacto:** Transición a arquitectura event-driven pura.  
-**Prioridad:** Baja - Migrar consumidores al nuevo patrón.
-
-### 6. 📱 DEPRECATED - Getters de Configuración Removidos
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/ConfigurationService.ts:139`  
-**Severidad:** Baja  
-**Estado:** Completado  
-**Descripción:**
-```typescript
-// === DEPRECATED GETTERS REMOVED ===
-```
-**Contexto:** Getters obsoletos eliminados tras migración a inyección directa.  
-**Impacto:** Arquitectura más limpia.  
-**Prioridad:** Completado - Ya implementado.
-
-### 7. � TODO - Integración de Datos de Audio en Componente de Juego (MEDIUM)
+### 1. � TODO - Integración de Datos de Audio en Componente de Juego (MEDIUM)
 **Archivo:** `qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx:173-176,193`  
 **Severidad:** Media  
 **Estado:** Pendiente  
@@ -124,28 +70,22 @@ velocity: [0, 0, 0] as [number, number, number], // TODO: Get from physics servi
 **Impacto:** Componente no refleja estado real del juego.  
 **Prioridad:** Media - Integrar servicios de audio y física existentes.
 
-### 8. 🏗️ PLACEHOLDER - Configuración de Audio Placeholder (LOW PRIORITY)
-**Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:160`  
-**Severidad:** Baja  
-**Estado:** Funcional  
+### 2. ✅ RESUELTO - Configuración de Audio Session (COMPLETADO 2025-10-04)
+**Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:160` (RESUELTO)  
+**Severidad:** Baja (COMPLETADA)  
+**Estado:** ✅ Implementado siguiendo GOLD.CODE  
 **Descripción:**
 ```typescript
-// Placeholder for future audio session configuration
+// Audio session configuration implemented with Direct Configuration Injection
 ```
-**Contexto:** Configuración de audio placeholder.  
-**Impacto:** Funcionalidad básica presente.  
-**Prioridad:** Baja - Implementar cuando se expanda soporte de audio.
+**Contexto:** Sistema completo de configuración de sesión de audio implementado.  
+**Impacto:** Sistema de audio ahora tiene configuración completa para Windows con prioridad ajustable.  
+**Implementación:**
+- ✅ AudioSessionConfig contract creado
+- ✅ audio-session.yaml configuración externalizada
+- ✅ AudioSystemBridge servicio implementado con IoC
+- ✅ Integración en GameControllerService
+- ✅ Preload script creado para IPC seguro
+- ✅ Main process handler actualizado con tipos correctos
 
-### 9. 🏗️ PLACEHOLDER - Buffer de Vértices Placeholder (MEDIUM)
-**Archivo:** `qualia-tempo-prototype/backend/services/RenderingService.py:95`  
-**Severidad:** Media  
-**Estado:** Funcional  
-**Descripción:**
-```python
-# Create vertex buffer for particles (placeholder)
-```
-**Contexto:** Buffer de vértices placeholder para partículas.  
-**Impacto:** Sistema de rendering básico funcional.  
-**Prioridad:** Media - Implementar buffer de vértices real.
 
----

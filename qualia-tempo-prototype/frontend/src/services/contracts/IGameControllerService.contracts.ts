@@ -12,6 +12,7 @@ import type { IGameStateStoreService } from '../interfaces/IGameStateStoreServic
 import type { ITimerService } from '../interfaces/ITimerService';
 import type { IPerformanceService } from '../interfaces/IPerformanceService';
 import type { IAudioService } from '../interfaces/IAudioService';
+import type { IAudioSystemBridge } from '../interfaces/IAudioSystemBridge';
 
 // QUALIA.CODE v1.1: Constructor parameter object pattern (max 4 parameters rule)
 // ARCHITECTURAL FIX: Explicit dependency injection - no Service Locator anti-pattern
@@ -23,6 +24,7 @@ export interface GameControllerServiceParams {
   timerService: ITimerService;
   performanceService: IPerformanceService;
   audioService: IAudioService;
+  audioSystemBridge: IAudioSystemBridge;
 }
 
 // Game state interface

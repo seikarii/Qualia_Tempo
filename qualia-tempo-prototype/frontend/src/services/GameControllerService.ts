@@ -25,6 +25,7 @@ import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IPerformanceService } from "./interfaces/IPerformanceService";
 import type { IAudioService } from "./interfaces/IAudioService";
+import type { IAudioSystemBridge } from "./interfaces/IAudioSystemBridge";
 
 /**
  * GameControllerService: Manages game state and control logic
@@ -42,6 +43,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   private timerService: ITimerService;
   private performanceService: IPerformanceService;
   private audioService: IAudioService;
+  private audioSystemBridge: IAudioSystemBridge;
   private config: GameControllerConfig;
   // @ts-expect-error - Used by @OnEvent decorator lifecycle
   private _eventListeners: string[] = []; // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
@@ -62,6 +64,7 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     this.timerService = params.timerService;
     this.performanceService = params.performanceService;
     this.audioService = params.audioService;
+    this.audioSystemBridge = params.audioSystemBridge;
     // gameState is initialized in initialize() to avoid redundancy
     this.logger.info("🎮 [GameController] Service initialized with explicit dependencies");
   }
@@ -140,12 +143,16 @@ export class GameControllerService implements IGameControllerService, IBaseServi
   public async startGame(): Promise<void> {
     this.logger.info("🎮 [GameController] Starting game sequence...");
 
-    // PASO 1: Esperar a que el AudioContext se inicie. ESTO ES CRÍTICO.
+    // PASO 1: Configure audio session BEFORE initializing audio context
+    // This ensures optimal audio performance on Windows
+    await this.audioSystemBridge.initializeAudioSession();
+
+    // PASO 2: Wait for AudioContext to initialize. This is CRITICAL.
     await this.audioService.initializeAudioContext();
 
     this.logger.info("AudioContext ready. Proceeding to start game state.");
 
-    // PASO 2: Proceder con la lógica original una vez el audio está listo.
+    // PASO 3: Proceed with original logic once audio is ready
     this.gameState.isPlaying = true;
     this.gameState.isPaused = false;
     this.emitGameStateChanged(GAME_STATES.PLAYING);

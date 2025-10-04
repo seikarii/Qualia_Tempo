@@ -34,6 +34,7 @@ import type { GameStateStoreConfig } from '../services/contracts/IGameStateStore
 import type { PostProcessingConfig } from '../services/contracts/IPostProcessingService.contracts';
 import type { ProtocolAdapterConfig } from '../services/contracts/IProtocolAdapter.contracts';
 import type { TimerServiceConfig } from '../services/contracts/ITimerService.contracts';
+import type { AudioSessionConfig } from '../services/contracts/IAudioSystemBridge.contracts';
 
 /**
  * Gameplay Configuration Interface
@@ -79,6 +80,7 @@ export interface FullGameConfig {
 
   // Transversal Services
   audioService: AudioServiceConfig;
+  audioSession: AudioSessionConfig;
   frontendRendering: FrontendRenderingConfig;
   notificationService: NotificationServiceConfig;
   errorReporting: ErrorReportingConfig;

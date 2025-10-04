@@ -1,0 +1,34 @@
+# QUALIA.CODE v1.1 - Audio Session Configuration
+# Windows audio session management for optimal game audio performance
+#
+# This configuration is injected directly into AudioSystemBridge service
+# following the Direct Configuration Injection pattern.
+
+# Audio session category - optimized for low-latency game audio
+category: 'game'
+
+# Audio session mode - default provides best balance for games
+mode: 'default'
+
+# Audio session behavior options
+options:
+  # Allow mixing with other apps (e.g., music players, Discord)
+  # true = good citizen, false = exclusive audio control
+  mixWithOthers: true
+  
+  # Reduce volume of other apps when game plays audio
+  # true = duck other apps, false = equal volume
+  duckOthers: false
+  
+  # Allow audio to continue when window is minimized/unfocused
+  # true = background audio, false = pause when inactive
+  allowBackgroundPlayback: false
+
+# Priority level for audio routing (0-100)
+# Game audio uses 85 for responsive, low-latency feedback
+# Higher values get preference in system audio mixer
+priority: 85
+
+# Master switch for audio session configuration
+# Set to false to disable audio session management (useful for debugging)
+enabled: true

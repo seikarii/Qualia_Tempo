@@ -39,6 +39,7 @@ import type { IViewLogicService } from "../services/interfaces/IViewLogicService
 import type { IStateStreamingService } from "../services/interfaces/IStateStreamingService";
 import type { IGameplayMechanicsService } from "../services/interfaces/IGameplayMechanicsService";
 import type { IAudioService } from "../services/interfaces/IAudioService";
+import type { IAudioSystemBridge } from "../services/interfaces/IAudioSystemBridge";
 import type { IGameControllerService } from "../services/interfaces/IGameControllerService";
 import type { IQualiaStateCalculatorService } from "../services/interfaces/IQualiaStateCalculatorService";
 import type { IErrorReportingService } from "../services/interfaces/IErrorReportingService";
@@ -73,6 +74,7 @@ import { mockViewLogicService } from "./mocks/view-logic-service.mock";
 import { mockStateStreamingService } from "./mocks/state-streaming-service.mock";
 import { mockGameplayMechanicsService } from "./mocks/gameplay-mechanics-service.mock";
 import { mockAudioService } from "./mocks/audio-service.mock";
+import { mockAudioSystemBridge } from "./mocks/audio-system-bridge.mock";
 import { mockGameControllerService } from "./mocks/game-controller-service.mock";
 import { mockQualiaStateCalculatorService } from "./mocks/qualia-state-calculator-service.mock";
 import { mockErrorReportingService } from "./mocks/error-reporting-service.mock";
@@ -242,7 +244,8 @@ const createDefaultGameControllerParams = (
   gameStateStoreService: IGameStateStoreService,
   timerService: ITimerService,
   performanceService: IPerformanceService,
-  audioService: IAudioService
+  audioService: IAudioService,
+  audioSystemBridge: IAudioSystemBridge
 ): GameControllerServiceParams => ({ // eslint-disable-line max-params
   eventBus,
   logger,
@@ -250,7 +253,8 @@ const createDefaultGameControllerParams = (
   gameStateStoreService,
   timerService,
   performanceService,
-  audioService
+  audioService,
+  audioSystemBridge
 });
 
 const createDefaultQualiaCalculatorParams = (
@@ -352,6 +356,7 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   testContainer.bind<IStateStreamingService>(TYPES.IStateStreamingService).toConstantValue(mockStateStreamingService);
   testContainer.bind<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService).toConstantValue(mockGameplayMechanicsService);
   testContainer.bind<IAudioService>(TYPES.IAudioService).toConstantValue(mockAudioService);
+  testContainer.bind<IAudioSystemBridge>(TYPES.IAudioSystemBridge).toConstantValue(mockAudioSystemBridge);
   testContainer.bind<IGameControllerService>(TYPES.IGameControllerService).toConstantValue(mockGameControllerService);
   testContainer.bind<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService).toConstantValue(mockQualiaStateCalculatorService);
   testContainer.bind<IErrorReportingService>(TYPES.IErrorReportingService).toConstantValue(mockErrorReportingService);
@@ -401,7 +406,8 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
     mockGameStateStoreService,
     mockTimerService,
     mockPerformanceService,
-    mockAudioService
+    mockAudioService,
+    mockAudioSystemBridge
   );
   const qualiaCalculatorParams = createDefaultQualiaCalculatorParams(
     freshMockEventBus,
