@@ -150,6 +150,91 @@ ruleTester.run('enforce-performance-best-practices', rule, {
         };
       `,
       filename: 'src/components/MyComponent.tsx'
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: Simple getter in render loop (no @measureTime needed)
+    {
+      code: `
+        class GameStateService {
+          @logMethod()
+          public getCurrentState(): GameState {
+            return this.state;
+          }
+          
+          public render(): void {
+            useFrame(() => {
+              const state = this.getCurrentState();
+              this.visualize(state);
+            });
+          }
+        }
+      `,
+      filename: 'src/services/GameStateService.ts'
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: Simple delegation method in render loop
+    {
+      code: `
+        class RenderOrchestratorService {
+          @logMethod()
+          public getVisuals(): VisualData {
+            return this.viewLogicService.getVisuals();
+          }
+          
+          public render(): void {
+            useFrame(() => {
+              const visuals = this.getVisuals();
+            });
+          }
+        }
+      `,
+      filename: 'src/services/RenderOrchestratorService.ts'
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: TimerService thin wrapper (platform abstraction)
+    {
+      code: `
+        class TimerService {
+          @logMethod()
+          public setTimeout(callback: Function, delay: number): number {
+            return window.setTimeout(callback, delay);
+          }
+          
+          @logMethod()
+          public clearTimeout(id: number): void {
+            window.clearTimeout(id);
+          }
+        }
+      `,
+      filename: 'src/services/TimerService.ts'
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: Short method with just property access
+    {
+      code: `
+        class ConfigService {
+          @logMethod()
+          public isEnabled(): boolean {
+            return this.config.enabled;
+          }
+        }
+      `,
+      filename: 'src/services/ConfigService.ts'
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: Method with performance exemption
+    {
+      code: `
+        class OptimizedService {
+          /**
+           * @performance-exempt - Already profiled and optimized
+           */
+          @logMethod()
+          public criticalPath(): void {
+            useFrame(() => {
+              for (let i = 0; i < 10000; i++) {
+                this.process(i);
+              }
+            });
+          }
+        }
+      `,
+      filename: 'src/services/OptimizedService.ts'
     }
   ],
 
@@ -203,7 +288,7 @@ ruleTester.run('enforce-performance-best-practices', rule, {
         data: { eventName: 'mousemove' }
       }]
     },
-    // Method in render loop without @measureTime (computational)
+    // CONTEXTUAL INTELLIGENCE TEST: Computationally intensive method requires @measureTime
     {
       code: `
         class ViewLogicService {
@@ -226,6 +311,55 @@ ruleTester.run('enforce-performance-best-practices', rule, {
       errors: [{
         messageId: 'suggestMeasureTime',
         data: { methodName: 'calculateParticles' }
+      }]
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: GPU operations require @measureTime
+    {
+      code: `
+        class RenderingService {
+          @logMethod()
+          public updateBufferGeometry(data: Float32Array): void {
+            this.geometry.setAttribute('position', new BufferAttribute(data, 3));
+            this.geometry.computeVertexNormals();
+            
+            useFrame(() => {
+              this.material.setUniform('time', performance.now());
+            });
+          }
+        }
+      `,
+      filename: 'src/services/RenderingService.ts',
+      errors: [{
+        messageId: 'suggestMeasureTime',
+        data: { methodName: 'updateBufferGeometry' }
+      }]
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: Long method with complex calculations
+    {
+      code: `
+        class PhysicsService {
+          @logMethod()
+          public calculatePhysics(particles: Particle[]): void {
+            // This is a long method with complex calculations
+            const forces = particles.map(p => this.calculateForce(p));
+            const velocities = forces.map((f, i) => this.calculateVelocity(f, particles[i]));
+            const positions = velocities.map((v, i) => this.calculatePosition(v, particles[i]));
+            
+            for (let i = 0; i < particles.length; i++) {
+              particles[i].position = positions[i];
+              particles[i].velocity = velocities[i];
+            }
+            
+            useFrame(() => {
+              this.updateParticles(particles);
+            });
+          }
+        }
+      `,
+      filename: 'src/services/PhysicsService.ts',
+      errors: [{
+        messageId: 'suggestMeasureTime',
+        data: { methodName: 'calculatePhysics' }
       }]
     },
     // Multiple high-frequency events without throttle

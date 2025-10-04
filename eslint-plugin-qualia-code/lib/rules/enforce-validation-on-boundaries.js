@@ -84,6 +84,42 @@ module.exports = {
     }
 
     /**
+     * CONTEXTUAL INTELLIGENCE: Detect if event source is external (untrusted)
+     * 
+     * RATIONALE (QUALIA.CODE SUGGESTION #1):
+     * - External Events (WebSocket, API, user input): MUST validate (untrusted data)
+     * - Internal Events (EventBus typed events): TypeScript type safety sufficient
+     * 
+     * This function distinguishes between:
+     * 1. External sources requiring runtime validation
+     * 2. Internal EventBus communications where compile-time types provide safety
+     */
+    function isExternalEventSource(node) {
+      const sourceCode = context.getSourceCode();
+      const methodText = sourceCode.getText(node.value);
+      
+      // Check for indicators of external data sources
+      const externalPatterns = [
+        /WebSocket/i,                              // WebSocket connections
+        /\.on\s*\(\s*['"]message['"]/,            // WebSocket.on('message')
+        /fetch|axios|http/i,                       // HTTP API calls
+        /addEventListener.*(?:message|error)/i,    // Browser message events
+        /postMessage/i,                            // Cross-origin messaging
+        /XMLHttpRequest/i,                         // Legacy AJAX
+      ];
+      
+      const hasExternalSource = externalPatterns.some(pattern => pattern.test(methodText));
+      
+      // Additional check: Look for EventBus subscription patterns (internal events)
+      // Internal events are indicated by @OnEvent decorator on typed EventBus events
+      const hasInternalEventBusPattern = /@OnEvent/.test(sourceCode.getText(node.parent)) &&
+                                        !hasExternalSource;
+      
+      // If it's an @OnEvent handler without external source indicators, it's internal
+      return hasExternalSource;
+    }
+
+    /**
      * Get the event name from @OnEvent decorator
      */
     function getOnEventName(node) {
@@ -205,13 +241,17 @@ module.exports = {
 
         // RULE 1: @OnEvent handlers must validate event properties if they access them
         // NOTE: Event handlers are checked regardless of visibility (private/public)
+        // ENHANCEMENT: Only enforce for external event sources (SUGGESTION #1)
         const eventName = getOnEventName(node);
         if (eventName) {
           const hasValidateEventProperty = hasDecorator(node, 'validateEventProperty');
           const accessesEvent = accessesEventProperties(node);
           const hasExemption = hasValidationExemption(node);
+          const isExternal = isExternalEventSource(node);
 
-          if (accessesEvent && !hasValidateEventProperty && !hasExemption) {
+          // Only require validation for external event sources
+          // Internal EventBus events rely on TypeScript type safety
+          if (accessesEvent && !hasValidateEventProperty && !hasExemption && isExternal) {
             context.report({
               node,
               messageId: 'missingEventValidation',

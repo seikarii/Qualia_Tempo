@@ -128,28 +128,64 @@ ruleTester.run('enforce-validation-on-boundaries', rule, {
         }
       `,
       filename: 'src/services/EventHandlerService.ts'
-    }
-  ],
-
-  invalid: [
-    // @OnEvent handler accessing event properties without validation
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: Internal EventBus event (TypeScript typed, no validation needed)
     {
       code: `
-        class GameControllerService {
-          @OnEvent('PlayerAction')
-          private handlePlayerAction(event: PlayerActionEvent): void {
-            const action = event.action;
-            this.processAction(action);
+        class GameStateStoreService {
+          @OnEvent('QualiaStateUpdated')
+          private handleQualiaUpdate(event: QualiaStateUpdatedEvent): void {
+            const state = event.qualiaState;
+            this.store.setState({ qualiaState: state });
           }
         }
       `,
-      filename: 'src/services/GameControllerService.ts',
-      errors: [{
-        messageId: 'missingEventValidation',
-        data: { eventName: 'PlayerAction' }
-      }]
+      filename: 'src/services/GameStateStoreService.ts'
     },
-    // @OnEvent handler with event property destructuring without validation
+    // CONTEXTUAL INTELLIGENCE TEST: Internal EventBus event with multiple property access
+    {
+      code: `
+        class NotificationService {
+          @OnEvent('GameStateChanged')
+          private handleStateChange(event: GameStateChangedEvent): void {
+            const { newState, oldState, timestamp } = event;
+            this.notify('State changed from ' + oldState + ' to ' + newState);
+          }
+        }
+      `,
+      filename: 'src/services/NotificationService.ts'
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: Constructor with config validation (exempt)
+    {
+      code: `
+        import { AudioServiceConfig } from './contracts/IAudioService.contracts';
+        
+        class AudioService {
+          constructor(
+            @inject(TYPES.AudioServiceConfig) config: AudioServiceConfig
+          ) {
+            this.config = config;
+          }
+        }
+      `,
+      filename: 'src/services/AudioService.ts'
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: Method with validation exemption comment
+    {
+      code: `
+        class QualiaCalculatorService {
+          /**
+           * @validation-exempt - State is pre-validated by GameStateStore
+           */
+          @logMethod()
+          public calculateMetrics(state: QualiaState): void {
+            return state.value * 2;
+          }
+        }
+      `,
+      filename: 'src/services/QualiaCalculatorService.ts'
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: Internal event with property destructuring (no validation needed)
     {
       code: `
         class EventService {
@@ -160,10 +196,73 @@ ruleTester.run('enforce-validation-on-boundaries', rule, {
           }
         }
       `,
-      filename: 'src/services/EventService.ts',
+      filename: 'src/services/EventService.ts'
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: Internal event with nested property access (no validation needed)
+    {
+      code: `
+        class StateService {
+          @OnEvent('StateChanged')
+          private handleStateChange(event: StateChangedEvent): void {
+            console.log(event.data.state.value);
+          }
+        }
+      `,
+      filename: 'src/services/StateService.ts'
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: Internal event with bracket notation (no validation needed)
+    {
+      code: `
+        class EventService {
+          @OnEvent('CustomEvent')
+          private handleCustom(event: CustomEvent): void {
+            const value = event['customProperty'];
+            this.process(value);
+          }
+        }
+      `,
+      filename: 'src/services/EventService.ts'
+    }
+  ],
+
+  invalid: [
+    // CONTEXTUAL INTELLIGENCE TEST: External event source (WebSocket) requires validation
+    {
+      code: `
+        class WebSocketService {
+          @OnEvent('message')
+          private handleMessage(event: MessageEvent): void {
+            const ws = new WebSocket('ws://localhost:8080');
+            ws.on('message', (data) => {
+              const message = event.data;
+              this.processMessage(message);
+            });
+          }
+        }
+      `,
+      filename: 'src/services/WebSocketService.ts',
       errors: [{
         messageId: 'missingEventValidation',
-        data: { eventName: 'DataUpdate' }
+        data: { eventName: 'message' }
+      }]
+    },
+    // CONTEXTUAL INTELLIGENCE TEST: API response requires validation
+    {
+      code: `
+        class ApiClientService {
+          @OnEvent('apiResponse')
+          private handleResponse(event: ApiResponseEvent): void {
+            fetch('/api/data').then(response => {
+              const data = event.data;
+              this.process(data);
+            });
+          }
+        }
+      `,
+      filename: 'src/services/ApiClientService.ts',
+      errors: [{
+        messageId: 'missingEventValidation',
+        data: { eventName: 'apiResponse' }
       }]
     },
     // Public method with shared_contracts DTO without @validate
@@ -187,18 +286,12 @@ ruleTester.run('enforce-validation-on-boundaries', rule, {
         }
       }]
     },
-    // Multiple issues: event access and DTO without validation
+    // DTO without validation (CombatStarted is internal event, no validation needed)
     {
       code: `
         import { CombatData } from '../types/contracts';
         
         class CombatService {
-          @OnEvent('CombatStarted')
-          private handleCombat(event: CombatEvent): void {
-            const data = event.data;
-            this.processCombat(data);
-          }
-          
           @logMethod()
           public updateCombat(combat: CombatData): void {
             this.state = combat;
@@ -208,10 +301,6 @@ ruleTester.run('enforce-validation-on-boundaries', rule, {
       filename: 'src/services/CombatService.ts',
       errors: [
         {
-          messageId: 'missingEventValidation',
-          data: { eventName: 'CombatStarted' }
-        },
-        {
           messageId: 'missingDtoValidation',
           data: { 
             methodName: 'updateCombat',
@@ -219,22 +308,6 @@ ruleTester.run('enforce-validation-on-boundaries', rule, {
           }
         }
       ]
-    },
-    // Event handler accessing nested event properties
-    {
-      code: `
-        class StateService {
-          @OnEvent('StateChanged')
-          private handleStateChange(event: StateChangedEvent): void {
-            console.log(event.data.state.value);
-          }
-        }
-      `,
-      filename: 'src/services/StateService.ts',
-      errors: [{
-        messageId: 'missingEventValidation',
-        data: { eventName: 'StateChanged' }
-      }]
     },
     // Public method with Response type from contracts
     {
@@ -255,23 +328,6 @@ ruleTester.run('enforce-validation-on-boundaries', rule, {
           methodName: 'handleResponse',
           argumentType: 'ApiResponse'
         }
-      }]
-    },
-    // Event handler using bracket notation for event access
-    {
-      code: `
-        class EventService {
-          @OnEvent('CustomEvent')
-          private handleCustom(event: CustomEvent): void {
-            const value = event['customProperty'];
-            this.process(value);
-          }
-        }
-      `,
-      filename: 'src/services/EventService.ts',
-      errors: [{
-        messageId: 'missingEventValidation',
-        data: { eventName: 'CustomEvent' }
       }]
     }
   ]

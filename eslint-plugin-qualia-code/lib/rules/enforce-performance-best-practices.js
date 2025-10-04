@@ -161,6 +161,64 @@ module.exports = {
     }
 
     /**
+     * CONTEXTUAL INTELLIGENCE: Detect if method is computationally intensive
+     * 
+     * RATIONALE (QUALIA.CODE SUGGESTION #2):
+     * - Computationally intensive methods: SHOULD measure (GPU ops, loops, async)
+     * - Simple delegators/getters: SHOULD NOT measure (overhead > work)
+     * 
+     * This function uses heuristics to distinguish between:
+     * 1. Methods that benefit from performance instrumentation
+     * 2. Trivial methods where @measureTime overhead exceeds operation time
+     */
+    function isComputationallyIntensive(node) {
+      const sourceCode = context.getSourceCode();
+      const methodText = sourceCode.getText(node.value);
+      
+      // Indicator 1: Method contains loops (iterative work)
+      const hasLoops = /for\s*\(|while\s*\(|do\s+\{|\.forEach\(|\.map\(|\.filter\(|\.reduce\(/.test(methodText);
+      
+      // Indicator 2: Method performs GPU operations (WebGL, Three.js)
+      const hasGPUOps = /\.setAttribute|\.setUniform|\.render|BufferGeometry|WebGL|ShaderMaterial|\.updateMatrix/.test(methodText);
+      
+      // Indicator 3: Method is long enough to contain non-trivial logic
+      const isLongMethod = methodText.length > 300;
+      
+      // Indicator 4: Method has async operations (I/O, promises)
+      const hasAsyncOps = /await\s+|Promise\.|async\s+function|\.then\(/.test(methodText);
+      
+      // Indicator 5: Method has complex calculations
+      const hasComplexCalc = /Math\.\w+|calculate|compute|process|transform/i.test(methodText);
+      
+      // EXCLUSION: Simple getters/setters are NOT intensive
+      // Pattern: short methods with just return or assignment
+      const isSimpleAccessor = (
+        (/^(get|set)\w+/.test(node.key?.name) || /^(is|has)\w+/.test(node.key?.name)) &&
+        methodText.length < 100 &&
+        !/for\s*\(|while\s*\(/.test(methodText)
+      );
+      
+      // EXCLUSION: Pure delegation methods (just calling another service)
+      const isPureDelegation = (
+        methodText.split('\n').length <= 5 &&
+        /return\s+this\.\w+\.\w+\(/.test(methodText) &&
+        !hasLoops &&
+        !hasGPUOps
+      );
+      
+      // Method is intensive if it has multiple indicators and is not a simple accessor
+      const intensityScore = (
+        (hasLoops ? 2 : 0) +
+        (hasGPUOps ? 3 : 0) +
+        (isLongMethod ? 1 : 0) +
+        (hasAsyncOps ? 1 : 0) +
+        (hasComplexCalc ? 1 : 0)
+      );
+      
+      return intensityScore >= 2 && !isSimpleAccessor && !isPureDelegation;
+    }
+
+    /**
      * Extract event name from addEventListener call
      */
     function getEventListenerName(node) {
@@ -304,14 +362,14 @@ module.exports = {
 
         const classInRenderLoop = parentClass && classUsesRenderLoop(parentClass);
 
-        // Suggest @measureTime for hot-path methods (warning, not error)
+        // ENHANCED: Suggest @measureTime ONLY for computationally intensive methods (SUGGESTION #2)
+        // This eliminates false positives for simple getters, delegators, and thin wrappers
         if ((inRenderLoop || classInRenderLoop) && !hasMeasureTime) {
-          // Only suggest for methods that seem computationally intensive
-          const methodText = context.getSourceCode().getText(node.value);
-          const seemsComputational = methodText.length > 200 || // Non-trivial method
-                                    /for\s*\(|while\s*\(|\.map\(|\.filter\(|\.reduce\(/.test(methodText);
+          const isIntensive = isComputationallyIntensive(node);
 
-          if (seemsComputational) {
+          // Only suggest @measureTime if method is truly computationally intensive
+          // Simple accessors and delegators are exempt to avoid measurement overhead
+          if (isIntensive) {
             context.report({
               node,
               messageId: 'suggestMeasureTime',
