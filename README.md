@@ -121,7 +121,7 @@ pnpm run dev
 ### Full System Startup
 ```bash
 # Start both frontend and backend
-./debug-full-system.sh
+./scripts/debug-full-system.sh
 
 # Or manually:
 # Terminal 1: Backend
@@ -223,7 +223,7 @@ audio:
 ### Debug Tools
 ```bash
 # Full system test
-./debug-full-system.sh
+./scripts/debug-full-system.sh
 
 # Backend health check
 curl http://localhost:8000/health

@@ -483,6 +483,27 @@ EOF
     log_info "In-memory browser test execution finished."
 }
 
+# Analyze race conditions in browser log
+analyze_race_conditions() {
+    log_info "🔬 Analyzing for configuration race conditions..."
+    
+    # Patterns that indicate a race condition
+    # 'Configuration not loaded' is explicit
+    # "Cannot read properties of undefined (reading '.*Config')" is a common symptom
+    local error_patterns="Configuration not loaded|Cannot read properties of undefined \(reading '.*Config'\)"
+    
+    if grep -qE "$error_patterns" "$BROWSER_LOG"; then
+        log_error "RACE CONDITION DETECTED! Configuration was accessed before it was loaded."
+        echo "- ❌ **Race Condition Validation:** FAILED. Critical configuration errors found in browser log." >> "$DEBUG_REPORT"
+        echo "\`\`\`" >> "$DEBUG_REPORT"
+        grep -E "$error_patterns" "$BROWSER_LOG" >> "$DEBUG_REPORT"
+        echo "\`\`\`" >> "$DEBUG_REPORT"
+    else
+        log_success "No configuration race conditions detected."
+        echo "- ✅ **Race Condition Validation:** PASSED." >> "$DEBUG_REPORT"
+    fi
+}
+
 # Generate comprehensive debug report
 generate_report() {
     log_info "Generating comprehensive debug report..."
@@ -513,6 +534,9 @@ $(tail -20 "$FRONTEND_LOG" 2>/dev/null || echo "No frontend log available")
 
 ## Browser Test Results
 EOF
+
+    # Analyze for race conditions
+    analyze_race_conditions
 
     if [ -f "$LOG_DIR/browser-test-report-main-menu.json" ] || [ -f "$LOG_DIR/browser-test-report-game-view.json" ] || [ -f "$LOG_DIR/browser-test-report-movement-test.json" ]; then
         echo "Browser test reports available: browser-test-report-main-menu.json, browser-test-report-game-view.json, browser-test-report-movement-test.json" >> "$DEBUG_REPORT"

@@ -1,5 +1,55 @@
 # CHANGELOG
 
+## [2025-10-04] - Frontend Remediation: Zombie Code Purge & Diagnostic Consolidation
+
+### 🎯 MISSION: Architectural Remediation and Diagnostic Consolidation
+- **OBJECTIVE:** Eliminate obsolete zombie code from `/frontend` root and consolidate diagnostic functionality into standardized tooling
+- **STATUS:** ✅ **MISSION ACCOMPLISHED** - All zombie files purged, index.html sanitized, debug-full-system.sh enhanced and relocated
+- **PRINCIPLE:** Zero-tolerance for unmaintained code. Single source of truth for diagnostics.
+
+### 🧹 Phase 1: Zombie Code Eradication
+- **DELETED:** `frontend/main.js` - Obsolete Electron entry point
+- **DELETED:** `frontend/race-condition-test.js` - Redundant Playwright test (134 lines)
+- **DELETED:** `frontend/debug-console.js` - Duplicate race condition test (183 lines)
+- **DELETED:** `frontend/fix-centering-test.js` - Single-use UI test (71 lines)
+- **IMPACT:** Removed 459 lines of unmaintained, untested code operating outside quality pipeline
+
+### 🧼 Phase 2: index.html Sanitization
+- **REFACTORED:** Removed 66-line inline `<script>` block from `index.html`
+- **RATIONALE:** Script was a temporary hack for race condition detection, now superseded by async boot architecture
+- **BENEFIT:** Clean separation of concerns, no inline JavaScript in HTML
+
+### 🔬 Phase 3: Diagnostic Consolidation
+- **ENHANCED:** `debug-full-system.sh` with `analyze_race_conditions()` function
+- **FUNCTIONALITY:** Automated detection of configuration race conditions via browser log analysis
+- **PATTERNS DETECTED:** 
+  - "Configuration not loaded" errors
+  - "Cannot read properties of undefined (reading '.*Config')" errors
+- **INTEGRATION:** Race condition analysis now part of standard debug report generation
+- **RELOCATED:** Moved script to standardized `scripts/` directory (`scripts/debug-full-system.sh`)
+- **VALIDATION:** Script passes bash syntax validation, executable permissions set
+
+### 📚 Phase 4: Documentation Updates
+- **UPDATED:** `README.md` - Both script invocation examples now reference `./scripts/debug-full-system.sh`
+- **UPDATED:** `docs/map.md` - Added debug-full-system.sh entry under scripts/ section, removed from root
+- **UPDATED:** `.github/personality.md` - Added debug-full-system.sh to project structure map
+
+### 🎯 Quality Gates Achieved
+- ✅ Zero obsolete files in `/frontend` root
+- ✅ `index.html` contains no inline scripts
+- ✅ `debug-full-system.sh` includes race condition detection
+- ✅ Script relocated to `scripts/` directory
+- ✅ All documentation references updated
+- ✅ Bash syntax validation passed
+
+### 🔐 Architectural Compliance
+- **QUALIA.CODE §1:** No prototypes - Diagnostic tooling now production-grade, single source of truth
+- **QUALIA.CODE §3:** Automation First - Manual testing scripts eliminated, automated diagnostic consolidated
+- **QUALIA.CODE §4.7:** Performance - Script maintains 20-second timeout standard
+- **CUSTOM INSTRUCTIONS §2.3:** Documentation updated to reflect architectural changes
+
+---
+
 ## [2025-10-04] - Audio Session Bridge Integration: GOLD.CODE IoC Implementation
 
 ### 🎯 MISSION: Integrate Audio Session Configuration Following Direct Configuration Injection Pattern

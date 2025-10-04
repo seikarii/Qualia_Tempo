@@ -12,7 +12,7 @@ QualiaTempo/
 ├── ERROR_LOG.md                   # Log de errores
 ├── README.md                      # Documentación principal del proyecto
 ├── TODO.md                        # Lista de tareas pendientes
-├── debug-full-system.sh           # Script de depuración del sistema completo
+
 ├── docs/                          # Documentación general del proyecto
 │   ├── GDD.md                     # Game Design Document
 │   ├── Performance.txt            # Notas de rendimiento
@@ -288,6 +288,7 @@ QualiaTempo/
 ├── requirements.txt               # Dependencias Python generales
 ├── ruff-qualia-code/              # Configuraciones Ruff personalizadas
 ├── scripts/                       # Scripts de automatización
+│   ├── debug-full-system.sh       # Script de depuración del sistema completo
 │   ├── generate_contracts.sh      # Script para generar contratos
 │   └── lint-architecture.sh       # Script para linting de arquitectura
 ├── shared_contracts/              # Contratos compartidos (JSON Schema para modelos)

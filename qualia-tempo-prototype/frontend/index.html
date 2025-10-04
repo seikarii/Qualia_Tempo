@@ -5,69 +5,6 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Qualia Tempo</title>
-    <script>
-      // Debug script to test race condition fix
-      console.log("=== RACE CONDITION TEST SCRIPT LOADED ===");
-
-      // Monitor for configuration errors
-      let configurationErrors = [];
-      let serviceInitErrors = [];
-
-      // Override console.error to capture configuration-related errors
-      const originalError = console.error;
-      console.error = function (...args) {
-        const errorString = args.join(" ");
-
-        if (
-          errorString.includes("Configuration not loaded") ||
-          errorString.includes("config") ||
-          errorString.includes("Configuration")
-        ) {
-          configurationErrors.push({
-            timestamp: new Date().toISOString(),
-            message: errorString,
-            args: args,
-          });
-          console.log("🔴 CONFIGURATION ERROR DETECTED:", errorString);
-        }
-
-        if (
-          errorString.includes("service") ||
-          errorString.includes("Service")
-        ) {
-          serviceInitErrors.push({
-            timestamp: new Date().toISOString(),
-            message: errorString,
-            args: args,
-          });
-          console.log("🔴 SERVICE ERROR DETECTED:", errorString);
-        }
-
-        originalError.apply(console, args);
-      };
-
-      // Test results after application loads
-      setTimeout(() => {
-        console.log("=== RACE CONDITION TEST RESULTS ===");
-
-        if (configurationErrors.length === 0) {
-          console.log("✅ NO CONFIGURATION ERRORS DETECTED");
-        } else {
-          console.log("❌ CONFIGURATION ERRORS FOUND:", configurationErrors);
-        }
-
-        if (serviceInitErrors.length === 0) {
-          console.log("✅ NO SERVICE INITIALIZATION ERRORS DETECTED");
-        } else {
-          console.log(
-            "❌ SERVICE INITIALIZATION ERRORS FOUND:",
-            serviceInitErrors,
-          );
-        }
-
-        console.log("=== TEST COMPLETE ===");
-      }, 3000);
-    </script>
   </head>
   <body>
     <div id="root"></div>
