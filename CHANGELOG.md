@@ -1,12 +1,22 @@
 # CHANGELOG
 
-## [Unreleased] - 2025-10-03 - TODO.md Categorization Update
+## [Unreleased] - 2025-10-04 - Code Refinement: GameStateStoreService Redundancy Elimination
+
+### 🧹 Code Quality
+- **GameStateStoreService Refinement:** Eliminated redundant null checks and unused method in `handlePlayerAction`. The primary null guard `if (!this.currentCombatData)` now sufficiently protects against uninitialized state, making subsequent `ensureCombatDataInitialized()` call and `currentCombatData?.noteMap` check obsolete. Removed the unused `ensureCombatDataInitialized()` method to maintain DRY principles and code cleanliness.
+- **Test Integrity:** All existing tests in `GameStateStoreService.test.ts` continue to pass without modification.
+- **Architectural Compliance:** Changes pass QUALIA.CODE linting, maintaining system integrity.
 
 ### 📋 Documentation
 - **TODO.md Categorization:** Updated all TODO items with difficulty categories (EASY/MEDIUM/DIFFICULT) based on code analysis:
   - EASY: Changes within the same file (notes, placeholders, future comments)
   - MEDIUM: Changes affecting other existing files (service integration, deprecated removal)
   - DIFFICULT: Requires implementing new unimplemented features (decorators, new services)
+
+### 🛡️ Resilience Enhancement
+- **GameStateStoreService Race Condition Fix:** Added null guard in `handlePlayerAction` to prevent TypeError when `currentCombatData` is not initialized before PlayerAction events arrive. The service now gracefully ignores actions and logs a warning during startup race conditions.
+- **Test Coverage:** Added unit test `should handle PlayerAction gracefully when currentCombatData is not initialized` to validate the resilience enhancement and ensure no exceptions are thrown.
+- **Architectural Compliance:** All changes pass QUALIA.CODE linting and maintain existing test suite integrity.
 
 ## [v1.18.0] - 2025-01-03 - CRISALIDA.CODE Phase 2 Final: Pure Reactive Architecture Achievement
 

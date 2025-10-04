@@ -367,10 +367,10 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
 
     if (!noteId || (action !== 'HitNote' && action !== 'MissNote')) return;
 
-    // Ensure combat data is initialized
-    this.ensureCombatDataInitialized();
-    if (!this.currentCombatData?.noteMap) {
-      this._logger.warn('Cannot update note state: no combat data available');
+    // AÑADIR ESTA GUARDA DE ROBUSTEZ
+    if (!this.currentCombatData) {
+      this._logger.warn(`GameStateStoreService: Se ignoró PlayerAction para la nota ${noteId} porque currentCombatData aún no ha sido inicializado. Esto 
+puede ser normal durante el arranque.`);
       return;
     }
 
@@ -390,17 +390,6 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
 
     // Emit cleanup event
     this.emitNoteCleanupEvent(noteId);
-  }
-
-  /**
-   * Ensure combat data is initialized
-   * Note: Since we now track combat data via CombatDataUpdated events,
-   * this method only needs to check if data exists. If not, it means no combat data
-   * has been loaded yet, which is a valid initial state.
-   */
-  private ensureCombatDataInitialized(): void {
-    // Combat data is populated by CombatDataUpdated events or updateGameState
-    // No action needed here - just a guard for the logic that follows
   }
 
   /**

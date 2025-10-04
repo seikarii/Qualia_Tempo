@@ -7,6 +7,7 @@ import { EventBus } from '../EventBus';
 import { TYPES } from '../inversify.types';
 import type { PlayerActionEvent } from '../contracts/events.contracts';
 import type { Container } from 'inversify';
+import { mockLogger } from '../../testing/mocks/logger.mock';
 
 /**
  * ARCHITECTURE COMPLIANCE:
@@ -153,5 +154,28 @@ describe('GameStateStoreService - PlayerAction Handling', () => {
     
     // Verify the state transformation is correct
     expect(testState.combatData.noteMap[0].state).toBe('missed');
+  });
+
+  it('should handle PlayerAction gracefully when currentCombatData is not initialized', async () => {
+    // Do NOT call updateGameState - simulate race condition where PlayerAction arrives before CombatDataUpdated
+
+    // Emit PlayerAction HitNote event on uninitialized service
+    await eventBus.emit({
+      type: 'PlayerAction',
+      action: 'HitNote',
+      context: { noteId: 'note_1', accuracy: 0.9, result: 'perfect', score: 100 },
+      timestamp: new Date()
+    } as PlayerActionEvent);
+
+    // Verify no exception was thrown (test passes if we reach this point)
+    expect(true).toBe(true); // Placeholder assertion - the test passing means no exception
+
+    // Verify the warning was logged
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'GameStateStoreService: Se ignoró PlayerAction para la nota note_1 porque currentCombatData aún no ha sido inicializado. Esto \npuede ser normal durante el arranque.'
+    );
+
+    // Verify store setter was NOT called (no state update occurred)
+    expect(mockStoreSetter).not.toHaveBeenCalled();
   });
 });
