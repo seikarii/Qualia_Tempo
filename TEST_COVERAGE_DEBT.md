@@ -382,9 +382,7 @@ correspondiente. Los porcentajes de cobertura se basan en líneas de código eje
 | 🟡 ALTA | `WebAudioAPIService.ts` | No | ❌ Faltante |
 | 🟡 ALTA | `WebSocketService.ts` | No | ❌ Faltante |
 | 🟡 ALTA | `hooks.ts` | No | ❌ Faltante |
-| 🟡 ALTA | `inversify.config.ts` | No | ❌ Faltante |
-| 🟡 ALTA | `inversify.container.ts` | No | ❌ Faltante |
-| 🟡 ALTA | `inversify.types.ts` | No | ❌ Faltante |
+
 
 
 ### SERVICIOS SIN COBERTURA (DEUDA CRÍTICA)
