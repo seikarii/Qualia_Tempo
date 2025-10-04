@@ -167,13 +167,14 @@ const GameCanvasContent: React.FC<GameCanvasContentProps> = ({
 );
 
 // Helper functions to build prop objects (Extract Method Pattern)
-const buildQualiaFieldProps = (qualiaState: GameState['qualiaState']) => ({
+// QUALIA.CODE v2.0: Now using real audio analysis data from AudioAnalysisService
+const buildQualiaFieldProps = (qualiaState: GameState['qualiaState'], gameState: GameState) => ({
   qualiaState,
   musicData: {
-    tempo: 120, // TODO: Get from audio service
-    beat_position: 0, // TODO: Get from audio service
+    tempo: gameState.tempo,
+    beat_position: gameState.beatPosition,
     intensity: qualiaState.intensity,
-    frequency_bands: [0, 0, 0, 0], // TODO: Get from audio service
+    frequency_bands: gameState.frequencyBands.slice(0, 4), // Use first 4 bands
     order_influence: qualiaState.precision,
     chaos_influence: qualiaState.chaos,
     emotional_valence: qualiaState.recovery,
@@ -181,6 +182,7 @@ const buildQualiaFieldProps = (qualiaState: GameState['qualiaState']) => ({
   }
 });
 
+// QUALIA.CODE v2.0: Now using real physics data from PhysicsService
 const buildPlayerProps = (zustandState: GameState) => ({
   player: {
     id: "player_1",
@@ -190,7 +192,11 @@ const buildPlayerProps = (zustandState: GameState) => ({
       0,
       zustandState.player.position.y,
     ] as [number, number, number],
-    velocity: [0, 0, 0] as [number, number, number], // TODO: Get from physics service
+    velocity: [
+      zustandState.velocity.x,
+      zustandState.velocity.y,
+      zustandState.velocity.z,
+    ] as [number, number, number],
     health: zustandState.player.health,
     power_level: zustandState.player.health,
     consciousness_level: zustandState.qualiaState.transcendence,
@@ -238,7 +244,8 @@ const GameElements: React.FC<GameElementsProps> = ({
   renderedNotes,
   playerAvatarRef
 }) => {
-  const qualiaFieldProps = buildQualiaFieldProps(zustandState.qualiaState);
+  // QUALIA.CODE v2.0: Pass full state to get audio analysis data
+  const qualiaFieldProps = buildQualiaFieldProps(zustandState.qualiaState, zustandState);
   const playerProps = buildPlayerProps(zustandState);
   const bossProps = buildBossProps(zustandState.qualiaState);
 

@@ -24,6 +24,8 @@ import type { IDebugOrchestratorService } from "./interfaces/IDebugOrchestratorS
 import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
+import type { IAudioAnalysisService } from "./interfaces/IAudioAnalysisService";
+import type { IPhysicsService } from "./interfaces/IPhysicsService";
 import { logMethod, catchError, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 
 @injectable()
@@ -50,6 +52,10 @@ export class ApplicationInitializerService
   private readonly browserEventsService: IBrowserEventsService;
   private readonly qualiaStateCalculatorService: IQualiaStateCalculatorService;
 
+  // QUALIA.CODE v2.0: Audio Analysis and Physics Services
+  private readonly audioAnalysisService: IAudioAnalysisService;
+  private readonly physicsService: IPhysicsService;
+
   private isStarted = false;
   private readonly managedServices: IBaseService[] = [];
 
@@ -75,6 +81,10 @@ export class ApplicationInitializerService
     this.debugOrchestratorService = params.debugOrchestratorService;
     this.browserEventsService = params.browserEventsService;
     this.qualiaStateCalculatorService = params.qualiaStateCalculatorService;
+    
+    // QUALIA.CODE v2.0: Initialize audio analysis and physics services
+    this.audioAnalysisService = params.audioAnalysisService;
+    this.physicsService = params.physicsService;
     
     // Configuration is injected and available immediately
     this.logger.info(this.config.messages.serviceConstructed);
@@ -150,7 +160,10 @@ export class ApplicationInitializerService
       this.subtitleService,
       this.debugOrchestratorService,
       this.browserEventsService,
-      this.qualiaStateCalculatorService
+      this.qualiaStateCalculatorService,
+      // QUALIA.CODE v2.0: New analysis services
+      this.audioAnalysisService,
+      this.physicsService
     ];
 
     newServices.forEach(service => {

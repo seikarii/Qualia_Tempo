@@ -456,6 +456,49 @@ puede ser normal durante el arranque.`);
     } as unknown as Omit<EventTypes, "timestamp">);
   }
 
+  /**
+   * QUALIA.CODE v2.0: Handle AudioDataUpdatedEvent
+   * Updates audio analysis data in the store
+   */
+  @OnEvent('AudioDataUpdated')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private handleAudioDataUpdate(event: import('./contracts/events.contracts').AudioDataUpdatedEvent): void {
+    this._logger.debug('Received AudioDataUpdatedEvent', {
+      tempo: event.tempo,
+      beatPosition: event.beatPosition,
+      volume: event.volume,
+    });
+
+    this.setStore((state: GameState) => 
+      this.stateMergerService.deepMerge(state, {
+        tempo: event.tempo,
+        beatPosition: event.beatPosition,
+        frequencyBands: event.frequencyBands,
+        volume: event.volume,
+      })
+    );
+  }
+
+  /**
+   * QUALIA.CODE v2.0: Handle PhysicsDataUpdatedEvent
+   * Updates physics simulation data in the store
+   */
+  @OnEvent('PhysicsDataUpdated')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private handlePhysicsDataUpdate(event: import('./contracts/events.contracts').PhysicsDataUpdatedEvent): void {
+    this._logger.debug('Received PhysicsDataUpdatedEvent', {
+      velocity: event.velocity,
+      acceleration: event.acceleration,
+    });
+
+    this.setStore((state: GameState) => 
+      this.stateMergerService.deepMerge(state, {
+        velocity: event.velocity,
+        acceleration: event.acceleration,
+      })
+    );
+  }
+
   // === UTILITY METHODS ===
 
   /**

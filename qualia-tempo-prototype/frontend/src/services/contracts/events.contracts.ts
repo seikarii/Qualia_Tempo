@@ -191,3 +191,29 @@ export interface CombatDataUpdatedEvent extends BaseEvent {
   combatData: import("../../types/contracts").CombatData | null;
   source: string;
 }
+
+// QUALIA.CODE v2.0: Audio Analysis Event for Real-Time Audio Data
+export interface AudioDataUpdatedEvent extends BaseEvent {
+  type: "AudioDataUpdated";
+  tempo: number; // Beats per minute
+  beatPosition: number; // Position in current beat (0-1)
+  frequencyBands: number[]; // Frequency analysis data (8 bands)
+  volume: number; // Current volume level (0-1)
+  source: string;
+}
+
+// QUALIA.CODE v2.0: Physics Data Event for Movement Simulation
+export interface PhysicsDataUpdatedEvent extends BaseEvent {
+  type: "PhysicsDataUpdated";
+  velocity: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  acceleration: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  source: string;
+}

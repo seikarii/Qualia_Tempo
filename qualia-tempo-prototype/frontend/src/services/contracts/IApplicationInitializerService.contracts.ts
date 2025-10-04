@@ -40,6 +40,9 @@ export interface ApplicationInitializerServiceParams {
   debugOrchestratorService: IDebugOrchestratorService;
   browserEventsService: IBrowserEventsService;
   qualiaStateCalculatorService: IQualiaStateCalculatorService;
+  // QUALIA.CODE v2.0: Audio Analysis and Physics Services
+  audioAnalysisService: import("../interfaces/IAudioAnalysisService").IAudioAnalysisService;
+  physicsService: import("../interfaces/IPhysicsService").IPhysicsService;
 }
 
 // Specific state update interfaces for type safety

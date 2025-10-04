@@ -59,6 +59,24 @@ export interface GameState {
 
   // Notifications
   notifications: Notification[];
+
+  // QUALIA.CODE v2.0: Audio Analysis Data
+  tempo: number;
+  beatPosition: number;
+  frequencyBands: number[];
+  volume: number;
+
+  // QUALIA.CODE v2.0: Physics Data
+  velocity: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  acceleration: {
+    x: number;
+    y: number;
+    z: number;
+  };
 }
 
 const initialPlayerState: PlayerState = {
@@ -97,6 +115,14 @@ const initialState: GameState = {
   maxStreak: 0,
   pauseCooldownRemaining: 0,
   notifications: [],
+  // QUALIA.CODE v2.0: Audio Analysis initial state
+  tempo: 120,
+  beatPosition: 0,
+  frequencyBands: [0, 0, 0, 0, 0, 0, 0, 0],
+  volume: 0,
+  // QUALIA.CODE v2.0: Physics initial state
+  velocity: { x: 0, y: 0, z: 0 },
+  acceleration: { x: 0, y: 0, z: 0 },
 };
 
 // Create the store

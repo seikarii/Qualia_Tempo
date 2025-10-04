@@ -1,0 +1,44 @@
+# QUALIA.CODE v2.0 - AudioAnalysisService Configuration
+# Real-time audio analysis parameters for tempo, beat detection, and frequency analysis
+
+# Number of frequency bands to analyze (default: 8)
+frequencyBands: 8
+
+# FFT size for frequency analysis (powers of 2: 256, 512, 1024, 2048, etc.)
+# Higher values = more frequency resolution but slower processing
+fftSize: 2048
+
+# Smoothing time constant for frequency data (0-1)
+# Higher values = smoother but less responsive
+smoothingTimeConstant: 0.8
+
+# Minimum decibel level for frequency analysis
+minDecibels: -90
+
+# Maximum decibel level for frequency analysis
+maxDecibels: -10
+
+# Beat detection threshold (0-1)
+# Energy must exceed this to register as a beat
+beatThreshold: 0.6
+
+# Minimum time between beats in milliseconds
+# Prevents double-detection of the same beat
+minBeatInterval: 300
+
+# Update interval in milliseconds (typically 1000/60 for 60fps)
+updateInterval: 16.67
+
+# Enable beat detection algorithm
+enableBeatDetection: true
+
+# Enable tempo estimation from beat history
+enableTempoEstimation: true
+
+# Logging messages
+messages:
+  initialized: "AudioAnalysisService initialized"
+  audioReady: "Audio context ready, starting analysis"
+  analysisStarted: "Audio analysis loop started"
+  analysisStopped: "Audio analysis loop stopped"
+  beatDetected: "Beat detected"

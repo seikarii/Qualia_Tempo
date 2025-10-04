@@ -95,6 +95,10 @@ export interface FullGameConfig {
   postProcessing: PostProcessingConfig;
   protocolAdapter: ProtocolAdapterConfig;
 
+  // QUALIA.CODE v2.0: Audio Analysis and Physics Services
+  audioAnalysis: import('../services/contracts/IAudioAnalysisService.contracts').AudioAnalysisServiceConfig;
+  physics: import('../services/contracts/IPhysicsService.contracts').PhysicsServiceConfig;
+
   // Optional Features
   visualEffects?: VisualEffectsConfig;
 }

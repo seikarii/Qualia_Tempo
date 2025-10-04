@@ -16,6 +16,14 @@ export const TYPES = {
   IPerformanceService: Symbol.for("IPerformanceService"),
   IPerformanceProvider: Symbol.for("IPerformanceProvider"),
   ITimerProvider: Symbol.for("ITimerProvider"),
+  
+  // ===== QUALIA.CODE v2.0: NEW ANALYSIS SERVICES =====
+  IAudioAnalysisService: Symbol.for("IAudioAnalysisService"),
+  IPhysicsService: Symbol.for("IPhysicsService"),
+  AudioAnalysisServiceConfig: Symbol.for("AudioAnalysisServiceConfig"),
+  AudioAnalysisServiceParams: Symbol.for("AudioAnalysisServiceParams"),
+  PhysicsServiceConfig: Symbol.for("PhysicsServiceConfig"),
+  PhysicsServiceParams: Symbol.for("PhysicsServiceParams"),
 
   // ===== FEATURE SERVICES =====
   IQualiaStateCalculatorService: Symbol.for("IQualiaStateCalculatorService"),

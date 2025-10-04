@@ -47,6 +47,10 @@ import type { IDebugService } from "../services/interfaces/IDebugService";
 import type { ISubtitleService } from "../services/interfaces/ISubtitleService";
 import type { IRhythmicMovementController } from "../services/interfaces/IRhythmicMovementController";
 import type { IBackendSyncService } from "../services/interfaces/IBackendSyncService";
+// QUALIA.CODE v2.0: Audio Analysis and Physics Services
+import type { IAudioAnalysisService } from "../services/interfaces/IAudioAnalysisService";
+import type { IPhysicsService } from "../services/interfaces/IPhysicsService";
+import type { IInputStateService } from "../services/interfaces/IInputStateService";
 
 // Import real services for pure utilities (no side effects)
 import { ColorService } from "../services/ColorService";
@@ -78,6 +82,9 @@ import { mockAudioSystemBridge } from "./mocks/audio-system-bridge.mock";
 import { mockGameControllerService } from "./mocks/game-controller-service.mock";
 import { mockQualiaStateCalculatorService } from "./mocks/qualia-state-calculator-service.mock";
 import { mockErrorReportingService } from "./mocks/error-reporting-service.mock";
+// QUALIA.CODE v2.0: Audio Analysis and Physics Service mocks
+import { mockAudioAnalysisService } from "./mocks/audio-analysis-service.mock";
+import { mockPhysicsService } from "./mocks/physics-service.mock";
 import { mockDebugService } from "./mocks/debug-service.mock";
 import { mockSubtitleService } from "./mocks/subtitle-service.mock";
 import { mockRhythmicMovementController } from "./mocks/rhythmic-movement-controller.mock";
@@ -202,7 +209,10 @@ const createDefaultAppInitializerParams = (
   subtitleService: ISubtitleService,
   debugOrchestratorService: IDebugOrchestratorService,
   browserEventsService: IBrowserEventsService,
-  qualiaStateCalculatorService: IQualiaStateCalculatorService
+  qualiaStateCalculatorService: IQualiaStateCalculatorService,
+  // QUALIA.CODE v2.0: Audio Analysis and Physics Services
+  audioAnalysisService: import('../services/interfaces/IAudioAnalysisService').IAudioAnalysisService,
+  physicsService: import('../services/interfaces/IPhysicsService').IPhysicsService
 ): ApplicationInitializerServiceParams => ({ // eslint-disable-line max-params
   config: defaultAppInitializerConfig,
   backendSyncService,
@@ -220,7 +230,10 @@ const createDefaultAppInitializerParams = (
   subtitleService,
   debugOrchestratorService,
   browserEventsService,
-  qualiaStateCalculatorService
+  qualiaStateCalculatorService,
+  // QUALIA.CODE v2.0
+  audioAnalysisService,
+  physicsService
 });
 
 const createDefaultBackendSyncParams = (
@@ -364,6 +377,11 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   testContainer.bind<ISubtitleService>(TYPES.ISubtitleService).toConstantValue(mockSubtitleService);
   testContainer.bind<IRhythmicMovementController>(TYPES.IRhythmicMovementController).toConstantValue(mockRhythmicMovementController);
   testContainer.bind<IBackendSyncService>(TYPES.IBackendSyncService).toConstantValue(mockBackendSyncService);
+  testContainer.bind<IInputStateService>(TYPES.IInputStateService).toConstantValue(mockInputStateService);
+  
+  // QUALIA.CODE v2.0: Audio Analysis and Physics Services
+  testContainer.bind<IAudioAnalysisService>(TYPES.IAudioAnalysisService).toConstantValue(mockAudioAnalysisService);
+  testContainer.bind<IPhysicsService>(TYPES.IPhysicsService).toConstantValue(mockPhysicsService);
 
   // STEP 2.5: Bind real services for pure utilities (no side effects, no external dependencies)
   // ColorService is a pure utility that only performs mathematical color conversions
@@ -391,7 +409,10 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
     mockSubtitleService,
     mockDebugOrchestratorService,
     mockBrowserEventsService,
-    mockQualiaStateCalculatorService
+    mockQualiaStateCalculatorService,
+    // QUALIA.CODE v2.0: Audio Analysis and Physics Services
+    mockAudioAnalysisService,
+    mockPhysicsService
   );
   const backendSyncParams = createDefaultBackendSyncParams(
     freshMockEventBus,

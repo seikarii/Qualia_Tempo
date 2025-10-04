@@ -1,0 +1,28 @@
+# QUALIA.CODE v2.0 - PhysicsService Configuration
+# Physics simulation parameters for player movement
+
+# Maximum velocity magnitude (units per second)
+maxVelocity: 10.0
+
+# Acceleration magnitude per second (units per second^2)
+accelerationRate: 20.0
+
+# Friction coefficient (0-1, higher = more friction)
+# Applied when no input is detected
+frictionCoefficient: 0.15
+
+# Minimum velocity threshold (below this, velocity is set to 0)
+velocityThreshold: 0.01
+
+# Update interval in milliseconds (typically 1000/60 for 60fps)
+updateInterval: 16.67
+
+# Enable velocity damping (gradual slowdown over time)
+enableDamping: true
+
+# Logging messages
+messages:
+  initialized: "PhysicsService initialized"
+  started: "Physics simulation started"
+  stopped: "Physics simulation stopped"
+  velocityUpdated: "Velocity updated"

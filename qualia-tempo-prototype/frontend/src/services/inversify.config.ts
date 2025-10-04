@@ -39,6 +39,10 @@ import type { BackendSyncServiceParams } from "./contracts/IBackendSyncService.c
 import type { WebSocketServiceParams } from "./contracts/IWebSocketService.contracts";
 import type { CoordinateSystemConfig } from "./contracts/ICoordinateSystemService.contracts";
 
+// QUALIA.CODE v2.0: Analysis Services Configuration Imports
+import type { AudioAnalysisServiceParams } from "./contracts/IAudioAnalysisService.contracts";
+import type { PhysicsServiceParams } from "./contracts/IPhysicsService.contracts";
+
 // NEW SERVICES CONFIGURATION IMPORTS
 // Future configuration imports for additional services
 // import type { GameplayMechanicsConfig } from "./contracts/IGameplayMechanicsService.contracts";
@@ -167,7 +171,10 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "coordinateSystem": "game-config.yaml",
   "protocolAdapter": "protocol-adapter.yaml",
   "timerService": "timer-service.yaml",
-  "audioSession": "audio-session.yaml"
+  "audioSession": "audio-session.yaml",
+  // QUALIA.CODE v2.0: New analysis services
+  "audioAnalysis": "audio-analysis-service.yaml",
+  "physics": "physics-service.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
@@ -379,6 +386,22 @@ container
   .to(DebugOrchestratorService)
   .inSingletonScope();
 
+// ===== QUALIA.CODE v2.0: AUDIO ANALYSIS AND PHYSICS SERVICES =====
+import { AudioAnalysisService } from './AudioAnalysisService';
+import { PhysicsService } from './PhysicsService';
+import type { IAudioAnalysisService } from './interfaces/IAudioAnalysisService';
+import type { IPhysicsService } from './interfaces/IPhysicsService';
+
+container
+  .bind<IAudioAnalysisService>(TYPES.IAudioAnalysisService)
+  .to(AudioAnalysisService)
+  .inSingletonScope();
+
+container
+  .bind<IPhysicsService>(TYPES.IPhysicsService)
+  .to(PhysicsService)
+  .inSingletonScope();
+
 // ===== SHADER AND POST-PROCESSING SERVICES =====
 container
   .bind<IShaderLoaderService>(TYPES.IShaderLoaderService)
@@ -492,6 +515,10 @@ function bindBasicConfigurations(fullConfig: FullGameConfig): void {
   safeBindConstant<TimerServiceConfig>(TYPES.TimerServiceConfig, fullConfig.timerService);
   safeBindConstant<AudioSessionConfig>(TYPES.AudioSessionConfig, fullConfig.audioSession);
   
+  // QUALIA.CODE v2.0: New analysis services configurations
+  safeBindConstant(TYPES.AudioAnalysisServiceConfig, fullConfig.audioAnalysis);
+  safeBindConstant(TYPES.PhysicsServiceConfig, fullConfig.physics);
+  
   // Bind ThrottlingConfig from NotificationService config
   safeBindConstant(TYPES.ThrottlingConfig, fullConfig.notificationService.throttling);
   
@@ -505,6 +532,7 @@ function bindBasicConfigurations(fullConfig: FullGameConfig): void {
  */
 function bindServiceParameterObjects(fullConfig: FullGameConfig): void {
   bindGameplayServiceParams(fullConfig);
+  bindAnalysisServiceParams(fullConfig);
   bindRenderingServiceParams(fullConfig);
   bindCommunicationServiceParams(fullConfig);
   bindDiagnosticServiceParams(fullConfig);
@@ -550,6 +578,27 @@ function bindGameplayServiceParams(fullConfig: FullGameConfig): void {
     audioEngine: container.get<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine),
     webAudioAPIService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),
     timerService: container.get<ITimerService>(TYPES.ITimerService),
+  });
+}
+
+/**
+ * Bind analysis-related service parameter objects (QUALIA.CODE v2.0).
+ */
+function bindAnalysisServiceParams(fullConfig: FullGameConfig): void {
+  safeBindConstant<AudioAnalysisServiceParams>(TYPES.AudioAnalysisServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    webAudioService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),
+    config: fullConfig.audioAnalysis,
+  });
+
+  safeBindConstant<PhysicsServiceParams>(TYPES.PhysicsServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    inputStateService: container.get<IInputStateService>(TYPES.IInputStateService),
+    config: fullConfig.physics,
   });
 }
 
@@ -668,6 +717,9 @@ function bindApplicationInitializerParams(fullConfig: FullGameConfig): void {
     debugOrchestratorService: container.get<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService),
     browserEventsService: container.get<IBrowserEventsService>(TYPES.IBrowserEventsService),
     qualiaStateCalculatorService: container.get<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService),
+    // QUALIA.CODE v2.0: Audio Analysis and Physics Services
+    audioAnalysisService: container.get<IAudioAnalysisService>(TYPES.IAudioAnalysisService),
+    physicsService: container.get<IPhysicsService>(TYPES.IPhysicsService),
   });
 }
 
