@@ -1,0 +1,12 @@
+# robots.txt for Qualia Tempo
+# Allow all crawlers to index the application
+
+User-agent: *
+Allow: /
+
+# Disallow indexing of config and shader files
+Disallow: /config/
+Disallow: /shaders/
+
+# Sitemap location (update with production URL)
+Sitemap: https://qualia-tempo.crisalida.dev/sitemap.xml

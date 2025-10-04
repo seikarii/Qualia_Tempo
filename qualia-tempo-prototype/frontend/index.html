@@ -2,9 +2,63 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Qualia Tempo</title>
+
+    <!-- Branding y UI -->
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/logo192.png" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- Título Principal -->
+    <title>Qualia Tempo - A Charlie Hellsinger Story</title>
+
+    <!-- SEO y Metadatos Básicos -->
+    <meta name="description" content="Dive into a rhythmic reality-bending adventure. Qualia Tempo is an immersive experience that synchronizes gameplay with your very essence." />
+    <meta name="keywords" content="Qualia Tempo, Rhythm Game, Sci-Fi, Charlie Hellsinger, Reality Bending, Music Game, CRISALIDA" />
+    <meta name="author" content="CRISALIDA" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph para Redes Sociales (Facebook, LinkedIn, etc.) -->
+    <meta property="og:title" content="Qualia Tempo - A Charlie Hellsinger Story" />
+    <meta property="og:description" content="Dive into a rhythmic reality-bending adventure. Qualia Tempo is an immersive experience that synchronizes gameplay with your very essence." />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:url" content="https://qualia-tempo.crisalida.dev" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Qualia Tempo" />
+
+    <!-- Twitter Card para Twitter/X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Qualia Tempo - A Charlie Hellsinger Story" />
+    <meta name="twitter:description" content="Dive into a rhythmic reality-bending adventure. Qualia Tempo is an immersive experience that synchronizes gameplay with your very essence." />
+    <meta name="twitter:image" content="/og-image.png" />
+    <meta name="twitter:creator" content="@CRISALIDA" />
+
+    <!-- Manifest para PWA (Progressive Web App) -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Structured Data para SEO (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Qualia Tempo",
+      "alternateName": "Qualia Tempo - A Charlie Hellsinger Story",
+      "description": "Dive into a rhythmic reality-bending adventure. Qualia Tempo is an immersive experience that synchronizes gameplay with your very essence.",
+      "author": {
+        "@type": "Organization",
+        "name": "CRISALIDA"
+      },
+      "genre": ["Rhythm Game", "Music Game", "Sci-Fi"],
+      "gamePlatform": ["Web Browser"],
+      "applicationCategory": "Game"
+    }
+    </script>
+
+    <!-- Performance Hints -->
+    <link rel="dns-prefetch" href="//localhost:8000" />
+    
+    <!-- NOTE: Graphic assets (favicon.ico, logo192.png, logo512.png, og-image.png) 
+         are pending creation by the design team. See /public/ASSETS_TODO.md -->
   </head>
   <body>
     <div id="root"></div>

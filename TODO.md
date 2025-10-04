@@ -16,11 +16,7 @@
 - **TOTAL ACTIVAS**: 6 instancias
 - **TOTAL HISTÓRICAS**: 12 instancias
 
-### 🔥 ACTUALIZACION 2025-10-04: CRISALIDA.CODE Enforcement - Deprecation Purge
-**3 deprecated patterns COMPLETAMENTE ELIMINADOS:**
-- ✅ `gatherServiceDiagnostics()` - PURGED from DebugOrchestratorService
-- ✅ `getServiceStatuses()` - PURGED from DebugOrchestratorService  
-- ✅ `worldToScreen()` overload - PURGED from CoordinateSystemService
+
 
 ## DEV NOTES: 
 1. ARREGLAR/MEJORAR PARTE DE SHADERS Y RENDERIZADO FRONTEND (ESTADO CATASTROFICO)
@@ -38,6 +34,10 @@
 14. PASAR EL ENGINE DEL BACKEND A RUST
 15. FALTAN INTERFACES EN EL BACKEND
 16. Agregar concurrency,performance,cache,workers y demas
+17. **CREAR ASSETS GRÁFICOS PARA BRANDING Y SEO** - Pendiente creación de favicon.ico, logo192.png, logo512.png, og-image.png (Ver `/frontend/public/ASSETS_TODO.md` para especificaciones completas)
+18. CI/CD - AUTOMATIZAR `sitemap.xml`: La fecha `lastmod` debe generarse dinámicamente en el pipeline de build para reflejar la frescura real del contenido.
+19. PWA - ENRIQUECER `manifest.json`: Añadir capturas de pantalla promocionales del juego al array `screenshots` para mejorar la experiencia de instalación de la PWA. qualia-tempo-prototype/frontend/public/METADATA_VALIDATION.md
+
 ---
 
 ## 🔍 Metodología de Análisis
@@ -70,22 +70,5 @@ velocity: [0, 0, 0] as [number, number, number], // TODO: Get from physics servi
 **Impacto:** Componente no refleja estado real del juego.  
 **Prioridad:** Media - Integrar servicios de audio y física existentes.
 
-### 2. ✅ RESUELTO - Configuración de Audio Session (COMPLETADO 2025-10-04)
-**Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:160` (RESUELTO)  
-**Severidad:** Baja (COMPLETADA)  
-**Estado:** ✅ Implementado siguiendo GOLD.CODE  
-**Descripción:**
-```typescript
-// Audio session configuration implemented with Direct Configuration Injection
-```
-**Contexto:** Sistema completo de configuración de sesión de audio implementado.  
-**Impacto:** Sistema de audio ahora tiene configuración completa para Windows con prioridad ajustable.  
-**Implementación:**
-- ✅ AudioSessionConfig contract creado
-- ✅ audio-session.yaml configuración externalizada
-- ✅ AudioSystemBridge servicio implementado con IoC
-- ✅ Integración en GameControllerService
-- ✅ Preload script creado para IPC seguro
-- ✅ Main process handler actualizado con tipos correctos
 
 
