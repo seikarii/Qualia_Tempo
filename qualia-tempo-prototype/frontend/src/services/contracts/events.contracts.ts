@@ -184,3 +184,10 @@ export interface GameTickEvent extends BaseEvent {
   deltaTime: number; // Time elapsed since last tick in seconds
   totalTime: number; // Total elapsed time since game start in seconds
 }
+
+// QUALIA.CODE v1.1: Combat Data Update Event for Reactive State Tracking
+export interface CombatDataUpdatedEvent extends BaseEvent {
+  type: "CombatDataUpdated";
+  combatData: import("../../types/contracts").CombatData | null;
+  source: string;
+}

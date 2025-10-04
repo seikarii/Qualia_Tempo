@@ -511,7 +511,6 @@ function bindGameplayServiceParams(fullConfig: FullGameConfig): void {
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     keyAdapter: container.get<IEventTransformer<PlayerInputEvent, PlayerDirectionEvent>>(TYPES.IKeyToDirectionAdapter),
     inputStateService: container.get<IInputStateService>(TYPES.IInputStateService),
-    gameStateStore: container.get<IGameStateStoreService>(TYPES.IGameStateStoreService),
     gameplayMechanicsService: container.get<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService),
   });
 

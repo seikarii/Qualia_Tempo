@@ -42,12 +42,6 @@ export interface IGameStateStoreService {
   isRunning(): boolean;
 
   /**
-   * Get the current game state from the store.
-   * @returns Current game state object
-   */
-  getGameState(): GameState;
-
-  /**
    * Provide the store setter dependency from the UI layer.
    * CRITICAL: This method allows the Composition Root to inject the UI dependency
    * after the service is constructed, breaking the React context collision.

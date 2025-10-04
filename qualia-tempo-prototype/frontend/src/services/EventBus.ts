@@ -33,6 +33,7 @@ import type {
   ServiceStatusUpdateEvent,
   SystemAudioReadyEvent,
   ConfigurationLoadedEvent,
+  CombatDataUpdatedEvent,
 } from "./contracts/events.contracts";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { EventBusConfig } from "./contracts/IEventBus.contracts";
@@ -57,7 +58,8 @@ export type EventTypes =
   | ConfigurationLoadedEvent
   | WebGLContextLostEvent
   | WebGLContextRestoredEvent
-  | ServiceStatusUpdateEvent;
+  | ServiceStatusUpdateEvent
+  | CombatDataUpdatedEvent;
 
 // Event handler types
 export type EventHandler<T extends BaseEvent = BaseEvent> = (

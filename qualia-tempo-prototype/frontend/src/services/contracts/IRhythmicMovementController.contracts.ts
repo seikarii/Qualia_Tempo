@@ -12,12 +12,12 @@ import type { ILogger } from "../interfaces/ILogger";
 import type { ITimerService } from "../interfaces/ITimerService";
 import type { IEventTransformer } from "../protocol/IEventTransformer";
 import type { IInputStateService } from "../interfaces/IInputStateService";
-import type { IGameStateStoreService } from "../interfaces/IGameStateStoreService";
 import type { IGameplayMechanicsService } from "../interfaces/IGameplayMechanicsService";
 import type { PlayerInputEvent, PlayerDirectionEvent } from "./events.contracts";
 
 // QUALIA.CODE v1.1: Constructor Parameter Object
-// Consolidates 8 constructor parameters into a single object to comply with IoC limits
+// Consolidates 7 constructor parameters into a single object to comply with IoC limits
+// CRISALIDA.CODE Phase 2: Removed gameStateStore dependency for pure reactive architecture
 export interface RhythmicMovementControllerParams {
   eventBus: IEventBus;
   logger: ILogger;
@@ -25,7 +25,6 @@ export interface RhythmicMovementControllerParams {
   timerService: ITimerService;
   keyAdapter: IEventTransformer<PlayerInputEvent, PlayerDirectionEvent>;
   inputStateService: IInputStateService;
-  gameStateStore: IGameStateStoreService;
   gameplayMechanicsService: IGameplayMechanicsService;
 }
 

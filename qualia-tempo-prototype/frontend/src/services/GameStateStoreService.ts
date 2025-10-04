@@ -106,6 +106,13 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
     // Track combat data updates internally to avoid getGameState() hack
     if (state.combatData !== undefined) {
       this.currentCombatData = state.combatData;
+      // Emit CombatDataUpdated event for reactive services
+      this.eventBus.emit({
+        type: 'CombatDataUpdated',
+        combatData: state.combatData,
+        source: 'GameStateStoreService',
+        timestamp: new Date(),
+      } as EventTypes);
     }
     
     this.setStore((currentState: GameState) => 
@@ -131,26 +138,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
     return true; // Service is always running after initialize
   }
 
-  /**
-   * @deprecated QUALIA.CODE v1.1: This method violates unidirectional data flow.
-   * Services should listen to events and maintain internal state instead of pulling from store.
-   * Currently kept for backward compatibility with RhythmicMovementController.
-   * TODO: Refactor all consumers to use event-driven state tracking, then remove this method.
-   */
-  @logMethod
-  getGameState(): GameState {
-    // Access the store state through the setter function
-    // This is a bit of a hack, but necessary due to the passive store pattern
-    let currentState: GameState | undefined;
-    this.setStore((state: GameState) => {
-      currentState = state;
-      return state; // No-op, just to get the current state
-    });
-    if (!currentState) {
-      throw new Error('Failed to retrieve current game state from store');
-    }
-    return currentState;
-  }
+
 
   // === PRIVATE EVENT HANDLERS ===
 
@@ -405,13 +393,14 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   }
 
   /**
-   * Ensure combat data is initialized (lazy loading from store)
+   * Ensure combat data is initialized
+   * Note: Since we now track combat data via CombatDataUpdated events,
+   * this method only needs to check if data exists. If not, it means no combat data
+   * has been loaded yet, which is a valid initial state.
    */
   private ensureCombatDataInitialized(): void {
-    if (!this.currentCombatData) {
-      const gameState = this.getGameState();
-      this.currentCombatData = gameState.combatData;
-    }
+    // Combat data is populated by CombatDataUpdated events or updateGameState
+    // No action needed here - just a guard for the logic that follows
   }
 
   /**
@@ -440,7 +429,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   }
 
   /**
-   * Update store with new note map using deep merge
+   * Update store with new note map using deep merge and emit CombatDataUpdated event
    */
   private updateStoreWithNewNoteMap(newNoteMap: NoteData[]): void {
     this.setStore((state: GameState) => {
@@ -452,6 +441,16 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
         combatData: { noteMap: newNoteMap }
       } as Partial<GameState>);
     });
+
+    // Emit CombatDataUpdated event for reactive services
+    if (this.currentCombatData) {
+      this.eventBus.emit({
+        type: 'CombatDataUpdated',
+        combatData: this.currentCombatData,
+        source: 'GameStateStoreService',
+        timestamp: new Date(),
+      } as EventTypes);
+    }
   }
 
   /**

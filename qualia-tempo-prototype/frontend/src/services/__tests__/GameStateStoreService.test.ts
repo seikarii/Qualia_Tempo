@@ -95,6 +95,10 @@ describe('GameStateStoreService - PlayerAction Handling', () => {
     });
     gameStateStoreService.setStoreSetter(statefulStoreSetter);
 
+    // Initialize internal combat data by calling updateGameState
+    gameStateStoreService.updateGameState({ combatData: testState.combatData });
+    statefulStoreSetter.mockClear(); // Clear mock to test only the PlayerAction update
+
     // Emit PlayerAction HitNote event
     await eventBus.emit({
       type: 'PlayerAction',
@@ -130,6 +134,10 @@ describe('GameStateStoreService - PlayerAction Handling', () => {
     });
     gameStateStoreService.setStoreSetter(statefulStoreSetter);
 
+    // Initialize internal combat data by calling updateGameState
+    gameStateStoreService.updateGameState({ combatData: testState.combatData });
+    statefulStoreSetter.mockClear(); // Clear mock to test only the PlayerAction update
+ 
     // Emit PlayerAction MissNote event
     await eventBus.emit({
       type: 'PlayerAction',

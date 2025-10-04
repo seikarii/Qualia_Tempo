@@ -7,9 +7,10 @@ import type {
   RhythmicDashEvent,
   PlayerInputEvent,
   PlayerDirectionEvent,
+  CombatDataUpdatedEvent,
 } from "./contracts/events.contracts";
 import { logMethod, catchError, IBaseService, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
-import type { QualiaState } from "../types/contracts";
+import type { QualiaState, CombatData } from "../types/contracts";
 import type { RhythmicMovementConfig, RhythmicMovementControllerParams } from "./contracts/IRhythmicMovementController.contracts";
 import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovementController";
 import type { IEventBus } from "./interfaces/IEventBus";
@@ -17,7 +18,6 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { IEventTransformer } from "./protocol/IEventTransformer";
 import type { IInputStateService } from "./interfaces/IInputStateService";
-import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
 import type { IGameplayMechanicsService } from "./interfaces/IGameplayMechanicsService";
 
 /**
@@ -32,8 +32,9 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
   private timerService: ITimerService;
   private keyAdapter: IEventTransformer<PlayerInputEvent, PlayerDirectionEvent>; // Used by @AdaptAndEmit decorator (DEPRECATED)
   private inputStateService: IInputStateService; // NUEVA FUENTE DE VERDAD
-  private gameStateStore: IGameStateStoreService;
   private gameplayMechanicsService: IGameplayMechanicsService;
+  // QUALIA.CODE v1.1: Internal combat data tracking for reactive state management
+  private currentCombatData: CombatData | null = null;
 
   // @ts-expect-error - Utilizado por el ciclo de vida del decorador @OnEvent
   private _eventListeners: string[] = [];
@@ -74,7 +75,6 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
     this.timerService = params.timerService;
     this.keyAdapter = params.keyAdapter;
     this.inputStateService = params.inputStateService;
-    this.gameStateStore = params.gameStateStore;
     this.gameplayMechanicsService = params.gameplayMechanicsService;
     // Ensure keyAdapter is used by decorator (TypeScript workaround) - DEPRECATED
     void this.keyAdapter;
@@ -163,6 +163,15 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
     } else if (newState === "Playing" && this.isPaused) {
       this.resumeFromPause();
     }
+  }
+
+  @OnEvent('CombatDataUpdated')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private _handleCombatDataUpdate(event: CombatDataUpdatedEvent): void {
+    this.logger.debug('Combat data received and cached internally.', { 
+      noteCount: event.combatData?.noteMap?.length ?? 0 
+    });
+    this.currentCombatData = event.combatData;
   }
 
   @logMethod
@@ -400,8 +409,9 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
   }
 
   /**
-   * QUALIA.CODE: Nuevo método de sondeo de estado para acciones rítmicas
+   * QUALIA.CODE v1.1: Nuevo método de sondeo de estado para acciones rítmicas
    * Centraliza toda la lógica de HitNote/MissNote en el bucle de juego
+   * Uses internal combat data tracking instead of polling store
    */
   @logMethod
   private processActionInputFromState(): void {
@@ -409,15 +419,14 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
     const wasActionPressed = this.inputStateService.wasActionJustPressed(' ');
     if (!wasActionPressed) return;
 
-    const gameState = this.gameStateStore.getGameState();
     const currentTime = this.timerService.now();
 
     // Usar el GameplayMechanicsService para encontrar la nota más cercana
-    if (!gameState.combatData) {
+    if (!this.currentCombatData) {
       this.logger.warn("No combat data available for note detection");
       return;
     }
-    const nearestNote = this.gameplayMechanicsService.findNearestNote(gameState.combatData.noteMap, currentTime);
+    const nearestNote = this.gameplayMechanicsService.findNearestNote(this.currentCombatData.noteMap, currentTime);
     if (!nearestNote) {
       this.eventBus.emit({
         type: 'PlayerAction',

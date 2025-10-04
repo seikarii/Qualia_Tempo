@@ -269,7 +269,6 @@ const createDefaultRhythmicMovementParams = (
   logger: ILogger,
   timerService: ITimerService,
   inputStateService: any, // Using any for now since the type might be complex
-  gameStateStore: IGameStateStoreService,
   gameplayMechanicsService: IGameplayMechanicsService
 ): RhythmicMovementControllerParams => ({ // eslint-disable-line max-params
   eventBus,
@@ -278,7 +277,6 @@ const createDefaultRhythmicMovementParams = (
   timerService,
   keyAdapter: mockKeyAdapter,
   inputStateService,
-  gameStateStore,
   gameplayMechanicsService
 });
 
@@ -416,7 +414,6 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
     mockLogger,
     mockTimerService,
     mockInputStateService,
-    mockGameStateStoreService,
     mockGameplayMechanicsService
   );
 

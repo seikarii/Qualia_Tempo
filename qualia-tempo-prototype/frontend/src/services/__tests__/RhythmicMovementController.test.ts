@@ -7,7 +7,6 @@ import type { IEventBus } from '../interfaces/IEventBus';
 import type { ILogger } from '../interfaces/ILogger';
 import type { ITimerService } from '../interfaces/ITimerService';
 import type { IInputStateService } from '../interfaces/IInputStateService';
-import type { IGameStateStore } from '../interfaces/IGameStateStore';
 import type { IGameplayMechanicsService } from '../interfaces/IGameplayMechanicsService';
 
 describe('RhythmicMovementController', () => {
@@ -17,7 +16,6 @@ describe('RhythmicMovementController', () => {
   let mockLogger: any;
   let mockTimerService: any;
   let mockInputStateService: any;
-  let mockGameStateStore: any;
   let mockGameplayMechanicsService: any;
 
   beforeEach(() => {
@@ -44,7 +42,6 @@ describe('RhythmicMovementController', () => {
     mockEventBus = container.get(TYPES.IEventBus);
     mockLogger = container.get(TYPES.ILogger);
     mockTimerService = container.get(TYPES.ITimerService);
-    mockGameStateStore = container.get(TYPES.IGameStateStoreService);
     
     // Create specialized mocks
     const mockKeyAdapter = { adapt: vi.fn() };
@@ -74,6 +71,7 @@ describe('RhythmicMovementController', () => {
     container.bind(TYPES.IGameplayMechanicsService).toConstantValue(mockGameplayMechanicsServiceLocal);
     
     // ARCHITECTURAL NOTE: Rebuild RhythmicMovementControllerParams with updated config and mocks
+    // CRISALIDA.CODE Phase 2: Removed gameStateStore dependency
     const config = container.get(TYPES.RhythmicMovementConfig);
     container.unbind(TYPES.RhythmicMovementControllerParams);
     container.bind(TYPES.RhythmicMovementControllerParams).toConstantValue({
@@ -83,7 +81,6 @@ describe('RhythmicMovementController', () => {
       timerService: mockTimerService,
       keyAdapter: mockKeyAdapter,
       inputStateService: mockInputStateServiceLocal,
-      gameStateStore: mockGameStateStore,
       gameplayMechanicsService: mockGameplayMechanicsServiceLocal
     });
     
@@ -104,8 +101,13 @@ describe('RhythmicMovementController', () => {
       mockInputStateService.wasActionJustPressed.mockClear();
       mockInputStateService.wasActionJustPressed.mockReturnValue(true);
       
-      mockGameStateStore.getGameState.mockClear();
-      mockGameStateStore.getGameState.mockReturnValue({ combatData: { noteMap: [] } });
+      // Populate internal combat data via CombatDataUpdated event
+      (controller as any)._handleCombatDataUpdate({
+        type: 'CombatDataUpdated',
+        combatData: { noteMap: [] },
+        source: 'Test',
+        timestamp: new Date()
+      });
       
       mockTimerService.now.mockClear();
       mockTimerService.now.mockReturnValue(1000);
@@ -135,8 +137,13 @@ describe('RhythmicMovementController', () => {
       mockInputStateService.wasActionJustPressed.mockClear();
       mockInputStateService.wasActionJustPressed.mockReturnValue(true);
       
-      mockGameStateStore.getGameState.mockClear();
-      mockGameStateStore.getGameState.mockReturnValue({ combatData: { noteMap: [mockNote] } });
+      // Populate internal combat data via CombatDataUpdated event
+      (controller as any)._handleCombatDataUpdate({
+        type: 'CombatDataUpdated',
+        combatData: { noteMap: [mockNote] },
+        source: 'Test',
+        timestamp: new Date()
+      });
       
       mockTimerService.now.mockClear();
       mockTimerService.now.mockReturnValue(1000);
@@ -171,8 +178,13 @@ describe('RhythmicMovementController', () => {
       mockInputStateService.wasActionJustPressed.mockClear();
       mockInputStateService.wasActionJustPressed.mockReturnValue(true);
       
-      mockGameStateStore.getGameState.mockClear();
-      mockGameStateStore.getGameState.mockReturnValue({ combatData: { noteMap: [mockNote] } });
+      // Populate internal combat data via CombatDataUpdated event
+      (controller as any)._handleCombatDataUpdate({
+        type: 'CombatDataUpdated',
+        combatData: { noteMap: [mockNote] },
+        source: 'Test',
+        timestamp: new Date()
+      });
       
       mockTimerService.now.mockClear();
       mockTimerService.now.mockReturnValue(1000);
@@ -204,7 +216,7 @@ describe('RhythmicMovementController', () => {
       (controller as any).processActionInputFromState();
 
       // Assert
-      expect(mockGameStateStore.getGameState).not.toHaveBeenCalled();
+      // No getGameState call expected - event-driven architecture
       expect(mockEventBus.emit).not.toHaveBeenCalled();
     });
 
@@ -218,8 +230,13 @@ describe('RhythmicMovementController', () => {
       mockInputStateService.wasActionJustPressed.mockClear();
       mockInputStateService.wasActionJustPressed.mockReturnValue(true);
       
-      mockGameStateStore.getGameState.mockClear();
-      mockGameStateStore.getGameState.mockReturnValue({ combatData: { noteMap: [mockNote] } });
+      // Populate internal combat data via CombatDataUpdated event
+      (controller as any)._handleCombatDataUpdate({
+        type: 'CombatDataUpdated',
+        combatData: { noteMap: [mockNote] },
+        source: 'Test',
+        timestamp: new Date()
+      });
       
       mockTimerService.now.mockClear();
       mockTimerService.now.mockReturnValue(currentTime);

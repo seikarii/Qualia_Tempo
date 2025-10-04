@@ -52,7 +52,22 @@
 
 ## 📋 Lista de Deuda Técnica
 
-### 1. � TODO - Integración de Datos de Audio en Componente de Juego (DIFFICULT)
+### 1. � TODO - Integración de Datos de Audio en Componente de Juego (MEDIUM)
+**Archivo:** `qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx:140-143,161`  
+**Severidad:** Media  
+**Estado:** Pendiente  
+**Descripción:**
+```typescript
+tempo: 120, // TODO: Get from audio service
+beat_position: 0, // TODO: Get from audio service
+frequency_bands: [0, 0, 0, 0], // TODO: Get from audio service
+velocity: [0, 0, 0], // TODO: Get from physics service
+```
+**Contexto:** Datos hardcodeados que deberían provenir de servicios de audio y física.  
+**Impacto:** Componente no refleja estado real del juego.  
+**Prioridad:** Media - Integrar servicios de audio y física existentes.
+
+### 2. 📝 TODO - Refactor de Bucle Interno en Calculadora de Estado (MEDIUM)
 **Archivo:** `qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx:140-143,161`  
 **Severidad:** Media  
 **Estado:** Pendiente  
@@ -67,36 +82,10 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Componente no refleja estado real del juego.  
 **Prioridad:** Media - Integrar servicios de audio y física.
 
-### 2. 📝 TODO - Refactor de Bucle Interno en Calculadora de Estado (DIFFICULT)
-**Archivo:** `qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx:140-143,161`  
-**Severidad:** Media  
-**Estado:** Pendiente  
-**Descripción:**
-```typescript
-tempo: 120, // TODO: Get from audio service
-beat_position: 0, // TODO: Get from audio service
-frequency_bands: [0, 0, 0, 0], // TODO: Get from audio service
-velocity: [0, 0, 0], // TODO: Get from physics service
-```
-**Contexto:** Datos hardcodeados que deberían provenir de servicios de audio y física.  
-**Impacto:** Componente no refleja estado real del juego.  
-**Prioridad:** Media - Integrar servicios de audio y física.
 
 
 
-### 5. 🔧 HACK - Patrón de Store Pasivo
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/GameStateStoreService.ts:118`  
-**Severidad:** Media  
-**Estado:** Funcional  
-**Descripción:**
-```typescript
-// This is a bit of a hack, but necessary due to the passive store pattern
-```
-**Contexto:** Solución temporal para el patrón de store pasivo.  
-**Impacto:** Código menos elegante, potencialmente frágil.  
-**Prioridad:** Media - Refactor para eliminar el hack.
-
-### 6. 📝 NOTE: - Render Target Gestionado por Servicio
+### 3. 📝 NOTE: - Render Target Gestionado por Servicio (EASY)
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/FrontendRenderingService.ts:4,406`  
 **Severidad:** Media  
 **Estado:** Documentado  
@@ -109,7 +98,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Documentación de decisiones arquitectónicas.  
 **Prioridad:** Media - Considerar si estas notas necesitan acción.
 
-### 7. 🏗️ PLACEHOLDER - Configuración de Audio Placeholder
+### 4. 🏗️ PLACEHOLDER - Configuración de Audio Placeholder (EASY)
 **Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:203,205`  
 **Severidad:** Baja  
 **Estado:** Funcional  
@@ -122,7 +111,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Funcionalidad básica presente.  
 **Prioridad:** Baja - Implementar cuando se expanda soporte de audio.
 
-### 8. 🏗️ PLACEHOLDER - Buffer de Vértices Placeholder
+### 5. 🏗️ PLACEHOLDER - Buffer de Vértices Placeholder (MEDIUM)
 **Archivo:** `qualia-tempo-prototype/backend/services/RenderingService.py:86`  
 **Severidad:** Media  
 **Estado:** Funcional  
@@ -146,7 +135,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Sistema de rendering básico funcional.  
 **Prioridad:** Media - Implementar buffer de vértices real.
 
-### 9. 🔮 FUTURE - Configuración Futura de Servicios
+### 6. 🔮 FUTURE - Configuración Futura de Servicios (EASY)
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/inversify.config.ts:35`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -158,7 +147,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Preparación para expansión.  
 **Prioridad:** Baja - Implementar cuando se agreguen nuevos servicios.
 
-### 10. 🔮 FUTURE - Extensibilidad Futura en Servicios
+### 7. 🔮 FUTURE - Extensibilidad Futura en Servicios (EASY)
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/NotificationService.ts:77,78`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -171,7 +160,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Diseño extensible.  
 **Prioridad:** Baja - Implementar cuando se expanda funcionalidad.
 
-### 11. 🔮 FUTURE - Manejo Futuro de Acciones del Jugador
+### 8. 🔮 FUTURE - Manejo Futuro de Acciones del Jugador (EASY)
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/GameControllerService.ts:216,333`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -184,7 +173,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Arquitectura preparada para expansión.  
 **Prioridad:** Baja - Implementar cuando se agreguen nuevas acciones.
 
-### 12. 🔮 FUTURE - Contexto de Contenedor Futuro
+### 9. 🔮 FUTURE - Contexto de Contenedor Futuro (EASY)
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/CompositionRoot.provider.ts:17`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -196,7 +185,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Flexibilidad arquitectónica.  
 **Prioridad:** Baja - Implementar si se requiere contexto.
 
-### 13. 🔮 FUTURE - Extensibilidad en Servicio de Debug
+### 10. 🔮 FUTURE - Extensibilidad en Servicio de Debug (EASY)
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/DebugService.ts:58,59`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -209,7 +198,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Debugging futuro más robusto.  
 **Prioridad:** Baja - Implementar cuando se expanda debugging.
 
-### 14. 🔮 FUTURE - Cálculo Basado en Longitud de Letra
+### 11. 🔮 FUTURE - Cálculo Basado en Longitud de Letra (EASY)
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/SubtitleService.ts:76`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -221,7 +210,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Sistema de subtítulos extensible.  
 **Prioridad:** Baja - Implementar cuando se mejore timing.
 
-### 15. 🔮 FUTURE - Ratio de Poder para Uso Futuro
+### 12. 🔮 FUTURE - Ratio de Poder para Uso Futuro (EASY)
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/ViewLogicService.ts:88`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -233,7 +222,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Lógica de vista preparada.  
 **Prioridad:** Baja - Implementar cuando se use.
 
-### 16. 🔮 FUTURE - Opacidad de Flujo Reservada
+### 13. 🔮 FUTURE - Opacidad de Flujo Reservada (EASY)
 **Archivo:** `qualia-tempo-prototype/frontend/src/components/game/PlayerAvatar.tsx:13`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -245,7 +234,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Efectos visuales preparados.  
 **Prioridad:** Baja - Implementar cuando se agreguen efectos.
 
-### 17. 🔮 FUTURE - Timing de Subtítulos Basado en Longitud
+### 14. 🔮 FUTURE - Timing de Subtítulos Basado en Longitud (EASY)
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/SubtitleService.ts:76`  
 **Severidad:** Baja  
 **Estado:** Planificado  
@@ -257,7 +246,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Sistema de subtítulos más dinámico.  
 **Prioridad:** Baja - Implementar cuando se mejore timing.
 
-### 18. 📱 DEPRECATED - Método de Rendering Obsoleto
+### 18. 📱 DEPRECATED - Método de Rendering Obsoleto (MEDIUM)
 **Archivo:** `qualia-tempo-prototype/frontend/src/services/FrontendRenderingService.ts:349`  
 **Severidad:** Baja  
 **Estado:** Documentado  
@@ -434,27 +423,4 @@ private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator (DEPRECA
 
 
 ---
-## ✅ RESOLVED: 2025-01-XX - CRISALIDA.CODE Phase 2: Deep State Merge Implementation
-**Status:** COMPLETED
-**Quality Score:** 9.5/10 (↑ from 9.2)
-**Violations:** 0 (ALL SYSTEMS COMPLIANT)
-
-### Completed Tasks:
-1. ✅ Created IStateMergerService interface with type-safe deepMerge method
-2. ✅ Implemented StateMergerService with recursive deep merge algorithm
-3. ✅ Registered StateMergerService in IoC container (production + test)
-4. ✅ Refactored GameStateStoreService - eliminated ALL shallow merge patterns
-5. ✅ Implemented internal combat data tracking to reduce getGameState() usage
-6. ✅ Marked getGameState() as @deprecated with architectural migration path
-7. ✅ Maintained 100% test pass rate (124/124 tests)
-8. ✅ Achieved full QUALIA.CODE v1.1 compliance
-
-### Technical Debt Resolved:
-- **Shallow Merge Anti-Pattern:** Eliminated across entire codebase, replaced with mathematically correct deep merge
-- **State Integrity:** Deep merge preserves nested object data (e.g., player.position, combatData.noteMap)
-- **Architectural Purity:** Internal state tracking reduces store polling violations
-
-### Remaining Work:
-- [ ] **TODO (#6):** Complete elimination of getGameState() across all services (requires RhythmicMovementController refactor)
-- [ ] **TODO (#7):** Create comprehensive StateMergerService test suite (edge cases: circular refs, arrays, null handling)
 
