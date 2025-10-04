@@ -10,7 +10,7 @@
  * Extracts complex diagnostic logic from ServiceDiagnosticsPanel component.
  */
 
-import type { ServiceDiagnosticData, ServiceStatus } from '../contracts/IDebugOrchestratorService.contracts';
+import type { ServiceStatus } from '../contracts/IDebugOrchestratorService.contracts';
 import type { IBaseService } from './IBaseService';
 
 export interface IDebugOrchestratorService extends IBaseService {
@@ -22,19 +22,6 @@ export interface IDebugOrchestratorService extends IBaseService {
    * @returns Array of current service status information (synchronous)
    */
   getHealthReport(): ServiceStatus[];
-
-  /**
-   * Gather comprehensive diagnostic data from all services
-   * @deprecated Use getHealthReport() instead. This method promotes a "pull" pattern.
-   * @returns Promise resolving to complete diagnostic data
-   */
-  gatherServiceDiagnostics(): Promise<ServiceDiagnosticData>;
-
-  /**
-   * Get current status of all services
-   * @returns Array of service status information
-   */
-  getServiceStatuses(): Promise<ServiceStatus[]>;
 
   /**
    * Check if debug mode is enabled

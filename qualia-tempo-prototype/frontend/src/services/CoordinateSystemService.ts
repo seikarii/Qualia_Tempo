@@ -65,21 +65,12 @@ export class CoordinateSystemService implements ICoordinateSystemService {
   /**
    * WORLD-TO-SCREEN PROJECTION
    * Uses Three.js Vector3.project() for accurate camera projection.
-   */
-  // Overload signatures
-  /**
+   * 
    * Convert world coordinates to screen coordinates.
-   * @param _params - WorldToScreenParams object containing all required parameters
-   * @returns Screen coordinates {x, y}
-   */
-  public worldToScreen(_params: WorldToScreenParams): { x: number; y: number };
-  
-  /**
-   * @deprecated Use parameter object form instead: worldToScreen({ worldX, worldY, worldZ, camera, domElementSize })
-   */
-  /**
-   * Convert world coordinates to screen coordinates
    * QUALIA.CODE COMPLIANT: Parameter Object Pattern (4 params max)
+   * 
+   * @param params - WorldToScreenParams object containing all required parameters
+   * @returns Screen coordinates {x, y}
    */
   @logMethod
   @catchError

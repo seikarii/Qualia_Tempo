@@ -24,6 +24,12 @@ export interface IConfigurationService {
 
   /**
    * Get the complete configuration object.
+   * 
+   * @deprecated ARCHITECTURAL MANDATE: This method enables the Service Locator anti-pattern.
+   * All services MUST inject their specific configuration slice directly, not the entire config object.
+   * This method will be removed in a future version. Migrate all usages immediately.
+   * See QUALIA.MANUAL.md Section 8 for the correct Direct Configuration Injection pattern.
+   * 
    * @returns The full configuration object
    */
   getConfig(): FullGameConfig;

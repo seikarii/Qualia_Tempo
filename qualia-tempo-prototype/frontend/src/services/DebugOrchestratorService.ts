@@ -15,12 +15,11 @@ import type {
 } from './contracts/IDebugOrchestratorService.contracts';
 import type { ILogger } from './interfaces/ILogger';
 import type { ITimerService } from './interfaces/ITimerService';
-import type { IPerformanceService } from './interfaces/IPerformanceService';
 import type { IEventBus } from './interfaces/IEventBus';
 // QUALIA.CODE v1.1: Service imports removed - event-driven pattern eliminates coupling
 // import type { INotificationService } from './interfaces/INotificationService';
 // import type { IErrorReportingService } from './interfaces/IErrorReportingService';
-import { logMethod, catchError, BrowserOnly, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from '../utils/decorators';
+import { logMethod, catchError, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from '../utils/decorators';
 import type { ConfigurationLoadedEvent, ServiceStatusUpdateEvent } from './contracts/events.contracts';
 import type { IBaseService } from './interfaces/IBaseService';
 
@@ -29,7 +28,6 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
   private readonly config: DebugOrchestratorConfig;
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
-  private readonly performanceService: IPerformanceService;
   // QUALIA.CODE v1.1: EventBus required for @OnEvent decorator lifecycle management
   // @ts-expect-error - Used by @OnEvent decorator infrastructure
   private readonly eventBus: IEventBus;
@@ -62,7 +60,6 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
     this.config = params.config;
     this.logger = params.logger;
     this.timerService = params.timerService;
-    this.performanceService = params.performanceService;
     this.eventBus = eventBus;
     // QUALIA.CODE v1.1: Services no longer injected - event-driven pattern eliminates coupling
     
@@ -99,77 +96,9 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
     return report;
   }
 
-  /**
-   * @deprecated This method promotes a "pull" pattern. Use getHealthReport() instead to read cached state.
-   * Marked for future removal once all consumers migrate to the event-driven pattern.
-   */
-  @logMethod
-  @catchError
-  @BrowserOnly
-  async gatherServiceDiagnostics(): Promise<ServiceDiagnosticData> {
-    const serviceStatuses = await this.getServiceStatuses();
-    
-    // Get system information
-    const systemInfo = {
-      timestamp: this.timerService.getCurrentDate(),
-      performance: {
-        memoryUsage: this.getMemoryUsage(),
-        fpsAverage: this.getFpsAverage(),
-        renderTime: this.getRenderTime()
-      },
-      configuration: {
-        debugMode: this.isDebugModeEnabled(),
-        // QUALIA.CODE v1.1: Use injected config instead of process.env (Platform Abstraction)
-        environment: this.config.environment,
-        version: this.config.version
-      }
-    };
 
-    const diagnosticData: ServiceDiagnosticData = {
-      services: serviceStatuses,
-      systemInfo
-    };
 
-    this._cachedDiagnostics = diagnosticData;
-    this.lastUpdateTime = this.timerService.getCurrentDate();
-    
-    return diagnosticData;
-  }
 
-  /**
-   * QUALIA.CODE v1.1: Event-Driven Service Status Retrieval
-   * 
-   * ARCHITECTURE PATTERN: Passive Aggregation (Push Model)
-   * 
-   * This method NO LONGER calls other services directly. Instead, it simply
-   * returns the aggregated status information that has been collected via
-   * ServiceStatusUpdateEvent events.
-   * 
-   * BENEFITS:
-   * - Zero coupling to other services
-   * - No knowledge of other services' internal methods
-   * - Highly scalable - services emit on their own schedule
-   * - Event-driven architecture compliance
-   * 
-   * NOTE: If a service hasn't emitted a status update yet, it won't appear
-   * in this list. This is by design - services are responsible for their
-   * own status broadcasting.
-   */
-  @logMethod
-  @catchError
-  async getServiceStatuses(): Promise<ServiceStatus[]> {
-    // QUALIA.CODE v1.1: Simply convert the internal map to an array
-    // No direct service method calls - pure event-driven aggregation
-    const statuses: ServiceStatus[] = Array.from(this.serviceStatuses.values());
-    
-    this.logger.debug('Retrieved service statuses from event aggregation', {
-      totalServices: statuses.length,
-      pattern: 'event-driven (push)',
-      services: statuses.map(s => s.name)
-    });
-
-    return statuses;
-  }
 
   /**
    * QUALIA.CODE v1.1: Event Handler for Service Status Updates
@@ -229,9 +158,12 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
   @logMethod
   @catchError
   async forceRefresh(): Promise<void> {
-    this.logger.info('Forcing diagnostic data refresh');
+    this.logger.info('Force refresh requested (event-driven model - no action needed)', {
+      pattern: 'event-driven (push)',
+      note: 'Service status is passively aggregated via events. No manual refresh required.'
+    });
     this._cachedDiagnostics = null;
-    await this.gatherServiceDiagnostics();
+    this.lastUpdateTime = this.timerService.getCurrentDate();
   }
 
   /**
@@ -265,27 +197,7 @@ export class DebugOrchestratorService implements IDebugOrchestratorService, IBas
     });
   }
 
-  // Private helper methods
-  private getMemoryUsage(): number {
-    // QUALIA.CODE v1.1: Use abstracted IPerformanceService instead of direct platform API
-    const memoryInfo = this.performanceService.getMemoryInfo();
-    if (memoryInfo.usedJSHeapSize) {
-      return memoryInfo.usedJSHeapSize / this.config.defaultMetrics.memoryConversionFactor; // MB
-    }
-    return 0;
-  }
-
-  private getFpsAverage(): number {
-    // This would need to be integrated with a performance monitoring system
-    // For now, return a default value
-    return this.config.defaultMetrics.fps;
-  }
-
-  private getRenderTime(): number {
-    // This would need to be integrated with the rendering system
-    // For now, return a default value
-    return this.config.defaultMetrics.frameTime; // ~60fps
-  }
+  // Private helper methods removed - no longer needed with event-driven model
 
   // IBaseService implementation
   public initialize(): void {
