@@ -443,6 +443,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   }
 
   @logMethod
+  @catchError
   @OnEvent('Error.Occurred')
   public _handleErrorEvent(event: ErrorEvent): void {
     const errorReport = this.createErrorReport(

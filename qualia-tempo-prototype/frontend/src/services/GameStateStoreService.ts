@@ -150,6 +150,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
    * ARCHITECTURAL IMPROVEMENT: Extracted state update logic into focused helper methods
    * Reduced from 95 lines to ~25 lines (75% reduction)
    */
+  @catchError
   @OnEvent('GameStateChanged')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handleGameStateChange(event: GameStateChangedEvent): void {
@@ -312,6 +313,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
    * NOTE: Binary protocol delivers particle data via ArrayBuffer, 
    * no direct qualiaState reconstruction in store service
    */
+  @catchError
   @OnEvent('QualiaParticleDataReceived')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handleParticleDataReceived(event: QualiaParticleDataReceivedEvent): void {
@@ -336,6 +338,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
   /**
    * Handle RhythmicDash events to update player position
    */
+  @catchError
   @OnEvent('RhythmicDash')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handleRhythmicDash(event: RhythmicDashEvent): void {
@@ -361,6 +364,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
    * Handle PlayerAction events to update note states
    * QUALIA.CODE v1.1: Uses internal currentCombatData tracking instead of getGameState() hack
    */
+  @catchError
   @OnEvent('PlayerAction')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handlePlayerAction(event: PlayerActionEvent): void {
@@ -460,6 +464,7 @@ puede ser normal durante el arranque.`);
    * QUALIA.CODE v2.0: Handle AudioDataUpdatedEvent
    * Updates audio analysis data in the store
    */
+  @catchError
   @OnEvent('AudioDataUpdated')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handleAudioDataUpdate(event: import('./contracts/events.contracts').AudioDataUpdatedEvent): void {
@@ -483,6 +488,7 @@ puede ser normal durante el arranque.`);
    * QUALIA.CODE v2.0: Handle PhysicsDataUpdatedEvent
    * Updates physics simulation data in the store
    */
+  @catchError
   @OnEvent('PhysicsDataUpdated')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handlePhysicsDataUpdate(event: import('./contracts/events.contracts').PhysicsDataUpdatedEvent): void {

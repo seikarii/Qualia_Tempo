@@ -670,6 +670,28 @@ public getWindowDimensions(): { width: number; height: number } {
 
 ---
 
+### 4.4. Protocolo de Orden de Decoradores (Mandatorio)
+
+#### Ejemplo de Implementación INCORRECTA (PROHIBIDA):
+
+```typescript
+// ❌ INCORRECTO: @OnEvent se aplica a la función envuelta por @catchError
+@OnEvent("System.Audio.Ready")
+@catchError
+private onAudioReady() { /* ... */ }
+```
+
+#### Ejemplo de Implementación CORRECTA (GOLD.CODE):
+
+```typescript
+// ✅ CORRECTO: @OnEvent se aplica al método original, luego @catchError lo envuelve.
+@catchError
+@OnEvent("System.Audio.Ready")
+private onAudioReady() { /* ... */ }
+```
+
+---
+
 ## 5. Testing Implementation
 
 ### 5.1. Backend Testing with TestCompositionRootFactory

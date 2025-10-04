@@ -157,6 +157,23 @@ The linting system integrates with continuous integration pipelines to ensure on
 // Aplicación del decorador de adaptación:
 @AdaptAndEmit('messageAdapter')
 private onRawMessage(rawData: ArrayBuffer): void { /* ... */ }
+## 5.2 Decorator-Driven Development
+
+### Protocolo de Orden de Decoradores (Mandatorio)
+
+Debido al orden de ejecución inverso de los decoradores en TypeScript (de abajo hacia arriba), es imperativo seguir un orden estricto para garantizar que los decoradores de registro (que necesitan leer metadatos del método original) se apliquen antes que los decoradores de transformación (que envuelven o modifican el método).
+
+1. Capa de Transformación (Más externa): Decoradores que envuelven la lógica del método.
+   * @logMethod
+   * @catchError
+   * @measureTime
+   * @validate
+
+2. Capa de Registro de Dominio (Más interna): Decoradores que leen la firma del método o se registran en un sistema.
+   * @OnEvent
+   * @AdaptAndEmit
+   * @BrowserOnly
+
 
 ### 6.2.1. Environment Adaptation Bundle
 

@@ -643,6 +643,7 @@ export class NotificationService implements INotificationService, IBaseService {
 
   // Private implementation methods
 
+  @catchError
   @OnEvent('Error')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private _handleErrorEvent(event: ErrorEvent): void {
@@ -673,6 +674,7 @@ export class NotificationService implements INotificationService, IBaseService {
     this.processNotification(notification);
   }
 
+  @catchError
   @OnEvent('GameStateChanged')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private _handleGameStateEvent(event: GameStateChangedEvent): void {
@@ -693,6 +695,7 @@ export class NotificationService implements INotificationService, IBaseService {
     this.processNotification(notification);
   }
 
+  @catchError
   @OnEvent('QualiaStateCalculated')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private _handleQualiaStateCalculatedEvent(event: QualiaStateCalculatedEvent): void {
@@ -719,6 +722,7 @@ export class NotificationService implements INotificationService, IBaseService {
     }
   }
 
+  @catchError
   @OnEvent('BackendSync')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private _handleBackendSyncEvent(event: BackendSyncEvent): void {

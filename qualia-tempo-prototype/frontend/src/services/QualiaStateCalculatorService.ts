@@ -160,6 +160,7 @@ export class QualiaStateCalculatorService
    * Handle incoming PlayerAction events.
    * ARCHITECTURE: This replaces the direct method calls from UI.
    */
+  @catchError
   @OnEvent('PlayerAction')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handlePlayerAction(event: PlayerActionEvent): void {
@@ -275,6 +276,7 @@ export class QualiaStateCalculatorService
    * QUALIA.CODE v1.1: Pure event-driven architecture replaces internal setInterval.
    * This method is automatically subscribed via @OnEvent decorator.
    */
+  @catchError
   @OnEvent('GameTick')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private _handleGameTick(event: { deltaTime: number }): void {

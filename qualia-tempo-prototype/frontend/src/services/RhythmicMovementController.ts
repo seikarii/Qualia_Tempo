@@ -143,6 +143,7 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
     cleanupEventSubscriptions(this);
   }
 
+  @catchError
   @OnEvent('GameStateChanged')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private _handleGameStateChange(event: GameStateChangedEvent): void {
@@ -158,6 +159,7 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
     }
   }
 
+  @catchError
   @OnEvent('CombatDataUpdated')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private _handleCombatDataUpdate(event: CombatDataUpdatedEvent): void {

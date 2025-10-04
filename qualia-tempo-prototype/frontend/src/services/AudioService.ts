@@ -120,6 +120,7 @@ export class AudioService implements IAudioService, IBaseService {
     };
   }
 
+  @catchError
   @OnEvent('QualiaStateCalculated')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handleQualiaStateUpdate(event: QualiaStateCalculatedEvent): void {
@@ -170,12 +171,14 @@ export class AudioService implements IAudioService, IBaseService {
     // Setup rhythmic feedback listeners - REMOVED: Now handled by @OnEvent decorators
   }
 
+  @catchError
   @OnEvent('RhythmicDash')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private _handleRhythmicDash(event: RhythmicDashEvent): void {
     this.playRhythmicFeedback(event.timing);
   }
 
+  @catchError
   @OnEvent('MetronomeTick')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private _handleMetronomeTick(_event: MetronomeTickEvent): void {

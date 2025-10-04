@@ -57,21 +57,6 @@
 ---
 
 
-### 1. � TODO - Integración de Datos de Audio en Componente de Juego (MEDIUM)
-**Archivo:** `qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx:173-176,193`  
-**Severidad:** Media  
-**Estado:** Pendiente  
-**Descripción:**
-```typescript
-tempo: 120, // TODO: Get from audio service
-beat_position: 0, // TODO: Get from audio service
-frequency_bands: [0, 0, 0, 0], // TODO: Get from audio service
-velocity: [0, 0, 0] as [number, number, number], // TODO: Get from physics service
-```
-**Contexto:** Datos hardcodeados que deberían provenir de servicios de audio y física.  
-**Impacto:** Componente no refleja estado real del juego.  
-**Prioridad:** Media - Integrar servicios de audio y física existentes.
-
 
 
 Backend:
@@ -88,8 +73,3 @@ Backend:
    * `frontend/src/services/DebugService.ts:79`: FUTURE para la limpieza de suscripciones del EventBus.
    * `frontend/src/components/QualiaMainMenu.tsx:44`: Comentario TEMPO que indica trabajo temporal o incompleto.
    * `frontend/public/shaders/gbuffer.glsl:40`: PLACEHOLDER para las propiedades de los materiales en el G-buffer.
-
-## Phase 7 - Test Refactoring Tasks
-- [ ] FIXME: PhysicsService tests - Service not emitting events after initialize() - in /qualia-tempo-prototype/frontend/src/services/__tests__/PhysicsService.test.ts (7 tests failing)
-- [ ] FIXME: AudioAnalysisService tests - @OnEvent handler not triggering on System.Audio.Ready - in /qualia-tempo-prototype/frontend/src/services/__tests__/AudioAnalysisService.test.ts (2 tests failing)
-- [x] COMPLETED: Eliminate setTimeout anti-pattern in tests - Replaced with RAF callback queue pattern - in /qualia-tempo-prototype/frontend/src/testing/mocks/timer-service.mock.ts (18/27 tests passing)

@@ -226,8 +226,8 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
 
   // Private methods
 
-  @OnEvent('QualiaStateCalculated')
   @validateEventProperty("qualiaState", "QualiaState")
+  @OnEvent('QualiaStateCalculated')
   // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
   private handleQualiaStateUpdate(event: QualiaStateCalculatedEvent): void {
     this.logger.info(this.config.messages.qualiaStateCalculated);
