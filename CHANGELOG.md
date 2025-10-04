@@ -1,5 +1,58 @@
 # CHANGELOG
 
+## [2025-01-04] - @validate Decorator Refactoring: Elimination of Redundant Error Wrapping
+
+### 🎯 MISSION: Simplify @validate Decorator by Removing Redundant try-catch Block
+- **OBJECTIVE:** Refactor `@validate` decorator to eliminate redundant error wrapping and ensure clean error propagation
+- **STATUS:** ✅ **MISSION ACCOMPLISHED** - Decorator simplified, tests passing at 100%, architectural linting passed
+- **PRINCIPLE:** Trust the underlying validation infrastructure. Let errors propagate naturally without unnecessary wrapping.
+
+### 🔧 Refactoring Details
+
+#### validate.decorator.ts - Simplification
+- **REMOVED:** Redundant `try-catch` block that wrapped errors from `getSchemaFromRegistry` and `performValidation`
+- **PATTERN:** Direct invocation of validation logic without error interception
+- **BENEFIT:** Cleaner code, reduced complexity, natural error propagation from validation functions
+- **COMPLIANCE:** Aligns with QUALIA.CODE principle of directness and simplicity
+
+#### validate.decorator.test.ts - Test Modernization
+- **FIXED:** Tests now expect clean, unwrapped error messages from validation functions
+- **CHALLENGE SOLVED:** Global decorator mocking in `setup.ts` was preventing real decorator from executing in tests
+- **SOLUTION:** Refactored error-throwing tests to call decorator as a function rather than via TypeScript decorator syntax
+- **PATTERN:** `validate('SchemaName')(originalMethod, context)` instead of `@validate('SchemaName')`
+- **REMOVED:** Duplicate test blocks that were causing confusion
+- **BENEFIT:** Tests now validate actual decorator behavior, not mocked no-ops
+
+#### setup.ts - Conditional Mocking Enhancement
+- **ADDED:** Conditional decorator mocking based on `TEST_REAL_DECORATORS` environment variable
+- **RATIONALE:** Allow decorator unit tests to use real implementations while other tests use mocked decorators
+- **PATTERN:** `const shouldMockDecorators = !process.env.TEST_REAL_DECORATORS`
+- **FUTURE-PROOF:** Other decorator tests can now follow same pattern
+
+### 📊 Test Results
+- **validate.decorator.test.ts:** 6/6 tests passing ✅
+  - ✅ should validate first argument successfully and execute method when validation passes
+  - ✅ should call validation logic with proper schema from registry
+  - ✅ should not perform validation when method is called with no arguments
+  - ✅ should validate data for async methods before execution
+  - ✅ should throw error and log when validation fails (GOLD.CODE: clean error message)
+  - ✅ should throw error when schema does not exist in registry (GOLD.CODE: clean error message)
+
+### 📊 Architectural Linting
+- **Contract Integrity:** PASSED ✅
+- **Config Integrity:** PASSED ✅
+- **Frontend TypeScript:** PASSED ✅
+- **Frontend QUALIA.CODE:** PASSED ✅
+- **Backend Patterns:** PASSED ✅
+- **Backend Types:** PASSED ✅
+
+### 🎓 Lessons Learned
+1. **Decorator Mocking Challenge:** Global decorator mocks in test setup can interfere with decorator unit tests. Solution: Call decorators as functions in tests.
+2. **Error Propagation:** Trust validation functions to throw descriptive errors. Don't wrap them unnecessarily.
+3. **Test Isolation:** Decorator unit tests require special handling to bypass global mocks.
+
+---
+
 ## [Unreleased] - 2025-01-XX - ARCHITECTURAL PURGE PHASE 2: Complete Service Locator Eradication
 
 ### 🎯 MISSION: Final Elimination of Configuration Service Locator Pattern

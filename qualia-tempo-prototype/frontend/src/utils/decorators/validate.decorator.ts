@@ -85,29 +85,15 @@ export function validate(schemaName: string) {
       const instanceLogger = getLogger(this);
 
       // Validate first argument if present
+      // GOLD.CODE: Direct logic without redundant try-catch.
+      // Let getSchemaFromRegistry and performValidation errors propagate naturally.
       if (args.length > 0) {
-        try {
-          const schema = getSchemaFromRegistry(schemaName, instanceLogger);
-          performValidation(schema, args[0], {
-            schemaName,
-            methodName: fullMethodName,
-            logger: instanceLogger
-          });
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          if (instanceLogger) {
-            instanceLogger.error(
-              `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-              { error: errorMessage }
-            );
-          } else {
-            EmergencyLogger.error(
-              `Schema validation failed for ${schemaName} in ${fullMethodName}:`,
-              { error: errorMessage, note: "Logger not found on instance, using console fallback" }
-            );
-          }
-          throw new Error(`Schema validation failed: ${errorMessage}`);
-        }
+        const schema = getSchemaFromRegistry(schemaName, instanceLogger);
+        performValidation(schema, args[0], {
+          schemaName,
+          methodName: fullMethodName,
+          logger: instanceLogger
+        });
       }
 
       return value.apply(this, args);
