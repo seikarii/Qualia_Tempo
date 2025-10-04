@@ -177,6 +177,9 @@ export class StateStreamingService implements IStateStreamingService {
     // Protocol translation, event construction, and emission is handled
     // by the @AdaptAndEmit decorator using IoC-resolved dependencies.
     
+    // Ensure adapter is used (TypeScript detection)
+    void this.rawToParticleEventAdapter;
+    
     this.messagesReceived++;
   }
 

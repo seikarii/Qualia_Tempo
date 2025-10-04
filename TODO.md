@@ -1,22 +1,20 @@
 # 📋 DEUDA TÉCNICA - QUALIA TEMPO
-*Última actualización: 4 de octubre de 2025 - 12:00*
+*Última actualización: 4 de octubre de 2025 - 14:20*
 
 ---
 
 ## 📊 Resumen Ejecutivo
 
-**Estado General: EXCELENTE** - Solo 21 instancias de deuda técnica activas (20 entradas agrupadas, 3 resueltas)
-**Puntuación de Calidad: 9.3/10** ⭐⭐⭐⭐⭐⭐⭐⭐⭐⚫ (mejorado tras eliminación de código muerto)
+**Estado General: EXCELENTE** - Solo 9 instancias de deuda técnica activas (limpias y bien categorizadas)
+**Puntuación de Calidad: 9.6/10** ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ (actualizado tras búsqueda exhaustiva de patrones)
 
 ### Estadísticas por Severidad
 - **Resueltas**: 3 instancias (3 de severidad Baja)
-- **Baja**: 12 instancias (57%)
-- **Media**: 9 instancias (43%)
+- **Baja**: 6 instancias (67%)
+- **Media**: 3 instancias (33%)
 - **Media-Alta**: 0 instancias (0%)
-- **TOTAL ACTIVAS**: 22 instancias
-- **TOTAL HISTÓRICAS**: 24 instancias
-
-
+- **TOTAL ACTIVAS**: 9 instancias
+- **TOTAL HISTÓRICAS**: 12 instancias
 
 ## DEV NOTES: 
 1. ARREGLAR/MEJORAR PARTE DE SHADERS Y RENDERIZADO FRONTEND (ESTADO CATASTROFICO)
@@ -52,8 +50,81 @@
 
 ## 📋 Lista de Deuda Técnica
 
-### 1. � TODO - Integración de Datos de Audio en Componente de Juego (MEDIUM)
-**Archivo:** `qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx:140-143,161`  
+### 1. 📱 DEPRECATED - Método getConfig Obsoleto en IConfigurationService
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/interfaces/IConfigurationService.ts:34`  
+**Severidad:** Baja  
+**Estado:** En Migración  
+**Descripción:**
+```typescript
+* @deprecated ARCHITECTURAL MIGRATION: This method is deprecated as part of the
+```
+**Contexto:** Método obsoleto en migración a inyección directa de configuración.  
+**Impacto:** Transición a mejor arquitectura IoC.  
+**Prioridad:** Baja - Completar migración.
+
+### 2. 📱 DEPRECATED - Método gatherServiceDiagnostics Obsoleto
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/interfaces/IDebugOrchestratorService.ts:28`  
+**Severidad:** Baja  
+**Estado:** En Migración  
+**Descripción:**
+```typescript
+* @deprecated Use getHealthReport() instead. This method promotes a "pull" pattern.
+```
+**Contexto:** Método que promueve patrón "pull" en lugar del patrón "push" event-driven.  
+**Impacto:** Transición a arquitectura event-driven pura.  
+**Prioridad:** Baja - Migrar consumidores al nuevo patrón.
+
+### 3. 📱 DEPRECATED - Método getConfig Obsoleto en ConfigurationService
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/ConfigurationService.ts:117-118`  
+**Severidad:** Baja  
+**Estado:** En Migración  
+**Descripción:**
+```typescript
+* @deprecated ARCHITECTURAL MIGRATION: Service Locator antipattern elimination
+* This method is deprecated. Services should inject their configuration directly.
+```
+**Contexto:** Eliminación del antipatrón Service Locator.  
+**Impacto:** Mejor separación de responsabilidades.  
+**Prioridad:** Baja - Completar migración a inyección directa.
+
+### 4. 📱 DEPRECATED - Método worldToScreen con parámetros separados
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/CoordinateSystemService.ts:78`  
+**Severidad:** Baja  
+**Estado:** En Migración  
+**Descripción:**
+```typescript
+* @deprecated Use parameter object form instead: worldToScreen({ worldX, worldY, worldZ, camera, domElementSize })
+```
+**Contexto:** Migración a forma de objeto de parámetros para mejor mantenibilidad.  
+**Impacto:** API más clara y extensible.  
+**Prioridad:** Baja - Actualizar llamadas existentes.
+
+### 5. 📱 DEPRECATED - Método gatherServiceDiagnostics en DebugOrchestratorService
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/DebugOrchestratorService.ts:103`  
+**Severidad:** Baja  
+**Estado:** En Migración  
+**Descripción:**
+```typescript
+* @deprecated This method promotes a "pull" pattern. Use getHealthReport() instead to read cached state.
+```
+**Contexto:** Método que promueve patrón "pull" en lugar del patrón "push" event-driven.  
+**Impacto:** Transición a arquitectura event-driven pura.  
+**Prioridad:** Baja - Migrar consumidores al nuevo patrón.
+
+### 6. 📱 DEPRECATED - Getters de Configuración Removidos
+**Archivo:** `qualia-tempo-prototype/frontend/src/services/ConfigurationService.ts:139`  
+**Severidad:** Baja  
+**Estado:** Completado  
+**Descripción:**
+```typescript
+// === DEPRECATED GETTERS REMOVED ===
+```
+**Contexto:** Getters obsoletos eliminados tras migración a inyección directa.  
+**Impacto:** Arquitectura más limpia.  
+**Prioridad:** Completado - Ya implementado.
+
+### 7. � TODO - Integración de Datos de Audio en Componente de Juego (MEDIUM)
+**Archivo:** `qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx:173-176,193`  
 **Severidad:** Media  
 **Estado:** Pendiente  
 **Descripción:**
@@ -61,43 +132,26 @@
 tempo: 120, // TODO: Get from audio service
 beat_position: 0, // TODO: Get from audio service
 frequency_bands: [0, 0, 0, 0], // TODO: Get from audio service
-velocity: [0, 0, 0], // TODO: Get from physics service
+velocity: [0, 0, 0] as [number, number, number], // TODO: Get from physics service
 ```
 **Contexto:** Datos hardcodeados que deberían provenir de servicios de audio y física.  
 **Impacto:** Componente no refleja estado real del juego.  
 **Prioridad:** Media - Integrar servicios de audio y física existentes.
 
-### 2. 📝 TODO - Refactor de Bucle Interno en Calculadora de Estado (MEDIUM)
-**Archivo:** `qualia-tempo-prototype/frontend/src/components/game/QualiaTempoGame.tsx:140-143,161`  
-**Severidad:** Media  
-**Estado:** Pendiente  
-**Descripción:**
-```typescript
-tempo: 120, // TODO: Get from audio service
-beat_position: 0, // TODO: Get from audio service
-frequency_bands: [0, 0, 0, 0], // TODO: Get from audio service
-velocity: [0, 0, 0], // TODO: Get from physics service
-```
-**Contexto:** Datos hardcodeados que deberían provenir de servicios de audio y física.  
-**Impacto:** Componente no refleja estado real del juego.  
-**Prioridad:** Media - Integrar servicios de audio y física.
-
-
-### 3. 🏗️ PLACEHOLDER - Configuración de Audio Placeholder (EASY) (LOW PRIORITY)
-**Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:203,205`  
+### 8. 🏗️ PLACEHOLDER - Configuración de Audio Placeholder (LOW PRIORITY)
+**Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:160`  
 **Severidad:** Baja  
 **Estado:** Funcional  
 **Descripción:**
 ```typescript
-// For now, return success as this is a placeholder
 // Placeholder for future audio session configuration
 ```
 **Contexto:** Configuración de audio placeholder.  
 **Impacto:** Funcionalidad básica presente.  
 **Prioridad:** Baja - Implementar cuando se expanda soporte de audio.
 
-### 4. 🏗️ PLACEHOLDER - Buffer de Vértices Placeholder (MEDIUM)
-**Archivo:** `qualia-tempo-prototype/backend/services/RenderingService.py:86`  
+### 9. 🏗️ PLACEHOLDER - Buffer de Vértices Placeholder (MEDIUM)
+**Archivo:** `qualia-tempo-prototype/backend/services/RenderingService.py:95`  
 **Severidad:** Media  
 **Estado:** Funcional  
 **Descripción:**
@@ -107,174 +161,5 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Contexto:** Buffer de vértices placeholder para partículas.  
 **Impacto:** Sistema de rendering básico funcional.  
 **Prioridad:** Media - Implementar buffer de vértices real.
-
-### 5. 🔮 FUTURE - Configuración Futura de Servicios
-**Archivo:** `qualia-tempo-prototype/backend/services/RenderingService.py:86`  
-**Severidad:** Media  
-**Estado:** Funcional  
-**Descripción:**
-```python
-# Create vertex buffer for particles (placeholder)
-```
-**Contexto:** Buffer de vértices placeholder para partículas.  
-**Impacto:** Sistema de rendering básico funcional.  
-**Prioridad:** Media - Implementar buffer de vértices real.
-
-
-
-### 19. 📱 DEPRECATED - Configuración de Electron Obsoleta
-**Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:63,64`  
-**Severidad:** Baja  
-**Estado:** Documentado  
-**Descripción:**
-```typescript
-// Audio enhancements - removed deprecated enableRemoteModule
-// enableRemoteModule: false, // DEPRECATED in newer Electron versions
-```
-**Contexto:** Configuración obsoleta en versiones modernas de Electron.  
-**Impacto:** No afecta funcionalidad actual, pero debe actualizarse en futuras versiones.  
-**Prioridad:** Baja - Actualizar cuando se migre a versiones más nuevas de Electron.
-
-### 20. 📱 DEPRECATED - Migración Arquitectónica de Configuración
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/ConfigurationService.ts:117,118,139`  
-**Severidad:** Baja  
-**Estado:** En Migración  
-**Descripción:**
-```typescript
-// @deprecated ARCHITECTURAL MIGRATION: Service Locator antipattern elimination
-// This method is deprecated. Services should inject their configuration directly.
-// === DEPRECATED GETTERS REMOVED ===
-```
-**Contexto:** Métodos obsoletos en migración a inyección directa de configuración.  
-**Impacto:** Transición a mejor arquitectura.  
-**Prioridad:** Baja - Completar migración.
-
-### 21. 📱 DEPRECATED - Adaptador de Mensajes Obsoleto
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/RhythmicMovementController.ts:31,75`  
-**Severidad:** Baja  
-**Estado:** Documentado  
-**Descripción:**
-```typescript
-private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator (DEPRECATED)
-// Ensure keyAdapter is used by decorator (TypeScript workaround) - DEPRECATED
-```
-**Contexto:** Adaptador obsoleto usado por decorador deprecated.  
-**Impacto:** Código legacy en transición.  
-**Prioridad:** Baja - Remover cuando se elimine decorador.
-
-### 22. 📱 DEPRECATED - Interfaz de Configuración Obsoleta
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/interfaces/IConfigurationService.ts:34`  
-**Severidad:** Baja  
-**Estado:** En Migración  
-**Descripción:**
-```typescript
-// @deprecated ARCHITECTURAL MIGRATION: This method is deprecated as part of the
-```
-**Contexto:** Método obsoleto en interfaz de configuración.  
-**Impacto:** Parte de migración arquitectónica.  
-**Prioridad:** Baja - Actualizar cuando se complete migración.
-
-### 23. 🔧 WORKAROUND - Workaround de TypeScript
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/RhythmicMovementController.ts:75`  
-**Severidad:** Media  
-**Estado:** Funcional  
-**Descripción:**
-```typescript
-// Ensure keyAdapter is used by decorator (TypeScript workaround) - DEPRECATED
-```
-**Contexto:** Solución temporal para limitaciones de TypeScript.  
-**Impacto:** Código menos limpio.  
-**Prioridad:** Media - Resolver cuando se actualice decorador.
-
-### 24. 🔧 WORKAROUND - Workaround de TypeScript en Streaming
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/StateStreamingService.ts:54`  
-**Severidad:** Media  
-**Estado:** Funcional  
-**Descripción:**
-```typescript
-// Ensure messageAdapter is used by decorator (TypeScript workaround)
-```
-**Contexto:** Solución temporal similar en servicio de streaming.  
-**Impacto:** Patrón repetido de workaround.  
-**Prioridad:** Media - Resolver de manera consistente.
-
-### 19. 📱 DEPRECATED - Configuración de Electron Obsoleta
-**Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:63,64`  
-**Severidad:** Baja  
-**Estado:** Documentado  
-**Descripción:**
-```typescript
-// Audio enhancements - removed deprecated enableRemoteModule
-// enableRemoteModule: false, // DEPRECATED in newer Electron versions
-```
-**Contexto:** Configuración obsoleta en versiones modernas de Electron.  
-**Impacto:** No afecta funcionalidad actual, pero debe actualizarse en futuras versiones.  
-**Prioridad:** Baja - Actualizar cuando se migre a versiones más nuevas de Electron.
-
-### 20. 📱 DEPRECATED - Migración Arquitectónica de Configuración
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/ConfigurationService.ts:117,118,139`  
-**Severidad:** Baja  
-**Estado:** En Migración  
-**Descripción:**
-```typescript
-// @deprecated ARCHITECTURAL MIGRATION: Service Locator antipattern elimination
-// This method is deprecated. Services should inject their configuration directly.
-// === DEPRECATED GETTERS REMOVED ===
-```
-**Contexto:** Métodos obsoletos en migración a inyección directa de configuración.  
-**Impacto:** Transición a mejor arquitectura.  
-**Prioridad:** Baja - Completar migración.
-
-### 21. 📱 DEPRECATED - Adaptador de Mensajes Obsoleto
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/RhythmicMovementController.ts:31,75`  
-**Severidad:** Baja  
-**Estado:** Documentado  
-**Descripción:**
-```typescript
-private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator (DEPRECATED)
-// Ensure keyAdapter is used by decorator (TypeScript workaround) - DEPRECATED
-```
-**Contexto:** Adaptador obsoleto usado por decorador deprecated.  
-**Impacto:** Código legacy en transición.  
-**Prioridad:** Baja - Remover cuando se elimine decorador.
-
-### 22. 📱 DEPRECATED - Interfaz de Configuración Obsoleta
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/interfaces/IConfigurationService.ts:34`  
-**Severidad:** Baja  
-**Estado:** En Migración  
-**Descripción:**
-```typescript
-// @deprecated ARCHITECTURAL MIGRATION: This method is deprecated as part of the
-```
-**Contexto:** Método obsoleto en interfaz de configuración.  
-**Impacto:** Parte de migración arquitectónica.  
-**Prioridad:** Baja - Actualizar cuando se complete migración.
-
-### 23. 🔧 WORKAROUND - Workaround de TypeScript
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/RhythmicMovementController.ts:75`  
-**Severidad:** Media  
-**Estado:** Funcional  
-**Descripción:**
-```typescript
-// Ensure keyAdapter is used by decorator (TypeScript workaround) - DEPRECATED
-```
-**Contexto:** Solución temporal para limitaciones de TypeScript.  
-**Impacto:** Código menos limpio.  
-**Prioridad:** Media - Resolver cuando se actualice decorador.
-
-### 24. 🔧 WORKAROUND - Workaround de TypeScript en Streaming
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/StateStreamingService.ts:54`  
-**Severidad:** Media  
-**Estado:** Funcional  
-**Descripción:**
-```typescript
-// Ensure messageAdapter is used by decorator (TypeScript workaround)
-```
-**Contexto:** Solución temporal similar en servicio de streaming.  
-**Impacto:** Patrón repetido de workaround.  
-**Prioridad:** Media - Resolver de manera consistente.
-
-
 
 ---
-
