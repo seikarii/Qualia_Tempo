@@ -14,6 +14,7 @@ import type { StreamingConfig, StateStreamingServiceParams } from "./contracts/I
 import type { ConnectionStatus, StreamingStatusChangedEvent, ConnectionStateType } from "./contracts/events.contracts";
 import { logMethod, catchError, AdaptAndEmit } from "../utils/decorators";
 import type { IStateStreamingService } from "./interfaces/IStateStreamingService";
+import type { IMessageAdapter } from "./protocol/IMessageAdapter";
 
 @injectable()
 export class StateStreamingService implements IStateStreamingService {
@@ -23,6 +24,7 @@ export class StateStreamingService implements IStateStreamingService {
   private readonly webSocketService: IWebSocketService;
   private readonly timerService: ITimerService;
   private readonly config: StreamingConfig;
+  private readonly rawToParticleEventAdapter: IMessageAdapter;
 
   // WebSocket connection state
   private connectionUrl: string;
@@ -38,12 +40,14 @@ export class StateStreamingService implements IStateStreamingService {
   private connectionStartTime = 0;
 
   constructor(
-    @inject(TYPES.StateStreamingServiceParams) params: StateStreamingServiceParams
+    @inject(TYPES.StateStreamingServiceParams) params: StateStreamingServiceParams,
+    @inject(TYPES.IRawToParticleEventAdapter) rawToParticleEventAdapter: IMessageAdapter
   ) {
     this.webSocketService = params.webSocketService;
     this.timerService = params.timerService;
     this.config = params.config;
     this.logger = params.logger;
+    this.rawToParticleEventAdapter = rawToParticleEventAdapter;
 
     // Build connection URL with authentication if enabled
     this.connectionUrl = this.config.websocket.url;
@@ -166,7 +170,7 @@ export class StateStreamingService implements IStateStreamingService {
    * - StateStreamingService no longer directly calls EventBus.emit
    * - Single Responsibility: WebSocket connection management ONLY
    */
-  @AdaptAndEmit(TYPES.IRawToParticleEventAdapter)
+  @AdaptAndEmit('rawToParticleEventAdapter')
   private onRawMessage(_data: ArrayBuffer): void {
     // ARCHITECTURAL COMPLIANCE: This method body contains ONLY business logic
     // that belongs to the StateStreamingService (statistics tracking).

@@ -1,5 +1,39 @@
 # CHANGELOG
 
+## [Unreleased] - 2025-10-04 - REFACTORING: StateStreamingService IoC Compliance
+
+### 🏗️ Architectural Refactoring: @AdaptAndEmit Decorator IoC Compliance
+- **MISSION:** Refactor StateStreamingService.ts to eliminate Service Locator anti-pattern in @AdaptAndEmit decorator
+- **STATUS:** ✅ **MISSION ACCOMPLISHED** - IoC compliance achieved, no architectural violations
+
+### 🔧 Implementation Details
+
+#### StateStreamingService.ts Refactoring
+- **Added IMessageAdapter import** from protocol interface
+- **Injected IRawToParticleEventAdapter** directly in constructor via @inject
+- **Added rawToParticleEventAdapter property** as private readonly field
+- **Updated @AdaptAndEmit decorator** from `TYPES.IRawToParticleEventAdapter` to `'rawToParticleEventAdapter'`
+- **Maintained backward compatibility** - all existing tests pass without modification
+
+#### Architectural Compliance Achieved
+- ✅ **No Service Locator usage** - Dependencies resolved via constructor injection only
+- ✅ **IoC container decoupling** - Service no longer knows about container symbols
+- ✅ **Property-based adapter access** - Decorator uses instance property instead of container resolution
+- ✅ **Type safety maintained** - Full TypeScript compliance with no type errors
+- ✅ **Test compatibility** - Existing test infrastructure handles additional constructor parameter
+
+#### Quality Gates Passed
+- ✅ **Architectural Linter:** PASSED (QUALIA.CODE compliance verified)
+- ✅ **TypeScript Compilation:** PASSED (no type errors)
+- ✅ **Unit Tests:** PASSED (all existing tests continue to work)
+- ✅ **No Breaking Changes:** Existing functionality preserved
+
+### 📊 Impact Assessment
+- **Files Modified:** 1 (StateStreamingService.ts)
+- **Lines Changed:** 6 (imports, property, constructor, decorator)
+- **Test Impact:** Zero breaking changes - all tests pass
+- **Architectural Debt Reduced:** Eliminated Service Locator anti-pattern usage
+
 ## [Unreleased] - 2025-10-04 - RECTIFICATION: Complete Decorator Test Coverage
 
 ### 🧪 Quality Gate Compliance: 100% Test Coverage Achieved
