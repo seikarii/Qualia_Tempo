@@ -54,7 +54,7 @@ function performValidation(
         { ...errorData, note: "Logger not found on instance, using console fallback" }
       );
     }
-    throw new Error(errorMessage);
+    throw new Error(error.message);
   }
   
   // Log success

@@ -144,7 +144,7 @@ describe('@validate Decorator', () => {
     const instance = { logger: mockLogger };
     
     // GOLD.CODE: Expect clean, unwrapped error message from performValidation
-    expect(() => decoratedMethod.call(instance, { invalid: 'data' })).toThrow("Schema validation failed: Validation failed");
+    expect(() => decoratedMethod.call(instance, { invalid: 'data' })).toThrow("Validation failed");
     expect(mockLogger.error).toHaveBeenCalled();
   });
 
