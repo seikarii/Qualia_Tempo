@@ -3,7 +3,7 @@ import { TYPES } from "./inversify.types";
 import type { QualiaStateCalculatedEvent, RhythmicDashEvent, MetronomeTickEvent } from "./contracts/events.contracts";
 import type { IOntologicalAudioEngine } from "../audio/IOntologicalAudioEngine";
 import type { QualiaState } from "../types/contracts";
-import { logMethod, catchError, measureTime, IBaseService, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
+import { logMethod, catchError, measureTime, validate, IBaseService, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 import { AUDIO_WAVEFORM_TYPES, AUDIO_EVENT_TYPES, type AudioWaveformType } from "./contracts/constants";
 
 import type { IAudioService } from "./interfaces/IAudioService";
@@ -227,6 +227,7 @@ export class AudioService implements IAudioService, IBaseService {
 
   @logMethod
   @catchError
+  @validate('QualiaState')
   public createEntityVoice(entityId: string, qualiaState: QualiaState): void {
     if (!this.audioEngine || !this.isInitialized) {
       const audioConfig = this.config;

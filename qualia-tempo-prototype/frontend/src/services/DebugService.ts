@@ -14,7 +14,7 @@
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions, BrowserOnly } from "../utils/decorators";
+import { logMethod, catchError, validate, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions, BrowserOnly } from "../utils/decorators";
 import { EVENT_TYPES } from "./contracts/constants";
 import { AI_ANALYSIS_TYPES, SEVERITY_LEVELS, DEBUG_SESSION_PREFIX } from "./contracts/constants";
 import type {
@@ -232,6 +232,7 @@ export class DebugService implements IDebugService, IBaseService {
    */
   @logMethod
   @catchError
+  @validate('BaseEvent')
   public logEvent(event: BaseEvent): void {
     if (!this.isStarted) {
       return;
@@ -478,6 +479,7 @@ export class DebugService implements IDebugService, IBaseService {
 
   // @ts-expect-error - Used by @OnEvent decorator
   @logMethod()
+  @validate('BaseEvent')
   @OnEvent('*')
   public handleGenericEvent(event: BaseEvent): void {
     this.recordEvent(event);

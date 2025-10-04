@@ -130,39 +130,54 @@ describe('@validate Decorator', () => {
   });
 
   it('should throw error and log when validation fails', () => {
-    // Test the decorator as a function, not via TypeScript decorator syntax
-    // This bypasses any decorator mocking issues
+    // Test the decorator using PropertyDescriptor pattern
     const originalMethod = function(this: any, data: any) {
       return 'should not reach here';
     };
     
-    const decoratedMethod = validate('InvalidSchema')(
-      originalMethod,
-      { name: 'failValidation', kind: 'method' } as any
+    const descriptor = {
+      value: originalMethod,
+      writable: true,
+      enumerable: false,
+      configurable: true
+    };
+    
+    const decoratedDescriptor = validate('InvalidSchema')(
+      {},
+      'failValidation',
+      descriptor
     );
     
     const instance = { logger: mockLogger };
     
     // GOLD.CODE: Expect clean, unwrapped error message from performValidation
-    expect(() => decoratedMethod.call(instance, { invalid: 'data' })).toThrow("Validation failed");
+    expect(() => decoratedDescriptor.value.call(instance, { invalid: 'data' })).toThrow("Validation failed");
     expect(mockLogger.error).toHaveBeenCalled();
   });
 
   it('should throw error when schema does not exist in registry', () => {
-    // Test the decorator as a function, not via TypeScript decorator syntax
+    // Test the decorator using PropertyDescriptor pattern
     const originalMethod = function(this: any, data: any) {
       return 'should not reach here';
     };
     
-    const decoratedMethod = validate('NonExistentSchema')(
-      originalMethod,
-      { name: 'methodWithMissingSchema', kind: 'method' } as any
+    const descriptor = {
+      value: originalMethod,
+      writable: true,
+      enumerable: false,
+      configurable: true
+    };
+    
+    const decoratedDescriptor = validate('NonExistentSchema')(
+      {},
+      'methodWithMissingSchema',
+      descriptor
     );
     
     const instance = { logger: mockLogger };
     
     // GOLD.CODE: Expect clean, unwrapped error message from getSchemaFromRegistry
-    expect(() => decoratedMethod.call(instance, { data: 'test' })).toThrow("Schema 'NonExistentSchema' not found in registry");
+    expect(() => decoratedDescriptor.value.call(instance, { data: 'test' })).toThrow("Schema 'NonExistentSchema' not found in registry");
     expect(mockLogger.error).toHaveBeenCalled();
   });
 });

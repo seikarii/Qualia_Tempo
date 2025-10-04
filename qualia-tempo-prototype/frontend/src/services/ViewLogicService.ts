@@ -86,6 +86,9 @@ export class ViewLogicService implements IViewLogicService {
     }
   }
 
+  /**
+   * @validation-exempt: Hot-path method called >60fps. Data originates from trusted internal state store (Zustand). Performance outweighs redundant validation.
+   */
   @logMethod
   @catchError
   @measureTime
@@ -246,6 +249,9 @@ export class ViewLogicService implements IViewLogicService {
     };
   }
 
+  /**
+   * @validation-exempt: Hot-path method called >60fps. Data originates from trusted internal state store (Zustand). Performance outweighs redundant validation.
+   */
   @logMethod
   @catchError
   getPlayerVisuals(playerState: PlayerState, performance: PerformanceData, time: number): PlayerVisualData {
@@ -351,6 +357,9 @@ export class ViewLogicService implements IViewLogicService {
     };
   }
 
+  /**
+   * @validation-exempt: Hot-path method called >60fps. Data originates from trusted internal state store (Zustand). Performance outweighs redundant validation.
+   */
   @logMethod
   @catchError
   @measureTime
@@ -502,6 +511,9 @@ export class ViewLogicService implements IViewLogicService {
     });
   }
 
+  /**
+   * @validation-exempt: Hot-path method called >60fps. Data originates from trusted internal state store (Zustand). Performance outweighs redundant validation.
+   */
   @logMethod
   @catchError
   getQualiaFieldParticles(qualiaState: QualiaState, musicData: MusicData, time: number): ParticleData[] {

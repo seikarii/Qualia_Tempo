@@ -9,6 +9,7 @@ import type { BackendSyncEvent, ErrorEvent, QualiaStateCalculatedEvent } from ".
 import {
   logMethod,
   catchError,
+  validate,
   validateEventProperty,
   IBaseService,
   OnEvent,
@@ -430,6 +431,7 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
    */
   @logMethod
   @catchError
+  @validate('QualiaState')
   public async syncQualiaState(state: QualiaState): Promise<void> {
     const qualiaRequest: QualiaStateRequest = {
       intensity: state.intensity || 0,

@@ -71,17 +71,19 @@ function performValidation(
 /**
  * Schema validation decorator.
  * Usage: @validate('QualiaState')
+ * Compatible with TypeScript 5.9.2 using PropertyDescriptor pattern (matching other decorators)
  */
 export function validate(schemaName: string) {
   return function (
-    value: (..._args: unknown[]) => unknown,
-    context: ClassMethodDecoratorContext
-  ): (..._args: unknown[]) => unknown {
-    const methodName = String(context.name);
+    _target: unknown,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ): PropertyDescriptor {
+    const method = descriptor.value;
 
-    return function (this: unknown, ...args: unknown[]) {
+    descriptor.value = function (this: unknown, ...args: unknown[]) {
       const className = (this as Record<string, unknown>).constructor.name;
-      const fullMethodName = `${className}.${methodName}`;
+      const fullMethodName = `${className}.${propertyKey}`;
       const instanceLogger = getLogger(this);
 
       // Validate first argument if present
@@ -96,7 +98,9 @@ export function validate(schemaName: string) {
         });
       }
 
-      return value.apply(this, args);
+      return method.apply(this, args);
     };
+
+    return descriptor;
   };
 }

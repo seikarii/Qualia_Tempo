@@ -22,6 +22,7 @@ import type { QualiaState } from "../types/contracts";
 import {
   logMethod,
   catchError,
+  validate,
   OnEvent,
   IBaseService,
   initializeEventSubscriptions,
@@ -122,6 +123,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
 
   @logMethod
   @catchError
+  @validate('QualiaState')
   updateQualiaState(state: QualiaState): void {
     this.setStore((currentState: GameState) => 
       this.stateMergerService.deepMerge(currentState, { qualiaState: { ...state } })

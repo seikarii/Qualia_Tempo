@@ -23,7 +23,7 @@ import { QualiaStateCalculatedEvent } from "./contracts/events.contracts";
 import type { PlayerActionEvent } from "./contracts/events.contracts";
 import type { QualiaState } from "../types/contracts";
 import type { IPerformanceService } from "./interfaces/IPerformanceService";
-import { logMethod, catchError, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
+import { logMethod, catchError, validate, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 import { EVENT_TYPES, PLAYER_ACTIONS } from "./contracts/constants";
 
 // Configuration interface - REMOVED: Using ConfigurationService interface
@@ -369,6 +369,7 @@ export class QualiaStateCalculatorService
    */
   @logMethod
   @catchError
+  @validate('PlayerActionEvent')
   public calculateQualiaState(_action: PlayerActionEvent): QualiaState {
     // This method would process the action and return updated state
     // For now, return current state (implementation can be expanded)
