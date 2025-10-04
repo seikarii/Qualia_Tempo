@@ -51,6 +51,7 @@ import type { IBackendSyncService } from "../services/interfaces/IBackendSyncSer
 import type { IAudioAnalysisService } from "../services/interfaces/IAudioAnalysisService";
 import type { IPhysicsService } from "../services/interfaces/IPhysicsService";
 import type { IInputStateService } from "../services/interfaces/IInputStateService";
+import type { IWebAudioAPIService } from "../services/interfaces/IWebAudioAPIService";
 
 // Import real services for pure utilities (no side effects)
 import { ColorService } from "../services/ColorService";
@@ -85,6 +86,7 @@ import { mockErrorReportingService } from "./mocks/error-reporting-service.mock"
 // QUALIA.CODE v2.0: Audio Analysis and Physics Service mocks
 import { mockAudioAnalysisService } from "./mocks/audio-analysis-service.mock";
 import { mockPhysicsService } from "./mocks/physics-service.mock";
+import { mockWebAudioAPIService } from "./mocks/web-audio-api-service.mock";
 import { mockDebugService } from "./mocks/debug-service.mock";
 import { mockSubtitleService } from "./mocks/subtitle-service.mock";
 import { mockRhythmicMovementController } from "./mocks/rhythmic-movement-controller.mock";
@@ -378,6 +380,7 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   testContainer.bind<IRhythmicMovementController>(TYPES.IRhythmicMovementController).toConstantValue(mockRhythmicMovementController);
   testContainer.bind<IBackendSyncService>(TYPES.IBackendSyncService).toConstantValue(mockBackendSyncService);
   testContainer.bind<IInputStateService>(TYPES.IInputStateService).toConstantValue(mockInputStateService);
+  testContainer.bind<IWebAudioAPIService>(TYPES.IWebAudioAPIService).toConstantValue(mockWebAudioAPIService);
   
   // QUALIA.CODE v2.0: Audio Analysis and Physics Services
   testContainer.bind<IAudioAnalysisService>(TYPES.IAudioAnalysisService).toConstantValue(mockAudioAnalysisService);

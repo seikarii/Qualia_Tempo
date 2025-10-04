@@ -2,19 +2,30 @@ import { vi } from "vitest";
 import type { ITimerService } from "../../services/interfaces/ITimerService";
 
 /**
- * QUALIA.CODE v1.1: High-Fidelity Timer Service Mock
+ * QUALIA.CODE v2.0: High-Fidelity Timer Service Mock
  * 
- * CRITICAL: This mock MUST execute timer callbacks immediately to simulate
- * the behavior of real timers in tests. This is essential for:
- * - EventBus error event emission (uses setTimeout internally)
- * - Any asynchronous operations that depend on timers
+ * CRITICAL UPDATES:
+ * - `requestAnimationFrame` now STORES callbacks instead of executing immediately
+ * - This prevents infinite recursion in services that use RAF loops
+ * - Tests can manually trigger callbacks via exported `rafCallbacks` array
  * 
- * LOW-FIDELITY ANTI-PATTERN (FORBIDDEN):
- * setTimeout: vi.fn() // Returns undefined, callbacks never execute
+ * ANTI-PATTERN (FORBIDDEN):
+ * requestAnimationFrame: vi.fn((callback) => { callback(); return 1; }) // Causes stack overflow
  * 
  * HIGH-FIDELITY PATTERN (MANDATORY):
- * setTimeout: vi.fn((callback) => { callback(); return 1; })
+ * requestAnimationFrame: vi.fn((callback) => { rafCallbacks.push(callback); return rafCallbacks.length; })
  */
+
+// Exported array for tests to manually trigger RAF callbacks
+export const rafCallbacks: Array<() => void> = [];
+
+/**
+ * Helper to clear RAF callbacks between tests
+ */
+export const clearRafCallbacks = () => {
+  rafCallbacks.length = 0;
+};
+
 export const mockTimerService: ITimerService = {
   // CRITICAL: Execute callback immediately and return a timer ID
   setTimeout: vi.fn((callback: () => void, _delay?: number) => {
@@ -38,10 +49,11 @@ export const mockTimerService: ITimerService = {
   now: vi.fn(() => Date.now()),
   // Return current Date object
   getCurrentDate: vi.fn(() => new Date()),
-  // Execute callback immediately and return a frame ID
+  // CRITICAL: STORE callback instead of executing immediately
+  // This prevents infinite recursion in services using RAF loops
   requestAnimationFrame: vi.fn((callback: () => void) => {
-    callback();
-    return 1; // Return a valid frame ID
+    rafCallbacks.push(callback);
+    return rafCallbacks.length; // Return callback index as ID
   }),
   cancelAnimationFrame: vi.fn(),
   // Return current performance timestamp
