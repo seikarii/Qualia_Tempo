@@ -1,17 +1,17 @@
 # 📋 DEUDA TÉCNICA - QUALIA TEMPO
-*Última actualización: 3 de octubre de 2025 - 12:00*
+*Última actualización: 4 de octubre de 2025 - 12:00*
 
 ---
 
 ## 📊 Resumen Ejecutivo
 
-**Estado General: EXCELENTE** - Solo 22 instancias de deuda técnica activas (21 entradas agrupadas, 2 resueltas)
-**Puntuación de Calidad: 9.2/10** ⭐⭐⭐⭐⭐⭐⭐⭐⭐⚫ (mejorado tras refactorización CRISALIDA.CODE)
+**Estado General: EXCELENTE** - Solo 21 instancias de deuda técnica activas (20 entradas agrupadas, 3 resueltas)
+**Puntuación de Calidad: 9.3/10** ⭐⭐⭐⭐⭐⭐⭐⭐⭐⚫ (mejorado tras eliminación de código muerto)
 
 ### Estadísticas por Severidad
-- **Resueltas**: 2 instancias (2 de severidad Media)
-- **Baja**: 13 instancias (59%)
-- **Media**: 9 instancias (41%)
+- **Resueltas**: 3 instancias (3 de severidad Baja)
+- **Baja**: 12 instancias (57%)
+- **Media**: 9 instancias (43%)
 - **Media-Alta**: 0 instancias (0%)
 - **TOTAL ACTIVAS**: 22 instancias
 - **TOTAL HISTÓRICAS**: 24 instancias
@@ -83,7 +83,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Prioridad:** Media - Integrar servicios de audio y física.
 
 
-### 4. 🏗️ PLACEHOLDER - Configuración de Audio Placeholder (EASY)
+### 3. 🏗️ PLACEHOLDER - Configuración de Audio Placeholder (EASY) (LOW PRIORITY)
 **Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:203,205`  
 **Severidad:** Baja  
 **Estado:** Funcional  
@@ -231,18 +231,6 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Sistema de subtítulos más dinámico.  
 **Prioridad:** Baja - Implementar cuando se mejore timing.
 
-### 18. 📱 DEPRECATED - Método de Rendering Obsoleto (MEDIUM)
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/FrontendRenderingService.ts:349`  
-**Severidad:** Baja  
-**Estado:** Documentado  
-**Descripción:**
-```typescript
-// DEPRECATED: This method is no longer used. Particle data comes from backend via updateParticleBuffer.
-```
-**Contexto:** Método obsoleto reemplazado por nueva implementación.  
-**Impacto:** Código legacy documentado.  
-**Prioridad:** Baja - Remover en futura refactorización.
-
 ### 19. 📱 DEPRECATED - Configuración de Electron Obsoleta
 **Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:63,64`  
 **Severidad:** Baja  
@@ -318,16 +306,6 @@ private keyAdapter: IMessageAdapter; // Used by @AdaptAndEmit decorator (DEPRECA
 **Contexto:** Solución temporal similar en servicio de streaming.  
 **Impacto:** Patrón repetido de workaround.  
 **Prioridad:** Media - Resolver de manera consistente.
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/FrontendRenderingService.ts:349`  
-**Severidad:** Baja  
-**Estado:** Documentado  
-**Descripción:**
-```typescript
-// DEPRECATED: This method is no longer used. Particle data comes from backend via updateParticleBuffer.
-```
-**Contexto:** Método obsoleto reemplazado por nueva implementación.  
-**Impacto:** Código legacy documentado.  
-**Prioridad:** Baja - Remover en futura refactorización.
 
 ### 19. 📱 DEPRECATED - Configuración de Electron Obsoleta
 **Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:63,64`  

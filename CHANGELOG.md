@@ -1,6 +1,21 @@
 # CHANGELOG
 
-## [Unreleased] - 2025-10-04 - Code Refinement: GameStateStoreService Redundancy Elimination
+## [Unreleased] - 2025-10-04 - CRISALIDA.CODE Enforcement: FrontendRenderingService Dead Code Elimination
+
+### 🧹 Code Quality
+- **FrontendRenderingService Refactoring:** Eliminated dead code and aligned with QUALIA.CODE v1.1 architecture standards:
+  - Removed obsolete `particleDataListenerId` property that was no longer used
+  - Eliminated manual event unsubscription block in `stop()` method, relying exclusively on automatic cleanup via `@OnEvent` pattern
+  - Removed deprecated comment about unused method to eliminate confusion
+- **Architectural Compliance:** Service now follows QUALIA.CODE's exclusive use of `@OnEvent` decorator and `IBaseService` lifecycle management
+- **Test Integrity:** All 156 tests pass without modification, confirming no regressions introduced
+
+### 📋 Documentation
+- **TODO.md Update:** Removed completed TODO item for FrontendRenderingService deprecated method cleanup
+
+### 🏗️ Architecture
+- **Event Management Standardization:** FrontendRenderingService now exclusively uses the `@OnEvent` pattern for event lifecycle management, eliminating manual subscription/unsubscription code that violated QUALIA.CODE decoupling principles
+- **Code Complexity Reduction:** Removed 6 lines of dead code, improving maintainability and reducing potential confusion for future developers
 
 ### 🧹 Code Quality
 - **GameStateStoreService Refinement:** Eliminated redundant null checks and unused method in `handlePlayerAction`. The primary null guard `if (!this.currentCombatData)` now sufficiently protects against uninitialized state, making subsequent `ensureCombatDataInitialized()` call and `currentCombatData?.noteMap` check obsolete. Removed the unused `ensureCombatDataInitialized()` method to maintain DRY principles and code cleanliness.

@@ -71,9 +71,6 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
   private fps = 0;
   private frameTime = 0;
 
-  // Event handling
-  private particleDataListenerId: string | null = null;
-
   // QUALIA.CODE v1.1: Required for @OnEvent lifecycle
   public _eventListeners: string[] = [];
 
@@ -367,16 +364,8 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
       this.animationId = null;
     }
 
-    // Unsubscribe from particle data events
-    if (this.particleDataListenerId !== null) {
-      this.eventBus.unsubscribe(this.particleDataListenerId);
-      this.particleDataListenerId = null;
-    }
-
     this.logger.info("FrontendRenderingService stopped");
   }
-
-  // DEPRECATED: This method is no longer used. Particle data comes from backend via updateParticleBuffer.
 
   @logMethod
   resize(width: number, height: number): void {
