@@ -66,6 +66,11 @@ module.exports = {
             return;
           }
 
+          // Whitelist: Allow in decorators.ts (IoC resolution for @AdaptAndEmit decorator)
+          if (filename.endsWith('decorators.ts')) {
+            return;
+          }
+
           // If we reach here, it's a violation
           context.report({
             node,

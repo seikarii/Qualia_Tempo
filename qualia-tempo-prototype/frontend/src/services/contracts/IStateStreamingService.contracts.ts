@@ -7,15 +7,14 @@
 import type { IWebSocketService } from '../interfaces/IWebSocketService';
 import type { ITimerService } from '../interfaces/ITimerService';
 import type { ILogger } from '../interfaces/ILogger';
-import type { IMessageAdapter } from '../protocol/IMessageAdapter';
 
-// QUALIA.CODE v1.1: Constructor parameter object pattern (max 4 parameters rule)
+// QUALIA.CODE v1.2: Constructor parameter object pattern (max 4 parameters rule)
+// messageAdapter removed - now resolved via IoC container in @AdaptAndEmit decorator
 export interface StateStreamingServiceParams {
   webSocketService: IWebSocketService;
   timerService: ITimerService;
   config: StreamingConfig;
   logger: ILogger;
-  messageAdapter: IMessageAdapter;
 }
 
 export interface StreamingConfig {

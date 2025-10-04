@@ -504,12 +504,12 @@ function bindServiceParameterObjects(fullConfig: FullGameConfig): void {
  * Bind gameplay-related service parameter objects.
  */
 function bindGameplayServiceParams(fullConfig: FullGameConfig): void {
+  // QUALIA.CODE v1.2: keyAdapter removed - @AdaptAndEmit decorator was never used in this service
   safeBindConstant<RhythmicMovementControllerParams>(TYPES.RhythmicMovementControllerParams, {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
     config: fullConfig.rhythmicMovement,
     timerService: container.get<ITimerService>(TYPES.ITimerService),
-    keyAdapter: container.get<IEventTransformer<PlayerInputEvent, PlayerDirectionEvent>>(TYPES.IKeyToDirectionAdapter),
     inputStateService: container.get<IInputStateService>(TYPES.IInputStateService),
     gameplayMechanicsService: container.get<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService),
   });
@@ -575,12 +575,12 @@ function bindCommunicationServiceParams(fullConfig: FullGameConfig): void {
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
   });
 
+  // QUALIA.CODE v1.2: messageAdapter removed - now resolved via IoC in @AdaptAndEmit decorator
   safeBindConstant<StateStreamingServiceParams>(TYPES.StateStreamingServiceParams, {
     webSocketService: container.get<IWebSocketService>(TYPES.IWebSocketService),
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     config: fullConfig.backendSync.streaming,
     logger: container.get<ILogger>(TYPES.ILogger),
-    messageAdapter: container.get<IMessageAdapter>(TYPES.IRawToParticleEventAdapter),
   });
 
   safeBindConstant<WebSocketServiceParams>(TYPES.WebSocketServiceParams, {

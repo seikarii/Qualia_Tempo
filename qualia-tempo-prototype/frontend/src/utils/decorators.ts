@@ -5,6 +5,8 @@
 import { schemaRegistry } from "../schemas";
 import { EmergencyLogger } from "./EmergencyLogger";
 import type { ILogger } from "../services/interfaces/ILogger";
+import { container } from "../services/inversify.container";
+import { TYPES } from "../services/inversify.types";
 
 // QUALIA.CODE v1.1: Type helper for instances with logger
 interface InstanceWithLogger {
@@ -549,13 +551,15 @@ export function validateEventProperty(
 
 /**
  * @AdaptAndEmit decorator for Protocol Adapter Bundle.
- * Automatically adapts raw data using the injected adapter and emits the result.
- * Implements the architectural pattern for protocol translation at system boundaries.
+ * QUALIA.CODE v1.2 - IoC Compliant Implementation
  * 
- * @param adapterPropertyKey - Name of the property containing the injected adapter
+ * Automatically adapts raw data using IoC-resolved adapter and emits via IoC-resolved EventBus.
+ * Eliminates Service Locator anti-pattern by resolving dependencies from InversifyJS container.
+ * 
+ * @param adapterIdentifier - Symbol identifier for the adapter service in IoC container
  * @returns Method decorator that intercepts, adapts, and emits data
  */
-export function AdaptAndEmit(adapterPropertyKey: string | symbol) {
+export function AdaptAndEmit(adapterIdentifier: symbol) {
   return function (_target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
@@ -563,7 +567,7 @@ export function AdaptAndEmit(adapterPropertyKey: string | symbol) {
       const params = {
         instance: this,
         propertyKey,
-        adapterPropertyKey,
+        adapterIdentifier,
         originalMethod,
         args
       };
@@ -577,26 +581,23 @@ export function AdaptAndEmit(adapterPropertyKey: string | symbol) {
 function adaptAndEmitImpl(params: {
   instance: unknown;
   propertyKey: string;
-  adapterPropertyKey: string | symbol;
+  adapterIdentifier: symbol;
   originalMethod: (..._args: unknown[]) => unknown;
   args: unknown[];
 }): unknown {
-  const { instance, propertyKey, adapterPropertyKey, originalMethod, args } = params;
+  const { instance, propertyKey, adapterIdentifier, originalMethod, args } = params;
   const rawData = args[0];
-  const instanceWithDeps = instance as InstanceWithDependencies;
-  const className = instanceWithDeps.constructor.name;
+  const instanceWithLogger = instance as InstanceWithLogger;
+  const className = instanceWithLogger.constructor.name;
   const fullMethodName = `${className}.${propertyKey}`;
 
   try {
-    validateDependencies(instanceWithDeps, adapterPropertyKey, className);
-    const adapter = instanceWithDeps[adapterPropertyKey] as IMessageAdapter;
-    const eventBus = instanceWithDeps.eventBus; // Validated above, no non-null assertion needed
+    // QUALIA.CODE v1.2: IoC Container Resolution - Eliminates Service Locator
+    // Dependencies are resolved from the container, not looked up on instance properties
+    const adapter = container.get<IMessageAdapter>(adapterIdentifier);
+    const eventBus = container.get<IEventBus>(TYPES.IEventBus);
 
-    if (!eventBus) {
-      throw new Error('EventBus should be validated by validateDependencies');
-    }
-
-    logAdaptAndEmitStart(instance, fullMethodName, adapterPropertyKey, rawData);
+    logAdaptAndEmitStart(instance, fullMethodName, adapterIdentifier, rawData);
 
     const adaptedEvent = adapter.adapt(rawData);
     eventBus.emit(adaptedEvent);
@@ -606,40 +607,21 @@ function adaptAndEmitImpl(params: {
     return originalMethod.apply(instance, args);
 
   } catch (error) {
-    handleAdaptAndEmitError(instance, fullMethodName, adapterPropertyKey, error);
+    handleAdaptAndEmitError(instance, fullMethodName, adapterIdentifier, error);
     throw error;
-  }
-}
-
-function validateDependencies(
-  instance: InstanceWithDependencies,
-  adapterPropertyKey: string | symbol,
-  className: string
-): void {
-  const adapter = instance[adapterPropertyKey];
-  if (!adapter) {
-    const errorMsg = `Architectural Violation: Decorated class ${className} is missing required property '${String(adapterPropertyKey)}'. Ensure the adapter is injected and assigned in the constructor.`;
-    EmergencyLogger.error(errorMsg);
-    throw new Error(errorMsg);
-  }
-
-  if (!instance.eventBus) {
-    const errorMsg = `Architectural Violation: Decorated class ${className} is missing required property 'eventBus'. Ensure IEventBus is injected and assigned.`;
-    EmergencyLogger.error(errorMsg);
-    throw new Error(errorMsg);
   }
 }
 
 function logAdaptAndEmitStart(
   instance: unknown,
   fullMethodName: string,
-  adapterPropertyKey: string | symbol,
+  adapterIdentifier: symbol,
   rawData: unknown
 ): void {
   const instanceLogger = getLogger(instance);
   if (instanceLogger) {
     instanceLogger.debug(`🔄 @AdaptAndEmit processing in ${fullMethodName}`, {
-      adapterProperty: adapterPropertyKey,
+      adapterIdentifier: adapterIdentifier.toString(),
       rawDataType: typeof rawData,
       timestamp: new Date().toISOString()
     });
@@ -664,14 +646,14 @@ function logAdaptAndEmitSuccess(
 function handleAdaptAndEmitError(
   instance: unknown,
   fullMethodName: string,
-  adapterPropertyKey: string | symbol,
+  adapterIdentifier: symbol,
   error: unknown
 ): void {
   const instanceLogger = getLogger(instance);
   if (instanceLogger) {
     instanceLogger.error(`🚨 @AdaptAndEmit failed in ${fullMethodName}`, {
       error: error instanceof Error ? error.message : String(error),
-      adapterProperty: adapterPropertyKey,
+      adapterIdentifier: adapterIdentifier.toString(),
       timestamp: new Date().toISOString()
     });
   } else {

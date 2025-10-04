@@ -25,7 +25,7 @@
 4. AGREGAR SERVICIO DE BENCHMARKING
 5. ARREGLAR EL PANDEL DE DIAGNOSTICO,MOSTRARLO Y AÑADIR LA PARTE DE BENCHMARK
 6. MEJORAR EL MENU INICIAL
-8. INSPECCIONAR NUEVOS DECORADORES Y DEPRECATED (refactorizar adaptandemit para que no contenga un patron de service locator, agregar problamemente algun decorador de cache o de workers)
+8. ~~INSPECCIONAR NUEVOS DECORADORES Y DEPRECATED (refactorizar adaptandemit para que no contenga un patron de service locator~~ ✅ **COMPLETADO 2025-10-04** - @AdaptAndEmit refactorizado a IoC puro. Agregar probablemente algun decorador de cache o de workers)
 9. REVISAR DEBUGSERVICE,NOTIFICATION,ERRORSERVICE Y SU INTEGRACION CON EL RESTO DEL PROJECTO
 10. MEJORAR MENU INICIAL, UTILIZAR LETRAS NEON
 11. MEJORAR EL MOTOR PARA QUE CREE ONDAS Y CAMPOS QUE SE RESUELVEN Y RENDERIZAN EN PARTICULAS EN VEZ DEL REVES
@@ -96,7 +96,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Funcionalidad básica presente.  
 **Prioridad:** Baja - Implementar cuando se expanda soporte de audio.
 
-### 5. 🏗️ PLACEHOLDER - Buffer de Vértices Placeholder (MEDIUM)
+### 4. 🏗️ PLACEHOLDER - Buffer de Vértices Placeholder (MEDIUM)
 **Archivo:** `qualia-tempo-prototype/backend/services/RenderingService.py:86`  
 **Severidad:** Media  
 **Estado:** Funcional  
@@ -108,7 +108,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Sistema de rendering básico funcional.  
 **Prioridad:** Media - Implementar buffer de vértices real.
 
-### 9. 🔮 FUTURE - Configuración Futura de Servicios
+### 5. 🔮 FUTURE - Configuración Futura de Servicios
 **Archivo:** `qualia-tempo-prototype/backend/services/RenderingService.py:86`  
 **Severidad:** Media  
 **Estado:** Funcional  
@@ -120,116 +120,7 @@ velocity: [0, 0, 0], // TODO: Get from physics service
 **Impacto:** Sistema de rendering básico funcional.  
 **Prioridad:** Media - Implementar buffer de vértices real.
 
-### 6. 🔮 FUTURE - Configuración Futura de Servicios (EASY)
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/inversify.config.ts:35`  
-**Severidad:** Baja  
-**Estado:** Planificado  
-**Descripción:**
-```typescript
-// Future configuration imports for additional services
-```
-**Contexto:** Imports preparados para servicios futuros.  
-**Impacto:** Preparación para expansión.  
-**Prioridad:** Baja - Implementar cuando se agreguen nuevos servicios.
 
-### 7. 🔮 FUTURE - Extensibilidad Futura en Servicios (EASY)
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/NotificationService.ts:77,78`  
-**Severidad:** Baja  
-**Estado:** Planificado  
-**Descripción:**
-```typescript
-// Configuration service for future extensibility
-// @ts-expect-error - Unused parameter for future configuration features
-```
-**Contexto:** Parámetros reservados para funcionalidades futuras.  
-**Impacto:** Diseño extensible.  
-**Prioridad:** Baja - Implementar cuando se expanda funcionalidad.
-
-### 8. 🔮 FUTURE - Manejo Futuro de Acciones del Jugador (EASY)
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/GameControllerService.ts:216,333`  
-**Severidad:** Baja  
-**Estado:** Planificado  
-**Descripción:**
-```typescript
-// @ts-expect-error - Reserved for future player action handling
-// @ts-expect-error - Reserved for future game state change handling
-```
-**Contexto:** Manejo reservado para acciones futuras del jugador.  
-**Impacto:** Arquitectura preparada para expansión.  
-**Prioridad:** Baja - Implementar cuando se agreguen nuevas acciones.
-
-### 9. 🔮 FUTURE - Contexto de Contenedor Futuro (EASY)
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/CompositionRoot.provider.ts:17`  
-**Severidad:** Baja  
-**Estado:** Planificado  
-**Descripción:**
-```typescript
-// is globally configured. In the future, this could provide container context
-```
-**Contexto:** Posibilidad futura de contexto de contenedor.  
-**Impacto:** Flexibilidad arquitectónica.  
-**Prioridad:** Baja - Implementar si se requiere contexto.
-
-### 10. 🔮 FUTURE - Extensibilidad en Servicio de Debug (EASY)
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/DebugService.ts:58,59`  
-**Severidad:** Baja  
-**Estado:** Planificado  
-**Descripción:**
-```typescript
-// Configuration service for future extensibility
-// @ts-expect-error - Unused parameter for future configuration features
-```
-**Contexto:** Extensibilidad preparada en servicio de debug.  
-**Impacto:** Debugging futuro más robusto.  
-**Prioridad:** Baja - Implementar cuando se expanda debugging.
-
-### 11. 🔮 FUTURE - Cálculo Basado en Longitud de Letra (EASY)
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/SubtitleService.ts:76`  
-**Severidad:** Baja  
-**Estado:** Planificado  
-**Descripción:**
-```typescript
-// based on lyric length or other factors in the future
-```
-**Contexto:** Cálculo futuro basado en longitud de letra.  
-**Impacto:** Sistema de subtítulos extensible.  
-**Prioridad:** Baja - Implementar cuando se mejore timing.
-
-### 12. 🔮 FUTURE - Ratio de Poder para Uso Futuro (EASY)
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/ViewLogicService.ts:88`  
-**Severidad:** Baja  
-**Estado:** Planificado  
-**Descripción:**
-```typescript
-// Power ratio calculation for future use
-```
-**Contexto:** Cálculo de ratio de poder reservado.  
-**Impacto:** Lógica de vista preparada.  
-**Prioridad:** Baja - Implementar cuando se use.
-
-### 13. 🔮 FUTURE - Opacidad de Flujo Reservada (EASY)
-**Archivo:** `qualia-tempo-prototype/frontend/src/components/game/PlayerAvatar.tsx:13`  
-**Severidad:** Baja  
-**Estado:** Planificado  
-**Descripción:**
-```typescript
-
-```
-**Contexto:** Opacidad de flujo comentada para uso futuro.  
-**Impacto:** Efectos visuales preparados.  
-**Prioridad:** Baja - Implementar cuando se agreguen efectos.
-
-### 14. 🔮 FUTURE - Timing de Subtítulos Basado en Longitud (EASY)
-**Archivo:** `qualia-tempo-prototype/frontend/src/services/SubtitleService.ts:76`  
-**Severidad:** Baja  
-**Estado:** Planificado  
-**Descripción:**
-```typescript
-// based on lyric length or other factors in the future
-```
-**Contexto:** Cálculo de timing de subtítulos basado en longitud de letra para futuro.  
-**Impacto:** Sistema de subtítulos más dinámico.  
-**Prioridad:** Baja - Implementar cuando se mejore timing.
 
 ### 19. 📱 DEPRECATED - Configuración de Electron Obsoleta
 **Archivo:** `qualia-tempo-prototype/frontend/src/main.ts:63,64`  

@@ -10,20 +10,18 @@ import type { CoordinateSystemConfig } from "./ICoordinateSystemService.contract
 import type { IEventBus } from "../interfaces/IEventBus";
 import type { ILogger } from "../interfaces/ILogger";
 import type { ITimerService } from "../interfaces/ITimerService";
-import type { IEventTransformer } from "../protocol/IEventTransformer";
 import type { IInputStateService } from "../interfaces/IInputStateService";
 import type { IGameplayMechanicsService } from "../interfaces/IGameplayMechanicsService";
-import type { PlayerInputEvent, PlayerDirectionEvent } from "./events.contracts";
 
-// QUALIA.CODE v1.1: Constructor Parameter Object
-// Consolidates 7 constructor parameters into a single object to comply with IoC limits
+// QUALIA.CODE v1.2: Constructor Parameter Object
+// Consolidates constructor parameters into a single object to comply with IoC limits
 // CRISALIDA.CODE Phase 2: Removed gameStateStore dependency for pure reactive architecture
+// keyAdapter removed - @AdaptAndEmit decorator was never used in this service (legacy code)
 export interface RhythmicMovementControllerParams {
   eventBus: IEventBus;
   logger: ILogger;
   config: RhythmicMovementConfig;
   timerService: ITimerService;
-  keyAdapter: IEventTransformer<PlayerInputEvent, PlayerDirectionEvent>;
   inputStateService: IInputStateService;
   gameplayMechanicsService: IGameplayMechanicsService;
 }

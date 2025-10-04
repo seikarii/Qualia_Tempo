@@ -10,7 +10,6 @@ import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IWebSocketService } from "./interfaces/IWebSocketService";
 import type { ITimerService } from "./interfaces/ITimerService";
-import type { IMessageAdapter } from "./protocol/IMessageAdapter";
 import type { StreamingConfig, StateStreamingServiceParams } from "./contracts/IStateStreamingService.contracts";
 import type { ConnectionStatus, StreamingStatusChangedEvent, ConnectionStateType } from "./contracts/events.contracts";
 import { logMethod, catchError, AdaptAndEmit } from "../utils/decorators";
@@ -24,7 +23,6 @@ export class StateStreamingService implements IStateStreamingService {
   private readonly webSocketService: IWebSocketService;
   private readonly timerService: ITimerService;
   private readonly config: StreamingConfig;
-  private readonly messageAdapter: IMessageAdapter;
 
   // WebSocket connection state
   private connectionUrl: string;
@@ -46,9 +44,6 @@ export class StateStreamingService implements IStateStreamingService {
     this.timerService = params.timerService;
     this.config = params.config;
     this.logger = params.logger;
-    this.messageAdapter = params.messageAdapter;
-    // Ensure messageAdapter is used by decorator (TypeScript workaround)
-    void this.messageAdapter;
 
     // Build connection URL with authentication if enabled
     this.connectionUrl = this.config.websocket.url;
@@ -171,12 +166,12 @@ export class StateStreamingService implements IStateStreamingService {
    * - StateStreamingService no longer directly calls EventBus.emit
    * - Single Responsibility: WebSocket connection management ONLY
    */
-  @AdaptAndEmit('messageAdapter')
+  @AdaptAndEmit(TYPES.IRawToParticleEventAdapter)
   private onRawMessage(_data: ArrayBuffer): void {
     // ARCHITECTURAL COMPLIANCE: This method body contains ONLY business logic
     // that belongs to the StateStreamingService (statistics tracking).
     // Protocol translation, event construction, and emission is handled
-    // by the @AdaptAndEmit decorator using injected dependencies.
+    // by the @AdaptAndEmit decorator using IoC-resolved dependencies.
     
     this.messagesReceived++;
   }

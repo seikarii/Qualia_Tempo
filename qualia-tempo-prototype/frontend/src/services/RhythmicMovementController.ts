@@ -5,8 +5,6 @@ import type {
   GameStateChangedEvent,
   MetronomeTickEvent,
   RhythmicDashEvent,
-  PlayerInputEvent,
-  PlayerDirectionEvent,
   CombatDataUpdatedEvent,
 } from "./contracts/events.contracts";
 import { logMethod, catchError, IBaseService, OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
@@ -16,7 +14,6 @@ import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovement
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
 import type { ITimerService } from "./interfaces/ITimerService";
-import type { IEventTransformer } from "./protocol/IEventTransformer";
 import type { IInputStateService } from "./interfaces/IInputStateService";
 import type { IGameplayMechanicsService } from "./interfaces/IGameplayMechanicsService";
 
@@ -30,7 +27,6 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
   private logger: ILogger;
   private config: RhythmicMovementConfig;
   private timerService: ITimerService;
-  private keyAdapter: IEventTransformer<PlayerInputEvent, PlayerDirectionEvent>; // Used by @AdaptAndEmit decorator (DEPRECATED)
   private inputStateService: IInputStateService; // NUEVA FUENTE DE VERDAD
   private gameplayMechanicsService: IGameplayMechanicsService;
   // QUALIA.CODE v1.1: Internal combat data tracking for reactive state management
@@ -73,11 +69,8 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
     this.logger = params.logger;
     this.config = params.config;
     this.timerService = params.timerService;
-    this.keyAdapter = params.keyAdapter;
     this.inputStateService = params.inputStateService;
     this.gameplayMechanicsService = params.gameplayMechanicsService;
-    // Ensure keyAdapter is used by decorator (TypeScript workaround) - DEPRECATED
-    void this.keyAdapter;
 
     this.logger.info(this.config.messages.serviceInitialized);
   }

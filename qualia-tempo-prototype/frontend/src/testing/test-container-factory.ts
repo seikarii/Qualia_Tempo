@@ -81,7 +81,7 @@ import { mockSubtitleService } from "./mocks/subtitle-service.mock";
 import { mockRhythmicMovementController } from "./mocks/rhythmic-movement-controller.mock";
 import { mockBackendSyncService } from "./mocks/backend-sync-service.mock";
 import { mockInputStateService } from "./mocks/input-state-service.mock";
-import { mockKeyAdapter } from './mocks/key-adapter.mock'; // AÑADIR ESTA LÍNEA
+// mockKeyAdapter removed - @AdaptAndEmit decorator not used in RhythmicMovementController
 
 // ===================================================================================
 // DIRECTIVE 006: DEFAULT TEST CONFIGURATION BINDINGS
@@ -275,7 +275,6 @@ const createDefaultRhythmicMovementParams = (
   logger,
   config: defaultRhythmicMovementConfig,
   timerService,
-  keyAdapter: mockKeyAdapter,
   inputStateService,
   gameplayMechanicsService
 });
