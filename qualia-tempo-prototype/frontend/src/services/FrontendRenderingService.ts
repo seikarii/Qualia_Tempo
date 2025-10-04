@@ -40,7 +40,7 @@ import type {
   WebGLContextLostEvent,
   WebGLContextRestoredEvent 
 } from "./contracts/events.contracts";
-import { logMethod, catchError, BrowserOnly, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
+import { logMethod, catchError, measureTime, BrowserOnly, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 
 @injectable()
 export class FrontendRenderingService implements IFrontendRenderingService, IBaseService {
@@ -88,6 +88,7 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
 
   @logMethod
   @catchError
+  @measureTime
   @BrowserOnly
   async initializeRenderer(canvas: HTMLCanvasElement): Promise<void> {
     if (this.isInitialized) {
@@ -133,6 +134,7 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
 
   @logMethod
   @catchError
+  @measureTime
   updateParticleBuffer(data: Float32Array): void {
     if (!this.isInitialized) {
       this.logger.warn("Cannot update particle buffer: service not initialized");
@@ -368,6 +370,7 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
   }
 
   @logMethod
+  @measureTime
   resize(width: number, height: number): void {
     if (!this.isInitialized) return;
 
@@ -387,6 +390,7 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
   }
 
   @logMethod
+  @measureTime
   dispose(): void {
     this.stop();
 

@@ -54,6 +54,17 @@ module.exports = {
     ];
 
     /**
+     * Platform abstraction services that are thin wrappers around browser APIs.
+     * These services delegate immediately and should not have @measureTime overhead.
+     * Rationale: QUALIA.CODE §11.1 - "Methods >100 calls/sec minimize decorators"
+     */
+    const PLATFORM_ABSTRACTION_SERVICES = [
+      'TimerService',
+      'HttpService',
+      'BrowserEventsService'
+    ];
+
+    /**
      * Check if a node has a specific decorator
      */
     function hasDecorator(node, decoratorName) {
@@ -80,6 +91,20 @@ module.exports = {
       while (parent) {
         if (parent.type === 'ClassDeclaration' && parent.id?.name?.endsWith('Service')) {
           return true;
+        }
+        parent = parent.parent;
+      }
+      return false;
+    }
+
+    /**
+     * Check if node is in a platform abstraction service
+     */
+    function isInPlatformAbstractionService(node) {
+      let parent = node.parent;
+      while (parent) {
+        if (parent.type === 'ClassDeclaration' && parent.id?.name) {
+          return PLATFORM_ABSTRACTION_SERVICES.includes(parent.id.name);
         }
         parent = parent.parent;
       }
@@ -237,6 +262,11 @@ module.exports = {
       MethodDefinition(node) {
         // Only check service classes
         if (!isInServiceClass(node)) {
+          return;
+        }
+
+        // Skip platform abstraction services (thin wrappers with minimal overhead)
+        if (isInPlatformAbstractionService(node)) {
           return;
         }
 

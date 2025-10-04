@@ -71,6 +71,19 @@ module.exports = {
     }
 
     /**
+     * Check if method has validation exemption comment
+     */
+    function hasValidationExemption(node) {
+      const comments = context.getSourceCode().getCommentsBefore(node);
+      return comments.some(comment => {
+        const text = comment.value.toLowerCase();
+        return text.includes('@validation-exempt') ||
+               text.includes('validation: exempt') ||
+               text.includes('no validation needed');
+      });
+    }
+
+    /**
      * Get the event name from @OnEvent decorator
      */
     function getOnEventName(node) {
@@ -196,8 +209,9 @@ module.exports = {
         if (eventName) {
           const hasValidateEventProperty = hasDecorator(node, 'validateEventProperty');
           const accessesEvent = accessesEventProperties(node);
+          const hasExemption = hasValidationExemption(node);
 
-          if (accessesEvent && !hasValidateEventProperty) {
+          if (accessesEvent && !hasValidateEventProperty && !hasExemption) {
             context.report({
               node,
               messageId: 'missingEventValidation',
@@ -214,11 +228,17 @@ module.exports = {
           return;
         }
 
+        // Skip constructors - config objects are validated by ConfigurationService at load time
+        if (node.kind === 'constructor') {
+          return;
+        }
+
         const sharedContractParam = hasSharedContractParameter(node);
         if (sharedContractParam) {
           const hasValidate = hasDecorator(node, 'validate');
+          const hasExemption = hasValidationExemption(node);
 
-          if (!hasValidate) {
+          if (!hasValidate && !hasExemption) {
             context.report({
               node,
               messageId: 'missingDtoValidation',

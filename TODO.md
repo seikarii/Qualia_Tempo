@@ -25,6 +25,7 @@
 4. AGREGAR SERVICIO DE BENCHMARKING
 5. ARREGLAR EL PANDEL DE DIAGNOSTICO,MOSTRARLO Y AÑADIR LA PARTE DE BENCHMARK
 6. MEJORAR EL MENU INICIAL
+7. **LINTER VIOLATIONS: 29 event handlers + 2 DTO methods** - Decidir estrategia: crear schemas para eventos internos O refinar linter para distinguir eventos externos (WebSocket/API) vs eventos internos (EventBus tipado). Ver CHANGELOG.md [2025-10-04 Phase 2] para análisis completo
 8. ~~INSPECCIONAR NUEVOS DECORADORES Y DEPRECATED (refactorizar adaptandemit para que no contenga un patron de service locator~~ ✅ **COMPLETADO 2025-10-04** - @AdaptAndEmit refactorizado a IoC puro. Agregar probablemente algun decorador de cache o de workers)
 9. REVISAR DEBUGSERVICE,NOTIFICATION,ERRORSERVICE Y SU INTEGRACION CON EL RESTO DEL PROJECTO
 10. MEJORAR MENU INICIAL, UTILIZAR LETRAS NEON

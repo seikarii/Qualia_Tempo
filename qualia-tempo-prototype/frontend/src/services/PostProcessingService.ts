@@ -18,7 +18,7 @@ import type { IShaderIntrospectionService } from "./interfaces/IShaderIntrospect
 import type { IShaderLoaderService } from "./interfaces/IShaderLoaderService";
 import type { IPerformanceService } from "./interfaces/IPerformanceService";
 import type { PostProcessingConfig, PostProcessingPass, PostProcessingServiceParams } from "./contracts/IPostProcessingService.contracts";
-import { logMethod, catchError, BrowserOnly } from "../utils/decorators";
+import { logMethod, catchError, measureTime, BrowserOnly } from "../utils/decorators";
 import { env } from "../utils/env";
 import { GBufferPass } from "./postprocessing/GBufferPass.js";
 
@@ -360,6 +360,7 @@ export class PostProcessingService implements IPostProcessingService {
 
   @logMethod
   @catchError
+  @measureTime
   @BrowserOnly
   render(camera: THREE.PerspectiveCamera): void {
     if (!this.isInitialized) {
