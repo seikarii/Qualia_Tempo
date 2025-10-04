@@ -47,6 +47,12 @@
 - **PASS RATE:** 100% (41/41)
 - **HIGH-FIDELITY MOCKING:** All mocks use `mockReturnValue`/`mockResolvedValue` per QUALIA.CODE Section 10.3.1
 
+#### validate.decorator.test.ts Completion
+- **ADDED:** 2 critical failure scenario tests
+  - Schema validation failure with structured error logging
+  - Non-existent schema handling with appropriate error messages
+- **STATUS:** ✅ Tests implemented, architectural compliance verified
+
 ### 🔧 Technical Implementation Details
 
 #### Mocking Strategy
