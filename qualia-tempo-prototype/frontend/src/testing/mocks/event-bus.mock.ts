@@ -7,7 +7,11 @@ class TestEventBus implements IEventBus {
 
   // --- MÉTODOS FUNCIONALES ENVUELTOS EN ESPÍAS ---
 
-  subscribe = vi.fn((eventType: string, callback: (event: any) => void | Promise<void>): string => {
+  subscribe = vi.fn((
+    eventType: string,
+    callback: (event: any) => void | Promise<void>,
+    _options?: { once?: boolean; priority?: "low" | "normal" | "high" }
+  ): string => {
     const id = `test-listener-${this.nextId++}`;
     if (!this.listeners.has(eventType)) {
       this.listeners.set(eventType, new Map());

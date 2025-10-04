@@ -58,6 +58,9 @@ import { ColorService } from "../services/ColorService";
 // QUALIA.CODE v1.1: StateMergerService - Pure utility, no side effects, use real implementation in tests
 import type { IStateMergerService } from "../services/interfaces/IStateMergerService";
 import { StateMergerService } from "../services/StateMergerService";
+// QUALIA.CODE v2.0: Real service implementations for unit testing
+import { PhysicsService } from "../services/PhysicsService";
+import { AudioAnalysisService } from "../services/AudioAnalysisService";
 
 // Import centralized mocks
 import { mockLogger } from "./mocks/logger.mock";
@@ -106,6 +109,8 @@ import type { BackendSyncConfig, BackendSyncServiceParams } from '../services/co
 import type { GameControllerConfig, GameControllerServiceParams } from '../services/contracts/IGameControllerService.contracts';
 import type { QualiaCalculatorConfig, QualiaStateCalculatorServiceParams } from '../services/contracts/IQualiaStateCalculatorService.contracts';
 import type { RhythmicMovementConfig, RhythmicMovementControllerParams } from '../services/contracts/IRhythmicMovementController.contracts';
+import type { PhysicsServiceConfig, PhysicsServiceParams } from '../services/contracts/IPhysicsService.contracts';
+import type { AudioAnalysisServiceConfig, AudioAnalysisServiceParams } from '../services/contracts/IAudioAnalysisService.contracts';
 
 // --- Default Config Objects ---
 
@@ -155,6 +160,41 @@ const defaultQualiaCalculatorConfig: QualiaCalculatorConfig = {
   updateIntervalMs: 50, minValue: 0, maxValue: 1,
   transcendenceActivationValue: 1, millisecondsToSecondsConversion: 1000, transcendenceDecayRate: 0.05, transcendenceCheckValue: 0
 } as QualiaCalculatorConfig;
+
+const defaultPhysicsServiceConfig: PhysicsServiceConfig = {
+  maxVelocity: 10,
+  accelerationRate: 5,
+  frictionCoefficient: 0.8,
+  velocityThreshold: 0.01,
+  updateInterval: 16,
+  enableDamping: true,
+  messages: {
+    initialized: 'PhysicsService initialized',
+    started: 'PhysicsService started',
+    stopped: 'PhysicsService stopped',
+    velocityUpdated: 'Velocity updated'
+  }
+};
+
+const defaultAudioAnalysisServiceConfig: AudioAnalysisServiceConfig = {
+  frequencyBands: 8,
+  fftSize: 2048,
+  smoothingTimeConstant: 0.8,
+  minDecibels: -90,
+  maxDecibels: -10,
+  beatThreshold: 0.7,
+  minBeatInterval: 300,
+  updateInterval: 16,
+  enableBeatDetection: true,
+  enableTempoEstimation: true,
+  messages: {
+    initialized: 'AudioAnalysisService initialized',
+    audioReady: 'Audio system ready',
+    analysisStarted: 'Analysis started',
+    analysisStopped: 'Analysis stopped',
+    beatDetected: 'Beat detected'
+  }
+};
 
 const defaultRhythmicMovementConfig: RhythmicMovementConfig = {
   secondsPerMinute: 60,
@@ -283,6 +323,32 @@ const createDefaultQualiaCalculatorParams = (
   performanceService
 });
 
+const createDefaultPhysicsServiceParams = (
+  eventBus: IEventBus,
+  logger: ILogger,
+  timerService: ITimerService,
+  inputStateService: IInputStateService
+): PhysicsServiceParams => ({
+  eventBus,
+  logger,
+  timerService,
+  inputStateService,
+  config: defaultPhysicsServiceConfig
+});
+
+const createDefaultAudioAnalysisServiceParams = (
+  eventBus: IEventBus,
+  logger: ILogger,
+  timerService: ITimerService,
+  webAudioService: IWebAudioAPIService
+): AudioAnalysisServiceParams => ({
+  eventBus,
+  logger,
+  timerService,
+  webAudioService,
+  config: defaultAudioAnalysisServiceConfig
+});
+
 const createDefaultRhythmicMovementParams = (
   eventBus: IEventBus,
   logger: ILogger,
@@ -382,9 +448,10 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   testContainer.bind<IInputStateService>(TYPES.IInputStateService).toConstantValue(mockInputStateService);
   testContainer.bind<IWebAudioAPIService>(TYPES.IWebAudioAPIService).toConstantValue(mockWebAudioAPIService);
   
-  // QUALIA.CODE v2.0: Audio Analysis and Physics Services
-  testContainer.bind<IAudioAnalysisService>(TYPES.IAudioAnalysisService).toConstantValue(mockAudioAnalysisService);
-  testContainer.bind<IPhysicsService>(TYPES.IPhysicsService).toConstantValue(mockPhysicsService);
+  // QUALIA.CODE v2.0: Audio Analysis and Physics Services - BIND REAL SERVICES FOR UNIT TESTING
+  // Use .inTransientScope() to create fresh instances for each test, preventing state contamination
+  testContainer.bind<IAudioAnalysisService>(TYPES.IAudioAnalysisService).to(AudioAnalysisService).inTransientScope();
+  testContainer.bind<IPhysicsService>(TYPES.IPhysicsService).to(PhysicsService).inTransientScope();
 
   // STEP 2.5: Bind real services for pure utilities (no side effects, no external dependencies)
   // ColorService is a pure utility that only performs mathematical color conversions
@@ -445,12 +512,26 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
     mockInputStateService,
     mockGameplayMechanicsService
   );
+  const physicsServiceParams = createDefaultPhysicsServiceParams(
+    freshMockEventBus,
+    mockLogger,
+    mockTimerService,
+    mockInputStateService
+  );
+  const audioAnalysisServiceParams = createDefaultAudioAnalysisServiceParams(
+    freshMockEventBus,
+    mockLogger,
+    mockTimerService,
+    mockWebAudioAPIService
+  );
 
   testContainer.bind<ApplicationInitializerServiceParams>(TYPES.ApplicationInitializerServiceParams).toConstantValue(appInitializerParams);
   testContainer.bind<BackendSyncServiceParams>(TYPES.BackendSyncServiceParams).toConstantValue(backendSyncParams);
   testContainer.bind<GameControllerServiceParams>(TYPES.GameControllerServiceParams).toConstantValue(gameControllerParams);
   testContainer.bind<QualiaStateCalculatorServiceParams>(TYPES.QualiaStateCalculatorServiceParams).toConstantValue(qualiaCalculatorParams);
   testContainer.bind<RhythmicMovementControllerParams>(TYPES.RhythmicMovementControllerParams).toConstantValue(rhythmicMovementParams);
+  testContainer.bind<PhysicsServiceParams>(TYPES.PhysicsServiceParams).toConstantValue(physicsServiceParams);
+  testContainer.bind<AudioAnalysisServiceParams>(TYPES.AudioAnalysisServiceParams).toConstantValue(audioAnalysisServiceParams);
 
   // STEP 3: Apply any test-specific overrides.
   for (const override of overrides) {

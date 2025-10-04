@@ -113,7 +113,7 @@ describe('AudioAnalysisService', () => {
       expect(audioAnalysisService.isAnalyzing()).toBe(false);
     });
 
-    it('should return true after audio is ready and analysis starts', () => {
+    it('should return true after audio is ready and analysis starts', async () => {
       audioAnalysisService.initialize();
       
       const audioReadyEvent: SystemAudioReadyEvent = {
@@ -122,7 +122,7 @@ describe('AudioAnalysisService', () => {
         source: 'Test',
       };
       
-      mockEventBus.emit(audioReadyEvent);
+      await mockEventBus.emit(audioReadyEvent);
       
       // After audio ready event, service should start analyzing
       expect(audioAnalysisService.isAnalyzing()).toBe(true);
@@ -135,7 +135,7 @@ describe('AudioAnalysisService', () => {
       expect(() => audioAnalysisService.cleanup()).not.toThrow();
     });
 
-    it('should stop analysis when cleaning up', () => {
+    it('should stop analysis when cleaning up', async () => {
       audioAnalysisService.initialize();
       
       const audioReadyEvent: SystemAudioReadyEvent = {
@@ -144,7 +144,7 @@ describe('AudioAnalysisService', () => {
         source: 'Test',
       };
       
-      mockEventBus.emit(audioReadyEvent);
+      await mockEventBus.emit(audioReadyEvent);
       expect(audioAnalysisService.isAnalyzing()).toBe(true);
       
       audioAnalysisService.cleanup();

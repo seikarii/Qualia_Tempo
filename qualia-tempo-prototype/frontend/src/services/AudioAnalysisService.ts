@@ -102,9 +102,12 @@ export class AudioAnalysisService implements IAudioAnalysisService, IBaseService
   /**
    * Event handler for System.Audio.Ready
    * Sets up audio analysis when audio context is ready
+   * 
+   * DECORATOR ORDER CRITICAL: @catchError must be applied BEFORE @OnEvent (appears after)
+   * to ensure @OnEvent captures the original method before @catchError wraps it.
    */
-  @OnEvent("System.Audio.Ready")
   @catchError
+  @OnEvent("System.Audio.Ready")
   // @ts-expect-error - Method used by @OnEvent decorator, false positive unused warning
   private onAudioReady(_event: SystemAudioReadyEvent): void {
     this.logger.info(this.config.messages.audioReady);
