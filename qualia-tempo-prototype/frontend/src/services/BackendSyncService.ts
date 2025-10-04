@@ -223,15 +223,6 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
     return this.connected;
   }
 
-  /**
-   * Get current configuration.
-   */
-  @logMethod
-  @catchError
-  public getConfig(): BackendSyncConfig {
-    return { ...this.config };
-  }
-
   // Private methods
 
   @OnEvent('QualiaStateCalculated')

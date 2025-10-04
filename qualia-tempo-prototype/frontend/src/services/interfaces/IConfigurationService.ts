@@ -23,36 +23,6 @@ export interface IConfigurationService {
   loadConfig(): Promise<FullGameConfig>;
 
   /**
-   * Get the complete configuration object.
-   * 
-   * @deprecated ARCHITECTURAL MANDATE: This method enables the Service Locator anti-pattern.
-   * All services MUST inject their specific configuration slice directly, not the entire config object.
-   * This method will be removed in a future version. Migrate all usages immediately.
-   * See QUALIA.MANUAL.md Section 8 for the correct Direct Configuration Injection pattern.
-   * 
-   * @returns The full configuration object
-   */
-  getConfig(): FullGameConfig;
-
-  /**
-   * Get specific configuration section with full type safety.
-   * 
-   * @deprecated ARCHITECTURAL MIGRATION: This method is deprecated as part of the
-   * elimination of the Service Locator antipattern. Services should now inject
-   * their specific configuration objects directly via @inject(TYPES.ConfigName).
-   * 
-   * MIGRATION PATH:
-   * OLD: constructor(@inject(TYPES.IConfigurationService) config: IConfigurationService)
-   *      this.config = config.getConfigSection("myService")
-   * NEW: constructor(@inject(TYPES.MyServiceConfig) config: MyServiceConfig)
-   *      this.config = config
-   * 
-   * @param sectionKey - The key of the configuration section
-   * @returns The requested configuration section with correct typing
-   */
-  getConfigSection<K extends keyof FullGameConfig>(sectionKey: K): FullGameConfig[K];
-
-  /**
    * Check if configuration is loaded.
    * @returns True if configuration is loaded, false otherwise
    */

@@ -102,41 +102,6 @@ export class ConfigurationService implements IConfigurationService {
     return this.loadedConfig;
   }
 
-  /**
-   * Get the complete configuration
-   * 
-   * @deprecated ARCHITECTURAL MANDATE: This method enables the Service Locator anti-pattern.
-   * All services MUST inject their specific configuration slice directly, not the entire config object.
-   * This method will be removed in a future version. Migrate all usages immediately.
-   * See QUALIA.MANUAL.md Section 8 for the correct Direct Configuration Injection pattern.
-   */
-  @logMethod
-  public getConfig(): FullGameConfig {
-    if (!this.loadedConfig) {
-      throw new Error("Configuration not loaded. Call loadConfig() first.");
-    }
-    return this.loadedConfig;
-  }
-
-  /**
-   * @deprecated ARCHITECTURAL MIGRATION: Service Locator antipattern elimination
-   * This method is deprecated. Services should inject their configuration directly.
-   * See inversify.config.ts configureServices() function for the new approach.
-   */
-  @logMethod
-  public getConfigSection<K extends keyof FullGameConfig>(sectionKey: K): FullGameConfig[K] {
-    if (!this.loadedConfig) {
-      throw new Error("Configuration not loaded. Call loadConfig() first.");
-    }
-
-    const section = this.loadedConfig[sectionKey];
-    if (!section) {
-      throw new Error(`Configuration section '${sectionKey}' not found.`);
-    }
-
-    return section;
-  }
-
   // === VALIDATION REMOVED ===
   // Monolithic validation method replaced with modular validators.
   // See config-validators/ directory for individual validation functions.

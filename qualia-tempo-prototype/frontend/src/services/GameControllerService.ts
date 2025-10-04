@@ -202,16 +202,6 @@ export class GameControllerService implements IGameControllerService, IBaseServi
     return this.gameState.isPaused;
   }
 
-  // === ORIGINAL METHODS (PRESERVED) ===
-
-  /**
-   * Get configuration
-   */
-  @logMethod
-  public getConfig(): Readonly<GameControllerConfig> {
-    return { ...this.config };
-  }
-
   // === PRIVATE METHODS ===
 
   @OnEvent('PlayerAction')

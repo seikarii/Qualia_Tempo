@@ -35,6 +35,9 @@ import type { IViewLogicService } from './interfaces/IViewLogicService';
 import type { ISubtitleService } from './interfaces/ISubtitleService';
 import type { IDebugOrchestratorService } from './interfaces/IDebugOrchestratorService';
 
+// CONFIGURATION CONTRACTS
+import type { SubtitleConfig } from './contracts/ISubtitleService.contracts';
+
 /**
  * Generic hook to resolve a service from the IoC container
  * @param serviceIdentifier - Symbol identifier for the service
@@ -148,3 +151,8 @@ export const useSubtitleService = (): ISubtitleService =>
 
 export const useDebugOrchestratorService = (): IDebugOrchestratorService => 
   useService<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService);
+
+// CONFIGURATION HOOKS
+// These hooks provide direct access to configuration objects for components that need styling/display config
+export const useSubtitleConfig = (): SubtitleConfig => 
+  useService<SubtitleConfig>(TYPES.SubtitleConfig);

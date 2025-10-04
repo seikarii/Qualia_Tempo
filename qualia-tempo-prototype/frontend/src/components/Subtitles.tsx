@@ -6,12 +6,14 @@
  * - Business logic extracted to SubtitleService
  * - Component is now a pure presenter
  * - Uses service hooks for dependency injection
+ * - Direct configuration injection via useService hook
  */
 
 import React from "react";
 import { useGameStore } from "../state/useGameStore";
-import { useSubtitleService } from "../services/hooks";
+import { useSubtitleService, useSubtitleConfig } from "../services/hooks";
 import type { LyricData } from "../types/CombatData.d";
+import type { SubtitleConfig } from "../services/contracts/ISubtitleService.contracts";
 
 interface SubtitlesProps {
   // No additional props needed - all data comes from services
@@ -20,7 +22,6 @@ interface SubtitlesProps {
 /**
  * Subtitle display component for rendering individual lyric text
  */
-import type { SubtitleConfig } from "../services/contracts/ISubtitleService.contracts";
 
 const SubtitleDisplay: React.FC<{
   lyric: LyricData;
@@ -61,6 +62,9 @@ export const Subtitles: React.FC<SubtitlesProps> = () => {
 
   // QUALIA.CODE: Business logic delegated to service
   const subtitleService = useSubtitleService();
+  
+  // QUALIA.CODE: Direct Configuration Injection - get config from container via hook
+  const config = useSubtitleConfig();
 
   // Early return if no data or not playing
   if (!combatData || !isPlaying || !combatData.lyrics) {
@@ -76,9 +80,6 @@ export const Subtitles: React.FC<SubtitlesProps> = () => {
   if (!currentLyric) {
     return null;
   }
-
-  // Get styling configuration from service
-  const config = subtitleService.getConfig();
 
   return <SubtitleDisplay lyric={currentLyric} config={config} />;
 };

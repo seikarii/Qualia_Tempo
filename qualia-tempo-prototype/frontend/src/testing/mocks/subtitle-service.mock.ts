@@ -16,6 +16,5 @@ import type { ISubtitleService } from '../../services/interfaces/ISubtitleServic
 export const mockSubtitleService: ISubtitleService = {
   getCurrentLyric: vi.fn().mockReturnValue({}),
   shouldDisplayLyric: vi.fn().mockReturnValue(false),
-  getConfig: vi.fn().mockReturnValue({}),
   getDisplayDuration: vi.fn().mockReturnValue(0),
 };

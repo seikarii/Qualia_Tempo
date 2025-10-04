@@ -15,7 +15,6 @@ import type { IConfigurationService } from '../../services/interfaces/IConfigura
  */
 export const mockConfigurationService: IConfigurationService = {
   loadConfig: vi.fn().mockResolvedValue({}),
-  getConfig: vi.fn().mockReturnValue({}),
   isLoaded: vi.fn().mockReturnValue(false),
   reload: vi.fn().mockResolvedValue(undefined),
 };

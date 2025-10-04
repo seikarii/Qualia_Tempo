@@ -428,8 +428,7 @@ export async function configureServices(): Promise<void> {
   const configService = container.get<IConfigurationService>(TYPES.IConfigurationService);
   
   // 2. Load all configuration ONE TIME
-  await configService.loadConfig();
-  const fullConfig = configService.getConfig();
+  const fullConfig = await configService.loadConfig();
   
   // 3. Bind configuration objects
   bindBasicConfigurations(fullConfig);

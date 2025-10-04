@@ -41,12 +41,6 @@ export interface IBackendSyncService extends IBaseService {
   forceSync(): Promise<void>;
 
   /**
-   * Get current backend configuration.
-   * @returns The current configuration object
-   */
-  getConfig(): BackendSyncConfig;
-
-  /**
    * Update the backend configuration.
    * @param config New configuration to apply
    */

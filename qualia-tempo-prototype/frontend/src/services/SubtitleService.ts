@@ -65,11 +65,6 @@ export class SubtitleService implements ISubtitleService {
   }
 
   @logMethod
-  getConfig(): SubtitleConfig {
-    return { ...this.config };
-  }
-
-  @logMethod
   @catchError
   getDisplayDuration(lyric: LyricData): number {
     // Use configured display duration as base, but could be extended

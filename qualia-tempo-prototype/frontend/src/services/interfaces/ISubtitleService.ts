@@ -5,7 +5,6 @@
  */
 
 import type { LyricData } from '../../types/CombatData.d';
-import type { SubtitleConfig } from '../contracts/ISubtitleService.contracts';
 
 export interface ISubtitleService {
   /**
@@ -23,12 +22,6 @@ export interface ISubtitleService {
    * @returns True if lyric should be displayed
    */
   shouldDisplayLyric(lyric: LyricData, currentTime: number): boolean;
-
-  /**
-   * Get subtitle configuration
-   * @returns Subtitle display configuration
-   */
-  getConfig(): SubtitleConfig;
 
   /**
    * Calculate subtitle display duration
