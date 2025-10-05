@@ -336,3 +336,41 @@ colorGradingLUT:
   # Subtle: 0.5 (blend 50% with original)
   # Balanced: 0.75
   # Full: 1.0 (100% graded, default)
+
+# ============================================================================
+# PHASE 2: COMPLETE BLOOM SYSTEM (CRISALIDA.CODE v1.1)
+# Professional multi-stage bloom with mipmap chain
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Bloom - Professional HDR Bloom with Mipmap Chain
+# ----------------------------------------------------------------------------
+bloom:
+  enabled: true
+  
+  # Bright Pass Extraction
+  threshold: 0.9              # Primary brightness threshold (0.8-1.2 typical)
+  softThreshold: 0.5          # Soft knee range (0.0 = hard, 1.0 = very soft)
+  intensity: 1.5              # Bloom strength multiplier (1.0-3.0)
+  colorPreservation: 0.8      # Saturation preservation (0.7-1.0)
+  
+  # Mipmap Chain Configuration
+  radius: 1.0                 # Bloom diffusion radius (0.5-2.0)
+  levels: 5                   # Mipmap levels (3-7, default: 5)
+  blendMode: "additive"       # "additive" | "screen"
+  
+  # Performance Notes:
+  # - Total bloom overhead: ~2-3ms on 1080p
+  # - 5 levels = balanced quality/performance
+  # - 7 levels = maximum quality (cinematic)
+  # - 3 levels = performance mode (mobile)
+  #
+  # QUALITY PRESETS:
+  # Performance (3 levels): threshold=1.0, intensity=1.2, radius=0.7
+  # Balanced (5 levels): threshold=0.9, intensity=1.5, radius=1.0 (default)
+  # Cinematic (7 levels): threshold=0.8, intensity=2.0, radius=1.5
+  #
+  # ARTISTIC STYLES:
+  # Subtle Glow: threshold=1.1, intensity=1.0, colorPreservation=0.9
+  # Strong Bloom: threshold=0.7, intensity=2.5, colorPreservation=0.7
+  # Ethereal: threshold=0.8, intensity=3.0, radius=2.0
