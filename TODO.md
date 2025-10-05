@@ -40,6 +40,7 @@
 18. CI/CD - AUTOMATIZAR `sitemap.xml`: La fecha `lastmod` debe generarse dinámicamente en el pipeline de build para reflejar la frescura real del contenido.
 19. PWA - ENRIQUECER `manifest.json`: Añadir capturas de pantalla promocionales del juego al array `screenshots` para mejorar la experiencia de instalación de la PWA. qualia-tempo-prototype/frontend/public/METADATA_VALIDATION.md
 20. Añadir motor de curvatura para fisicas de magia que deforme los ejes X ,Y
+21. Añadir un circular dependency check al linter
 ---
 
 ## 🔍 Metodología de Análisis
@@ -86,7 +87,11 @@ Backend:
 
 ---
 
-## 🚀 NUEVAS TAREAS - MIGRACIÓN A ARCHITECTURE.GOLD.CODE
+## � TAREAS CRÍTICAS - CORRECCIONES DE BOOTSTRAP
+
+- [ ] **CRITICAL: REFACTORIZAR INVERSIFY BINDING ORDER**: Dependency graph circular en bindServiceParameterObjects. Múltiples servicios (PostProcessingService, etc.) necesitan sus Params antes de ser instanciados, pero Params bindings llaman container.get() que dispara instanciación prematura. SOLUCIÓN: Crear dos fases de binding: (1) Bind todos los *Params objects que NO contienen servicios, (2) Bind objetos compuestos que usan container.get(). Archivo: `/frontend/src/services/inversify.config.ts` líneas 570-630 y funciones bind*ServiceParams.
+
+## �🚀 NUEVAS TAREAS - MIGRACIÓN A ARCHITECTURE.GOLD.CODE
 
 - [ ] **MIGRAR QualiaStateCalculator A WEB WORKER**: Mover cálculos de QualiaState a hilo separado para evitar bloqueo de UI. Archivo: `frontend/src/services/QualiaStateCalculatorService.ts`
 - [ ] **IMPLEMENTAR PROCESS POOL PARA PARTICLE ENGINE**: Backend ParticleEngine en proceso separado. Archivo: `backend/engine/ParticleEngine.py`

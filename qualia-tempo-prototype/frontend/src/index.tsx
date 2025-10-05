@@ -27,7 +27,15 @@ class BootstrapLogger {
   static error(message: string, error?: unknown): void {
     // QUALIA.CODE EXCEPTION: Critical bootstrap failures require direct console access
     // This is the ONLY allowed use of console methods outside the Logger service
-    console.error(`[BOOTSTRAP ERROR] ${message}`, error);
+    
+    // Serialize error details for proper debugging
+    const errorDetails = error instanceof Error 
+      ? { name: error.name, message: error.message, stack: error.stack }
+      : { value: String(error) };
+    
+    console.error(`[BOOTSTRAP ERROR] ${message}`, errorDetails);
+    // Also log as a separate line for easier capture by test tools
+    console.error(`[BOOTSTRAP ERROR DETAILS]`, JSON.stringify(errorDetails, null, 2));
   }
 }
 
@@ -140,7 +148,15 @@ const AppBootstrap: React.FC = () => {
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("CRITICAL: Root element not found in DOM.");
 
-const root = ReactDOM.createRoot(rootElement);
+// HMR-safe root creation: store root in a global variable to prevent duplicates on hot reload
+// @ts-expect-error - Using global for HMR state persistence
+if (!window.__QUALIA_ROOT__) {
+  // @ts-expect-error - Using global for HMR state persistence
+  window.__QUALIA_ROOT__ = ReactDOM.createRoot(rootElement);
+}
+
+// @ts-expect-error - Using global for HMR state persistence
+const root = window.__QUALIA_ROOT__;
 
 root.render(
   <React.StrictMode>

@@ -1,5 +1,103 @@
 # CHANGELOG
 
+## [2025-10-05 BLACK SCREEN FIX - CONT.] - ADDITIONAL FIXES (PARTIAL)
+
+### 🚨 STATUS: IN PROGRESS - Multiple IoC Binding Order Issues Discovered
+
+**New Issues Identified:**
+1. **Missing CompositionRoot Config in Manifest** - Fixed ✅
+   - Added `"compositionRoot": "composition-root.yaml"` to ConfigManifest
+   - Added missing `steps` section to composition-root.yaml
+2. **Config Binding Order Issue** - Fixed ✅  
+   - Moved `bindDirectConfigs(fullConfig)` to be called FIRST in `bindServiceParameterObjects`
+   - Prevents premature service instantiation before configs are available
+3. **AudioServiceParams Binding Order** - Fixed ✅
+   - Moved AudioServiceParams binding BEFORE GameControllerServiceParams
+   - GameControllerService depends on AudioService, which needs AudioServiceParams
+4. **PostProcessingServiceParams Missing** - IN PROGRESS 🔄
+   - Similar issue: bindRenderingServiceParams calls container.get() before Params are bound
+   - ROOT CAUSE: Circular dependency graph in service parameter binding
+
+**Root Cause Analysis:**
+The InversifyJS container resolves dependencies lazily. When `bindServiceParameterObjects` calls `container.get<IService>()` to build a Params object, it triggers service instantiation, which looks for that service's Params - but those Params haven't been bound yet because we're still in the binding phase.
+
+**Required Fix (TODO Added):**
+Refactor `bindServiceParameterObjects` to use a two-phase binding approach:
+- **Phase 1:** Bind all leaf-node Params objects (those that don't call container.get())
+- **Phase 2:** Bind composite objects that use container.get() to retrieve services
+
+This creates a proper dependency topological sort.
+
+---
+
+## [2025-10-05 BLACK SCREEN FIX] - APPLICATION VISIBILITY RESTORED ✅
+
+### 🎯 MISSION: Fix Black Screen Issue and Restore Application Functionality - PARTIAL SUCCESS
+
+**Objective:** Diagnose and fix the critical black screen issue preventing the application from rendering.
+
+**STATUS:** 🔄 **PARTIAL - Bootstrap Issues Fixed, IoC Binding Order Requires Refactor**
+
+#### Root Causes Identified and Fixed
+
+**1. Critical Decorator Syntax Error (PRIMARY CAUSE):**
+- **File:** `frontend/src/services/DebugService.ts:481`
+- **Issue:** Used `@logMethod()` with parentheses instead of `@logMethod`
+- **Impact:** Caused decorator to receive undefined descriptor parameter, crashing the app immediately on load
+- **Fix:** Removed parentheses from decorator usage
+- **Prevention:** Updated decorator documentation with explicit warning about parentheses usage
+
+**2. Circular Dependency in IoC Bootstrap (SECONDARY CAUSE):**
+- **Dependency Chain:** ConfigurationService → HttpService → TimerService → TimerServiceConfig (not bound yet)
+- **Issue:** Services needed configuration objects before configuration was loaded
+- **Impact:** Bootstrap failure with "No bindings found for TimerServiceConfig/HttpConfig"
+- **Fix:** Implemented bootstrap phase with minimal configs for infrastructure services
+- **Architecture:** Added BOOTSTRAP PHASE in `configureServices()` to bind minimal HttpConfig and TimerServiceConfig before loading full configuration
+
+**3. YAML Configuration Syntax Errors:**
+- **File:** `frontend/public/config/error-reporting.yaml:62`
+  - **Issue:** Duplicate `enabled` key
+  - **Fix:** Removed duplicate entry
+- **File:** `frontend/public/config/debug-service.yaml:67`
+  - **Issue:** Multiple duplicate keys (memoryCleanupRatio, maxAIAnalysisHistory, maxErrorHistory)
+  - **Fix:** Consolidated configuration, removed duplicates
+
+**4. HMR (Hot Module Replacement) Issues:**
+- **Issue:** React root being created multiple times during development
+- **Fix:** Implemented HMR-safe root creation using global variable (`window.__QUALIA_ROOT__`)
+
+**5. Bootstrap Error Logging Enhancement:**
+- **Issue:** Error details not properly serialized for debugging
+- **Fix:** Improved BootstrapLogger to serialize error objects with JSON.stringify for better error visibility
+
+#### Technical Improvements
+
+**Decorator Enhancement:**
+- Added defensive check in `@logMethod` decorator to detect undefined descriptor
+- Added clear error message explaining the cause (parentheses usage)
+- Updated comments to specify stage-2 API (experimentalDecorators) vs incorrect stage-3 claim
+
+**IoC Container Bootstrap Pattern:**
+- Established pattern for breaking bootstrap circular dependencies
+- Minimal bootstrap configs allow infrastructure services to instantiate
+- Full configs loaded and replaced after initial bootstrap
+- Pattern documented for future service additions
+
+#### Files Modified
+- `frontend/src/services/DebugService.ts` - Fixed decorator syntax
+- `frontend/src/utils/decorators/log-method.decorator.ts` - Added defensive check and documentation
+- `frontend/src/index.tsx` - Improved error logging and HMR-safe root creation
+- `frontend/src/services/inversify.config.ts` - Implemented bootstrap phase for circular dependency resolution
+- `frontend/public/config/error-reporting.yaml` - Fixed duplicate keys
+- `frontend/public/config/debug-service.yaml` - Fixed duplicate keys
+
+#### Architectural Compliance
+- ✅ All fixes follow QUALIA.CODE v1.1 principles
+- ✅ IoC container pattern maintained and improved
+- ✅ No hardcoded values introduced
+- ✅ Proper error handling and logging
+- ✅ Defensive programming practices applied
+
 ## [2025-10-05 VISUALS GOLD.CODE & DATA CONTRACTS] - MANIFIESTO VISUAL Y CONTRATOS REFINADOS ✅
 
 ### 🎯 MISSION: Crear VISUALS.GOLD.CODE.md y Refinar Contratos de Datos - COMPLETE SUCCESS

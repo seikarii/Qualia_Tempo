@@ -1,6 +1,7 @@
 // QUALIA.CODE v1.1 - @logMethod Decorator
 // Logs method calls, arguments, results, and errors
-// Compatible with TypeScript 5.9.2 stage-3 decorators
+// Compatible with TypeScript 5.x experimentalDecorators (stage-2 API)
+// CRITICAL: Use @logMethod WITHOUT parentheses. @logMethod() will cause crashes.
 
 import { EmergencyLogger } from "../EmergencyLogger";
 import { getLogger, type InstanceWithLogger } from "./shared-types";
@@ -9,13 +10,22 @@ import type { ILogger } from "../../services/interfaces/ILogger";
 /**
  * Decorator to log method calls and arguments.
  * Uses instance logger if available, falls back to EmergencyLogger only when necessary.
- * Usage: @logMethod
+ * Usage: @logMethod (NO PARENTHESES)
+ * 
+ * PROHIBITED: @logMethod() - This will cause the application to crash with "descriptor is undefined"
  */
 export function logMethod(
   _target: unknown,
   propertyKey: string,
   descriptor: PropertyDescriptor
 ): PropertyDescriptor {
+  // Defensive check: Ensure descriptor is defined
+  if (!descriptor) {
+    const errorMsg = `@logMethod decorator received undefined descriptor. This typically happens when @logMethod() is used with parentheses. Use @logMethod without parentheses instead.`;
+    EmergencyLogger.error(errorMsg, { propertyKey });
+    throw new Error(errorMsg);
+  }
+  
   const method = descriptor.value;
 
   descriptor.value = function (this: unknown, ...args: unknown[]) {

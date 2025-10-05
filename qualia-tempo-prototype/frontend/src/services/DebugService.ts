@@ -477,8 +477,7 @@ export class DebugService implements IDebugService, IBaseService {
     }
   }
 
-  // @ts-expect-error - Used by @OnEvent decorator
-  @logMethod()
+  @logMethod
   @catchError
   @validate('BaseEvent')
   @OnEvent('*')

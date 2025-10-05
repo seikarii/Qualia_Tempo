@@ -147,6 +147,7 @@ container.bind<ILogger>(TYPES.ILogger).to(QualiaLogger).inSingletonScope();
 // Bind configuration values for ConfigurationService
 container.bind<string>(TYPES.ConfigBasePath).toConstantValue("/config/");
 container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
+  "compositionRoot": "composition-root.yaml",
   "appInitializer": "application-initializer.yaml",
   "logger": "logger.yaml",
   "http": "http-service.yaml",
@@ -458,13 +459,53 @@ export async function configureServices(): Promise<void> {
     return; // Configuration already loaded
   }
 
+  // BOOTSTRAP PHASE: Bind minimal configs for core infrastructure services
+  // This breaks the circular dependency: ConfigurationService → HttpService → (TimerService, Config)
+  // HttpService and TimerService need configs to instantiate, but ConfigurationService needs them to load config
+  
+  const bootstrapHttpConfig: HttpConfig = {
+    timeout: 30000,
+    retries: 3,
+    retryDelay: 1000,
+    headers: {},
+    baseUrl: "",
+    enableCompression: false,
+    enableCaching: false
+  };
+  
+  const bootstrapTimerConfig: TimerServiceConfig = {
+    messages: {
+      timerServiceInitialized: "[BOOTSTRAP] TimerService initialized (minimal config)",
+      performanceServiceInitialized: "[BOOTSTRAP] PerformanceService initialized (minimal config)"
+    },
+    timer: {
+      performance: { enableTracking: false, slowTimerThreshold: 1000 },
+      cleanup: { cleanupInterval: 60000, maxTrackedTimers: 1000 },
+      debug: { enableDebugLogging: false, logTimerLifecycle: false }
+    }
+  };
+  
+  // Bind bootstrap configs BEFORE loading full configuration
+  if (!container.isBound(TYPES.HttpConfig)) {
+    container.bind<HttpConfig>(TYPES.HttpConfig).toConstantValue(bootstrapHttpConfig);
+  }
+  if (!container.isBound(TYPES.TimerServiceConfig)) {
+    container.bind<TimerServiceConfig>(TYPES.TimerServiceConfig).toConstantValue(bootstrapTimerConfig);
+  }
+
   // 1. Get ConfigurationService instance to load configuration
   const configService = container.get<IConfigurationService>(TYPES.IConfigurationService);
   
   // 2. Load all configuration ONE TIME
   const fullConfig = await configService.loadConfig();
   
-  // 3. Bind configuration objects
+  // 3. Unbind bootstrap configs and bind full configuration objects
+  if (container.isBound(TYPES.HttpConfig)) {
+    container.unbind(TYPES.HttpConfig);
+  }
+  if (container.isBound(TYPES.TimerServiceConfig)) {
+    container.unbind(TYPES.TimerServiceConfig);
+  }
   bindBasicConfigurations(fullConfig);
   bindServiceParameterObjects(fullConfig);
 
@@ -529,20 +570,39 @@ function bindBasicConfigurations(fullConfig: FullGameConfig): void {
 /**
  * Binds all service parameter objects to the container.
  * These are the consolidated parameter objects that reduce constructor parameter counts.
+ * CRITICAL: bindDirectConfigs MUST be called FIRST to ensure all config objects are available
+ * before any service instantiation is triggered by container.get() calls.
  */
 function bindServiceParameterObjects(fullConfig: FullGameConfig): void {
+  bindDirectConfigs(fullConfig); // MUST BE FIRST - configs needed before service instantiation
   bindGameplayServiceParams(fullConfig);
   bindAnalysisServiceParams(fullConfig);
   bindRenderingServiceParams(fullConfig);
   bindCommunicationServiceParams(fullConfig);
   bindDiagnosticServiceParams(fullConfig);
-  bindDirectConfigs(fullConfig);
 }
 
 /**
  * Bind gameplay-related service parameter objects.
  */
 function bindGameplayServiceParams(fullConfig: FullGameConfig): void {
+  // CRITICAL: AudioServiceParams MUST be bound FIRST because GameControllerServiceParams needs AudioService
+  safeBindConstant<AudioServiceParams>(TYPES.AudioServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    config: fullConfig.audioService,
+    audioEngine: container.get<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine),
+    webAudioAPIService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+  });
+
+  safeBindConstant<QualiaStateCalculatorServiceParams>(TYPES.QualiaStateCalculatorServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    config: fullConfig.qualiaCalculator,
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+  });
+
   // QUALIA.CODE v1.2: keyAdapter removed - @AdaptAndEmit decorator was never used in this service
   safeBindConstant<RhythmicMovementControllerParams>(TYPES.RhythmicMovementControllerParams, {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
@@ -562,22 +622,6 @@ function bindGameplayServiceParams(fullConfig: FullGameConfig): void {
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
     audioService: container.get<IAudioService>(TYPES.IAudioService),
     audioSystemBridge: container.get<IAudioSystemBridge>(TYPES.IAudioSystemBridge),
-  });
-
-  safeBindConstant<QualiaStateCalculatorServiceParams>(TYPES.QualiaStateCalculatorServiceParams, {
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    logger: container.get<ILogger>(TYPES.ILogger),
-    config: fullConfig.qualiaCalculator,
-    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
-  });
-
-  safeBindConstant<AudioServiceParams>(TYPES.AudioServiceParams, {
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    logger: container.get<ILogger>(TYPES.ILogger),
-    config: fullConfig.audioService,
-    audioEngine: container.get<IOntologicalAudioEngine>(TYPES.IOntologicalAudioEngine),
-    webAudioAPIService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
   });
 }
 

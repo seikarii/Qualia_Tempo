@@ -59,7 +59,6 @@ statusEmission:
   maxRetries: 3
   retryDelay: 2000
   batchSize: 20
-  enabled: false
 
 # Additional settings
 enableCompression: true

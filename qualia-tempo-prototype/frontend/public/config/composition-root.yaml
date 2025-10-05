@@ -26,3 +26,12 @@ http:
   defaultTimeout: 30000
   maxRetries: 3
   retryDelay: 1000
+
+steps:
+  loadConfiguration: "Loading game configuration..."
+  configureHttpService: "Configuring HTTP service..."
+  startGameStateService: "Starting game state management..."
+  startTransversalServices: "Starting transversal services..."
+  startGameController: "Starting game controller..."
+  startRhythmicController: "Starting rhythmic movement controller..."
+  startBackendSync: "Starting backend synchronization..."
