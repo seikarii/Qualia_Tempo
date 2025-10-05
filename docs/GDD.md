@@ -2,7 +2,7 @@
 
 **Versión:** 2.0
 **Fecha:** 25 de Septiembre de 2025
-
+**DEV NOTE** : QUALIA TEMPO NO ES UN JUEGO DE BROWSER, ES UNA APLICACION.
 ---
 
 ## 1. Ficha Técnica
