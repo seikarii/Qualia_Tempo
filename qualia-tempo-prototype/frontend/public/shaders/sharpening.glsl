@@ -1,21 +1,24 @@
+#version 300 es
 /**
- * QUALIA.CODE v1.1 - Sharpening Shader (Adaptive Laplacian)
+ * QUALIA.CODE v1.1 - Adaptive Laplacian Sharpening Shader
  * CRISALIDA.CODE v1.1 - Phase 1: Independent Effects
  *
- * Edge-aware sharpening using adaptive Laplacian kernel.
- * Rescued from _deprecated shaders - elite quality implementation.
+ * Elite-quality edge-aware sharpening using 5-point Laplacian kernel.
+ * Rescued from _deprecated shaders - production-ready implementation.
  *
  * Key Features:
- * - 4-neighbor Laplacian kernel for edge detection
- * - Adaptive strength based on edge magnitude (prevents oversharpening)
- * - Smooth falloff using smoothstep
- * - Configurable sharpness intensity
+ * - Adaptive strength based on edge magnitude
+ * - Prevents halos on high-contrast edges
+ * - Smoothstep falloff for natural appearance
+ * - Preserves original color on flat regions
  *
  * Uniforms:
  * - inputTexture: Source image to sharpen
- * - resolution: Screen resolution for pixel size calculation
- * - sharpness: Sharpening intensity (0.0-1.0, typical: 0.2-0.5)
+ * - resolution: Render target size for neighbor sampling
+ * - sharpness: Intensity control (0.0-1.0)
  */
+
+precision highp float;
 
 precision highp float;
 

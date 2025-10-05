@@ -1,6 +1,7 @@
 /**
- * QUALIA.CODE v1.1 - LUTPass Contracts
+ * QUALIA.CODE v1.1 - LUTPass Contracts (WebGL 2.0 Upgrade)
  * Configuration and parameter contracts for Color Grading LUT post-processing effect
+ * Now uses native sampler3D with Data3DTexture for optimal performance
  */
 
 import * as THREE from 'three';
@@ -17,5 +18,5 @@ export interface LUTPassParams {
   vertexShader: string;
   fragmentShader: string;
   lutStrength?: number;
-  lutTexture?: THREE.Texture;  // Optional pre-loaded LUT texture
+  lutTexture?: THREE.Data3DTexture;  // Native 3D LUT texture (32x32x32)
 }

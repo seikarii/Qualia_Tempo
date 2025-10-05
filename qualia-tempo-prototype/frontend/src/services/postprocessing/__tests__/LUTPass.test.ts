@@ -82,10 +82,10 @@ describe('LUTPass', () => {
     });
 
     it('should create neutral identity LUT by default', () => {
-      // Access private lutTexture to verify it was created
+      // Access private lutTexture to verify it was created (WebGL 2.0 native 3D texture)
       const material = (lutPass as any).material;
       expect(material.uniforms.colorLUT.value).toBeDefined();
-      expect(material.uniforms.colorLUT.value).toBeInstanceOf(THREE.DataTexture);
+      expect(material.uniforms.colorLUT.value).toBeInstanceOf(THREE.Data3DTexture);
     });
 
     it('should set needsSwap to true', () => {
@@ -110,7 +110,13 @@ describe('LUTPass', () => {
 
   describe('LUT Texture Management', () => {
     it('should allow replacing LUT texture', () => {
-      const newLUT = new THREE.Texture();
+      // Create a new 3D LUT texture (WebGL 2.0)
+      const size = 32;
+      const data = new Uint8Array(size * size * size * 4);
+      const newLUT = new THREE.Data3DTexture(data, size, size, size);
+      newLUT.format = THREE.RGBAFormat;
+      newLUT.type = THREE.UnsignedByteType;
+      
       lutPass.setLUTTexture(newLUT);
 
       const material = (lutPass as any).material;

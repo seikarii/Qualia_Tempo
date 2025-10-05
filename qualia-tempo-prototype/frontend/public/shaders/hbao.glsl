@@ -1,4 +1,8 @@
-#version 330 core
+#version 300 es
+// QUALIA.CODE: Upgraded to GLSL ES 3.00 for WebGL 2.0 compatibility
+precision highp float;
+precision highp int;
+
 out vec4 fragColor;
 in vec2 uv;
 

@@ -1,26 +1,29 @@
+#version 300 es
 /**
  * QUALIA.CODE v1.1 - Chromatic Aberration Shader
  * CRISALIDA.CODE v1.1 - Phase 1: Independent Effects
  *
- * Radial chromatic aberration effect simulating lens distortion.
- * Rescued from _deprecated shaders - elite quality implementation.
+ * Simulates lens chromatic aberration with radial RGB channel separation.
+ * Rescued from _deprecated shaders - physically-inspired implementation.
  *
  * Key Features:
- * - Distance-based RGB channel separation
  * - Radial distortion from screen center
- * - Subtle, physically-plausible effect
- * - Configurable strength
+ * - Distance-based channel offset
+ * - Red shifts outward, blue shifts inward (realistic)
+ * - Resolution-independent effect
  *
  * Uniforms:
  * - inputTexture: Source image
- * - strength: Aberration intensity (0.001-0.005, typical: 0.002)
+ * - strength: Distortion intensity (0.001-0.005)
  *
- * Visual Effect:
- * - Red channel shifts outward from center
- * - Blue channel shifts inward
- * - Green channel stays centered
- * - Effect intensity increases with distance from center
+ * Recommended Presets:
+ * - Very Subtle: 0.001 (barely noticeable)
+ * - Subtle: 0.002 (default, physically plausible)
+ * - Noticeable: 0.003 (stylized)
+ * - Strong: 0.005+ (artistic effect)
  */
+
+precision highp float;
 
 precision highp float;
 

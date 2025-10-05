@@ -92,6 +92,32 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
     this.logger.info(this.config.messages.serviceInitialized);
   }
 
+  /**
+   * Create WebGL 2.0 context and Three.js renderer
+   * @param canvas Target canvas element
+   * @returns Configured WebGLRenderer
+   */
+  private createWebGL2Renderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
+    // QUALIA.CODE: Explicit WebGL 2.0 context request ensures modern shader features (sampler3D, etc.)
+    const context = canvas.getContext('webgl2');
+    if (!context) {
+      throw new Error('WebGL 2.0 not supported. Modern browser required.');
+    }
+    
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      context,
+      antialias: this.config.antialias
+    });
+    
+    this.logger.info('WebGL 2.0 context successfully initialized');
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.setPixelRatio(this.config.devicePixelRatio);
+    renderer.setClearColor(this.config.backgroundColor);
+    
+    return renderer;
+  }
+
   @logMethod
   @catchError
   @measureTime
@@ -104,14 +130,8 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
 
     this.logger.info("Initializing FrontendRenderingService");
 
-    // Create renderer - FrontendRenderingService is the OWNER
-    this.renderer = new THREE.WebGLRenderer({
-      canvas,
-      antialias: this.config.antialias
-    });
-    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    this.renderer.setPixelRatio(this.config.devicePixelRatio);
-    this.renderer.setClearColor(this.config.backgroundColor);
+    // Create WebGL 2.0 renderer
+    this.renderer = this.createWebGL2Renderer(canvas);
 
     // Create scene
     this.scene = new THREE.Scene();
