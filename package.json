@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "lint:architecture": "bash scripts/lint-architecture.sh"
+    "lint:architecture": "bash scripts/lint-architecture.sh",
+    "detect-circular-deps": "tsx scripts/detect-circular-dependencies.ts"
   },
   "dependencies": {
     "@qualia-tempo/eslint-plugin-qualia-code": "file:eslint-plugin-qualia-code",
@@ -8,6 +9,8 @@
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
+    "@typescript-eslint/typescript-estree": "^8.45.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.2"
   }
 }

@@ -86,6 +86,8 @@ module.exports = {
     // NEW RULES - QUALIA.CODE v1.2 Data Integrity & Performance
     "@qualia-tempo/qualia-code/enforce-validation-on-boundaries": "error",
     "@qualia-tempo/qualia-code/enforce-performance-best-practices": "error",
+    // NEW RULES - QUALIA.CODE v1.3 IoC Binding Order Enforcement
+    "@qualia-tempo/qualia-code/enforce-ioc-binding-order": "error",
   },
   settings: {
     "import/resolver": {

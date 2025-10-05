@@ -148,7 +148,7 @@ container.bind<ILogger>(TYPES.ILogger).to(QualiaLogger).inSingletonScope();
 container.bind<string>(TYPES.ConfigBasePath).toConstantValue("/config/");
 container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "compositionRoot": "composition-root.yaml",
-  "appInitializer": "application-initializer.yaml",
+  "applicationInitializer": "application-initializer.yaml",
   "logger": "logger.yaml",
   "http": "http-service.yaml",
   "eventBus": "eventbus.yaml",
@@ -568,25 +568,51 @@ function bindBasicConfigurations(fullConfig: FullGameConfig): void {
 }
 
 /**
- * Binds all service parameter objects to the container.
- * These are the consolidated parameter objects that reduce constructor parameter counts.
- * CRITICAL: bindDirectConfigs MUST be called FIRST to ensure all config objects are available
- * before any service instantiation is triggered by container.get() calls.
+ * Binds all service parameter objects to the container using a topological sort approach.
+ * 
+ * ARCHITECTURAL PATTERN: Two-Phase Binding with Dependency Levels
+ * ================================================================
+ * This function implements a topological sort of service dependencies to prevent circular
+ * dependency errors during IoC container resolution. Services are bound in "levels" where
+ * each level only depends on services from previous levels.
+ * 
+ * Phase 1: Direct Configs (Level 0)
+ *   - Bind simple config objects that services can inject directly
+ *   - No container.get() calls, just config object binding
+ * 
+ * Phase 2: Service Params by Dependency Level
+ *   - Level 2: Services that depend only on Level 0/1 (infrastructure + simple services)
+ *   - Level 3: Services that depend on Level 2 services
+ *   - Level 4: Services that depend on Level 3 services
+ *   - Level 5: Orchestrator services that depend on everything
+ * 
+ * CRITICAL: Each level MUST be bound before the next level to ensure that when
+ * container.get<IService>() is called in a Params binding, that service's own Params
+ * have already been bound.
+ * 
+ * See: /docs/reports/DEPENDENCY_GRAPH_ANALYSIS_2025-10-05.md for full dependency analysis
  */
 function bindServiceParameterObjects(fullConfig: FullGameConfig): void {
-  bindDirectConfigs(fullConfig); // MUST BE FIRST - configs needed before service instantiation
-  bindGameplayServiceParams(fullConfig);
-  bindAnalysisServiceParams(fullConfig);
-  bindRenderingServiceParams(fullConfig);
-  bindCommunicationServiceParams(fullConfig);
-  bindDiagnosticServiceParams(fullConfig);
+  // Phase 1: Direct config binding (no service dependencies)
+  bindDirectConfigs(fullConfig);
+  
+  // Phase 2: Service Params binding in dependency order
+  bindLevel2ServiceParams(fullConfig); // Services depending on infrastructure only
+  bindLevel3ServiceParams(fullConfig); // Services depending on Level 2
+  bindLevel4ServiceParams(fullConfig); // Services depending on Level 3
+  bindLevel5ServiceParams(fullConfig); // Orchestrator services depending on all
 }
 
+// ============================================================================
+// LEVEL 2: Services depending on infrastructure + simple config services
+// ============================================================================
 /**
- * Bind gameplay-related service parameter objects.
+ * Level 2 Service Params Binding
+ * Dependencies: EventBus, Logger, TimerService, HttpService, PerformanceService (Level 0/1)
+ *               OntologicalAudioEngine, WebAudioAPIService, ShaderLoader, ShaderIntrospection (Level 1)
  */
-function bindGameplayServiceParams(fullConfig: FullGameConfig): void {
-  // CRITICAL: AudioServiceParams MUST be bound FIRST because GameControllerServiceParams needs AudioService
+function bindLevel2ServiceParams(fullConfig: FullGameConfig): void {
+  // Audio Service - needs OntologicalAudioEngine, WebAudioAPIService (both Level 1)
   safeBindConstant<AudioServiceParams>(TYPES.AudioServiceParams, {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -596,6 +622,7 @@ function bindGameplayServiceParams(fullConfig: FullGameConfig): void {
     timerService: container.get<ITimerService>(TYPES.ITimerService),
   });
 
+  // Qualia Calculator - needs only PerformanceService (Level 0)
   safeBindConstant<QualiaStateCalculatorServiceParams>(TYPES.QualiaStateCalculatorServiceParams, {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -603,7 +630,33 @@ function bindGameplayServiceParams(fullConfig: FullGameConfig): void {
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
   });
 
+  // PostProcessing Service - needs ShaderLoader, ShaderIntrospection (both Level 1)
+  safeBindConstant<PostProcessingServiceParams>(TYPES.PostProcessingServiceParams, {
+    logger: container.get<ILogger>(TYPES.ILogger),
+    shaderLoader: container.get<IShaderLoaderService>(TYPES.IShaderLoaderService),
+    shaderIntrospection: container.get<IShaderIntrospectionService>(TYPES.IShaderIntrospectionService),
+    config: fullConfig.postProcessing,
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+  });
+
+  // WebSocket Service - needs WebSocketFactory (Level 1)
+  safeBindConstant<WebSocketServiceParams>(TYPES.WebSocketServiceParams, {
+    logger: container.get<ILogger>(TYPES.ILogger),
+    webSocketFactory: container.get<IWebSocketFactory>(TYPES.IWebSocketFactory),
+    config: fullConfig.backendSync,
+  });
+}
+
+// ============================================================================
+// LEVEL 3: Services depending on Level 2 services
+// ============================================================================
+/**
+ * Level 3 Service Params Binding
+ * Dependencies: Level 2 services (AudioService, PostProcessingService, WebSocketService)
+ */
+function bindLevel3ServiceParams(fullConfig: FullGameConfig): void {
   // QUALIA.CODE v1.2: keyAdapter removed - @AdaptAndEmit decorator was never used in this service
+  // Rhythmic Movement - needs InputStateService (Level 1), GameplayMechanicsService (Level 1)
   safeBindConstant<RhythmicMovementControllerParams>(TYPES.RhythmicMovementControllerParams, {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -613,6 +666,43 @@ function bindGameplayServiceParams(fullConfig: FullGameConfig): void {
     gameplayMechanicsService: container.get<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService),
   });
 
+  // Audio Analysis - needs WebAudioAPIService (Level 1)
+  safeBindConstant<AudioAnalysisServiceParams>(TYPES.AudioAnalysisServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    webAudioService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),
+    config: fullConfig.audioAnalysis,
+  });
+
+  // Physics Service - needs InputStateService (Level 1)
+  safeBindConstant<PhysicsServiceParams>(TYPES.PhysicsServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    inputStateService: container.get<IInputStateService>(TYPES.IInputStateService),
+    config: fullConfig.physics,
+  });
+
+  // State Streaming - needs WebSocketService (Level 2)
+  // QUALIA.CODE v1.2: messageAdapter removed - now resolved via IoC in @AdaptAndEmit decorator
+  safeBindConstant<StateStreamingServiceParams>(TYPES.StateStreamingServiceParams, {
+    webSocketService: container.get<IWebSocketService>(TYPES.IWebSocketService),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    config: fullConfig.backendSync.streaming,
+    logger: container.get<ILogger>(TYPES.ILogger),
+  });
+}
+
+// ============================================================================
+// LEVEL 4: Services depending on Level 3 services
+// ============================================================================
+/**
+ * Level 4 Service Params Binding
+ * Dependencies: Level 3 services (AudioService, RhythmicMovement, etc.)
+ */
+function bindLevel4ServiceParams(fullConfig: FullGameConfig): void {
+  // Game Controller - needs AudioService (Level 2), GameStateStoreService (Level 1), AudioSystemBridge
   safeBindConstant<GameControllerServiceParams>(TYPES.GameControllerServiceParams, {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -623,33 +713,8 @@ function bindGameplayServiceParams(fullConfig: FullGameConfig): void {
     audioService: container.get<IAudioService>(TYPES.IAudioService),
     audioSystemBridge: container.get<IAudioSystemBridge>(TYPES.IAudioSystemBridge),
   });
-}
 
-/**
- * Bind analysis-related service parameter objects (QUALIA.CODE v2.0).
- */
-function bindAnalysisServiceParams(fullConfig: FullGameConfig): void {
-  safeBindConstant<AudioAnalysisServiceParams>(TYPES.AudioAnalysisServiceParams, {
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    logger: container.get<ILogger>(TYPES.ILogger),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
-    webAudioService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),
-    config: fullConfig.audioAnalysis,
-  });
-
-  safeBindConstant<PhysicsServiceParams>(TYPES.PhysicsServiceParams, {
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    logger: container.get<ILogger>(TYPES.ILogger),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
-    inputStateService: container.get<IInputStateService>(TYPES.IInputStateService),
-    config: fullConfig.physics,
-  });
-}
-
-/**
- * Bind rendering-related service parameter objects.
- */
-function bindRenderingServiceParams(fullConfig: FullGameConfig): void {
+  // Frontend Rendering - needs PostProcessingService (Level 2)
   safeBindConstant<FrontendRenderingServiceParams>(TYPES.FrontendRenderingServiceParams, {
     logger: container.get<ILogger>(TYPES.ILogger),
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
@@ -658,19 +723,7 @@ function bindRenderingServiceParams(fullConfig: FullGameConfig): void {
     config: fullConfig.frontendRendering,
   });
 
-  safeBindConstant<PostProcessingServiceParams>(TYPES.PostProcessingServiceParams, {
-    logger: container.get<ILogger>(TYPES.ILogger),
-    shaderLoader: container.get<IShaderLoaderService>(TYPES.IShaderLoaderService),
-    shaderIntrospection: container.get<IShaderIntrospectionService>(TYPES.IShaderIntrospectionService),
-    config: fullConfig.postProcessing,
-    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
-  });
-}
-
-/**
- * Bind communication-related service parameter objects.
- */
-function bindCommunicationServiceParams(fullConfig: FullGameConfig): void {
+  // Backend Sync - needs HttpService (Level 0)
   safeBindConstant<BackendSyncServiceParams>(TYPES.BackendSyncServiceParams, {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -680,33 +733,7 @@ function bindCommunicationServiceParams(fullConfig: FullGameConfig): void {
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
   });
 
-  // QUALIA.CODE v1.2: messageAdapter removed - now resolved via IoC in @AdaptAndEmit decorator
-  safeBindConstant<StateStreamingServiceParams>(TYPES.StateStreamingServiceParams, {
-    webSocketService: container.get<IWebSocketService>(TYPES.IWebSocketService),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
-    config: fullConfig.backendSync.streaming,
-    logger: container.get<ILogger>(TYPES.ILogger),
-  });
-
-  safeBindConstant<WebSocketServiceParams>(TYPES.WebSocketServiceParams, {
-    logger: container.get<ILogger>(TYPES.ILogger),
-    webSocketFactory: container.get<IWebSocketFactory>(TYPES.IWebSocketFactory),
-    config: fullConfig.backendSync,
-  });
-}
-
-/**
- * Bind diagnostic and monitoring service parameter objects.
- */
-function bindDiagnosticServiceParams(fullConfig: FullGameConfig): void {
-  bindBasicDiagnosticServices(fullConfig);
-  bindApplicationInitializerParams(fullConfig);
-}
-
-/**
- * Bind basic diagnostic service parameters (notification, debug, error reporting).
- */
-function bindBasicDiagnosticServices(fullConfig: FullGameConfig): void {
+  // Notification Service - needs GameStateStore (Level 1), ThrottlingManager (Level 1)
   safeBindConstant<NotificationServiceParams>(TYPES.NotificationServiceParams, {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -716,6 +743,7 @@ function bindBasicDiagnosticServices(fullConfig: FullGameConfig): void {
     throttlingManager: container.get<ThrottlingManager>(TYPES.ThrottlingManager),
   });
 
+  // Debug Service - needs PerformanceService (Level 0)
   safeBindConstant<DebugServiceParams>(TYPES.DebugServiceParams, {
     logger: container.get<ILogger>(TYPES.ILogger),
     timerService: container.get<ITimerService>(TYPES.ITimerService),
@@ -723,6 +751,7 @@ function bindBasicDiagnosticServices(fullConfig: FullGameConfig): void {
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
   });
 
+  // Debug Orchestrator - needs PerformanceService (Level 0)
   safeBindConstant<DebugOrchestratorServiceParams>(TYPES.DebugOrchestratorServiceParams, {
     config: fullConfig.debugOrchestrator,
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -730,6 +759,7 @@ function bindBasicDiagnosticServices(fullConfig: FullGameConfig): void {
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
   });
 
+  // Error Reporting - needs HttpService (Level 0)
   safeBindConstant<ErrorReportingServiceParams>(TYPES.ErrorReportingServiceParams, {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -739,10 +769,17 @@ function bindBasicDiagnosticServices(fullConfig: FullGameConfig): void {
   });
 }
 
+// ============================================================================
+// LEVEL 5: Orchestrator services depending on all previous levels
+// ============================================================================
 /**
- * Bind ApplicationInitializerService parameters (consolidates 14+ dependencies).
+ * Level 5 Service Params Binding - Application Orchestrator
+ * Dependencies: ALL services from Levels 0-4
+ * 
+ * This is the final level that coordinates all other services.
  */
-function bindApplicationInitializerParams(fullConfig: FullGameConfig): void {
+function bindLevel5ServiceParams(fullConfig: FullGameConfig): void {
+  // Application Initializer - needs ALL services from levels 0-4
   safeBindConstant<ApplicationInitializerServiceParams>(TYPES.ApplicationInitializerServiceParams, {
     config: fullConfig.applicationInitializer,
     backendSyncService: container.get<IBackendSyncService>(TYPES.IBackendSyncService),

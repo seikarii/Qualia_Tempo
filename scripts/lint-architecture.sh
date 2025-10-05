@@ -27,6 +27,7 @@ FRONTEND_TYPE_ERRORS=0
 FRONTEND_COMPLIANCE_ERRORS=0
 BACKEND_ERRORS=0
 TYPE_ERRORS=0
+CIRCULAR_DEPS_ERRORS=0
 
 echo -e "${BLUE}📋 Phase 0: Contract & Configuration Integrity${NC}"
 if python3 "$PROJECT_ROOT/scripts/contract-validator.py"; then
@@ -147,15 +148,30 @@ else
 fi
 
 echo
-echo -e "${BLUE}📋 Phase 4: Summary${NC}"
+echo -e "${BLUE}📋 Phase 4: IoC Circular Dependency Detection${NC}"
+if command -v npm &> /dev/null; then
+    if npm run detect-circular-deps --silent; then
+        echo -e "   ${GREEN}✅ IoC binding order: PASSED${NC}"
+    else
+        echo -e "   ${RED}❌ IoC circular dependencies or binding order violations detected${NC}"
+        CIRCULAR_DEPS_ERRORS=1
+    fi
+else
+    echo -e "   ${YELLOW}⚠️  npm not found, skipping IoC circular dependency detection${NC}"
+    CIRCULAR_DEPS_ERRORS=0
+fi
+
+echo
+echo -e "${BLUE}📋 Phase 5: Summary${NC}"
 echo "   Contract Integrity:        $([ $CONTRACT_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
 echo "   Config Integrity:          $([ $CONFIG_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
 echo "   Frontend TypeScript:       $([ $FRONTEND_TYPE_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
 echo "   Frontend QUALIA.CODE:      $([ $FRONTEND_COMPLIANCE_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
 echo "   Backend Patterns:          $([ $BACKEND_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
 echo "   Backend Types:             $([ $TYPE_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
+echo "   IoC Binding Order:         $([ $CIRCULAR_DEPS_ERRORS -eq 0 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}FAILED${NC}")"
 
-TOTAL_ERRORS=$((CONTRACT_ERRORS + CONFIG_ERRORS + FRONTEND_TYPE_ERRORS + FRONTEND_COMPLIANCE_ERRORS + BACKEND_ERRORS + TYPE_ERRORS))
+TOTAL_ERRORS=$((CONTRACT_ERRORS + CONFIG_ERRORS + FRONTEND_TYPE_ERRORS + FRONTEND_COMPLIANCE_ERRORS + BACKEND_ERRORS + TYPE_ERRORS + CIRCULAR_DEPS_ERRORS))
 
 if [ $TOTAL_ERRORS -eq 0 ]; then
     echo

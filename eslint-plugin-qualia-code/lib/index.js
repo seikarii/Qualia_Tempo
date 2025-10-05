@@ -38,6 +38,8 @@ const enforceIsolatedTestContainer = require('./rules/enforce-isolated-test-cont
 // NEW RULES - QUALIA.CODE v1.2 Data Integrity & Performance
 const enforceValidationOnBoundaries = require('./rules/enforce-validation-on-boundaries');
 const enforcePerformanceBestPractices = require('./rules/enforce-performance-best-practices');
+// NEW RULES - QUALIA.CODE v1.3 IoC Binding Order Enforcement
+const enforceIocBindingOrder = require('./rules/enforce-ioc-binding-order');
 
 module.exports = {
   rules: {
@@ -67,6 +69,8 @@ module.exports = {
     // NEW RULES - QUALIA.CODE v1.2 Data Integrity & Performance
     'enforce-validation-on-boundaries': enforceValidationOnBoundaries,
     'enforce-performance-best-practices': enforcePerformanceBestPractices,
+    // NEW RULES - QUALIA.CODE v1.3 IoC Binding Order Enforcement
+    'enforce-ioc-binding-order': enforceIocBindingOrder,
   },
   configs: {
     recommended: {
@@ -98,6 +102,8 @@ module.exports = {
         // NEW RULES - QUALIA.CODE v1.2 Data Integrity & Performance
         '@qualia-tempo/qualia-code/enforce-validation-on-boundaries': 'error',
         '@qualia-tempo/qualia-code/enforce-performance-best-practices': 'error',
+        // NEW RULES - QUALIA.CODE v1.3 IoC Binding Order Enforcement
+        '@qualia-tempo/qualia-code/enforce-ioc-binding-order': 'error',
       }
     }
   }
