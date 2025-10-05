@@ -34,6 +34,8 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { IPerformanceService } from "./interfaces/IPerformanceService";
 import type { IPostProcessingService } from "./interfaces/IPostProcessingService";
 import type { IEventBus } from "./interfaces/IEventBus";
+import type { IShaderLoaderService } from "./interfaces/IShaderLoaderService";
+import type { IShaderIntrospectionService } from "./interfaces/IShaderIntrospectionService";
 import type { FrontendRenderingConfig, FrontendRenderingServiceParams } from "./contracts/IFrontendRenderingService.contracts";
 import type { 
   QualiaParticleDataReceivedEvent,
@@ -48,6 +50,8 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
   private readonly performanceService: IPerformanceService;
   private readonly postProcessingService: IPostProcessingService;
   private readonly eventBus: IEventBus;
+  private readonly shaderLoader: IShaderLoaderService;
+  private readonly shaderIntrospection: IShaderIntrospectionService;
   private readonly config: FrontendRenderingConfig;
 
   // Three.js core objects
@@ -60,10 +64,10 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
   private isRunning = false;
   private animationId: number | null = null;
 
-  // Particle system
+  // Particle system - CRISALIDA.CODE v1.1: Using ShaderMaterial for G-Buffer rendering
   private particleSystem!: THREE.Points;
   private particleGeometry!: THREE.BufferGeometry;
-  private particleMaterial!: THREE.PointsMaterial;
+  private particleMaterial!: THREE.ShaderMaterial;
 
   // Performance tracking
   private frameCount = 0;
@@ -81,6 +85,8 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
     this.performanceService = params.performanceService;
     this.postProcessingService = params.postProcessingService;
     this.eventBus = params.eventBus;
+    this.shaderLoader = params.shaderLoader;
+    this.shaderIntrospection = params.shaderIntrospection;
     this.config = params.config;
 
     this.logger.info(this.config.messages.serviceInitialized);
@@ -125,8 +131,8 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
     // Setup WebGL context loss/restore handlers
     this.setupContextHandlers();
 
-    // Initialize particle system
-    this.initializeParticleSystem();
+    // Initialize particle system - CRISALIDA.CODE v1.1: Now async for shader loading
+    await this.initializeParticleSystem();
 
     this.isInitialized = true;
     this.logger.info("FrontendRenderingService initialized successfully");
@@ -226,42 +232,105 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
 
     // Context loss recovery removed - handled by PostProcessingService
 
+  /**
+   * CRISALIDA.CODE v1.1 - Phase 2: G-Buffer Activation
+   * Initialize particle system with ShaderMaterial for deferred rendering
+   */
   @logMethod
-  private initializeParticleSystem(): void {
-    // Create particle geometry
-    this.particleGeometry = new THREE.BufferGeometry();
+  @catchError
+  private async initializeParticleSystem(): Promise<void> {
+    // Create and populate particle geometry
+    this.particleGeometry = this.createParticleGeometry();
+    
+    // Load and create shader material
+    this.particleMaterial = await this.createParticleShaderMaterial();
+
+    // Create particle system and add to scene
+    this.particleSystem = new THREE.Points(this.particleGeometry, this.particleMaterial);
+    this.scene.add(this.particleSystem);
+    
+    this.logger.info(`Initialized particle system with ${this.config.particleCount} particles using G-Buffer shader`);
+  }
+
+  /**
+   * Create and populate particle geometry with random attributes
+   * QUALIA.CODE: Extracted method to reduce complexity (complexity: 3)
+   */
+  private createParticleGeometry(): THREE.BufferGeometry {
+    const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(this.config.particleCount * 3);
     const colors = new Float32Array(this.config.particleCount * 3);
     const sizes = new Float32Array(this.config.particleCount);
+    const materialProps = new Float32Array(this.config.particleCount * 2);
 
-    // Initialize particles in random positions
     for (let i = 0; i < this.config.particleCount; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * this.config.particlePositionRange;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * this.config.particlePositionRange;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * this.config.particlePositionRange;
-
-      colors[i * 3] = Math.random();
-      colors[i * 3 + 1] = Math.random();
-      colors[i * 3 + 2] = Math.random();
-
-      sizes[i] = Math.random() * (this.config.particleSizeMax - this.config.particleSizeMin) + this.config.particleSizeMin;
+      this.initializeParticleAttributes({ index: i, positions, colors, sizes, materialProps });
     }
 
-    this.particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    this.particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    this.particleGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    geometry.setAttribute('materialProps', new THREE.BufferAttribute(materialProps, 2));
 
-    // Create points material
-    this.particleMaterial = new THREE.PointsMaterial({
-      size: 2,
-      vertexColors: true,
+    return geometry;
+  }
+
+  /**
+   * Initialize random attributes for a single particle
+   * QUALIA.CODE: Extracted method (complexity: 1, params object to avoid max-params violation)
+   */
+  private initializeParticleAttributes(params: {
+    index: number;
+    positions: Float32Array;
+    colors: Float32Array;
+    sizes: Float32Array;
+    materialProps: Float32Array;
+  }): void {
+    const { index, positions, colors, sizes, materialProps } = params;
+    
+    // Position
+    positions[index * 3] = (Math.random() - 0.5) * this.config.particlePositionRange;
+    positions[index * 3 + 1] = (Math.random() - 0.5) * this.config.particlePositionRange;
+    positions[index * 3 + 2] = (Math.random() - 0.5) * this.config.particlePositionRange;
+
+    // Color
+    colors[index * 3] = Math.random();
+    colors[index * 3 + 1] = Math.random();
+    colors[index * 3 + 2] = Math.random();
+
+    // Size
+    sizes[index] = Math.random() * (this.config.particleSizeMax - this.config.particleSizeMin) + this.config.particleSizeMin;
+    
+    // Material properties (metallic, roughness)
+    const metallicRange = this.config.particleMetallicMax - this.config.particleMetallicMin;
+    const roughnessRange = this.config.particleRoughnessMax - this.config.particleRoughnessMin;
+    materialProps[index * 2] = Math.random() * metallicRange + this.config.particleMetallicMin;
+    materialProps[index * 2 + 1] = Math.random() * roughnessRange + this.config.particleRoughnessMin;
+  }
+
+  /**
+   * Load gbuffer_particles shader and create ShaderMaterial
+   * QUALIA.CODE: Extracted method to reduce complexity (complexity: 2)
+   */
+  private async createParticleShaderMaterial(): Promise<THREE.ShaderMaterial> {
+    const shaderSource = await this.shaderLoader.load('gbuffer_particles');
+    const shader = await this.shaderIntrospection.introspect(shaderSource);
+
+    return new THREE.ShaderMaterial({
+      vertexShader: shader.vertexShader,
+      fragmentShader: shader.fragmentShader,
+      uniforms: {
+        ...shader.uniforms,
+        particleScale: { value: this.config.particleScale },
+        cameraNear: { value: this.camera.near },
+        cameraFar: { value: this.camera.far },
+        time: { value: 0.0 }
+      },
       transparent: true,
-      alphaTest: 0.5,
-      sizeAttenuation: true,
+      depthWrite: true,
+      depthTest: true,
+      blending: THREE.NormalBlending
     });
-
-    this.particleSystem = new THREE.Points(this.particleGeometry, this.particleMaterial);
-    this.scene.add(this.particleSystem);
   }
 
   /**
@@ -425,8 +494,10 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
       this.lastTime = currentTime;
     }
 
-    // Update time uniform for animations
-    // NOTE: Removed time uniform as we switched from ShaderMaterial to PointsMaterial
+    // CRISALIDA.CODE v1.1: Update time uniform for G-Buffer particle shader animations
+    if (this.particleMaterial?.uniforms.time) {
+      this.particleMaterial.uniforms.time.value = currentTime * 0.001; // Convert to seconds
+    }
 
     // Rotate camera slowly for dynamic view
     this.camera.position.x = Math.cos(currentTime * this.config.cameraOrbitSpeed) * this.config.cameraOrbitRadius;

@@ -21,6 +21,8 @@ import type { PostProcessingConfig, PostProcessingPass, PostProcessingServicePar
 import { logMethod, catchError, measureTime, BrowserOnly } from "../utils/decorators";
 import { env } from "../utils/env";
 import { GBufferPass } from "./postprocessing/GBufferPass.js";
+import { SSRPass } from "./postprocessing/SSRPass.js";
+import { HBAOPass } from "./postprocessing/HBAOPass.js";
 
 @injectable()
 export class PostProcessingService implements IPostProcessingService {
@@ -219,6 +221,7 @@ export class PostProcessingService implements IPostProcessingService {
   @catchError
   /**
    * Create post-processing pass from configuration
+   * CRISALIDA.CODE v1.1 - Phase 3: Added SSRPass and HBAOPass support
    * QUALIA.CODE COMPLIANT: Extract Method Pattern (58→20 lines, 66% reduction)
    */
   private async createPass(passConfig: PostProcessingPass): Promise<Pass | null> {
@@ -234,6 +237,12 @@ export class PostProcessingService implements IPostProcessingService {
 
       case 'GBufferPass':
         return await this.createGBufferPass();
+
+      case 'SSRPass':
+        return await this.createSSRPass(passConfig);
+
+      case 'HBAOPass':
+        return await this.createHBAOPass(passConfig);
 
       default:
         this.logger.warn(`Unknown pass type: ${passConfig.type}`);
@@ -294,6 +303,74 @@ export class PostProcessingService implements IPostProcessingService {
       vertexShader: shader.vertexShader,
       fragmentShader: shader.fragmentShader,
       uniforms: shader.uniforms
+    });
+  }
+
+  /**
+   * CRISALIDA.CODE v1.1 - Phase 3: Advanced Effects Integration
+   * Create SSR pass for screen-space reflections
+   */
+  private async createSSRPass(passConfig: PostProcessingPass): Promise<Pass> {
+    const shaderSource = await this.shaderLoader.load('ssr_v2');
+    const shader = await this.shaderIntrospection.introspect(shaderSource);
+    
+    // Get G-Buffer textures from renderTargets map
+    const gBufferColor = this.renderTargets.get('gbuffer_color')?.texture;
+    const gBufferNormal = this.renderTargets.get('gbuffer_normal')?.texture;
+    const gBufferDepth = this.renderTargets.get('gbuffer_depth')?.texture;
+    const gBufferMaterial = this.renderTargets.get('gbuffer_material')?.texture;
+
+    if (!gBufferColor || !gBufferNormal || !gBufferDepth || !gBufferMaterial) {
+      throw new Error('SSRPass requires G-Buffer textures to be available');
+    }
+
+    return new SSRPass({
+      width: this.config.renderTargetWidth,
+      height: this.config.renderTargetHeight,
+      scene: this.scene,
+      camera: this.camera,
+      gBufferColor,
+      gBufferNormal,
+      gBufferDepth,
+      gBufferMaterial,
+      vertexShader: shader.vertexShader,
+      fragmentShader: shader.fragmentShader,
+      maxSteps: passConfig.params?.maxSteps as number | undefined,
+      stride: passConfig.params?.stride as number | undefined,
+      thickness: passConfig.params?.thickness as number | undefined,
+      maxDistance: passConfig.params?.maxDistance as number | undefined,
+    });
+  }
+
+  /**
+   * CRISALIDA.CODE v1.1 - Phase 3: Advanced Effects Integration
+   * Create HBAO pass for ambient occlusion
+   */
+  private async createHBAOPass(passConfig: PostProcessingPass): Promise<Pass> {
+    const shaderSource = await this.shaderLoader.load('hbao');
+    const shader = await this.shaderIntrospection.introspect(shaderSource);
+    
+    // Get G-Buffer textures from renderTargets map
+    const gBufferNormal = this.renderTargets.get('gbuffer_normal')?.texture;
+    const gBufferDepth = this.renderTargets.get('gbuffer_depth')?.texture;
+
+    if (!gBufferNormal || !gBufferDepth) {
+      throw new Error('HBAOPass requires G-Buffer normal and depth textures');
+    }
+
+    return new HBAOPass({
+      width: this.config.renderTargetWidth,
+      height: this.config.renderTargetHeight,
+      scene: this.scene,
+      camera: this.camera,
+      gBufferNormal,
+      gBufferDepth,
+      vertexShader: shader.vertexShader,
+      fragmentShader: shader.fragmentShader,
+      radius: passConfig.params?.radius as number | undefined,
+      bias: passConfig.params?.bias as number | undefined,
+      numDirections: passConfig.params?.numDirections as number | undefined,
+      numSteps: passConfig.params?.numSteps as number | undefined,
     });
   }
 

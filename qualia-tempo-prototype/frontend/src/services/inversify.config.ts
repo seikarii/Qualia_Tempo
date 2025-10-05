@@ -723,12 +723,14 @@ function bindLevel4ServiceParams(fullConfig: FullGameConfig): void {
     audioSystemBridge: container.get<IAudioSystemBridge>(TYPES.IAudioSystemBridge),
   });
 
-  // Frontend Rendering - needs PostProcessingService (Level 2)
+  // Frontend Rendering - CRISALIDA.CODE v1.1: Added shader services for G-Buffer particles
   safeBindConstant<FrontendRenderingServiceParams>(TYPES.FrontendRenderingServiceParams, {
     logger: container.get<ILogger>(TYPES.ILogger),
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
     postProcessingService: container.get<IPostProcessingService>(TYPES.IPostProcessingService),
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    shaderLoader: container.get<IShaderLoaderService>(TYPES.IShaderLoaderService),
+    shaderIntrospection: container.get<IShaderIntrospectionService>(TYPES.IShaderIntrospectionService),
     config: fullConfig.frontendRendering,
   });
 

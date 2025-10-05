@@ -51,6 +51,15 @@ renderTargets:
       minFilter: Linear
       magFilter: Linear
 
+  # HBAO output (CRISALIDA.CODE v1.1 - Phase 3)
+  - name: hbao_occlusion
+    width: 1920
+    height: 1080
+    format: UnsignedByte
+    options:
+      minFilter: Linear
+      magFilter: Linear
+
   # SSR output
   - name: ssr_reflections
     width: 1920
@@ -87,17 +96,34 @@ pipelines:
         # - gbuffer_material (COLOR_ATTACHMENT3)
 
   # ============================================================================
-  # PIPELINE 2: SSR V2 Calculation
+  # PIPELINE 2: HBAO (Horizon-Based Ambient Occlusion) - CRISALIDA.CODE v1.1
+  # High-quality ambient occlusion for enhanced depth perception
+  # ============================================================================
+  - name: hbao_pipeline
+    output: hbao_occlusion
+    passes:
+      - type: HBAOPass
+        enabled: true
+        params:
+          radius: 1.5        # Sampling radius in view space
+          bias: 0.025        # Bias to prevent self-occlusion artifacts
+          numDirections: 8   # Number of sampling directions (quality)
+          numSteps: 4        # Steps per direction (quality vs performance)
+
+  # ============================================================================
+  # PIPELINE 3: SSR V2 Calculation
   # Advanced screen-space reflections with adaptive ray-marching
   # ============================================================================
   - name: ssr_pipeline
     output: ssr_reflections
     passes:
-      - type: ShaderPass
+      - type: SSRPass
         enabled: true
-        shader: ssr_v2
-        uniforms:
-          # G-Buffer inputs (connected via JIT pipeline connections)
+        params:
+          maxSteps: 64       # Maximum ray-marching steps
+          stride: 2.0        # Step size multiplier
+          thickness: 0.5     # Hit detection threshold
+          maxDistance: 50.0  # Maximum ray travel distance
           gBuffer_Color:
             value: gbuffer_color
           gBuffer_Normal:
@@ -127,34 +153,47 @@ pipelines:
             value: 100.0  # Range: 50.0-200.0. Maximum ray travel distance
 
   # ============================================================================
-  # PIPELINE 3: Final Composite
-  # Combines base color with SSR reflections
+  # PIPELINE 4: Final Composite - CRISALIDA.CODE v1.1 Phase 4
+  # HDR composition with ACES tone mapping, bloom, and color grading
   # ============================================================================
   - name: composite_pipeline
     output: screen  # Final output to screen
     passes:
+      # Bloom pass for glow effects
+      - type: UnrealBloomPass
+        enabled: true
+        params:
+          strength: 0.5
+          radius: 0.3
+          threshold: 0.9
+
+      # Final HDR composition
       - type: ShaderPass
         enabled: true
         shader: composite_pass
         uniforms:
           tDiffuse:
             value: gbuffer_color
-          tReflections:
-            value: ssr_reflections
-          reflectionStrength:
-            value: 1.0  # Global reflection intensity multiplier
+          tBloom:
+            value: composite_buffer  # Bloom output
+          bloomStrength:
+            value: 0.8
+          exposure:
+            value: 1.0       # HDR exposure compensation (-3.0 to +3.0)
+          contrast:
+            value: 1.2       # Contrast adjustment (0.5-2.0)
+          saturation:
+            value: 1.1       # Color saturation (0.0-2.0)
+          gamma:
+            value: 2.2       # Gamma correction (1.8-2.4)
+          blendMode:
+            value: 1         # 0=Additive, 1=Screen, 2=Overlay, 3=SoftLight
+          # TODO: Integrate HBAO and SSR textures in composite shader
 
-      # Optional: Add bloom for enhanced visuals
-      - type: UnrealBloomPass
-        enabled: true  # Enable for extra visual flair
-        params:
-          strength: 0.5
-          radius: 0.3
-          threshold: 0.9
-
-# Pipeline execution order
+# Pipeline execution order - CRISALIDA.CODE v1.1: GBuffer → HBAO → SSR → Composite
 pipelineOrder:
   - gbuffer_pipeline
+  - hbao_pipeline
   - ssr_pipeline
   - composite_pipeline
 

@@ -7,6 +7,8 @@ import type { ILogger } from "../interfaces/ILogger";
 import type { IPerformanceService } from "../interfaces/IPerformanceService";
 import type { IPostProcessingService } from "../interfaces/IPostProcessingService";
 import type { IEventBus } from "../interfaces/IEventBus";
+import type { IShaderLoaderService } from "../interfaces/IShaderLoaderService";
+import type { IShaderIntrospectionService } from "../interfaces/IShaderIntrospectionService";
 
 export interface FrontendRenderingConfig {
   // Particle system configuration
@@ -14,6 +16,13 @@ export interface FrontendRenderingConfig {
   particlePositionRange: number;
   particleSizeMin: number;
   particleSizeMax: number;
+  particleScale: number; // CRISALIDA.CODE v1.1: Particle size scaling for G-Buffer shader
+  
+  // Particle material properties (for G-Buffer)
+  particleMetallicMin: number;
+  particleMetallicMax: number;
+  particleRoughnessMin: number;
+  particleRoughnessMax: number;
   
   // Particle data format configuration
   componentsPerParticle: number;
@@ -64,11 +73,13 @@ export interface FrontendRenderingConfig {
 }
 
 // QUALIA.CODE v1.1: Constructor Parameter Object
-// Consolidates 5 constructor parameters into a single object to comply with IoC limits
+// CRISALIDA.CODE v1.1: Added shader services for G-Buffer particle rendering
 export interface FrontendRenderingServiceParams {
   logger: ILogger;
   performanceService: IPerformanceService;
   postProcessingService: IPostProcessingService;
   eventBus: IEventBus;
+  shaderLoader: IShaderLoaderService;
+  shaderIntrospection: IShaderIntrospectionService;
   config: FrontendRenderingConfig;
 }

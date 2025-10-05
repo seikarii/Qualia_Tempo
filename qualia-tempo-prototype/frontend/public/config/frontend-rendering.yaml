@@ -6,6 +6,13 @@ particleCount: 10000
 particlePositionRange: 20.0
 particleSizeMin: 1.0
 particleSizeMax: 6.0
+particleScale: 1.0  # CRISALIDA.CODE v1.1: Particle size scaling for G-Buffer shader
+
+# Particle material properties (for G-Buffer deferred rendering)
+particleMetallicMin: 0.0
+particleMetallicMax: 0.8
+particleRoughnessMin: 0.2
+particleRoughnessMax: 0.9
 
 # Particle data format configuration
 componentsPerParticle: 21
