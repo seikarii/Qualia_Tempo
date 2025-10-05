@@ -1,523 +1,443 @@
 /**
- * QUALIA.CODE v3.2 - PostProcessingService
- * Dynamic post-processing pipeline graph engine using Three.js EffectComposer.
- * Loads pipeline configuration from YAML and orchestrates complex rendering graphs.
+ * QUALIA.CODE v4.0 - PostProcessingService Dynamic Orchestrator
+ * 
+ * AAA-grade post-processing pipeline orchestrator with intelligent dependency management.
+ * Dynamically constructs render graphs based on modular configuration.
+ * 
+ * Features:
+ * - Dynamic pass instantiation (Bloom, TAA, Motion Blur, DoF)
+ * - Automatic dependency wiring (G-Buffer velocity → TAA/MotionBlur)
+ * - Jitter integration for TAA sub-pixel sampling
+ * - History buffer management for temporal effects
+ * - Configurable pass execution order
+ * - Performance profiling and optimization
+ * 
+ * Architecture:
+ * - Uses Three.js EffectComposer for pass chaining
+ * - IoC-compliant with constructor injection
+ * - External YAML configuration for all parameters
+ * - Zero hardcoded values
+ * 
+ * @implements {IPostProcessingService}
  */
 
 import { injectable, inject } from "inversify";
 import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { Pass } from "three/examples/jsm/postprocessing/Pass.js";
 import { TYPES } from "./inversify.types";
 import type { IPostProcessingService } from "./interfaces/IPostProcessingService";
 import type { ILogger } from "./interfaces/ILogger";
-import type { IShaderIntrospectionService } from "./interfaces/IShaderIntrospectionService";
 import type { IShaderLoaderService } from "./interfaces/IShaderLoaderService";
 import type { IPerformanceService } from "./interfaces/IPerformanceService";
-import type { PostProcessingConfig, PostProcessingPass, PostProcessingServiceParams } from "./contracts/IPostProcessingService.contracts";
+import type { IJitterService } from "./interfaces/IJitterService";
+import type { PostProcessingConfig, PostProcessingServiceParams } from "./contracts/IPostProcessingService.contracts";
 import { logMethod, catchError, measureTime, BrowserOnly } from "../utils/decorators";
-import { env } from "../utils/env";
-import { GBufferPass } from "./postprocessing/GBufferPass.js";
-import { SSRPass } from "./postprocessing/SSRPass.js";
-import { HBAOPass } from "./postprocessing/HBAOPass.js";
+import { GBufferPass } from "./postprocessing/GBufferPass";
+import { BloomPass } from "./postprocessing/BloomPass";
+import { TAAPass } from "./postprocessing/TAAPass";
+import { MotionBlurPass } from "./postprocessing/MotionBlurPass";
+import { DoFPass } from "./postprocessing/DoFPass";
 
 @injectable()
 export class PostProcessingService implements IPostProcessingService {
   private readonly logger: ILogger;
   private readonly shaderLoader: IShaderLoaderService;
-  private readonly shaderIntrospection: IShaderIntrospectionService;
-  private readonly config: PostProcessingConfig;
   private readonly performanceService: IPerformanceService;
+  private readonly jitterService: IJitterService;
+  private readonly config: PostProcessingConfig;
 
   private isInitialized = false;
 
-  // Dynamic pipeline graph storage
-  private readonly pipelines = new Map<string, EffectComposer>();
-  private readonly renderTargets = new Map<string, { texture: THREE.Texture, renderTarget?: THREE.WebGLRenderTarget }>();
-
-  // Shared objects from FrontendRenderingService
+  // Core infrastructure
   private renderer!: THREE.WebGLRenderer;
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
+  private composer!: EffectComposer;
+
+  // Pass instances (instantiated based on configuration)
+  private gbufferPass!: GBufferPass;
+  private bloomPass?: BloomPass;
+  private taaPass?: TAAPass;
+  private motionBlurPass?: MotionBlurPass;
+  private dofPass?: DoFPass;
 
   // Performance tracking
   private renderTime = 0;
+  private originalProjectionMatrix!: THREE.Matrix4;
 
   constructor(
     @inject(TYPES.PostProcessingServiceParams) params: PostProcessingServiceParams
   ) {
     this.logger = params.logger;
     this.shaderLoader = params.shaderLoader;
-    this.shaderIntrospection = params.shaderIntrospection;
-    this.config = params.config;
     this.performanceService = params.performanceService;
+    this.jitterService = params.jitterService;
+    this.config = params.config;
+
+    this.logger.info("PostProcessingService v4.0 created (not yet initialized)");
   }
 
   @logMethod
   @catchError
   @BrowserOnly
-  async initialize(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera): Promise<void> {
+  async initialize(
+    renderer: THREE.WebGLRenderer,
+    scene: THREE.Scene,
+    camera: THREE.PerspectiveCamera
+  ): Promise<void> {
     if (this.isInitialized) {
       this.logger.warn("PostProcessingService already initialized");
       return;
     }
 
-    this.logger.info("Initializing PostProcessingService v3.2");
+    if (!this.config.enabled) {
+      this.logger.info("PostProcessingService disabled by configuration");
+      return;
+    }
+
+    this.logger.info("Initializing PostProcessingService v4.0 Dynamic Orchestrator");
 
     // Store shared objects
     this.renderer = renderer;
     this.scene = scene;
     this.camera = camera;
+    this.originalProjectionMatrix = camera.projectionMatrix.clone();
 
-    // Build render targets from configuration
-    this.buildRenderTargets();
+    // Create G-Buffer pass (mandatory - produces textures for other passes)
+    await this.createGBufferPass();
 
-    // Build pipelines from configuration
-    await this.buildPipelines();
+    // Create optional passes based on configuration
+    await this.createOptionalPasses();
 
-    // Connect pipeline dependencies
-    this.connectPipelines();
+    // Wire inter-pass dependencies
+    this.wireDependencies();
+
+    // Build EffectComposer with ordered passes
+    this.buildComposer();
 
     this.isInitialized = true;
-    this.logger.info("PostProcessingService v3.2 initialized successfully");
+    this.logger.info("PostProcessingService v4.0 initialized successfully", {
+      taaEnabled: !!this.taaPass,
+      bloomEnabled: !!this.bloomPass,
+      motionBlurEnabled: !!this.motionBlurPass,
+      dofEnabled: !!this.dofPass,
+    });
   }
 
+  /**
+   * Create mandatory G-Buffer pass (produces color, normal, depth, material, velocity)
+   */
   @logMethod
   @catchError
-  private buildRenderTargets(): void {
-    this.logger.debug("Building render targets from configuration");
+  private async createGBufferPass(): Promise<void> {
+    this.logger.debug("Creating GBufferPass");
+    
+    const width = this.config.renderTargetWidth;
+    const height = this.config.renderTargetHeight;
 
-    for (const rtConfig of this.config.renderTargets) {
-      const options: THREE.RenderTargetOptions = {
-        type: this.mapTextureType(rtConfig.format),
-        minFilter: this.mapMinFilter(rtConfig.options?.minFilter),
-        magFilter: this.mapMagFilter(rtConfig.options?.magFilter),
-        // Añadir wrapS, wrapT si se definen en el contrato
-      };
+    // Load G-Buffer shaders
+    const vertexShader = await this.shaderLoader.load("gbuffer_particles.glsl");
+    const fragmentShader = vertexShader; // Pragma-delimited shader
 
-      const renderTarget = new THREE.WebGLRenderTarget(
-        rtConfig.width,
-        rtConfig.height,
-        options
+    // Create G-Buffer pass with full params
+    this.gbufferPass = new GBufferPass({
+      scene: this.scene,
+      camera: this.camera,
+      width,
+      height,
+      vertexShader,
+      fragmentShader,
+      uniforms: {}, // G-Buffer manages its own uniforms
+    });
+    this.gbufferPass.renderToScreen = false; // Always render to texture
+
+    this.logger.debug("GBufferPass created successfully");
+  }
+
+  /**
+   * Create optional passes based on orchestration configuration
+   */
+  @logMethod
+  @catchError
+  private async createOptionalPasses(): Promise<void> {
+    const orch = this.config.orchestration;
+    const width = this.config.renderTargetWidth;
+    const height = this.config.renderTargetHeight;
+
+    // Create BloomPass if enabled
+    if (orch.bloomEnabled) {
+      this.logger.debug("Creating BloomPass");
+      const shaders = await this.loadBloomShaders();
+      this.bloomPass = new BloomPass(this.config.bloom, width, height, shaders);
+      this.bloomPass.renderToScreen = false;
+      this.logger.debug("BloomPass created successfully");
+    }
+
+    // Create TAAPass if enabled
+    if (orch.taaEnabled) {
+      this.logger.debug("Creating TAAPass");
+      const taaShader = await this.shaderLoader.load("taa.glsl");
+      this.taaPass = new TAAPass(this.config.taa, width, height, taaShader);
+      this.taaPass.renderToScreen = false;
+      this.logger.debug("TAAPass created successfully");
+    }
+
+    // Create MotionBlurPass if enabled
+    if (orch.motionBlurEnabled) {
+      this.logger.debug("Creating MotionBlurPass");
+      const motionBlurShader = await this.shaderLoader.load("motion_blur.glsl");
+      this.motionBlurPass = new MotionBlurPass(
+        this.config.motionBlur,
+        motionBlurShader
       );
-
-      this.renderTargets.set(rtConfig.name, { texture: renderTarget.texture, renderTarget });
-      this.logger.debug(`Created render target: ${rtConfig.name} (${rtConfig.width}x${rtConfig.height})`);
+      this.motionBlurPass.renderToScreen = false;
+      this.logger.debug("MotionBlurPass created successfully");
     }
 
-    this.logger.info(`Built ${this.renderTargets.size} render targets`);
-  }
-
-  @logMethod
-  @catchError
-  private mapTextureType(format: 'HalfFloat' | 'Float' | 'UnsignedByte'): THREE.TextureDataType {
-    switch (format) {
-      case 'HalfFloat': return THREE.HalfFloatType;
-      case 'Float': return THREE.FloatType;
-      case 'UnsignedByte': return THREE.UnsignedByteType;
-      default: return THREE.UnsignedByteType;
+    // Create DoFPass if enabled
+    if (orch.dofEnabled) {
+      this.logger.debug("Creating DoFPass");
+      const dofShader = await this.shaderLoader.load("dof.glsl");
+      this.dofPass = new DoFPass(this.config.dof, width, height, dofShader);
+      this.dofPass.renderToScreen = false;
+      this.logger.debug("DoFPass created successfully");
     }
   }
 
-  @logMethod
-  @catchError
-  private mapMinFilter(filter?: 'Linear' | 'Nearest'): THREE.MinificationTextureFilter | undefined {
-    if (!filter) return undefined;
-    return filter === 'Linear' ? THREE.LinearFilter : THREE.NearestFilter;
-  }
-
-  @logMethod
-  @catchError
-  private mapMagFilter(filter?: 'Linear' | 'Nearest'): THREE.MagnificationTextureFilter | undefined {
-    if (!filter) return undefined;
-    return filter === 'Linear' ? THREE.LinearFilter : THREE.NearestFilter;
-  }
-
-  @logMethod
-  @catchError
-  private async buildPipelines(): Promise<void> {
-    this.logger.debug("Building pipelines from configuration");
-
-    for (const pipelineConfig of this.config.pipelines) {
-      let composer: EffectComposer;
-      const outputTarget = this.renderTargets.get(pipelineConfig.output);
-
-      if (pipelineConfig.output === 'screen') {
-        // Este pipeline renderiza a la pantalla
-        composer = new EffectComposer(this.renderer);
-      } else if (outputTarget?.renderTarget) {
-        // Este pipeline renderiza a un render target específico
-        composer = new EffectComposer(this.renderer, outputTarget.renderTarget);
-      } else {
-        // Para pipelines productores como gbuffer
-        composer = new EffectComposer(this.renderer);
-        composer.renderToScreen = false;
-      }
-
-      // Add passes to the pipeline
-      for (const passConfig of pipelineConfig.passes) {
-        if (!passConfig.enabled) continue;
-
-        try {
-          const pass = await this.createPass(passConfig);
-          if (pass) {
-            composer.addPass(pass);
-            this.logger.debug(`Added pass ${passConfig.type} to pipeline ${pipelineConfig.name}`);
-          }
-        } catch (error) {
-          this.logger.error(`Failed to create pass ${passConfig.type} in pipeline ${pipelineConfig.name}`, { error });
-          if (env.isDev) {
-            throw error;
-          }
-        }
-      }
-
-      this.pipelines.set(pipelineConfig.name, composer);
-      this.logger.debug(`Built pipeline: ${pipelineConfig.name} with ${composer.passes.length} passes -> output: ${pipelineConfig.output}`);
-    }
-
-    this.logger.info(`Built ${this.pipelines.size} pipelines`);
-  }
-
-  @logMethod
-  @catchError
-  private connectPipelines(): void {
-    this.logger.debug("Connecting pipeline dependencies");
-
-    for (const [pipelineName, composer] of this.pipelines) {
-      const pipelineConfig = this.config.pipelines.find(p => p.name === pipelineName);
-      if (!pipelineConfig) continue;
-
-      // Connect pass dependencies within this pipeline
-      for (let i = 0; i < composer.passes.length; i++) {
-        const pass = composer.passes[i];
-        const passConfig = pipelineConfig.passes[i];
-
-        // Handle ShaderPass uniform connections
-        if (pass instanceof ShaderPass && passConfig.uniforms) {
-          for (const uniformName in passConfig.uniforms) {
-            const uniformValue = passConfig.uniforms[uniformName].value;
-
-            // If uniform references a render target by name
-            if (typeof uniformValue === 'string') {
-              const renderTarget = this.renderTargets.get(uniformValue);
-              if (renderTarget) {
-                pass.uniforms[uniformName].value = renderTarget.texture;
-                this.logger.debug(`Connected render target ${uniformValue} to uniform ${uniformName} in pipeline ${pipelineName}`);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    this.logger.info("Pipeline dependencies connected");
-  }
-
-  @logMethod
-  @catchError
   /**
-   * Create post-processing pass from configuration
-   * CRISALIDA.CODE v1.1 - Phase 3: Added SSRPass and HBAOPass support
-   * QUALIA.CODE COMPLIANT: Extract Method Pattern (58→20 lines, 66% reduction)
+   * Load all shaders required for BloomPass
    */
-  private async createPass(passConfig: PostProcessingPass): Promise<Pass | null> {
-    switch (passConfig.type) {
-      case 'RenderPass':
-        return this.createRenderPass();
+  @logMethod
+  @catchError
+  private async loadBloomShaders(): Promise<{
+    brightPassShader: string;
+    blurShader: string;
+    downsampleShader: string;
+    upsampleShader: string;
+  }> {
+    this.logger.debug("Loading Bloom shaders");
+    
+    const [brightPassShader, blurShader, downsampleShader, upsampleShader] = await Promise.all([
+      this.shaderLoader.load("bright_pass.glsl"),
+      this.shaderLoader.load("blur.glsl"),
+      this.shaderLoader.load("bloom_downsample.glsl"),
+      this.shaderLoader.load("bloom_upsample.glsl"),
+    ]);
 
-      case 'UnrealBloomPass':
-        return this.createUnrealBloomPass(passConfig);
+    return { brightPassShader, blurShader, downsampleShader, upsampleShader };
+  }
 
-      case 'ShaderPass':
-        return await this.createShaderPass(passConfig);
+  /**
+   * Wire inter-pass dependencies (CRITICAL: G-Buffer outputs → Pass inputs)
+   */
+  @logMethod
+  @catchError
+  private wireDependencies(): void {
+    this.logger.debug("Wiring inter-pass dependencies");
 
-      case 'GBufferPass':
-        return await this.createGBufferPass();
+    const velocityTexture = this.gbufferPass.velocityTexture;
+    const depthTexture = this.gbufferPass.depthTexture;
 
-      case 'SSRPass':
-        return await this.createSSRPass(passConfig);
+    // Wire velocity texture to TAA
+    if (this.taaPass && velocityTexture) {
+      this.taaPass.setVelocityTexture(velocityTexture);
+      this.logger.debug("Wired G-Buffer velocity → TAAPass");
+    }
 
-      case 'HBAOPass':
-        return await this.createHBAOPass(passConfig);
+    // Wire velocity texture to MotionBlur
+    if (this.motionBlurPass && velocityTexture) {
+      this.motionBlurPass.setVelocityTexture(velocityTexture);
+      this.logger.debug("Wired G-Buffer velocity → MotionBlurPass");
+    }
 
+    // Wire depth texture to DoF
+    if (this.dofPass && depthTexture) {
+      this.dofPass.setDepthTexture(depthTexture);
+      this.logger.debug("Wired G-Buffer depth → DoFPass");
+    }
+
+    this.logger.info("Inter-pass dependencies wired successfully");
+  }
+
+  /**
+   * Build EffectComposer with passes in configured order
+   */
+  @logMethod
+  @catchError
+  private buildComposer(): void {
+    this.logger.debug("Building EffectComposer with ordered passes");
+
+    this.composer = new EffectComposer(this.renderer);
+
+    // Add RenderPass for scene (base rendering)
+    const renderPass = new RenderPass(this.scene, this.camera);
+    renderPass.renderToScreen = false;
+    this.composer.addPass(renderPass);
+
+    // Add G-Buffer pass (produces textures)
+    this.composer.addPass(this.gbufferPass);
+
+    // Add optional passes in configured order
+    const passOrder = this.config.orchestration.passOrder;
+    for (const passName of passOrder) {
+      const pass = this.getPassByName(passName);
+      if (pass) {
+        this.composer.addPass(pass);
+        this.logger.debug(`Added ${passName} to composer`);
+      }
+    }
+
+    // Ensure last pass renders to screen
+    const lastPass = this.composer.passes[this.composer.passes.length - 1];
+    if (lastPass) {
+      lastPass.renderToScreen = true;
+    }
+
+    this.logger.info(`EffectComposer built with ${this.composer.passes.length} passes`);
+  }
+
+  /**
+   * Get pass instance by name
+   */
+  private getPassByName(name: string): Pass | undefined {
+    switch (name) {
+      case "taa":
+        return this.taaPass;
+      case "bloom":
+        return this.bloomPass;
+      case "motionBlur":
+        return this.motionBlurPass;
+      case "dof":
+        return this.dofPass;
       default:
-        this.logger.warn(`Unknown pass type: ${passConfig.type}`);
-        return null;
+        this.logger.warn(`Unknown pass name: ${name}`);
+        return undefined;
     }
   }
 
   /**
-   * Create basic render pass using shared scene and camera
+   * Apply jitter to camera projection matrix (for TAA sub-pixel sampling)
    */
-  private createRenderPass(): Pass {
-    return new RenderPass(this.scene, this.camera);
-  }
-
-  /**
-   * Create unreal bloom pass with configured parameters
-   */
-  private createUnrealBloomPass(passConfig: PostProcessingPass): Pass {
-    return new UnrealBloomPass(
-      new THREE.Vector2(this.config.renderTargetWidth, this.config.renderTargetHeight),
-      (typeof passConfig.params?.strength === 'number' ? passConfig.params.strength : 1.5),
-      (typeof passConfig.params?.radius === 'number' ? passConfig.params.radius : 0.4),
-      (typeof passConfig.params?.threshold === 'number' ? passConfig.params.threshold : 0.85)
-    );
-  }
-
-  /**
-   * Create shader pass with introspected shader and auto-connected uniforms
-   */
-  private async createShaderPass(passConfig: PostProcessingPass): Promise<Pass> {
-    if (!passConfig.shader) {
-      throw new Error('ShaderPass requires shader name');
+  @logMethod
+  private applyJitterToCamera(): void {
+    if (!this.config.orchestration.taaEnabled || !this.taaPass) {
+      return;
     }
 
-    const shaderSource = await this.shaderLoader.load(passConfig.shader);
-    const shader = await this.shaderIntrospection.introspect(shaderSource);
+    const jitter = this.jitterService.getJitterOffset();
+    const width = this.renderer.domElement.width;
+    const height = this.renderer.domElement.height;
 
-    // Merge uniforms from config
-    shader.uniforms = { ...shader.uniforms, ...passConfig.uniforms };
+    // Apply sub-pixel offset to projection matrix
+    // Elements [8] and [9] control horizontal and vertical offset
+    this.camera.projectionMatrix.elements[8] += (jitter.x * 2) / width;
+    this.camera.projectionMatrix.elements[9] += (jitter.y * 2) / height;
 
-    // Add auto-connected uniforms
-    this.addAutoConnectedUniforms(shader);
-
-    return new ShaderPass(shader);
+    this.logger.debug("Applied jitter to camera", { jitterX: jitter.x, jitterY: jitter.y });
   }
 
   /**
-   * Create G-Buffer pass for deferred rendering
+   * Remove jitter from camera projection matrix (restore original)
    */
-  private async createGBufferPass(): Promise<Pass> {
-    const shaderSource = await this.shaderLoader.load('gbuffer');
-    const shader = await this.shaderIntrospection.introspect(shaderSource);
-    return new GBufferPass({
-      scene: this.scene,
-      camera: this.camera,
-      width: this.config.renderTargetWidth,
-      height: this.config.renderTargetHeight,
-      vertexShader: shader.vertexShader,
-      fragmentShader: shader.fragmentShader,
-      uniforms: shader.uniforms
-    });
-  }
-
-  /**
-   * CRISALIDA.CODE v1.1 - Phase 3: Advanced Effects Integration
-   * Create SSR pass for screen-space reflections
-   */
-  private async createSSRPass(passConfig: PostProcessingPass): Promise<Pass> {
-    const shaderSource = await this.shaderLoader.load('ssr_v2');
-    const shader = await this.shaderIntrospection.introspect(shaderSource);
-    
-    // Get G-Buffer textures from renderTargets map
-    const gBufferColor = this.renderTargets.get('gbuffer_color')?.texture;
-    const gBufferNormal = this.renderTargets.get('gbuffer_normal')?.texture;
-    const gBufferDepth = this.renderTargets.get('gbuffer_depth')?.texture;
-    const gBufferMaterial = this.renderTargets.get('gbuffer_material')?.texture;
-
-    if (!gBufferColor || !gBufferNormal || !gBufferDepth || !gBufferMaterial) {
-      throw new Error('SSRPass requires G-Buffer textures to be available');
+  @logMethod
+  private removeJitterFromCamera(): void {
+    if (!this.config.orchestration.taaEnabled || !this.taaPass) {
+      return;
     }
 
-    return new SSRPass({
-      width: this.config.renderTargetWidth,
-      height: this.config.renderTargetHeight,
-      scene: this.scene,
-      camera: this.camera,
-      gBufferColor,
-      gBufferNormal,
-      gBufferDepth,
-      gBufferMaterial,
-      vertexShader: shader.vertexShader,
-      fragmentShader: shader.fragmentShader,
-      maxSteps: passConfig.params?.maxSteps as number | undefined,
-      stride: passConfig.params?.stride as number | undefined,
-      thickness: passConfig.params?.thickness as number | undefined,
-      maxDistance: passConfig.params?.maxDistance as number | undefined,
-    });
-  }
-
-  /**
-   * CRISALIDA.CODE v1.1 - Phase 3: Advanced Effects Integration
-   * Create HBAO pass for ambient occlusion
-   */
-  private async createHBAOPass(passConfig: PostProcessingPass): Promise<Pass> {
-    const shaderSource = await this.shaderLoader.load('hbao');
-    const shader = await this.shaderIntrospection.introspect(shaderSource);
-    
-    // Get G-Buffer textures from renderTargets map
-    const gBufferNormal = this.renderTargets.get('gbuffer_normal')?.texture;
-    const gBufferDepth = this.renderTargets.get('gbuffer_depth')?.texture;
-
-    if (!gBufferNormal || !gBufferDepth) {
-      throw new Error('HBAOPass requires G-Buffer normal and depth textures');
-    }
-
-    return new HBAOPass({
-      width: this.config.renderTargetWidth,
-      height: this.config.renderTargetHeight,
-      scene: this.scene,
-      camera: this.camera,
-      gBufferNormal,
-      gBufferDepth,
-      vertexShader: shader.vertexShader,
-      fragmentShader: shader.fragmentShader,
-      radius: passConfig.params?.radius as number | undefined,
-      bias: passConfig.params?.bias as number | undefined,
-      numDirections: passConfig.params?.numDirections as number | undefined,
-      numSteps: passConfig.params?.numSteps as number | undefined,
-    });
-  }
-
-  /**
-   * Add auto-connected uniforms to shader (camera matrices, resolution, etc.)
-   */
-  private addAutoConnectedUniforms(shader: { uniforms: Record<string, { value: unknown }> }): void {
-    shader.uniforms.projectionMatrix = { value: new THREE.Matrix4() };
-    shader.uniforms.viewMatrix = { value: new THREE.Matrix4() };
-    shader.uniforms.cameraNear = { value: this.camera.near };
-    shader.uniforms.cameraFar = { value: this.camera.far };
-    shader.uniforms.resolution = { value: new THREE.Vector2(this.config.renderTargetWidth, this.config.renderTargetHeight) };
-  }
-
-  /**
-   * QUALIA.CODE v4.2: Update pipeline inputs from render targets map
-   * Updates ShaderPass uniforms that reference render targets by name
-   */
-  private _updatePipelineInputsFromMap(): void {
-    for (const [pipelineName, composer] of this.pipelines) {
-      for (const pass of composer.passes) {
-        if (pass instanceof ShaderPass && pass.uniforms) {
-          for (const uniformName in pass.uniforms) {
-            const uniformValue = pass.uniforms[uniformName].value;
-            if (typeof uniformValue === 'string') {
-              const renderTarget = this.renderTargets.get(uniformValue);
-              if (renderTarget) {
-                pass.uniforms[uniformName].value = renderTarget.texture;
-                this.logger.debug(`Updated uniform ${uniformName} in pipeline ${pipelineName} from map`);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * QUALIA.CODE v4.3: Update camera-related uniforms for all ShaderPasses
-   */
-  private _updateCameraUniforms(camera: THREE.PerspectiveCamera): void {
-    for (const composer of this.pipelines.values()) {
-      for (const pass of composer.passes) {
-        if (pass instanceof ShaderPass && pass.uniforms) {
-          if ('projectionMatrix' in pass.uniforms) {
-            pass.uniforms.projectionMatrix.value = camera.projectionMatrix;
-          }
-          if ('viewMatrix' in pass.uniforms) {
-            pass.uniforms.viewMatrix.value = camera.matrixWorldInverse;
-          }
-          if ('cameraNear' in pass.uniforms) {
-            pass.uniforms.cameraNear.value = camera.near;
-          }
-          if ('cameraFar' in pass.uniforms) {
-            pass.uniforms.cameraFar.value = camera.far;
-          }
-          if ('resolution' in pass.uniforms) {
-            pass.uniforms.resolution.value.set(this.config.renderTargetWidth, this.config.renderTargetHeight);
-          }
-        }
-      }
-    }
+    // Restore original projection matrix
+    this.camera.projectionMatrix.copy(this.originalProjectionMatrix);
+    this.camera.updateProjectionMatrix();
   }
 
   @logMethod
   @catchError
   @measureTime
   @BrowserOnly
-  render(camera: THREE.PerspectiveCamera): void {
-    if (!this.isInitialized) {
-      throw new Error("PostProcessingService must be initialized before rendering");
+  render(): void {
+    if (!this.isInitialized || !this.config.enabled) {
+      return;
     }
 
     const startTime = this.performanceService.now();
 
-    // Producer: Render gbuffer pipeline to produce textures
-    const gbufferPipeline = 'gbuffer_pipeline';
-    const gbufferComposer = this.pipelines.get(gbufferPipeline);
-    if (gbufferComposer) {
-      gbufferComposer.render();
+    // Apply jitter before rendering (for TAA sub-pixel sampling)
+    this.applyJitterToCamera();
 
-      // Update Map: Update renderTargets map with produced G-Buffer textures
-      const gbufferPass = gbufferComposer.passes.find(p => p instanceof GBufferPass) as GBufferPass;
-      if (gbufferPass) {
-        this.renderTargets.set('gbuffer_color', { texture: gbufferPass.colorTexture });
-        this.renderTargets.set('gbuffer_normal', { texture: gbufferPass.normalTexture });
-        this.renderTargets.set('gbuffer_depth', { texture: gbufferPass.depthTexture });
-        this.renderTargets.set('gbuffer_material', { texture: gbufferPass.materialTexture });
-      }
+    // Render entire post-processing pipeline
+    this.composer.render();
 
-      // Update uniforms from the updated map
-      this._updatePipelineInputsFromMap();
+    // Remove jitter after rendering (restore camera)
+    this.removeJitterFromCamera();
 
-      // Update camera uniforms
-      this._updateCameraUniforms(camera);
-    }
-
-    // Consumer: Render other pipelines that consume the textures
-    for (const pipelineName of (this.config.pipelineOrder || []).filter(name => name !== gbufferPipeline)) {
-      const composer = this.pipelines.get(pipelineName);
-      if (composer) {
-        composer.render();
-        this.logger.debug(`Rendered pipeline: ${pipelineName}`);
-      } else {
-        this.logger.warn(`Pipeline not found: ${pipelineName}`);
-      }
+    // Advance jitter sequence for next frame (if TAA enabled)
+    if (this.config.orchestration.taaEnabled && this.taaPass) {
+      this.jitterService.advanceFrame();
     }
 
     this.renderTime = this.performanceService.now() - startTime;
+
+    if (this.config.orchestration.performance.enableProfiling) {
+      this.logger.debug("Post-processing render time", { renderTime: this.renderTime });
+    }
   }
 
   @logMethod
   resize(width: number, height: number): void {
     if (!this.isInitialized) return;
 
-    // Resize all render targets
-    for (const [name, rtWrapper] of this.renderTargets) {
-      if (rtWrapper.renderTarget) {
-        rtWrapper.renderTarget.setSize(width, height);
-        this.logger.debug(`Resized render target: ${name}`);
-      }
+    this.logger.debug("Resizing post-processing pipeline", { width, height });
+
+    // Resize composer
+    this.composer.setSize(width, height);
+
+    // Resize individual passes
+    if (this.gbufferPass) {
+      this.gbufferPass.setSize(width, height);
+    }
+    if (this.bloomPass) {
+      this.bloomPass.setSize(width, height);
+    }
+    if (this.taaPass) {
+      this.taaPass.setSize(width, height);
+    }
+    if (this.motionBlurPass) {
+      this.motionBlurPass.setSize(width, height);
+    }
+    if (this.dofPass) {
+      this.dofPass.setSize(width, height);
     }
 
-    // Resize all composers
-    for (const [name, composer] of this.pipelines) {
-      composer.setSize(width, height);
-      this.logger.debug(`Resized pipeline: ${name}`);
-    }
+    this.logger.info("Post-processing pipeline resized successfully");
   }
 
   @logMethod
   dispose(): void {
-    // Dispose all render targets
-    for (const [name, rtWrapper] of this.renderTargets) {
-      if (rtWrapper.renderTarget) {
-        rtWrapper.renderTarget.dispose();
-        this.logger.debug(`Disposed render target: ${name}`);
-      }
-    }
-    this.renderTargets.clear();
+    this.logger.debug("Disposing post-processing pipeline");
 
-    // Dispose all composers
-    for (const [name, composer] of this.pipelines) {
-      composer.dispose();
-      this.logger.debug(`Disposed pipeline: ${name}`);
+    // Dispose composer
+    if (this.composer) {
+      this.composer.dispose();
     }
-    this.pipelines.clear();
+
+    // Dispose individual passes
+    if (this.gbufferPass) {
+      this.gbufferPass.dispose();
+    }
+    if (this.bloomPass) {
+      this.bloomPass.dispose();
+    }
+    if (this.taaPass) {
+      this.taaPass.dispose();
+    }
+    if (this.motionBlurPass) {
+      this.motionBlurPass.dispose();
+    }
+    if (this.dofPass) {
+      this.dofPass.dispose();
+    }
 
     this.isInitialized = false;
     this.logger.info("PostProcessingService disposed");
@@ -525,9 +445,15 @@ export class PostProcessingService implements IPostProcessingService {
 
   @logMethod
   getStats(): { pipelines: number; renderTargets: number; renderTime: number } {
+    let passCount = 1; // G-Buffer always present
+    if (this.bloomPass) passCount++;
+    if (this.taaPass) passCount++;
+    if (this.motionBlurPass) passCount++;
+    if (this.dofPass) passCount++;
+
     return {
-      pipelines: this.pipelines.size,
-      renderTargets: this.renderTargets.size,
+      pipelines: passCount,
+      renderTargets: 5, // G-Buffer: color, normal, depth, material, velocity
       renderTime: this.renderTime,
     };
   }

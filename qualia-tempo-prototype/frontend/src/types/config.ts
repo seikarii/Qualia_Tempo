@@ -99,8 +99,12 @@ export interface FullGameConfig {
   audioAnalysis: import('../services/contracts/IAudioAnalysisService.contracts').AudioAnalysisServiceConfig;
   physics: import('../services/contracts/IPhysicsService.contracts').PhysicsServiceConfig;
 
-  // PHASE 4: Temporal Effects
+  // PHASE 4: Temporal Effects & Post-Processing Passes
   jitterService: import('../services/contracts/IJitterService.contracts').JitterServiceConfig;
+  bloomPass: import('../services/contracts/IBloomPass.contracts').BloomPassConfig;
+  taaPass: import('../services/contracts/ITAAPass.contracts').TAAPassConfig;
+  motionBlurPass: import('../services/contracts/IMotionBlurPass.contracts').MotionBlurPassConfig;
+  dofPass: import('../services/contracts/IDoFPass.contracts').DoFPassConfig;
 
   // Optional Features
   visualEffects?: VisualEffectsConfig;

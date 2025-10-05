@@ -178,8 +178,12 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   // QUALIA.CODE v2.0: New analysis services
   "audioAnalysis": "audio-analysis-service.yaml",
   "physics": "physics-service.yaml",
-  // PHASE 4: Temporal Effects
-  "jitterService": "jitter-service.yaml"
+  // PHASE 4: Temporal Effects & Post-Processing Passes
+  "jitterService": "jitter-service.yaml",
+  "bloomPass": "bloom-pass.yaml",
+  "taaPass": "taa-pass.yaml",
+  "motionBlurPass": "motion-blur-pass.yaml",
+  "dofPass": "dof-pass.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
@@ -374,7 +378,6 @@ import type { IGlslParser } from './interfaces/IGlslParser';
 import type { IShaderIntrospectionService } from './interfaces/IShaderIntrospectionService';
 import type { IPostProcessingService } from './interfaces/IPostProcessingService';
 import type { IRenderTargetPoolService } from './interfaces/IRenderTargetPoolService';
-import type { RenderTargetPoolConfig } from './contracts/IRenderTargetPoolService.contracts';
 
 container
   .bind<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService)
@@ -680,17 +683,25 @@ function bindLevel2ServiceParams(fullConfig: FullGameConfig): void {
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
   });
 
-  // PostProcessing Service - needs ShaderLoader, ShaderIntrospection (both Level 1)
+  // PostProcessing Service - needs ShaderLoader, JitterService, Performance (all Level 1)
   safeBindConstant<PostProcessingServiceParams>(TYPES.PostProcessingServiceParams, {
     logger: container.get<ILogger>(TYPES.ILogger),
     shaderLoader: container.get<IShaderLoaderService>(TYPES.IShaderLoaderService),
-    shaderIntrospection: container.get<IShaderIntrospectionService>(TYPES.IShaderIntrospectionService),
-    config: fullConfig.postProcessing,
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+    // eslint-disable-next-line @qualia-tempo/qualia-code/enforce-ioc-binding-order -- JitterService uses direct config injection (QUALIA.CODE v4.0), not params object
+    jitterService: container.get<IJitterService>(TYPES.IJitterService),
+    config: {
+      enabled: fullConfig.postProcessing.enabled,
+      renderTargetWidth: fullConfig.postProcessing.renderTargetWidth,
+      renderTargetHeight: fullConfig.postProcessing.renderTargetHeight,
+      orchestration: fullConfig.postProcessing.orchestration,
+      bloom: fullConfig.bloomPass,
+      taa: fullConfig.taaPass,
+      motionBlur: fullConfig.motionBlurPass,
+      dof: fullConfig.dofPass,
+      jitter: fullConfig.jitterService,
+    },
   });
-
-  // RenderTargetPool Configuration
-  safeBindConstant<RenderTargetPoolConfig>(TYPES.RenderTargetPoolConfig, fullConfig.postProcessing.renderTargetPool);
 
   // WebSocket Service - needs WebSocketFactory (Level 1)
   safeBindConstant<WebSocketServiceParams>(TYPES.WebSocketServiceParams, {
