@@ -69,6 +69,10 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
   private particleGeometry!: THREE.BufferGeometry;
   private particleMaterial!: THREE.ShaderMaterial;
 
+  // Phase 3: Previous frame matrices for velocity calculation
+  private previousViewMatrix: THREE.Matrix4;
+  private previousProjectionMatrix: THREE.Matrix4;
+
   // Performance tracking
   private frameCount = 0;
   private lastTime = 0;
@@ -88,6 +92,10 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
     this.shaderLoader = params.shaderLoader;
     this.shaderIntrospection = params.shaderIntrospection;
     this.config = params.config;
+
+    // Phase 3: Initialize previous frame matrices (identity on first frame)
+    this.previousViewMatrix = new THREE.Matrix4();
+    this.previousProjectionMatrix = new THREE.Matrix4();
 
     this.logger.info(this.config.messages.serviceInitialized);
   }
@@ -344,7 +352,10 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
         particleScale: { value: this.config.particleScale },
         cameraNear: { value: this.camera.near },
         cameraFar: { value: this.camera.far },
-        time: { value: 0.0 }
+        time: { value: 0.0 },
+        // Phase 3: Previous frame matrices for velocity calculation
+        prevViewMatrix: { value: this.previousViewMatrix },
+        prevProjectionMatrix: { value: this.previousProjectionMatrix }
       },
       transparent: true,
       depthWrite: true,
@@ -524,6 +535,15 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
     this.camera.position.z = Math.sin(currentTime * this.config.cameraOrbitSpeed) * this.config.cameraOrbitRadius;
     // QUALIA.CODE v1.1: Use externalized configuration for camera look-at target
     this.camera.lookAt(...this.config.scene.lookAtTarget);
+
+    // Phase 3: Update camera matrices (needed before rendering)
+    this.camera.updateMatrixWorld();
+    this.camera.updateProjectionMatrix();
+
+    // Phase 3: Store current matrices as "previous" for next frame
+    // This must happen BEFORE rendering so velocity calculation uses last frame's matrices
+    this.previousViewMatrix.copy(this.camera.matrixWorldInverse);
+    this.previousProjectionMatrix.copy(this.camera.projectionMatrix);
 
     // Render through post-processing pipeline
     this.postProcessingService.render(this.camera);

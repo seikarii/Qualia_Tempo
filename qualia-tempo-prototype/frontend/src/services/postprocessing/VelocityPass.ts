@@ -87,11 +87,13 @@ export class VelocityPass extends Pass implements IVelocityPass {
     `;
   }
 
+  // eslint-disable-next-line max-params -- Three.js Pass base class signature requires 5 parameters
   public render(
     renderer: THREE.WebGLRenderer,
     writeBuffer: THREE.WebGLRenderTarget,
     _readBuffer: THREE.WebGLRenderTarget,
-    ..._optionalParams: unknown[]
+    _deltaTime?: number,
+    _maskActive?: boolean
   ): void {
     if (!this.config.enabled) {
       // Pass-through if disabled - render black velocity buffer

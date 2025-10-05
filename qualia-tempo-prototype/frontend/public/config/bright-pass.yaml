@@ -1,0 +1,9 @@
+# QUALIA.CODE v1.1 - BrightPass Configuration
+# Phase 2: Bloom System - Luminance Threshold Extraction
+# Purpose: Extract bright pixels for bloom effect
+
+enabled: true               # BrightPass enabled by default
+threshold: 0.9              # Primary brightness threshold (0.8-1.2 typical)
+softThreshold: 0.5          # Soft knee range (0.0 = hard, 1.0 = very soft)
+intensity: 1.5              # Bloom strength multiplier (1.0-3.0)
+colorPreservation: 0.8      # Color saturation preservation (0.7-1.0)

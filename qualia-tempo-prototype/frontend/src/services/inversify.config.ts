@@ -38,6 +38,7 @@ import type { AudioServiceParams } from "./contracts/IAudioService.contracts";
 import type { BackendSyncServiceParams } from "./contracts/IBackendSyncService.contracts";
 import type { WebSocketServiceParams } from "./contracts/IWebSocketService.contracts";
 import type { CoordinateSystemConfig } from "./contracts/ICoordinateSystemService.contracts";
+import type { JitterServiceConfig } from "./contracts/IJitterService.contracts";
 
 // QUALIA.CODE v2.0: Analysis Services Configuration Imports
 import type { AudioAnalysisServiceParams } from "./contracts/IAudioAnalysisService.contracts";
@@ -130,6 +131,7 @@ import { CoordinateSystemService } from "./CoordinateSystemService";
 import { ToneFactoryService } from "../audio/ToneFactoryService";
 import { StateMergerService } from "./StateMergerService";
 import { AudioSystemBridge } from "./AudioSystemBridge";
+import { JitterService } from "./JitterService";
 
 // ===== PROTOCOL ADAPTER IMPORTS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
@@ -175,7 +177,9 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "audioSession": "audio-session.yaml",
   // QUALIA.CODE v2.0: New analysis services
   "audioAnalysis": "audio-analysis-service.yaml",
-  "physics": "physics-service.yaml"
+  "physics": "physics-service.yaml",
+  // PHASE 4: Temporal Effects
+  "jitterService": "jitter-service.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
@@ -436,6 +440,14 @@ container
   .to(RenderTargetPoolService)
   .inSingletonScope();
 
+// ===== PHASE 4: TEMPORAL EFFECTS SERVICES =====
+import type { IJitterService } from './interfaces/IJitterService';
+
+container
+  .bind<IJitterService>(TYPES.IJitterService)
+  .to(JitterService)
+  .inSingletonScope();
+
 // ===== PROTOCOL ADAPTER BINDINGS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
 container
@@ -594,6 +606,9 @@ function bindBasicConfigurations(fullConfig: FullGameConfig): void {
   // QUALIA.CODE v2.0: New analysis services configurations
   safeBindConstant(TYPES.AudioAnalysisServiceConfig, fullConfig.audioAnalysis);
   safeBindConstant(TYPES.PhysicsServiceConfig, fullConfig.physics);
+  
+  // PHASE 4: Temporal Effects configurations
+  safeBindConstant<JitterServiceConfig>(TYPES.JitterServiceConfig, fullConfig.jitterService);
   
   // Bind ThrottlingConfig from NotificationService config
   safeBindConstant(TYPES.ThrottlingConfig, fullConfig.notificationService.throttling);

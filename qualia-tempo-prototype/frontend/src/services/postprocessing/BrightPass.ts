@@ -1,148 +1,126 @@
 /**
- * QUALIA.CODE v1.1 - BrightPass
- * CRISALIDA.CODE v1.1 - Phase 2: Complete Bloom System
- *
- * Professional bright pass extraction with soft threshold and color preservation.
- * First stage of the bloom pipeline - extracts luminance above threshold.
- *
- * Key Features:
- * - Rec. 709 luminance calculation (broadcast standard)
- * - Soft threshold with smooth knee for natural transitions
- * - Color preservation for saturated highlights
- * - Intensity control for bloom strength
- *
- * Architecture:
- * - Follows Pass-based post-processing pattern
- * - No external dependencies (operates on any input texture)
- * - Configuration externalized to YAML
- *
- * Performance: ~0.2ms on 1080p (minimal overhead)
+ * QUALIA.CODE v1.1 - BrightPass Implementation
+ * Purpose: Luminance threshold extraction for bloom system
+ * Features: Soft threshold, color preservation, dynamic parameters
+ * Performance: <0.5ms (fast, single pass)
  */
 
-import * as THREE from "three";
-import { Pass } from "three/examples/jsm/postprocessing/Pass.js";
-import { FullScreenQuad } from "three/examples/jsm/postprocessing/Pass.js";
-import type { BrightPassParams } from "../contracts/IBrightPass.contracts";
+import * as THREE from 'three';
+import { Pass } from 'three/examples/jsm/postprocessing/Pass.js';
+import type { BrightPassConfig, BrightPassState } from '../contracts/IBrightPass.contracts';
+import type { IBrightPass } from './interfaces/IBrightPass';
 
-export class BrightPass extends Pass {
-  private fsQuad: FullScreenQuad;
-  private brightPassMaterial: THREE.ShaderMaterial;
+export class BrightPass extends Pass implements IBrightPass {
+  private readonly config: BrightPassConfig;
+  private readonly brightPassMaterial: THREE.ShaderMaterial;
+  private readonly quad: THREE.Mesh;
+  private readonly camera: THREE.OrthographicCamera;
+  private readonly scene: THREE.Scene;
+  
+  // Dynamic parameters (override config values)
+  private threshold: number;
+  private intensity: number;
 
-  constructor(params: BrightPassParams) {
+  constructor(config: BrightPassConfig, shaderCode: string) {
     super();
-
+    
+    this.config = config;
+    this.threshold = config.threshold;
+    this.intensity = config.intensity;
+    
+    // Setup rendering infrastructure
+    this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    this.scene = new THREE.Scene();
+    this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2));
+    this.quad.frustumCulled = false;
+    this.scene.add(this.quad);
+    
     // Create bright pass shader material
-    this.brightPassMaterial = new THREE.ShaderMaterial({
-      vertexShader: params.vertexShader,
-      fragmentShader: params.fragmentShader,
+    this.brightPassMaterial = this.createBrightPassMaterial(shaderCode);
+  }
+
+  private createBrightPassMaterial(fragmentShader: string): THREE.ShaderMaterial {
+    const vertexShader = `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
+
+    return new THREE.ShaderMaterial({
       uniforms: {
         sceneTexture: { value: null },
-        threshold: { value: params.threshold ?? 0.9 },
-        softThreshold: { value: params.softThreshold ?? 0.5 },
-        intensity: { value: params.intensity ?? 1.5 },
-        colorPreservation: { value: params.colorPreservation ?? 0.8 }
+        threshold: { value: this.config.threshold },
+        softThreshold: { value: this.config.softThreshold },
+        intensity: { value: this.config.intensity },
+        colorPreservation: { value: this.config.colorPreservation }
       },
-      transparent: false,
-      depthTest: false,
-      depthWrite: false
+      vertexShader,
+      fragmentShader,
+      glslVersion: THREE.GLSL3
     });
-
-    // Create full-screen quad
-    this.fsQuad = new FullScreenQuad(this.brightPassMaterial);
-
-    this.needsSwap = true;
   }
 
-  /**
-   * Render bright pass extraction
-   */
-  render(
+  // eslint-disable-next-line max-params -- Three.js Pass base class signature requires 5 parameters
+  public render(
     renderer: THREE.WebGLRenderer,
     writeBuffer: THREE.WebGLRenderTarget,
-    readBuffer: THREE.WebGLRenderTarget
+    readBuffer: THREE.WebGLRenderTarget,
+    _deltaTime?: number,
+    _maskActive?: boolean
   ): void {
-    // Update input texture
+    if (!this.config.enabled) {
+      // Pass-through if disabled - render black buffer (no bright pixels)
+      renderer.setRenderTarget(writeBuffer);
+      renderer.setClearColor(new THREE.Color(0, 0, 0), 1.0);
+      renderer.clear();
+      return;
+    }
+    
+    // Update uniforms with dynamic parameters
     this.brightPassMaterial.uniforms.sceneTexture.value = readBuffer.texture;
-
-    // Render to write buffer or screen
+    this.brightPassMaterial.uniforms.threshold.value = this.threshold;
+    this.brightPassMaterial.uniforms.softThreshold.value = this.config.softThreshold;
+    this.brightPassMaterial.uniforms.intensity.value = this.intensity;
+    this.brightPassMaterial.uniforms.colorPreservation.value = this.config.colorPreservation;
+    
+    // Render bright pass extraction
+    this.quad.material = this.brightPassMaterial;
+    
     if (this.renderToScreen) {
       renderer.setRenderTarget(null);
-      this.fsQuad.render(renderer);
     } else {
       renderer.setRenderTarget(writeBuffer);
-      if (this.clear) renderer.clear();
-      this.fsQuad.render(renderer);
     }
+    
+    renderer.render(this.scene, this.camera);
   }
 
-  /**
-   * Update threshold value
-   */
-  setThreshold(value: number): void {
-    this.brightPassMaterial.uniforms.threshold.value = Math.max(0, value);
+  public setThreshold(threshold: number): void {
+    this.threshold = threshold;
+    this.brightPassMaterial.uniforms.threshold.value = threshold;
   }
 
-  /**
-   * Get current threshold value
-   */
-  getThreshold(): number {
-    return this.brightPassMaterial.uniforms.threshold.value;
+  public setIntensity(intensity: number): void {
+    this.intensity = intensity;
+    this.brightPassMaterial.uniforms.intensity.value = intensity;
   }
 
-  /**
-   * Update soft threshold range
-   */
-  setSoftThreshold(value: number): void {
-    this.brightPassMaterial.uniforms.softThreshold.value = Math.max(0, Math.min(1, value));
+  public getState(): BrightPassState {
+    return {
+      brightPixelCount: 0, // Would require GPU readback to calculate accurately
+      averageBrightness: this.threshold
+    };
   }
 
-  /**
-   * Get current soft threshold value
-   */
-  getSoftThreshold(): number {
-    return this.brightPassMaterial.uniforms.softThreshold.value;
+  public setSize(_width: number, _height: number): void {
+    // BrightPass operates in screen space - size independent
+    // Method preserved for Three.js Pass interface compatibility
   }
 
-  /**
-   * Update intensity multiplier
-   */
-  setIntensity(value: number): void {
-    this.brightPassMaterial.uniforms.intensity.value = Math.max(0, value);
-  }
-
-  /**
-   * Get current intensity value
-   */
-  getIntensity(): number {
-    return this.brightPassMaterial.uniforms.intensity.value;
-  }
-
-  /**
-   * Update color preservation factor
-   */
-  setColorPreservation(value: number): void {
-    this.brightPassMaterial.uniforms.colorPreservation.value = Math.max(0, Math.min(1, value));
-  }
-
-  /**
-   * Get current color preservation value
-   */
-  getColorPreservation(): number {
-    return this.brightPassMaterial.uniforms.colorPreservation.value;
-  }
-
-  /**
-   * Resize pass (no resolution-dependent logic in this pass)
-   */
-  setSize(_width: number, _height: number): void {
-    // BrightPass doesn't require resolution updates
-  }
-
-  /**
-   * Dispose resources
-   */
-  dispose(): void {
+  public dispose(): void {
     this.brightPassMaterial.dispose();
-    this.fsQuad.dispose();
+    this.quad.geometry.dispose();
   }
 }

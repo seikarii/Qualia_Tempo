@@ -135,6 +135,10 @@ export const TYPES = {
   // ===== RENDER TARGET POOLING =====
   IRenderTargetPoolService: Symbol.for("IRenderTargetPoolService"),
   RenderTargetPoolConfig: Symbol.for("RenderTargetPoolConfig"),
+
+  // ===== TEMPORAL EFFECTS (PHASE 4) =====
+  IJitterService: Symbol.for("IJitterService"),
+  JitterServiceConfig: Symbol.for("JitterServiceConfig"),
 } as const;
 
 // Type-safe access to TYPES

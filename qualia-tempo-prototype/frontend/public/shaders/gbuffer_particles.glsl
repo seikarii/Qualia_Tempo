@@ -1,15 +1,16 @@
 /**
  * QUALIA.CODE v1.1 - G-Buffer Particles Shader
- * CRISALIDA.CODE v1.1 - Phase 2: G-Buffer Activation
+ * CRISALIDA.CODE v1.1 - Phase 3: Velocity Buffer Integration
  * 
  * Deferred rendering shader for particle system.
- * Writes particle properties to G-Buffer textures (Color, Normal, Depth, Material).
+ * Writes particle properties to G-Buffer textures (Color, Normal, Depth, Material, Velocity).
  * 
  * MRT Outputs:
  * - gl_FragData[0]: Color (RGB) + Alpha
  * - gl_FragData[1]: Normal (view space, encoded 0-1)
  * - gl_FragData[2]: Depth (linear, normalized)
  * - gl_FragData[3]: Material (metallic, roughness, ao, emission)
+ * - gl_FragData[4]: Velocity (RG: NDC motion vectors, BA: unused) [Phase 3]
  */
 
 #pragma VERTEX
@@ -26,12 +27,16 @@ uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 uniform float particleScale;
+// Phase 3: Previous frame matrices for velocity
+uniform mat4 prevViewMatrix;
+uniform mat4 prevProjectionMatrix;
 
 // Varyings
 out vec3 vColor;
 out vec3 vViewPosition;
 out vec2 vMaterialProps;
 out float vSize;
+out vec2 vVelocity; // Phase 3: Motion vectors
 
 void main() {
   // Pass color to fragment shader
@@ -50,6 +55,18 @@ void main() {
   
   // Output clip space position
   gl_Position = projectionMatrix * mvPosition;
+  
+  // Phase 3: Calculate velocity (motion vectors)
+  // Current frame NDC position
+  vec4 clipPosition = projectionMatrix * mvPosition;
+  vec2 currentNDC = clipPosition.xy / clipPosition.w;
+  
+  // Previous frame NDC position
+  vec4 prevClipPosition = prevProjectionMatrix * prevViewMatrix * vec4(position, 1.0);
+  vec2 prevNDC = prevClipPosition.xy / prevClipPosition.w;
+  
+  // Velocity is difference in NDC space (screen-space motion)
+  vVelocity = currentNDC - prevNDC;
 }
 
 #pragma FRAGMENT
@@ -64,17 +81,19 @@ in vec3 vColor;
 in vec3 vViewPosition;
 in vec2 vMaterialProps;
 in float vSize;
+in vec2 vVelocity; // Phase 3: Motion vectors
 
 // Uniforms
 uniform float cameraNear;
 uniform float cameraFar;
 uniform float time;
 
-// G-Buffer outputs
+// G-Buffer outputs (Phase 3: 5 targets)
 layout(location = 0) out vec4 gColor;
 layout(location = 1) out vec4 gNormal;
 layout(location = 2) out vec4 gDepth;
 layout(location = 3) out vec4 gMaterial;
+layout(location = 4) out vec4 gVelocity; // Phase 3: Motion vectors
 
 /**
  * Generate spherical normal for point sprite
@@ -141,4 +160,8 @@ void main() {
   float ao = 1.0; // Full ambient occlusion (particles don't self-occlude)
   float emission = calculateEmission();
   gMaterial = vec4(metallic, roughness, ao, emission);
+  
+  // Output 4 (Phase 3): Velocity (motion vectors)
+  // RG: velocity in NDC space [-1,1], BA: unused (set to 0)
+  gVelocity = vec4(vVelocity, 0.0, 1.0);
 }

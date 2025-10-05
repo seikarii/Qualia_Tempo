@@ -1,0 +1,4 @@
+enabled: false              # TAA disabled by default (requires JitterService coordination)
+sampleCount: 8              # Halton sequence samples (must match JitterService)
+sharpness: 0.5              # Post-TAA sharpening (0.0-1.0, recovers lost detail)
+varianceClipping: 1.0       # Ghosting reduction (0.5-2.0, higher = less ghosting, more flicker)

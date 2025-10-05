@@ -9,16 +9,19 @@ import type { PreviousFrameMatrices } from '../../contracts/IVelocityPass.contra
 export interface IVelocityPass {
     /**
    * Render velocity buffer to target
+   * Implements Three.js Pass standard signature (5 parameters)
    * @param renderer WebGL renderer instance
    * @param writeBuffer Target render buffer
-   * @param readBuffer Source render buffer
-   * @param optionalParams Optional deltaTime and maskActive parameters (unused, required by Three.js Pass)
+   * @param readBuffer Source render buffer (unused by VelocityPass)
+   * @param deltaTime Frame delta time (unused by VelocityPass)
+   * @param maskActive Stencil mask active state (unused by VelocityPass)
    */
   render(
     renderer: THREE.WebGLRenderer,
     writeBuffer: THREE.WebGLRenderTarget,
     readBuffer: THREE.WebGLRenderTarget,
-    ...optionalParams: unknown[]
+    deltaTime?: number,
+    maskActive?: boolean
   ): void;
   
   /**

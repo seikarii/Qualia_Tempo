@@ -14,6 +14,7 @@ export interface GBufferTargets {
   normal: THREE.Texture;
   depth: THREE.Texture;
   material: THREE.Texture;
+  velocity: THREE.Texture; // Phase 3: Motion vectors for temporal effects
 }
 
 export class GBufferPass extends Pass {
@@ -28,6 +29,7 @@ export class GBufferPass extends Pass {
   private _normalTexture!: THREE.Texture;
   private _depthTexture!: THREE.Texture;
   private _materialTexture!: THREE.Texture;
+  private _velocityTexture!: THREE.Texture; // Phase 3: Motion vectors
 
   constructor(params: GBufferPassParams) {
     super();
@@ -40,7 +42,7 @@ export class GBufferPass extends Pass {
 
     // Create render target (MRT - Multiple Render Targets)
     this.gbuffer = new THREE.WebGLRenderTarget<THREE.Texture[]>(params.width, params.height, {
-      count: 4, // Multiple render targets
+      count: 5, // Multiple render targets (Phase 3: +velocity)
       type: THREE.UnsignedByteType,
       format: THREE.RGBAFormat,
       minFilter: THREE.LinearFilter,
@@ -53,6 +55,7 @@ export class GBufferPass extends Pass {
     this.gbuffer.texture[1] = this._normalTexture;
     this.gbuffer.texture[2] = this._depthTexture;
     this.gbuffer.texture[3] = this._materialTexture;
+    this.gbuffer.texture[4] = this._velocityTexture; // Phase 3: Velocity
 
     // Create and configure G-Buffer shader material
     this.initializeShaderMaterial(params.vertexShader, params.fragmentShader, params.uniforms);
@@ -92,6 +95,14 @@ export class GBufferPass extends Pass {
     this._materialTexture.minFilter = THREE.LinearFilter;
     this._materialTexture.magFilter = THREE.LinearFilter;
     this._materialTexture.generateMipmaps = false;
+
+    this._velocityTexture = new THREE.Texture();
+    this._velocityTexture.name = 'gBuffer-Velocity';
+    this._velocityTexture.type = THREE.FloatType; // Signed motion vectors
+    this._velocityTexture.format = THREE.RGBAFormat;
+    this._velocityTexture.minFilter = THREE.LinearFilter;
+    this._velocityTexture.magFilter = THREE.LinearFilter;
+    this._velocityTexture.generateMipmaps = false;
   }
 
   private initializeShaderMaterial(vertexShader: string, fragmentShader: string, uniforms: Record<string, THREE.IUniform>): void {
@@ -133,6 +144,7 @@ export class GBufferPass extends Pass {
     this._normalTexture.dispose();
     this._depthTexture.dispose();
     this._materialTexture.dispose();
+    this._velocityTexture.dispose(); // Phase 3: Cleanup velocity
   }
 
   // Getters for accessing the G-Buffer textures
@@ -152,12 +164,17 @@ export class GBufferPass extends Pass {
     return this.gbuffer.texture[3];
   }
 
+  get velocityTexture(): THREE.Texture {
+    return this.gbuffer.texture[4]; // Phase 3: Velocity getter
+  }
+
   get targets(): GBufferTargets {
     return {
       color: this.gbuffer.texture[0],
       normal: this.gbuffer.texture[1],
       depth: this.gbuffer.texture[2],
-      material: this.gbuffer.texture[3]
+      material: this.gbuffer.texture[3],
+      velocity: this.gbuffer.texture[4] // Phase 3: Velocity in targets
     };
   }
 }

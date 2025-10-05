@@ -1,0 +1,11 @@
+# QUALIA.CODE v1.1 - Bloom System Configuration
+# Phase 2: Complete Bloom System
+# Purpose: Professional bloom effect with mipmap chain
+
+enabled: true               # Bloom enabled by default
+threshold: 0.9              # Bright pass threshold (0.8-1.2)
+softThreshold: 0.5          # Soft knee range (0.0-1.0)
+intensity: 1.5              # Bloom strength (1.0-3.0)
+radius: 1.0                 # Bloom diffusion radius (0.5-2.0)
+levels: 5                   # Mipmap levels (3-7)
+blendMode: additive         # Blend mode (additive or screen)

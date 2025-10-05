@@ -1,219 +1,168 @@
 /**
  * QUALIA.CODE v1.1 - BrightPass Tests
- * CRISALIDA.CODE v1.1 - Phase 2: Complete Bloom System
- * 
- * Unit tests for BrightPass (luminance threshold extraction)
+ * Coverage: Initialization, threshold control, rendering, state management
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BrightPass } from '../BrightPass';
+import type { BrightPassConfig } from '../../contracts/IBrightPass.contracts';
 import * as THREE from 'three';
 
 describe('BrightPass', () => {
   let brightPass: BrightPass;
   let mockRenderer: THREE.WebGLRenderer;
-  let mockWriteBuffer: THREE.WebGLRenderTarget;
-  let mockReadBuffer: THREE.WebGLRenderTarget;
-
-  const VERTEX_SHADER = `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `;
-
-  const FRAGMENT_SHADER = `
+  let writeBuffer: THREE.WebGLRenderTarget;
+  let readBuffer: THREE.WebGLRenderTarget;
+  let config: BrightPassConfig;
+  const mockShaderCode = `
+    #version 300 es
     precision highp float;
-    varying vec2 vUv;
+    in vec2 vUv;
+    out vec4 fragColor;
     uniform sampler2D sceneTexture;
     uniform float threshold;
     uniform float softThreshold;
     uniform float intensity;
     uniform float colorPreservation;
-    void main() {
-      gl_FragColor = texture2D(sceneTexture, vUv);
-    }
+    void main() { fragColor = texture(sceneTexture, vUv); }
   `;
 
   beforeEach(() => {
-    // Create bright pass
-    brightPass = new BrightPass({
-      width: 1920,
-      height: 1080,
-      vertexShader: VERTEX_SHADER,
-      fragmentShader: FRAGMENT_SHADER,
+    config = {
+      enabled: true,
       threshold: 0.9,
       softThreshold: 0.5,
       intensity: 1.5,
       colorPreservation: 0.8
-    });
+    };
 
-    // Mock Three.js objects
     mockRenderer = {
       setRenderTarget: vi.fn(),
-      clear: vi.fn(),
-      render: vi.fn()
+      render: vi.fn(),
+      setClearColor: vi.fn(),
+      clear: vi.fn()
     } as unknown as THREE.WebGLRenderer;
 
-    mockWriteBuffer = {
-      texture: new THREE.Texture()
-    } as THREE.WebGLRenderTarget;
+    writeBuffer = new THREE.WebGLRenderTarget(1920, 1080);
+    readBuffer = new THREE.WebGLRenderTarget(1920, 1080);
 
-    mockReadBuffer = {
-      texture: new THREE.Texture()
-    } as THREE.WebGLRenderTarget;
-  });
-
-  afterEach(() => {
-    brightPass.dispose();
+    brightPass = new BrightPass(config, mockShaderCode);
   });
 
   describe('Initialization', () => {
-    it('should create bright pass with default parameters', () => {
+    it('should initialize with correct configuration', () => {
       expect(brightPass).toBeDefined();
-      expect(brightPass.getThreshold()).toBe(0.9);
-      expect(brightPass.getSoftThreshold()).toBe(0.5);
-      expect(brightPass.getIntensity()).toBe(1.5);
-      expect(brightPass.getColorPreservation()).toBe(0.8);
+      expect(brightPass['config']).toEqual(config);
     });
 
-    it('should create bright pass with custom parameters', () => {
-      const customPass = new BrightPass({
-        width: 1920,
-        height: 1080,
-        vertexShader: VERTEX_SHADER,
-        fragmentShader: FRAGMENT_SHADER,
-        threshold: 1.0,
-        softThreshold: 0.3,
-        intensity: 2.0,
-        colorPreservation: 0.9
-      });
-
-      expect(customPass.getThreshold()).toBe(1.0);
-      expect(customPass.getSoftThreshold()).toBe(0.3);
-      expect(customPass.getIntensity()).toBe(2.0);
-      expect(customPass.getColorPreservation()).toBe(0.9);
-      customPass.dispose();
+    it('should create bright pass material with correct uniforms', () => {
+      expect(brightPass['brightPassMaterial']).toBeDefined();
+      expect(brightPass['brightPassMaterial'].uniforms.threshold.value).toBe(0.9);
+      expect(brightPass['brightPassMaterial'].uniforms.softThreshold.value).toBe(0.5);
+      expect(brightPass['brightPassMaterial'].uniforms.intensity.value).toBe(1.5);
+      expect(brightPass['brightPassMaterial'].uniforms.colorPreservation.value).toBe(0.8);
     });
 
-    it('should set needsSwap to true', () => {
-      expect(brightPass.needsSwap).toBe(true);
+    it('should initialize dynamic parameters from config', () => {
+      expect(brightPass['threshold']).toBe(0.9);
+      expect(brightPass['intensity']).toBe(1.5);
     });
 
-    it('should use default values when parameters are omitted', () => {
-      const defaultPass = new BrightPass({
-        width: 1920,
-        height: 1080,
-        vertexShader: VERTEX_SHADER,
-        fragmentShader: FRAGMENT_SHADER
-      });
-
-      expect(defaultPass.getThreshold()).toBe(0.9);
-      expect(defaultPass.getSoftThreshold()).toBe(0.5);
-      expect(defaultPass.getIntensity()).toBe(1.5);
-      expect(defaultPass.getColorPreservation()).toBe(0.8);
-      defaultPass.dispose();
+    it('should set GLSL version to 3 for WebGL 2.0', () => {
+      expect(brightPass['brightPassMaterial'].glslVersion).toBe(THREE.GLSL3);
     });
   });
 
   describe('Threshold Control', () => {
-    it('should update threshold value', () => {
+    it('should update threshold dynamically', () => {
       brightPass.setThreshold(1.2);
-      expect(brightPass.getThreshold()).toBe(1.2);
+      expect(brightPass['threshold']).toBe(1.2);
+      expect(brightPass['brightPassMaterial'].uniforms.threshold.value).toBe(1.2);
     });
 
-    it('should clamp threshold to minimum 0', () => {
-      brightPass.setThreshold(-0.5);
-      expect(brightPass.getThreshold()).toBe(0.0);
-    });
-
-    it('should allow threshold values above 1', () => {
-      brightPass.setThreshold(2.0);
-      expect(brightPass.getThreshold()).toBe(2.0);
-    });
-  });
-
-  describe('Soft Threshold Control', () => {
-    it('should update soft threshold value', () => {
-      brightPass.setSoftThreshold(0.7);
-      expect(brightPass.getSoftThreshold()).toBe(0.7);
-    });
-
-    it('should clamp soft threshold to 0.0-1.0 range', () => {
-      brightPass.setSoftThreshold(-0.5);
-      expect(brightPass.getSoftThreshold()).toBe(0.0);
-
-      brightPass.setSoftThreshold(1.5);
-      expect(brightPass.getSoftThreshold()).toBe(1.0);
-    });
-  });
-
-  describe('Intensity Control', () => {
-    it('should update intensity value', () => {
+    it('should update intensity dynamically', () => {
       brightPass.setIntensity(2.5);
-      expect(brightPass.getIntensity()).toBe(2.5);
-    });
-
-    it('should clamp intensity to minimum 0', () => {
-      brightPass.setIntensity(-1.0);
-      expect(brightPass.getIntensity()).toBe(0.0);
-    });
-
-    it('should allow high intensity values', () => {
-      brightPass.setIntensity(5.0);
-      expect(brightPass.getIntensity()).toBe(5.0);
-    });
-  });
-
-  describe('Color Preservation Control', () => {
-    it('should update color preservation value', () => {
-      brightPass.setColorPreservation(0.95);
-      expect(brightPass.getColorPreservation()).toBe(0.95);
-    });
-
-    it('should clamp color preservation to 0.0-1.0 range', () => {
-      brightPass.setColorPreservation(-0.5);
-      expect(brightPass.getColorPreservation()).toBe(0.0);
-
-      brightPass.setColorPreservation(1.5);
-      expect(brightPass.getColorPreservation()).toBe(1.0);
+      expect(brightPass['intensity']).toBe(2.5);
+      expect(brightPass['brightPassMaterial'].uniforms.intensity.value).toBe(2.5);
     });
   });
 
   describe('Rendering', () => {
-    it('should render to write buffer when renderToScreen is false', () => {
-      brightPass.renderToScreen = false;
-      brightPass.render(mockRenderer, mockWriteBuffer, mockReadBuffer);
-
-      expect(mockRenderer.setRenderTarget).toHaveBeenCalledWith(mockWriteBuffer);
+    it('should render bright pass extraction when enabled', () => {
+      brightPass.render(mockRenderer, writeBuffer, readBuffer);
+      
+      expect(mockRenderer.setRenderTarget).toHaveBeenCalledWith(writeBuffer);
+      expect(mockRenderer.render).toHaveBeenCalled();
     });
 
-    it('should render to screen when renderToScreen is true', () => {
-      brightPass.renderToScreen = true;
-      brightPass.render(mockRenderer, mockWriteBuffer, mockReadBuffer);
-
-      expect(mockRenderer.setRenderTarget).toHaveBeenCalledWith(null);
+    it('should render black buffer when disabled', () => {
+      const disabledConfig: BrightPassConfig = { ...config, enabled: false };
+      const disabledPass = new BrightPass(disabledConfig, mockShaderCode);
+      
+      disabledPass.render(mockRenderer, writeBuffer, readBuffer);
+      
+      expect(mockRenderer.setRenderTarget).toHaveBeenCalledWith(writeBuffer);
+      expect(mockRenderer.setClearColor).toHaveBeenCalledWith(expect.any(THREE.Color), 1.0);
+      expect(mockRenderer.clear).toHaveBeenCalled();
     });
 
-    it('should update input texture from read buffer', () => {
-      brightPass.render(mockRenderer, mockWriteBuffer, mockReadBuffer);
-      // Material uniform should be set to read buffer texture
-      expect(brightPass['brightPassMaterial'].uniforms.sceneTexture.value).toBe(mockReadBuffer.texture);
+    it('should update scene texture uniform during render', () => {
+      brightPass.render(mockRenderer, writeBuffer, readBuffer);
+      expect(brightPass['brightPassMaterial'].uniforms.sceneTexture.value).toBe(readBuffer.texture);
+    });
+
+    it('should use dynamic parameters in render', () => {
+      brightPass.setThreshold(1.1);
+      brightPass.setIntensity(2.0);
+      
+      brightPass.render(mockRenderer, writeBuffer, readBuffer);
+      
+      expect(brightPass['brightPassMaterial'].uniforms.threshold.value).toBe(1.1);
+      expect(brightPass['brightPassMaterial'].uniforms.intensity.value).toBe(2.0);
+    });
+
+    it('should update all uniforms during render', () => {
+      brightPass.render(mockRenderer, writeBuffer, readBuffer);
+      
+      expect(brightPass['brightPassMaterial'].uniforms.sceneTexture.value).toBe(readBuffer.texture);
+      expect(brightPass['brightPassMaterial'].uniforms.threshold.value).toBe(config.threshold);
+      expect(brightPass['brightPassMaterial'].uniforms.softThreshold.value).toBe(config.softThreshold);
+      expect(brightPass['brightPassMaterial'].uniforms.intensity.value).toBe(config.intensity);
+      expect(brightPass['brightPassMaterial'].uniforms.colorPreservation.value).toBe(config.colorPreservation);
     });
   });
 
-  describe('Resource Management', () => {
-    it('should dispose resources properly', () => {
-      const disposeSpy = vi.spyOn(brightPass['brightPassMaterial'], 'dispose');
-      brightPass.dispose();
-      expect(disposeSpy).toHaveBeenCalled();
+  describe('State Management', () => {
+    it('should return current state', () => {
+      const state = brightPass.getState();
+      
+      expect(state).toHaveProperty('brightPixelCount');
+      expect(state).toHaveProperty('averageBrightness');
+      expect(state.averageBrightness).toBe(0.9);
+    });
+
+    it('should update state when threshold changes', () => {
+      brightPass.setThreshold(1.5);
+      const state = brightPass.getState();
+      expect(state.averageBrightness).toBe(1.5);
     });
   });
 
-  describe('Resize Handling', () => {
-    it('should handle resize without errors', () => {
+  describe('Size Management', () => {
+    it('should accept setSize calls without errors', () => {
       expect(() => brightPass.setSize(2560, 1440)).not.toThrow();
+    });
+  });
+
+  describe('Resource Cleanup', () => {
+    it('should dispose of GPU resources', () => {
+      const materialDisposeSpy = vi.spyOn(brightPass['brightPassMaterial'], 'dispose');
+      const geometryDisposeSpy = vi.spyOn(brightPass['quad'].geometry, 'dispose');
+      
+      brightPass.dispose();
+      
+      expect(materialDisposeSpy).toHaveBeenCalled();
+      expect(geometryDisposeSpy).toHaveBeenCalled();
     });
   });
 });

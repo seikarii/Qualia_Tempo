@@ -1,0 +1,4 @@
+enabled: false          # Motion blur disabled by default (performance intensive)
+samples: 8              # Sample count (4-16, higher = better quality, lower performance)
+strength: 0.8           # Blur strength multiplier (0.5-1.0 typical)
+threshold: 0.001        # Minimum velocity for blur (optimization, skip static pixels)

@@ -99,6 +99,9 @@ export interface FullGameConfig {
   audioAnalysis: import('../services/contracts/IAudioAnalysisService.contracts').AudioAnalysisServiceConfig;
   physics: import('../services/contracts/IPhysicsService.contracts').PhysicsServiceConfig;
 
+  // PHASE 4: Temporal Effects
+  jitterService: import('../services/contracts/IJitterService.contracts').JitterServiceConfig;
+
   // Optional Features
   visualEffects?: VisualEffectsConfig;
 }

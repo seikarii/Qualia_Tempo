@@ -1,312 +1,285 @@
 /**
  * QUALIA.CODE v1.1 - BloomPass Orchestrator
- * CRISALIDA.CODE v1.1 - Phase 2: Complete Bloom System
- *
- * Professional HDR bloom implementation with mipmap chain.
- * Coordinates all bloom sub-passes for cinematic quality results.
- *
- * Pipeline Flow:
- * 1. BrightPass: Extract bright areas (threshold + soft knee)
- * 2. Downsample Chain: Progressive mipmap generation (3-7 levels)
- * 3. Blur (optional): Gaussian blur per mipmap level
- * 4. Upsample Chain: Progressive blending back to full resolution
- * 5. Composite: Blend bloom with original scene
- *
- * Performance: ~2-3ms total (configurable quality/performance trade-off)
- * Memory: 5-7 intermediate render targets (pooled)
+ * Purpose: Complete bloom system coordinator
+ * Features: Mipmap chain, bright pass, blur, downsample, upsample, blend
+ * Performance: <3ms total (high quality bloom)
  */
 
 import * as THREE from 'three';
 import { Pass } from 'three/examples/jsm/postprocessing/Pass.js';
-import type { BloomPassConfig } from '../contracts/IBloomPass.contracts';
-import type { IRenderTargetPoolService } from '../interfaces/IRenderTargetPoolService';
+import type { BloomPassConfig, BloomPassState } from '../contracts/IBloomPass.contracts';
+import type { IBloomPass } from './interfaces/IBloomPass';
+import { BrightPass } from './BrightPass';
+import { BlurPass } from './BlurPass';
+import { BloomDownsamplePass } from './BloomDownsamplePass';
+import { BloomUpsamplePass } from './BloomUpsamplePass';
 
-/**
- * BloomPass: Complete bloom pipeline orchestrator
- * Pipeline: BrightPass → Downsample Chain → Upsample Chain → Composite
- * Uses RenderTargetPoolService for GPU memory optimization
- */
-export class BloomPass extends Pass {
+export class BloomPass extends Pass implements IBloomPass {
   private readonly config: BloomPassConfig;
-  private readonly pool: IRenderTargetPoolService;
+  private readonly brightPass: BrightPass;
+  private readonly blurPass: BlurPass;
+  private readonly downsamplePass: BloomDownsamplePass;
+  private readonly upsamplePass: BloomUpsamplePass;
   
-  // Shader materials for each pipeline stage
-  private readonly brightPassMaterial: THREE.ShaderMaterial;
-  private readonly downsampleMaterial: THREE.ShaderMaterial;
-  private readonly upsampleMaterial: THREE.ShaderMaterial;
+  private readonly renderTargets: THREE.WebGLRenderTarget[] = [];
   private readonly compositeMaterial: THREE.ShaderMaterial;
-  
-  // Rendering infrastructure
   private readonly quad: THREE.Mesh;
   private readonly camera: THREE.OrthographicCamera;
   private readonly scene: THREE.Scene;
   
-  // Render target dimensions
-  private width: number;
-  private height: number;
+  private intensity: number;
 
   constructor(
     config: BloomPassConfig,
     width: number,
     height: number,
-    pool: IRenderTargetPoolService
+    shaders: {
+      brightPassShader: string;
+      blurShader: string;
+      downsampleShader: string;
+      upsampleShader: string;
+    }
   ) {
     super();
     
     this.config = config;
-    this.width = width;
-    this.height = height;
-    this.pool = pool;
+    this.intensity = config.intensity;
     
-    // Initialize rendering infrastructure
+    // Setup rendering infrastructure
     this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     this.scene = new THREE.Scene();
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2));
     this.quad.frustumCulled = false;
     this.scene.add(this.quad);
     
-    // Initialize shader materials
-    this.brightPassMaterial = this.createBrightPassMaterial(config);
-    this.downsampleMaterial = this.createDownsampleMaterial(width, height);
-    this.upsampleMaterial = this.createUpsampleMaterial(config);
-    this.compositeMaterial = this.createCompositeMaterial(config);
+    // Create sub-passes
+    this.brightPass = this.createBrightPass(config, shaders);
+    this.blurPass = this.createBlurPass(config, width, height, shaders);
+    this.downsamplePass = this.createDownsamplePass(width, height, shaders);
+    this.upsamplePass = this.createUpsamplePass(width, height, shaders);
+    
+    // Create mipmap chain render targets
+    this.createRenderTargets(width, height);
+    
+    // Create composite material for final blend
+    this.compositeMaterial = this.createCompositeMaterial();
   }
 
-  private createBrightPassMaterial(config: BloomPassConfig): THREE.ShaderMaterial {
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        sceneTexture: { value: null },
-        threshold: { value: config.threshold },
-        softThreshold: { value: config.softThreshold },
-        intensity: { value: 1.0 },
-        colorPreservation: { value: config.colorPreservation }
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
-      `,
-      fragmentShader: `
-        uniform sampler2D sceneTexture; uniform float threshold; uniform float softThreshold;
-        uniform float intensity; uniform float colorPreservation; varying vec2 vUv;
-        void main() {
-          vec4 color = texture2D(sceneTexture, vUv);
-          float luminance = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
-          float softCurve = luminance - threshold + softThreshold;
-          softCurve = clamp(softCurve, 0.0, 2.0 * softThreshold);
-          softCurve = softCurve * softCurve / (4.0 * softThreshold + 0.0001);
-          float contribution = max(softCurve, luminance - threshold) / max(luminance, 0.0001);
-          color.rgb = mix(vec3(luminance), color.rgb, colorPreservation) * contribution * intensity;
-          gl_FragColor = color;
-        }
-      `
+  private createBrightPass(
+    config: BloomPassConfig,
+    shaders: { brightPassShader: string; blurShader: string; downsampleShader: string; upsampleShader: string }
+  ): BrightPass {
+    return new BrightPass({
+      enabled: config.enabled,
+      threshold: config.threshold,
+      softThreshold: config.softThreshold,
+      intensity: config.intensity,
+      colorPreservation: 0.8
+    }, shaders.brightPassShader);
+  }
+
+  private createBlurPass(
+    config: BloomPassConfig,
+    width: number,
+    height: number,
+    shaders: { brightPassShader: string; blurShader: string; downsampleShader: string; upsampleShader: string }
+  ): BlurPass {
+    return new BlurPass({
+      enabled: config.enabled,
+      kernelSize: config.radius,
+      passes: 1
+    }, width, height, shaders.blurShader);
+  }
+
+  private createDownsamplePass(
+    width: number,
+    height: number,
+    shaders: { brightPassShader: string; blurShader: string; downsampleShader: string; upsampleShader: string }
+  ): BloomDownsamplePass {
+    return new BloomDownsamplePass({
+      width,
+      height,
+      vertexShader: this.getSimpleVertexShader(),
+      fragmentShader: shaders.downsampleShader
     });
   }
 
-  private createDownsampleMaterial(width: number, height: number): THREE.ShaderMaterial {
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        sourceTexture: { value: null },
-        texelSize: { value: new THREE.Vector2(1.0 / width, 1.0 / height) }
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
-      `,
-      fragmentShader: `
-        uniform sampler2D sourceTexture; uniform vec2 texelSize; varying vec2 vUv;
-        void main() {
-          vec4 sum = texture2D(sourceTexture, vUv + vec2(-1,-1) * texelSize);
-          sum += texture2D(sourceTexture, vUv + vec2(0,-1) * texelSize) * 2.0;
-          sum += texture2D(sourceTexture, vUv + vec2(1,-1) * texelSize);
-          sum += texture2D(sourceTexture, vUv + vec2(-1,0) * texelSize) * 2.0;
-          sum += texture2D(sourceTexture, vUv) * 4.0;
-          sum += texture2D(sourceTexture, vUv + vec2(1,0) * texelSize) * 2.0;
-          sum += texture2D(sourceTexture, vUv + vec2(-1,1) * texelSize);
-          sum += texture2D(sourceTexture, vUv + vec2(0,1) * texelSize) * 2.0;
-          sum += texture2D(sourceTexture, vUv + vec2(1,1) * texelSize);
-          gl_FragColor = sum / 16.0;
-        }
-      `
+  private createUpsamplePass(
+    width: number,
+    height: number,
+    shaders: { brightPassShader: string; blurShader: string; downsampleShader: string; upsampleShader: string }
+  ): BloomUpsamplePass {
+    return new BloomUpsamplePass({
+      width,
+      height,
+      vertexShader: this.getSimpleVertexShader(),
+      fragmentShader: shaders.upsampleShader,
+      intensity: 0.3
     });
   }
 
-  private createUpsampleMaterial(config: BloomPassConfig): THREE.ShaderMaterial {
+  private createRenderTargets(width: number, height: number): void {
+    let w = Math.floor(width / 2);
+    let h = Math.floor(height / 2);
+    
+    for (let i = 0; i < this.config.levels; i++) {
+      this.renderTargets.push(
+        new THREE.WebGLRenderTarget(w, h, {
+          minFilter: THREE.LinearFilter,
+          magFilter: THREE.LinearFilter,
+          format: THREE.RGBAFormat
+        })
+      );
+      w = Math.floor(w / 2);
+      h = Math.floor(h / 2);
+    }
+  }
+
+  private getSimpleVertexShader(): string {
+    return `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
+  }
+
+  private createCompositeMaterial(): THREE.ShaderMaterial {
     return new THREE.ShaderMaterial({
       uniforms: {
-        sourceTexture: { value: null },
-        higherTexture: { value: null },
-        intensity: { value: config.radius }
+        baseTexture: { value: null },
+        bloomTexture: { value: null },
+        intensity: { value: this.config.intensity }
       },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
-      `,
+      vertexShader: this.getSimpleVertexShader(),
       fragmentShader: `
-        uniform sampler2D sourceTexture; uniform sampler2D higherTexture; uniform float intensity;
         varying vec2 vUv;
+        uniform sampler2D baseTexture;
+        uniform sampler2D bloomTexture;
+        uniform float intensity;
+        
         void main() {
-          vec4 current = texture2D(sourceTexture, vUv);
-          vec4 higher = texture2D(higherTexture, vUv);
-          gl_FragColor = mix(current, current + higher * intensity, 0.5);
+          vec3 base = texture2D(baseTexture, vUv).rgb;
+          vec3 bloom = texture2D(bloomTexture, vUv).rgb;
+          
+          // Additive blending with intensity
+          vec3 result = base + bloom * intensity;
+          
+          gl_FragColor = vec4(result, 1.0);
         }
-      `
+      `,
+      depthTest: false,
+      depthWrite: false
     });
   }
 
-  private createCompositeMaterial(config: BloomPassConfig): THREE.ShaderMaterial {
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        tScene: { value: null },
-        tBloom: { value: null },
-        uIntensity: { value: config.intensity },
-        uBlendMode: { value: config.blendMode === 'additive' ? 0 : 1 }
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
-      `,
-      fragmentShader: `
-        uniform sampler2D tScene; uniform sampler2D tBloom; uniform float uIntensity; uniform int uBlendMode;
-        varying vec2 vUv;
-        void main() {
-          vec4 sceneColor = texture2D(tScene, vUv);
-          vec4 bloomColor = texture2D(tBloom, vUv) * uIntensity;
-          vec4 result = (uBlendMode == 0) ? sceneColor + bloomColor :
-            vec4(1.0) - (vec4(1.0) - sceneColor) * (vec4(1.0) - bloomColor);
-          result.a = sceneColor.a;
-          gl_FragColor = result;
-        }
-      `
-    });
-  }
-
-  /**
-   * Render a full-screen quad with the given material
-   */
-  private renderPass(
-    renderer: THREE.WebGLRenderer,
-    material: THREE.ShaderMaterial,
-    renderTarget: THREE.WebGLRenderTarget | null
-  ): void {
-    this.quad.material = material;
-    renderer.setRenderTarget(renderTarget);
-    renderer.render(this.scene, this.camera);
-  }
-
+  // eslint-disable-next-line max-params
   public render(
     renderer: THREE.WebGLRenderer,
     writeBuffer: THREE.WebGLRenderTarget,
-    readBuffer: THREE.WebGLRenderTarget
+    readBuffer: THREE.WebGLRenderTarget,
+    _deltaTime?: number,
+    _maskActive?: boolean
   ): void {
     if (!this.config.enabled) {
-      this.renderPassthrough(renderer, readBuffer, writeBuffer);
       return;
     }
     
-    const brightBuffer = this.extractBrightAreas(renderer, readBuffer);
-    const downsampledBuffers = this.generateDownsampleChain(renderer, brightBuffer);
-    this.upsampleAndBlend(renderer, downsampledBuffers);
-    this.compositeWithScene(renderer, readBuffer, writeBuffer, downsampledBuffers[0]);
-    this.releaseBuffers(brightBuffer, downsampledBuffers);
-  }
-
-  private renderPassthrough(
-    renderer: THREE.WebGLRenderer,
-    readBuffer: THREE.WebGLRenderTarget,
-    writeBuffer: THREE.WebGLRenderTarget
-  ): void {
-    const copyMaterial = new THREE.MeshBasicMaterial({ map: readBuffer.texture });
-    this.quad.material = copyMaterial;
-    this.renderPass(renderer, copyMaterial as unknown as THREE.ShaderMaterial, 
-      this.renderToScreen ? null : writeBuffer);
-    copyMaterial.dispose();
-  }
-
-  private extractBrightAreas(
-    renderer: THREE.WebGLRenderer,
-    readBuffer: THREE.WebGLRenderTarget
-  ): THREE.WebGLRenderTarget {
-    const brightBuffer = this.pool.acquire(this.width, this.height, {
-      format: THREE.RGBAFormat,
-      type: THREE.HalfFloatType
-    });
-    this.brightPassMaterial.uniforms.sceneTexture.value = readBuffer.texture;
-    this.renderPass(renderer, this.brightPassMaterial, brightBuffer);
-    return brightBuffer;
-  }
-
-  private generateDownsampleChain(
-    renderer: THREE.WebGLRenderer,
-    brightBuffer: THREE.WebGLRenderTarget
-  ): THREE.WebGLRenderTarget[] {
-    const downsampledBuffers: THREE.WebGLRenderTarget[] = [];
-    let currentInput = brightBuffer;
+    // Step 1: Extract bright pixels
+    this.brightPass.render(renderer, this.renderTargets[0], readBuffer);
     
-    for (let i = 0; i < this.config.levels; i++) {
-      const mipWidth = Math.max(1, this.width >> (i + 1));
-      const mipHeight = Math.max(1, this.height >> (i + 1));
-      const mipBuffer = this.pool.acquire(mipWidth, mipHeight, {
-        format: THREE.RGBAFormat,
-        type: THREE.HalfFloatType
-      });
-      
-      this.downsampleMaterial.uniforms.texelSize.value.set(1.0 / mipWidth, 1.0 / mipHeight);
-      this.downsampleMaterial.uniforms.sourceTexture.value = currentInput.texture;
-      this.renderPass(renderer, this.downsampleMaterial, mipBuffer);
-      
-      downsampledBuffers.push(mipBuffer);
-      currentInput = mipBuffer;
-    }
-    return downsampledBuffers;
+    // Step 2: Blur bright pixels
+    this.blurPass.render(renderer, this.renderTargets[0], this.renderTargets[0]);
+    
+    // Step 3-4: Process mipmap chain
+    this.downsampleMipmapChain(renderer);
+    this.upsampleMipmapChain(renderer);
+    
+    // Step 5: Composite bloom with scene
+    this.compositeBloom(renderer, writeBuffer, readBuffer);
   }
 
-  private upsampleAndBlend(
-    renderer: THREE.WebGLRenderer,
-    downsampledBuffers: THREE.WebGLRenderTarget[]
-  ): void {
+  private downsampleMipmapChain(renderer: THREE.WebGLRenderer): void {
+    for (let i = 0; i < this.config.levels - 1; i++) {
+      this.downsamplePass.updateTexelSize(
+        this.renderTargets[i + 1].width,
+        this.renderTargets[i + 1].height
+      );
+      this.downsamplePass.render(
+        renderer,
+        this.renderTargets[i + 1],
+        this.renderTargets[i]
+      );
+    }
+  }
+
+  private upsampleMipmapChain(renderer: THREE.WebGLRenderer): void {
     for (let i = this.config.levels - 2; i >= 0; i--) {
-      const higherRes = downsampledBuffers[i + 1];
-      const currentRes = downsampledBuffers[i];
-      
-      this.upsampleMaterial.uniforms.sourceTexture.value = currentRes.texture;
-      this.upsampleMaterial.uniforms.higherTexture.value = higherRes.texture;
-      this.renderPass(renderer, this.upsampleMaterial, currentRes);
+      this.upsamplePass.updateTexelSize(
+        this.renderTargets[i].width,
+        this.renderTargets[i].height
+      );
+      this.upsamplePass.render(
+        renderer,
+        this.renderTargets[i],
+        this.renderTargets[i + 1]
+      );
     }
   }
 
-  private compositeWithScene(
+  private compositeBloom(
     renderer: THREE.WebGLRenderer,
-    readBuffer: THREE.WebGLRenderTarget,
     writeBuffer: THREE.WebGLRenderTarget,
-    finalBloom: THREE.WebGLRenderTarget
+    readBuffer: THREE.WebGLRenderTarget
   ): void {
-    this.compositeMaterial.uniforms.tScene.value = readBuffer.texture;
-    this.compositeMaterial.uniforms.tBloom.value = finalBloom.texture;
-    this.compositeMaterial.uniforms.uIntensity.value = this.config.intensity;
-    this.renderPass(renderer, this.compositeMaterial, 
-      this.renderToScreen ? null : writeBuffer);
+    this.compositeMaterial.uniforms.baseTexture.value = readBuffer.texture;
+    this.compositeMaterial.uniforms.bloomTexture.value = this.renderTargets[0].texture;
+    this.compositeMaterial.uniforms.intensity.value = this.intensity;
+    
+    this.quad.material = this.compositeMaterial;
+    
+    if (this.renderToScreen) {
+      renderer.setRenderTarget(null);
+    } else {
+      renderer.setRenderTarget(writeBuffer);
+    }
+    
+    renderer.render(this.scene, this.camera);
   }
 
-  private releaseBuffers(
-    brightBuffer: THREE.WebGLRenderTarget,
-    downsampledBuffers: THREE.WebGLRenderTarget[]
-  ): void {
-    this.pool.release(brightBuffer);
-    for (const buffer of downsampledBuffers) {
-      this.pool.release(buffer);
-    }
+  public setIntensity(intensity: number): void {
+    this.intensity = intensity;
+    this.brightPass.setIntensity(intensity);
+  }
+
+  public setThreshold(threshold: number): void {
+    this.brightPass.setThreshold(threshold);
+  }
+
+  public getState(): BloomPassState {
+    return {
+      activeLevels: this.config.levels,
+      currentIntensity: this.intensity,
+      renderTargetsAllocated: this.renderTargets.length
+    };
   }
 
   public setSize(width: number, height: number): void {
-    this.width = width;
-    this.height = height;
+    this.brightPass.setSize(width, height);
+    this.blurPass.setSize(width, height);
+    
+    // Recreate render targets
+    this.renderTargets.forEach(rt => rt.dispose());
+    this.renderTargets.length = 0;
+    this.createRenderTargets(width, height);
   }
 
   public dispose(): void {
-    this.brightPassMaterial.dispose();
-    this.downsampleMaterial.dispose();
-    this.upsampleMaterial.dispose();
+    this.brightPass.dispose();
+    this.blurPass.dispose();
     this.compositeMaterial.dispose();
     this.quad.geometry.dispose();
+    this.renderTargets.forEach(rt => rt.dispose());
   }
 }

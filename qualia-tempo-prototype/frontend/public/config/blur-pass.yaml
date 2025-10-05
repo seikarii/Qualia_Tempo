@@ -1,0 +1,4 @@
+# BlurPass Configuration
+enabled: true
+kernelSize: 2.0      # Blur radius (1.0-5.0)
+passes: 1            # Number of blur iterations

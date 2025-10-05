@@ -1,0 +1,7 @@
+# Jitter Service Configuration - TAA Sub-Pixel Sampling
+# Halton(2,3) sequence for Temporal Anti-Aliasing
+
+enabled: false              # TAA disabled by default (high performance cost)
+sampleCount: 8              # Number of frames in Halton cycle (8, 16, or 32)
+strength: 1.0               # Jitter strength multiplier (1.0 = full pixel offset)
+resetOnMove: true           # Reset sequence when camera moves

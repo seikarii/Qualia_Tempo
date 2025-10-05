@@ -1,0 +1,11 @@
+# QUALIA.CODE v1.1 - Depth of Field Configuration
+# Phase 4: Temporal Effects - DoFPass
+# Purpose: Configure depth-based focus blur with natural bokeh
+
+enabled: false              # DoF disabled by default (performance)
+focusDistance: 10.0         # Focus plane distance (meters)
+focusRange: 5.0             # Range of sharp focus (meters)
+bokehRadius: 3.0            # Maximum blur radius (pixels)
+bokehSamples: 32            # Samples for bokeh shape (16-64)
+aperture: 5.6               # Aperture f-stop (realistic DoF)
+debugMode: false            # Debug visualization mode
