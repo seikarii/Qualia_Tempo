@@ -1,4 +1,6 @@
-# Qualia Tempo - Arquitectura Futura (v2.0)
+# Qualia Tempo - Arquitectura Futura (v2.0) - DEPRECATED
+
+**DEPRECATED: Este documento ha sido reemplazado por `ARCHITECTURE.GOLD.CODE.md`. No usar para nuevas implementaciones.**
 
 ## Visión General
 

@@ -73,3 +73,13 @@ Backend:
    * `frontend/src/services/DebugService.ts:79`: FUTURE para la limpieza de suscripciones del EventBus.
    * `frontend/src/components/QualiaMainMenu.tsx:44`: Comentario TEMPO que indica trabajo temporal o incompleto.
    * `frontend/public/shaders/gbuffer.glsl:40`: PLACEHOLDER para las propiedades de los materiales en el G-buffer.
+
+---
+
+## 🚀 NUEVAS TAREAS - MIGRACIÓN A ARCHITECTURE.GOLD.CODE
+
+- [ ] **MIGRAR QualiaStateCalculator A WEB WORKER**: Mover cálculos de QualiaState a hilo separado para evitar bloqueo de UI. Archivo: `frontend/src/services/QualiaStateCalculatorService.ts`
+- [ ] **IMPLEMENTAR PROCESS POOL PARA PARTICLE ENGINE**: Backend ParticleEngine en proceso separado. Archivo: `backend/engine/ParticleEngine.py`
+- [ ] **ACTUALIZAR EVENTBUS PARA SOPORTE DE WORKERS**: Extender EventBus para comunicación cross-worker. Archivos: `frontend/src/services/EventBus.ts`, `backend/EventBus.py`
+- [ ] **REFACTORIZAR KAIROS VISUAL ENGINE**: Separar cálculo visual de renderizado según patrón Stateless View-Logic. Archivo: `frontend/src/components/game/KairosVisualEngine.tsx`
+- [ ] **VALIDAR FLUJO UNIDIRECCIONAL**: Asegurar que el flujo Input -> Backend -> Estado -> Frontend sea estricto. Revisar todos los servicios.
