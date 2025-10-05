@@ -76,6 +76,16 @@ Backend:
 
 ---
 
+## 🚀 NUEVAS TAREAS - IMPLEMENTACIÓN VISUALS.GOLD.CODE (PROYECTO KAIROS)
+
+- [ ] **FASE 1: ATMÓSFERA Y PRESENCIA**: Implementar Bloom y God Rays en Kairos Visual Engine. Mapear QualiaState (intensity, transcendence, precision, aggression) a shader uniforms.
+- [ ] **FASE 2: SYNESTHESIA PROFUNDA**: Integrar FFT análisis en AudioService, enviar datos al backend, modular partículas con graves/medios/agudos en shaders.
+- [ ] **FASE 3: EL MUNDO VIVIENTE**: Implementar Reaction-Diffusion compute shader para suelo dinámico. Mapear QualiaState (chaos, flow, recovery) a simulación parameters.
+- [ ] **FASE 4: AVATARES PROCEDURALES**: Reemplazar modelos 3D con Raymarching SDFs. Parametrizar formas con QualiaState para mutaciones en tiempo real.
+- [ ] **VALIDAR MAPEOS DE DATOS**: Asegurar que todos los parámetros shader sean funciones del QualiaState y/o FFT data, sin valores estáticos.
+
+---
+
 ## 🚀 NUEVAS TAREAS - MIGRACIÓN A ARCHITECTURE.GOLD.CODE
 
 - [ ] **MIGRAR QualiaStateCalculator A WEB WORKER**: Mover cálculos de QualiaState a hilo separado para evitar bloqueo de UI. Archivo: `frontend/src/services/QualiaStateCalculatorService.ts`

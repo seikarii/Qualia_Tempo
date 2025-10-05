@@ -129,7 +129,7 @@ export interface ICombatState {
   player: IPlayerState;   // Estado del jugador
   boss: IBossState;       // Estado del jefe
   qualiaState: IQualiaState; // Estado de Qualia actualizado
-  activeEffects: IEffect[]; // Efectos visuales/auditivos activos
+  activeEffects: IActiveEffect[]; // Efectos visuales/auditivos activos
   comboHistory: number[];  // Historial de combos
   hitHistory: IHitEvent[]; // Historial de golpes
   
@@ -231,6 +231,13 @@ export interface ILyricData {
 ```
 
 ## Sistema de Partículas
+
+// NOTA DE ARQUITECTO (GOLD.CODE):
+// Las siguientes interfaces (IParticleSystemConfig, IParticleEffect y sus tipos asociados)
+// definen la CONFIGURACIÓN INTERNA de los efectos visuales en el motor del FRONTEND.
+// NO representan datos que se transfieran por la red en tiempo real.
+// Su propósito es permitir al Kairos Visual Engine del frontend tener un catálogo
+// de efectos pre-configurados.
 
 ### ParticleSystemConfig
 Configuración del sistema de partículas.
@@ -534,17 +541,21 @@ export interface IBossDebuff extends IDebuff {
 }
 
 /**
- * General effect system
+ * Representa el ESTADO de un efecto visual activo en la escena.
+ * Este es el objeto que el Backend envía al Frontend para decirle "activa este efecto aquí".
  */
-export interface IEffect {
-  id: string;
-  name: string;
-  type: 'visual' | 'audio' | 'particle' | 'gameplay';
-  startTime: number;
-  duration: number;
-  position: Vector2;
-  intensity: number;
-  color?: Color;
+export interface IActiveEffect {
+  instanceId: string;      // ID único para esta instancia específica del efecto.
+  effectId: string;        // ID del efecto pre-configurado en el catálogo del frontend (ej: "vortex_combo_effect").
+  timestamp: number;       // Momento de creación del efecto.
+  duration: number;        // Duración en segundos. -1 para infinito.
+  position: Vector2;       // Posición en el mundo donde se origina el efecto.
+
+  // Opcional: Parámetros dinámicos que el backend puede sobreescribir en tiempo real.
+  scale?: number;          // Multiplicador de tamaño.
+  intensity?: number;      // Multiplicador de intensidad.
+  color?: Color;           // Tinte de color principal.
+  targetId?: string;       // ID de la entidad a la que está anclado (ej: ID del jugador o del boss).
 }
 
 /**

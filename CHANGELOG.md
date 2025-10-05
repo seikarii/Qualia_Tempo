@@ -1,5 +1,30 @@
 # CHANGELOG
 
+## [2025-10-05 VISUALS GOLD.CODE & DATA CONTRACTS] - MANIFIESTO VISUAL Y CONTRATOS REFINADOS ✅
+
+### 🎯 MISSION: Crear VISUALS.GOLD.CODE.md y Refinar Contratos de Datos - COMPLETE SUCCESS
+
+**Objective:** Crear manifiesto visual GOLD.CODE absorbiendo music.txt, refinar contratos de datos para arquitectura backend envía ESTADO no configuración.
+
+**STATUS:** ✅ **100% SUCCESS - VISUALS.GOLD.CODE ESTABLECIDO, CONTRATOS ALINEADOS**
+
+#### Implementation Details
+
+**1. Archivos Creados/Modificados:**
+- `docs/VISUALS.GOLD.CODE.md`: Nuevo manifiesto visual con fases Kairos, mapeos de datos, arquitectura frontend-exclusive rendering.
+- `docs/data_structures_v2.md`: Agregada nota arquitecto, renombrado IEffect→IActiveEffect, actualizado ICombatState.
+- `docs/music.txt`: Eliminado (contenido absorbido).
+
+**2. Arquitectura GOLD.CODE Aplicada:**
+- Frontend exclusivo para renderizado (Kairos Visual Engine).
+- Backend envía ESTADO (IActiveEffect), no configuración.
+- Mapeos detallados QualiaState→Shader parameters.
+- Fases secuenciales: Atmósfera → Synesthesia → Mundo Viviente → Avatares Procedurales.
+
+**3. Validación:**
+- Lint-architecture.sh: PASSED (todos compliant).
+- Contratos alineados con ARCHITECTURE.GOLD.CODE.md.
+
 ## [2025-10-05 ARCHITECTURE GOLD.CODE] - NUEVA VISIÓN ARQUITECTÓNICA ESTABLECIDA ✅
 
 ### 🎯 MISSION: Implementar ARCHITECTURE.GOLD.CODE.md y Deprecar Arquitectura Anterior - COMPLETE SUCCESS
