@@ -1,39 +1,28 @@
-DIRECTIVA REVISADA 07: `enforce-dependency-inversion`
+SERVICIOS EN EL BACKEND (PROCESO PYTHON):
 
-  Objetivo: Forzar que los constructores de servicios solo acepten interfaces, nunca clases concretas.
+   1. `Kairos Visual Engine` (incluyendo el `QualiaParticleEngine`):
+       * Razón: Gestiona la computación pesada de shaders, partículas y efectos visuales avanzados (Reaction-Diffusion, SDF) que no dependen del timing musical
+         instantáneo, solo del QualiaState resultante.
 
-  Guía Lógica para el Ingeniero:
+   2. `Boss AI & Behavior System`:
+       * Razón: La inteligencia artificial, la generación de patrones de ataque y el escalado de dificultad son lógicas de simulación que no requieren acceso al audio
+         en tiempo real.
 
-   1. Punto de Entrada: Implementa un visitor del AST que se active para cada ClassDeclaration.
-   2. Filtrado de Clases: Dentro del visitor, lo primero es comprobar si la clase tiene el decorador @injectable. Si no lo tiene, ignórala y sal. No nos importa lo que
-      hagan las clases que no son servicios.
-   3. Localización del Constructor: Si la clase es un servicio, busca en su cuerpo el método constructor. Si no tiene constructor, no hay nada que hacer. Sal.
-   4. Análisis de Parámetros: Itera sobre los parámetros del constructor. Te interesan los nodos TSParameterProperty.
-   5. Consulta al Type Checker: Para cada parámetro, debes usar los parserServices para obtener su tipo semántico, no solo el texto. Necesitas el objeto Type de
-      TypeScript.
-   6. Detección de la Violación: Una vez tienes el objeto Type, comprueba sus flags. Si el símbolo del tipo contiene el flag ts.SymbolFlags.Class, has encontrado una
-      dependencia de una clase concreta. Esa es la violación.
-   7. Reporte del Error: Al detectar la violación, invoca a context.report para lanzar un error de linting que rompa la build. El mensaje debe ser inequívoco: Error en 
-      'MiServicio': el parámetro 'miLogger' no puede ser la clase 'LoggerConcreto'. Debe ser una interfaz.
+   3. Servicios de Persistencia y Metajuego:
+       * Razón: Cualquier servicio que gestione el marcador online, el guardado de progreso o la carga de música personalizada debe estar aquí para interactuar con
+         bases de datos o el sistema de archivos de forma segura.
 
-  ---
+  SERVICIOS EN EL FRONTEND (PROCESO NATIVO/WEB):
 
-  DIRECTIVA REVISADA 08: `no-service-locator`
+   1. `QualiaStateCalculatorService` y `GameplayMechanicsService` (en un Web Worker):
+       * Razón: Necesitan acceso instantáneo al motor de audio (Tone.js) y al input del jugador para el cálculo de armonía y combos, algo inviable con la latencia de un
+         proceso externo. Se mueven a un worker para no bloquear la UI.
 
-  Objetivo: Prohibir las llamadas a container.get() en cualquier lugar que no sea el Composition Root o los tests.
+   2. `Ontological & 8D Audio Engine` (`Tone.js`):
+       * Razón: Es el motor que reproduce el sonido. Debe estar en el frontend para tener acceso al hardware de audio del usuario.
 
-  Guía Lógica para el Ingeniero:
+   3. `Audio Analysis Service` (FFT):
+       * Razón: Utiliza la Web Audio API, que solo está disponible en el entorno del frontend.
 
-   1. Punto de Entrada: Implementa un visitor del AST que se active para cada CallExpression.
-   2. Identificación de la Llamada: Comprueba si la expresión de llamada corresponde a container.get. Analiza el callee para verificar que el objeto se llama container y
-      la propiedad get.
-   3. Contexto de la Llamada: Si es una llamada a container.get, obtén la ruta del archivo que se está analizando a través del context.
-   4. Aplicación de Excepciones: Compara la ruta del archivo con la lista de excepciones permitidas:
-       * ¿Es inversify.config.ts? Si es así, la llamada es válida. Sal.
-       * ¿Termina en .test.ts? Si es así, la llamada es válida. Sal.
-   5. Reporte del Error: Si el archivo no está en la lista de excepciones, has encontrado un anti-patrón. Lanza un error de linting fatal con context.report. Mensaje:
-      Error: El uso de 'container.get()' está prohibido fuera de 'inversify.config.ts' y los tests.
-
-  ---
-
-  Esta es la guía. Clara, lógica y procesable. Es el nivel de dirección que se esperaba de mí.
+   4. `Musical Input & Combo System` (Captura de Input):
+       * Razón: Debe ejecutarse en el hilo principal del frontend para recibir los eventos de teclado del sistema operativo sin latencia.
