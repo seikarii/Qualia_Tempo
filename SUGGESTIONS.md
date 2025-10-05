@@ -1,345 +1,6 @@
 # ARCHITECTURAL SUGGESTIONS & IMPROVEMENTS
 *Generated: 2025-10-04 - Post Linter Remediation Analysis*
 *Updated: 2025-10-04 - Phase 3 & Phase 4 Implementation Complete*
-*Updated: 2025-10-05 - IoC Circular Dependency Prevention - PHASES 1 & 2 COMPLETE*
-
-## 🎯 Executive Summary
-
-**STATUS UPDATE:** ✅ Suggestions #1, #2, and #3 (PHASES 1 & 2) have been **FULLY IMPLEMENTED**. The linter now possesses contextual intelligence AND real-time IoC binding order enforcement, achieving architectural excellence.
-
-## 🎉 IMPLEMENTED SUGGESTIONS
-
-### ✅ SUGGESTION #1: Event Source Detection - IMPLEMENTED
-**Implementation Date:** 2025-10-04 Phase 3  
-**Status:** Production-ready, 66% violation reduction achieved
-
-### ✅ SUGGESTION #2: Hot-Path Auto-Detection - IMPLEMENTED  
-**Implementation Date:** 2025-10-04 Phase 3  
-**Status:** Production-ready, eliminates false positives for simple methods
-
-### ✅ SUGGESTION #3: IoC Circular Dependency Prevention - PHASES 1 & 2 IMPLEMENTED
-**Implementation Date:** 2025-10-05  
-**Status:** Production-ready, real-time and CI/CD enforcement active
-
-**PHASE 1 (Detection Script):**
-- File: `/scripts/detect-circular-dependencies.ts` (501 lines)
-- Integration: npm script + lint-architecture.sh Phase 4
-- Validation: 45 bindings, 0 violations detected
-- See: `PHASE_1_PREVENTION_SUCCESS_2025-10-05.md`
-
-**PHASE 2 (ESLint Rule):**
-- File: `/eslint-plugin-qualia-code/lib/rules/enforce-ioc-binding-order.js` (170 lines)
-- Rule: `@qualia-tempo/qualia-code/enforce-ioc-binding-order`
-- Integration: Real-time IDE feedback in VS Code
-- Validation: 0 violations, 0 false positives
-- See: `PHASE_2_ESLINT_RULE_SUCCESS_2025-10-05.md`
-
-See complete implementation details in `/docs/reports/`.
-
----
-
-## 🔮 FUTURE SUGGESTIONS (Not Yet Implemented)
-
-## 🚨 CRITICAL SUGGESTION #3: IoC Circular Dependency Prevention (2025-10-05)
-**Priority:** CRITICAL - Prevents catastrophic binding failures  
-**Context:** After resolving major IoC binding order circular dependency issue
-
-### Problem: InversifyJS Lazy Resolution Enables Silent Binding Order Bugs
-
-**Scenario:**
-```typescript
-// Service A Params tries to inject Service B
-safeBindConstant<ServiceAParams>(TYPES.ServiceAParams, {
-  serviceB: container.get<IServiceB>(TYPES.IServiceB) // ← Triggers Service B instantiation
-});
-
-// Service B Params bound LATER (too late!)
-safeBindConstant<ServiceBParams>(TYPES.ServiceBParams, { /* ... */ });
-```
-
-**Impact:** Cascading "No bindings found" errors that crash the entire application at bootstrap.
-
-**Root Cause:** InversifyJS resolves dependencies lazily. When a Params binding calls `container.get()`, it immediately triggers service instantiation, which looks for that service's Params. If those Params haven't been bound yet (because we're still in the binding phase), the container throws "No bindings found."
-
-### Proposed Solution 1: Circular Dependency Detection Script
-
-**Implementation:**
-- **File:** `/scripts/detect-circular-dependencies.ts`
-- **Logic:**
-  1. Parse `inversify.config.ts` using TypeScript AST (ts-morph or @typescript-eslint/parser)
-  2. Extract all `safeBindConstant()` calls with their TYPES symbols
-  3. Extract all `container.get<IService>(TYPES.Symbol)` calls within each Params binding
-  4. Build dependency graph: `ServiceA → ServiceB` means "ServiceA's Params retrieves ServiceB via container.get()"
-  5. Detect cycles using depth-first search (DFS)
-  6. Check binding order: If ServiceA depends on ServiceB, ServiceB's Params MUST be bound before ServiceA's Params
-
-**Algorithm:**
-```typescript
-interface BindingNode {
-  symbol: string;              // TYPES.ServiceAParams
-  lineNumber: number;          // Where it's bound
-  dependencies: string[];      // Other services retrieved via container.get()
-}
-
-function detectViolations(bindings: BindingNode[]): Violation[] {
-  const violations: Violation[] = [];
-  const bindingOrder = new Map<string, number>(); // symbol → line number
-  
-  bindings.forEach(binding => {
-    bindingOrder.set(binding.symbol, binding.lineNumber);
-  });
-  
-  bindings.forEach(binding => {
-    binding.dependencies.forEach(dep => {
-      const depLineNumber = bindingOrder.get(dep);
-      if (!depLineNumber) {
-        violations.push({
-          type: 'MISSING_BINDING',
-          service: binding.symbol,
-          dependency: dep,
-          message: `${binding.symbol} depends on ${dep} but ${dep} is never bound`
-        });
-      } else if (depLineNumber > binding.lineNumber) {
-        violations.push({
-          type: 'BINDING_ORDER',
-          service: binding.symbol,
-          dependency: dep,
-          serviceLine: binding.lineNumber,
-          dependencyLine: depLineNumber,
-          message: `${binding.symbol} (line ${binding.lineNumber}) depends on ${dep} (line ${depLineNumber}) but ${dep} is bound AFTER`
-        });
-      }
-    });
-  });
-  
-  return violations;
-}
-```
-
-**Integration Points:**
-1. **Standalone Script:** `pnpm run detect-circular-deps` (runs during development)
-2. **Integrated in `lint-architecture.sh`:** Runs as part of architectural linting
-3. **Optional: Pre-commit hook:** Blocks commits that introduce binding order violations
-4. **Optional: CI/CD:** Fails build if violations detected
-
-**Output Example:**
-```
-🔍 Analyzing IoC binding order in inversify.config.ts...
-
-❌ BINDING ORDER VIOLATION:
-   GameControllerServiceParams (line 650) depends on AudioService
-   but AudioServiceParams is bound LATER at line 680
-   
-   Solution: Move AudioServiceParams binding BEFORE line 650
-
-❌ MISSING BINDING:
-   FrontendRenderingServiceParams (line 720) depends on PostProcessingService
-   but PostProcessingServiceParams is never bound
-   
-   Solution: Add binding for PostProcessingServiceParams
-
-✅ Dependency graph is acyclic
-❌ Found 2 binding order violations
-
-Exit code: 1
-```
-
-### Proposed Solution 2: ESLint Rule for Binding Order
-
-**Implementation:**
-- **File:** `eslint-plugin-qualia-code/rules/enforce-ioc-binding-order.js`
-- **Rule ID:** `@qualia-tempo/qualia-code/enforce-ioc-binding-order`
-
-**Rule Logic:**
-```javascript
-module.exports = {
-  meta: {
-    type: 'problem',
-    docs: {
-      description: 'Enforce that InversifyJS service Params are bound before they are retrieved',
-      category: 'IoC Architecture',
-      recommended: true
-    },
-    messages: {
-      bindingOrderViolation: 'Service "{{dependency}}" is retrieved at line {{getLine}} but its Params are bound later at line {{bindLine}}. Reorder bindings so dependencies are bound first.',
-      missingBinding: 'Service "{{dependency}}" is retrieved but never bound in this file.'
-    }
-  },
-  create(context) {
-    const bindings = new Map(); // TYPES.Symbol → line number
-    const retrievals = [];      // {symbol, lineNumber}
-    
-    return {
-      // Detect safeBindConstant() calls
-      'CallExpression[callee.name="safeBindConstant"]'(node) {
-        const typeArg = node.arguments[0]; // TYPES.ServiceParams
-        if (typeArg && typeArg.type === 'MemberExpression') {
-          const symbol = `${typeArg.object.name}.${typeArg.property.name}`;
-          bindings.set(symbol, node.loc.start.line);
-        }
-      },
-      
-      // Detect container.get() calls
-      'CallExpression[callee.object.name="container"][callee.property.name="get"]'(node) {
-        const typeArg = node.arguments[0]; // TYPES.IService
-        if (typeArg && typeArg.type === 'MemberExpression') {
-          const symbol = `${typeArg.object.name}.${typeArg.property.name}`;
-          retrievals.push({symbol, lineNumber: node.loc.start.line});
-        }
-      },
-      
-      // After file is fully parsed, check order
-      'Program:exit'(node) {
-        retrievals.forEach(({symbol, lineNumber}) => {
-          const bindLine = bindings.get(symbol);
-          if (!bindLine) {
-            context.report({
-              node,
-              messageId: 'missingBinding',
-              data: {dependency: symbol}
-            });
-          } else if (bindLine > lineNumber) {
-            context.report({
-              node,
-              messageId: 'bindingOrderViolation',
-              data: {
-                dependency: symbol,
-                getLine: lineNumber,
-                bindLine: bindLine
-              }
-            });
-          }
-        });
-      }
-    };
-  }
-};
-```
-
-**Configuration (.eslintrc.js):**
-```javascript
-module.exports = {
-  plugins: ['@qualia-tempo/qualia-code'],
-  rules: {
-    '@qualia-tempo/qualia-code/enforce-ioc-binding-order': 'error'
-  }
-};
-```
-
-### Proposed Solution 3: Update QUALIA.CODE Documentation
-
-**File:** `docs/QUALIA.CODE.md`
-
-**New Section to Add:**
-```markdown
-### II.7. IOC BINDING ORDER PROTOCOL (CRITICAL)
-
-**LAW OF DEPENDENCY PRECEDENCE: DEPENDENCIES BIND FIRST.**
-
-**RATIONALE:** InversifyJS resolves dependencies lazily. When a Params object calls `container.get<IService>()`, it triggers immediate service instantiation, which looks for that service's Params. If those Params haven't been bound yet, the container throws "No bindings found," causing cascading failures.
-
-**MANDATE:** Service Params MUST be bound in topological order based on their dependencies.
-
-**BINDING ORDER LEVELS:**
-- **Level 0 (Bootstrap):** Infrastructure services with no dependencies (EventBus, Logger, TimerService, HttpService)
-- **Level 1 (Direct Configs):** Simple config objects with no service dependencies
-- **Level 2 (Infrastructure-Dependent):** Services depending only on Level 0/1
-- **Level 3 (Level 2-Dependent):** Services depending on Level 2
-- **Level 4 (Level 3-Dependent):** Services depending on Level 3
-- **Level 5 (Orchestrator):** ApplicationInitializerService depending on ALL services
-
-**CORRECT PATTERN:**
-\`\`\`typescript
-function bindServiceParameterObjects(fullConfig: FullGameConfig): void {
-  // Phase 1: Direct config binding (no service dependencies)
-  bindDirectConfigs(fullConfig);
-  
-  // Phase 2: Service Params binding in strict dependency order
-  bindLevel2ServiceParams(fullConfig); // Infrastructure dependencies only
-  bindLevel3ServiceParams(fullConfig); // Depends on Level 2
-  bindLevel4ServiceParams(fullConfig); // Depends on Level 3
-  bindLevel5ServiceParams(fullConfig); // Orchestrator - depends on all
-}
-
-function bindLevel2ServiceParams(fullConfig: FullGameConfig): void {
-  // AudioService depends on OntologicalAudioEngine (Level 1)
-  safeBindConstant<AudioServiceParams>(TYPES.AudioServiceParams, {
-    ontologicalAudioEngine: container.get<IOntologicalAudioEngine>(...) // ✅ Safe - Level 1 already bound
-  });
-}
-
-function bindLevel3ServiceParams(fullConfig: FullGameConfig): void {
-  // GameControllerService depends on AudioService (Level 2)
-  safeBindConstant<GameControllerServiceParams>(TYPES.GameControllerServiceParams, {
-    audioService: container.get<IAudioService>(...) // ✅ Safe - Level 2 already bound
-  });
-}
-\`\`\`
-
-**ANTI-PATTERN (FORBIDDEN):**
-\`\`\`typescript
-function bindServiceParameterObjects(fullConfig: FullGameConfig): void {
-  // VIOLATION: Arbitrary binding order
-  safeBindConstant<GameControllerServiceParams>({
-    audioService: container.get<IAudioService>() // ❌ CRITICAL VIOLATION - AudioServiceParams not bound yet
-  });
-  
-  // Too late - GameControllerService already tried to instantiate AudioService
-  safeBindConstant<AudioServiceParams>({ /* ... */ });
-}
-\`\`\`
-
-**ENFORCEMENT:**
-- Architectural linter rule: `@qualia-tempo/qualia-code/enforce-ioc-binding-order`
-- Detection script: `./scripts/detect-circular-dependencies.ts`
-- Integrated in: `./scripts/lint-architecture.sh`
-```
-
-### Implementation Priority
-
-**Phase 1 (CRITICAL - Immediate):**
-1. Create `detect-circular-dependencies.ts` script
-2. Integrate with `lint-architecture.sh`
-3. Add to `package.json` scripts: `"detect-circular-deps": "tsx scripts/detect-circular-dependencies.ts"`
-
-**Phase 2 (HIGH - Next Sprint):**
-1. Implement ESLint rule `enforce-ioc-binding-order`
-2. Add to eslint-plugin-qualia-code
-3. Configure in `.eslintrc.json` with severity 'error'
-4. Run on CI/CD pipeline
-
-**Phase 3 (MEDIUM - Documentation):**
-1. Update `QUALIA.CODE.md` with IoC Binding Order Protocol
-2. Update `QUALIA.MANUAL.md` with implementation examples
-3. Add to onboarding documentation
-
-### Success Criteria
-
-**Detection Script:**
-- ✅ Detects all binding order violations in inversify.config.ts
-- ✅ Reports line numbers and dependency chains
-- ✅ Exit code 0 = no violations, 1 = violations found
-- ✅ Runs in <2 seconds
-
-**ESLint Rule:**
-- ✅ Detects violations inline during development
-- ✅ Provides actionable error messages
-- ✅ No false positives for correct binding order
-- ✅ Integrated in VS Code with squiggly underlines
-
-**Documentation:**
-- ✅ QUALIA.CODE updated with comprehensive binding protocol
-- ✅ Examples of correct and incorrect patterns
-- ✅ Rationale clearly explained
-
-### Expected Impact
-
-**Development Velocity:** +20% (prevents hours of debugging cascading binding errors)  
-**Code Reliability:** +30% (prevents entire classes of catastrophic bootstrap failures)  
-**Onboarding Time:** -40% (new developers understand IoC binding rules immediately)  
-**Technical Debt:** -100% for this specific issue class (automated enforcement)
-
-**RECOMMENDATION:** Implement Phase 1 immediately. This is a critical architectural safeguard that prevents catastrophic failures.
 
 ---
 
@@ -600,3 +261,254 @@ The exemption comment system achieves this balance:
 ---
 
 *This document represents living architectural wisdom. Update as new patterns emerge.*
+
+---
+
+## 🚀 SUGGESTION #4: Wasm-Based GLSL Parser Upgrade (2025-10-05)
+**Priority:** MEDIUM - Performance Optimization (3-5x speedup)  
+**Context:** CRISALIDA.CODE v1.1 implementation completed with tactical JS solution  
+**Status:** Architecture prepared, Wasm implementation ready for future sprint
+
+### Current Implementation: JsGlslParserService
+
+**Library:** `@shaderfrog/glsl-parser` v6.1.0 (JavaScript)  
+**Performance:** Adequate for current usage (~10-50ms parse time per shader)  
+**Architecture:** Fully abstracted via `IGlslParser` interface, enabling zero-impact replacement
+
+### Strategic Upgrade: Rust/Wasm Parser
+
+**Rationale (QUALIA.CODE Section 12.2):**
+> "When performance is critical and the task is computationally intensive, use the most optimal language. For systems-level tasks where memory safety and performance are paramount, use Rust compiled to WebAssembly."
+
+**Benefits:**
+- **3-5x Performance Gain:** Rust's zero-cost abstractions and compiled nature
+- **Memory Safety:** Rust's borrow checker prevents memory leaks
+- **Parallel Processing:** Potential for SIMD optimizations
+- **Browser Compatibility:** Wasm runs natively in all modern browsers
+
+### Implementation Plan
+
+#### Phase 1: Create Rust Parser Crate
+
+**Directory Structure:**
+```
+QualiaTempo/
+├── crates/
+│   └── glsl-parser/
+│       ├── Cargo.toml
+│       ├── src/
+│       │   ├── lib.rs           # Main entry point
+│       │   ├── parser.rs        # GLSL parsing logic
+│       │   └── types.rs         # AST type definitions
+│       └── tests/
+│           └── integration_test.rs
+```
+
+**Key Dependencies (Cargo.toml):**
+```toml
+[package]
+name = "glsl-parser"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+glsl = "6.0"               # Robust Rust GLSL parser
+wasm-bindgen = "0.2"       # Wasm interop
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"         # JSON serialization
+```
+
+**Core Implementation (lib.rs):**
+```rust
+use wasm_bindgen::prelude::*;
+use glsl::parser::Parse;
+use serde_json;
+
+#[wasm_bindgen]
+pub fn parse_glsl_to_json(source: &str) -> Result<String, JsValue> {
+    // Parse GLSL source into AST
+    let ast = glsl::parser::Parse::parse(source)
+        .map_err(|e| JsValue::from_str(&format!("Parse error: {}", e)))?;
+    
+    // Serialize AST to JSON
+    serde_json::to_string(&ast)
+        .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+}
+
+#[wasm_bindgen]
+pub fn extract_uniforms(ast_json: &str) -> Result<String, JsValue> {
+    // Deserialize AST from JSON
+    let ast: glsl::syntax::TranslationUnit = serde_json::from_str(ast_json)
+        .map_err(|e| JsValue::from_str(&format!("Deserialization error: {}", e)))?;
+    
+    // Traverse AST to find uniform declarations
+    let uniforms = traverse_for_uniforms(&ast);
+    
+    // Serialize uniforms to JSON
+    serde_json::to_string(&uniforms)
+        .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+}
+```
+
+**Build Command:**
+```bash
+cd crates/glsl-parser
+wasm-pack build --target web --out-dir ../../qualia-tempo-prototype/frontend/src/wasm
+```
+
+#### Phase 2: Create WasmGlslParserService
+
+**Location:** `frontend/src/services/WasmGlslParserService.ts`
+
+**Implementation:**
+```typescript
+import { injectable, inject } from 'inversify';
+import { TYPES } from './inversify.types';
+import type { 
+  IGlslParser, 
+  GlslAst, 
+  UniformDeclaration 
+} from './interfaces/IGlslParser';
+import type { ILogger } from './interfaces/ILogger';
+import { logMethod, catchError } from '../utils/decorators';
+
+// Wasm module import (generated by wasm-pack)
+import init, { parse_glsl_to_json, extract_uniforms } from '../wasm/glsl_parser';
+
+@injectable()
+export class WasmGlslParserService implements IGlslParser {
+  private readonly logger: ILogger;
+  private wasmInitialized = false;
+
+  constructor(
+    @inject(TYPES.ILogger) logger: ILogger
+  ) {
+    this.logger = logger;
+  }
+
+  /**
+   * Initialize Wasm module (call once at app startup)
+   */
+  @logMethod
+  @catchError
+  public async initialize(): Promise<void> {
+    if (this.wasmInitialized) return;
+    
+    await init();
+    this.wasmInitialized = true;
+    this.logger.info('Wasm GLSL parser initialized');
+  }
+
+  @logMethod
+  @catchError
+  public async parse(source: string): Promise<GlslAst> {
+    if (!this.wasmInitialized) {
+      await this.initialize();
+    }
+
+    try {
+      const astJson = parse_glsl_to_json(source);
+      const ast = JSON.parse(astJson) as GlslAst;
+      
+      this.logger.debug('Wasm GLSL parsing completed', {
+        nodeCount: ast.program?.length || 0
+      });
+
+      return ast;
+    } catch (error) {
+      this.logger.error('Wasm GLSL parsing failed', { error });
+      throw new Error(`Wasm parsing failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  @logMethod
+  public extractUniforms(ast: GlslAst): UniformDeclaration[] {
+    const astJson = JSON.stringify(ast);
+    const uniformsJson = extract_uniforms(astJson);
+    const uniforms = JSON.parse(uniformsJson) as UniformDeclaration[];
+    
+    this.logger.debug(`Wasm extracted ${uniforms.length} uniforms`);
+    return uniforms;
+  }
+}
+```
+
+#### Phase 3: Zero-Impact Replacement
+
+**Update inversify.config.ts:**
+```typescript
+// OLD (Tactical Solution):
+// container.bind<IGlslParser>(TYPES.IGlslParser).to(JsGlslParserService).inSingletonScope();
+
+// NEW (Strategic Solution):
+container.bind<IGlslParser>(TYPES.IGlslParser).to(WasmGlslParserService).inSingletonScope();
+```
+
+**That's it!** All dependent services (ShaderIntrospectionService, PostProcessingService) require ZERO changes due to interface abstraction.
+
+#### Phase 4: Performance Benchmarking
+
+**Test Suite:**
+```typescript
+describe('Wasm Parser Performance', () => {
+  it('should parse complex shader 3-5x faster than JS parser', async () => {
+    const complexShader = loadTestShader('ssr_v2.glsl');
+    
+    const jsStart = performance.now();
+    await jsParser.parse(complexShader);
+    const jsTime = performance.now() - jsStart;
+    
+    const wasmStart = performance.now();
+    await wasmParser.parse(complexShader);
+    const wasmTime = performance.now() - wasmStart;
+    
+    expect(wasmTime).toBeLessThan(jsTime / 3);
+    console.log(`JS: ${jsTime}ms, Wasm: ${wasmTime}ms, Speedup: ${(jsTime/wasmTime).toFixed(2)}x`);
+  });
+});
+```
+
+### Prerequisites for Implementation
+
+1. **Rust Toolchain:**
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   rustup target add wasm32-unknown-unknown
+   ```
+
+2. **wasm-pack:**
+   ```bash
+   curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+   ```
+
+3. **Vite Wasm Plugin:**
+   ```bash
+   npm install vite-plugin-wasm vite-plugin-top-level-await
+   ```
+
+### Estimated Effort
+
+- **Phase 1 (Rust Crate):** 4-6 hours
+- **Phase 2 (Wasm Service):** 2-3 hours
+- **Phase 3 (Integration):** 1 hour
+- **Phase 4 (Testing & Benchmarking):** 2-3 hours
+- **Total:** ~10-13 hours
+
+### Success Criteria
+
+- ✅ Wasm parser passes all existing ShaderIntrospectionService tests
+- ✅ 3-5x performance improvement demonstrated in benchmarks
+- ✅ Zero breaking changes to dependent services
+- ✅ Wasm bundle size < 500KB (gzipped)
+- ✅ All architectural linter rules pass
+
+### References
+
+- QUALIA.CODE Section 12.2: "Optimal Language Selection"
+- CRISALIDA.CODE v1.1: "Strategic Mandate (GOLD.CODE STANDARD)"
+- Rust GLSL Parser: https://crates.io/crates/glsl
+- wasm-bindgen Guide: https://rustwasm.github.io/docs/wasm-bindgen/
+

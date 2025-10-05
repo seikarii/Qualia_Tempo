@@ -357,6 +357,7 @@ import { ViewLogicService } from './ViewLogicService';
 import { SubtitleService } from './SubtitleService';
 import { DebugOrchestratorService } from './DebugOrchestratorService';
 import { ShaderLoaderService } from './ShaderLoaderService';
+import { JsGlslParserService } from './JsGlslParserService';
 import { ShaderIntrospectionService } from './ShaderIntrospectionService';
 import { PostProcessingService } from './PostProcessingService';
 import type { IGameplayMechanicsService } from './interfaces/IGameplayMechanicsService';
@@ -364,6 +365,7 @@ import type { IViewLogicService } from './interfaces/IViewLogicService';
 import type { ISubtitleService } from './interfaces/ISubtitleService';
 import type { IDebugOrchestratorService } from './interfaces/IDebugOrchestratorService';
 import type { IShaderLoaderService } from './interfaces/IShaderLoaderService';
+import type { IGlslParser } from './interfaces/IGlslParser';
 import type { IShaderIntrospectionService } from './interfaces/IShaderIntrospectionService';
 import type { IPostProcessingService } from './interfaces/IPostProcessingService';
 
@@ -407,6 +409,13 @@ container
 container
   .bind<IShaderLoaderService>(TYPES.IShaderLoaderService)
   .to(ShaderLoaderService)
+  .inSingletonScope();
+
+// CRISALIDA.CODE v1.1: GLSL Parser Service (Tactical JS Implementation)
+// This binding enables zero-impact replacement with Wasm parser in the future
+container
+  .bind<IGlslParser>(TYPES.IGlslParser)
+  .to(JsGlslParserService)
   .inSingletonScope();
 
 container

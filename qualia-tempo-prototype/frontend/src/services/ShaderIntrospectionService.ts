@@ -1,12 +1,18 @@
 /**
- * QUALIA.CODE v1.1 - ShaderIntrospectionService
- * AST-based GLSL shader introspection service for automatic uniform extraction and shader separation.
- * Eliminates manual regex parsing and hardcoded shader logic.
+ * QUALIA.CODE v1.2 - ShaderIntrospectionService
+ * CRISALIDA.CODE v1.1 COMPLIANT - Robust AST-based GLSL shader introspection.
+ * 
+ * ARCHITECTURAL EVOLUTION:
+ * - Replaced fragile regex parsing with robust AST-based parsing via IGlslParser
+ * - Injected parser abstraction enables zero-impact Wasm upgrade path
+ * - Eliminates #pragma requirements for fragment-only shaders
+ * - Maintains decorator compliance per QUALIA.CODE Section 6.2.1
  */
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
 import type { IShaderIntrospectionService } from './interfaces/IShaderIntrospectionService';
+import type { IGlslParser } from './interfaces/IGlslParser';
 import type { ILogger } from './interfaces/ILogger';
 import * as THREE from 'three';
 import type { IUniform } from 'three';
@@ -15,35 +21,46 @@ import { logMethod, catchError } from '../utils/decorators';
 @injectable()
 export class ShaderIntrospectionService implements IShaderIntrospectionService {
   private readonly logger: ILogger;
+  private readonly parser: IGlslParser;
 
   constructor(
-    @inject(TYPES.ILogger) logger: ILogger
+    @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.IGlslParser) parser: IGlslParser
   ) {
     this.logger = logger;
+    this.parser = parser;
   }
 
   @logMethod
   @catchError
-  public introspect(shaderSource: string): {
+  public async introspect(shaderSource: string): Promise<{
     vertexShader: string;
     fragmentShader: string;
     uniforms: Record<string, IUniform>;
-  } {
-    this.logger.debug('Introspecting shader source');
+  }> {
+    this.logger.debug('Introspecting shader source using AST parsing');
 
-    // Split shader source by pragmas
+    // Check for pragma-based shader separation
     const vertexMatch = shaderSource.match(/#pragma VERTEX\s*\n([\s\S]*?)(?=#pragma FRAGMENT|$)/);
     const fragmentMatch = shaderSource.match(/#pragma FRAGMENT\s*\n([\s\S]*?)$/);
 
-    if (!vertexMatch || !fragmentMatch) {
-      throw new Error('Shader source must contain #pragma VERTEX and #pragma FRAGMENT sections');
+    let vertexShader: string;
+    let fragmentShader: string;
+
+    if (vertexMatch && fragmentMatch) {
+      // Shader has explicit pragma sections
+      vertexShader = vertexMatch[1].trim();
+      fragmentShader = fragmentMatch[1].trim();
+      this.logger.debug('Shader uses pragma-based separation');
+    } else {
+      // Fragment-only shader - generate passthrough vertex shader
+      vertexShader = this.generatePassthroughVertexShader();
+      fragmentShader = shaderSource.trim();
+      this.logger.debug('Fragment-only shader detected, generated passthrough vertex shader');
     }
 
-    const vertexShader = vertexMatch[1].trim();
-    const fragmentShader = fragmentMatch[1].trim();
-
     // Parse fragment shader to extract uniforms using AST
-    const uniforms = this.extractUniforms(fragmentShader);
+    const uniforms = await this.extractUniforms(fragmentShader);
 
     this.logger.debug(`Extracted ${Object.keys(uniforms).length} uniforms from shader`);
 
@@ -54,22 +71,44 @@ export class ShaderIntrospectionService implements IShaderIntrospectionService {
     };
   }
 
-  private extractUniforms(shaderSource: string): Record<string, IUniform> {
+  private async extractUniforms(shaderSource: string): Promise<Record<string, IUniform>> {
     const uniforms: Record<string, IUniform> = {};
 
-    // Use regex to find all uniform declarations
-    const uniformRegex = /uniform\s+(\w+)\s+(\w+)\s*;/g;
-    let match;
+    try {
+      // Parse shader source into AST
+      const ast = await this.parser.parse(shaderSource);
 
-    while ((match = uniformRegex.exec(shaderSource)) !== null) {
-      const type = match[1];
-      const name = match[2];
-      const defaultValue = this.getDefaultValueForType(type);
+      // Extract uniform declarations from AST
+      const uniformDeclarations = this.parser.extractUniforms(ast);
 
-      uniforms[name] = { value: defaultValue };
+      // Convert uniform declarations to Three.js uniform objects
+      for (const uniform of uniformDeclarations) {
+        const defaultValue = this.getDefaultValueForType(uniform.type);
+        uniforms[uniform.name] = { value: defaultValue };
+      }
+
+      this.logger.debug(`AST parsing extracted ${uniformDeclarations.length} uniforms`);
+    } catch (error) {
+      this.logger.error('Failed to extract uniforms via AST parsing', { error });
+      throw new Error(`Uniform extraction failed: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     return uniforms;
+  }
+
+  /**
+   * Generates a default passthrough vertex shader for fragment-only shaders.
+   * This shader simply passes through position and UV coordinates.
+   */
+  private generatePassthroughVertexShader(): string {
+    return `
+      varying vec2 vUv;
+      
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `.trim();
   }
 
   private getDefaultValueForType(type: string): THREE.Vector2 | THREE.Vector3 | THREE.Vector4 | THREE.Matrix4 | number | null {

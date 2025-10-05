@@ -269,7 +269,7 @@ export class PostProcessingService implements IPostProcessingService {
     }
 
     const shaderSource = await this.shaderLoader.load(passConfig.shader);
-    const shader = this.shaderIntrospection.introspect(shaderSource);
+    const shader = await this.shaderIntrospection.introspect(shaderSource);
 
     // Merge uniforms from config
     shader.uniforms = { ...shader.uniforms, ...passConfig.uniforms };
@@ -285,7 +285,7 @@ export class PostProcessingService implements IPostProcessingService {
    */
   private async createGBufferPass(): Promise<Pass> {
     const shaderSource = await this.shaderLoader.load('gbuffer');
-    const shader = this.shaderIntrospection.introspect(shaderSource);
+    const shader = await this.shaderIntrospection.introspect(shaderSource);
     return new GBufferPass({
       scene: this.scene,
       camera: this.camera,

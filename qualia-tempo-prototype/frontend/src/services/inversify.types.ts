@@ -50,6 +50,7 @@ export const TYPES = {
 
   // ===== NEW SERVICES =====
   IShaderLoaderService: Symbol.for("IShaderLoaderService"),
+  IGlslParser: Symbol.for("IGlslParser"),
   IShaderIntrospectionService: Symbol.for("IShaderIntrospectionService"),
   IPostProcessingService: Symbol.for("IPostProcessingService"),
   PostProcessingServiceParams: Symbol.for("PostProcessingServiceParams"),
