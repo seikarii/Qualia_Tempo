@@ -167,7 +167,7 @@ pipelines:
           radius: 0.3
           threshold: 0.9
 
-      # Final HDR composition
+      # Final HDR composition with HBAO and SSR integration
       - type: ShaderPass
         enabled: true
         shader: composite_pass
@@ -176,8 +176,14 @@ pipelines:
             value: gbuffer_color
           tBloom:
             value: composite_buffer  # Bloom output
+          tHBAO:
+            value: hbao_occlusion    # Ambient occlusion from HBAO pass
+          tSSR:
+            value: ssr_reflections   # Reflections from SSR pass
           bloomStrength:
             value: 0.8
+          ssrStrength:
+            value: 0.5       # SSR intensity (0.0-1.0) - tune for visual balance
           exposure:
             value: 1.0       # HDR exposure compensation (-3.0 to +3.0)
           contrast:
@@ -188,7 +194,6 @@ pipelines:
             value: 2.2       # Gamma correction (1.8-2.4)
           blendMode:
             value: 1         # 0=Additive, 1=Screen, 2=Overlay, 3=SoftLight
-          # TODO: Integrate HBAO and SSR textures in composite shader
 
 # Pipeline execution order - CRISALIDA.CODE v1.1: GBuffer → HBAO → SSR → Composite
 pipelineOrder:

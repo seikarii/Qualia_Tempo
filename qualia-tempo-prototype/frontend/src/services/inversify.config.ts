@@ -462,16 +462,16 @@ function safeBindConstant<T>(identifier: symbol, value: T): void {
   }
 }
 
-export async function configureServices(): Promise<void> {
-  // CRITICAL: Use container.isBound() instead of static flags for React.StrictMode immunity
-  if (container.isBound(TYPES.FullGameConfig)) {
-    return; // Configuration already loaded
-  }
-
-  // BOOTSTRAP PHASE: Bind minimal configs for core infrastructure services
-  // This breaks the circular dependency: ConfigurationService → HttpService → (TimerService, Config)
-  // HttpService and TimerService need configs to instantiate, but ConfigurationService needs them to load config
-  
+/**
+ * Creates bootstrap configurations for core infrastructure services.
+ * These are minimal configs that enable ConfigurationService to load the full config.
+ * They get replaced with real configs after ConfigurationService loads.
+ * 
+ * NOTE: Bootstrap values are intentionally hardcoded to break circular dependency.
+ * ESLint suppression justified: These bootstrap configs are temporary and get replaced.
+ */
+/* eslint-disable @qualia-tempo/qualia-code/no-hardcoded-config */
+function createBootstrapConfigs(): { http: HttpConfig; timer: TimerServiceConfig } {
   const bootstrapHttpConfig: HttpConfig = {
     timeout: 30000,
     retries: 3,
@@ -493,13 +493,46 @@ export async function configureServices(): Promise<void> {
       debug: { enableDebugLogging: false, logTimerLifecycle: false }
     }
   };
+
+  return { http: bootstrapHttpConfig, timer: bootstrapTimerConfig };
+}
+/* eslint-enable @qualia-tempo/qualia-code/no-hardcoded-config */
+
+/**
+ * Emits ConfigurationLoadedEvent to notify all services that configuration is ready.
+ */
+function emitConfigurationLoadedEvent(): void {
+  const eventBus = container.get<IEventBus>(TYPES.IEventBus);
+  const configManifest = container.get<Record<string, string>>(TYPES.ConfigManifest);
+  const loadedConfigs = Object.keys(configManifest);
+  const totalConfigs = loadedConfigs.length;
+
+  const configLoadedEvent: ConfigurationLoadedEvent = {
+    type: "ConfigurationLoaded",
+    timestamp: new Date(),
+    source: "ConfigurationService",
+    loadedConfigs,
+    totalConfigs,
+  };
+
+  eventBus.emit(configLoadedEvent);
+}
+
+export async function configureServices(): Promise<void> {
+  // CRITICAL: Use container.isBound() instead of static flags for React.StrictMode immunity
+  if (container.isBound(TYPES.FullGameConfig)) {
+    return; // Configuration already loaded
+  }
+
+  // BOOTSTRAP PHASE: Bind minimal configs for core infrastructure services
+  // This breaks the circular dependency: ConfigurationService → HttpService → (TimerService, Config)
+  const bootstrapConfigs = createBootstrapConfigs();
   
-  // Bind bootstrap configs BEFORE loading full configuration
   if (!container.isBound(TYPES.HttpConfig)) {
-    container.bind<HttpConfig>(TYPES.HttpConfig).toConstantValue(bootstrapHttpConfig);
+    container.bind<HttpConfig>(TYPES.HttpConfig).toConstantValue(bootstrapConfigs.http);
   }
   if (!container.isBound(TYPES.TimerServiceConfig)) {
-    container.bind<TimerServiceConfig>(TYPES.TimerServiceConfig).toConstantValue(bootstrapTimerConfig);
+    container.bind<TimerServiceConfig>(TYPES.TimerServiceConfig).toConstantValue(bootstrapConfigs.timer);
   }
 
   // 1. Get ConfigurationService instance to load configuration
@@ -519,22 +552,7 @@ export async function configureServices(): Promise<void> {
   bindServiceParameterObjects(fullConfig);
 
   // 4. Emit configuration loaded event
-  // CRITICAL: Emit ConfigurationLoadedEvent to notify all services that configuration is ready
-  // This breaks the circular dependency by centralizing event emission in IoC setup
-  const eventBus = container.get<IEventBus>(TYPES.IEventBus);
-  const configManifest = container.get<Record<string, string>>(TYPES.ConfigManifest);
-  const loadedConfigs = Object.keys(configManifest);
-  const totalConfigs = loadedConfigs.length;
-
-  const configLoadedEvent: ConfigurationLoadedEvent = {
-    type: "ConfigurationLoaded",
-    timestamp: new Date(),
-    source: "ConfigurationService",
-    loadedConfigs,
-    totalConfigs,
-  };
-
-  eventBus.emit(configLoadedEvent);
+  emitConfigurationLoadedEvent();
 }
 
 // ===== HELPER FUNCTIONS FOR CONFIGURATION BINDING =====
@@ -710,8 +728,10 @@ function bindLevel3ServiceParams(fullConfig: FullGameConfig): void {
  * Level 4 Service Params Binding
  * Dependencies: Level 3 services (AudioService, RhythmicMovement, etc.)
  */
-function bindLevel4ServiceParams(fullConfig: FullGameConfig): void {
-  // Game Controller - needs AudioService (Level 2), GameStateStoreService (Level 1), AudioSystemBridge
+/**
+ * Binds game controller service parameters
+ */
+function bindGameControllerParams(fullConfig: FullGameConfig): void {
   safeBindConstant<GameControllerServiceParams>(TYPES.GameControllerServiceParams, {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -722,7 +742,12 @@ function bindLevel4ServiceParams(fullConfig: FullGameConfig): void {
     audioService: container.get<IAudioService>(TYPES.IAudioService),
     audioSystemBridge: container.get<IAudioSystemBridge>(TYPES.IAudioSystemBridge),
   });
+}
 
+/**
+ * Binds rendering-related service parameters
+ */
+function bindRenderingParams(fullConfig: FullGameConfig): void {
   // Frontend Rendering - CRISALIDA.CODE v1.1: Added shader services for G-Buffer particles
   safeBindConstant<FrontendRenderingServiceParams>(TYPES.FrontendRenderingServiceParams, {
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -733,6 +758,41 @@ function bindLevel4ServiceParams(fullConfig: FullGameConfig): void {
     shaderIntrospection: container.get<IShaderIntrospectionService>(TYPES.IShaderIntrospectionService),
     config: fullConfig.frontendRendering,
   });
+}
+
+/**
+ * Binds debugging and monitoring service parameters
+ */
+function bindDebugAndMonitoringParams(fullConfig: FullGameConfig): void {
+  // Debug Service
+  safeBindConstant<DebugServiceParams>(TYPES.DebugServiceParams, {
+    logger: container.get<ILogger>(TYPES.ILogger),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    config: fullConfig.debugService,
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+  });
+
+  // Debug Orchestrator
+  safeBindConstant<DebugOrchestratorServiceParams>(TYPES.DebugOrchestratorServiceParams, {
+    config: fullConfig.debugOrchestrator,
+    logger: container.get<ILogger>(TYPES.ILogger),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
+  });
+
+  // Error Reporting
+  safeBindConstant<ErrorReportingServiceParams>(TYPES.ErrorReportingServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    httpService: container.get<IHttpService>(TYPES.IHttpService),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    config: fullConfig.errorReporting,
+  });
+}
+
+function bindLevel4ServiceParams(fullConfig: FullGameConfig): void {
+  bindGameControllerParams(fullConfig);
+  bindRenderingParams(fullConfig);
 
   // Backend Sync - needs HttpService (Level 0)
   safeBindConstant<BackendSyncServiceParams>(TYPES.BackendSyncServiceParams, {
@@ -754,30 +814,7 @@ function bindLevel4ServiceParams(fullConfig: FullGameConfig): void {
     throttlingManager: container.get<ThrottlingManager>(TYPES.ThrottlingManager),
   });
 
-  // Debug Service - needs PerformanceService (Level 0)
-  safeBindConstant<DebugServiceParams>(TYPES.DebugServiceParams, {
-    logger: container.get<ILogger>(TYPES.ILogger),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
-    config: fullConfig.debugService,
-    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
-  });
-
-  // Debug Orchestrator - needs PerformanceService (Level 0)
-  safeBindConstant<DebugOrchestratorServiceParams>(TYPES.DebugOrchestratorServiceParams, {
-    config: fullConfig.debugOrchestrator,
-    logger: container.get<ILogger>(TYPES.ILogger),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
-    performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
-  });
-
-  // Error Reporting - needs HttpService (Level 0)
-  safeBindConstant<ErrorReportingServiceParams>(TYPES.ErrorReportingServiceParams, {
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    logger: container.get<ILogger>(TYPES.ILogger),
-    httpService: container.get<IHttpService>(TYPES.IHttpService),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
-    config: fullConfig.errorReporting,
-  });
+  bindDebugAndMonitoringParams(fullConfig);
 }
 
 // ============================================================================

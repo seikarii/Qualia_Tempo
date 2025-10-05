@@ -5,7 +5,10 @@ varying vec2 vUv;
 
 uniform sampler2D tDiffuse;      // Scene texture (Three.js standard)
 uniform sampler2D tBloom;        // Bloom texture
+uniform sampler2D tHBAO;         // HBAO Ambient Occlusion texture
+uniform sampler2D tSSR;          // Screen Space Reflections texture
 uniform float bloomStrength;    // Bloom intensity (0.0-2.0)
+uniform float ssrStrength;      // SSR intensity (0.0-1.0)
 uniform float exposure;         // HDR exposure compensation (-3.0 to +3.0)
 uniform float contrast;         // Contrast adjustment (0.5-2.0)
 uniform float saturation;       // Color saturation (0.0-2.0)
@@ -51,14 +54,22 @@ float luminance(vec3 color) {
 }
 
 void main() {
-    // Sample base scene and bloom
+    // Sample all textures
     vec3 scene = texture2D(tDiffuse, vUv).rgb;
     vec3 bloom = texture2D(tBloom, vUv).rgb;
+    vec3 hbao = texture2D(tHBAO, vUv).rgb;    // Grayscale occlusion factor
+    vec3 ssr = texture2D(tSSR, vUv).rgb;      // Reflection color
 
-    // Apply exposure compensation to scene
+    // 1. Apply HBAO (multiply to darken occluded areas)
+    scene *= hbao;
+
+    // 2. Add SSR reflections (screen blend for realistic compositing)
+    scene = blendScreen(scene, ssr * ssrStrength);
+
+    // 3. Apply exposure compensation
     scene *= pow(2.0, exposure);
 
-    // Blend bloom with scene using selected mode
+    // 4. Blend bloom with scene using selected mode
     vec3 result;
     switch(blendMode) {
         case 1: // Screen blend
@@ -75,21 +86,21 @@ void main() {
             break;
     }
 
-    // Apply ACES filmic tone mapping (Industry standard)
+    // 5. Apply ACES filmic tone mapping (Industry standard)
     result = ACESFilm(result);
 
-    // Color grading pipeline
-    // 1. Contrast adjustment
+    // 6. Color grading pipeline
+    // 6.1. Contrast adjustment
     result = mix(vec3(0.5), result, contrast);
 
-    // 2. Saturation control
+    // 6.2. Saturation control
     float lum = luminance(result);
     result = mix(vec3(lum), result, saturation);
 
-    // 3. Gamma correction for display
+    // 6.3. Gamma correction for display
     result = pow(result, vec3(1.0 / gamma));
 
-    // 4. Final clamp to prevent artifacts
+    // 6.4. Final clamp to prevent artifacts
     result = clamp(result, 0.0, 1.0);
 
     gl_FragColor = vec4(result, 1.0);

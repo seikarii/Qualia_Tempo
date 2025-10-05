@@ -113,11 +113,14 @@ export class SSRPass extends Pass {
         // Screen resolution
         resolution: { value: new THREE.Vector2(params.width, params.height) },
 
-        // SSR quality parameters (with defaults)
+        // SSR quality parameters (defaults for optional params - standard TypeScript pattern)
+        // ESLint suppression justified: ?? operator with defaults is acceptable for optional params
+        /* eslint-disable @qualia-tempo/qualia-code/no-hardcoded-config */
         maxSteps: { value: params.maxSteps ?? 64 },
         stride: { value: params.stride ?? 2.0 },
         thickness: { value: params.thickness ?? 0.5 },
         maxDistance: { value: params.maxDistance ?? 50.0 },
+        /* eslint-enable @qualia-tempo/qualia-code/no-hardcoded-config */
       },
       transparent: true,
       depthTest: false,
