@@ -30,6 +30,7 @@ import { TYPES } from "./inversify.types";
 import type { IPostProcessingService } from "./interfaces/IPostProcessingService";
 import type { ILogger } from "./interfaces/ILogger";
 import type { IShaderLoaderService } from "./interfaces/IShaderLoaderService";
+import type { IShaderIntrospectionService } from "./interfaces/IShaderIntrospectionService";
 import type { IPerformanceService } from "./interfaces/IPerformanceService";
 import type { IJitterService } from "./interfaces/IJitterService";
 import type { PostProcessingConfig, PostProcessingServiceParams } from "./contracts/IPostProcessingService.contracts";
@@ -44,6 +45,7 @@ import { DoFPass } from "./postprocessing/DoFPass";
 export class PostProcessingService implements IPostProcessingService {
   private readonly logger: ILogger;
   private readonly shaderLoader: IShaderLoaderService;
+  private readonly shaderIntrospection: IShaderIntrospectionService;
   private readonly performanceService: IPerformanceService;
   private readonly jitterService: IJitterService;
   private readonly config: PostProcessingConfig;
@@ -72,6 +74,7 @@ export class PostProcessingService implements IPostProcessingService {
   ) {
     this.logger = params.logger;
     this.shaderLoader = params.shaderLoader;
+    this.shaderIntrospection = params.shaderIntrospection;
     this.performanceService = params.performanceService;
     this.jitterService = params.jitterService;
     this.config = params.config;
@@ -137,19 +140,20 @@ export class PostProcessingService implements IPostProcessingService {
     const width = this.config.renderTargetWidth;
     const height = this.config.renderTargetHeight;
 
-    // Load G-Buffer shaders
-    const vertexShader = await this.shaderLoader.load("gbuffer_particles.glsl");
-    const fragmentShader = vertexShader; // Pragma-delimited shader
+    // CRITICAL FIX: Load and introspect G-Buffer shader to strip version directives
+    // and separate pragma-delimited sections
+    const shaderSource = await this.shaderLoader.load("gbuffer_particles");
+    const shader = await this.shaderIntrospection.introspect(shaderSource);
 
-    // Create G-Buffer pass with full params
+    // Create G-Buffer pass with introspected shaders
     this.gbufferPass = new GBufferPass({
       scene: this.scene,
       camera: this.camera,
       width,
       height,
-      vertexShader,
-      fragmentShader,
-      uniforms: {}, // G-Buffer manages its own uniforms
+      vertexShader: shader.vertexShader,
+      fragmentShader: shader.fragmentShader,
+      uniforms: shader.uniforms, // Use introspected uniforms
     });
     this.gbufferPass.renderToScreen = false; // Always render to texture
 
@@ -178,8 +182,11 @@ export class PostProcessingService implements IPostProcessingService {
     // Create TAAPass if enabled
     if (orch.taaEnabled) {
       this.logger.debug("Creating TAAPass");
-      const taaShader = await this.shaderLoader.load("taa.glsl");
-      this.taaPass = new TAAPass(this.config.taa, width, height, taaShader);
+      const taaShaderSource = await this.shaderLoader.load("taa");
+      const taaShader = await this.shaderIntrospection.introspect(taaShaderSource);
+      // Reconstruct pragma-delimited format for TAAPass (it expects this format)
+      const taaShaderCode = `#pragma VERTEX\n${taaShader.vertexShader}\n#pragma FRAGMENT\n${taaShader.fragmentShader}`;
+      this.taaPass = new TAAPass(this.config.taa, width, height, taaShaderCode);
       this.taaPass.renderToScreen = false;
       this.logger.debug("TAAPass created successfully");
     }
@@ -187,10 +194,13 @@ export class PostProcessingService implements IPostProcessingService {
     // Create MotionBlurPass if enabled
     if (orch.motionBlurEnabled) {
       this.logger.debug("Creating MotionBlurPass");
-      const motionBlurShader = await this.shaderLoader.load("motion_blur.glsl");
+      const motionBlurShaderSource = await this.shaderLoader.load("motion_blur");
+      const motionBlurShader = await this.shaderIntrospection.introspect(motionBlurShaderSource);
+      // Reconstruct pragma-delimited format for MotionBlurPass (it expects this format)
+      const motionBlurShaderCode = `#pragma VERTEX\n${motionBlurShader.vertexShader}\n#pragma FRAGMENT\n${motionBlurShader.fragmentShader}`;
       this.motionBlurPass = new MotionBlurPass(
         this.config.motionBlur,
-        motionBlurShader
+        motionBlurShaderCode
       );
       this.motionBlurPass.renderToScreen = false;
       this.logger.debug("MotionBlurPass created successfully");
@@ -199,8 +209,11 @@ export class PostProcessingService implements IPostProcessingService {
     // Create DoFPass if enabled
     if (orch.dofEnabled) {
       this.logger.debug("Creating DoFPass");
-      const dofShader = await this.shaderLoader.load("dof.glsl");
-      this.dofPass = new DoFPass(this.config.dof, width, height, dofShader);
+      const dofShaderSource = await this.shaderLoader.load("dof");
+      const dofShader = await this.shaderIntrospection.introspect(dofShaderSource);
+      // Reconstruct pragma-delimited format for DoFPass (it expects this format)
+      const dofShaderCode = `#pragma VERTEX\n${dofShader.vertexShader}\n#pragma FRAGMENT\n${dofShader.fragmentShader}`;
+      this.dofPass = new DoFPass(this.config.dof, width, height, dofShaderCode);
       this.dofPass.renderToScreen = false;
       this.logger.debug("DoFPass created successfully");
     }
@@ -208,6 +221,7 @@ export class PostProcessingService implements IPostProcessingService {
 
   /**
    * Load all shaders required for BloomPass
+   * CRITICAL: All shaders must be introspected to strip #version directives
    */
   @logMethod
   @catchError
@@ -219,14 +233,28 @@ export class PostProcessingService implements IPostProcessingService {
   }> {
     this.logger.debug("Loading Bloom shaders");
     
-    const [brightPassShader, blurShader, downsampleShader, upsampleShader] = await Promise.all([
-      this.shaderLoader.load("bright_pass.glsl"),
-      this.shaderLoader.load("blur.glsl"),
-      this.shaderLoader.load("bloom_downsample.glsl"),
-      this.shaderLoader.load("bloom_upsample.glsl"),
+    const [brightPassSource, blurSource, downsampleSource, upsampleSource] = await Promise.all([
+      this.shaderLoader.load("bright_pass"),
+      this.shaderLoader.load("blur"),
+      this.shaderLoader.load("bloom_downsample"),
+      this.shaderLoader.load("bloom_upsample"),
     ]);
 
-    return { brightPassShader, blurShader, downsampleShader, upsampleShader };
+    // Introspect all shaders to strip #version directives and separate pragma sections
+    const [brightPass, blur, downsample, upsample] = await Promise.all([
+      this.shaderIntrospection.introspect(brightPassSource),
+      this.shaderIntrospection.introspect(blurSource),
+      this.shaderIntrospection.introspect(downsampleSource),
+      this.shaderIntrospection.introspect(upsampleSource),
+    ]);
+
+    // Reconstruct pragma-delimited format for BloomPass (it expects this format)
+    return {
+      brightPassShader: `#pragma VERTEX\n${brightPass.vertexShader}\n#pragma FRAGMENT\n${brightPass.fragmentShader}`,
+      blurShader: `#pragma VERTEX\n${blur.vertexShader}\n#pragma FRAGMENT\n${blur.fragmentShader}`,
+      downsampleShader: `#pragma VERTEX\n${downsample.vertexShader}\n#pragma FRAGMENT\n${downsample.fragmentShader}`,
+      upsampleShader: `#pragma VERTEX\n${upsample.vertexShader}\n#pragma FRAGMENT\n${upsample.fragmentShader}`,
+    };
   }
 
   /**

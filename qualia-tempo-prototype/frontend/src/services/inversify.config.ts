@@ -683,10 +683,11 @@ function bindLevel2ServiceParams(fullConfig: FullGameConfig): void {
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
   });
 
-  // PostProcessing Service - needs ShaderLoader, JitterService, Performance (all Level 1)
+  // PostProcessing Service - needs ShaderLoader, ShaderIntrospection, JitterService, Performance (all Level 1)
   safeBindConstant<PostProcessingServiceParams>(TYPES.PostProcessingServiceParams, {
     logger: container.get<ILogger>(TYPES.ILogger),
     shaderLoader: container.get<IShaderLoaderService>(TYPES.IShaderLoaderService),
+    shaderIntrospection: container.get<IShaderIntrospectionService>(TYPES.IShaderIntrospectionService),
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
     // eslint-disable-next-line @qualia-tempo/qualia-code/enforce-ioc-binding-order -- JitterService uses direct config injection (QUALIA.CODE v4.0), not params object
     jitterService: container.get<IJitterService>(TYPES.IJitterService),

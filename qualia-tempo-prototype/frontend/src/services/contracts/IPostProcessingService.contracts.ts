@@ -6,6 +6,7 @@
 
 import type { ILogger } from "../interfaces/ILogger";
 import type { IShaderLoaderService } from "../interfaces/IShaderLoaderService";
+import type { IShaderIntrospectionService } from "../interfaces/IShaderIntrospectionService";
 import type { IPerformanceService } from "../interfaces/IPerformanceService";
 import type { IJitterService } from "../interfaces/IJitterService";
 import type { BloomPassConfig } from "./IBloomPass.contracts";
@@ -51,6 +52,7 @@ export interface PostProcessingConfig {
 export interface PostProcessingServiceParams {
   logger: ILogger;
   shaderLoader: IShaderLoaderService;
+  shaderIntrospection: IShaderIntrospectionService;
   performanceService: IPerformanceService;
   jitterService: IJitterService;
   config: PostProcessingConfig;

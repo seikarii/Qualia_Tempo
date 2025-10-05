@@ -1,5 +1,67 @@
 # CHANGELOG
 
+## [2025-10-05 CRITICAL FIX #2: SHADER LOADING PATH RESOLUTION] 🔧⚡
+
+### Mission Critical: Double Extension Bug in Shader Loader
+
+**Issue Identified:**
+- Shader files loading HTML instead of GLSL code
+- "Qualia Tempo" text invisible (CSS gradient rendering issue - secondary)
+- "Initiate Neural Sync" button non-functional
+- "Disconnected" 0 FPS status display
+- Browser console showing "ERROR: 0:4: '<' : syntax error" with HTML DOCTYPE in shaders
+
+**Root Cause Analysis:**
+1. ShaderLoaderService automatically appends `.glsl` extension to shader names
+2. PostProcessingService was calling `shaderLoader.load("shader_name.glsl")` - passing names WITH extension
+3. This caused requests to `/shaders/shader_name.glsl.glsl` (double extension)
+4. Vite's SPA fallback returns `index.html` with 200 OK status for non-existent files
+5. HttpService received HTML content, passed it as "shader source" to Three.js
+6. Three.js tried to compile HTML as GLSL → compilation errors
+
+**Solution Implemented:**
+1. **PostProcessingService:** Removed `.glsl` extension from ALL shader loader calls
+2. **Consistency:** All shader loading now uses bare names (e.g., `"taa"` instead of `"taa.glsl"`)
+3. **ShaderLoaderService:** Continues to append `.glsl` automatically (no changes needed)
+
+**Files Modified (1 file):**
+- `PostProcessingService.ts`: 
+  - Line 141: `"gbuffer_particles.glsl"` → `"gbuffer_particles"`
+  - Line 181: `"taa.glsl"` → `"taa"`
+  - Line 190: `"motion_blur.glsl"` → `"motion_blur"`
+  - Line 202: `"dof.glsl"` → `"dof"`
+  - Line 223: `"bright_pass.glsl"` → `"bright_pass"`
+  - Line 224: `"blur.glsl"` → `"blur"`
+  - Line 225: `"bloom_downsample.glsl"` → `"bloom_downsample"`
+  - Line 226: `"bloom_upsample.glsl"` → `"bloom_upsample"`
+
+**QUALIA.CODE Compliance:**
+- ✅ HttpService abstraction working correctly (text/plain responses handled properly)
+- ✅ ShaderLoaderService caching functioning as designed
+- ✅ Platform abstraction maintained (Vite-agnostic shader loading)
+- ✅ Single Source of Truth: ShaderLoaderService owns extension logic
+
+**Status:**
+- ✅ Frontend builds successfully
+- ✅ Backend/Frontend startup successful  
+- ✅ Double-extension bug fixed (no more HTML being loaded as shaders)
+- ⏳ NEW ISSUE: Post-processing passes need refactoring to use pre-separated vertex/fragment shaders
+  - Current: Passes receive pragma-delimited shader code and parse it internally
+  - Problem: Pragmas don't work with RawShaderMaterial + GLSL3 (unrecognized pragma warnings)
+  - Solution needed: Passes should receive `{vertexShader, fragmentShader, uniforms}` directly from introspection
+- ⏳ "Qualia Tempo" text visibility issue (CSS rendering - separate issue)
+- ⏳ Button functionality pending shader pipeline fix
+
+**Next Steps:**
+1. **CRITICAL**: Refactor all post-processing passes to accept pre-introspected shaders (no pragma parsing)
+   - TAAPass, MotionBlurPass, DoFPass, BloomPass, BrightPass, BlurPass, etc.
+   - Remove internal pragma parsing logic
+   - Accept shader objects directly: `{vertexShader: string, fragmentShader: string, uniforms: Record<>}`
+2. Fix "Qualia Tempo" text invisibility (CSS gradient/text-fill bug)
+3. Verify button click handler once rendering pipeline is stable
+
+---
+
 ## [2025-10-05 CRITICAL FIX: GLSL 300 ES SHADER COMPILATION] 🔧⚡✨
 
 ### Mission Critical: Shader Compilation System Overhaul
