@@ -45,6 +45,12 @@ export interface PostProcessingConfig {
   renderTargets: RenderTargetDefinition[];
   pipelines: PipelineDefinition[];
   pipelineOrder: string[]; // Order in which pipelines should be executed
+  renderTargetPool: {
+    enabled: boolean;
+    maxPoolSize: number;
+    autoCleanup: boolean;
+    debugMode: boolean;
+  };
 }
 
 export interface PostProcessingServiceParams {

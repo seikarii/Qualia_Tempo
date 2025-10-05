@@ -360,6 +360,7 @@ import { ShaderLoaderService } from './ShaderLoaderService';
 import { JsGlslParserService } from './JsGlslParserService';
 import { ShaderIntrospectionService } from './ShaderIntrospectionService';
 import { PostProcessingService } from './PostProcessingService';
+import { RenderTargetPoolService } from './RenderTargetPoolService';
 import type { IGameplayMechanicsService } from './interfaces/IGameplayMechanicsService';
 import type { IViewLogicService } from './interfaces/IViewLogicService';
 import type { ISubtitleService } from './interfaces/ISubtitleService';
@@ -368,6 +369,8 @@ import type { IShaderLoaderService } from './interfaces/IShaderLoaderService';
 import type { IGlslParser } from './interfaces/IGlslParser';
 import type { IShaderIntrospectionService } from './interfaces/IShaderIntrospectionService';
 import type { IPostProcessingService } from './interfaces/IPostProcessingService';
+import type { IRenderTargetPoolService } from './interfaces/IRenderTargetPoolService';
+import type { RenderTargetPoolConfig } from './contracts/IRenderTargetPoolService.contracts';
 
 container
   .bind<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService)
@@ -426,6 +429,11 @@ container
 container
   .bind<IPostProcessingService>(TYPES.IPostProcessingService)
   .to(PostProcessingService)
+  .inSingletonScope();
+
+container
+  .bind<IRenderTargetPoolService>(TYPES.IRenderTargetPoolService)
+  .to(RenderTargetPoolService)
   .inSingletonScope();
 
 // ===== PROTOCOL ADAPTER BINDINGS =====
@@ -665,6 +673,9 @@ function bindLevel2ServiceParams(fullConfig: FullGameConfig): void {
     config: fullConfig.postProcessing,
     performanceService: container.get<IPerformanceService>(TYPES.IPerformanceService),
   });
+
+  // RenderTargetPool Configuration
+  safeBindConstant<RenderTargetPoolConfig>(TYPES.RenderTargetPoolConfig, fullConfig.postProcessing.renderTargetPool);
 
   // WebSocket Service - needs WebSocketFactory (Level 1)
   safeBindConstant<WebSocketServiceParams>(TYPES.WebSocketServiceParams, {

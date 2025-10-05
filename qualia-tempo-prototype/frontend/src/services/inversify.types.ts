@@ -131,6 +131,10 @@ export const TYPES = {
   ProtocolAdapterConfig: Symbol.for("ProtocolAdapterConfig"),
   TimerServiceConfig: Symbol.for("TimerServiceConfig"),
   AudioSessionConfig: Symbol.for("AudioSessionConfig"),
+
+  // ===== RENDER TARGET POOLING =====
+  IRenderTargetPoolService: Symbol.for("IRenderTargetPoolService"),
+  RenderTargetPoolConfig: Symbol.for("RenderTargetPoolConfig"),
 } as const;
 
 // Type-safe access to TYPES
