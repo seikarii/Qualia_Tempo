@@ -45,7 +45,7 @@ export class LUTPass extends Pass {
     this.lutTexture = params.lutTexture ?? this.createNeutralLUT();
 
     // Create LUT shader material
-    this.material = new THREE.ShaderMaterial({
+    this.material = new THREE.RawShaderMaterial({
       vertexShader: params.vertexShader,
       fragmentShader: params.fragmentShader,
       uniforms: {
@@ -56,7 +56,7 @@ export class LUTPass extends Pass {
       transparent: false,
       depthTest: false,
       depthWrite: false,
-      glslVersion: THREE.GLSL3 // Explicitly use GLSL ES 3.00
+      glslVersion: THREE.GLSL3
     });
 
     // Create full-screen quad

@@ -40,15 +40,22 @@ export class BrightPass extends Pass implements IBrightPass {
   }
 
   private createBrightPassMaterial(fragmentShader: string): THREE.ShaderMaterial {
+    // GLSL 300 es vertex shader (glslVersion property handles #version)
     const vertexShader = `
-      varying vec2 vUv;
+      in vec2 uv;
+      out vec2 vUv;
+      
+      uniform mat4 projectionMatrix;
+      uniform mat4 modelViewMatrix;
+      in vec3 position;
+      
       void main() {
         vUv = uv;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
     `;
 
-    return new THREE.ShaderMaterial({
+    return new THREE.RawShaderMaterial({
       uniforms: {
         sceneTexture: { value: null },
         threshold: { value: this.config.threshold },
@@ -59,7 +66,7 @@ export class BrightPass extends Pass implements IBrightPass {
       vertexShader,
       fragmentShader,
       glslVersion: THREE.GLSL3
-    });
+    }) as THREE.ShaderMaterial;
   }
 
   // eslint-disable-next-line max-params -- Three.js Pass base class signature requires 5 parameters

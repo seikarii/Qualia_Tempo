@@ -79,7 +79,7 @@ export class TAAPass extends Pass implements ITAAPass {
       throw new Error('TAAPass: Invalid shader format. Expected #pragma VERTEX and #pragma FRAGMENT markers.');
     }
     
-    return new THREE.ShaderMaterial({
+    return new THREE.RawShaderMaterial({
       vertexShader: vertexMatch[1].trim(),
       fragmentShader: fragmentMatch[1].trim(),
       uniforms: {
@@ -91,8 +91,9 @@ export class TAAPass extends Pass implements ITAAPass {
         varianceClipping: { value: this.config.varianceClipping }
       },
       depthTest: false,
-      depthWrite: false
-    });
+      depthWrite: false,
+      glslVersion: THREE.GLSL3
+    }) as THREE.ShaderMaterial;
   }
 
   // eslint-disable-next-line max-params

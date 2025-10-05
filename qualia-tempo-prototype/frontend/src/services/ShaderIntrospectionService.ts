@@ -59,6 +59,13 @@ export class ShaderIntrospectionService implements IShaderIntrospectionService {
       this.logger.debug('Fragment-only shader detected, generated passthrough vertex shader');
     }
 
+    // CRITICAL FIX: Strip #version and #extension directives
+    // Three.js ShaderMaterial prepends its own shader chunks, pushing #version down
+    // GLSL spec requires #version to be the FIRST line, so we must remove it
+    // and let Three.js handle the version declaration
+    vertexShader = this.stripVersionDirectives(vertexShader);
+    fragmentShader = this.stripVersionDirectives(fragmentShader);
+
     // Parse fragment shader to extract uniforms using AST
     const uniforms = await this.extractUniforms(fragmentShader);
 
@@ -69,6 +76,24 @@ export class ShaderIntrospectionService implements IShaderIntrospectionService {
       fragmentShader,
       uniforms
     };
+  }
+
+  /**
+   * Strips #version and #extension directives from shader source.
+   * 
+   * CRITICAL: Even RawShaderMaterial adds #define directives before our code,
+   * which pushes #version to line 2+, violating GLSL spec. The glslVersion
+   * property on RawShaderMaterial handles version declaration correctly.
+   * 
+   * QUALIA.CODE Compliance: Platform abstraction - let Three.js manage GLSL version
+   */
+  private stripVersionDirectives(shaderSource: string): string {
+    // Remove ALL version and extension directives from source
+    // The glslVersion: THREE.GLSL3 property on RawShaderMaterial will handle this
+    return shaderSource
+      .replace(/#version\s+\d+\s+\w+\s*\n?/g, '')
+      .replace(/#extension\s+\S+\s*:\s*\w+\s*\n?/g, '')
+      .trim();
   }
 
   private async extractUniforms(shaderSource: string): Promise<Record<string, IUniform>> {

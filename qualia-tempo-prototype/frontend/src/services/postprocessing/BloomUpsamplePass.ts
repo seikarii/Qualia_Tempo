@@ -34,8 +34,8 @@ export class BloomUpsamplePass extends Pass {
 
     this.resolution = new THREE.Vector2(params.width, params.height);
 
-    // Create upsample shader material
-    this.upsampleMaterial = new THREE.ShaderMaterial({
+    // Create upsample shader material with GLSL 300 es support
+    this.upsampleMaterial = new THREE.RawShaderMaterial({
       vertexShader: params.vertexShader,
       fragmentShader: params.fragmentShader,
       uniforms: {
@@ -46,8 +46,9 @@ export class BloomUpsamplePass extends Pass {
       },
       transparent: false,
       depthTest: false,
-      depthWrite: false
-    });
+      depthWrite: false,
+      glslVersion: THREE.GLSL3
+    }) as THREE.ShaderMaterial;
 
     // Create full-screen quad
     this.fsQuad = new FullScreenQuad(this.upsampleMaterial);

@@ -90,9 +90,10 @@ export class SSRPass extends Pass {
   private createSSRMaterial(params: SSRPassParams): THREE.ShaderMaterial {
     const camera = this.camera as THREE.PerspectiveCamera;
 
-    return new THREE.ShaderMaterial({
+    return new THREE.RawShaderMaterial({
       vertexShader: params.vertexShader,
       fragmentShader: params.fragmentShader,
+      glslVersion: THREE.GLSL3,
       uniforms: {
         // G-Buffer inputs
         gBuffer_Color: { value: params.gBufferColor },

@@ -106,11 +106,15 @@ export class GBufferPass extends Pass {
   }
 
   private initializeShaderMaterial(vertexShader: string, fragmentShader: string, uniforms: Record<string, THREE.IUniform>): void {
-    this.gbufferMaterial = new THREE.ShaderMaterial({
+    // CRITICAL: Use RawShaderMaterial for GLSL 300 es (WebGL 2.0) shaders
+    // RawShaderMaterial does NOT prepend Three.js shader chunks, allowing
+    // #version to remain at the top as required by GLSL specification
+    this.gbufferMaterial = new THREE.RawShaderMaterial({
       vertexShader,
       fragmentShader,
-      uniforms
-    });
+      uniforms,
+      glslVersion: THREE.GLSL3 // Explicitly specify GLSL 3.0 (WebGL 2.0)
+    }) as THREE.ShaderMaterial; // Type assertion for compatibility
   }
 
   render(renderer: THREE.WebGLRenderer, _writeBuffer: THREE.WebGLRenderTarget, _readBuffer: THREE.WebGLRenderTarget): void {

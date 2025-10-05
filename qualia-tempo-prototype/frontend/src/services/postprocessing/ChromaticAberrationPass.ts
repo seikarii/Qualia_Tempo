@@ -32,7 +32,8 @@ export class ChromaticAberrationPass extends Pass {
     super();
 
     // Create chromatic aberration shader material
-    this.material = new THREE.ShaderMaterial({
+    this.material = new THREE.RawShaderMaterial({
+      glslVersion: THREE.GLSL3,
       vertexShader: params.vertexShader,
       fragmentShader: params.fragmentShader,
       uniforms: {

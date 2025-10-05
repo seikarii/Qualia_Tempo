@@ -32,7 +32,8 @@ export class SharpeningPass extends Pass {
     super();
 
     // Create sharpening shader material
-    this.sharpeningMaterial = new THREE.ShaderMaterial({
+    this.sharpeningMaterial = new THREE.RawShaderMaterial({
+      glslVersion: THREE.GLSL3,
       vertexShader: params.vertexShader,
       fragmentShader: params.fragmentShader,
       uniforms: {

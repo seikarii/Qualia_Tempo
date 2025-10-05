@@ -89,9 +89,10 @@ export class HBAOPass extends Pass {
     const camera = this.camera as THREE.PerspectiveCamera;
     const noiseScale = 4; // Noise texture is 4x4
 
-    return new THREE.ShaderMaterial({
+    return new THREE.RawShaderMaterial({
       vertexShader: params.vertexShader,
       fragmentShader: params.fragmentShader,
+      glslVersion: THREE.GLSL3,
       uniforms: {
         // G-Buffer inputs
         depthTexture: { value: params.gBufferDepth },

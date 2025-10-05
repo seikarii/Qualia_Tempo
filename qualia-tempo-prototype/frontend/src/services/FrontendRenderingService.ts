@@ -337,14 +337,20 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
   }
 
   /**
-   * Load gbuffer_particles shader and create ShaderMaterial
+   * Load gbuffer_particles shader and create RawShaderMaterial
    * QUALIA.CODE: Extracted method to reduce complexity (complexity: 2)
+   * 
+   * CRITICAL: Uses RawShaderMaterial for GLSL 300 es (WebGL 2.0) shaders.
+   * RawShaderMaterial does NOT prepend Three.js shader chunks, allowing
+   * #version to remain at the top as required by GLSL specification.
    */
   private async createParticleShaderMaterial(): Promise<THREE.ShaderMaterial> {
     const shaderSource = await this.shaderLoader.load('gbuffer_particles');
     const shader = await this.shaderIntrospection.introspect(shaderSource);
 
-    return new THREE.ShaderMaterial({
+    // CRITICAL: Use RawShaderMaterial for GLSL 300 es to prevent Three.js from
+    // prepending shader chunks that would push #version directive down
+    return new THREE.RawShaderMaterial({
       vertexShader: shader.vertexShader,
       fragmentShader: shader.fragmentShader,
       uniforms: {
@@ -360,8 +366,9 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
       transparent: true,
       depthWrite: true,
       depthTest: true,
-      blending: THREE.NormalBlending
-    });
+      blending: THREE.NormalBlending,
+      glslVersion: THREE.GLSL3 // Explicitly specify GLSL 3.0 (WebGL 2.0)
+    }) as THREE.ShaderMaterial; // Type assertion for compatibility
   }
 
   /**

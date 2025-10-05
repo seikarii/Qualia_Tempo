@@ -136,8 +136,15 @@ export class BloomPass extends Pass implements IBloomPass {
   }
 
   private getSimpleVertexShader(): string {
+    // GLSL 300 es vertex shader (glslVersion property handles #version)
     return `
-      varying vec2 vUv;
+      in vec2 uv;
+      out vec2 vUv;
+      
+      uniform mat4 projectionMatrix;
+      uniform mat4 modelViewMatrix;
+      in vec3 position;
+      
       void main() {
         vUv = uv;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);

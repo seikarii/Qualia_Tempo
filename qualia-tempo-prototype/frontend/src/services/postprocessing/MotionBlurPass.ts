@@ -65,9 +65,10 @@ export class MotionBlurPass extends Pass implements IMotionBlurPass {
       throw new Error('MotionBlurPass: Invalid shader format. Expected #pragma VERTEX and #pragma FRAGMENT markers.');
     }
     
-    return new THREE.ShaderMaterial({
+    return new THREE.RawShaderMaterial({
       vertexShader: vertexMatch[1].trim(),
       fragmentShader: fragmentMatch[1].trim(),
+      glslVersion: THREE.GLSL3,
       uniforms: {
         sceneTexture: { value: null },
         velocityTexture: { value: this.velocityTexture },
