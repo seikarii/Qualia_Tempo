@@ -21,6 +21,7 @@ uniform sampler2D gBuffer_Material; // vec4(metallic, roughness, emissive, unuse
 
 // Camera matrices
 uniform mat4 projectionMatrix;
+uniform mat4 invProjectionMatrix;  // PRE-CALCULATED by CPU (CRITICAL OPTIMIZATION)
 uniform mat4 viewMatrix;
 uniform float cameraNear;
 uniform float cameraFar;
@@ -50,15 +51,15 @@ const float DEPTH_TOLERANCE = 0.001;
 // ============================================================================
 
 // Reconstruye la posición en View Space desde depth y UV
+// OPTIMIZED: Uses pre-calculated invProjectionMatrix uniform (CPU-side calculation)
+// Reference: hbao.glsl getViewPosition() - GOLD.CODE pattern
 vec3 reconstructViewPosition(vec2 texCoord, float depth) {
     // Normalizar coordenadas a NDC [-1, 1]
     vec4 clipSpacePosition = vec4(texCoord * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
     
-    // Calcular matriz de proyección inversa
-    mat4 invProjection = inverse(projectionMatrix);
-    
-    // Transformar a View Space
-    vec4 viewSpacePosition = invProjection * clipSpacePosition;
+    // Transformar a View Space usando uniform pre-calculado
+    // CRITICAL FIX: No longer calculates inverse(projectionMatrix) per-fragment
+    vec4 viewSpacePosition = invProjectionMatrix * clipSpacePosition;
     
     // Perspective divide
     return viewSpacePosition.xyz / viewSpacePosition.w;

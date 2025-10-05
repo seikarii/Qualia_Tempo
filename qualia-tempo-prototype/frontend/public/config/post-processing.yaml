@@ -275,3 +275,62 @@ pipelineOrder:
 #      ray-tracing or environment map fallback for edge cases
 #
 # ============================================================================
+
+# ============================================================================
+# PHASE 1: INDEPENDENT EFFECTS (QUICK WINS)
+# Elite-quality effects rescued from _deprecated shaders
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Sharpening Effect - Adaptive Laplacian Edge Enhancement
+# ----------------------------------------------------------------------------
+sharpening:
+  enabled: true
+  sharpness: 0.3  # Range: 0.0-1.0 (typical: 0.2-0.5)
+  # Higher values = stronger sharpening
+  # Adaptive algorithm prevents halos on strong edges
+  #
+  # QUALITY PRESETS:
+  # Subtle: 0.2
+  # Balanced: 0.3 (default)
+  # Strong: 0.5
+  # Extreme: 0.7+ (may introduce artifacts)
+
+# ----------------------------------------------------------------------------
+# Chromatic Aberration - Radial Lens Distortion
+# ----------------------------------------------------------------------------
+chromaticAberration:
+  enabled: true
+  strength: 0.002  # Range: 0.001-0.005 (typical: 0.002)
+  # Simulates lens imperfections with RGB channel separation
+  # Red shifts outward, blue shifts inward
+  # Effect increases with distance from screen center
+  #
+  # QUALITY PRESETS:
+  # Very Subtle: 0.001
+  # Subtle: 0.002 (default, physically plausible)
+  # Noticeable: 0.003
+  # Strong: 0.005+ (artistic effect)
+
+# ----------------------------------------------------------------------------
+# Color Grading LUT - Professional Cinema-Grade Color Correction
+# ----------------------------------------------------------------------------
+colorGradingLUT:
+  enabled: false  # Disabled by default (neutral identity LUT)
+  lutStrength: 1.0  # Range: 0.0-1.0 (blend with original)
+  lutFile: null     # Path to .cube LUT file (future: AssetService integration)
+  # 
+  # Current Implementation:
+  # - Uses neutral identity LUT (no color grading)
+  # - WebGL 1.0 compatible (2D unwrapped texture)
+  # - 32x32x32 resolution (cinema-grade)
+  #
+  # Future Enhancements (TODO):
+  # - Implement AssetService for loading .cube LUT files
+  # - Add LUT presets: Cinematic, Warm, Cold, Vintage, Bleach Bypass, etc.
+  # - Hot-reload LUTs for iterative grading workflow
+  #
+  # STRENGTH PRESETS:
+  # Subtle: 0.5 (blend 50% with original)
+  # Balanced: 0.75
+  # Full: 1.0 (100% graded, default)

@@ -8,10 +8,11 @@ uniform sampler2D noiseTexture;
 uniform mat4 projection;
 uniform mat4 invProjection;
 uniform vec2 resolution;
-uniform float radius; // 0.5-2.0 en view space
-uniform float bias; // 0.01-0.05
-uniform int numDirections; // 6-8
-uniform int numSteps; // 4-6
+uniform vec2 noiseScale;      // Noise texture scale factor (replaces magic number 4.0)
+uniform float radius;         // 0.5-2.0 en view space
+uniform float bias;           // 0.01-0.05
+uniform int numDirections;    // 6-8
+uniform int numSteps;         // 4-6
 
 const float PI = 3.14159265359;
 
@@ -36,8 +37,9 @@ void main() {
     vec3 viewPos = getViewPosition(uv, depth);
     vec3 viewNormal = normalize(texture(normalTexture, uv).xyz * 2.0 - 1.0);
     
-    // Noise para rotar direcciones
-    vec2 noise = texture(noiseTexture, uv * resolution / 4.0).xy * 2.0 - 1.0;
+    // OPTIMIZED: Use noiseScale uniform (CPU-configured) instead of hardcoded 4.0
+    // This allows runtime configuration and follows QUALIA.CODE configuration externalization
+    vec2 noise = texture(noiseTexture, uv * resolution / noiseScale).xy * 2.0 - 1.0;
     float randomAngle = noise.x * 2.0 * PI;
     
     float occlusion = 0.0;
