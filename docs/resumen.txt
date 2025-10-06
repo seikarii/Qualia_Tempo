@@ -130,3 +130,19 @@ Fase 2	Synesthesia Profunda	Análisis de audio FFT en tiempo real	Los graves (ff
 Fase 3	El Mundo Viviente	Compute Shader de Reaction-Diffusion en el suelo	El chaos del QualiaState crea patrones frenéticos; el flow genera corrientes suaves.
 Fase 4	Avatares Procedurales	Raymarching de Signed Distance Fields (SDFs)	La precision genera formas cristalinas para el jugador; el chaos y aggression crean fractales amenazantes para el jefe.
 
+
+Preseed:
+Qualia tempo : status (al 30%) juego de musica y ritmo, la barra de vida del boss es lo que queda de musica,cuanto mas daño le hagas mas rapido va la musica, habilidades del boss y tiles del suelo, hay que recoger tiles para generar combo, cada tile tiene un color y si tocas mal te van dando debuffs y si tocas bien buffs, todo con lucecitas y combos y sistema de score y feedback musical, la ulti transforma el sonido en 8d. Introducimos Bosses finales con IA que aprenden de los combates que ha tenido el player antes de llegar a el. Utilizar un SLM ya que sera local y apenas afectara al rendimiento.
+
+El juego es gratuito ,cada 1 o 2 semanas se añade un capitulo nuevo publicitandolo en redes sociales con 3 o 4 canciones nuevas. Objetivo fast win para ganar reputacion y nombre y poder optar a una seed.
+
+
+Postseed:
+
+Desarrollar QualiaWorld: juego mmorpg ,al tener acceso a servidores podemos hacer un ecosistema de IA's que ya ni si quiera se ven relegadas a ser SLM y pueden estar potenciados por LLM, objetivo generar un ecosistema de npcs que tengan vidas,memorias y sentimientos, y con los que puedan interactuar los players masivamente, esto genera data MUY codiciada tanto para los modelos que creemos (la propia memoria de los AICharacters, AIC) y el modelo con el que interactuara dicha memoria que lo iremos especializando para que sea un LLM que aprende a simular vida y artes marciales (cualquier arte de combate, ya sea por hechizos o movimientos) .
+Desarrollar dicho juego mientras paralelamente se trabajar en el nuevo sistema de control EMG(electromiografia) y EGG (electroencefalografia), capsula donde meterte y poder meter brazos y piernas ,con sensores para que midan tus movimientos, evitando el cansancio EXCESIVO de jugar a cualquier juego de accion en VR y los mareos de los mismos al estar en una capsula cerrada, la pantalla puede ser un simple projector.
+En el caso de optar por EEG habria que hacer que la gaming capsule sea una caja de faraday para evitar ruido electrico que dificulte la lectura de ondas cerebrales (actual cuello de botella) .Toda esta tecnologia ya existe simplemente son idiotas y no se estan moviendo en esta direcion, ademas que los que la usan intentan "adivinar que estas pensando" en vez de tratar las areas cerebrales como simples bindeos y dejar que la neuroplasticidad del cerebro de cada player se adapte a lanzar inputs concentrandose en diversas areas de su cerebro y utilizarlo como un teclado /raton mas.
+
+LOS DATOS DE ESTO ULTIMO SE VENDERIAN POR MILLONES, ademas de que seria un autentico monopolio ya que no hay NINGUN juego que vaya en esta direccion, literalmente ninguno, lo mas parecido es mir5 y solamente intentan añadir la IA a bosses o futuros juegos de simulacion que la añaden como una feature para hablar con los npcs, no para actualmente dotarles de inteligencia y permitir que su memoria tome el mando en base a las conversaciones que vean ,hagan y reciban.
+
+Cuanto mas evolucione el juego menos llamadas tienen que hacer al llm y mas pueden hacer a su memoria.
