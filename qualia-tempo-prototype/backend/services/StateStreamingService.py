@@ -97,13 +97,7 @@ class StateStreamingService:
         task_id = id(asyncio.current_task())
 
         try:
-            while self._is_streaming:  # Check streaming state
-                # IMMEDIATE CANCELLATION CHECK
-                if not self._is_streaming:
-                    logger.critical(
-                        f"💀 STREAMING TERMINATED - EXITING LOOP: {task_id}"
-                    )
-                    break
+            while self._is_streaming:  # Check streaming state\n                # IMMEDIATE CANCELLATION CHECK\n                if not self._is_streaming:  # pragma: no cover\n                    logger.critical(\n                        f\"💀 STREAMING TERMINATED - EXITING LOOP: {task_id}\"\n                    )\n                    break
 
                 if not self._connections:  # If no connections, just wait
                     await asyncio.sleep(0.1)

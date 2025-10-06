@@ -1,5 +1,203 @@
 # CHANGELOG
 
+## [2024-10-06 PHASE 1 TASK 1.2 COMPLETED - ParticleEngine v2 Refactoring] ✅🎉
+
+### QualiaParticleEngine v2: Pure State Calculation Wrapper
+
+**✅ COMPLETADO (100% of Task 1.2):**
+
+#### 1. ParticleStateCalculator - Pure Physics Engine
+- ✅ **Nuevo archivo**: `backend/engine/ParticleStateCalculator.py` (411 lines)
+  - **Pure Python, NO GPU, NO ModernGL** dependencies
+  - OPTIMIZED_PARTICLE_DTYPE maintained (62 bytes/particle, 26% memory reduction)
+  - Physics simulation: gravity, force fields, damping, collisions, velocity clamping
+  - JSON-serializable output via `get_particle_states()`
+  - PhysicsConfig dataclass for external configuration
+  - Decorators: `@log_execution`, `@handle_errors`, `@time_execution`
+  
+- ✅ **Tests unitarios**: `backend/tests/test_particle_state_calculator.py` (367 lines)
+  - **22 unit tests, 100% passing** ✅
+
+#### 2. QualiaParticleEngine Refactored to Wrapper/Facade
+- ✅ **Refactorizado**: `backend/engine/qualia_particle_engine.py` (997→~450 lines, -54%)
+  - **ELIMINADO**: All GPU/shader code, ModernGL dependencies, rendering loops
+  - **CONVERTED**: To pure wrapper delegating to ParticleStateCalculator
+  - **MAINTAINED**: Public API for backward compatibility
+  - **ADDED**: QualiaState → physics parameters mapping
+    - intensity → gravity (9.8 * (1.0 + intensity))
+    - transcendence → attractive force field (strength = 200.0 * transcendence)
+    - chaos → multiple repulsive force fields (num_fields = int(chaos * 3) + 1)
+    - aggression → damping reduction (0.98 - aggression * 0.15)
+  - **DEPRECATED**: v1 GPU methods with warning logs
+  - **BACKED UP**: Original file to `/drop/phase1_backups/engine/qualia_particle_engine.py.TIMESTAMP`
+
+#### 3. CompositionRoot OpenGL Elimination
+- ✅ **Actualizado**: `backend/CompositionRoot.py`
+  - **ELIMINADO**: `_initialize_shared_context()` method (40 lines)
+  - **ELIMINADO**: shared_opengl_context creation and registration
+  - **ACTUALIZADO**: `_initialize_particle_system()` (no ctx, shader_inspector, standalone params)
+  - Backend initialization now completely GPU-free
+
+#### 4. Test Suite v2
+- ✅ **CREADO**: `backend/tests/test_qualia_particle_engine_v2.py` (27 tests, 100% passing)
+  - TestQualiaMetrics: 3 tests (metrics tracking)
+  - TestQualiaParticleEngineV2: 24 tests (wrapper functionality, delegation, QualiaState mapping, deprecated methods)
+  - TestFactoryFunction: 2 tests (factory creation)
+  
+- ✅ **ACTUALIZADO**: `backend/tests/test_composition_root.py` (14 tests, 100% passing)
+  - Removed OpenGL/ModernGL context mocks
+  - Updated to use v2 API (update() instead of compute_step(), get_statistics() instead of get_current_parameters())
+  - Fixed Event attribute usage (type instead of name)
+  
+- ✅ **MOVIDO A BACKUP**: Old GPU-based tests to `/drop/phase1_backups/tests/old_gpu_tests/`
+  - test_qualia_particle_engine.py (incompatible with v2)
+  - test_particle_engine_extended.py (incompatible with v2)
+  - test_optimized_particles.py (incompatible with v2)
+  - test_particle_engine_coverage.py (incompatible with v2)
+
+#### 5. Architectural Compliance
+- ✅ **Linter arquitectural: ALL SYSTEMS COMPLIANT** 🎉
+  - ✅ Contract Integrity: PASSED
+  - ✅ Config Integrity: PASSED (78 YAML files)
+  - ✅ Frontend TypeScript: PASSED
+  - ✅ Frontend QUALIA.CODE: PASSED
+  - ✅ Backend Patterns: PASSED
+  - ✅ Backend Types: PASSED (MyPy strict mode)
+  - ✅ IoC Binding Order: PASSED (46 bindings)
+
+**ARCHITECTURE.GOLD.CODE v2.0 COMPLIANCE:**
+- ✅ Backend NEVER renders - only calculates state
+- ✅ State-only output (JSON-serializable)
+- ✅ Fully decoupled from GPU/rendering infrastructure
+- ✅ Ready for Process Pool parallelization (Task 1.3)
+- ✅ EventBus integration active
+- ✅ QualiaState directly drives physics simulation
+
+**IMPACTO:**
+- **Código eliminado**: ~547 lines (GPU/shader/rendering code)
+- **Código agregado**: 411 lines (ParticleStateCalculator) + ~450 lines (wrapper) + 367 lines (tests v2) = 1,228 lines
+- **Tests**: 49 tests passing (22 ParticleStateCalculator + 27 QualiaParticleEngine v2)
+- **Dependencies removed**: ModernGL completely eliminated from ParticleEngine
+- **Performance**: Ready for multi-process parallelization (next task)
+- **Maintainability**: Clean separation physics vs rendering, facade pattern for backward compatibility
+
+**PRÓXIMOS PASOS:**
+- [ ] **Task 1.3**: Process Pool Setup (multiprocessing.Pool for parallel particle calculation)
+- [ ] **Task 1.4**: Integration (ParticleEngineWorker in CompositionRoot)
+
+---
+
+## [2025-01-06 PHASE 1 TASK 1.1 COMPLETED - Backend Rendering Elimination] ✅🔥
+
+### Eliminación de Rendering del Backend (ARCHITECTURE.GOLD.CODE Compliance)
+
+**COMPLETADO:**
+- ✅ **Backups creados**: Todos los archivos respaldados en `/drop/phase1_backups/`
+- ✅ **Eliminados**:
+  - `backend/services/RenderingService.py` (237 líneas)
+  - `backend/services/StreamingWebService.py` (489 líneas)
+  - `backend/engine/shaders/` (directorio completo - 4 shaders GLSL)
+  - Endpoint `/ws/video_stream` en `routes.py`
+  
+- ✅ **Refactorizados**:
+  - `backend/CompositionRoot.py`:
+    - Removido `_initialize_streaming_web_service()` method
+    - Removidos getters: `get_rendering_service()`, `get_streaming_web_service()`
+    - Mantenido `_initialize_shared_context()` para ParticleEngine (Task 1.2)
+  - `backend/api/routes.py`:
+    - Endpoint de video streaming eliminado
+    - Agregado comentario ARCHITECTURE.GOLD.CODE explicando el cambio
+  
+- ✅ **Tests actualizados**:
+  - Eliminados: `test_rendering_service.py`, `test_streaming_web_service.py`, `test_shaders.py`
+  - Actualizado: `test_composition_root.py` (TestCompositionRootFactory)
+    - Removidos mocks de rendering_service y streaming_service
+    - Agregado mock de state_streaming_service
+    - Todos los tests siguen pasando
+
+**VALIDACIÓN ARQUITECTÓNICA:**
+```
+✅ Contract Integrity: PASSED
+✅ Config Integrity: PASSED (78 YAML files validated)
+✅ Frontend TypeScript: PASSED
+✅ Frontend QUALIA.CODE: PASSED
+✅ Backend Patterns: PASSED
+⚠️ Backend Types: 4 unreachable code warnings (acceptable - will be resolved in Task 1.2)
+✅ IoC Binding Order: PASSED
+```
+
+**IMPACTO:**
+- **Código eliminado**: ~800 líneas (RenderingService + StreamingWebService + shaders)
+- **Backend rendering completamente removido**: ✅ ARCHITECTURE.GOLD.CODE compliance
+- **Breaking changes**: Frontend debe usar estado (no frames de video)
+- **Próximo paso**: Task 1.2 - Refactorizar ParticleEngine a pure state calculator
+
+---
+
+## [2025-10-06 PHASE 0 TASK 1.3 COMPLETED - Documentation] ✅📚
+
+### Service Audit & Architecture Flow Diagrams
+
+**COMPLETADO:**
+- ✅ **Auditoría completa de servicios v1 → v2**:
+  - Creado: `docs/SERVICE_AUDIT_v1_TO_v2.md` (comprehensive service inventory)
+  - **Backend**: 9 servicios documentados (3 para eliminar, 1 para refactorizar, 4 para crear)
+  - **Frontend**: 25+ servicios documentados (1 para refactorizar, 4 para crear)
+  - **API Surface**: Métodos públicos, dependencias, eventos para cada servicio
+  - **Migration Matrix**: Files to delete/refactor/create en Phases 1-6
+  - **Checklist**: Tareas detalladas para cada Phase
+
+- ✅ **Diagramas de flujo arquitectónico v1 vs v2**:
+  - Creado: `docs/ARCHITECTURE_FLOW_DIAGRAMS.md` (8 Mermaid diagrams)
+  - Diagram 1: Flujo v1 (deprecated) - sequence diagram
+  - Diagram 2: Flujo v2 (GOLD.CODE) - sequence diagram
+  - Diagram 3: Arquitectura 4 dominios v2 - component diagram
+  - Diagram 4: Dependencias Backend v2 - dependency graph
+  - Diagram 5: Dependencias Frontend v2 - dependency graph
+  - Diagram 6: Lifecycle "Kairos" (game heartbeat) - sequence diagram
+  - Diagram 7: Migration timeline - Gantt chart
+  - Diagram 8: Service states by phase - state diagram
+
+- ✅ **Documentación de APIs internas**:
+  - Cada servicio documentado con API surface completa
+  - Decoradores aplicados (QUALIA.CODE compliance)
+  - Eventos publicados/escuchados
+  - Contratos de configuración
+
+- ✅ **Comparación v1 vs v2**:
+  - Cambios arquitectónicos críticos documentados
+  - Problemas de v1 identificados (GPU backend, latencia video, etc.)
+  - Ventajas de v2 explicadas (4 dominios, control frontend, etc.)
+
+**VALIDACIÓN ARQUITECTÓNICA:**
+```
+✅ Contract Integrity: PASSED
+✅ Config Integrity: PASSED
+✅ Frontend TypeScript: PASSED
+✅ Frontend QUALIA.CODE: PASSED
+✅ Backend Patterns: PASSED
+⚠️ Backend Types: 7 pre-existing errors (technical debt)
+✅ IoC Binding Order: PASSED
+```
+
+**NOTA:** Backend MyPy errors son deuda técnica de v1 que será eliminada en Phase 1:
+- qualia_particle_engine.py → será refactorizado (Phase 1, Task 1.2)
+- StreamingWebService.py → será eliminado (Phase 1, Task 1.1)
+- StateStreamingService.py → será modificado (Phase 1, Task 1.1)
+
+**IMPACTO:**
+- **Phase 0 ahora 100% completo** ✅
+- Documentación definitiva para Phases 1-6
+- 34+ servicios inventariados y catalogados
+- Roadmap visual completo (8 diagramas Mermaid)
+- Ready to start Phase 1: Backend Rendering Removal
+
+**ARCHIVOS CREADOS:**
+- `docs/SERVICE_AUDIT_v1_TO_v2.md` (~3,500 líneas)
+- `docs/ARCHITECTURE_FLOW_DIAGRAMS.md` (~500 líneas)
+
+---
+
 ## [2025-10-06 PHASE 0 TASK 1.2 COMPLETED - Testing Infrastructure] ✅🎉
 
 ### Test Fixtures, Mocks, y Test Container Setup - v2 Services Preparados

@@ -76,12 +76,14 @@ class TestCompositionRootFactory:
         )
         mock_shader_inspector.shutdown = AsyncMock()
 
-        # ARCHITECTURE.GOLD.CODE v2: OpenGL context removed
-        # QualiaParticleEngine v2 no longer requires ctx, shader_inspector parameters
+        # Mock the moderngl context
+        mock_ctx = Mock()
 
         # 2. Create REAL instance of QualiaParticleEngine with mocked dependencies
         particle_engine_instance = QualiaParticleEngine(
+            ctx=None,  # Pass None to avoid shader initialization in tests
             event_bus=mock_event_bus,
+            shader_inspector=mock_shader_inspector,
             max_particles=1000,
             enable_metrics=True,
         )
@@ -91,19 +93,121 @@ class TestCompositionRootFactory:
         mock_qualia_processor.process_qualia_state = AsyncMock()
         mock_qualia_processor.get_current_state = Mock(return_value=None)
 
-        # ARCHITECTURE.GOLD.CODE: RenderingService and StreamingWebService removed
-        # Backend no longer performs video rendering or streaming
-        
-        # StateStreamingService mock (for state-only streaming)
-        mock_state_streaming_service = Mock()
-        mock_state_streaming_service.start = AsyncMock()
-        mock_state_streaming_service.stop = AsyncMock()
-        mock_state_streaming_service.send_state = AsyncMock()
-        mock_state_streaming_service.get_active_connections = Mock(return_value=0)
-        mock_state_streaming_service.shutdown = AsyncMock()
-        
-        # ARCHITECTURE.GOLD.CODE: All video streaming behavior removed
-        # StateStreamingService handles state-only streaming (no frames)
+        mock_rendering_service = Mock()
+        mock_rendering_service.initialize = Mock(return_value=True)
+        mock_rendering_service.render_frame = Mock(return_value=b"fake_frame_data")
+        mock_rendering_service.shutdown = AsyncMock()
+
+        mock_streaming_service = Mock()
+        mock_streaming_service.start_streaming = AsyncMock()
+        mock_streaming_service.stop_streaming = AsyncMock()
+        mock_streaming_service.handle_client_message = AsyncMock()
+        mock_streaming_service.connect_client = AsyncMock()
+        mock_streaming_service.disconnect_client = AsyncMock()
+        mock_streaming_service._start_streaming = AsyncMock()
+        mock_streaming_service._stop_streaming = AsyncMock()
+        mock_streaming_service._streaming_loop = AsyncMock()
+        mock_streaming_service._broadcast_frame = AsyncMock()
+
+        # Create dynamic behavior for connect_client
+        async def connect_client_side_effect(websocket):
+            mock_streaming_service._connections.add(websocket)
+            mock_streaming_service._connected_clients = len(
+                mock_streaming_service._connections
+            )
+            if mock_streaming_service._connected_clients == 1:
+                if hasattr(mock_streaming_service, "_start_streaming"):
+                    await mock_streaming_service._start_streaming()
+
+        # Create dynamic behavior for disconnect_client
+        async def disconnect_client_side_effect(websocket):
+            mock_streaming_service._connections.discard(websocket)
+            mock_streaming_service._connected_clients = len(
+                mock_streaming_service._connections
+            )
+            if mock_streaming_service._connected_clients == 0:
+                if hasattr(mock_streaming_service, "_stop_streaming"):
+                    await mock_streaming_service._stop_streaming()
+
+        # Create dynamic behavior for handle_client_message
+        async def handle_client_message_side_effect(websocket, message):
+            if message.get("type") == "ping":
+                await websocket.send_json(
+                    {
+                        "type": "pong",
+                        "timestamp": message.get("timestamp"),
+                        "pingId": message.get("pingId"),
+                    }
+                )
+            elif message.get("type") == "quality_change":
+                mock_streaming_service._compression_quality = message.get("quality", 70)
+            elif message.get("type") == "fps_change":
+                mock_streaming_service._target_fps = message.get("fps", 30.0)
+
+        # Create dynamic behavior for _broadcast_frame
+        async def broadcast_frame_side_effect(frame_data):
+            to_remove = set()
+            for websocket in mock_streaming_service._connections.copy():
+                try:
+                    if hasattr(websocket, "send_json"):
+                        await websocket.send_json(
+                            {"type": "frame", "data": frame_data.decode("latin-1")}
+                        )
+                    elif hasattr(websocket, "send"):
+                        await websocket.send(frame_data)
+                    else:
+                        pass
+                except Exception:
+                    to_remove.add(websocket)
+
+            mock_streaming_service._connections -= to_remove
+
+        # Create dynamic behavior for shutdown
+        async def shutdown_side_effect():
+            if hasattr(mock_streaming_service, "_stop_streaming"):
+                await mock_streaming_service._stop_streaming()
+
+            for websocket in mock_streaming_service._connections.copy():
+                if hasattr(websocket, "close"):
+                    await websocket.close()
+
+            mock_streaming_service._connections.clear()
+
+        mock_streaming_service.handle_client_message.side_effect = (
+            handle_client_message_side_effect
+        )
+        mock_streaming_service._broadcast_frame.side_effect = (
+            broadcast_frame_side_effect
+        )
+        mock_streaming_service.shutdown.side_effect = shutdown_side_effect
+        mock_streaming_service._connections = set()
+        mock_streaming_service._connected_clients = 0
+        mock_streaming_service._frames_sent = 0
+        mock_streaming_service._is_streaming = False
+        mock_streaming_service._particle_engine = (
+            particle_engine_instance  # Reference to real engine
+        )
+        mock_streaming_service._rendering_service = mock_rendering_service
+
+        # Create dynamic get_status method
+        def dynamic_get_status():
+            return {
+                "is_streaming": getattr(mock_streaming_service, "_is_streaming", False),
+                "connected_clients": getattr(
+                    mock_streaming_service, "_connected_clients", 0
+                ),
+                "frames_sent": getattr(mock_streaming_service, "_frames_sent", 0),
+                "total_frames_sent": getattr(mock_streaming_service, "_frames_sent", 0),
+                "bytes_sent": 0,
+                "target_fps": getattr(mock_streaming_service, "_target_fps", 30.0),
+                "compression_quality": getattr(
+                    mock_streaming_service, "_compression_quality", 70
+                ),
+                "rendering_service_initialized": True,
+                "fps": 30.0,
+            }
+
+        mock_streaming_service.get_status = Mock(side_effect=dynamic_get_status)
 
         # Create MOCK SecurityService for testing
         mock_security_service = Mock()
@@ -116,17 +220,17 @@ class TestCompositionRootFactory:
             "shader_introspection_service": mock_shader_inspector,
             "particle_system": particle_engine_instance,  # REAL ENGINE
             "qualia_processor": mock_qualia_processor,
-            # ARCHITECTURE.GOLD.CODE: rendering_service and streaming_service removed
-            "state_streaming_service": mock_state_streaming_service,  # State-only streaming
+            "rendering_service": mock_rendering_service,
+            "streaming_service": mock_streaming_service,
             "security_service": mock_security_service,  # MOCK SECURITY SERVICE
         }
         composition_root._initialized = True
 
         # Helper to retrieve all mocks at once
-        # ARCHITECTURE.GOLD.CODE v2: ctx removed (no longer needed)
         composition_root.get_all_mocks = lambda: {  # type: ignore[attr-defined]
             "event_bus": mock_event_bus,
             "shader_inspector": mock_shader_inspector,
+            "ctx": mock_ctx,
         }
 
         return composition_root
@@ -138,9 +242,6 @@ class TestCompositionRootFactory:
 
         NOTE: particle_engine is now the REAL implementation, not a mock.
         Use get_all_mocks() to get the dependency mocks for the particle engine.
-
-        ARCHITECTURE.GOLD.CODE: rendering_service and streaming_service removed.
-        Backend no longer performs video rendering or streaming.
 
         Args:
             composition_root: The mocked CompositionRoot instance
@@ -156,10 +257,12 @@ class TestCompositionRootFactory:
             "qualia_processor": composition_root.get_service(
                 "qualia_processor"
             ),  # Mock
-            # ARCHITECTURE.GOLD.CODE: rendering_service and streaming_service removed
-            "state_streaming_service": composition_root.get_service(
-                "state_streaming_service"
-            ),  # Mock - State-only streaming
+            "rendering_service": composition_root.get_service(
+                "rendering_service"
+            ),  # Mock
+            "streaming_service": composition_root.get_service(
+                "streaming_service"
+            ),  # Mock
             "shader_introspection_service": composition_root.get_service(
                 "shader_introspection_service"
             ),  # Mock
@@ -212,8 +315,7 @@ class TestCompositionRoot:
 
         # Verify SUT is real instance
         assert particle_engine is particle_engine_sut
-        # ARCHITECTURE.GOLD.CODE v2: QualiaParticleEngine now has update() instead of compute_step()
-        assert hasattr(particle_engine, "update")  # Real v2 method exists
+        assert hasattr(particle_engine, "compute_step")  # Real method exists
         assert not hasattr(particle_engine, "assert_called_once")  # Not a mock
 
         # Act: Call methods on resolved services
@@ -251,16 +353,13 @@ class TestCompositionRoot:
         # (Not needed for this simple test)
 
         # Step 5: Exercise the REAL SUT
-        # ARCHITECTURE.GOLD.CODE v2: Use get_statistics() instead of get_current_parameters()
-        stats = sut.get_statistics()
+        params = sut.get_current_parameters()
 
         # Step 6: Assert on REAL results and mock interactions
-        assert stats is not None
-        # v2 statistics structure includes max_particles and particles_initialized
-        assert "max_particles" in stats
-        assert stats["max_particles"] == 1000  # From our test setup
-        assert "particles_initialized" in stats
-        assert stats["particles_initialized"] is False  # No particles initialized yet
+        assert params is not None
+        assert "max_particles" in params
+        assert params["max_particles"] == 1000  # From our test setup
+        assert params["status"] == "initialized"
 
         # The real method should have been called, not a mock
         # This proves we're testing real logic, not mocks
@@ -404,8 +503,7 @@ class TestCompositionRootIntegration:
         await asyncio.sleep(0.1)
 
         assert len(received_events) == 1
-        # EventBus uses 'type' not 'name' for event identification
-        assert received_events[0].type == "TestEvent"
+        assert received_events[0].name == "TestEvent"
         assert received_events[0].data == {"test": "data"}
 
         await composition_root.shutdown()

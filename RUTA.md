@@ -5,6 +5,31 @@
 
 ---
 
+## 📊 PROGRESO GENERAL
+
+```
+FASE 0: PREPARACIÓN Y FUNDAMENTOS ✅ 100% (6 días, Oct 1-6, 2025)
+├─ Task 1.1: Shared Contracts ✅
+├─ Task 1.2: Testing Infrastructure ✅
+└─ Task 1.3: Documentation ✅
+
+FASE 1: BACKEND - ELIMINACIÓN DE RENDERING ⏳ 35% (5-7 días, Started: Oct 6, 2025)
+├─ Task 1.1: Eliminar servicios de rendering ✅ COMPLETADO (Oct 6, 2025)
+├─ Task 1.2: Refactorizar ParticleEngine 🔄 IN PROGRESS
+└─ Task 1.3: Process Pool Setup ⏳
+
+FASE 2: BACKEND GAME LOGIC ⏳ 0% (8-10 días)
+FASE 3: FRONTEND WEB WORKER ⏳ 0% (5-7 días)
+FASE 4: FRONTEND AUDIO ADVANCED ⏳ 0% (6-8 días)
+FASE 5: FRONTEND VISUAL ENGINE ⏳ 0% (10-12 días)
+FASE 6: INTEGRATION & POLISH ⏳ 0% (5-7 días)
+
+PROGRESO TOTAL: 16.67% (1/6 phases)
+TIEMPO ESTIMADO RESTANTE: 39-51 días
+```
+
+---
+
 ## RESUMEN EJECUTIVO
 
 Esta es la hoja de ruta definitiva para migrar Qualia Tempo de la arquitectura v1 (híbrida frontend/backend rendering) a v2 (ARCHITECTURE.GOLD.CODE - separación absoluta, performance AAA).
@@ -14,6 +39,10 @@ Esta es la hoja de ruta definitiva para migrar Qualia Tempo de la arquitectura v
 - v2: Backend solo calcula ESTADO → Frontend hace TODO el rendering
 
 **MAGNITUD:** ~120 archivos afectados, 45 nuevos, 8 eliminados, 67 modificados
+
+**DOCUMENTACIÓN DE REFERENCIA:**
+- 📚 `docs/SERVICE_AUDIT_v1_TO_v2.md` - Inventario completo de servicios (34+ servicios documentados)
+- 📊 `docs/ARCHITECTURE_FLOW_DIAGRAMS.md` - 8 diagramas visuales Mermaid
 
 ---
 
@@ -144,12 +173,14 @@ Esta es la hoja de ruta definitiva para migrar Qualia Tempo de la arquitectura v
 
 ## 3. PLAN DE EJECUCIÓN POR FASES
 
-### **FASE 0: PREPARACIÓN Y FUNDAMENTOS** (3-5 días)
+### **FASE 0: PREPARACIÓN Y FUNDAMENTOS** (3-5 días) ✅ **COMPLETADO**
 
 #### Objetivos:
-- Actualizar shared contracts
-- Configurar infraestructura de testing
-- Documentar estado actual
+- ✅ Actualizar shared contracts
+- ✅ Configurar infraestructura de testing
+- ✅ Documentar estado actual
+
+**FECHA COMPLETADO:** 6 de octubre de 2025
 
 #### Tareas:
 1. **Shared Contracts** (Día 1-2): ✅ **COMPLETADO**
@@ -188,20 +219,42 @@ Esta es la hoja de ruta definitiva para migrar Qualia Tempo de la arquitectura v
      - Actualizaciones en `test-container-factory.ts`: Bindings + Configs default
    - **Documento de referencia**: `V2_SERVICES_TESTING_PREP.md`
 
-3. **Documentation** (Día 4-5):
-   - [ ] Auditar todos los servicios actuales
-   - [ ] Documentar APIs internas
-   - [ ] Crear diagramas de flujo v1 vs v2
+3. **Documentation** (Día 4-5): ✅ **COMPLETADO**
+   - [x] Auditar todos los servicios actuales ✅
+   - [x] Documentar APIs internas ✅
+   - [x] Crear diagramas de flujo v1 vs v2 ✅
+   - **Documentos creados:**
+     - `docs/SERVICE_AUDIT_v1_TO_v2.md` - Inventario completo de servicios (34+ servicios documentados)
+     - `docs/ARCHITECTURE_FLOW_DIAGRAMS.md` - 8 diagramas Mermaid visuales
 
 #### Entregables:
 - ✅ 12 nuevos schemas en shared_contracts/
 - ✅ Contratos generados y validados
 - ✅ Infraestructura de testing lista
-- ✅ Documentación de estado actual
+- ✅ **Documentación de estado actual (SERVICE_AUDIT + FLOW_DIAGRAMS)**
+
+#### Resumen de Phase 0:
+```
+📊 ESTADÍSTICAS FINALES PHASE 0:
+├─ Contratos creados: 14 (11 nuevos + 3 actualizados)
+├─ Test fixtures: 14 (48+ factory functions)
+├─ Mocks high-fidelity: 4 (QUALIA.CODE compliant)
+├─ Interfaces v2 preparadas: 4 (Phase 3-5 ready)
+├─ Servicios documentados: 34+ (Backend 9 + Frontend 25+)
+├─ Diagramas creados: 8 (Mermaid format)
+├─ Documentación: 4,000+ líneas (AUDIT + DIAGRAMS)
+├─ Architectural Lint: PASSED (frontend 100%)
+└─ Duración: 6 días (Oct 1-6, 2025)
+
+🎯 RESULTADO: Phase 0 100% COMPLETADO
+Ready to proceed to Phase 1: Backend Rendering Removal
+```
 
 ---
 
 ### **FASE 1: BACKEND - ELIMINACIÓN DE RENDERING** (5-7 días)
+
+**PREREQUISITO:** Phase 0 completado ✅
 
 #### Objetivos:
 - Eliminar todo código de rendering del backend
@@ -210,21 +263,56 @@ Esta es la hoja de ruta definitiva para migrar Qualia Tempo de la arquitectura v
 
 #### Tareas:
 
-##### 1.1. Eliminación (Día 1):
-- [ ] **ELIMINAR**: `backend/services/RenderingService.py`
-- [ ] **ELIMINAR**: `backend/engine/shaders/` (todos los shaders backend)
-- [ ] **ELIMINAR**: Endpoint `/ws/video_stream` de `routes.py`
-- [ ] **ELIMINAR**: Referencias a ModernGL rendering en CompositionRoot
-- [ ] Actualizar tests para remover rendering
+##### 1.1. Eliminación (Día 1): ✅ **COMPLETADO**
+- [x] **BACKUP**: Crear copias de seguridad de archivos a eliminar ✅
+- [x] **ELIMINAR**: `backend/services/RenderingService.py` ✅
+- [x] **ELIMINAR**: `backend/services/StreamingWebService.py` ✅
+- [x] **ELIMINAR**: `backend/engine/shaders/` (todos los shaders backend) ✅
+- [x] **ELIMINAR**: Endpoint `/ws/video_stream` de `routes.py` ✅
+- [x] **ELIMINAR**: Referencias a RenderingService y StreamingWebService en CompositionRoot ✅
+- [x] **Actualizar tests para remover rendering** ✅
+  - Eliminados: test_rendering_service.py, test_streaming_web_service.py, test_shaders.py
+  - Actualizado: test_composition_root.py (TestCompositionRootFactory)
 
-##### 1.2. Refactorización ParticleEngine (Día 2-4):
-- [ ] Crear `backend/engine/ParticleStateCalculator.py` (nueva clase)
-- [ ] Migrar lógica de física/colisiones (sin GPU)
-- [ ] Remover dependencias de ModernGL del ParticleEngine
-- [ ] Mantener estructura de datos (OPTIMIZED_PARTICLE_DTYPE)
-- [ ] Calcular solo: position, velocity, lifetime, NO renderizar
-- [ ] Output: lista de estados de partículas (JSON serializable)
-- [ ] Tests unitarios para cálculos de estado
+##### 1.2. Refactorización ParticleEngine (Día 2-4): ✅ **COMPLETED** (100%) - Oct 6, 2024
+- [x] **BACKUP**: Crear copia de `backend/engine/qualia_particle_engine.py` ✅
+- [x] Crear `backend/engine/ParticleStateCalculator.py` (nueva clase pura) ✅
+  - **411 lines de física pura** (NO GPU, NO ModernGL)
+  - Mantiene OPTIMIZED_PARTICLE_DTYPE (62 bytes/particle)
+  - Implementa: gravedad, force fields, colisiones, damping, velocity clamping
+  - Output JSON-serializable vía `get_particle_states()`
+  - PhysicsConfig dataclass para configuración
+- [x] Tests unitarios para ParticleStateCalculator ✅
+  - **22 unit tests, 100% passing**
+  - Coverage: initialization, physics simulation, force fields, collisions, JSON serialization
+  - Test file: `backend/tests/test_particle_state_calculator.py` (367 lines)
+- [x] Refactorizar QualiaParticleEngine ✅
+  - Convertido a wrapper/facade sobre ParticleStateCalculator
+  - **ELIMINADO**: Todos los shaders, buffers GPU, rendering loops (997→~450 lines)
+  - **ELIMINADO**: Todas las dependencias de ModernGL
+  - Delega todos los cálculos a ParticleStateCalculator
+  - Mantiene interfaz pública para backward compatibility
+  - Implementa QualiaState → physics parameters mapping (intensity→gravity, transcendence→attraction, chaos→repulsion, aggression→damping)
+  - Métodos deprecated marcados con warnings
+- [x] Actualizar CompositionRoot ✅
+  - **ELIMINADO**: `_initialize_shared_context()` method (40 lines)
+  - **ELIMINADO**: shared_opengl_context creation
+  - Actualizado `_initialize_particle_system()` (sin ctx parameter)
+  - ShaderIntrospectionService ya no se pasa a ParticleEngine
+- [x] Actualizar tests de ParticleEngine existentes ✅
+  - **CREADO**: `test_qualia_particle_engine_v2.py` (27 tests passing, 100%)
+  - **ACTUALIZADO**: `test_composition_root.py` (14 tests passing, OpenGL mocks removed)
+  - **MOVIDO A BACKUP**: test_qualia_particle_engine.py, test_particle_engine_extended.py, test_optimized_particles.py, test_particle_engine_coverage.py (incompatibles con v2)
+  - Tests cubren: Initialization, update loop, QualiaState mapping, deprecated methods, factory function
+- [x] **Linter arquitectural** ✅
+  - ✅ Contract Integrity: PASSED
+  - ✅ Config Integrity: PASSED
+  - ✅ Frontend TypeScript: PASSED
+  - ✅ Frontend QUALIA.CODE: PASSED
+  - ✅ Backend Patterns: PASSED
+  - ✅ Backend Types: PASSED
+  - ✅ IoC Binding Order: PASSED
+  - 🎉 **ALL SYSTEMS COMPLIANT**
 
 ##### 1.3. Process Pool Setup (Día 5-6):
 - [ ] Crear `backend/workers/ParticleEngineWorker.py`

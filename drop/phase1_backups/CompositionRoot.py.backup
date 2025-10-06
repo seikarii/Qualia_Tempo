@@ -37,8 +37,8 @@ class CompositionRoot:
 
         self._logger.info("🚀 Initializing QUALIA.CODE CompositionRoot...")
 
-        # ARCHITECTURE.GOLD.CODE v2: No OpenGL context needed (backend no longer renders)
-        # All rendering handled by frontend KairosVisualEngine
+        # GOLD.CODE: Initialize shared OpenGL context FIRST
+        await self._initialize_shared_context()
 
         # Initialize platform abstraction services (QUALIA.CODE §4 - Platform Abstraction)
         await self._initialize_filesystem_service()
@@ -50,8 +50,7 @@ class CompositionRoot:
         await self._initialize_shader_introspection_service()
         await self._initialize_particle_system()
         await self._initialize_qualia_processor()
-        # ARCHITECTURE.GOLD.CODE: StreamingWebService removed - backend does not render
-        # Video streaming functionality deprecated in favor of state-only streaming
+        await self._initialize_streaming_web_service()
         await self._initialize_state_streaming_service()
 
         # Register event handlers
@@ -60,9 +59,48 @@ class CompositionRoot:
         self._initialized = True
         self._logger.info("✅ CompositionRoot initialization complete")
 
-    # ARCHITECTURE.GOLD.CODE v2: _initialize_shared_context REMOVED
-    # Backend no longer uses GPU/OpenGL. All rendering happens in frontend.
-    # This method was deprecated as part of Phase 1 Task 1.2 migration.
+    async def _initialize_shared_context(self) -> None:
+        """Initialize shared OpenGL context - GOLD.CODE: Single source of truth."""
+        try:
+            import moderngl
+
+            # GOLD.CODE: Try EGL first, fallback to software if not available
+            context_backends = [
+                {"backend": "egl", "name": "EGL"},
+                {"backend": "glx", "name": "GLX"},
+                {"name": "Default"},  # Empty dict = default
+            ]
+
+            shared_ctx = None
+            for backend_config in context_backends:
+                try:
+                    # Try creating context with OpenGL 3.30 requirement
+                    shared_ctx = moderngl.create_standalone_context(require=330)
+
+                    backend_name = backend_config.get("name", "Default")
+                    self._logger.info(
+                        f"✅ Created shared {backend_name} OpenGL context"
+                    )
+                    break
+
+                except Exception as e:
+                    backend_name = backend_config.get("name", "Default")
+                    self._logger.warning(
+                        f"⚠️ Failed to create {backend_name} context: {e}"
+                    )
+                    continue
+
+            if shared_ctx is None:
+                raise RuntimeError(
+                    "GOLD.CODE VIOLATION: Failed to create any OpenGL context"
+                )
+
+            self._services["shared_opengl_context"] = shared_ctx
+            self._logger.debug("🔗 Shared OpenGL context initialized and registered")
+
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize shared OpenGL context: {e}")
+            raise
 
     async def _initialize_event_bus(self) -> None:
         """Initialize the EventBus service."""
@@ -135,21 +173,35 @@ class CompositionRoot:
         self._logger.debug("🔍 ShaderIntrospectionService registered")
 
     async def _initialize_particle_system(self) -> None:
-        """Initialize the QualiaParticleEngine service (v2 - pure state calculation)."""
+        """Initialize the QualiaParticleEngine service with shared context."""
         try:
             from .engine.qualia_particle_engine import create_qualia_particle_engine
 
-            # ARCHITECTURE.GOLD.CODE v2: No GPU context needed
-            # ParticleEngine now uses ParticleStateCalculator (pure Python/NumPy)
+            # GOLD.CODE: Get shared context and pass to particle engine
+            shared_ctx = self._services.get("shared_opengl_context")
+            if shared_ctx is None:
+                raise RuntimeError(
+                    "GOLD.CODE VIOLATION: Shared context not available for particle engine"
+                )
+
+            # ✅ QUALIA.CODE: Pass shared context instead of standalone=True
             particle_engine = create_qualia_particle_engine(
                 max_particles=10000,
                 enable_metrics=True,
+                standalone=False,  # GOLD.CODE: Use shared context
+                ctx=shared_ctx,  # GOLD.CODE: Inject shared OpenGL context
                 event_bus=self._event_bus,  # QUALIA.CODE: Inject EventBus dependency
+                shader_inspector=self._services.get(
+                    "shader_introspection_service"
+                ),  # QUALIA.CODE: Inject ShaderIntrospectionService
             )
             self._services["particle_system"] = particle_engine
 
+            # QUALIA.CODE: Start the engine to subscribe to events
+            particle_engine.start()
+
             self._logger.debug(
-                "✅ QualiaParticleEngine v2 registered (pure state calculation, no GPU)"
+                "🎆 QualiaParticleEngine service registered with shared context"
             )
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize QualiaParticleEngine: {e}")
@@ -163,9 +215,34 @@ class CompositionRoot:
         self._services["qualia_processor"] = processor
         self._logger.debug("✅ QualiaProcessor initialized")
 
-    # ARCHITECTURE.GOLD.CODE: _initialize_streaming_web_service REMOVED
-    # Backend no longer performs rendering. Video streaming deprecated.
-    # All visual rendering now handled exclusively by frontend (KairosVisualEngine)
+    async def _initialize_streaming_web_service(self) -> None:
+        """Initialize StreamingWebService for video streaming via WebSocket."""
+        from .services.StreamingWebService import StreamingWebService
+        from .services.RenderingService import RenderingService
+
+        particle_engine = self._services.get("particle_system")
+        
+        # QUALIA.CODE: Inject FileSystemService for shader loading
+        filesystem_service = self._services.get("filesystem_service")
+        if filesystem_service is None:
+            raise RuntimeError("FileSystemService not available for RenderingService")
+        
+        # Create the actual rendering service with injected dependencies
+        rendering_service = RenderingService(
+            ctx=self._services.get("shared_opengl_context"),
+            particle_engine=particle_engine,
+            event_bus=self._event_bus,
+            filesystem_service=filesystem_service
+        )
+
+        streaming_web_service = StreamingWebService(
+            event_bus=self._event_bus,
+            rendering_service=rendering_service,
+            particle_engine=particle_engine,
+        )
+        self._services["streaming_web_service"] = streaming_web_service
+        self._services["rendering_service"] = rendering_service
+        self._logger.debug("✅ StreamingWebService and RenderingService initialized")
 
     async def _initialize_state_streaming_service(self) -> None:
         """Initialize StateStreamingService for WebSocket state streaming."""
@@ -249,9 +326,14 @@ class CompositionRoot:
         """Get the QualiaProcessor service."""
         return self.get_service("qualia_processor")
 
-    # ARCHITECTURE.GOLD.CODE: get_rendering_service and get_streaming_web_service REMOVED
-    # Backend no longer provides rendering or video streaming services
-    
+    def get_rendering_service(self) -> Any:
+        """Get RenderingService instance."""
+        return self.get_service("rendering_service")
+
+    def get_streaming_web_service(self) -> Any:
+        """Get StreamingWebService instance."""
+        return self.get_service("streaming_web_service")
+
     def get_state_streaming_service(self) -> Any:
         """Get StateStreamingService instance."""
         return self.get_service("state_streaming_service")

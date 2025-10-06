@@ -26,21 +26,27 @@ Qualia Tempo is a rhythm-action boss rush game that transforms music into a livi
 
 ## 🏗️ Architecture & Technology
 
-### Backend (Python/FastAPI)
-- **Visual Processing Engine**: Real-time generation of procedural effects
-- **QualiaState Processing**: Backend computation of player mastery metrics
-- **API Endpoints**: RESTful communication with frontend
-- **Shader Pipeline**: GLSL vertex/fragment shaders for advanced visuals
-- **CompositionRoot Pattern**: IoC container for service management
-- **EventBus Architecture**: Type-safe event-driven communication
+### 🎯 **ARCHITECTURE.GOLD.CODE v2.0** - Absolute Backend/Frontend Separation
 
-### Frontend (TypeScript/React)
+#### Backend (Python/FastAPI) - **STATE CALCULATION ONLY**
+- **ParticleStateCalculator**: Pure Python physics engine (NO GPU, NO rendering)
+- **QualiaParticleEngine v2**: Wrapper/facade delegating to ParticleStateCalculator
+- **QualiaState Processing**: Backend computation of player mastery metrics
+- **EventBus Architecture**: Type-safe event-driven communication
+- **CompositionRoot Pattern**: IoC container for service management
+- **Process Pool Ready**: Multi-core physics calculation (Task 1.3)
+- **JSON State Output**: Serializable particle states for frontend consumption
+- **ZERO Rendering**: Backend NEVER touches GPU or shaders
+
+#### Frontend (TypeScript/React) - **RENDERING ONLY**
 - **React Three Fiber**: 3D rendering with Three.js
+- **Kairos Visual Engine** (planned): Advanced shader pipeline for visual effects
 - **InversifyJS IoC**: Dependency injection container for service management
 - **EventBus Architecture**: Type-safe event-driven communication
 - **Zustand State Management**: Reactive state management with slices
 - **Tone.js**: Advanced audio processing and synthesis
 - **Platform Abstraction**: No direct API usage, all through services
+- **Backend State Consumption**: Receives JSON particle states via WebSocket
 
 ### Quality Assurance & Architectural Enforcement
 - **QUALIA.CODE v1.1 Compliance**: Strict architectural standards enforcement

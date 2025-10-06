@@ -1,0 +1,488 @@
+# QUALIA.CODE v1.1 - StreamingWebService
+# WebSocket service for streaming rendered frames to frontend clients
+
+import asyncio
+import logging
+import base64
+import json
+from typing import Dict, Any, Set, Optional
+from fastapi import WebSocket, WebSocketDisconnect
+from .EventBus import EventBus, RenderingPipelineFailedEvent
+from .exceptions import RenderingPipelineError, GPUResourceError
+from ..utils.decorators import (
+    log_execution,
+    handle_errors,
+)
+
+try:
+    import moderngl
+except ImportError:
+    moderngl = None  # type: ignore[assignment]
+
+logger = logging.getLogger(__name__)
+
+
+class StreamingWebService:
+    """
+    WebSocket service for streaming rendered frames to connected clients.
+    Manages connections and coordinates with RenderingService for frame generation.
+    """
+
+    def __init__(
+        self,
+        event_bus: EventBus,
+        rendering_service: Any,  # RenderingService type - using Any to avoid circular import
+        particle_engine: Any,
+    ) -> None:
+        self._event_bus = event_bus
+        self._rendering_service = rendering_service
+        self._particle_engine = (
+            particle_engine  # QUALIA.CODE: Inject particle engine for simulation
+        )
+        self._logger = logging.getLogger(__name__)
+
+        # Connection management
+        self._connections: Set[WebSocket] = set()
+        self._is_streaming = False
+        self._stream_task: Optional[asyncio.Task[Any]] = None
+        self._resources_ready = False  # QUALIA.CODE: Flag to track if system resources are ready
+
+        # Streaming configuration
+        self._target_fps = 30.0  # Lower FPS for WebSocket streaming
+        self._compression_quality = 70  # JPEG quality (0-100)
+
+        # Statistics
+        self._frames_sent = 0
+        self._bytes_sent = 0
+        self._connected_clients = 0
+
+        # Subscribe to rendering pipeline failure events
+        self._event_bus.subscribe(
+            "RENDERING_PIPELINE_FAILED", self._handle_rendering_failure
+        )
+        
+        # QUALIA.CODE: Subscribe to system resources ready event
+        self._event_bus.subscribe(
+            "System.ResourcesReady", self._on_resources_ready
+        )
+
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
+    async def _start_streaming(self) -> None:
+        """Starts the video streaming loop, ensuring any previous task is stopped."""
+        if self._is_streaming:
+            self._logger.warning("Start streaming called, but it is already running.")
+            return
+
+        # QUALIA.CODE: Wait for system resources to be ready
+        if not self._resources_ready:
+            self._logger.info("Waiting for system resources to be ready before starting streaming...")
+            timeout = 10.0  # 10 second timeout
+            waited = 0.0
+            while not self._resources_ready and waited < timeout:
+                await asyncio.sleep(0.1)
+                waited += 0.1
+            
+            if not self._resources_ready:
+                self._logger.critical("System resources not ready within timeout. Cannot start streaming.")
+                return
+
+        # Ensure any lingering task is robustly stopped before starting a new one.
+        await self._stop_streaming()
+
+        self._is_streaming = True
+        self._stream_task = asyncio.create_task(self._streaming_loop())
+        self._logger.info(
+            f"🚀 Started new video streaming task: {id(self._stream_task)}"
+        )
+
+    async def _handle_rendering_failure(
+        self, event: RenderingPipelineFailedEvent
+    ) -> None:
+        """Handle rendering pipeline failure events by stopping the stream."""
+        self._logger.critical(
+            f"🚨 Rendering pipeline failed: {event.data['error_message']}"
+        )
+        self._logger.critical("🛑 Shutting down stream due to rendering failure")
+
+        # Disconnect all clients with error message
+        disconnect_message = {
+            "type": "error",
+            "message": "Rendering pipeline failed. Stream terminated.",
+            "error_code": event.data["error_code"],
+            "timestamp": event.timestamp,
+        }
+
+        # Send error message to all clients before disconnecting
+        for connection in list(self._connections):
+            try:
+                await connection.send_json(disconnect_message)
+                await connection.close(code=1011)  # Internal Error
+            except Exception as e:
+                self._logger.error(f"Failed to notify client of rendering failure: {e}")
+
+        # Stop streaming immediately
+        await self._stop_streaming()
+
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
+    def _on_resources_ready(self, event: Any) -> None:
+        """Handle System.ResourcesReady event and mark resources as available."""
+        self._resources_ready = True
+        self._logger.info("📡 Received System.ResourcesReady event - resources are now available for streaming")
+
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
+    async def _stop_streaming(self) -> None:
+        """Stops the video streaming loop robustly and waits for termination."""
+        if not self._is_streaming or not self._stream_task:
+            self._logger.info("Streaming is already stopped.")
+            return
+
+        self._is_streaming = False
+        task = self._stream_task
+        self._stream_task = None
+
+        self._logger.info(f"Attempting to cancel streaming task: {id(task)}")
+
+        if not task.done():
+            task.cancel()
+            try:
+                await asyncio.wait_for(task, timeout=1.0)
+                self._logger.info(
+                    f"Streaming task {id(task)} cancelled and terminated successfully."
+                )
+            except asyncio.CancelledError:
+                self._logger.info(f"Streaming task {id(task)} confirmed cancelled.")
+            except asyncio.TimeoutError:
+                self._logger.error(
+                    f"Timeout waiting for task {id(task)} to cancel. It may become a zombie."
+                )
+            except Exception as e:
+                self._logger.error(
+                    f"Error during task cancellation for {id(task)}: {e}"
+                )
+        else:
+            self._logger.info(f"Streaming task {id(task)} was already done.")
+
+    @log_execution(level="DEBUG")
+    @handle_errors(fallback_return_value=None)
+    async def _streaming_loop(self) -> None:
+        """Main streaming loop that generates and sends frames to all connected clients."""
+        frame_time = 1.0 / self._target_fps
+        task_id = id(asyncio.current_task())
+
+        # Health check pre-loop: Check if rendering service is healthy before starting
+        if hasattr(self._rendering_service, 'is_healthy') and not self._rendering_service.is_healthy():
+            self._logger.critical(
+                "RenderingService is not healthy. Aborting streaming."
+            )
+            await self._stop_streaming()
+            return
+
+        try:
+            while self._is_streaming:  # Check streaming state
+                # IMMEDIATE CANCELLATION CHECK
+                if not self._is_streaming:
+                    logger.critical(
+                        f"💀 STREAMING TERMINATED - EXITING LOOP: {task_id}"
+                    )
+                    break
+
+                if not self._connections:  # If no connections, just wait
+                    await asyncio.sleep(0.1)
+                    continue
+
+                loop_start = asyncio.get_event_loop().time()
+
+                # SECOND CANCELLATION CHECK BEFORE EXPENSIVE OPERATION
+                if not self._is_streaming:
+                    logger.critical(
+                        f"💀 STREAMING CANCELLED - ABORTING RENDER: {task_id}"
+                    )
+                    break
+
+                # QUALIA.CODE CRITICAL FIX: CONTEXT-SAFE OpenGL operations
+                # CRITICAL: All OpenGL operations must run in the main thread context
+                frame_bytes = None
+
+                try:
+                    # CRITICAL: Execute rendering
+                    # QUALIA.CODE: ParticleEngine manages its own autonomous simulation loop
+                    frame_bytes = self._rendering_service.render_frame()
+
+                except (RenderingPipelineError, GPUResourceError, moderngl.Error) as e:
+                    self._logger.critical(f"Unrecoverable rendering error: {e}. Shutting down stream.")
+                    # Publish a failure event for system-wide awareness
+                    await self._event_bus.publish(
+                        "RENDERING_PIPELINE_FAILED",
+                        {"error_message": str(e), "error_code": "CRITICAL_GPU_ERROR"},
+                        source="StreamingWebService"
+                    )
+                    break # EXIT THE LOOP
+
+                if frame_bytes:
+                    # THIRD CANCELLATION CHECK BEFORE TRANSMISSION
+                    if not self._is_streaming:
+                        logger.critical(
+                            f"💀 STREAMING CANCELLED - ABORTING TRANSMISSION: {task_id}"
+                        )
+                        break
+
+                    try:
+                        # Send frame bytes directly to all connected clients
+                        await self._broadcast_bytes(frame_bytes)
+
+                        # Update statistics
+                        self._frames_sent += 1
+                        self._bytes_sent += len(frame_bytes)
+
+                    except WebSocketDisconnect:
+                        # Handle client disconnects gracefully
+                        self._logger.debug(
+                            "Client disconnected during frame transmission"
+                        )
+                    except Exception as e:
+                        self._logger.error(f"🚨 Error in frame transmission: {e}")
+                else:
+                    # This case should now only happen if render_frame explicitly returns None
+                    # in a controlled, non-error scenario (which it shouldn't).
+                    self._logger.warning(
+                        "render_frame returned None without an exception. This indicates a potential logic flaw."
+                    )
+
+                # Frame rate limiting
+                elapsed = asyncio.get_event_loop().time() - loop_start
+                sleep_time = max(0, frame_time - elapsed)
+
+                if sleep_time > 0:
+                    await asyncio.sleep(sleep_time)
+
+        except asyncio.CancelledError:
+            self._logger.info("🛑 Streaming loop cancelled successfully")
+            raise
+        except Exception as e:
+            self._logger.error(f"🚨 Critical error in streaming loop: {e}")
+        finally:
+            self._logger.info("🛑 Streaming loop terminated")
+
+    @log_execution(level="DEBUG")
+    @handle_errors(fallback_return_value=None)
+    async def _broadcast_frame(self, message: Dict[str, Any]) -> None:
+        """Send frame message to all connected clients, removing dead connections."""
+        if not self._connections:
+            return
+
+        # Send to all connections simultaneously
+        disconnected = set()
+
+        for websocket in self._connections.copy():
+            try:
+                await websocket.send_json(message)
+
+            except WebSocketDisconnect:
+                disconnected.add(websocket)
+
+            except Exception as e:
+                self._logger.error(f"🚨 Error sending frame to client: {e}")
+                disconnected.add(websocket)
+
+        # Remove disconnected clients
+        for websocket in disconnected:
+            if websocket in self._connections:
+                self._connections.remove(websocket)
+                self._connected_clients = len(self._connections)
+
+                self._logger.info(
+                    f"🔌 Client disconnected during broadcast. Total connections: {self._connected_clients}"
+                )
+
+                # Stop streaming if no connections remain
+                if self._connected_clients == 0 and self._is_streaming:
+                    await self._stop_streaming()
+
+    @log_execution(level="DEBUG")
+    @handle_errors(fallback_return_value=None)
+    async def handle_client_message(
+        self, websocket: WebSocket, message: Dict[str, Any]
+    ) -> None:
+        """Handle incoming messages from WebSocket clients."""
+        message_type = message.get("type")
+
+        if message_type == "ping":
+            # Respond to ping with pong, including the mandatory pingId for contract compliance
+            await websocket.send_json(
+                {
+                    "type": "pong",
+                    "timestamp": message.get("timestamp"),
+                    "pingId": message.get("pingId"),
+                }
+            )
+
+        elif message_type == "quality_change":
+            # Handle quality change requests
+            new_quality = message.get("quality", self._compression_quality)
+            if 10 <= new_quality <= 100:
+                self._compression_quality = new_quality
+                self._logger.info(f"🎛️ Changed streaming quality to {new_quality}")
+
+        elif message_type == "fps_change":
+            # Handle FPS change requests
+            new_fps = message.get("fps", self._target_fps)
+            if 1.0 <= new_fps <= 60.0:
+                self._target_fps = new_fps
+                self._logger.info(f"🎛️ Changed streaming FPS to {new_fps}")
+
+        else:
+            self._logger.warning(f"⚠️ Unknown message type: {message_type}")
+
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
+    async def shutdown(self) -> None:
+        """Gracefully stop the streaming loop and disconnect all clients."""
+        self._logger.info("Shutting down StreamingWebService...")
+
+        # Stop the streaming task robustly.
+        await self._stop_streaming()
+
+        # Gracefully close all active connections.
+        if self._connections:
+            self._logger.info(f"Closing {len(self._connections)} client connections...")
+            tasks = [ws.close() for ws in self._connections]
+            await asyncio.gather(*tasks, return_exceptions=True)
+            self._connections.clear()
+
+        self._logger.info("✅ StreamingWebService shutdown complete.")
+
+    @log_execution(level="DEBUG")
+    def get_status(self) -> Dict[str, Any]:
+        """Get current streaming service status."""
+        return {
+            "is_streaming": self._is_streaming,
+            "connected_clients": self._connected_clients,
+            "target_fps": self._target_fps,
+            "compression_quality": self._compression_quality,
+            "frames_sent": self._frames_sent,
+            "bytes_sent": self._bytes_sent,
+            "rendering_service_initialized": self._rendering_service.is_initialized,
+        }
+
+    @property
+    @log_execution(level="DEBUG")
+    def connected_clients(self) -> int:
+        """Get number of connected clients."""
+        return self._connected_clients
+
+    @property
+    @log_execution(level="DEBUG")
+    def is_streaming(self) -> bool:
+        """Check if currently streaming."""
+        return self._is_streaming
+
+    @log_execution(level="INFO")
+    @handle_errors(fallback_return_value=None)
+    async def handle_websocket_connection(self, websocket: WebSocket) -> None:
+        """
+        Handle a complete WebSocket connection lifecycle for video streaming.
+        Assumes websocket is already accepted. Manages message handling and cleanup.
+        """
+        # Add websocket to active connections
+        self._connections.add(websocket)
+        self._connected_clients = len(self._connections)
+
+        self._logger.info(
+            f"🔗 Client added to streaming. Total connections: {self._connected_clients}"
+        )
+
+        # Start streaming if this is the first connection
+        if not self._is_streaming and self._connected_clients > 0:
+            await self._start_streaming()
+
+        try:
+            # Handle incoming messages
+            while True:
+                try:
+                    # Receive message from client
+                    message_text = await websocket.receive_text()
+                    message = json.loads(message_text)
+
+                    # Handle client message
+                    await self.handle_client_message(websocket, message)
+
+                except WebSocketDisconnect:
+                    break
+                except json.JSONDecodeError as e:
+                    self._logger.error(f"🚨 Invalid JSON from client: {e}")
+                    await websocket.send_json(
+                        {"type": "error", "message": "Invalid JSON format"}
+                    )
+                except Exception as e:
+                    self._logger.error(f"🚨 Error handling WebSocket message: {e}")
+                    break
+
+        except Exception as e:
+            self._logger.error(f"🚨 WebSocket connection error: {e}")
+
+        finally:
+            # Remove websocket from active connections
+            if websocket in self._connections:
+                self._connections.remove(websocket)
+                self._connected_clients = len(self._connections)
+
+                self._logger.info(
+                    f"🔌 Client removed from streaming. Total connections: {self._connected_clients}"
+                )
+
+                # Stop streaming if no connections remain
+                if self._connected_clients == 0 and self._is_streaming:
+                    await self._stop_streaming()
+
+            self._logger.info("🔌 WebSocket connection handled and cleaned up")
+
+    @log_execution(level="DEBUG")
+    @handle_errors(fallback_return_value=None)
+    async def _broadcast_bytes(self, data: bytes) -> None:
+        """Send raw bytes to all connected clients."""
+        if not self._connections:
+            return
+
+        disconnected = set()
+        # Prepara las tareas de envío para todos los clientes.
+        send_tasks = [
+            self._send_bytes_to_client(websocket, data)
+            for websocket in self._connections
+        ]
+
+        # Ejecuta todas las tareas en paralelo para máxima eficiencia.
+        results = await asyncio.gather(*send_tasks, return_exceptions=True)
+
+        # Procesa los resultados para encontrar clientes desconectados.
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                websocket = list(self._connections)[i]
+                disconnected.add(websocket)
+                self._logger.error(f"🚨 Error sending bytes to client: {result}")
+
+        # Limpia las conexiones desconectadas.
+        if disconnected:
+            for websocket in disconnected:
+                if websocket in self._connections:
+                    self._connections.remove(websocket)
+                    self._connected_clients = len(self._connections)
+
+                    self._logger.info(
+                        f"🔌 Client disconnected during broadcast. Total connections: {self._connected_clients}"
+                    )
+
+                    # Stop streaming if no connections remain
+                    if self._connected_clients == 0 and self._is_streaming:
+                        await self._stop_streaming()
+
+    async def _send_bytes_to_client(self, websocket: WebSocket, data: bytes) -> None:
+        """Sends bytes to a single client and handles exceptions."""
+        try:
+            # ¡LA LLAMADA CORRECTA Y ÚNICA ACEPTABLE!
+            await websocket.send_bytes(data)
+        except (WebSocketDisconnect, RuntimeError) as e:
+            # Propaga la excepción para que el manejador de broadcast la capture.
+            raise e

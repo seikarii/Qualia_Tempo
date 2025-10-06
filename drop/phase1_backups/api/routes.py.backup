@@ -284,9 +284,51 @@ async def get_stream_status(services: CompositionRoot = Depends(get_services)) -
         return {"status": "error", "error": str(e)}
 
 
-# ARCHITECTURE.GOLD.CODE: Video streaming endpoint removed - backend does not render
-# Video rendering is now exclusively handled by frontend (KairosVisualEngine)
-# Backend only streams STATE data via /ws/game_state endpoint
+@app.websocket("/ws/video_stream")
+async def websocket_video_stream(
+    websocket: WebSocket, services: CompositionRoot = Depends(get_services)
+) -> None:
+    """
+    QUALIA.CODE v1.1 WebSocket endpoint for video streaming with configurable security.
+    Streams rendered video frames from StreamingWebService to frontend clients.
+    """
+    logger.info("🔌 WebSocket connection attempt to /ws/video_stream")
+    
+    try:
+        # Get SecurityService through dependency injection
+        security_service = services.get_security_service()
+        
+        # Verify connection authentication based on configuration
+        try:
+            user_info = await security_service.verify_connection(websocket)
+            if user_info:
+                logger.info(f"✅ Authentication successful for video stream: {user_info}")
+            else:
+                logger.info("✅ Authentication disabled - allowing video stream connection")
+        except Exception as e:
+            logger.error(f"🚨 Authentication failed for video stream: {e}")
+            await websocket.close(code=1008, reason="Authentication required")
+            return
+
+        # Get StreamingWebService through dependency injection
+        streaming_web_service = services.get_streaming_web_service()
+        
+        # Accept WebSocket connection after authentication
+        await websocket.accept()
+        logger.info("✅ Video stream client connected")
+
+        # Handle video streaming
+        await streaming_web_service.handle_websocket_connection(websocket)
+
+    except WebSocketDisconnect:
+        logger.info("🔌 Video stream client disconnected")
+    except Exception as e:
+        logger.error(f"🚨 Video stream WebSocket error: {e}")
+        try:
+            await websocket.close(code=1011, reason="Internal server error")
+        except:
+            pass  # Connection might already be closed
+
 
 @app.websocket("/ws/test")
 async def websocket_test(websocket: WebSocket) -> None:
