@@ -1,4 +1,6 @@
 // IFrontendRenderingService.ts
+import type { ReactNode } from 'react';
+
 export interface IFrontendRenderingService {
   /**
    * Initialize the Three.js scene and renderer
@@ -29,6 +31,21 @@ export interface IFrontendRenderingService {
    * Get rendering statistics
    */
   getStats(): RenderingStats;
+
+  /**
+   * CRISALIDA.CODE v2.0: Unified rendering pipeline
+   * Render game scene content (React Three Fiber JSX) into the main scene
+   * This enables QualiaTempoGame to be a "scene provider" without owning a canvas
+   * 
+   * @param sceneContent - React Three Fiber JSX elements (lights, meshes, etc.)
+   */
+  setGameScene(sceneContent: ReactNode): void;
+
+  /**
+   * CRISALIDA.CODE v2.0: Clear game scene content
+   * Removes game objects from the main scene, returning to particle-only rendering
+   */
+  clearGameScene(): void;
 
   /**
    * Cleanup resources

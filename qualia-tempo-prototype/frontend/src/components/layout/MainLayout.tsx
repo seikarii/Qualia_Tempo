@@ -1,16 +1,24 @@
 /**
- * QUALIA.CODE v1.1 - MainLayout Component
- * Architectural orchestrator for the definitive visual layering system.
+ * CRISALIDA.CODE v2.0 - MainLayout Component
+ * Unified rendering pipeline orchestrator with single-canvas architecture.
  *
- * This component establishes the sacred hierarchy of visual layers:
- * Layer 0: FrontendRenderer (z-0) - GPU-rendered Three.js particle visuals
- * Layer 1: Atmosphere (z-10) - CSS complementary effects (grid, bloom)
- * Layer 2: UI (z-20) - Interactive menu/game elements based on game state
+ * ARCHITECTURAL BREAKTHROUGH:
+ * ✅ Single WebGL canvas for ALL rendering (menu particles + game 3D objects)
+ * ✅ FrontendRenderer ALWAYS visible - renders both menu and game scenes
+ * ✅ QualiaTempoGame provides scene content to FrontendRenderingService
+ * ✅ PostProcessingService applies effects to unified scene
+ * ✅ No more double canvas issue - eliminated second WebGL context
+ *
+ * Visual Layer Hierarchy:
+ * Layer 0: FrontendRenderer (z-0) - ALWAYS ACTIVE - Unified rendering pipeline
+ * Layer 1: Atmosphere (z-10) - CSS complementary effects
+ * Layer 2: UI (z-20) - Interactive menu/game UI overlays
  *
  * QUALIA.CODE Compliance:
  * - Uses Zustand store for state-driven UI rendering
- * - Conditionally renders Menu vs Game based on isPlaying state
+ * - Conditionally renders Menu vs Game UI overlays
  * - Maintains proper visual layer separation
+ * - FrontendRenderingService owns the canvas exclusively
  */
 
 import React from "react";
@@ -29,15 +37,15 @@ const MainLayout: React.FC = () => {
     <div className="h-screen w-screen relative overflow-hidden">
       {/*
         LAYER 0: FRONTEND RENDERER (Z-0)
-        La fuente de verdad para los visuales del motor.
-        Debe llenar toda la pantalla.
-        CRITICAL FIX: Only render in Menu mode to avoid double canvas issue
+        CRISALIDA.CODE v2.0: ALWAYS RENDERED - Single source of truth for all 3D rendering
+        - In menu mode: renders particle effects
+        - In game mode: renders particle effects + game 3D scene (player, boss, notes, etc.)
+        - Uses FrontendRenderingService with React Three Fiber integration
+        - PostProcessingService applies unified effects (Bloom, ChromaticAberration, TAA, etc.)
       */}
-      {!isPlaying && (
-        <div className="absolute inset-0 z-0">
-          <FrontendRenderer />
-        </div>
-      )}
+      <div className="absolute inset-0 z-0">
+        <FrontendRenderer />
+      </div>
 
       {/*
         LAYER 1: ATMOSPHERE (Z-10)
@@ -49,8 +57,9 @@ const MainLayout: React.FC = () => {
 
       {/*
         LAYER 2: UI (Z-20)
-        State-driven conditional rendering: Menu OR Game view
+        State-driven conditional rendering: Menu OR Game UI overlays
         QUALIA.CODE: Pure UI layer that reacts to service-managed state
+        CRISALIDA.CODE v2.0: Game component provides 3D content to FrontendRenderingService
       */}
       <div className="absolute inset-0 z-20">
         {isPlaying ? (

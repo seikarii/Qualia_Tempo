@@ -26,3 +26,21 @@ orchestration:
     enableProfiling: false    # Enable per-pass performance tracking
     targetFrameTime: 16.67    # Target frame time in ms (60 FPS)
     autoQualityAdjust: false  # Automatically adjust quality based on performance
+
+# CRISALIDA.CODE v2.0: Bloom Pass Configuration
+# Professional bloom effect with mipmap chain (replaces @react-three/postprocessing version)
+bloom:
+  intensityMultiplier: 2.0      # Base intensity multiplier (can be modulated by QualiaState.intensity)
+  luminanceThreshold: 0.1       # Brightness threshold for bloom (0.0 - 1.0)
+  luminanceSmoothing: 0.9       # Smoothness of threshold transition (0.0 - 1.0)
+  mipmapBlurRadius: 5.0         # Blur radius for mipmap downsampling
+  mipmapLevels: 5               # Number of mipmap levels for bloom blur
+
+# CRISALIDA.CODE v2.0: Chromatic Aberration Configuration
+# Color fringing effect simulating lens distortion (replaces @react-three/postprocessing version)
+chromaticAberration:
+  enabled: true                  # Enable chromatic aberration effect
+  baseOffset: 0.0005             # Base offset for color channels (in screen space)
+  chaosMultiplier: 0.002         # Multiplier for QualiaState.chaos (dynamic modulation)
+  radialModulation: false        # Enable radial distortion (more pronounced at screen edges)
+  modulationOffset: 0.15         # Offset for radial modulation

@@ -25,6 +25,8 @@
 
 import { injectable, inject } from "inversify";
 import * as THREE from "three";
+import { type ReactNode } from "react";
+import { createRoot, extend } from "@react-three/fiber";
 import { TYPES } from "./inversify.types";
 import type {
   IFrontendRenderingService,
@@ -43,6 +45,9 @@ import type {
   WebGLContextRestoredEvent 
 } from "./contracts/events.contracts";
 import { logMethod, catchError, measureTime, BrowserOnly, OnEvent, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
+
+// CRISALIDA.CODE v2.0: Register THREE namespace for React Three Fiber JSX
+extend(THREE);
 
 @injectable()
 export class FrontendRenderingService implements IFrontendRenderingService, IBaseService {
@@ -72,6 +77,11 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
   // Phase 3: Previous frame matrices for velocity calculation
   private previousViewMatrix: THREE.Matrix4;
   private previousProjectionMatrix: THREE.Matrix4;
+
+  // CRISALIDA.CODE v2.0: React Three Fiber integration for game scenes
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private r3fRoot: any | null = null; // Type is complex from @react-three/fiber internal API
+  private gameSceneActive = false;
 
   // Performance tracking
   private frameCount = 0;
@@ -136,7 +146,7 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
       return;
     }
 
-    this.logger.info("Initializing FrontendRenderingService");
+    this.logger.info("Initializing FrontendRenderingService with unified rendering pipeline");
 
     // Create WebGL 2.0 renderer
     this.renderer = this.createWebGL2Renderer(canvas);
@@ -162,8 +172,11 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
     // Initialize particle system - CRISALIDA.CODE v1.1: Now async for shader loading
     await this.initializeParticleSystem();
 
+    // CRISALIDA.CODE v2.0: Initialize React Three Fiber root for game scene integration
+    await this.initializeR3FRoot(canvas);
+
     this.isInitialized = true;
-    this.logger.info("FrontendRenderingService initialized successfully");
+    this.logger.info("FrontendRenderingService initialized successfully with R3F integration");
   }
 
   @logMethod
@@ -509,10 +522,100 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
       this.particleMaterial.dispose();
     }
 
+    // CRISALIDA.CODE v2.0: Dispose R3F root
+    if (this.r3fRoot) {
+      this.r3fRoot.unmount();
+      this.r3fRoot = null;
+    }
+
     this.postProcessingService.dispose();
 
     this.isInitialized = false;
     this.logger.info("FrontendRenderingService disposed");
+  }
+
+  /**
+   * CRISALIDA.CODE v2.0: Initialize React Three Fiber root
+   * Creates a R3F root that renders into our existing canvas using our renderer, scene, and camera
+   * This allows QualiaTempoGame to provide React Three Fiber JSX without owning a canvas
+   */
+  @logMethod
+  @catchError
+  private async initializeR3FRoot(canvas: HTMLCanvasElement): Promise<void> {
+    try {
+      this.logger.info("Initializing React Three Fiber root for game scene integration");
+
+      // Create R3F root targeting our canvas
+      this.r3fRoot = createRoot(canvas);
+
+      // Configure the root to use our existing Three.js objects
+      await this.r3fRoot.configure({
+        gl: this.renderer,            // Use our renderer
+        scene: this.scene,             // Use our scene
+        camera: this.camera,           // Use our camera
+        frameloop: 'never',            // We control the animation loop
+        size: {
+          width: canvas.width,
+          height: canvas.height
+        },
+        // Disable R3F's event system since we handle input via GameInputControllerService
+        events: undefined
+      });
+
+      this.logger.info("React Three Fiber root initialized successfully");
+    } catch (error) {
+      this.logger.error("Failed to initialize R3F root", { error });
+      throw error;
+    }
+  }
+
+  /**
+   * CRISALIDA.CODE v2.0: Set game scene content
+   * Renders React Three Fiber JSX into the main scene
+   * This is how QualiaTempoGame provides its 3D objects without owning a canvas
+   */
+  @logMethod
+  @measureTime
+  setGameScene(sceneContent: ReactNode): void {
+    if (!this.isInitialized) {
+      this.logger.error("Cannot set game scene: service not initialized");
+      return;
+    }
+
+    if (!this.r3fRoot) {
+      this.logger.error("Cannot set game scene: R3F root not initialized");
+      return;
+    }
+
+    try {
+      this.logger.info("Setting game scene content");
+      this.r3fRoot.render(sceneContent);
+      this.gameSceneActive = true;
+      this.logger.info("Game scene content rendered successfully");
+    } catch (error) {
+      this.logger.error("Failed to render game scene", { error });
+    }
+  }
+
+  /**
+   * CRISALIDA.CODE v2.0: Clear game scene
+   * Removes game objects from the scene, returning to particle-only rendering
+   */
+  @logMethod
+  @measureTime
+  clearGameScene(): void {
+    if (!this.r3fRoot) {
+      return;
+    }
+
+    try {
+      this.logger.info("Clearing game scene content");
+      this.r3fRoot.render(null);
+      this.gameSceneActive = false;
+      this.logger.info("Game scene cleared");
+    } catch (error) {
+      this.logger.error("Failed to clear game scene", { error });
+    }
   }
 
   private animate = (): void => {
@@ -537,11 +640,15 @@ export class FrontendRenderingService implements IFrontendRenderingService, IBas
       this.particleMaterial.uniforms.time.value = currentTime * 0.001; // Convert to seconds
     }
 
-    // Rotate camera slowly for dynamic view
-    this.camera.position.x = Math.cos(currentTime * this.config.cameraOrbitSpeed) * this.config.cameraOrbitRadius;
-    this.camera.position.z = Math.sin(currentTime * this.config.cameraOrbitSpeed) * this.config.cameraOrbitRadius;
-    // QUALIA.CODE v1.1: Use externalized configuration for camera look-at target
-    this.camera.lookAt(...this.config.scene.lookAtTarget);
+    // CRISALIDA.CODE v2.0: Only orbit camera when no game scene is active
+    // When game is active, OrbitControls in the game scene will control the camera
+    if (!this.gameSceneActive) {
+      // Rotate camera slowly for dynamic view in menu
+      this.camera.position.x = Math.cos(currentTime * this.config.cameraOrbitSpeed) * this.config.cameraOrbitRadius;
+      this.camera.position.z = Math.sin(currentTime * this.config.cameraOrbitSpeed) * this.config.cameraOrbitRadius;
+      // QUALIA.CODE v1.1: Use externalized configuration for camera look-at target
+      this.camera.lookAt(...this.config.scene.lookAtTarget);
+    }
 
     // Phase 3: Update camera matrices (needed before rendering)
     this.camera.updateMatrixWorld();

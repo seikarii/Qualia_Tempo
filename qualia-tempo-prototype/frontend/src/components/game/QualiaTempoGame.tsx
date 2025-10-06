@@ -1,15 +1,28 @@
+/**
+ * CRISALIDA.CODE v2.0 - QualiaTempoGame
+ * Unified rendering pipeline integration - this component is now a "Scene Provider"
+ * 
+ * ARCHITECTURAL CHANGES:
+ * - ❌ REMOVED: <Canvas> from @react-three/fiber (eliminated second WebGL context)
+ * - ❌ REMOVED: <EffectComposer>, <Bloom>, <ChromaticAberration> from @react-three/postprocessing
+ * - ✅ NOW: Provides React Three Fiber JSX content to FrontendRenderingService
+ * - ✅ NOW: All post-processing handled by PostProcessingService (unified pipeline)
+ * - ✅ NOW: Single canvas, single WebGL context, single renderer
+ * 
+ * This component constructs the game scene (player, boss, notes, lights, etc.)
+ * and sends it to FrontendRenderingService via setGameScene().
+ * The service renders it using our production-grade deferred rendering pipeline.
+ */
+
 import React, { useEffect, useRef } from "react";
-import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import {
-  EffectComposer,
-  Bloom,
-  ChromaticAberration,
-} from "@react-three/postprocessing";
-import { Vector2 } from "three";
 import * as THREE from "three";
 import { useGameStore } from "../../state/useGameStore";
-import { useCoordinateSystemService, useGameInputControllerService } from "../../services/hooks";
+import { 
+  useCoordinateSystemService, 
+  useGameInputControllerService,
+  useFrontendRenderingService 
+} from "../../services/hooks";
 import type { GameState } from "../../state/useGameStore";
 import { useCombatNotes } from "../../hooks/useCombatNotes";
 import type { RenderedNote } from "../../services/protocol/adapters/CombatNoteAdapter";
@@ -114,21 +127,25 @@ interface GameCanvasContentProps {
   playerAvatarRef: React.RefObject<THREE.Group>;
 }
 
+/**
+ * CRISALIDA.CODE v2.0: Game scene content (pure 3D objects + controls)
+ * This is the React Three Fiber JSX that gets rendered into FrontendRenderingService's scene
+ */
 const GameCanvasContent: React.FC<GameCanvasContentProps> = ({
   zustandState,
   renderedNotes,
   playerAvatarRef
 }) => (
   <>
-    {/* Game Elements */}
+    {/* Game Elements (3D objects) */}
     <GameElements
       zustandState={zustandState}
       renderedNotes={renderedNotes}
       playerAvatarRef={playerAvatarRef}
     />
 
-    {/* QUALIA.CODE v1.1: SceneControlsAndEffects component - encapsulates controls and post-processing */}
-    <SceneControlsAndEffects qualiaState={zustandState.qualiaState} />
+    {/* Camera controls - post-processing effects removed (handled by PostProcessingService) */}
+    <SceneControls />
   </>
 );
 
@@ -247,37 +264,26 @@ const GameElements: React.FC<GameElementsProps> = ({
 };
 
 // Component for scene controls and post-processing
-interface SceneControlsAndEffectsProps {
-  qualiaState: GameState['qualiaState'];
+/**
+ * CRISALIDA.CODE v2.0: Scene controls component
+ * Contains OrbitControls for camera manipulation
+ * Post-processing effects (Bloom, ChromaticAberration) moved to PostProcessingService
+ */
+interface SceneControlsProps {
+  // No qualiaState needed - effects are handled by PostProcessingService
 }
 
-const SceneControlsAndEffects: React.FC<SceneControlsAndEffectsProps> = ({ qualiaState }) => (
-  <>
-    <OrbitControls
-      enablePan={false}
-      enableZoom={true}
-      enableRotate={true}
-      minPolarAngle={Math.PI / 6}  // Limit rotation to prevent flipping
-      maxPolarAngle={Math.PI / 2.2}  // Keep view mostly top-down but allow tilt
-      minDistance={10}
-      maxDistance={25}
-      target={[0, 0, 0]}  // Focus on center of grid
-    />
-
-    {/* Post-processing effects */}
-    <EffectComposer>
-      <Bloom
-        intensity={qualiaState.intensity * 2}
-        luminanceThreshold={0.1}
-        luminanceSmoothing={0.9}
-      />
-      <ChromaticAberration
-        offset={new Vector2(qualiaState.chaos * 0.002, 0)}
-        radialModulation={false}
-        modulationOffset={0.15}
-      />
-    </EffectComposer>
-  </>
+const SceneControls: React.FC<SceneControlsProps> = () => (
+  <OrbitControls
+    enablePan={false}
+    enableZoom={true}
+    enableRotate={true}
+    minPolarAngle={Math.PI / 6}  // Limit rotation to prevent flipping
+    maxPolarAngle={Math.PI / 2.2}  // Keep view mostly top-down but allow tilt
+    minDistance={10}
+    maxDistance={25}
+    target={[0, 0, 0]}  // Focus on center of grid
+  />
 );
 
 // Component for Game HUD Overlay
@@ -332,10 +338,21 @@ const GameplayInstructions: React.FC<GameplayInstructionsProps> = ({ zustandStat
   </div>
 );
 
+/**
+ * CRISALIDA.CODE v2.0: QualiaTempoGame - Scene Provider Component
+ * 
+ * This component no longer owns a canvas or renderer.
+ * Instead, it provides React Three Fiber JSX content to FrontendRenderingService.
+ * The service renders it in the unified rendering pipeline with deferred rendering.
+ */
+// eslint-disable-next-line max-lines-per-function
 const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   onGameAction: _onGameAction,
   isActive = false,
 }) => {
+  // Get rendering service to provide scene content
+  const renderingService = useFrontendRenderingService();
+
   // Extracted game logic and state management
   const {
     zustandState,
@@ -345,36 +362,47 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   // Ref to access the player's 3D avatar for follower positioning
   const playerAvatarRef = useRef<THREE.Group>(null);
 
+  // CRISALIDA.CODE v2.0: Provide scene content to FrontendRenderingService
+  useEffect(() => {
+    if (!isActive || !renderingService) {
+      return;
+    }
+
+    // Build the 3D scene content (React Three Fiber JSX) inside useEffect
+    // to avoid recreating it on every render
+    const sceneContent = (
+      <GameCanvasContent
+        zustandState={zustandState}
+        renderedNotes={renderedNotes}
+        playerAvatarRef={playerAvatarRef}
+      />
+    );
+
+    renderingService.setGameScene(sceneContent);
+    
+    // Cleanup: remove game scene when component unmounts or becomes inactive
+    return () => {
+      renderingService.clearGameScene();
+    };
+    // NOTE: This effect intentionally omits zustandState and renderedNotes from dependencies
+    // to avoid re-rendering the scene on every state change. The scene updates reactively
+    // through React Three Fiber's internal mechanisms.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive, renderingService]);
+
+  // CRISALIDA.CODE v2.0: This component now only renders UI overlays (HUD, instructions)
+  // The 3D content is rendered by FrontendRenderingService in the main canvas
   return (
-    <div className="fixed top-0 left-0 w-screen h-screen z-10">
-      {/* 3D Game Scene */}
-      <Canvas
-        data-testid="canvas"
-        camera={{ 
-          position: [0, 15, 12], 
-          fov: 50,
-          near: 0.1,
-          far: 1000
-        }}
-        className="w-full h-full"
-        style={{
-          background: "linear-gradient(180deg, #0a0a2e 0%, #16213e 100%)",
-        }}
-      >
-        <GameCanvasContent
-          zustandState={zustandState}
-          renderedNotes={renderedNotes}
-          playerAvatarRef={playerAvatarRef}
-        />
-      </Canvas>
-
+    <div className="fixed top-0 left-0 w-screen h-screen z-10 pointer-events-none">
       {/* Game HUD Overlay */}
-      <GameHUDOverlay zustandState={zustandState} />
-
-      {/* QUALIA.CODE v1.1: PlayerAvatar moved inside Canvas - this eliminates magic numbers */}
+      <div className="pointer-events-auto">
+        <GameHUDOverlay zustandState={zustandState} />
+      </div>
 
       {/* Gameplay Instructions */}
-      <GameplayInstructions zustandState={zustandState} />
+      <div className="pointer-events-auto">
+        <GameplayInstructions zustandState={zustandState} />
+      </div>
     </div>
   );
 };
