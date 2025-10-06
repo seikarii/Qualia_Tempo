@@ -1,34 +1,6 @@
 # 📋 DEUDA TÉCNICA - QUALIA TEMPO
 *Última actualización: 6 de octubre de 2025 - 10:30*
 
-## 🔥 TAREAS CRÍTICAS INMEDIATAS (6 OCT 2025)
-
-### SECONDARY ISSUE INVESTIGATION (ALTA PRIORIDAD)
-- [ ] **INVESTIGATE**: StateStreamingService "Message handler failed" errors - in /qualia-tempo-prototype/frontend/src/services/StateStreamingService.ts:XX
-- [ ] **INVESTIGATE**: QualiaCalculator "Unknown action: StartGame" warning - in /qualia-tempo-prototype/frontend/src/services/QualiaStateCalculatorService.ts:XX DEUDA TÉCNICA - QUALIA TEMPO
-*Última actualización: 4 de octubre de 2025 - 14:20*
-
-## � TAREAS CRÍTICAS INMEDIATAS (5 OCT 2025)
-
-### UI/UX FIXES (MEDIA PRIORIDAD)
-- [ ] **BUG**: "Qualia Tempo" texto invisible en MainMenu
-  - Síntoma: Texto solo visible al seleccionar con ratón
-  - Causa sospechada: CSS `bg-clip-text text-transparent` gradient no renderiza
-  - Archivo: `qualia-tempo-prototype/frontend/src/components/QualiaMainMenu.tsx` líneas 29-65
-  - Posibles causas: WebKit prefix missing, gradient animation conflict, z-index layering
-
-- [ ] **BUG**: "Initiate Neural Sync" button no funcional
-  - ~~Bloqueado por: Shader pipeline errors~~ ✅ **Shaders fixed 2025-10-06**
-  - Verificar: EventBus subscription para GameController
-  - Test: Click handler debe emitir evento de inicio de juego
-
-### IOC LINTER FALSE POSITIVE (BAJA PRIORIDAD)
-- [ ] **LINTER**: Actualizar circular dependency detector para reconocer Direct Config Injection
-  - False positive actual: JitterService reports "missing JitterServiceParams binding"
-  - Causa: Linter no reconoce patrón QUALIA.CODE v4.0 (direct config injection)
-  - Archivo: `scripts/detect-circular-deps.ts` (o similar)
-  - Pattern actual: Service recibe `XxxConfig` directamente, no `XxxParams`
-
 ## DEV NOTES: 
 2. BARAJAR PINO PARA LOGGING
 3. ARREGLAR LA PARTE DEL JUEGO (CATASTROFICO, FALTAN COSAS Y ESTA TODO DESCONECTADO)
