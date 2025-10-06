@@ -161,6 +161,7 @@ export class AudioService implements IAudioService, IBaseService {
       chaos: this.config.baseQualiaState.chaos,
       recovery: this.config.baseQualiaState.recovery,
       transcendence: this.config.baseQualiaState.transcendence,
+      collectionWindowEnd: 0, // No collection window for entity voices
     };
 
     this.audioEngine.createEntityVoice("player", baseState);

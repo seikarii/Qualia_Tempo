@@ -115,6 +115,7 @@ export interface QualiaStateRequest {
   chaos: number;
   recovery: number;
   transcendence: number;
+  collectionWindowEnd: number; // Timestamp marking end of Qualia collection window
 }
 
 // Health Check Response - New interface for health endpoint

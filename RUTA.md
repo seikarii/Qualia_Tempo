@@ -152,13 +152,19 @@ Esta es la hoja de ruta definitiva para migrar Qualia Tempo de la arquitectura v
 - Documentar estado actual
 
 #### Tareas:
-1. **Shared Contracts** (Día 1-2):
-   - [ ] Crear 12 nuevos schemas JSON (BossState, CombatState, etc.)
-   - [ ] Actualizar QualiaState.json (añadir collectionWindowEnd)
-   - [ ] Actualizar PlayerState.json (añadir velocity, abilities)
-   - [ ] Actualizar CombatData.json (añadir patterns, combos)
-   - [ ] Ejecutar `./scripts/generate_contracts.sh`
-   - [ ] Verificar generación TypeScript + Pydantic
+1. **Shared Contracts** (Día 1-2): ✅ **COMPLETADO**
+   - [x] Crear 12 nuevos schemas JSON (BossState, CombatState, etc.) ✅
+   - [x] Actualizar QualiaState.json (añadir collectionWindowEnd) ✅
+   - [x] Actualizar PlayerState.json (añadir velocity, abilities) ✅
+   - [x] Actualizar CombatData.json (añadir patterns, combos) ✅
+   - [x] Ejecutar `./scripts/generate_contracts.sh` ✅
+   - [x] Verificar generación TypeScript + Pydantic ✅
+   - **Archivos generados**:
+     - 11 nuevos contratos: BossState, CombatState, MusicalComboData, PatternData, ISongData, ILeaderboardEntry, IGameSettings, IMusicalInputAnalysis, IActiveEffect, IEnvironmentEffect, AudioEvent, AudioLayer
+     - 3 contratos actualizados: QualiaState, PlayerState, CombatData
+     - TypeScript interfaces: frontend/src/types/contracts.ts (1.9KB)
+     - Pydantic models: backend/api/models.py (28KB)
+   - **Fix realizado**: pyproject.toml MyPy overrides (TOML syntax)
 
 2. **Testing Infrastructure** (Día 3):
    - [ ] Crear test fixtures para nuevos contracts

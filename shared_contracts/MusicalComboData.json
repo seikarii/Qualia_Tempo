@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MusicalComboData",
+  "description": "Musical combo definitions - sequences of hits that create harmonic effects",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique combo identifier"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable combo name"
+    },
+    "sequence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["hit", "dash", "parry", "sustain"],
+            "description": "Action type"
+          },
+          "timing": {
+            "type": "string",
+            "enum": ["exact", "early", "late", "any"],
+            "description": "Timing requirement"
+          },
+          "maxDelayMs": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Maximum delay from previous action (milliseconds)"
+          }
+        },
+        "required": ["action", "timing"]
+      },
+      "minItems": 2,
+      "description": "Sequence of actions forming the combo"
+    },
+    "bonusMultiplier": {
+      "type": "number",
+      "minimum": 1.0,
+      "description": "Score multiplier when combo completed"
+    },
+    "qualiaModifiers": {
+      "type": "object",
+      "properties": {
+        "intensity": {"type": "number"},
+        "precision": {"type": "number"},
+        "aggression": {"type": "number"},
+        "flow": {"type": "number"},
+        "chaos": {"type": "number"},
+        "recovery": {"type": "number"},
+        "transcendence": {"type": "number"}
+      },
+      "description": "Qualia state modifiers applied on completion"
+    },
+    "visualEffectId": {
+      "type": "string",
+      "description": "ID of visual effect to trigger"
+    },
+    "audioEffectId": {
+      "type": "string",
+      "description": "ID of audio effect to trigger"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["easy", "medium", "hard", "expert"],
+      "description": "Combo difficulty tier"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "sequence",
+    "bonusMultiplier",
+    "qualiaModifiers",
+    "difficulty"
+  ],
+  "additionalProperties": false
+}

@@ -11,7 +11,447 @@ from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 from typing import Annotated
+from typing import Annotated, Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, Optional
 from typing import Annotated, List
+from typing import Annotated, List, Optional
+from typing import Annotated, Optional
+
+class EffectType(Enum):
+    """
+    Type of visual effect
+    """
+
+    particle_burst = 'particle_burst'
+    trail = 'trail'
+    aura = 'aura'
+    screen_shake = 'screen_shake'
+    color_shift = 'color_shift'
+    distortion = 'distortion'
+    bloom_pulse = 'bloom_pulse'
+    god_rays = 'god_rays'
+    reaction_diffusion = 'reaction_diffusion'
+    sdf_morph = 'sdf_morph'
+
+
+
+class Position(BaseModel):
+    """
+    3D position in world space
+    """
+
+    x: float
+    y: float
+    z: float
+
+
+
+class Color(BaseModel):
+    """
+    RGBA color
+    """
+
+    r: Annotated[float, Field(ge=0.0, le=1.0)]
+    g: Annotated[float, Field(ge=0.0, le=1.0)]
+    b: Annotated[float, Field(ge=0.0, le=1.0)]
+    a: Annotated[float, Field(ge=0.0, le=1.0)]
+
+
+
+class IActiveEffect(BaseModel):
+    """
+    Active visual effect instance
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: str
+    """
+    Unique instance identifier
+    """
+    effectType: EffectType
+    """
+    Type of visual effect
+    """
+    startTime: float
+    """
+    Effect start timestamp
+    """
+    durationSec: Annotated[float, Field(ge=0.0)]
+    """
+    Effect duration (seconds)
+    """
+    position: Position
+    """
+    3D position in world space
+    """
+    intensity: Annotated[float, Field(ge=0.0, le=1.0)]
+    """
+    Effect intensity (0-1)
+    """
+    color: Color
+    """
+    RGBA color
+    """
+    scale: Annotated[float, Field(ge=0.0)]
+    """
+    Effect scale multiplier
+    """
+    fadeInSec: Annotated[Optional[float], Field(ge=0.0)] = None
+    """
+    Fade in duration (seconds)
+    """
+    fadeOutSec: Annotated[Optional[float], Field(ge=0.0)] = None
+    """
+    Fade out duration (seconds)
+    """
+    attachedToEntity: Optional[str] = None
+    """
+    Optional entity ID to attach effect to
+    """
+    customParameters: Optional[Dict[str, Any]] = None
+    """
+    Effect-specific parameters
+    """
+
+
+class Type(Enum):
+    """
+    Audio event type
+    """
+
+    play_sfx = 'play_sfx'
+    stop_sfx = 'stop_sfx'
+    play_music = 'play_music'
+    stop_music = 'stop_music'
+    crossfade = 'crossfade'
+    volume_change = 'volume_change'
+    pitch_shift = 'pitch_shift'
+    apply_filter = 'apply_filter'
+    trigger_stinger = 'trigger_stinger'
+    sync_beat = 'sync_beat'
+
+
+
+class Parameters(BaseModel):
+    """
+    Audio playback parameters
+    """
+
+    volume: Annotated[Optional[float], Field(ge=0.0, le=1.0)] = None
+    pitch: Optional[float] = None
+    pan: Annotated[Optional[float], Field(ge=-1.0, le=1.0)] = None
+    fadeInSec: Annotated[Optional[float], Field(ge=0.0)] = None
+    fadeOutSec: Annotated[Optional[float], Field(ge=0.0)] = None
+    loop: Optional[bool] = None
+    priority: Annotated[Optional[int], Field(ge=0)] = None
+
+
+
+class Type1(Enum):
+    lowpass = 'lowpass'
+    highpass = 'highpass'
+    bandpass = 'bandpass'
+    reverb = 'reverb'
+    delay = 'delay'
+    distortion = 'distortion'
+
+
+
+class FilterSettings(BaseModel):
+    """
+    Audio filter settings
+    """
+
+    type: Optional[Type1] = None
+    frequency: Annotated[Optional[float], Field(ge=20.0, le=20000.0)] = None
+    resonance: Annotated[Optional[float], Field(ge=0.0, le=1.0)] = None
+    wetDryMix: Annotated[Optional[float], Field(ge=0.0, le=1.0)] = None
+
+
+
+class SpatialData(BaseModel):
+    """
+    3D spatial audio data
+    """
+
+    position: Optional[Position] = None
+    maxDistance: Annotated[Optional[float], Field(ge=0.0)] = None
+    rolloffFactor: Annotated[Optional[float], Field(ge=0.0)] = None
+
+
+
+class TriggerCondition(BaseModel):
+    """
+    Conditions for triggering this event
+    """
+
+    qualiaThreshold: Optional[float] = None
+    comboBased: Optional[bool] = None
+    beatSynced: Optional[bool] = None
+
+
+
+class AudioEvent(BaseModel):
+    """
+    Audio system event
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: str
+    """
+    Unique event identifier
+    """
+    type: Type
+    """
+    Audio event type
+    """
+    timestamp: float
+    """
+    Event timestamp
+    """
+    audioClipId: Optional[str] = None
+    """
+    Audio clip identifier
+    """
+    layerId: Optional[str] = None
+    """
+    Target audio layer
+    """
+    parameters: Optional[Parameters] = None
+    """
+    Audio playback parameters
+    """
+    filterSettings: Optional[FilterSettings] = None
+    """
+    Audio filter settings
+    """
+    spatialData: Optional[SpatialData] = None
+    """
+    3D spatial audio data
+    """
+    triggerCondition: Optional[TriggerCondition] = None
+    """
+    Conditions for triggering this event
+    """
+
+
+class TimeSignature(BaseModel):
+    """
+    Time signature (e.g., 4/4, 3/4)
+    """
+
+    numerator: Annotated[int, Field(ge=1)]
+    denominator: Annotated[int, Field(ge=1)]
+
+
+
+class Name(Enum):
+    """
+    Section type
+    """
+
+    intro = 'intro'
+    verse = 'verse'
+    chorus = 'chorus'
+    bridge = 'bridge'
+    outro = 'outro'
+
+
+
+class Section(BaseModel):
+    name: Name
+    """
+    Section type
+    """
+    startTimeSec: Annotated[float, Field(ge=0.0)]
+    """
+    Start time (seconds)
+    """
+    endTimeSec: Annotated[float, Field(ge=0.0)]
+    """
+    End time (seconds)
+    """
+
+
+
+class BeatMapItem(BaseModel):
+    timestamp: Annotated[float, Field(ge=0.0)]
+    beatNumber: Annotated[int, Field(ge=1)]
+    barNumber: Annotated[int, Field(ge=1)]
+    isDownbeat: bool
+
+
+
+class Difficulty(Enum):
+    """
+    Song difficulty tier
+    """
+
+    easy = 'easy'
+    medium = 'medium'
+    hard = 'hard'
+    expert = 'expert'
+
+
+
+class ISongData(BaseModel):
+    """
+    Song metadata and structure
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: str
+    """
+    Unique song identifier
+    """
+    title: str
+    """
+    Song title
+    """
+    artist: str
+    """
+    Song artist
+    """
+    bpm: Annotated[float, Field(ge=1.0)]
+    """
+    Beats per minute
+    """
+    durationSec: Annotated[float, Field(ge=0.0)]
+    """
+    Total song duration (seconds)
+    """
+    audioFilePath: str
+    """
+    Path to audio file
+    """
+    timeSignature: TimeSignature
+    """
+    Time signature (e.g., 4/4, 3/4)
+    """
+    key: Optional[str] = None
+    """
+    Musical key (e.g., 'C major', 'D minor')
+    """
+    sections: Optional[List[Section]] = None
+    """
+    Song sections
+    """
+    beatMap: List[BeatMapItem]
+    """
+    Precise beat timestamps
+    """
+    difficulty: Difficulty
+    """
+    Song difficulty tier
+    """
+    previewStartSec: Annotated[Optional[float], Field(ge=0.0)] = None
+    """
+    Timestamp for preview start (seconds)
+    """
+
+
+class Action(Enum):
+    """
+    Action type
+    """
+
+    hit = 'hit'
+    dash = 'dash'
+    parry = 'parry'
+    sustain = 'sustain'
+
+
+
+class Timing(Enum):
+    """
+    Timing requirement
+    """
+
+    exact = 'exact'
+    early = 'early'
+    late = 'late'
+    any = 'any'
+
+
+
+class SequenceItem(BaseModel):
+    action: Action
+    """
+    Action type
+    """
+    timing: Timing
+    """
+    Timing requirement
+    """
+    maxDelayMs: Annotated[Optional[int], Field(ge=0)] = None
+    """
+    Maximum delay from previous action (milliseconds)
+    """
+
+
+
+class QualiaModifiers(BaseModel):
+    """
+    Qualia state modifiers applied on completion
+    """
+
+    intensity: Optional[float] = None
+    precision: Optional[float] = None
+    aggression: Optional[float] = None
+    flow: Optional[float] = None
+    chaos: Optional[float] = None
+    recovery: Optional[float] = None
+    transcendence: Optional[float] = None
+
+
+
+class MusicalComboData(BaseModel):
+    """
+    Musical combo definitions - sequences of hits that create harmonic effects
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: str
+    """
+    Unique combo identifier
+    """
+    name: str
+    """
+    Human-readable combo name
+    """
+    sequence: Annotated[List[SequenceItem], Field(min_length=2)]
+    """
+    Sequence of actions forming the combo
+    """
+    bonusMultiplier: Annotated[float, Field(ge=1.0)]
+    """
+    Score multiplier when combo completed
+    """
+    qualiaModifiers: QualiaModifiers
+    """
+    Qualia state modifiers applied on completion
+    """
+    visualEffectId: Optional[str] = None
+    """
+    ID of visual effect to trigger
+    """
+    audioEffectId: Optional[str] = None
+    """
+    ID of audio effect to trigger
+    """
+    difficulty: Difficulty
+    """
+    Combo difficulty tier
+    """
+
 
 class ColorItem(RootModel[int]):
     root: Annotated[int, Field(ge=0, le=255)]
@@ -71,18 +511,295 @@ class OptimizedParticle(BaseModel):
     """
 
 
-class Position(BaseModel):
+class Audio(BaseModel):
+    masterVolume: Annotated[float, Field(ge=0.0, le=1.0)]
+    musicVolume: Annotated[float, Field(ge=0.0, le=1.0)]
+    sfxVolume: Annotated[float, Field(ge=0.0, le=1.0)]
+    audioOffsetMs: int
+    """
+    Audio calibration offset (milliseconds)
+    """
+
+
+
+class TimingWindowMs(BaseModel):
+    """
+    Timing windows for hit accuracy (milliseconds)
+    """
+
+    perfect: Annotated[int, Field(ge=1)]
+    good: Annotated[int, Field(ge=1)]
+    ok: Annotated[int, Field(ge=1)]
+
+
+
+class Gameplay(BaseModel):
+    timingWindowMs: TimingWindowMs
+    """
+    Timing windows for hit accuracy (milliseconds)
+    """
+    autoplay: bool
+    """
+    Enable autoplay mode
+    """
+    practiceMode: bool
+    """
+    Enable practice mode
+    """
+    showTiming: bool
+    """
+    Show timing feedback
+    """
+
+
+
+class ParticleDensity(Enum):
+    """
+    Particle effect density
+    """
+
+    low = 'low'
+    medium = 'medium'
+    high = 'high'
+    ultra = 'ultra'
+
+
+
+class Visual(BaseModel):
+    brightness: Annotated[float, Field(ge=0.0, le=1.0)]
+    particleDensity: ParticleDensity
+    """
+    Particle effect density
+    """
+    postProcessingEnabled: bool
+    bloomIntensity: Annotated[float, Field(ge=0.0, le=1.0)]
+    showHitEffects: bool
+    showComboText: bool
+    backgroundAnimations: bool
+
+
+
+class KeyBindings(BaseModel):
+    hitNote: List[str]
+    dash: List[str]
+    pause: List[str]
+
+
+
+class Input(BaseModel):
+    keyBindings: KeyBindings
+    mouseSensitivity: Annotated[float, Field(ge=0.1, le=5.0)]
+
+
+
+class ColorblindMode(Enum):
+    none = 'none'
+    protanopia = 'protanopia'
+    deuteranopia = 'deuteranopia'
+    tritanopia = 'tritanopia'
+
+
+
+class Accessibility(BaseModel):
+    colorblindMode: ColorblindMode
+    screenShakeIntensity: Annotated[float, Field(ge=0.0, le=1.0)]
+    flashingEffects: bool
+    subtitlesEnabled: bool
+
+
+
+class IGameSettings(BaseModel):
+    """
+    Game settings configuration
+    """
+
     model_config = ConfigDict(
         extra='forbid',
     )
+    audio: Audio
+    gameplay: Gameplay
+    visual: Visual
+    input: Input
+    accessibility: Accessibility
+
+
+class Phase(RootModel[int]):
+    root: Annotated[int, Field(ge=0)]
+
+
+
+class Velocity(BaseModel):
     x: float
-    """
-    X coordinate
-    """
     y: float
+
+
+
+class Shape(Enum):
+    circle = 'circle'
+    square = 'square'
+    triangle = 'triangle'
+    custom = 'custom'
+
+
+
+class VisualData(BaseModel):
+    color: Optional[str] = None
+    size: Annotated[Optional[float], Field(ge=0.0)] = None
+    shape: Optional[Shape] = None
+
+
+
+class Note(BaseModel):
+    timestamp: Annotated[float, Field(ge=0.0)]
     """
-    Y coordinate
+    Time offset from pattern start (seconds)
     """
+    position: Position
+    velocity: Optional[Velocity] = None
+    damage: Annotated[float, Field(ge=0.0)]
+    visualData: Optional[VisualData] = None
+
+
+
+class RequiredQualiaThreshold(BaseModel):
+    """
+    Qualia thresholds required to trigger this pattern
+    """
+
+    aggression: Optional[float] = None
+    chaos: Optional[float] = None
+
+
+
+class PatternData(BaseModel):
+    """
+    Boss attack pattern definition
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: str
+    """
+    Unique pattern identifier
+    """
+    name: str
+    """
+    Human-readable pattern name
+    """
+    type: Type
+    """
+    Attack pattern type
+    """
+    phases: List[Phase]
+    """
+    Boss phases where this pattern can appear
+    """
+    notes: List[Note]
+    """
+    Notes/projectiles in this pattern
+    """
+    durationSec: Annotated[float, Field(ge=0.0)]
+    """
+    Total pattern duration (seconds)
+    """
+    cooldownSec: Annotated[float, Field(ge=0.0)]
+    """
+    Cooldown before pattern can repeat (seconds)
+    """
+    requiredQualiaThreshold: Optional[RequiredQualiaThreshold] = None
+    """
+    Qualia thresholds required to trigger this pattern
+    """
+
+
+class BossState(BaseModel):
+    """
+    Boss state data structure for Qualia Tempo
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: str
+    """
+    Unique identifier for the boss
+    """
+    name: str
+    """
+    Display name of the boss
+    """
+    position: Position
+    health: Annotated[float, Field(ge=0.0)]
+    """
+    Current health
+    """
+    maxHealth: Annotated[float, Field(ge=0.0)]
+    """
+    Maximum health
+    """
+    currentPhase: Annotated[int, Field(ge=0)]
+    """
+    Current combat phase
+    """
+    activePatterns: List[str]
+    """
+    IDs of currently active attack patterns
+    """
+    buffs: List[str]
+    """
+    Active boss buffs
+    """
+    debuffs: List[str]
+    """
+    Active boss debuffs
+    """
+    currentAggressionLevel: Annotated[float, Field(ge=0.0, le=1.0)]
+    """
+    Current aggression level influenced by tempo and volume
+    """
+
+
+class Dash(BaseModel):
+    isReady: bool
+    cooldownRemaining: Annotated[float, Field(ge=0.0)]
+
+
+
+class Parry(BaseModel):
+    isReady: bool
+    cooldownRemaining: Annotated[float, Field(ge=0.0)]
+
+
+
+class Ultimate(BaseModel):
+    isActive: bool
+    charge: Annotated[float, Field(ge=0.0, le=1.0)]
+
+
+
+class Abilities(BaseModel):
+    """
+    Player ability states
+    """
+
+    dash: Dash
+    parry: Parry
+    ultimate: Ultimate
+
+
+
+class Buff(BaseModel):
+    id: str
+    name: str
+    durationRemaining: Annotated[float, Field(ge=0.0)]
+
+
+
+class Debuff(BaseModel):
+    id: str
+    name: str
+    durationRemaining: Annotated[float, Field(ge=0.0)]
 
 
 
@@ -114,6 +831,68 @@ class PlayerState(BaseModel):
     lastRhythmHit: Annotated[float, Field(ge=0.0)]
     """
     Timestamp of last rhythm hit
+    """
+    velocity: Velocity
+    """
+    Player velocity vector
+    """
+    abilities: Abilities
+    """
+    Player ability states
+    """
+    buffs: List[Buff]
+    """
+    Active buffs
+    """
+    debuffs: List[Debuff]
+    """
+    Active debuffs
+    """
+
+
+class QualiaEventHistoryItem(BaseModel):
+    id: str
+    timestamp: float
+    position: Position
+    value: float
+
+
+
+class CombatState(BaseModel):
+    """
+    Overall combat state structure
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    isActive: bool
+    """
+    Whether combat is currently active
+    """
+    currentPhase: Annotated[int, Field(ge=0)]
+    """
+    Current phase of the combat
+    """
+    elapsedTime: Annotated[float, Field(ge=0.0)]
+    """
+    Elapsed time since combat start (seconds)
+    """
+    songProgress: Annotated[float, Field(ge=0.0, le=1.0)]
+    """
+    Progress through the song (0-1)
+    """
+    activeEffects: List[str]
+    """
+    IDs of active visual effects
+    """
+    environmentEffects: List[str]
+    """
+    IDs of active environment effects
+    """
+    qualiaEventHistory: List[QualiaEventHistoryItem]
+    """
+    Recent history of Qualia events
     """
 
 
@@ -152,6 +931,107 @@ class QualiaState(BaseModel):
     transcendence: Annotated[float, Field(ge=0.0, le=1.0)]
     """
     Ultimate mode (0-1)
+    """
+    collectionWindowEnd: float
+    """
+    Timestamp marking end of current Qualia collection window (max 1 second)
+    """
+
+
+class Center(BaseModel):
+    x: Optional[float] = None
+    y: Optional[float] = None
+
+
+
+class AffectedArea(BaseModel):
+    shape: Shape
+    center: Optional[Center] = None
+    radius: Annotated[Optional[float], Field(ge=0.0)] = None
+    width: Annotated[Optional[float], Field(ge=0.0)] = None
+    height: Annotated[Optional[float], Field(ge=0.0)] = None
+
+
+
+class GameplayModifiers(BaseModel):
+    """
+    Gameplay parameter modifiers
+    """
+
+    playerSpeedMultiplier: Optional[float] = None
+    gravityMultiplier: Optional[float] = None
+    damageMultiplier: Optional[float] = None
+    scoreMultiplier: Optional[float] = None
+
+
+
+class VisualParameters(BaseModel):
+    """
+    Visual rendering parameters
+    """
+
+    color: Optional[Color] = None
+    particleDensity: Annotated[Optional[float], Field(ge=0.0)] = None
+    distortionAmount: Annotated[Optional[float], Field(ge=0.0, le=1.0)] = None
+
+
+
+class TriggeredByQualiaState(BaseModel):
+    """
+    Optional Qualia thresholds that trigger this effect
+    """
+
+    transcendence: Optional[float] = None
+    """
+    Transcendence threshold
+    """
+    chaos: Optional[float] = None
+    """
+    Chaos threshold
+    """
+
+
+
+class IEnvironmentEffect(BaseModel):
+    """
+    Environmental effect affecting gameplay area
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: str
+    """
+    Unique effect identifier
+    """
+    type: Type
+    """
+    Environment effect type
+    """
+    startTime: float
+    """
+    Effect start timestamp
+    """
+    durationSec: Annotated[float, Field(ge=0.0)]
+    """
+    Effect duration (seconds, -1 for permanent)
+    """
+    affectedArea: AffectedArea
+    intensity: Annotated[float, Field(ge=0.0, le=1.0)]
+    """
+    Effect intensity (0-1)
+    """
+    gameplayModifiers: Optional[GameplayModifiers] = None
+    """
+    Gameplay parameter modifiers
+    """
+    visualParameters: Optional[VisualParameters] = None
+    """
+    Visual rendering parameters
+    """
+    triggeredByQualiaState: Optional[TriggeredByQualiaState] = None
+    """
+    Optional Qualia thresholds that trigger this effect
     """
 
 
@@ -248,6 +1128,264 @@ class CombatData(BaseModel):
     lyrics: List[LyricData]
     """
     Array of all lyrics in the song
+    """
+    patterns: List[str]
+    """
+    Array of boss attack patterns
+    """
+    combos: List[str]
+    """
+    Array of available musical combos
+    """
+
+
+class ActiveSource(BaseModel):
+    sourceId: str
+    audioClipId: str
+    startTime: float
+    volume: Annotated[float, Field(ge=0.0, le=1.0)]
+    isLooping: bool
+
+
+
+class Effect(BaseModel):
+    effectId: str
+    type: Type1
+    enabled: bool
+    parameters: Optional[Dict[str, Any]] = None
+
+
+
+class Routing(BaseModel):
+    """
+    Audio routing configuration
+    """
+
+    outputBus: Optional[str] = None
+    """
+    Output bus identifier
+    """
+    sendLevels: Optional[Dict[str, float]] = None
+    """
+    Send levels to auxiliary buses
+    """
+
+
+
+class QualiaModulation(BaseModel):
+    """
+    How Qualia state modulates this layer
+    """
+
+    volumeByIntensity: Optional[bool] = None
+    filterByTranscendence: Optional[bool] = None
+    pitchByChaos: Optional[bool] = None
+
+
+
+class AudioLayer(BaseModel):
+    """
+    Audio mixing layer
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    id: str
+    """
+    Unique layer identifier
+    """
+    name: str
+    """
+    Human-readable layer name
+    """
+    type: Type
+    """
+    Layer category
+    """
+    volume: Annotated[float, Field(ge=0.0, le=1.0)]
+    """
+    Layer master volume (0-1)
+    """
+    muted: bool
+    """
+    Whether layer is muted
+    """
+    solo: bool
+    """
+    Whether layer is soloed (only this plays)
+    """
+    activeSources: List[ActiveSource]
+    """
+    Currently active audio sources in this layer
+    """
+    effects: List[Effect]
+    """
+    Audio effects chain for this layer
+    """
+    routing: Optional[Routing] = None
+    """
+    Audio routing configuration
+    """
+    qualiaModulation: Optional[QualiaModulation] = None
+    """
+    How Qualia state modulates this layer
+    """
+
+
+class Accuracy(Enum):
+    perfect = 'perfect'
+    good = 'good'
+    ok = 'ok'
+    miss = 'miss'
+
+
+
+class RecentInput(BaseModel):
+    action: Action
+    timestamp: float
+    timingOffset: float
+    """
+    Offset from beat (ms)
+    """
+    accuracy: Accuracy
+
+
+
+class DetectedPattern(Enum):
+    """
+    Detected rhythmic pattern
+    """
+
+    none = 'none'
+    steady = 'steady'
+    syncopated = 'syncopated'
+    polyrhythmic = 'polyrhythmic'
+    chaotic = 'chaotic'
+
+
+
+class SuggestedQualiaShift(BaseModel):
+    """
+    Suggested Qualia adjustments based on analysis
+    """
+
+    intensity: Optional[float] = None
+    precision: Optional[float] = None
+    aggression: Optional[float] = None
+    flow: Optional[float] = None
+    chaos: Optional[float] = None
+
+
+
+class IMusicalInputAnalysis(BaseModel):
+    """
+    Analysis of player input from musical perspective
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    timestamp: float
+    """
+    Analysis timestamp
+    """
+    recentInputs: List[RecentInput]
+    """
+    Last N inputs for analysis window
+    """
+    rhythmicConsistency: Annotated[float, Field(ge=0.0, le=1.0)]
+    """
+    How consistently player hits on beat (0-1)
+    """
+    detectedPattern: DetectedPattern
+    """
+    Detected rhythmic pattern
+    """
+    harmonicAlignment: Annotated[float, Field(ge=0.0, le=1.0)]
+    """
+    Alignment with song's harmony (0-1)
+    """
+    phraseCompletion: Annotated[float, Field(ge=0.0, le=1.0)]
+    """
+    How well player completes musical phrases (0-1)
+    """
+    dynamicRange: Annotated[float, Field(ge=0.0, le=1.0)]
+    """
+    Variation in input intensity (0-1)
+    """
+    suggestedQualiaShift: SuggestedQualiaShift
+    """
+    Suggested Qualia adjustments based on analysis
+    """
+
+
+class QualiaSnapshot(BaseModel):
+    """
+    Final Qualia state at end of run
+    """
+
+    intensity: Optional[float] = None
+    precision: Optional[float] = None
+    aggression: Optional[float] = None
+    flow: Optional[float] = None
+    chaos: Optional[float] = None
+    recovery: Optional[float] = None
+    transcendence: Optional[float] = None
+
+
+
+class ILeaderboardEntry(BaseModel):
+    """
+    Leaderboard entry structure
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    rank: Annotated[int, Field(ge=1)]
+    """
+    Player rank position
+    """
+    playerId: str
+    """
+    Unique player identifier
+    """
+    playerName: str
+    """
+    Player display name
+    """
+    score: Annotated[int, Field(ge=0)]
+    """
+    Total score
+    """
+    songId: str
+    """
+    Song identifier
+    """
+    difficulty: Difficulty
+    """
+    Difficulty level played
+    """
+    maxCombo: Annotated[int, Field(ge=0)]
+    """
+    Maximum combo achieved
+    """
+    accuracy: Annotated[float, Field(ge=0.0, le=1.0)]
+    """
+    Hit accuracy (0-1)
+    """
+    timestamp: float
+    """
+    Unix timestamp of the run
+    """
+    qualiaSnapshot: QualiaSnapshot
+    """
+    Final Qualia state at end of run
+    """
+    replayDataUrl: Optional[str] = None
+    """
+    Optional URL to replay data
     """
 
 

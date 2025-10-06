@@ -68,27 +68,21 @@ check_untyped_defs = false
 warn_return_any = false
 warn_no_return = false
 
-# Per-file ignores for MyPy (similar to Ruff)
-per-file-ignores = {
-    "**/tests/*.py": [
-        "no-untyped-def",
-        "no-untyped-call", 
-        "no-any-return",
-        "attr-defined"
-    ],
-    "**/test_*.py": [
-        "no-untyped-def",
-        "no-untyped-call",
-        "no-any-return",
-        "attr-defined"
-    ],
-    "qualia_tempo_prototype/backend/engine/qualia_particle_engine.py": [
-        "unreachable"
-    ],
-    "qualia_tempo_prototype/backend/services/StreamingWebService.py": [
-        "unreachable"
-    ],
-    "qualia_tempo_prototype/backend/services/StateStreamingService.py": [
-        "unreachable"
-    ]
-}
+# Per-file ignores for MyPy (using proper TOML syntax)
+[[tool.mypy.overrides]]
+module = "tests.*,test_*"
+disallow_untyped_defs = false
+disallow_untyped_calls = false
+no_any_return = false
+
+[[tool.mypy.overrides]]
+module = "qualia_tempo_prototype.backend.engine.qualia_particle_engine"
+warn_unreachable = false
+
+[[tool.mypy.overrides]]
+module = "qualia_tempo_prototype.backend.services.StreamingWebService"
+warn_unreachable = false
+
+[[tool.mypy.overrides]]
+module = "qualia_tempo_prototype.backend.services.StateStreamingService"
+warn_unreachable = false

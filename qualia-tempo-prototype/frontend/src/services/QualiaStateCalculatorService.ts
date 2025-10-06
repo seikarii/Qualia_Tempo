@@ -149,6 +149,7 @@ export class QualiaStateCalculatorService
       chaos: this.config.baseQualiaState.chaos,
       recovery: this.config.baseQualiaState.recovery,
       transcendence: this.config.baseQualiaState.transcendence,
+      collectionWindowEnd: 0, // Initialize collection window (will be set on first Qualia generation)
     };
   }
 

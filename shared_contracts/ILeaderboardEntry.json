@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ILeaderboardEntry",
+  "description": "Leaderboard entry structure",
+  "type": "object",
+  "properties": {
+    "rank": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Player rank position"
+    },
+    "playerId": {
+      "type": "string",
+      "description": "Unique player identifier"
+    },
+    "playerName": {
+      "type": "string",
+      "description": "Player display name"
+    },
+    "score": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total score"
+    },
+    "songId": {
+      "type": "string",
+      "description": "Song identifier"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["easy", "medium", "hard", "expert"],
+      "description": "Difficulty level played"
+    },
+    "maxCombo": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Maximum combo achieved"
+    },
+    "accuracy": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Hit accuracy (0-1)"
+    },
+    "timestamp": {
+      "type": "number",
+      "description": "Unix timestamp of the run"
+    },
+    "qualiaSnapshot": {
+      "type": "object",
+      "properties": {
+        "intensity": {"type": "number"},
+        "precision": {"type": "number"},
+        "aggression": {"type": "number"},
+        "flow": {"type": "number"},
+        "chaos": {"type": "number"},
+        "recovery": {"type": "number"},
+        "transcendence": {"type": "number"}
+      },
+      "description": "Final Qualia state at end of run"
+    },
+    "replayDataUrl": {
+      "type": "string",
+      "description": "Optional URL to replay data"
+    }
+  },
+  "required": [
+    "rank",
+    "playerId",
+    "playerName",
+    "score",
+    "songId",
+    "difficulty",
+    "maxCombo",
+    "accuracy",
+    "timestamp",
+    "qualiaSnapshot"
+  ],
+  "additionalProperties": false
+}

@@ -86,6 +86,14 @@ const initialPlayerState: PlayerState = {
   score: 0,
   isMoving: false,
   lastRhythmHit: 0,
+  velocity: { x: 0, y: 0 },
+  abilities: {
+    dash: { isReady: true, cooldownRemaining: 0 },
+    parry: { isReady: true, cooldownRemaining: 0 },
+    ultimate: { isActive: false, charge: 0 },
+  },
+  buffs: [],
+  debuffs: [],
 };
 
 const initialQualiaState: QualiaState = {
@@ -96,6 +104,7 @@ const initialQualiaState: QualiaState = {
   chaos: 0,
   recovery: 0,
   transcendence: 0,
+  collectionWindowEnd: 0,
 };
 
 // Store implementation - PASSIVE CONTAINER ONLY

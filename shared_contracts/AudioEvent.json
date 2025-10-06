@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AudioEvent",
+  "description": "Audio system event",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique event identifier"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "play_sfx",
+        "stop_sfx",
+        "play_music",
+        "stop_music",
+        "crossfade",
+        "volume_change",
+        "pitch_shift",
+        "apply_filter",
+        "trigger_stinger",
+        "sync_beat"
+      ],
+      "description": "Audio event type"
+    },
+    "timestamp": {
+      "type": "number",
+      "description": "Event timestamp"
+    },
+    "audioClipId": {
+      "type": "string",
+      "description": "Audio clip identifier"
+    },
+    "layerId": {
+      "type": "string",
+      "description": "Target audio layer"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "volume": {"type": "number", "minimum": 0, "maximum": 1},
+        "pitch": {"type": "number"},
+        "pan": {"type": "number", "minimum": -1, "maximum": 1},
+        "fadeInSec": {"type": "number", "minimum": 0},
+        "fadeOutSec": {"type": "number", "minimum": 0},
+        "loop": {"type": "boolean"},
+        "priority": {"type": "integer", "minimum": 0}
+      },
+      "description": "Audio playback parameters"
+    },
+    "filterSettings": {
+      "type": "object",
+      "properties": {
+        "type": {"type": "string", "enum": ["lowpass", "highpass", "bandpass", "reverb", "delay", "distortion"]},
+        "frequency": {"type": "number", "minimum": 20, "maximum": 20000},
+        "resonance": {"type": "number", "minimum": 0, "maximum": 1},
+        "wetDryMix": {"type": "number", "minimum": 0, "maximum": 1}
+      },
+      "description": "Audio filter settings"
+    },
+    "spatialData": {
+      "type": "object",
+      "properties": {
+        "position": {
+          "type": "object",
+          "properties": {
+            "x": {"type": "number"},
+            "y": {"type": "number"},
+            "z": {"type": "number"}
+          },
+          "required": ["x", "y", "z"]
+        },
+        "maxDistance": {"type": "number", "minimum": 0},
+        "rolloffFactor": {"type": "number", "minimum": 0}
+      },
+      "description": "3D spatial audio data"
+    },
+    "triggerCondition": {
+      "type": "object",
+      "properties": {
+        "qualiaThreshold": {"type": "number"},
+        "comboBased": {"type": "boolean"},
+        "beatSynced": {"type": "boolean"}
+      },
+      "description": "Conditions for triggering this event"
+    }
+  },
+  "required": [
+    "id",
+    "type",
+    "timestamp"
+  ],
+  "additionalProperties": false
+}

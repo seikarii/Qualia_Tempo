@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ISongData",
+  "description": "Song metadata and structure",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique song identifier"
+    },
+    "title": {
+      "type": "string",
+      "description": "Song title"
+    },
+    "artist": {
+      "type": "string",
+      "description": "Song artist"
+    },
+    "bpm": {
+      "type": "number",
+      "minimum": 1,
+      "description": "Beats per minute"
+    },
+    "durationSec": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total song duration (seconds)"
+    },
+    "audioFilePath": {
+      "type": "string",
+      "description": "Path to audio file"
+    },
+    "timeSignature": {
+      "type": "object",
+      "properties": {
+        "numerator": {"type": "integer", "minimum": 1},
+        "denominator": {"type": "integer", "minimum": 1}
+      },
+      "required": ["numerator", "denominator"],
+      "description": "Time signature (e.g., 4/4, 3/4)"
+    },
+    "key": {
+      "type": "string",
+      "description": "Musical key (e.g., 'C major', 'D minor')"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["intro", "verse", "chorus", "bridge", "outro"],
+            "description": "Section type"
+          },
+          "startTimeSec": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Start time (seconds)"
+          },
+          "endTimeSec": {
+            "type": "number",
+            "minimum": 0,
+            "description": "End time (seconds)"
+          }
+        },
+        "required": ["name", "startTimeSec", "endTimeSec"]
+      },
+      "description": "Song sections"
+    },
+    "beatMap": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {"type": "number", "minimum": 0},
+          "beatNumber": {"type": "integer", "minimum": 1},
+          "barNumber": {"type": "integer", "minimum": 1},
+          "isDownbeat": {"type": "boolean"}
+        },
+        "required": ["timestamp", "beatNumber", "barNumber", "isDownbeat"]
+      },
+      "description": "Precise beat timestamps"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["easy", "medium", "hard", "expert"],
+      "description": "Song difficulty tier"
+    },
+    "previewStartSec": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Timestamp for preview start (seconds)"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "artist",
+    "bpm",
+    "durationSec",
+    "audioFilePath",
+    "timeSignature",
+    "beatMap",
+    "difficulty"
+  ],
+  "additionalProperties": false
+}

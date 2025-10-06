@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IActiveEffect",
+  "description": "Active visual effect instance",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique instance identifier"
+    },
+    "effectType": {
+      "type": "string",
+      "enum": [
+        "particle_burst",
+        "trail",
+        "aura",
+        "screen_shake",
+        "color_shift",
+        "distortion",
+        "bloom_pulse",
+        "god_rays",
+        "reaction_diffusion",
+        "sdf_morph"
+      ],
+      "description": "Type of visual effect"
+    },
+    "startTime": {
+      "type": "number",
+      "description": "Effect start timestamp"
+    },
+    "durationSec": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Effect duration (seconds)"
+    },
+    "position": {
+      "type": "object",
+      "properties": {
+        "x": {"type": "number"},
+        "y": {"type": "number"},
+        "z": {"type": "number"}
+      },
+      "required": ["x", "y", "z"],
+      "description": "3D position in world space"
+    },
+    "intensity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Effect intensity (0-1)"
+    },
+    "color": {
+      "type": "object",
+      "properties": {
+        "r": {"type": "number", "minimum": 0, "maximum": 1},
+        "g": {"type": "number", "minimum": 0, "maximum": 1},
+        "b": {"type": "number", "minimum": 0, "maximum": 1},
+        "a": {"type": "number", "minimum": 0, "maximum": 1}
+      },
+      "required": ["r", "g", "b", "a"],
+      "description": "RGBA color"
+    },
+    "scale": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Effect scale multiplier"
+    },
+    "fadeInSec": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Fade in duration (seconds)"
+    },
+    "fadeOutSec": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Fade out duration (seconds)"
+    },
+    "attachedToEntity": {
+      "type": "string",
+      "description": "Optional entity ID to attach effect to"
+    },
+    "customParameters": {
+      "type": "object",
+      "description": "Effect-specific parameters"
+    }
+  },
+  "required": [
+    "id",
+    "effectType",
+    "startTime",
+    "durationSec",
+    "position",
+    "intensity",
+    "color",
+    "scale"
+  ],
+  "additionalProperties": false
+}

@@ -45,6 +45,10 @@
       "minimum": 0,
       "maximum": 1,
       "description": "Ultimate mode (0-1)"
+    },
+    "collectionWindowEnd": {
+      "type": "number",
+      "description": "Timestamp marking end of current Qualia collection window (max 1 second)"
     }
   },
   "required": [
@@ -54,7 +58,8 @@
     "flow",
     "chaos",
     "recovery",
-    "transcendence"
+    "transcendence",
+    "collectionWindowEnd"
   ],
   "additionalProperties": false
 }

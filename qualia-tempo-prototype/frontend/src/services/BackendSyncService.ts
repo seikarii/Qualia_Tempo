@@ -248,6 +248,7 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
       chaos: event.qualiaState.chaos || 0,
       recovery: event.qualiaState.recovery || 0,
       transcendence: event.qualiaState.transcendence || 0,
+      collectionWindowEnd: event.qualiaState.collectionWindowEnd || 0,
     };
 
     this.scheduleSync(qualiaRequest);
@@ -441,6 +442,7 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
       chaos: state.chaos || 0,
       recovery: state.recovery || 0,
       transcendence: state.transcendence || 0,
+      collectionWindowEnd: state.collectionWindowEnd || 0,
     };
 
     const url = `${this.config.api.baseUrl}${this.config.api.qualiaEndpoint}`;

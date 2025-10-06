@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IGameSettings",
+  "description": "Game settings configuration",
+  "type": "object",
+  "properties": {
+    "audio": {
+      "type": "object",
+      "properties": {
+        "masterVolume": {"type": "number", "minimum": 0, "maximum": 1},
+        "musicVolume": {"type": "number", "minimum": 0, "maximum": 1},
+        "sfxVolume": {"type": "number", "minimum": 0, "maximum": 1},
+        "audioOffsetMs": {"type": "integer", "description": "Audio calibration offset (milliseconds)"}
+      },
+      "required": ["masterVolume", "musicVolume", "sfxVolume", "audioOffsetMs"]
+    },
+    "gameplay": {
+      "type": "object",
+      "properties": {
+        "timingWindowMs": {
+          "type": "object",
+          "properties": {
+            "perfect": {"type": "integer", "minimum": 1},
+            "good": {"type": "integer", "minimum": 1},
+            "ok": {"type": "integer", "minimum": 1}
+          },
+          "required": ["perfect", "good", "ok"],
+          "description": "Timing windows for hit accuracy (milliseconds)"
+        },
+        "autoplay": {"type": "boolean", "description": "Enable autoplay mode"},
+        "practiceMode": {"type": "boolean", "description": "Enable practice mode"},
+        "showTiming": {"type": "boolean", "description": "Show timing feedback"}
+      },
+      "required": ["timingWindowMs", "autoplay", "practiceMode", "showTiming"]
+    },
+    "visual": {
+      "type": "object",
+      "properties": {
+        "brightness": {"type": "number", "minimum": 0, "maximum": 1},
+        "particleDensity": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "ultra"],
+          "description": "Particle effect density"
+        },
+        "postProcessingEnabled": {"type": "boolean"},
+        "bloomIntensity": {"type": "number", "minimum": 0, "maximum": 1},
+        "showHitEffects": {"type": "boolean"},
+        "showComboText": {"type": "boolean"},
+        "backgroundAnimations": {"type": "boolean"}
+      },
+      "required": [
+        "brightness",
+        "particleDensity",
+        "postProcessingEnabled",
+        "bloomIntensity",
+        "showHitEffects",
+        "showComboText",
+        "backgroundAnimations"
+      ]
+    },
+    "input": {
+      "type": "object",
+      "properties": {
+        "keyBindings": {
+          "type": "object",
+          "properties": {
+            "hitNote": {"type": "array", "items": {"type": "string"}},
+            "dash": {"type": "array", "items": {"type": "string"}},
+            "pause": {"type": "array", "items": {"type": "string"}}
+          },
+          "required": ["hitNote", "dash", "pause"]
+        },
+        "mouseSensitivity": {"type": "number", "minimum": 0.1, "maximum": 5.0}
+      },
+      "required": ["keyBindings", "mouseSensitivity"]
+    },
+    "accessibility": {
+      "type": "object",
+      "properties": {
+        "colorblindMode": {
+          "type": "string",
+          "enum": ["none", "protanopia", "deuteranopia", "tritanopia"]
+        },
+        "screenShakeIntensity": {"type": "number", "minimum": 0, "maximum": 1},
+        "flashingEffects": {"type": "boolean"},
+        "subtitlesEnabled": {"type": "boolean"}
+      },
+      "required": ["colorblindMode", "screenShakeIntensity", "flashingEffects", "subtitlesEnabled"]
+    }
+  },
+  "required": ["audio", "gameplay", "visual", "input", "accessibility"],
+  "additionalProperties": false
+}

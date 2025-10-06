@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AudioLayer",
+  "description": "Audio mixing layer",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique layer identifier"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable layer name"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["music", "sfx", "ambient", "voice", "ui"],
+      "description": "Layer category"
+    },
+    "volume": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Layer master volume (0-1)"
+    },
+    "muted": {
+      "type": "boolean",
+      "description": "Whether layer is muted"
+    },
+    "solo": {
+      "type": "boolean",
+      "description": "Whether layer is soloed (only this plays)"
+    },
+    "activeSources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sourceId": {"type": "string"},
+          "audioClipId": {"type": "string"},
+          "startTime": {"type": "number"},
+          "volume": {"type": "number", "minimum": 0, "maximum": 1},
+          "isLooping": {"type": "boolean"}
+        },
+        "required": ["sourceId", "audioClipId", "startTime", "volume", "isLooping"]
+      },
+      "description": "Currently active audio sources in this layer"
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "effectId": {"type": "string"},
+          "type": {"type": "string", "enum": ["compressor", "eq", "reverb", "delay", "limiter", "distortion"]},
+          "enabled": {"type": "boolean"},
+          "parameters": {"type": "object"}
+        },
+        "required": ["effectId", "type", "enabled"]
+      },
+      "description": "Audio effects chain for this layer"
+    },
+    "routing": {
+      "type": "object",
+      "properties": {
+        "outputBus": {"type": "string", "description": "Output bus identifier"},
+        "sendLevels": {
+          "type": "object",
+          "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1},
+          "description": "Send levels to auxiliary buses"
+        }
+      },
+      "description": "Audio routing configuration"
+    },
+    "qualiaModulation": {
+      "type": "object",
+      "properties": {
+        "volumeByIntensity": {"type": "boolean"},
+        "filterByTranscendence": {"type": "boolean"},
+        "pitchByChaos": {"type": "boolean"}
+      },
+      "description": "How Qualia state modulates this layer"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "type",
+    "volume",
+    "muted",
+    "solo",
+    "activeSources",
+    "effects"
+  ],
+  "additionalProperties": false
+}

@@ -43,6 +43,22 @@
       "items": {
         "$ref": "#/definitions/LyricData"
       }
+    },
+    "patterns": {
+      "type": "array",
+      "description": "Array of boss attack patterns",
+      "items": {
+        "type": "string",
+        "description": "Pattern ID referencing PatternData contract"
+      }
+    },
+    "combos": {
+      "type": "array",
+      "description": "Array of available musical combos",
+      "items": {
+        "type": "string",
+        "description": "Combo ID referencing MusicalComboData contract"
+      }
     }
   },
   "required": [
@@ -53,7 +69,9 @@
     "bpm",
     "duration",
     "noteMap",
-    "lyrics"
+    "lyrics",
+    "patterns",
+    "combos"
   ],
   "additionalProperties": false,
   "definitions": {

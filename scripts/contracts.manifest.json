@@ -1,6 +1,18 @@
 {
-  "CombatData.json": "bf8ed836c6758aec56ba7f77a4d007bc7307d746e8a11169f8e1d6ab3fad91be",
+  "AudioEvent.json": "5fc0b55e162125fe294b28852f0baa443f44e81dd92958b7a30d8170f9ad1ce1",
+  "AudioLayer.json": "1b186d15fbb0d16503f9bfa4110345a5f8f8839146a8f8a9a3237bd13507548f",
+  "BossState.json": "7ba0d95af1ca3849fe0cc7af4460eaabf31389a2c71adff95e072451725a27b7",
+  "CombatData.json": "f3f6c1a29fa3a7a26db5b5befbe9f04579898787b6c224c362f2dfe62ae8b29b",
+  "CombatState.json": "66903dc7b2b89be0ad65327fc1ada5ee9efec8c99885b7677be052077ddb23d8",
+  "IActiveEffect.json": "243d2ba6758f07c89bede8392b17a2730fa213198343b73636029f313b163d1e",
+  "IEnvironmentEffect.json": "b4a7dbfdc20f103ecd0b3762023175206dfc4b067caa561a7b54358275821362",
+  "IGameSettings.json": "130d87c93ad4f6db29f80e94ba69d6b5983a9075278baa4537eb3a97b579abcc",
+  "ILeaderboardEntry.json": "f2553a3698ba09bc4c94111f2463932525aad101eeccad6b033569129950ea26",
+  "IMusicalInputAnalysis.json": "832a38ac34706b7b83331203ae4386027b668e3bb4ccd7b0f6182c7b62855d05",
+  "ISongData.json": "50426cd4466aafa459c92f99c991837b1ba4003daf48c0257c0cd451ea739678",
+  "MusicalComboData.json": "929e1ba686451490aeeb86ed7f4091d0058b0b1d84d0028f9a2791b0ab65cb7b",
   "OptimizedParticle.json": "e0152c059316ce0f3b2b8c21569ff17b052994acc8ce795d1b919719e454163c",
-  "PlayerState.json": "f3f3997f8b12ab495a1590196a1202bd4c43a904cbdd90ec78fc95024785c4cf",
-  "QualiaState.json": "e668953a1143a8dfe5ce8839c1a2d19f2d3bef70a79b0ad1cf426048d0276a8a"
+  "PatternData.json": "0098e39abbdcd570396fe6211639045edf95ecec1367f5122d3014d20e3fb171",
+  "PlayerState.json": "6080b70e56304405c804e85a7f2d7fd7e41ad67fee44569912212ced51f35f27",
+  "QualiaState.json": "2184c493665f39377394754f9e2358302ca4dfa6661c42941bc174eb92ec423d"
 }

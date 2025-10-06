@@ -306,6 +306,7 @@ const GameHUDOverlay: React.FC<GameHUDOverlayProps> = ({ zustandState }) => (
       chaos: zustandState.qualiaState.chaos,
       recovery: 0,
       transcendence: zustandState.qualiaState.transcendence / 100,
+      collectionWindowEnd: zustandState.qualiaState.collectionWindowEnd,
     }}
     playerHealth={zustandState.player.health}
     score={zustandState.player.score}

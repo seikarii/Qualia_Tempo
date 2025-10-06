@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PatternData",
+  "description": "Boss attack pattern definition",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique pattern identifier"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable pattern name"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["projectile", "area", "melee", "summon", "buff"],
+      "description": "Attack pattern type"
+    },
+    "phases": {
+      "type": "array",
+      "items": {"type": "integer", "minimum": 0},
+      "description": "Boss phases where this pattern can appear"
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Time offset from pattern start (seconds)"
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {"type": "number"},
+              "y": {"type": "number"}
+            },
+            "required": ["x", "y"]
+          },
+          "velocity": {
+            "type": "object",
+            "properties": {
+              "x": {"type": "number"},
+              "y": {"type": "number"}
+            },
+            "required": ["x", "y"]
+          },
+          "damage": {
+            "type": "number",
+            "minimum": 0
+          },
+          "visualData": {
+            "type": "object",
+            "properties": {
+              "color": {"type": "string"},
+              "size": {"type": "number", "minimum": 0},
+              "shape": {"type": "string", "enum": ["circle", "square", "triangle", "custom"]}
+            }
+          }
+        },
+        "required": ["timestamp", "position", "damage"]
+      },
+      "description": "Notes/projectiles in this pattern"
+    },
+    "durationSec": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total pattern duration (seconds)"
+    },
+    "cooldownSec": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Cooldown before pattern can repeat (seconds)"
+    },
+    "requiredQualiaThreshold": {
+      "type": "object",
+      "properties": {
+        "aggression": {"type": "number"},
+        "chaos": {"type": "number"}
+      },
+      "description": "Qualia thresholds required to trigger this pattern"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "type",
+    "phases",
+    "notes",
+    "durationSec",
+    "cooldownSec"
+  ],
+  "additionalProperties": false
+}

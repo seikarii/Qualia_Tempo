@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IMusicalInputAnalysis",
+  "description": "Analysis of player input from musical perspective",
+  "type": "object",
+  "properties": {
+    "timestamp": {
+      "type": "number",
+      "description": "Analysis timestamp"
+    },
+    "recentInputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {"type": "string", "enum": ["hit", "dash", "miss"]},
+          "timestamp": {"type": "number"},
+          "timingOffset": {"type": "number", "description": "Offset from beat (ms)"},
+          "accuracy": {"type": "string", "enum": ["perfect", "good", "ok", "miss"]}
+        },
+        "required": ["action", "timestamp", "timingOffset", "accuracy"]
+      },
+      "description": "Last N inputs for analysis window"
+    },
+    "rhythmicConsistency": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "How consistently player hits on beat (0-1)"
+    },
+    "detectedPattern": {
+      "type": "string",
+      "enum": ["none", "steady", "syncopated", "polyrhythmic", "chaotic"],
+      "description": "Detected rhythmic pattern"
+    },
+    "harmonicAlignment": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Alignment with song's harmony (0-1)"
+    },
+    "phraseCompletion": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "How well player completes musical phrases (0-1)"
+    },
+    "dynamicRange": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Variation in input intensity (0-1)"
+    },
+    "suggestedQualiaShift": {
+      "type": "object",
+      "properties": {
+        "intensity": {"type": "number"},
+        "precision": {"type": "number"},
+        "aggression": {"type": "number"},
+        "flow": {"type": "number"},
+        "chaos": {"type": "number"}
+      },
+      "description": "Suggested Qualia adjustments based on analysis"
+    }
+  },
+  "required": [
+    "timestamp",
+    "recentInputs",
+    "rhythmicConsistency",
+    "detectedPattern",
+    "harmonicAlignment",
+    "phraseCompletion",
+    "dynamicRange",
+    "suggestedQualiaShift"
+  ],
+  "additionalProperties": false
+}

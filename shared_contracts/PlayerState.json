@@ -43,6 +43,72 @@
       "type": "number",
       "minimum": 0,
       "description": "Timestamp of last rhythm hit"
+    },
+    "velocity": {
+      "type": "object",
+      "properties": {
+        "x": {"type": "number"},
+        "y": {"type": "number"}
+      },
+      "required": ["x", "y"],
+      "description": "Player velocity vector"
+    },
+    "abilities": {
+      "type": "object",
+      "properties": {
+        "dash": {
+          "type": "object",
+          "properties": {
+            "isReady": {"type": "boolean"},
+            "cooldownRemaining": {"type": "number", "minimum": 0}
+          },
+          "required": ["isReady", "cooldownRemaining"]
+        },
+        "parry": {
+          "type": "object",
+          "properties": {
+            "isReady": {"type": "boolean"},
+            "cooldownRemaining": {"type": "number", "minimum": 0}
+          },
+          "required": ["isReady", "cooldownRemaining"]
+        },
+        "ultimate": {
+          "type": "object",
+          "properties": {
+            "isActive": {"type": "boolean"},
+            "charge": {"type": "number", "minimum": 0, "maximum": 1}
+          },
+          "required": ["isActive", "charge"]
+        }
+      },
+      "required": ["dash", "parry", "ultimate"],
+      "description": "Player ability states"
+    },
+    "buffs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "durationRemaining": {"type": "number", "minimum": 0}
+        },
+        "required": ["id", "name", "durationRemaining"]
+      },
+      "description": "Active buffs"
+    },
+    "debuffs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "durationRemaining": {"type": "number", "minimum": 0}
+        },
+        "required": ["id", "name", "durationRemaining"]
+      },
+      "description": "Active debuffs"
     }
   },
   "required": [
@@ -51,7 +117,11 @@
     "combo", 
     "score",
     "isMoving",
-    "lastRhythmHit"
+    "lastRhythmHit",
+    "velocity",
+    "abilities",
+    "buffs",
+    "debuffs"
   ],
   "additionalProperties": false
 }

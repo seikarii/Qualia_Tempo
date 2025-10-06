@@ -276,6 +276,14 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
       score: this.config.resetValues.player.score,
       isMoving: this.config.resetValues.player.isMoving,
       lastRhythmHit: this.config.resetValues.player.lastRhythmHit,
+      velocity: { x: 0, y: 0 },
+      abilities: {
+        dash: { isReady: true, cooldownRemaining: 0 },
+        parry: { isReady: true, cooldownRemaining: 0 },
+        ultimate: { isActive: false, charge: 0 },
+      },
+      buffs: [],
+      debuffs: [],
     };
   }
 
@@ -291,6 +299,7 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
       chaos: this.config.resetValues.qualiaState.chaos,
       recovery: this.config.resetValues.qualiaState.recovery,
       transcendence: this.config.resetValues.qualiaState.transcendence,
+      collectionWindowEnd: 0, // No active collection window on reset
     };
   }
 

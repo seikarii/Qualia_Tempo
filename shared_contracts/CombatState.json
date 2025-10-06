@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CombatState",
+  "description": "Overall combat state structure",
+  "type": "object",
+  "properties": {
+    "isActive": {
+      "type": "boolean",
+      "description": "Whether combat is currently active"
+    },
+    "currentPhase": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Current phase of the combat"
+    },
+    "elapsedTime": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Elapsed time since combat start (seconds)"
+    },
+    "songProgress": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Progress through the song (0-1)"
+    },
+    "activeEffects": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "IDs of active visual effects"
+    },
+    "environmentEffects": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "IDs of active environment effects"
+    },
+    "qualiaEventHistory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "timestamp": {"type": "number"},
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {"type": "number"},
+              "y": {"type": "number"}
+            },
+            "required": ["x", "y"]
+          },
+          "value": {"type": "number"}
+        },
+        "required": ["id", "timestamp", "position", "value"]
+      },
+      "description": "Recent history of Qualia events"
+    }
+  },
+  "required": [
+    "isActive",
+    "currentPhase",
+    "elapsedTime",
+    "songProgress",
+    "activeEffects",
+    "environmentEffects",
+    "qualiaEventHistory"
+  ],
+  "additionalProperties": false
+}

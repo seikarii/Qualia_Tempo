@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IEnvironmentEffect",
+  "description": "Environmental effect affecting gameplay area",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique effect identifier"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "gravity_shift",
+        "time_dilation",
+        "color_filter",
+        "ambient_particles",
+        "lighting_change",
+        "fog",
+        "wind",
+        "barrier"
+      ],
+      "description": "Environment effect type"
+    },
+    "startTime": {
+      "type": "number",
+      "description": "Effect start timestamp"
+    },
+    "durationSec": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Effect duration (seconds, -1 for permanent)"
+    },
+    "affectedArea": {
+      "type": "object",
+      "properties": {
+        "shape": {"type": "string", "enum": ["circle", "rectangle", "global"]},
+        "center": {
+          "type": "object",
+          "properties": {
+            "x": {"type": "number"},
+            "y": {"type": "number"}
+          }
+        },
+        "radius": {"type": "number", "minimum": 0},
+        "width": {"type": "number", "minimum": 0},
+        "height": {"type": "number", "minimum": 0}
+      },
+      "required": ["shape"]
+    },
+    "intensity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Effect intensity (0-1)"
+    },
+    "gameplayModifiers": {
+      "type": "object",
+      "properties": {
+        "playerSpeedMultiplier": {"type": "number"},
+        "gravityMultiplier": {"type": "number"},
+        "damageMultiplier": {"type": "number"},
+        "scoreMultiplier": {"type": "number"}
+      },
+      "description": "Gameplay parameter modifiers"
+    },
+    "visualParameters": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "type": "object",
+          "properties": {
+            "r": {"type": "number", "minimum": 0, "maximum": 1},
+            "g": {"type": "number", "minimum": 0, "maximum": 1},
+            "b": {"type": "number", "minimum": 0, "maximum": 1},
+            "a": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        },
+        "particleDensity": {"type": "number", "minimum": 0},
+        "distortionAmount": {"type": "number", "minimum": 0, "maximum": 1}
+      },
+      "description": "Visual rendering parameters"
+    },
+    "triggeredByQualiaState": {
+      "type": "object",
+      "properties": {
+        "transcendence": {"type": "number", "description": "Transcendence threshold"},
+        "chaos": {"type": "number", "description": "Chaos threshold"}
+      },
+      "description": "Optional Qualia thresholds that trigger this effect"
+    }
+  },
+  "required": [
+    "id",
+    "type",
+    "startTime",
+    "durationSec",
+    "affectedArea",
+    "intensity"
+  ],
+  "additionalProperties": false
+}
