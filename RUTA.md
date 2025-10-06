@@ -166,10 +166,27 @@ Esta es la hoja de ruta definitiva para migrar Qualia Tempo de la arquitectura v
      - Pydantic models: backend/api/models.py (28KB)
    - **Fix realizado**: pyproject.toml MyPy overrides (TOML syntax)
 
-2. **Testing Infrastructure** (Día 3):
-   - [ ] Crear test fixtures para nuevos contracts
-   - [ ] Setup test containers para nuevos servicios
-   - [ ] Crear mocks base para servicios v2
+2. **Testing Infrastructure** (Día 3): ✅ **COMPLETADO**
+   - [x] Crear test fixtures para nuevos contracts ✅
+   - [x] Setup test containers para nuevos servicios ✅
+   - [x] Crear mocks base para servicios v2 ✅
+   - **Archivos creados**:
+     - 14 test fixtures en `frontend/src/testing/fixtures/contracts/`:
+       - BossState, CombatState, MusicalComboData, PatternData
+       - ISongData, ILeaderboardEntry, IGameSettings, IMusicalInputAnalysis
+       - IActiveEffect, IEnvironmentEffect, AudioEvent, AudioLayer
+       - QualiaState (actualizado), PlayerState (actualizado)
+     - 4 interfaces v2 en `frontend/src/services/interfaces/`:
+       - IFFTAnalyzerService, IAudio8DService
+       - IMusicalComboDetectorService, IKairosVisualEngine
+     - 4 mocks high-fidelity en `frontend/src/testing/mocks/`:
+       - fft-analyzer-service.mock.ts
+       - audio-8d-service.mock.ts
+       - musical-combo-detector-service.mock.ts
+       - kairos-visual-engine.mock.ts
+     - Actualizaciones en `inversify.types.ts`: 8 nuevos TYPES symbols
+     - Actualizaciones en `test-container-factory.ts`: Bindings + Configs default
+   - **Documento de referencia**: `V2_SERVICES_TESTING_PREP.md`
 
 3. **Documentation** (Día 4-5):
    - [ ] Auditar todos los servicios actuales

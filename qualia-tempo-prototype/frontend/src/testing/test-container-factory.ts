@@ -52,6 +52,11 @@ import type { IAudioAnalysisService } from "../services/interfaces/IAudioAnalysi
 import type { IPhysicsService } from "../services/interfaces/IPhysicsService";
 import type { IInputStateService } from "../services/interfaces/IInputStateService";
 import type { IWebAudioAPIService } from "../services/interfaces/IWebAudioAPIService";
+// QUALIA.CODE v2.0: v2 Service interfaces (RUTA.md Phase 4 & 5)
+import type { IFFTAnalyzerService } from "../services/interfaces/IFFTAnalyzerService";
+import type { IAudio8DService } from "../services/interfaces/IAudio8DService";
+import type { IMusicalComboDetectorService } from "../services/interfaces/IMusicalComboDetectorService";
+import type { IKairosVisualEngine } from "../services/interfaces/IKairosVisualEngine";
 
 // Import real services for pure utilities (no side effects)
 import { ColorService } from "../services/ColorService";
@@ -93,6 +98,11 @@ import { mockRhythmicMovementController } from "./mocks/rhythmic-movement-contro
 import { mockBackendSyncService } from "./mocks/backend-sync-service.mock";
 import { mockInputStateService } from "./mocks/input-state-service.mock";
 // mockKeyAdapter removed - @AdaptAndEmit decorator not used in RhythmicMovementController
+// QUALIA.CODE v2.0: v2 Services (RUTA.md Phase 4 & 5)
+import { mockFFTAnalyzerService } from "./mocks/fft-analyzer-service.mock";
+import { mockAudio8DService } from "./mocks/audio-8d-service.mock";
+import { mockMusicalComboDetectorService } from "./mocks/musical-combo-detector-service.mock";
+import { mockKairosVisualEngine } from "./mocks/kairos-visual-engine.mock";
 
 // ===================================================================================
 // DIRECTIVE 006: DEFAULT TEST CONFIGURATION BINDINGS
@@ -227,6 +237,94 @@ const defaultRhythmicMovementConfig: RhythmicMovementConfig = {
   sequenceDifficultyVarietyBonusMultiplier: 0.5,
   flowBpmMultiplier: 1.2
 } as RhythmicMovementConfig;
+
+// ============================================================================
+// QUALIA.CODE v2.0: v2 Services Default Configurations (RUTA.md Phase 4 & 5)
+// ============================================================================
+
+// FFT Analyzer Default Config
+const defaultFFTAnalyzerConfig: Record<string, unknown> = {
+  fftSize: 2048,
+  smoothingTimeConstant: 0.8,
+  minDecibels: -100,
+  maxDecibels: -30,
+  frequencyBands: {
+    bass: { start: 0, end: 4 },
+    mid: { start: 5, end: 20 },
+    treble: { start: 21, end: 31 },
+  },
+  updateInterval: 16, // 60fps
+  messages: {
+    fftInitialized: 'FFT Initialized',
+    analysisStarted: 'Analysis Started',
+    analysisStopped: 'Analysis Stopped',
+  },
+};
+
+// Audio 8D Default Config
+const defaultAudio8DConfig: Record<string, unknown> = {
+  maxDistance: 50,
+  rolloffFactor: 1.0,
+  refDistance: 1.0,
+  coneInnerAngle: 360,
+  coneOuterAngle: 0,
+  coneOuterGain: 0,
+  panningModel: 'HRTF',
+  distanceModel: 'inverse',
+  messages: {
+    serviceInitialized: '8D Audio Initialized',
+    sourceAdded: 'Audio Source Added',
+    sourceRemoved: 'Audio Source Removed',
+  },
+};
+
+// Musical Combo Detector Default Config
+const defaultMusicalComboDetectorConfig: Record<string, unknown> = {
+  maxSequenceLength: 7, // Q-E-R-T-F-G-C
+  sequenceTimeoutMs: 3000,
+  cooldownMs: 5000,
+  validKeys: ['q', 'e', 'r', 't', 'f', 'g', 'c'],
+  noteMapping: {
+    q: 'C4', e: 'D4', r: 'E4', t: 'F4',
+    f: 'G4', g: 'A4', c: 'B4',
+  },
+  messages: {
+    comboStarted: 'Combo Started',
+    comboCompleted: 'Combo Completed',
+    comboFailed: 'Combo Failed',
+  },
+};
+
+// Kairos Visual Engine Default Config
+const defaultKairosVisualEngineConfig: Record<string, unknown> = {
+  renderer: {
+    antialias: true,
+    powerPreference: 'high-performance',
+    alpha: false,
+  },
+  camera: {
+    fov: 75,
+    near: 0.1,
+    far: 1000,
+    position: { x: 0, y: 10, z: 20 },
+  },
+  postProcessing: {
+    bloom: { enabled: true, strength: 1.5, threshold: 0.8 },
+    taa: { enabled: true },
+    hbao: { enabled: true, radius: 0.5 },
+    godRays: { enabled: false }, // Phase 6
+  },
+  performance: {
+    targetFPS: 60,
+    adaptiveQuality: true,
+    shadowMapSize: 2048,
+  },
+  messages: {
+    engineInitialized: 'Kairos Engine Initialized',
+    sceneUpdated: 'Scene Updated',
+    renderError: 'Render Error',
+  },
+};
 
 // --- Default Params Factory Functions ---
 
@@ -387,6 +485,11 @@ export interface MockServices {
   mockSubtitleService: ISubtitleService;
   mockRhythmicMovementController: IRhythmicMovementController;
   mockBackendSyncService: IBackendSyncService;
+  // QUALIA.CODE v2.0: v2 Services (RUTA.md Phase 4 & 5)
+  mockFFTAnalyzerService: IFFTAnalyzerService;
+  mockAudio8DService: IAudio8DService;
+  mockMusicalComboDetectorService: IMusicalComboDetectorService;
+  mockKairosVisualEngine: IKairosVisualEngine;
 }
 
 /**
@@ -434,6 +537,12 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   testContainer.bind<IInputStateService>(TYPES.IInputStateService).toConstantValue(mockInputStateService);
   testContainer.bind<IWebAudioAPIService>(TYPES.IWebAudioAPIService).toConstantValue(mockWebAudioAPIService);
   
+  // QUALIA.CODE v2.0: v2 Services (RUTA.md Phase 4 & 5) - HIGH-FIDELITY MOCKS
+  testContainer.bind<IFFTAnalyzerService>(TYPES.IFFTAnalyzerService).toConstantValue(mockFFTAnalyzerService);
+  testContainer.bind<IAudio8DService>(TYPES.IAudio8DService).toConstantValue(mockAudio8DService);
+  testContainer.bind<IMusicalComboDetectorService>(TYPES.IMusicalComboDetectorService).toConstantValue(mockMusicalComboDetectorService);
+  testContainer.bind<IKairosVisualEngine>(TYPES.IKairosVisualEngine).toConstantValue(mockKairosVisualEngine);
+
   // QUALIA.CODE v2.0: Audio Analysis and Physics Services - BIND REAL SERVICES FOR UNIT TESTING
   // Use .inTransientScope() to create fresh instances for each test, preventing state contamination
   testContainer.bind<IAudioAnalysisService>(TYPES.IAudioAnalysisService).to(AudioAnalysisService).inTransientScope();
@@ -509,6 +618,12 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   testContainer.bind<RhythmicMovementControllerParams>(TYPES.RhythmicMovementControllerParams).toConstantValue(rhythmicMovementParams);
   testContainer.bind<PhysicsServiceParams>(TYPES.PhysicsServiceParams).toConstantValue(physicsServiceParams);
   testContainer.bind<AudioAnalysisServiceParams>(TYPES.AudioAnalysisServiceParams).toConstantValue(audioAnalysisServiceParams);
+
+  // QUALIA.CODE v2.0: v2 Services Config Bindings (RUTA.md Phase 4 & 5)
+  testContainer.bind<Record<string, unknown>>(TYPES.FFTAnalyzerServiceConfig).toConstantValue(defaultFFTAnalyzerConfig);
+  testContainer.bind<Record<string, unknown>>(TYPES.Audio8DServiceConfig).toConstantValue(defaultAudio8DConfig);
+  testContainer.bind<Record<string, unknown>>(TYPES.MusicalComboDetectorServiceConfig).toConstantValue(defaultMusicalComboDetectorConfig);
+  testContainer.bind<Record<string, unknown>>(TYPES.KairosVisualEngineConfig).toConstantValue(defaultKairosVisualEngineConfig);
 
   // STEP 3: Apply any test-specific overrides.
   for (const override of overrides) {

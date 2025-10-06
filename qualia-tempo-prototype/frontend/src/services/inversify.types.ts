@@ -144,6 +144,23 @@ export const TYPES = {
   // ===== TEMPORAL EFFECTS (PHASE 4) =====
   IJitterService: Symbol.for("IJitterService"),
   JitterServiceConfig: Symbol.for("JitterServiceConfig"),
+
+  // ===== v2 SERVICES (RUTA.md Phase 4 & 5) =====
+  // Phase 4: Advanced Audio Services
+  IFFTAnalyzerService: Symbol.for("IFFTAnalyzerService"),
+  IAudio8DService: Symbol.for("IAudio8DService"),
+  IMusicalComboDetectorService: Symbol.for("IMusicalComboDetectorService"),
+
+  // Phase 4: Audio Config
+  FFTAnalyzerServiceConfig: Symbol.for("FFTAnalyzerServiceConfig"),
+  Audio8DServiceConfig: Symbol.for("Audio8DServiceConfig"),
+  MusicalComboDetectorServiceConfig: Symbol.for("MusicalComboDetectorServiceConfig"),
+
+  // Phase 5: Visual Services
+  IKairosVisualEngine: Symbol.for("IKairosVisualEngine"),
+
+  // Phase 5: Visual Config
+  KairosVisualEngineConfig: Symbol.for("KairosVisualEngineConfig"),
 } as const;
 
 // Type-safe access to TYPES
