@@ -1,48 +1,49 @@
 /**
- * QUALIA.CODE v1.1 - IApplicationInitializerService Contracts
+ * QUALIA.CODE v2.0 - IApplicationInitializerService Contracts
  * Single Source of Truth for ApplicationInitializerService data structures.
- * This file is manually maintained for ApplicationInitializerService-specific contracts.
+ * 
+ * ARCHITECTURAL EVOLUTION: Hybrid Injection Pattern
+ * - Infrastructure Services: Logger, EventBus, Config
+ * - Orchestration Services: Services requiring explicit sequencing
+ * - Managed Services: Auto-discovered IBaseService implementers (via multi-injection)
  */
 
-import type { IBackendSyncService } from "../interfaces/IBackendSyncService";
+import type { ILogger } from "../interfaces/ILogger";
+import type { IEventBus } from "../interfaces/IEventBus";
 import type { IGameStateStoreService } from "../interfaces/IGameStateStoreService";
-import type { IGameControllerService } from "../interfaces/IGameControllerService";
+import type { IBackendSyncService } from "../interfaces/IBackendSyncService";
 import type { IRhythmicMovementController } from "../interfaces/IRhythmicMovementController";
-import type { INotificationService } from "../interfaces/INotificationService";
 import type { IErrorReportingService } from "../interfaces/IErrorReportingService";
 import type { IDebugService } from "../interfaces/IDebugService";
+import type { INotificationService } from "../interfaces/INotificationService";
 import type { IStateStreamingService } from "../interfaces/IStateStreamingService";
-import type { ILogger } from "../interfaces/ILogger";
-import type { IGameplayMechanicsService } from "../interfaces/IGameplayMechanicsService";
-import type { IViewLogicService } from "../interfaces/IViewLogicService";
-import type { ISubtitleService } from "../interfaces/ISubtitleService";
-import type { IDebugOrchestratorService } from "../interfaces/IDebugOrchestratorService";
-import type { IBrowserEventsService } from "../interfaces/IBrowserEventsService";
-import type { IEventBus } from "../interfaces/IEventBus";
-import type { IQualiaStateCalculatorService } from "../interfaces/IQualiaStateCalculatorService";
 
-// Parameter object for ApplicationInitializerService constructor
+/**
+ * QUALIA.CODE v2.0: Hybrid Injection Pattern
+ * Parameter object for ApplicationInitializerService constructor
+ * 
+ * ARCHITECTURAL PRINCIPLE: Separation of Concerns
+ * - Infrastructure Services: Logger, EventBus, Config (always needed)
+ * - Orchestration Services: Services that require explicit sequencing, specific method calls,
+ *   or complex initialization logic beyond simple `initialize()`
+ * - Managed Services: Services implementing IBaseService are auto-discovered via multi-injection
+ *   for @OnEvent lifecycle management
+ * 
+ * This interface contains services that ApplicationInitializerService explicitly orchestrates
+ * in a specific sequence with specific method calls.
+ */
 export interface ApplicationInitializerServiceParams {
   config: AppInitializerConfig;
-  backendSyncService: IBackendSyncService;
-  gameStateStoreService: IGameStateStoreService;
-  gameControllerService: IGameControllerService;
-  rhythmicMovementController: IRhythmicMovementController;
-  notificationService: INotificationService;
-  errorReportingService: IErrorReportingService;
-  debugService: IDebugService;
-  stateStreamingService: IStateStreamingService;
   logger: ILogger;
   eventBus: IEventBus;
-  gameplayMechanicsService: IGameplayMechanicsService;
-  viewLogicService: IViewLogicService;
-  subtitleService: ISubtitleService;
-  debugOrchestratorService: IDebugOrchestratorService;
-  browserEventsService: IBrowserEventsService;
-  qualiaStateCalculatorService: IQualiaStateCalculatorService;
-  // QUALIA.CODE v2.0: Audio Analysis and Physics Services
-  audioAnalysisService: import("../interfaces/IAudioAnalysisService").IAudioAnalysisService;
-  physicsService: import("../interfaces/IPhysicsService").IPhysicsService;
+  // Orchestration services - explicit sequencing required
+  gameStateStoreService: IGameStateStoreService;
+  backendSyncService: IBackendSyncService;
+  rhythmicMovementController: IRhythmicMovementController;
+  errorReportingService: IErrorReportingService;
+  debugService: IDebugService;
+  notificationService: INotificationService;
+  stateStreamingService: IStateStreamingService;
 }
 
 // Specific state update interfaces for type safety

@@ -96,6 +96,7 @@ import type { ICoordinateSystemService } from "./interfaces/ICoordinateSystemSer
 import type { IToneFactoryService } from "../audio/interfaces/IToneFactoryService";
 import type { IStateMergerService } from "./interfaces/IStateMergerService";
 import type { IAudioSystemBridge } from "./interfaces/IAudioSystemBridge";
+import type { IBaseService } from "./interfaces/IBaseService";
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { ConfigurationService } from "./ConfigurationService";
@@ -238,30 +239,51 @@ container
   .to(QualiaStateCalculatorService)
   .inSingletonScope();
 container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IQualiaStateCalculatorService);
+container
   .bind<IBackendSyncService>(TYPES.IBackendSyncService)
   .to(BackendSyncService)
   .inSingletonScope();
+container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IBackendSyncService);
 container
   .bind<IAudioService>(TYPES.IAudioService)
   .to(AudioService)
   .inSingletonScope();
 container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IAudioService);
+container
   .bind<IGameControllerService>(TYPES.IGameControllerService)
   .to(GameControllerService)
   .inSingletonScope();
+container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IGameControllerService);
 container
   .bind<IGameInputControllerService>(TYPES.IGameInputControllerService)
   .to(GameInputControllerService)
   .inSingletonScope();
 container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IGameInputControllerService);
+container
   .bind<IGameStateStoreService>(TYPES.IGameStateStoreService)
   .to(GameStateStoreService)
   .inSingletonScope();
+container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IGameStateStoreService);
 // QUALIA.CODE: Complete service bindings - All services implemented and bound
 container
   .bind<INotificationService>(TYPES.INotificationService)
   .to(NotificationService)
   .inSingletonScope();
+container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.INotificationService);
 // QUALIA.CODE v1.1: StateMergerService - Deep merge for state integrity
 container
   .bind<IStateMergerService>(TYPES.IStateMergerService)
@@ -272,9 +294,15 @@ container
   .to(ErrorReportingService)
   .inSingletonScope();
 container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IErrorReportingService);
+container
   .bind<IDebugService>(TYPES.IDebugService)
   .to(DebugService)
   .inSingletonScope();
+container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IDebugService);
 container
   .bind<IRhythmicMovementController>(TYPES.IRhythmicMovementController)
   .to(RhythmicMovementController)
@@ -312,6 +340,9 @@ container
   .bind<IFrontendRenderingService>(TYPES.IFrontendRenderingService)
   .to(FrontendRenderingService)
   .inSingletonScope();
+container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IFrontendRenderingService);
 
 container
   .bind<IStateStreamingService>(TYPES.IStateStreamingService)
@@ -398,6 +429,9 @@ container
   .bind<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService)
   .to(DebugOrchestratorService)
   .inSingletonScope();
+container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IDebugOrchestratorService);
 
 // ===== QUALIA.CODE v2.0: AUDIO ANALYSIS AND PHYSICS SERVICES =====
 import { AudioAnalysisService } from './AudioAnalysisService';
@@ -409,6 +443,9 @@ container
   .bind<IAudioAnalysisService>(TYPES.IAudioAnalysisService)
   .to(AudioAnalysisService)
   .inSingletonScope();
+container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IAudioAnalysisService);
 
 container
   .bind<IPhysicsService>(TYPES.IPhysicsService)
@@ -860,33 +897,32 @@ function bindLevel4ServiceParams(fullConfig: FullGameConfig): void {
 // ============================================================================
 /**
  * Level 5 Service Params Binding - Application Orchestrator
- * Dependencies: ALL services from Levels 0-4
+ * Dependencies: Infrastructure + Orchestration Services
  * 
- * This is the final level that coordinates all other services.
+ * QUALIA.CODE v2.0: Hybrid Injection Pattern
+ * - Infrastructure Services: Logger, EventBus, Config (always needed)
+ * - Orchestration Services: Services requiring explicit sequencing (injected here)
+ * - Managed Services: IBaseService implementers (auto-discovered via @multiInject)
+ * 
+ * This hybrid approach:
+ * - Keeps explicit control for complex orchestration sequences
+ * - Automates @OnEvent lifecycle management via multi-injection
+ * - Eliminates manual lists for simple initialize() calls
  */
 function bindLevel5ServiceParams(fullConfig: FullGameConfig): void {
-  // Application Initializer - needs ALL services from levels 0-4
+  // Application Initializer - receives infrastructure + orchestration services
+  // Managed services (for @OnEvent lifecycle) are auto-injected via multi-injection
   safeBindConstant<ApplicationInitializerServiceParams>(TYPES.ApplicationInitializerServiceParams, {
     config: fullConfig.applicationInitializer,
-    backendSyncService: container.get<IBackendSyncService>(TYPES.IBackendSyncService),
-    gameStateStoreService: container.get<IGameStateStoreService>(TYPES.IGameStateStoreService),
-    gameControllerService: container.get<IGameControllerService>(TYPES.IGameControllerService),
-    rhythmicMovementController: container.get<IRhythmicMovementController>(TYPES.IRhythmicMovementController),
-    notificationService: container.get<INotificationService>(TYPES.INotificationService),
-    errorReportingService: container.get<IErrorReportingService>(TYPES.IErrorReportingService),
-    debugService: container.get<IDebugService>(TYPES.IDebugService),
-    stateStreamingService: container.get<IStateStreamingService>(TYPES.IStateStreamingService),
     logger: container.get<ILogger>(TYPES.ILogger),
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    gameplayMechanicsService: container.get<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService),
-    viewLogicService: container.get<IViewLogicService>(TYPES.IViewLogicService),
-    subtitleService: container.get<ISubtitleService>(TYPES.ISubtitleService),
-    debugOrchestratorService: container.get<IDebugOrchestratorService>(TYPES.IDebugOrchestratorService),
-    browserEventsService: container.get<IBrowserEventsService>(TYPES.IBrowserEventsService),
-    qualiaStateCalculatorService: container.get<IQualiaStateCalculatorService>(TYPES.IQualiaStateCalculatorService),
-    // QUALIA.CODE v2.0: Audio Analysis and Physics Services
-    audioAnalysisService: container.get<IAudioAnalysisService>(TYPES.IAudioAnalysisService),
-    physicsService: container.get<IPhysicsService>(TYPES.IPhysicsService),
+    gameStateStoreService: container.get<IGameStateStoreService>(TYPES.IGameStateStoreService),
+    backendSyncService: container.get<IBackendSyncService>(TYPES.IBackendSyncService),
+    rhythmicMovementController: container.get<IRhythmicMovementController>(TYPES.IRhythmicMovementController),
+    errorReportingService: container.get<IErrorReportingService>(TYPES.IErrorReportingService),
+    debugService: container.get<IDebugService>(TYPES.IDebugService),
+    notificationService: container.get<INotificationService>(TYPES.INotificationService),
+    stateStreamingService: container.get<IStateStreamingService>(TYPES.IStateStreamingService),
   });
 }
 

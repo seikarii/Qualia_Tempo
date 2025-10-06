@@ -168,6 +168,19 @@ export class QualiaStateCalculatorService
     const { action, context } = event;
 
     switch (action) {
+      case PLAYER_ACTIONS.START_GAME:
+        // Game start doesn't directly affect QualiaState, handled by GameControllerService
+        this.logger.debug(`🎮 [QualiaCalculator] Game started - no QualiaState impact`);
+        break;
+      case PLAYER_ACTIONS.PAUSE_GAME:
+        // Game pause doesn't directly affect QualiaState
+        this.logger.debug(`🎮 [QualiaCalculator] Game paused - no QualiaState impact`);
+        break;
+      case PLAYER_ACTIONS.RESET_GAME:
+        // Game reset - reset QualiaState to initial
+        this.currentState = this.createInitialState();
+        this.logger.info(`🎮 [QualiaCalculator] Game reset - QualiaState reset to initial`);
+        break;
       case PLAYER_ACTIONS.HIT_NOTE:
         this.onNoteHit(context);
         break;

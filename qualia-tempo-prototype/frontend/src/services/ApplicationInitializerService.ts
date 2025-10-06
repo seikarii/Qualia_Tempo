@@ -3,11 +3,18 @@
  * Orchestrates the application initialization sequence.
  */
 
-import { injectable, inject } from "inversify";
+/**
+ * QUALIA.CODE v2.0 - ApplicationInitializerService
+ * Orchestrates the application initialization sequence with AUTOMATED service lifecycle management.
+ * 
+ * ARCHITECTURAL UPGRADE: Eliminates manual service lists using InversifyJS multi-injection.
+ * Services implementing IBaseService are automatically discovered and managed.
+ */
+
+import { injectable, inject, multiInject } from "inversify";
 import { TYPES } from "./inversify.types";
 import type { IBackendSyncService } from "./interfaces/IBackendSyncService";
 import type { IGameStateStoreService } from "./interfaces/IGameStateStoreService";
-import type { IGameControllerService } from "./interfaces/IGameControllerService";
 import type { IRhythmicMovementController } from "./interfaces/IRhythmicMovementController";
 import type { INotificationService } from "./interfaces/INotificationService";
 import type { IErrorReportingService } from "./interfaces/IErrorReportingService";
@@ -17,77 +24,61 @@ import type { ILogger } from "./interfaces/ILogger";
 import type { IApplicationInitializerService } from "./interfaces/IApplicationInitializerService";
 import type { AppInitializerConfig } from "./contracts/IApplicationInitializerService.contracts";
 import type { ApplicationInitializerServiceParams } from "./contracts/IApplicationInitializerService.contracts";
-import type { IGameplayMechanicsService } from "./interfaces/IGameplayMechanicsService";
-import type { IViewLogicService } from "./interfaces/IViewLogicService";
-import type { ISubtitleService } from "./interfaces/ISubtitleService";
-import type { IDebugOrchestratorService } from "./interfaces/IDebugOrchestratorService";
-import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
 import type { IEventBus } from "./interfaces/IEventBus";
-import type { IQualiaStateCalculatorService } from "./interfaces/IQualiaStateCalculatorService";
-import type { IAudioAnalysisService } from "./interfaces/IAudioAnalysisService";
-import type { IPhysicsService } from "./interfaces/IPhysicsService";
 import { logMethod, catchError, IBaseService, initializeEventSubscriptions, cleanupEventSubscriptions } from "../utils/decorators";
 
 @injectable()
 export class ApplicationInitializerService
   implements IApplicationInitializerService
 {
+  // QUALIA.CODE v2.0: Hybrid Injection Pattern
+  // Infrastructure services
   private readonly config: AppInitializerConfig;
-  private readonly backendSyncService: IBackendSyncService;
-  private readonly gameStateStoreService: IGameStateStoreService;
-  private readonly gameControllerService: IGameControllerService;
-  private readonly rhythmicMovementController: IRhythmicMovementController;
-  private readonly notificationService: INotificationService;
-  private readonly errorReportingService: IErrorReportingService;
-  private readonly debugService: IDebugService;
-  private readonly stateStreamingService: IStateStreamingService;
   private readonly logger: ILogger;
   private readonly eventBus: IEventBus;
 
-  // QUALIA.CODE v1.1: New Services with @OnEvent lifecycle
-  private readonly gameplayMechanicsService: IGameplayMechanicsService;
-  private readonly viewLogicService: IViewLogicService;
-  private readonly subtitleService: ISubtitleService;
-  private readonly debugOrchestratorService: IDebugOrchestratorService;
-  private readonly browserEventsService: IBrowserEventsService;
-  private readonly qualiaStateCalculatorService: IQualiaStateCalculatorService;
+  // Orchestration services - explicit sequencing required
+  private readonly gameStateStoreService: IGameStateStoreService;
+  private readonly backendSyncService: IBackendSyncService;
+  private readonly rhythmicMovementController: IRhythmicMovementController;
+  private readonly errorReportingService: IErrorReportingService;
+  private readonly debugService: IDebugService;
+  private readonly notificationService: INotificationService;
+  private readonly stateStreamingService: IStateStreamingService;
 
-  // QUALIA.CODE v2.0: Audio Analysis and Physics Services
-  private readonly audioAnalysisService: IAudioAnalysisService;
-  private readonly physicsService: IPhysicsService;
+  // QUALIA.CODE v2.0: AUTOMATED SERVICE DISCOVERY
+  // All services implementing IBaseService are automatically injected here
+  // No manual list maintenance required - InversifyJS multi-injection handles it
+  private readonly managedServices: IBaseService[];
 
   private isStarted = false;
-  private readonly managedServices: IBaseService[] = [];
 
   constructor(
     @inject(TYPES.ApplicationInitializerServiceParams) params: ApplicationInitializerServiceParams,
+    @multiInject(TYPES.ManagedService) managedServices: IBaseService[]
   ) {
+    // QUALIA.CODE v2.0: Hybrid dependency injection
+    // Infrastructure services
     this.config = params.config;
-    this.backendSyncService = params.backendSyncService;
-    this.gameStateStoreService = params.gameStateStoreService;
-    this.gameControllerService = params.gameControllerService;
-    this.rhythmicMovementController = params.rhythmicMovementController;
-    this.notificationService = params.notificationService;
-    this.errorReportingService = params.errorReportingService;
-    this.debugService = params.debugService;
-    this.stateStreamingService = params.stateStreamingService;
     this.logger = params.logger;
     this.eventBus = params.eventBus;
     
-    // QUALIA.CODE v1.1: Initialize new services
-    this.gameplayMechanicsService = params.gameplayMechanicsService;
-    this.viewLogicService = params.viewLogicService;
-    this.subtitleService = params.subtitleService;
-    this.debugOrchestratorService = params.debugOrchestratorService;
-    this.browserEventsService = params.browserEventsService;
-    this.qualiaStateCalculatorService = params.qualiaStateCalculatorService;
+    // Orchestration services - explicit sequencing
+    this.gameStateStoreService = params.gameStateStoreService;
+    this.backendSyncService = params.backendSyncService;
+    this.rhythmicMovementController = params.rhythmicMovementController;
+    this.errorReportingService = params.errorReportingService;
+    this.debugService = params.debugService;
+    this.notificationService = params.notificationService;
+    this.stateStreamingService = params.stateStreamingService;
     
-    // QUALIA.CODE v2.0: Initialize audio analysis and physics services
-    this.audioAnalysisService = params.audioAnalysisService;
-    this.physicsService = params.physicsService;
+    // QUALIA.CODE v2.0: AUTOMATED SERVICE DISCOVERY
+    // All managed services are automatically discovered via multi-injection
+    this.managedServices = managedServices;
     
     // Configuration is injected and available immediately
     this.logger.info(this.config.messages.serviceConstructed);
+    this.logger.info(`🤖 Automatically discovered ${managedServices.length} managed services via IoC multi-injection`);
   }
 
   @logMethod
@@ -142,88 +133,95 @@ export class ApplicationInitializerService
     this.notificationService.start();
     this.logger.info(this.config.messages.transversalServicesStarted);
 
-    // Step 4: QUALIA.CODE v1.1 - Initialize new services with @OnEvent lifecycle
-    this.initializeNewServices();
+    // Step 4: QUALIA.CODE v2.0 - Initialize ALL managed services with @OnEvent lifecycle
+    // This is now fully automated via multi-injection - no manual list maintenance
+    this.initializeManagedServices();
 
     // Step 5: Start state streaming service (needs EventBus to be available)
     await this.stateStreamingService.start();
     this.logger.info("State streaming service started");
   }
 
-  private initializeNewServices(): void {
-    this.logger.debug('Initializing QUALIA.CODE v1.1 services with @OnEvent lifecycle...');
+  /**
+   * QUALIA.CODE v2.0: AUTOMATED SERVICE LIFECYCLE INITIALIZATION
+   * 
+   * This method replaces the manual service list with automatic discovery.
+   * All services implementing IBaseService are automatically injected and initialized.
+   * 
+   * ARCHITECTURAL BENEFITS:
+   * - Zero manual maintenance: Add a service, bind it to ManagedService, done.
+   * - No risk of forgetting to add services to initialization lists
+   * - Scales infinitely without code changes
+   * - Single Responsibility: Only manages lifecycle, doesn't know specific services
+   */
+  private initializeManagedServices(): void {
+    this.logger.debug(`🤖 Initializing ${this.managedServices.length} auto-discovered managed services...`);
     
-    // Initialize services that implement IBaseService with @OnEvent decorators
-    const newServices = [
-      this.gameplayMechanicsService,
-      this.viewLogicService,
-      this.subtitleService,
-      this.debugOrchestratorService,
-      this.browserEventsService,
-      this.qualiaStateCalculatorService,
-      // QUALIA.CODE v2.0: New analysis services
-      this.audioAnalysisService,
-      this.physicsService
-    ];
-
-    newServices.forEach(service => {
-      if (this.implementsIBaseService(service)) {
+    let successCount = 0;
+    let failureCount = 0;
+    
+    for (const service of this.managedServices) {
+      try {
         // Initialize @OnEvent subscriptions
         initializeEventSubscriptions(service);
         
         // Call service initialize method
         service.initialize();
         
-        // Track for cleanup
-        this.managedServices.push(service);
-        
-        this.logger.debug(`✅ Initialized service: ${service.constructor.name}`);
+        this.logger.debug(`✅ Initialized: ${service.constructor.name}`);
+        successCount++;
+      } catch (error) {
+        this.logger.error(`❌ Failed to initialize: ${service.constructor.name}`, { error });
+        failureCount++;
       }
-    });
+    }
 
-    this.logger.info(`🚀 Initialized ${this.managedServices.length} QUALIA.CODE v1.1 services`);
-  }
-
-  private implementsIBaseService(service: unknown): service is IBaseService {
-    return typeof service === 'object' &&
-           service !== null &&
-           'initialize' in service &&
-           'cleanup' in service &&
-           typeof (service as Record<string, unknown>).initialize === 'function' &&
-           typeof (service as Record<string, unknown>).cleanup === 'function';
+    this.logger.info(
+      `🚀 Service initialization complete: ${successCount} succeeded, ${failureCount} failed (${this.managedServices.length} total)`
+    );
+    
+    if (failureCount > 0) {
+      throw new Error(`Failed to initialize ${failureCount} managed service(s). Check logs for details.`);
+    }
   }
 
   private async startGameServices(): Promise<void> {
-    // Step 5: Start game controller service
-    this.logger.debug(this.config.steps.startGameController);
-    this.gameControllerService.start();
-    this.logger.info(this.config.messages.gameControllerStarted);
-
-    // Step 5: Start rhythmic movement controller
+    // Step 6: Start rhythmic movement controller
     this.logger.debug(this.config.steps.startRhythmicController);
     this.rhythmicMovementController.start();
     this.logger.info(this.config.messages.rhythmicControllerStarted);
   }
 
   private async startBackendServices(): Promise<void> {
-    // Step 6: Start backend synchronization
+    // Step 7: Start backend synchronization
     this.logger.debug(this.config.steps.startBackendSync);
     await this.backendSyncService.start();
 
-    // Step 7: Update backend connection status
+    // Step 8: Update backend connection status
     const isConnected = this.backendSyncService.isBackendConnected();
     this.gameStateStoreService.updateGameState({
       backendConnected: isConnected,
     });
   }
 
+  /**
+   * QUALIA.CODE v2.0: AUTOMATED SERVICE LIFECYCLE CLEANUP
+   * 
+   * Cleanup is now fully automated using the same multi-injected service array.
+   * All services are cleaned up in reverse order for dependency safety.
+   */
   @logMethod
   @catchError
   public cleanup(): void {
     this.logger.info('🧹 Starting application cleanup...');
 
-    // Cleanup all managed services with @OnEvent decorators
-    this.managedServices.forEach(service => {
+    let successCount = 0;
+    let failureCount = 0;
+    
+    // Cleanup in reverse order to respect dependencies
+    const servicesReversed = [...this.managedServices].reverse();
+    
+    for (const service of servicesReversed) {
       try {
         // Cleanup @OnEvent subscriptions
         cleanupEventSubscriptions(service);
@@ -231,13 +229,17 @@ export class ApplicationInitializerService
         // Call service cleanup method
         service.cleanup();
         
-        this.logger.debug(`✅ Cleaned up service: ${service.constructor.name}`);
+        this.logger.debug(`✅ Cleaned up: ${service.constructor.name}`);
+        successCount++;
       } catch (error) {
-        this.logger.error(`❌ Failed to cleanup service: ${service.constructor.name}`, { error });
+        this.logger.error(`❌ Failed to cleanup: ${service.constructor.name}`, { error });
+        failureCount++;
       }
-    });
+    }
 
-    this.logger.info(`🧹 Cleaned up ${this.managedServices.length} managed services`);
+    this.logger.info(
+      `🧹 Service cleanup complete: ${successCount} succeeded, ${failureCount} failed (${this.managedServices.length} total)`
+    );
     
     // Cleanup EventBus
     try {

@@ -29,7 +29,7 @@ const MainTitle: React.FC = () => (
     <h1 className="text-6xl md:text-8xl lg:text-9xl font-orbitron font-black tracking-wider">
       <span className="relative">
         {/* QUALIA */}
-        <span className="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x">
+        <span className="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent -webkit-bg-clip-text animate-gradient-x">
           QUALIA
         </span>
         {/* Holographic glitch effect */}
@@ -43,7 +43,7 @@ const MainTitle: React.FC = () => (
       <span className="relative">
         {/* TEMPO */}
         <span
-          className="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient-x"
+          className="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent -webkit-bg-clip-text animate-gradient-x"
           style={{ animationDelay: "0.25s" }}
         >
           TEMPO

@@ -86,9 +86,6 @@ import { mockAudioSystemBridge } from "./mocks/audio-system-bridge.mock";
 import { mockGameControllerService } from "./mocks/game-controller-service.mock";
 import { mockQualiaStateCalculatorService } from "./mocks/qualia-state-calculator-service.mock";
 import { mockErrorReportingService } from "./mocks/error-reporting-service.mock";
-// QUALIA.CODE v2.0: Audio Analysis and Physics Service mocks
-import { mockAudioAnalysisService } from "./mocks/audio-analysis-service.mock";
-import { mockPhysicsService } from "./mocks/physics-service.mock";
 import { mockWebAudioAPIService } from "./mocks/web-audio-api-service.mock";
 import { mockDebugService } from "./mocks/debug-service.mock";
 import { mockSubtitleService } from "./mocks/subtitle-service.mock";
@@ -233,49 +230,38 @@ const defaultRhythmicMovementConfig: RhythmicMovementConfig = {
 
 // --- Default Params Factory Functions ---
 
-// --- Default Params Factory Functions ---
+/**
+ * QUALIA.CODE v2.0: Simplified factory for ApplicationInitializerServiceParams
+ * Reflects the hybrid injection pattern where orchestration services are explicitly
+ * injected while managed services (IBaseService implementers) are auto-discovered.
+ * 
+ * Uses configuration object pattern to avoid max-params violation.
+ */
+interface AppInitializerParamsDeps {
+  eventBus: IEventBus;
+  logger: ILogger;
+  gameStateStoreService: IGameStateStoreService;
+  backendSyncService: IBackendSyncService;
+  rhythmicMovementController: IRhythmicMovementController;
+  errorReportingService: IErrorReportingService;
+  debugService: IDebugService;
+  notificationService: INotificationService;
+  stateStreamingService: IStateStreamingService;
+}
 
 const createDefaultAppInitializerParams = (
-  eventBus: IEventBus,
-  logger: ILogger,
-  backendSyncService: IBackendSyncService,
-  gameStateStoreService: IGameStateStoreService,
-  gameControllerService: IGameControllerService,
-  rhythmicMovementController: IRhythmicMovementController,
-  notificationService: INotificationService,
-  errorReportingService: IErrorReportingService,
-  debugService: IDebugService,
-  stateStreamingService: IStateStreamingService,
-  gameplayMechanicsService: IGameplayMechanicsService,
-  viewLogicService: IViewLogicService,
-  subtitleService: ISubtitleService,
-  debugOrchestratorService: IDebugOrchestratorService,
-  browserEventsService: IBrowserEventsService,
-  qualiaStateCalculatorService: IQualiaStateCalculatorService,
-  // QUALIA.CODE v2.0: Audio Analysis and Physics Services
-  audioAnalysisService: import('../services/interfaces/IAudioAnalysisService').IAudioAnalysisService,
-  physicsService: import('../services/interfaces/IPhysicsService').IPhysicsService
-): ApplicationInitializerServiceParams => ({ // eslint-disable-line max-params
+  deps: AppInitializerParamsDeps
+): ApplicationInitializerServiceParams => ({
   config: defaultAppInitializerConfig,
-  backendSyncService,
-  gameStateStoreService,
-  gameControllerService,
-  rhythmicMovementController,
-  notificationService,
-  errorReportingService,
-  debugService,
-  stateStreamingService,
-  logger,
-  eventBus,
-  gameplayMechanicsService,
-  viewLogicService,
-  subtitleService,
-  debugOrchestratorService,
-  browserEventsService,
-  qualiaStateCalculatorService,
-  // QUALIA.CODE v2.0
-  audioAnalysisService,
-  physicsService
+  logger: deps.logger,
+  eventBus: deps.eventBus,
+  gameStateStoreService: deps.gameStateStoreService,
+  backendSyncService: deps.backendSyncService,
+  rhythmicMovementController: deps.rhythmicMovementController,
+  errorReportingService: deps.errorReportingService,
+  debugService: deps.debugService,
+  notificationService: deps.notificationService,
+  stateStreamingService: deps.stateStreamingService,
 });
 
 const createDefaultBackendSyncParams = (
@@ -463,27 +449,18 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   testContainer.bind<EventBusConfig>(TYPES.EventBusConfig).toConstantValue(defaultEventBusConfig);
 
   // Create parameter objects using the same fresh mock instances
-  const appInitializerParams = createDefaultAppInitializerParams(
-    freshMockEventBus,
-    mockLogger,
-    mockBackendSyncService,
-    mockGameStateStoreService,
-    mockGameControllerService,
-    mockRhythmicMovementController,
-    mockNotificationService,
-    mockErrorReportingService,
-    mockDebugService,
-    mockStateStreamingService,
-    mockGameplayMechanicsService,
-    mockViewLogicService,
-    mockSubtitleService,
-    mockDebugOrchestratorService,
-    mockBrowserEventsService,
-    mockQualiaStateCalculatorService,
-    // QUALIA.CODE v2.0: Audio Analysis and Physics Services
-    mockAudioAnalysisService,
-    mockPhysicsService
-  );
+  // QUALIA.CODE v2.0: Simplified factory call for hybrid injection pattern
+  const appInitializerParams = createDefaultAppInitializerParams({
+    eventBus: freshMockEventBus,
+    logger: mockLogger,
+    gameStateStoreService: mockGameStateStoreService,
+    backendSyncService: mockBackendSyncService,
+    rhythmicMovementController: mockRhythmicMovementController,
+    errorReportingService: mockErrorReportingService,
+    debugService: mockDebugService,
+    notificationService: mockNotificationService,
+    stateStreamingService: mockStateStreamingService,
+  });
   const backendSyncParams = createDefaultBackendSyncParams(
     freshMockEventBus,
     mockLogger,

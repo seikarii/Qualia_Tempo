@@ -101,6 +101,29 @@ const INFRASTRUCTURE_SERVICES = new Set([
 ]);
 
 /**
+ * Services that use Direct Config Injection (QUALIA.CODE v4.0)
+ * These services receive config objects directly instead of Params objects
+ * They are exempt from Params binding validation
+ */
+const DIRECT_CONFIG_SERVICES = new Set([
+  'IAudioService',
+  'IBackendSyncService',
+  'IGameControllerService',
+  'IQualiaStateCalculatorService',
+  'IRhythmicMovementController',
+  'INotificationService',
+  'IErrorReportingService',
+  'IDebugService',
+  'IFrontendRenderingService',
+  'IStateStreamingService',
+  'ITimerService',
+  'IAudioAnalysisService',
+  'IPhysicsService',
+  'IJitterService',  // Added to fix false positive
+  // Add more as they migrate to Direct Config Injection
+]);
+
+/**
  * Map service interface name to its Params type
  * e.g., "IAudioService" → "AudioServiceParams"
  */
@@ -339,6 +362,11 @@ function validateBindingOrder(bindings: BindingNode[]): Violation[] {
       // Skip infrastructure services - they're bound directly without Params
       if (INFRASTRUCTURE_SERVICES.has(dep)) {
         return;  // This is expected, not a violation
+      }
+      
+      // Skip services that use Direct Config Injection - they don't have Params
+      if (DIRECT_CONFIG_SERVICES.has(dep)) {
+        return;  // QUALIA.CODE v4.0: Direct Config Injection, no Params needed
       }
       
       // Map service interface to its Params type

@@ -96,13 +96,17 @@ module.exports = {
 
       return param.decorators.some(decorator => {
         // Handle both regular call expressions and TypeScript decorator syntax
+        const decoratorName = decorator.expression?.callee?.name;
+        
+        // QUALIA.CODE v2.0: Support multi-injection pattern
+        // Accept both @inject() and @multiInject() decorators
         if (decorator.expression?.type === 'CallExpression' &&
-            decorator.expression.callee?.name === 'inject') {
+            (decoratorName === 'inject' || decoratorName === 'multiInject')) {
           return true;
         }
         // Handle member expressions like TYPES.Logger
         if (decorator.expression?.type === 'CallExpression' &&
-            decorator.expression.callee?.name === 'inject' &&
+            (decoratorName === 'inject' || decoratorName === 'multiInject') &&
             decorator.expression.arguments?.length > 0) {
           return true;
         }

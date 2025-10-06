@@ -77,6 +77,11 @@ export const TYPES = {
   IGameStateStore: Symbol.for("IGameStateStore"),
   ThrottlingManager: Symbol.for("ThrottlingManager"),
   ThrottlingConfig: Symbol.for("ThrottlingConfig"),
+  
+  // ===== LIFECYCLE MANAGEMENT =====
+  // QUALIA.CODE v2.0: Multi-injection symbol for automatic service lifecycle management
+  // All services implementing IBaseService are bound to this symbol for automated discovery
+  ManagedService: Symbol.for("ManagedService"),
 
   // Configuration values for services
   ConfigBasePath: Symbol.for("ConfigBasePath"),

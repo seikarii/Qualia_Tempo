@@ -74,6 +74,11 @@ function adaptAndEmitImpl(params: {
 
     logAdaptAndEmitStart(instance, fullMethodName, adapterIdentifier, rawData);
 
+    // Validate raw data before adaptation
+    if (!rawData) {
+      throw new Error(`Raw data is null or undefined in ${fullMethodName}`);
+    }
+
     const adaptedEvent = adapter.adapt(rawData);
     eventBus.emit(adaptedEvent);
 
@@ -83,7 +88,8 @@ function adaptAndEmitImpl(params: {
 
   } catch (error) {
     handleAdaptAndEmitError(instance, fullMethodName, adapterIdentifier, error);
-    throw error;
+    // Don't re-throw to prevent crashing the message handler
+    // Log the error and continue
   }
 }
 
