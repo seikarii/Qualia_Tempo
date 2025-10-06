@@ -14,7 +14,7 @@ describe('SharpeningPass', () => {
   let mockReadBuffer: THREE.WebGLRenderTarget;
 
   const VERTEX_SHADER = `
-    varying vec2 vUv;
+    out vec2 vUv;
     void main() {
       vUv = uv;
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -23,12 +23,12 @@ describe('SharpeningPass', () => {
 
   const FRAGMENT_SHADER = `
     precision highp float;
-    varying vec2 vUv;
+    in vec2 vUv;
     uniform sampler2D inputTexture;
     uniform vec2 resolution;
     uniform float sharpness;
     void main() {
-      gl_FragColor = texture2D(inputTexture, vUv);
+      gl_FragColor = texture(inputTexture, vUv);
     }
   `;
 

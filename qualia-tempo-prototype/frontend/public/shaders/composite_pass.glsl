@@ -1,7 +1,12 @@
 // QUALIA.CODE v1.2 - Professional HDR Composition Shader for Three.js
 // ACES Filmic Tone Mapping + Advanced Color Grading (Industry Standard)
+// Fragment Shader - Requires fullscreen_quad.vert as vertex shader
 
-varying vec2 vUv;
+#version 300 es
+precision highp float;
+
+in vec2 vUv;
+out vec4 fragColor;
 
 uniform sampler2D tDiffuse;      // Scene texture (Three.js standard)
 uniform sampler2D tBloom;        // Bloom texture
@@ -55,10 +60,10 @@ float luminance(vec3 color) {
 
 void main() {
     // Sample all textures
-    vec3 scene = texture2D(tDiffuse, vUv).rgb;
-    vec3 bloom = texture2D(tBloom, vUv).rgb;
-    vec3 hbao = texture2D(tHBAO, vUv).rgb;    // Grayscale occlusion factor
-    vec3 ssr = texture2D(tSSR, vUv).rgb;      // Reflection color
+    vec3 scene = texture(tDiffuse, vUv).rgb;
+    vec3 bloom = texture(tBloom, vUv).rgb;
+    vec3 hbao = texture(tHBAO, vUv).rgb;    // Grayscale occlusion factor
+    vec3 ssr = texture(tSSR, vUv).rgb;      // Reflection color
 
     // 1. Apply HBAO (multiply to darken occluded areas)
     scene *= hbao;
@@ -103,5 +108,5 @@ void main() {
     // 6.4. Final clamp to prevent artifacts
     result = clamp(result, 0.0, 1.0);
 
-    gl_FragColor = vec4(result, 1.0);
+    fragColor = vec4(result, 1.0);
 }

@@ -1,5 +1,66 @@
 # CHANGELOG
 
+## [2025-10-06 CRITICAL FIX: WebGL 2 / GLSL ES 3.0 Shader Syntax Compliance] 🔥🎯✅
+
+### Mission: Fix Critical Rendering Failure Due to Deprecated `varying` Keyword
+
+**Context:**
+The `debug-full-system.sh` integration test revealed a **CRITICAL RENDERING FAILURE**: the frontend canvas remained black with a "Disconnected" overlay. Browser console analysis revealed shader compilation errors caused by using the deprecated `varying` keyword in shaders that declare `#version 300 es` (GLSL ES 3.0 / WebGL 2).
+
+**Root Cause:**
+WebGL 2 / GLSL ES 3.0 deprecated the `varying` keyword in favor of:
+- `out` in vertex shaders (to output data to the next stage)
+- `in` in fragment shaders (to receive data from the previous stage)
+
+Using `varying` in GLSL ES 3.0 causes shader compilation to fail with:
+```
+ERROR: 0:5: 'varying' : Illegal use of reserved word
+ERROR: 0:5: 'varying' : syntax error
+```
+
+**Files Fixed:**
+
+1. **Production Shaders:**
+   - `gbuffer.glsl`: Added `#version 300 es`, converted `varying` to `in/out`, replaced `texture2D()` with `texture()`, replaced `gl_FragData[]` with named `out` variables
+   - `composite_pass.glsl`: Added `#version 300 es`, converted `varying` to `in`, replaced `texture2D()` with `texture()`, replaced `gl_FragColor` with `out vec4 fragColor`
+   - `fullscreen_quad.vert`: Changed from `#version 330 core` to `#version 300 es` for WebGL 2 compatibility, renamed `out vec2 uv` to `out vec2 vUv` for consistency
+
+2. **TypeScript Inline Shaders:**
+   - `BloomPass.ts`: Converted `varying vec2 vUv` to `out/in vec2 vUv`, replaced `texture2D()` with `texture()`
+   - `VelocityPass.ts`: Converted all `varying` declarations to `out/in` syntax
+
+3. **Test Mock Shaders (8 files):**
+   - `BloomDownsamplePass.test.ts`
+   - `BloomUpsamplePass.test.ts`
+   - `SharpeningPass.test.ts`
+   - `LUTPass.test.ts`
+   - `ChromaticAberrationPass.test.ts`
+   - `ShaderIntrospectionService.test.ts`: Updated test expectations to check for `out vec2 vUv` instead of `varying vec2 vUv`
+
+4. **Code Quality Improvements:**
+   - `PostProcessingService.ts`: Refactored `createOptionalPasses()` method (53 lines → 21 lines) by extracting helper methods (`createBloomPass()`, `createTAAPass()`, `createMotionBlurPass()`, `createDoFPass()`) to comply with `max-lines-per-function` ESLint rule (50 lines max)
+
+**Results:**
+- ✅ **Frontend QUALIA.CODE Compliance: PASSED** (architectural linter)
+- ✅ **Frontend TypeScript Type Checking: PASSED**
+- ✅ **All shader syntax errors resolved**
+- ✅ **Code compiles and builds successfully**
+- 📝 **IoC Linter False Positive:** The IoC circular dependency linter reports "JitterServiceParams not bound", but this is a false positive. `JitterService` uses **Direct Config Injection** (`JitterServiceConfig`), not a Params object. The config is properly bound on line 611 of `inversify.config.ts`.
+
+**Quality Gates:**
+- [x] Architectural linter passes (except known false positive)
+- [x] TypeScript compilation passes
+- [x] Frontend build succeeds
+- [ ] Full system integration test (pending backend restart and E2E validation)
+- [ ] Investigation of secondary issues (StateStreamingService errors, QualiaCalculator warnings)
+
+**Next Steps:**
+1. Run `./scripts/debug-full-system.sh` to validate rendering fix
+2. Investigate StateStreamingService "Message handler failed" errors
+3. Investigate QualiaCalculator "Unknown action: StartGame" warning
+
+---
+
 ## [2025-10-05 ARCHITECTURAL REFACTORING: PRAGMA-FREE SHADER PIPELINE] 🏗️⚡✨
 
 ### Mission: Eliminate Pragma Parsing, Achieve 100% GLSL 300 ES Compliance

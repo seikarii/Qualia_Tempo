@@ -13,8 +13,8 @@ describe('BloomDownsamplePass', () => {
   let mockWriteBuffer: THREE.WebGLRenderTarget;
   let mockReadBuffer: THREE.WebGLRenderTarget;
 
-  const VERTEX_SHADER = `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }`;
-  const FRAGMENT_SHADER = `precision highp float; varying vec2 vUv; uniform sampler2D inputTexture; uniform vec2 texelSize; void main() { gl_FragColor = texture2D(inputTexture, vUv); }`;
+  const VERTEX_SHADER = `out vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }`;
+  const FRAGMENT_SHADER = `precision highp float; in vec2 vUv; uniform sampler2D inputTexture; uniform vec2 texelSize; void main() { gl_FragColor = texture(inputTexture, vUv); }`;
 
   beforeEach(() => {
     downsamplePass = new BloomDownsamplePass({

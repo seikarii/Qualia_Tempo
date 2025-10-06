@@ -14,8 +14,8 @@ describe('BloomUpsamplePass', () => {
   let mockLowResTexture: THREE.Texture;
   let mockHighResTexture: THREE.Texture;
 
-  const VERTEX_SHADER = `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }`;
-  const FRAGMENT_SHADER = `precision highp float; varying vec2 vUv; uniform sampler2D lowResTexture; uniform sampler2D highResTexture; uniform vec2 texelSize; uniform float intensity; void main() { gl_FragColor = texture2D(lowResTexture, vUv); }`;
+  const VERTEX_SHADER = `out vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }`;
+  const FRAGMENT_SHADER = `precision highp float; in vec2 vUv; uniform sampler2D lowResTexture; uniform sampler2D highResTexture; uniform vec2 texelSize; uniform float intensity; void main() { gl_FragColor = texture(lowResTexture, vUv); }`;
 
   beforeEach(() => {
     upsamplePass = new BloomUpsamplePass({

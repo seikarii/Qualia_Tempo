@@ -99,10 +99,10 @@ describe('ShaderIntrospectionService (CRISALIDA.CODE v1.1)', () => {
       const fragmentOnlySource = `
         uniform sampler2D tDiffuse;
         uniform float uIntensity;
-        varying vec2 vUv;
+        in vec2 vUv;
         
         void main() {
-          vec4 texel = texture2D(tDiffuse, vUv);
+          vec4 texel = texture(tDiffuse, vUv);
           gl_FragColor = texel * uIntensity;
         }
       `;
@@ -141,7 +141,7 @@ describe('ShaderIntrospectionService (CRISALIDA.CODE v1.1)', () => {
       const result = await service.introspect(fragmentOnlySource);
 
       // Assert
-      expect(result.vertexShader).toContain('varying vec2 vUv');
+      expect(result.vertexShader).toContain('out vec2 vUv');
       expect(result.vertexShader).toContain('projectionMatrix');
       expect(result.fragmentShader).toContain('tDiffuse');
       expect(result.uniforms).toHaveProperty('tDiffuse');
@@ -164,7 +164,7 @@ describe('ShaderIntrospectionService (CRISALIDA.CODE v1.1)', () => {
         uniform float uReflectionStrength;
         uniform vec2 uResolution;
         
-        varying vec2 vUv;
+        in vec2 vUv;
         
         void main() {
           // Complex SSR logic...

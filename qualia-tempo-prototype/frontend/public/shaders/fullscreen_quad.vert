@@ -1,9 +1,10 @@
-#version 330 core
+#version 300 es
 
 // QUALIA.CODE v1.3 - Optimized Fullscreen Quad (No VBO)
 // Genera un triángulo a pantalla completa sin necesidad de buffers.
+// Compatible with WebGL 2 / GLSL ES 3.0
 
-out vec2 uv;
+out vec2 vUv;
 
 // Vértices de un triángulo que cubre toda la pantalla en clip-space
 const vec2 positions[3] = vec2[](
@@ -22,5 +23,5 @@ const vec2 uvs[3] = vec2[](
 void main() {
     // Asigna la posición y UV basándose en el índice del vértice
     gl_Position = vec4(positions[gl_VertexID], 0.0, 1.0);
-    uv = uvs[gl_VertexID];
+    vUv = uvs[gl_VertexID];
 }

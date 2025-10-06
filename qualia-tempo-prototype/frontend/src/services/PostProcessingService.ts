@@ -170,51 +170,53 @@ export class PostProcessingService implements IPostProcessingService {
     const width = this.config.renderTargetWidth;
     const height = this.config.renderTargetHeight;
 
-    // Create BloomPass if enabled
     if (orch.bloomEnabled) {
-      this.logger.debug("Creating BloomPass");
-      const shaders = await this.loadBloomShaders();
-      this.bloomPass = new BloomPass(this.config.bloom, width, height, shaders);
-      this.bloomPass.renderToScreen = false;
-      this.logger.debug("BloomPass created successfully");
+      await this.createBloomPass(width, height);
     }
-
-    // Create TAAPass if enabled
     if (orch.taaEnabled) {
-      this.logger.debug("Creating TAAPass");
-      const taaShaderSource = await this.shaderLoader.load("taa");
-      const taaShader = await this.shaderIntrospection.introspect(taaShaderSource);
-      // ARCHITECTURAL IMPROVEMENT: Pass IntrospectedShader directly to eliminate pragma parsing in TAAPass
-      this.taaPass = new TAAPass(this.config.taa, width, height, taaShader);
-      this.taaPass.renderToScreen = false;
-      this.logger.debug("TAAPass created successfully");
+      await this.createTAAPass(width, height);
     }
-
-    // Create MotionBlurPass if enabled
     if (orch.motionBlurEnabled) {
-      this.logger.debug("Creating MotionBlurPass");
-      const motionBlurShaderSource = await this.shaderLoader.load("motion_blur");
-      const motionBlurShader = await this.shaderIntrospection.introspect(motionBlurShaderSource);
-      // ARCHITECTURAL IMPROVEMENT: Pass IntrospectedShader directly to eliminate pragma parsing in MotionBlurPass
-      this.motionBlurPass = new MotionBlurPass(
-        this.config.motionBlur,
-        motionBlurShader
-      );
-      this.motionBlurPass.renderToScreen = false;
-      this.logger.debug("MotionBlurPass created successfully");
+      await this.createMotionBlurPass();
     }
-
-    // Create DoFPass if enabled
     if (orch.dofEnabled) {
-      this.logger.debug("Creating DoFPass");
-      const dofShaderSource = await this.shaderLoader.load("dof");
-      const dofShader = await this.shaderIntrospection.introspect(dofShaderSource);
-      // DoFPass generates its own vertex shader and expects ONLY the fragment shader
-      // (not pragma-delimited format)
-      this.dofPass = new DoFPass(this.config.dof, width, height, dofShader.fragmentShader);
-      this.dofPass.renderToScreen = false;
-      this.logger.debug("DoFPass created successfully");
+      await this.createDoFPass(width, height);
     }
+  }
+
+  private async createBloomPass(width: number, height: number): Promise<void> {
+    this.logger.debug("Creating BloomPass");
+    const shaders = await this.loadBloomShaders();
+    this.bloomPass = new BloomPass(this.config.bloom, width, height, shaders);
+    this.bloomPass.renderToScreen = false;
+    this.logger.debug("BloomPass created successfully");
+  }
+
+  private async createTAAPass(width: number, height: number): Promise<void> {
+    this.logger.debug("Creating TAAPass");
+    const taaShaderSource = await this.shaderLoader.load("taa");
+    const taaShader = await this.shaderIntrospection.introspect(taaShaderSource);
+    this.taaPass = new TAAPass(this.config.taa, width, height, taaShader);
+    this.taaPass.renderToScreen = false;
+    this.logger.debug("TAAPass created successfully");
+  }
+
+  private async createMotionBlurPass(): Promise<void> {
+    this.logger.debug("Creating MotionBlurPass");
+    const motionBlurShaderSource = await this.shaderLoader.load("motion_blur");
+    const motionBlurShader = await this.shaderIntrospection.introspect(motionBlurShaderSource);
+    this.motionBlurPass = new MotionBlurPass(this.config.motionBlur, motionBlurShader);
+    this.motionBlurPass.renderToScreen = false;
+    this.logger.debug("MotionBlurPass created successfully");
+  }
+
+  private async createDoFPass(width: number, height: number): Promise<void> {
+    this.logger.debug("Creating DoFPass");
+    const dofShaderSource = await this.shaderLoader.load("dof");
+    const dofShader = await this.shaderIntrospection.introspect(dofShaderSource);
+    this.dofPass = new DoFPass(this.config.dof, width, height, dofShader.fragmentShader);
+    this.dofPass.renderToScreen = false;
+    this.logger.debug("DoFPass created successfully");
   }
 
   /**

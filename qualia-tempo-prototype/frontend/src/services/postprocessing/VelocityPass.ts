@@ -55,7 +55,7 @@ export class VelocityPass extends Pass implements IVelocityPass {
 
   private getVelocityVertexShader(): string {
     return `
-      varying vec2 vUv; varying vec3 vWorldPosition; varying vec2 vVelocity;
+      out vec2 vUv; out vec3 vWorldPosition; out vec2 vVelocity;
       uniform mat4 prevViewMatrix; uniform mat4 prevProjectionMatrix;
       void main() {
         vUv = uv;
@@ -74,7 +74,7 @@ export class VelocityPass extends Pass implements IVelocityPass {
   private getVelocityFragmentShader(): string {
     return `
       uniform float velocityScale; uniform bool isDebugMode;
-      varying vec2 vUv; varying vec2 vVelocity; varying vec3 vWorldPosition;
+      in vec2 vUv; in vec2 vVelocity; in vec3 vWorldPosition;
       void main() {
         vec2 velocity = vVelocity * velocityScale;
         if (isDebugMode) {

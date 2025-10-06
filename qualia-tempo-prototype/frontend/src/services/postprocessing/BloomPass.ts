@@ -139,7 +139,7 @@ export class BloomPass extends Pass implements IBloomPass {
     // ShaderMaterial (not Raw) provides common uniforms/attributes via chunks
     // We only need to use them, not declare them
     return `
-      varying vec2 vUv;
+      out vec2 vUv;
       
       void main() {
         vUv = uv;
@@ -157,14 +157,14 @@ export class BloomPass extends Pass implements IBloomPass {
       },
       vertexShader: this.getSimpleVertexShader(),
       fragmentShader: `
-        varying vec2 vUv;
+        in vec2 vUv;
         uniform sampler2D baseTexture;
         uniform sampler2D bloomTexture;
         uniform float intensity;
         
         void main() {
-          vec3 base = texture2D(baseTexture, vUv).rgb;
-          vec3 bloom = texture2D(bloomTexture, vUv).rgb;
+          vec3 base = texture(baseTexture, vUv).rgb;
+          vec3 bloom = texture(bloomTexture, vUv).rgb;
           
           // Additive blending with intensity
           vec3 result = base + bloom * intensity;
