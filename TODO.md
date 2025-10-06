@@ -20,8 +20,7 @@
 17. **CREAR ASSETS GRÁFICOS PARA BRANDING Y SEO** - Pendiente creación de favicon.ico, logo192.png, logo512.png, og-image.png (Ver `/frontend/public/ASSETS_TODO.md` para especificaciones completas)
 18. CI/CD - AUTOMATIZAR `sitemap.xml`: La fecha `lastmod` debe generarse dinámicamente en el pipeline de build para reflejar la frescura real del contenido.
 19. PWA - ENRIQUECER `manifest.json`: Añadir capturas de pantalla promocionales del juego al array `screenshots` para mejorar la experiencia de instalación de la PWA. qualia-tempo-prototype/frontend/public/METADATA_VALIDATION.md
-20. Añadir motor de curvatura para fisicas de magia que deforme los ejes X ,Y
-21. Añadir un circular dependency check al linter
+20. Añadir motor de curvatura para fisicas de magia que deforme los ejes X ,Ysa
 ---
 
 ## 🔍 Metodología de Análisis
