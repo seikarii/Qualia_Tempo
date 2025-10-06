@@ -184,9 +184,8 @@ export class PostProcessingService implements IPostProcessingService {
       this.logger.debug("Creating TAAPass");
       const taaShaderSource = await this.shaderLoader.load("taa");
       const taaShader = await this.shaderIntrospection.introspect(taaShaderSource);
-      // Reconstruct pragma-delimited format for TAAPass (it expects this format)
-      const taaShaderCode = `#pragma VERTEX\n${taaShader.vertexShader}\n#pragma FRAGMENT\n${taaShader.fragmentShader}`;
-      this.taaPass = new TAAPass(this.config.taa, width, height, taaShaderCode);
+      // ARCHITECTURAL IMPROVEMENT: Pass IntrospectedShader directly to eliminate pragma parsing in TAAPass
+      this.taaPass = new TAAPass(this.config.taa, width, height, taaShader);
       this.taaPass.renderToScreen = false;
       this.logger.debug("TAAPass created successfully");
     }
@@ -196,11 +195,10 @@ export class PostProcessingService implements IPostProcessingService {
       this.logger.debug("Creating MotionBlurPass");
       const motionBlurShaderSource = await this.shaderLoader.load("motion_blur");
       const motionBlurShader = await this.shaderIntrospection.introspect(motionBlurShaderSource);
-      // Reconstruct pragma-delimited format for MotionBlurPass (it expects this format)
-      const motionBlurShaderCode = `#pragma VERTEX\n${motionBlurShader.vertexShader}\n#pragma FRAGMENT\n${motionBlurShader.fragmentShader}`;
+      // ARCHITECTURAL IMPROVEMENT: Pass IntrospectedShader directly to eliminate pragma parsing in MotionBlurPass
       this.motionBlurPass = new MotionBlurPass(
         this.config.motionBlur,
-        motionBlurShaderCode
+        motionBlurShader
       );
       this.motionBlurPass.renderToScreen = false;
       this.logger.debug("MotionBlurPass created successfully");
@@ -211,9 +209,9 @@ export class PostProcessingService implements IPostProcessingService {
       this.logger.debug("Creating DoFPass");
       const dofShaderSource = await this.shaderLoader.load("dof");
       const dofShader = await this.shaderIntrospection.introspect(dofShaderSource);
-      // Reconstruct pragma-delimited format for DoFPass (it expects this format)
-      const dofShaderCode = `#pragma VERTEX\n${dofShader.vertexShader}\n#pragma FRAGMENT\n${dofShader.fragmentShader}`;
-      this.dofPass = new DoFPass(this.config.dof, width, height, dofShaderCode);
+      // DoFPass generates its own vertex shader and expects ONLY the fragment shader
+      // (not pragma-delimited format)
+      this.dofPass = new DoFPass(this.config.dof, width, height, dofShader.fragmentShader);
       this.dofPass.renderToScreen = false;
       this.logger.debug("DoFPass created successfully");
     }
@@ -221,7 +219,8 @@ export class PostProcessingService implements IPostProcessingService {
 
   /**
    * Load all shaders required for BloomPass
-   * CRITICAL: All shaders must be introspected to strip #version directives
+   * ARCHITECTURAL NOTE: All bloom sub-passes (BrightPass, BlurPass, etc.) generate their own
+   * vertex shaders and expect ONLY fragment shaders, not pragma-delimited format.
    */
   @logMethod
   @catchError
@@ -248,12 +247,12 @@ export class PostProcessingService implements IPostProcessingService {
       this.shaderIntrospection.introspect(upsampleSource),
     ]);
 
-    // Reconstruct pragma-delimited format for BloomPass (it expects this format)
+    // Return ONLY fragment shaders - all bloom passes generate their own vertex shaders
     return {
-      brightPassShader: `#pragma VERTEX\n${brightPass.vertexShader}\n#pragma FRAGMENT\n${brightPass.fragmentShader}`,
-      blurShader: `#pragma VERTEX\n${blur.vertexShader}\n#pragma FRAGMENT\n${blur.fragmentShader}`,
-      downsampleShader: `#pragma VERTEX\n${downsample.vertexShader}\n#pragma FRAGMENT\n${downsample.fragmentShader}`,
-      upsampleShader: `#pragma VERTEX\n${upsample.vertexShader}\n#pragma FRAGMENT\n${upsample.fragmentShader}`,
+      brightPassShader: brightPass.fragmentShader,
+      blurShader: blur.fragmentShader,
+      downsampleShader: downsample.fragmentShader,
+      upsampleShader: upsample.fragmentShader,
     };
   }
 

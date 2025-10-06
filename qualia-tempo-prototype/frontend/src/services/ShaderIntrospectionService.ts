@@ -11,7 +11,7 @@
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
-import type { IShaderIntrospectionService } from './interfaces/IShaderIntrospectionService';
+import type { IShaderIntrospectionService, IntrospectedShader } from './interfaces/IShaderIntrospectionService';
 import type { IGlslParser } from './interfaces/IGlslParser';
 import type { ILogger } from './interfaces/ILogger';
 import * as THREE from 'three';
@@ -33,11 +33,7 @@ export class ShaderIntrospectionService implements IShaderIntrospectionService {
 
   @logMethod
   @catchError
-  public async introspect(shaderSource: string): Promise<{
-    vertexShader: string;
-    fragmentShader: string;
-    uniforms: Record<string, IUniform>;
-  }> {
+  public async introspect(shaderSource: string): Promise<IntrospectedShader> {
     this.logger.debug('Introspecting shader source using AST parsing');
 
     // Check for pragma-based shader separation
@@ -123,11 +119,16 @@ export class ShaderIntrospectionService implements IShaderIntrospectionService {
 
   /**
    * Generates a default passthrough vertex shader for fragment-only shaders.
-   * This shader simply passes through position and UV coordinates.
+   * Uses GLSL 300 es syntax (in/out) for RawShaderMaterial compatibility.
+   * The glslVersion property on RawShaderMaterial handles #version directive.
    */
   private generatePassthroughVertexShader(): string {
     return `
-      varying vec2 vUv;
+      in vec2 uv;
+      in vec3 position;
+      uniform mat4 projectionMatrix;
+      uniform mat4 modelViewMatrix;
+      out vec2 vUv;
       
       void main() {
         vUv = uv;

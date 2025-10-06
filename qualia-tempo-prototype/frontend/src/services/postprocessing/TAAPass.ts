@@ -1,5 +1,5 @@
 /**
- * QUALIA.CODE v1.1 - TAAPass Implementation
+ * QUALIA.CODE v1.2 - TAAPass Implementation
  * CRISALIDA.CODE v1.1 - Phase 4: Temporal Effects (ELITE)
  * 
  * Temporal Anti-Aliasing with advanced reconstruction:
@@ -11,12 +11,16 @@
  * 
  * Performance: ~1-2ms (high quality)
  * Dependencies: G-Buffer velocity texture (Phase 3), JitterService (Phase 4)
+ * 
+ * ARCHITECTURAL NOTE: Now accepts IntrospectedShader instead of raw shader strings.
+ * This eliminates pragma parsing and ensures proper #version directive handling.
  */
 
 import * as THREE from 'three';
 import { Pass } from 'three/examples/jsm/postprocessing/Pass.js';
 import type { TAAPassConfig, TAAPassState } from '../contracts/ITAAPass.contracts';
 import type { ITAAPass } from './interfaces/ITAAPass';
+import type { IntrospectedShader } from '../interfaces/IShaderIntrospectionService';
 
 export class TAAPass extends Pass implements ITAAPass {
   private readonly config: TAAPassConfig;
@@ -36,7 +40,7 @@ export class TAAPass extends Pass implements ITAAPass {
   private width: number;
   private height: number;
 
-  constructor(config: TAAPassConfig, width: number, height: number, shaderCode: string) {
+  constructor(config: TAAPassConfig, width: number, height: number, shader: IntrospectedShader) {
     super();
     
     this.config = config;
@@ -56,7 +60,7 @@ export class TAAPass extends Pass implements ITAAPass {
     this.scene.add(this.quad);
     
     // Create TAA shader material
-    this.taaMaterial = this.createTAAMaterial(shaderCode);
+    this.taaMaterial = this.createTAAMaterial(shader);
     this.quad.material = this.taaMaterial;
   }
 
@@ -70,19 +74,19 @@ export class TAAPass extends Pass implements ITAAPass {
     });
   }
 
-  private createTAAMaterial(shaderCode: string): THREE.ShaderMaterial {
-    // Extract vertex and fragment shaders from pragma-delimited code
-    const vertexMatch = shaderCode.match(/#pragma VERTEX\s+([\s\S]*?)#pragma FRAGMENT/);
-    const fragmentMatch = shaderCode.match(/#pragma FRAGMENT\s+([\s\S]*$)/);
-    
-    if (!vertexMatch || !fragmentMatch) {
-      throw new Error('TAAPass: Invalid shader format. Expected #pragma VERTEX and #pragma FRAGMENT markers.');
-    }
+  private createTAAMaterial(shader: IntrospectedShader): THREE.ShaderMaterial {
+    // ARCHITECTURAL IMPROVEMENT: Use pre-introspected shader instead of pragma parsing.
+    // The ShaderIntrospectionService has already:
+    // 1. Stripped #version directives (RawShaderMaterial handles via glslVersion property)
+    // 2. Separated vertex/fragment shaders (no pragma artifacts in source)
+    // 3. Extracted uniforms from shader source
     
     return new THREE.RawShaderMaterial({
-      vertexShader: vertexMatch[1].trim(),
-      fragmentShader: fragmentMatch[1].trim(),
+      vertexShader: shader.vertexShader,
+      fragmentShader: shader.fragmentShader,
       uniforms: {
+        // Merge introspected uniforms with TAA-specific uniforms
+        ...shader.uniforms,
         currentFrame: { value: null },
         historyFrame: { value: this.historyBuffer.texture },
         velocityTexture: { value: this.velocityTexture },
@@ -174,9 +178,9 @@ export class TAAPass extends Pass implements ITAAPass {
     return new THREE.ShaderMaterial({
       uniforms: { tDiffuse: { value: readBuffer.texture } },
       // eslint-disable-next-line @qualia-tempo/qualia-code/no-hardcoded-config -- Technical shader code, not configuration
-      vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position, 1.0); }',
+      vertexShader: 'in vec2 uv; out vec2 vUv; void main() { vUv = uv; gl_Position = vec4(vec3(uv * 2.0 - 1.0, 0.0), 1.0); }',
       // eslint-disable-next-line @qualia-tempo/qualia-code/no-hardcoded-config -- Technical shader code, not configuration
-      fragmentShader: 'varying vec2 vUv; uniform sampler2D tDiffuse; void main() { gl_FragColor = texture2D(tDiffuse, vUv); }',
+      fragmentShader: 'in vec2 vUv; uniform sampler2D tDiffuse; out vec4 fragColor; void main() { fragColor = texture(tDiffuse, vUv); }',
       depthTest: false,
       depthWrite: false
     });
