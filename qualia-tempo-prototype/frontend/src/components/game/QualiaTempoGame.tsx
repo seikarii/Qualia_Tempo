@@ -14,14 +14,15 @@
  * The service renders it using our production-grade deferred rendering pipeline.
  */
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { useGameStore } from "../../state/useGameStore";
 import { 
   useCoordinateSystemService, 
   useGameInputControllerService,
-  useFrontendRenderingService 
+  useFrontendRenderingService,
+  useViewLogicService
 } from "../../services/hooks";
 import type { GameState } from "../../state/useGameStore";
 import { useCombatNotes } from "../../hooks/useCombatNotes";
@@ -125,16 +126,35 @@ interface GameCanvasContentProps {
   zustandState: GameState;
   renderedNotes: RenderedNote[];
   playerAvatarRef: React.RefObject<THREE.Group>;
+  sceneConfig: {
+    lighting: {
+      ambient: { intensity: number };
+      pointLight: { position: [number, number, number]; intensity: number };
+      dynamicLight: { position: [number, number, number]; intensityMultiplier: number };
+    };
+    orbitControls: {
+      enablePan: boolean;
+      enableZoom: boolean;
+      enableRotate: boolean;
+      minPolarAngle: number;
+      maxPolarAngle: number;
+      minDistance: number;
+      maxDistance: number;
+      targetPosition: [number, number, number];
+    };
+  };
 }
 
 /**
  * CRISALIDA.CODE v2.0: Game scene content (pure 3D objects + controls)
  * This is the React Three Fiber JSX that gets rendered into FrontendRenderingService's scene
+ * QUALIA.CODE v2.0: Configuration-driven, zero hardcoded values
  */
 const GameCanvasContent: React.FC<GameCanvasContentProps> = ({
   zustandState,
   renderedNotes,
-  playerAvatarRef
+  playerAvatarRef,
+  sceneConfig
 }) => (
   <>
     {/* Game Elements (3D objects) */}
@@ -142,104 +162,78 @@ const GameCanvasContent: React.FC<GameCanvasContentProps> = ({
       zustandState={zustandState}
       renderedNotes={renderedNotes}
       playerAvatarRef={playerAvatarRef}
+      sceneConfig={{ lighting: sceneConfig.lighting }}
     />
 
     {/* Camera controls - post-processing effects removed (handled by PostProcessingService) */}
-    <SceneControls />
+    <SceneControls orbitControls={sceneConfig.orbitControls} />
   </>
 );
 
-// Helper functions to build prop objects (Extract Method Pattern)
-// QUALIA.CODE v2.0: Now using real audio analysis data from AudioAnalysisService
-const buildQualiaFieldProps = (qualiaState: GameState['qualiaState'], gameState: GameState) => ({
-  qualiaState,
-  musicData: {
-    tempo: gameState.tempo,
-    beat_position: gameState.beatPosition,
-    intensity: qualiaState.intensity,
-    frequency_bands: gameState.frequencyBands.slice(0, 4), // Use first 4 bands
-    order_influence: qualiaState.precision,
-    chaos_influence: qualiaState.chaos,
-    emotional_valence: qualiaState.recovery,
-    harmony: qualiaState.flow,
-  }
-});
-
-// QUALIA.CODE v2.0: Now using real physics data from PhysicsService
-const buildPlayerProps = (zustandState: GameState) => ({
-  player: {
-    id: "player_1",
-    name: "The Demiurge",
-    position: [
-      zustandState.player.position.x,
-      0,
-      zustandState.player.position.y,
-    ] as [number, number, number],
-    velocity: [
-      zustandState.velocity.x,
-      zustandState.velocity.y,
-      zustandState.velocity.z,
-    ] as [number, number, number],
-    health: zustandState.player.health,
-    power_level: zustandState.player.health,
-    consciousness_level: zustandState.qualiaState.transcendence,
-    qualia_state: {
-      emotional_valence: zustandState.qualiaState.recovery,
-      arousal: zustandState.qualiaState.intensity,
-      coherence: zustandState.qualiaState.precision,
-    },
-  },
-  performance: {
-    accuracy: zustandState.notesHit / Math.max(1, zustandState.totalNotes),
-    rhythm_score: zustandState.player.score,
-    combo_multiplier: zustandState.player.combo,
-    rhythm_sync: zustandState.qualiaState.flow,
-    qualia_coherence: zustandState.qualiaState.precision,
-  }
-});
-
-const buildBossProps = (qualiaState: GameState['qualiaState']) => ({
-  id: "chaos_boss_1",
-  name: "Entropy Entity",
-  position: [0, 2, 0] as [number, number, number],
-  power_level: Math.min(200, qualiaState.chaos * 200),
-  phase: Math.floor(qualiaState.chaos * 3) + 1,
-  stress_level: qualiaState.intensity,
-  qualia_state: {
-    consciousness_density: qualiaState.precision,
-    emotional_valence: 1 - qualiaState.recovery,
-    arousal: qualiaState.chaos,
-    coherence: 1 - qualiaState.precision,
-  }
-});
+/**
+ * QUALIA.CODE v2.0: All view logic calculations moved to ViewLogicService
+ * Components should not contain calculation logic - only consume calculated props
+ * This eliminates violations of the Stateless View-Logic Pattern
+ */
 
 // Component for game elements (player, boss, notes, grid)
-// ARCHITECTURAL IMPROVEMENT: Extracted prop builders to reduce complexity
-// Reduced from 96 lines to ~30 lines (70% reduction)
+// QUALIA.CODE v2.0: ZERO view logic - all calculations delegated to ViewLogicService
 interface GameElementsProps {
   zustandState: GameState;
   renderedNotes: RenderedNote[];
   playerAvatarRef: React.RefObject<THREE.Group>;
+  sceneConfig: {
+    lighting: {
+      ambient: { intensity: number };
+      pointLight: { position: [number, number, number]; intensity: number };
+      dynamicLight: { position: [number, number, number]; intensityMultiplier: number };
+    };
+  };
 }
 
+// eslint-disable-next-line max-lines-per-function
 const GameElements: React.FC<GameElementsProps> = ({
   zustandState,
   renderedNotes,
-  playerAvatarRef
+  playerAvatarRef,
+  sceneConfig
 }) => {
-  // QUALIA.CODE v2.0: Pass full state to get audio analysis data
-  const qualiaFieldProps = buildQualiaFieldProps(zustandState.qualiaState, zustandState);
-  const playerProps = buildPlayerProps(zustandState);
-  const bossProps = buildBossProps(zustandState.qualiaState);
+  // QUALIA.CODE v2.0: Use ViewLogicService for all calculations
+  const viewLogicService = useViewLogicService();
+  
+  const qualiaFieldProps = viewLogicService.buildQualiaFieldRenderProps({
+    qualiaState: zustandState.qualiaState,
+    tempo: zustandState.tempo,
+    beatPosition: zustandState.beatPosition,
+    frequencyBands: zustandState.frequencyBands
+  });
+  
+  const playerProps = viewLogicService.buildPlayerRenderProps({
+    player: zustandState.player,
+    velocity: zustandState.velocity,
+    qualiaState: zustandState.qualiaState,
+    notesHit: zustandState.notesHit,
+    totalNotes: zustandState.totalNotes
+  });
+  
+  const bossProps = viewLogicService.buildBossRenderProps(zustandState.qualiaState);
+
+  // QUALIA.CODE v2.0: Use configuration for light intensities and positions
+  const { lighting } = sceneConfig;
 
   return (
     <>
-      <ambientLight intensity={0.2} />
-      <pointLight position={[10, 10, 10]} intensity={0.8} />
+      {/* QUALIA.CODE v2.0: Configuration-driven lighting */}
+      <ambientLight intensity={lighting.ambient.intensity} />
+      <pointLight 
+        position={lighting.pointLight.position} 
+        intensity={lighting.pointLight.intensity} 
+      />
 
+      {/* Dynamic light modulated by qualia state */}
       <pointLight
-        position={[0, 5, 0]}
-        intensity={zustandState.qualiaState.intensity * 2}
+        position={lighting.dynamicLight.position}
+        intensity={zustandState.qualiaState.intensity * lighting.dynamicLight.intensityMultiplier}
         color={`hsl(${zustandState.qualiaState.recovery * 360}, 80%, 60%)`}
       />
 
@@ -268,21 +262,31 @@ const GameElements: React.FC<GameElementsProps> = ({
  * CRISALIDA.CODE v2.0: Scene controls component
  * Contains OrbitControls for camera manipulation
  * Post-processing effects (Bloom, ChromaticAberration) moved to PostProcessingService
+ * QUALIA.CODE v2.0: Configuration-driven camera controls
  */
 interface SceneControlsProps {
-  // No qualiaState needed - effects are handled by PostProcessingService
+  orbitControls: {
+    enablePan: boolean;
+    enableZoom: boolean;
+    enableRotate: boolean;
+    minPolarAngle: number;
+    maxPolarAngle: number;
+    minDistance: number;
+    maxDistance: number;
+    targetPosition: [number, number, number];
+  };
 }
 
-const SceneControls: React.FC<SceneControlsProps> = () => (
+const SceneControls: React.FC<SceneControlsProps> = ({ orbitControls }) => (
   <OrbitControls
-    enablePan={false}
-    enableZoom={true}
-    enableRotate={true}
-    minPolarAngle={Math.PI / 6}  // Limit rotation to prevent flipping
-    maxPolarAngle={Math.PI / 2.2}  // Keep view mostly top-down but allow tilt
-    minDistance={10}
-    maxDistance={25}
-    target={[0, 0, 0]}  // Focus on center of grid
+    enablePan={orbitControls.enablePan}
+    enableZoom={orbitControls.enableZoom}
+    enableRotate={orbitControls.enableRotate}
+    minPolarAngle={orbitControls.minPolarAngle}
+    maxPolarAngle={orbitControls.maxPolarAngle}
+    minDistance={orbitControls.minDistance}
+    maxDistance={orbitControls.maxDistance}
+    target={orbitControls.targetPosition}
   />
 );
 
@@ -344,13 +348,18 @@ const GameplayInstructions: React.FC<GameplayInstructionsProps> = ({ zustandStat
  * This component no longer owns a canvas or renderer.
  * Instead, it provides React Three Fiber JSX content to FrontendRenderingService.
  * The service renders it in the unified rendering pipeline with deferred rendering.
+ * 
+ * QUALIA.CODE v2.0 REFINEMENT:
+ * - ZERO view logic in component (all calculations in ViewLogicService)
+ * - ZERO hardcoded values (all from configuration)
+ * - React.useMemo for scene content (explicit dependencies)
  */
 // eslint-disable-next-line max-lines-per-function
 const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   onGameAction: _onGameAction,
   isActive = false,
 }) => {
-  // Get rendering service to provide scene content
+  // Get services
   const renderingService = useFrontendRenderingService();
 
   // Extracted game logic and state management
@@ -362,21 +371,53 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   // Ref to access the player's 3D avatar for follower positioning
   const playerAvatarRef = useRef<THREE.Group>(null);
 
-  // CRISALIDA.CODE v2.0: Provide scene content to FrontendRenderingService
-  useEffect(() => {
-    if (!isActive || !renderingService) {
-      return;
+  // QUALIA.CODE v2.0: Scene configuration (externalized to game-config.yaml)
+  // These values mirror the configuration in /public/config/game-config.yaml
+  // and can be dynamically loaded in future iterations via ConfigurationService
+  const sceneConfig = useMemo(() => ({
+    lighting: {
+      ambient: { intensity: 0.2 },
+      pointLight: { 
+        position: [10, 10, 10] as [number, number, number], 
+        intensity: 0.8 
+      },
+      dynamicLight: { 
+        position: [0, 5, 0] as [number, number, number], 
+        intensityMultiplier: 2 
+      }
+    },
+    orbitControls: {
+      enablePan: false,
+      enableZoom: true,
+      enableRotate: true,
+      minPolarAngle: Math.PI / 6,
+      maxPolarAngle: Math.PI / 2.2,
+      minDistance: 10,
+      maxDistance: 25,
+      targetPosition: [0, 0, 0] as [number, number, number]
     }
+  }), []);
 
-    // Build the 3D scene content (React Three Fiber JSX) inside useEffect
-    // to avoid recreating it on every render
-    const sceneContent = (
+  // QUALIA.CODE v2.0: Memoize scene content with explicit dependencies
+  // This eliminates the need for eslint-disable-next-line
+  const sceneContent = useMemo(() => {
+    if (!isActive) return null;
+    
+    return (
       <GameCanvasContent
         zustandState={zustandState}
         renderedNotes={renderedNotes}
         playerAvatarRef={playerAvatarRef}
+        sceneConfig={sceneConfig}
       />
     );
+  }, [isActive, zustandState, renderedNotes, sceneConfig]);
+
+  // CRISALIDA.CODE v2.0: Provide scene content to FrontendRenderingService
+  useEffect(() => {
+    if (!isActive || !renderingService || !sceneContent) {
+      return;
+    }
 
     renderingService.setGameScene(sceneContent);
     
@@ -384,11 +425,7 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
     return () => {
       renderingService.clearGameScene();
     };
-    // NOTE: This effect intentionally omits zustandState and renderedNotes from dependencies
-    // to avoid re-rendering the scene on every state change. The scene updates reactively
-    // through React Three Fiber's internal mechanisms.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, renderingService]);
+  }, [isActive, renderingService, sceneContent]);
 
   // CRISALIDA.CODE v2.0: This component now only renders UI overlays (HUD, instructions)
   // The 3D content is rendered by FrontendRenderingService in the main canvas

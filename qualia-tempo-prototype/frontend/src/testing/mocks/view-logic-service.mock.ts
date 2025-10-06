@@ -12,12 +12,80 @@ import type { IViewLogicService } from '../../services/interfaces/IViewLogicServ
 /**
  * High-Fidelity Mock for IViewLogicService
  * All methods return type-safe default values
+ * QUALIA.CODE v2.0: Updated with new calculation and builder methods
  */
 export const mockViewLogicService: IViewLogicService = {
   getBossVisuals: vi.fn().mockReturnValue({}),
   getPlayerVisuals: vi.fn().mockReturnValue({}),
   getQualiaFieldVisuals: vi.fn().mockReturnValue({}),
-  getQualiaFieldParticles: vi.fn().mockReturnValue({}),
-  getMusicalNoteVisuals: vi.fn().mockReturnValue({}),
+  getQualiaFieldParticles: vi.fn().mockReturnValue([]),
+  getMusicalNoteVisuals: vi.fn().mockReturnValue([]),
   getGridVisuals: vi.fn().mockReturnValue({}),
+  
+  // QUALIA.CODE v2.0: New calculation methods
+  calculateAccuracy: vi.fn().mockReturnValue(0),
+  calculateBossPowerLevel: vi.fn().mockReturnValue(0),
+  calculateBossPhase: vi.fn().mockReturnValue(1),
+  
+  // QUALIA.CODE v2.0: New builder methods
+  buildPlayerRenderProps: vi.fn().mockReturnValue({
+    player: {
+      id: 'player_1',
+      name: 'Test Player',
+      position: [0, 0, 0],
+      velocity: [0, 0, 0],
+      health: 100,
+      power_level: 100,
+      consciousness_level: 0,
+      qualia_state: {
+        emotional_valence: 0,
+        arousal: 0,
+        coherence: 0
+      }
+    },
+    performance: {
+      accuracy: 0,
+      rhythm_score: 0,
+      combo_multiplier: 0,
+      rhythm_sync: 0,
+      qualia_coherence: 0
+    }
+  }),
+  
+  buildBossRenderProps: vi.fn().mockReturnValue({
+    id: 'boss_1',
+    name: 'Test Boss',
+    position: [0, 0, 0],
+    power_level: 0,
+    phase: 1,
+    stress_level: 0,
+    qualia_state: {
+      consciousness_density: 0,
+      emotional_valence: 0,
+      arousal: 0,
+      coherence: 0
+    }
+  }),
+  
+  buildQualiaFieldRenderProps: vi.fn().mockReturnValue({
+    qualiaState: {
+      intensity: 0,
+      precision: 0,
+      aggression: 0,
+      flow: 0,
+      chaos: 0,
+      recovery: 0,
+      transcendence: 0
+    },
+    musicData: {
+      tempo: 120,
+      beat_position: 0,
+      intensity: 0,
+      frequency_bands: [0, 0, 0, 0],
+      order_influence: 0,
+      chaos_influence: 0,
+      emotional_valence: 0,
+      harmony: 0
+    }
+  })
 };

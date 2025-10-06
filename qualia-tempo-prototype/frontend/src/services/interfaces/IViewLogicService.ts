@@ -107,4 +107,96 @@ export interface IViewLogicService {
    * @returns Grid visual data
    */
   getGridVisuals(params: GetGridVisualsParams): GridVisualData;
+
+  /**
+   * Calculate player accuracy based on hits and total notes
+   * @param notesHit - Number of notes successfully hit
+   * @param totalNotes - Total number of notes
+   * @returns Accuracy value between 0 and 1
+   */
+  calculateAccuracy(notesHit: number, totalNotes: number): number;
+
+  /**
+   * Calculate boss power level based on chaos
+   * @param chaos - Chaos value from qualia state
+   * @returns Boss power level
+   */
+  calculateBossPowerLevel(chaos: number): number;
+
+  /**
+   * Calculate boss phase based on chaos
+   * @param chaos - Chaos value from qualia state
+   * @returns Boss phase number
+   */
+  calculateBossPhase(chaos: number): number;
+
+  /**
+   * Build player render properties from game state
+   * @param gameState - Partial game state with player data
+   * @returns Player and performance props for rendering
+   */
+  buildPlayerRenderProps(gameState: {
+    player: { position: { x: number; y: number }; health: number; score: number; combo: number };
+    velocity: { x: number; y: number; z: number };
+    qualiaState: QualiaState;
+    notesHit: number;
+    totalNotes: number;
+  }): {
+    player: {
+      id: string;
+      name: string;
+      position: [number, number, number];
+      velocity: [number, number, number];
+      health: number;
+      power_level: number;
+      consciousness_level: number;
+      qualia_state: {
+        emotional_valence: number;
+        arousal: number;
+        coherence: number;
+      };
+    };
+    performance: {
+      accuracy: number;
+      rhythm_score: number;
+      combo_multiplier: number;
+      rhythm_sync: number;
+      qualia_coherence: number;
+    };
+  };
+
+  /**
+   * Build boss render properties from qualia state
+   * @param qualiaState - Current qualia state
+   * @returns Boss props for rendering
+   */
+  buildBossRenderProps(qualiaState: QualiaState): {
+    id: string;
+    name: string;
+    position: [number, number, number];
+    power_level: number;
+    phase: number;
+    stress_level: number;
+    qualia_state: {
+      consciousness_density: number;
+      emotional_valence: number;
+      arousal: number;
+      coherence: number;
+    };
+  };
+
+  /**
+   * Build qualia field render properties from game state
+   * @param gameState - Partial game state with qualia and audio data
+   * @returns Qualia field props for rendering
+   */
+  buildQualiaFieldRenderProps(gameState: {
+    qualiaState: QualiaState;
+    tempo: number;
+    beatPosition: number;
+    frequencyBands: number[];
+  }): {
+    qualiaState: QualiaState;
+    musicData: MusicData;
+  };
 }

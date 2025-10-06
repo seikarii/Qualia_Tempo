@@ -891,5 +891,138 @@ export class ViewLogicService implements IViewLogicService {
     return 'qualia';
   }
 
+  // ============================================
+  // GAME ELEMENT PROP CALCULATIONS (QUALIA.CODE v2.0)
+  // ============================================
+  
+  /**
+   * Calculate player accuracy based on hits and total notes
+   * @validation-exempt: Simple mathematical operation with validated inputs
+   */
+  @logMethod
+  @measureTime
+  public calculateAccuracy(notesHit: number, totalNotes: number): number {
+    return notesHit / Math.max(1, totalNotes);
+  }
+
+  /**
+   * Calculate boss power level based on chaos
+   * @validation-exempt: Simple mathematical operation with validated inputs
+   */
+  @logMethod
+  @measureTime
+  public calculateBossPowerLevel(chaos: number): number {
+    return Math.min(200, chaos * 200);
+  }
+
+  /**
+   * Calculate boss phase based on chaos
+   * @validation-exempt: Simple mathematical operation with validated inputs
+   */
+  @logMethod
+  @measureTime
+  public calculateBossPhase(chaos: number): number {
+    return Math.floor(chaos * 3) + 1;
+  }
+
+  /**
+   * Build player render properties from game state
+   * Consolidates all player-related calculations in one place
+   * @validation-exempt: Delegates to other validated methods
+   */
+  @logMethod
+  @measureTime
+  public buildPlayerRenderProps(gameState: {
+    player: { position: { x: number; y: number }; health: number; score: number; combo: number };
+    velocity: { x: number; y: number; z: number };
+    qualiaState: QualiaState;
+    notesHit: number;
+    totalNotes: number;
+  }) {
+    return {
+      player: {
+        id: "player_1",
+        name: "The Demiurge",
+        position: [
+          gameState.player.position.x,
+          0,
+          gameState.player.position.y,
+        ] as [number, number, number],
+        velocity: [
+          gameState.velocity.x,
+          gameState.velocity.y,
+          gameState.velocity.z,
+        ] as [number, number, number],
+        health: gameState.player.health,
+        power_level: gameState.player.health,
+        consciousness_level: gameState.qualiaState.transcendence,
+        qualia_state: {
+          emotional_valence: gameState.qualiaState.recovery,
+          arousal: gameState.qualiaState.intensity,
+          coherence: gameState.qualiaState.precision,
+        },
+      },
+      performance: {
+        accuracy: this.calculateAccuracy(gameState.notesHit, gameState.totalNotes),
+        rhythm_score: gameState.player.score,
+        combo_multiplier: gameState.player.combo,
+        rhythm_sync: gameState.qualiaState.flow,
+        qualia_coherence: gameState.qualiaState.precision,
+      }
+    };
+  }
+
+  /**
+   * Build boss render properties from qualia state
+   * Consolidates all boss-related calculations in one place
+   * @validation-exempt: Delegates to other validated methods
+   */
+  @logMethod
+  @measureTime
+  public buildBossRenderProps(qualiaState: QualiaState) {
+    return {
+      id: "chaos_boss_1",
+      name: "Entropy Entity",
+      position: [0, 2, 0] as [number, number, number],
+      power_level: this.calculateBossPowerLevel(qualiaState.chaos),
+      phase: this.calculateBossPhase(qualiaState.chaos),
+      stress_level: qualiaState.intensity,
+      qualia_state: {
+        consciousness_density: qualiaState.precision,
+        emotional_valence: 1 - qualiaState.recovery,
+        arousal: qualiaState.chaos,
+        coherence: 1 - qualiaState.precision,
+      }
+    };
+  }
+
+  /**
+   * Build qualia field render properties from game state
+   * Consolidates all qualia field-related calculations in one place
+   * @validation-exempt: Direct property mapping, no calculations
+   */
+  @logMethod
+  @measureTime
+  public buildQualiaFieldRenderProps(gameState: {
+    qualiaState: QualiaState;
+    tempo: number;
+    beatPosition: number;
+    frequencyBands: number[];
+  }) {
+    return {
+      qualiaState: gameState.qualiaState,
+      musicData: {
+        tempo: gameState.tempo,
+        beat_position: gameState.beatPosition,
+        intensity: gameState.qualiaState.intensity,
+        frequency_bands: gameState.frequencyBands.slice(0, 4), // Use first 4 bands
+        order_influence: gameState.qualiaState.precision,
+        chaos_influence: gameState.qualiaState.chaos,
+        emotional_valence: gameState.qualiaState.recovery,
+        harmony: gameState.qualiaState.flow,
+      }
+    };
+  }
+
 
 }

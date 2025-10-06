@@ -2,10 +2,11 @@
 *Última actualización: 6 de octubre de 2025 - 10:30*
 
 ## DEV NOTES: 
+1. Revisar toda la pipeline de postprocessado 
 2. BARAJAR PINO PARA LOGGING
 3. ARREGLAR LA PARTE DEL JUEGO (CATASTROFICO, FALTAN COSAS Y ESTA TODO DESCONECTADO)
 4. AGREGAR SERVICIO DE BENCHMARKING
-5. ARREGLAR EL PANDEL DE DIAGNOSTICO,MOSTRARLO Y AÑADIR LA PARTE DE BENCHMARK. CONTADOR FPS
+5. ARREGLAR EL PANEL DE DIAGNOSTICO, MOSTRARLO Y AÑADIR LA PARTE DE BENCHMARK. CONTADOR FPS
 6. MEJORAR EL MENU INICIAL
 7.1. ~~**AUDIO ANALYSIS & PHYSICS TESTS**: 9 tests fallidos (2 AudioAnalysisService, 7 PhysicsService)~~ ✅ **COMPLETADO 2025-01-21 PHASE 7** - Fixed test container to bind REAL services instead of mocks. Fixed decorator order conflict (@OnEvent/@catchError). Fixed EventBus mock signature. **All 27/27 tests PASSING (100%)**. Ver CHANGELOG.md [2025-01-21 PHASE 7 COMPLETE] para detalles.
 8. ~~INSPECCIONAR NUEVOS DECORADORES Y DEPRECATED (refactorizar adaptandemit para que no contenga un patron de service locator~~ ✅ **COMPLETADO 2025-10-04** - @AdaptAndEmit refactorizado a IoC puro. Agregar probablemente algun decorador de cache o de workers)
@@ -57,9 +58,21 @@ Backend:
 
 ---
 
-## 🚀 NUEVAS TAREAS - IMPLEMENTACIÓN VISUALS.GOLD.CODE (PROYECTO KAIROS)
+## 🚀 NUEVAS TAREAS - FASE 3: ACTIVACIÓN EFECTOS AVANZADOS
 
-- [ ] **FASE 1: ATMÓSFERA Y PRESENCIA**: Implementar Bloom y God Rays en Kairos Visual Engine. Mapear QualiaState (intensity, transcendence, precision, aggression) a shader uniforms.
+- [ ] **ACTIVAR TAA (Temporal Anti-Aliasing)**: Set `taaEnabled: true` en `post-processing.yaml`. Ya configurado y listo.
+- [ ] **ACTIVAR MOTION BLUR**: Set `motionBlurEnabled: true` en `post-processing.yaml`. Velocity buffer ya generado por G-Buffer.
+- [ ] **IMPLEMENTAR MODULACIÓN POR QualiaState**: En PostProcessingService, mapear:
+  - `QualiaState.intensity` → `bloom.intensityMultiplier` (dinámico)
+  - `QualiaState.chaos` → `chromaticAberration.chaosMultiplier` (dinámico)
+- [ ] **IMPLEMENTAR SSRPass**: Usar texturas normal + depth del G-Buffer para Screen-Space Reflections.
+- [ ] **PROFILING DE PASSES**: Añadir medición de tiempo GPU por pass individual.
+
+---
+
+## 🚀 TAREAS FUTURAS - IMPLEMENTACIÓN VISUALS.GOLD.CODE (PROYECTO KAIROS)
+
+- [ ] **FASE 1: ATMÓSFERA Y PRESENCIA**: Implementar God Rays (ya tenemos Bloom). Mapear QualiaState (intensity, transcendence, precision, aggression) a shader uniforms.
 - [ ] **FASE 2: SYNESTHESIA PROFUNDA**: Integrar FFT análisis en AudioService, enviar datos al backend, modular partículas con graves/medios/agudos en shaders.
 - [ ] **FASE 3: EL MUNDO VIVIENTE**: Implementar Reaction-Diffusion compute shader para suelo dinámico. Mapear QualiaState (chaos, flow, recovery) a simulación parameters.
 - [ ] **FASE 4: AVATARES PROCEDURALES**: Reemplazar modelos 3D con Raymarching SDFs. Parametrizar formas con QualiaState para mutaciones en tiempo real.
