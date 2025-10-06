@@ -33,6 +33,8 @@ metronome:
   duration: 0.05
   gain: 0.5
   waveform: "square"
+  minFrequency: 200
+  maxFrequency: 2000
 
 audioEngine:
   sampleRate: 44100

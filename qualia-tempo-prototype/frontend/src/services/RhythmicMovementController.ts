@@ -111,7 +111,6 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
     // REMOVED: setupGameStateListener - Now handled by @OnEvent decorators
     this.startMetronome();
     this.isListening = true;
-    this.logger.info("RhythmicMovementController started successfully");
   }
 
   @logMethod
@@ -126,19 +125,16 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
     // REMOVED: removeGameStateListener - Now handled by @OnEvent decorators
     this.stopMetronome();
     this.isListening = false;
-    this.logger.info("🎵 RhythmicMovementController stopped");
   }
 
   @logMethod
   public initialize(): void {
-    this.logger.info('🚀 [RhythmicMovementController] Initializing service with @OnEvent lifecycle...');
     // Activa todas las suscripciones de eventos declaradas con @OnEvent
     initializeEventSubscriptions(this);
   }
 
   @logMethod
   public cleanup(): void {
-    this.logger.info('🧹 [RhythmicMovementController] Cleaning up service...');
     // Limpia todas las suscripciones de eventos para prevenir memory leaks
     cleanupEventSubscriptions(this);
   }
@@ -152,10 +148,23 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
     // Update playing state
     this.gameIsPlaying = newState === "Playing";
 
+    // CRITICAL FIX: Start the rhythm controller when transitioning from Menu to Playing
+    // This activates the metronome which drives the entire game loop
+    if (newState === "Playing" && !this.isListening) {
+      this.logger.info('🎮 Starting RhythmicMovementController as game begins...');
+      this.start();
+    }
+
     if (newState === "Paused") {
       this.activatePauseWithSlowdown();
     } else if (newState === "Playing" && this.isPaused) {
       this.resumeFromPause();
+    }
+    
+    // Stop the controller when returning to menu
+    if (newState === "Menu" && this.isListening) {
+      this.logger.info('🎮 Stopping RhythmicMovementController as game ends...');
+      this.stop();
     }
   }
 
@@ -486,7 +495,6 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
    * Set the intensity of rhythmic movement.
    */
   @logMethod
-  @catchError
   public setIntensity(intensity: number): void {
     this.currentIntensity = Math.max(0, Math.min(1, intensity));
     this.logger.debug("Movement intensity set", {
@@ -567,11 +575,11 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
    */
   @logMethod
   @catchError
-  public async recordPlayerPerformance(
+  public recordPlayerPerformance(
     action: string,
     timestamp: number,
     accuracy: number,
-  ): Promise<void> {
+  ): void {
     this.logger.debug("Recording player performance", {
       action,
       timestamp,
@@ -601,10 +609,10 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
    */
   @logMethod
   @catchError
-  public async setCustomBeatPattern(
+  public setCustomBeatPattern(
     patternName: string,
     pattern: number[],
-  ): Promise<void> {
+  ): void {
     this.logger.info("Setting custom beat pattern", { patternName, pattern });
 
     // Validate pattern array
@@ -654,8 +662,7 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
    * Check synchronization accuracy with current audio timing
    */
   @logMethod
-  @catchError
-  public async checkSyncAccuracy(currentTime: number): Promise<number> {
+  public checkSyncAccuracy(currentTime: number): number {
     if (!Number.isFinite(currentTime)) {
       const config = this.config;
       this.logger.warn(config.messages.invalidTimeWarning);
@@ -682,8 +689,7 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
    * Analyze audio data for beat detection
    */
   @logMethod
-  @catchError
-  public async analyzeAudioForBeat(audioData: Float32Array): Promise<boolean> {
+  public analyzeAudioForBeat(audioData: Float32Array): boolean {
     if (!audioData || audioData.length === 0) {
       this.logger.warn("Invalid audio data provided for beat analysis");
       return false;
@@ -710,8 +716,7 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
    * Start beat tracking for the current session
    */
   @logMethod
-  @catchError
-  public async startBeatTracking(): Promise<void> {
+  public startBeatTracking(): void {
     this.logger.info("Starting beat tracking");
 
     // Reset beat tracking state
@@ -728,8 +733,7 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
    * Get upcoming movement predictions
    */
   @logMethod
-  @catchError
-  public async getUpcomingMovements(count: number = 4): Promise<string[]> {
+  public getUpcomingMovements(count: number = 4): string[] {
     this.logger.debug("Generating upcoming movement predictions", { count });
 
     const movements = this.config.availableMovements;
@@ -748,10 +752,9 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
    * Predict optimal timing for a specific action
    */
   @logMethod
-  @catchError
-  public async predictOptimalTiming(
+  public predictOptimalTiming(
     action: string,
-  ): Promise<{ nextBeat: number; confidence: number }> {
+  ): { nextBeat: number; confidence: number } {
     this.logger.debug("Predicting optimal timing", { action });
 
     const nextBeatTime = this.lastBeatTime + this.beatInterval;
@@ -769,10 +772,9 @@ export class RhythmicMovementController implements IRhythmicMovementController, 
    * Calculate difficulty score for a movement sequence
    */
   @logMethod
-  @catchError
-  public async calculateSequenceDifficulty(
+  public calculateSequenceDifficulty(
     sequence: string[],
-  ): Promise<number> {
+  ): number {
     if (!sequence || sequence.length === 0) {
       return 0;
     }

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import {
@@ -10,8 +10,9 @@ import { Vector2 } from "three";
 import * as THREE from "three";
 import { useGameStore } from "../../state/useGameStore";
 import { useCoordinateSystemService, useGameInputControllerService } from "../../services/hooks";
-import type { NoteData } from "../../types/contracts";
 import type { GameState } from "../../state/useGameStore";
+import { useCombatNotes } from "../../hooks/useCombatNotes";
+import type { RenderedNote } from "../../services/protocol/adapters/CombatNoteAdapter";
 
 import QualiaTempoHUD from "./QualiaTempoHUD";
 import QualiaFieldRenderer from "./QualiaFieldRenderer";
@@ -19,17 +20,6 @@ import MusicalNotesRenderer from "./MusicalNotesRenderer";
 import BossRenderer from "./BossRenderer";
 import PlayerRenderer from "./PlayerRenderer";
 import GridRenderer from "./GridRenderer";
-
-/**
- * Note type for renderer compatibility
- */
-interface Note {
-  id: string;
-  type: string;
-  timing: number;
-  position: [number, number, number];
-  qualia_signature: string;
-}
 
 /**
  * Game action data types for callback communication
@@ -93,15 +83,8 @@ const useQualiaTempoGameLogic = (isActive: boolean) => {
   const gameInputControllerService = useGameInputControllerService();
   const zustandState = useGameStore();
 
-  // QUALIA.CODE: Memoized note transformation - Performance critical
-  const renderedNotes = useMemo(() => {
-    if (!zustandState.combatData?.noteMap) {
-      return [];
-    }
-
-    // Transform NoteData from contracts to Note type for renderer
-    return transformCombatNotes(zustandState.combatData.noteMap);
-  }, [zustandState.combatData?.noteMap]);
+  // QUALIA.CODE v1.1: Note transformation using useCombatNotes hook
+  const renderedNotes = useCombatNotes(zustandState.combatData?.noteMap);
 
   // Initialize input handling when component mounts
   useEffect(() => {
@@ -122,29 +105,12 @@ const useQualiaTempoGameLogic = (isActive: boolean) => {
   };
 };
 
-// Function to transform NoteData from contracts to Note type for renderer
-const transformCombatNotes = (noteMap?: NoteData[]): Note[] => {
-  if (!noteMap) {
-    return [];
-  }
-
-  return noteMap.map((noteData: NoteData) => ({
-    id: `note_${noteData.timestamp}_${noteData.position.x}_${noteData.position.y}`,
-    type: "musical_note", // Default type for all notes
-    timing: noteData.timestamp,
-    position: [
-      noteData.position.x,
-      noteData.position.y,
-      0, // Z position - can be calculated based on timing or other factors
-    ] as [number, number, number],
-    qualia_signature: `signature_${Math.floor(noteData.timestamp)}`, // Generate based on timing
-  }));
-};
+// QUALIA.CODE v1.1: transformCombatNotes function eliminated - moved to CombatNoteAdapter
 
 // Component for 3D Canvas content
 interface GameCanvasContentProps {
   zustandState: GameState;
-  renderedNotes: Note[];
+  renderedNotes: RenderedNote[];
   playerAvatarRef: React.RefObject<THREE.Group>;
 }
 
@@ -235,7 +201,7 @@ const buildBossProps = (qualiaState: GameState['qualiaState']) => ({
 // Reduced from 96 lines to ~30 lines (70% reduction)
 interface GameElementsProps {
   zustandState: GameState;
-  renderedNotes: Note[];
+  renderedNotes: RenderedNote[];
   playerAvatarRef: React.RefObject<THREE.Group>;
 }
 
@@ -289,8 +255,13 @@ const SceneControlsAndEffects: React.FC<SceneControlsAndEffectsProps> = ({ quali
   <>
     <OrbitControls
       enablePan={false}
-      enableZoom={false}
-      enableRotate={false}
+      enableZoom={true}
+      enableRotate={true}
+      minPolarAngle={Math.PI / 6}  // Limit rotation to prevent flipping
+      maxPolarAngle={Math.PI / 2.2}  // Keep view mostly top-down but allow tilt
+      minDistance={10}
+      maxDistance={25}
+      target={[0, 0, 0]}  // Focus on center of grid
     />
 
     {/* Post-processing effects */}
@@ -379,7 +350,12 @@ const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
       {/* 3D Game Scene */}
       <Canvas
         data-testid="canvas"
-        camera={{ position: [0, 18, 0.1], fov: 50 }}
+        camera={{ 
+          position: [0, 15, 12], 
+          fov: 50,
+          near: 0.1,
+          far: 1000
+        }}
         className="w-full h-full"
         style={{
           background: "linear-gradient(180deg, #0a0a2e 0%, #16213e 100%)",

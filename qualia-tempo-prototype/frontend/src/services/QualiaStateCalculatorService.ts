@@ -90,10 +90,10 @@ export class QualiaStateCalculatorService
   @logMethod
   @catchError
   public initialize(): void {
-    this.logger.info("🚀 [QualiaCalculator] Initializing service...");
     // Activa todas las suscripciones de eventos declaradas con @OnEvent
     initializeEventSubscriptions(this);
-    this.logger.info("🧮 [QualiaCalculator] Service initialized - listening to GameTick events");
+    // CRITICAL FIX: Emit initial state so AudioService can start with base values
+    this.emitStateUpdate();
   }
 
   /**
@@ -101,19 +101,15 @@ export class QualiaStateCalculatorService
    * QUALIA.CODE v1.1: Pure event-driven architecture - no internal loops to stop
    */
   @logMethod
-  @catchError
   public cleanup(): void {
-    this.logger.info("🛑 [QualiaCalculator] Cleaning up service...");
     // Limpia todas las suscripciones de eventos para prevenir memory leaks
     cleanupEventSubscriptions(this);
-    this.logger.info("✅ [QualiaCalculator] Service cleaned up");
   }
 
   /**
    * Get current QualiaState (for debugging/monitoring).
    */
   @logMethod
-  @catchError
   public getCurrentState(): QualiaState {
     return { ...this.currentState };
   }
@@ -346,10 +342,32 @@ export class QualiaStateCalculatorService
     return Math.max(config.minValue, Math.min(config.maxValue, value));
   }
 
+  private previousState: QualiaState | null = null;
+
   private hasSignificantChange(): boolean {
+    // QUALIA.CODE v1.1: Production-ready implementation - no prototypes
     // Check if any value changed by more than 0.01 (1%)
     // This prevents excessive event emissions during decay
-    return true; // For now, always emit to ensure backend sync
+    if (!this.previousState) {
+      this.previousState = { ...this.currentState };
+      return true; // First emission always significant
+    }
+
+    const threshold = 0.01; // 1% change threshold
+    const hasChange = 
+      Math.abs(this.currentState.intensity - this.previousState.intensity) > threshold ||
+      Math.abs(this.currentState.precision - this.previousState.precision) > threshold ||
+      Math.abs(this.currentState.aggression - this.previousState.aggression) > threshold ||
+      Math.abs(this.currentState.flow - this.previousState.flow) > threshold ||
+      Math.abs(this.currentState.chaos - this.previousState.chaos) > threshold ||
+      Math.abs(this.currentState.recovery - this.previousState.recovery) > threshold ||
+      Math.abs(this.currentState.transcendence - this.previousState.transcendence) > threshold;
+
+    if (hasChange) {
+      this.previousState = { ...this.currentState };
+    }
+
+    return hasChange;
   }
 
   /**
@@ -447,7 +465,6 @@ export class QualiaStateCalculatorService
    * @returns Object containing performance metrics
    */
   @logMethod
-  @catchError
   public getStats(): {
     isRunning: boolean;
     calculationsPerformed: number;

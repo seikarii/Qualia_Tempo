@@ -218,3 +218,40 @@ test:
   mockServices: true
   enableDebugOutput: false
   timeoutMs: 5000
+
+# 3D Scene Configuration - QualiaTempoGame
+scene3D:
+  camera:
+    position: [0, 15, 12]
+    fov: 50
+    near: 0.1
+    far: 1000
+  orbitControls:
+    enablePan: false
+    enableZoom: true
+    enableRotate: true
+    minPolarAngle: 0.5235987755982988 # Math.PI / 6
+    maxPolarAngle: 1.4284271247461903 # Math.PI / 2.2
+    minDistance: 10
+    maxDistance: 25
+    targetPosition: [0, 0, 0]
+  lighting:
+    ambient:
+      intensity: 0.2
+    pointLight:
+      position: [10, 10, 10]
+      intensity: 0.8
+    dynamicLight:
+      position: [0, 5, 0]
+      intensityMultiplier: 2
+  background:
+    gradient: "linear-gradient(180deg, #0a0a2e 0%, #16213e 100%)"
+  postProcessing:
+    bloom:
+      intensityMultiplier: 2
+      luminanceThreshold: 0.1
+      luminanceSmoothing: 0.9
+    chromaticAberration:
+      chaosMultiplier: 0.002
+      radialModulation: false
+      modulationOffset: 0.15

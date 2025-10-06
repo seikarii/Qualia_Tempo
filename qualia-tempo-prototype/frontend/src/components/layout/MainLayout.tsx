@@ -31,10 +31,13 @@ const MainLayout: React.FC = () => {
         LAYER 0: FRONTEND RENDERER (Z-0)
         La fuente de verdad para los visuales del motor.
         Debe llenar toda la pantalla.
+        CRITICAL FIX: Only render in Menu mode to avoid double canvas issue
       */}
-      <div className="absolute inset-0 z-0">
-        <FrontendRenderer />
-      </div>
+      {!isPlaying && (
+        <div className="absolute inset-0 z-0">
+          <FrontendRenderer />
+        </div>
+      )}
 
       {/*
         LAYER 1: ATMOSPHERE (Z-10)

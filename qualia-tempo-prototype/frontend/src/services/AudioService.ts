@@ -26,6 +26,7 @@ export class AudioService implements IAudioService, IBaseService {
   private timerService: ITimerService;
   private isInitialized: boolean = false;
   private isAudioContextStarted: boolean = false;
+  private currentQualiaState: QualiaState | null = null;
 
   // @ts-expect-error - Utilizado por el ciclo de vida del decorador @OnEvent
   private _eventListeners: string[] = [];
@@ -54,7 +55,6 @@ export class AudioService implements IAudioService, IBaseService {
     this.createEntityVoices();
 
     this.isInitialized = true;
-    this.logger.info("✅ AudioService initialized successfully");
   }
 
   @logMethod
@@ -67,20 +67,16 @@ export class AudioService implements IAudioService, IBaseService {
 
     // Clean up audio engine
     this.isInitialized = false;
-
-    this.logger.info("✅ AudioService stopped successfully");
   }
 
   @logMethod
   public initialize(): void {
-    this.logger.info('🚀 [AudioService] Initializing service with @OnEvent lifecycle...');
     // Activa todas las suscripciones de eventos declaradas con @OnEvent
     initializeEventSubscriptions(this);
   }
 
   @logMethod
   public cleanup(): void {
-    this.logger.info('🧹 [AudioService] Cleaning up service...');
     // Limpia todas las suscripciones de eventos para prevenir memory leaks
     cleanupEventSubscriptions(this);
   }
@@ -112,7 +108,6 @@ export class AudioService implements IAudioService, IBaseService {
   }
 
   @logMethod
-  @catchError
   public getStatus(): { running: boolean; engine: boolean } {
     return {
       running: this.isInitialized,
@@ -127,6 +122,10 @@ export class AudioService implements IAudioService, IBaseService {
     // Use the real qualiaState from frontend calculation
     const { qualiaState } = event;
     const qualiaStateRecord = qualiaState as unknown as Record<string, unknown>;
+
+    // CRITICAL FIX: Store current qualia state for metronome
+    this.currentQualiaState = qualiaState;
+    this.logger.info(`🔊 [AudioService] Qualia state updated: intensity=${qualiaState.intensity.toFixed(2)}, flow=${qualiaState.flow.toFixed(2)}`);
 
     this.audioEngine.updateEntitySound("player", qualiaStateRecord);
     
@@ -210,22 +209,39 @@ export class AudioService implements IAudioService, IBaseService {
   }
 
   @logMethod
-  @catchError
   public playMetronomeTick(): void {
     if (!this.audioEngine || !this.isInitialized) {
       return; // Silent fail for metronome - not critical
     }
 
-    try {
-      this.webAudioAPIService.playTone(
-        this.config.metronome.frequency,
-        this.config.metronome.duration,
-        this.config.metronome.gain,
-        this.config.metronome.waveform as AudioWaveformType
+    // CRITICAL FIX: Vary metronome frequency based on qualia state
+    let frequency = this.config.metronome.frequency;
+    
+    if (this.currentQualiaState) {
+      // Modulate frequency based on intensity (±20%)
+      const intensityModulation = 1 + (this.currentQualiaState.intensity - 0.5) * 0.4;
+      // Modulate frequency based on flow (pitch variation)
+      const flowModulation = 1 + (this.currentQualiaState.flow - 0.5) * 0.3;
+      // Combine modulations
+      frequency = this.config.metronome.frequency * intensityModulation * flowModulation;
+      
+      // QUALIA.CODE: Use externalized configuration for frequency limits
+      frequency = Math.max(
+        this.config.metronome.minFrequency, 
+        Math.min(this.config.metronome.maxFrequency, frequency)
       );
-    } catch (error) {
-      // Silent fail for metronome
+      
+      this.logger.info(`🎵 [AudioService] Metronome tick: ${frequency.toFixed(0)}Hz (base=${this.config.metronome.frequency}, intensity=${this.currentQualiaState.intensity.toFixed(2)}, flow=${this.currentQualiaState.flow.toFixed(2)})`);
+    } else {
+      this.logger.warn(`⚠️ [AudioService] No qualia state available, using default ${frequency}Hz`);
     }
+
+    this.webAudioAPIService.playTone(
+      frequency,
+      this.config.metronome.duration,
+      this.config.metronome.gain,
+      this.config.metronome.waveform as AudioWaveformType
+    );
   }
 
   @logMethod
@@ -318,7 +334,6 @@ export class AudioService implements IAudioService, IBaseService {
   }
 
   @logMethod
-  @catchError
   public getMasterVolume(): number {
     return this.config.volume;
   }

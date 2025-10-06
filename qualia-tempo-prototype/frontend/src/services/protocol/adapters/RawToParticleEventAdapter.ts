@@ -59,6 +59,7 @@ export class RawToParticleEventAdapter implements IMessageAdapter {
 
   /**
    * Validate raw data format and size
+   * QUALIA.CODE v1.2: Enhanced error handling for graceful degradation
    */
   private validateRawData(rawData: ArrayBuffer): void {
     if (!(rawData instanceof ArrayBuffer)) {
@@ -67,8 +68,11 @@ export class RawToParticleEventAdapter implements IMessageAdapter {
       );
     }
 
-    if (rawData.byteLength === this.config.particleProtocol.validation.minBufferSize) {
-      throw new Error('Invalid particle data: ArrayBuffer is empty');
+    // CRITICAL FIX: Check for zero or very small buffers
+    if (rawData.byteLength === 0 || rawData.byteLength < this.config.particleProtocol.validation.minBufferSize) {
+      throw new Error(
+        `Invalid particle data: ArrayBuffer too small (${rawData.byteLength} bytes). Minimum: ${this.config.particleProtocol.validation.minBufferSize} bytes`
+      );
     }
 
     if (rawData.byteLength % this.config.particleProtocol.validation.requireMultipleOf !== 0) {

@@ -32,6 +32,8 @@ export interface AudioServiceConfig {
     gain: number;
     duration: number;
     waveform: string;
+    minFrequency: number;
+    maxFrequency: number;
   };
   audioEngine: {
     sampleRate: number;

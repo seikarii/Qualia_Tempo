@@ -12,7 +12,7 @@ import type { IBrowserEventsService } from './interfaces/IBrowserEventsService';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { ILogger } from './interfaces/ILogger';
 import type { PlayerActionEvent } from './contracts/events.contracts';
-import { logMethod, IBaseService } from '../utils/decorators';
+import { logMethod, catchError, IBaseService } from '../utils/decorators';
 
 @injectable()
 export class GameInputControllerService implements IGameInputControllerService, IBaseService {
@@ -40,21 +40,19 @@ export class GameInputControllerService implements IGameInputControllerService, 
   }
 
   @logMethod
+  @catchError
   public initialize(): void {
-    this.logger.info('🚀 [GameInputController] Initializing service...');
     // Initialize input handling as active by default
     this.initializeInputHandling(true);
-    this.logger.info('✅ [GameInputController] Service initialized');
   }
 
   @logMethod
   public cleanup(): void {
-    this.logger.info('🧹 [GameInputController] Cleaning up service...');
     this.cleanupInputHandling();
-    this.logger.info('✅ [GameInputController] Service cleaned up');
   }
 
   @logMethod
+  @catchError
   public initializeInputHandling(isActive: boolean): void {
     this.isActive = isActive;
 
@@ -70,8 +68,6 @@ export class GameInputControllerService implements IGameInputControllerService, 
     // Register event listeners
     this.browserEventsService.addWindowEventListener('keydown', this.keyPressHandler);
     this.browserEventsService.addWindowEventListener('keyup', this.keyReleaseHandler);
-
-    this.logger.debug('Input handling initialized');
   }
 
   @logMethod
@@ -85,8 +81,6 @@ export class GameInputControllerService implements IGameInputControllerService, 
       this.browserEventsService.removeWindowEventListener('keyup', this.keyReleaseHandler);
       this.keyReleaseHandler = undefined;
     }
-
-    this.logger.debug('Input handling cleaned up');
   }
 
   @logMethod

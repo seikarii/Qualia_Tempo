@@ -150,19 +150,22 @@ const useConnectionStatus = () => {
 
 /**
  * Custom hook for canvas sizing
+ * QUALIA.CODE v1.1: Uses canvasRef instead of direct DOM access for platform abstraction
  */
-const useCanvasSizing = (isInitialized: boolean, width?: number, height?: number) => {
+const useCanvasSizing = (
+  canvasRef: React.RefObject<HTMLCanvasElement>,
+  isInitialized: boolean, 
+  width?: number, 
+  height?: number
+) => {
   const renderingService = useFrontendRenderingService();
 
   useEffect(() => {
-    if (isInitialized) {
-      const canvas = document.querySelector('canvas');
-      if (canvas) {
-        const rect = canvas.getBoundingClientRect();
-        renderingService.resize(rect.width, rect.height);
-      }
+    if (isInitialized && canvasRef.current) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      renderingService.resize(rect.width, rect.height);
     }
-  }, [width, height, isInitialized, renderingService]);
+  }, [width, height, isInitialized, renderingService, canvasRef]);
 };
 
 /**
@@ -172,7 +175,7 @@ const useCanvasSizing = (isInitialized: boolean, width?: number, height?: number
 const useFrontendRenderer = (width?: number, height?: number) => {
   const { canvasRef, isInitialized, renderingService } = useRendererInitialization();
   const connectionStatus = useConnectionStatus();
-  useCanvasSizing(isInitialized, width, height);
+  useCanvasSizing(canvasRef, isInitialized, width, height);
 
   return {
     canvasRef,
@@ -204,14 +207,12 @@ const FrontendRenderer: React.FC<FrontendRendererProps> = ({
   const { canvasRef, isInitialized, connectionStatus, renderingService } = useFrontendRenderer(width, height);
 
   return (
-    <div className={`frontend-renderer ${className}`}>
+    <div className={`frontend-renderer ${className}`} style={{ width: '100%', height: '100%' }}>
       <canvas
         ref={canvasRef}
-        width={width}
-        height={height}
         style={{
-          width: width ?? '100%',
-          height: height ?? '100%',
+          width: width ? `${width}px` : '100%',
+          height: height ? `${height}px` : '100%',
           display: 'block',
           background: '#000000',
         }}
