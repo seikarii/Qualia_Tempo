@@ -2,7 +2,7 @@
 *Última actualización: 6 de octubre de 2025 - 10:30*
 
 ## DEV NOTES: 
-1. Revisar toda la pipeline de postprocessado 
+1. Revisar toda la pipeline de postprocessado , añadir shadercaching
 2. BARAJAR PINO PARA LOGGING
 3. ARREGLAR LA PARTE DEL JUEGO (CATASTROFICO, FALTAN COSAS Y ESTA TODO DESCONECTADO)
 4. AGREGAR SERVICIO DE BENCHMARKING

@@ -1,6 +1,173 @@
 # ARCHITECTURAL SUGGESTIONS & IMPROVEMENTS
 *Generated: 2025-10-04 - Post Linter Remediation Analysis*
 *Updated: 2025-10-04 - Phase 3 & Phase 4 Implementation Complete*
+*Updated: 2025-10-06 - Shader Architecture & PostProcessingService Improvements*
+
+---
+
+
+## 🚀 NEW SUGGESTION 2: ShaderLoaderService Caching Enhancement (2025-10-06)
+
+### Context
+During shader debugging, noticed `ShaderLoaderService` has basic in-memory caching but lacks advanced features.
+
+### Proposed Enhancements
+
+**2.1. Persistent Cache (LocalStorage)**
+```typescript
+async load(shaderName: string): Promise<string> {
+  // Check LocalStorage first
+  const cacheKey = `shader_v${SHADER_VERSION}_${shaderName}`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) return cached;
+  
+  // Load from network, cache to LocalStorage
+  const source = await this.httpService.get(`/shaders/${shaderName}.glsl`);
+  localStorage.setItem(cacheKey, source);
+  return source;
+}
+```
+
+**Benefits:** Instant shader load on subsequent page loads (no HTTP requests)
+
+**2.2. Shader Validation Cache**
+```typescript
+interface CompiledShader {
+  source: string;
+  compiledVertexShader: string;
+  compiledFragmentShader: string;
+  uniforms: Record<string, IUniform>;
+  validationHash: string;  // Hash of source for cache invalidation
+}
+```
+
+**Benefits:** Skip introspection if shader source unchanged (huge perf boost)
+
+**2.3. Hot Module Replacement (HMR) Integration**
+```typescript
+if (import.meta.hot) {
+  import.meta.hot.accept(['/shaders/**/*.glsl'], (modules) => {
+    this.cache.clear();
+    this.logger.info('Shader cache cleared due to HMR');
+  });
+}
+```
+
+**Benefits:** Instant shader reload during development without full page refresh
+
+---
+
+## 🚀 NEW SUGGESTION 3: RawShaderMaterial Attribute Auto-Detection (2025-10-06)
+
+### Context
+Fixed bug where `position`, `uv` attributes were undeclared. This is a common RawShaderMaterial pitfall.
+
+### Proposed Solution: ShaderIntrospectionService Auto-Attribute Detection
+
+**Idea:** Parse vertex shader to detect required attributes, warn if missing:
+
+```typescript
+private detectRequiredAttributes(vertexShader: string): string[] {
+  const attributes: string[] = [];
+  const attributeRegex = /\b(\w+)\s*=\s*(\w+)(?:\.\w+)?/g;
+  
+  let match;
+  while ((match = attributeRegex.exec(vertexShader)) !== null) {
+    const varName = match[2];
+    if (['position', 'uv', 'normal', 'color', 'size'].includes(varName)) {
+      if (!vertexShader.includes(`in ${varName}`)) {
+        this.logger.warn(`Attribute '${varName}' used but not declared with 'in'`);
+        attributes.push(varName);
+      }
+    }
+  }
+  
+  return attributes;
+}
+```
+
+**Auto-Fix Option:**
+```typescript
+private autoFixMissingAttributes(vertexShader: string): string {
+  const missing = this.detectRequiredAttributes(vertexShader);
+  if (missing.length === 0) return vertexShader;
+  
+  const declarations = missing.map(attr => {
+    const type = this.getAttributeType(attr);  // 'vec3' for position, 'vec2' for uv, etc.
+    return `in ${type} ${attr};`;
+  }).join('\n');
+  
+  return declarations + '\n' + vertexShader;
+}
+```
+
+**Benefits:**
+1. Catch missing attributes at shader load time (not at render time)
+2. Auto-fix common mistakes
+3. Better error messages for developers
+4. QUALIA.CODE compliance: Validation at boundaries
+
+---
+
+## 🔧 SUGGESTION 4: Three.js RawShaderMaterial Helper Class (2025-10-06)
+
+### Context
+RawShaderMaterial requires manual management of all uniforms/attributes. This is error-prone.
+
+### Proposed Solution: QualiaRawShaderMaterial Wrapper
+
+```typescript
+export class QualiaRawShaderMaterial extends THREE.RawShaderMaterial {
+  constructor(params: RawShaderMaterialParameters & {
+    autoInjectMatrices?: boolean;  // Default: true
+    autoInjectAttributes?: boolean; // Default: true
+  }) {
+    // Auto-inject Three.js built-in uniforms
+    if (params.autoInjectMatrices !== false) {
+      params.uniforms = {
+        ...params.uniforms,
+        modelViewMatrix: { value: new THREE.Matrix4() },
+        projectionMatrix: { value: new THREE.Matrix4() },
+        viewMatrix: { value: new THREE.Matrix4() },
+        normalMatrix: { value: new THREE.Matrix3() },
+        cameraPosition: { value: new THREE.Vector3() }
+      };
+    }
+    
+    // Auto-detect and log missing attributes
+    if (params.autoInjectAttributes !== false) {
+      const required = ['position', 'uv', 'normal', 'color'];
+      required.forEach(attr => {
+        if (!params.vertexShader?.includes(`in ${attr}`)) {
+          console.warn(`QualiaRawShaderMaterial: Missing 'in ${attr}' declaration`);
+        }
+      });
+    }
+    
+    super(params);
+  }
+}
+```
+
+**Usage:**
+```typescript
+// BEFORE: Manual matrix injection (error-prone)
+new THREE.RawShaderMaterial({
+  uniforms: {
+    modelViewMatrix: { value: new THREE.Matrix4() },  // Easy to forget
+    projectionMatrix: { value: new THREE.Matrix4() },
+    // ...
+  }
+});
+
+// AFTER: Auto-injected (QUALIA.CODE compliant)
+new QualiaRawShaderMaterial({
+  uniforms: { /* custom uniforms only */ }
+  // Matrices auto-injected
+});
+```
+
+---
 
 ---
 
