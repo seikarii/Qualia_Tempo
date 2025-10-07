@@ -424,6 +424,108 @@ class BossAttackEvent(BaseEvent):
         self.telegraph_duration = telegraph_duration
 
 
+class BossAggressionChangedEvent(BaseEvent):
+    """Event emitted when boss aggression level changes significantly."""
+    def __init__(
+        self,
+        boss_id: str,
+        old_aggression: float,  # 0.0-1.0
+        new_aggression: float,  # 0.0-1.0
+        aggression_tier: str,  # 'passive', 'cautious', 'normal', 'aggressive', 'enraged'
+        factors: Dict[str, float],  # Contributing factors: volume, tempo, harmony, combo
+        timestamp: float,
+        source: str = "BossAIService",
+        metadata: Optional[Dict[str, Any]] = None
+    ):
+        BaseEvent.__init__(
+            self,
+            type="Boss.AggressionChanged",
+            timestamp=timestamp,
+            source=source,
+            metadata=metadata
+        )
+        self.boss_id = boss_id
+        self.old_aggression = old_aggression
+        self.new_aggression = new_aggression
+        self.aggression_tier = aggression_tier
+        self.factors = factors
+
+
+class BossPatternSelectedEvent(BaseEvent):
+    """Event emitted when boss AI selects a new attack pattern."""
+    def __init__(
+        self,
+        boss_id: str,
+        pattern_id: str,
+        pattern_type: str,  # 'projectile', 'melee', 'aoe', 'movement', 'special'
+        pattern_name: str,
+        selection_context: Dict[str, Any],  # Why this pattern was chosen
+        timestamp: float,
+        source: str = "BossAIService",
+        metadata: Optional[Dict[str, Any]] = None
+    ):
+        BaseEvent.__init__(
+            self,
+            type="Boss.PatternSelected",
+            timestamp=timestamp,
+            source=source,
+            metadata=metadata
+        )
+        self.boss_id = boss_id
+        self.pattern_id = pattern_id
+        self.pattern_type = pattern_type
+        self.pattern_name = pattern_name
+        self.selection_context = selection_context
+
+
+class BossEnragedEvent(BaseEvent):
+    """Event emitted when boss enters enrage mode."""
+    def __init__(
+        self,
+        boss_id: str,
+        time_remaining: float,  # Seconds left in song
+        enrage_multipliers: Dict[str, float],  # Aggression, telegraph, frequency boosts
+        timestamp: float,
+        source: str = "BossAIService",
+        metadata: Optional[Dict[str, Any]] = None
+    ):
+        BaseEvent.__init__(
+            self,
+            type="Boss.Enraged",
+            timestamp=timestamp,
+            source=source,
+            metadata=metadata
+        )
+        self.boss_id = boss_id
+        self.time_remaining = time_remaining
+        self.enrage_multipliers = enrage_multipliers
+
+
+class BossVulnerableEvent(BaseEvent):
+    """Event emitted when boss becomes vulnerable after an attack."""
+    def __init__(
+        self,
+        boss_id: str,
+        vulnerability_duration: float,  # Seconds
+        damage_multiplier: float,  # Damage multiplier during vulnerability
+        can_be_neutralized: bool,  # Can harmonic combos neutralize boss
+        timestamp: float,
+        source: str = "BossAIService",
+        metadata: Optional[Dict[str, Any]] = None
+    ):
+        BaseEvent.__init__(
+            self,
+            type="Boss.Vulnerable",
+            timestamp=timestamp,
+            source=source,
+            metadata=metadata
+        )
+        self.boss_id = boss_id
+        self.vulnerability_duration = vulnerability_duration
+        self.damage_multiplier = damage_multiplier
+        self.can_be_neutralized = can_be_neutralized
+
+
 # ============================================================================
 # MUSIC SYSTEM EVENTS
 # ============================================================================
@@ -650,6 +752,10 @@ def dict_to_event(data: Dict[str, Any]) -> BaseEvent:
         "Game.CooldownUpdated": CooldownUpdatedEvent,
         "Boss.PhaseChanged": BossPhaseChangedEvent,
         "Boss.Attack": BossAttackEvent,
+        "Boss.AggressionChanged": BossAggressionChangedEvent,
+        "Boss.PatternSelected": BossPatternSelectedEvent,
+        "Boss.Enraged": BossEnragedEvent,
+        "Boss.Vulnerable": BossVulnerableEvent,
         "Music.SongNote": SongNoteEvent,
         "Music.TempoChanged": TempoChangedEvent,
         "Music.VolumeChanged": VolumeChangedEvent,

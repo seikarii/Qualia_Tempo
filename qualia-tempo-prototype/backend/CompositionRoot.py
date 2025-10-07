@@ -54,6 +54,9 @@ class CompositionRoot:
         await self._initialize_game_logic_service()
         # PHASE 2 TASK 2.2: Initialize HarmonyAnalysisService for musical harmony
         await self._initialize_harmony_analysis_service()
+        # PHASE 2 TASK 2.3: Initialize BossAI and PatternSystem services
+        await self._initialize_boss_ai_service()
+        await self._initialize_pattern_system_service()
         # ARCHITECTURE.GOLD.CODE: StreamingWebService removed - backend does not render
         # Video streaming functionality deprecated in favor of state-only streaming
         await self._initialize_state_streaming_service()
@@ -228,6 +231,53 @@ class CompositionRoot:
             self._logger.error(f"🚨 Failed to initialize HarmonyAnalysisService: {e}")
             raise
 
+    async def _initialize_boss_ai_service(self) -> None:
+        """
+        Initialize BossAIService for boss behavior orchestration (PHASE 2 TASK 2.3).
+        
+        RESPONSIBILITIES (per GDD.md):
+        - Boss phase management (Opening, Escalation, Climax, Finale)
+        - Multi-factor aggression calculation (volume, tempo, harmony, combo)
+        - Context-aware attack pattern selection AI
+        - Pattern execution with telegraph timing and vulnerability windows
+        - Enrage mechanics when song time remaining < 30s
+        - Qualia generation on successful attacks
+        - Harmonic combo pattern neutralization
+        """
+        try:
+            from .services.BossAIService import BossAIService
+
+            boss_ai_service = BossAIService(event_bus=self._event_bus)
+            self._services["boss_ai_service"] = boss_ai_service
+            
+            self._logger.info("✅ BossAIService initialized - Boss AI orchestration ready")
+            
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize BossAIService: {e}")
+            raise
+
+    async def _initialize_pattern_system_service(self) -> None:
+        """
+        Initialize PatternSystemService for attack pattern management (PHASE 2 TASK 2.3).
+        
+        RESPONSIBILITIES:
+        - Pattern library management
+        - Pattern validation (type, phase requirements, aggression requirements)
+        - Pattern querying by type, phase, aggression tier
+        - Loading patterns from CombatData JSON files
+        """
+        try:
+            from .services.PatternSystemService import PatternSystemService
+
+            pattern_service = PatternSystemService()
+            self._services["pattern_system_service"] = pattern_service
+            
+            self._logger.info("✅ PatternSystemService initialized - Pattern library ready")
+            
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize PatternSystemService: {e}")
+            raise
+
     # ARCHITECTURE.GOLD.CODE v2: ParticleEngine uses multiprocessing pool (Phase 1 Task 1.3)
     # No GPU/OpenGL context needed - pure state calculation
             
@@ -328,6 +378,14 @@ class CompositionRoot:
     def get_harmony_analysis_service(self) -> Any:
         """Get the HarmonyAnalysisService instance."""
         return self.get_service("harmony_analysis_service")
+
+    def get_boss_ai_service(self) -> Any:
+        """Get the BossAIService instance."""
+        return self.get_service("boss_ai_service")
+
+    def get_pattern_system_service(self) -> Any:
+        """Get the PatternSystemService instance."""
+        return self.get_service("pattern_system_service")
 
     # ARCHITECTURE.GOLD.CODE: get_rendering_service and get_streaming_web_service REMOVED
     # Backend no longer provides rendering or video streaming services

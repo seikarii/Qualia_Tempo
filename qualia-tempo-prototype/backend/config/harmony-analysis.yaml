@@ -176,13 +176,15 @@ thresholds:
   # Classification thresholds
   harmonic_threshold: 0.60     # Score >= 0.60 is considered "harmonic"
   chaotic_threshold: 0.40      # Score <= 0.40 is considered "chaotic"
-  neutral_range: [0.40, 0.60]  # Between these is "neutral"
+  neutral_range_min: 0.40      # Neutral range lower bound
+  neutral_range_max: 0.60      # Neutral range upper bound
   
   # Special thresholds
   perfect_harmony: 0.90        # Score >= 0.90 is "perfect harmony"
   extreme_chaos: 0.20          # Score <= 0.20 is "extreme chaos"
-  
-  # Pattern detection
+
+# Pattern detection parameters
+pattern_detection:
   min_notes_for_chord: 3       # Minimum notes to form a chord pattern
   max_notes_for_analysis: 7    # Maximum notes to consider at once
 
