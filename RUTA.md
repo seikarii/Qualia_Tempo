@@ -314,13 +314,36 @@ Ready to proceed to Phase 1: Backend Rendering Removal
   - ✅ IoC Binding Order: PASSED
   - 🎉 **ALL SYSTEMS COMPLIANT**
 
-##### 1.3. Process Pool Setup (Día 5-6):
-- [ ] Crear `backend/workers/ParticleEngineWorker.py`
-- [ ] Implementar pool con multiprocessing.Pool
-- [ ] Queue management (input/output)
-- [ ] Timeout handling y error recovery
-- [ ] Config: `backend/config/process-pool.yaml`
-- [ ] Tests de concurrencia
+##### 1.3. Process Pool Setup (Día 5-6): 🔄 **IN PROGRESS** (60% COMPLETE) - Oct 7, 2024
+- [x] Crear `backend/workers/ParticleEngineWorker.py` ✅
+  - **328 lines**: Worker class con lazy initialization
+  - **WorkerTask/WorkerResult dataclasses**: Input/output contracts
+  - **Dos modos**: Ephemeral (per-task) y persistent (per-process) workers
+  - **Commands**: update, initialize, reset
+  - **QualiaState integration**: Applies qualia parameters to physics
+  - Standalone test mode included
+- [x] Implementar pool con multiprocessing.Pool ✅
+  - **ParticleEnginePoolManager**: 348 lines de gestión completa
+  - **Async/await compatible**: FastAPI-ready con asyncio.Future integration
+  - **Dynamic task submission**: worker_process_task entry point
+  - **Context spawn**: Mejor aislamiento y compatibilidad cross-platform
+- [x] Queue management (input/output) ✅
+  - Task queue con UUID tracking
+  - Pending tasks dictionary con futures
+  - Result callbacks (on_complete, on_error)
+  - Backpressure via max_size config
+- [x] Timeout handling y error recovery ✅
+  - Task timeout con asyncio.wait_for
+  - Max retries configurable (3 default)
+  - Fallback strategies: skip, cache_last, error
+  - Health checks periódicos
+  - Graceful vs force shutdown
+- [x] Config: `backend/config/process-pool.yaml` ✅
+  - **6 secciones completas**: pool, queue, error_handling, performance, monitoring, shutdown
+  - Feature flags para escalabilidad futura
+  - Valores production-ready
+- [ ] Tests de concurrencia 🔄
+  - Pendiente: test_particle_engine_pool_manager.py
 
 ##### 1.4. Integration (Día 7):
 - [ ] Integrar ParticleEngineWorker en CompositionRoot

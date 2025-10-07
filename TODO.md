@@ -1,5 +1,5 @@
 # 📋 DEUDA TÉCNICA - QUALIA TEMPO
-*Última actualización: 6 de octubre de 2025 - 10:30*
+*Última actualización: 7 de octubre de 2025 - 14:45*
 
 ## DEV NOTES: 
 1. Revisar toda la pipeline de postprocessado , añadir shadercaching

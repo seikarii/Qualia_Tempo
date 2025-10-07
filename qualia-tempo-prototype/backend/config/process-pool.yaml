@@ -1,0 +1,44 @@
+# QUALIA.CODE v1.1 - Process Pool Configuration
+# Backend particle calculation multiprocessing setup
+
+# Pool Settings
+pool:
+  num_workers: 16  # Number of worker processes (default: CPU cores)
+  max_tasks_per_child: 100  # Restart worker after N tasks (memory management)
+  worker_restart_policy: "on_failure"  # Options: "on_failure", "never", "always"
+
+# Queue Management
+queue:
+  max_size: 50  # Maximum queued tasks before backpressure
+  timeout_seconds: 5.0  # Task execution timeout
+  priority_enabled: false  # Enable task prioritization (future feature)
+
+# Error Handling
+error_handling:
+  max_retries: 3  # Retry failed tasks
+  retry_delay_seconds: 0.5  # Delay between retries
+  fallback_strategy: "skip"  # Options: "skip", "cache_last", "error"
+  log_level: "WARNING"  # Options: DEBUG, INFO, WARNING, ERROR
+
+# Performance
+performance:
+  batch_size: 1  # Number of tasks to batch (1 = no batching)
+  collect_metrics: true  # Enable performance metrics
+  metrics_window_seconds: 60.0  # Metrics collection window
+
+# Monitoring
+monitoring:
+  health_check_interval_seconds: 10.0  # Worker health check frequency
+  worker_timeout_seconds: 30.0  # Consider worker dead after N seconds without response
+  enable_diagnostics: true  # Emit diagnostic events
+
+# Graceful Shutdown
+shutdown:
+  grace_period_seconds: 5.0  # Wait for tasks to complete before force shutdown
+  force_terminate_after_seconds: 10.0  # Hard kill workers if not stopped
+
+# Feature Flags
+features:
+  enable_async_result_handling: true  # Use async/await for result processing
+  enable_worker_pool_scaling: false  # Dynamic worker count (future feature)
+  enable_task_cancellation: false  # Allow task cancellation (future feature)
