@@ -160,14 +160,22 @@ export const TYPES = {
 
   // Phase 5: Visual Services
   IKairosVisualEngine: Symbol.for("IKairosVisualEngine"),
+  IParticleSystemService: Symbol.for("IParticleSystemService"),
 
   // Phase 5: Visual Config
   KairosVisualEngineConfig: Symbol.for("KairosVisualEngineConfig"),
   KairosVisualEngineParams: Symbol.for("KairosVisualEngineParams"),
+  ParticleSystemServiceConfig: Symbol.for("ParticleSystemServiceConfig"),
+  ParticleSystemServiceParams: Symbol.for("ParticleSystemServiceParams"),
 
   // Phase 3: Web Worker Services (ARCHITECTURE.GOLD.CODE - DOMINIO 2)
   IQualiaCalculatorWorkerService: Symbol.for("IQualiaCalculatorWorkerService"),
   QualiaCalculatorWorkerServiceConfig: Symbol.for("QualiaCalculatorWorkerServiceConfig"),
+
+  // Phase 5.4: Reaction-Diffusion Services (VISUALS.GOLD.CODE Phase 3)
+  IReactionDiffusionService: Symbol.for("IReactionDiffusionService"),
+  ReactionDiffusionServiceConfig: Symbol.for("ReactionDiffusionServiceConfig"),
+  ReactionDiffusionServiceParams: Symbol.for("ReactionDiffusionServiceParams"),
 } as const;
 
 // Type-safe access to TYPES

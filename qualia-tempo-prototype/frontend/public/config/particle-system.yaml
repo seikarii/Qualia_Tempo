@@ -1,0 +1,42 @@
+# QUALIA.CODE v1.1 - Particle System Configuration
+# PURPOSE: Configure GPU-instanced FFT-reactive particle system
+# REFERENCE: docs/VISUALS.GOLD.CODE.md Phase 2 - Synesthesia Profunda
+#
+# ARCHITECTURE NOTES:
+# - All behavior-defining values externalized here (LAW OF SOVEREIGNTY)
+# - Loaded by ConfigurationService on startup
+# - Directly injected into ParticleSystemService (no Service Locator)
+
+# Maximum particles in the pool
+# Higher values = more visual density but higher GPU cost
+# Target: 10,000 particles at 60fps
+maxParticles: 10000
+
+# Base size of each particle in world units
+# Multiplied by FFT bass level in real-time
+baseParticleSize: 1.0
+
+# Base emission speed in particles per second
+# Modulated by QualiaState.intensity (10-100 range)
+emissionSpeed: 5.0
+
+# FFT reactivity mappings
+# VISUALS.GOLD.CODE Phase 2: Audio frequencies → Visual properties
+fftReactivity:
+  # Bass (0-200Hz) → Particle Size
+  # Boom/kick drums make particles larger
+  bassToParticleSizeMultiplier:
+    min: 1.0
+    max: 2.5
+  
+  # Mid (200-2000Hz) → Velocity
+  # Melody/vocals make particles move faster
+  midToVelocityMultiplier:
+    min: 1.0
+    max: 2.0
+  
+  # Treble (2000-20000Hz) → Emissive Intensity
+  # Hi-hats/cymbals make particles glow brighter
+  trebleToEmissiveMultiplier:
+    min: 0.5
+    max: 2.0

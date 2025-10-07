@@ -48,6 +48,8 @@ import type { PhysicsServiceParams } from "./contracts/IPhysicsService.contracts
 
 // PHASE 5: Kairos Visual Engine Configuration Imports
 import type { KairosVisualEngineConfig, KairosVisualEngineParams } from "./contracts/IKairosVisualEngine.contracts";
+import type { ParticleSystemServiceConfig, ParticleSystemServiceParams } from "./contracts/IParticleSystemService.contracts";
+import type { ReactionDiffusionServiceParams } from "./contracts/IReactionDiffusionService.contracts";
 
 // NEW SERVICES CONFIGURATION IMPORTS
 // Future configuration imports for additional services
@@ -104,6 +106,8 @@ import type { IAudioSystemBridge } from "./interfaces/IAudioSystemBridge";
 import type { IBaseService } from "./interfaces/IBaseService";
 import type { IQualiaCalculatorWorkerService } from "./interfaces/IQualiaCalculatorWorkerService";
 import type { IKairosVisualEngine } from "./interfaces/IKairosVisualEngine";
+import type { IParticleSystemService } from "./interfaces/IParticleSystemService";
+import type { IReactionDiffusionService } from "./interfaces/IReactionDiffusionService";
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { ConfigurationService } from "./ConfigurationService";
@@ -142,6 +146,8 @@ import { StateMergerService } from "./StateMergerService";
 import { AudioSystemBridge } from "./AudioSystemBridge";
 import { JitterService } from "./JitterService";
 import { KairosVisualEngine } from "./KairosVisualEngine";
+import { ParticleSystemService } from "./ParticleSystemService";
+import { ReactionDiffusionService } from "./ReactionDiffusionService";
 
 // ===== PROTOCOL ADAPTER IMPORTS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
@@ -199,7 +205,10 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   // PHASE 3: Web Worker Services
   "qualiaCalculatorWorker": "qualia-calculator-worker.yaml",
   // PHASE 5: Kairos Visual Engine
-  "kairosVisual": "kairos-visual.yaml"
+  "kairosVisual": "kairos-visual.yaml",
+  "particleSystem": "particle-system.yaml",
+  // PHASE 5.4: Reaction-Diffusion Ground (VISUALS.GOLD.CODE Phase 3)
+  "reactionDiffusion": "reaction-diffusion.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
@@ -538,6 +547,23 @@ container
   .bind<IBaseService>(TYPES.ManagedService)
   .toService(TYPES.IKairosVisualEngine);
 
+// ===== PHASE 5.3: PARTICLE SYSTEM SERVICE =====
+container
+  .bind<IParticleSystemService>(TYPES.IParticleSystemService)
+  .to(ParticleSystemService)
+  .inSingletonScope();
+
+container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IParticleSystemService);
+
+// ===== PHASE 5.4: REACTION-DIFFUSION SERVICE =====
+// VISUALS.GOLD.CODE Phase 3: El Mundo Viviente (The Living World)
+container
+  .bind<IReactionDiffusionService>(TYPES.IReactionDiffusionService)
+  .to(ReactionDiffusionService)
+  .inSingletonScope();
+
 // ===== PHASE 4: TEMPORAL EFFECTS SERVICES =====
 import type { IJitterService } from './interfaces/IJitterService';
 
@@ -713,6 +739,7 @@ function bindBasicConfigurations(fullConfig: FullGameConfig): void {
   
   // PHASE 5: Kairos Visual Engine configuration
   safeBindConstant<KairosVisualEngineConfig>(TYPES.KairosVisualEngineConfig, fullConfig.kairosVisual);
+  safeBindConstant<ParticleSystemServiceConfig>(TYPES.ParticleSystemServiceConfig, fullConfig.particleSystem);
   
   // Bind ThrottlingConfig from NotificationService config
   safeBindConstant(TYPES.ThrottlingConfig, fullConfig.notificationService.throttling);
@@ -812,12 +839,29 @@ function bindLevel2ServiceParams(fullConfig: FullGameConfig): void {
     config: fullConfig.backendSync,
   });
   
-  // PHASE 5: Kairos Visual Engine - needs only base services (Level 0)
+  // PHASE 5.3: Particle System Service - needs AudioAnalysisService (Level 2 dependency)
+  // CRITICAL: Must be bound BEFORE KairosVisualEngineParams because it's injected there
+  safeBindConstant<ParticleSystemServiceParams>(TYPES.ParticleSystemServiceParams, {
+    config: fullConfig.particleSystem,
+    logger: container.get<ILogger>(TYPES.ILogger),
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    audioAnalysisService: container.get(TYPES.IAudioAnalysisService),
+  });
+  
+  // PHASE 5.4: Reaction-Diffusion Service - VISUALS.GOLD.CODE Phase 3
+  safeBindConstant<ReactionDiffusionServiceParams>(TYPES.ReactionDiffusionServiceParams, {
+    config: fullConfig.reactionDiffusion,
+    logger: container.get<ILogger>(TYPES.ILogger),
+  });
+  
+  // PHASE 5: Kairos Visual Engine - needs particleSystemService + reactionDiffusionService (Level 2 dependencies)
   safeBindConstant<KairosVisualEngineParams>(TYPES.KairosVisualEngineParams, {
     config: fullConfig.kairosVisual,
     logger: container.get<ILogger>(TYPES.ILogger),
     gameStateStore: container.get<IGameStateStore>(TYPES.IGameStateStore),
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    particleSystemService: container.get(TYPES.IParticleSystemService),
+    reactionDiffusionService: container.get(TYPES.IReactionDiffusionService),
   });
 }
 

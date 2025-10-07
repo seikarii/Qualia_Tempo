@@ -52,6 +52,8 @@ import type { DoFPassConfig } from '../services/contracts/IDoFPass.contracts';
 
 // PHASE 5: Kairos Visual Engine
 import type { KairosVisualEngineConfig } from '../services/contracts/IKairosVisualEngine.contracts';
+import type { ParticleSystemServiceConfig } from '../services/contracts/IParticleSystemService.contracts';
+import type { ReactionDiffusionServiceConfig } from '../services/contracts/IReactionDiffusionService.contracts';
 
 /**
  * Gameplay Configuration Interface
@@ -128,6 +130,8 @@ export interface FullGameConfig {
 
   // PHASE 5: Kairos Visual Engine
   kairosVisual: KairosVisualEngineConfig;
+  particleSystem: ParticleSystemServiceConfig;
+  reactionDiffusion: ReactionDiffusionServiceConfig; // PHASE 5.4: VISUALS.GOLD.CODE Phase 3
 
   // Optional Features
   visualEffects?: VisualEffectsConfig;

@@ -64,6 +64,11 @@
 - [ ] **FASE 4: AVATARES PROCEDURALES**: Reemplazar modelos 3D con Raymarching SDFs. Parametrizar formas con QualiaState para mutaciones en tiempo real.
 - [ ] **VALIDAR MAPEOS DE DATOS**: Asegurar que todos los parámetros shader sean funciones del QualiaState y/o FFT data, sin valores estáticos.
 
+### ⚠️ DEUDA TÉCNICA PENDIENTE - ReactionDiffusionService
+
+- [ ] **LOAD SHADER FROM FILE**: `getComputeShaderCode()` method inlines 65-line shader string (exceeds max-lines-per-function). Future refactor: load from `/public/shaders/reaction_diffusion_compute.glsl` - in `/frontend/src/services/ReactionDiffusionService.ts:287`
+- [ ] **REMOVE NON-NULL ASSERTIONS**: `executeSimulationStep()` uses non-null assertions (safe due to `canRunSimulation()` guard, but violates ESLint rules). Consider refactoring for cleaner null handling - in `/frontend/src/services/ReactionDiffusionService.ts:525-530`
+
 ---
 
 ## � TAREAS CRÍTICAS - CORRECCIONES DE BOOTSTRAP

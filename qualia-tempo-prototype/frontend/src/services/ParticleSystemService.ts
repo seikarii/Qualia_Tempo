@@ -98,7 +98,7 @@ export class ParticleSystemService implements IBaseService {
   /**
    * IBaseService lifecycle - Initialize service
    */
-  @logMethod()
+  @logMethod
   public initialize(): void {
     this.logger.info('[ParticleSystemService] Initializing...');
     initializeEventSubscriptions(this);
@@ -109,7 +109,7 @@ export class ParticleSystemService implements IBaseService {
   /**
    * IBaseService lifecycle - Cleanup service
    */
-  @logMethod()
+  @logMethod
   public cleanup(): void {
     this.logger.info('[ParticleSystemService] Cleaning up...');
     this.dispose();
@@ -120,7 +120,7 @@ export class ParticleSystemService implements IBaseService {
   /**
    * Initialize particle pool and GPU resources
    */
-  @catchError()
+  @catchError
   private initializeParticles(): void {
     // Create particle pool
     this.particles = [];
@@ -181,7 +181,7 @@ export class ParticleSystemService implements IBaseService {
    * Update particle system
    * Called every frame by KairosVisualEngine
    */
-  @catchError()
+  @catchError
   public update(deltaTime: number): void {
     // Update FFT data from audio service
     this.updateFFTData();
@@ -207,13 +207,20 @@ export class ParticleSystemService implements IBaseService {
       return;
     }
     
-    // Get frequency band energy (0-1 normalized)
-    this.currentFFT.bass = this.audioAnalysisService.getFrequencyBandEnergy('bass');
-    this.currentFFT.mid = this.audioAnalysisService.getFrequencyBandEnergy('mid');
-    this.currentFFT.treble = this.audioAnalysisService.getFrequencyBandEnergy('treble');
-  }
-  
-  /**
+    // Get current audio data (contains 8 frequency bands)
+    const audioData = this.audioAnalysisService.getCurrentAudioData();
+    if (!audioData || !audioData.frequencyBands || audioData.frequencyBands.length < 8) {
+      return;
+    }
+    
+    // Map frequency bands to bass/mid/treble (0-1 normalized)
+    // Bands 0-1: Bass (0-200Hz)
+    // Bands 2-5: Mid (200-2000Hz)
+    // Bands 6-7: Treble (2000-20000Hz)
+    this.currentFFT.bass = (audioData.frequencyBands[0] + audioData.frequencyBands[1]) / 2;
+    this.currentFFT.mid = (audioData.frequencyBands[2] + audioData.frequencyBands[3] + audioData.frequencyBands[4] + audioData.frequencyBands[5]) / 4;
+    this.currentFFT.treble = (audioData.frequencyBands[6] + audioData.frequencyBands[7]) / 2;
+  }  /**
    * Emit new particles based on emission rate and FFT bass
    */
   private emitParticles(deltaTime: number): void {
@@ -417,7 +424,7 @@ export class ParticleSystemService implements IBaseService {
   /**
    * Dispose GPU resources
    */
-  @catchError()
+  @catchError
   public dispose(): void {
     this.logger.info('[ParticleSystemService] Disposing resources...');
     

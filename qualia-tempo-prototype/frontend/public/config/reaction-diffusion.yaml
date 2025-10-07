@@ -1,0 +1,26 @@
+# QUALIA.CODE v1.1 - Reaction-Diffusion Service Configuration
+# VISUALS.GOLD.CODE Phase 3: El Mundo Viviente (The Living World)
+# PURPOSE: Configure Gray-Scott reaction-diffusion simulation for living ground
+
+# Master enable/disable
+enabled: true
+
+# Gray-Scott Model Parameters
+# These control the fundamental pattern formation behavior
+# See: "Complex Patterns in a Simple System" - John E. Pearson (1993)
+grayScott:
+  feedRate: 0.055 # F parameter (0.02-0.08) - Controls pattern scale
+  diffusionA: 1.0 # Da - Diffusion rate for substrate (chemical A)
+  diffusionB: 0.5 # Db - Diffusion rate for catalyst (chemical B)
+
+# Simulation Quality and Performance
+simulation:
+  resolution: 512 # Texture resolution (256, 512, 1024)
+  updateRate: 2 # Simulation steps per frame (1-4) - Higher = more accurate but slower
+  deltaTimeScale: 1.0 # Time step multiplier - Higher = faster evolution
+
+# Ground Plane Visual Configuration
+groundPlane:
+  size: 50 # Physical size in world units
+  height: -0.5 # Y position (slightly below origin)
+  segments: 64 # Mesh detail (32, 64, 128) - Higher = smoother but more vertices

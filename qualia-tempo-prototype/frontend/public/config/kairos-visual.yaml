@@ -44,7 +44,7 @@ effects:
   fftReactiveParticlesEnabled: true
   
   # PHASE 3: Reaction-Diffusion Ground
-  reactionDiffusionEnabled: false # Enable in Phase 5.4
+  reactionDiffusionEnabled: true # ✅ PHASE 5.4 COMPLETE
   
   # PHASE 4: SDF Avatars
   sdfAvatarsEnabled: false # Enable in Phase 5.5

@@ -177,4 +177,6 @@ export interface KairosVisualEngineParams {
   logger: any; // ILogger (avoiding circular import)
   gameStateStore: any; // IGameStateStore (avoiding circular import)
   eventBus: any; // IEventBus (avoiding circular import)
+  particleSystemService: any; // IParticleSystemService (avoiding circular import)
+  reactionDiffusionService: any; // IReactionDiffusionService (avoiding circular import)
 }

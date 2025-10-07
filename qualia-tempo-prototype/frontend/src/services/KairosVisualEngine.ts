@@ -23,6 +23,8 @@ import type { IBaseService } from './interfaces/IBaseService';
 import type { ILogger } from './interfaces/ILogger';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { IGameStateStore } from './interfaces/IGameStateStore';
+import type { IParticleSystemService } from './interfaces/IParticleSystemService';
+import type { IReactionDiffusionService } from './interfaces/IReactionDiffusionService';
 import type { KairosVisualEngineParams, KairosVisualEngineConfig } from './contracts/IKairosVisualEngine.contracts';
 import { OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from '../utils/decorators';
 import type { GameStateChangedEvent, QualiaStateCalculatedEvent } from './contracts/events.contracts';
@@ -130,6 +132,8 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   private readonly logger: ILogger;
   private readonly eventBus: IEventBus;
   private readonly gameStateStore: IGameStateStore;
+  private readonly particleSystemService: IParticleSystemService;
+  private readonly reactionDiffusionService: IReactionDiffusionService;
   
   // Three.js core objects
   private scene: THREE.Scene | null = null;
@@ -167,25 +171,26 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     aggression: number;
     chaos: number;
     flow: number;
+    recovery: number;
   } = {
     intensity: 0.5,
     transcendence: 0.0,
     precision: 0.5,
     aggression: 0.5,
     chaos: 0.5,
-    flow: 0.5
+    flow: 0.5,
+    recovery: 0.5
   };
   
   constructor(
-    @inject(TYPES.KairosVisualEngineConfig) config: KairosVisualEngineConfig,
-    @inject(TYPES.ILogger) logger: ILogger,
-    @inject(TYPES.IEventBus) eventBus: IEventBus,
-    @inject(TYPES.IGameStateStore) gameStateStore: IGameStateStore
+    @inject(TYPES.KairosVisualEngineParams) params: KairosVisualEngineParams
   ) {
-    this.config = config;
-    this.logger = logger;
-    this.eventBus = eventBus;
-    this.gameStateStore = gameStateStore;
+    this.config = params.config;
+    this.logger = params.logger;
+    this.eventBus = params.eventBus;
+    this.gameStateStore = params.gameStateStore;
+    this.particleSystemService = params.particleSystemService;
+    this.reactionDiffusionService = params.reactionDiffusionService;
     
     this.logger.info('[KairosVisualEngine] Service instantiated');
   }
@@ -281,6 +286,12 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     // PHASE 5.2: Setup post-processing pipeline
     this.setupPostProcessing();
     
+    // PHASE 5.3: Setup particle system (FFT-reactive)
+    this.setupParticleSystem();
+    
+    // PHASE 5.4: Setup reaction-diffusion ground (VISUALS.GOLD.CODE Phase 3)
+    this.setupReactionDiffusionGround();
+    
     // Log initialization complete
     this.logger.info('[KairosVisualEngine] Three.js initialized successfully', {
       renderer: 'WebGLRenderer',
@@ -289,7 +300,8 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
       shadows: this.config.render.shadowsEnabled,
       postProcessing: true,
       bloomEnabled: this.config.effects.bloomEnabled,
-      godRaysEnabled: this.config.effects.godRaysEnabled
+      godRaysEnabled: this.config.effects.godRaysEnabled,
+      particleSystemEnabled: this.config.effects.fftReactiveParticlesEnabled
     });
   }
   
@@ -397,6 +409,65 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   }
   
   /**
+   * Setup particle system
+   * VISUALS.GOLD.CODE Phase 2: FFT-Reactive Particles
+   */
+  private setupParticleSystem(): void {
+    if (!this.scene) {
+      this.logger.error('[KairosVisualEngine] Cannot setup particle system - scene not initialized');
+      return;
+    }
+    
+    if (!this.config.effects.fftReactiveParticlesEnabled) {
+      this.logger.info('[KairosVisualEngine] FFT-reactive particles disabled in config');
+      return;
+    }
+    
+    // Get particle system mesh from service
+    const particleMesh = this.particleSystemService.getInstancedMesh();
+    if (particleMesh) {
+      this.scene.add(particleMesh);
+      this.logger.info('[KairosVisualEngine] Particle system added to scene', {
+        particleCount: particleMesh.count,
+        instancedRendering: true
+      });
+    } else {
+      this.logger.warn('[KairosVisualEngine] Particle system mesh not available');
+    }
+  }
+  
+  /**
+   * Setup reaction-diffusion ground plane
+   * VISUALS.GOLD.CODE Phase 3: El Mundo Viviente (The Living World)
+   */
+  private setupReactionDiffusionGround(): void {
+    if (!this.scene || !this.renderer) {
+      this.logger.error('[KairosVisualEngine] Cannot setup reaction-diffusion - scene/renderer not initialized');
+      return;
+    }
+    
+    if (!this.config.effects.reactionDiffusionEnabled) {
+      this.logger.info('[KairosVisualEngine] Reaction-diffusion ground disabled in config');
+      return;
+    }
+    
+    // Initialize reaction-diffusion service
+    this.reactionDiffusionService.initialize(this.renderer);
+    
+    // Get ground mesh from service and add to scene
+    const groundMesh = this.reactionDiffusionService.getGroundMesh();
+    if (groundMesh) {
+      this.scene.add(groundMesh);
+      this.logger.info('[KairosVisualEngine] Reaction-diffusion ground added to scene', {
+        enabled: true,
+        phase: 'VISUALS.GOLD.CODE Phase 3'
+      });
+    } else {
+      this.logger.warn('[KairosVisualEngine] Reaction-diffusion ground mesh not available');
+    }
+  }
+  
+  /**
    * Update post-processing uniforms based on QualiaState
    * VISUALS.GOLD.CODE Phase 1: Atmospheric Effects
    */
@@ -487,10 +558,17 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     // PHASE 5.2: Update atmospheric effects based on current QualiaState
     this.updateAtmosphericEffects();
     
-    // TODO PHASE 5.3+: Update scene objects based on game state
-    // - Update particle system (Phase 5.3)
-    // - Update reaction-diffusion ground (Phase 5.4)
-    // - Update SDF avatars (Phase 5.5)
+    // PHASE 5.3: Update particle system (FFT-reactive)
+    if (this.config.effects.fftReactiveParticlesEnabled) {
+      this.particleSystemService.update(deltaTime);
+    }
+    
+    // PHASE 5.4: Update reaction-diffusion ground
+    if (this.config.effects.reactionDiffusionEnabled) {
+      this.reactionDiffusionService.update(deltaTime, this.currentQualiaState);
+    }
+    
+    // TODO PHASE 5.5: Update SDF avatars
     
     // Render scene with post-processing
     if (this.composer) {
@@ -572,15 +650,15 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
       precision: qualiaState.precision,
       aggression: qualiaState.aggression,
       chaos: qualiaState.chaos,
-      flow: qualiaState.flow
+      flow: qualiaState.flow,
+      recovery: qualiaState.recovery || 0.5 // Default if not present
     };
     
     this.logger.debug('[KairosVisualEngine] QualiaState updated', this.currentQualiaState);
     
     // Atmospheric effects will be updated in next frame via updateAtmosphericEffects()
-    // TODO PHASE 5.3+: Update additional shader uniforms
-    // PHASE 3: Reaction-Diffusion parameters (chaos, flow, recovery)
-    // PHASE 4: SDF avatar parameters (precision, flow, chaos, aggression)
+    // PHASE 5.4: Reaction-Diffusion parameters (chaos, flow, recovery) ✅ COMPLETE
+    // TODO PHASE 5.5: SDF avatar parameters (precision, flow, chaos, aggression)
   }
   
   /**
