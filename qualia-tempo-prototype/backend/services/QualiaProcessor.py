@@ -45,7 +45,7 @@ class QualiaProcessor:
         )
 
         # Publish event for other services to react
-        await self._event_bus.publish(
+        await self._event_bus.publish_async(
             event_name="QualiaStateUpdated", data=qualia_state, source="QualiaProcessor"
         )
 
@@ -67,7 +67,7 @@ class QualiaProcessor:
             new_state.get("intensity", 0) - self._current_state.get("intensity", 0)
         )
         if intensity_change > 0.3:
-            await self._event_bus.publish(
+            await self._event_bus.publish_async(
                 event_name="IntensitySpike",
                 data={
                     "old_intensity": self._current_state.get("intensity", 0),
@@ -81,7 +81,7 @@ class QualiaProcessor:
             new_state.get("transcendence", 0) > 0.8
             and self._current_state.get("transcendence", 0) <= 0.8
         ):
-            await self._event_bus.publish(
+            await self._event_bus.publish_async(
                 event_name="TranscendenceActivated",
                 data=new_state,
                 source="QualiaProcessor",
@@ -89,7 +89,7 @@ class QualiaProcessor:
 
         # Detect chaos threshold breach
         if new_state.get("chaos", 0) > 0.7:
-            await self._event_bus.publish(
+            await self._event_bus.publish_async(
                 event_name="ChaosThresholdBreached",
                 data=new_state,
                 source="QualiaProcessor",
@@ -135,7 +135,7 @@ class MinimalQualiaProcessor:
         self._logger.debug("🔄 Minimal processing of QualiaState")
 
         # Just publish the basic event
-        await self._event_bus.publish(
+        await self._event_bus.publish_async(
             event_name="QualiaStateUpdated",
             data=qualia_state,
             source="MinimalQualiaProcessor",

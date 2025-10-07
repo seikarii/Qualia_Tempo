@@ -24,7 +24,7 @@ class PatternSystemService(IPatternSystemService):
     - Can be used independently or by BossAIService
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize PatternSystemService."""
         self._logger = logging.getLogger(__name__)
         self._patterns: Dict[str, AttackPattern] = {}
@@ -139,6 +139,7 @@ class PatternSystemService(IPatternSystemService):
         
         return True
 
+    @log_execution()
     def get_pattern_count(self) -> int:
         """Get total number of loaded patterns."""
         return len(self._patterns)

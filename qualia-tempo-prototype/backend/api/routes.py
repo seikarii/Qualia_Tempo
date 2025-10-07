@@ -326,7 +326,7 @@ async def reset_visual_engine(services: CompositionRoot = Depends(get_services))
     try:
         # Reset through EventBus only - no direct calls
         event_bus = services.get_event_bus()
-        await event_bus.publish(event_name="EngineReset", data={}, source="API")
+        await event_bus.publish_async(event_name="EngineReset", data={}, source="API")
 
         logger.info("✅ Visual engine reset event published via EventBus")
         return QualiaUpdateResponse(

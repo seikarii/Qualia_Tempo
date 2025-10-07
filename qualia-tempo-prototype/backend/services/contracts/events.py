@@ -733,7 +733,7 @@ def event_to_dict(event: BaseEvent) -> Dict[str, Any]:
 
 def dict_to_event(data: Dict[str, Any]) -> BaseEvent:
     """Convert a dictionary back to an event object."""
-    event_type = data.get('type')
+    event_type: str = data.get('type', 'Unknown')
     
     # Map event types to their classes
     event_map = {

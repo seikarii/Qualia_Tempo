@@ -64,9 +64,11 @@ class GameLogicService(IGameLogicService):
         
         # Load configuration
         if config_path is None:
-            config_path = Path(__file__).parent.parent / "config" / "game-logic.yaml"
+            config_path_final: Path = Path(__file__).parent.parent / "config" / "game-logic.yaml"
+        else:
+            config_path_final = Path(config_path) if not isinstance(config_path, Path) else config_path
         
-        with open(config_path, 'r') as f:
+        with open(config_path_final, 'r') as f:
             self._config = yaml.safe_load(f)
         
         # Game state
@@ -421,7 +423,7 @@ class GameLogicService(IGameLogicService):
         
         # Calculate score
         score_gained = self._calculate_score(qualia.value, is_perfect)
-        self._player_score += score_gained
+        self._player_score += int(score_gained)
         
         if is_perfect:
             self._stats['perfect_collections'] += 1
@@ -469,7 +471,7 @@ class GameLogicService(IGameLogicService):
         if is_perfect:
             score += scoring_config['perfect_timing_bonus']
         
-        return score
+        return float(score)
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
@@ -600,7 +602,7 @@ class GameLogicService(IGameLogicService):
             actual_delta = self._player_health - old_health
             
             if actual_delta < 0:
-                self._stats['total_damage_taken'] += abs(actual_delta)
+                self._stats['total_damage_taken'] += int(abs(actual_delta))
             
             self._event_bus.publish(HealthChangedEvent(
                 entity_id=entity_id,
@@ -621,7 +623,7 @@ class GameLogicService(IGameLogicService):
             actual_delta = self._boss_health - old_health
             
             if actual_delta < 0:
-                self._stats['total_damage_dealt'] += abs(actual_delta)
+                self._stats['total_damage_dealt'] += int(abs(actual_delta))
             
             self._event_bus.publish(HealthChangedEvent(
                 entity_id=entity_id,
@@ -772,7 +774,7 @@ class GameLogicService(IGameLogicService):
         multiplier = 1.0 - (bpm_diff * modifier_factor)
         multiplier = max(min_multiplier, multiplier)
         
-        return base_cooldown * multiplier
+        return float(base_cooldown * multiplier)
 
     @log_execution(level="DEBUG")
     def get_player_state(self, player_id: str) -> Dict[str, Any]:
@@ -876,6 +878,7 @@ class GameLogicService(IGameLogicService):
         self._current_bpm = bpm
         self._logger.debug(f"Tempo set to {bpm} BPM")
 
+    @log_execution()
     def reset(self) -> None:
         """Reset game logic state."""
         self._player_id = None

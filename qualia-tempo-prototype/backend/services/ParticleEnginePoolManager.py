@@ -5,6 +5,7 @@
 import asyncio
 import logging
 import multiprocessing as mp
+from multiprocessing.pool import Pool
 import time
 import uuid
 from typing import Dict, Any, Optional, List
@@ -75,7 +76,7 @@ class ParticleEnginePoolManager:
         self.config = self._load_config(config_path)
         
         # Pool state
-        self.pool: Optional[mp.Pool] = None
+        self.pool: Optional[Pool] = None
         self.is_running = False
         self.metrics = PoolMetrics()
         
@@ -230,7 +231,7 @@ class ParticleEnginePoolManager:
             future = loop.create_future()
             
             # Callback to resolve future when task completes
-            def on_task_complete(result):
+            def on_task_complete(result: Any) -> None:
                 if not future.done():
                     loop.call_soon_threadsafe(future.set_result, result)
                     self.metrics.total_tasks_completed += 1
@@ -247,7 +248,7 @@ class ParticleEnginePoolManager:
                         # Update average
                         self.metrics.average_execution_time_ms = sum(self.task_execution_times) / len(self.task_execution_times)
             
-            def on_task_error(error):
+            def on_task_error(error: BaseException) -> None:
                 if not future.done():
                     loop.call_soon_threadsafe(future.set_exception, error)
                     self.metrics.total_tasks_failed += 1
@@ -268,7 +269,7 @@ class ParticleEnginePoolManager:
             # Wait for result with timeout
             try:
                 result = await asyncio.wait_for(future, timeout=self.config.queue_timeout_seconds)
-                return result
+                return dict(result) if result else None
             except asyncio.TimeoutError:
                 logger.error(f"Task {task_id} timed out after {self.config.queue_timeout_seconds}s")
                 self.metrics.total_tasks_failed += 1

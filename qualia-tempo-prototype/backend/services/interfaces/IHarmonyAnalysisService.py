@@ -2,7 +2,7 @@
 # Musical harmony analysis for emergent combo system
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Tuple
 from enum import Enum
 
@@ -33,7 +33,7 @@ class HarmonyScore:
     classification: str  # 'harmonic', 'neutral', 'chaotic', 'perfect', 'extreme_chaos'
     harmony_trend: float  # -1.0 to 1.0 (negative = getting worse, positive = improving)
     timestamp: float
-    metadata: Dict = None
+    metadata: Dict = field(default_factory=dict)
 
 
 @dataclass

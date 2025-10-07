@@ -57,9 +57,11 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
         
         # Load configuration
         if config_path is None:
-            config_path = Path(__file__).parent.parent / "config" / "harmony-analysis.yaml"
+            config_path_final: Path = Path(__file__).parent.parent / "config" / "harmony-analysis.yaml"
+        else:
+            config_path_final = Path(config_path) if not isinstance(config_path, Path) else config_path
         
-        with open(config_path, 'r') as f:
+        with open(config_path_final, 'r') as f:
             self._config = yaml.safe_load(f)
         
         # Player state
@@ -224,7 +226,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
         
         # Emit event
         self._event_bus.publish(HarmonyScoreCalculatedEvent(
-            player_id=self._player_id,
+            player_id=self._player_id or "unknown",
             harmony_score=overall_score,
             is_harmonic=is_harmonic,
             song_harmony=song_harmony,
@@ -260,8 +262,8 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
             return 0.5
         
         # Convert qualia colors to notes
-        qualia_notes = [self._color_to_note(color) for color in qualia_colors if color]
-        qualia_notes = [note for note in qualia_notes if note is not None]
+        qualia_notes_raw = [self._color_to_note(color) for color in qualia_colors if color]
+        qualia_notes: List[str] = [note for note in qualia_notes_raw if note is not None]
         
         if not qualia_notes:
             return 0.5
@@ -433,7 +435,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
             if (r_range[0] <= r <= r_range[1] and
                 g_range[0] <= g <= g_range[1] and
                 b_range[0] <= b <= b_range[1]):
-                return note
+                return str(note)
         
         return None
 
@@ -467,7 +469,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
         trend = (second_half_avg - first_half_avg)
         
         # Normalize to -1.0 to 1.0
-        return max(-1.0, min(1.0, trend * 2.0))
+        return float(max(-1.0, min(1.0, trend * 2.0)))
 
     @log_execution(level="DEBUG")
     def is_harmonic_combination(
@@ -476,7 +478,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
     ) -> bool:
         """Quick check if note combination is harmonic."""
         score = self.get_consonance_score(notes)
-        return score >= self._config['thresholds']['harmonic_threshold']
+        return bool(score >= float(self._config['thresholds']['harmonic_threshold']))
 
     @log_execution(level="DEBUG")
     def is_chaotic_combination(
@@ -485,7 +487,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
     ) -> bool:
         """Quick check if note combination is chaotic/dissonant."""
         score = self.get_consonance_score(notes)
-        return score <= self._config['thresholds']['chaotic_threshold']
+        return bool(score <= float(self._config['thresholds']['chaotic_threshold']))
 
     @log_execution(level="DEBUG")
     def get_consonance_score(

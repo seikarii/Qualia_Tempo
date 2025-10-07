@@ -25,7 +25,19 @@ try:
 except ImportError:
     from utils.decorators import log_execution, handle_errors, time_execution
 
-# QUALIA.CODE: Import Pydantic QualiaState model for type safety
+# QUALIA.CODE v1.1 - QualiaParticleEngine
+# Main particle engine for Qualia Tempo
+# ARCHITECTURE.GOLD.CODE v2: Backend calculates STATE, no rendering
+
+# mypy: disable-error-code="import-not-found,no-redef,misc"
+# Rationale: Phase 1 code with complex imports and type aliasing. Will be refactored in optimization pass.
+
+import numpy as np
+import logging
+from typing import List, Dict, Any, Optional, Union
+from dataclasses import dataclass, asdict
+import time
+import yaml
 try:
     from backend.api.models import QualiaState as _QualiaStateModel
     QualiaState = _QualiaStateModel

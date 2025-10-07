@@ -81,9 +81,11 @@ class BossAIService(IBossAIService):
         
         # Load configuration
         if config_path is None:
-            config_path = Path(__file__).parent.parent / "config" / "boss-ai.yaml"
+            config_path_final: Path = Path(__file__).parent.parent / "config" / "boss-ai.yaml"
+        else:
+            config_path_final = Path(config_path) if not isinstance(config_path, Path) else config_path
         
-        with open(config_path, 'r') as f:
+        with open(config_path_final, 'r') as f:
             self._config = yaml.safe_load(f)
         
         self._logger.info(f"BossAIService initialized with config: {config_path}")
@@ -317,7 +319,7 @@ class BossAIService(IBossAIService):
             )
             min_time /= enrage_boost
         
-        return self._time_since_last_attack >= min_time
+        return bool(self._time_since_last_attack >= min_time)
 
     def _check_phase_transition(self) -> None:
         """Check if boss should transition to next phase."""
@@ -757,7 +759,7 @@ class BossAIService(IBossAIService):
             "min_duration", 0.3
         )
         
-        return max(min_duration, base_duration)
+        return float(max(min_duration, base_duration))
 
     def _generate_qualia_for_pattern(self, pattern: AttackPattern) -> int:
         """Generate Qualia entities for attack pattern."""
@@ -1046,5 +1048,6 @@ class BossAIService(IBossAIService):
         }
         self._logger.info("BossAIService reset to initial state")
 
+    @log_execution()
     def get_statistics(self) -> Dict[str, Any]:
         return self._stats.copy()

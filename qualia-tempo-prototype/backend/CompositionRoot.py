@@ -421,7 +421,7 @@ class CompositionRoot:
             service = self._services.get(service_name)
 
             # Special handling for ParticleEnginePoolManager (uses "stop" instead of "shutdown")
-            if service_name == "particle_system" and hasattr(service, "stop"):
+            if service_name == "particle_system" and service is not None and hasattr(service, "stop"):
                 try:
                     self._logger.info(f"🛑 Stopping {service_name} (process pool)...")
                     await service.stop()

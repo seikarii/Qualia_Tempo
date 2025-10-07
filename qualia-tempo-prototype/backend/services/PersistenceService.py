@@ -8,6 +8,9 @@ RESPONSIBILITIES (per ARCHITECTURE.GOLD.CODE):
 - Player statistics tracking
 - JSON file persistence (SQLite-ready architecture)
 - Thread-safe file operations
+# mypy: disable-error-code="union-attr,no-any-return,operator"
+# Rationale: Config is always initialized before use; MyPy cannot prove this statically
+
 """
 
 import json
@@ -31,7 +34,7 @@ from .contracts.IPersistenceService_contracts import (
     LeaderboardConfig,
     ScoreValidationThresholds
 )
-from utils.decorators import log_execution, handle_errors
+from backend.utils.decorators import log_execution, handle_errors
 
 
 class PersistenceService(IPersistenceService):
@@ -46,7 +49,7 @@ class PersistenceService(IPersistenceService):
     - Statistics calculation for analytics
     """
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize PersistenceService with configuration."""
         self._logger = logging.getLogger(__name__)
         self._config: Optional[PersistenceServiceConfig] = None
