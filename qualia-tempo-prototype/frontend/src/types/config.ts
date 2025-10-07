@@ -35,6 +35,20 @@ import type { PostProcessingConfig } from '../services/contracts/IPostProcessing
 import type { ProtocolAdapterConfig } from '../services/contracts/IProtocolAdapter.contracts';
 import type { TimerServiceConfig } from '../services/contracts/ITimerService.contracts';
 import type { AudioSessionConfig } from '../services/contracts/IAudioSystemBridge.contracts';
+import type { QualiaCalculatorWorkerServiceConfig } from '../services/contracts/IQualiaCalculatorWorkerService.contracts';
+
+// QUALIA.CODE v2.0: Audio Analysis and Physics Services
+import type { AudioAnalysisServiceConfig } from '../services/contracts/IAudioAnalysisService.contracts';
+import type { PhysicsServiceConfig } from '../services/contracts/IPhysicsService.contracts';
+import type { Audio8DServiceConfig } from '../services/contracts/IAudio8DService.contracts';
+import type { MusicalComboDetectorServiceConfig } from '../services/contracts/IMusicalComboDetectorService.contracts';
+
+// PHASE 4: Temporal Effects & Post-Processing Passes
+import type { JitterServiceConfig } from '../services/contracts/IJitterService.contracts';
+import type { BloomPassConfig } from '../services/contracts/IBloomPass.contracts';
+import type { TAAPassConfig } from '../services/contracts/ITAAPass.contracts';
+import type { MotionBlurPassConfig } from '../services/contracts/IMotionBlurPass.contracts';
+import type { DoFPassConfig } from '../services/contracts/IDoFPass.contracts';
 
 /**
  * Gameplay Configuration Interface
@@ -76,6 +90,7 @@ export interface FullGameConfig {
   gameController: GameControllerConfig;
   gameplay: GameplayConfig;
   qualiaCalculator: QualiaCalculatorConfig;
+  qualiaCalculatorWorker: QualiaCalculatorWorkerServiceConfig;
   rhythmicMovement: RhythmicMovementConfig;
 
   // Transversal Services
@@ -96,15 +111,17 @@ export interface FullGameConfig {
   protocolAdapter: ProtocolAdapterConfig;
 
   // QUALIA.CODE v2.0: Audio Analysis and Physics Services
-  audioAnalysis: import('../services/contracts/IAudioAnalysisService.contracts').AudioAnalysisServiceConfig;
-  physics: import('../services/contracts/IPhysicsService.contracts').PhysicsServiceConfig;
+  audioAnalysis: AudioAnalysisServiceConfig;
+  audio8D: Audio8DServiceConfig;
+  musicalComboDetector: MusicalComboDetectorServiceConfig;
+  physics: PhysicsServiceConfig;
 
   // PHASE 4: Temporal Effects & Post-Processing Passes
-  jitterService: import('../services/contracts/IJitterService.contracts').JitterServiceConfig;
-  bloomPass: import('../services/contracts/IBloomPass.contracts').BloomPassConfig;
-  taaPass: import('../services/contracts/ITAAPass.contracts').TAAPassConfig;
-  motionBlurPass: import('../services/contracts/IMotionBlurPass.contracts').MotionBlurPassConfig;
-  dofPass: import('../services/contracts/IDoFPass.contracts').DoFPassConfig;
+  jitterService: JitterServiceConfig;
+  bloomPass: BloomPassConfig;
+  taaPass: TAAPassConfig;
+  motionBlurPass: MotionBlurPassConfig;
+  dofPass: DoFPassConfig;
 
   // Optional Features
   visualEffects?: VisualEffectsConfig;

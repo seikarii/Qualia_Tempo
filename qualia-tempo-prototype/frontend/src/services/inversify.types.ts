@@ -154,13 +154,19 @@ export const TYPES = {
   // Phase 4: Audio Config
   FFTAnalyzerServiceConfig: Symbol.for("FFTAnalyzerServiceConfig"),
   Audio8DServiceConfig: Symbol.for("Audio8DServiceConfig"),
+  Audio8DServiceParams: Symbol.for("Audio8DServiceParams"),
   MusicalComboDetectorServiceConfig: Symbol.for("MusicalComboDetectorServiceConfig"),
+  MusicalComboDetectorServiceParams: Symbol.for("MusicalComboDetectorServiceParams"),
 
   // Phase 5: Visual Services
   IKairosVisualEngine: Symbol.for("IKairosVisualEngine"),
 
   // Phase 5: Visual Config
   KairosVisualEngineConfig: Symbol.for("KairosVisualEngineConfig"),
+
+  // Phase 3: Web Worker Services (ARCHITECTURE.GOLD.CODE - DOMINIO 2)
+  IQualiaCalculatorWorkerService: Symbol.for("IQualiaCalculatorWorkerService"),
+  QualiaCalculatorWorkerServiceConfig: Symbol.for("QualiaCalculatorWorkerServiceConfig"),
 } as const;
 
 // Type-safe access to TYPES

@@ -5,7 +5,7 @@
 
 import { injectable, inject } from "inversify";
 import { TYPES } from "./inversify.types";
-import type { BackendSyncEvent, ErrorEvent, QualiaStateCalculatedEvent } from "./contracts/events.contracts";
+import type { BackendSyncEvent, ErrorEvent, QualiaStateCalculatedEvent, AudioDataUpdatedEvent } from "./contracts/events.contracts";
 import {
   logMethod,
   catchError,
@@ -16,7 +16,7 @@ import {
   initializeEventSubscriptions,
   cleanupEventSubscriptions,
 } from "../utils/decorators";
-import type { BackendSyncConfig, BackendSyncServiceParams, QualiaStateRequest, HealthCheckResponse, QualiaSyncResponse } from "./contracts/IBackendSyncService.contracts";
+import type { BackendSyncConfig, BackendSyncServiceParams, QualiaStateRequest, AudioDataRequest, AudioDataResponse, HealthCheckResponse, QualiaSyncResponse } from "./contracts/IBackendSyncService.contracts";
 import type { IBackendSyncService } from "./interfaces/IBackendSyncService";
 import type { IEventBus } from "./interfaces/IEventBus";
 import type { ILogger } from "./interfaces/ILogger";
@@ -57,6 +57,12 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
   private lastSyncTime = 0;
   private pendingSync: QualiaStateRequest | null = null;
   private syncTimeoutId: number | null = null;
+
+  // PHASE 4: Audio data throttling (separate from qualia state sync)
+  private lastAudioSyncTime = 0;
+  private pendingAudioData: AudioDataRequest | null = null;
+  private audioSyncTimeoutId: number | null = null;
+  private readonly audioSyncThrottleDelay = 100; // Send audio data at most once per 100ms
 
   // Connection monitoring
   private healthCheckInterval: number = 0; // Will be loaded from config
@@ -131,6 +137,7 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
 
       this.stopHealthChecking();
       this.clearPendingSync();
+      this.clearPendingAudioSync(); // PHASE 4: Clear audio sync timeout
       this.isRunning = false;
       this.connected = false;
 
@@ -254,6 +261,28 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
     this.scheduleSync(qualiaRequest);
   }
 
+  /**
+   * PHASE 4 INTEGRATION: Handle audio data updates from AudioAnalysisService
+   */
+  @OnEvent('AudioDataUpdated')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private handleAudioDataUpdate(event: AudioDataUpdatedEvent): void {
+    if (!this.isConnected) {
+      return; // Silently skip if not connected (audio data is continuous)
+    }
+
+    // Create audio data request from event
+    const audioRequest: AudioDataRequest = {
+      tempo: event.tempo,
+      beatPosition: event.beatPosition,
+      frequencyBands: event.frequencyBands,
+      volume: event.volume,
+      timestamp: Date.now(),
+    };
+
+    this.scheduleAudioSync(audioRequest);
+  }
+
   private scheduleSync(qualiaRequest: QualiaStateRequest): void {
     const now = this.performanceService.now();
     const timeSinceLastSync = now - this.lastSyncTime;
@@ -280,6 +309,86 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
       this.logger.info(
         `⏱️ [BackendSync] Sync scheduled in ${delay.toFixed(0)}ms`,
       );
+    }
+  }
+
+  /**
+   * PHASE 4 INTEGRATION: Schedule audio data sync with throttling
+   */
+  private scheduleAudioSync(audioRequest: AudioDataRequest): void {
+    const now = this.performanceService.now();
+    const timeSinceLastSync = now - this.lastAudioSyncTime;
+
+    // Store the latest audio data
+    this.pendingAudioData = audioRequest;
+
+    // If we haven't hit the throttle limit, sync immediately
+    if (timeSinceLastSync >= this.audioSyncThrottleDelay) {
+      this.performAudioSyncSafe(audioRequest);
+      this.pendingAudioData = null;
+    } else {
+      // Schedule a delayed sync
+      this.clearPendingAudioSync();
+      const delay = this.audioSyncThrottleDelay - timeSinceLastSync;
+
+      this.audioSyncTimeoutId = this.timerService.setTimeout(() => {
+        if (this.pendingAudioData) {
+          this.performAudioSyncSafe(this.pendingAudioData);
+          this.pendingAudioData = null;
+        }
+      }, delay);
+    }
+  }
+
+  /**
+   * PHASE 4 INTEGRATION: Clear pending audio sync timeout
+   */
+  private clearPendingAudioSync(): void {
+    if (this.audioSyncTimeoutId !== null) {
+      this.timerService.clearTimeout(this.audioSyncTimeoutId);
+      this.audioSyncTimeoutId = null;
+    }
+  }
+
+  /**
+   * PHASE 4 INTEGRATION: Perform audio sync safely with error handling
+   */
+  private async performAudioSyncSafe(audioRequest: AudioDataRequest): Promise<void> {
+    try {
+      await this.performAudioSync(audioRequest);
+    } catch (error) {
+      this.logger.debug("⚠️ [BackendSync] Audio sync failed (non-critical)", { error });
+      // Don't emit error event for audio sync failures - they're non-critical
+    }
+  }
+
+  /**
+   * PHASE 4 INTEGRATION: Send audio data to backend
+   */
+  private async performAudioSync(audioRequest: AudioDataRequest): Promise<void> {
+    const startTime = this.performanceService.now();
+
+    const url = `${this.config.api.baseUrl}${this.config.api.audioDataEndpoint}`;
+
+    try {
+      const response = await this.httpService.post<AudioDataResponse>(url, {
+        body: audioRequest,
+        timeout: this.config.api.timeout,
+      });
+
+      this.lastAudioSyncTime = this.performanceService.now();
+
+      if (response.success) {
+        const duration = this.performanceService.now() - startTime;
+        this.logger.debug(`🎵 [BackendSync] Audio data sent - ${duration.toFixed(2)}ms`);
+      }
+    } catch (error) {
+      const duration = this.performanceService.now() - startTime;
+      this.logger.debug(
+        `⚠️ [BackendSync] Audio sync error - ${duration.toFixed(2)}ms`,
+        { error }
+      );
+      throw error;
     }
   }
 

@@ -7,21 +7,37 @@
  */
 
 import { vi } from 'vitest';
-import type { IAudio8DService, AudioSource3D } from '../../services/interfaces/IAudio8DService';
+import type { IAudio8DService } from '../../services/interfaces/IAudio8DService';
+import type { SpatialSoundSource } from '../../services/contracts/IAudio8DService.contracts';
 
-const defaultAudioSources: AudioSource3D[] = [];
+const defaultSpatialSource: SpatialSoundSource = {
+  id: 'mock-source',
+  pannerNode: {} as PannerNode,
+  gainNode: {} as GainNode,
+  position: { x: 0, y: 0 },
+  velocity: { x: 0, y: 0 },
+  active: true,
+};
 
 export const mockAudio8DService: IAudio8DService = {
-  // Lifecycle methods (async, return void)
-  initialize: vi.fn().mockResolvedValue(undefined),
-  addSource: vi.fn().mockResolvedValue(undefined),
-  removeSource: vi.fn().mockResolvedValue(undefined),
-  updateConfig: vi.fn().mockResolvedValue(undefined),
+  // Lifecycle methods (synchronous, return void)
+  initialize: vi.fn().mockReturnValue(undefined),
+  cleanup: vi.fn().mockReturnValue(undefined),
 
-  // Synchronous update methods (return void)
-  updateSourcePosition: vi.fn().mockReturnValue(undefined),
+  // Sound source management (create returns SpatialSoundSource)
+  createSoundSource: vi.fn().mockReturnValue(defaultSpatialSource),
+  removeSoundSource: vi.fn().mockReturnValue(undefined),
+  updateSoundSourcePosition: vi.fn().mockReturnValue(undefined),
   updateListenerPosition: vi.fn().mockReturnValue(undefined),
 
-  // Getters (MUST have mockReturnValue - HIGH FIDELITY)
-  getActiveSources: vi.fn().mockReturnValue(defaultAudioSources),
+  // Audio connection methods
+  connectAudioSource: vi.fn().mockReturnValue(undefined),
+  disconnectAudioSource: vi.fn().mockReturnValue(undefined),
+
+  // Directional echo effect
+  createDirectionalEcho: vi.fn().mockReturnValue(undefined),
+
+  // Spatial audio state getters
+  getActiveSoundSources: vi.fn().mockReturnValue([]),
+  isEnabled: vi.fn().mockReturnValue(false),
 };

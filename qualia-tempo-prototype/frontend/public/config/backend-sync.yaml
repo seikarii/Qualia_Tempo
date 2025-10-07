@@ -1,6 +1,7 @@
 api:
   baseUrl: "http://127.0.0.1:8000"
   qualiaEndpoint: "/qualia"
+  audioDataEndpoint: "/audio_data" # PHASE 4: FFT analysis data endpoint
   healthEndpoint: "/health"
   timeout: 5000
 

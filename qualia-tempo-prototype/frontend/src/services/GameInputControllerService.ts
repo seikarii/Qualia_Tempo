@@ -11,7 +11,7 @@ import type { IInputStateService } from './interfaces/IInputStateService';
 import type { IBrowserEventsService } from './interfaces/IBrowserEventsService';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { ILogger } from './interfaces/ILogger';
-import type { PlayerActionEvent } from './contracts/events.contracts';
+import type { PlayerActionEvent, KeyPressedEvent } from './contracts/events.contracts';
 import { logMethod, catchError, IBaseService } from '../utils/decorators';
 
 @injectable()
@@ -99,10 +99,27 @@ export class GameInputControllerService implements IGameInputControllerService, 
       const key = _event.key.toLowerCase();
       const movementKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright'];
       const actionKeys = [' ', 'enter']; // Teclas de acción
+      const musicalKeys = ['q', 'e', 'r', 't', 'f', 'g', 'c']; // PHASE 4: Musical ability keys
 
       if (movementKeys.includes(key) || actionKeys.includes(key)) {
         _event.preventDefault();
         this.inputStateService.pressKey(_event.key);
+        return;
+      }
+
+      // PHASE 4 INTEGRATION: Handle musical keys for combo detection
+      if (musicalKeys.includes(key)) {
+        _event.preventDefault();
+        const normalizedKey = key.toUpperCase();
+        
+        // Emit KeyPressedEvent for MusicalComboDetectorService (timestamp added by EventBus)
+        this.eventBus.emit<KeyPressedEvent>({
+          type: 'Input.KeyPressed',
+          key: normalizedKey,
+          source: 'GameInputControllerService',
+        });
+        
+        this.logger.debug(`Musical key pressed: ${normalizedKey}`);
         return;
       }
 

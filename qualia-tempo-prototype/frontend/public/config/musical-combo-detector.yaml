@@ -1,0 +1,134 @@
+# MusicalComboDetectorService Configuration
+# Musical key sequence detection and combo pattern validation
+# ARCHITECTURE: Externalized Configuration (QUALIA.CODE v1.1)
+
+enabled: true
+
+# --- Timing Configuration ---
+# Maximum time between key presses for a valid sequence (ms)
+sequenceTimeout: 2000  # 2 seconds window
+
+# Minimum keys required for a combo
+minSequenceLength: 2
+
+# Maximum keys in a combo sequence
+maxSequenceLength: 7
+
+# --- Cooldown Configuration ---
+# Global cooldown between ANY combo activations (ms)
+globalCooldown: 500  # 500ms between combos
+
+# Default cooldown for combo patterns (ms) - overridden per pattern
+defaultComboCooldown: 5000  # 5 seconds (as per GDD.md)
+
+# --- Harmony Configuration ---
+# Threshold for harmonic (>0.5) vs chaotic (<0.5) detection
+harmonicThreshold: 0.5
+
+# Enable contextual analysis (compare with current song notes)
+contextualAnalysis: true
+
+# --- Combo Patterns ---
+# Pattern definitions from GDD.md
+patterns:
+  # HARMONIC COMBOS (Beneficial)
+  - id: 'whirlwind'
+    keys: ['Q', 'E', 'R']
+    type: 'harmonic'
+    effect: 'whirlwind'
+    harmonicScore: 0.85
+    cooldown: 5000
+    description: 'Remolino - Control de área, atrae Qualia cercano'
+
+  - id: 'attractor'
+    keys: ['Q', 'R', 'F']
+    type: 'harmonic'
+    effect: 'attractor'
+    harmonicScore: 0.90
+    cooldown: 6000
+    description: 'Atractor - Recolección masiva de Qualia en radio'
+
+  - id: 'repulsor'
+    keys: ['T', 'E', 'R']
+    type: 'harmonic'
+    effect: 'repulsor'
+    harmonicScore: 0.80
+    cooldown: 5000
+    description: 'Repulsor - Defensa, repele ataques del boss'
+
+  - id: 'comboMultiplier'
+    keys: ['Q', 'E', 'T']
+    type: 'harmonic'
+    effect: 'comboMultiplier'
+    harmonicScore: 0.75
+    cooldown: 8000
+    description: 'Multiplicador - +50% puntuación temporal'
+
+  - id: 'healing'
+    keys: ['F', 'G', 'C']
+    type: 'harmonic'
+    effect: 'healing'
+    harmonicScore: 0.88
+    cooldown: 7000
+    description: 'Curación - Restaura vida gradualmente'
+
+  - id: 'fullScale'
+    keys: ['Q', 'E', 'R', 'T', 'F', 'G', 'C']
+    type: 'harmonic'
+    effect: 'fullScale'
+    harmonicScore: 1.0
+    cooldown: 15000
+    description: 'Escala Completa - Curación completa + escudo temporal'
+
+  # CHAOTIC COMBOS (Malicious)
+  - id: 'soundWall'
+    keys: ['Q', 'T', 'G']
+    type: 'chaotic'
+    effect: 'soundWall'
+    harmonicScore: 0.20
+    cooldown: 5000
+    description: 'Muro Sonoro - Bloquea movimiento en área'
+
+  - id: 'damageZone'
+    keys: ['E', 'F', 'C']
+    type: 'chaotic'
+    effect: 'damageZone'
+    harmonicScore: 0.15
+    cooldown: 6000
+    description: 'Zona de Daño - Daño por segundo en área circular'
+
+  - id: 'inverseRepulsor'
+    keys: ['R', 'G', 'T']
+    type: 'chaotic'
+    effect: 'inverseRepulsor'
+    harmonicScore: 0.25
+    cooldown: 5000
+    description: 'Repulsor Inverso - Empuja al jugador hacia el boss'
+
+  - id: 'hostileAttractor'
+    keys: ['Q', 'G', 'C']
+    type: 'chaotic'
+    effect: 'hostileAttractor'
+    harmonicScore: 0.18
+    cooldown: 7000
+    description: 'Atractor Hostil - Atrae al boss hacia el jugador'
+
+  - id: 'auditoryInterference'
+    keys: ['T', 'F', 'R']
+    type: 'chaotic'
+    effect: 'auditoryInterference'
+    harmonicScore: 0.22
+    cooldown: 6000
+    description: 'Interferencia Auditiva - Reduce precisión de recolección'
+
+# --- Event Configuration ---
+# Emit combo events to EventBus
+emitEvents: true
+
+# --- Logging Messages ---
+logMessages:
+  serviceInitialized: 'MusicalComboDetectorService initialized with {patternCount} patterns'
+  comboDetected: 'Combo detected: {comboId} (type: {comboType}, score: {harmonicScore})'
+  comboExpired: 'Combo expired: {comboId}'
+  sequenceCleared: 'Sequence cleared (timeout or manual clear)'
+  cooldownActive: 'Combo {comboId} on cooldown (remaining: {remainingMs}ms)'

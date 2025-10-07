@@ -217,3 +217,52 @@ export interface PhysicsDataUpdatedEvent extends BaseEvent {
   };
   source: string;
 }
+
+// QUALIA.CODE v2.0: Input Events for Musical Interaction
+export interface KeyPressedEvent extends BaseEvent {
+  type: "Input.KeyPressed";
+  key: string; // Normalized key (e.g., "Q", "E", "R")
+  timestamp: Date;
+  source: string;
+}
+
+// QUALIA.CODE v2.0: Entity Position Events for Spatial Audio
+export interface EntityPositionUpdatedEvent extends BaseEvent {
+  type: "Entity.PositionUpdated";
+  entityId: string; // "player", "boss", or particle ID
+  entityType: 'player' | 'boss' | 'particle';
+  position: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  velocity?: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  source: string;
+}
+
+// QUALIA.CODE v2.0: Musical Combo Events
+export interface ComboDetectedEvent extends BaseEvent {
+  type: "Combo.Detected";
+  comboId: string;
+  comboType: 'harmonic' | 'chaotic' | 'neutral';
+  effect: string;
+  harmonicScore: number;
+  keys: string[];
+  source: string;
+}
+
+export interface ComboExpiredEvent extends BaseEvent {
+  type: "Combo.Expired";
+  comboId: string;
+  source: string;
+}
+
+export interface SequenceClearedEvent extends BaseEvent {
+  type: "Combo.SequenceCleared";
+  reason: 'timeout' | 'manual' | 'combo-activated';
+  source: string;
+}

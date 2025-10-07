@@ -39,9 +39,11 @@ import type { BackendSyncServiceParams } from "./contracts/IBackendSyncService.c
 import type { WebSocketServiceParams } from "./contracts/IWebSocketService.contracts";
 import type { CoordinateSystemConfig } from "./contracts/ICoordinateSystemService.contracts";
 import type { JitterServiceConfig } from "./contracts/IJitterService.contracts";
+import type { QualiaCalculatorWorkerServiceConfig } from "./contracts/IQualiaCalculatorWorkerService.contracts";
 
 // QUALIA.CODE v2.0: Analysis Services Configuration Imports
 import type { AudioAnalysisServiceParams } from "./contracts/IAudioAnalysisService.contracts";
+import type { Audio8DServiceParams } from "./contracts/IAudio8DService.contracts";
 import type { PhysicsServiceParams } from "./contracts/IPhysicsService.contracts";
 
 // NEW SERVICES CONFIGURATION IMPORTS
@@ -97,6 +99,7 @@ import type { IToneFactoryService } from "../audio/interfaces/IToneFactoryServic
 import type { IStateMergerService } from "./interfaces/IStateMergerService";
 import type { IAudioSystemBridge } from "./interfaces/IAudioSystemBridge";
 import type { IBaseService } from "./interfaces/IBaseService";
+import type { IQualiaCalculatorWorkerService } from "./interfaces/IQualiaCalculatorWorkerService";
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { ConfigurationService } from "./ConfigurationService";
@@ -106,6 +109,7 @@ import { PerformanceService } from "./PerformanceService";
 import { PerformanceProvider } from "./providers/PerformanceProvider";
 import { BrowserTimerProvider } from "./providers/BrowserTimerProvider";
 import { QualiaStateCalculatorService } from "./QualiaStateCalculatorService";
+import { QualiaCalculatorWorkerService } from "./QualiaCalculatorWorkerService";
 import { BackendSyncService } from "./BackendSyncService";
 import { AudioService } from "./AudioService";
 import { GameControllerService } from "./GameControllerService";
@@ -178,13 +182,17 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "audioSession": "audio-session.yaml",
   // QUALIA.CODE v2.0: New analysis services
   "audioAnalysis": "audio-analysis-service.yaml",
+  "audio8D": "audio-8d.yaml",
+  "musicalComboDetector": "musical-combo-detector.yaml",
   "physics": "physics-service.yaml",
   // PHASE 4: Temporal Effects & Post-Processing Passes
   "jitterService": "jitter-service.yaml",
   "bloomPass": "bloom-pass.yaml",
   "taaPass": "taa-pass.yaml",
   "motionBlurPass": "motion-blur-pass.yaml",
-  "dofPass": "dof-pass.yaml"
+  "dofPass": "dof-pass.yaml",
+  // PHASE 3: Web Worker Services
+  "qualiaCalculatorWorker": "qualia-calculator-worker.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
@@ -241,6 +249,16 @@ container
 container
   .bind<IBaseService>(TYPES.ManagedService)
   .toService(TYPES.IQualiaStateCalculatorService);
+
+// PHASE 3: Web Worker-based Qualia Calculator (ARCHITECTURE.GOLD.CODE - DOMINIO 2)
+container
+  .bind<IQualiaCalculatorWorkerService>(TYPES.IQualiaCalculatorWorkerService)
+  .to(QualiaCalculatorWorkerService)
+  .inSingletonScope();
+container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IQualiaCalculatorWorkerService);
+
 container
   .bind<IBackendSyncService>(TYPES.IBackendSyncService)
   .to(BackendSyncService)
@@ -439,6 +457,13 @@ import { PhysicsService } from './PhysicsService';
 import type { IAudioAnalysisService } from './interfaces/IAudioAnalysisService';
 import type { IPhysicsService } from './interfaces/IPhysicsService';
 
+// ===== PHASE 4: AUDIO ADVANCED SERVICES =====
+import { Audio8DService } from './Audio8DService';
+import type { IAudio8DService } from './interfaces/IAudio8DService';
+import { MusicalComboDetectorService } from './MusicalComboDetectorService';
+import type { IMusicalComboDetectorService } from './interfaces/IMusicalComboDetectorService';
+import type { MusicalComboDetectorServiceParams } from './contracts/IMusicalComboDetectorService.contracts';
+
 container
   .bind<IAudioAnalysisService>(TYPES.IAudioAnalysisService)
   .to(AudioAnalysisService)
@@ -446,6 +471,22 @@ container
 container
   .bind<IBaseService>(TYPES.ManagedService)
   .toService(TYPES.IAudioAnalysisService);
+
+container
+  .bind<IAudio8DService>(TYPES.IAudio8DService)
+  .to(Audio8DService)
+  .inSingletonScope();
+container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IAudio8DService);
+
+container
+  .bind<IMusicalComboDetectorService>(TYPES.IMusicalComboDetectorService)
+  .to(MusicalComboDetectorService)
+  .inSingletonScope();
+container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IMusicalComboDetectorService);
 
 container
   .bind<IPhysicsService>(TYPES.IPhysicsService)
@@ -633,6 +674,7 @@ function bindBasicConfigurations(fullConfig: FullGameConfig): void {
   safeBindConstant<BackendSyncConfig>(TYPES.BackendSyncConfig, fullConfig.backendSync);
   safeBindConstant<GameControllerConfig>(TYPES.GameControllerConfig, fullConfig.gameController);
   safeBindConstant<QualiaCalculatorConfig>(TYPES.QualiaCalculatorConfig, fullConfig.qualiaCalculator);
+  safeBindConstant<QualiaCalculatorWorkerServiceConfig>(TYPES.QualiaCalculatorWorkerServiceConfig, fullConfig.qualiaCalculatorWorker);
   safeBindConstant<RhythmicMovementConfig>(TYPES.RhythmicMovementConfig, fullConfig.rhythmicMovement);
   safeBindConstant<AudioServiceConfig>(TYPES.AudioServiceConfig, fullConfig.audioService);
   safeBindConstant<NotificationServiceConfig>(TYPES.NotificationServiceConfig, fullConfig.notificationService);
@@ -645,6 +687,8 @@ function bindBasicConfigurations(fullConfig: FullGameConfig): void {
   
   // QUALIA.CODE v2.0: New analysis services configurations
   safeBindConstant(TYPES.AudioAnalysisServiceConfig, fullConfig.audioAnalysis);
+  safeBindConstant(TYPES.Audio8DServiceConfig, fullConfig.audio8D);
+  safeBindConstant(TYPES.MusicalComboDetectorServiceConfig, fullConfig.musicalComboDetector);
   safeBindConstant(TYPES.PhysicsServiceConfig, fullConfig.physics);
   
   // PHASE 4: Temporal Effects configurations
@@ -775,6 +819,23 @@ function bindLevel3ServiceParams(fullConfig: FullGameConfig): void {
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     webAudioService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),
     config: fullConfig.audioAnalysis,
+  });
+
+  // Audio 8D Spatial - needs WebAudioAPIService (Level 1)
+  safeBindConstant<Audio8DServiceParams>(TYPES.Audio8DServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    webAudioService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),
+    config: fullConfig.audio8D,
+  });
+
+  // Musical Combo Detector - needs EventBus, Logger, TimerService (Level 1)
+  safeBindConstant<MusicalComboDetectorServiceParams>(TYPES.MusicalComboDetectorServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    config: fullConfig.musicalComboDetector,
   });
 
   // Physics Service - needs InputStateService (Level 1)

@@ -1,0 +1,39 @@
+# QUALIA.CODE v1.1 - QualiaCalculatorWorkerService Configuration
+# Configuration for Web Worker-based Qualia State calculations
+
+# Enable/disable worker (if false, uses main thread fallback)
+enabled: true
+
+# Worker initialization timeout (milliseconds)
+initializationTimeout: 5000
+
+# Message response timeout (milliseconds)
+messageTimeout: 1000
+
+# Maximum retry attempts for failed operations
+maxRetries: 3
+
+# Delay between retry attempts (milliseconds)
+retryDelay: 100
+
+# Performance monitoring
+enablePerformanceMonitoring: true
+performanceMonitoringInterval: 10000  # Check every 10 seconds
+
+# Debug logging for worker messages
+debugLogging: false
+
+# Fallback strategy when worker fails
+# Options: 'main-thread', 'error', 'retry'
+fallbackStrategy: 'main-thread'
+
+# Maximum worker age before recreation (milliseconds)
+# 0 = never recreate based on age
+# Useful for preventing memory leaks in long-running workers
+maxWorkerAge: 0  # Disabled by default
+
+# Automatically recreate worker on error
+autoRecreateOnError: true
+
+# Error threshold before fallback (consecutive errors)
+errorThreshold: 3

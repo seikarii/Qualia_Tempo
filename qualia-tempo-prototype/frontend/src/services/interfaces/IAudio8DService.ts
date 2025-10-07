@@ -1,58 +1,104 @@
 /**
- * IAudio8DService
- * Spatial 8D audio positioning (Phase 4)
- * 
- * PURPOSE: Position audio sources in 3D space for immersive experience
- * STATUS: 🔮 FUTURE (v2 - RUTA.md Phase 4)
- * IMPLEMENTATION: Pending Phase 4
+ * QUALIA.CODE v2.0 - IAudio8DService
+ * Spatial 8D audio positioning service for immersive sound experience.
+ *
+ * PURPOSE: Position audio sources in 3D space based on 2D game coordinates
+ * ARCHITECTURE: Event-driven service following IBaseService pattern
+ *
+ * RESPONSIBILITIES:
+ * - Create and manage PannerNode instances for spatial audio
+ * - Update listener position based on player movement
+ * - Calculate 3D positions from 2D game coordinates
+ * - Apply Doppler effect for moving entities
+ * - Create directional echo effects for Qualia collection
+ *
+ * INTEGRATION POINTS:
+ * - Listens to: PlayerMovedEvent, QualiaCollectedEvent, EntitySpawnedEvent
+ * - Uses: IWebAudioAPIService for AudioContext and node creation
+ * - Uses: ITimerService for position update loop
  */
 
-export interface AudioSourcePosition {
-  x: number;
-  y: number;
-  z?: number;
-}
-
-export interface AudioSource3D {
-  id: string;
-  position: AudioSourcePosition;
-  maxDistance: number;
-  rolloffFactor: number;
-}
+import type { SpatialSoundSource, ListenerPosition } from '../contracts/IAudio8DService.contracts';
 
 export interface IAudio8DService {
   /**
-   * Initialize spatial audio system
+   * Initialize the spatial audio system
+   * Sets up audio listener and prepares node pools
    */
-  initialize(): Promise<void>;
+  initialize(): void;
 
   /**
-   * Add a new 3D audio source
+   * Cleanup the spatial audio system
+   * Removes all sound sources and event listeners
    */
-  addSource(sourceId: string, position: AudioSourcePosition): Promise<void>;
+  cleanup(): void;
 
   /**
-   * Remove a 3D audio source
+   * Create a positioned sound source
+   * @param id - Unique identifier for the source
+   * @param position - Initial position in game coordinates
+   * @returns The created spatial sound source
    */
-  removeSource(sourceId: string): Promise<void>;
+  createSoundSource(id: string, position: { x: number; y: number }): SpatialSoundSource;
 
   /**
-   * Update position of existing audio source
+   * Remove a sound source
+   * @param id - ID of the source to remove
    */
-  updateSourcePosition(sourceId: string, position: AudioSourcePosition): void;
+  removeSoundSource(id: string): void;
+
+  /**
+   * Update sound source position
+   * @param id - ID of the source to update
+   * @param position - New position in game coordinates
+   * @param velocity - Optional velocity for Doppler effect
+   */
+  updateSoundSourcePosition(
+    id: string,
+    position: { x: number; y: number },
+    velocity?: { x: number; y: number }
+  ): void;
 
   /**
    * Update listener (player) position
+   * @param position - Listener position data
    */
-  updateListenerPosition(position: AudioSourcePosition): void;
+  updateListenerPosition(position: ListenerPosition): void;
 
   /**
-   * Get all active 3D audio sources
+   * Connect an audio source to a spatial sound node
+   * @param sourceId - ID of the spatial sound source
+   * @param audioSource - Web Audio API AudioNode to connect
    */
-  getActiveSources(): AudioSource3D[];
+  connectAudioSource(sourceId: string, audioSource: AudioNode): void;
 
   /**
-   * Update spatial audio configuration
+   * Disconnect an audio source from a spatial sound node
+   * @param sourceId - ID of the spatial sound source
    */
-  updateConfig(config: Partial<Record<string, unknown>>): Promise<void>;
+  disconnectAudioSource(sourceId: string): void;
+
+  /**
+   * Create directional echo effect for a position
+   * @param position - Position where the echo originated
+   * @param direction - Direction vector for the echo
+   * @param intensity - Intensity of the echo (0-1)
+   */
+  createDirectionalEcho(
+    position: { x: number; y: number },
+    direction: { x: number; y: number },
+    intensity: number
+  ): void;
+
+  /**
+   * Get all active sound sources
+   * @returns Array of active sound sources
+   */
+  getActiveSoundSources(): SpatialSoundSource[];
+
+  /**
+   * Check if spatial audio is enabled
+   * @returns True if spatial audio is active
+   */
+  isEnabled(): boolean;
 }

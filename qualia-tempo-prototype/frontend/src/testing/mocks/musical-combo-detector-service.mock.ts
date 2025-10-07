@@ -17,9 +17,10 @@ const defaultMusicalSequence: MusicalSequence = {
 };
 
 export const mockMusicalComboDetectorService: IMusicalComboDetectorService = {
-  // Lifecycle methods (async, return void)
-  initialize: vi.fn().mockResolvedValue(undefined),
-  updateConfig: vi.fn().mockResolvedValue(undefined),
+  // Lifecycle methods (synchronous, return void)
+  initialize: vi.fn().mockReturnValue(undefined),
+  cleanup: vi.fn().mockReturnValue(undefined),
+  updateConfig: vi.fn().mockReturnValue(undefined),
 
   // Synchronous action methods (return void)
   recordKeyPress: vi.fn().mockReturnValue(undefined),

@@ -18,7 +18,7 @@ export interface IMusicalComboDetectorService {
   /**
    * Initialize combo detector
    */
-  initialize(): Promise<void>;
+  initialize(): void;
 
   /**
    * Record a key press in the sequence
@@ -49,5 +49,10 @@ export interface IMusicalComboDetectorService {
   /**
    * Update detector configuration
    */
-  updateConfig(config: Partial<Record<string, unknown>>): Promise<void>;
+  updateConfig(config: Partial<Record<string, unknown>>): void;
+
+  /**
+   * Cleanup service resources
+   */
+  cleanup(): void;
 }

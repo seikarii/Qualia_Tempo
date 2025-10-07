@@ -25,6 +25,7 @@ export interface BackendSyncConfig {
   api: {
     baseUrl: string;
     qualiaEndpoint: string;
+    audioDataEndpoint: string; // PHASE 4: Audio FFT data endpoint
     healthEndpoint: string;
     timeout: number;
   };
@@ -138,6 +139,22 @@ export interface QualiaSyncResponse {
   timestamp: string;
   processedAt?: string;
   requestId?: string;
+}
+
+// PHASE 4: Audio Data Request - FFT analysis data for backend
+export interface AudioDataRequest {
+  tempo: number; // Beats per minute
+  beatPosition: number; // Position in current beat (0-1)
+  frequencyBands: number[]; // 8 frequency bands from FFT analysis
+  volume: number; // Current volume level (0-1)
+  timestamp: number; // Client timestamp for sync
+}
+
+// PHASE 4: Audio Data Response - Backend acknowledgment
+export interface AudioDataResponse {
+  success: boolean;
+  message?: string;
+  timestamp: string;
 }
 
 // Generic API Response - Moved from BackendSyncService.ts, changed to unknown

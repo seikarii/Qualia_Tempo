@@ -1,0 +1,55 @@
+# QUALIA.CODE v2.0 - Audio8DService Configuration
+# Spatial 8D audio positioning for immersive sound experience
+
+# Feature flags
+enabled: true
+
+# Distance model for 3D audio positioning
+# Options: 'linear', 'inverse', 'exponential'
+# - linear: Distance attenuation is linear (simple, predictable)
+# - inverse: Distance attenuation follows inverse square law (realistic)
+# - exponential: Distance attenuation is exponential (dramatic falloff)
+distanceModel: 'inverse'
+
+# Reference distance (game units)
+# Distance at which volume starts to decrease
+# Typical game arena: 100x100 units
+refDistance: 10.0
+
+# Maximum distance (game units)
+# Distance beyond which audio is silent
+maxDistance: 100.0
+
+# Rolloff factor
+# Higher values = faster falloff with distance
+# Range: 0.0 - 10.0 (1.0 is natural)
+rolloffFactor: 1.0
+
+# Panning scale
+# How much horizontal movement affects stereo positioning
+# Range: 0.0 - 2.0 (1.0 is natural, 2.0 is exaggerated)
+panningScale: 1.5
+
+# Doppler effect
+enableDoppler: true
+dopplerFactor: 1.0
+speedOfSound: 343.0  # meters per second in real world
+
+# Update interval (milliseconds)
+# How often to recalculate positions
+# Lower = more accurate but more CPU
+# Recommended: 16ms (60fps) to 33ms (30fps)
+updateInterval: 16
+
+# Directional echo for Qualia collection
+enableDirectionalEcho: true
+echoDelayTime: 0.2  # seconds
+echoFeedback: 0.3   # 0.0 - 1.0
+
+# Log messages
+messages:
+  initialized: "Audio8DService initialized with spatial audio support"
+  audioReady: "Spatial audio context ready"
+  spatialAudioStarted: "Spatial audio positioning started"
+  spatialAudioStopped: "Spatial audio positioning stopped"
+  positionUpdated: "Listener position updated"
