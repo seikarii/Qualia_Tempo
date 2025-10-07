@@ -1,0 +1,171 @@
+# Avatar Rendering Configuration
+# Controls SDF raymarching avatars for player and boss
+
+player_avatar:
+  # Shape parameters control the visual appearance
+  default_shape_params:
+    precision: 0.5    # 0.0-1.0, higher = more geometric/crystalline
+    flow: 0.5         # 0.0-1.0, higher = smoother transitions
+    complexity: 0.3   # 0.0-1.0, higher = more detail/subdivisions
+  
+  # Material properties
+  material:
+    base_color: [0.2, 0.6, 1.0]  # Cool blue tone
+    metallic: 0.8
+    roughness: 0.2
+    emissive_strength: 0.3
+  
+  # Transcendence threshold for fractal transformation
+  transcendence_threshold: 0.9
+  
+  # Lighting coefficients
+  lighting:
+    ambient: 0.3
+    diffuse: 0.6
+    specular: 0.8
+    shininess: 32.0
+
+boss_avatar:
+  # Shape parameters for boss morphology
+  default_shape_params:
+    chaos: 0.4        # 0.0-1.0, higher = more distortion
+    aggression: 0.3   # 0.0-1.0, higher = more threatening
+    distortion: 0.5   # 0.0-1.0, noise distortion amount
+  
+  # Material properties
+  material:
+    base_color: [1.0, 0.3, 0.2]  # Warm red/orange tone
+    metallic: 0.4
+    roughness: 0.6
+    emissive_strength: 0.5
+  
+  # Organic distortion parameters
+  distortion:
+    frequency: 2.0      # Noise frequency multiplier
+    amplitude: 0.5      # Distortion strength
+    octaves: 3          # Fractal noise octaves
+    lacunarity: 2.0     # Frequency increase per octave
+    persistence: 0.5    # Amplitude decrease per octave
+  
+  # Lighting coefficients (subsurface scattering simulation)
+  lighting:
+    ambient: 0.4
+    diffuse: 0.7
+    specular: 0.3
+    shininess: 16.0
+    subsurface: 0.2     # Subsurface scattering strength
+
+mandelbulb:
+  # Fractal parameters
+  max_iterations: 12    # Maximum iterations (performance limit)
+  min_iterations: 4     # Minimum iterations
+  power: 8.0            # Mandelbulb power (classic = 8)
+  bailout_radius: 2.0   # Escape radius
+  
+  # Visual enhancement
+  glow:
+    enabled: true
+    strength: 1.5
+    color: [1.0, 0.9, 0.6]  # Golden glow
+  
+  # Material properties
+  material:
+    base_color: [1.0, 0.95, 0.7]  # Golden/white
+    metallic: 0.9
+    roughness: 0.1
+    emissive_strength: 0.8
+  
+  # Lighting
+  lighting:
+    ambient: 0.5
+    diffuse: 0.5
+    specular: 1.0
+    shininess: 64.0
+
+raymarching:
+  # Raymarching algorithm parameters
+  max_steps: 128        # Maximum raymarch steps
+  max_distance: 100.0   # Maximum ray distance
+  epsilon: 0.001        # Surface hit threshold
+  step_multiplier: 0.9  # Step size multiplier (0.0-1.0)
+  
+  # Normal calculation
+  normal_delta: 0.001   # Delta for gradient calculation
+  
+  # Performance optimization
+  early_exit: true      # Exit on distance > max_distance
+  adaptive_steps: true  # Reduce steps at distance
+
+lighting:
+  # Global lighting setup for all avatars
+  ambient_light:
+    color: [0.2, 0.2, 0.3]
+    intensity: 0.3
+  
+  directional_light:
+    direction: [-0.5, -1.0, -0.5]  # Normalized in shader
+    color: [1.0, 0.95, 0.9]
+    intensity: 1.0
+  
+  fog:
+    enabled: true
+    color: [0.05, 0.05, 0.1]
+    near: 10.0
+    far: 80.0
+    density: 0.02
+
+performance:
+  # Level of detail based on distance
+  lod:
+    enabled: true
+    thresholds:
+      high: 15.0      # Full quality < 15 units
+      medium: 35.0    # Medium quality 15-35 units
+      low: 60.0       # Low quality > 35 units
+    
+    # Quality presets
+    high_quality:
+      max_steps: 128
+      epsilon: 0.001
+    medium_quality:
+      max_steps: 64
+      epsilon: 0.002
+    low_quality:
+      max_steps: 32
+      epsilon: 0.005
+  
+  # Shader complexity levels
+  complexity:
+    player_high_precision: 1.5    # Complexity multiplier
+    boss_high_chaos: 1.8
+    mandelbulb_max: 2.0
+
+animation:
+  # Time-based animation parameters
+  player:
+    rotation_speed: 0.3
+    pulse_frequency: 1.0
+    pulse_amplitude: 0.05
+  
+  boss:
+    writhe_speed: 0.5
+    pulse_frequency: 1.5
+    distortion_speed: 0.8
+  
+  mandelbulb:
+    rotation_speed: 0.1
+    morph_speed: 0.2
+
+# Feature flags
+features:
+  enable_lod: true
+  enable_fog: true
+  enable_glow: true
+  enable_shadows: false  # Future feature
+  enable_reflections: false  # Future feature
+
+# Metadata
+metadata:
+  version: "1.0.0"
+  description: "SDF Raymarching avatar rendering configuration"
+  last_updated: "2025-10-08"

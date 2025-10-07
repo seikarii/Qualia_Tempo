@@ -13,6 +13,11 @@ import type {
   GetGridVisualsParams,
   ParticleData
 } from "../contracts/IViewLogicService.contracts";
+import type {
+  PlayerAvatarVisuals,
+  BossAvatarVisuals,
+  MandelbulbVisuals
+} from "../contracts/IAvatarRendering.contracts";
 
 // Local type definitions for music data
 export interface MusicData {
@@ -199,4 +204,35 @@ export interface IViewLogicService {
     qualiaState: QualiaState;
     musicData: MusicData;
   };
+
+  /**
+   * Generate player avatar visual data for SDF raymarching shader
+   * PHASE 5.5 - VISUALS.GOLD.CODE Phase 4
+   * @param qualiaState - Current QualiaState (precision, flow, complexity, transcendence)
+   * @param playerState - Current player position
+   * @param time - Current game time for animation
+   * @returns Player avatar visual properties for shader uniforms
+   */
+  getPlayerAvatarVisuals(qualiaState: QualiaState, playerState: PlayerState, time: number): PlayerAvatarVisuals;
+
+  /**
+   * Generate boss avatar visual data for SDF raymarching shader
+   * PHASE 5.5 - VISUALS.GOLD.CODE Phase 4
+   * @param qualiaState - Current QualiaState (chaos, aggression)
+   * @param bossState - Current boss position
+   * @param time - Current game time for animation
+   * @returns Boss avatar visual properties for shader uniforms
+   */
+  getBossAvatarVisuals(qualiaState: QualiaState, bossState: BossState, time: number): BossAvatarVisuals;
+
+  /**
+   * Generate Mandelbulb fractal visual data for transcendence state
+   * PHASE 5.5 - VISUALS.GOLD.CODE Phase 4
+   * Triggered when QualiaState.transcendence > 0.9
+   * @param qualiaState - Current QualiaState (transcendence level determines iterations)
+   * @param playerState - Current player position (fractal centered here)
+   * @param time - Current game time for animation
+   * @returns Mandelbulb fractal visual properties for shader uniforms
+   */
+  getMandelbulbVisuals(qualiaState: QualiaState, playerState: PlayerState, time: number): MandelbulbVisuals;
 }

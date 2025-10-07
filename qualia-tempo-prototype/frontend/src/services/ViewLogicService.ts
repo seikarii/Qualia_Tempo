@@ -5,6 +5,7 @@
  */
 
 import { injectable, inject } from 'inversify';
+import { Vector3 } from 'three';
 import { TYPES } from './inversify.types';
 import type { IViewLogicService, BossState, PlayerState, PerformanceData, MusicData } from './interfaces/IViewLogicService';
 import type { 
@@ -18,6 +19,11 @@ import type {
   TileVisualData,
   GetGridVisualsParams
 } from './contracts/IViewLogicService.contracts';
+import type { 
+  PlayerAvatarVisuals,
+  BossAvatarVisuals,
+  MandelbulbVisuals
+} from './contracts/IAvatarRendering.contracts';
 import type { QualiaState, NoteData } from '../types/contracts';
 import type { ILogger } from './interfaces/ILogger';
 import type { ICoordinateSystemService } from './interfaces/ICoordinateSystemService';
@@ -1021,6 +1027,164 @@ export class ViewLogicService implements IViewLogicService {
         emotional_valence: gameState.qualiaState.recovery,
         harmony: gameState.qualiaState.flow,
       }
+    };
+  }
+
+  /**
+   * Generate player avatar visual data for SDF raymarching shader
+   * PHASE 5.5 - VISUALS.GOLD.CODE Phase 4
+   * Maps QualiaState to crystalline geometric forms
+   * @validation-exempt: Hot-path method called >60fps
+   */
+  @logMethod
+  @catchError
+  @measureTime
+  public getPlayerAvatarVisuals(
+    qualiaState: QualiaState,
+    playerState: PlayerState,
+    _time: number
+  ): PlayerAvatarVisuals {
+    const position = new Vector3(
+      playerState.position[0],
+      playerState.position[1],
+      playerState.position[2]
+    );
+
+    // Map QualiaState to shader parameters (VISUALS.GOLD.CODE Phase 4 specification)
+    const shapeParams = {
+      precision: qualiaState.precision, // 0-1, controls crystallinity
+      flow: qualiaState.flow, // 0-1, controls rotation/animation speed
+      complexity: qualiaState.intensity, // 0-1, adds torus rings and facets
+    };
+
+    // Scale avatar based on intensity
+    const scale = 1.0 + qualiaState.intensity * 0.5;
+
+    // Color shifts with recovery (blue → cyan for healing)
+    const color = {
+      r: 0.3 + qualiaState.precision * 0.4,
+      g: 0.5 + qualiaState.flow * 0.3,
+      b: 0.8 + qualiaState.recovery * 0.2,
+    };
+
+    // Emissive intensity driven by intensity and flow
+    const emissive = qualiaState.intensity * 0.7 + qualiaState.flow * 0.3;
+
+    // Toggle fractal mode when transcendence > 0.9
+    const useFractal = qualiaState.transcendence > 0.9;
+
+    return {
+      position,
+      scale,
+      shapeParams,
+      color,
+      emissive,
+      useFractal,
+    };
+  }
+
+  /**
+   * Generate boss avatar visual data for SDF raymarching shader
+   * PHASE 5.5 - VISUALS.GOLD.CODE Phase 4
+   * Maps QualiaState to organic distorted forms
+   * @validation-exempt: Hot-path method called >60fps
+   */
+  @logMethod
+  @catchError
+  @measureTime
+  public getBossAvatarVisuals(
+    qualiaState: QualiaState,
+    bossState: BossState,
+    _time: number
+  ): BossAvatarVisuals {
+    const position = new Vector3(
+      bossState.position[0],
+      bossState.position[1],
+      bossState.position[2]
+    );
+
+    // Map QualiaState to shader parameters (VISUALS.GOLD.CODE Phase 4 specification)
+    const shapeParams = {
+      chaos: qualiaState.chaos, // 0-1, controls domain warping
+      aggression: qualiaState.chaos * bossState.stress_level, // Combined aggression
+      distortion: qualiaState.chaos * 2.0, // Twist intensity
+    };
+
+    // Boss scales with phase and stress
+    const scale = 2.0 + bossState.phase * 0.5 + bossState.stress_level * 0.5;
+
+    // Color shifts from red (low stress) to dark crimson (high stress)
+    const color = {
+      r: 0.8 + bossState.stress_level * 0.2,
+      g: 0.2 - bossState.stress_level * 0.1,
+      b: 0.1,
+    };
+
+    // Emissive pulsing based on chaos and stress
+    const emissive = qualiaState.chaos * 0.6 + bossState.stress_level * 0.4;
+
+    // Time offset for per-boss variation in animations
+    const timeOffset = bossState.phase * 10.0;
+
+    return {
+      position,
+      scale,
+      shapeParams,
+      color,
+      emissive,
+      timeOffset,
+    };
+  }
+
+  /**
+   * Generate Mandelbulb fractal visual data for transcendence state
+   * PHASE 5.5 - VISUALS.GOLD.CODE Phase 4
+   * Triggered when QualiaState.transcendence > 0.9
+   * @validation-exempt: Only called in transcendence state (<1% of frames)
+   */
+  @logMethod
+  @catchError
+  @measureTime
+  public getMandelbulbVisuals(
+    qualiaState: QualiaState,
+    playerState: PlayerState,
+    _time: number
+  ): MandelbulbVisuals {
+    const position = new Vector3(
+      playerState.position[0],
+      playerState.position[1],
+      playerState.position[2]
+    );
+
+    // Iterations scale with transcendence (4-12 range)
+    const iterations = Math.floor(4 + qualiaState.transcendence * 8);
+
+    // Fractal power (Mandelbulb standard is 8.0)
+    const power = 8.0;
+
+    // Scale fractal with intensity
+    const scale = 1.5 + qualiaState.intensity * 0.5;
+
+    // Golden → warm orange gradient (divine transcendence)
+    const colorGradient = {
+      inner: { r: 1.0, g: 0.84, b: 0.0 }, // Gold
+      outer: { r: 1.0, g: 0.5, b: 0.2 }, // Warm orange
+    };
+
+    // Rim lighting for divine glow effect
+    const rimLightIntensity = 0.8 + qualiaState.transcendence * 0.2;
+
+    // Outer glow radius expands with transcendence
+    const glowRadius = 2.0 + qualiaState.transcendence * 1.0;
+
+    return {
+      position,
+      scale,
+      iterations,
+      power,
+      colorGradient,
+      rimLightIntensity,
+      glowRadius,
     };
   }
 

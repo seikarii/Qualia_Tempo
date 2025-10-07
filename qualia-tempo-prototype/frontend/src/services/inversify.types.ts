@@ -176,6 +176,9 @@ export const TYPES = {
   IReactionDiffusionService: Symbol.for("IReactionDiffusionService"),
   ReactionDiffusionServiceConfig: Symbol.for("ReactionDiffusionServiceConfig"),
   ReactionDiffusionServiceParams: Symbol.for("ReactionDiffusionServiceParams"),
+
+  // Phase 5.5: Avatar Rendering Services (VISUALS.GOLD.CODE Phase 4)
+  AvatarRenderingConfig: Symbol.for("AvatarRenderingConfig"),
 } as const;
 
 // Type-safe access to TYPES

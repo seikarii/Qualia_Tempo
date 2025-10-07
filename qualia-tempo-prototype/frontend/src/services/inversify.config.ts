@@ -208,7 +208,9 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "kairosVisual": "kairos-visual.yaml",
   "particleSystem": "particle-system.yaml",
   // PHASE 5.4: Reaction-Diffusion Ground (VISUALS.GOLD.CODE Phase 3)
-  "reactionDiffusion": "reaction-diffusion.yaml"
+  "reactionDiffusion": "reaction-diffusion.yaml",
+  // PHASE 5.5: Avatar Rendering (VISUALS.GOLD.CODE Phase 4)
+  "avatarRendering": "avatar-rendering.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
