@@ -12,8 +12,13 @@ from dataclasses import dataclass, asdict
 # Add backend to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from engine.qualia_particle_engine import QualiaParticleEngine, create_qualia_particle_engine
-from engine.ParticleStateCalculator import PhysicsConfig
+# Use absolute imports for better compatibility
+try:
+    from backend.engine.qualia_particle_engine import QualiaParticleEngine, create_qualia_particle_engine
+    from backend.engine.ParticleStateCalculator import PhysicsConfig
+except ImportError:
+    from engine.qualia_particle_engine import QualiaParticleEngine, create_qualia_particle_engine
+    from engine.ParticleStateCalculator import PhysicsConfig
 
 # Configure worker-specific logger
 logging.basicConfig(

@@ -12,7 +12,11 @@ try:
 except ImportError:
     np = None  # type: ignore[assignment]
 
-from ..utils.decorators import log_execution, handle_errors, time_execution
+# Import decorators - handle both relative and absolute imports
+try:
+    from backend.utils.decorators import log_execution, handle_errors, time_execution
+except ImportError:
+    from utils.decorators import log_execution, handle_errors, time_execution
 
 logger = logging.getLogger(__name__)
 

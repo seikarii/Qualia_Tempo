@@ -172,6 +172,7 @@ class ParticleEnginePoolManager:
             
             self.is_running = False
             self.metrics.active_workers = 0
+            self.pool = None  # Clear pool reference
             
             logger.info("✅ Process pool stopped")
             return True
@@ -216,8 +217,7 @@ class ParticleEnginePoolManager:
             'task_id': task_id,
             'dt': dt,
             'qualia_state': qualia_state,
-            'command': command,
-            'max_particles': 1000  # TODO: Make configurable
+            'command': command
         }
         
         try:
@@ -282,6 +282,7 @@ class ParticleEnginePoolManager:
             self.metrics.total_tasks_failed += 1
             return None
     
+    @log_execution()
     def get_metrics(self) -> Dict[str, Any]:
         """
         Get current pool metrics.
@@ -294,7 +295,7 @@ class ParticleEnginePoolManager:
             'total_tasks_completed': self.metrics.total_tasks_completed,
             'total_tasks_failed': self.metrics.total_tasks_failed,
             'success_rate': (
-                self.metrics.total_tasks_completed / self.metrics.total_tasks_submitted
+                (self.metrics.total_tasks_completed / self.metrics.total_tasks_submitted) * 100.0
                 if self.metrics.total_tasks_submitted > 0 else 0.0
             ),
             'average_execution_time_ms': self.metrics.average_execution_time_ms,

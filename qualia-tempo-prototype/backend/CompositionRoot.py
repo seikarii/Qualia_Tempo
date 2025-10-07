@@ -135,24 +135,36 @@ class CompositionRoot:
         self._logger.debug("🔍 ShaderIntrospectionService registered")
 
     async def _initialize_particle_system(self) -> None:
-        """Initialize the QualiaParticleEngine service (v2 - pure state calculation)."""
+        """
+        Initialize the ParticleEnginePoolManager service (v2 - process pool).
+        
+        ARCHITECTURE.GOLD.CODE v2 - Phase 1.4 Integration:
+        - Replaced synchronous QualiaParticleEngine with async ParticleEnginePoolManager
+        - Particle calculations now happen in separate worker processes
+        - Decouples heavy computation from FastAPI event loop
+        - Enables horizontal scaling and true parallelism
+        """
         try:
-            from .engine.qualia_particle_engine import create_qualia_particle_engine
+            from .services.ParticleEnginePoolManager import ParticleEnginePoolManager
 
-            # ARCHITECTURE.GOLD.CODE v2: No GPU context needed
-            # ParticleEngine now uses ParticleStateCalculator (pure Python/NumPy)
-            particle_engine = create_qualia_particle_engine(
-                max_particles=10000,
-                enable_metrics=True,
-                event_bus=self._event_bus,  # QUALIA.CODE: Inject EventBus dependency
-            )
-            self._services["particle_system"] = particle_engine
+            # Create and start the process pool
+            pool_manager = ParticleEnginePoolManager()
+            
+            # Start the pool (this creates worker processes)
+            pool_started = await pool_manager.start()
+            
+            if not pool_started:
+                raise RuntimeError("Failed to start ParticleEnginePoolManager")
+            
+            # Register pool manager as "particle_system" for backward compatibility
+            self._services["particle_system"] = pool_manager
 
-            self._logger.debug(
-                "✅ QualiaParticleEngine v2 registered (pure state calculation, no GPU)"
+            self._logger.info(
+                f"✅ ParticleEnginePoolManager initialized with {pool_manager.config.num_workers} worker processes"
             )
+            
         except Exception as e:
-            self._logger.error(f"🚨 Failed to initialize QualiaParticleEngine: {e}")
+            self._logger.error(f"🚨 Failed to initialize ParticleEnginePoolManager: {e}")
             raise
 
     async def _initialize_qualia_processor(self) -> None:
@@ -265,6 +277,10 @@ class CompositionRoot:
     async def shutdown(self) -> None:
         """
         Gracefully shut down all background services using proper async introspection.
+        
+        ARCHITECTURE.GOLD.CODE v2 - Phase 1.4:
+        - Added special handling for ParticleEnginePoolManager (stop method)
+        - Ensures worker processes are terminated gracefully
         """
         if not self._initialized:
             self._logger.warning(
@@ -277,6 +293,18 @@ class CompositionRoot:
         # Shutdown services in reverse order to respect dependencies.
         for service_name in reversed(list(self._services.keys())):
             service = self._services.get(service_name)
+
+            # Special handling for ParticleEnginePoolManager (uses "stop" instead of "shutdown")
+            if service_name == "particle_system" and hasattr(service, "stop"):
+                try:
+                    self._logger.info(f"🛑 Stopping {service_name} (process pool)...")
+                    await service.stop()
+                    self._logger.critical(f"✅ {service_name} TERMINATED.")
+                except Exception as e:
+                    self._logger.error(
+                        f"🚨 Error during shutdown of {service_name}: {e}", exc_info=True
+                    )
+                continue
 
             if not (
                 service and hasattr(service, "shutdown") and callable(service.shutdown)

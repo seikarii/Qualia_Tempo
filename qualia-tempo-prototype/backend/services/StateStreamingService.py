@@ -1,12 +1,14 @@
 # QUALIA.CODE v1.1 - StateStreamingService
 # WebSocket service for streaming qualia state data to frontend clients
+# ARCHITECTURE.GOLD.CODE v2 - Phase 1.4: Integrated with ParticleEnginePoolManager
 
 import asyncio
 import logging
-# BINARY PROTOCOL: json import removed - no more JSON serialization
+import json
 from typing import Dict, Any, Set, Optional
 from fastapi import WebSocket, WebSocketDisconnect
 from .EventBus import EventBus
+from .ParticleEnginePoolManager import ParticleEnginePoolManager
 from ..utils.decorators import (
     log_execution,
     handle_errors,
@@ -18,14 +20,19 @@ logger = logging.getLogger(__name__)
 class StateStreamingService:
     """
     WebSocket service for streaming qualia state data to connected clients.
-    Manages connections and coordinates with particle engine for state computation.
+    
+    ARCHITECTURE.GOLD.CODE v2 - Phase 1.4 Integration:
+    - Now uses async ParticleEnginePoolManager instead of synchronous ParticleEngine
+    - Submits particle calculation tasks to worker pool
+    - Streams JSON state data (particle_states list) to frontend
+    - Frontend KairosVisualEngine will handle rendering
     """
 
     def __init__(
-        self, event_bus: EventBus, particle_engine: Any, config: Dict[str, Any]
+        self, event_bus: EventBus, particle_engine: ParticleEnginePoolManager, config: Dict[str, Any]
     ) -> None:
         self._event_bus = event_bus
-        self._particle_engine = particle_engine
+        self._pool_manager = particle_engine  # Now a ParticleEnginePoolManager
         self._config = config
         self._logger = logging.getLogger(__name__)
 
@@ -36,10 +43,17 @@ class StateStreamingService:
 
         # Streaming configuration - Externalized from QUALIA.CODE §7
         self._target_fps = self._config.get("streaming", {}).get("target_fps", 30.0)
+        self._frame_time = 1.0 / self._target_fps
 
         # Statistics
         self._states_sent = 0
         self._connected_clients = 0
+        
+        # Qualia state tracking (updated from EventBus)
+        self._current_qualia_state: Optional[Dict[str, Any]] = None
+        
+        # Subscribe to QualiaState updates from EventBus
+        self._event_bus.subscribe("QualiaStateUpdated", self._on_qualia_state_updated)
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
@@ -89,40 +103,94 @@ class StateStreamingService:
         else:
             self._logger.info(f"Streaming task {id(task)} was already done.")
 
+    async def _on_qualia_state_updated(self, event: Any) -> None:
+        """
+        EventBus handler for QualiaStateUpdated events.
+        
+        ARCHITECTURE.GOLD.CODE: Event-driven architecture
+        Updates current qualia state to be sent to workers
+        
+        Args:
+            event: Event object from EventBus (has .data attribute)
+        """
+        # EventBus wraps data in Event object - access via event.data
+        event_data = event.data if hasattr(event, 'data') else event
+        self._current_qualia_state = event_data.get("qualia_state")
+        if self._current_qualia_state:
+            intensity = self._current_qualia_state.get('intensity', 0)
+            self._logger.debug(f"QualiaState updated: intensity={intensity}")
+
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
     async def _streaming_loop(self) -> None:
-        """Main streaming loop that computes and sends state updates to all connected clients."""
-        frame_time = 1.0 / self._target_fps
+        """
+        Main streaming loop that submits tasks to worker pool and streams results.
+        
+        ARCHITECTURE.GOLD.CODE v2 - Phase 1.4:
+        - Uses async ParticleEnginePoolManager.submit_task()
+        - Sends dt and current QualiaState to workers
+        - Workers return particle_states (JSON-serializable list)
+        - Broadcasts JSON state to frontend clients
+        """
         task_id = id(asyncio.current_task())
+        last_frame_time = asyncio.get_event_loop().time()
 
         try:
-            while self._is_streaming:  # Check streaming state\n                # IMMEDIATE CANCELLATION CHECK\n                if not self._is_streaming:  # pragma: no cover\n                    logger.critical(\n                        f\"💀 STREAMING TERMINATED - EXITING LOOP: {task_id}\"\n                    )\n                    break
+            while self._is_streaming:
+                # IMMEDIATE CANCELLATION CHECK
+                if not self._is_streaming:  # pragma: no cover
+                    logger.critical(
+                        f"💀 STREAMING TERMINATED - EXITING LOOP: {task_id}"
+                    )
+                    break
 
                 if not self._connections:  # If no connections, just wait
                     await asyncio.sleep(0.1)
+                    last_frame_time = asyncio.get_event_loop().time()
                     continue
 
                 loop_start = asyncio.get_event_loop().time()
+                dt = loop_start - last_frame_time
+                last_frame_time = loop_start
 
                 try:
-                    # CORRECTO: Obtiene el formato GOLD.CODE (62 bytes) directamente como bytes
-                    binary_payload = self._particle_engine.get_optimized_particle_data()
+                    # Submit particle calculation task to worker pool
+                    result = await self._pool_manager.submit_task(
+                        dt=dt,
+                        qualia_state=self._current_qualia_state,
+                        command="update"
+                    )
 
-                    if binary_payload:
-                        # Transmite la carga útil correcta sin serialización adicional
-                        await self._broadcast_state_update(binary_payload)
+                    if result and result.get('success'):
+                        # Extract particle states from worker result
+                        particle_states = result.get('particle_states', [])
+                        
+                        # Create state update payload
+                        state_payload = {
+                            'type': 'particle_state_update',
+                            'timestamp': loop_start,
+                            'particle_states': particle_states,
+                            'qualia_state': self._current_qualia_state,
+                            'statistics': result.get('statistics', {})
+                        }
+                        
+                        # Serialize to JSON and broadcast
+                        json_payload = json.dumps(state_payload)
+                        await self._broadcast_state_update(json_payload)
 
                         # Update statistics
-                    self._states_sent += 1
+                        self._states_sent += 1
+                    else:
+                        error_msg = result.get('error_message', 'Unknown error') if result else 'No result'
+                        self._logger.warning(f"⚠️  Worker task failed: {error_msg}")
 
                 except Exception as e:
-                    self._logger.error(f"🚨 Error in state computation: {e}")
+                    self._logger.error(f"🚨 Error in state computation: {e}", exc_info=True)
                     await asyncio.sleep(0.1)  # Brief pause before retry
 
                 # Frame rate limiting
                 elapsed = asyncio.get_event_loop().time() - loop_start
-                sleep_time = max(0, frame_time - elapsed)
+                sleep_time = max(0, self._frame_time - elapsed)
 
                 if sleep_time > 0:
                     await asyncio.sleep(sleep_time)
@@ -137,13 +205,14 @@ class StateStreamingService:
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
-    async def _broadcast_state_update(self, binary_payload: bytes) -> None:
-        """Send binary particle data to all connected clients via WebSocket.
+    async def _broadcast_state_update(self, json_payload: str) -> None:
+        """
+        Send JSON particle state data to all connected clients via WebSocket.
         
-        QUALIA.CODE v1.2: BINARY PROTOCOL IMPLEMENTATION
-        - Eliminates JSON serialization performance disaster
-        - Streams raw numpy bytes directly to GPU pipeline
-        - Zero-copy, maximum throughput architecture
+        ARCHITECTURE.GOLD.CODE v2 - Phase 1.4:
+        - Backend sends STATE (particle_states + qualia_state) as JSON
+        - Frontend KairosVisualEngine handles rendering
+        - Clean separation: Backend = Logic, Frontend = Visuals
         """
         if not self._connections:
             return
@@ -152,12 +221,12 @@ class StateStreamingService:
 
         for connection in self._connections:
             try:
-                # BINARY STREAMING: send_bytes instead of send_text
-                await connection.send_bytes(binary_payload)
+                # JSON STREAMING: send_text with JSON payload
+                await connection.send_text(json_payload)
             except WebSocketDisconnect:
                 dead_connections.add(connection)
             except Exception as e:
-                self._logger.error(f"Error sending binary data to client: {e}")
+                self._logger.error(f"Error sending JSON data to client: {e}")
                 dead_connections.add(connection)
 
         # Remove dead connections
