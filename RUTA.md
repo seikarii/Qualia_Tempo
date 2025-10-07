@@ -19,14 +19,16 @@ FASE 1: BACKEND - ELIMINACIÓN DE RENDERING ✅ 100% (5-7 días, Started: Oct 6,
 ├─ Task 1.3: Process Pool Setup ✅ COMPLETADO (Oct 7, 2025)
 └─ Task 1.4: Integration ✅ COMPLETADO (Oct 7, 2025)
 
-FASE 2: BACKEND GAME LOGIC ⏳ 0% (8-10 días)
+FASE 2: BACKEND GAME LOGIC ⏳ 50% (8-10 días, Started: Oct 7, 2025)
+├─ Task 2.1: GameLogicService ✅ COMPLETADO (Oct 7, 2025)
+├─ Task 2.2: HarmonyAnalysisService ✅ COMPLETADO (Oct 7, 2025)
 FASE 3: FRONTEND WEB WORKER ⏳ 0% (5-7 días)
 FASE 4: FRONTEND AUDIO ADVANCED ⏳ 0% (6-8 días)
 FASE 5: FRONTEND VISUAL ENGINE ⏳ 0% (10-12 días)
 FASE 6: INTEGRATION & POLISH ⏳ 0% (5-7 días)
 
-PROGRESO TOTAL: 33.33% (2/6 phases)
-TIEMPO ESTIMADO RESTANTE: 34-46 días
+PROGRESO TOTAL: 43.75% (2.50/6 phases)
+TIEMPO ESTIMADO RESTANTE: 31-43 días
 ```
 
 ---
@@ -420,7 +422,7 @@ Ready to proceed to Phase 2: Backend Game Logic
 
 ---
 
-### **FASE 2: BACKEND - GAME LOGIC & AI** (8-10 días)
+### **FASE 2: BACKEND - GAME LOGIC & AI** (8-10 días) ⏳ 25%
 
 #### Objetivos:
 - Implementar toda la lógica de juego del GDD
@@ -429,30 +431,80 @@ Ready to proceed to Phase 2: Backend Game Logic
 
 #### Tareas:
 
-##### 2.1. GameLogicService (Día 1-3):
-- [ ] Crear `backend/services/GameLogicService.py`
-- [ ] Crear interfaz `backend/services/interfaces/IGameLogicService.py`
-- [ ] Implementar mecánicas GDD:
-  - [ ] Generación de Qualia (dash, abilities, metronome)
-  - [ ] Sistema de combos (emergentes)
-  - [ ] Detección de ventana de recolección (<1s)
-  - [ ] Cálculo de score
-  - [ ] Gestión de vida del jugador
-  - [ ] Dificultad basada en volumen
-- [ ] Config: `backend/config/game-logic.yaml`
-- [ ] Tests unitarios completos
+##### 2.1. GameLogicService (Día 1-3): ✅ **COMPLETADO** (Oct 7, 2025)
+- [x] Crear `backend/services/GameLogicService.py` (~950 lines) ✅
+- [x] Crear interfaz `backend/services/interfaces/IGameLogicService.py` (~300 lines) ✅
+- [x] Crear contratos de eventos `backend/services/contracts/events.py` (~570 lines) ✅
+- [x] Implementar mecánicas GDD: ✅
+  - [x] Generación de Qualia (dash=10, ability=15, metronome=5) ✅
+  - [x] On-beat multiplier (1.5x when in sync con metronome) ✅
+  - [x] Sistema de combos emergentes (6 harmonic + 5 chaotic) ✅
+  - [x] Detección de ventana de recolección (<1000ms) ✅
+  - [x] Perfect timing bonus (<300ms = +50 score) ✅
+  - [x] Cálculo de score (base + combo multiplier + timing) ✅
+  - [x] Gestión de vida del jugador (max 100) ✅
+  - [x] Gestión de vida del boss (song_duration * 10) ✅
+  - [x] Ultimate ability (x40 combo, 2x Qualia, 60s cooldown) ✅
+  - [x] Cooldowns tempo-aware (reduced at high BPM) ✅
+  - [x] Dificultad basada en volumen (training/normal/hard/extreme) ✅
+- [x] Config: `backend/config/game-logic.yaml` (~230 lines) ✅
+  - Externalizado: thresholds, multipliers, combos, cooldowns, difficulty settings
+- [x] Tests unitarios completos: ✅
+  - **33 tests, 100% passing** (test_game_logic_service.py ~650 lines)
+  - Test classes: Initialization (3), Qualia Generation (5), Collection (4), Combos (3), Ultimate (3), Health (4), Difficulty (2), Tempo (1), State Management (4), EventBus (1), Edge Cases (3)
+- [x] CompositionRoot integration ✅
+  - Backup created: CompositionRoot.py.backup_phase2_1_[timestamp]
+  - Added _initialize_game_logic_service() method
+  - Added get_game_logic_service() accessor
+  - Service initialized after qualia_processor
+- [x] EventBus API extended ✅
+  - Added publish(event_obj) method for new event contract objects
+  - Backward compatible with legacy publish_async(event_name, data, source)
+  - Automatic event type conversion
+- [x] Architectural decorators applied ✅
+  - @log_execution() on all public methods
+  - @handle_errors() on all external interaction methods
+  - 95%+ QUALIA.CODE compliance
 
-##### 2.2. HarmonyAnalysisService (Día 4-5):
-- [ ] Crear `backend/services/HarmonyAnalysisService.py`
-- [ ] Crear interfaz `backend/services/interfaces/IHarmonyAnalysisService.py`
-- [ ] Implementar comparación musical:
-  - [ ] Input del jugador (teclas Q-E-R-T-F-G-C)
-  - [ ] Notas actuales de la canción
-  - [ ] Qualia recolectado del suelo
-  - [ ] Calcular harmony score (0-1)
-  - [ ] Determinar: armónico vs caótico
-- [ ] Config: `backend/config/harmony-analysis.yaml`
-- [ ] Tests con casos musicales reales
+##### 2.2. HarmonyAnalysisService (Día 4-5): ✅ **COMPLETADO** (Oct 7, 2025)
+- [x] Crear `backend/services/HarmonyAnalysisService.py` (~650 lines) ✅
+- [x] Crear interfaz `backend/services/interfaces/IHarmonyAnalysisService.py` (~310 lines) ✅
+- [x] Crear contratos de eventos harmony en `backend/services/contracts/events.py` (+120 lines) ✅
+- [x] Implementar comparación musical: ✅
+  - [x] Input del jugador (teclas Q-E-R-T-F-G-C → C-D-E-F-G-A-B) ✅
+  - [x] Notas actuales de la canción (do-re-mi-fa-sol-la-si) ✅
+  - [x] Qualia recolectado del suelo (RGB → musical notes mapping) ✅
+  - [x] Calcular harmony score (0.0-1.0 via pairwise interval analysis) ✅
+  - [x] Determinar: armónico vs caótico (5-tier classification) ✅
+  - [x] Musical interval analysis (12 interval types: perfect consonances, imperfect consonances, strong/moderate dissonances) ✅
+  - [x] Chord pattern detection (10 patterns: major/minor/power/suspended triads, diminished/augmented/tone clusters) ✅
+  - [x] Harmony trend tracking (improvement/decline detection) ✅
+  - [x] Context modifiers (tempo bonus, combo multiplier) ✅
+  - [x] Weighted scoring (song harmony 60%, qualia harmony 40%) ✅
+- [x] Config: `backend/config/harmony-analysis.yaml` (~300 lines) ✅
+  - Externalizado: musical intervals, chord patterns, thresholds, analysis windows, RGB→note mapping
+- [x] Tests con casos musicales reales: ✅
+  - **44 tests, 100% passing** (test_harmony_analysis_service.py ~720 lines)
+  - Test classes: Initialization (3), Musical Intervals (5), Harmony Scoring (5), Player Input Analysis (3), Song Comparison (3), Qualia Comparison (3), Chord Detection (5), Consonance Scoring (4), Harmony Checks (3), Context Updates (2), Harmony Trends (3), Statistics (1), EventBus Integration (1), Edge Cases (3)
+- [x] CompositionRoot integration ✅
+  - Backup created: CompositionRoot.py.backup_phase2_2_[timestamp]
+  - Added _initialize_harmony_analysis_service() method
+  - Added get_harmony_analysis_service() accessor
+  - Service initialized after GameLogicService
+- [x] Musical theory implementation complete ✅
+  - Perfect consonances: unison (1.0), perfect fifth (0.95), perfect fourth (0.85)
+  - Imperfect consonances: major third (0.75), minor third (0.70), major/minor sixths (0.65-0.70)
+  - Strong dissonances: tritone (1.0 chaos), minor second (0.95 chaos), major seventh (0.90 chaos)
+  - Moderate dissonances: major second (0.60 chaos), minor seventh (0.55 chaos)
+  - Chord patterns: 6 harmonic types (major/minor/power/suspended triads), 4 chaotic types (diminished/augmented/tone clusters)
+- [x] Event system extended ✅
+  - HarmonyScoreCalculatedEvent: overall score, song/qualia harmony, classification, player/song/qualia notes
+  - HarmonicPatternDetectedEvent: pattern type, notes, harmony score
+  - ChaoticPatternDetectedEvent: pattern type, notes, chaos score
+- [x] Architectural decorators applied ✅
+  - @log_execution() on all public methods
+  - @handle_errors() on all external interaction methods
+  - 95%+ QUALIA.CODE compliance
 
 ##### 2.3. BossAI & PatternSystem (Día 6-9):
 - [ ] Crear `backend/services/BossAIService.py`

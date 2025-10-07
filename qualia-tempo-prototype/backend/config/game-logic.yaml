@@ -1,0 +1,221 @@
+# QUALIA.CODE v1.1 - GameLogicService Configuration
+# All game logic parameters externalized for easy tuning
+
+# Qualia Generation Settings
+qualia_generation:
+  # Base generation amounts
+  dash_base_value: 10.0           # Qualia generated per dash
+  ability_base_value: 15.0        # Qualia generated per ability use
+  metronome_base_value: 5.0       # Qualia generated per metronome tick
+  
+  # Timing bonuses
+  on_beat_multiplier: 1.5         # Multiplier for perfect timing (on metronome beat)
+  collection_window_ms: 1000      # Maximum time to collect Qualia (milliseconds)
+  perfect_collection_window_ms: 300  # Window for "perfect" timing bonus
+  perfect_collection_bonus: 1.2   # Multiplier for perfect collection timing
+  
+  # Color mapping (RGB values 0-1)
+  colors:
+    dash: {r: 0.2, g: 0.8, b: 1.0}        # Cyan
+    ability: {r: 1.0, g: 0.3, b: 0.8}     # Magenta
+    metronome: {r: 1.0, g: 0.9, b: 0.2}   # Yellow
+    boss: {r: 1.0, g: 0.2, b: 0.2}        # Red
+    ultimate: {r: 1.0, g: 0.8, b: 0.0}    # Gold
+
+# Combo System Settings
+combo_system:
+  # Combo thresholds
+  combo_decay_time_sec: 3.0       # Time before combo starts decaying
+  combo_decay_rate: 0.1           # Combo decay per second after decay time
+  max_combo_multiplier: 10.0      # Maximum combo multiplier for score
+  
+  # Ultimate ability
+  ultimate_threshold: 40          # Combo count required for ultimate
+  ultimate_duration_sec: 10.0     # Duration of ultimate ability
+  ultimate_qualia_multiplier: 2.0 # Qualia generation multiplier during ultimate
+  
+  # Harmonic combo definitions (beneficial effects)
+  harmonic_combos:
+    - id: "vortex"
+      name: "Remolino"
+      sequence: ["Q", "E", "R"]
+      effect_type: "area_control"
+      effect_description: "Atrae Qualia cercano"
+      effect_value: 1.5             # Attraction multiplier
+      effect_radius: 5.0            # Units
+      
+    - id: "attractor"
+      name: "Atractor"
+      sequence: ["Q", "R", "F"]
+      effect_type: "mass_collection"
+      effect_description: "Recolección masiva de Qualia"
+      effect_value: 2.0
+      effect_radius: 10.0
+      
+    - id: "repulsor"
+      name: "Repulsor"
+      sequence: ["T", "E", "R"]
+      effect_type: "defense"
+      effect_description: "Repele ataques del boss"
+      effect_value: 1.0             # Shield strength
+      effect_duration: 5.0          # Seconds
+      
+    - id: "multiplier"
+      name: "Multiplicador"
+      sequence: ["Q", "E", "T"]
+      effect_type: "score_boost"
+      effect_description: "+50% puntuación temporal"
+      effect_value: 1.5
+      effect_duration: 8.0
+      
+    - id: "heal"
+      name: "Curación"
+      sequence: ["F", "G", "C"]
+      effect_type: "healing"
+      effect_description: "Restaura vida gradualmente"
+      effect_value: 20.0            # Health restored
+      effect_duration: 5.0
+      
+    - id: "full_scale"
+      name: "Escala Completa"
+      sequence: ["Q", "E", "R", "T", "F", "G", "C"]
+      effect_type: "ultimate_heal"
+      effect_description: "Curación completa + escudo temporal"
+      effect_value: 100.0           # Full health
+      shield_duration: 10.0
+  
+  # Chaotic combo definitions (malicious effects)
+  chaotic_combos:
+    - id: "sound_wall"
+      name: "Muro Sonoro"
+      sequence: ["Q", "T", "G"]
+      effect_type: "movement_block"
+      effect_description: "Bloquea movimiento en área"
+      effect_value: 1.0
+      effect_radius: 3.0
+      effect_duration: 4.0
+      
+    - id: "damage_zone"
+      name: "Zona de Daño"
+      sequence: ["E", "F", "C"]
+      effect_type: "damage_over_time"
+      effect_description: "Daño por segundo en área"
+      effect_value: 5.0             # Damage per second
+      effect_radius: 4.0
+      effect_duration: 6.0
+      
+    - id: "inverse_repulsor"
+      name: "Repulsor Inverso"
+      sequence: ["R", "G", "T"]
+      effect_type: "forced_movement"
+      effect_description: "Empuja al jugador hacia el boss"
+      effect_value: 2.0             # Push force
+      
+    - id: "hostile_attractor"
+      name: "Atractor Hostil"
+      sequence: ["Q", "G", "C"]
+      effect_type: "enemy_attraction"
+      effect_description: "Atrae al boss hacia el jugador"
+      effect_value: 1.5
+      effect_duration: 5.0
+      
+    - id: "interference"
+      name: "Interferencia Auditiva"
+      sequence: ["T", "F", "R"]
+      effect_type: "precision_reduction"
+      effect_description: "Reduce precisión de recolección"
+      effect_value: 0.5             # Precision multiplier
+      effect_duration: 7.0
+
+# Score Calculation Settings
+scoring:
+  # Base score values
+  qualia_collection_base: 100     # Base score per Qualia collected
+  combo_multiplier_factor: 0.1    # Added to multiplier per combo count
+  perfect_timing_bonus: 50        # Extra score for perfect collection timing
+  
+  # Bonus multipliers
+  harmonic_combo_bonus: 500       # Score for activating harmonic combo
+  chaotic_combo_penalty: -200     # Score penalty for triggering chaotic combo
+  boss_damage_multiplier: 10      # Score multiplier for boss damage dealt
+  
+  # Special bonuses
+  no_damage_bonus: 5000           # Bonus for not taking damage in phase
+  full_combo_bonus: 10000         # Bonus for maintaining full combo through song
+
+# Health Management Settings
+health_system:
+  # Player health
+  player_max_health: 100.0
+  player_starting_health: 100.0
+  player_health_regen_per_sec: 0.0  # No passive regen
+  
+  # Boss health (calculated from song duration)
+  boss_health_per_second: 10.0    # Boss health = song_duration_sec * this value
+  
+  # Damage values
+  boss_attack_base_damage: 15.0   # Base damage from boss attacks
+  chaotic_combo_self_damage: 10.0 # Damage from triggering chaotic combo
+  
+  # Healing values
+  harmonic_heal_multiplier: 1.0   # Multiplier for harmonic combo healing
+
+# Ability Cooldown Settings
+cooldowns:
+  # Base cooldowns (seconds)
+  ability_base_cooldown: 5.0      # Base cooldown for Q-E-R-T-F-G-C abilities
+  dash_cooldown: 0.0              # Dash has no cooldown (metronome-based)
+  ultimate_cooldown: 60.0         # Cooldown after ultimate ends
+  
+  # Tempo-based modifiers
+  tempo_modifier_enabled: true
+  tempo_base_bpm: 120.0           # BPM where cooldown is normal
+  tempo_modifier_factor: 0.01     # Cooldown reduction per BPM above base
+  min_cooldown_multiplier: 0.5    # Minimum cooldown multiplier (at very high BPM)
+
+# Difficulty Settings (Volume-Based)
+difficulty:
+  # Volume ranges (0.0 to 1.0)
+  training_volume_max: 0.4
+  normal_volume_max: 0.6
+  hard_volume_max: 0.8
+  extreme_volume_min: 0.8
+  
+  # Difficulty modifiers
+  training_boss_damage_mult: 0.5
+  normal_boss_damage_mult: 1.0
+  hard_boss_damage_mult: 1.5
+  extreme_boss_damage_mult: 2.0
+  
+  training_boss_speed_mult: 0.7
+  normal_boss_speed_mult: 1.0
+  hard_boss_speed_mult: 1.3
+  extreme_boss_speed_mult: 1.6
+  
+  # Telegraph timing (seconds)
+  training_telegraph_duration: 2.0
+  normal_telegraph_duration: 1.5
+  hard_telegraph_duration: 1.0
+  extreme_telegraph_duration: 0.5
+
+# Game State Settings
+game_state:
+  # Timing
+  game_tick_rate: 60              # Updates per second
+  state_broadcast_rate: 30        # State broadcasts to frontend per second
+  
+  # Victory/defeat conditions
+  victory_condition: "boss_defeated"  # When boss health reaches 0
+  defeat_conditions:
+    - "player_health_zero"
+    - "song_ended_boss_alive"
+
+# Feature Flags
+features:
+  enable_ultimate_ability: true
+  enable_harmonic_combos: true
+  enable_chaotic_combos: true
+  enable_tempo_cooldown_modifier: true
+  enable_volume_difficulty: true
+  enable_combo_decay: true
+  enable_perfect_timing_bonus: true

@@ -50,6 +50,10 @@ class CompositionRoot:
         await self._initialize_shader_introspection_service()
         await self._initialize_particle_system()
         await self._initialize_qualia_processor()
+        # PHASE 2 TASK 2.1: Initialize GameLogicService for GDD mechanics
+        await self._initialize_game_logic_service()
+        # PHASE 2 TASK 2.2: Initialize HarmonyAnalysisService for musical harmony
+        await self._initialize_harmony_analysis_service()
         # ARCHITECTURE.GOLD.CODE: StreamingWebService removed - backend does not render
         # Video streaming functionality deprecated in favor of state-only streaming
         await self._initialize_state_streaming_service()
@@ -175,6 +179,62 @@ class CompositionRoot:
         self._services["qualia_processor"] = processor
         self._logger.debug("✅ QualiaProcessor initialized")
 
+    async def _initialize_game_logic_service(self) -> None:
+        """
+        Initialize GameLogicService for core game mechanics (PHASE 2 TASK 2.1).
+        
+        RESPONSIBILITIES (per GDD.md):
+        - Qualia generation (dash, ability, metronome)
+        - Emergent combo system (harmonic/chaotic)
+        - Score calculation with multipliers
+        - Health management (player/boss)
+        - Ultimate ability (x40 combo)
+        - Difficulty scaling (volume-based)
+        - Tempo-aware cooldowns
+        """
+        try:
+            from .services.GameLogicService import GameLogicService
+
+            game_logic_service = GameLogicService(event_bus=self._event_bus)
+            self._services["game_logic_service"] = game_logic_service
+            
+            self._logger.info("✅ GameLogicService initialized - Core GDD mechanics ready")
+            
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize GameLogicService: {e}")
+            raise
+
+    async def _initialize_harmony_analysis_service(self) -> None:
+        """
+        Initialize HarmonyAnalysisService for musical harmony analysis (PHASE 2 TASK 2.2).
+        
+        RESPONSIBILITIES (per GDD.md):
+        - Musical interval analysis (consonance/dissonance)
+        - Chord pattern detection (major/minor triads, etc.)
+        - Player input vs song harmony scoring
+        - Player input vs qualia harmony scoring
+        - Harmony trend tracking over time
+        - Harmonic vs chaotic pattern classification
+        """
+        try:
+            from .services.HarmonyAnalysisService import HarmonyAnalysisService
+
+            harmony_service = HarmonyAnalysisService(event_bus=self._event_bus)
+            self._services["harmony_analysis_service"] = harmony_service
+            
+            self._logger.info("✅ HarmonyAnalysisService initialized - Musical harmony analysis ready")
+            
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize HarmonyAnalysisService: {e}")
+            raise
+
+    # ARCHITECTURE.GOLD.CODE v2: ParticleEngine uses multiprocessing pool (Phase 1 Task 1.3)
+    # No GPU/OpenGL context needed - pure state calculation
+            
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize GameLogicService: {e}")
+            raise
+
     # ARCHITECTURE.GOLD.CODE: _initialize_streaming_web_service REMOVED
     # Backend no longer performs rendering. Video streaming deprecated.
     # All visual rendering now handled exclusively by frontend (KairosVisualEngine)
@@ -260,6 +320,14 @@ class CompositionRoot:
     def get_qualia_processor(self) -> Any:
         """Get the QualiaProcessor service."""
         return self.get_service("qualia_processor")
+
+    def get_game_logic_service(self) -> Any:
+        """Get the GameLogicService instance."""
+        return self.get_service("game_logic_service")
+
+    def get_harmony_analysis_service(self) -> Any:
+        """Get the HarmonyAnalysisService instance."""
+        return self.get_service("harmony_analysis_service")
 
     # ARCHITECTURE.GOLD.CODE: get_rendering_service and get_streaming_web_service REMOVED
     # Backend no longer provides rendering or video streaming services

@@ -119,7 +119,24 @@ class EventBus:
                 ]
             self._logger.debug(f"📡 Unsubscribed handler from event: {event_name}")
 
-    async def publish(
+    def publish(self, event_obj: Any) -> None:
+        """
+        Publish an event to all subscribers (synchronous wrapper for async publish).
+        Accepts event objects from services.contracts.events.
+        
+        Args:
+            event_obj: Event object with type, timestamp, source attributes
+        """
+        # Create event loop if not in async context
+        try:
+            loop = asyncio.get_running_loop()
+            # We're in async context, schedule the coroutine
+            asyncio.create_task(self._publish_async(event_obj))
+        except RuntimeError:
+            # Not in async context, run in new loop
+            asyncio.run(self._publish_async(event_obj))
+
+    async def publish_async(
         self,
         event_name: str,
         data: Any,
@@ -127,7 +144,7 @@ class EventBus:
         correlation_id: Optional[str] = None,
     ) -> None:
         """
-        Publish an event to all subscribers.
+        Publish an event to all subscribers (legacy API with separate arguments).
 
         Args:
             event_name: Name of the event
@@ -143,13 +160,35 @@ class EventBus:
             correlation_id=correlation_id,
         )
 
-        self._stats["events_published"] += 1
-        self._logger.info(f"📢 Publishing event: {event_name} from {source}")
+        await self._publish_async(event)
 
-        if event_name in self._handlers:
+    async def _publish_async(self, event_obj: Any) -> None:
+        """
+        Internal async method to publish events.
+        
+        Args:
+            event_obj: Event object (either Event or custom event from contracts)
+        """
+        # Convert custom event objects to standard Event if needed
+        if isinstance(event_obj, Event):
+            event = event_obj
+        else:
+            # Event object from services.contracts.events
+            event = Event(
+                type=event_obj.type,
+                data=event_obj.__dict__,
+                timestamp=event_obj.timestamp,
+                source=event_obj.source,
+                correlation_id=getattr(event_obj, 'correlation_id', None)
+            )
+        
+        self._stats["events_published"] += 1
+        self._logger.info(f"📢 Publishing event: {event.type} from {event.source}")
+
+        if event.type in self._handlers:
             # Create tasks for all handlers to run concurrently
             tasks = []
-            for handler in self._handlers[event_name]:
+            for handler in self._handlers[event.type]:
                 task = asyncio.create_task(self._handle_event_safely(handler, event))
                 tasks.append(task)
 
@@ -157,7 +196,7 @@ class EventBus:
             if tasks:
                 await asyncio.gather(*tasks, return_exceptions=True)
         else:
-            self._logger.debug(f"⚠️  No handlers registered for event: {event_name}")
+            self._logger.debug(f"⚠️  No handlers registered for event: {event.type}")
 
     async def _handle_event_safely(self, handler: EventHandler, event: Event) -> None:
         """

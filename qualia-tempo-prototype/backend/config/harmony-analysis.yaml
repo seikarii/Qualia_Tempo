@@ -1,0 +1,230 @@
+# QUALIA.CODE v1.1 - Harmony Analysis Configuration
+# Musical harmony rules and scoring parameters
+
+# ============================================================================
+# MUSICAL NOTE MAPPINGS
+# ============================================================================
+musical_notes:
+  # Keyboard key to musical note mapping (Q-E-R-T-F-G-C → do-re-mi-fa-sol-la-si)
+  key_to_note:
+    Q: "C"   # do
+    E: "D"   # re
+    R: "E"   # mi
+    T: "F"   # fa
+    F: "G"   # sol
+    G: "A"   # la
+    C: "B"   # si
+  
+  # Note to frequency mapping (Hz) - Middle octave (C4-B4)
+  note_frequencies:
+    C: 261.63  # C4
+    D: 293.66  # D4
+    E: 329.63  # E4
+    F: 349.23  # F4
+    G: 392.00  # G4
+    A: 440.00  # A4
+    B: 493.88  # B4
+  
+  # Chromatic scale - all 12 notes
+  chromatic_scale: ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+  
+  # Diatonic scale (C major) - used as base reference
+  diatonic_scale: ["C", "D", "E", "F", "G", "A", "B"]
+
+# ============================================================================
+# HARMONIC INTERVALS (Consonance Rules)
+# ============================================================================
+harmonic_intervals:
+  # Perfect consonances (highest harmony)
+  perfect:
+    - name: "perfect_unison"
+      semitones: 0
+      harmony_score: 1.0
+      description: "Same note"
+    
+    - name: "perfect_octave"
+      semitones: 12
+      harmony_score: 1.0
+      description: "Octave above/below"
+    
+    - name: "perfect_fifth"
+      semitones: 7
+      harmony_score: 0.95
+      description: "Most stable interval (sol)"
+    
+    - name: "perfect_fourth"
+      semitones: 5
+      harmony_score: 0.85
+      description: "Very stable (fa)"
+  
+  # Imperfect consonances (medium-high harmony)
+  imperfect:
+    - name: "major_third"
+      semitones: 4
+      harmony_score: 0.75
+      description: "Happy interval (mi)"
+    
+    - name: "minor_third"
+      semitones: 3
+      harmony_score: 0.70
+      description: "Sad interval (mi♭)"
+    
+    - name: "major_sixth"
+      semitones: 9
+      harmony_score: 0.70
+      description: "Pleasing interval (la)"
+    
+    - name: "minor_sixth"
+      semitones: 8
+      harmony_score: 0.65
+      description: "Melancholic interval (la♭)"
+
+# ============================================================================
+# CHAOTIC INTERVALS (Dissonance Rules)
+# ============================================================================
+chaotic_intervals:
+  # Strong dissonances (high chaos)
+  strong:
+    - name: "tritone"
+      semitones: 6
+      chaos_score: 1.0
+      description: "Devil's interval - maximum tension"
+    
+    - name: "minor_second"
+      semitones: 1
+      chaos_score: 0.95
+      description: "Adjacent notes - harsh clash"
+    
+    - name: "major_seventh"
+      semitones: 11
+      chaos_score: 0.90
+      description: "Very tense, wants resolution"
+  
+  # Moderate dissonances (medium chaos)
+  moderate:
+    - name: "major_second"
+      semitones: 2
+      chaos_score: 0.60
+      description: "Slightly tense (re)"
+    
+    - name: "minor_seventh"
+      semitones: 10
+      chaos_score: 0.55
+      description: "Bluesy tension (si♭)"
+
+# ============================================================================
+# CHORD PATTERNS (Multi-Note Harmony)
+# ============================================================================
+chord_patterns:
+  harmonic:
+    - name: "major_triad"
+      intervals: [0, 4, 7]  # Root, major 3rd, perfect 5th
+      harmony_score: 0.95
+      description: "Happy, stable chord"
+    
+    - name: "minor_triad"
+      intervals: [0, 3, 7]  # Root, minor 3rd, perfect 5th
+      harmony_score: 0.90
+      description: "Sad, stable chord"
+    
+    - name: "power_chord"
+      intervals: [0, 7]  # Root, perfect 5th
+      harmony_score: 0.90
+      description: "Rock music staple"
+    
+    - name: "suspended_chord"
+      intervals: [0, 5, 7]  # Root, perfect 4th, perfect 5th
+      harmony_score: 0.75
+      description: "Suspended, wants resolution"
+  
+  chaotic:
+    - name: "diminished_triad"
+      intervals: [0, 3, 6]  # Root, minor 3rd, tritone
+      chaos_score: 0.95
+      description: "Very tense, unstable"
+    
+    - name: "augmented_triad"
+      intervals: [0, 4, 8]  # Root, major 3rd, augmented 5th
+      chaos_score: 0.85
+      description: "Dreamy but unstable"
+    
+    - name: "tone_cluster"
+      intervals: [0, 1, 2]  # Three adjacent notes
+      chaos_score: 1.0
+      description: "Maximum dissonance"
+
+# ============================================================================
+# SCORING WEIGHTS
+# ============================================================================
+scoring_weights:
+  # How much each factor contributes to overall harmony score
+  song_harmony_weight: 0.6     # Player notes vs current song notes
+  qualia_harmony_weight: 0.4   # Player notes vs collected qualia colors/notes
+  
+  # Timing considerations
+  timing_tolerance_ms: 100     # Window for considering notes "simultaneous"
+  timing_precision_bonus: 0.1  # Bonus for perfect timing
+  
+  # Context modifiers
+  tempo_modifier: 0.01         # Faster tempo = slightly more forgiving (per BPM above 120)
+  combo_modifier: 0.05         # Higher combo = bonus to harmony (per 10 combo)
+
+# ============================================================================
+# THRESHOLDS
+# ============================================================================
+thresholds:
+  # Classification thresholds
+  harmonic_threshold: 0.60     # Score >= 0.60 is considered "harmonic"
+  chaotic_threshold: 0.40      # Score <= 0.40 is considered "chaotic"
+  neutral_range: [0.40, 0.60]  # Between these is "neutral"
+  
+  # Special thresholds
+  perfect_harmony: 0.90        # Score >= 0.90 is "perfect harmony"
+  extreme_chaos: 0.20          # Score <= 0.20 is "extreme chaos"
+  
+  # Pattern detection
+  min_notes_for_chord: 3       # Minimum notes to form a chord pattern
+  max_notes_for_analysis: 7    # Maximum notes to consider at once
+
+# ============================================================================
+# ANALYSIS WINDOWS
+# ============================================================================
+analysis_windows:
+  # Time windows for analysis
+  player_input_window: 1000    # Consider last 1000ms of player input
+  song_context_window: 2000    # Consider 2000ms of song notes
+  qualia_collection_window: 1500  # Consider qualia collected in last 1500ms
+  
+  # History tracking
+  harmony_history_length: 10   # Track last 10 harmony calculations
+  trend_calculation_window: 5000  # Calculate trends over 5 seconds
+
+# ============================================================================
+# QUALIA COLOR TO NOTE MAPPING
+# ============================================================================
+qualia_color_to_note:
+  # RGB color ranges map to musical notes
+  # This allows collected qualia to have musical meaning
+  C: { r: [200, 255], g: [0, 50], b: [0, 50] }      # Red (C - do)
+  D: { r: [200, 255], g: [100, 150], b: [0, 50] }   # Orange (D - re)
+  E: { r: [200, 255], g: [200, 255], b: [0, 50] }   # Yellow (E - mi)
+  F: { r: [0, 50], g: [200, 255], b: [0, 50] }      # Green (F - fa)
+  G: { r: [0, 50], g: [150, 200], b: [200, 255] }   # Cyan (G - sol)
+  A: { r: [0, 50], g: [0, 50], b: [200, 255] }      # Blue (A - la)
+  B: { r: [150, 200], g: [0, 50], b: [200, 255] }   # Purple (B - si)
+
+# ============================================================================
+# FEATURE FLAGS
+# ============================================================================
+features:
+  enable_chord_detection: true         # Detect multi-note chord patterns
+  enable_timing_bonus: true            # Apply timing precision bonus
+  enable_trend_tracking: true          # Track harmony trends over time
+  enable_context_modifiers: true       # Apply tempo/combo modifiers
+  enable_qualia_harmony: true          # Include qualia in harmony calculation
+  enable_pattern_detection: true       # Detect specific harmonic/chaotic patterns
+  strict_diatonic_mode: false          # If true, only diatonic notes are harmonic
+  
+  # Debug/diagnostics
+  log_all_calculations: false          # Log every harmony calculation (verbose)
+  emit_debug_events: false             # Emit additional debug events
