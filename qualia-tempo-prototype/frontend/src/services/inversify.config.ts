@@ -46,6 +46,9 @@ import type { AudioAnalysisServiceParams } from "./contracts/IAudioAnalysisServi
 import type { Audio8DServiceParams } from "./contracts/IAudio8DService.contracts";
 import type { PhysicsServiceParams } from "./contracts/IPhysicsService.contracts";
 
+// PHASE 5: Kairos Visual Engine Configuration Imports
+import type { KairosVisualEngineConfig, KairosVisualEngineParams } from "./contracts/IKairosVisualEngine.contracts";
+
 // NEW SERVICES CONFIGURATION IMPORTS
 // Future configuration imports for additional services
 // import type { GameplayMechanicsConfig } from "./contracts/IGameplayMechanicsService.contracts";
@@ -100,6 +103,7 @@ import type { IStateMergerService } from "./interfaces/IStateMergerService";
 import type { IAudioSystemBridge } from "./interfaces/IAudioSystemBridge";
 import type { IBaseService } from "./interfaces/IBaseService";
 import type { IQualiaCalculatorWorkerService } from "./interfaces/IQualiaCalculatorWorkerService";
+import type { IKairosVisualEngine } from "./interfaces/IKairosVisualEngine";
 
 // ===== IMPORT ALL IMPLEMENTATIONS =====
 import { ConfigurationService } from "./ConfigurationService";
@@ -137,6 +141,7 @@ import { ToneFactoryService } from "../audio/ToneFactoryService";
 import { StateMergerService } from "./StateMergerService";
 import { AudioSystemBridge } from "./AudioSystemBridge";
 import { JitterService } from "./JitterService";
+import { KairosVisualEngine } from "./KairosVisualEngine";
 
 // ===== PROTOCOL ADAPTER IMPORTS =====
 // QUALIA.CODE v1.2 - Protocol Adapter Bundle
@@ -192,7 +197,9 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   "motionBlurPass": "motion-blur-pass.yaml",
   "dofPass": "dof-pass.yaml",
   // PHASE 3: Web Worker Services
-  "qualiaCalculatorWorker": "qualia-calculator-worker.yaml"
+  "qualiaCalculatorWorker": "qualia-calculator-worker.yaml",
+  // PHASE 5: Kairos Visual Engine
+  "kairosVisual": "kairos-visual.yaml"
 });
 
 // Bind ConfigurationService after its dependencies
@@ -521,6 +528,16 @@ container
   .to(RenderTargetPoolService)
   .inSingletonScope();
 
+// ===== PHASE 5: KAIROS VISUAL ENGINE =====
+container
+  .bind<IKairosVisualEngine>(TYPES.IKairosVisualEngine)
+  .to(KairosVisualEngine)
+  .inSingletonScope();
+
+container
+  .bind<IBaseService>(TYPES.ManagedService)
+  .toService(TYPES.IKairosVisualEngine);
+
 // ===== PHASE 4: TEMPORAL EFFECTS SERVICES =====
 import type { IJitterService } from './interfaces/IJitterService';
 
@@ -694,6 +711,9 @@ function bindBasicConfigurations(fullConfig: FullGameConfig): void {
   // PHASE 4: Temporal Effects configurations
   safeBindConstant<JitterServiceConfig>(TYPES.JitterServiceConfig, fullConfig.jitterService);
   
+  // PHASE 5: Kairos Visual Engine configuration
+  safeBindConstant<KairosVisualEngineConfig>(TYPES.KairosVisualEngineConfig, fullConfig.kairosVisual);
+  
   // Bind ThrottlingConfig from NotificationService config
   safeBindConstant(TYPES.ThrottlingConfig, fullConfig.notificationService.throttling);
   
@@ -790,6 +810,14 @@ function bindLevel2ServiceParams(fullConfig: FullGameConfig): void {
     logger: container.get<ILogger>(TYPES.ILogger),
     webSocketFactory: container.get<IWebSocketFactory>(TYPES.IWebSocketFactory),
     config: fullConfig.backendSync,
+  });
+  
+  // PHASE 5: Kairos Visual Engine - needs only base services (Level 0)
+  safeBindConstant<KairosVisualEngineParams>(TYPES.KairosVisualEngineParams, {
+    config: fullConfig.kairosVisual,
+    logger: container.get<ILogger>(TYPES.ILogger),
+    gameStateStore: container.get<IGameStateStore>(TYPES.IGameStateStore),
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
   });
 }
 

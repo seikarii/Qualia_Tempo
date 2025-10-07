@@ -23,9 +23,10 @@ export interface SceneState {
 
 export interface IKairosVisualEngine {
   /**
-   * Initialize Three.js renderer and scene
+   * Initialize Three.js renderer and scene with canvas
+   * NOTE: Separate from IBaseService.initialize() which handles event subscriptions
    */
-  initialize(canvas: HTMLCanvasElement): Promise<void>;
+  initializeRenderer(canvas: HTMLCanvasElement): Promise<void>;
 
   /**
    * Start rendering loop

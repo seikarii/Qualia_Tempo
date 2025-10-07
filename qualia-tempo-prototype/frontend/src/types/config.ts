@@ -50,6 +50,9 @@ import type { TAAPassConfig } from '../services/contracts/ITAAPass.contracts';
 import type { MotionBlurPassConfig } from '../services/contracts/IMotionBlurPass.contracts';
 import type { DoFPassConfig } from '../services/contracts/IDoFPass.contracts';
 
+// PHASE 5: Kairos Visual Engine
+import type { KairosVisualEngineConfig } from '../services/contracts/IKairosVisualEngine.contracts';
+
 /**
  * Gameplay Configuration Interface
  * Defines timing windows and gameplay parameters
@@ -122,6 +125,9 @@ export interface FullGameConfig {
   taaPass: TAAPassConfig;
   motionBlurPass: MotionBlurPassConfig;
   dofPass: DoFPassConfig;
+
+  // PHASE 5: Kairos Visual Engine
+  kairosVisual: KairosVisualEngineConfig;
 
   // Optional Features
   visualEffects?: VisualEffectsConfig;

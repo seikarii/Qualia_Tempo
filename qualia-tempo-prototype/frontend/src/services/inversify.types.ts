@@ -163,6 +163,7 @@ export const TYPES = {
 
   // Phase 5: Visual Config
   KairosVisualEngineConfig: Symbol.for("KairosVisualEngineConfig"),
+  KairosVisualEngineParams: Symbol.for("KairosVisualEngineParams"),
 
   // Phase 3: Web Worker Services (ARCHITECTURE.GOLD.CODE - DOMINIO 2)
   IQualiaCalculatorWorkerService: Symbol.for("IQualiaCalculatorWorkerService"),

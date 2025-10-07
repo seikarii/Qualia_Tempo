@@ -1,0 +1,131 @@
+# QUALIA.CODE v1.1 - Kairos Visual Engine Configuration
+# REFERENCE: docs/VISUALS.GOLD.CODE.md
+# PURPOSE: Configure Three.js rendering and all 4 visual phases
+
+# Render Quality and Performance
+render:
+  targetFPS: 60
+  antialias: true
+  pixelRatio: 1.5 # 1.0 for low-end, 2.0 for high-end
+  shadowsEnabled: true
+  shadowMapSize: 2048 # 512, 1024, 2048, 4096
+  toneMapping: 'ACESFilmic' # None, Linear, Reinhard, Cinematic, ACESFilmic
+  toneMappingExposure: 1.0 # 0.5-2.0
+
+# Camera Configuration
+camera:
+  fov: 75 # Field of view in degrees
+  near: 0.1 # Near clipping plane
+  far: 1000 # Far clipping plane
+  position:
+    x: 0
+    y: 10
+    z: 20
+  lookAt:
+    x: 0
+    y: 0
+    z: 0
+
+# Post-Processing Effects
+# VISUALS.GOLD.CODE: Controls which visual phases are active
+effects:
+  # PHASE 1: Atmospheric Effects
+  bloomEnabled: true
+  bloomThreshold: 0.8 # Brightness threshold (0-1)
+  bloomIntensity: 1.5 # Bloom strength
+  bloomRadius: 0.5 # Blur radius
+  godRaysEnabled: true
+  godRaysDecay: 0.95 # Ray decay factor (0-1)
+  godRaysWeight: 0.5 # Ray weight
+  godRaysDensity: 0.8 # Ray density
+  godRaysExposure: 0.6 # Ray exposure
+  
+  # PHASE 2: FFT-Reactive Particles
+  fftReactiveParticlesEnabled: true
+  
+  # PHASE 3: Reaction-Diffusion Ground
+  reactionDiffusionEnabled: false # Enable in Phase 5.4
+  
+  # PHASE 4: SDF Avatars
+  sdfAvatarsEnabled: false # Enable in Phase 5.5
+  fractalMandelbulbEnabled: false # Enable with transcendence > 0.9
+  
+  # Standard Post-Processing
+  taaEnabled: true # Temporal Anti-Aliasing
+  motionBlurEnabled: false # Performance impact
+  dofEnabled: false # Depth of Field
+  chromaticAberrationEnabled: false
+  vignetteEnabled: true
+
+# QualiaState to Shader Parameter Mappings
+# VISUALS.GOLD.CODE: The heart of the visual system
+qualiaMapping:
+  # PHASE 1: Bloom Mappings
+  intensityToBloomThreshold:
+    min: 1.0 # Low intensity = high threshold (less bloom)
+    max: 0.3 # High intensity = low threshold (more bloom)
+  transcendenceToBloomIntensity:
+    min: 1.0 # Low transcendence = subtle bloom
+    max: 3.0 # High transcendence (Ultimate) = extreme bloom
+  
+  # PHASE 1: God Rays Mappings
+  precisionToGodRaysSharpness:
+    min: 0.3 # Low precision = blurry rays
+    max: 1.0 # High precision = sharp, defined rays
+  aggressionToColorTint:
+    lowAggression:
+      r: 0.7 # Cool blue tones
+      g: 0.8
+      b: 1.0
+    highAggression:
+      r: 1.0 # Warm red/orange tones
+      g: 0.6
+      b: 0.4
+  
+  # PHASE 2: FFT Mappings
+  bassToParticleSizeMultiplier:
+    min: 1.0 # No bass = normal size
+    max: 2.5 # Heavy bass = 2.5x size
+  midToVelocityMultiplier:
+    min: 1.0 # No mids = normal velocity
+    max: 2.0 # Strong mids = 2x velocity
+  trebleToEmissiveMultiplier:
+    min: 0.5 # No treble = dim particles
+    max: 2.0 # Strong treble = bright particles
+  
+  # PHASE 3: Reaction-Diffusion Mappings
+  chaosToDiffusionRate:
+    min: 0.2 # Low chaos = stable patterns
+    max: 0.8 # High chaos = chaotic patterns
+  flowToDirection:
+    magnitude: 0.5 # How strongly flow affects pattern direction
+  recoveryToKillRate:
+    min: 0.04 # Low recovery = persistent patterns
+    max: 0.08 # High recovery = patterns fade quickly
+  
+  # PHASE 4: SDF Avatar Mappings
+  precisionFlowToPlayerShape:
+    smoothness: 0.8 # How geometric vs organic (0-1)
+  chaosAggressionToBossShape:
+    distortion: 0.6 # Noise amplitude (0-1)
+  transcendenceToFractalIterations:
+    threshold: 0.9 # transcendence value to trigger fractal
+    minIterations: 4 # Minimum fractal iterations
+    maxIterations: 12 # Maximum fractal iterations
+
+# Performance Optimization
+performance:
+  enableLOD: true # Level of Detail system
+  enableFrustumCulling: true # Frustum culling
+  enableOcclusionCulling: false # Occlusion culling (expensive)
+  maxParticles: 10000 # Maximum particle count
+  particleUpdateBatchSize: 1000 # Particles updated per frame
+  gpuInstancing: true # Enable GPU instancing for particles
+  computeShaderSupport: true # Use compute shaders if available
+
+# Development and Debugging
+dev:
+  showStats: false # Show FPS/draw calls stats (enable in dev mode)
+  shaderHotReload: false # Enable shader hot-reload (dev only)
+  debugMode: false # Enable debug helpers (axes, grid, bounding boxes)
+  logPerformance: false # Log performance metrics

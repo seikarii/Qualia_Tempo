@@ -2,6 +2,7 @@
 *Última actualización: 7 de octubre de 2025 - 14:45*
 
 ## DEV NOTES: 
+0. Revisar sistema de postprocessing y kairosengine ,pingpongo para kairosengine y separar funciones, falta god rays en postprocessing pipeline, hardcodeado en kairos
 1. Revisar toda la pipeline de postprocessado , añadir shadercaching
 2. BARAJAR PINO PARA LOGGING
 3. ARREGLAR LA PARTE DEL JUEGO (CATASTROFICO, FALTAN COSAS Y ESTA TODO DESCONECTADO)
@@ -40,21 +41,6 @@
 
 
 
-
-Backend:
-   * `backend/services/RenderingService.py:95`: PLACEHOLDER para el buffer de vértices de partículas.
-   * `backend/engine/qualia_particle_engine.py:437`: FUTURE para la gestión del ciclo de vida de las partículas.
-   * `backend/engine/shaders/qualia_particles.glsl:11`: FUTURE enhancement para investigar el soporte nativo de float16.
-
-  Frontend:
-   * `frontend/src/main.ts:177`: Future implementation para usar paquetes nativos de sesión de audio.
-   * `frontend/src/services/GameControllerService.ts:215`: FUTURE para el manejo de acciones del jugador.
-   * `frontend/src/services/SubtitleService.ts:71`: FUTURE para el cálculo de la duración de los subtítulos.
-   * `frontend/src/services/NotificationService.ts:77`: FUTURE para la extensibilidad del servicio de configuración.
-   * `frontend/src/services/__tests__/GameStateStoreService.test.ts:171`: Placeholder assertion en un test.
-   * `frontend/src/services/DebugService.ts:79`: FUTURE para la limpieza de suscripciones del EventBus.
-   * `frontend/src/components/QualiaMainMenu.tsx:44`: Comentario TEMPO que indica trabajo temporal o incompleto.
-   * `frontend/public/shaders/gbuffer.glsl:40`: PLACEHOLDER para las propiedades de los materiales en el G-buffer.
 
 ---
 

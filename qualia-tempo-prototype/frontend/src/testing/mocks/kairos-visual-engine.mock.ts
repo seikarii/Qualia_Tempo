@@ -18,7 +18,7 @@ const defaultRenderStats: RenderStats = {
 
 export const mockKairosVisualEngine: IKairosVisualEngine = {
   // Lifecycle methods (async/void)
-  initialize: vi.fn().mockResolvedValue(undefined),
+  initializeRenderer: vi.fn().mockResolvedValue(undefined), // Changed from initialize to initializeRenderer
   start: vi.fn().mockReturnValue(undefined),
   stop: vi.fn().mockReturnValue(undefined),
   updateConfig: vi.fn().mockResolvedValue(undefined),
