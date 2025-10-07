@@ -3,6 +3,7 @@
 
 ## DEV NOTES: 
 0. Revisar sistema de postprocessing y kairosengine ,pingpongo para kairosengine y separar funciones, falta god rays en postprocessing pipeline, hardcodeado en kairos
+1. revisar decorador de logging, crear norma que prohiba logger.algo , esta todo lleno de loggers sin @logger
 1. Revisar toda la pipeline de postprocessado , añadir shadercaching
 2. BARAJAR PINO PARA LOGGING
 3. ARREGLAR LA PARTE DEL JUEGO (CATASTROFICO, FALTAN COSAS Y ESTA TODO DESCONECTADO)
