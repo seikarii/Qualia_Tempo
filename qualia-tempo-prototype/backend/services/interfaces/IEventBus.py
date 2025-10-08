@@ -16,6 +16,10 @@ class IEventBus(Protocol):
         """Unsubscribe a handler from an event."""
         ...
 
+    def publish(self, event_obj: Any) -> None:
+        """Publish an event to all subscribers (synchronous wrapper for async publish)."""
+        ...
+
     async def publish_async(self, event_name: str, data: Any, source: str) -> None:
         """Publish an event asynchronously."""
         ...

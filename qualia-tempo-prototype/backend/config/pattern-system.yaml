@@ -1,0 +1,18 @@
+# Pattern System Configuration
+# Defines behavior rules for pattern library management
+
+# Maximum number of patterns that can be active simultaneously
+max_active_patterns: 10
+
+# Maximum number of patterns to cache in memory
+pattern_cache_size: 100
+
+# Enable AI-driven pattern prediction for pre-loading
+enable_pattern_prediction: true
+
+# List of pattern IDs to load by default (fallback if CombatData unavailable)
+default_patterns:
+  - "single_projectile"
+  - "triple_spread"
+  - "dash_strike"
+  - "shockwave"

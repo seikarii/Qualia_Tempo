@@ -110,40 +110,44 @@ class TestCompositionRootFactory:
         mock_security_service.validate_token = Mock(return_value=True)
         mock_security_service.generate_token = Mock(return_value="mock_token")
 
-        # Create REAL FileSystemService for file operations
-        from backend.services.FileSystemService import FileSystemService
-        filesystem_service = FileSystemService()
+        # Create REAL FileSystemService from container (Phase 1 migration)
+        from backend.services.interfaces.IFileSystemService import IFileSystemService
+        from backend.services.container_config import get_configured_container
+        
+        # Get configured container
+        test_container = get_configured_container()
+        filesystem_service = test_container.resolve(IFileSystemService)
 
         # Create REAL PersistenceService with real FileSystemService
         from backend.services.PersistenceService import PersistenceService
         persistence_service = PersistenceService(file_system_service=filesystem_service)
         persistence_service.initialize()
 
-        # Create REAL ParticleEnginePoolManager (unstarted - tests will start it)
+        # Create REAL ParticleEnginePoolManager from container (unstarted - tests will start it)
+        # Phase 2.1: Now uses container for proper IoC
         # Note: We don't start it here because start() is async
-        from backend.services.ParticleEnginePoolManager import ParticleEnginePoolManager
-        import tempfile
-        import yaml
+        from backend.services.interfaces.IParticleEnginePoolManager import IParticleEnginePoolManager
+        from backend.services.container_config import get_configured_container
         
-        # Create temporary config for pool manager
-        temp_config_dir = tempfile.mkdtemp()
-        pool_config_path = f"{temp_config_dir}/test-process-pool.yaml"
-        pool_config = {
-            "pool": {"num_workers": 2, "max_tasks_per_child": 10, "worker_restart_policy": "on_failure"},
-            "queue": {"max_size": 10, "timeout_seconds": 2.0, "priority_enabled": False},
-            "error_handling": {"max_retries": 2, "retry_delay_seconds": 0.1, "fallback_strategy": "skip", "log_level": "WARNING"},
-            "performance": {"batch_size": 1, "collect_metrics": True, "metrics_window_seconds": 60.0},
-            "monitoring": {"health_check_interval_seconds": 5.0, "worker_timeout_seconds": 10.0, "enable_diagnostics": True},
-            "shutdown": {"grace_period_seconds": 2.0, "force_terminate_after_seconds": 5.0},
-            "features": {"enable_async_result_handling": True, "enable_worker_pool_scaling": False, "enable_task_cancellation": False}
-        }
-        with open(pool_config_path, 'w') as f:
-            yaml.dump(pool_config, f)
+        # Get configured container with ParticleEnginePoolManager registered
+        test_container = get_configured_container()
+        particle_pool_manager = test_container.resolve(IParticleEnginePoolManager)
         
-        particle_pool_manager = ParticleEnginePoolManager(
-            file_system_service=filesystem_service,
-            config_path=pool_config_path
-        )
+        # Create REAL GameLogicService from container (Phase 2.2)
+        from backend.services.interfaces.IGameLogicService import IGameLogicService
+        game_logic_service = test_container.resolve(IGameLogicService)
+        
+        # Create REAL HarmonyAnalysisService from container (Phase 2.3)
+        from backend.services.interfaces.IHarmonyAnalysisService import IHarmonyAnalysisService
+        harmony_analysis_service = test_container.resolve(IHarmonyAnalysisService)
+        
+        # Create REAL BossAIService from container (Phase 2.4)
+        from backend.services.interfaces.IBossAIService import IBossAIService
+        boss_ai_service = test_container.resolve(IBossAIService)
+        
+        # Create REAL PatternSystemService from container (Phase 2.5)
+        from backend.services.interfaces.IBossAIService import IPatternSystemService
+        pattern_system_service = test_container.resolve(IPatternSystemService)
 
         # 4. Inject services into composition root
         composition_root._services = {
@@ -157,6 +161,10 @@ class TestCompositionRootFactory:
             "filesystem_service": filesystem_service,  # REAL FileSystemService
             "persistence_service": persistence_service,  # REAL PersistenceService
             "particle_pool_manager": particle_pool_manager,  # REAL ParticleEnginePoolManager (unstarted)
+            "game_logic_service": game_logic_service,  # REAL GameLogicService (Phase 2.2)
+            "harmony_analysis_service": harmony_analysis_service,  # REAL HarmonyAnalysisService (Phase 2.3)
+            "boss_ai_service": boss_ai_service,  # REAL BossAIService (Phase 2.4)
+            "pattern_system_service": pattern_system_service,  # REAL PatternSystemService (Phase 2.5)
         }
         composition_root._initialized = True
 

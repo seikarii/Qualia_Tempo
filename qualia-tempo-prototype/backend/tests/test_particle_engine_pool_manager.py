@@ -15,11 +15,7 @@ from typing import Dict, Any
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from backend.tests.test_composition_root import TestCompositionRootFactory
-from backend.services.ParticleEnginePoolManager import (
-    PoolConfig,
-    PoolMetrics,
-    get_pool_manager
-)
+from backend.services.ParticleEnginePoolManager import PoolMetrics
 
 
 # ============================================================================

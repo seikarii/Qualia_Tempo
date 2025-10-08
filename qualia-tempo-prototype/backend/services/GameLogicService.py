@@ -1,20 +1,18 @@
 # QUALIA.CODE v1.1 - GameLogicService Implementation
 # Core game mechanics and rules from GDD.md
 
-import logging
 import time
 import uuid
-import yaml
 from typing import Dict, List, Optional, Tuple, Any
-from pathlib import Path
 
 from backend.services.interfaces.IGameLogicService import (
     IGameLogicService,
     QualiaEntity,
     ComboEffect
 )
-from backend.services.interfaces.IFileSystemService import IFileSystemService
-from backend.services.EventBus import EventBus
+from backend.services.interfaces.ILogger import ILogger
+from backend.services.interfaces.IEventBus import IEventBus
+from backend.services.contracts.IGameLogicService_contracts import GameLogicConfig
 from backend.services.contracts.events import (
     PlayerDashEvent,
     PlayerKeyPressEvent,
@@ -52,27 +50,23 @@ class GameLogicService(IGameLogicService):
     7. Tempo-aware cooldowns
     """
 
-    def __init__(self, event_bus: EventBus, file_system_service: IFileSystemService, config_path: Optional[str] = None):
+    def __init__(self, config: GameLogicConfig, logger: ILogger, event_bus: IEventBus):
         """
         Initialize GameLogicService.
         
+        QUALIA.CODE v1.1 IoC Pattern Compliance:
+        - Configuration injected directly (no service locator)
+        - Logger injected (no logging.getLogger())
+        - EventBus injected as interface
+        
         Args:
-            event_bus: EventBus instance for event publishing
-            file_system_service: FileSystemService for file operations (QUALIA.CODE §4 Platform Abstraction)
-            config_path: Path to game-logic.yaml configuration
+            config: GameLogicConfig with all game logic parameters
+            logger: ILogger instance for structured logging
+            event_bus: IEventBus instance for event publishing
         """
-        self._logger = logging.getLogger(__name__)
+        self._config = config
+        self._logger = logger
         self._event_bus = event_bus
-        self._file_system_service = file_system_service
-        
-        # Load configuration using FileSystemService (QUALIA.CODE compliance)
-        if config_path is None:
-            config_path_final: Path = Path(__file__).parent.parent / "config" / "game-logic.yaml"
-        else:
-            config_path_final = Path(config_path) if not isinstance(config_path, Path) else config_path
-        
-        config_content = self._file_system_service.read_file(config_path_final)
-        self._config = yaml.safe_load(config_content)
         
         # Game state
         self._player_id: Optional[str] = None
@@ -142,7 +136,7 @@ class GameLogicService(IGameLogicService):
         self._current_time = 0.0
         
         # Initialize player
-        health_config = self._config['health_system']
+        health_config = self._config.health_system
         self._player_health = health_config['player_starting_health']
         self._player_combo = 0
         self._player_score = 0
@@ -182,7 +176,7 @@ class GameLogicService(IGameLogicService):
             self._logger.warning(f"Dash from unknown player: {player_id}")
             return []
         
-        qualia_config = self._config['qualia_generation']
+        qualia_config = self._config.qualia_generation
         base_value = qualia_config['dash_base_value']
         
         # Apply on-beat multiplier
@@ -191,7 +185,7 @@ class GameLogicService(IGameLogicService):
         
         # Apply ultimate multiplier
         if self._ultimate_active:
-            combo_config = self._config['combo_system']
+            combo_config = self._config.combo_system
             base_value *= combo_config['ultimate_qualia_multiplier']
         
         # Generate Qualia
@@ -242,19 +236,19 @@ class GameLogicService(IGameLogicService):
                 return False, None, f"Ability on cooldown: {cooldown_remaining:.2f}s remaining"
         
         # Calculate cooldown with tempo modifier
-        base_cooldown = self._config['cooldowns']['ability_base_cooldown']
+        base_cooldown = self._config.cooldowns['ability_base_cooldown']
         actual_cooldown = self._calculate_tempo_modified_cooldown(base_cooldown)
         self._ability_cooldowns[ability_key] = timestamp + actual_cooldown
         
         # Generate Qualia
-        qualia_config = self._config['qualia_generation']
+        qualia_config = self._config.qualia_generation
         base_value = qualia_config['ability_base_value']
         
         if on_beat:
             base_value *= qualia_config['on_beat_multiplier']
         
         if self._ultimate_active:
-            combo_config = self._config['combo_system']
+            combo_config = self._config.combo_system
             base_value *= combo_config['ultimate_qualia_multiplier']
         
         qualia = self._generate_qualia(
@@ -308,11 +302,11 @@ class GameLogicService(IGameLogicService):
         timestamp: float
     ) -> List[QualiaEntity]:
         """Process metronome tick and generate Qualia."""
-        qualia_config = self._config['qualia_generation']
+        qualia_config = self._config.qualia_generation
         base_value = qualia_config['metronome_base_value']
         
         if self._ultimate_active:
-            combo_config = self._config['combo_system']
+            combo_config = self._config.combo_system
             base_value *= combo_config['ultimate_qualia_multiplier']
         
         # Generate Qualia at a random position near player
@@ -351,7 +345,7 @@ class GameLogicService(IGameLogicService):
         qualia_id = str(uuid.uuid4())
         
         # Get color based on source type
-        qualia_config = self._config['qualia_generation']
+        qualia_config = self._config.qualia_generation
         if self._ultimate_active:
             color = qualia_config['colors']['ultimate']
         else:
@@ -400,7 +394,7 @@ class GameLogicService(IGameLogicService):
         qualia = self._active_qualia[qualia_id]
         
         # Check collection window
-        qualia_config = self._config['qualia_generation']
+        qualia_config = self._config.qualia_generation
         collection_time = (collection_timestamp - qualia.generated_timestamp) * 1000  # to ms
         max_window = qualia_config['collection_window_ms']
         
@@ -458,14 +452,14 @@ class GameLogicService(IGameLogicService):
 
     def _calculate_score(self, qualia_value: float, is_perfect: bool) -> float:
         """Calculate score for Qualia collection."""
-        scoring_config = self._config['scoring']
+        scoring_config = self._config.scoring
         
         base_score = scoring_config['qualia_collection_base']
         
         # Combo multiplier
         combo_factor = scoring_config['combo_multiplier_factor']
         combo_multiplier = 1.0 + (self._player_combo * combo_factor)
-        max_multiplier = self._config['combo_system']['max_combo_multiplier']
+        max_multiplier = self._config.combo_system['max_combo_multiplier']
         combo_multiplier = min(combo_multiplier, max_multiplier)
         
         score = base_score * combo_multiplier * qualia_value
@@ -487,14 +481,14 @@ class GameLogicService(IGameLogicService):
         if player_id != self._player_id:
             return None
         
-        if not self._config['features']['enable_harmonic_combos'] and \
-           not self._config['features']['enable_chaotic_combos']:
+        if not self._config.features['enable_harmonic_combos'] and \
+           not self._config.features['enable_chaotic_combos']:
             return None
         
-        combo_config = self._config['combo_system']
+        combo_config = self._config.combo_system
         
         # Check harmonic combos first
-        if self._config['features']['enable_harmonic_combos']:
+        if self._config.features['enable_harmonic_combos']:
             for combo_def in combo_config['harmonic_combos']:
                 sequence = combo_def['sequence']
                 if self._sequence_matches(recent_keys, sequence):
@@ -504,7 +498,7 @@ class GameLogicService(IGameLogicService):
                     self._stats['total_harmonic_combos'] += 1
                     
                     # Add score bonus
-                    score_bonus = self._config['scoring']['harmonic_combo_bonus']
+                    score_bonus = self._config.scoring['harmonic_combo_bonus']
                     self._player_score += score_bonus
                     
                     self._event_bus.publish(ComboActivatedEvent(
@@ -520,7 +514,7 @@ class GameLogicService(IGameLogicService):
                     return effect
         
         # Check chaotic combos
-        if self._config['features']['enable_chaotic_combos']:
+        if self._config.features['enable_chaotic_combos']:
             for combo_def in combo_config['chaotic_combos']:
                 sequence = combo_def['sequence']
                 if self._sequence_matches(recent_keys, sequence):
@@ -530,11 +524,11 @@ class GameLogicService(IGameLogicService):
                     self._stats['total_chaotic_combos'] += 1
                     
                     # Apply score penalty
-                    score_penalty = self._config['scoring']['chaotic_combo_penalty']
+                    score_penalty = self._config.scoring['chaotic_combo_penalty']
                     self._player_score += score_penalty  # Negative value
                     
                     # Apply self damage
-                    damage = self._config['health_system']['chaotic_combo_self_damage']
+                    damage = self._config.health_system['chaotic_combo_self_damage']
                     self.update_health(player_id, 'player', -damage, 'chaotic_combo')
                     
                     self._event_bus.publish(ComboActivatedEvent(
@@ -580,7 +574,7 @@ class GameLogicService(IGameLogicService):
         if effect.effect_type == 'healing':
             self.update_health(self._player_id, 'player', effect.effect_value, 'harmonic_combo_heal')
         elif effect.effect_type == 'ultimate_heal':
-            health_config = self._config['health_system']
+            health_config = self._config.health_system
             self.update_health(self._player_id, 'player', health_config['player_max_health'], 'full_scale_heal')
 
     @log_execution(level="INFO")
@@ -598,7 +592,7 @@ class GameLogicService(IGameLogicService):
             self._player_health += health_delta
             
             # Clamp to valid range
-            health_config = self._config['health_system']
+            health_config = self._config.health_system
             max_health = health_config['player_max_health']
             self._player_health = max(0.0, min(self._player_health, max_health))
             
@@ -648,7 +642,7 @@ class GameLogicService(IGameLogicService):
         if player_id != self._player_id:
             return False
         
-        if not self._config['features']['enable_ultimate_ability']:
+        if not self._config.features['enable_ultimate_ability']:
             return False
         
         # Check if already active
@@ -660,7 +654,7 @@ class GameLogicService(IGameLogicService):
             return False
         
         # Check combo threshold
-        combo_config = self._config['combo_system']
+        combo_config = self._config.combo_system
         threshold = combo_config['ultimate_threshold']
         
         if self._player_combo < threshold:
@@ -692,7 +686,7 @@ class GameLogicService(IGameLogicService):
         self._current_time = current_time
         
         # Update combo decay
-        if self._config['features']['enable_combo_decay']:
+        if self._config.features['enable_combo_decay']:
             self._update_combo_decay(delta_time)
         
         # Update cooldowns
@@ -701,7 +695,7 @@ class GameLogicService(IGameLogicService):
         # Update ultimate
         if self._ultimate_active and current_time >= self._ultimate_end_time:
             self._ultimate_active = False
-            cooldown_duration = self._config['cooldowns']['ultimate_cooldown']
+            cooldown_duration = self._config.cooldowns['ultimate_cooldown']
             self._ultimate_cooldown_end = current_time + cooldown_duration
             self._logger.info("Ultimate ability ended")
         
@@ -798,7 +792,7 @@ class GameLogicService(IGameLogicService):
 
     def _update_combo_decay(self, delta_time: float) -> None:
         """Update combo decay."""
-        combo_config = self._config['combo_system']
+        combo_config = self._config.combo_system
         decay_time = combo_config['combo_decay_time_sec']
         
         if self._player_combo > 0:
@@ -823,7 +817,7 @@ class GameLogicService(IGameLogicService):
 
     def _expire_old_qualia(self, current_time: float) -> None:
         """Remove expired Qualia entities."""
-        qualia_config = self._config['qualia_generation']
+        qualia_config = self._config.qualia_generation
         max_window = qualia_config['collection_window_ms'] / 1000.0  # to seconds
         
         expired_ids = [
@@ -845,7 +839,7 @@ class GameLogicService(IGameLogicService):
 
     def _calculate_tempo_modified_cooldown(self, base_cooldown: float) -> float:
         """Calculate tempo-modified cooldown."""
-        cooldown_config = self._config['cooldowns']
+        cooldown_config = self._config.cooldowns
         
         if not cooldown_config['tempo_modifier_enabled']:
             return base_cooldown
@@ -870,7 +864,7 @@ class GameLogicService(IGameLogicService):
         return {
             "id": self._player_id,
             "health": self._player_health,
-            "max_health": self._config['health_system']['player_max_health'],
+            "max_health": self._config.health_system['player_max_health'],
             "combo": self._player_combo,
             "score": self._player_score,
             "position": self._player_position.copy(),
@@ -897,7 +891,7 @@ class GameLogicService(IGameLogicService):
         if boss_id != self._boss_id:
             return {}
         
-        health_config = self._config['health_system']
+        health_config = self._config.health_system
         max_health = self._song_duration * health_config['boss_health_per_second']
         
         return {
@@ -931,7 +925,7 @@ class GameLogicService(IGameLogicService):
     @log_execution(level="INFO")
     def set_difficulty(self, volume: float) -> str:
         """Set difficulty based on volume."""
-        diff_config = self._config['difficulty']
+        diff_config = self._config.difficulty
         
         if volume <= diff_config['training_volume_max']:
             self._difficulty_level = 'training'

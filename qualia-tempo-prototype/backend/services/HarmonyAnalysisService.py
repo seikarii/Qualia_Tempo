@@ -1,11 +1,8 @@
 # QUALIA.CODE v1.1 - HarmonyAnalysisService Implementation
 # Musical harmony analysis for emergent combo system
 
-import logging
 import time
-import yaml
 from typing import Dict, List, Optional, Tuple
-from pathlib import Path
 from collections import deque
 
 from backend.services.interfaces.IHarmonyAnalysisService import (
@@ -16,8 +13,9 @@ from backend.services.interfaces.IHarmonyAnalysisService import (
     ChordPattern,
     HarmonyClassification
 )
-from backend.services.interfaces.IFileSystemService import IFileSystemService
-from backend.services.EventBus import EventBus
+from backend.services.interfaces.ILogger import ILogger
+from backend.services.interfaces.IEventBus import IEventBus
+from backend.services.contracts.IHarmonyAnalysisService_contracts import HarmonyAnalysisConfig
 from backend.services.contracts.events import (
     HarmonyScoreCalculatedEvent,
     HarmonicPatternDetectedEvent,
@@ -45,27 +43,18 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
     6. Event emission for game logic integration
     """
 
-    def __init__(self, event_bus: EventBus, file_system_service: IFileSystemService, config_path: Optional[str] = None):
+    def __init__(self, config: HarmonyAnalysisConfig, logger: ILogger, event_bus: IEventBus):
         """
         Initialize HarmonyAnalysisService.
         
         Args:
-            event_bus: EventBus instance for event publishing
-            file_system_service: FileSystemService for file operations (QUALIA.CODE §4 Platform Abstraction)
-            config_path: Path to harmony-analysis.yaml configuration
+            config: HarmonyAnalysisConfig with all harmony analysis settings
+            logger: ILogger instance for structured logging
+            event_bus: IEventBus instance for event publishing
         """
-        self._logger = logging.getLogger(__name__)
+        self._config = config
+        self._logger = logger
         self._event_bus = event_bus
-        self._file_system_service = file_system_service
-        
-        # Load configuration using FileSystemService (QUALIA.CODE compliance)
-        if config_path is None:
-            config_path_final: Path = Path(__file__).parent.parent / "config" / "harmony-analysis.yaml"
-        else:
-            config_path_final = Path(config_path) if not isinstance(config_path, Path) else config_path
-        
-        config_content = self._file_system_service.read_file(config_path_final)
-        self._config = yaml.safe_load(config_content)
         
         # Player state
         self._player_id: Optional[str] = None
@@ -76,7 +65,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
         self._collected_qualia_notes: List[str] = []
         
         # Harmony history for trend calculation
-        self._harmony_history: deque = deque(maxlen=self._config['analysis_windows']['harmony_history_length'])
+        self._harmony_history: deque = deque(maxlen=self._config.analysis_windows['harmony_history_length'])
         
         # Statistics
         self._total_analyses: int = 0
@@ -89,17 +78,17 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
         
         # Build chromatic scale index for interval calculation
         self._note_to_index: Dict[str, int] = {
-            note: idx for idx, note in enumerate(self._config['musical_notes']['chromatic_scale'])
+            note: idx for idx, note in enumerate(self._config.musical_notes['chromatic_scale'])
         }
         
-        self._logger.info("HarmonyAnalysisService initialized with config: %s", config_path)
+        self._logger.info("HarmonyAnalysisService initialized")
 
     def _build_interval_lookup(self) -> Dict[int, Dict]:
         """Build lookup table for interval types by semitone distance."""
         lookup = {}
         
         # Add harmonic intervals
-        for interval in self._config['harmonic_intervals']['perfect']:
+        for interval in self._config.harmonic_intervals['perfect']:
             semitones = interval['semitones']
             lookup[semitones] = {
                 'name': interval['name'],
@@ -108,7 +97,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
                 'description': interval['description']
             }
         
-        for interval in self._config['harmonic_intervals']['imperfect']:
+        for interval in self._config.harmonic_intervals['imperfect']:
             semitones = interval['semitones']
             lookup[semitones] = {
                 'name': interval['name'],
@@ -118,7 +107,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
             }
         
         # Add chaotic intervals
-        for interval in self._config['chaotic_intervals']['strong']:
+        for interval in self._config.chaotic_intervals['strong']:
             semitones = interval['semitones']
             lookup[semitones] = {
                 'name': interval['name'],
@@ -127,7 +116,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
                 'description': interval['description']
             }
         
-        for interval in self._config['chaotic_intervals']['moderate']:
+        for interval in self._config.chaotic_intervals['moderate']:
             semitones = interval['semitones']
             lookup[semitones] = {
                 'name': interval['name'],
@@ -174,7 +163,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
         
         # Apply weights from configuration
         # If no qualia, only use song harmony
-        weights = self._config['scoring_weights']
+        weights = self._config.scoring_weights
         if self._collected_qualia_notes:
             overall_score = (
                 song_harmony * weights['song_harmony_weight'] +
@@ -185,7 +174,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
             overall_score = song_harmony
         
         # Apply context modifiers
-        if self._config['features']['enable_context_modifiers']:
+        if self._config.features['enable_context_modifiers']:
             overall_score = self._apply_context_modifiers(overall_score)
         
         # Classify the harmony
@@ -340,10 +329,10 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
         timestamp: float
     ) -> Optional[ChordPattern]:
         """Detect if notes form a recognized chord pattern."""
-        if not self._config['features']['enable_chord_detection']:
+        if not self._config.features['enable_chord_detection']:
             return None
         
-        if len(notes) < self._config['thresholds']['min_notes_for_chord']:
+        if len(notes) < self._config.thresholds['min_notes_for_chord']:
             return None
         
         # Sort notes to normalize ordering
@@ -355,7 +344,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
         intervals.sort()
         
         # Check harmonic patterns
-        for pattern in self._config['chord_patterns']['harmonic']:
+        for pattern in self._config.chord_patterns['harmonic']:
             if intervals == pattern['intervals']:
                 return ChordPattern(
                     pattern_name=pattern['name'],
@@ -367,7 +356,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
                 )
         
         # Check chaotic patterns
-        for pattern in self._config['chord_patterns']['chaotic']:
+        for pattern in self._config.chord_patterns['chaotic']:
             if intervals == pattern['intervals']:
                 return ChordPattern(
                     pattern_name=pattern['name'],
@@ -386,7 +375,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
         harmony_score: float
     ) -> HarmonyClassification:
         """Classify a harmony score into a category."""
-        thresholds = self._config['thresholds']
+        thresholds = self._config.thresholds
         
         if harmony_score >= thresholds['perfect_harmony']:
             return HarmonyClassification.PERFECT_HARMONY
@@ -428,7 +417,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
         """Convert RGB color to musical note based on configuration."""
         r, g, b = color.get('r', 0), color.get('g', 0), color.get('b', 0)
         
-        color_mapping = self._config['qualia_color_to_note']
+        color_mapping = self._config.qualia_color_to_note
         
         for note, ranges in color_mapping.items():
             r_range = ranges['r']
@@ -448,7 +437,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
         window_ms: float = 5000.0
     ) -> float:
         """Calculate harmony trend over time window."""
-        if not self._config['features']['enable_trend_tracking']:
+        if not self._config.features['enable_trend_tracking']:
             return 0.0
         
         if len(self._harmony_history) < 2:
@@ -481,7 +470,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
     ) -> bool:
         """Quick check if note combination is harmonic."""
         score = self.get_consonance_score(notes)
-        return bool(score >= float(self._config['thresholds']['harmonic_threshold']))
+        return bool(score >= float(self._config.thresholds['harmonic_threshold']))
 
     @log_execution(level="DEBUG")
     def is_chaotic_combination(
@@ -490,7 +479,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
     ) -> bool:
         """Quick check if note combination is chaotic/dissonant."""
         score = self.get_consonance_score(notes)
-        return bool(score <= float(self._config['thresholds']['chaotic_threshold']))
+        return bool(score <= float(self._config.thresholds['chaotic_threshold']))
 
     @log_execution(level="DEBUG")
     def get_consonance_score(
@@ -516,7 +505,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
         
         # Tempo modifier - faster tempo = slightly more forgiving
         if self._current_tempo_bpm > 120:
-            tempo_bonus = (self._current_tempo_bpm - 120) * self._config['scoring_weights']['tempo_modifier']
+            tempo_bonus = (self._current_tempo_bpm - 120) * self._config.scoring_weights['tempo_modifier']
             modified_score += tempo_bonus
         
         # Clamp to valid range

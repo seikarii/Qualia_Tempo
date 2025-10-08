@@ -13,6 +13,10 @@ from .interfaces.ISystemEnvironmentService import ISystemEnvironmentService
 from .interfaces.ISecurityService import ISecurityService
 from .interfaces.IShaderIntrospectionService import IShaderIntrospectionService
 from .interfaces.IConfigurationService import IConfigurationService
+from .interfaces.IParticleEnginePoolManager import IParticleEnginePoolManager
+from .interfaces.IGameLogicService import IGameLogicService
+from .interfaces.IHarmonyAnalysisService import IHarmonyAnalysisService
+from .interfaces.IBossAIService import IBossAIService, IPatternSystemService
 
 # Import implementations
 from .QualiaLogger import QualiaLogger
@@ -23,6 +27,11 @@ from .SystemEnvironmentService import SystemEnvironmentService
 from .SecurityService import SecurityService
 from .ShaderIntrospectionService import ShaderIntrospectionService
 from .ConfigurationService import ConfigurationService
+from .ParticleEnginePoolManager import ParticleEnginePoolManager
+from .GameLogicService import GameLogicService
+from .HarmonyAnalysisService import HarmonyAnalysisService
+from .BossAIService import BossAIService
+from .PatternSystemService import PatternSystemService
 
 # Import contracts
 from .contracts.ILogger_contracts import LoggerConfig
@@ -33,6 +42,11 @@ from .contracts.ISystemEnvironmentService_contracts import SystemEnvironmentConf
 from .contracts.ISecurityService_contracts import SecurityConfig
 from .contracts.IShaderIntrospectionService_contracts import ShaderIntrospectionConfig
 from .contracts.IConfigurationService_contracts import ConfigurationServiceConfig
+from .contracts.IParticleEnginePoolManager_contracts import ParticleEnginePoolManagerConfig
+from .contracts.IGameLogicService_contracts import GameLogicConfig
+from .contracts.IHarmonyAnalysisService_contracts import HarmonyAnalysisConfig
+from .contracts.IBossAIService_contracts import BossAIServiceConfig
+from .contracts.IPatternSystemService_contracts import PatternSystemConfig
 
 
 def _load_yaml_config(config_name: str, config_dir: str = "config") -> Dict[str, Any]:
@@ -81,6 +95,11 @@ def configure_container(container: ServiceContainer) -> None:
     security_config_data = _load_yaml_config("security")
     shader_config_data = _load_yaml_config("shader-introspection")
     config_service_config_data = _load_yaml_config("configuration-service")
+    pool_config_data = _load_yaml_config("process-pool")
+    game_logic_config_data = _load_yaml_config("game-logic")
+    harmony_analysis_config_data = _load_yaml_config("harmony-analysis")
+    boss_ai_config_data = _load_yaml_config("boss-ai")
+    pattern_system_config_data = _load_yaml_config("pattern-system")
     
     # Register typed configuration objects
     container.register_config(LoggerConfig, LoggerConfig(
@@ -129,6 +148,66 @@ def configure_container(container: ServiceContainer) -> None:
         validate_on_load=config_service_config_data.get("validate_on_load", True)
     ))
     
+    # Extract pool config sections
+    pool_cfg = pool_config_data.get('pool', {})
+    queue_cfg = pool_config_data.get('queue', {})
+    error_cfg = pool_config_data.get('error_handling', {})
+    perf_cfg = pool_config_data.get('performance', {})
+    mon_cfg = pool_config_data.get('monitoring', {})
+    shutdown_cfg = pool_config_data.get('shutdown', {})
+    
+    container.register_config(ParticleEnginePoolManagerConfig, ParticleEnginePoolManagerConfig(
+        num_workers=pool_cfg.get('num_workers', 4),
+        max_tasks_per_child=pool_cfg.get('max_tasks_per_child', 100),
+        queue_max_size=queue_cfg.get('max_size', 50),
+        queue_timeout_seconds=queue_cfg.get('timeout_seconds', 5.0),
+        max_retries=error_cfg.get('max_retries', 3),
+        retry_delay_seconds=error_cfg.get('retry_delay_seconds', 0.5),
+        collect_metrics=perf_cfg.get('collect_metrics', True),
+        health_check_interval_seconds=mon_cfg.get('health_check_interval_seconds', 10.0),
+        grace_period_seconds=shutdown_cfg.get('grace_period_seconds', 5.0)
+    ))
+    
+    container.register_config(GameLogicConfig, GameLogicConfig(
+        qualia_generation=game_logic_config_data.get('qualia_generation', {}),
+        combo_system=game_logic_config_data.get('combo_system', {}),
+        scoring=game_logic_config_data.get('scoring', {}),
+        health_system=game_logic_config_data.get('health_system', {}),
+        cooldowns=game_logic_config_data.get('cooldowns', {}),
+        difficulty=game_logic_config_data.get('difficulty', {}),
+        game_state=game_logic_config_data.get('game_state', {}),
+        features=game_logic_config_data.get('features', {})
+    ))
+    
+    container.register_config(HarmonyAnalysisConfig, HarmonyAnalysisConfig(
+        musical_notes=harmony_analysis_config_data.get('musical_notes', {}),
+        harmonic_intervals=harmony_analysis_config_data.get('harmonic_intervals', {}),
+        chaotic_intervals=harmony_analysis_config_data.get('chaotic_intervals', {}),
+        chord_patterns=harmony_analysis_config_data.get('chord_patterns', {}),
+        scoring_weights=harmony_analysis_config_data.get('scoring_weights', {}),
+        thresholds=harmony_analysis_config_data.get('thresholds', {}),
+        analysis_windows=harmony_analysis_config_data.get('analysis_windows', {}),
+        qualia_color_to_note=harmony_analysis_config_data.get('qualia_color_to_note', {}),
+        features=harmony_analysis_config_data.get('features', {})
+    ))
+    
+    container.register_config(BossAIServiceConfig, BossAIServiceConfig(
+        phases=boss_ai_config_data.get('phases', {}),
+        aggression=boss_ai_config_data.get('aggression', {}),
+        pattern_selection=boss_ai_config_data.get('pattern_selection', {}),
+        default_patterns=boss_ai_config_data.get('default_patterns', {}),
+        behavior=boss_ai_config_data.get('behavior', {}),
+        qualia_generation=boss_ai_config_data.get('qualia_generation', {}),
+        features=boss_ai_config_data.get('features', {})
+    ))
+    
+    container.register_config(PatternSystemConfig, PatternSystemConfig(
+        max_active_patterns=pattern_system_config_data.get('max_active_patterns', 10),
+        pattern_cache_size=pattern_system_config_data.get('pattern_cache_size', 100),
+        enable_pattern_prediction=pattern_system_config_data.get('enable_pattern_prediction', True),
+        default_patterns=pattern_system_config_data.get('default_patterns', [])
+    ))
+    
     # Step 2: Register all services as singletons
     # Dependencies will be automatically resolved by the container
     
@@ -142,6 +221,11 @@ def configure_container(container: ServiceContainer) -> None:
     container.register_singleton(ISystemEnvironmentService, SystemEnvironmentService)  # type: ignore[type-abstract]
     container.register_singleton(ISecurityService, SecurityService)  # type: ignore[type-abstract]
     container.register_singleton(IShaderIntrospectionService, ShaderIntrospectionService)  # type: ignore[type-abstract]
+    container.register_singleton(IParticleEnginePoolManager, ParticleEnginePoolManager)  # type: ignore[type-abstract]
+    container.register_singleton(IGameLogicService, GameLogicService)  # type: ignore[type-abstract]
+    container.register_singleton(IHarmonyAnalysisService, HarmonyAnalysisService)  # type: ignore[type-abstract]
+    container.register_singleton(IBossAIService, BossAIService)  # type: ignore[type-abstract]
+    container.register_singleton(IPatternSystemService, PatternSystemService)  # type: ignore[type-abstract]
 
 
 def get_configured_container() -> ServiceContainer:

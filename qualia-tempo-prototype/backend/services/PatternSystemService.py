@@ -1,11 +1,12 @@
 # QUALIA.CODE v1.1 - PatternSystemService Implementation
 # Pattern library management and validation
 
-import logging
 from typing import Dict, List, Optional, Any
 
 from backend.services.interfaces.IBossAIService import IPatternSystemService
+from backend.services.interfaces.ILogger import ILogger
 from backend.services.contracts.IBossAIService_contracts import AttackPattern
+from backend.services.contracts.IPatternSystemService_contracts import PatternSystemConfig
 from backend.utils.decorators import log_execution, handle_errors
 
 
@@ -20,15 +21,28 @@ class PatternSystemService(IPatternSystemService):
     4. Pattern querying and filtering
     
     ARCHITECTURE COMPLIANCE:
-    - Decoupled from BossAI (QUALIA.CODE)
+    - Decoupled from BossAI (QUALIA.CODE §II)
+    - Direct Configuration Injection (QUALIA.CODE §II Step 3)
+    - Logger injection (QUALIA.CODE §V)
     - Can be used independently or by BossAIService
     """
 
-    def __init__(self) -> None:
-        """Initialize PatternSystemService."""
-        self._logger = logging.getLogger(__name__)
+    def __init__(self, config: PatternSystemConfig, logger: ILogger) -> None:
+        """
+        Initialize PatternSystemService with dependency injection.
+        
+        Args:
+            config: PatternSystemConfig loaded from YAML via container
+            logger: ILogger instance for structured logging
+            
+        ARCHITECTURE COMPLIANCE:
+        - Direct Configuration Injection (QUALIA.CODE §II)
+        - Logger injection (QUALIA.CODE §V)
+        """
+        self._config = config
+        self._logger = logger
         self._patterns: Dict[str, AttackPattern] = {}
-        self._logger.info("PatternSystemService initialized")
+        self._logger.info("PatternSystemService initialized via IoC container")
 
     @log_execution()
     @handle_errors()

@@ -12,6 +12,7 @@ from .services.interfaces.ISecurityService import ISecurityService
 from .services.interfaces.IShaderIntrospectionService import IShaderIntrospectionService
 from .services.interfaces.IQualiaProcessor import IQualiaProcessor
 from .services.interfaces.IConfigurationService import IConfigurationService
+from .services.interfaces.IParticleEnginePoolManager import IParticleEnginePoolManager
 from .utils.decorators import log_execution, handle_errors
 import asyncio
 
@@ -157,24 +158,21 @@ class CompositionRoot:
 
     async def _initialize_particle_system(self) -> None:
         """
-        Initialize the ParticleEnginePoolManager service (v2 - process pool).
+        Initialize the ParticleEnginePoolManager service from container (Phase 2.1).
         
-        ARCHITECTURE.GOLD.CODE v2 - Phase 1.4 Integration:
-        - Replaced synchronous QualiaParticleEngine with async ParticleEnginePoolManager
-        - Particle calculations now happen in separate worker processes
+        ARCHITECTURE.GOLD.CODE v2 - Phase 2.1 Migration:
+        - Migrated to IoC container with proper dependency injection
+        - Uses ILogger for structured logging (QUALIA.CODE §5.3)
+        - Configuration loaded from process-pool.yaml
+        - Particle calculations happen in separate worker processes
         - Decouples heavy computation from FastAPI event loop
         - Enables horizontal scaling and true parallelism
         """
         try:
-            from .services.ParticleEnginePoolManager import ParticleEnginePoolManager
+            from .services.interfaces.IParticleEnginePoolManager import IParticleEnginePoolManager
             
-            # QUALIA.CODE §4: Inject FileSystemService for platform abstraction
-            filesystem_service = self._services.get("filesystem_service")
-            if not filesystem_service:
-                raise RuntimeError("FileSystemService not available for ParticleEnginePoolManager")
-
-            # Create and start the process pool
-            pool_manager = ParticleEnginePoolManager(file_system_service=filesystem_service)
+            # Resolve from container (dependencies auto-injected)
+            pool_manager = self.container.resolve(IParticleEnginePoolManager)
             
             # Start the pool (this creates worker processes)
             pool_started = await pool_manager.start()
@@ -186,7 +184,7 @@ class CompositionRoot:
             self._services["particle_system"] = pool_manager
 
             self._logger.info(
-                f"✅ ParticleEnginePoolManager initialized with {pool_manager.config.num_workers} worker processes"
+                "✅ ParticleEnginePoolManager initialized from container and started"
             )
             
         except Exception as e:
@@ -203,6 +201,11 @@ class CompositionRoot:
         """
         Initialize GameLogicService for core game mechanics (PHASE 2 TASK 2.1).
         
+        QUALIA.CODE v1.1 IoC Compliance:
+        - Service resolved from container (Phase 2.2 migration)
+        - All dependencies (config, logger, event_bus) injected by container
+        - No manual instantiation or config loading
+        
         RESPONSIBILITIES (per GDD.md):
         - Qualia generation (dash, ability, metronome)
         - Emergent combo system (harmonic/chaotic)
@@ -213,20 +216,13 @@ class CompositionRoot:
         - Tempo-aware cooldowns
         """
         try:
-            from .services.GameLogicService import GameLogicService
+            from .services.interfaces.IGameLogicService import IGameLogicService
             
-            # QUALIA.CODE §4: Inject FileSystemService for platform abstraction
-            filesystem_service = self._services.get("filesystem_service")
-            if not filesystem_service:
-                raise RuntimeError("FileSystemService not available for GameLogicService")
-
-            game_logic_service = GameLogicService(
-                event_bus=self._event_bus,
-                file_system_service=filesystem_service
-            )
+            # Resolve from container (Phase 2.2 - IoC pattern)
+            game_logic_service = self.container.resolve(IGameLogicService)
             self._services["game_logic_service"] = game_logic_service
             
-            self._logger.info("✅ GameLogicService initialized - Core GDD mechanics ready")
+            self._logger.info("✅ GameLogicService initialized - Core GDD mechanics ready (Phase 2.2 IoC)")
             
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize GameLogicService: {e}")
@@ -234,7 +230,7 @@ class CompositionRoot:
 
     async def _initialize_harmony_analysis_service(self) -> None:
         """
-        Initialize HarmonyAnalysisService for musical harmony analysis (PHASE 2 TASK 2.2).
+        Initialize HarmonyAnalysisService for musical harmony analysis (PHASE 2.3 - IoC MIGRATION).
         
         RESPONSIBILITIES (per GDD.md):
         - Musical interval analysis (consonance/dissonance)
@@ -243,22 +239,20 @@ class CompositionRoot:
         - Player input vs qualia harmony scoring
         - Harmony trend tracking over time
         - Harmonic vs chaotic pattern classification
+        
+        QUALIA.CODE COMPLIANCE:
+        - Service obtained via container.resolve() (IoC pattern)
+        - Configuration injected from YAML (harmony-analysis.yaml)
+        - Logger injection (no logging.getLogger())
         """
         try:
-            from .services.HarmonyAnalysisService import HarmonyAnalysisService
+            from .services.interfaces.IHarmonyAnalysisService import IHarmonyAnalysisService
             
-            # QUALIA.CODE §4: Inject FileSystemService for platform abstraction
-            filesystem_service = self._services.get("filesystem_service")
-            if not filesystem_service:
-                raise RuntimeError("FileSystemService not available for HarmonyAnalysisService")
-
-            harmony_service = HarmonyAnalysisService(
-                event_bus=self._event_bus,
-                file_system_service=filesystem_service
-            )
+            # Resolve service from IoC container (QUALIA.CODE §2.1 IoC mandate)
+            harmony_service = self.container.resolve(IHarmonyAnalysisService)
             self._services["harmony_analysis_service"] = harmony_service
             
-            self._logger.info("✅ HarmonyAnalysisService initialized - Musical harmony analysis ready")
+            self._logger.info("✅ HarmonyAnalysisService initialized via IoC container - Musical harmony analysis ready")
             
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize HarmonyAnalysisService: {e}")
@@ -266,7 +260,13 @@ class CompositionRoot:
 
     async def _initialize_boss_ai_service(self) -> None:
         """
-        Initialize BossAIService for boss behavior orchestration (PHASE 2 TASK 2.3).
+        Initialize BossAIService for boss behavior orchestration (PHASE 2.4 MIGRATED).
+        
+        ARCHITECTURE COMPLIANCE:
+        - IoC container resolution (QUALIA.CODE §II)
+        - Direct Configuration Injection (QUALIA.CODE §II Step 3)
+        - Logger injection (QUALIA.CODE §V)
+        - EventBus interface injection (QUALIA.CODE §IV)
         
         RESPONSIBILITIES (per GDD.md):
         - Boss phase management (Opening, Escalation, Climax, Finale)
@@ -278,20 +278,13 @@ class CompositionRoot:
         - Harmonic combo pattern neutralization
         """
         try:
-            from .services.BossAIService import BossAIService
+            from .services.interfaces.IBossAIService import IBossAIService
             
-            # QUALIA.CODE §4: Inject FileSystemService for platform abstraction
-            filesystem_service = self._services.get("filesystem_service")
-            if not filesystem_service:
-                raise RuntimeError("FileSystemService not available for BossAIService")
-
-            boss_ai_service = BossAIService(
-                event_bus=self._event_bus,
-                file_system_service=filesystem_service
-            )
+            # Container resolution replaces manual instantiation
+            boss_ai_service = self.container.resolve(IBossAIService)
             self._services["boss_ai_service"] = boss_ai_service
             
-            self._logger.info("✅ BossAIService initialized - Boss AI orchestration ready")
+            self._logger.info("✅ BossAIService initialized via IoC container - Boss AI orchestration ready")
             
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize BossAIService: {e}")
@@ -299,7 +292,12 @@ class CompositionRoot:
 
     async def _initialize_pattern_system_service(self) -> None:
         """
-        Initialize PatternSystemService for attack pattern management (PHASE 2 TASK 2.3).
+        Initialize PatternSystemService for attack pattern management (PHASE 2.5 MIGRATED).
+        
+        ARCHITECTURE COMPLIANCE:
+        - IoC container resolution (QUALIA.CODE §II)
+        - Direct Configuration Injection (QUALIA.CODE §II Step 3)
+        - Logger injection (QUALIA.CODE §V)
         
         RESPONSIBILITIES:
         - Pattern library management
@@ -308,12 +306,13 @@ class CompositionRoot:
         - Loading patterns from CombatData JSON files
         """
         try:
-            from .services.PatternSystemService import PatternSystemService
-
-            pattern_service = PatternSystemService()
+            from .services.interfaces.IBossAIService import IPatternSystemService
+            
+            # Container resolution replaces manual instantiation
+            pattern_service = self.container.resolve(IPatternSystemService)
             self._services["pattern_system_service"] = pattern_service
             
-            self._logger.info("✅ PatternSystemService initialized - Pattern library ready")
+            self._logger.info("✅ PatternSystemService initialized via IoC container - Pattern library ready")
             
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize PatternSystemService: {e}")
