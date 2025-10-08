@@ -1,0 +1,10 @@
+# Logger Service Configuration
+# QUALIA.CODE v1.1 - Centralized Logging Configuration
+
+log_level: "INFO"
+enable_file_logging: true
+log_file_path: "backend.log"
+max_file_size_mb: 10
+backup_count: 5
+enable_json_format: true
+enable_console_output: true

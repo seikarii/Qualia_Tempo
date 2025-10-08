@@ -11,6 +11,7 @@ from .services.interfaces.ISystemEnvironmentService import ISystemEnvironmentSer
 from .services.interfaces.ISecurityService import ISecurityService
 from .services.interfaces.IShaderIntrospectionService import IShaderIntrospectionService
 from .services.interfaces.IQualiaProcessor import IQualiaProcessor
+from .services.interfaces.IConfigurationService import IConfigurationService
 from .utils.decorators import log_execution, handle_errors
 import asyncio
 
@@ -58,6 +59,7 @@ class CompositionRoot:
 
         # Initialize platform abstraction services (QUALIA.CODE §4 - Platform Abstraction)
         await self._initialize_filesystem_service()
+        await self._initialize_configuration_service()  # Phase 1 completion - YAML config loading
         await self._initialize_system_environment_service()
 
         # Initialize core services
@@ -106,6 +108,23 @@ class CompositionRoot:
 
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize FileSystemService: {e}")
+            raise
+
+    async def _initialize_configuration_service(self) -> None:
+        """
+        Initialize ConfigurationService from container (QUALIA.CODE v1.1).
+        
+        Phase 1 Completion: This service replaces hardcoded configs with YAML loading.
+        All configuration values now externalized per QUALIA.CODE mandate.
+        """
+        try:
+            config_service = self.container.resolve(IConfigurationService)
+            self._services["configuration_service"] = config_service
+            self._logger.info("⚙️  ConfigurationService registered from container")
+            self._logger.info("🎯 Phase 1 ConfigurationService: All configs now loaded from YAML files")
+
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize ConfigurationService: {e}")
             raise
 
     async def _initialize_system_environment_service(self) -> None:

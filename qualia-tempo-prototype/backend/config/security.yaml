@@ -1,0 +1,13 @@
+# Security Service Configuration
+# QUALIA.CODE v1.1 - Authentication & Authorization Configuration
+
+auth_enabled: true
+token_expiration_minutes: 60
+enable_rate_limiting: true
+max_requests_per_minute: 100
+enable_cors: true
+allowed_origins:
+  - "http://localhost:5173"
+  - "http://localhost:3000"
+enable_session_management: true
+session_timeout_minutes: 30

@@ -1,0 +1,9 @@
+# ShaderIntrospection Service Configuration
+# QUALIA.CODE v1.1 - Shader Analysis Configuration
+
+shader_directory: "public/shaders"
+enable_caching: true
+cache_ttl_seconds: 600
+enable_hot_reload: false
+parse_glsl_version: "330"
+enable_uniform_validation: true

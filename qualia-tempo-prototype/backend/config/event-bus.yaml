@@ -1,0 +1,9 @@
+# EventBus Service Configuration
+# QUALIA.CODE v1.1 - Event-Driven Architecture Configuration
+
+max_handlers_per_event: 100
+enable_statistics: true
+log_all_events: false
+enable_dead_letter_queue: true
+event_timeout_seconds: 30
+enable_event_replay: false

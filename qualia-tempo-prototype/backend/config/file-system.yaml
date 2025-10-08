@@ -1,0 +1,8 @@
+# FileSystem Service Configuration
+# QUALIA.CODE v1.1 - Platform Abstraction Configuration
+
+base_path: "/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/backend"
+enable_caching: true
+cache_ttl_seconds: 300
+max_cache_size_mb: 50
+enable_path_validation: true

@@ -1,0 +1,8 @@
+# SystemEnvironment Service Configuration
+# QUALIA.CODE v1.1 - Environment Management Configuration
+
+environment: "development"
+enable_debug_logging: true
+enable_performance_profiling: false
+enable_memory_monitoring: false
+max_workers: 4

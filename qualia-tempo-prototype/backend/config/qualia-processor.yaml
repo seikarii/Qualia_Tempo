@@ -1,0 +1,9 @@
+# Qualia Processor Service Configuration  
+# QUALIA.CODE v1.1 - Qualia State Calculation Configuration
+
+processing_enabled: true
+intensity_spike_threshold: 0.3
+transcendence_threshold: 0.8
+chaos_threshold: 0.7
+enable_performance_monitoring: true
+calculation_timeout_ms: 100

@@ -6,6 +6,7 @@ moderngl==5.8.2
 pyrr==0.10.3
 pygame==2.5.2
 numpy>=1.26.0
+PyYAML>=6.0.1
 
 # QUALIA.CODE v1.0 Dependencies
 jsonschema>=4.17.0

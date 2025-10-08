@@ -1,0 +1,7 @@
+# ConfigurationService Configuration (Meta-config)
+# QUALIA.CODE v1.1 - Configuration Management
+
+config_directory: "/media/seikarii/Nvme/QualiaTempo/qualia-tempo-prototype/backend/config"
+enable_hot_reload: false
+cache_configs: true
+validate_on_load: true
