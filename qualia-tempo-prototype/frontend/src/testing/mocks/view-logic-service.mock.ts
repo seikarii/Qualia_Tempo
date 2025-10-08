@@ -87,5 +87,37 @@ export const mockViewLogicService: IViewLogicService = {
       emotional_valence: 0,
       harmony: 0
     }
+  }),
+  
+  // PHASE 5.6: Avatar visual methods
+  getPlayerAvatarVisuals: vi.fn().mockReturnValue({
+    position: { x: 0, y: 0, z: 0 },
+    scale: 1.0,
+    shapeParameters: { x: 0.5, y: 0.5, z: 0.5 },
+    baseColor: { r: 0.3, g: 0.5, b: 0.8 },
+    emissive: 0.5,
+    useFractal: false
+  }),
+  
+  getBossAvatarVisuals: vi.fn().mockReturnValue({
+    position: { x: 0, y: 0, z: 5 },
+    scale: 1.5,
+    shapeParameters: { x: 0.7, y: 0.7, z: 0.7 },
+    baseColor: { r: 0.8, g: 0.3, b: 0.3 },
+    emissive: 0.7,
+    timeOffset: 0
+  }),
+  
+  getMandelbulbVisuals: vi.fn().mockReturnValue({
+    position: { x: 0, y: 0, z: 0 },
+    scale: 1.2,
+    iterations: 8,
+    power: 8.0,
+    colorGradient: {
+      inner: { r: 1.0, g: 0.84, b: 0.0 },
+      outer: { r: 1.0, g: 0.5, b: 0.2 }
+    },
+    rimLightIntensity: 0.8,
+    glowRadius: 2.0
   })
 };

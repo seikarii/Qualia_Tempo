@@ -1,0 +1,36 @@
+# QUALIA.CODE v1.1 - GameStateStreaming Configuration
+# PHASE 6 TASK 6.1: Full System Integration
+# WebSocket client configuration for receiving CombatState from backend
+
+websocket:
+  # Backend game state WebSocket endpoint
+  # Production: Should be environment variable
+  url: "ws://localhost:8000/ws/game_state"
+  
+  # Reconnection strategy
+  maxReconnectAttempts: 5
+  reconnectDelay: 1000              # Initial delay in ms
+  reconnectBackoffMultiplier: 2.0   # Exponential backoff
+  maxReconnectDelay: 30000          # Maximum delay in ms
+  
+  # Keep-alive configuration
+  pingInterval: 15000               # Send ping every 15 seconds
+  pingTimeout: 5000                 # Wait 5 seconds for pong
+  
+  # WebSocket codes
+  normalCloseCode: 1000
+
+statistics:
+  # Performance tracking
+  trackLatency: true
+  latencySampleSize: 100            # Number of samples for averaging
+
+messages:
+  serviceInitialized: "🎮 GameStateStreamingService initialized"
+  connecting: "🔌 Connecting to game state stream..."
+  connected: "✅ Connected to game state stream"
+  disconnected: "🔌 Disconnected from game state stream"
+  reconnecting: "🔄 Reconnecting to game state stream..."
+  maxReconnectAttemptsReached: "🚨 Max reconnect attempts reached for game state stream"
+  stateReceived: "📥 CombatState received"
+  pingFailed: "⚠️ Ping failed for game state connection"

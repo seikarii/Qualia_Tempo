@@ -266,3 +266,15 @@ export interface SequenceClearedEvent extends BaseEvent {
   reason: 'timeout' | 'manual' | 'combo-activated';
   source: string;
 }
+
+/**
+ * PHASE 6 TASK 6.1: CombatState streaming event
+ * Emitted when backend sends updated game state via WebSocket
+ */
+export interface CombatStateUpdatedEvent extends BaseEvent {
+  type: "CombatStateUpdated";
+  combatState: any; // CombatState from contracts
+  backendTimestamp: number; // Original timestamp from backend
+  latency?: number; // Time between backend send and frontend receive (ms)
+  source: string;
+}

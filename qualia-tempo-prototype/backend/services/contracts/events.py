@@ -716,6 +716,29 @@ class ErrorEvent(BaseEvent):
 
 
 # ============================================================================
+# GAME STATE EVENTS - PHASE 6.1
+# ============================================================================
+
+class GameStateChangedEvent(BaseEvent):
+    """Event emitted when game state changes (PHASE 6.1 - Full System Integration)"""
+    def __init__(
+        self,
+        combat_state: Dict[str, Any],  # Complete CombatState dict
+        timestamp: float,
+        source: str = "GameLogicService",
+        metadata: Optional[Dict[str, Any]] = None
+    ):
+        BaseEvent.__init__(
+            self,
+            type="GameStateChanged",
+            timestamp=timestamp,
+            source=source,
+            metadata=metadata
+        )
+        self.combat_state = combat_state
+
+
+# ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
@@ -763,6 +786,7 @@ def dict_to_event(data: Dict[str, Any]) -> BaseEvent:
         "Harmony.HarmonicPatternDetected": HarmonicPatternDetectedEvent,
         "Harmony.ChaoticPatternDetected": ChaoticPatternDetectedEvent,
         "System.Error": ErrorEvent,
+        "GameStateChanged": GameStateChangedEvent,  # PHASE 6.1
     }
     
     event_class = event_map.get(event_type, BaseEvent)

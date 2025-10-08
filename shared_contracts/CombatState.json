@@ -1,9 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "CombatState",
-  "description": "Overall combat state structure",
+  "description": "Overall combat state structure - complete game state for rendering",
   "type": "object",
   "properties": {
+    "gameState": {
+      "type": "string",
+      "enum": ["idle", "playing", "paused", "game_over"],
+      "description": "Current game state"
+    },
     "isActive": {
       "type": "boolean",
       "description": "Whether combat is currently active"
@@ -23,6 +28,95 @@
       "minimum": 0,
       "maximum": 1,
       "description": "Progress through the song (0-1)"
+    },
+    "player": {
+      "type": "object",
+      "description": "Player entity state",
+      "properties": {
+        "health": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Player health (0-100)"
+        },
+        "position": {
+          "type": "object",
+          "properties": {
+            "x": {"type": "number"},
+            "y": {"type": "number"},
+            "z": {"type": "number"}
+          },
+          "required": ["x", "y", "z"],
+          "description": "Player 3D position"
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Current player score"
+        },
+        "combo": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Current combo count"
+        },
+        "maxCombo": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum combo achieved"
+        },
+        "moveSpeed": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Player movement speed"
+        },
+        "isInvulnerable": {
+          "type": "boolean",
+          "description": "Whether player is temporarily invulnerable"
+        }
+      },
+      "required": ["health", "position", "score", "combo", "maxCombo", "moveSpeed", "isInvulnerable"]
+    },
+    "boss": {
+      "type": "object",
+      "description": "Boss entity state",
+      "properties": {
+        "health": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Boss health (0-100)"
+        },
+        "position": {
+          "type": "object",
+          "properties": {
+            "x": {"type": "number"},
+            "y": {"type": "number"},
+            "z": {"type": "number"}
+          },
+          "required": ["x", "y", "z"],
+          "description": "Boss 3D position"
+        },
+        "currentPhase": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Current boss phase (affects appearance and behavior)"
+        },
+        "attackPattern": {
+          "type": "string",
+          "description": "Current attack pattern name"
+        },
+        "isVulnerable": {
+          "type": "boolean",
+          "description": "Whether boss can currently take damage"
+        },
+        "nextPhaseThreshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Health threshold for next phase transition"
+        }
+      },
+      "required": ["health", "position", "currentPhase", "attackPattern", "isVulnerable", "nextPhaseThreshold"]
     },
     "activeEffects": {
       "type": "array",
@@ -57,10 +151,13 @@
     }
   },
   "required": [
+    "gameState",
     "isActive",
     "currentPhase",
     "elapsedTime",
     "songProgress",
+    "player",
+    "boss",
     "activeEffects",
     "environmentEffects",
     "qualiaEventHistory"

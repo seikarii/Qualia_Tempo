@@ -47,6 +47,11 @@ export const TYPES = {
   IWebSocketFactory: Symbol.for("IWebSocketFactory"),
   WebSocketServiceParams: Symbol.for("WebSocketServiceParams"),
   IBrowserEventsService: Symbol.for("IBrowserEventsService"),
+  
+  // PHASE 6.1: Full System Integration
+  IGameStateStreamingService: Symbol.for("IGameStateStreamingService"),
+  GameStateStreamingServiceParams: Symbol.for("GameStateStreamingServiceParams"),
+  GameStateStreamingConfig: Symbol.for("GameStateStreamingConfig"),
 
   // ===== NEW SERVICES =====
   IShaderLoaderService: Symbol.for("IShaderLoaderService"),

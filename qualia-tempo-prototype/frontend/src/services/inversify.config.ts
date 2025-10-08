@@ -34,6 +34,7 @@ import type { GameControllerServiceParams } from "./contracts/IGameControllerSer
 import type { QualiaStateCalculatorServiceParams } from "./contracts/IQualiaStateCalculatorService.contracts";
 import type { StateStreamingServiceParams } from "./contracts/IStateStreamingService.contracts";
 import type { DebugOrchestratorServiceParams } from "./contracts/IDebugOrchestratorService.contracts";
+import type { GameStateStreamingConfig } from "./contracts/IGameStateStreamingService.contracts";
 import type { AudioServiceParams } from "./contracts/IAudioService.contracts";
 import type { BackendSyncServiceParams } from "./contracts/IBackendSyncService.contracts";
 import type { WebSocketServiceParams } from "./contracts/IWebSocketService.contracts";
@@ -99,6 +100,7 @@ import type { IStateStreamingService } from "./interfaces/IStateStreamingService
 import type { IWebSocketService } from "./interfaces/IWebSocketService";
 import type { IWebSocketFactory } from "./interfaces/IWebSocketFactory";
 import type { IBrowserEventsService } from "./interfaces/IBrowserEventsService";
+import type { IGameStateStreamingService } from "./interfaces/IGameStateStreamingService";
 import type { ICoordinateSystemService } from "./interfaces/ICoordinateSystemService";
 import type { IToneFactoryService } from "../audio/interfaces/IToneFactoryService";
 import type { IStateMergerService } from "./interfaces/IStateMergerService";
@@ -138,6 +140,7 @@ import { StateStreamingService } from "./StateStreamingService";
 import { WebSocketService } from "./WebSocketService";
 import { BrowserWebSocketFactory } from "./BrowserWebSocketFactory";
 import { BrowserEventsService } from "./BrowserEventsService";
+import { GameStateStreamingService } from "./GameStateStreamingService";
 import { ThrottlingManager } from "./utils/ThrottlingManager";
 import { InputStateService } from "./InputStateService";
 import { CoordinateSystemService } from "./CoordinateSystemService";
@@ -207,6 +210,8 @@ container.bind<Record<string, string>>(TYPES.ConfigManifest).toConstantValue({
   // PHASE 5: Kairos Visual Engine
   "kairosVisual": "kairos-visual.yaml",
   "particleSystem": "particle-system.yaml",
+  // PHASE 6.1: Full System Integration
+  "gameStateStreaming": "game-state-streaming.yaml",
   // PHASE 5.4: Reaction-Diffusion Ground (VISUALS.GOLD.CODE Phase 3)
   "reactionDiffusion": "reaction-diffusion.yaml",
   // PHASE 5.5: Avatar Rendering (VISUALS.GOLD.CODE Phase 4)
@@ -383,6 +388,12 @@ container
 container
   .bind<IStateStreamingService>(TYPES.IStateStreamingService)
   .to(StateStreamingService)
+  .inSingletonScope();
+
+// PHASE 6.1: Full System Integration - Game State Streaming
+container
+  .bind<IGameStateStreamingService>(TYPES.IGameStateStreamingService)
+  .to(GameStateStreamingService)
   .inSingletonScope();
 
 // QUALIA.CODE v1.1: Platform Abstraction - WebSocket Factory
@@ -857,6 +868,7 @@ function bindLevel2ServiceParams(fullConfig: FullGameConfig): void {
   });
   
   // PHASE 5: Kairos Visual Engine - needs particleSystemService + reactionDiffusionService (Level 2 dependencies)
+  // PHASE 5.6: Added viewLogicService + performanceService for SDF avatar integration
   safeBindConstant<KairosVisualEngineParams>(TYPES.KairosVisualEngineParams, {
     config: fullConfig.kairosVisual,
     logger: container.get<ILogger>(TYPES.ILogger),
@@ -864,6 +876,8 @@ function bindLevel2ServiceParams(fullConfig: FullGameConfig): void {
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
     particleSystemService: container.get(TYPES.IParticleSystemService),
     reactionDiffusionService: container.get(TYPES.IReactionDiffusionService),
+    viewLogicService: container.get(TYPES.IViewLogicService), // PHASE 5.6
+    performanceService: container.get(TYPES.IPerformanceService), // PHASE 5.6
   });
 }
 
@@ -1072,6 +1086,12 @@ function bindDirectConfigs(fullConfig: FullGameConfig): void {
   safeBindConstant<GameStateStoreConfig>(TYPES.GameStateStoreConfig, fullConfig.gameStateStore);
   safeBindConstant<PostProcessingConfig>(TYPES.PostProcessingConfig, fullConfig.postProcessing);
   safeBindConstant<ProtocolAdapterConfig>(TYPES.ProtocolAdapterConfig, fullConfig.protocolAdapter);
+  
+  // PHASE 6.1: Full System Integration
+  safeBindConstant<GameStateStreamingConfig>(
+    TYPES.GameStateStreamingConfig, 
+    fullConfig.gameStateStreaming
+  );
 }
 
 // ===== CONTAINER VERIFICATION =====

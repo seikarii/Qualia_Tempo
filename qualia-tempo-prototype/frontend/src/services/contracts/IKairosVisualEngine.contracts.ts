@@ -179,4 +179,6 @@ export interface KairosVisualEngineParams {
   eventBus: any; // IEventBus (avoiding circular import)
   particleSystemService: any; // IParticleSystemService (avoiding circular import)
   reactionDiffusionService: any; // IReactionDiffusionService (avoiding circular import)
+  viewLogicService: any; // IViewLogicService (avoiding circular import) - PHASE 5.6
+  performanceService: any; // IPerformanceService (avoiding circular import) - PHASE 5.6
 }

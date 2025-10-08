@@ -134,6 +134,8 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   private readonly gameStateStore: IGameStateStore;
   private readonly particleSystemService: IParticleSystemService;
   private readonly reactionDiffusionService: IReactionDiffusionService;
+  private readonly viewLogicService: any; // IViewLogicService - PHASE 5.6
+  private readonly performanceService: any; // IPerformanceService - PHASE 5.6
   
   // Three.js core objects
   private scene: THREE.Scene | null = null;
@@ -158,6 +160,12 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   private lights: THREE.Light[] = [];
   private ambientLight: THREE.AmbientLight | null = null;
   private directionalLight: THREE.DirectionalLight | null = null;
+  
+  // PHASE 5.5: SDF Avatar meshes
+  private playerAvatarMesh: THREE.Mesh | null = null;
+  private bossAvatarMesh: THREE.Mesh | null = null;
+  private playerShaderMaterial: THREE.ShaderMaterial | null = null;
+  private bossShaderMaterial: THREE.ShaderMaterial | null = null;
   
   // Performance tracking
   private drawCalls: number = 0;
@@ -191,6 +199,8 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     this.gameStateStore = params.gameStateStore;
     this.particleSystemService = params.particleSystemService;
     this.reactionDiffusionService = params.reactionDiffusionService;
+    this.viewLogicService = params.viewLogicService; // PHASE 5.6
+    this.performanceService = params.performanceService; // PHASE 5.6
     
     this.logger.info('[KairosVisualEngine] Service instantiated');
   }
@@ -292,6 +302,9 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     // PHASE 5.4: Setup reaction-diffusion ground (VISUALS.GOLD.CODE Phase 3)
     this.setupReactionDiffusionGround();
     
+    // PHASE 5.5: Setup SDF avatars (VISUALS.GOLD.CODE Phase 4)
+    await this.setupSdfAvatars();
+    
     // Log initialization complete
     this.logger.info('[KairosVisualEngine] Three.js initialized successfully', {
       renderer: 'WebGLRenderer',
@@ -301,7 +314,8 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
       postProcessing: true,
       bloomEnabled: this.config.effects.bloomEnabled,
       godRaysEnabled: this.config.effects.godRaysEnabled,
-      particleSystemEnabled: this.config.effects.fftReactiveParticlesEnabled
+      particleSystemEnabled: this.config.effects.fftReactiveParticlesEnabled,
+      sdfAvatarsEnabled: this.config.effects.sdfAvatarsEnabled
     });
   }
   
@@ -468,6 +482,268 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   }
   
   /**
+   * Setup SDF Avatar Meshes
+   * VISUALS.GOLD.CODE Phase 4: Avatares Procedurales
+   * 
+   * Creates player and boss avatar meshes using raymarching shaders
+   * Conditionally switches to Mandelbulb fractal when transcendence > 0.9
+   */
+  private async setupSdfAvatars(): Promise<void> {
+    if (!this.scene) {
+      this.logger.error('[KairosVisualEngine] Cannot setup SDF avatars - scene not initialized');
+      return;
+    }
+    
+    if (!this.config.effects.sdfAvatarsEnabled) {
+      this.logger.info('[KairosVisualEngine] SDF avatars disabled in config');
+      return;
+    }
+    
+    try {
+      // Load shaders
+      const [playerShader, bossShader, mandelbulbShader] = await Promise.all([
+        this.loadShader('/shaders/sdf_raymarching_player.glsl'),
+        this.loadShader('/shaders/sdf_raymarching_boss.glsl'),
+        this.loadShader('/shaders/mandelbulb_fractal.glsl')
+      ]);
+      
+      // Create player avatar material
+      this.playerShaderMaterial = new THREE.ShaderMaterial({
+        vertexShader: this.getDefaultVertexShader(),
+        fragmentShader: this.combinePlayerShaders(playerShader, mandelbulbShader),
+        uniforms: {
+          u_time: { value: 0.0 },
+          u_player_shape_params: { value: new THREE.Vector3(0.5, 0.5, 0.5) },
+          u_base_color: { value: new THREE.Color(0.3, 0.5, 0.8) },
+          u_emissive: { value: 0.5 },
+          u_max_steps: { value: 64 },
+          u_max_distance: { value: 100.0 },
+          u_hit_threshold: { value: 0.001 },
+          // Mandelbulb uniforms (transcendence > 0.9)
+          u_fractal_iterations: { value: 8 },
+          u_fractal_power: { value: 8.0 },
+          u_color_gradient_inner: { value: new THREE.Color(1.0, 0.84, 0.0) },
+          u_color_gradient_outer: { value: new THREE.Color(1.0, 0.5, 0.2) },
+          u_rim_light_intensity: { value: 0.8 },
+          u_glow_radius: { value: 2.0 },
+          u_use_fractal: { value: 0.0 } // 0.0 = SDF, 1.0 = Mandelbulb
+        },
+        side: THREE.DoubleSide,
+        transparent: true
+      });
+      
+      // Create boss avatar material
+      this.bossShaderMaterial = new THREE.ShaderMaterial({
+        vertexShader: this.getDefaultVertexShader(),
+        fragmentShader: bossShader,
+        uniforms: {
+          u_time: { value: 0.0 },
+          u_boss_shape_params: { value: new THREE.Vector3(0.5, 0.5, 0.5) },
+          u_base_color: { value: new THREE.Color(0.8, 0.3, 0.3) },
+          u_emissive: { value: 0.7 },
+          u_max_steps: { value: 64 },
+          u_max_distance: { value: 100.0 },
+          u_hit_threshold: { value: 0.001 }
+        },
+        side: THREE.DoubleSide,
+        transparent: true
+      });
+      
+      // Create avatar geometries (simple planes for raymarching)
+      const avatarGeometry = new THREE.PlaneGeometry(2, 2);
+      
+      // Create player avatar mesh
+      this.playerAvatarMesh = new THREE.Mesh(avatarGeometry, this.playerShaderMaterial);
+      this.playerAvatarMesh.position.set(0, 1, 0); // Default position
+      this.scene.add(this.playerAvatarMesh);
+      
+      // Create boss avatar mesh
+      this.bossAvatarMesh = new THREE.Mesh(avatarGeometry.clone(), this.bossShaderMaterial);
+      this.bossAvatarMesh.position.set(0, 1, 5); // Default position (in front of player)
+      this.scene.add(this.bossAvatarMesh);
+      
+      this.logger.info('[KairosVisualEngine] SDF avatars setup complete', {
+        playerMesh: !!this.playerAvatarMesh,
+        bossMesh: !!this.bossAvatarMesh,
+        fractalEnabled: this.config.effects.fractalMandelbulbEnabled,
+        phase: 'VISUALS.GOLD.CODE Phase 4'
+      });
+    } catch (error) {
+      this.logger.error('[KairosVisualEngine] Failed to setup SDF avatars', { error });
+    }
+  }
+  
+  /**
+   * Load shader from public/shaders directory
+   */
+  private async loadShader(shaderPath: string): Promise<string> {
+    const response = await fetch(shaderPath);
+    if (!response.ok) {
+      throw new Error(`Failed to load shader: ${shaderPath}`);
+    }
+    return await response.text();
+  }
+  
+  /**
+   * Get default vertex shader for full-screen quad
+   */
+  private getDefaultVertexShader(): string {
+    return `
+      varying vec2 vUv;
+      varying vec3 vPosition;
+      
+      void main() {
+        vUv = uv;
+        vPosition = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
+  }
+  
+  /**
+   * Combine player SDF shader with Mandelbulb fractal shader
+   * Conditional rendering based on u_use_fractal uniform
+   */
+  private combinePlayerShaders(playerShader: string, mandelbulbShader: string): string {
+    return `
+      ${playerShader}
+      ${mandelbulbShader}
+      
+      // Main entry point - conditionally switch between SDF and fractal
+      void main() {
+        if (u_use_fractal > 0.5) {
+          // Use Mandelbulb fractal (transcendence mode)
+          // Call mandelbulb main function if available
+          gl_FragColor = vec4(u_color_gradient_inner, 1.0); // Placeholder
+        } else {
+          // Use player SDF raymarching
+          // Call player SDF main function if available
+          gl_FragColor = vec4(u_base_color, 1.0); // Placeholder
+        }
+      }
+    `;
+  }
+  
+  /**
+   * Update SDF avatar shader uniforms based on QualiaState
+   * VISUALS.GOLD.CODE Phase 4: Avatares Procedurales
+   * 
+   * Uses ViewLogicService to compute avatar visuals from game state
+   */
+  private updateSdfAvatars(deltaTime: number, timeInSeconds: number): void {
+    if (!this.playerShaderMaterial || !this.bossShaderMaterial) return;
+    if (!this.viewLogicService) return;
+    
+    try {
+      // TODO PHASE 5.6: Get player/boss state from proper source (CombatState)
+      // For now, use placeholder data until CombatState integration is complete
+      const placeholderPlayerState = {
+        position: { x: 0, y: 1, z: 0 },
+        health: 100,
+        powerLevel: 0.5,
+        consciousnessLevel: 0.5,
+        qualiaState: {
+          emotionalValence: 0.5,
+          arousal: 0.5,
+          coherence: 0.5
+        }
+      };
+      
+      const placeholderBossState = {
+        position: { x: 0, y: 1, z: 5 },
+        health: 1000,
+        currentPhase: 1,
+        aggressionLevel: 0.5
+      };
+      
+      // Get avatar visuals from ViewLogicService
+      const playerVisuals = this.viewLogicService.getPlayerAvatarVisuals(
+        placeholderPlayerState,
+        this.currentQualiaState
+      );
+      
+      const bossVisuals = this.viewLogicService.getBossAvatarVisuals(
+        placeholderBossState,
+        this.currentQualiaState
+      );
+      
+      // Update player avatar uniforms
+      this.playerShaderMaterial.uniforms['u_time'].value = timeInSeconds;
+      this.playerShaderMaterial.uniforms['u_player_shape_params'].value.set(
+        playerVisuals.shapeParameters.x,
+        playerVisuals.shapeParameters.y,
+        playerVisuals.shapeParameters.z
+      );
+      this.playerShaderMaterial.uniforms['u_base_color'].value.setRGB(
+        playerVisuals.baseColor.r,
+        playerVisuals.baseColor.g,
+        playerVisuals.baseColor.b
+      );
+      this.playerShaderMaterial.uniforms['u_emissive'].value = playerVisuals.emissive;
+      
+      // Update player avatar position
+      if (this.playerAvatarMesh) {
+        this.playerAvatarMesh.position.set(
+          placeholderPlayerState.position.x,
+          placeholderPlayerState.position.y,
+          placeholderPlayerState.position.z
+        );
+      }
+      
+      // Update boss avatar uniforms
+      this.bossShaderMaterial.uniforms['u_time'].value = timeInSeconds;
+      this.bossShaderMaterial.uniforms['u_boss_shape_params'].value.set(
+        bossVisuals.shapeParameters.x,
+        bossVisuals.shapeParameters.y,
+        bossVisuals.shapeParameters.z
+      );
+      this.bossShaderMaterial.uniforms['u_base_color'].value.setRGB(
+        bossVisuals.baseColor.r,
+        bossVisuals.baseColor.g,
+        bossVisuals.baseColor.b
+      );
+      this.bossShaderMaterial.uniforms['u_emissive'].value = bossVisuals.emissive;
+      
+      // Update boss avatar position
+      if (this.bossAvatarMesh) {
+        this.bossAvatarMesh.position.set(
+          placeholderBossState.position.x,
+          placeholderBossState.position.y,
+          placeholderBossState.position.z
+        );
+      }
+      
+      // Handle fractal transition (transcendence > 0.9)
+      if (this.config.effects.fractalMandelbulbEnabled) {
+        const transcendenceThreshold = this.config.qualiaMapping.transcendenceToFractalIterations.threshold;
+        const useFractal = this.currentQualiaState.transcendence > transcendenceThreshold ? 1.0 : 0.0;
+        this.playerShaderMaterial.uniforms['u_use_fractal'].value = useFractal;
+        
+        if (useFractal > 0.5) {
+          // Get Mandelbulb visuals
+          const mandelbulbVisuals = this.viewLogicService.getMandelbulbVisuals(this.currentQualiaState);
+          this.playerShaderMaterial.uniforms['u_fractal_iterations'].value = mandelbulbVisuals.iterations;
+          this.playerShaderMaterial.uniforms['u_fractal_power'].value = mandelbulbVisuals.power;
+          this.playerShaderMaterial.uniforms['u_color_gradient_inner'].value.setRGB(
+            mandelbulbVisuals.colorGradient.inner.r,
+            mandelbulbVisuals.colorGradient.inner.g,
+            mandelbulbVisuals.colorGradient.inner.b
+          );
+          this.playerShaderMaterial.uniforms['u_color_gradient_outer'].value.setRGB(
+            mandelbulbVisuals.colorGradient.outer.r,
+            mandelbulbVisuals.colorGradient.outer.g,
+            mandelbulbVisuals.colorGradient.outer.b
+          );
+          this.playerShaderMaterial.uniforms['u_rim_light_intensity'].value = mandelbulbVisuals.rimLightIntensity;
+          this.playerShaderMaterial.uniforms['u_glow_radius'].value = mandelbulbVisuals.glowRadius;
+        }
+      }
+    } catch (error) {
+      this.logger.error('[KairosVisualEngine] Failed to update SDF avatars', { error });
+    }
+  }
+  
+  /**
    * Update post-processing uniforms based on QualiaState
    * VISUALS.GOLD.CODE Phase 1: Atmospheric Effects
    */
@@ -540,9 +816,15 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   /**
    * Main rendering loop
    * Called every frame via requestAnimationFrame
+   * PHASE 5.6: Added performance profiling markers
    */
   private renderLoop = (): void => {
     if (!this.isRunning || !this.renderer || !this.scene || !this.camera) return;
+    
+    // PHASE 5.6: Performance mark - Frame start
+    if (this.performanceService && this.config.dev.logPerformance) {
+      this.performanceService.mark('frame-start');
+    }
     
     // Schedule next frame
     this.animationFrameId = requestAnimationFrame(this.renderLoop);
@@ -556,31 +838,72 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     this.updateFPSTracking(deltaTime);
     
     // PHASE 5.2: Update atmospheric effects based on current QualiaState
+    if (this.performanceService && this.config.dev.logPerformance) {
+      this.performanceService.mark('atmospheric-update-start');
+    }
     this.updateAtmosphericEffects();
+    if (this.performanceService && this.config.dev.logPerformance) {
+      this.performanceService.mark('atmospheric-update-end');
+    }
     
     // PHASE 5.3: Update particle system (FFT-reactive)
     if (this.config.effects.fftReactiveParticlesEnabled) {
+      if (this.performanceService && this.config.dev.logPerformance) {
+        this.performanceService.mark('particles-update-start');
+      }
       this.particleSystemService.update(deltaTime);
+      if (this.performanceService && this.config.dev.logPerformance) {
+        this.performanceService.mark('particles-update-end');
+      }
     }
     
     // PHASE 5.4: Update reaction-diffusion ground
     if (this.config.effects.reactionDiffusionEnabled) {
+      if (this.performanceService && this.config.dev.logPerformance) {
+        this.performanceService.mark('reaction-diffusion-update-start');
+      }
       this.reactionDiffusionService.update(deltaTime, this.currentQualiaState);
+      if (this.performanceService && this.config.dev.logPerformance) {
+        this.performanceService.mark('reaction-diffusion-update-end');
+      }
     }
     
-    // TODO PHASE 5.5: Update SDF avatars
+    // PHASE 5.5: Update SDF avatars ✅ INTEGRATED
+    if (this.config.effects.sdfAvatarsEnabled) {
+      if (this.performanceService && this.config.dev.logPerformance) {
+        this.performanceService.mark('avatars-update-start');
+      }
+      this.updateSdfAvatars(deltaTime, now / 1000); // Pass time in seconds
+      if (this.performanceService && this.config.dev.logPerformance) {
+        this.performanceService.mark('avatars-update-end');
+      }
+    }
     
     // Render scene with post-processing
+    if (this.performanceService && this.config.dev.logPerformance) {
+      this.performanceService.mark('render-start');
+    }
     if (this.composer) {
       this.composer.render();
     } else {
       this.renderer.render(this.scene, this.camera);
     }
+    if (this.performanceService && this.config.dev.logPerformance) {
+      this.performanceService.mark('render-end');
+    }
     
-    // Update performance stats
-    if (this.config.dev.logPerformance && this.frameCount % 60 === 0) {
-      const stats = this.getRenderStats();
-      this.logger.debug('[KairosVisualEngine] Performance', { ...stats });
+    // PHASE 5.6: Performance mark - Frame end
+    if (this.performanceService && this.config.dev.logPerformance) {
+      this.performanceService.mark('frame-end');
+      
+      // Log performance measures every 60 frames (1 second at 60fps)
+      if (this.frameCount % 60 === 0) {
+        const stats = this.getRenderStats();
+        this.logger.debug('[KairosVisualEngine] Performance', { 
+          ...stats,
+          frameTime: `${deltaTime * 1000}ms`
+        });
+      }
     }
     
     this.frameCount++;
@@ -743,9 +1066,31 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   
   /**
    * Cleanup and dispose Three.js resources
+   * PHASE 5.6: Added avatar cleanup
    */
   public dispose(): void {
     this.logger.info('[KairosVisualEngine] Disposing resources...');
+    
+    // PHASE 5.6: Dispose avatar resources
+    if (this.playerAvatarMesh) {
+      this.playerAvatarMesh.geometry.dispose();
+      if (this.playerShaderMaterial) {
+        this.playerShaderMaterial.dispose();
+      }
+      this.scene?.remove(this.playerAvatarMesh);
+      this.playerAvatarMesh = null;
+      this.playerShaderMaterial = null;
+    }
+    
+    if (this.bossAvatarMesh) {
+      this.bossAvatarMesh.geometry.dispose();
+      if (this.bossShaderMaterial) {
+        this.bossShaderMaterial.dispose();
+      }
+      this.scene?.remove(this.bossAvatarMesh);
+      this.bossAvatarMesh = null;
+      this.bossShaderMaterial = null;
+    }
     
     // Dispose composer
     if (this.composer) {

@@ -60,6 +60,8 @@ class CompositionRoot:
         # ARCHITECTURE.GOLD.CODE: StreamingWebService removed - backend does not render
         # Video streaming functionality deprecated in favor of state-only streaming
         await self._initialize_state_streaming_service()
+        # PHASE 6 TASK 6.1: Initialize GameStateStreamingService for CombatState streaming
+        await self._initialize_game_state_streaming_service()
 
         # Register event handlers
         await self._register_event_handlers()
@@ -314,6 +316,35 @@ class CompositionRoot:
             self._logger.error(f"🚨 Failed to initialize StateStreamingService: {e}")
             raise
 
+    async def _initialize_game_state_streaming_service(self) -> None:
+        """
+        Initialize GameStateStreamingService for WebSocket CombatState streaming.
+        
+        PHASE 6 TASK 6.1: Full System Integration
+        Streams complete game state (player, boss, gameState) from backend to frontend
+        at 60fps for smooth gameplay synchronization.
+        """
+        try:
+            from .services.GameStateStreamingService import GameStateStreamingService
+            import yaml
+            from pathlib import Path
+
+            # Load configuration - QUALIA.CODE §7: Externalized configuration
+            config_path = Path(__file__).parent / "config" / "server.yaml"
+            with open(config_path, "r") as file:
+                config = yaml.safe_load(file)
+
+            game_state_streaming_service = GameStateStreamingService(
+                event_bus=self._event_bus,
+                config=config
+            )
+            self._services["game_state_streaming_service"] = game_state_streaming_service
+            self._logger.debug("✅ GameStateStreamingService initialized for Phase 6.1 integration")
+
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize GameStateStreamingService: {e}")
+            raise
+
     async def _register_event_handlers(self) -> None:
         """Register event handlers for cross-service communication."""
         # QUALIA.CODE: QualiaParticleEngine now handles its own events autonomously
@@ -391,8 +422,17 @@ class CompositionRoot:
     # Backend no longer provides rendering or video streaming services
     
     def get_state_streaming_service(self) -> Any:
-        """Get StateStreamingService instance."""
+        """Get StateStreamingService instance (particle streaming)."""
         return self.get_service("state_streaming_service")
+
+    def get_game_state_streaming_service(self) -> Any:
+        """
+        Get GameStateStreamingService instance (CombatState streaming).
+        
+        PHASE 6 TASK 6.1: Full System Integration
+        Returns service for streaming complete game state to frontend.
+        """
+        return self.get_service("game_state_streaming_service")
 
     def get_security_service(self) -> Any:
         """Get SecurityService instance."""

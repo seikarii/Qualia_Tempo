@@ -17,6 +17,7 @@ import { validateDebugServiceConfig } from './validateDebugService.validator';
 import { validateNotificationServiceConfig } from './validateNotificationService.validator';
 import { validateRhythmicMovementConfig } from './validateRhythmicMovement.validator';
 import { validateEventBusConfig } from './validateEventBus.validator';
+import { validateGameStateStreamingConfig } from './validateGameStateStreaming.validator';
 
 // Export all individual validators
 export {
@@ -29,7 +30,8 @@ export {
   validateDebugServiceConfig,
   validateNotificationServiceConfig,
   validateRhythmicMovementConfig,
-  validateEventBusConfig
+  validateEventBusConfig,
+  validateGameStateStreamingConfig
 };
 
 // Import the full config type for composite validation
@@ -56,6 +58,7 @@ export function validateFullGameConfig(config: FullGameConfig): void {
   validateNotificationServiceConfig(config.notificationService);
   validateRhythmicMovementConfig(config.rhythmicMovement);
   validateEventBusConfig(config.eventBus);
+  validateGameStateStreamingConfig(config.gameStateStreaming);
   
   // Visual effects config is optional, only validate if present
   // Individual services handle their optional config validation internally

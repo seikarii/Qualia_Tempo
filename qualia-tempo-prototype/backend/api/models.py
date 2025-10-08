@@ -850,22 +850,123 @@ class PlayerState(BaseModel):
     """
 
 
+class GameState(Enum):
+    """
+    Current game state
+    """
+
+    idle = 'idle'
+    playing = 'playing'
+    paused = 'paused'
+    game_over = 'game_over'
+
+
+
+class Player(BaseModel):
+    """
+    Player entity state
+    """
+
+    health: Annotated[float, Field(ge=0.0, le=100.0)]
+    """
+    Player health (0-100)
+    """
+    position: Position
+    """
+    Player 3D position
+    """
+    score: Annotated[int, Field(ge=0)]
+    """
+    Current player score
+    """
+    combo: Annotated[int, Field(ge=0)]
+    """
+    Current combo count
+    """
+    maxCombo: Annotated[int, Field(ge=0)]
+    """
+    Maximum combo achieved
+    """
+    moveSpeed: Annotated[float, Field(ge=0.0)]
+    """
+    Player movement speed
+    """
+    isInvulnerable: bool
+    """
+    Whether player is temporarily invulnerable
+    """
+
+
+
+class Position1(BaseModel):
+    """
+    Boss 3D position
+    """
+
+    x: float
+    y: float
+    z: float
+
+
+
+class Boss(BaseModel):
+    """
+    Boss entity state
+    """
+
+    health: Annotated[float, Field(ge=0.0, le=100.0)]
+    """
+    Boss health (0-100)
+    """
+    position: Position1
+    """
+    Boss 3D position
+    """
+    currentPhase: Annotated[int, Field(ge=0)]
+    """
+    Current boss phase (affects appearance and behavior)
+    """
+    attackPattern: str
+    """
+    Current attack pattern name
+    """
+    isVulnerable: bool
+    """
+    Whether boss can currently take damage
+    """
+    nextPhaseThreshold: Annotated[float, Field(ge=0.0, le=100.0)]
+    """
+    Health threshold for next phase transition
+    """
+
+
+
+class Position2(BaseModel):
+    x: float
+    y: float
+
+
+
 class QualiaEventHistoryItem(BaseModel):
     id: str
     timestamp: float
-    position: Position
+    position: Position2
     value: float
 
 
 
 class CombatState(BaseModel):
     """
-    Overall combat state structure
+    Overall combat state structure - complete game state for rendering
     """
 
     model_config = ConfigDict(
         extra='forbid',
     )
+    gameState: GameState
+    """
+    Current game state
+    """
     isActive: bool
     """
     Whether combat is currently active
@@ -881,6 +982,14 @@ class CombatState(BaseModel):
     songProgress: Annotated[float, Field(ge=0.0, le=1.0)]
     """
     Progress through the song (0-1)
+    """
+    player: Player
+    """
+    Player entity state
+    """
+    boss: Boss
+    """
+    Boss entity state
     """
     activeEffects: List[str]
     """

@@ -680,7 +680,12 @@ class GameLogicService(IGameLogicService):
 
     @log_execution(level="DEBUG")
     def update_game_state(self, delta_time: float, current_time: float) -> Dict[str, Any]:
-        """Update game state."""
+        """
+        Update game state and emit CombatState for frontend rendering.
+        
+        PHASE 6 TASK 6.1: Full System Integration
+        Emits GameStateChanged event with complete CombatState for frontend consumption.
+        """
         self._current_time = current_time
         
         # Update combo decay
@@ -703,6 +708,9 @@ class GameLogicService(IGameLogicService):
         # Expire old Qualia
         self._expire_old_qualia(current_time)
         
+        # PHASE 6.1: Emit complete CombatState for frontend rendering
+        self._emit_combat_state_update(current_time)
+        
         return {
             "current_time": current_time,
             "player_combo": self._player_combo,
@@ -710,6 +718,80 @@ class GameLogicService(IGameLogicService):
             "active_effects_count": len(self._active_effects),
             "active_qualia_count": len(self._active_qualia),
         }
+
+    def _emit_combat_state_update(self, current_time: float) -> None:
+        """
+        Emit GameStateChanged event with complete CombatState.
+        
+        PHASE 6 TASK 6.1: Full System Integration
+        Creates complete CombatState matching shared_contracts/CombatState.json
+        and publishes it to EventBus for GameStateStreamingService to broadcast.
+        """
+        # Determine game state
+        if self._player_health <= 0:
+            game_state = "game_over"
+        elif self._song_duration > 0 and current_time >= self._song_duration:
+            game_state = "game_over"
+        elif self._player_health > 0 and self._boss_health > 0:
+            game_state = "playing"
+        else:
+            game_state = "idle"
+        
+        # Build CombatState matching contract
+        combat_state = {
+            "gameState": game_state,
+            "isActive": game_state == "playing",
+            "currentPhase": self._boss_phase,
+            "elapsedTime": current_time,
+            "songProgress": min(1.0, current_time / self._song_duration) if self._song_duration > 0 else 0.0,
+            "player": {
+                "health": self._player_health,
+                "position": {
+                    "x": self._player_position.get("x", 0.0),
+                    "y": self._player_position.get("y", 0.0),
+                    "z": 0.0  # 2D game, z always 0
+                },
+                "score": self._player_score,
+                "combo": self._player_combo,
+                "maxCombo": self._stats.get("max_combo", 0),
+                "moveSpeed": 5.0,  # TODO: Make configurable
+                "isInvulnerable": self._ultimate_active
+            },
+            "boss": {
+                "health": self._boss_health,
+                "position": {
+                    "x": 0.0,  # TODO: Boss AI should provide position
+                    "y": 0.0,
+                    "z": 0.0
+                },
+                "currentPhase": self._boss_phase,
+                "attackPattern": "default",  # TODO: BossAI should provide pattern
+                "isVulnerable": True,  # TODO: Add vulnerability mechanics
+                "nextPhaseThreshold": self._boss_health * 0.5  # TODO: Make configurable
+            },
+            "activeEffects": [effect.effect_type for effect in self._active_effects],
+            "environmentEffects": [],  # TODO: Add environment effects system
+            "qualiaEventHistory": [
+                {
+                    "id": str(qualia.id),
+                    "timestamp": qualia.generated_timestamp,
+                    "position": {"x": qualia.position["x"], "y": qualia.position["y"]},
+                    "value": qualia.value
+                }
+                for qualia in list(self._active_qualia.values())[-10:]  # Last 10 qualia
+            ]
+        }
+        
+        # Emit event to EventBus
+        try:
+            from backend.services.contracts.events import GameStateChangedEvent
+            event = GameStateChangedEvent(
+                combat_state=combat_state,
+                timestamp=time.time()
+            )
+            self._event_bus.publish(event)
+        except Exception as e:
+            self._logger.error(f"Failed to emit GameStateChanged event: {e}")
 
     def _update_combo_decay(self, delta_time: float) -> None:
         """Update combo decay."""

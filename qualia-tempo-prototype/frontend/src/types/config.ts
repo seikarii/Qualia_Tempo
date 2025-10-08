@@ -114,6 +114,9 @@ export interface FullGameConfig {
   gameStateStore: GameStateStoreConfig;
   postProcessing: PostProcessingConfig;
   protocolAdapter: ProtocolAdapterConfig;
+  
+  // PHASE 6.1: Full System Integration
+  gameStateStreaming: import('../services/contracts/IGameStateStreamingService.contracts').GameStateStreamingConfig;
 
   // QUALIA.CODE v2.0: Audio Analysis and Physics Services
   audioAnalysis: AudioAnalysisServiceConfig;

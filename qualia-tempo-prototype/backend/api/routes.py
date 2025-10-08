@@ -288,6 +288,37 @@ async def get_stream_status(services: CompositionRoot = Depends(get_services)) -
 # Video rendering is now exclusively handled by frontend (KairosVisualEngine)
 # Backend only streams STATE data via /ws/game_state endpoint
 
+@app.websocket("/ws/game_state")
+async def websocket_game_state(
+    websocket: WebSocket, services: CompositionRoot = Depends(get_services)
+) -> None:
+    """
+    PHASE 6 TASK 6.1: WebSocket endpoint for CombatState streaming.
+    
+    Streams complete game state (player, boss, gameState, etc.) to frontend at 60fps.
+    Frontend GameStateStore consumes this data for rendering.
+    
+    DATA FLOW:
+    Player Actions → GameLogicService → EventBus (GameStateChanged) → 
+    GameStateStreamingService → WebSocket → Frontend GameStateStore →
+    ViewLogicService → KairosVisualEngine
+    """
+    logger.info("🔌 WebSocket connection attempt to /ws/game_state")
+    game_state_streaming = services.get_game_state_streaming_service()
+
+    try:
+        logger.info("🔗 Accepting game state WebSocket connection...")
+        await game_state_streaming.connect_client(websocket)
+
+    except Exception as e:
+        logger.error(f"🚨 WebSocket game state connection error: {e}")
+
+    finally:
+        # Ensure client is properly disconnected
+        await game_state_streaming.disconnect_client(websocket)
+        logger.info("🔌 Game state client disconnected")
+
+
 @app.websocket("/ws/test")
 async def websocket_test(websocket: WebSocket) -> None:
     """Simple WebSocket test endpoint to verify WebSocket infrastructure."""
