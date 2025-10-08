@@ -1,5 +1,6 @@
 # QUALIA.CODE v1.1 - GameLogicService Tests
 # Comprehensive test suite for core game mechanics
+# ARCHITECTURE COMPLIANCE: Using TestCompositionRootFactory for proper IoC
 
 import pytest
 import pytest_asyncio
@@ -7,8 +8,7 @@ import time
 from unittest.mock import MagicMock, AsyncMock, patch
 from pathlib import Path
 
-from backend.services.GameLogicService import GameLogicService
-from backend.services.EventBus import EventBus
+from backend.tests.test_composition_root import TestCompositionRootFactory
 from backend.services.contracts.events import (
     PlayerDashEvent,
     PlayerKeyPressEvent,
@@ -20,26 +20,21 @@ from backend.services.contracts.events import (
 
 
 @pytest.fixture
-def event_bus():
-    """Create EventBus instance for testing."""
-    return EventBus()
+def mocked_composition_root():
+    """Create mocked CompositionRoot for testing (QUALIA.CODE compliance)."""
+    return TestCompositionRootFactory.create_mocked_composition_root()
 
 
 @pytest.fixture
-def config_path():
-    """Get path to test configuration."""
-    return Path(__file__).parent.parent / "config" / "game-logic.yaml"
-
-
-@pytest.fixture
-def game_logic_service(event_bus, config_path):
-    """Create GameLogicService instance for testing."""
-    service = GameLogicService(event_bus=event_bus, config_path=str(config_path))
+async def game_logic_service(mocked_composition_root):
+    """Get GameLogicService from CompositionRoot (QUALIA.CODE compliance)."""
+    await mocked_composition_root.initialize()
+    service = mocked_composition_root.get_service("game_logic_service")
     return service
 
 
 @pytest.fixture
-def initialized_service(game_logic_service):
+async def initialized_service(game_logic_service):
     """Create initialized GameLogicService."""
     game_logic_service.initialize(
         player_id="test_player",

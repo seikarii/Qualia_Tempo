@@ -1,6 +1,7 @@
 # QUALIA.CODE v1.1 - ParticleEnginePoolManager Concurrency Tests
 # Comprehensive testing for multiprocessing pool infrastructure
 # ARCHITECTURE.GOLD.CODE v2: Backend calculates STATE, never renders
+# ARCHITECTURE COMPLIANCE: Using TestCompositionRootFactory for proper IoC
 
 import pytest
 import pytest_asyncio
@@ -13,8 +14,8 @@ from typing import Dict, Any
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from backend.tests.test_composition_root import TestCompositionRootFactory
 from backend.services.ParticleEnginePoolManager import (
-    ParticleEnginePoolManager,
     PoolConfig,
     PoolMetrics,
     get_pool_manager
@@ -69,10 +70,16 @@ features:
     return str(config_file)
 
 
+@pytest.fixture
+def mocked_composition_root():
+    """Create mocked CompositionRoot for testing (QUALIA.CODE compliance)."""
+    return TestCompositionRootFactory.create_mocked_composition_root()
+
+
 @pytest_asyncio.fixture
-async def pool_manager(test_config_path):
-    """Create a pool manager instance for testing."""
-    manager = ParticleEnginePoolManager(config_path=test_config_path)
+async def pool_manager(mocked_composition_root):
+    """Get ParticleEnginePoolManager from CompositionRoot (QUALIA.CODE compliant)."""
+    manager = mocked_composition_root.get_service("particle_pool_manager")
     yield manager
     # Cleanup
     if manager.is_running:
@@ -237,9 +244,9 @@ class TestTaskSubmission:
 class TestMetrics:
     """Test metrics collection and accuracy."""
     
-    def test_metrics_initial_state(self, test_config_path):
+    def test_metrics_initial_state(self, mocked_composition_root):
         """Test metrics in initial state."""
-        manager = ParticleEnginePoolManager(config_path=test_config_path)
+        manager = mocked_composition_root.get_service("particle_pool_manager")
         metrics = manager.get_metrics()
         
         assert metrics['total_tasks_submitted'] == 0
@@ -355,18 +362,18 @@ class TestAsyncIntegration:
 class TestConfiguration:
     """Test configuration loading and validation."""
     
-    def test_load_config_from_yaml(self, test_config_path):
+    def test_load_config_from_yaml(self, mocked_composition_root):
         """Test loading configuration from YAML file."""
-        manager = ParticleEnginePoolManager(config_path=test_config_path)
+        manager = mocked_composition_root.get_service("particle_pool_manager")
         
         assert manager.config is not None
         assert manager.config.num_workers == 2
         assert manager.config.max_tasks_per_child == 10
         assert manager.config.queue_timeout_seconds == 2.0
     
-    def test_config_validation(self, test_config_path):
+    def test_config_validation(self, mocked_composition_root):
         """Test that configuration values are correctly parsed."""
-        manager = ParticleEnginePoolManager(config_path=test_config_path)
+        manager = mocked_composition_root.get_service("particle_pool_manager")
         
         # Validate pool config
         assert manager.config.num_workers > 0
@@ -389,9 +396,9 @@ class TestIntegration:
     """End-to-end integration tests."""
     
     @pytest.mark.asyncio
-    async def test_full_workflow(self, test_config_path):
+    async def test_full_workflow(self, mocked_composition_root):
         """Test complete workflow: start, submit, metrics, health check, stop."""
-        manager = ParticleEnginePoolManager(config_path=test_config_path)
+        manager = mocked_composition_root.get_service("particle_pool_manager")
         
         # Start
         success = await manager.start()

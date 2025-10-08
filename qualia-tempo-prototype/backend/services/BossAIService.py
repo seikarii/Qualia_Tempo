@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Tuple, Any
 from pathlib import Path
 
 from backend.services.interfaces.IBossAIService import IBossAIService
+from backend.services.interfaces.IFileSystemService import IFileSystemService
 from backend.services.EventBus import EventBus
 from backend.services.contracts.IBossAIService_contracts import (
     BossAIState,
@@ -68,25 +69,27 @@ class BossAIService(IBossAIService):
     7. Health management
     """
 
-    def __init__(self, event_bus: EventBus, config_path: Optional[str] = None):
+    def __init__(self, event_bus: EventBus, file_system_service: IFileSystemService, config_path: Optional[str] = None):
         """
         Initialize BossAIService.
         
         Args:
             event_bus: EventBus instance for event publishing
+            file_system_service: FileSystemService for file operations (QUALIA.CODE §4 Platform Abstraction)
             config_path: Path to boss-ai.yaml configuration
         """
         self._logger = logging.getLogger(__name__)
         self._event_bus = event_bus
+        self._file_system_service = file_system_service
         
-        # Load configuration
+        # Load configuration using FileSystemService (QUALIA.CODE compliance)
         if config_path is None:
             config_path_final: Path = Path(__file__).parent.parent / "config" / "boss-ai.yaml"
         else:
             config_path_final = Path(config_path) if not isinstance(config_path, Path) else config_path
         
-        with open(config_path_final, 'r') as f:
-            self._config = yaml.safe_load(f)
+        config_content = self._file_system_service.read_file(config_path_final)
+        self._config = yaml.safe_load(config_content)
         
         self._logger.info(f"BossAIService initialized with config: {config_path}")
         
@@ -961,33 +964,43 @@ class BossAIService(IBossAIService):
         self._event_bus.publish(event)
 
     # Getter methods
+    @log_execution()
     def get_current_phase(self) -> BossPhase:
         return self._current_phase
 
+    @log_execution()
     def get_current_aggression(self) -> float:
         return self._aggression
 
+    @log_execution()
     def get_aggression_tier(self) -> AggressionTier:
         return self._aggression_tier
 
+    @log_execution()
     def is_enraged(self) -> bool:
         return self._is_enraged
 
+    @log_execution()
     def is_vulnerable(self) -> bool:
         return self._is_vulnerable
 
+    @log_execution()
     def get_active_pattern(self) -> Optional[AttackPattern]:
         return self._active_pattern
 
+    @log_execution()
     def get_pattern_cooldowns(self) -> Dict[str, float]:
         return self._pattern_cooldowns.copy()
 
+    @log_execution()
     def get_boss_health(self) -> float:
         return self._current_health
 
+    @log_execution()
     def get_boss_max_health(self) -> float:
         return self._max_health
 
+    @log_execution()
     def get_state_snapshot(self) -> BossStateSnapshot:
         return BossStateSnapshot(
             boss_id=self._boss_id or "unknown",

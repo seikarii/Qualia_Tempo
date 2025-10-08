@@ -16,6 +16,7 @@ from backend.services.interfaces.IHarmonyAnalysisService import (
     ChordPattern,
     HarmonyClassification
 )
+from backend.services.interfaces.IFileSystemService import IFileSystemService
 from backend.services.EventBus import EventBus
 from backend.services.contracts.events import (
     HarmonyScoreCalculatedEvent,
@@ -44,25 +45,27 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
     6. Event emission for game logic integration
     """
 
-    def __init__(self, event_bus: EventBus, config_path: Optional[str] = None):
+    def __init__(self, event_bus: EventBus, file_system_service: IFileSystemService, config_path: Optional[str] = None):
         """
         Initialize HarmonyAnalysisService.
         
         Args:
             event_bus: EventBus instance for event publishing
+            file_system_service: FileSystemService for file operations (QUALIA.CODE §4 Platform Abstraction)
             config_path: Path to harmony-analysis.yaml configuration
         """
         self._logger = logging.getLogger(__name__)
         self._event_bus = event_bus
+        self._file_system_service = file_system_service
         
-        # Load configuration
+        # Load configuration using FileSystemService (QUALIA.CODE compliance)
         if config_path is None:
             config_path_final: Path = Path(__file__).parent.parent / "config" / "harmony-analysis.yaml"
         else:
             config_path_final = Path(config_path) if not isinstance(config_path, Path) else config_path
         
-        with open(config_path_final, 'r') as f:
-            self._config = yaml.safe_load(f)
+        config_content = self._file_system_service.read_file(config_path_final)
+        self._config = yaml.safe_load(config_content)
         
         # Player state
         self._player_id: Optional[str] = None

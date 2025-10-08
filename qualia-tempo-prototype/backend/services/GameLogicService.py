@@ -13,6 +13,7 @@ from backend.services.interfaces.IGameLogicService import (
     QualiaEntity,
     ComboEffect
 )
+from backend.services.interfaces.IFileSystemService import IFileSystemService
 from backend.services.EventBus import EventBus
 from backend.services.contracts.events import (
     PlayerDashEvent,
@@ -51,25 +52,27 @@ class GameLogicService(IGameLogicService):
     7. Tempo-aware cooldowns
     """
 
-    def __init__(self, event_bus: EventBus, config_path: Optional[str] = None):
+    def __init__(self, event_bus: EventBus, file_system_service: IFileSystemService, config_path: Optional[str] = None):
         """
         Initialize GameLogicService.
         
         Args:
             event_bus: EventBus instance for event publishing
+            file_system_service: FileSystemService for file operations (QUALIA.CODE §4 Platform Abstraction)
             config_path: Path to game-logic.yaml configuration
         """
         self._logger = logging.getLogger(__name__)
         self._event_bus = event_bus
+        self._file_system_service = file_system_service
         
-        # Load configuration
+        # Load configuration using FileSystemService (QUALIA.CODE compliance)
         if config_path is None:
             config_path_final: Path = Path(__file__).parent.parent / "config" / "game-logic.yaml"
         else:
             config_path_final = Path(config_path) if not isinstance(config_path, Path) else config_path
         
-        with open(config_path_final, 'r') as f:
-            self._config = yaml.safe_load(f)
+        config_content = self._file_system_service.read_file(config_path_final)
+        self._config = yaml.safe_load(config_content)
         
         # Game state
         self._player_id: Optional[str] = None
@@ -906,10 +909,12 @@ class GameLogicService(IGameLogicService):
             "aggression": self._boss_aggression,
         }
 
+    @log_execution()
     def get_active_qualia(self) -> List[QualiaEntity]:
         """Get all active Qualia."""
         return list(self._active_qualia.values())
 
+    @log_execution()
     def get_cooldown_remaining(self, player_id: str, ability_key: str) -> float:
         """Get remaining cooldown for an ability."""
         if player_id != self._player_id:
@@ -955,6 +960,7 @@ class GameLogicService(IGameLogicService):
         
         return self._difficulty_level
 
+    @log_execution()
     def set_tempo(self, bpm: float) -> None:
         """Set current tempo."""
         self._current_bpm = bpm

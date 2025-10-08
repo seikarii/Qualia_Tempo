@@ -57,6 +57,8 @@ class CompositionRoot:
         # PHASE 2 TASK 2.3: Initialize BossAI and PatternSystem services
         await self._initialize_boss_ai_service()
         await self._initialize_pattern_system_service()
+        # PHASE 2 TASK 2.4: Initialize PersistenceService for leaderboards
+        await self._initialize_persistence_service()
         # ARCHITECTURE.GOLD.CODE: StreamingWebService removed - backend does not render
         # Video streaming functionality deprecated in favor of state-only streaming
         await self._initialize_state_streaming_service()
@@ -155,9 +157,14 @@ class CompositionRoot:
         """
         try:
             from .services.ParticleEnginePoolManager import ParticleEnginePoolManager
+            
+            # QUALIA.CODE §4: Inject FileSystemService for platform abstraction
+            filesystem_service = self._services.get("filesystem_service")
+            if not filesystem_service:
+                raise RuntimeError("FileSystemService not available for ParticleEnginePoolManager")
 
             # Create and start the process pool
-            pool_manager = ParticleEnginePoolManager()
+            pool_manager = ParticleEnginePoolManager(file_system_service=filesystem_service)
             
             # Start the pool (this creates worker processes)
             pool_started = await pool_manager.start()
@@ -199,8 +206,16 @@ class CompositionRoot:
         """
         try:
             from .services.GameLogicService import GameLogicService
+            
+            # QUALIA.CODE §4: Inject FileSystemService for platform abstraction
+            filesystem_service = self._services.get("filesystem_service")
+            if not filesystem_service:
+                raise RuntimeError("FileSystemService not available for GameLogicService")
 
-            game_logic_service = GameLogicService(event_bus=self._event_bus)
+            game_logic_service = GameLogicService(
+                event_bus=self._event_bus,
+                file_system_service=filesystem_service
+            )
             self._services["game_logic_service"] = game_logic_service
             
             self._logger.info("✅ GameLogicService initialized - Core GDD mechanics ready")
@@ -223,8 +238,16 @@ class CompositionRoot:
         """
         try:
             from .services.HarmonyAnalysisService import HarmonyAnalysisService
+            
+            # QUALIA.CODE §4: Inject FileSystemService for platform abstraction
+            filesystem_service = self._services.get("filesystem_service")
+            if not filesystem_service:
+                raise RuntimeError("FileSystemService not available for HarmonyAnalysisService")
 
-            harmony_service = HarmonyAnalysisService(event_bus=self._event_bus)
+            harmony_service = HarmonyAnalysisService(
+                event_bus=self._event_bus,
+                file_system_service=filesystem_service
+            )
             self._services["harmony_analysis_service"] = harmony_service
             
             self._logger.info("✅ HarmonyAnalysisService initialized - Musical harmony analysis ready")
@@ -248,8 +271,16 @@ class CompositionRoot:
         """
         try:
             from .services.BossAIService import BossAIService
+            
+            # QUALIA.CODE §4: Inject FileSystemService for platform abstraction
+            filesystem_service = self._services.get("filesystem_service")
+            if not filesystem_service:
+                raise RuntimeError("FileSystemService not available for BossAIService")
 
-            boss_ai_service = BossAIService(event_bus=self._event_bus)
+            boss_ai_service = BossAIService(
+                event_bus=self._event_bus,
+                file_system_service=filesystem_service
+            )
             self._services["boss_ai_service"] = boss_ai_service
             
             self._logger.info("✅ BossAIService initialized - Boss AI orchestration ready")
@@ -278,6 +309,37 @@ class CompositionRoot:
             
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize PatternSystemService: {e}")
+            raise
+
+    async def _initialize_persistence_service(self) -> None:
+        """
+        Initialize PersistenceService for leaderboard and score management (PHASE 2 TASK 2.4).
+        
+        RESPONSIBILITIES (per ARCHITECTURE.GOLD.CODE):
+        - Save and load leaderboard entries
+        - Score validation (anti-cheat detection)
+        - Player statistics tracking
+        - Thread-safe file operations
+        """
+        try:
+            from .services.PersistenceService import PersistenceService
+            
+            # QUALIA.CODE §4: Inject FileSystemService for platform abstraction
+            filesystem_service = self._services.get("filesystem_service")
+            if not filesystem_service:
+                raise RuntimeError("FileSystemService not available for PersistenceService")
+
+            persistence_service = PersistenceService(file_system_service=filesystem_service)
+            
+            # Initialize the service (loads existing data, creates directories)
+            persistence_service.initialize()
+            
+            self._services["persistence_service"] = persistence_service
+            
+            self._logger.info("✅ PersistenceService initialized - Leaderboard management ready")
+            
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize PersistenceService: {e}")
             raise
 
     # ARCHITECTURE.GOLD.CODE v2: ParticleEngine uses multiprocessing pool (Phase 1 Task 1.3)
@@ -417,6 +479,10 @@ class CompositionRoot:
     def get_pattern_system_service(self) -> Any:
         """Get the PatternSystemService instance."""
         return self.get_service("pattern_system_service")
+
+    def get_persistence_service(self) -> Any:
+        """Get the PersistenceService instance."""
+        return self.get_service("persistence_service")
 
     # ARCHITECTURE.GOLD.CODE: get_rendering_service and get_streaming_web_service REMOVED
     # Backend no longer provides rendering or video streaming services

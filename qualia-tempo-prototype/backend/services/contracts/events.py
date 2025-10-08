@@ -10,9 +10,9 @@ from datetime import datetime
 @dataclass
 class BaseEvent:
     """Base event class for all system events."""
-    type: str
-    timestamp: float
-    source: str
+    type: str = ""
+    timestamp: float = 0.0
+    source: str = ""
     metadata: Optional[Dict[str, Any]] = None
     correlation_id: Optional[str] = None
 
@@ -21,721 +21,485 @@ class BaseEvent:
 # PLAYER ACTION EVENTS
 # ============================================================================
 
+@dataclass
 class PlayerActionEvent(BaseEvent):
-    """Base class for all player action events."""
-    player_id: str
-    action_type: str  # 'dash', 'key_press', 'ability_activate'
-    action_data: Dict[str, Any]
+    """Base class for all player action events.
+    
+    Inherits from BaseEvent (type, timestamp, source, metadata, correlation_id).
+    Adds player-specific action data.
+    """
+    player_id: str = ""
+    action_type: str = ""  # 'dash', 'key_press', 'ability_activate'
+    action_data: Dict[str, Any] = None  # type: ignore
+
+    def __post_init__(self) -> None:
+        if self.action_data is None:
+            self.action_data = {}
 
 
+@dataclass
 class PlayerDashEvent(PlayerActionEvent):
     """Event emitted when player performs a dash."""
-    def __init__(
-        self,
-        player_id: str,
-        position: Dict[str, float],  # {'x': float, 'y': float}
-        direction: Dict[str, float],  # {'x': float, 'y': float}
-        on_beat: bool,  # True if dash was on metronome beat
-        timestamp: float,
-        source: str = "InputManager",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
-            self,
-            type="PlayerAction.Dash",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.player_id = player_id
-        self.action_type = "dash"
-        self.action_data = {
-            "position": position,
-            "direction": direction,
-            "on_beat": on_beat
-        }
+    position: Dict[str, float] = None  # type: ignore # {'x': float, 'y': float}
+    direction: Dict[str, float] = None  # type: ignore # {'x': float, 'y': float}
+    on_beat: bool = False  # True if dash was on metronome beat
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if self.type == "":
+            self.type = "PlayerAction.Dash"
+        if self.source == "":
+            self.source = "InputManager"
+        if self.action_type == "":
+            self.action_type = "dash"
+        if self.position is not None and self.direction is not None and "position" not in self.action_data:
+            self.action_data.update({
+                "position": self.position,
+                "direction": self.direction,
+                "on_beat": self.on_beat
+            })
 
 
+@dataclass
 class PlayerKeyPressEvent(PlayerActionEvent):
     """Event emitted when player presses a musical ability key (Q-E-R-T-F-G-C)."""
-    def __init__(
-        self,
-        player_id: str,
-        key: str,  # 'Q', 'E', 'R', 'T', 'F', 'G', 'C'
-        note: str,  # Musical note: 'C', 'D', 'E', 'F', 'G', 'A', 'B'
-        timestamp: float,
-        on_beat: bool = False,
-        source: str = "InputManager",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
-            self,
-            type="PlayerAction.KeyPress",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.player_id = player_id
-        self.action_type = "key_press"
-        self.action_data = {
-            "key": key,
-            "note": note,
-            "on_beat": on_beat
-        }
+    key: str = ""  # 'Q', 'E', 'R', 'T', 'F', 'G', 'C'
+    note: str = ""  # Musical note: 'C', 'D', 'E', 'F', 'G', 'A', 'B'
+    on_beat: bool = False
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if self.type == "":
+            self.type = "PlayerAction.KeyPress"
+        if self.source == "":
+            self.source = "InputManager"
+        if self.action_type == "":
+            self.action_type = "key_press"
+        if self.key and "key" not in self.action_data:
+            self.action_data.update({
+                "key": self.key,
+                "note": self.note,
+                "on_beat": self.on_beat
+            })
 
 
+@dataclass
 class PlayerAbilityActivatedEvent(PlayerActionEvent):
     """Event emitted when player activates a special ability (combo or ultimate)."""
-    def __init__(
-        self,
-        player_id: str,
-        ability_type: str,  # 'combo', 'ultimate'
-        ability_id: str,
-        timestamp: float,
-        source: str = "GameLogicService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
-            self,
-            type="PlayerAction.AbilityActivated",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.player_id = player_id
-        self.action_type = "ability_activate"
-        self.action_data = {
-            "ability_type": ability_type,
-            "ability_id": ability_id
-        }
+    ability_type: str = ""  # 'combo', 'ultimate'
+    ability_id: str = ""
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if self.type == "":
+            self.type = "PlayerAction.AbilityActivated"
+        if self.source == "":
+            self.source = "GameLogicService"
+        if self.action_type == "":
+            self.action_type = "ability_activate"
+        if self.ability_type and "ability_type" not in self.action_data:
+            self.action_data.update({
+                "ability_type": self.ability_type,
+                "ability_id": self.ability_id
+            })
 
 
 # ============================================================================
 # QUALIA SYSTEM EVENTS
 # ============================================================================
 
+@dataclass
 class QualiaGeneratedEvent(BaseEvent):
     """Event emitted when Qualia is generated in the game world."""
-    def __init__(
-        self,
-        qualia_id: str,
-        position: Dict[str, float],
-        color: Dict[str, float],  # RGB values
-        source_type: str,  # 'dash', 'ability', 'metronome', 'boss'
-        value: float,
-        timestamp: float,
-        source: str = "GameLogicService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    qualia_id: str = ""
+    position: Dict[str, float] = None  # type: ignore
+    color: Dict[str, float] = None  # type: ignore # RGB values
+    source_type: str = ""  # 'dash', 'ability', 'metronome', 'boss'
+    value: float = 0.0
 
-            self,
-            type="Qualia.Generated",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.qualia_id = qualia_id
-        self.position = position
-        self.color = color
-        self.source_type = source_type
-        self.value = value
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Qualia.Generated"
+        if self.source == "":
+            self.source = "GameLogicService"
 
 
+@dataclass
 class QualiaCollectedEvent(BaseEvent):
     """Event emitted when player collects Qualia."""
-    def __init__(
-        self,
-        player_id: str,
-        qualia_id: str,
-        value: float,
-        collection_time: float,  # Time since generation (ms)
-        perfect_timing: bool,  # True if collected within optimal window
-        timestamp: float,
-        source: str = "GameLogicService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    player_id: str = ""
+    qualia_id: str = ""
+    value: float = 0.0
+    collection_time: float = 0.0  # Time since generation (ms)
+    perfect_timing: bool = False  # True if collected within optimal window
 
-            self,
-            type="Qualia.Collected",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.player_id = player_id
-        self.qualia_id = qualia_id
-        self.value = value
-        self.collection_time = collection_time
-        self.perfect_timing = perfect_timing
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Qualia.Collected"
+        if self.source == "":
+            self.source = "GameLogicService"
 
 
+@dataclass
 class QualiaExpiredEvent(BaseEvent):
     """Event emitted when Qualia expires (not collected in time)."""
-    def __init__(
-        self,
-        qualia_id: str,
-        lifetime: float,  # How long it existed (ms)
-        timestamp: float,
-        source: str = "GameLogicService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    qualia_id: str = ""
+    lifetime: float = 0.0  # How long it existed (ms)
 
-            self,
-            type="Qualia.Expired",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.qualia_id = qualia_id
-        self.lifetime = lifetime
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Qualia.Expired"
+        if self.source == "":
+            self.source = "GameLogicService"
 
 
 # ============================================================================
 # GAME STATE EVENTS
 # ============================================================================
 
+@dataclass
 class MetronomeTickEvent(BaseEvent):
     """Event emitted on each metronome beat."""
-    def __init__(
-        self,
-        beat_number: int,
-        bpm: float,
-        timestamp: float,
-        source: str = "AudioEngine",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    beat_number: int = 0
+    bpm: float = 0.0
 
-            self,
-            type="Game.MetronomeTick",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.beat_number = beat_number
-        self.bpm = bpm
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Game.MetronomeTick"
+        if self.source == "":
+            self.source = "AudioEngine"
 
 
+@dataclass
 class ComboActivatedEvent(BaseEvent):
     """Event emitted when a combo is activated (harmonic or chaotic)."""
-    def __init__(
-        self,
-        player_id: str,
-        combo_id: str,
-        combo_type: str,  # 'harmonic', 'chaotic'
-        combo_sequence: List[str],  # Keys pressed
-        effect_id: str,
-        effect_description: str,
-        timestamp: float,
-        source: str = "GameLogicService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    player_id: str = ""
+    combo_id: str = ""
+    combo_type: str = ""  # 'harmonic', 'chaotic'
+    combo_sequence: List[str] = None  # type: ignore # Keys pressed
+    effect_id: str = ""
+    effect_description: str = ""
 
-            self,
-            type="Game.ComboActivated",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.player_id = player_id
-        self.combo_id = combo_id
-        self.combo_type = combo_type
-        self.combo_sequence = combo_sequence
-        self.effect_id = effect_id
-        self.effect_description = effect_description
+    def __post_init__(self) -> None:
+        if self.combo_sequence is None:
+            self.combo_sequence = []
+        if self.type == "":
+            self.type = "Game.ComboActivated"
+        if self.source == "":
+            self.source = "GameLogicService"
 
 
+@dataclass
 class GameStateUpdatedEvent(BaseEvent):
     """Event emitted when the overall game state changes."""
-    def __init__(
-        self,
-        state: str,  # 'menu', 'playing', 'paused', 'game_over', 'victory'
-        previous_state: Optional[str],
-        timestamp: float,
-        source: str = "GameControllerService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    state: str = ""  # 'menu', 'playing', 'paused', 'game_over', 'victory'
+    previous_state: Optional[str] = None
 
-            self,
-            type="Game.StateUpdated",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.state = state
-        self.previous_state = previous_state
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Game.StateUpdated"
+        if self.source == "":
+            self.source = "GameControllerService"
 
 
+@dataclass
 class ScoreUpdatedEvent(BaseEvent):
     """Event emitted when player's score changes."""
-    def __init__(
-        self,
-        player_id: str,
-        new_score: int,
-        score_delta: int,
-        reason: str,  # 'qualia_collected', 'combo_multiplier', 'perfect_timing', etc.
-        timestamp: float,
-        source: str = "GameLogicService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    player_id: str = ""
+    new_score: int = 0
+    score_delta: int = 0
+    reason: str = ""  # 'qualia_collected', 'combo_multiplier', 'perfect_timing', etc.
 
-            self,
-            type="Game.ScoreUpdated",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.player_id = player_id
-        self.new_score = new_score
-        self.score_delta = score_delta
-        self.reason = reason
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Game.ScoreUpdated"
+        if self.source == "":
+            self.source = "GameLogicService"
 
 
+@dataclass
 class HealthChangedEvent(BaseEvent):
     """Event emitted when player or boss health changes."""
-    def __init__(
-        self,
-        entity_id: str,  # player_id or boss_id
-        entity_type: str,  # 'player' or 'boss'
-        new_health: float,
-        health_delta: float,
-        reason: str,  # 'damage', 'healing', 'combo_effect', etc.
-        timestamp: float,
-        source: str = "GameLogicService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    entity_id: str = ""  # player_id or boss_id
+    entity_type: str = ""  # 'player' or 'boss'
+    new_health: float = 0.0
+    health_delta: float = 0.0
+    reason: str = ""  # 'damage', 'healing', 'combo_effect', etc.
 
-            self,
-            type="Game.HealthChanged",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.entity_id = entity_id
-        self.entity_type = entity_type
-        self.new_health = new_health
-        self.health_delta = health_delta
-        self.reason = reason
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Game.HealthChanged"
+        if self.source == "":
+            self.source = "GameLogicService"
 
 
+@dataclass
 class UltimateActivatedEvent(BaseEvent):
     """Event emitted when player activates ultimate ability (x40 combo)."""
-    def __init__(
-        self,
-        player_id: str,
-        duration: float,  # Duration in seconds
-        timestamp: float,
-        source: str = "GameLogicService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    player_id: str = ""
+    duration: float = 0.0  # Duration in seconds
 
-            self,
-            type="Game.UltimateActivated",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.player_id = player_id
-        self.duration = duration
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Game.UltimateActivated"
+        if self.source == "":
+            self.source = "GameLogicService"
 
 
+@dataclass
 class CooldownUpdatedEvent(BaseEvent):
     """Event emitted when ability cooldown changes."""
-    def __init__(
-        self,
-        player_id: str,
-        ability_key: str,  # 'Q', 'E', 'R', etc.
-        cooldown_remaining: float,  # Seconds
-        timestamp: float,
-        source: str = "GameLogicService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    player_id: str = ""
+    ability_key: str = ""  # 'Q', 'E', 'R', etc.
+    cooldown_remaining: float = 0.0  # Seconds
 
-            self,
-            type="Game.CooldownUpdated",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.player_id = player_id
-        self.ability_key = ability_key
-        self.cooldown_remaining = cooldown_remaining
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Game.CooldownUpdated"
+        if self.source == "":
+            self.source = "GameLogicService"
 
 
 # ============================================================================
 # BOSS AI EVENTS
 # ============================================================================
 
+@dataclass
 class BossPhaseChangedEvent(BaseEvent):
     """Event emitted when boss enters a new phase."""
-    def __init__(
-        self,
-        boss_id: str,
-        new_phase: int,
-        phase_description: str,
-        timestamp: float,
-        source: str = "BossAIService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    boss_id: str = ""
+    new_phase: int = 0
+    phase_description: str = ""
 
-            self,
-            type="Boss.PhaseChanged",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.boss_id = boss_id
-        self.new_phase = new_phase
-        self.phase_description = phase_description
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Boss.PhaseChanged"
+        if self.source == "":
+            self.source = "BossAIService"
 
 
+@dataclass
 class BossAttackEvent(BaseEvent):
     """Event emitted when boss launches an attack."""
-    def __init__(
-        self,
-        boss_id: str,
-        attack_id: str,
-        pattern_id: str,
-        telegraph_duration: float,  # Seconds
-        timestamp: float,
-        source: str = "BossAIService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    boss_id: str = ""
+    attack_id: str = ""
+    pattern_id: str = ""
+    telegraph_duration: float = 0.0  # Seconds
 
-            self,
-            type="Boss.Attack",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.boss_id = boss_id
-        self.attack_id = attack_id
-        self.pattern_id = pattern_id
-        self.telegraph_duration = telegraph_duration
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Boss.Attack"
+        if self.source == "":
+            self.source = "BossAIService"
 
 
+@dataclass
 class BossAggressionChangedEvent(BaseEvent):
     """Event emitted when boss aggression level changes significantly."""
-    def __init__(
-        self,
-        boss_id: str,
-        old_aggression: float,  # 0.0-1.0
-        new_aggression: float,  # 0.0-1.0
-        aggression_tier: str,  # 'passive', 'cautious', 'normal', 'aggressive', 'enraged'
-        factors: Dict[str, float],  # Contributing factors: volume, tempo, harmony, combo
-        timestamp: float,
-        source: str = "BossAIService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
-            self,
-            type="Boss.AggressionChanged",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.boss_id = boss_id
-        self.old_aggression = old_aggression
-        self.new_aggression = new_aggression
-        self.aggression_tier = aggression_tier
-        self.factors = factors
+    boss_id: str = ""
+    old_aggression: float = 0.0  # 0.0-1.0
+    new_aggression: float = 0.0  # 0.0-1.0
+    aggression_tier: str = ""  # 'passive', 'cautious', 'normal', 'aggressive', 'enraged'
+    factors: Dict[str, float] = None  # type: ignore # Contributing factors: volume, tempo, harmony, combo
+
+    def __post_init__(self) -> None:
+        if self.factors is None:
+            self.factors = {}
+        if self.type == "":
+            self.type = "Boss.AggressionChanged"
+        if self.source == "":
+            self.source = "BossAIService"
 
 
+@dataclass
 class BossPatternSelectedEvent(BaseEvent):
     """Event emitted when boss AI selects a new attack pattern."""
-    def __init__(
-        self,
-        boss_id: str,
-        pattern_id: str,
-        pattern_type: str,  # 'projectile', 'melee', 'aoe', 'movement', 'special'
-        pattern_name: str,
-        selection_context: Dict[str, Any],  # Why this pattern was chosen
-        timestamp: float,
-        source: str = "BossAIService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
-            self,
-            type="Boss.PatternSelected",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.boss_id = boss_id
-        self.pattern_id = pattern_id
-        self.pattern_type = pattern_type
-        self.pattern_name = pattern_name
-        self.selection_context = selection_context
+    boss_id: str = ""
+    pattern_id: str = ""
+    pattern_type: str = ""  # 'projectile', 'melee', 'aoe', 'movement', 'special'
+    pattern_name: str = ""
+    selection_context: Dict[str, Any] = None  # type: ignore # Why this pattern was chosen
+
+    def __post_init__(self) -> None:
+        if self.selection_context is None:
+            self.selection_context = {}
+        if self.type == "":
+            self.type = "Boss.PatternSelected"
+        if self.source == "":
+            self.source = "BossAIService"
 
 
+@dataclass
 class BossEnragedEvent(BaseEvent):
     """Event emitted when boss enters enrage mode."""
-    def __init__(
-        self,
-        boss_id: str,
-        time_remaining: float,  # Seconds left in song
-        enrage_multipliers: Dict[str, float],  # Aggression, telegraph, frequency boosts
-        timestamp: float,
-        source: str = "BossAIService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
-            self,
-            type="Boss.Enraged",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.boss_id = boss_id
-        self.time_remaining = time_remaining
-        self.enrage_multipliers = enrage_multipliers
+    boss_id: str = ""
+    time_remaining: float = 0.0  # Seconds left in song
+    enrage_multipliers: Dict[str, float] = None  # type: ignore # Aggression, telegraph, frequency boosts
+
+    def __post_init__(self) -> None:
+        if self.enrage_multipliers is None:
+            self.enrage_multipliers = {}
+        if self.type == "":
+            self.type = "Boss.Enraged"
+        if self.source == "":
+            self.source = "BossAIService"
 
 
+@dataclass
 class BossVulnerableEvent(BaseEvent):
     """Event emitted when boss becomes vulnerable after an attack."""
-    def __init__(
-        self,
-        boss_id: str,
-        vulnerability_duration: float,  # Seconds
-        damage_multiplier: float,  # Damage multiplier during vulnerability
-        can_be_neutralized: bool,  # Can harmonic combos neutralize boss
-        timestamp: float,
-        source: str = "BossAIService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
-            self,
-            type="Boss.Vulnerable",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.boss_id = boss_id
-        self.vulnerability_duration = vulnerability_duration
-        self.damage_multiplier = damage_multiplier
-        self.can_be_neutralized = can_be_neutralized
+    boss_id: str = ""
+    vulnerability_duration: float = 0.0  # Seconds
+    damage_multiplier: float = 1.0  # Damage multiplier during vulnerability
+    can_be_neutralized: bool = False  # Can harmonic combos neutralize boss
+
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Boss.Vulnerable"
+        if self.source == "":
+            self.source = "BossAIService"
 
 
 # ============================================================================
 # MUSIC SYSTEM EVENTS
 # ============================================================================
 
+@dataclass
 class SongNoteEvent(BaseEvent):
     """Event emitted when a note in the song is played."""
-    def __init__(
-        self,
-        note: str,  # Musical note: 'C', 'D', 'E', 'F', 'G', 'A', 'B'
-        octave: int,
-        duration: float,  # Seconds
-        timestamp: float,
-        source: str = "AudioEngine",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    note: str = ""  # Musical note: 'C', 'D', 'E', 'F', 'G', 'A', 'B'
+    octave: int = 0
+    duration: float = 0.0  # Seconds
 
-            self,
-            type="Music.SongNote",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.note = note
-        self.octave = octave
-        self.duration = duration
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Music.SongNote"
+        if self.source == "":
+            self.source = "AudioEngine"
 
 
+@dataclass
 class TempoChangedEvent(BaseEvent):
     """Event emitted when song tempo changes."""
-    def __init__(
-        self,
-        new_bpm: float,
-        previous_bpm: float,
-        timestamp: float,
-        source: str = "AudioEngine",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    new_bpm: float = 0.0
+    previous_bpm: float = 0.0
 
-            self,
-            type="Music.TempoChanged",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.new_bpm = new_bpm
-        self.previous_bpm = previous_bpm
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Music.TempoChanged"
+        if self.source == "":
+            self.source = "AudioEngine"
 
 
+@dataclass
 class VolumeChangedEvent(BaseEvent):
     """Event emitted when volume (difficulty) changes."""
-    def __init__(
-        self,
-        new_volume: float,  # 0.0 to 1.0
-        difficulty_level: str,  # 'training', 'normal', 'hard', 'extreme'
-        timestamp: float,
-        source: str = "AudioEngine",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    new_volume: float = 0.0  # 0.0 to 1.0
+    difficulty_level: str = ""  # 'training', 'normal', 'hard', 'extreme'
 
-            self,
-            type="Music.VolumeChanged",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.new_volume = new_volume
-        self.difficulty_level = difficulty_level
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "Music.VolumeChanged"
+        if self.source == "":
+            self.source = "AudioEngine"
 
 
 # ============================================================================
 # HARMONY ANALYSIS EVENTS
 # ============================================================================
 
+@dataclass
 class HarmonyScoreCalculatedEvent(BaseEvent):
     """Event emitted when harmony score is calculated."""
-    def __init__(
-        self,
-        player_id: str,
-        harmony_score: float,  # 0.0-1.0
-        is_harmonic: bool,  # True if score >= threshold
-        song_harmony: float,  # Harmony with song notes
-        qualia_harmony: float,  # Harmony with collected qualia
-        player_notes: List[str],  # Recent player notes
-        song_notes: List[str],  # Current song notes
-        qualia_notes: List[str],  # Notes from collected qualia
-        timestamp: float,
-        source: str = "HarmonyAnalysisService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
-            self,
-            type="Harmony.ScoreCalculated",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.player_id = player_id
-        self.harmony_score = harmony_score
-        self.is_harmonic = is_harmonic
-        self.song_harmony = song_harmony
-        self.qualia_harmony = qualia_harmony
-        self.player_notes = player_notes
-        self.song_notes = song_notes
-        self.qualia_notes = qualia_notes
+    player_id: str = ""
+    harmony_score: float = 0.0  # 0.0-1.0
+    is_harmonic: bool = False  # True if score >= threshold
+    song_harmony: float = 0.0  # Harmony with song notes
+    qualia_harmony: float = 0.0  # Harmony with collected qualia
+    player_notes: List[str] = None  # type: ignore # Recent player notes
+    song_notes: List[str] = None  # type: ignore # Current song notes
+    qualia_notes: List[str] = None  # type: ignore # Notes from collected qualia
+
+    def __post_init__(self) -> None:
+        if self.player_notes is None:
+            self.player_notes = []
+        if self.song_notes is None:
+            self.song_notes = []
+        if self.qualia_notes is None:
+            self.qualia_notes = []
+        if self.type == "":
+            self.type = "Harmony.ScoreCalculated"
+        if self.source == "":
+            self.source = "HarmonyAnalysisService"
 
 
+@dataclass
 class HarmonicPatternDetectedEvent(BaseEvent):
     """Event emitted when a harmonic (consonant) pattern is detected."""
-    def __init__(
-        self,
-        player_id: str,
-        pattern_type: str,  # e.g., 'perfect_fifth', 'major_third', 'consonant_triad'
-        notes: List[str],  # Notes in the pattern
-        harmony_score: float,
-        timestamp: float,
-        source: str = "HarmonyAnalysisService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
-            self,
-            type="Harmony.HarmonicPatternDetected",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.player_id = player_id
-        self.pattern_type = pattern_type
-        self.notes = notes
-        self.harmony_score = harmony_score
+    player_id: str = ""
+    pattern_type: str = ""  # e.g., 'perfect_fifth', 'major_third', 'consonant_triad'
+    notes: List[str] = None  # type: ignore # Notes in the pattern
+    harmony_score: float = 0.0
+
+    def __post_init__(self) -> None:
+        if self.notes is None:
+            self.notes = []
+        if self.type == "":
+            self.type = "Harmony.HarmonicPatternDetected"
+        if self.source == "":
+            self.source = "HarmonyAnalysisService"
 
 
+@dataclass
 class ChaoticPatternDetectedEvent(BaseEvent):
     """Event emitted when a chaotic (dissonant) pattern is detected."""
-    def __init__(
-        self,
-        player_id: str,
-        pattern_type: str,  # e.g., 'tritone', 'minor_second', 'dissonant_cluster'
-        notes: List[str],  # Notes in the pattern
-        chaos_score: float,  # Inverted harmony score (1.0 - harmony)
-        timestamp: float,
-        source: str = "HarmonyAnalysisService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
-            self,
-            type="Harmony.ChaoticPatternDetected",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.player_id = player_id
-        self.pattern_type = pattern_type
-        self.notes = notes
-        self.chaos_score = chaos_score
+    player_id: str = ""
+    pattern_type: str = ""  # e.g., 'tritone', 'minor_second', 'dissonant_cluster'
+    notes: List[str] = None  # type: ignore # Notes in the pattern
+    chaos_score: float = 0.0  # Inverted harmony score (1.0 - harmony)
+
+    def __post_init__(self) -> None:
+        if self.notes is None:
+            self.notes = []
+        if self.type == "":
+            self.type = "Harmony.ChaoticPatternDetected"
+        if self.source == "":
+            self.source = "HarmonyAnalysisService"
 
 
 # ============================================================================
 # SYSTEM EVENTS
 # ============================================================================
 
+@dataclass
 class ErrorEvent(BaseEvent):
     """Event emitted when an error occurs."""
-    def __init__(
-        self,
-        error_type: str,
-        error_message: str,
-        error_code: Optional[str],
-        stack_trace: Optional[str],
-        timestamp: float,
-        source: str,
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
+    error_type: str = ""
+    error_message: str = ""
+    error_code: Optional[str] = None
+    stack_trace: Optional[str] = None
 
-            self,
-            type="System.Error",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.error_type = error_type
-        self.error_message = error_message
-        self.error_code = error_code
-        self.stack_trace = stack_trace
+    def __post_init__(self) -> None:
+        if self.type == "":
+            self.type = "System.Error"
 
 
 # ============================================================================
 # GAME STATE EVENTS - PHASE 6.1
 # ============================================================================
 
+@dataclass
 class GameStateChangedEvent(BaseEvent):
     """Event emitted when game state changes (PHASE 6.1 - Full System Integration)"""
-    def __init__(
-        self,
-        combat_state: Dict[str, Any],  # Complete CombatState dict
-        timestamp: float,
-        source: str = "GameLogicService",
-        metadata: Optional[Dict[str, Any]] = None
-    ):
-        BaseEvent.__init__(
-            self,
-            type="GameStateChanged",
-            timestamp=timestamp,
-            source=source,
-            metadata=metadata
-        )
-        self.combat_state = combat_state
+    combat_state: Dict[str, Any] = None  # type: ignore # Complete CombatState dict
+
+    def __post_init__(self) -> None:
+        if self.combat_state is None:
+            self.combat_state = {}
+        if self.type == "":
+            self.type = "GameStateChanged"
+        if self.source == "":
+            self.source = "GameLogicService"
 
 
 # ============================================================================

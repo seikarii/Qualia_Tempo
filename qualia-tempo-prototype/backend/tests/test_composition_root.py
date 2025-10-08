@@ -110,15 +110,53 @@ class TestCompositionRootFactory:
         mock_security_service.validate_token = Mock(return_value=True)
         mock_security_service.generate_token = Mock(return_value="mock_token")
 
+        # Create REAL FileSystemService for file operations
+        from backend.services.FileSystemService import FileSystemService
+        filesystem_service = FileSystemService()
+
+        # Create REAL PersistenceService with real FileSystemService
+        from backend.services.PersistenceService import PersistenceService
+        persistence_service = PersistenceService(file_system_service=filesystem_service)
+        persistence_service.initialize()
+
+        # Create REAL ParticleEnginePoolManager (unstarted - tests will start it)
+        # Note: We don't start it here because start() is async
+        from backend.services.ParticleEnginePoolManager import ParticleEnginePoolManager
+        import tempfile
+        import yaml
+        
+        # Create temporary config for pool manager
+        temp_config_dir = tempfile.mkdtemp()
+        pool_config_path = f"{temp_config_dir}/test-process-pool.yaml"
+        pool_config = {
+            "pool": {"num_workers": 2, "max_tasks_per_child": 10, "worker_restart_policy": "on_failure"},
+            "queue": {"max_size": 10, "timeout_seconds": 2.0, "priority_enabled": False},
+            "error_handling": {"max_retries": 2, "retry_delay_seconds": 0.1, "fallback_strategy": "skip", "log_level": "WARNING"},
+            "performance": {"batch_size": 1, "collect_metrics": True, "metrics_window_seconds": 60.0},
+            "monitoring": {"health_check_interval_seconds": 5.0, "worker_timeout_seconds": 10.0, "enable_diagnostics": True},
+            "shutdown": {"grace_period_seconds": 2.0, "force_terminate_after_seconds": 5.0},
+            "features": {"enable_async_result_handling": True, "enable_worker_pool_scaling": False, "enable_task_cancellation": False}
+        }
+        with open(pool_config_path, 'w') as f:
+            yaml.dump(pool_config, f)
+        
+        particle_pool_manager = ParticleEnginePoolManager(
+            file_system_service=filesystem_service,
+            config_path=pool_config_path
+        )
+
         # 4. Inject services into composition root
         composition_root._services = {
             "event_bus": mock_event_bus,
             "shader_introspection_service": mock_shader_inspector,
-            "particle_system": particle_engine_instance,  # REAL ENGINE
+            "particle_system": particle_engine_instance,  # REAL ENGINE (legacy)
             "qualia_processor": mock_qualia_processor,
             # ARCHITECTURE.GOLD.CODE: rendering_service and streaming_service removed
             "state_streaming_service": mock_state_streaming_service,  # State-only streaming
             "security_service": mock_security_service,  # MOCK SECURITY SERVICE
+            "filesystem_service": filesystem_service,  # REAL FileSystemService
+            "persistence_service": persistence_service,  # REAL PersistenceService
+            "particle_pool_manager": particle_pool_manager,  # REAL ParticleEnginePoolManager (unstarted)
         }
         composition_root._initialized = True
 

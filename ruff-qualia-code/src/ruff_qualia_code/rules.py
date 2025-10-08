@@ -542,10 +542,19 @@ class QLA006Checker:
        # Common event bus variable names
        self.event_bus_names = {"eventBus", "event_bus", "bus", "publisher"}
        self.diagnostic: Optional[Diagnostic] = None
+       # Cache for class definitions found in the file (for inheritance resolution)
+       self.class_definitions: Dict[str, ast.ClassDef] = {}
+       # Track if we need to build the class cache
+       self.cache_built = False
 
    def visit(self, node: AST) -> None:
        if not self.is_service_file:
            return
+
+       # First pass: build cache of all class definitions in the file
+       if not self.cache_built and isinstance(node, ast.Module):
+           self._build_class_cache(node)
+           self.cache_built = True
 
        if isinstance(node, ast.ClassDef):
            self._check_event_class(node)
@@ -557,6 +566,12 @@ class QLA006Checker:
        # Recursively visit children
        for child in ast.iter_child_nodes(node):
            self.visit(child)
+   
+   def _build_class_cache(self, module_node: ast.Module) -> None:
+       """Build a cache of all class definitions in the module for inheritance resolution."""
+       for node in ast.walk(module_node):
+           if isinstance(node, ast.ClassDef):
+               self.class_definitions[node.name] = node
 
    def _check_event_class(self, node: ast.ClassDef) -> None:
        # Check if this is an event class (more comprehensive detection)
@@ -578,6 +593,61 @@ class QLA006Checker:
        
        # Has type field and at least 2 other fields
        return "type" in fields and len(fields) >= 3
+   
+   def _is_dataclass(self, node: ast.ClassDef) -> bool:
+       """Check if a class has the @dataclass decorator."""
+       for decorator in node.decorator_list:
+           # Handle simple decorator: @dataclass
+           if isinstance(decorator, ast.Name) and decorator.id == "dataclass":
+               return True
+           # Handle decorator with arguments: @dataclass(...)
+           if isinstance(decorator, ast.Call):
+               if isinstance(decorator.func, ast.Name) and decorator.func.id == "dataclass":
+                   return True
+       return False
+   
+   def _get_parent_class_names(self, node: ast.ClassDef) -> list:
+       """Extract parent class names from a class definition."""
+       parent_names = []
+       for base in node.bases:
+           if isinstance(base, ast.Name):
+               parent_names.append(base.id)
+       return parent_names
+   
+   def _collect_inherited_fields(self, node: ast.ClassDef) -> set:
+       """Recursively collect all fields from parent classes (for @dataclass inheritance)."""
+       inherited_fields = set()
+       
+       # Get parent class names
+       parent_names = self._get_parent_class_names(node)
+       
+       for parent_name in parent_names:
+           # Check if parent class is defined in the same file
+           if parent_name in self.class_definitions:
+               parent_node = self.class_definitions[parent_name]
+               
+               # Only collect fields if parent is also a @dataclass
+               if self._is_dataclass(parent_node):
+                   # Collect fields from parent
+                   parent_fields = self._get_class_fields(parent_node)
+                   inherited_fields.update(parent_fields)
+                   
+                   # Recursively collect from parent's parents
+                   inherited_fields.update(self._collect_inherited_fields(parent_node))
+       
+       return inherited_fields
+   
+   def _get_class_fields(self, node: ast.ClassDef) -> set:
+       """Extract field names from a class definition."""
+       fields = set()
+       for item in node.body:
+           if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
+               fields.add(item.target.id)
+           elif isinstance(item, ast.Assign):
+               for target in item.targets:
+                   if isinstance(target, ast.Name):
+                       fields.add(target.id)
+       return fields
 
    def _check_event_emission_call(self, node: ast.Call) -> None:
        """Check function calls that might be creating events"""
@@ -592,17 +662,16 @@ class QLA006Checker:
        pass  # Disabled - too many false positives
 
    def _validate_event_class(self, node: ast.ClassDef) -> None:
-       # Check if event class has required fields
-       class_fields = set()
-       for item in node.body:
-           if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
-               class_fields.add(item.target.id)
-           # Also check simple assignments
-           elif isinstance(item, ast.Assign):
-               for target in item.targets:
-                   if isinstance(target, ast.Name):
-                       class_fields.add(target.id)
-
+       """Check if event class has required fields, considering @dataclass inheritance."""
+       # Get fields directly defined in this class
+       class_fields = self._get_class_fields(node)
+       
+       # If this is a @dataclass, also collect inherited fields from parent @dataclass classes
+       if self._is_dataclass(node):
+           inherited_fields = self._collect_inherited_fields(node)
+           class_fields.update(inherited_fields)
+       
+       # Check for missing required fields
        missing_fields = self.required_event_fields - class_fields
        if missing_fields:
            self._report_event_contract_violation(node, missing_fields)

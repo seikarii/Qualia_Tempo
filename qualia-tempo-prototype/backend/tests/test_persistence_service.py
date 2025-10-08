@@ -3,7 +3,7 @@ QUALIA.CODE v1.1 - PersistenceService Test Suite
 Phase 2 Task 2.4: Comprehensive Testing
 
 TARGET: >85% coverage
-METHODOLOGY: Isolated unit tests with mocked dependencies
+METHODOLOGY: Isolated unit tests with TestCompositionRootFactory (QUALIA.CODE compliance)
 """
 
 import pytest
@@ -14,7 +14,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch, MagicMock
 
-from backend.services.PersistenceService import PersistenceService
+from backend.tests.test_composition_root import TestCompositionRootFactory
 from backend.services.contracts.IPersistenceService_contracts import (
     LeaderboardEntry,
     ScoreValidationResult
@@ -81,10 +81,16 @@ features:
 
 
 @pytest.fixture
-def persistence_service(mock_config_file):
-    """Create an initialized PersistenceService instance."""
-    service = PersistenceService()
-    service.initialize()
+def mocked_composition_root(mock_config_file):
+    """Create mocked CompositionRoot for testing (QUALIA.CODE compliance)."""
+    # mock_config_file ensures config exists before creating CompositionRoot
+    return TestCompositionRootFactory.create_mocked_composition_root()
+
+
+@pytest.fixture
+def persistence_service(mocked_composition_root):
+    """Get PersistenceService from CompositionRoot (QUALIA.CODE compliant)."""
+    service = mocked_composition_root.get_service("persistence_service")
     yield service
     service.shutdown()
 
@@ -117,11 +123,11 @@ class TestPersistenceServiceInitialization:
     """Test service initialization."""
     
     def test_initialization_success(self, mock_config_file):
-        """Test successful initialization."""
-        service = PersistenceService()
-        result = service.initialize()
+        """Test successful initialization (QUALIA.CODE compliant)."""
+        composition_root = TestCompositionRootFactory.create_mocked_composition_root()
+        service = composition_root.get_service("persistence_service")
         
-        assert result is True
+        # Service is already initialized by TestCompositionRootFactory
         assert service._initialized is True
         assert service._config is not None
         assert service._storage_path is not None
@@ -129,9 +135,9 @@ class TestPersistenceServiceInitialization:
         service.shutdown()
     
     def test_initialization_creates_directories(self, mock_config_file, temp_storage_dir):
-        """Test that initialization creates necessary directories."""
-        service = PersistenceService()
-        service.initialize()
+        """Test that initialization creates necessary directories (QUALIA.CODE compliant)."""
+        composition_root = TestCompositionRootFactory.create_mocked_composition_root()
+        service = composition_root.get_service("persistence_service")
         
         storage_path = Path(temp_storage_dir) / "data"
         backup_path = Path(temp_storage_dir) / "backups"
@@ -163,9 +169,9 @@ class TestPersistenceServiceInitialization:
         with open(storage_path / "leaderboard.json", 'w') as f:
             json.dump(existing_data, f)
         
-        # Initialize service
-        service = PersistenceService()
-        service.initialize()
+        # Initialize service (QUALIA.CODE compliant)
+        composition_root = TestCompositionRootFactory.create_mocked_composition_root()
+        service = composition_root.get_service("persistence_service")
         
         assert len(service._leaderboard) == 1
         assert service._leaderboard[0].player_id == "player_001"
@@ -613,8 +619,16 @@ class TestEdgeCases:
     """Test edge cases and error handling."""
     
     def test_operations_before_initialization(self):
-        """Test that operations fail gracefully before initialization."""
-        service = PersistenceService()
+        """Test that operations fail gracefully before initialization (QUALIA.CODE compliant)."""
+        # Create uninitialized service via CompositionRoot (not recommended in production)
+        from backend.services.FileSystemService import FileSystemService
+        from backend.services.PersistenceService import PersistenceService
+        
+        # For this edge case test, we need an uninitialized service
+        # This is an exception to the rule as we're testing pre-initialization behavior
+        filesystem_service = FileSystemService()
+        service = PersistenceService(file_system_service=filesystem_service)
+        # DO NOT call initialize()
         
         result = service.save_leaderboard_entry(
             player_id="player_001", player_name="Player",

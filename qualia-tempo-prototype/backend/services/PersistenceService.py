@@ -24,6 +24,7 @@ from typing import List, Optional, Dict, Any
 import yaml
 
 from .interfaces.IPersistenceService import IPersistenceService
+from .interfaces.IFileSystemService import IFileSystemService
 from .contracts.IPersistenceService_contracts import (
     LeaderboardEntry,
     PersistenceServiceConfig,
@@ -49,9 +50,14 @@ class PersistenceService(IPersistenceService):
     - Statistics calculation for analytics
     """
     
-    def __init__(self) -> None:
-        """Initialize PersistenceService with configuration."""
+    def __init__(self, file_system_service: IFileSystemService) -> None:
+        """Initialize PersistenceService with configuration.
+        
+        Args:
+            file_system_service: FileSystemService for file operations (QUALIA.CODE §4 Platform Abstraction)
+        """
         self._logger = logging.getLogger(__name__)
+        self._file_system_service = file_system_service
         self._config: Optional[PersistenceServiceConfig] = None
         self._leaderboard: List[LeaderboardEntry] = []
         self._lock = Lock()  # Thread safety for file operations
@@ -72,10 +78,10 @@ class PersistenceService(IPersistenceService):
         Creates storage directories and loads existing data.
         """
         try:
-            # Load configuration
+            # Load configuration using FileSystemService (QUALIA.CODE compliance)
             config_path = Path(__file__).parent.parent / "config" / "persistence.yaml"
-            with open(config_path, 'r') as f:
-                config_data = yaml.safe_load(f)
+            config_content = self._file_system_service.read_file(config_path)
+            config_data = yaml.safe_load(config_content)
             
             # Parse configuration into dataclasses
             storage_cfg = StorageConfig(**config_data['storage'])
@@ -98,12 +104,12 @@ class PersistenceService(IPersistenceService):
             backup_path = Path(self._config.storage.backup_directory)
             backup_path.mkdir(parents=True, exist_ok=True)
             
-            # Load existing leaderboard data
+            # Load existing leaderboard data using FileSystemService
             leaderboard_file = self._storage_path / self._config.storage.leaderboard_filename
-            if leaderboard_file.exists():
-                with open(leaderboard_file, 'r') as f:
-                    data = json.load(f)
-                    self._leaderboard = [LeaderboardEntry.from_dict(entry) for entry in data]
+            if self._file_system_service.exists(leaderboard_file):
+                leaderboard_content = self._file_system_service.read_file(leaderboard_file)
+                data = json.loads(leaderboard_content)
+                self._leaderboard = [LeaderboardEntry.from_dict(entry) for entry in data]
                 self._logger.info(f"Loaded {len(self._leaderboard)} leaderboard entries from disk")
             else:
                 self._leaderboard = []
@@ -521,10 +527,10 @@ class PersistenceService(IPersistenceService):
                 return False
             
             with self._lock:
-                # Load backup data
-                with open(backup_path, 'r') as f:
-                    data = json.load(f)
-                    self._leaderboard = [LeaderboardEntry.from_dict(entry) for entry in data]
+                # Load backup data using FileSystemService (QUALIA.CODE compliance)
+                backup_content = self._file_system_service.read_file(backup_path)
+                data = json.loads(backup_content)
+                self._leaderboard = [LeaderboardEntry.from_dict(entry) for entry in data]
                 
                 # Save to current location
                 self._save_to_disk()
@@ -596,10 +602,10 @@ class PersistenceService(IPersistenceService):
             leaderboard_file = self._storage_path / self._config.storage.leaderboard_filename
             data = [entry.to_dict() for entry in self._leaderboard]
             
-            # Write atomically (write to temp file, then rename)
+            # Write atomically using FileSystemService (write to temp file, then rename)
             temp_file = leaderboard_file.with_suffix('.tmp')
-            with open(temp_file, 'w') as f:
-                json.dump(data, f, indent=2)
+            json_content = json.dumps(data, indent=2)
+            self._file_system_service.write_file(temp_file, json_content)
             
             temp_file.replace(leaderboard_file)
             self._logger.debug(f"Saved {len(self._leaderboard)} entries to disk")

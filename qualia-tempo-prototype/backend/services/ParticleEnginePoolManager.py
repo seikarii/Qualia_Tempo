@@ -13,6 +13,7 @@ from dataclasses import dataclass, asdict
 import yaml
 from pathlib import Path
 
+from backend.services.interfaces.IFileSystemService import IFileSystemService
 from backend.utils.decorators import log_execution, handle_errors, time_execution
 
 logger = logging.getLogger(__name__)
@@ -65,13 +66,16 @@ class ParticleEnginePoolManager:
     - Async/await integration for FastAPI compatibility
     """
     
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, file_system_service: IFileSystemService, config_path: Optional[str] = None):
         """
         Initialize the pool manager.
         
         Args:
+            file_system_service: FileSystemService for file operations (QUALIA.CODE §4 Platform Abstraction)
             config_path: Path to process-pool.yaml config file
         """
+        self._file_system_service = file_system_service
+        
         # Load configuration
         self.config = self._load_config(config_path)
         
@@ -87,13 +91,13 @@ class ParticleEnginePoolManager:
         logger.info(f"🏊 ParticleEnginePoolManager initialized with {self.config.num_workers} workers")
     
     def _load_config(self, config_path: Optional[str]) -> PoolConfig:
-        """Load pool configuration from YAML file."""
+        """Load pool configuration from YAML file using FileSystemService (QUALIA.CODE compliance)."""
         if config_path is None:
             config_path = str(Path(__file__).parent.parent / "config" / "process-pool.yaml")
         
         try:
-            with open(config_path, 'r') as f:
-                yaml_config = yaml.safe_load(f)
+            config_content = self._file_system_service.read_file(config_path)
+            yaml_config = yaml.safe_load(config_content)
             
             # Extract relevant config sections
             pool_cfg = yaml_config.get('pool', {})
@@ -231,6 +235,7 @@ class ParticleEnginePoolManager:
             future = loop.create_future()
             
             # Callback to resolve future when task completes
+            @log_execution()
             def on_task_complete(result: Any) -> None:
                 if not future.done():
                     loop.call_soon_threadsafe(future.set_result, result)
@@ -248,6 +253,7 @@ class ParticleEnginePoolManager:
                         # Update average
                         self.metrics.average_execution_time_ms = sum(self.task_execution_times) / len(self.task_execution_times)
             
+            @log_execution()
             def on_task_error(error: BaseException) -> None:
                 if not future.done():
                     loop.call_soon_threadsafe(future.set_exception, error)
@@ -324,12 +330,22 @@ class ParticleEnginePoolManager:
             return False
 
 
-# Singleton instance (optional, for convenience)
+# DEPRECATED: Singleton pattern removed for proper IoC compliance (QUALIA.CODE §2)
+# ParticleEnginePoolManager must be obtained through CompositionRoot
+# Keeping function stub for backward compatibility during migration
 _pool_manager_instance: Optional[ParticleEnginePoolManager] = None
 
 def get_pool_manager() -> ParticleEnginePoolManager:
-    """Get or create the global pool manager instance."""
+    """
+    DEPRECATED: Get the global pool manager instance.
+    
+    WARNING: This function is deprecated and will be removed in future versions.
+    Use CompositionRoot.get_service("particle_system") instead for proper IoC.
+    """
     global _pool_manager_instance
     if _pool_manager_instance is None:
-        _pool_manager_instance = ParticleEnginePoolManager()
+        raise RuntimeError(
+            "ParticleEnginePoolManager singleton is deprecated. "
+            "Use CompositionRoot.get_service('particle_system') instead."
+        )
     return _pool_manager_instance

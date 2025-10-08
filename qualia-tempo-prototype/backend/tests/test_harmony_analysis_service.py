@@ -1,39 +1,34 @@
 # QUALIA.CODE v1.1 - HarmonyAnalysisService Tests
 # Comprehensive test suite for musical harmony analysis
+# ARCHITECTURE COMPLIANCE: Using TestCompositionRootFactory for proper IoC
 
 import pytest
 import time
 from unittest.mock import MagicMock
 from pathlib import Path
 
-from backend.services.HarmonyAnalysisService import HarmonyAnalysisService
-from backend.services.EventBus import EventBus
+from backend.tests.test_composition_root import TestCompositionRootFactory
 from backend.services.interfaces.IHarmonyAnalysisService import (
     HarmonyClassification,
 )
 
 
 @pytest.fixture
-def event_bus():
-    """Create EventBus instance for testing."""
-    return EventBus()
+def mocked_composition_root():
+    """Create mocked CompositionRoot for testing (QUALIA.CODE compliance)."""
+    return TestCompositionRootFactory.create_mocked_composition_root()
 
 
 @pytest.fixture
-def config_path():
-    """Get path to test configuration."""
-    return Path(__file__).parent.parent / "config" / "harmony-analysis.yaml"
-
-
-@pytest.fixture
-def harmony_service(event_bus, config_path):
-    """Create HarmonyAnalysisService instance for testing."""
-    service = HarmonyAnalysisService(event_bus=event_bus, config_path=str(config_path))
+async def harmony_service(mocked_composition_root):
+    """Get HarmonyAnalysisService from CompositionRoot (QUALIA.CODE compliance)."""
+    await mocked_composition_root.initialize()
+    service = mocked_composition_root.get_service("harmony_analysis_service")
     return service
 
 
 @pytest.fixture
-def initialized_service(harmony_service):
+async def initialized_service(harmony_service):
     """Create initialized HarmonyAnalysisService."""
     harmony_service.initialize(player_id="test_player")
     return harmony_service
