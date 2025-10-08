@@ -1,13 +1,12 @@
 # QUALIA.CODE v1.1 - SystemEnvironmentService Implementation
 # Platform abstraction for system environment operations
 
-import logging
 import os
 from typing import Optional, Dict
 from .interfaces.ISystemEnvironmentService import ISystemEnvironmentService
+from .interfaces.ILogger import ILogger
+from .contracts.ISystemEnvironmentService_contracts import SystemEnvironmentConfig
 from ..utils.decorators import log_execution
-
-logger = logging.getLogger(__name__)
 
 
 class SystemEnvironmentService(ISystemEnvironmentService):
@@ -16,11 +15,21 @@ class SystemEnvironmentService(ISystemEnvironmentService):
     
     Provides platform-abstracted system environment operations with 
     comprehensive logging per QUALIA.CODE architectural mandates.
+    
+    QUALIA.CODE v1.1: Now uses injected ILogger and SystemEnvironmentConfig.
     """
 
-    def __init__(self) -> None:
-        """Initialize SystemEnvironmentService."""
-        logger.info("SystemEnvironmentService initialized")
+    def __init__(self, config: SystemEnvironmentConfig, logger: ILogger) -> None:
+        """
+        Initialize SystemEnvironmentService with dependency injection.
+        
+        Args:
+            config: Service configuration
+            logger: Injected logger service
+        """
+        self._config = config
+        self._logger = logger
+        self._logger.info("SystemEnvironmentService initialized")
 
     @log_execution(level="DEBUG")
     def get_env(self, key: str, default: Optional[str] = None) -> Optional[str]:
@@ -36,7 +45,7 @@ class SystemEnvironmentService(ISystemEnvironmentService):
         """
         value = os.getenv(key, default)
         if value is None:
-            logger.debug(f"Environment variable '{key}' not set, using default: {default}")
+            self._logger.debug(f"Environment variable '{key}' not set, using default: {default}")
         return value
 
     @log_execution(level="DEBUG")
@@ -49,7 +58,7 @@ class SystemEnvironmentService(ISystemEnvironmentService):
             value: Value to set
         """
         os.environ[key] = value
-        logger.debug(f"Environment variable '{key}' set")
+        self._logger.debug(f"Environment variable '{key}' set")
 
     @log_execution(level="DEBUG")
     def get_all_env(self) -> Dict[str, str]:

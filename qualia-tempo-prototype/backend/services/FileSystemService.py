@@ -1,14 +1,13 @@
 # QUALIA.CODE v1.1 - FileSystemService Implementation
 # Platform abstraction for file system operations
 
-import logging
 import os
 from pathlib import Path
 from typing import Union
 from .interfaces.IFileSystemService import IFileSystemService
+from .interfaces.ILogger import ILogger
+from .contracts.IFileSystemService_contracts import FileSystemConfig
 from ..utils.decorators import log_execution, handle_errors
-
-logger = logging.getLogger(__name__)
 
 
 class FileSystemService(IFileSystemService):
@@ -17,11 +16,21 @@ class FileSystemService(IFileSystemService):
     
     Provides platform-abstracted file system operations with comprehensive
     error handling and logging per QUALIA.CODE architectural mandates.
+    
+    QUALIA.CODE v1.1: Now uses injected ILogger and FileSystemConfig.
     """
 
-    def __init__(self) -> None:
-        """Initialize FileSystemService."""
-        logger.info("FileSystemService initialized")
+    def __init__(self, config: FileSystemConfig, logger: ILogger) -> None:
+        """
+        Initialize FileSystemService with dependency injection.
+        
+        Args:
+            config: Service configuration
+            logger: Injected logger service
+        """
+        self._config = config
+        self._logger = logger
+        self._logger.info("FileSystemService initialized")
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value="")

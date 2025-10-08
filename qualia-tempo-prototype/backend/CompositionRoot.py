@@ -1,10 +1,16 @@
-# QUALIA.CODE v1.0 - Backend CompositionRoot
+# QUALIA.CODE v1.1 - Backend CompositionRoot
 # IoC Container for backend service instantiation and dependency injection
 
-import logging
 from typing import Dict, Any, Optional
-from .services.EventBus import EventBus, get_event_bus
-from .services.ShaderIntrospectionService import ShaderIntrospectionService
+from .services.container import ServiceContainer
+from .services.container_config import get_configured_container
+from .services.interfaces.ILogger import ILogger
+from .services.interfaces.IEventBus import IEventBus
+from .services.interfaces.IFileSystemService import IFileSystemService
+from .services.interfaces.ISystemEnvironmentService import ISystemEnvironmentService
+from .services.interfaces.ISecurityService import ISecurityService
+from .services.interfaces.IShaderIntrospectionService import IShaderIntrospectionService
+from .services.interfaces.IQualiaProcessor import IQualiaProcessor
 from .utils.decorators import log_execution, handle_errors
 import asyncio
 
@@ -14,15 +20,25 @@ class CompositionRoot:
     Central IoC container for all backend services.
     Responsible for instantiating and managing service dependencies.
 
-    QUALIA.CODE MANDATE: This is the ONLY place where services are instantiated.
+    QUALIA.CODE v1.1 MIGRATION (Phase 1 - Hybrid Approach):
+    - Uses ServiceContainer for migrated services (EventBus, QualiaProcessor, etc.)
+    - Maintains manual initialization for pending services (ParticleEngine, GameLogic, etc.)
+    - Phase 2 will complete full migration to ServiceContainer
+    
+    MANDATE: This is the ONLY place where services are instantiated.
     All other code must receive services via dependency injection.
     """
 
     def __init__(self) -> None:
+        # Phase 1: Initialize ServiceContainer for migrated services
+        self.container: ServiceContainer = get_configured_container()
+        self._logger: ILogger = self.container.resolve(ILogger)
+        
+        # Legacy service dictionary for services not yet migrated
         self._services: Dict[str, Any] = {}
-        self._logger = logging.getLogger(__name__)
-        self._event_bus = get_event_bus()
         self._initialized = False
+        
+        self._logger.info("CompositionRoot initialized with ServiceContainer (Phase 1 hybrid mode)")
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
@@ -76,74 +92,49 @@ class CompositionRoot:
     # This method was deprecated as part of Phase 1 Task 1.2 migration.
 
     async def _initialize_event_bus(self) -> None:
-        """Initialize the EventBus service."""
-        self._services["event_bus"] = self._event_bus
-        self._logger.debug("📡 EventBus service registered")
+        """Initialize the EventBus service from container."""
+        event_bus = self.container.resolve(IEventBus)
+        self._services["event_bus"] = event_bus
+        self._logger.debug("📡 EventBus service registered from container")
 
     async def _initialize_filesystem_service(self) -> None:
-        """Initialize FileSystemService for platform abstraction (QUALIA.CODE §4)."""
+        """Initialize FileSystemService from container (QUALIA.CODE v1.1)."""
         try:
-            from .services.FileSystemService import FileSystemService
-
-            filesystem_service = FileSystemService()
+            filesystem_service = self.container.resolve(IFileSystemService)
             self._services["filesystem_service"] = filesystem_service
-            self._logger.debug("📁 FileSystemService registered")
+            self._logger.debug("📁 FileSystemService registered from container")
 
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize FileSystemService: {e}")
             raise
 
     async def _initialize_system_environment_service(self) -> None:
-        """Initialize SystemEnvironmentService for platform abstraction (QUALIA.CODE §4)."""
+        """Initialize SystemEnvironmentService from container (QUALIA.CODE v1.1)."""
         try:
-            from .services.SystemEnvironmentService import SystemEnvironmentService
-
-            env_service = SystemEnvironmentService()
+            env_service = self.container.resolve(ISystemEnvironmentService)
             self._services["system_environment_service"] = env_service
-            self._logger.debug("🌍 SystemEnvironmentService registered")
+            self._logger.debug("🌍 SystemEnvironmentService registered from container")
 
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize SystemEnvironmentService: {e}")
             raise
 
     async def _initialize_security_service(self) -> None:
-        """Initialize SecurityService with configuration and injected dependencies."""
+        """Initialize SecurityService from container (QUALIA.CODE v1.1)."""
         try:
-            from .services.SecurityService import SecurityService
-            import yaml
-
-            # QUALIA.CODE: Use injected FileSystemService instead of direct open()
-            filesystem_service = self._services.get("filesystem_service")
-            if filesystem_service is None:
-                raise RuntimeError("FileSystemService not available for SecurityService")
-
-            # Load configuration using abstracted service
-            config_path = filesystem_service.join_path(
-                filesystem_service.get_absolute_path(__file__).rsplit('/', 1)[0],
-                "config",
-                "server.yaml"
-            )
-            config_content = filesystem_service.read_file(config_path)
-            config = yaml.safe_load(config_content)
-
-            # Inject SystemEnvironmentService into SecurityService
-            env_service = self._services.get("system_environment_service")
-            if env_service is None:
-                raise RuntimeError("SystemEnvironmentService not available for SecurityService")
-            
-            security_service = SecurityService(config, env_service)
+            security_service = self.container.resolve(ISecurityService)
             self._services["security_service"] = security_service
-            self._logger.debug("🔒 SecurityService registered with injected dependencies")
+            self._logger.debug("🔒 SecurityService registered from container")
 
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize SecurityService: {e}")
             raise
 
     async def _initialize_shader_introspection_service(self) -> None:
-        """Initialize the ShaderIntrospectionService."""
-        shader_introspection_service = ShaderIntrospectionService()
+        """Initialize ShaderIntrospectionService from container (QUALIA.CODE v1.1)."""
+        shader_introspection_service = self.container.resolve(IShaderIntrospectionService)
         self._services["shader_introspection_service"] = shader_introspection_service
-        self._logger.debug("🔍 ShaderIntrospectionService registered")
+        self._logger.debug("🔍 ShaderIntrospectionService registered from container")
 
     async def _initialize_particle_system(self) -> None:
         """
@@ -184,12 +175,10 @@ class CompositionRoot:
             raise
 
     async def _initialize_qualia_processor(self) -> None:
-        """Initialize QualiaProcessor service with EventBus dependency."""
-        from .services.QualiaProcessor import QualiaProcessor
-
-        processor = QualiaProcessor(event_bus=self._event_bus)
+        """Initialize QualiaProcessor from container (QUALIA.CODE v1.1)."""
+        processor = self.container.resolve(IQualiaProcessor)
         self._services["qualia_processor"] = processor
-        self._logger.debug("✅ QualiaProcessor initialized")
+        self._logger.debug("✅ QualiaProcessor initialized from container")
 
     async def _initialize_game_logic_service(self) -> None:
         """
@@ -451,10 +440,9 @@ class CompositionRoot:
 
         return self._services[service_name]
 
-    def get_event_bus(self) -> EventBus:
-        """Get the EventBus service."""
-        from backend.services.EventBus import EventBus as EventBusClass
-        return self.get_service("event_bus")  # type: ignore[no-any-return]
+    def get_event_bus(self) -> Any:
+        """Get the EventBus service from container (QUALIA.CODE v1.1)."""
+        return self.get_service("event_bus")
 
     def get_particle_system(self) -> Any:
         """Get the ParticleSystem service."""

@@ -1,16 +1,15 @@
 # QUALIA.CODE v1.1 - SecurityService Implementation
 # Configurable authentication service for WebSocket connections
 
-import logging
 from typing import Optional, Dict, Any
 from fastapi import WebSocket
 from urllib.parse import parse_qs
 from .interfaces.ISecurityService import ISecurityService
 from .interfaces.ISystemEnvironmentService import ISystemEnvironmentService
+from .interfaces.ILogger import ILogger
+from .contracts.ISecurityService_contracts import SecurityConfig
 from .exceptions import SecurityException
 from ..utils.decorators import log_execution, handle_errors
-
-logger = logging.getLogger(__name__)
 
 
 class SecurityService(ISecurityService):
@@ -18,24 +17,29 @@ class SecurityService(ISecurityService):
     Configurable security service for WebSocket authentication.
     Supports disabled authentication for development/testing environments.
     
-    QUALIA.CODE §4: Uses injected SystemEnvironmentService for platform abstraction.
+    QUALIA.CODE v1.1: Uses injected ILogger, SecurityConfig, and ISystemEnvironmentService.
     """
 
-    def __init__(self, config: Dict[str, Any], env_service: ISystemEnvironmentService) -> None:
+    def __init__(
+        self, 
+        config: SecurityConfig, 
+        env_service: ISystemEnvironmentService,
+        logger: ILogger
+    ) -> None:
         """
-        Initialize SecurityService with configuration and injected dependencies.
+        Initialize SecurityService with dependency injection.
         
         Args:
-            config: Configuration dictionary containing security settings
+            config: Service configuration
             env_service: Injected SystemEnvironmentService for environment access
+            logger: Injected logger service
         """
         self._config = config
-        self._security_config = config.get("security", {})
-        self._websocket_config = self._security_config.get("websockets", {})
-        self._auth_enabled = self._websocket_config.get("auth_enabled", False)
+        self._auth_enabled = config.auth_enabled
         self._env_service = env_service
+        self._logger = logger
         
-        logger.info(f"SecurityService initialized with auth_enabled={self._auth_enabled}")
+        self._logger.info(f"SecurityService initialized with auth_enabled={self._auth_enabled}")
 
     @log_execution()
     @handle_errors()
@@ -53,7 +57,7 @@ class SecurityService(ISecurityService):
             SecurityException: If authentication fails when enabled
         """
         if not self._auth_enabled:
-            logger.info("Authentication disabled - allowing connection")
+            self._logger.info("Authentication disabled - allowing connection")
             return {"user": "anonymous", "auth_disabled": True}
 
         # Authentication is enabled - check for token
@@ -71,11 +75,11 @@ class SecurityService(ISecurityService):
 
             # Validate token (simple validation for now)
             user_info = await self._validate_token(token)
-            logger.info(f"User authenticated successfully: {user_info.get('user', 'unknown')}")
+            self._logger.info(f"User authenticated successfully: {user_info.get('user', 'unknown')}")
             return user_info
 
         except Exception as e:
-            logger.error(f"Authentication failed: {e}")
+            self._logger.error(f"Authentication failed: {e}")
             raise SecurityException(f"Authentication failed: {str(e)}")
 
     @log_execution()

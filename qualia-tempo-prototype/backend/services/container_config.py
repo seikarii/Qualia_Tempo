@@ -75,7 +75,7 @@ def configure_container(container: ServiceContainer) -> None:
     ))
     
     container.register_config(SecurityConfig, SecurityConfig(
-        enable_auth=True,
+        auth_enabled=True,
         token_expiration_minutes=60
     ))
     

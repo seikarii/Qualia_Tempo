@@ -7,6 +7,8 @@ from pyparsing import *
 from backend.services.interfaces.IShaderIntrospectionService import (
     IShaderIntrospectionService,
 )
+from backend.services.interfaces.ILogger import ILogger
+from backend.services.contracts.IShaderIntrospectionService_contracts import ShaderIntrospectionConfig
 from backend.utils.decorators import log_execution, handle_errors
 
 
@@ -16,6 +18,8 @@ class ShaderIntrospectionService(IShaderIntrospectionService):
 
     Parses uniform buffer objects (UBOs) to extract uniform names, types,
     and compute proper struct packing format for Python.
+    
+    QUALIA.CODE v1.1: Now uses injected ILogger and ShaderIntrospectionConfig.
     """
 
     # GLSL type to Python struct format mapping
@@ -29,8 +33,16 @@ class ShaderIntrospectionService(IShaderIntrospectionService):
         "mat4": "16f",
     }
 
-    def __init__(self) -> None:
-        """Initialize the shader introspection service."""
+    def __init__(self, config: ShaderIntrospectionConfig, logger: ILogger) -> None:
+        """
+        Initialize the shader introspection service with dependency injection.
+        
+        Args:
+            config: Service configuration
+            logger: Injected logger service
+        """
+        self._config = config
+        self._logger = logger
         self._type_sizes = {
             "float": 4,
             "int": 4,
