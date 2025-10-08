@@ -1,9 +1,10 @@
-# QUALIA.CODE v1.0 - QualiaProcessor Service
+# QUALIA.CODE v1.1 - QualiaProcessor Service
 # Processes QualiaState updates and coordinates visual effects
 
-import logging
 from typing import Dict, Any, Optional
-from .EventBus import EventBus
+from .interfaces.IEventBus import IEventBus
+from .interfaces.ILogger import ILogger
+from .contracts.IQualiaProcessor_contracts import QualiaProcessorConfig
 from ..utils.decorators import (
     log_execution,
     handle_errors,
@@ -16,13 +17,38 @@ class QualiaProcessor:
     """
     Main processor for QualiaState data.
     Receives QualiaState from frontend and triggers visual effects.
+    
+    QUALIA.CODE v1.1: Now uses injected IEventBus, ILogger, and QualiaProcessorConfig.
     """
 
-    def __init__(self, event_bus: EventBus):
+    def __init__(
+        self, 
+        config: QualiaProcessorConfig,
+        event_bus: IEventBus,
+        logger: ILogger
+    ):
+        """
+        Initialize QualiaProcessor with dependency injection.
+        
+        Args:
+            config: Processor configuration
+            event_bus: Injected event bus service
+            logger: Injected logger service
+        """
+        self._config = config
         self._event_bus = event_bus
-        self._logger = logging.getLogger(__name__)
+        self._logger = logger
         self._current_state: Optional[Dict[str, Any]] = None
-        self._processing_enabled = True
+        self._processing_enabled = config.processing_enabled
+        
+        self._logger.info(
+            f"QualiaProcessor initialized",
+            context={
+                "intensity_threshold": config.intensity_spike_threshold,
+                "transcendence_threshold": config.transcendence_threshold,
+                "chaos_threshold": config.chaos_threshold
+            }
+        )
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
@@ -62,11 +88,11 @@ class QualiaProcessor:
         if self._current_state is None:
             return
 
-        # Detect significant changes in key metrics
+        # Detect significant changes in key metrics (using config threshold)
         intensity_change = abs(
             new_state.get("intensity", 0) - self._current_state.get("intensity", 0)
         )
-        if intensity_change > 0.3:
+        if intensity_change > self._config.intensity_spike_threshold:
             await self._event_bus.publish_async(
                 event_name="IntensitySpike",
                 data={
@@ -76,10 +102,10 @@ class QualiaProcessor:
                 source="QualiaProcessor",
             )
 
-        # Detect transcendence mode activation
+        # Detect transcendence mode activation (using config threshold)
         if (
-            new_state.get("transcendence", 0) > 0.8
-            and self._current_state.get("transcendence", 0) <= 0.8
+            new_state.get("transcendence", 0) > self._config.transcendence_threshold
+            and self._current_state.get("transcendence", 0) <= self._config.transcendence_threshold
         ):
             await self._event_bus.publish_async(
                 event_name="TranscendenceActivated",
@@ -87,8 +113,8 @@ class QualiaProcessor:
                 source="QualiaProcessor",
             )
 
-        # Detect chaos threshold breach
-        if new_state.get("chaos", 0) > 0.7:
+        # Detect chaos threshold breach (using config threshold)
+        if new_state.get("chaos", 0) > self._config.chaos_threshold:
             await self._event_bus.publish_async(
                 event_name="ChaosThresholdBreached",
                 data=new_state,
@@ -101,16 +127,21 @@ class QualiaProcessor:
         return self._current_state.copy() if self._current_state else None
 
     @log_execution(level="INFO")
-    def enable_processing(self) -> None:
+    def enable(self) -> None:
         """Enable QualiaState processing."""
         self._processing_enabled = True
         self._logger.info("✅ QualiaProcessor enabled")
 
     @log_execution(level="INFO")
-    def disable_processing(self) -> None:
+    def disable(self) -> None:
         """Disable QualiaState processing."""
         self._processing_enabled = False
         self._logger.info("⏸️  QualiaProcessor disabled")
+    
+    @log_execution(level="DEBUG")
+    def is_enabled(self) -> bool:
+        """Check if processing is enabled."""
+        return self._processing_enabled
 
     async def shutdown(self) -> None:
         """Gracefully shutdown the processor."""
@@ -125,9 +156,15 @@ class MinimalQualiaProcessor:
     Provides basic functionality without advanced features.
     """
 
-    def __init__(self, event_bus: EventBus):
+    def __init__(
+        self,
+        config: QualiaProcessorConfig,
+        event_bus: IEventBus,
+        logger: ILogger
+    ):
+        self._config = config
         self._event_bus = event_bus
-        self._logger = logging.getLogger(__name__)
+        self._logger = logger
         self._logger.warning("⚠️  Using MinimalQualiaProcessor fallback")
 
     async def process_qualia_state(self, qualia_state: Dict[str, Any]) -> None:
@@ -147,14 +184,18 @@ class MinimalQualiaProcessor:
         return None
 
     @log_execution(level="DEBUG")
-    def enable_processing(self) -> None:
+    def enable(self) -> None:
         """Enable processing (no-op in minimal processor)."""
         pass
 
     @log_execution(level="DEBUG")
-    def disable_processing(self) -> None:
+    def disable(self) -> None:
         """Disable processing (no-op in minimal processor)."""
         pass
+    
+    def is_enabled(self) -> bool:
+        """Check if processing is enabled."""
+        return False
 
     async def shutdown(self) -> None:
         """Shutdown (no-op in minimal processor)."""

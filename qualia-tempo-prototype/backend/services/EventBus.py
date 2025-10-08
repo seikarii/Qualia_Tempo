@@ -1,12 +1,13 @@
-# QUALIA.CODE v1.0 - Backend EventBus
+# QUALIA.CODE v1.1 - Backend EventBus
 # Event-driven communication system for backend services
 
 import asyncio
-import logging
 from typing import Any, Callable, Dict, List, Optional, Union
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 import time
+from .interfaces.ILogger import ILogger
+from .contracts.IEventBus_contracts import EventBusConfig
 
 
 @dataclass
@@ -68,12 +69,25 @@ class EventBus:
     """
     Central event bus for backend service communication.
     Implements pub/sub pattern with async event handling.
+    
+    QUALIA.CODE v1.1: Now uses injected ILogger and EventBusConfig.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, config: EventBusConfig, logger: ILogger) -> None:
+        """
+        Initialize EventBus with configuration and logger injection.
+        
+        Args:
+            config: EventBus configuration
+            logger: Injected logger service
+        """
+        self._config = config
+        self._logger = logger
         self._handlers: Dict[str, List[EventHandler]] = {}
-        self._logger = logging.getLogger(__name__)
         self._stats = {"events_published": 0, "events_handled": 0, "errors": 0}
+        
+        if self._config.enable_statistics:
+            self._logger.info("EventBus initialized with statistics enabled")
 
     def subscribe(
         self, event_name: str, handler: Union[EventHandler, Callable]
@@ -227,6 +241,18 @@ class EventBus:
         return {
             event_name: len(handlers) for event_name, handlers in self._handlers.items()
         }
+    
+    def clear_handlers(self, event_name: str) -> None:
+        """
+        Clear all handlers for a specific event.
+        
+        Args:
+            event_name: Event name to clear handlers for
+        """
+        if event_name in self._handlers:
+            count = len(self._handlers[event_name])
+            self._handlers[event_name].clear()
+            self._logger.info(f"Cleared {count} handlers for event: {event_name}")
 
 
 class CallableEventHandler(EventHandler):
@@ -246,9 +272,9 @@ class CallableEventHandler(EventHandler):
 class QualiaEventHandler(EventHandler):
     """Specialized handler for QualiaState events."""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, logger: ILogger):
         self.name = name
-        self._logger = logging.getLogger(__name__)
+        self._logger = logger
 
     async def handle(self, event: Event) -> None:
         """Handle QualiaState update events."""
@@ -266,15 +292,28 @@ class QualiaEventHandler(EventHandler):
         self._logger.debug(f"🔄 Default QualiaState processing: {qualia_state}")
 
 
-# Global event bus instance
+# Global event bus instance (for backward compatibility during migration)
 _event_bus_instance: Optional[EventBus] = None
 
 
 def get_event_bus() -> EventBus:
-    """Get the global event bus instance (singleton pattern)."""
+    """
+    Get the global event bus instance (singleton pattern).
+    
+    DEPRECATED: This function is provided for backward compatibility during migration.
+    New code should use the ServiceContainer to resolve IEventBus.
+    """
     global _event_bus_instance
     if _event_bus_instance is None:
-        _event_bus_instance = EventBus()
+        # Create with default config for backward compatibility
+        from .QualiaLogger import QualiaLogger
+        from .contracts.ILogger_contracts import LoggerConfig
+        
+        default_logger_config = LoggerConfig()
+        default_logger = QualiaLogger(default_logger_config)
+        
+        default_config = EventBusConfig()
+        _event_bus_instance = EventBus(default_config, default_logger)
     return _event_bus_instance
 
 
