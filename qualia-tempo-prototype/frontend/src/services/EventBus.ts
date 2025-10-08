@@ -42,6 +42,7 @@ import type {
   ComboExpiredEvent,
   SequenceClearedEvent,
   CombatStateUpdatedEvent,
+  GameStateStoreUpdatedEvent,
 } from "./contracts/events.contracts";
 import type { ITimerService } from "./interfaces/ITimerService";
 import type { EventBusConfig } from "./contracts/IEventBus.contracts";
@@ -75,7 +76,8 @@ export type EventTypes =
   | ComboDetectedEvent
   | ComboExpiredEvent
   | SequenceClearedEvent
-  | CombatStateUpdatedEvent;
+  | CombatStateUpdatedEvent
+  | GameStateStoreUpdatedEvent;
 
 // Event handler types
 export type EventHandler<T extends BaseEvent = BaseEvent> = (

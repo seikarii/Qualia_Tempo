@@ -30,14 +30,12 @@ import type { IBaseService } from './interfaces/IBaseService';
 import type { CombatState } from '../types/CombatState';
 import type {
   GameStateStreamingConfig,
-  // TODO PHASE 6.2: Uncomment when implementing WebSocket message handling
-  // CombatStateMessage,
-  // PingMessage,
-  // PongMessage,
+  CombatStateMessage,
+  PingMessage,
+  PongMessage,
   StateRequestMessage
 } from './contracts/IGameStateStreamingService.contracts';
-// TODO PHASE 6.2: Uncomment when implementing EventBus emission
-// import type { CombatStateUpdatedEvent } from './contracts/events.contracts';
+import type { CombatStateUpdatedEvent } from './contracts/events.contracts';
 
 /**
  * GameStateStreamingService - WebSocket client for CombatState reception
@@ -46,8 +44,7 @@ import type {
 export class GameStateStreamingService implements IGameStateStreamingService, IBaseService {
   private readonly config: GameStateStreamingConfig;
   private readonly logger: ILogger;
-  // TODO PHASE 6.2: Uncomment when implementing EventBus emission
-  // private readonly eventBus: IEventBus;
+  private readonly eventBus: IEventBus;
   private readonly webSocketService: IWebSocketService;
   private readonly timerService: ITimerService;
   private readonly performanceService: IPerformanceService;
@@ -75,24 +72,23 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
     connectionDrops: 0
   };
 
-  // TODO PHASE 6.2: Uncomment these when implementing full WebSocket protocol
   // Latency tracking (circular buffer)
-  // private latencySamples: number[] = [];
-  // private latencySampleIndex: number = 0;
+  private latencySamples: number[] = [];
+  private latencySampleIndex: number = 0;
 
   // Timing
   private startTime: number = 0;
-  // private messagesInLastSecond: number = 0;
+  private messagesInLastSecond: number = 0;
 
   // Ping/pong health monitoring
   private pingIntervalId: number | null = null;
   private pingTimeoutId: number | null = null;
-  // private lastPingTimestamp: number = 0;
+  private lastPingTimestamp: number = 0;
 
   // Reconnection state
   private reconnectionTimeoutId: number | null = null;
-  // private currentReconnectDelay: number = 0;
-  // private isReconnecting: boolean = false;
+  private currentReconnectDelay: number = 0;
+  private isReconnecting: boolean = false;
 
   constructor(
     @inject(TYPES.GameStateStreamingConfig) config: GameStateStreamingConfig,
@@ -104,14 +100,10 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
   ) {
     this.config = config;
     this.logger = logger;
-    // TODO PHASE 6.2: Uncomment when implementing EventBus emission
-    // this.eventBus = eventBus;
+    this.eventBus = eventBus;
     this.webSocketService = webSocketService;
     this.timerService = timerService;
     this.performanceService = performanceService;
-    
-    // Suppress unused parameter warnings
-    void eventBus;
 
     this.logger.info(this.config.messages.serviceInitialized);
   }
@@ -139,9 +131,8 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
   public async start(): Promise<void> {
     this.logger.info('[GameStateStreaming] Starting service...');
     this.startTime = this.performanceService.now();
-    // TODO PHASE 6.2: Initialize reconnection and latency tracking
-    // this.currentReconnectDelay = this.config.websocket.reconnectDelay;
-    // this.latencySamples = new Array(this.config.statistics.latencySampleSize).fill(0);
+    this.currentReconnectDelay = this.config.websocket.reconnectDelay;
+    this.latencySamples = new Array(this.config.statistics.latencySampleSize).fill(0);
   }
 
   /**
@@ -158,22 +149,20 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
     this.logger.info(this.config.messages.connecting, { url: this.config.websocket.url });
 
     try {
-      // WebSocketService.connect signature is (url: string) => Promise<void>
-      // We need to set up message handlers via subscribe pattern or similar
-      // Looking at IWebSocketService interface...
-      await this.webSocketService.connect(this.config.websocket.url);
+      // Register WebSocket event handlers BEFORE connecting
+      this.webSocketService.onMessage(this.handleMessage.bind(this));
+      this.webSocketService.onClose(this.handleClose.bind(this));
+      this.webSocketService.onError(this.handleError.bind(this));
 
-      // Set up message handler after connection
-      // Note: This depends on IWebSocketService implementation
-      // If WebSocketService uses an event-based pattern, we may need to adjust
+      // Connect to WebSocket
+      await this.webSocketService.connect(this.config.websocket.url);
 
       this.connectionStatus.connected = true;
       this.connectionStatus.state = 'CONNECTED';
       this.connectionStatus.connectedAt = new Date();
       this.connectionStatus.reconnectAttempts = 0;
-      // TODO PHASE 6.2: Reset reconnection state
-      // this.currentReconnectDelay = this.config.websocket.reconnectDelay;
-      // this.isReconnecting = false;
+      this.currentReconnectDelay = this.config.websocket.reconnectDelay;
+      this.isReconnecting = false;
 
       this.logger.info(this.config.messages.connected);
 
@@ -258,29 +247,154 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
   }
 
   /**
-   * TODO PHASE 6.2: WebSocket Integration
-   * These methods will be connected once IWebSocketService supports:
-   * - Message callbacks (onMessage)
-   * - Close event handlers (onClose) 
-   * - Error handlers (onError)
-   * - Receive and emit CombatStateUpdatedEvent
-   * - Handle reconnection logic
-   * 
-   * Current implementation is a stub for Phase 6.1 architecture setup.
-   * Backend is ready to stream, frontend infrastructure is complete.
-   * Phase 6.2 will add the actual WebSocket message handling.
+   * PHASE 6.2: WebSocket Message Handling
    */
 
   /**
-   * Start ping interval for connection health monitoring
-   * TODO PHASE 6.2: Implement once WebSocket message handling is ready
+   * Handle incoming WebSocket message
    */
-  private startPingInterval(): void {
-    // Stub for Phase 6.1
-    this.logger.debug('[GameStateStreaming] Ping interval will be implemented in Phase 6.2');
+  private handleMessage(data: string | ArrayBuffer | Blob): void {
+    try {
+      // Backend sends JSON strings
+      if (typeof data !== 'string') {
+        this.logger.warn('[GameStateStreaming] Received non-string message, ignoring', { type: typeof data });
+        return;
+      }
+
+      const message = JSON.parse(data);
+
+      // Route to specific handler based on message type
+      switch (message.type) {
+        case 'combat_state_update':
+          this.handleCombatStateUpdate(message as CombatStateMessage);
+          break;
+        case 'pong':
+          this.handlePongMessage(message as PongMessage);
+          break;
+        default:
+          this.logger.warn('[GameStateStreaming] Unknown message type', { type: message.type });
+      }
+    } catch (error) {
+      this.logger.error('[GameStateStreaming] Failed to parse message', { error });
+    }
   }
 
-  /* TODO PHASE 6.2: Implement WebSocket ping/pong protocol
+  /**
+   * Handle CombatState update from backend
+   */
+  private handleCombatStateUpdate(message: CombatStateMessage): void {
+    const now = this.performanceService.now();
+    const latency = now - message.timestamp;
+
+    // Update statistics
+    this.statistics.messagesReceived++;
+    this.statistics.lastMessageTimestamp = now;
+    this.messagesInLastSecond++;
+
+    // Track latency if configured
+    if (this.config.statistics.trackLatency) {
+      this.trackLatency(latency);
+    }
+
+    // Cache latest CombatState
+    this.latestCombatState = message.combat_state as CombatState;
+    this.connectionStatus.lastCombatStateTimestamp = now;
+
+    // Emit event to EventBus for consumption by GameStateStore
+    const event: CombatStateUpdatedEvent = {
+      type: 'CombatStateUpdated',
+      combatState: message.combat_state,
+      backendTimestamp: message.timestamp,
+      latency,
+      source: 'GameStateStreamingService',
+      timestamp: new Date(),
+      metadata: {
+        dt: message.dt
+      }
+    };
+
+    this.eventBus.emit(event);
+
+    this.logger.debug(this.config.messages.stateReceived, {
+      latency: latency.toFixed(2),
+      messagesReceived: this.statistics.messagesReceived
+    });
+  }
+
+  /**
+   * Handle pong response from backend
+   */
+  private handlePongMessage(message: PongMessage): void {
+    // Clear ping timeout
+    if (this.pingTimeoutId !== null) {
+      this.timerService.clearTimeout(this.pingTimeoutId);
+      this.pingTimeoutId = null;
+    }
+
+    // Calculate round-trip latency
+    const now = this.performanceService.now();
+    const pingLatency = now - this.lastPingTimestamp;
+
+    if (this.config.statistics.trackLatency) {
+      this.trackLatency(pingLatency);
+    }
+
+    this.logger.debug('[GameStateStreaming] Pong received', {
+      pingId: message.pingId,
+      latency: pingLatency.toFixed(2)
+    });
+  }
+
+  /**
+   * Handle WebSocket close event
+   */
+  private handleClose(event: CloseEvent): void {
+    this.logger.warn('[GameStateStreaming] WebSocket closed', {
+      code: event.code,
+      reason: event.reason,
+      wasClean: event.wasClean
+    });
+
+    this.connectionStatus.connected = false;
+    this.connectionStatus.state = 'DISCONNECTED';
+    this.statistics.connectionDrops++;
+
+    this.clearTimers();
+
+    // Attempt reconnection if not a normal closure
+    if (event.code !== this.config.websocket.normalCloseCode) {
+      this.attemptReconnection();
+    }
+  }
+
+  /**
+   * Handle WebSocket error event
+   */
+  private handleError(error: Event): void {
+    this.logger.error('[GameStateStreaming] WebSocket error', { error });
+    this.connectionStatus.state = 'ERROR';
+  }
+
+  /**
+   * Start ping interval for connection health monitoring
+   */
+  private startPingInterval(): void {
+    if (this.pingIntervalId !== null) {
+      return; // Already running
+    }
+
+    this.pingIntervalId = this.timerService.setInterval(() => {
+      this.sendPing();
+    }, this.config.websocket.pingInterval);
+
+    this.logger.debug('[GameStateStreaming] Ping interval started', {
+      interval: this.config.websocket.pingInterval
+    });
+  }
+
+  /**
+   * Send ping message to backend
+   */
   private sendPing(): void {
     if (!this.webSocketService.isConnected()) {
       return;
@@ -302,12 +416,18 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
     }, this.config.websocket.pingTimeout);
   }
 
+  /**
+   * Handle ping timeout (connection appears dead)
+   */
   private handlePingTimeout(): void {
     this.logger.error('[GameStateStreaming] Ping timeout - connection appears dead');
-    this.disconnect();
+    void this.disconnect();
     this.attemptReconnection();
   }
 
+  /**
+   * Attempt to reconnect with exponential backoff
+   */
   private attemptReconnection(): void {
     if (this.connectionStatus.reconnectAttempts >= this.config.websocket.maxReconnectAttempts) {
       this.logger.error(this.config.messages.maxReconnectAttemptsReached);
@@ -331,7 +451,7 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
     });
 
     this.reconnectionTimeoutId = this.timerService.setTimeout(() => {
-      this.connect().catch((error) => {
+      void this.connect().catch((error) => {
         this.logger.error('[GameStateStreaming] Reconnection failed', { error });
         this.currentReconnectDelay *= this.config.websocket.reconnectBackoffMultiplier;
         this.attemptReconnection();
@@ -339,6 +459,9 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
     }, delay);
   }
 
+  /**
+   * Track latency in circular buffer and calculate rolling average
+   */
   private trackLatency(latency: number): void {
     this.latencySamples[this.latencySampleIndex] = latency;
     this.latencySampleIndex = (this.latencySampleIndex + 1) % this.latencySamples.length;
@@ -346,7 +469,6 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
     const sum = this.latencySamples.reduce((acc, val) => acc + val, 0);
     this.statistics.averageLatency = sum / this.latencySamples.length;
   }
-  */
 
   /**
    * Clear all timers

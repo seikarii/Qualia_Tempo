@@ -278,3 +278,12 @@ export interface CombatStateUpdatedEvent extends BaseEvent {
   latency?: number; // Time between backend send and frontend receive (ms)
   source: string;
 }
+
+/**
+ * PHASE 6 TASK 6.3: Store updated event
+ * Emitted when GameStateStoreService updates the Zustand store
+ */
+export interface GameStateStoreUpdatedEvent extends BaseEvent {
+  type: "GameStateStoreUpdated";
+  source: string;
+}

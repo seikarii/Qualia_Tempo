@@ -27,7 +27,8 @@ import type { IParticleSystemService } from './interfaces/IParticleSystemService
 import type { IReactionDiffusionService } from './interfaces/IReactionDiffusionService';
 import type { KairosVisualEngineParams, KairosVisualEngineConfig } from './contracts/IKairosVisualEngine.contracts';
 import { OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from '../utils/decorators';
-import type { GameStateChangedEvent, QualiaStateCalculatedEvent } from './contracts/events.contracts';
+import type { GameStateChangedEvent, QualiaStateCalculatedEvent, CombatStateUpdatedEvent } from './contracts/events.contracts';
+import type { CombatState } from '../types/CombatState';
 
 /**
  * God Rays Shader
@@ -189,6 +190,9 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     flow: 0.5,
     recovery: 0.5
   };
+  
+  // PHASE 6.4: Current CombatState from backend (for avatar real data)
+  private currentCombatState: CombatState | null = null;
   
   constructor(
     @inject(TYPES.KairosVisualEngineParams) params: KairosVisualEngineParams
@@ -625,92 +629,144 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   }
   
   /**
+   * PHASE 6.4: Map CombatState.player to ViewLogicService PlayerState
+   * Transforms backend CombatState data into frontend ViewLogic format
+   */
+  private mapCombatStateToPlayerState(combatState: CombatState): any {
+    return {
+      position: [
+        combatState.player.position.x,
+        combatState.player.position.y,
+        combatState.player.position.z
+      ] as [number, number, number],
+      velocity: [0, 0, 0] as [number, number, number], // Not yet in CombatState
+      health: combatState.player.health,
+      power_level: Math.min(combatState.player.score / 10000, 1.0), // Normalize score to 0-1
+      consciousness_level: Math.min(combatState.player.combo / 100, 1.0), // Normalize combo to 0-1
+      qualia_state: {
+        emotional_valence: 0.5, // TODO: Add to backend CombatState
+        arousal: 0.5,
+        coherence: 0.5
+      }
+    };
+  }
+  
+  /**
+   * PHASE 6.4: Map CombatState.boss to ViewLogicService BossState
+   * Transforms backend CombatState data into frontend ViewLogic format
+   */
+  private mapCombatStateToBossState(combatState: CombatState): any {
+    return {
+      stress_level: (100 - combatState.boss.health) / 100, // Lower health = higher stress
+      phase: combatState.boss.currentPhase,
+      position: [
+        combatState.boss.position.x,
+        combatState.boss.position.y,
+        combatState.boss.position.z
+      ] as [number, number, number],
+      power_level: combatState.boss.currentPhase * 0.33, // Phase 1→0.33, 2→0.66, 3→1.0
+      qualia_state: {
+        emotional_valence: 0.5 - (combatState.boss.health / 200) // More damaged = more negative
+      }
+    };
+  }
+  
+  /**
    * Update SDF avatar shader uniforms based on QualiaState
    * VISUALS.GOLD.CODE Phase 4: Avatares Procedurales
    * 
    * Uses ViewLogicService to compute avatar visuals from game state
+   * PHASE 6.4: Now uses real CombatState data from backend
    */
-  private updateSdfAvatars(deltaTime: number, timeInSeconds: number): void {
+  private updateSdfAvatars(_deltaTime: number, timeInSeconds: number): void {
     if (!this.playerShaderMaterial || !this.bossShaderMaterial) return;
     if (!this.viewLogicService) return;
     
     try {
-      // TODO PHASE 5.6: Get player/boss state from proper source (CombatState)
-      // For now, use placeholder data until CombatState integration is complete
-      const placeholderPlayerState = {
-        position: { x: 0, y: 1, z: 0 },
-        health: 100,
-        powerLevel: 0.5,
-        consciousnessLevel: 0.5,
-        qualiaState: {
-          emotionalValence: 0.5,
-          arousal: 0.5,
-          coherence: 0.5
-        }
-      };
+      // PHASE 6.4: Use real CombatState data if available, otherwise use placeholders
+      let playerState: any;
+      let bossState: any;
       
-      const placeholderBossState = {
-        position: { x: 0, y: 1, z: 5 },
-        health: 1000,
-        currentPhase: 1,
-        aggressionLevel: 0.5
-      };
+      if (this.currentCombatState) {
+        // Real data from backend
+        playerState = this.mapCombatStateToPlayerState(this.currentCombatState);
+        bossState = this.mapCombatStateToBossState(this.currentCombatState);
+        
+        this.logger.debug('[KairosVisualEngine] Using real CombatState for avatar visuals', {
+          playerHealth: this.currentCombatState.player.health,
+          bossPhase: this.currentCombatState.boss.currentPhase
+        });
+      } else {
+        // Fallback placeholders when game not started
+        playerState = {
+          position: [0, 1, 0] as [number, number, number],
+          velocity: [0, 0, 0] as [number, number, number],
+          health: 100,
+          power_level: 0.5,
+          consciousness_level: 0.5,
+          qualia_state: { emotional_valence: 0.5, arousal: 0.5, coherence: 0.5 }
+        };
+        
+        bossState = {
+          stress_level: 0.5,
+          phase: 1,
+          position: [0, 1, 5] as [number, number, number],
+          power_level: 0.5,
+          qualia_state: { emotional_valence: 0.5 }
+        };
+        
+        this.logger.debug('[KairosVisualEngine] Using placeholder data (no CombatState yet)');
+      }
       
-      // Get avatar visuals from ViewLogicService
+      // Get avatar visuals from ViewLogicService with correct method signature
       const playerVisuals = this.viewLogicService.getPlayerAvatarVisuals(
-        placeholderPlayerState,
-        this.currentQualiaState
+        this.currentQualiaState,
+        playerState,
+        timeInSeconds
       );
       
       const bossVisuals = this.viewLogicService.getBossAvatarVisuals(
-        placeholderBossState,
-        this.currentQualiaState
+        this.currentQualiaState,
+        bossState,
+        timeInSeconds
       );
       
       // Update player avatar uniforms
       this.playerShaderMaterial.uniforms['u_time'].value = timeInSeconds;
       this.playerShaderMaterial.uniforms['u_player_shape_params'].value.set(
-        playerVisuals.shapeParameters.x,
-        playerVisuals.shapeParameters.y,
-        playerVisuals.shapeParameters.z
+        playerVisuals.shapeParams.precision,
+        playerVisuals.shapeParams.flow,
+        playerVisuals.shapeParams.complexity
       );
       this.playerShaderMaterial.uniforms['u_base_color'].value.setRGB(
-        playerVisuals.baseColor.r,
-        playerVisuals.baseColor.g,
-        playerVisuals.baseColor.b
+        playerVisuals.color.r,
+        playerVisuals.color.g,
+        playerVisuals.color.b
       );
       this.playerShaderMaterial.uniforms['u_emissive'].value = playerVisuals.emissive;
       
-      // Update player avatar position
-      if (this.playerAvatarMesh) {
-        this.playerAvatarMesh.position.set(
-          placeholderPlayerState.position.x,
-          placeholderPlayerState.position.y,
-          placeholderPlayerState.position.z
-        );
+      // Update player avatar position from visuals (ViewLogicService returns Vector3)
+      if (this.playerAvatarMesh && playerVisuals.position) {
+        this.playerAvatarMesh.position.copy(playerVisuals.position);
       }
       
       // Update boss avatar uniforms
       this.bossShaderMaterial.uniforms['u_time'].value = timeInSeconds;
       this.bossShaderMaterial.uniforms['u_boss_shape_params'].value.set(
-        bossVisuals.shapeParameters.x,
-        bossVisuals.shapeParameters.y,
-        bossVisuals.shapeParameters.z
+        bossVisuals.shapeParams.chaos,
+        bossVisuals.shapeParams.aggression,
+        bossVisuals.shapeParams.distortion
       );
       this.bossShaderMaterial.uniforms['u_base_color'].value.setRGB(
-        bossVisuals.baseColor.r,
-        bossVisuals.baseColor.g,
-        bossVisuals.baseColor.b
+        bossVisuals.color.r,
+        bossVisuals.color.g,
+        bossVisuals.color.b
       );
       this.bossShaderMaterial.uniforms['u_emissive'].value = bossVisuals.emissive;
       
-      // Update boss avatar position
-      if (this.bossAvatarMesh) {
-        this.bossAvatarMesh.position.set(
-          placeholderBossState.position.x,
-          placeholderBossState.position.y,
-          placeholderBossState.position.z
-        );
+      // Update boss avatar position from visuals (ViewLogicService returns Vector3)
+      if (this.bossAvatarMesh && bossVisuals.position) {
+        this.bossAvatarMesh.position.copy(bossVisuals.position);
       }
       
       // Handle fractal transition (transcendence > 0.9)
@@ -720,8 +776,12 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
         this.playerShaderMaterial.uniforms['u_use_fractal'].value = useFractal;
         
         if (useFractal > 0.5) {
-          // Get Mandelbulb visuals
-          const mandelbulbVisuals = this.viewLogicService.getMandelbulbVisuals(this.currentQualiaState);
+          // Get Mandelbulb visuals with correct method signature
+          const mandelbulbVisuals = this.viewLogicService.getMandelbulbVisuals(
+            this.currentQualiaState,
+            playerState,
+            timeInSeconds
+          );
           this.playerShaderMaterial.uniforms['u_fractal_iterations'].value = mandelbulbVisuals.iterations;
           this.playerShaderMaterial.uniforms['u_fractal_power'].value = mandelbulbVisuals.power;
           this.playerShaderMaterial.uniforms['u_color_gradient_inner'].value.setRGB(
@@ -981,7 +1041,24 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     
     // Atmospheric effects will be updated in next frame via updateAtmosphericEffects()
     // PHASE 5.4: Reaction-Diffusion parameters (chaos, flow, recovery) ✅ COMPLETE
-    // TODO PHASE 5.5: SDF avatar parameters (precision, flow, chaos, aggression)
+    // PHASE 5.5: SDF avatar parameters (precision, flow, chaos, aggression) ✅ COMPLETE
+  }
+  
+  /**
+   * @OnEvent handler for CombatStateUpdated
+   * PHASE 6.4: Caches combat state for real data avatar rendering
+   * Receives CombatState from backend via WebSocket → EventBus
+   */
+  @OnEvent('CombatStateUpdated')
+  private handleCombatStateUpdated(event: CombatStateUpdatedEvent): void {
+    this.currentCombatState = event.combatState;
+    
+    this.logger.debug('[KairosVisualEngine] CombatState received', {
+      hasPlayer: !!this.currentCombatState?.player,
+      hasBoss: !!this.currentCombatState?.boss,
+      gameState: this.currentCombatState?.gameState,
+      latency: event.latency
+    });
   }
   
   /**

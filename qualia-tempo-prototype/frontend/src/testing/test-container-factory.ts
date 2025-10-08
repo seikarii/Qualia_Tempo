@@ -57,6 +57,8 @@ import type { IFFTAnalyzerService } from "../services/interfaces/IFFTAnalyzerSer
 import type { IAudio8DService } from "../services/interfaces/IAudio8DService";
 import type { IMusicalComboDetectorService } from "../services/interfaces/IMusicalComboDetectorService";
 import type { IKairosVisualEngine } from "../services/interfaces/IKairosVisualEngine";
+// PHASE 6.3: Integration Testing
+import type { IGameStateStreamingService } from "../services/interfaces/IGameStateStreamingService";
 
 // Import real services for pure utilities (no side effects)
 import { ColorService } from "../services/ColorService";
@@ -103,6 +105,8 @@ import { mockFFTAnalyzerService } from "./mocks/fft-analyzer-service.mock";
 import { mockAudio8DService } from "./mocks/audio-8d-service.mock";
 import { mockMusicalComboDetectorService } from "./mocks/musical-combo-detector-service.mock";
 import { mockKairosVisualEngine } from "./mocks/kairos-visual-engine.mock";
+// PHASE 6.3: Integration Testing
+import { mockGameStateStreamingService } from "./mocks/game-state-streaming-service.mock";
 
 // ===================================================================================
 // DIRECTIVE 006: DEFAULT TEST CONFIGURATION BINDINGS
@@ -490,6 +494,8 @@ export interface MockServices {
   mockAudio8DService: IAudio8DService;
   mockMusicalComboDetectorService: IMusicalComboDetectorService;
   mockKairosVisualEngine: IKairosVisualEngine;
+  // PHASE 6.3: Integration Testing
+  mockGameStateStreamingService: IGameStateStreamingService;
 }
 
 /**
@@ -542,6 +548,9 @@ export function createTestContainer(overrides: MockOverride[] = []): Container {
   testContainer.bind<IAudio8DService>(TYPES.IAudio8DService).toConstantValue(mockAudio8DService);
   testContainer.bind<IMusicalComboDetectorService>(TYPES.IMusicalComboDetectorService).toConstantValue(mockMusicalComboDetectorService);
   testContainer.bind<IKairosVisualEngine>(TYPES.IKairosVisualEngine).toConstantValue(mockKairosVisualEngine);
+  
+  // PHASE 6.3: Integration Testing - HIGH-FIDELITY MOCKS
+  testContainer.bind<IGameStateStreamingService>(TYPES.IGameStateStreamingService).toConstantValue(mockGameStateStreamingService);
 
   // QUALIA.CODE v2.0: Audio Analysis and Physics Services - BIND REAL SERVICES FOR UNIT TESTING
   // Use .inTransientScope() to create fresh instances for each test, preventing state contamination

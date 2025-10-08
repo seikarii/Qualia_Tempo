@@ -16,6 +16,7 @@ import type {
   QualiaParticleDataReceivedEvent,
   PlayerActionEvent,
   RhythmicDashEvent,
+  CombatStateUpdatedEvent,
 } from "./contracts/events.contracts";
 import type { EventTypes } from "./EventBus";
 import type { QualiaState } from "../types/contracts";
@@ -342,6 +343,39 @@ export class GameStateStoreService implements IGameStateStoreService, IBaseServi
         },
       })
     );
+  }
+
+  /**
+   * PHASE 6.3: Handle CombatStateUpdated events from GameStateStreamingService
+   * Receives complete game state from backend at 60fps via WebSocket
+   */
+  @catchError
+  @OnEvent('CombatStateUpdated')
+  // @ts-expect-error - Method used by @OnEvent decorator but TypeScript cannot detect it
+  private handleCombatStateUpdated(event: CombatStateUpdatedEvent): void {
+    this._logger.debug('CombatStateUpdated received', {
+      latency: event.latency,
+      backendTimestamp: event.backendTimestamp,
+      gameState: event.combatState.gameState,
+    });
+
+    // Update Zustand store with complete CombatState
+    this.setStore((state: GameState) =>
+      this.stateMergerService.deepMerge(state, {
+        combatState: event.combatState,
+      })
+    );
+
+    // Emit GameStateStoreUpdated event for reactive components
+    this.eventBus.emit({
+      type: 'GameStateStoreUpdated',
+      timestamp: new Date(),
+      source: 'GameStateStoreService',
+      metadata: {
+        combatStateReceived: true,
+        latency: event.latency,
+      },
+    } as EventTypes);
   }
 
   /**

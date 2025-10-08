@@ -2,6 +2,7 @@ import { createWithEqualityFn } from "zustand/traditional";
 import { subscribeWithSelector } from "zustand/middleware";
 import { shallow } from "zustand/shallow";
 import { QualiaState, PlayerState, CombatData } from "../types/contracts";
+import type { CombatState } from "../types/CombatState";
 
 // Notification types
 export interface Notification {
@@ -36,6 +37,9 @@ export interface GameState {
 
   // Combat data
   combatData: CombatData | null;
+
+  // PHASE 6.3: Real-time CombatState from backend (60fps streaming)
+  combatState: CombatState | null;
 
   // Qualia state - LEGACY: kept for backward compatibility
   qualiaState: QualiaState;
@@ -116,6 +120,7 @@ const initialState: GameState = {
   backendConnected: false,
   player: { ...initialPlayerState },
   combatData: null,
+  combatState: null, // PHASE 6.3: Will be populated by GameStateStoreService
   qualiaState: { ...initialQualiaState },
   totalNotes: 0,
   notesHit: 0,
