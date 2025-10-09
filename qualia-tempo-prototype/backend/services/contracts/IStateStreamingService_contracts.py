@@ -2,9 +2,12 @@
 from dataclasses import dataclass
 
 @dataclass
-class StateStreamingConfig:
-    """Configuration contract for StateStreamingService."""
+class StateStreamingServiceConfig:
+    """
+    Configuration contract for StateStreamingService.
+    
+    Direct configuration injection per QUALIA.CODE §II.2.3 Step 3.
+    """
+    target_fps: float = 30.0
     enable_streaming: bool = True
-    throttle_interval_ms: int = 16
     max_queue_size: int = 100
-    compression_enabled: bool = False

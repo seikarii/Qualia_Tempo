@@ -3,29 +3,45 @@
 # ARCHITECTURE.GOLD.CODE v2 - Phase 6.1: Full System Integration
 # Separate from StateStreamingService (particles) for independent update rates
 
+# QUALIA.CODE COMPLIANCE FIXES:
+# - ✅ Implements IBaseService for lifecycle management (§IX @OnEvent pattern)
+# - ✅ Uses @OnEvent decorator for GameStateChanged subscription
+# - ✅ Injects ILogger instead of using logging.getLogger() (§5.3 Logging Standard)
+# - ✅ Injects ITimerService for asyncio.sleep abstraction (§4 Platform Abstraction)
+# - ✅ Direct configuration injection (§II.2.3 Step 3)
+
 import asyncio
-import logging
 import json
-from typing import Dict, Any, Set, Optional
+from typing import Dict, Any, Set, Optional, List
 from fastapi import WebSocket, WebSocketDisconnect
-from .EventBus import EventBus
+from .interfaces.IEventBus import IEventBus
+from .interfaces.ILogger import ILogger
+from .interfaces.ITimerService import ITimerService
+from .interfaces.IBaseService import IBaseService
+from .contracts.IGameStateStreamingService_contracts import GameStateStreamingServiceConfig
 from ..utils.decorators import (
     log_execution,
     handle_errors,
+    OnEvent
 )
 
-logger = logging.getLogger(__name__)
 
-
-class GameStateStreamingService:
+class GameStateStreamingService(IBaseService):
     """
     WebSocket service for streaming CombatState (game state) data to connected clients.
     
     ARCHITECTURE.GOLD.CODE v2 - Phase 6.1:
-    - Listens to GameStateChanged events from EventBus
+    - Listens to GameStateChanged events from EventBus via @OnEvent decorator
     - Streams complete CombatState (player, boss, game state) to frontend at 60fps
     - Frontend GameStateStore consumes this data for rendering
     - Separate from particle streaming for independent update rates
+    
+    QUALIA.CODE COMPLIANCE:
+    - Implements IBaseService for lifecycle management
+    - Uses @OnEvent for automatic event subscription (§IX.9.1)
+    - ILogger injection (§5.3 Logging Standard)
+    - ITimerService for time operations (§4 Platform Abstraction)
+    - Direct configuration injection (§II Step 3)
     
     DATA FLOW:
     Player Actions → GameLogicService → EventBus (GameStateChanged) → 
@@ -34,31 +50,101 @@ class GameStateStreamingService:
     """
 
     def __init__(
-        self, event_bus: EventBus, config: Dict[str, Any]
+        self,
+        config: GameStateStreamingServiceConfig,
+        event_bus: IEventBus,
+        timer_service: ITimerService,
+        logger: ILogger
     ) -> None:
-        self._event_bus = event_bus
+        """Initialize GameStateStreamingService with injected dependencies.
+        
+        Args:
+            config: Direct configuration injection (QUALIA.CODE §II Step 3)
+            event_bus: EventBus for @OnEvent subscriptions (§IV Event-Driven Architecture)
+            timer_service: Timer service for async sleep (§4 Platform Abstraction)
+            logger: Injected logger instance (§5.3 Logging Standard)
+        """
         self._config = config
-        self._logger = logging.getLogger(__name__)
+        self._event_bus = event_bus
+        self._timer_service = timer_service
+        self._logger = logger
 
         # Connection management
         self._connections: Set[WebSocket] = set()
         self._is_streaming = False
         self._stream_task: Optional[asyncio.Task[Any]] = None
 
-        # Streaming configuration
-        self._target_fps = self._config.get("game_state_streaming", {}).get("target_fps", 60.0)
+        # Streaming configuration from injected config
+        self._target_fps = self._config.target_fps
         self._frame_time = 1.0 / self._target_fps
 
         # Statistics
         self._states_sent = 0
         self._connected_clients = 0
         
-        # CombatState tracking (updated from EventBus)
+        # CombatState tracking (updated from EventBus via @OnEvent)
         self._current_combat_state: Optional[Dict[str, Any]] = None
         self._last_broadcasted_state: Optional[Dict[str, Any]] = None
         
-        # Subscribe to GameStateChanged events from EventBus
-        self._event_bus.subscribe("GameStateChanged", self._on_game_state_changed)
+        # Event subscription tracking for cleanup
+        self._event_subscriptions: List[str] = []
+        
+        self._logger.info("GameStateStreamingService initialized with injected configuration")
+    
+    # ============================================================================
+    # IBaseService Implementation (QUALIA.CODE §IX Lifecycle Management)
+    # ============================================================================
+    
+    async def initialize(self) -> None:
+        """Initialize service and register @OnEvent handlers."""
+        # @OnEvent decorator automatically registers handlers
+        # ApplicationInitializerService calls this method on startup
+        await self.start_streaming()
+        self._logger.info("GameStateStreamingService initialized via IBaseService")
+    
+    async def cleanup(self) -> None:
+        """Cleanup service resources and stop streaming."""
+        await self.stop_streaming()
+        # Event subscriptions automatically cleaned up by ApplicationInitializerService
+        self._logger.info("GameStateStreamingService cleaned up via IBaseService")
+    
+    @log_execution(level="DEBUG")
+    def get_health_status(self) -> Dict[str, Any]:
+        """Get service health status (IBaseService requirement)."""
+        return {
+            "is_streaming": self._is_streaming,
+            "connected_clients": len(self._connections),
+            "states_sent": self._states_sent,
+            "target_fps": self._target_fps,
+            "has_current_state": self._current_combat_state is not None
+        }
+    
+    # ============================================================================
+    # Event Handlers (QUALIA.CODE §IX @OnEvent Pattern)
+    # ============================================================================
+    
+    @OnEvent("GameStateChanged")
+    async def _on_game_state_changed(self, event: Any) -> None:
+        """
+        EventBus handler for GameStateChanged events.
+        Automatically subscribed via @OnEvent decorator.
+        
+        ARCHITECTURE.GOLD.CODE: Event-driven architecture
+        Updates current combat state to be broadcast to clients
+        
+        Args:
+            event: Event object from EventBus (has .data attribute)
+        """
+        # EventBus wraps data in Event object - access via event.data
+        event_data = event.data if hasattr(event, 'data') else event
+        self._current_combat_state = event_data.get("combat_state")
+        if self._current_combat_state:
+            game_state = self._current_combat_state.get('gameState', 'unknown')
+            self._logger.debug(f"CombatState updated: gameState={game_state}")
+    
+    # ============================================================================
+    # Streaming Control
+    # ============================================================================
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
@@ -108,22 +194,7 @@ class GameStateStreamingService:
         else:
             self._logger.info(f"GameStateStreaming task {id(task)} was already done.")
 
-    async def _on_game_state_changed(self, event: Any) -> None:
-        """
-        EventBus handler for GameStateChanged events.
-        
-        ARCHITECTURE.GOLD.CODE: Event-driven architecture
-        Updates current combat state to be broadcast to clients
-        
-        Args:
-            event: Event object from EventBus (has .data attribute)
-        """
-        # EventBus wraps data in Event object - access via event.data
-        event_data = event.data if hasattr(event, 'data') else event
-        self._current_combat_state = event_data.get("combat_state")
-        if self._current_combat_state:
-            game_state = self._current_combat_state.get('gameState', 'unknown')
-            self._logger.debug(f"CombatState updated: gameState={game_state}")
+
 
     @log_execution(level="DEBUG")
     @handle_errors(fallback_return_value=None)
@@ -144,13 +215,14 @@ class GameStateStreamingService:
             while self._is_streaming:
                 # IMMEDIATE CANCELLATION CHECK
                 if not self._is_streaming:
-                    logger.critical(
+                    self._logger.critical(
                         f"💀 GAME STATE STREAMING TERMINATED - EXITING LOOP: {task_id}"
                     )
                     break
 
                 if not self._connections:  # If no connections, just wait
-                    await asyncio.sleep(0.1)
+                    # Use ITimerService instead of asyncio.sleep (QUALIA.CODE §4 Platform Abstraction)
+                    await self._timer_service.sleep(0.1)
                     last_frame_time = asyncio.get_event_loop().time()
                     continue
 
@@ -179,14 +251,16 @@ class GameStateStreamingService:
 
                 except Exception as e:
                     self._logger.error(f"🚨 Error in game state broadcast: {e}", exc_info=True)
-                    await asyncio.sleep(0.1)  # Brief pause before retry
+                    # Use ITimerService (QUALIA.CODE §4 Platform Abstraction)
+                    await self._timer_service.sleep(0.1)  # Brief pause before retry
 
                 # Frame rate limiting (60fps target)
                 elapsed = asyncio.get_event_loop().time() - loop_start
                 sleep_time = max(0, self._frame_time - elapsed)
 
                 if sleep_time > 0:
-                    await asyncio.sleep(sleep_time)
+                    # Use ITimerService (QUALIA.CODE §4 Platform Abstraction)
+                    await self._timer_service.sleep(sleep_time)
 
         except asyncio.CancelledError:
             self._logger.info("🛑 Game state streaming loop cancelled successfully")

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 from backend.services.interfaces.IFileSystemService import IFileSystemService
 from backend.services.interfaces.ILogger import ILogger
+from backend.services.interfaces.ITimerService import ITimerService
 from backend.services.interfaces.IBaseService import IBaseService
 from backend.services.interfaces.IParticleEnginePoolManager import IParticleEnginePoolManager
 from backend.services.contracts.IParticleEnginePoolManager_contracts import ParticleEnginePoolManagerConfig
@@ -56,19 +57,28 @@ class ParticleEnginePoolManager(IParticleEnginePoolManager, IBaseService):
         self,
         config: ParticleEnginePoolManagerConfig,
         logger: ILogger,
-        file_system_service: IFileSystemService
+        file_system_service: IFileSystemService,
+        timer_service: ITimerService
     ):
         """
         Initialize the pool manager.
         
+        QUALIA.CODE v1.1 Compliance:
+        - Direct configuration injection (§II.2.3)
+        - ILogger injection (§5.3)
+        - IFileSystemService injection for platform abstraction (§4)
+        - ITimerService injection for async operations with timeout (§4)
+        
         Args:
             config: ParticleEnginePoolManagerConfig from container
-            logger: Injected ILogger instance (QUALIA.CODE §5.3 Logging Standard)
-            file_system_service: FileSystemService for file operations (QUALIA.CODE §4 Platform Abstraction)
+            logger: Injected ILogger instance
+            file_system_service: FileSystemService for file operations
+            timer_service: TimerService for async timeout operations
         """
         self._config = config
         self._logger = logger
         self._file_system_service = file_system_service
+        self._timer_service = timer_service
         
         # Pool state
         self.pool: Optional[Pool] = None
@@ -231,9 +241,9 @@ class ParticleEnginePoolManager(IParticleEnginePoolManager, IBaseService):
             self.metrics.total_tasks_submitted += 1
             self.pending_tasks[task_id] = future
             
-            # Wait for result with timeout
+            # Wait for result with timeout (QUALIA.CODE v1.1 §4: Platform abstraction via ITimerService)
             try:
-                result = await asyncio.wait_for(future, timeout=self._config.queue_timeout_seconds)
+                result = await self._timer_service.wait_for(future, timeout=self._config.queue_timeout_seconds)
                 return dict(result) if result else None
             except asyncio.TimeoutError:
                 self._logger.error(f"Task {task_id} timed out after {self._config.queue_timeout_seconds}s")

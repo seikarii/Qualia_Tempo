@@ -1,0 +1,6 @@
+# QUALIA.CODE v1.1 - GameStateStreamingService Configuration
+# WebSocket CombatState streaming settings (Phase 6.1)
+
+target_fps: 60.0
+enable_delta_compression: true
+max_state_history: 100

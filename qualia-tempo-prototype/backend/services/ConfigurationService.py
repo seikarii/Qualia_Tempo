@@ -151,11 +151,15 @@ class ConfigurationService(IConfigurationService):
             )
             raise TypeError(f"Cannot cast {key} to {config_type.__name__}: {e}")
 
-    @log_execution(level="INFO")
-    @log_execution(level="INFO")
+    @log_execution(level="DEBUG")
     def get_raw(self, key: str, default: Any = None) -> Any:
         """
-        Get raw configuration value.
+        Get raw configuration value (synchronous access to cached configs).
+        
+        QUALIA.CODE COMPLIANCE FIX:
+        - Removed loop.run_until_complete() anti-pattern (§8 Async/Sync Principles)
+        - Now operates purely on cached configurations
+        - Configs must be preloaded via load_config() during service initialization
         
         Args:
             key: Configuration key in format "config_name.section.key"
@@ -163,6 +167,10 @@ class ConfigurationService(IConfigurationService):
             
         Returns:
             Configuration value or default
+            
+        Note:
+            If config is not cached, returns default value. 
+            Ensure load_config() is called during service initialization.
         """
         parts = key.split(".")
         if len(parts) < 2:
@@ -171,15 +179,13 @@ class ConfigurationService(IConfigurationService):
         
         config_name = parts[0]
         
-        # Load config if not cached
+        # Check if config is cached
         if config_name not in self._cache:
-            try:
-                import asyncio
-                loop = asyncio.get_event_loop()
-                loop.run_until_complete(self.load_config(config_name))
-            except Exception as e:
-                self._logger.error(f"Failed to load config: {config_name}", {"error": str(e)})
-                return default
+            self._logger.warning(
+                f"Config not preloaded: {config_name}. Call load_config() first.",
+                {"key": key}
+            )
+            return default
         
         # Navigate nested keys
         value = self._cache[config_name]

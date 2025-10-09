@@ -1,0 +1,6 @@
+# QUALIA.CODE v1.1 - StateStreamingService Configuration
+# WebSocket particle state streaming settings
+
+target_fps: 30.0
+enable_streaming: true
+max_queue_size: 100

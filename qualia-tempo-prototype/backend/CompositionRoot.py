@@ -335,23 +335,21 @@ class CompositionRoot:
         - Score validation (anti-cheat detection)
         - Player statistics tracking
         - Thread-safe file operations
+        
+        QUALIA.CODE v1.1: Container-based instantiation with direct config injection.
         """
         try:
-            from .services.PersistenceService import PersistenceService
+            from .services.interfaces.IPersistenceService import IPersistenceService
             
-            # QUALIA.CODE §4: Inject FileSystemService for platform abstraction
-            filesystem_service = self._services.get("filesystem_service")
-            if not filesystem_service:
-                raise RuntimeError("FileSystemService not available for PersistenceService")
-
-            persistence_service = PersistenceService(file_system_service=filesystem_service)
+            # QUALIA.CODE §II.2 - Resolve from container (all dependencies auto-injected)
+            persistence_service = self.container.resolve(IPersistenceService)  # type: ignore[type-abstract]
             
             # Initialize the service (loads existing data, creates directories)
             persistence_service.initialize()
             
             self._services["persistence_service"] = persistence_service
             
-            self._logger.info("✅ PersistenceService initialized - Leaderboard management ready")
+            self._logger.info("✅ PersistenceService initialized via IoC container - Leaderboard management ready")
             
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize PersistenceService: {e}")
@@ -369,25 +367,21 @@ class CompositionRoot:
     # All visual rendering now handled exclusively by frontend (KairosVisualEngine)
 
     async def _initialize_state_streaming_service(self) -> None:
-        """Initialize StateStreamingService for WebSocket state streaming."""
+        """
+        Initialize StateStreamingService for WebSocket state streaming.
+        
+        QUALIA.CODE v1.1: Container-based instantiation with direct config injection.
+        All dependencies (IEventBus, IParticleEnginePoolManager, ITimerService, ILogger, config) 
+        are auto-injected by the IoC container.
+        """
         try:
-            from .services.StateStreamingService import StateStreamingService
-            import yaml
-            from pathlib import Path
-
-            # Load configuration - QUALIA.CODE §7: Externalized configuration
-            config_path = Path(__file__).parent / "config" / "server.yaml"
-            with open(config_path, "r") as file:
-                config = yaml.safe_load(file)
-
-            particle_engine = self._services["particle_system"]
-            streaming_service = StateStreamingService(
-                event_bus=self.get_event_bus(),
-                particle_engine=particle_engine,
-                config=config
-            )
+            from .services.interfaces.IStateStreamingService import IStateStreamingService
+            
+            # QUALIA.CODE §II.2 - Resolve from container (eliminates manual instantiation)
+            streaming_service = self.container.resolve(IStateStreamingService)  # type: ignore[type-abstract]
+            
             self._services["state_streaming_service"] = streaming_service
-            self._logger.debug("✅ StateStreamingService initialized with externalized config")
+            self._logger.debug("✅ StateStreamingService initialized via IoC container")
 
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize StateStreamingService: {e}")
@@ -400,23 +394,19 @@ class CompositionRoot:
         PHASE 6 TASK 6.1: Full System Integration
         Streams complete game state (player, boss, gameState) from backend to frontend
         at 60fps for smooth gameplay synchronization.
+        
+        QUALIA.CODE v1.1: Container-based instantiation with direct config injection.
+        All dependencies (IEventBus, ITimerService, ILogger, GameStateStreamingServiceConfig) 
+        are auto-injected by the IoC container.
         """
         try:
-            from .services.GameStateStreamingService import GameStateStreamingService
-            import yaml
-            from pathlib import Path
-
-            # Load configuration - QUALIA.CODE §7: Externalized configuration
-            config_path = Path(__file__).parent / "config" / "server.yaml"
-            with open(config_path, "r") as file:
-                config = yaml.safe_load(file)
-
-            game_state_streaming_service = GameStateStreamingService(
-                event_bus=self.get_event_bus(),
-                config=config
-            )
+            from .services.interfaces.IGameStateStreamingService import IGameStateStreamingService
+            
+            # QUALIA.CODE §II.2 - Resolve from container (eliminates manual instantiation)
+            game_state_streaming_service = self.container.resolve(IGameStateStreamingService)  # type: ignore[type-abstract]
+            
             self._services["game_state_streaming_service"] = game_state_streaming_service
-            self._logger.debug("✅ GameStateStreamingService initialized for Phase 6.1 integration")
+            self._logger.debug("✅ GameStateStreamingService initialized via IoC container for Phase 6.1 integration")
 
         except Exception as e:
             self._logger.error(f"🚨 Failed to initialize GameStateStreamingService: {e}")
@@ -571,9 +561,12 @@ class CompositionRoot:
         
         PHASE 6.5: HealthCheckService Integration
         Returns service for dependency health checking and Kubernetes probes.
+        
+        QUALIA.CODE v1.1 Compliance:
+        - Uses container.resolve() for IoC pattern (Session 14 fix)
         """
         from .services.interfaces.IHealthCheckService import IHealthCheckService
-        return self.container.get(IHealthCheckService)
+        return self.container.resolve(IHealthCheckService)
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)

@@ -21,6 +21,9 @@ from .interfaces.IApplicationInitializerService import IApplicationInitializerSe
 from .interfaces.IPerformanceService import IPerformanceService
 from .interfaces.ITimerService import ITimerService
 from .interfaces.IMetricsService import IMetricsService
+from .interfaces.IPersistenceService import IPersistenceService
+from .interfaces.IStateStreamingService import IStateStreamingService
+from .interfaces.IGameStateStreamingService import IGameStateStreamingService
 
 # Import implementations
 from .QualiaLogger import QualiaLogger
@@ -39,6 +42,9 @@ from .PatternSystemService import PatternSystemService
 from .ApplicationInitializerService import ApplicationInitializerService
 from .PerformanceService import PerformanceService
 from .TimerService import TimerService
+from .PersistenceService import PersistenceService
+from .StateStreamingService import StateStreamingService
+from .GameStateStreamingService import GameStateStreamingService
 
 # Import contracts
 from .contracts.ILogger_contracts import LoggerConfig
@@ -57,6 +63,14 @@ from .contracts.IPatternSystemService_contracts import PatternSystemConfig
 from .contracts.IApplicationInitializerService_contracts import ApplicationInitializerServiceConfig
 from .contracts.IPerformanceService_contracts import PerformanceServiceConfig
 from .contracts.ITimerService_contracts import TimerServiceConfig
+from .contracts.IPersistenceService_contracts import (
+    PersistenceServiceConfig,
+    StorageConfig,
+    LeaderboardConfig,
+    ScoreValidationThresholds
+)
+from .contracts.IStateStreamingService_contracts import StateStreamingServiceConfig
+from .contracts.IGameStateStreamingService_contracts import GameStateStreamingServiceConfig
 
 
 def _load_yaml_config(config_name: str, config_dir: str = "config") -> Dict[str, Any]:
@@ -113,6 +127,9 @@ def configure_container(container: ServiceContainer) -> None:
     app_initializer_config_data = _load_yaml_config("application-initializer")
     performance_config_data = _load_yaml_config("performance")
     timer_config_data = _load_yaml_config("timer")
+    persistence_config_data = _load_yaml_config("persistence")
+    state_streaming_config_data = _load_yaml_config("state-streaming")
+    game_state_streaming_config_data = _load_yaml_config("game-state-streaming")
     
     # Register typed configuration objects
     container.register_config(LoggerConfig, LoggerConfig(
@@ -261,6 +278,34 @@ def configure_container(container: ServiceContainer) -> None:
         enable_fast_forward=timer_config_data.get('enable_fast_forward', False)
     ))
     
+    # Register PersistenceService configuration
+    storage_data = persistence_config_data.get('storage', {})
+    leaderboard_data = persistence_config_data.get('leaderboard', {})
+    validation_data = persistence_config_data.get('validation', {})
+    
+    container.register_config(PersistenceServiceConfig, PersistenceServiceConfig(
+        storage=StorageConfig(**storage_data) if storage_data else StorageConfig(),
+        leaderboard=LeaderboardConfig(**leaderboard_data) if leaderboard_data else LeaderboardConfig(),
+        validation=ScoreValidationThresholds(**validation_data) if validation_data else ScoreValidationThresholds(),
+        enable_score_validation=persistence_config_data.get('enable_score_validation', True),
+        enable_auto_backup=persistence_config_data.get('enable_auto_backup', True),
+        enable_statistics=persistence_config_data.get('enable_statistics', True)
+    ))
+    
+    # Register StateStreamingService configuration
+    container.register_config(StateStreamingServiceConfig, StateStreamingServiceConfig(
+        target_fps=state_streaming_config_data.get('target_fps', 30.0),
+        enable_streaming=state_streaming_config_data.get('enable_streaming', True),
+        max_queue_size=state_streaming_config_data.get('max_queue_size', 100)
+    ))
+    
+    # Register GameStateStreamingService configuration
+    container.register_config(GameStateStreamingServiceConfig, GameStateStreamingServiceConfig(
+        target_fps=game_state_streaming_config_data.get('target_fps', 60.0),
+        enable_delta_compression=game_state_streaming_config_data.get('enable_delta_compression', True),
+        max_state_history=game_state_streaming_config_data.get('max_state_history', 100)
+    ))
+    
     # Step 2: Register all services as singletons
     # Dependencies will be automatically resolved by the container
     
@@ -282,6 +327,9 @@ def configure_container(container: ServiceContainer) -> None:
     container.register_singleton(IApplicationInitializerService, ApplicationInitializerService)  # type: ignore[type-abstract]
     container.register_singleton(IPerformanceService, PerformanceService)  # type: ignore[type-abstract]
     container.register_singleton(ITimerService, TimerService)  # type: ignore[type-abstract]
+    container.register_singleton(IPersistenceService, PersistenceService)  # type: ignore[type-abstract]
+    container.register_singleton(IStateStreamingService, StateStreamingService)  # type: ignore[type-abstract]
+    container.register_singleton(IGameStateStreamingService, GameStateStreamingService)  # type: ignore[type-abstract]
 
 
 def get_configured_container() -> ServiceContainer:

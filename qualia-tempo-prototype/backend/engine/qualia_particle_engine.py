@@ -94,6 +94,7 @@ class QualiaParticleEngine:
 
     def __init__(
         self,
+        calculator_factory: Optional[Any] = None,  # Callable that creates ParticleStateCalculator
         ctx: Any = None,  # DEPRECATED - kept for backward compatibility, not used
         max_particles: int = 10000,
         enable_metrics: bool = True,
@@ -103,7 +104,12 @@ class QualiaParticleEngine:
         """
         Initialize the QualiaParticleEngine wrapper.
         
+        QUALIA.CODE COMPLIANCE FIX:
+        - Accepts calculator_factory for dependency injection (§2.1 IoC)
+        - If calculator_factory is None, falls back to direct instantiation (backward compatibility)
+        
         Args:
+            calculator_factory: Optional factory function to create ParticleStateCalculator (IoC)
             ctx: DEPRECATED (v1 GPU context, not used in v2)
             max_particles: Maximum number of particles to simulate
             enable_metrics: Enable performance metrics tracking
@@ -125,6 +131,7 @@ class QualiaParticleEngine:
         self.max_particles = max_particles
         self.enable_metrics = enable_metrics
         self.event_bus = event_bus
+        self._calculator_factory = calculator_factory
         
         # State tracking
         self.simulation_tick = 0
@@ -140,7 +147,7 @@ class QualiaParticleEngine:
         # Physics configuration from QualiaState
         self.physics_config = PhysicsConfig()
         
-        # Create the pure state calculator (NO GPU)
+        # Create the pure state calculator (NO GPU) - Will be created via factory if provided
         self.calculator: Optional[ParticleStateCalculator] = None
         
         # QUALIA.CODE v1.2: State cache for decoupling event handling
@@ -171,12 +178,23 @@ class QualiaParticleEngine:
             return False
         
         try:
-            # Create the particle state calculator
-            self.calculator = ParticleStateCalculator(
-                max_particles=self.max_particles,
-                physics_config=self.physics_config,
-                event_bus=self.event_bus
-            )
+            # Create the particle state calculator via factory (IoC) or direct instantiation (backward compatibility)
+            if self._calculator_factory is not None:
+                # QUALIA.CODE COMPLIANT: Use injected factory
+                self.calculator = self._calculator_factory(
+                    max_particles=self.max_particles,
+                    physics_config=self.physics_config,
+                    event_bus=self.event_bus
+                )
+                logger.debug("ParticleStateCalculator created via injected factory (IoC compliant)")
+            else:
+                # BACKWARD COMPATIBILITY: Direct instantiation
+                self.calculator = ParticleStateCalculator(
+                    max_particles=self.max_particles,
+                    physics_config=self.physics_config,
+                    event_bus=self.event_bus
+                )
+                logger.debug("ParticleStateCalculator created via direct instantiation (backward compatibility mode)")
             
             # Initialize particles (either with provided data or defaults)
             success = self.calculator.initialize_particles(particle_data=particles_data)

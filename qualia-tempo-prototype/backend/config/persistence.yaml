@@ -1,0 +1,28 @@
+# QUALIA.CODE v1.1 - PersistenceService Configuration
+# Leaderboard and score management settings
+
+storage:
+  storage_directory: "./data/leaderboard"
+  leaderboard_filename: "leaderboard.json"
+  backup_directory: "./data/backups"
+  max_backup_count: 5
+  auto_backup_interval_hours: 24
+
+leaderboard:
+  max_entries_per_song: 1000
+  max_entries_global: 10000
+  prune_old_entries: true
+  prune_after_days: 365
+  allow_duplicate_players: true
+  min_score_threshold: 1000.0
+
+validation:
+  max_score_per_second: 2000.0
+  max_combo_multiplier: 5.0
+  min_accuracy_for_high_score: 0.7
+  max_accuracy: 1.0
+  suspicious_score_threshold: 0.95
+
+enable_score_validation: true
+enable_auto_backup: true
+enable_statistics: true

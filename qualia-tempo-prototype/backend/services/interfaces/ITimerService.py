@@ -114,3 +114,25 @@ class ITimerService(Protocol):
             True if timer completed, False if timeout or cancelled
         """
         ...
+    
+    async def wait_for(self, coroutine: Awaitable[Any], timeout: float) -> Any:
+        """
+        Wait for coroutine with timeout.
+        
+        Platform abstraction over asyncio.wait_for().
+        
+        QUALIA.CODE v1.1 Compliance:
+        - §4 Platform Abstraction: Wraps asyncio.wait_for()
+        - Enables testable time control in health checks and async operations
+        
+        Args:
+            coroutine: Async coroutine to await
+            timeout: Maximum time to wait in seconds
+            
+        Returns:
+            Result from coroutine
+            
+        Raises:
+            asyncio.TimeoutError: If operation exceeds timeout
+        """
+        ...

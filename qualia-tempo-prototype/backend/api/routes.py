@@ -256,8 +256,8 @@ async def update_qualia_visuals(
         state_dict = state.dict()
         await qualia_processor.process_qualia_state(state_dict)
 
-        # Log state for debugging (enhanced)
-        _log_qualia_state_detailed(state_dict)
+        # Log state for debugging (enhanced) - QUALIA.CODE §5.3 compliant
+        _log_qualia_state_detailed(state_dict, logger)
 
         return QualiaUpdateResponse(
             status="success", message="QualiaState processed via EventBus architecture"
@@ -384,19 +384,27 @@ async def websocket_test(websocket: WebSocket) -> None:
         raise
 
 
-def _log_qualia_state_detailed(state_dict: dict) -> None:
-    """Enhanced logging for QualiaState with visual representation."""
-    print("")
-    print("=== QUALIA STATE UPDATE (QUALIA.CODE) ===")
-    print(f"🔥 Intensity: {state_dict.get('intensity', 0):.3f}")
-    print(f"🎯 Precision: {state_dict.get('precision', 0):.3f}")
-    print(f"⚡ Aggression: {state_dict.get('aggression', 0):.3f}")
-    print(f"🌊 Flow: {state_dict.get('flow', 0):.3f}")
-    print(f"🌪️ Chaos: {state_dict.get('chaos', 0):.3f}")
-    print(f"💊 Recovery: {state_dict.get('recovery', 0):.3f}")
-    print(f"🌟 Transcendence: {state_dict.get('transcendence', 0):.3f}")
-    print("==========================================")
-    print("")
+def _log_qualia_state_detailed(state_dict: dict, logger: logging.Logger) -> None:
+    """
+    Enhanced logging for QualiaState with visual representation.
+    
+    QUALIA.CODE v1.1 COMPLIANCE:
+    - Uses injected ILogger instead of print() (§5.3 Logging Standard)
+    - Structured logging with DEBUG level for development visibility
+    
+    Args:
+        state_dict: QualiaState dictionary with metrics
+        logger: Injected logger instance (not print())
+    """
+    logger.debug("=== QUALIA STATE UPDATE (QUALIA.CODE) ===")
+    logger.debug(f"🔥 Intensity: {state_dict.get('intensity', 0):.3f}")
+    logger.debug(f"🎯 Precision: {state_dict.get('precision', 0):.3f}")
+    logger.debug(f"⚡ Aggression: {state_dict.get('aggression', 0):.3f}")
+    logger.debug(f"🌊 Flow: {state_dict.get('flow', 0):.3f}")
+    logger.debug(f"🌪️ Chaos: {state_dict.get('chaos', 0):.3f}")
+    logger.debug(f"💊 Recovery: {state_dict.get('recovery', 0):.3f}")
+    logger.debug(f"🌟 Transcendence: {state_dict.get('transcendence', 0):.3f}")
+    logger.debug("==========================================")
 
 
 @app.post("/reset_engine")
@@ -419,18 +427,35 @@ async def reset_visual_engine(services: CompositionRoot = Depends(get_services))
 
 @app.get("/stats")
 async def get_engine_stats(services: CompositionRoot = Depends(get_services)) -> Dict[str, Any]:
-    """Get engine statistics and current state."""
+    """
+    Get engine statistics and current state.
+    
+    TODO (QUALIA.CODE §IV - Event-Driven Diagnostics):
+    This endpoint uses a "pull" pattern (calling get_stats() directly), which violates
+    QUALIA.CODE architectural principles. The correct approach is:
+    
+    1. Services should emit ServiceStatusUpdateEvent periodically
+    2. A DiagnosticsOrchestratorService should listen to these events
+    3. This endpoint should query the orchestrator's cached state (no direct service calls)
+    
+    This pattern prevents tight coupling and allows services to remain decoupled.
+    See: QUALIA.CODE.md §IV - Event-Driven Architecture, Diagnostics subsection
+    
+    TRACKED IN: TODO.md - Session 14 Remaining Work #1
+    """
     try:
         event_bus = services.get_event_bus()
         particle_system = services.get_particle_system()
         qualia_processor = services.get_qualia_processor()
 
+        # NOTE: Direct service method calls below violate event-driven architecture
+        # This is a KNOWN ARCHITECTURAL DEBT that will be resolved in future session
         return {
             "event_bus": event_bus.get_stats(),
             "subscriptions": event_bus.get_subscriptions(),
             "particle_parameters": particle_system.get_current_parameters(),
             "current_qualia_state": qualia_processor.get_current_state(),
-            "architecture": "QUALIA.CODE v1.0",
+            "architecture": "QUALIA.CODE v1.1 (diagnostics pending refactor)",
         }
     except Exception as e:
         logger.error(f"🚨 Error getting stats: {str(e)}")

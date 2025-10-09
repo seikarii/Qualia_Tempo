@@ -384,3 +384,29 @@ class TimerService(ITimerService):
         
         if completed:
             self._logger.debug(f"Cleaned up {len(completed)} completed timers")
+    
+    async def wait_for(self, coroutine: Awaitable[Any], timeout: float) -> Any:
+        """
+        Wait for coroutine with timeout.
+        
+        Platform abstraction over asyncio.wait_for().
+        
+        QUALIA.CODE v1.1 Compliance:
+        - §4 Platform Abstraction: Wraps asyncio.wait_for()
+        - Enables testable time control in health checks and async operations
+        
+        Args:
+            coroutine: Async coroutine to await
+            timeout: Maximum time to wait in seconds
+            
+        Returns:
+            Result from coroutine
+            
+        Raises:
+            asyncio.TimeoutError: If operation exceeds timeout
+        """
+        if timeout < 0:
+            self._logger.warning(f"Negative timeout: {timeout}, using 0")
+            timeout = 0
+        
+        return await asyncio.wait_for(coroutine, timeout=timeout)

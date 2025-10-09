@@ -8,23 +8,25 @@ RESPONSIBILITIES (per ARCHITECTURE.GOLD.CODE):
 - Player statistics tracking
 - JSON file persistence (SQLite-ready architecture)
 - Thread-safe file operations
+
+QUALIA.CODE COMPLIANCE FIXES:
+- ✅ Injects ILogger instead of using logging.getLogger() (§5.3 Logging Standard)
+- ✅ Injects PersistenceServiceConfig instead of loading YAML directly (§7 Configuration Management)
+- ✅ Uses IFileSystemService for all file operations (§4 Platform Abstraction)
 # mypy: disable-error-code="union-attr,no-any-return,operator"
 # Rationale: Config is always initialized before use; MyPy cannot prove this statically
 
 """
 
 import json
-import logging
-import os
-import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from threading import Lock
 from typing import List, Optional, Dict, Any
-import yaml
 
 from .interfaces.IPersistenceService import IPersistenceService
 from .interfaces.IFileSystemService import IFileSystemService
+from .interfaces.ILogger import ILogger
 from .contracts.IPersistenceService_contracts import (
     LeaderboardEntry,
     PersistenceServiceConfig,
@@ -48,17 +50,29 @@ class PersistenceService(IPersistenceService):
     - Score validation prevents cheating
     - Automatic pruning of old entries
     - Statistics calculation for analytics
+    
+    QUALIA.CODE COMPLIANCE:
+    - Direct configuration injection (§II.2.3 Step 3)
+    - ILogger injection (§V.5.3 Logging Standard)
+    - IFileSystemService for all I/O (§4 Platform Abstraction)
     """
     
-    def __init__(self, file_system_service: IFileSystemService) -> None:
-        """Initialize PersistenceService with configuration.
+    def __init__(
+        self,
+        config: PersistenceServiceConfig,
+        file_system_service: IFileSystemService,
+        logger: ILogger
+    ) -> None:
+        """Initialize PersistenceService with injected dependencies.
         
         Args:
-            file_system_service: FileSystemService for file operations (QUALIA.CODE §4 Platform Abstraction)
+            config: Direct configuration injection (QUALIA.CODE §II Step 3)
+            file_system_service: FileSystemService for file operations (§4 Platform Abstraction)
+            logger: Injected logger instance (§5.3 Logging Standard)
         """
-        self._logger = logging.getLogger(__name__)
+        self._config = config
         self._file_system_service = file_system_service
-        self._config: Optional[PersistenceServiceConfig] = None
+        self._logger = logger
         self._leaderboard: List[LeaderboardEntry] = []
         self._lock = Lock()  # Thread safety for file operations
         self._initialized = False
@@ -69,6 +83,8 @@ class PersistenceService(IPersistenceService):
         self._stats_cache: Dict[str, Any] = {}
         self._stats_cache_time: Optional[datetime] = None
         
+        self._logger.info("PersistenceService initialized with injected configuration")
+        
     @log_execution()
     @handle_errors()
     def initialize(self) -> bool:
@@ -76,27 +92,9 @@ class PersistenceService(IPersistenceService):
         Initialize persistence service.
         
         Creates storage directories and loads existing data.
+        Configuration is now injected via constructor (QUALIA.CODE §II.2.3 Step 3).
         """
         try:
-            # Load configuration using FileSystemService (QUALIA.CODE compliance)
-            config_path = Path(__file__).parent.parent / "config" / "persistence.yaml"
-            config_content = self._file_system_service.read_file(config_path)
-            config_data = yaml.safe_load(config_content)
-            
-            # Parse configuration into dataclasses
-            storage_cfg = StorageConfig(**config_data['storage'])
-            leaderboard_cfg = LeaderboardConfig(**config_data['leaderboard'])
-            validation_cfg = ScoreValidationThresholds(**config_data['validation'])
-            
-            self._config = PersistenceServiceConfig(
-                storage=storage_cfg,
-                leaderboard=leaderboard_cfg,
-                validation=validation_cfg,
-                enable_score_validation=config_data['features']['enable_score_validation'],
-                enable_auto_backup=config_data['features']['enable_auto_backup'],
-                enable_statistics=config_data['features']['enable_statistics']
-            )
-            
             # Create storage directories
             self._storage_path = Path(self._config.storage.storage_directory)
             self._storage_path.mkdir(parents=True, exist_ok=True)
@@ -502,15 +500,17 @@ class PersistenceService(IPersistenceService):
     @log_execution()
     @handle_errors()
     def backup_data(self, backup_path: str) -> bool:
-        """Create a backup of leaderboard data."""
+        """Create a backup of leaderboard data using IFileSystemService (QUALIA.CODE §4)."""
         try:
             with self._lock:
                 source = self._storage_path / self._config.storage.leaderboard_filename
-                if not source.exists():
+                if not self._file_system_service.exists(source):
                     self._logger.warning("No data to backup")
                     return False
                 
-                shutil.copy2(source, backup_path)
+                # Use IFileSystemService for file copying (platform abstraction)
+                source_content = self._file_system_service.read_file(source)
+                self._file_system_service.write_file(backup_path, source_content)
                 self._logger.info(f"Backup created: {backup_path}")
                 return True
         except Exception as e:

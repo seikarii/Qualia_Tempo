@@ -21,6 +21,7 @@ from .interfaces.IHealthCheckService import (
 )
 from .contracts.IHealthCheckService_contracts import HealthCheckServiceConfig
 from .interfaces.ILogger import ILogger
+from .interfaces.ITimerService import ITimerService
 from ..utils.decorators import log_execution
 
 
@@ -59,11 +60,25 @@ class HealthCheckService:
     def __init__(
         self,
         config: HealthCheckServiceConfig,
-        logger: ILogger
+        logger: ILogger,
+        timer_service: ITimerService
     ):
-        """Initialize HealthCheckService."""
+        """
+        Initialize HealthCheckService.
+        
+        QUALIA.CODE v1.1 Compliance:
+        - Direct configuration injection (§II.2.3)
+        - ILogger injection (§5.3)
+        - ITimerService injection for platform abstraction (§4)
+        
+        Args:
+            config: Service configuration
+            logger: Injected logger instance
+            timer_service: Injected timer service for async operations with timeout
+        """
         self._config = config
         self._logger = logger
+        self._timer_service = timer_service
         
         # Dependency registry
         self._dependency_checks: Dict[str, DependencyCheck] = {}
@@ -328,8 +343,8 @@ class HealthCheckService:
         start_time = time.perf_counter()
         
         try:
-            # Run check with timeout
-            is_healthy = await asyncio.wait_for(
+            # Run check with timeout (QUALIA.CODE v1.1 §4: Platform abstraction via ITimerService)
+            is_healthy = await self._timer_service.wait_for(
                 dependency.check_function(),
                 timeout=dependency.timeout_seconds
             )
