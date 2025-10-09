@@ -1,0 +1,22 @@
+# Health Check Service Configuration
+# QUALIA.CODE v1.1 Compliance - Phase 6.5
+
+# Health Check Settings
+enable_health_checks: true
+check_interval_seconds: 30.0
+check_timeout_seconds: 5.0
+
+# Dependency Management
+max_consecutive_failures: 3
+failure_reset_interval_seconds: 300.0
+enable_dependency_caching: true
+
+# Probe Configuration
+enable_readiness_probe: true
+enable_liveness_probe: true
+startup_grace_period_seconds: 60.0
+
+# Monitoring & Degradation
+enable_graceful_degradation: true
+degraded_mode_timeout_seconds: 3600.0
+enable_health_metrics: true

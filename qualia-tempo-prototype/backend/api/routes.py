@@ -7,6 +7,7 @@ from fastapi.responses import Response
 from .models import QualiaState, QualiaUpdateResponse
 from ..CompositionRoot import get_composition_root, CompositionRoot
 from typing import Dict, Any
+from datetime import datetime
 import logging
 import json
 import numpy as np
@@ -80,62 +81,68 @@ async def root() -> Dict[str, Any]:
 @app.get("/health")
 async def health_check(services: CompositionRoot = Depends(get_services)) -> Dict[str, Any]:
     """
-    Comprehensive health check with service validation.
+    Comprehensive health check with dependency status.
     
-    PHASE 3.4: IBaseService Health Status Integration
-    Uses ApplicationInitializerService to query health status from all managed services.
+    PHASE 6.5: HealthCheckService Integration
+    Uses HealthCheckService for dependency checking and status aggregation.
+    Returns detailed health report with all registered checks.
     """
     try:
-        # Get EventBus stats
-        event_bus = services.get_event_bus()
-        event_bus_stats = event_bus.get_stats()
-        subscriptions = event_bus.get_subscriptions()
-
-        # Get ApplicationInitializerService
-        app_initializer = services.get_application_initializer()
+        health_check_service = services.get_health_check()
+        health_report = await health_check_service.get_health_report()
         
-        # Collect health status from all managed services
-        service_health = {}
-        overall_status = "healthy"
-        
-        if app_initializer:
-            managed_services = app_initializer.get_managed_services()
-            for service in managed_services:
-                if hasattr(service, 'get_health_status'):
-                    try:
-                        health = service.get_health_status()
-                        service_name = health.get('service', 'unknown')
-                        service_health[service_name] = health
-                        
-                        # Aggregate overall status (degraded if any service degraded, error if any error)
-                        service_status = health.get('status', 'unknown')
-                        if service_status == 'error':
-                            overall_status = 'error'
-                        elif service_status == 'degraded' and overall_status == 'healthy':
-                            overall_status = 'degraded'
-                    except Exception as e:
-                        logger.error(f"Failed to get health status from service: {e}")
-                        overall_status = 'degraded'
-
-        return {
-            "status": overall_status,
-            "engine": "ready",
-            "architecture": "QUALIA.CODE v1.1",
-            "timestamp": event_bus_stats.get('timestamp', 0),
-            "event_bus": {
-                "stats": event_bus_stats,
-                "subscriptions": subscriptions
-            },
-            "services": service_health,
-            "managed_services_count": len(service_health)
-        }
+        return health_report
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return {
-            "status": "error",
-            "engine": "degraded",
-            "error": str(e)
+            "status": "UNHEALTHY",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
         }
+
+
+@app.get("/health/ready")
+async def readiness_probe(services: CompositionRoot = Depends(get_services)) -> Dict[str, bool]:
+    """
+    Kubernetes readiness probe endpoint.
+    
+    PHASE 6.5: HealthCheckService Integration
+    Returns true if the service is ready to accept traffic.
+    Returns false during startup grace period or if critically unhealthy.
+    
+    Returns:
+        {"ready": bool} - True if ready, False otherwise
+    """
+    try:
+        health_check_service = services.get_health_check()
+        is_ready = await health_check_service.check_readiness()
+        
+        return {"ready": is_ready}
+    except Exception as e:
+        logger.error(f"Readiness probe failed: {e}")
+        return {"ready": False}
+
+
+@app.get("/health/live")
+async def liveness_probe(services: CompositionRoot = Depends(get_services)) -> Dict[str, bool]:
+    """
+    Kubernetes liveness probe endpoint.
+    
+    PHASE 6.5: HealthCheckService Integration
+    Returns true if the service is alive and responsive.
+    Should almost always return true unless the process is completely stuck.
+    
+    Returns:
+        {"alive": bool} - True if alive, False otherwise
+    """
+    try:
+        health_check_service = services.get_health_check()
+        is_alive = await health_check_service.check_liveness()
+        
+        return {"alive": is_alive}
+    except Exception as e:
+        logger.error(f"Liveness probe failed: {e}")
+        return {"alive": False}
 
 
 @app.get("/diag/particle_buffer")

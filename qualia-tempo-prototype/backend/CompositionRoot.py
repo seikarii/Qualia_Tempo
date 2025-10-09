@@ -565,6 +565,16 @@ class CompositionRoot:
         """
         return self._app_initializer
 
+    def get_health_check(self) -> Any:
+        """
+        Get HealthCheckService instance.
+        
+        PHASE 6.5: HealthCheckService Integration
+        Returns service for dependency health checking and Kubernetes probes.
+        """
+        from .services.interfaces.IHealthCheckService import IHealthCheckService
+        return self._container.get(IHealthCheckService)
+
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
     async def shutdown(self) -> None:
