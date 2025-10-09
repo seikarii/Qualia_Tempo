@@ -1,5 +1,6 @@
 """High-Fidelity Mock for ISecurityService"""
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from fastapi import WebSocket
 from backend.services.interfaces.ISecurityService import ISecurityService
 
 
@@ -28,3 +29,14 @@ class MockSecurityService(ISecurityService):
     def check_permissions(self, user_id: str, resource: str) -> bool:
         """Check user permissions."""
         return user_id == "admin" or resource == "public"
+    
+    async def verify_connection(self, websocket: WebSocket) -> Optional[Dict[str, Any]]:
+        """Verify WebSocket connection authentication."""
+        # Return mock user info if auth is enabled
+        if self.is_auth_enabled():
+            return {"user_id": "mock_user", "authenticated": True}
+        return None
+    
+    def is_auth_enabled(self) -> bool:
+        """Check if authentication is currently enabled."""
+        return False  # Default to disabled for testing

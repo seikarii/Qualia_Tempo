@@ -25,6 +25,9 @@ from .boss_ai_service_mock import MockBossAIService
 from .particle_pool_manager_mock import MockParticleEnginePoolManager
 from .pattern_system_mock import MockPatternSystemService
 from .application_initializer_mock import MockApplicationInitializerService
+from .state_streaming_mock import MockStateStreamingService
+from .MockPerformanceService import MockPerformanceService
+from .MockTimerService import MockTimerService
 
 __all__ = [
     # Phase 4.1 (Core Infrastructure)
@@ -43,4 +46,9 @@ __all__ = [
     "MockParticleEnginePoolManager",
     "MockPatternSystemService",
     "MockApplicationInitializerService",
+    "MockStateStreamingService",
+    # Phase 6.1 (Performance Monitoring)
+    "MockPerformanceService",
+    # Phase 6.2 (Timer Service)
+    "MockTimerService",
 ]

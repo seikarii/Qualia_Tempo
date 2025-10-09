@@ -30,3 +30,11 @@ class MockShaderIntrospectionService(IShaderIntrospectionService):
     def validate_shader(self, shader_code: str) -> bool:
         """Validate shader code."""
         return len(shader_code) > 0 and "void main()" in shader_code
+    
+    def introspect(self, shader_source: str) -> Dict[str, Any]:
+        """Parse GLSL shader source and extract UBO uniform information."""
+        return {
+            "uniforms": [("u_time", "float", 0), ("u_resolution", "vec2", 4)],
+            "struct_format": "f2f",
+            "total_size": 12
+        }

@@ -1,13 +1,14 @@
 # QUALIA.CODE v1.1 - CompositionRoot Tests & Test Factory Strategy
 # Comprehensive testing for IoC container and service dependencies
 # SUPREME ARCHITECTURAL COMPLIANCE: ZERO TOLERANCE FOR MANUAL INSTANTIATION
+# Phase 4.3: Refactored to use centralized high-fidelity mocks
 
 import pytest
 import asyncio
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import patch, Mock  # Mock only for test-specific inline mocks
 import sys
 import os
-from typing import Dict
+from typing import Dict, Any
 
 # Add project root to path for imports
 sys.path.insert(
@@ -19,9 +20,17 @@ from backend.CompositionRoot import (
     get_composition_root,
     reset_composition_root,
 )
-from backend.services.EventBus import EventBus
-from backend.services.ShaderIntrospectionService import ShaderIntrospectionService
 from backend.engine.qualia_particle_engine import QualiaParticleEngine
+from backend.services.EventBus import EventBus  # For isinstance checks in tests
+
+# PHASE 4.3: Import centralized high-fidelity mocks
+from backend.tests.mocks import (
+    MockEventBus,
+    MockShaderIntrospectionService,
+    MockQualiaProcessor,
+    MockSecurityService,
+    MockStateStreamingService,
+)
 
 
 class TestCompositionRootFactory:
@@ -49,32 +58,12 @@ class TestCompositionRootFactory:
         reset_composition_root()
         composition_root = CompositionRoot()
 
-        # 1. Create Mocks for all dependencies
-        mock_event_bus = Mock(spec=EventBus)
-        mock_event_bus.subscribe = Mock()
-        mock_event_bus.unsubscribe = Mock()
-        mock_event_bus.publish = AsyncMock()
-        mock_event_bus._handlers = {}
-        mock_event_bus.get_stats = Mock(
-            return_value={
-                "total_handlers": 0,
-                "total_events_published": 0,
-                "events_published": 0,
-                "events_handled": 0,
-                "errors": 0,
-            }
-        )
-        mock_event_bus.get_subscriptions = Mock(return_value={"Event1": 2, "Event2": 1})
-
-        mock_shader_inspector = Mock(spec=ShaderIntrospectionService)
-        mock_shader_inspector.introspect = Mock(
-            return_value={
-                "uniforms": [("time", "float", 0), ("particle_count", "int", 4)],
-                "struct_format": "fi",
-                "total_size": 8,
-            }
-        )
-        mock_shader_inspector.shutdown = AsyncMock()
+        # 1. Create high-fidelity mocks from centralized mock library (Phase 4.3)
+        mock_event_bus = MockEventBus()
+        mock_event_bus.reset()  # Ensure clean state for test isolation
+        
+        mock_shader_inspector = MockShaderIntrospectionService()
+        mock_shader_inspector.reset()  # Ensure clean state for test isolation
 
         # ARCHITECTURE.GOLD.CODE v2: OpenGL context removed
         # QualiaParticleEngine v2 no longer requires ctx, shader_inspector parameters
@@ -86,29 +75,23 @@ class TestCompositionRootFactory:
             enable_metrics=True,
         )
 
-        # 3. Create mocks for other services (these remain mocked as they are not the SUT)
-        mock_qualia_processor = Mock()
-        mock_qualia_processor.process_qualia_state = AsyncMock()
-        mock_qualia_processor.get_current_state = Mock(return_value=None)
+        # 3. Create high-fidelity mocks for other services (Phase 4.3)
+        mock_qualia_processor = MockQualiaProcessor()
+        mock_qualia_processor.reset()  # Ensure clean state for test isolation
 
         # ARCHITECTURE.GOLD.CODE: RenderingService and StreamingWebService removed
         # Backend no longer performs video rendering or streaming
         
         # StateStreamingService mock (for state-only streaming)
-        mock_state_streaming_service = Mock()
-        mock_state_streaming_service.start = AsyncMock()
-        mock_state_streaming_service.stop = AsyncMock()
-        mock_state_streaming_service.send_state = AsyncMock()
-        mock_state_streaming_service.get_active_connections = Mock(return_value=0)
-        mock_state_streaming_service.shutdown = AsyncMock()
+        mock_state_streaming_service = MockStateStreamingService()
+        mock_state_streaming_service.reset()  # Ensure clean state for test isolation
         
         # ARCHITECTURE.GOLD.CODE: All video streaming behavior removed
         # StateStreamingService handles state-only streaming (no frames)
 
-        # Create MOCK SecurityService for testing
-        mock_security_service = Mock()
-        mock_security_service.validate_token = Mock(return_value=True)
-        mock_security_service.generate_token = Mock(return_value="mock_token")
+        # Create high-fidelity SecurityService mock for testing (Phase 4.3)
+        mock_security_service = MockSecurityService()
+        mock_security_service.reset()  # Ensure clean state for test isolation
 
         # Create REAL FileSystemService from container (Phase 1 migration)
         from backend.services.interfaces.IFileSystemService import IFileSystemService
@@ -178,7 +161,7 @@ class TestCompositionRootFactory:
         return composition_root
 
     @staticmethod
-    def get_service_mocks(composition_root: CompositionRoot) -> Dict[str, Mock]:
+    def get_service_mocks(composition_root: CompositionRoot) -> Dict[str, Any]:
         """
         Extract all service mocks from a test CompositionRoot.
 
@@ -187,6 +170,8 @@ class TestCompositionRootFactory:
 
         ARCHITECTURE.GOLD.CODE: rendering_service and streaming_service removed.
         Backend no longer performs video rendering or streaming.
+        
+        Phase 4.3: Now returns high-fidelity mocks from centralized mock library.
 
         Args:
             composition_root: The mocked CompositionRoot instance

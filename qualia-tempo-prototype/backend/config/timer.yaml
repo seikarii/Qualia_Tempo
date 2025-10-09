@@ -1,0 +1,30 @@
+# TimerService Configuration
+# QUALIA.CODE v1.1 - Phase 6.2
+
+# Timer Management
+max_concurrent_timers: 1000
+enable_timer_tracking: true
+
+# Timeouts
+default_timeout_seconds: 300.0  # 5 minutes
+max_delay_seconds: 86400.0      # 24 hours
+
+# Cleanup
+auto_cleanup_completed: true
+cleanup_interval_seconds: 60.0
+
+# Error Handling
+log_callback_errors: true
+retry_failed_callbacks: false
+max_callback_retries: 3
+
+# Performance
+callback_timeout_seconds: 30.0
+enable_callback_performance_tracking: true
+
+# Features
+enable_interval_timers: true
+enable_wait_for_completion: true
+
+# Testing
+enable_fast_forward: false  # Set to true in test environments

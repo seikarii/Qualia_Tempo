@@ -1081,3 +1081,195 @@ class QLA011Checker:
        if file_path not in self.analyzer.file_services:
            self.analyzer.file_services[file_path] = set()
        self.analyzer.file_services[file_path].add(service_name)
+
+
+class QLA012:
+    """Prohibit Service Locator Pattern"""
+
+    def check(self, node: AST, source_file: SourceFile) -> Optional[Diagnostic]:
+        checker = QLA012Checker(source_file.path)
+        checker.visit(node)
+        return checker.diagnostic
+
+
+class QLA012Checker:
+    def __init__(self, filepath: Path):
+        self.filepath = filepath
+        # Allow in container/composition root files
+        self.is_allowed_file = any(keyword in str(filepath) for keyword in [
+            "CompositionRoot", "container", "inversify", "test_composition_root"
+        ])
+        self.diagnostic: Optional[Diagnostic] = None
+
+    def visit(self, node: AST) -> None:
+        if self.is_allowed_file:
+            return
+
+        if isinstance(node, ast.Call):
+            self._check_call(node)
+        
+        # Recursively visit children
+        for child in ast.iter_child_nodes(node):
+            self.visit(child)
+
+    def _check_call(self, node: ast.Call) -> None:
+        """Check for service locator pattern calls"""
+        if isinstance(node.func, ast.Attribute):
+            method_name = node.func.attr
+            
+            # Check for container.resolve() calls
+            if method_name == 'resolve':
+                self.diagnostic = Diagnostic(
+                    code="QLA012",
+                    message="Service Locator pattern detected. Use dependency injection via constructor instead of calling resolve() outside CompositionRoot.",
+                    range=TextRange(0, 0),
+                )
+            
+            # Check for container.get_service() calls
+            elif method_name == 'get_service':
+                self.diagnostic = Diagnostic(
+                    code="QLA012",
+                    message="Service Locator pattern detected. Use dependency injection via constructor instead of calling get_service() outside CompositionRoot.",
+                    range=TextRange(0, 0),
+                )
+
+
+class QLA014:
+    """Prohibit Direct Logger Instantiation"""
+
+    def check(self, node: AST, source_file: SourceFile) -> Optional[Diagnostic]:
+        checker = QLA014Checker(source_file.path)
+        checker.visit(node)
+        return checker.diagnostic
+
+
+class QLA014Checker:
+    def __init__(self, filepath: Path):
+        self.filepath = filepath
+        # Allow in logger service implementation and container config
+        self.is_allowed_file = any(keyword in str(filepath) for keyword in [
+            "QualiaLogger.py", "Logger.py", "container_config.py", "CompositionRoot.py"
+        ])
+        self.diagnostic: Optional[Diagnostic] = None
+
+    def visit(self, node: AST) -> None:
+        if self.is_allowed_file:
+            return
+
+        if isinstance(node, ast.Call):
+            self._check_call(node)
+        
+        # Recursively visit children
+        for child in ast.iter_child_nodes(node):
+            self.visit(child)
+
+    def _check_call(self, node: ast.Call) -> None:
+        """Check for logging.getLogger() calls"""
+        if isinstance(node.func, ast.Attribute):
+            # Check for logging.getLogger(__name__)
+            if (node.func.attr == 'getLogger' and
+                isinstance(node.func.value, ast.Name) and
+                node.func.value.id == 'logging'):
+                self.diagnostic = Diagnostic(
+                    code="QLA014",
+                    message="Direct logger instantiation prohibited. Use injected ILogger instance via constructor: def __init__(self, logger: ILogger, ...).",
+                    range=TextRange(0, 0),
+                )
+
+
+class QLA016:
+    """Prohibit print() Statements"""
+
+    def check(self, node: AST, source_file: SourceFile) -> Optional[Diagnostic]:
+        checker = QLA016Checker(source_file.path)
+        checker.visit(node)
+        return checker.diagnostic
+
+
+class QLA016Checker:
+    def __init__(self, filepath: Path):
+        self.filepath = filepath
+        # Allow in tests and scripts
+        self.is_allowed_file = any(keyword in str(filepath) for keyword in [
+            "test_", "script", "debug", "__main__"
+        ])
+        self.diagnostic: Optional[Diagnostic] = None
+
+    def visit(self, node: AST) -> None:
+        if self.is_allowed_file:
+            return
+
+        if isinstance(node, ast.Call):
+            self._check_call(node)
+        
+        # Recursively visit children
+        for child in ast.iter_child_nodes(node):
+            self.visit(child)
+
+    def _check_call(self, node: ast.Call) -> None:
+        """Check for print() calls"""
+        if isinstance(node.func, ast.Name) and node.func.id == 'print':
+            self.diagnostic = Diagnostic(
+                code="QLA016",
+                message="print() statements prohibited in services layer. Use injected logger instance: self._logger.info() instead.",
+                range=TextRange(0, 0),
+            )
+
+
+class QLA020:
+    """Enforce IBaseService Implementation for @OnEvent Services"""
+
+    def check(self, node: AST, source_file: SourceFile) -> Optional[Diagnostic]:
+        checker = QLA020Checker(source_file.path)
+        checker.visit(node)
+        return checker.diagnostic
+
+
+class QLA020Checker:
+    def __init__(self, filepath: Path):
+        self.filepath = filepath
+        self.is_service_file = "services" in str(filepath)
+        self.diagnostic: Optional[Diagnostic] = None
+
+    def visit(self, node: AST) -> None:
+        if not self.is_service_file:
+            return
+
+        if isinstance(node, ast.ClassDef):
+            self._check_class(node)
+        
+        # Recursively visit children
+        for child in ast.iter_child_nodes(node):
+            self.visit(child)
+
+    def _check_class(self, node: ast.ClassDef) -> None:
+        """Check if class with @OnEvent methods implements IBaseService"""
+        has_onevent_decorator = False
+        has_ibaseservice = False
+
+        # Check if class has any @OnEvent decorated methods
+        for item in node.body:
+            if isinstance(item, ast.FunctionDef):
+                for decorator in item.decorator_list:
+                    decorator_name = None
+                    if isinstance(decorator, ast.Name):
+                        decorator_name = decorator.id
+                    elif isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Name):
+                        decorator_name = decorator.func.id
+                    
+                    if decorator_name == 'OnEvent':
+                        has_onevent_decorator = True
+                        break
+
+        # Check if class implements IBaseService
+        for base in node.bases:
+            if isinstance(base, ast.Name) and base.id == 'IBaseService':
+                has_ibaseservice = True
+
+        # Report violation if @OnEvent found but IBaseService missing
+        if has_onevent_decorator and not has_ibaseservice:
+            self.diagnostic = Diagnostic(
+                code="QLA020",
+                message=f"Class '{node.name}' uses @OnEvent decorator but does not implement IBaseService interface. Add IBaseService to class signature and implement lifecycle methods.",
+                range=TextRange(0, 0),
+            )

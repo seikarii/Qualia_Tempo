@@ -18,6 +18,8 @@ from .interfaces.IGameLogicService import IGameLogicService
 from .interfaces.IHarmonyAnalysisService import IHarmonyAnalysisService
 from .interfaces.IBossAIService import IBossAIService, IPatternSystemService
 from .interfaces.IApplicationInitializerService import IApplicationInitializerService
+from .interfaces.IPerformanceService import IPerformanceService
+from .interfaces.ITimerService import ITimerService
 
 # Import implementations
 from .QualiaLogger import QualiaLogger
@@ -34,6 +36,8 @@ from .HarmonyAnalysisService import HarmonyAnalysisService
 from .BossAIService import BossAIService
 from .PatternSystemService import PatternSystemService
 from .ApplicationInitializerService import ApplicationInitializerService
+from .PerformanceService import PerformanceService
+from .TimerService import TimerService
 
 # Import contracts
 from .contracts.ILogger_contracts import LoggerConfig
@@ -50,6 +54,8 @@ from .contracts.IHarmonyAnalysisService_contracts import HarmonyAnalysisConfig
 from .contracts.IBossAIService_contracts import BossAIServiceConfig
 from .contracts.IPatternSystemService_contracts import PatternSystemConfig
 from .contracts.IApplicationInitializerService_contracts import ApplicationInitializerServiceConfig
+from .contracts.IPerformanceService_contracts import PerformanceServiceConfig
+from .contracts.ITimerService_contracts import TimerServiceConfig
 
 
 def _load_yaml_config(config_name: str, config_dir: str = "config") -> Dict[str, Any]:
@@ -104,6 +110,8 @@ def configure_container(container: ServiceContainer) -> None:
     boss_ai_config_data = _load_yaml_config("boss-ai")
     pattern_system_config_data = _load_yaml_config("pattern-system")
     app_initializer_config_data = _load_yaml_config("application-initializer")
+    performance_config_data = _load_yaml_config("performance")
+    timer_config_data = _load_yaml_config("timer")
     
     # Register typed configuration objects
     container.register_config(LoggerConfig, LoggerConfig(
@@ -219,6 +227,39 @@ def configure_container(container: ServiceContainer) -> None:
         fail_fast=app_initializer_config_data.get('fail_fast', True)
     ))
     
+    container.register_config(PerformanceServiceConfig, PerformanceServiceConfig(
+        max_measurements=performance_config_data.get('max_measurements', 10000),
+        measurement_retention_seconds=performance_config_data.get('measurement_retention_seconds', 3600),
+        slow_operation_threshold_ms=performance_config_data.get('slow_operation_threshold_ms', 100.0),
+        critical_operation_threshold_ms=performance_config_data.get('critical_operation_threshold_ms', 1000.0),
+        enable_cpu_monitoring=performance_config_data.get('enable_cpu_monitoring', True),
+        enable_memory_monitoring=performance_config_data.get('enable_memory_monitoring', True),
+        resource_check_interval_seconds=performance_config_data.get('resource_check_interval_seconds', 60),
+        aggregation_window_seconds=performance_config_data.get('aggregation_window_seconds', 60),
+        percentiles=performance_config_data.get('percentiles', [50, 90, 95, 99]),
+        export_formats=performance_config_data.get('export_formats', ["json", "prometheus"]),
+        prometheus_prefix=performance_config_data.get('prometheus_prefix', "qualia_tempo"),
+        enable_alerting=performance_config_data.get('enable_alerting', False),
+        alert_threshold_multiplier=performance_config_data.get('alert_threshold_multiplier', 2.0)
+    ))
+    
+    container.register_config(TimerServiceConfig, TimerServiceConfig(
+        max_concurrent_timers=timer_config_data.get('max_concurrent_timers', 1000),
+        enable_timer_tracking=timer_config_data.get('enable_timer_tracking', True),
+        default_timeout_seconds=timer_config_data.get('default_timeout_seconds', 300.0),
+        max_delay_seconds=timer_config_data.get('max_delay_seconds', 86400.0),
+        auto_cleanup_completed=timer_config_data.get('auto_cleanup_completed', True),
+        cleanup_interval_seconds=timer_config_data.get('cleanup_interval_seconds', 60.0),
+        log_callback_errors=timer_config_data.get('log_callback_errors', True),
+        retry_failed_callbacks=timer_config_data.get('retry_failed_callbacks', False),
+        max_callback_retries=timer_config_data.get('max_callback_retries', 3),
+        callback_timeout_seconds=timer_config_data.get('callback_timeout_seconds', 30.0),
+        enable_callback_performance_tracking=timer_config_data.get('enable_callback_performance_tracking', True),
+        enable_interval_timers=timer_config_data.get('enable_interval_timers', True),
+        enable_wait_for_completion=timer_config_data.get('enable_wait_for_completion', True),
+        enable_fast_forward=timer_config_data.get('enable_fast_forward', False)
+    ))
+    
     # Step 2: Register all services as singletons
     # Dependencies will be automatically resolved by the container
     
@@ -238,6 +279,8 @@ def configure_container(container: ServiceContainer) -> None:
     container.register_singleton(IBossAIService, BossAIService)  # type: ignore[type-abstract]
     container.register_singleton(IPatternSystemService, PatternSystemService)  # type: ignore[type-abstract]
     container.register_singleton(IApplicationInitializerService, ApplicationInitializerService)  # type: ignore[type-abstract]
+    container.register_singleton(IPerformanceService, PerformanceService)  # type: ignore[type-abstract]
+    container.register_singleton(ITimerService, TimerService)  # type: ignore[type-abstract]
 
 
 def get_configured_container() -> ServiceContainer:

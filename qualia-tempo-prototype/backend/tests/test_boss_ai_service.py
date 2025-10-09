@@ -3,11 +3,12 @@
 
 import pytest
 import time
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch, MagicMock
 from pathlib import Path
 
 from backend.services.BossAIService import BossAIService
 from backend.services.EventBus import EventBus
+from backend.tests.mocks import MockEventBus
 from backend.services.contracts.IBossAIService_contracts import (
     BossPhase,
     AggressionTier,
@@ -18,9 +19,7 @@ from backend.services.contracts.IBossAIService_contracts import (
 @pytest.fixture
 def event_bus():
     """Create a mock EventBus for testing."""
-    bus = Mock(spec=EventBus)
-    bus.publish = Mock()
-    return bus
+    return MockEventBus()
 
 
 @pytest.fixture

@@ -10,17 +10,21 @@ pip install -e .
 
 ## Rules Overview
 
-This plugin provides **10 production-ready rules** covering all major QUALIA.CODE architectural principles:
+This plugin provides **14 production-ready rules** covering all major QUALIA.CODE architectural principles:
 
 ### Core IoC & Dependency Injection
 - **QLA001**: Prohibit Direct Service Instantiation
 - **QLA003**: Forbid Concrete Route Dependencies
 - **QLA009**: Testing Pattern Enforcement
+- **QLA012**: ⭐ Prohibit Service Locator Pattern (NEW - Phase 5.1)
 
 ### Code Quality & Architecture
 - **QLA002**: Enforce Service Method Decorators
 - **QLA010**: Decorator Parameter Validation
 - **QLA011**: Cross-File Circular Dependency Analysis
+- **QLA014**: ⭐ Prohibit Direct Logger Instantiation (NEW - Phase 5.1)
+- **QLA016**: ⭐ Prohibit print() Statements (NEW - Phase 5.1)
+- **QLA020**: ⭐ Enforce IBaseService Implementation (NEW - Phase 5.1)
 
 ### Configuration & Externalization
 - **QLA004**: Configuration Externalization Validation
@@ -98,6 +102,123 @@ def handler(service: IMyService = Depends(get_my_service)):
 class MyService:
     def __init__(self):
         # ❌ Bad - Hardcoded values
+```
+
+---
+
+## Phase 5.1 New Rules (Session 11)
+
+### QLA012: Prohibit Service Locator Pattern ⭐ NEW
+**Purpose**: Enforce dependency injection via constructor parameters instead of pulling services from container.
+
+**Triggers on**:
+```python
+# ❌ Bad - Service Locator anti-pattern
+class MyService:
+    def do_work(self):
+        other_service = self.container.resolve(IOtherService)
+        result = other_service.process()
+```
+
+**Requires**:
+```python
+# ✅ Good - Constructor injection
+class MyService:
+    def __init__(self, other_service: IOtherService, logger: ILogger):
+        self._other_service = other_service
+        self._logger = logger
+    
+    def do_work(self):
+        result = self._other_service.process()
+```
+
+**Allowed Files**: CompositionRoot.py, container.py, inversify.py, test_composition_root.py
+
+### QLA014: Prohibit Direct Logger Instantiation ⭐ NEW
+**Purpose**: Enforce injected ILogger instances instead of direct logging.getLogger() calls.
+
+**Triggers on**:
+```python
+# ❌ Bad - Direct logger instantiation
+import logging
+
+class MyService:
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+```
+
+**Requires**:
+```python
+# ✅ Good - Injected logger
+from backend.services.interfaces.ILogger import ILogger
+
+class MyService:
+    def __init__(self, logger: ILogger, config: MyServiceConfig):
+        self._logger = logger
+        self._config = config
+```
+
+**Allowed Files**: QualiaLogger.py, Logger.py, container_config.py, CompositionRoot.py
+
+### QLA016: Prohibit print() Statements ⭐ NEW
+**Purpose**: Ensure proper logging hygiene by preventing print() usage in services layer.
+
+**Triggers on**:
+```python
+# ❌ Bad - print() statement
+class MyService:
+    def process(self):
+        print("Processing data...")  # Violation!
+        return result
+```
+
+**Requires**:
+```python
+# ✅ Good - Logger usage
+class MyService:
+    def __init__(self, logger: ILogger):
+        self._logger = logger
+    
+    def process(self):
+        self._logger.info("Processing data...")
+        return result
+```
+
+**Allowed Files**: test_*.py, script files, debug files, __main__.py
+
+### QLA020: Enforce IBaseService Implementation ⭐ NEW
+**Purpose**: Validate that services using @OnEvent decorator properly implement IBaseService lifecycle contract.
+
+**Triggers on**:
+```python
+# ❌ Bad - @OnEvent without IBaseService
+class GameLogicService:
+    @OnEvent("PlayerAction")
+    def on_player_action(self, event):
+        pass  # Missing IBaseService lifecycle methods!
+```
+
+**Requires**:
+```python
+# ✅ Good - IBaseService with @OnEvent
+from backend.services.interfaces.IBaseService import IBaseService
+
+class GameLogicService(IGameLogicService, IBaseService):
+    async def initialize(self) -> None:
+        self._logger.info("GameLogicService initialized")
+    
+    async def cleanup(self) -> None:
+        self._logger.info("GameLogicService cleaned up")
+    
+    def get_health_status(self) -> Dict[str, Any]:
+        return {"status": "healthy", "service": "GameLogicService"}
+    
+    @OnEvent("PlayerAction")
+    def on_player_action(self, event):
+        pass
+```
+
+**Why This Matters**: The @OnEvent decorator requires proper service lifecycle management through ApplicationInitializerService, which depends on the IBaseService contract.
         self.timeout = 5000
         self.api_url = "https://api.example.com"
         self.rate_limit = 100

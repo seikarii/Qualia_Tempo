@@ -1,0 +1,27 @@
+# Performance Service Configuration
+# QUALIA.CODE v1.1 Compliance - Phase 6.1
+
+# Measurement settings
+max_measurements: 10000
+measurement_retention_seconds: 3600
+
+# Performance thresholds  
+slow_operation_threshold_ms: 100.0
+critical_operation_threshold_ms: 1000.0
+
+# Resource monitoring
+enable_cpu_monitoring: true
+enable_memory_monitoring: true
+resource_check_interval_seconds: 60
+
+# Metrics aggregation
+aggregation_window_seconds: 60
+percentiles: [50.0, 90.0, 95.0, 99.0]
+
+# Export settings
+export_formats: ["json", "prometheus"]
+prometheus_prefix: "qualia_tempo"
+
+# Feature flags
+enable_alerting: false
+alert_threshold_multiplier: 2.0
