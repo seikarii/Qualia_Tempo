@@ -5,12 +5,13 @@ from typing import Dict, List, Optional, Any
 
 from backend.services.interfaces.IBossAIService import IPatternSystemService
 from backend.services.interfaces.ILogger import ILogger
+from backend.services.interfaces.IBaseService import IBaseService
 from backend.services.contracts.IBossAIService_contracts import AttackPattern
 from backend.services.contracts.IPatternSystemService_contracts import PatternSystemConfig
 from backend.utils.decorators import log_execution, handle_errors
 
 
-class PatternSystemService(IPatternSystemService):
+class PatternSystemService(IPatternSystemService, IBaseService):
     """
     Pattern System Service - Pattern library management.
     
@@ -157,6 +158,65 @@ class PatternSystemService(IPatternSystemService):
     def get_pattern_count(self) -> int:
         """Get total number of loaded patterns."""
         return len(self._patterns)
+
+    # ==================== IBaseService Lifecycle Methods (PHASE 3.3) ====================
+
+    async def initialize(self) -> None:
+        """
+        Initialize PatternSystemService lifecycle (IBaseService implementation).
+        
+        PHASE 3.3: IBaseService implementation.
+        This service has no @OnEvent handlers as it's a pure data service.
+        
+        This method is called automatically during system startup.
+        """
+        self._logger.info("PatternSystemService lifecycle initialized (IBaseService)")
+
+    async def cleanup(self) -> None:
+        """
+        Cleanup PatternSystemService resources (IBaseService implementation).
+        
+        PHASE 3.3: IBaseService implementation.
+        Clears all loaded patterns during cleanup.
+        
+        This method MUST NOT raise exceptions (per IBaseService contract).
+        """
+        try:
+            self._logger.info("PatternSystemService lifecycle cleanup (IBaseService)")
+            # Clear pattern library
+            self.reset()
+        except Exception as e:
+            # Log but don't raise (IBaseService contract requirement)
+            self._logger.error(f"Error during PatternSystemService cleanup: {e}")
+
+    def get_health_status(self) -> Dict[str, Any]:
+        """
+        Get comprehensive health status for diagnostics (IBaseService implementation).
+        
+        PHASE 3.3: IBaseService implementation.
+        Returns comprehensive diagnostic information about service state.
+        
+        Returns:
+            Dict with health metrics including:
+            - service: Service name
+            - status: "healthy" or "degraded"
+            - pattern_count: Total patterns loaded
+            - max_active_patterns: Max patterns from config
+            - pattern_cache_size: Cache size from config
+            - enable_pattern_prediction: Prediction feature flag from config
+            - default_patterns_count: Number of default patterns in config
+        """
+        pattern_count = len(self._patterns)
+        
+        return {
+            'service': 'PatternSystemService',
+            'status': 'healthy' if pattern_count > 0 else 'degraded',
+            'pattern_count': pattern_count,
+            'max_active_patterns': self._config.max_active_patterns,
+            'pattern_cache_size': self._config.pattern_cache_size,
+            'enable_pattern_prediction': self._config.enable_pattern_prediction,
+            'default_patterns_count': len(self._config.default_patterns)
+        }
 
     @log_execution()
     def reset(self) -> None:

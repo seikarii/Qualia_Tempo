@@ -2,7 +2,7 @@
 # Musical harmony analysis for emergent combo system
 
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from collections import deque
 
 from backend.services.interfaces.IHarmonyAnalysisService import (
@@ -15,16 +15,17 @@ from backend.services.interfaces.IHarmonyAnalysisService import (
 )
 from backend.services.interfaces.ILogger import ILogger
 from backend.services.interfaces.IEventBus import IEventBus
+from backend.services.interfaces.IBaseService import IBaseService
 from backend.services.contracts.IHarmonyAnalysisService_contracts import HarmonyAnalysisConfig
 from backend.services.contracts.events import (
     HarmonyScoreCalculatedEvent,
     HarmonicPatternDetectedEvent,
     ChaoticPatternDetectedEvent,
 )
-from backend.utils.decorators import log_execution, handle_errors
+from backend.utils.decorators import log_execution, handle_errors, OnEvent
 
 
-class HarmonyAnalysisService(IHarmonyAnalysisService):
+class HarmonyAnalysisService(IHarmonyAnalysisService, IBaseService):
     """
     Musical harmony analysis service.
     
@@ -510,6 +511,126 @@ class HarmonyAnalysisService(IHarmonyAnalysisService):
         
         # Clamp to valid range
         return max(0.0, min(1.0, modified_score))
+
+    # ==================== @OnEvent Handlers (PHASE 3.3 Rollout) ====================
+
+    @handle_errors(fallback_return_value=None)
+    @OnEvent("QualiaCollected")
+    async def _on_qualia_collected(self, event_data: Dict[str, Any]) -> None:
+        """
+        Handle QualiaCollected event to track musical notes for harmony analysis.
+        
+        PHASE 3.3: @OnEvent decorator usage for automatic event subscription.
+        ApplicationInitializerService will scan and register this handler.
+        
+        Args:
+            event_data: Event payload with qualia note information
+        """
+        try:
+            note = event_data.get('note')
+            if note and isinstance(note, str):
+                self._collected_qualia_notes.append(note)
+                # Keep only recent notes (window size from config)
+                max_notes = self._config.analysis_windows.get('max_collected_notes', 10)
+                if len(self._collected_qualia_notes) > max_notes:
+                    self._collected_qualia_notes.pop(0)
+                self._logger.debug(f"Qualia note collected: {note}, total: {len(self._collected_qualia_notes)}")
+        except Exception as e:
+            self._logger.error(f"Error handling QualiaCollected event: {e}")
+
+    @handle_errors(fallback_return_value=None)
+    @OnEvent("ComboActivated")
+    async def _on_combo_activated(self, event_data: Dict[str, Any]) -> None:
+        """
+        Handle ComboActivated event to analyze combo harmony.
+        
+        PHASE 3.3: @OnEvent decorator usage for automatic event subscription.
+        ApplicationInitializerService will scan and register this handler.
+        
+        Args:
+            event_data: Event payload with combo activation information
+        """
+        try:
+            combo_notes = event_data.get('notes', [])
+            if combo_notes:
+                # Analyze combo harmony and emit event
+                harmony_score = self._calculate_group_consonance(combo_notes)
+                self._logger.info(
+                    f"Combo activated with harmony score: {harmony_score:.2f}",
+                    extra={'combo_size': len(combo_notes), 'notes': combo_notes}
+                )
+        except Exception as e:
+            self._logger.error(f"Error handling ComboActivated event: {e}")
+
+    # ==================== IBaseService Lifecycle Methods (PHASE 3.3) ====================
+
+    async def initialize(self) -> None:
+        """
+        Initialize HarmonyAnalysisService lifecycle (IBaseService implementation).
+        
+        PHASE 3.3: IBaseService implementation.
+        ApplicationInitializerService will automatically scan for @OnEvent
+        decorators and register event handlers during this initialization.
+        
+        This method is called automatically during system startup.
+        """
+        self._logger.info("HarmonyAnalysisService lifecycle initialized (IBaseService)")
+
+    async def cleanup(self) -> None:
+        """
+        Cleanup HarmonyAnalysisService resources (IBaseService implementation).
+        
+        PHASE 3.3: IBaseService implementation.
+        ApplicationInitializerService will automatically unregister all
+        @OnEvent handlers during cleanup.
+        
+        This method MUST NOT raise exceptions (per IBaseService contract).
+        """
+        try:
+            self._logger.info("HarmonyAnalysisService lifecycle cleanup (IBaseService)")
+            # Clear analysis state
+            self.reset()
+        except Exception as e:
+            # Log but don't raise (IBaseService contract requirement)
+            self._logger.error(f"Error during HarmonyAnalysisService cleanup: {e}")
+
+    def get_health_status(self) -> Dict[str, Any]:
+        """
+        Get comprehensive health status for diagnostics (IBaseService implementation).
+        
+        PHASE 3.3: IBaseService implementation.
+        Returns comprehensive diagnostic information about service state.
+        
+        Returns:
+            Dict with health metrics including:
+            - service: Service name
+            - status: "healthy" or "degraded"
+            - player_initialized: Whether player_id is set
+            - total_analyses: Total harmony analyses performed
+            - harmonic_ratio: Ratio of harmonic to total analyses
+            - chaotic_ratio: Ratio of chaotic to total analyses
+            - perfect_harmony_ratio: Ratio of perfect harmony analyses
+            - harmony_history_length: Current harmony history buffer size
+            - average_harmony: Average harmony score from history
+            - current_trend: Current harmony trend direction
+            - collected_qualia_count: Number of collected qualia notes
+            - current_song_notes_count: Number of current song notes
+        """
+        stats = self.get_statistics()
+        return {
+            'service': 'HarmonyAnalysisService',
+            'status': 'healthy' if self._player_id else 'degraded',
+            'player_initialized': self._player_id is not None,
+            'total_analyses': self._total_analyses,
+            'harmonic_ratio': self._harmonic_count / self._total_analyses if self._total_analyses > 0 else 0.0,
+            'chaotic_ratio': self._chaotic_count / self._total_analyses if self._total_analyses > 0 else 0.0,
+            'perfect_harmony_ratio': self._perfect_harmony_count / self._total_analyses if self._total_analyses > 0 else 0.0,
+            'harmony_history_length': len(self._harmony_history),
+            'average_harmony': stats['average_harmony'],
+            'current_trend': stats['current_trend'],
+            'collected_qualia_count': len(self._collected_qualia_notes),
+            'current_song_notes_count': len(self._current_song_notes)
+        }
 
     @log_execution(level="INFO")
     def reset(self) -> None:

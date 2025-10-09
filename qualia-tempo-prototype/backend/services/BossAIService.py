@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Tuple, Any
 from backend.services.interfaces.IBossAIService import IBossAIService
 from backend.services.interfaces.ILogger import ILogger
 from backend.services.interfaces.IEventBus import IEventBus
+from backend.services.interfaces.IBaseService import IBaseService
 from backend.services.contracts.IBossAIService_contracts import BossAIServiceConfig
 from backend.services.contracts.IBossAIService_contracts import (
     BossAIState,
@@ -36,10 +37,10 @@ from backend.services.contracts.events import (
     HealthChangedEvent,
     QualiaGeneratedEvent,
 )
-from backend.utils.decorators import log_execution, handle_errors
+from backend.utils.decorators import log_execution, handle_errors, OnEvent
 
 
-class BossAIService(IBossAIService):
+class BossAIService(IBossAIService, IBaseService):
     """
     Boss AI Service - Context-aware attack pattern orchestration.
     
@@ -1027,6 +1028,164 @@ class BossAIService(IBossAIService):
             patterns_used_count=self._patterns_used_count.copy(),
             timestamp=self._current_time
         )
+
+    # ==================== @OnEvent Handlers (PHASE 3.3 Rollout) ====================
+
+    @handle_errors(fallback_return_value=None)
+    @OnEvent("PlayerAction")
+    async def _on_player_action(self, event_data: Dict[str, Any]) -> None:
+        """
+        Handle PlayerAction event to update boss aggression factors.
+        
+        PHASE 3.3: @OnEvent decorator usage for automatic event subscription.
+        ApplicationInitializerService will scan and register this handler.
+        
+        Args:
+            event_data: Event payload with player action information
+        """
+        try:
+            action_type = event_data.get('action_type')
+            if action_type in ['dash', 'ability_cast', 'combo_complete']:
+                # Player aggressive actions should slightly increase boss caution
+                # This could influence next pattern selection
+                self._logger.debug(
+                    f"Boss AI registered player action: {action_type}",
+                    extra={'boss_id': self._boss_id, 'current_phase': self._current_phase}
+                )
+                # Could update internal factors here for more dynamic AI
+                # For now, just log the action for future enhancement
+        except Exception as e:
+            self._logger.error(f"Error handling PlayerAction event: {e}")
+
+    @handle_errors(fallback_return_value=None)
+    @OnEvent("HealthChanged")
+    async def _on_health_changed(self, event_data: Dict[str, Any]) -> None:
+        """
+        Handle HealthChanged event to track boss health updates.
+        
+        PHASE 3.3: @OnEvent decorator usage for automatic event subscription.
+        ApplicationInitializerService will scan and register this handler.
+        
+        Args:
+            event_data: Event payload with health change information
+        """
+        try:
+            entity_id = event_data.get('entity_id')
+            if entity_id == self._boss_id:
+                new_health = event_data.get('new_health', self._current_health)
+                old_health = self._current_health
+                self._current_health = new_health
+                
+                # Check if this triggers enrage (health < 30% and not already enraged)
+                health_percent = self._current_health / self._max_health if self._max_health > 0 else 0
+                if health_percent < 0.3 and not self._is_enraged:
+                    self._is_enraged = True
+                    self._logger.warning(
+                        f"Boss enraged at {health_percent:.1%} health",
+                        extra={'boss_id': self._boss_id, 'health': self._current_health}
+                    )
+                    # Emit enrage event
+                    enrage_event = BossEnragedEvent(
+                        boss_id=self._boss_id,
+                        health_percent=health_percent,
+                        timestamp=self._current_time
+                    )
+                    self._event_bus.publish(enrage_event)
+                    self._stats['enrage_count'] += 1
+                
+                self._logger.debug(
+                    f"Boss health updated: {old_health:.1f} → {new_health:.1f}",
+                    extra={'boss_id': self._boss_id, 'health_percent': health_percent}
+                )
+        except Exception as e:
+            self._logger.error(f"Error handling HealthChanged event: {e}")
+
+    # ==================== IBaseService Lifecycle Methods (PHASE 3.3) ====================
+
+    async def initialize(self) -> None:
+        """
+        Initialize BossAIService lifecycle (IBaseService implementation).
+        
+        PHASE 3.3: IBaseService implementation.
+        ApplicationInitializerService will automatically scan for @OnEvent
+        decorators and register event handlers during this initialization.
+        
+        This method is called automatically during system startup.
+        """
+        self._logger.info("BossAIService lifecycle initialized (IBaseService)")
+
+    async def cleanup(self) -> None:
+        """
+        Cleanup BossAIService resources (IBaseService implementation).
+        
+        PHASE 3.3: IBaseService implementation.
+        ApplicationInitializerService will automatically unregister all
+        @OnEvent handlers during cleanup.
+        
+        This method MUST NOT raise exceptions (per IBaseService contract).
+        """
+        try:
+            self._logger.info("BossAIService lifecycle cleanup (IBaseService)")
+            # Reset AI state
+            self.reset()
+        except Exception as e:
+            # Log but don't raise (IBaseService contract requirement)
+            self._logger.error(f"Error during BossAIService cleanup: {e}")
+
+    def get_health_status(self) -> Dict[str, Any]:
+        """
+        Get comprehensive health status for diagnostics (IBaseService implementation).
+        
+        PHASE 3.3: IBaseService implementation.
+        Returns comprehensive diagnostic information about service state.
+        
+        Returns:
+            Dict with health metrics including:
+            - service: Service name
+            - status: "healthy", "degraded", or "error"
+            - boss_initialized: Whether boss_id is set
+            - boss_id: Current boss ID
+            - current_phase: Current boss phase
+            - current_aggression: Current aggression level
+            - aggression_tier: Current aggression tier
+            - is_enraged: Whether boss is enraged
+            - is_vulnerable: Whether boss is vulnerable
+            - current_health: Current boss health
+            - max_health: Maximum boss health
+            - health_percent: Health percentage
+            - active_pattern: Current active pattern (if any)
+            - patterns_executed: Total patterns executed
+            - phase_transitions: Total phase transitions
+            - enrage_count: Number of times boss has enraged
+        """
+        health_percent = self._current_health / self._max_health if self._max_health > 0 else 0.0
+        
+        # Determine status
+        if not self._boss_id:
+            status = "degraded"
+        elif self._current_health <= 0:
+            status = "error"
+        else:
+            status = "healthy"
+        
+        return {
+            'service': 'BossAIService',
+            'status': status,
+            'boss_initialized': self._boss_id is not None,
+            'boss_id': self._boss_id,
+            'current_phase': self._current_phase,
+            'current_aggression': self._aggression,
+            'aggression_tier': self._aggression_tier,
+            'is_enraged': self._is_enraged,
+            'is_vulnerable': self._is_vulnerable,
+            'current_health': self._current_health,
+            'max_health': self._max_health,
+            'health_percent': health_percent,
+            'active_pattern': self._active_pattern.pattern_id if self._active_pattern else None,
+            'patterns_executed': self._stats.get('patterns_executed', 0),
+            'phase_transitions': self._stats.get('phase_transitions', 0),
+            'enrage_count': self._stats.get('enrage_count', 0)
+        }
 
     @log_execution()
     def reset(self) -> None:

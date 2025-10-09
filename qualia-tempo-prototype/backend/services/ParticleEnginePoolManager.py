@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 from backend.services.interfaces.IFileSystemService import IFileSystemService
 from backend.services.interfaces.ILogger import ILogger
+from backend.services.interfaces.IBaseService import IBaseService
 from backend.services.interfaces.IParticleEnginePoolManager import IParticleEnginePoolManager
 from backend.services.contracts.IParticleEnginePoolManager_contracts import ParticleEnginePoolManagerConfig
 from backend.utils.decorators import log_execution, handle_errors
@@ -28,7 +29,7 @@ class PoolMetrics:
     queue_size: int = 0
 
 
-class ParticleEnginePoolManager(IParticleEnginePoolManager):
+class ParticleEnginePoolManager(IParticleEnginePoolManager, IBaseService):
     """
     Manages a pool of worker processes for particle calculation.
     
@@ -268,6 +269,83 @@ class ParticleEnginePoolManager(IParticleEnginePoolManager):
             'is_running': self.is_running
         }
     
+    # ==================== IBaseService Lifecycle Methods (PHASE 3.3) ====================
+
+    async def initialize(self) -> None:
+        """
+        Initialize ParticleEnginePoolManager lifecycle (IBaseService implementation).
+        
+        PHASE 3.3: IBaseService implementation.
+        Starts the process pool for particle calculations.
+        
+        This method is called automatically during system startup.
+        """
+        self._logger.info("ParticleEnginePoolManager lifecycle initializing (IBaseService)")
+        await self.start()
+        self._logger.info("ParticleEnginePoolManager lifecycle initialized (IBaseService)")
+
+    async def cleanup(self) -> None:
+        """
+        Cleanup ParticleEnginePoolManager resources (IBaseService implementation).
+        
+        PHASE 3.3: IBaseService implementation.
+        Stops the process pool and cleans up all worker processes.
+        
+        This method MUST NOT raise exceptions (per IBaseService contract).
+        """
+        try:
+            self._logger.info("ParticleEnginePoolManager lifecycle cleanup (IBaseService)")
+            await self.stop()
+        except Exception as e:
+            # Log but don't raise (IBaseService contract requirement)
+            self._logger.error(f"Error during ParticleEnginePoolManager cleanup: {e}")
+
+    def get_health_status(self) -> Dict[str, Any]:
+        """
+        Get comprehensive health status for diagnostics (IBaseService implementation).
+        
+        PHASE 3.3: IBaseService implementation.
+        Returns comprehensive diagnostic information about pool state.
+        
+        Returns:
+            Dict with health metrics including:
+            - service: Service name
+            - status: "healthy", "degraded", or "error"
+            - is_running: Whether pool is running
+            - num_workers: Number of worker processes
+            - total_tasks_submitted: Total tasks submitted
+            - total_tasks_completed: Total tasks completed
+            - total_tasks_failed: Total tasks failed
+            - success_rate: Task success rate percentage
+            - average_execution_time_ms: Average task execution time
+            - pending_tasks: Number of pending tasks
+            - active_workers: Number of active workers
+        """
+        # Determine status based on pool state and metrics
+        if not self.is_running:
+            status = "error"
+        elif self.metrics.total_tasks_failed > self.metrics.total_tasks_completed:
+            status = "degraded"
+        else:
+            status = "healthy"
+        
+        return {
+            'service': 'ParticleEnginePoolManager',
+            'status': status,
+            'is_running': self.is_running,
+            'num_workers': self._config.num_workers,
+            'total_tasks_submitted': self.metrics.total_tasks_submitted,
+            'total_tasks_completed': self.metrics.total_tasks_completed,
+            'total_tasks_failed': self.metrics.total_tasks_failed,
+            'success_rate': (
+                (self.metrics.total_tasks_completed / self.metrics.total_tasks_submitted) * 100.0
+                if self.metrics.total_tasks_submitted > 0 else 0.0
+            ),
+            'average_execution_time_ms': self.metrics.average_execution_time_ms,
+            'pending_tasks': len(self.pending_tasks),
+            'active_workers': self.metrics.active_workers
+        }
+
     async def health_check(self) -> bool:
         """
         Check if the pool is healthy.

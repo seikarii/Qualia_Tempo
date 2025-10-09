@@ -556,6 +556,15 @@ class CompositionRoot:
         """Get SecurityService instance."""
         return self.get_service("security_service")
 
+    def get_application_initializer(self) -> Optional[IApplicationInitializerService]:
+        """
+        Get ApplicationInitializerService instance.
+        
+        PHASE 3.4: Health Endpoint Support
+        Returns service for querying managed service health status.
+        """
+        return self._app_initializer
+
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
     async def shutdown(self) -> None:

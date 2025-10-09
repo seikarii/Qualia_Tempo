@@ -1,291 +1,49 @@
-# QUALIA.CODE v1.1 - Backend Decorators
-# Mandatory transversal logic implementation
+# QUALIA.CODE v1.1 - Backend Decorators (Backward Compatibility Layer)
+# Phase 3.5: Decorator Modularization
+"""
+DEPRECATED: This file is maintained for backward compatibility only.
 
-import functools
-import logging
-import time
-import traceback
-from typing import Any, Callable, Dict, Optional, List
-import jsonschema
-import json
+New code should import from backend.utils.decorators package directly:
+    from backend.utils.decorators import log_execution, handle_errors, ...
 
+This file re-exports all decorators from the modularized structure:
+    backend/utils/decorators/
+        ├── __init__.py (main export)
+        ├── log_method.py (@log_execution)
+        ├── catch_error.py (@handle_errors)
+        ├── validate.py (@validate_schema)
+        ├── time_measure.py (@time_execution)
+        ├── cache.py (@cache_result)
+        └── on_event.py (@OnEvent)
 
-def log_execution(level: str = "INFO") -> Callable[[Callable], Callable]:
-    """
-    Decorator to log function entry, exit, and execution time.
+Migration Path:
+    Phase 3.5 creates modular structure while maintaining backward compatibility.
+    Phase 3.6+ will update all imports to use new structure directly.
+"""
 
-    Args:
-        level: Logging level (DEBUG, INFO, WARNING, ERROR)
-    """
+# Re-export all decorators from modular package
+from backend.utils.decorators.log_method import log_execution
+from backend.utils.decorators.catch_error import handle_errors
+from backend.utils.decorators.validate import validate_schema
+from backend.utils.decorators.time_measure import time_execution
+from backend.utils.decorators.cache import cache_result
+from backend.utils.decorators.on_event import OnEvent
 
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        @functools.wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            logger = logging.getLogger(func.__module__)
-            log_level = getattr(logging, level.upper())
+# Maintain backward compatibility
+__all__ = [
+    "log_execution",
+    "handle_errors",
+    "validate_schema",
+    "time_execution",
+    "cache_result",
+    "OnEvent",
+]
 
-            start_time = time.time()
-            func_name = f"{func.__module__}.{func.__qualname__}"
-
-            logger.log(log_level, f"→ ENTER {func_name}")
-
-            try:
-                result = func(*args, **kwargs)
-                execution_time = time.time() - start_time
-                logger.log(log_level, f"← EXIT {func_name} (⏱️ {execution_time:.3f}s)")
-                return result
-            except Exception as e:
-                execution_time = time.time() - start_time
-                logger.error(f"✗ ERROR {func_name} (⏱️ {execution_time:.3f}s): {str(e)}")
-                raise
-
-        return wrapper
-
-    return decorator
-
-
-def handle_errors(fallback_return_value: Any = None) -> Callable[[Callable], Callable]:
-    """
-    Decorator to wrap function in try/except block and log errors.
-
-    Args:
-        fallback_return_value: Value to return if an error occurs
-    """
-
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        @functools.wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            logger = logging.getLogger(func.__module__)
-            func_name = f"{func.__module__}.{func.__qualname__}"
-
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                logger.error(f"🚨 ERROR in {func_name}: {str(e)}")
-                logger.error(f"📍 Traceback: {traceback.format_exc()}")
-                logger.error(f"📋 Args: {args}")
-                logger.error(f"📋 Kwargs: {kwargs}")
-
-                if fallback_return_value is not None:
-                    logger.warning(
-                        f"🔄 Returning fallback value: {fallback_return_value}"
-                    )
-                    return fallback_return_value
-                else:
-                    logger.error("💥 Re-raising exception")
-                    raise
-
-        return wrapper
-
-    return decorator
-
-
-def validate_schema(schema_name: str) -> Callable[[Callable], Callable]:
-    """
-    Decorator to validate input against a shared contract schema.
-
-    Args:
-        schema_name: Name of the schema to validate against (e.g., "QualiaState")
-    """
-
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        @functools.wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            logger = logging.getLogger(func.__module__)
-            func_name = f"{func.__module__}.{func.__qualname__}"
-
-            # Load the schema
-            try:
-                schema_path = f"/media/seikarii/Nvme/QualiaTempo/shared_contracts/{schema_name}.json"
-                with open(schema_path, "r") as f:
-                    schema = json.load(f)
-            except FileNotFoundError:
-                logger.error(f"🚨 Schema not found: {schema_path}")
-                raise ValueError(f"Schema {schema_name} not found")
-            except json.JSONDecodeError as e:
-                logger.error(f"🚨 Invalid JSON in schema {schema_name}: {e}")
-                raise ValueError(f"Invalid schema {schema_name}")
-
-            # Validate the first argument (assumed to be the data to validate)
-            if args:
-                data_to_validate = args[0]
-                if hasattr(data_to_validate, "dict"):
-                    # Pydantic model
-                    data_dict = data_to_validate.dict()
-                elif isinstance(data_to_validate, dict):
-                    data_dict = data_to_validate
-                else:
-                    logger.warning(
-                        f"⚠️  Cannot validate type {type(data_to_validate)} in {func_name}"
-                    )
-                    return func(*args, **kwargs)
-
-                try:
-                    jsonschema.validate(data_dict, schema)
-                    logger.debug(
-                        f"✅ Schema validation passed for {schema_name} in {func_name}"
-                    )
-                except jsonschema.ValidationError as e:
-                    logger.error(
-                        f"🚨 Schema validation failed for {schema_name} in {func_name}: {e.message}"
-                    )
-                    raise ValueError(f"Schema validation failed: {e.message}")
-
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-def time_execution() -> Callable[[Callable], Callable]:
-    """
-    Decorator to measure and log execution time with performance categorization.
-    """
-
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        @functools.wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            logger = logging.getLogger(func.__module__)
-            func_name = f"{func.__module__}.{func.__qualname__}"
-
-            start_time = time.time()
-            result = func(*args, **kwargs)
-            execution_time = time.time() - start_time
-
-            # Performance categorization
-            if execution_time < 0.001:
-                perf_category = "🚀 FAST"
-                log_level = logging.DEBUG
-            elif execution_time < 0.01:
-                perf_category = "⚡ GOOD"
-                log_level = logging.DEBUG
-            elif execution_time < 0.1:
-                perf_category = "⏱️  OK"
-                log_level = logging.INFO
-            elif execution_time < 1.0:
-                perf_category = "🐌 SLOW"
-                log_level = logging.WARNING
-            else:
-                perf_category = "🚨 VERY SLOW"
-                log_level = logging.ERROR
-
-            logger.log(log_level, f"{perf_category} {func_name}: {execution_time:.4f}s")
-
-            return result
-
-        return wrapper
-
-    return decorator
-
-
-def cache_result(ttl_seconds: Optional[int] = None) -> Callable[[Callable], Callable]:
-    """
-    Decorator to cache function results with optional TTL.
-
-    Args:
-        ttl_seconds: Time to live for cached results. None means cache forever.
-    """
-    cache: Dict[str, Dict[str, Any]] = {}
-
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        @functools.wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            # Create cache key from function name and arguments
-            cache_key = f"{func.__module__}.{func.__qualname__}:{hash(str(args) + str(sorted(kwargs.items())))}"
-
-            current_time = time.time()
-
-            # Check if we have a cached result
-            if cache_key in cache:
-                cached_data = cache[cache_key]
-
-                # Check TTL if specified
-                if (
-                    ttl_seconds is None
-                    or (current_time - cached_data["timestamp"]) < ttl_seconds
-                ):
-                    logger = logging.getLogger(func.__module__)
-                    logger.debug(f"💾 Cache HIT for {func.__qualname__}")
-                    return cached_data["result"]
-                else:
-                    # TTL expired, remove from cache
-                    del cache[cache_key]
-
-            # Execute function and cache result
-            result = func(*args, **kwargs)
-            cache[cache_key] = {"result": result, "timestamp": current_time}
-
-            logger = logging.getLogger(func.__module__)
-            logger.debug(f"🔄 Cache MISS for {func.__qualname__}")
-
-            return result
-
-        return wrapper
-
-    return decorator
-
-
-def OnEvent(event_name: str) -> Callable[[Callable], Callable]:
-    """
-    Decorator for automatic event subscription management.
-    
-    QUALIA.CODE v1.1 - Event-Driven Architecture Enhancement
-    
-    Marks a method as an event handler for the specified event type.
-    Services using this decorator MUST implement IBaseService interface.
-    ApplicationInitializerService manages automatic subscription/cleanup.
-    
-    Args:
-        event_name: The event type to subscribe to (e.g., "QualiaStateUpdated")
-    
-    Usage:
-        @OnEvent("PlayerAction")
-        def on_player_action(self, event_data: Dict[str, Any]) -> None:
-            # Handle event
-            pass
-    
-    Benefits:
-        - Eliminates manual subscribe/unsubscribe boilerplate
-        - Automatic lifecycle management via ApplicationInitializerService
-        - Declarative event handling (clear intent)
-        - Prevents memory leaks (automatic cleanup)
-    
-    Example:
-        class MyService(IBaseService):
-            def __init__(self, event_bus: IEventBus, logger: ILogger):
-                self._event_bus = event_bus
-                self._logger = logger
-                self._event_subscriptions: List[str] = []
-            
-            @OnEvent("QualiaStateUpdated")
-            def _handle_qualia_update(self, event_data: Dict[str, Any]) -> None:
-                self._logger.info("Qualia state updated", context=event_data)
-            
-            async def initialize(self) -> None:
-                # ApplicationInitializerService scans for @OnEvent decorators
-                # and auto-registers handlers
-                pass
-            
-            async def cleanup(self) -> None:
-                # ApplicationInitializerService auto-unsubscribes all handlers
-                pass
-    """
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        # Mark method as event handler with metadata
-        func._is_event_handler = True  # type: ignore
-        func._event_name = event_name  # type: ignore
-        
-        @functools.wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            # Wrapper preserves original function behavior
-            # Actual subscription happens in ApplicationInitializerService
-            return func(*args, **kwargs)
-        
-        # Preserve metadata on wrapper
-        wrapper._is_event_handler = True  # type: ignore
-        wrapper._event_name = event_name  # type: ignore
-        
-        return wrapper
-    
-    return decorator
+# Migration notice
+__deprecated__ = True
+__migration_guide__ = (
+    "This file is deprecated. Import directly from backend.utils.decorators package: "
+    "from backend.utils.decorators import log_execution, handle_errors, ..."
+)
+__phase__ = "3.5"
+__status__ = "Backward Compatibility Layer"

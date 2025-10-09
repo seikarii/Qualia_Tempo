@@ -1,5 +1,6 @@
 """
 QUALIA.CODE v1.1 - Base Service Interface
+Phase 3.6: Linter Violation Resolution - Added @runtime_checkable
 Service lifecycle management contract.
 
 All services requiring lifecycle management (event subscriptions, resource
@@ -9,9 +10,10 @@ ApplicationInitializerService automatically manages services implementing
 IBaseService, calling initialize() on startup and cleanup() on shutdown.
 """
 
-from typing import Protocol, Dict, Any
+from typing import Protocol, Dict, Any, runtime_checkable
 
 
+@runtime_checkable
 class IBaseService(Protocol):
     """
     Base interface for all services requiring lifecycle management.

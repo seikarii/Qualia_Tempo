@@ -76,22 +76,112 @@ class QualiaLogger(ILogger):
             return f"{message} | Context: {context_str}"
         return message
         
-    def debug(self, message: str, context: Optional[Dict[str, Any]] = None) -> None:
-        """Log debug message."""
-        self._logger.debug(self._format_message(message, context))
+    def debug(
+        self, 
+        message: str, 
+        context: Optional[Dict[str, Any]] = None,
+        exc_info: bool = False,
+        extra: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """
+        Log debug message.
         
-    def info(self, message: str, context: Optional[Dict[str, Any]] = None) -> None:
-        """Log info message."""
-        self._logger.info(self._format_message(message, context))
+        Args:
+            message: The log message
+            context: Optional context dictionary
+            exc_info: Include exception information
+            extra: Extra fields for structured logging
+        """
+        self._logger.debug(
+            self._format_message(message, context),
+            exc_info=exc_info,
+            extra=extra or {}
+        )
         
-    def warning(self, message: str, context: Optional[Dict[str, Any]] = None) -> None:
-        """Log warning message."""
-        self._logger.warning(self._format_message(message, context))
+    def info(
+        self, 
+        message: str, 
+        context: Optional[Dict[str, Any]] = None,
+        exc_info: bool = False,
+        extra: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """
+        Log info message.
         
-    def error(self, message: str, context: Optional[Dict[str, Any]] = None) -> None:
-        """Log error message."""
-        self._logger.error(self._format_message(message, context))
+        Args:
+            message: The log message
+            context: Optional context dictionary
+            exc_info: Include exception information
+            extra: Extra fields for structured logging
+        """
+        self._logger.info(
+            self._format_message(message, context),
+            exc_info=exc_info,
+            extra=extra or {}
+        )
         
-    def critical(self, message: str, context: Optional[Dict[str, Any]] = None) -> None:
-        """Log critical message."""
-        self._logger.critical(self._format_message(message, context))
+    def warning(
+        self, 
+        message: str, 
+        context: Optional[Dict[str, Any]] = None,
+        exc_info: bool = False,
+        extra: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """
+        Log warning message.
+        
+        Args:
+            message: The log message
+            context: Optional context dictionary
+            exc_info: Include exception information
+            extra: Extra fields for structured logging
+        """
+        self._logger.warning(
+            self._format_message(message, context),
+            exc_info=exc_info,
+            extra=extra or {}
+        )
+        
+    def error(
+        self, 
+        message: str, 
+        context: Optional[Dict[str, Any]] = None,
+        exc_info: bool = False,
+        extra: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """
+        Log error message.
+        
+        Args:
+            message: The log message
+            context: Optional context dictionary
+            exc_info: Include exception information
+            extra: Extra fields for structured logging
+        """
+        self._logger.error(
+            self._format_message(message, context),
+            exc_info=exc_info,
+            extra=extra or {}
+        )
+        
+    def critical(
+        self, 
+        message: str, 
+        context: Optional[Dict[str, Any]] = None,
+        exc_info: bool = False,
+        extra: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """
+        Log critical message.
+        
+        Args:
+            message: The log message
+            context: Optional context dictionary
+            exc_info: Include exception information
+            extra: Extra fields for structured logging
+        """
+        self._logger.critical(
+            self._format_message(message, context),
+            exc_info=exc_info,
+            extra=extra or {}
+        )

@@ -79,22 +79,63 @@ async def root() -> Dict[str, Any]:
 
 @app.get("/health")
 async def health_check(services: CompositionRoot = Depends(get_services)) -> Dict[str, Any]:
-    """Health check with service validation."""
+    """
+    Comprehensive health check with service validation.
+    
+    PHASE 3.4: IBaseService Health Status Integration
+    Uses ApplicationInitializerService to query health status from all managed services.
+    """
     try:
+        # Get EventBus stats
         event_bus = services.get_event_bus()
-        stats = event_bus.get_stats()
+        event_bus_stats = event_bus.get_stats()
         subscriptions = event_bus.get_subscriptions()
 
+        # Get ApplicationInitializerService
+        app_initializer = services.get_application_initializer()
+        
+        # Collect health status from all managed services
+        service_health = {}
+        overall_status = "healthy"
+        
+        if app_initializer:
+            managed_services = app_initializer.get_managed_services()
+            for service in managed_services:
+                if hasattr(service, 'get_health_status'):
+                    try:
+                        health = service.get_health_status()
+                        service_name = health.get('service', 'unknown')
+                        service_health[service_name] = health
+                        
+                        # Aggregate overall status (degraded if any service degraded, error if any error)
+                        service_status = health.get('status', 'unknown')
+                        if service_status == 'error':
+                            overall_status = 'error'
+                        elif service_status == 'degraded' and overall_status == 'healthy':
+                            overall_status = 'degraded'
+                    except Exception as e:
+                        logger.error(f"Failed to get health status from service: {e}")
+                        overall_status = 'degraded'
+
         return {
-            "status": "healthy",
+            "status": overall_status,
             "engine": "ready",
-            "architecture": "QUALIA.CODE v1.0",
-            "event_bus_stats": stats,
-            "subscriptions": subscriptions,
+            "architecture": "QUALIA.CODE v1.1",
+            "timestamp": event_bus_stats.get('timestamp', 0),
+            "event_bus": {
+                "stats": event_bus_stats,
+                "subscriptions": subscriptions
+            },
+            "services": service_health,
+            "managed_services_count": len(service_health)
         }
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        return {"status": "degraded", "error": str(e)}
+        return {
+            "status": "error",
+            "engine": "degraded",
+            "error": str(e)
+        }
 
 
 @app.get("/diag/particle_buffer")
