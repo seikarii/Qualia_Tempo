@@ -28,6 +28,7 @@ from .application_initializer_mock import MockApplicationInitializerService
 from .state_streaming_mock import MockStateStreamingService
 from .MockPerformanceService import MockPerformanceService
 from .MockTimerService import MockTimerService
+from .MockMetricsService import MockMetricsService
 
 __all__ = [
     # Phase 4.1 (Core Infrastructure)

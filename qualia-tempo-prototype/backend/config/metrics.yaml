@@ -1,0 +1,35 @@
+# MetricsService Configuration
+# QUALIA.CODE v1.1 - Phase 6.3
+
+# Storage settings
+max_metrics_per_type: 1000
+enable_metric_persistence: false
+
+# Export settings
+enabled_backends:
+  - prometheus
+  - json
+prometheus_port: 9090
+statsd_host: "localhost"
+statsd_port: 8125
+cloudwatch_region: "us-east-1"
+cloudwatch_namespace: "QualiaTempo"
+
+# Aggregation settings
+histogram_buckets:
+  - 0.1
+  - 0.5
+  - 1.0
+  - 2.5
+  - 5.0
+  - 10.0
+enable_aggregation: true
+aggregation_interval_seconds: 60
+
+# Streaming settings
+enable_streaming: true
+max_subscribers: 100
+
+# Performance settings
+enable_metric_caching: true
+cache_ttl_seconds: 300

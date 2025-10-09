@@ -20,6 +20,7 @@ from .interfaces.IBossAIService import IBossAIService, IPatternSystemService
 from .interfaces.IApplicationInitializerService import IApplicationInitializerService
 from .interfaces.IPerformanceService import IPerformanceService
 from .interfaces.ITimerService import ITimerService
+from .interfaces.IMetricsService import IMetricsService
 
 # Import implementations
 from .QualiaLogger import QualiaLogger
