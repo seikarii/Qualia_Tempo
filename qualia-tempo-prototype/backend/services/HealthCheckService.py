@@ -21,6 +21,7 @@ from .interfaces.IHealthCheckService import (
 )
 from .contracts.IHealthCheckService_contracts import HealthCheckServiceConfig
 from .interfaces.ILogger import ILogger
+from ..utils.decorators import log_execution
 
 
 @dataclass
@@ -89,6 +90,8 @@ class HealthCheckService:
             }
         )
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def register_dependency_check(
         self,
         name: str,
@@ -221,6 +224,8 @@ class HealthCheckService:
         
         return result
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def set_degraded_mode(
         self,
         reason: str,
@@ -237,7 +242,9 @@ class HealthCheckService:
             f"Service set to degraded mode: {reason}",
             {"reason": reason, "until": until.isoformat() if until else None}
         )
+    @log_execution(level="INFO")
     
+    @log_execution(level="INFO")
     def clear_degraded_mode(self) -> None:
         """Clear manually-set degraded mode."""
         if self._degraded_mode:

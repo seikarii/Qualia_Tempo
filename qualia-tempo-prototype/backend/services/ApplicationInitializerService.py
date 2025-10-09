@@ -13,6 +13,7 @@ from .interfaces.IBaseService import IBaseService
 from .interfaces.ILogger import ILogger
 from .interfaces.IEventBus import IEventBus
 from .contracts.IApplicationInitializerService_contracts import ApplicationInitializerServiceConfig
+from ..utils.decorators import log_execution
 
 
 class ApplicationInitializerService(IApplicationInitializerService):
@@ -196,10 +197,13 @@ class ApplicationInitializerService(IApplicationInitializerService):
             }
         )
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def get_managed_services(self) -> List[IBaseService]:
         """Get list of all managed services."""
         return self._managed_services.copy()
     
+    @log_execution(level="INFO")
     def get_initialization_status(self) -> Dict[str, Any]:
         """Get current initialization status."""
         return {

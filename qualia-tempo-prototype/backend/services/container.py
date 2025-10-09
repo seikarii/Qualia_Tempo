@@ -1,3 +1,4 @@
+from ..utils.decorators import log_execution
 # QUALIA.CODE v1.1 - Service Container
 # Custom Dependency Injection Container for Backend Services
 
@@ -46,6 +47,8 @@ class ServiceContainer:
         self._config_objects: Dict[Type, Any] = {}
         self._logger = logging.getLogger(__name__)
         
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def register_singleton(
         self,
         interface: Type[T],
@@ -69,6 +72,8 @@ class ServiceContainer:
         self._services[interface] = registration
         self._logger.debug(f"📦 Registered singleton: {interface.__name__} -> {implementation.__name__}")
         
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def register_transient(
         self,
         interface: Type[T],
@@ -92,6 +97,8 @@ class ServiceContainer:
         self._services[interface] = registration
         self._logger.debug(f"📦 Registered transient: {interface.__name__} -> {implementation.__name__}")
         
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def register_config(self, config_type: Type[T], config_object: T) -> None:
         """
         Register a configuration object.
@@ -103,6 +110,8 @@ class ServiceContainer:
         self._config_objects[config_type] = config_object
         self._logger.debug(f"⚙️  Registered config: {config_type.__name__}")
         
+    @log_execution(level="DEBUG")
+    @log_execution(level="DEBUG")
     def resolve(self, interface: Type[T]) -> T:
         """
         Resolve a service by its interface.
@@ -185,12 +194,15 @@ class ServiceContainer:
         self._logger.debug(f"✅ Created instance: {registration.implementation.__name__}")
         return instance
         
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def clear(self) -> None:
         """Clear all service registrations and instances."""
         self._services.clear()
         self._config_objects.clear()
         self._logger.debug("🧹 Container cleared")
-        
+    
+    @log_execution(level="INFO")
     def get_registered_services(self) -> list[Type]:
         """Get list of all registered service interfaces."""
         return list(self._services.keys()) + list(self._config_objects.keys())

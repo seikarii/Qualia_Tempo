@@ -1,3 +1,4 @@
+from ..utils.decorators import log_execution
 # QUALIA.CODE v1.1 - BossAIService Implementation
 # Boss AI orchestrator with context-aware pattern selection
 
@@ -1132,6 +1133,7 @@ class BossAIService(IBossAIService, IBaseService):
             # Log but don't raise (IBaseService contract requirement)
             self._logger.error(f"Error during BossAIService cleanup: {e}")
 
+    @log_execution(level="INFO")
     def get_health_status(self) -> Dict[str, Any]:
         """
         Get comprehensive health status for diagnostics (IBaseService implementation).

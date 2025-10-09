@@ -223,6 +223,8 @@ class QualiaProcessor(IBaseService):
             # Log but don't raise (IBaseService contract requirement)
             self._logger.error(f"Error during QualiaProcessor cleanup: {e}")
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def get_health_status(self) -> Dict[str, Any]:
         """
         Get QualiaProcessor health status.
@@ -292,6 +294,7 @@ class MinimalQualiaProcessor:
         """Disable processing (no-op in minimal processor)."""
         pass
     
+    @log_execution(level="DEBUG")
     def is_enabled(self) -> bool:
         """Check if processing is enabled."""
         return False

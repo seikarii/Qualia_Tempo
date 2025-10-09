@@ -1,3 +1,4 @@
+from ..utils.decorators import log_execution
 # QUALIA.CODE v1.1 - HarmonyAnalysisService Implementation
 # Musical harmony analysis for emergent combo system
 
@@ -607,6 +608,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService, IBaseService):
             # Log but don't raise (IBaseService contract requirement)
             self._logger.error(f"Error during HarmonyAnalysisService cleanup: {e}")
 
+    @log_execution(level="INFO")
     def get_health_status(self) -> Dict[str, Any]:
         """
         Get comprehensive health status for diagnostics (IBaseService implementation).

@@ -16,6 +16,7 @@ from collections import deque
 from .interfaces.IErrorReportingService import IErrorReportingService
 from .interfaces.ILogger import ILogger
 from .contracts.IErrorReportingService_contracts import ErrorReportingServiceConfig
+from ..utils.decorators import log_execution
 
 
 class ErrorReportingService(IErrorReportingService):
@@ -68,6 +69,7 @@ class ErrorReportingService(IErrorReportingService):
             }
         )
     
+    @log_execution(level="INFO")
     def report_error(
         self,
         error_message: str,
@@ -146,6 +148,8 @@ class ErrorReportingService(IErrorReportingService):
         
         return error_id
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def report_exception(
         self,
         exception: Exception,
@@ -165,6 +169,8 @@ class ErrorReportingService(IErrorReportingService):
             severity=severity
         )
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def set_user_context(
         self,
         user_id: Optional[str] = None,
@@ -181,11 +187,15 @@ class ErrorReportingService(IErrorReportingService):
         }
         self._logger.debug(f"User context set for user_id: {user_id}")
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def set_tags(self, tags: Dict[str, str]) -> None:
         """Set custom tags for error categorization."""
         self._tags.update(tags)
         self._logger.debug(f"Tags updated: {list(tags.keys())}")
     
+    @log_execution(level="DEBUG")
+    @log_execution(level="DEBUG")
     def add_breadcrumb(
         self,
         message: str,
@@ -203,6 +213,8 @@ class ErrorReportingService(IErrorReportingService):
         }
         self._breadcrumbs.append(breadcrumb)
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def get_error_count(
         self,
         severity: Optional[str] = None,
@@ -223,6 +235,8 @@ class ErrorReportingService(IErrorReportingService):
             count += 1
         return count
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def get_recent_errors(
         self,
         limit: int = 50,
@@ -241,6 +255,8 @@ class ErrorReportingService(IErrorReportingService):
                 break
         return filtered_errors
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def export_errors(
         self,
         backend: str,
@@ -276,12 +292,16 @@ class ErrorReportingService(IErrorReportingService):
             self._logger.error(f"Failed to export errors: {str(e)}")
             return False
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def clear_context(self) -> None:
         """Clear user context and tags."""
         self._user_context = {}
         self._tags = {}
         self._logger.debug("Context cleared")
+    @log_execution(level="INFO")
     
+    @log_execution(level="INFO")
     def subscribe_to_errors(
         self,
         callback: Callable[[Dict[str, Any]], None],

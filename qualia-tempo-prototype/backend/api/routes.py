@@ -89,7 +89,7 @@ async def health_check(services: CompositionRoot = Depends(get_services)) -> Dic
     """
     try:
         health_check_service = services.get_health_check()
-        health_report = await health_check_service.get_health_report()
+        health_report: Dict[str, Any] = await health_check_service.get_health_report()
         
         return health_report
     except Exception as e:

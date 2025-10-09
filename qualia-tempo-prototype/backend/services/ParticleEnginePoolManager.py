@@ -1,3 +1,4 @@
+from ..utils.decorators import log_execution
 # QUALIA.CODE v1.1 - ParticleEnginePoolManager
 # Manages process pool for parallel particle calculation
 # ARCHITECTURE.GOLD.CODE v2: Backend calculates STATE via parallel workers
@@ -300,6 +301,7 @@ class ParticleEnginePoolManager(IParticleEnginePoolManager, IBaseService):
             # Log but don't raise (IBaseService contract requirement)
             self._logger.error(f"Error during ParticleEnginePoolManager cleanup: {e}")
 
+    @log_execution(level="INFO")
     def get_health_status(self) -> Dict[str, Any]:
         """
         Get comprehensive health status for diagnostics (IBaseService implementation).

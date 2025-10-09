@@ -15,6 +15,7 @@ from collections import defaultdict
 from .interfaces.IMetricsService import IMetricsService
 from .interfaces.ILogger import ILogger
 from .contracts.IMetricsService_contracts import MetricsServiceConfig
+from ..utils.decorators import log_execution
 
 
 class MetricsService(IMetricsService):
@@ -60,6 +61,8 @@ class MetricsService(IMetricsService):
             }
         )
     
+    @log_execution(level="DEBUG")
+    @log_execution(level="DEBUG")
     def record_counter(
         self,
         metric_name: str,
@@ -99,6 +102,8 @@ class MetricsService(IMetricsService):
         
         self._logger.debug(f"Counter {metric_name} incremented by {increment}")
     
+    @log_execution(level="DEBUG")
+    @log_execution(level="DEBUG")
     def record_gauge(
         self,
         metric_name: str,
@@ -138,6 +143,8 @@ class MetricsService(IMetricsService):
         
         self._logger.debug(f"Gauge {metric_name} set to {value}")
     
+    @log_execution(level="DEBUG")
+    @log_execution(level="DEBUG")
     def record_histogram(
         self,
         metric_name: str,
@@ -189,6 +196,8 @@ class MetricsService(IMetricsService):
         
         self._logger.debug(f"Histogram {metric_name} recorded value {value}")
     
+    @log_execution(level="DEBUG")
+    @log_execution(level="DEBUG")
     def get_metric(
         self,
         metric_name: str,
@@ -228,6 +237,8 @@ class MetricsService(IMetricsService):
         
         return metric_data
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def get_all_metrics(self) -> Dict[str, Any]:
         """Get all metrics organized by type."""
         return {
@@ -242,6 +253,8 @@ class MetricsService(IMetricsService):
             }
         }
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def export_to_backend(self, backend_name: str) -> str:
         """Export metrics to specified backend format."""
         if backend_name == "prometheus":
@@ -256,6 +269,8 @@ class MetricsService(IMetricsService):
             self._logger.error(f"Unknown backend: {backend_name}")
             return ""
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def reset_metrics(self, metric_type: Optional[str] = None) -> int:
         """Reset metrics (all or by type)."""
         count = 0
@@ -279,6 +294,8 @@ class MetricsService(IMetricsService):
         self._logger.info(f"Reset {count} metrics (type: {metric_type or 'all'})")
         return count
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def subscribe_to_updates(
         self,
         callback: Callable[[str, str, float], None],
@@ -304,6 +321,7 @@ class MetricsService(IMetricsService):
         self._logger.debug(f"New subscription: {subscription_id} (filter: {metric_filter})")
         return subscription_id
     
+    @log_execution(level="INFO")
     def unsubscribe(self, subscription_id: str) -> bool:
         """Unsubscribe from metric updates."""
         if subscription_id in self._subscribers:

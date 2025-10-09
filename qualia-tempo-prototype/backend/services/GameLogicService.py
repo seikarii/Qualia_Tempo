@@ -1,3 +1,4 @@
+from ..utils.decorators import log_execution
 # QUALIA.CODE v1.1 - GameLogicService Implementation
 # Core game mechanics and rules from GDD.md
 
@@ -1107,7 +1108,9 @@ class GameLogicService(IGameLogicService, IBaseService):
         except Exception as e:
             # Log but don't raise (IBaseService contract requirement)
             self._logger.error(f"Error during GameLogicService cleanup: {e}")
+    @log_execution(level="INFO")
     
+    @log_execution(level="INFO")
     def get_health_status(self) -> Dict[str, Any]:
         """
         Get GameLogicService health status.

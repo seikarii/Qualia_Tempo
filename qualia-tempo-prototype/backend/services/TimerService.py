@@ -15,6 +15,7 @@ from typing import Dict, Any, Optional, List, Callable, Awaitable
 from .interfaces.ITimerService import ITimerService
 from .interfaces.ILogger import ILogger
 from .contracts.ITimerService_contracts import TimerServiceConfig
+from ..utils.decorators import log_execution
 
 
 class TimerService(ITimerService):
@@ -69,6 +70,8 @@ class TimerService(ITimerService):
         
         await asyncio.sleep(seconds)
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def schedule_callback(
         self,
         callback: Callable[[], Awaitable[None]],
@@ -121,6 +124,8 @@ class TimerService(ITimerService):
         
         return timer_id
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def schedule_interval(
         self,
         callback: Callable[[], Awaitable[None]],
@@ -173,6 +178,8 @@ class TimerService(ITimerService):
         
         return timer_id
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def cancel_timer(self, timer_id: str) -> bool:
         """Cancel scheduled timer."""
         if timer_id not in self._timers:
@@ -199,6 +206,8 @@ class TimerService(ITimerService):
         
         return True
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def get_active_timers(self) -> List[Dict[str, Any]]:
         """Get list of all active timers."""
         return [
@@ -215,6 +224,7 @@ class TimerService(ITimerService):
             for timer in self._timers.values()
         ]
     
+    @log_execution(level="INFO")
     def cancel_all_timers(self) -> int:
         """Cancel all active timers."""
         count = 0

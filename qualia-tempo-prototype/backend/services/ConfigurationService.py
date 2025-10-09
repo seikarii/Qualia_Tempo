@@ -8,6 +8,7 @@ from .interfaces.IConfigurationService import IConfigurationService
 from .interfaces.ILogger import ILogger
 from .interfaces.IFileSystemService import IFileSystemService
 from .contracts.IConfigurationService_contracts import ConfigurationServiceConfig
+from ..utils.decorators import log_execution
 
 T = TypeVar('T')
 
@@ -117,6 +118,8 @@ class ConfigurationService(IConfigurationService):
         
         return config_data  # type: ignore[no-any-return]
 
+    @log_execution(level="DEBUG")
+    @log_execution(level="DEBUG")
     def get(self, key: str, config_type: Type[T]) -> T:
         """
         Get typed configuration value.
@@ -148,6 +151,8 @@ class ConfigurationService(IConfigurationService):
             )
             raise TypeError(f"Cannot cast {key} to {config_type.__name__}: {e}")
 
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def get_raw(self, key: str, default: Any = None) -> Any:
         """
         Get raw configuration value.
@@ -187,6 +192,7 @@ class ConfigurationService(IConfigurationService):
         
         return value
 
+    @log_execution(level="INFO")
     def reload(self) -> None:
         """
         Reload all configurations from disk.

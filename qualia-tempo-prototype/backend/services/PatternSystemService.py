@@ -1,3 +1,4 @@
+from ..utils.decorators import log_execution
 # QUALIA.CODE v1.1 - PatternSystemService Implementation
 # Pattern library management and validation
 
@@ -189,6 +190,7 @@ class PatternSystemService(IPatternSystemService, IBaseService):
             # Log but don't raise (IBaseService contract requirement)
             self._logger.error(f"Error during PatternSystemService cleanup: {e}")
 
+    @log_execution(level="INFO")
     def get_health_status(self) -> Dict[str, Any]:
         """
         Get comprehensive health status for diagnostics (IBaseService implementation).

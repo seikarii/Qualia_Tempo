@@ -573,7 +573,7 @@ class CompositionRoot:
         Returns service for dependency health checking and Kubernetes probes.
         """
         from .services.interfaces.IHealthCheckService import IHealthCheckService
-        return self._container.get(IHealthCheckService)
+        return self.container.get(IHealthCheckService)
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)

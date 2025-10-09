@@ -17,6 +17,7 @@ from collections import defaultdict, deque
 from .interfaces.IPerformanceService import IPerformanceService
 from .interfaces.ILogger import ILogger
 from .contracts.IPerformanceService_contracts import PerformanceServiceConfig
+from ..utils.decorators import log_execution
 
 
 class PerformanceService(IPerformanceService):
@@ -65,6 +66,8 @@ class PerformanceService(IPerformanceService):
             }
         )
     
+    @log_execution(level="DEBUG")
+    @log_execution(level="DEBUG")
     def start_measurement(self, operation_name: str, metadata: Optional[Dict[str, Any]] = None) -> str:
         """Start measuring execution time for an operation."""
         measurement_id = str(uuid.uuid4())
@@ -78,6 +81,8 @@ class PerformanceService(IPerformanceService):
         
         return measurement_id
     
+    @log_execution(level="DEBUG")
+    @log_execution(level="DEBUG")
     def end_measurement(self, measurement_id: str) -> float:
         """End measurement and record execution time."""
         if measurement_id not in self._active_measurements:
@@ -113,6 +118,8 @@ class PerformanceService(IPerformanceService):
         
         return duration_ms
     
+    @log_execution(level="DEBUG")
+    @log_execution(level="DEBUG")
     def record_metric(self, metric_name: str, value: float, tags: Optional[Dict[str, str]] = None) -> None:
         """Record a custom metric value."""
         # Store metric with optional tags
@@ -128,6 +135,8 @@ class PerformanceService(IPerformanceService):
         if len(self._metrics[metric_key]) > max_values:
             self._metrics[metric_key] = self._metrics[metric_key][-max_values:]
     
+    @log_execution(level="DEBUG")
+    @log_execution(level="DEBUG")
     def get_metrics(self, metric_name: Optional[str] = None) -> Dict[str, Any]:
         """Get recorded metrics with statistics."""
         if metric_name:
@@ -140,6 +149,8 @@ class PerformanceService(IPerformanceService):
             for name, values in self._metrics.items()
         }
     
+    @log_execution(level="INFO")
+    @log_execution(level="INFO")
     def get_slow_operations(self, threshold_ms: float = 100.0, limit: int = 10) -> List[Dict[str, Any]]:
         """Get slowest operations exceeding threshold."""
         slow_ops = [
@@ -152,6 +163,7 @@ class PerformanceService(IPerformanceService):
         
         return slow_ops[:limit]
     
+    @log_execution(level="INFO")
     def get_resource_usage(self) -> Dict[str, Any]:
         """Get current resource usage statistics."""
         usage = {}
@@ -170,6 +182,7 @@ class PerformanceService(IPerformanceService):
         
         return usage
     
+    @log_execution(level="INFO")
     def reset_metrics(self) -> None:
         """Reset all collected metrics and measurements."""
         self._measurements.clear()
@@ -178,6 +191,7 @@ class PerformanceService(IPerformanceService):
         self._active_measurements.clear()
         self._logger.info("Performance metrics reset")
     
+    @log_execution(level="INFO")
     def export_metrics(self, format: str = "json") -> str:
         """Export metrics in specified format."""
         if format == "json":
