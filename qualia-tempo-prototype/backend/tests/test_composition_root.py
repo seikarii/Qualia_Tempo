@@ -116,7 +116,7 @@ class TestCompositionRootFactory:
         
         # Get configured container
         test_container = get_configured_container()
-        filesystem_service = test_container.resolve(IFileSystemService)
+        filesystem_service = test_container.resolve(IFileSystemService)  # type: ignore[type-abstract]
 
         # Create REAL PersistenceService with real FileSystemService
         from backend.services.PersistenceService import PersistenceService
@@ -131,23 +131,23 @@ class TestCompositionRootFactory:
         
         # Get configured container with ParticleEnginePoolManager registered
         test_container = get_configured_container()
-        particle_pool_manager = test_container.resolve(IParticleEnginePoolManager)
+        particle_pool_manager = test_container.resolve(IParticleEnginePoolManager)  # type: ignore[type-abstract]
         
         # Create REAL GameLogicService from container (Phase 2.2)
         from backend.services.interfaces.IGameLogicService import IGameLogicService
-        game_logic_service = test_container.resolve(IGameLogicService)
+        game_logic_service = test_container.resolve(IGameLogicService)  # type: ignore[type-abstract]
         
         # Create REAL HarmonyAnalysisService from container (Phase 2.3)
         from backend.services.interfaces.IHarmonyAnalysisService import IHarmonyAnalysisService
-        harmony_analysis_service = test_container.resolve(IHarmonyAnalysisService)
+        harmony_analysis_service = test_container.resolve(IHarmonyAnalysisService)  # type: ignore[type-abstract]
         
         # Create REAL BossAIService from container (Phase 2.4)
         from backend.services.interfaces.IBossAIService import IBossAIService
-        boss_ai_service = test_container.resolve(IBossAIService)
+        boss_ai_service = test_container.resolve(IBossAIService)  # type: ignore[type-abstract]
         
         # Create REAL PatternSystemService from container (Phase 2.5)
         from backend.services.interfaces.IBossAIService import IPatternSystemService
-        pattern_system_service = test_container.resolve(IPatternSystemService)
+        pattern_system_service = test_container.resolve(IPatternSystemService)  # type: ignore[type-abstract]
 
         # 4. Inject services into composition root
         composition_root._services = {

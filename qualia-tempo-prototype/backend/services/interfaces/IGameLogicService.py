@@ -48,7 +48,7 @@ class IGameLogicService(ABC):
     """
 
     @abstractmethod
-    def initialize(self, player_id: str, boss_id: str, song_duration_sec: float) -> None:
+    def initialize_game(self, player_id: str, boss_id: str, song_duration_sec: float) -> None:
         """
         Initialize the game logic service for a new game session.
         

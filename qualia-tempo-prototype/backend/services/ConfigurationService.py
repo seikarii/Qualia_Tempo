@@ -115,7 +115,7 @@ class ConfigurationService(IConfigurationService):
             {"keys": list(config_data.keys()) if isinstance(config_data, dict) else None}
         )
         
-        return config_data
+        return config_data  # type: ignore[no-any-return]
 
     def get(self, key: str, config_type: Type[T]) -> T:
         """
@@ -140,7 +140,7 @@ class ConfigurationService(IConfigurationService):
         value = self.get_raw(key)
         
         try:
-            return config_type(value)
+            return config_type(value)  # type: ignore[call-arg]
         except (TypeError, ValueError) as e:
             self._logger.error(
                 f"Failed to cast config value to {config_type.__name__}",

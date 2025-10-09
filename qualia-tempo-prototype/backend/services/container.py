@@ -118,7 +118,7 @@ class ServiceContainer:
         """
         # Check if it's a config object
         if interface in self._config_objects:
-            return self._config_objects[interface]
+            return self._config_objects[interface]  # type: ignore[no-any-return]
             
         # Check if service is registered
         if interface not in self._services:
@@ -128,7 +128,7 @@ class ServiceContainer:
         
         # Return existing singleton instance
         if registration.scope == ServiceScope.SINGLETON and registration.instance is not None:
-            return registration.instance
+            return registration.instance  # type: ignore[no-any-return]
             
         # Create new instance
         instance = self._create_instance(registration)
@@ -137,7 +137,7 @@ class ServiceContainer:
         if registration.scope == ServiceScope.SINGLETON:
             registration.instance = instance
             
-        return instance
+        return instance  # type: ignore[no-any-return]
         
     def _create_instance(self, registration: ServiceRegistration) -> Any:
         """

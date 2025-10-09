@@ -36,7 +36,7 @@ class CompositionRoot:
     def __init__(self) -> None:
         # Phase 1: Initialize ServiceContainer for migrated services
         self.container: ServiceContainer = get_configured_container()
-        self._logger: ILogger = self.container.resolve(ILogger)
+        self._logger: ILogger = self.container.resolve(ILogger)  # type: ignore[type-abstract]
         
         # Phase 3: ApplicationInitializerService for lifecycle management
         self._app_initializer: Optional[IApplicationInitializerService] = None
@@ -104,14 +104,14 @@ class CompositionRoot:
 
     async def _initialize_event_bus(self) -> None:
         """Initialize the EventBus service from container."""
-        event_bus = self.container.resolve(IEventBus)
+        event_bus = self.container.resolve(IEventBus)  # type: ignore[type-abstract]
         self._services["event_bus"] = event_bus
         self._logger.debug("📡 EventBus service registered from container")
 
     async def _initialize_filesystem_service(self) -> None:
         """Initialize FileSystemService from container (QUALIA.CODE v1.1)."""
         try:
-            filesystem_service = self.container.resolve(IFileSystemService)
+            filesystem_service = self.container.resolve(IFileSystemService)  # type: ignore[type-abstract]
             self._services["filesystem_service"] = filesystem_service
             self._logger.debug("📁 FileSystemService registered from container")
 
@@ -127,7 +127,7 @@ class CompositionRoot:
         All configuration values now externalized per QUALIA.CODE mandate.
         """
         try:
-            config_service = self.container.resolve(IConfigurationService)
+            config_service = self.container.resolve(IConfigurationService)  # type: ignore[type-abstract]
             self._services["configuration_service"] = config_service
             self._logger.info("⚙️  ConfigurationService registered from container")
             self._logger.info("🎯 Phase 1 ConfigurationService: All configs now loaded from YAML files")
@@ -139,7 +139,7 @@ class CompositionRoot:
     async def _initialize_system_environment_service(self) -> None:
         """Initialize SystemEnvironmentService from container (QUALIA.CODE v1.1)."""
         try:
-            env_service = self.container.resolve(ISystemEnvironmentService)
+            env_service = self.container.resolve(ISystemEnvironmentService)  # type: ignore[type-abstract]
             self._services["system_environment_service"] = env_service
             self._logger.debug("🌍 SystemEnvironmentService registered from container")
 
@@ -150,7 +150,7 @@ class CompositionRoot:
     async def _initialize_security_service(self) -> None:
         """Initialize SecurityService from container (QUALIA.CODE v1.1)."""
         try:
-            security_service = self.container.resolve(ISecurityService)
+            security_service = self.container.resolve(ISecurityService)  # type: ignore[type-abstract]
             self._services["security_service"] = security_service
             self._logger.debug("🔒 SecurityService registered from container")
 
@@ -160,7 +160,7 @@ class CompositionRoot:
 
     async def _initialize_shader_introspection_service(self) -> None:
         """Initialize ShaderIntrospectionService from container (QUALIA.CODE v1.1)."""
-        shader_introspection_service = self.container.resolve(IShaderIntrospectionService)
+        shader_introspection_service = self.container.resolve(IShaderIntrospectionService)  # type: ignore[type-abstract]
         self._services["shader_introspection_service"] = shader_introspection_service
         self._logger.debug("🔍 ShaderIntrospectionService registered from container")
 
@@ -180,7 +180,7 @@ class CompositionRoot:
             from .services.interfaces.IParticleEnginePoolManager import IParticleEnginePoolManager
             
             # Resolve from container (dependencies auto-injected)
-            pool_manager = self.container.resolve(IParticleEnginePoolManager)
+            pool_manager = self.container.resolve(IParticleEnginePoolManager)  # type: ignore[type-abstract]
             
             # Start the pool (this creates worker processes)
             pool_started = await pool_manager.start()
@@ -201,7 +201,7 @@ class CompositionRoot:
 
     async def _initialize_qualia_processor(self) -> None:
         """Initialize QualiaProcessor from container (QUALIA.CODE v1.1)."""
-        processor = self.container.resolve(IQualiaProcessor)
+        processor = self.container.resolve(IQualiaProcessor)  # type: ignore[type-abstract]
         self._services["qualia_processor"] = processor
         self._logger.debug("✅ QualiaProcessor initialized from container")
 
@@ -227,7 +227,7 @@ class CompositionRoot:
             from .services.interfaces.IGameLogicService import IGameLogicService
             
             # Resolve from container (Phase 2.2 - IoC pattern)
-            game_logic_service = self.container.resolve(IGameLogicService)
+            game_logic_service = self.container.resolve(IGameLogicService)  # type: ignore[type-abstract]
             self._services["game_logic_service"] = game_logic_service
             
             self._logger.info("✅ GameLogicService initialized - Core GDD mechanics ready (Phase 2.2 IoC)")
@@ -257,7 +257,7 @@ class CompositionRoot:
             from .services.interfaces.IHarmonyAnalysisService import IHarmonyAnalysisService
             
             # Resolve service from IoC container (QUALIA.CODE §2.1 IoC mandate)
-            harmony_service = self.container.resolve(IHarmonyAnalysisService)
+            harmony_service = self.container.resolve(IHarmonyAnalysisService)  # type: ignore[type-abstract]
             self._services["harmony_analysis_service"] = harmony_service
             
             self._logger.info("✅ HarmonyAnalysisService initialized via IoC container - Musical harmony analysis ready")
@@ -289,7 +289,7 @@ class CompositionRoot:
             from .services.interfaces.IBossAIService import IBossAIService
             
             # Container resolution replaces manual instantiation
-            boss_ai_service = self.container.resolve(IBossAIService)
+            boss_ai_service = self.container.resolve(IBossAIService)  # type: ignore[type-abstract]
             self._services["boss_ai_service"] = boss_ai_service
             
             self._logger.info("✅ BossAIService initialized via IoC container - Boss AI orchestration ready")
@@ -317,7 +317,7 @@ class CompositionRoot:
             from .services.interfaces.IBossAIService import IPatternSystemService
             
             # Container resolution replaces manual instantiation
-            pattern_service = self.container.resolve(IPatternSystemService)
+            pattern_service = self.container.resolve(IPatternSystemService)  # type: ignore[type-abstract]
             self._services["pattern_system_service"] = pattern_service
             
             self._logger.info("✅ PatternSystemService initialized via IoC container - Pattern library ready")
@@ -382,7 +382,7 @@ class CompositionRoot:
 
             particle_engine = self._services["particle_system"]
             streaming_service = StateStreamingService(
-                event_bus=self._event_bus,
+                event_bus=self.get_event_bus(),
                 particle_engine=particle_engine,
                 config=config
             )
@@ -412,7 +412,7 @@ class CompositionRoot:
                 config = yaml.safe_load(file)
 
             game_state_streaming_service = GameStateStreamingService(
-                event_bus=self._event_bus,
+                event_bus=self.get_event_bus(),
                 config=config
             )
             self._services["game_state_streaming_service"] = game_state_streaming_service
@@ -439,14 +439,14 @@ class CompositionRoot:
                     self._logger.debug(f"📋 Registered {service_name} for lifecycle management")
             
             # Get logger and event_bus for ApplicationInitializerService
-            logger = self.container.resolve(ILogger)
-            event_bus = self.container.resolve(IEventBus)
+            logger = self.container.resolve(ILogger)  # type: ignore[type-abstract]
+            event_bus = self.container.resolve(IEventBus)  # type: ignore[type-abstract]
             
             # Create ApplicationInitializerService with managed services
             from .services.ApplicationInitializerService import ApplicationInitializerService
             from .services.contracts.IApplicationInitializerService_contracts import ApplicationInitializerServiceConfig
             
-            config = self.container.resolve(ApplicationInitializerServiceConfig)
+            config = self.container.resolve(ApplicationInitializerServiceConfig)  # type: ignore[type-abstract]
             self._app_initializer = ApplicationInitializerService(logger, event_bus, managed_services, config)
             
             # Start the application initializer (this will scan @OnEvent decorators and register handlers)
@@ -472,8 +472,8 @@ class CompositionRoot:
             # QUALIA.CODE v1.1: Import handler from proper module location
             from .handlers.engine_handlers import EngineResetHandler
 
-            reset_handler = EngineResetHandler(self._services["particle_system"])
-            self._event_bus.subscribe("EngineReset", reset_handler)
+            reset_handler = EngineResetHandler(self._services["particle_system"], self._logger)
+            self.get_event_bus().subscribe("EngineReset", reset_handler)
             self._logger.debug(
                 "🔄 Registered QualiaParticleEngine EngineReset event handler"
             )

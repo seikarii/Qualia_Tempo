@@ -129,7 +129,7 @@ class GameLogicService(IGameLogicService, IBaseService):
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
-    def initialize(self, player_id: str, boss_id: str, song_duration_sec: float) -> None:
+    def initialize_game(self, player_id: str, boss_id: str, song_duration_sec: float) -> None:
         """Initialize game session."""
         self._player_id = player_id
         self._boss_id = boss_id
@@ -999,6 +999,22 @@ class GameLogicService(IGameLogicService, IBaseService):
             "player_health": self._player_health,
             "boss_health": self._boss_health,
         }
+
+    async def generate_qualia_on_metronome(self, tick_number: int) -> None:
+        """
+        Generate qualia particles on metronome ticks.
+        
+        Args:
+            tick_number: The current metronome tick number
+        """
+        # Simple implementation: emit event for qualia generation
+        self._event_bus.publish({
+            "type": "QualiaSpawnRequest",
+            "tick_number": tick_number,
+            "timestamp": self._current_time,
+            "source": "GameLogicService"
+        })
+        self._logger.debug(f"Qualia generation requested for tick {tick_number}")
 
     # ==================== @OnEvent Handlers (PHASE 3.2 Proof of Concept) ====================
     

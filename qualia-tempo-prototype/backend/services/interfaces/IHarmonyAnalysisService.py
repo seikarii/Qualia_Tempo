@@ -92,7 +92,7 @@ class IHarmonyAnalysisService(ABC):
     """
 
     @abstractmethod
-    def initialize(self, player_id: str) -> None:
+    def initialize_for_player(self, player_id: str) -> None:
         """
         Initialize harmony analysis for a player.
         

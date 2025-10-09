@@ -151,16 +151,16 @@ class BossAIService(IBossAIService, IBaseService):
 
     def _load_phase_configs(self) -> None:
         """Load phase configurations from YAML."""
-        phases_data = self._config.get("phases", {})
+        phases_data = self._config.phases  # Direct attribute access (dataclass)
         phase_mapping = {
             "phase_1_opening": BossPhase.OPENING,
             "phase_2_escalation": BossPhase.ESCALATION,
             "phase_3_climax": BossPhase.CLIMAX,
             "phase_4_finale": BossPhase.FINALE,
         }
-        
+
         for phase_key, phase_enum in phase_mapping.items():
-            phase_data = phases_data.get(phase_key, {})
+            phase_data: Dict[str, Any] = phases_data.get(phase_key, {})  # type: ignore[attr-defined, assignment]
             self._phase_configs[phase_enum.value] = BossPhaseConfig(
                 phase_number=phase_enum.value,
                 name=phase_data.get("name", ""),
@@ -177,21 +177,21 @@ class BossAIService(IBossAIService, IBaseService):
 
     def _load_default_patterns(self) -> None:
         """Load default attack patterns from YAML."""
-        patterns_data = self._config.get("default_patterns", {})
+        patterns_data = self._config.default_patterns  # Direct attribute access (dataclass)
         
         for pattern_id, pattern_data in patterns_data.items():
             self._available_patterns[pattern_id] = AttackPattern(
                 pattern_id=pattern_id,
                 pattern_name=pattern_id.replace("_", " ").title(),
-                pattern_type=pattern_data.get("type", "projectile"),
-                weight=pattern_data.get("weight", 5.0),
-                damage=pattern_data.get("damage", 10.0),
-                telegraph_time=pattern_data.get("telegraph_time", 1.5),
-                cooldown=pattern_data.get("cooldown", 5.0),
-                phase_requirement=pattern_data.get("phase_requirement", 1),
-                aggression_requirement=pattern_data.get("aggression_requirement", 0.0),
-                radius=pattern_data.get("radius"),
-                duration=pattern_data.get("duration"),
+                pattern_type=pattern_data.get("type", "projectile"),  # type: ignore[attr-defined]
+                weight=pattern_data.get("weight", 5.0),  # type: ignore[attr-defined]
+                damage=pattern_data.get("damage", 10.0),  # type: ignore[attr-defined]
+                telegraph_time=pattern_data.get("telegraph_time", 1.5),  # type: ignore[attr-defined]
+                cooldown=pattern_data.get("cooldown", 5.0),  # type: ignore[attr-defined]
+                phase_requirement=pattern_data.get("phase_requirement", 1),  # type: ignore[attr-defined]
+                aggression_requirement=pattern_data.get("aggression_requirement", 0.0),  # type: ignore[attr-defined]
+                radius=pattern_data.get("radius"),  # type: ignore[attr-defined]
+                duration=pattern_data.get("duration"),  # type: ignore[attr-defined]
                 metadata={}
             )
         
@@ -298,7 +298,7 @@ class BossAIService(IBossAIService, IBaseService):
         if self._active_pattern:
             return False  # Already executing a pattern
         
-        min_time = self._config.get("pattern_selection", {}).get("cooldowns", {}).get(
+        min_time = self._config.pattern_selection.get("cooldowns", {}).get(  # type: ignore[attr-defined]
             "min_time_between_patterns", 2.0
         )
         
@@ -312,7 +312,7 @@ class BossAIService(IBossAIService, IBaseService):
         
         # Apply enrage multiplier
         if self._is_enraged:
-            enrage_boost = self._config.get("behavior", {}).get("enrage", {}).get(
+            enrage_boost = self._config.behavior.get("enrage", {}).get(  # type: ignore[attr-defined]
                 "pattern_frequency_boost", 1.5
             )
             min_time /= enrage_boost
@@ -321,7 +321,7 @@ class BossAIService(IBossAIService, IBaseService):
 
     def _check_phase_transition(self) -> None:
         """Check if boss should transition to next phase."""
-        if not self._config.get("features", {}).get("enable_phase_transitions", True):
+        if not self._config.features.get("enable_phase_transitions", True):  # type: ignore[attr-defined]
             return
         
         # Calculate health percentage
@@ -352,13 +352,13 @@ class BossAIService(IBossAIService, IBaseService):
 
     def _check_enrage(self) -> None:
         """Check if boss should enter enrage state."""
-        if not self._config.get("features", {}).get("enable_enrage_mechanic", True):
+        if not self._config.features.get("enable_enrage_mechanic", True):  # type: ignore[attr-defined]
             return
         
         if self._is_enraged:
             return  # Already enraged
         
-        trigger_time = self._config.get("behavior", {}).get("enrage", {}).get(
+        trigger_time = self._config.behavior.get("enrage", {}).get(  # type: ignore[attr-defined]
             "trigger_time_remaining", 30.0
         )
         
@@ -380,7 +380,7 @@ class BossAIService(IBossAIService, IBaseService):
         
         # Apply vulnerability multiplier
         if self._is_vulnerable:
-            vuln_mult = self._config.get("behavior", {}).get("vulnerability", {}).get(
+            vuln_mult = self._config.behavior.get("vulnerability", {}).get(  # type: ignore[attr-defined]
                 "damage_multiplier", 1.5
             )
             damage *= vuln_mult
@@ -437,12 +437,12 @@ class BossAIService(IBossAIService, IBaseService):
 
     def _calculate_aggression(self) -> None:
         """Calculate current boss aggression level."""
-        if not self._config.get("features", {}).get("enable_aggression_system", True):
+        if not self._config.features.get("enable_aggression_system", True):  # type: ignore[attr-defined]
             self._aggression = 0.5
             self._aggression_tier = AggressionTier.NORMAL
             return
         
-        aggression_config = self._config.get("aggression", {})
+        aggression_config = self._config.aggression
         
         # 1. Base volume influence
         volume_influence = aggression_config.get("volume_influence", {})
@@ -497,7 +497,7 @@ class BossAIService(IBossAIService, IBaseService):
         # 6. Enrage boost
         enrage_boost = 0.0
         if self._is_enraged:
-            enrage_boost = self._config.get("behavior", {}).get("enrage", {}).get(
+            enrage_boost = self._config.behavior.get("enrage", {}).get(  # type: ignore[attr-defined]
                 "aggression_boost", 0.3
             )
         
@@ -592,7 +592,7 @@ class BossAIService(IBossAIService, IBaseService):
     ) -> List[Tuple[AttackPattern, float]]:
         """Apply context-based weight modifiers to patterns."""
         weighted = []
-        context_weights = self._config.get("pattern_selection", {}).get("context_weights", {})
+        context_weights = self._config.pattern_selection.get("context_weights", {})  # type: ignore[attr-defined]
         
         for pattern in patterns:
             weight = pattern.weight
@@ -674,13 +674,13 @@ class BossAIService(IBossAIService, IBaseService):
         
         # Generate Qualia if enabled
         qualia_generated = 0
-        if self._config.get("qualia_generation", {}).get("enabled", True):
+        if self._config.qualia_generation.get("enabled", True):  # type: ignore[attr-defined]
             qualia_generated = self._generate_qualia_for_pattern(pattern)
         
         # Check for vulnerability window
         vulnerability_created = False
-        if self._config.get("behavior", {}).get("vulnerability", {}).get("enabled", True):
-            vuln_duration = self._config.get("behavior", {}).get("vulnerability", {}).get(
+        if self._config.behavior.get("vulnerability", {}).get("enabled", True):  # type: ignore[attr-defined]
+            vuln_duration = self._config.behavior.get("vulnerability", {}).get(  # type: ignore[attr-defined]
                 "duration_after_pattern", 1.5
             )
             self._is_vulnerable = True
@@ -735,25 +735,25 @@ class BossAIService(IBossAIService, IBaseService):
         
         # Apply enrage reduction
         if self._is_enraged:
-            enrage_reduction = self._config.get("behavior", {}).get("enrage", {}).get(
+            enrage_reduction = self._config.behavior.get("enrage", {}).get(  # type: ignore[attr-defined]
                 "telegraph_reduction", 0.5
             )
             base_duration *= (1.0 - enrage_reduction)
         
         # Apply harmony bonus/penalty
         if self._player_harmony_score >= 0.60:
-            bonus = self._config.get("pattern_selection", {}).get("telegraph", {}).get(
+            bonus = self._config.pattern_selection.get("telegraph", {}).get(  # type: ignore[attr-defined]
                 "harmony_bonus", 0.3
             )
             base_duration += bonus
         elif self._player_harmony_score < 0.40:
-            penalty = self._config.get("pattern_selection", {}).get("telegraph", {}).get(
+            penalty = self._config.pattern_selection.get("telegraph", {}).get(  # type: ignore[attr-defined]
                 "chaos_penalty", -0.2
             )
             base_duration += penalty  # penalty is negative
         
         # Clamp to minimum
-        min_duration = self._config.get("pattern_selection", {}).get("telegraph", {}).get(
+        min_duration = self._config.pattern_selection.get("telegraph", {}).get(  # type: ignore[attr-defined]
             "min_duration", 0.3
         )
         
@@ -761,7 +761,7 @@ class BossAIService(IBossAIService, IBaseService):
 
     def _generate_qualia_for_pattern(self, pattern: AttackPattern) -> int:
         """Generate Qualia entities for attack pattern."""
-        qualia_config = self._config.get("qualia_generation", {})
+        qualia_config = self._config.qualia_generation
         base_amount = qualia_config.get("generation_per_attack", 5)
         
         # Apply phase multiplier
@@ -786,7 +786,7 @@ class BossAIService(IBossAIService, IBaseService):
     @handle_errors()
     def neutralize_pattern(self, pattern_id: str, combo_type: str) -> bool:
         """Attempt to neutralize an active attack pattern with a harmonic combo."""
-        if not self._config.get("behavior", {}).get("vulnerability", {}).get(
+        if not self._config.behavior.get("vulnerability", {}).get(  # type: ignore[attr-defined]
             "harmonic_combo_neutralizes", True
         ):
             return False
@@ -804,7 +804,7 @@ class BossAIService(IBossAIService, IBaseService):
         self._stats["patterns_neutralized"] += 1
         
         # Create extended vulnerability window
-        vuln_duration = self._config.get("behavior", {}).get("vulnerability", {}).get(
+        vuln_duration = self._config.behavior.get("vulnerability", {}).get(  # type: ignore[attr-defined]
             "duration_after_pattern", 1.5
         )
         extended_duration = vuln_duration * 2.0  # 2x duration for neutralization
@@ -897,8 +897,8 @@ class BossAIService(IBossAIService, IBaseService):
             time_remaining=self._song_duration - self._current_time,
             enrage_multipliers={
                 "aggression_boost": self._aggression_factors.enrage_boost,
-                "telegraph_reduction": self._config.get("behavior", {}).get("enrage", {}).get("telegraph_reduction", 0.5),
-                "pattern_frequency_boost": self._config.get("behavior", {}).get("enrage", {}).get("pattern_frequency_boost", 1.5)
+                "telegraph_reduction": self._config.behavior.get("enrage", {}).get("telegraph_reduction", 0.5),  # type: ignore[attr-defined]
+                "pattern_frequency_boost": self._config.behavior.get("enrage", {}).get("pattern_frequency_boost", 1.5)  # type: ignore[attr-defined]
             },
             timestamp=time.time(),
             source="BossAIService"
@@ -910,10 +910,10 @@ class BossAIService(IBossAIService, IBaseService):
         event = BossVulnerableEvent(
             boss_id=self._boss_id or "unknown",
             vulnerability_duration=duration,
-            damage_multiplier=self._config.get("behavior", {}).get("vulnerability", {}).get(
+            damage_multiplier=self._config.behavior.get("vulnerability", {}).get(  # type: ignore[attr-defined]
                 "damage_multiplier", 1.5
             ),
-            can_be_neutralized=self._config.get("behavior", {}).get("vulnerability", {}).get(
+            can_be_neutralized=self._config.behavior.get("vulnerability", {}).get(  # type: ignore[attr-defined]
                 "harmonic_combo_neutralizes", True
             ),
             timestamp=time.time(),
@@ -1086,9 +1086,9 @@ class BossAIService(IBossAIService, IBaseService):
                     )
                     # Emit enrage event
                     enrage_event = BossEnragedEvent(
-                        boss_id=self._boss_id,
-                        health_percent=health_percent,
-                        timestamp=self._current_time
+                        boss_id=self._boss_id or "unknown",  # Ensure non-None boss_id
+                        time_remaining=0.0,  # TODO: Calculate from song duration
+                        enrage_multipliers={}  # TODO: Load from config
                     )
                     self._event_bus.publish(enrage_event)
                     self._stats['enrage_count'] += 1

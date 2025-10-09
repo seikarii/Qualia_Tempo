@@ -129,7 +129,7 @@ class HarmonyAnalysisService(IHarmonyAnalysisService, IBaseService):
         return lookup
 
     @log_execution(level="INFO")
-    def initialize(self, player_id: str) -> None:
+    def initialize_for_player(self, player_id: str) -> None:
         """Initialize harmony analysis for a player."""
         self._player_id = player_id
         self._harmony_history.clear()
@@ -537,6 +537,19 @@ class HarmonyAnalysisService(IHarmonyAnalysisService, IBaseService):
                 self._logger.debug(f"Qualia note collected: {note}, total: {len(self._collected_qualia_notes)}")
         except Exception as e:
             self._logger.error(f"Error handling QualiaCollected event: {e}")
+
+    def _calculate_group_consonance(self, notes: list[str]) -> float:
+        """
+        Calculate consonance score for a group of notes.
+        
+        Args:
+            notes: List of note names (e.g., ['C4', 'E4', 'G4'])
+            
+        Returns:
+            Consonance score from 0.0 (dissonant) to 1.0 (consonant)
+        """
+        # Use existing get_consonance_score method
+        return self.get_consonance_score(notes)  # type: ignore[no-any-return]
 
     @handle_errors(fallback_return_value=None)
     @OnEvent("ComboActivated")
