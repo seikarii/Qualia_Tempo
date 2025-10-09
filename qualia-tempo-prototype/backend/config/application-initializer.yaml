@@ -1,0 +1,7 @@
+# QUALIA.CODE v1.1 - Application Initializer Service Configuration
+# Configuration for service lifecycle management
+
+enable_lifecycle_logging: true
+initialization_timeout_seconds: 30
+shutdown_timeout_seconds: 10
+fail_fast: true

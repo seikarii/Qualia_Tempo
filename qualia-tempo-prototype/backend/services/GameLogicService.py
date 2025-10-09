@@ -12,6 +12,7 @@ from backend.services.interfaces.IGameLogicService import (
 )
 from backend.services.interfaces.ILogger import ILogger
 from backend.services.interfaces.IEventBus import IEventBus
+from backend.services.interfaces.IBaseService import IBaseService
 from backend.services.contracts.IGameLogicService_contracts import GameLogicConfig
 from backend.services.contracts.events import (
     PlayerDashEvent,
@@ -27,10 +28,10 @@ from backend.services.contracts.events import (
     UltimateActivatedEvent,
     CooldownUpdatedEvent,
 )
-from backend.utils.decorators import log_execution, handle_errors
+from backend.utils.decorators import log_execution, handle_errors, OnEvent
 
 
-class GameLogicService(IGameLogicService):
+class GameLogicService(IGameLogicService, IBaseService):
     """
     Core game logic service implementing GDD.md mechanics.
     
@@ -997,4 +998,120 @@ class GameLogicService(IGameLogicService):
             "difficulty_level": self._difficulty_level,
             "player_health": self._player_health,
             "boss_health": self._boss_health,
+        }
+
+    # ==================== @OnEvent Handlers (PHASE 3.2 Proof of Concept) ====================
+    
+    @handle_errors(fallback_return_value=None)
+    @OnEvent("MetronomeTick")
+    async def _on_metronome_tick(self, event_data: Dict[str, Any]) -> None:
+        """
+        Handle MetronomeTick events.
+        
+        PHASE 3.2: Proof of Concept - @OnEvent decorator usage.
+        This method is automatically registered with EventBus by ApplicationInitializerService.
+        
+        Args:
+            event_data: Metronome tick event data
+        """
+        tick_number = event_data.get("tick", 0)
+        self._logger.debug(
+            f"GameLogicService received MetronomeTick: {tick_number}",
+            context={"event_data": event_data}
+        )
+        
+        # Example: Generate qualia on metronome ticks if enabled
+        if self._config.qualia_generation.get("metronome_spawn_enabled", False):
+            await self.generate_qualia_on_metronome(tick_number)
+    
+    @handle_errors(fallback_return_value=None)
+    @OnEvent("BossPhaseChanged")
+    async def _on_boss_phase_changed(self, event_data: Dict[str, Any]) -> None:
+        """
+        Handle BossPhaseChanged events.
+        
+        PHASE 3.2: Proof of Concept - @OnEvent decorator usage.
+        This method is automatically registered with EventBus by ApplicationInitializerService.
+        
+        Args:
+            event_data: Boss phase change event data
+        """
+        new_phase = event_data.get("new_phase", 1)
+        old_phase = event_data.get("old_phase", 1)
+        
+        self._logger.info(
+            f"GameLogicService detected boss phase change: {old_phase} -> {new_phase}",
+            context={"event_data": event_data}
+        )
+        
+        # Example: Update difficulty or game mechanics based on boss phase
+        self._boss_phase = new_phase
+        
+        # Adjust difficulty multipliers based on phase
+        phase_difficulty_multiplier = self._config.difficulty.get(
+            "phase_multipliers", {}
+        ).get(str(new_phase), 1.0)
+        
+        self._logger.info(f"Difficulty multiplier for phase {new_phase}: {phase_difficulty_multiplier}")
+
+    # ==================== IBaseService Lifecycle Methods ====================
+    
+    async def initialize(self) -> None:
+        """
+        Initialize GameLogicService lifecycle.
+        
+        PHASE 3.2: IBaseService implementation.
+        ApplicationInitializerService will automatically scan for @OnEvent
+        decorated methods and register them with EventBus.
+        
+        This method is called by ApplicationInitializerService during startup.
+        """
+        self._logger.info("GameLogicService lifecycle initialized (IBaseService)")
+    
+    async def cleanup(self) -> None:
+        """
+        Cleanup GameLogicService resources.
+        
+        PHASE 3.2: IBaseService implementation.
+        ApplicationInitializerService will automatically unregister all
+        @OnEvent handlers during cleanup.
+        
+        This method MUST NOT raise exceptions (per IBaseService contract).
+        """
+        try:
+            self._logger.info("GameLogicService lifecycle cleanup (IBaseService)")
+            
+            # Clear all game state
+            self._active_qualia.clear()
+            self._active_effects.clear()
+            self._recent_keys.clear()
+            self._ability_cooldowns.clear()
+            
+            self._logger.debug("GameLogicService state cleared")
+        except Exception as e:
+            # Log but don't raise (IBaseService contract requirement)
+            self._logger.error(f"Error during GameLogicService cleanup: {e}")
+    
+    def get_health_status(self) -> Dict[str, Any]:
+        """
+        Get GameLogicService health status.
+        
+        PHASE 3.2: IBaseService implementation.
+        
+        Returns:
+            Dict with service health information
+        """
+        return {
+            "service": "GameLogicService",
+            "status": "healthy",
+            "game_initialized": self._player_id is not None,
+            "player_health": self._player_health,
+            "boss_health": self._boss_health,
+            "current_combo": self._player_combo,
+            "current_score": self._player_score,
+            "active_qualia_count": len(self._active_qualia),
+            "active_effects_count": len(self._active_effects),
+            "difficulty_level": self._difficulty_level,
+            "boss_phase": self._boss_phase,
+            "ultimate_active": self._ultimate_active,
         }

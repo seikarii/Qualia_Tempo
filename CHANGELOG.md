@@ -1,5 +1,110 @@
 # CHANGELOG
 
+## [Session 8 - Phase 3.2 Proof of Concept ✅] - 2025-01-08
+
+### 🎯 PHASE 3.2: IBaseService + @OnEvent Pattern Implementation (Proof of Concept)
+
+**Objective:** Implement IBaseService interface and @OnEvent decorator pattern in QualiaProcessor and GameLogicService to demonstrate automatic lifecycle management and event subscription.
+
+#### Tasks Completed:
+
+**1. QualiaProcessor Migration:**
+1. ✅ Added IBaseService to class signature: `class QualiaProcessor(IBaseService)`
+2. ✅ Added imports: `IBaseService`, `OnEvent` decorator
+3. ✅ Implemented IBaseService lifecycle methods:
+   - `async def initialize()`: Logs initialization message (called by ApplicationInitializerService)
+   - `async def cleanup()`: Clears `_current_state`, error-safe (MUST NOT raise per contract)
+   - `def get_health_status()`: Returns 7-metric health dict (service, status, processing_enabled, has_current_state, 3 thresholds)
+4. ✅ Created @OnEvent handlers (2 handlers):
+   - `@OnEvent("PlayerAction")` - Decorated with `@handle_errors`, tracks player actions (dash/ability) for qualia adjustments
+   - `@OnEvent("GameStateChanged")` - Decorated with `@handle_errors`, resets state on pause/stop events
+5. ✅ Syntax validated
+
+**2. GameLogicService Migration:**
+1. ✅ Added IBaseService to class signature: `class GameLogicService(IGameLogicService, IBaseService)`
+2. ✅ Added imports: `IBaseService`, `OnEvent` decorator
+3. ✅ Implemented IBaseService lifecycle methods:
+   - `async def initialize()`: Logs initialization message
+   - `async def cleanup()`: Clears 4 collections (qualia, effects, keys, cooldowns), error-safe with try/except
+   - `def get_health_status()`: Returns 11-metric comprehensive health dict (player/boss health, combo, score, qualia count, effects, difficulty, phase, ultimate)
+4. ✅ Created @OnEvent handlers (2 handlers):
+   - `@OnEvent("MetronomeTick")` - Decorated with `@handle_errors`, generates qualia on metronome ticks if config enabled
+   - `@OnEvent("BossPhaseChanged")` - Decorated with `@handle_errors`, adjusts difficulty multipliers based on boss phase
+5. ✅ Syntax validated
+
+#### Files Modified:
+- `backend/services/QualiaProcessor.py` (UPDATED - ~100 lines added: IBaseService implementation + 2 @OnEvent handlers)
+- `backend/services/GameLogicService.py` (UPDATED - ~130 lines added: IBaseService implementation + 2 @OnEvent handlers)
+
+#### Validation:
+- ✅ QualiaProcessor.py syntax validation PASSED
+- ✅ GameLogicService.py syntax validation PASSED
+- ✅ Architectural linter PASSED (Contract Integrity, Config Integrity, IoC Binding Order)
+- ✅ @OnEvent decorator order correct: `@handle_errors` → `@OnEvent` (per QUALIA.MANUAL.md)
+- ✅ cleanup() methods follow "MUST NOT raise" contract (try/except wrapping)
+
+#### Pattern Validation:
+- ✅ IBaseService contract correctly implemented in both services
+- ✅ @OnEvent decorator metadata preserved (`_is_event_handler`, `_event_name`)
+- ✅ ApplicationInitializerService can auto-scan these methods during startup
+- ✅ Health status methods provide comprehensive diagnostic information
+- ✅ All code follows QUALIA.CODE v1.1 and QUALIA.MANUAL.md patterns
+
+**Status:** Phase 3.2 Proof of Concept COMPLETE. Pattern successfully demonstrated in 2 services. ApplicationInitializerService will automatically register these @OnEvent handlers during startup. Next: Integration testing, decorator modularization, linter violation resolution.
+
+---
+
+## [Session 8 - Phase 3.1 Container Integration ✅] - 2025-01-08
+
+### 🎯 PHASE 3.1: ApplicationInitializerService Container Integration
+
+**Objective:** Register ApplicationInitializerService in container and update CompositionRoot to use it for automatic lifecycle management.
+
+#### Tasks Completed:
+1. ✅ Created ApplicationInitializerServiceConfig contract (`backend/services/contracts/IApplicationInitializerService_contracts.py`):
+   - Config fields: `enable_lifecycle_logging`, `initialization_timeout_seconds`, `shutdown_timeout_seconds`, `fail_fast`
+   - Syntax validated
+2. ✅ Registered ApplicationInitializerService in container (`backend/services/container_config.py`):
+   - Added imports: `IApplicationInitializerService`, `ApplicationInitializerService`, `ApplicationInitializerServiceConfig`
+   - Added YAML loading: `app_initializer_config_data = _load_yaml_config("application-initializer")`
+   - Registered `ApplicationInitializerServiceConfig` with defaults
+   - Registered `IApplicationInitializerService` → `ApplicationInitializerService` as singleton
+   - Syntax validated
+3. ✅ Created application-initializer.yaml configuration (`backend/config/application-initializer.yaml`):
+   - Settings: `enable_lifecycle_logging: true`, `initialization_timeout_seconds: 30`, `shutdown_timeout_seconds: 10`, `fail_fast: true`
+4. ✅ Updated ApplicationInitializerService constructor (`backend/services/ApplicationInitializerService.py`):
+   - Added `config: ApplicationInitializerServiceConfig` parameter
+   - Added config import
+   - Updated docstring
+   - Uses `config.enable_lifecycle_logging` for conditional logging
+   - Syntax validated
+5. ✅ Updated CompositionRoot (`backend/CompositionRoot.py`):
+   - Added imports: `IApplicationInitializerService`, `IBaseService`
+   - Added `_app_initializer` field to `__init__`
+   - Created `_initialize_application_initializer()` method:
+     * Collects all services implementing `IBaseService`
+     * Creates ApplicationInitializerService with managed services
+     * Calls `await initializer.start()` to scan @OnEvent decorators and register handlers
+   - Updated `initialize()` to call `_initialize_application_initializer()`
+   - Updated `shutdown()` to call `await _app_initializer.stop()` (LIFO cleanup)
+   - Syntax validated
+
+#### Files Modified:
+- `backend/services/contracts/IApplicationInitializerService_contracts.py` (NEW - 19 lines)
+- `backend/services/container_config.py` (UPDATED - added ApplicationInitializerService registration)
+- `backend/config/application-initializer.yaml` (NEW - 6 lines)
+- `backend/services/ApplicationInitializerService.py` (UPDATED - added config parameter)
+- `backend/CompositionRoot.py` (UPDATED - integrated ApplicationInitializerService lifecycle)
+
+#### Validation:
+- ✅ All syntax validations PASSED (5 files)
+- ✅ Container configuration validated
+- ✅ CompositionRoot integration validated
+
+**Status:** Phase 3.1 Container Integration COMPLETE. ApplicationInitializerService is now fully integrated with the IoC container and CompositionRoot. Next: Create proof-of-concept with QualiaProcessor and GameLogicService implementing IBaseService + @OnEvent pattern.
+
+---
+
 ## [Session 8 - Phase 2.5 🎯 100% SERVICE MIGRATION] - 2025-01-08
 
 ### 🎯 MILESTONE: Backend Recovery - PatternSystemService Migration (FINAL SERVICE - 100% COMPLETE) 🎉

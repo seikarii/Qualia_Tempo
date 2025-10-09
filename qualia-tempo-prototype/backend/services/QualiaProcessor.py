@@ -4,16 +4,18 @@
 from typing import Dict, Any, Optional
 from .interfaces.IEventBus import IEventBus
 from .interfaces.ILogger import ILogger
+from .interfaces.IBaseService import IBaseService
 from .contracts.IQualiaProcessor_contracts import QualiaProcessorConfig
 from ..utils.decorators import (
     log_execution,
     handle_errors,
     validate_schema,
     time_execution,
+    OnEvent,
 )
 
 
-class QualiaProcessor:
+class QualiaProcessor(IBaseService):
     """
     Main processor for QualiaState data.
     Receives QualiaState from frontend and triggers visual effects.
@@ -142,6 +144,103 @@ class QualiaProcessor:
     def is_enabled(self) -> bool:
         """Check if processing is enabled."""
         return self._processing_enabled
+
+    # ==================== @OnEvent Handlers (PHASE 3.2 Proof of Concept) ====================
+    
+    @handle_errors(fallback_return_value=None)
+    @OnEvent("PlayerAction")
+    async def _on_player_action(self, event_data: Dict[str, Any]) -> None:
+        """
+        Handle PlayerAction events.
+        
+        PHASE 3.2: Proof of Concept - @OnEvent decorator usage.
+        This method is automatically registered with EventBus by ApplicationInitializerService.
+        
+        Args:
+            event_data: Player action event data
+        """
+        action_type = event_data.get("action", "unknown")
+        self._logger.debug(
+            f"QualiaProcessor received PlayerAction: {action_type}",
+            context={"event_data": event_data}
+        )
+        
+        # Example: Track player actions for potential qualia adjustments
+        if action_type in ["dash", "ability"]:
+            self._logger.info(f"Player performed high-intensity action: {action_type}")
+    
+    @handle_errors(fallback_return_value=None)
+    @OnEvent("GameStateChanged")
+    async def _on_game_state_changed(self, event_data: Dict[str, Any]) -> None:
+        """
+        Handle GameStateChanged events.
+        
+        PHASE 3.2: Proof of Concept - @OnEvent decorator usage.
+        This method is automatically registered with EventBus by ApplicationInitializerService.
+        
+        Args:
+            event_data: Game state change event data
+        """
+        new_state = event_data.get("new_state", "unknown")
+        self._logger.info(
+            f"QualiaProcessor detected game state change: {new_state}",
+            context={"event_data": event_data}
+        )
+        
+        # Example: Reset state when game pauses/stops
+        if new_state in ["paused", "stopped"]:
+            self._current_state = None
+            self._logger.debug("QualiaProcessor state cleared due to game state change")
+
+    # ==================== IBaseService Lifecycle Methods ====================
+    
+    async def initialize(self) -> None:
+        """
+        Initialize QualiaProcessor lifecycle.
+        
+        PHASE 3.2: IBaseService implementation.
+        ApplicationInitializerService will automatically scan for @OnEvent
+        decorated methods and register them with EventBus.
+        
+        This method is called by ApplicationInitializerService during startup.
+        """
+        self._logger.info("QualiaProcessor lifecycle initialized (IBaseService)")
+    
+    async def cleanup(self) -> None:
+        """
+        Cleanup QualiaProcessor resources.
+        
+        PHASE 3.2: IBaseService implementation.
+        ApplicationInitializerService will automatically unregister all
+        @OnEvent handlers during cleanup.
+        
+        This method MUST NOT raise exceptions (per IBaseService contract).
+        """
+        try:
+            self._logger.info("QualiaProcessor lifecycle cleanup (IBaseService)")
+            self._current_state = None
+        except Exception as e:
+            # Log but don't raise (IBaseService contract requirement)
+            self._logger.error(f"Error during QualiaProcessor cleanup: {e}")
+    
+    def get_health_status(self) -> Dict[str, Any]:
+        """
+        Get QualiaProcessor health status.
+        
+        PHASE 3.2: IBaseService implementation.
+        
+        Returns:
+            Dict with service health information
+        """
+        return {
+            "service": "QualiaProcessor",
+            "status": "healthy" if self._processing_enabled else "disabled",
+            "processing_enabled": self._processing_enabled,
+            "has_current_state": self._current_state is not None,
+            "intensity_threshold": self._config.intensity_spike_threshold,
+            "transcendence_threshold": self._config.transcendence_threshold,
+            "chaos_threshold": self._config.chaos_threshold,
+        }
 
     async def shutdown(self) -> None:
         """Gracefully shutdown the processor."""

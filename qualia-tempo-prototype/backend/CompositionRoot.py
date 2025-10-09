@@ -13,6 +13,8 @@ from .services.interfaces.IShaderIntrospectionService import IShaderIntrospectio
 from .services.interfaces.IQualiaProcessor import IQualiaProcessor
 from .services.interfaces.IConfigurationService import IConfigurationService
 from .services.interfaces.IParticleEnginePoolManager import IParticleEnginePoolManager
+from .services.interfaces.IApplicationInitializerService import IApplicationInitializerService
+from .services.interfaces.IBaseService import IBaseService
 from .utils.decorators import log_execution, handle_errors
 import asyncio
 
@@ -36,11 +38,14 @@ class CompositionRoot:
         self.container: ServiceContainer = get_configured_container()
         self._logger: ILogger = self.container.resolve(ILogger)
         
+        # Phase 3: ApplicationInitializerService for lifecycle management
+        self._app_initializer: Optional[IApplicationInitializerService] = None
+        
         # Legacy service dictionary for services not yet migrated
         self._services: Dict[str, Any] = {}
         self._initialized = False
         
-        self._logger.info("CompositionRoot initialized with ServiceContainer (Phase 1 hybrid mode)")
+        self._logger.info("CompositionRoot initialized with ServiceContainer (Phase 3: ApplicationInitializer ready)")
 
     @log_execution(level="INFO")
     @handle_errors(fallback_return_value=None)
@@ -86,6 +91,9 @@ class CompositionRoot:
 
         # Register event handlers
         await self._register_event_handlers()
+        
+        # PHASE 3.1: Initialize ApplicationInitializerService for lifecycle management
+        await self._initialize_application_initializer()
 
         self._initialized = True
         self._logger.info("✅ CompositionRoot initialization complete")
@@ -414,6 +422,44 @@ class CompositionRoot:
             self._logger.error(f"🚨 Failed to initialize GameStateStreamingService: {e}")
             raise
 
+    async def _initialize_application_initializer(self) -> None:
+        """
+        Initialize ApplicationInitializerService for lifecycle management.
+        
+        PHASE 3.1: Automatic @OnEvent registration and service lifecycle orchestration.
+        Collects all services implementing IBaseService and manages their initialization/cleanup.
+        """
+        try:
+            # Collect all services that implement IBaseService
+            managed_services: list[IBaseService] = []
+            
+            for service_name, service in self._services.items():
+                if isinstance(service, IBaseService):
+                    managed_services.append(service)
+                    self._logger.debug(f"📋 Registered {service_name} for lifecycle management")
+            
+            # Get logger and event_bus for ApplicationInitializerService
+            logger = self.container.resolve(ILogger)
+            event_bus = self.container.resolve(IEventBus)
+            
+            # Create ApplicationInitializerService with managed services
+            from .services.ApplicationInitializerService import ApplicationInitializerService
+            from .services.contracts.IApplicationInitializerService_contracts import ApplicationInitializerServiceConfig
+            
+            config = self.container.resolve(ApplicationInitializerServiceConfig)
+            self._app_initializer = ApplicationInitializerService(logger, event_bus, managed_services, config)
+            
+            # Start the application initializer (this will scan @OnEvent decorators and register handlers)
+            await self._app_initializer.start()
+            
+            self._logger.info(
+                f"✅ ApplicationInitializerService initialized with {len(managed_services)} managed services"
+            )
+            
+        except Exception as e:
+            self._logger.error(f"🚨 Failed to initialize ApplicationInitializerService: {e}")
+            raise
+
     async def _register_event_handlers(self) -> None:
         """Register event handlers for cross-service communication."""
         # QUALIA.CODE: QualiaParticleEngine now handles its own events autonomously
@@ -519,6 +565,9 @@ class CompositionRoot:
         ARCHITECTURE.GOLD.CODE v2 - Phase 1.4:
         - Added special handling for ParticleEnginePoolManager (stop method)
         - Ensures worker processes are terminated gracefully
+        
+        PHASE 3.1:
+        - ApplicationInitializerService handles automatic lifecycle cleanup (LIFO order)
         """
         if not self._initialized:
             self._logger.warning(
@@ -527,6 +576,17 @@ class CompositionRoot:
             return
 
         self._logger.info("🔌 Gracefully shutting down QUALIA.CODE services...")
+        
+        # PHASE 3.1: Stop ApplicationInitializerService first (handles all IBaseService cleanup)
+        if self._app_initializer is not None:
+            try:
+                self._logger.info("🛑 Stopping ApplicationInitializerService (lifecycle cleanup)...")
+                await self._app_initializer.stop()
+                self._logger.critical("✅ ApplicationInitializerService TERMINATED.")
+            except Exception as e:
+                self._logger.error(
+                    f"🚨 Error during ApplicationInitializerService shutdown: {e}", exc_info=True
+                )
 
         # Shutdown services in reverse order to respect dependencies.
         for service_name in reversed(list(self._services.keys())):

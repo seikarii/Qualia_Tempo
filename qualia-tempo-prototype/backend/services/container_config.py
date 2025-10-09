@@ -17,6 +17,7 @@ from .interfaces.IParticleEnginePoolManager import IParticleEnginePoolManager
 from .interfaces.IGameLogicService import IGameLogicService
 from .interfaces.IHarmonyAnalysisService import IHarmonyAnalysisService
 from .interfaces.IBossAIService import IBossAIService, IPatternSystemService
+from .interfaces.IApplicationInitializerService import IApplicationInitializerService
 
 # Import implementations
 from .QualiaLogger import QualiaLogger
@@ -32,6 +33,7 @@ from .GameLogicService import GameLogicService
 from .HarmonyAnalysisService import HarmonyAnalysisService
 from .BossAIService import BossAIService
 from .PatternSystemService import PatternSystemService
+from .ApplicationInitializerService import ApplicationInitializerService
 
 # Import contracts
 from .contracts.ILogger_contracts import LoggerConfig
@@ -47,6 +49,7 @@ from .contracts.IGameLogicService_contracts import GameLogicConfig
 from .contracts.IHarmonyAnalysisService_contracts import HarmonyAnalysisConfig
 from .contracts.IBossAIService_contracts import BossAIServiceConfig
 from .contracts.IPatternSystemService_contracts import PatternSystemConfig
+from .contracts.IApplicationInitializerService_contracts import ApplicationInitializerServiceConfig
 
 
 def _load_yaml_config(config_name: str, config_dir: str = "config") -> Dict[str, Any]:
@@ -100,6 +103,7 @@ def configure_container(container: ServiceContainer) -> None:
     harmony_analysis_config_data = _load_yaml_config("harmony-analysis")
     boss_ai_config_data = _load_yaml_config("boss-ai")
     pattern_system_config_data = _load_yaml_config("pattern-system")
+    app_initializer_config_data = _load_yaml_config("application-initializer")
     
     # Register typed configuration objects
     container.register_config(LoggerConfig, LoggerConfig(
@@ -208,6 +212,13 @@ def configure_container(container: ServiceContainer) -> None:
         default_patterns=pattern_system_config_data.get('default_patterns', [])
     ))
     
+    container.register_config(ApplicationInitializerServiceConfig, ApplicationInitializerServiceConfig(
+        enable_lifecycle_logging=app_initializer_config_data.get('enable_lifecycle_logging', True),
+        initialization_timeout_seconds=app_initializer_config_data.get('initialization_timeout_seconds', 30),
+        shutdown_timeout_seconds=app_initializer_config_data.get('shutdown_timeout_seconds', 10),
+        fail_fast=app_initializer_config_data.get('fail_fast', True)
+    ))
+    
     # Step 2: Register all services as singletons
     # Dependencies will be automatically resolved by the container
     
@@ -226,6 +237,7 @@ def configure_container(container: ServiceContainer) -> None:
     container.register_singleton(IHarmonyAnalysisService, HarmonyAnalysisService)  # type: ignore[type-abstract]
     container.register_singleton(IBossAIService, BossAIService)  # type: ignore[type-abstract]
     container.register_singleton(IPatternSystemService, PatternSystemService)  # type: ignore[type-abstract]
+    container.register_singleton(IApplicationInitializerService, ApplicationInitializerService)  # type: ignore[type-abstract]
 
 
 def get_configured_container() -> ServiceContainer:
