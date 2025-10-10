@@ -10,7 +10,7 @@ from ruff_qualia_code.rules import SourceFile
 
 from ruff_qualia_code.rules import (
     QLA001, QLA002, QLA003, QLA004, QLA005, QLA006,
-    QLA007, QLA009, QLA010, QLA011
+    QLA007, QLA008, QLA009, QLA010, QLA011
 )
 
 
@@ -298,3 +298,119 @@ class ServiceBService:
     
     # Should not detect any circular dependencies
     assert len(diagnostics) == 0
+
+
+def test_qla008_missing_circuit_breaker():
+    """Test QLA008: Async function with HTTP call but no @circuit_breaker decorator"""
+    code = """
+import httpx
+
+class ApiService:
+    async def fetch_data(self, url: str):
+        response = await httpx.get(url)
+        return response.json()
+"""
+    source_file = create_source_file(code, "services/ApiService.py")
+    rule = QLA008()
+
+    tree = ast.parse(code)
+    diagnostic = rule.check(tree, source_file)
+
+    assert diagnostic is not None
+    assert diagnostic.code == "QLA008"
+    assert "circuit_breaker" in diagnostic.message
+    assert "fetch_data" in diagnostic.message
+
+
+def test_qla008_with_circuit_breaker():
+    """Test QLA008: Async function with HTTP call and @circuit_breaker decorator"""
+    code = """
+import httpx
+
+class ApiService:
+    @circuit_breaker
+    async def fetch_data(self, url: str):
+        response = await httpx.get(url)
+        return response.json()
+"""
+    source_file = create_source_file(code, "services/ApiService.py")
+    rule = QLA008()
+
+    tree = ast.parse(code)
+    diagnostic = rule.check(tree, source_file)
+
+    assert diagnostic is None
+
+
+def test_qla008_http_client_attribute():
+    """Test QLA008: Detects HTTP calls via self.http_client"""
+    code = """
+class ExternalApiService:
+    async def get_user_data(self, user_id: str):
+        result = await self.http_client.get(f"/users/{user_id}")
+        return result
+"""
+    source_file = create_source_file(code, "services/ExternalApiService.py")
+    rule = QLA008()
+
+    tree = ast.parse(code)
+    diagnostic = rule.check(tree, source_file)
+
+    assert diagnostic is not None
+    assert diagnostic.code == "QLA008"
+    assert "GET request" in diagnostic.message or "http" in diagnostic.message.lower()
+
+
+def test_qla008_private_method_exempt():
+    """Test QLA008: Private methods are exempt"""
+    code = """
+import httpx
+
+class ApiService:
+    async def _internal_fetch(self, url: str):
+        response = await httpx.get(url)
+        return response.json()
+"""
+    source_file = create_source_file(code, "services/ApiService.py")
+    rule = QLA008()
+
+    tree = ast.parse(code)
+    diagnostic = rule.check(tree, source_file)
+
+    assert diagnostic is None
+
+
+def test_qla008_no_http_operations():
+    """Test QLA008: Async function without HTTP calls should not trigger"""
+    code = """
+class CalculationService:
+    async def calculate_sum(self, numbers: list[int]):
+        return sum(numbers)
+"""
+    source_file = create_source_file(code, "services/CalculationService.py")
+    rule = QLA008()
+
+    tree = ast.parse(code)
+    diagnostic = rule.check(tree, source_file)
+
+    assert diagnostic is None
+
+
+def test_qla008_circuit_breaker_with_args():
+    """Test QLA008: Decorator with arguments should be recognized"""
+    code = """
+import httpx
+
+class ApiService:
+    @circuit_breaker(failure_threshold=5, timeout=60)
+    async def fetch_data(self, url: str):
+        response = await httpx.get(url)
+        return response.json()
+"""
+    source_file = create_source_file(code, "services/ApiService.py")
+    rule = QLA008()
+
+    tree = ast.parse(code)
+    diagnostic = rule.check(tree, source_file)
+
+    assert diagnostic is None

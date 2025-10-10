@@ -48,6 +48,12 @@ const enforceRetryOnIoOperations = require('./rules/enforce-retry-on-io-operatio
 const enforceAsyncOnHeavyMethods = require('./rules/enforce-async-on-heavy-methods');
 // NEW RULES - QUALIA.CODE v1.6 Timeout & Error Boundary Enforcement (ANALISIS.md §2.1 items #4, #10)
 const enforceTimeoutOnAsyncOperations = require('./rules/enforce-timeout-on-async-operations');
+// NEW RULES - QUALIA.CODE v1.7 Worker Offloading & Advanced Performance (ANALISIS.md §2.1 item #2)
+const enforceWorkerOffloading = require('./rules/enforce-worker-offloading');
+// NEW RULES - QUALIA.CODE v1.8 Stricter Platform Abstraction (Session 27)
+const noDirectTimerAccess = require('./rules/no-direct-timer-access');
+const enforceValidationOnPublicMethods = require('./rules/enforce-validation-on-public-methods');
+const enforceErrorBoundaryOnAsync = require('./rules/enforce-error-boundary-on-async');
 
 module.exports = {
   rules: {
@@ -87,6 +93,12 @@ module.exports = {
     'enforce-async-on-heavy-methods': enforceAsyncOnHeavyMethods,
     // NEW RULES - QUALIA.CODE v1.6 Timeout & Error Boundary Enforcement (ANALISIS.md §2.1 items #4, #10)
     'enforce-timeout-on-async-operations': enforceTimeoutOnAsyncOperations,
+    // NEW RULES - QUALIA.CODE v1.7 Worker Offloading & Advanced Performance (ANALISIS.md §2.1 item #2)
+    'enforce-worker-offloading': enforceWorkerOffloading,
+    // NEW RULES - QUALIA.CODE v1.8 Stricter Platform Abstraction (Session 27)
+    'no-direct-timer-access': noDirectTimerAccess,
+    'enforce-validation-on-public-methods': enforceValidationOnPublicMethods,
+    'enforce-error-boundary-on-async': enforceErrorBoundaryOnAsync,
   },
   configs: {
     recommended: {
@@ -128,6 +140,12 @@ module.exports = {
         '@qualia-tempo/qualia-code/enforce-async-on-heavy-methods': 'warn', // Suggestion only
         // NEW RULES - QUALIA.CODE v1.6 Timeout & Error Boundary Enforcement (ANALISIS.md §2.1 items #4, #10)
         '@qualia-tempo/qualia-code/enforce-timeout-on-async-operations': 'error',
+        // NEW RULES - QUALIA.CODE v1.7 Worker Offloading & Advanced Performance (ANALISIS.md §2.1 item #2)
+        '@qualia-tempo/qualia-code/enforce-worker-offloading': 'warn', // Suggestion only - requires major refactoring
+        // NEW RULES - QUALIA.CODE v1.8 Stricter Platform Abstraction (Session 27)
+        '@qualia-tempo/qualia-code/no-direct-timer-access': 'error', // MANDATORIO - Platform abstraction is law
+        '@qualia-tempo/qualia-code/enforce-validation-on-public-methods': 'warn', // Suggestion with exemption option
+        '@qualia-tempo/qualia-code/enforce-error-boundary-on-async': 'error', // MANDATORIO per QUALIA.CODE §6
       }
     }
   }

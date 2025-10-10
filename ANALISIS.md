@@ -160,11 +160,11 @@ Located in `/qualia-tempo-prototype/backend/utils/decorators/`:
    - **Example:** `QualiaStateCalculatorService.calculateQualiaState()` is synchronous
    - **Status:** Implemented with 17 comprehensive tests (100% pass rate), severity scoring system
 
-2. **`enforce-worker-offloading`**
+2. ~~**`enforce-worker-offloading`**~~ ⚠️ **IN PROGRESS (Session 26)**
    - **Purpose:** Flag CPU-intensive methods that should use Workers
    - **Detection:** Methods with mathematical operations, array manipulations
    - **Example:** `ParticleSystemService.update()` runs on main thread
-   - **Status:** ❌ NOT IMPLEMENTED
+   - **Status:** Rule created (400+ lines), 20 tests (45% pass rate), needs bug fixes (infinite recursion, false positives)
 
 3. ~~**`enforce-cache-decorator`**~~ ✅ **ALREADY EXISTS**
    - **Purpose:** Flag pure functions missing `@cache`/`@memoize`

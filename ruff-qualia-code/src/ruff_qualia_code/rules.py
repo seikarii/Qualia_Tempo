@@ -1480,3 +1480,103 @@ class QLA007Checker:
         # Recursively visit children
         for child in ast.iter_child_nodes(node):
             self.visit(child)
+
+
+class QLA008:
+    """Enforce @circuit_breaker decorator on async functions with external HTTP calls"""
+
+    def check(self, node: AST, source_file: SourceFile) -> Optional[Diagnostic]:
+        checker = QLA008Checker(source_file.path)
+        checker.visit(node)
+        return checker.diagnostic
+
+
+class QLA008Checker:
+    def __init__(self, filepath: Path):
+        self.filepath = filepath
+        # Exclude test files
+        is_test_file = "test_" in str(filepath) or "/tests/" in str(filepath)
+        self.is_service_file = "services" in str(filepath) and not is_test_file
+        self.diagnostic: Optional[Diagnostic] = None
+
+    def visit(self, node: AST) -> None:
+        if not self.is_service_file:
+            return
+
+        if isinstance(node, ast.AsyncFunctionDef):
+            self._check_async_function(node)
+        
+        # Recursively visit children
+        for child in ast.iter_child_nodes(node):
+            self.visit(child)
+
+    def _check_async_function(self, node: ast.AsyncFunctionDef) -> None:
+        # Skip private methods (prefixed with _)
+        if node.name.startswith('_'):
+            return
+
+        # Skip special methods
+        if node.name in ['__init__', '__del__', '__aenter__', '__aexit__']:
+            return
+
+        # Check if function already has @circuit_breaker decorator
+        if self._has_circuit_breaker_decorator(node):
+            return
+
+        # Check for external HTTP operations in function body
+        http_operations = self._detect_external_http_operations(node)
+
+        if http_operations:
+            self.diagnostic = Diagnostic(
+                code="QLA008",
+                message=f"Async method '{node.name}' performs external HTTP operations ({', '.join(http_operations)}) but lacks @circuit_breaker decorator. Add @circuit_breaker to handle cascading failures (QUALIA.CODE §12.3: Circuit Breaker Pattern).",
+                range=TextRange(0, 0),
+            )
+
+    def _has_circuit_breaker_decorator(self, node: ast.AsyncFunctionDef) -> bool:
+        """Check if function has @circuit_breaker decorator"""
+        for decorator in node.decorator_list:
+            if isinstance(decorator, ast.Name) and decorator.id == 'circuit_breaker':
+                return True
+            if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Name) and decorator.func.id == 'circuit_breaker':
+                return True
+        return False
+
+    def _detect_external_http_operations(self, node: ast.AsyncFunctionDef) -> list[str]:
+        """Detect external HTTP operations in function body"""
+        operations = []
+        
+        for child in ast.walk(node):
+            # HTTP client calls (httpx, aiohttp, requests)
+            if isinstance(child, ast.Call):
+                if isinstance(child.func, ast.Attribute):
+                    attr_name = child.func.attr
+                    obj = child.func.value
+                    
+                    # Check for httpx/aiohttp/requests client methods
+                    is_http_operation = False
+                    if isinstance(obj, ast.Attribute):
+                        # e.g., self.http_client.get(), self.api_service.post()
+                        obj_name = str(obj.attr).lower()
+                        is_http_operation = any(pattern in obj_name 
+                                               for pattern in ['http', 'client', 'api', 'request', 'session'])
+                    elif isinstance(obj, ast.Name):
+                        # e.g., httpx.get(), requests.post(), client.request()
+                        obj_name = str(obj.id).lower()
+                        is_http_operation = obj_name in ['httpx', 'requests', 'aiohttp'] or \
+                                          any(pattern in obj_name 
+                                              for pattern in ['http', 'client', 'api', 'request', 'session'])
+                    
+                    # HTTP method verbs
+                    if is_http_operation and attr_name in ['get', 'post', 'put', 'delete', 'patch', 'request', 'fetch']:
+                        operations.append(f'{attr_name.upper()} request')
+                
+                # Check for explicit httpx/aiohttp/requests module calls
+                if isinstance(child.func, ast.Attribute):
+                    if isinstance(child.func.value, ast.Name):
+                        module_name = child.func.value.id
+                        if module_name in ['httpx', 'requests', 'aiohttp']:
+                            operations.append(f'{module_name} HTTP call')
+        
+        # Remove duplicates
+        return list(set(operations))
