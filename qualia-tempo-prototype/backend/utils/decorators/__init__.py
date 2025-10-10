@@ -10,6 +10,11 @@ This package provides QUALIA.CODE-compliant decorators for cross-cutting concern
 - Performance: @time_execution
 - Caching: @cache_result
 - Event Handling: @OnEvent
+- Resilience: @circuit_breaker, @retry, @timeout
+- Concurrency: @mutex, @rate_limit
+- Security: @authorize
+- Database: @transaction
+- Deprecation: @deprecated
 
 All decorators follow QUALIA.CODE v1.1 architectural principles.
 """
@@ -22,6 +27,13 @@ from .time_measure import time_execution
 from .cache import cache_result
 from .on_event import OnEvent
 from .circuit_breaker import circuit_breaker, CircuitBreakerOpenError
+from .retry import retry, RetryExhaustedError
+from .timeout import timeout, TimeoutError
+from .rate_limit import rate_limit, RateLimitExceededError
+from .mutex import mutex, MutexTimeoutError
+from .deprecated import deprecated
+from .authorize import authorize, AuthorizationError, UnauthorizedError
+from .transaction import transaction, TransactionError
 
 # Export all decorators
 __all__ = [
@@ -33,6 +45,20 @@ __all__ = [
     "OnEvent",
     "circuit_breaker",
     "CircuitBreakerOpenError",
+    "retry",
+    "RetryExhaustedError",
+    "timeout",
+    "TimeoutError",
+    "rate_limit",
+    "RateLimitExceededError",
+    "mutex",
+    "MutexTimeoutError",
+    "deprecated",
+    "authorize",
+    "AuthorizationError",
+    "UnauthorizedError",
+    "transaction",
+    "TransactionError",
 ]
 
 # Version

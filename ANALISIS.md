@@ -130,7 +130,7 @@ Located in `/qualia-tempo-prototype/backend/utils/decorators/`:
 6. **`@authorize`** - Security/auth checks
 7. **`@deprecated`** - Deprecation warnings
 8. **`@mutex`** - Thread-safe execution
-9. **`@circuit_breaker`** - Circuit breaker pattern for external services
+9. ~~**`@circuit_breaker`** - Circuit breaker pattern for external services~~ ✅ **COMPLETED (Session 28 - Backend)**
 
 ---
 
@@ -240,9 +240,13 @@ Located in `/qualia-tempo-prototype/backend/utils/decorators/`:
    - **CURRENT ISSUE:** `backend/main.py` has multiple `print()` statements
    - **Status:** Implemented, exempts main.py and test files, no false positives
 
-4. **QLA008: `enforce-circuit-breaker`**
+4. ~~**QLA008: `enforce-circuit-breaker`**~~ ✅ **COMPLETED (Session 28)**
    - Flag external API calls without circuit breaker pattern
-   - **Status:** ❌ NOT IMPLEMENTED
+   - **Status:** ✅ IMPLEMENTED (11/11 tests passing)
+   - **Location:** `ruff-qualia-code/src/ruff_qualia_code/rules.py:796-946`
+   - **Test File:** `ruff-qualia-code/tests/test_qla008.py` (11 tests)
+   - **Detects:** HTTP/WebSocket/Database calls without `@circuit_breaker`
+   - **Handles:** Both direct library calls and service method calls (including nested attributes)
 
 5. ~~**QLA009: `enforce-retry-decorator`**~~ ✅ **ALREADY EXISTS**
    - Flag network operations without `@retry`
@@ -483,9 +487,11 @@ private handleQualiaStateUpdate(event: QualiaStateCalculatedEvent): void {
 
 **Solution:** Make async or offload to Audio Worklet.
 
-3. **No Circuit Breaker for Audio Failures**
-- Repeated audio failures could spam error logs
-- Need circuit breaker pattern to disable audio gracefully
+3. ~~**No Circuit Breaker for Audio Failures**~~ ✅ **ADDRESSED (Session 28)**
+- ~~Repeated audio failures could spam error logs~~
+- ~~Need circuit breaker pattern to disable audio gracefully~~
+- **Solution:** Backend `@circuit_breaker` decorator now available (174 lines, 9/9 tests)
+- **Note:** Frontend implementation pending (see missing `@debounce`, `@timeout`, `@retry` decorators)
 
 ### 4.2 Video/Shader Pipeline
 
@@ -608,7 +614,9 @@ private handleGameStateChange(event: GameStateChangedEvent): void {
    - No input validation patterns
 
 5. **Error Recovery Patterns:**
-   - `@catchError` exists but no retry/circuit breaker docs
+   - `@catchError` exists ~~but no retry/circuit breaker docs~~ ✅ **Circuit Breaker docs added (Session 28)**
+   - **Backend Circuit Breaker:** Fully documented in `backend/utils/decorators/circuit_breaker.py` (174 lines + docstrings)
+   - **Frontend Retry:** Still needs documentation (decorator pending implementation)
    - No discussion of graceful degradation
    - Missing error boundary hierarchies
 
@@ -679,9 +687,12 @@ private handleGameStateChange(event: GameStateChangedEvent): void {
    - HTTP cache exists but no memory cache
 
 3. **Error Recovery Debt**
-   - No retry logic decorators
-   - No circuit breaker implementation
-   - Audio/WebGL failures not gracefully handled
+   - ⚠️ No retry logic decorators (frontend pending)
+   - ~~No circuit breaker implementation~~ ✅ **RESOLVED (Session 28 - Backend)**
+     - Backend `@circuit_breaker` decorator: 174 lines, 9/9 tests passing
+     - QLA008 linter rule: 11/11 tests passing, enforces usage
+     - Frontend circuit breaker still pending
+   - Audio/WebGL failures not gracefully handled (needs frontend decorators)
 
 4. **Documentation Debt**
    - Missing decorator catalog

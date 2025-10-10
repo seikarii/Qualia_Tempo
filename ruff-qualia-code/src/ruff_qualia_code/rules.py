@@ -1640,3 +1640,217 @@ class QLA007Checker:
         # Recursively visit children
         for child in ast.iter_child_nodes(node):
             self.visit(child)
+
+
+class QLA013:
+    """Enforce @retry decorator on I/O operations (HTTP, WebSocket, Database)"""
+    
+    def check(self, node: AST, source_file: SourceFile) -> Optional[Diagnostic]:
+        checker = QLA013Checker(source_file.path)
+        checker.visit(node)
+        return checker.diagnostic
+
+
+class QLA013Checker:
+    """
+    Enforces that all methods making HTTP, WebSocket, or Database calls
+    are decorated with @retry for resilience against transient failures.
+    
+    QUALIA.CODE Compliance: §9.2 Retry Pattern
+    """
+    
+    def __init__(self, filepath: Path):
+        self.filepath = filepath
+        self.is_service_file = "services" in str(filepath) or "engine" in str(filepath)
+        self.is_test_file = "test_" in filepath.name or "/tests/" in str(filepath)
+        self.diagnostic: Optional[Diagnostic] = None
+        
+        # I/O operation patterns to detect
+        self.http_methods = {
+            "get", "post", "put", "delete", "patch", "request",
+            "fetch", "download", "upload"
+        }
+        self.db_methods = {
+            "execute", "query", "insert", "update", "delete", "select",
+            "commit", "rollback", "connect", "find", "save"
+        }
+        self.io_service_names = {
+            "http", "request", "client", "api", "database", "db",
+            "mongo", "postgres", "redis", "websocket", "socket"
+        }
+    
+    def visit(self, node: AST) -> None:
+        # Only check service files, skip tests
+        if not self.is_service_file or self.is_test_file:
+            return
+        
+        if isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):
+            self._check_function(node)
+        
+        # Recursively visit children
+        for child in ast.iter_child_nodes(node):
+            self.visit(child)
+    
+    def _check_function(self, node: ast.FunctionDef) -> None:
+        # Skip private methods (starting with _)
+        if node.name.startswith('_'):
+            return
+        
+        # Check if function has @retry decorator
+        has_retry = any(
+            self._is_retry_decorator(dec)
+            for dec in node.decorator_list
+        )
+        
+        # Scan function body for I/O operations
+        io_operations = self._find_io_operations(node)
+        
+        if io_operations and not has_retry:
+            operation_desc = ", ".join(io_operations[:3])  # Show first 3
+            if len(io_operations) > 3:
+                operation_desc += f" (and {len(io_operations) - 3} more)"
+            
+            self.diagnostic = Diagnostic(
+                code="QLA013",
+                message=f"Method '{node.name}' performs I/O operations ({operation_desc}) without @retry decorator. "
+                        f"QUALIA.CODE §9.2 mandates @retry on all network/database calls for transient failure resilience.",
+                range=TextRange(0, 0),
+            )
+    
+    def _is_retry_decorator(self, decorator) -> bool:
+        """Check if decorator is @retry"""
+        if isinstance(decorator, ast.Name):
+            return decorator.id == "retry"
+        elif isinstance(decorator, ast.Call):
+            if isinstance(decorator.func, ast.Name):
+                return decorator.func.id == "retry"
+        return False
+    
+    def _find_io_operations(self, node: ast.FunctionDef) -> List[str]:
+        """Scan function body for I/O operation calls"""
+        io_ops = []
+        
+        for child in ast.walk(node):
+            if isinstance(child, ast.Call):
+                # Check for method calls like self.http_service.get()
+                if isinstance(child.func, ast.Attribute):
+                    method_name = child.func.attr.lower()
+                    
+                    # Check if it's an HTTP/DB method
+                    if method_name in self.http_methods or method_name in self.db_methods:
+                        io_ops.append(f"{method_name}()")
+                    
+                    # Check if calling on an I/O service object
+                    if isinstance(child.func.value, ast.Attribute):
+                        service_attr = child.func.value.attr.lower()
+                        if any(service_name in service_attr for service_name in self.io_service_names):
+                            io_ops.append(f"{service_attr}.{method_name}()")
+        
+        return list(set(io_ops))  # Remove duplicates
+
+
+class QLA015:
+    """Enforce @transaction decorator on database write operations"""
+    
+    def check(self, node: AST, source_file: SourceFile) -> Optional[Diagnostic]:
+        checker = QLA015Checker(source_file.path)
+        checker.visit(node)
+        return checker.diagnostic
+
+
+class QLA015Checker:
+    """
+    Enforces that all methods performing database write operations
+    are decorated with @transaction for ACID guarantees.
+    
+    QUALIA.CODE Compliance: §12.1 Transaction Pattern
+    """
+    
+    def __init__(self, filepath: Path):
+        self.filepath = filepath
+        self.is_service_file = "services" in str(filepath) or "repository" in str(filepath)
+        self.is_test_file = "test_" in filepath.name or "/tests/" in str(filepath)
+        self.diagnostic: Optional[Diagnostic] = None
+        
+        # Database write operation patterns
+        self.db_write_methods = {
+            "insert", "update", "delete", "save", "create",
+            "remove", "drop", "modify", "upsert", "replace",
+            "commit", "execute"  # execute can be write
+        }
+        
+        self.db_write_keywords = {
+            "insert", "update", "delete", "drop", "create",
+            "alter", "truncate"
+        }
+    
+    def visit(self, node: AST) -> None:
+        # Only check service/repository files, skip tests
+        if not self.is_service_file or self.is_test_file:
+            return
+        
+        if isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):
+            self._check_function(node)
+        
+        # Recursively visit children
+        for child in ast.iter_child_nodes(node):
+            self.visit(child)
+    
+    def _check_function(self, node: ast.FunctionDef) -> None:
+        # Skip private methods and read-only methods
+        if node.name.startswith('_') or node.name.startswith('get_') or node.name.startswith('find_'):
+            return
+        
+        # Check if function has @transaction decorator
+        has_transaction = any(
+            self._is_transaction_decorator(dec)
+            for dec in node.decorator_list
+        )
+        
+        # Scan function body for database write operations
+        write_operations = self._find_write_operations(node)
+        
+        if write_operations and not has_transaction:
+            operation_desc = ", ".join(write_operations[:3])
+            if len(write_operations) > 3:
+                operation_desc += f" (and {len(write_operations) - 3} more)"
+            
+            self.diagnostic = Diagnostic(
+                code="QLA015",
+                message=f"Method '{node.name}' performs database write operations ({operation_desc}) without @transaction decorator. "
+                        f"QUALIA.CODE §12.1 mandates @transaction on all DB writes for ACID guarantees and automatic rollback.",
+                range=TextRange(0, 0),
+            )
+    
+    def _is_transaction_decorator(self, decorator) -> bool:
+        """Check if decorator is @transaction"""
+        if isinstance(decorator, ast.Name):
+            return decorator.id == "transaction"
+        elif isinstance(decorator, ast.Call):
+            if isinstance(decorator.func, ast.Name):
+                return decorator.func.id == "transaction"
+        return False
+    
+    def _find_write_operations(self, node: ast.FunctionDef) -> List[str]:
+        """Scan function body for database write operation calls"""
+        write_ops = []
+        
+        for child in ast.walk(node):
+            if isinstance(child, ast.Call):
+                # Check for method calls like db.insert()
+                if isinstance(child.func, ast.Attribute):
+                    method_name = child.func.attr.lower()
+                    
+                    # Check if it's a write method
+                    if method_name in self.db_write_methods:
+                        write_ops.append(f"{method_name}()")
+            
+            # Check for SQL strings with write keywords
+            elif isinstance(child, ast.Constant) and isinstance(child.value, str):
+                sql = child.value.lower()
+                for keyword in self.db_write_keywords:
+                    if keyword in sql:
+                        write_ops.append(f"SQL:{keyword.upper()}")
+                        break
+        
+        return list(set(write_ops))  # Remove duplicates
