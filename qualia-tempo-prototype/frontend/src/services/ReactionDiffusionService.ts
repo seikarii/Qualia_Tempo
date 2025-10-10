@@ -494,14 +494,14 @@ export class ReactionDiffusionService implements IReactionDiffusionService {
    * Run configured number of simulation steps with ping-pong rendering
    */
   private runSimulationSteps(): void {
-    if (!this.canRunSimulation()) return;
+    if (!this.canRunSimulation() || !this.renderer) return;
     
     const steps = this.config.simulation.updateRate;
     for (let i = 0; i < steps; i++) {
       this.executeSimulationStep();
     }
     
-    this.renderer!.setRenderTarget(null);
+    this.renderer.setRenderTarget(null);
   }
 
   /**
@@ -522,12 +522,19 @@ export class ReactionDiffusionService implements IReactionDiffusionService {
    * Execute single simulation step with ping-pong rendering
    */
   private executeSimulationStep(): void {
-    const readTarget = this.currentTarget === 'A' ? this.renderTargetA! : this.renderTargetB!;
-    const writeTarget = this.currentTarget === 'A' ? this.renderTargetB! : this.renderTargetA!;
+    // Guard: This method is only called after canRunSimulation() check
+    if (!this.renderTargetA || !this.renderTargetB || !this.simulationMaterial || 
+        !this.renderer || !this.simulationScene || !this.simulationCamera) {
+      this.logger.error('[ReactionDiffusionService] Cannot execute simulation step - resources not initialized');
+      return;
+    }
+
+    const readTarget = this.currentTarget === 'A' ? this.renderTargetA : this.renderTargetB;
+    const writeTarget = this.currentTarget === 'A' ? this.renderTargetB : this.renderTargetA;
     
-    this.simulationMaterial!.uniforms.u_state_texture.value = readTarget.texture;
-    this.renderer!.setRenderTarget(writeTarget);
-    this.renderer!.render(this.simulationScene!, this.simulationCamera!);
+    this.simulationMaterial.uniforms.u_state_texture.value = readTarget.texture;
+    this.renderer.setRenderTarget(writeTarget);
+    this.renderer.render(this.simulationScene, this.simulationCamera);
     
     this.currentTarget = this.currentTarget === 'A' ? 'B' : 'A';
   }

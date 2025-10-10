@@ -67,10 +67,10 @@ export class QualiaCalculatorCore {
     logCallback?: LoggerCallback
   ) {
     this.config = config;
-    this.currentState = initialState || this.createInitialState();
+    this.currentState = initialState ?? this.createInitialState();
     this.lastUpdateTime = performance.now();
     this.startTime = performance.now();
-    this.log = logCallback || this.noOpLogger;
+    this.log = logCallback ?? this.noOpLogger;
     
     this.log('info', '🧮 [QualiaCalculatorCore] Core initialized', {
       hasInitialState: !!initialState,

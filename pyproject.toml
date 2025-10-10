@@ -38,8 +38,8 @@ exclude = [
     ".coverage"
 ]
 
-# QUALIA.CODE specific settings
-qualia_code = true
+# NOTE: QUALIA.CODE enforcement is handled by the mypy_qualia_code plugin loaded above
+# No additional mypy settings are needed here as the plugin integrates automatically
 
 [[tool.mypy.overrides]]
 module = [
@@ -68,12 +68,9 @@ check_untyped_defs = false
 warn_return_any = false
 warn_no_return = false
 
-# Per-file ignores for MyPy (using proper TOML syntax)
-[[tool.mypy.overrides]]
-module = "tests.*,test_*"
-disallow_untyped_defs = false
-disallow_untyped_calls = false
-no_any_return = false
+# Note: The above patterns cover all test files. MyPy requires fully-qualified module names
+# with optional wildcards in components (e.g., "package.*.tests.*")
+# The existing "qualia_tempo_prototype.backend.tests.*" override already covers backend tests
 
 [[tool.mypy.overrides]]
 module = "qualia_tempo_prototype.backend.engine.qualia_particle_engine"

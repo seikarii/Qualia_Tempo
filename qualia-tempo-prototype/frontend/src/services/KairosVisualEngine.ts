@@ -376,7 +376,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
    * Creates EffectComposer with Bloom and God Rays passes
    */
   private setupPostProcessing(): void {
-    if (!this.renderer || !this.scene || !this.camera) {
+    if (!this.renderer || !this.scene || !this.camera || !this.canvas) {
       this.logger.error('[KairosVisualEngine] Cannot setup post-processing - renderer not initialized');
       return;
     }
@@ -391,7 +391,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     // PHASE 5.2.1: Add Bloom Pass
     if (this.config.effects.bloomEnabled) {
       this.bloomPass = new UnrealBloomPass(
-        new THREE.Vector2(this.canvas!.clientWidth, this.canvas!.clientHeight),
+        new THREE.Vector2(this.canvas.clientWidth, this.canvas.clientHeight),
         this.config.effects.bloomIntensity,
         this.config.effects.bloomRadius,
         this.config.effects.bloomThreshold
@@ -409,8 +409,8 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     if (this.config.effects.godRaysEnabled) {
       this.godRaysPass = new ShaderPass(GodRaysShader);
       this.godRaysPass.uniforms['uResolution'].value.set(
-        this.canvas!.clientWidth,
-        this.canvas!.clientHeight
+        this.canvas.clientWidth,
+        this.canvas.clientHeight
       );
       this.godRaysPass.uniforms['uDecay'].value = this.config.effects.godRaysDecay;
       this.godRaysPass.uniforms['uWeight'].value = this.config.effects.godRaysWeight;
@@ -1093,9 +1093,9 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     
     return {
       fps: Math.round(avgFps),
-      drawCalls: info?.render.calls || 0,
-      triangles: info?.render.triangles || 0,
-      textureMemoryMB: (info?.memory.textures || 0) * 0.001 // Approximate MB
+      drawCalls: info?.render.calls ?? 0,
+      triangles: info?.render.triangles ?? 0,
+      textureMemoryMB: (info?.memory.textures ?? 0) * 0.001 // Approximate MB
     };
   }
   

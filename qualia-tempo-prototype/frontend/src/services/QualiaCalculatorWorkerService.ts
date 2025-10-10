@@ -243,6 +243,11 @@ export class QualiaCalculatorWorkerService
       };
 
       // Initialize the worker with configuration
+      const worker = this.worker; // Capture reference to satisfy type checker
+      if (!worker) {
+        throw new Error('[QualiaCalculatorWorkerService] Worker creation failed');
+      }
+
       const initPromise = new Promise<void>((resolve, reject) => {
         const timeout = this.timerService.setTimeout(() => {
           reject(new Error('Worker initialization timeout'));
@@ -251,16 +256,16 @@ export class QualiaCalculatorWorkerService
         const tempHandler = (event: MessageEvent<WorkerOutputMessage>) => {
           if (event.data.type === 'INITIALIZED') {
             this.timerService.clearTimeout(timeout);
-            this.worker!.removeEventListener('message', tempHandler);
+            worker.removeEventListener('message', tempHandler);
             resolve();
           } else if (event.data.type === 'ERROR') {
             this.timerService.clearTimeout(timeout);
-            this.worker!.removeEventListener('message', tempHandler);
+            worker.removeEventListener('message', tempHandler);
             reject(new Error(event.data.error));
           }
         };
 
-        this.worker!.addEventListener('message', tempHandler);
+        worker.addEventListener('message', tempHandler);
       });
 
       // Send initialization message

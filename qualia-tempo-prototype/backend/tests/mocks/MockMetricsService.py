@@ -15,7 +15,7 @@ from backend.services.interfaces.IMetricsService import IMetricsService
 class MockMetricsService(IMetricsService):
     """High-fidelity mock for MetricsService with comprehensive call tracking."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize MockMetricsService."""
         # Call tracking
         self.record_counter_calls: List[Dict[str, Any]] = []

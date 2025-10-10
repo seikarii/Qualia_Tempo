@@ -229,7 +229,7 @@ export class MusicalComboDetectorService implements IMusicalComboDetectorService
     const result = this.detectCombo(this._currentSequence.keys);
 
     if (result.matched && result.pattern) {
-      this.activateCombo(result.pattern, result.harmonicScore || result.pattern.harmonicScore);
+      this.activateCombo(result.pattern, result.harmonicScore ?? result.pattern.harmonicScore);
     }
   }
 
@@ -298,7 +298,7 @@ export class MusicalComboDetectorService implements IMusicalComboDetectorService
         comboType: pattern.type,
         effect: pattern.effect,
         harmonicScore,
-        keys: [...(this._currentSequence?.keys || [])],
+        keys: [...(this._currentSequence?.keys ?? [])],
         timestamp: new Date(),
         source: 'MusicalComboDetectorService',
       };
