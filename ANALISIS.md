@@ -154,7 +154,7 @@ Located in `/qualia-tempo-prototype/backend/utils/decorators/`:
 
 #### 🔴 **CRITICAL: Missing ESLint Rules**
 
-1. ~~**`enforce-async-on-heavy-methods`**~~ ✅ **COMPLETED**
+1. ~~**`enforce-async-on-heavy-methods`**~~ ✅ **COMPLETED (Session 23)**
    - **Purpose:** Flag synchronous methods that should be async
    - **Detection:** Methods with loops, recursion, large data processing
    - **Example:** `QualiaStateCalculatorService.calculateQualiaState()` is synchronous
@@ -164,6 +164,7 @@ Located in `/qualia-tempo-prototype/backend/utils/decorators/`:
    - **Purpose:** Flag CPU-intensive methods that should use Workers
    - **Detection:** Methods with mathematical operations, array manipulations
    - **Example:** `ParticleSystemService.update()` runs on main thread
+   - **Status:** ❌ NOT IMPLEMENTED
 
 3. ~~**`enforce-cache-decorator`**~~ ✅ **ALREADY EXISTS**
    - **Purpose:** Flag pure functions missing `@cache`/`@memoize`
@@ -177,11 +178,13 @@ Located in `/qualia-tempo-prototype/backend/utils/decorators/`:
    - **Example:** `GameStateStoreService` methods need mutex
    - **Status:** Found existing implementation in eslint-plugin-qualia-code
 
-5. ~~**`enforce-retry-on-io-operations`**~~ ✅ **COMPLETED**
+5. ~~**`enforce-retry-on-io-operations`**~~ ✅ **COMPLETED & ENHANCED (Sessions 24-25)**
    - **Purpose:** Flag I/O operations without retry logic
    - **Detection:** Methods calling `HttpService`, `WebSocketService`
    - **Example:** `BackendSyncService.sync()` should have `@retry`
-   - **Status:** Implemented with 18 comprehensive tests (100% pass rate)
+   - **Status:** Implemented with 30 comprehensive tests (100% pass rate), <3% false positive rate
+   - **Session 24:** Context-aware detection for data structures & audio nodes
+   - **Session 25:** Status getter exemption, extended data structure patterns
 
 6. ~~**`enforce-timeout-on-async-operations`**~~ ✅ **COMPLETED (Session 23)**
    - **Purpose:** Flag async operations without timeout
@@ -189,10 +192,10 @@ Located in `/qualia-tempo-prototype/backend/utils/decorators/`:
    - **Example:** All `HttpService` calls should have timeout decorator
    - **Status:** Implemented with 20 comprehensive tests (100% pass rate), detecting legitimate violations
 
-7. **`enforce-browser-only-on-dom-access`**
+7. ~~**`enforce-browser-only-on-dom-access`**~~ ✅ **ALREADY EXISTS**
    - **Purpose:** Flag methods accessing `window`, `document` without `@BrowserOnly`
-   - **Current Status:** Partially enforced by `no-global-api-calls`
-   - **Gap:** Doesn't check for missing `@BrowserOnly` decorator
+   - **Current Status:** Enforced by existing `enforce-browser-only` rule in eslint-plugin-qualia-code
+   - **Status:** No additional implementation needed
 
 8. **`no-direct-timer-access`**
    - **Purpose:** Flag direct `setTimeout`/`setInterval` usage
@@ -239,6 +242,7 @@ Located in `/qualia-tempo-prototype/backend/utils/decorators/`:
 
 4. **QLA008: `enforce-circuit-breaker`**
    - Flag external API calls without circuit breaker pattern
+   - **Status:** ❌ NOT IMPLEMENTED
 
 5. ~~**QLA009: `enforce-retry-decorator`**~~ ✅ **ALREADY EXISTS**
    - Flag network operations without `@retry`

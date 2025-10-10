@@ -145,6 +145,195 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
         }
       `,
       filename: 'src/services/SyncService.ts'
+    },
+
+    // ✅ VALID: Map.get() - Not I/O (false positive prevention)
+    {
+      code: `
+        class CacheService {
+          private cache: Map<string, any> = new Map();
+          
+          public getData(key: string): any {
+            return this.cache.get(key);
+          }
+        }
+      `,
+      filename: 'src/services/CacheService.ts'
+    },
+
+    // ✅ VALID: Map.delete() - Not I/O (false positive prevention)
+    {
+      code: `
+        class TimerService {
+          private timers: Map<number, NodeJS.Timeout> = new Map();
+          
+          public clearTimeout(id: number): void {
+            const timer = this.timers.get(id);
+            if (timer) {
+              clearTimeout(timer);
+              this.timers.delete(id);
+            }
+          }
+        }
+      `,
+      filename: 'src/services/TimerService.ts'
+    },
+
+    // ✅ VALID: AudioNode.connect() - Not network I/O (false positive prevention)
+    {
+      code: `
+        class AudioService {
+          public createSoundSource(): void {
+            const gainNode = this.audioContext.createGain();
+            const pannerNode = this.audioContext.createPanner();
+            gainNode.connect(pannerNode);
+            pannerNode.connect(this.audioContext.destination);
+          }
+        }
+      `,
+      filename: 'src/services/AudioService.ts'
+    },
+
+    // ✅ VALID: this.someMap.get() - Data structure, not HTTP (false positive prevention)
+    {
+      code: `
+        class RenderTargetPoolService {
+          private pool: Map<string, WebGLRenderTarget> = new Map();
+          
+          public acquire(key: string): WebGLRenderTarget | undefined {
+            return this.pool.get(key);
+          }
+        }
+      `,
+      filename: 'src/services/RenderTargetPoolService.ts'
+    },
+
+    // ✅ VALID: getReadyState() - Status getter, not I/O operation
+    {
+      code: `
+        class WebSocketService {
+          private websocket: WebSocket | null = null;
+          
+          public getReadyState(): number {
+            return this.websocket ? this.websocket.readyState : WebSocket.CLOSED;
+          }
+        }
+      `,
+      filename: 'src/services/WebSocketService.ts'
+    },
+
+    // ✅ VALID: isConnected() - Status getter, not I/O operation
+    {
+      code: `
+        class WebSocketService {
+          private websocket: WebSocket | null = null;
+          
+          public isConnected(): boolean {
+            return this.websocket?.readyState === WebSocket.OPEN;
+          }
+        }
+      `,
+      filename: 'src/services/WebSocketService.ts'
+    },
+
+    // ✅ VALID: Set.delete() in Timer Service - Data structure operation
+    {
+      code: `
+        class TimerService {
+          private activeTimeouts: Set<number> = new Set();
+          
+          public clearTimeout(id: number): void {
+            this.timerProvider.clearTimeout(id);
+            this.activeTimeouts.delete(id);
+          }
+        }
+      `,
+      filename: 'src/services/TimerService.ts'
+    },
+
+    // ✅ VALID: source.gainNode.disconnect() - Audio API, not network
+    {
+      code: `
+        class Audio8DService {
+          public removeSoundSource(id: string): void {
+            const source = this.soundSources.get(id);
+            if (source) {
+              source.gainNode.disconnect();
+              source.pannerNode.disconnect();
+              this.soundSources.delete(id);
+            }
+          }
+        }
+      `,
+      filename: 'src/services/Audio8DService.ts'
+    },
+
+    // ✅ VALID: getStatus(), getConnectionStatus() - Status getters
+    {
+      code: `
+        class ConnectionService {
+          public getConnectionStatus(): string {
+            return this.isActive ? 'connected' : 'disconnected';
+          }
+          
+          public getStatus(): { active: boolean, latency: number } {
+            return { active: this.isActive, latency: this.latency };
+          }
+        }
+      `,
+      filename: 'src/services/ConnectionService.ts'
+    },
+
+    // ✅ VALID: Set<string>.delete() for key tracking - Not HTTP DELETE
+    {
+      code: `
+        class InputStateService {
+          private pressedKeys: Set<string> = new Set();
+          private justPressedKeys: Set<string> = new Set();
+          
+          public releaseKey(key: string): void {
+            this.pressedKeys.delete(key.toLowerCase());
+            this.justPressedKeys.delete(key.toLowerCase());
+          }
+        }
+      `,
+      filename: 'src/services/InputStateService.ts'
+    },
+
+    // ✅ VALID: Map<string, Notification>.delete() - Not HTTP DELETE
+    {
+      code: `
+        class NotificationService {
+          private activeNotifications: Map<string, Notification> = new Map();
+          
+          public dismissNotification(id: string): void {
+            const notification = this.activeNotifications.get(id);
+            if (notification) {
+              this.activeNotifications.delete(id);
+              this.logger.debug('Notification dismissed', { id });
+            }
+          }
+        }
+      `,
+      filename: 'src/services/NotificationService.ts'
+    },
+
+    // ✅ VALID: Pool.delete() for resource management - Not HTTP DELETE
+    {
+      code: `
+        class RenderTargetPoolService {
+          private pool: Map<string, RenderTarget> = new Map();
+          
+          public release(key: string): void {
+            const target = this.pool.get(key);
+            if (target) {
+              target.dispose();
+              this.pool.delete(key);
+            }
+          }
+        }
+      `,
+      filename: 'src/services/RenderTargetPoolService.ts'
     }
   ],
 
@@ -164,7 +353,7 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
           messageId: 'missingRetry',
           data: {
             methodName: 'fetchData',
-            operations: 'HTTP GET, HttpService'
+            operations: 'HttpService, HTTP GET'
           }
         }
       ]
@@ -185,7 +374,7 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
           messageId: 'missingRetry',
           data: {
             methodName: 'saveData',
-            operations: 'HTTP POST, HttpService'
+            operations: 'HttpService, HTTP POST'
           }
         }
       ]
@@ -206,7 +395,7 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
           messageId: 'missingRetry',
           data: {
             methodName: 'connect',
-            operations: 'connect(), WebSocket'
+            operations: 'WebSocket, connect()'
           }
         }
       ]
@@ -271,7 +460,7 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
           messageId: 'missingRetry',
           data: {
             methodName: 'syncAll',
-            operations: 'HTTP GET, HttpService, localStorage, send(), WebSocket'
+            operations: 'HttpService, localStorage, WebSocket, HTTP GET, send()'
           }
         }
       ]
@@ -313,7 +502,7 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
           messageId: 'missingRetry',
           data: {
             methodName: 'callApi',
-            operations: 'HTTP GET, axios'
+            operations: 'axios, HTTP GET'
           }
         }
       ]
