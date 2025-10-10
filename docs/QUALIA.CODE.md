@@ -140,10 +140,310 @@ The linting system integrates with continuous integration pipelines to ensure on
 
 - A set of decorators MUST be used for common cross-cutting concerns.
 
-### 5.1. Python Decorators (`backend/utils/decorators.py`)
-- `@log_execution(level="INFO")`: Logs function entry, exit, and execution time.
-- `@handle_errors(fallback_return_value=None)`: Wraps function in a try/except block and logs errors.
-- `@validate_schema(schema_name="QualiaState")`: Validates input against a shared contract schema.
+### 5.1. Python Decorators - Complete Catalog
+
+QUALIA.CODE provides a comprehensive suite of production-grade decorators for cross-cutting concerns in the Python backend. All decorators are located in `/backend/utils/decorators/` and follow the architectural patterns defined in this specification.
+
+#### Core Decorators (Foundational)
+
+1. **`@log_execution(level="INFO")`**
+   - **Purpose:** Logs function entry, exit, and execution time
+   - **Location:** `backend/utils/decorators/log_execution.py`
+   - **Usage:** Apply to all service methods for observability
+   - **Example:**
+     ```python
+     @log_execution(level="INFO")
+     def process_data(self, data: dict) -> dict:
+         return self.transform(data)
+     ```
+
+2. **`@handle_errors(fallback_return_value=None)`**
+   - **Purpose:** Wraps function in try/except block and logs errors
+   - **Location:** `backend/utils/decorators/handle_errors.py`
+   - **Usage:** Apply to methods with external dependencies or complex logic
+   - **Example:**
+     ```python
+     @handle_errors(fallback_return_value={})
+     def fetch_external_data(self) -> dict:
+         return requests.get(self.api_url).json()
+     ```
+
+3. **`@validate_schema(schema_name="QualiaState")`**
+   - **Purpose:** Validates input against shared contract schema
+   - **Location:** `backend/utils/decorators/validate_schema.py`
+   - **Usage:** Apply to methods receiving complex data structures
+   - **Example:**
+     ```python
+     @validate_schema(schema_name="QualiaState")
+     def update_state(self, state: dict) -> None:
+         self.state = state
+     ```
+
+4. **`@time_execution`**
+   - **Purpose:** Measures and logs method execution time
+   - **Location:** `backend/utils/decorators/time_execution.py`
+   - **Usage:** Apply to performance-critical methods for profiling
+   - **Example:**
+     ```python
+     @time_execution
+     def complex_calculation(self, data: list) -> float:
+         return sum(self.process(item) for item in data)
+     ```
+
+5. **`@cache_result(ttl=3600)`**
+   - **Purpose:** Caches method results for expensive computations
+   - **Location:** `backend/utils/decorators/cache_result.py`
+   - **Parameters:** `ttl` (time-to-live in seconds)
+   - **Usage:** Apply to pure functions with expensive computations
+   - **Example:**
+     ```python
+     @cache_result(ttl=300)
+     def calculate_qualia_metrics(self, state: QualiaState) -> dict:
+         return self.complex_analysis(state)
+     ```
+
+#### Resilience Decorators (Sessions 28-29)
+
+6. **`@circuit_breaker(failure_threshold=5, timeout=60, expected_exception=Exception)`**
+   - **Purpose:** Circuit breaker pattern for external service calls
+   - **Location:** `backend/utils/decorators/circuit_breaker.py`
+   - **Implementation:** 174 lines, state machine (closed/open/half-open)
+   - **Test Coverage:** 100% (9/9 tests passing)
+   - **Linter Enforcement:** QLA008
+   - **Parameters:**
+     - `failure_threshold`: Number of failures before opening circuit
+     - `timeout`: Seconds to wait before attempting recovery
+     - `expected_exception`: Exception type to catch
+   - **States:**
+     - CLOSED: Normal operation, tracking failures
+     - OPEN: Circuit broken, rejecting calls immediately
+     - HALF_OPEN: Testing recovery, allowing single probe
+   - **Usage:** Apply to all external API calls, database connections, network operations
+   - **Example:**
+     ```python
+     @circuit_breaker(failure_threshold=3, timeout=30)
+     async def call_external_api(self, endpoint: str) -> dict:
+         async with httpx.AsyncClient() as client:
+             response = await client.get(f"{self.base_url}/{endpoint}")
+             return response.json()
+     ```
+
+7. **`@retry(max_retries=3, backoff_factor=2.0, max_backoff=60.0, jitter=True)`**
+   - **Purpose:** Automatic retry with exponential backoff for transient failures
+   - **Location:** `backend/utils/decorators/retry.py`
+   - **Implementation:** 195 lines
+   - **Test Coverage:** 94% (10 tests)
+   - **Linter Enforcement:** QLA009, QLA013
+   - **Parameters:**
+     - `max_retries`: Maximum retry attempts (default: 3)
+     - `backoff_factor`: Exponential backoff multiplier (default: 2.0)
+     - `max_backoff`: Maximum backoff time in seconds (default: 60.0)
+     - `jitter`: Add randomness to prevent thundering herd (default: True)
+     - `on_retry`: Callback function invoked after each retry
+     - `on_exhausted`: Callback function invoked when retries exhausted
+     - `should_retry`: Predicate function to determine if error is retryable
+   - **Exceptions:** `RetryExhaustedError` when max retries exceeded
+   - **Usage:** Apply to network operations, database queries, external API calls
+   - **Example:**
+     ```python
+     @retry(max_retries=5, backoff_factor=2.0, jitter=True)
+     async def fetch_remote_data(self, url: str) -> bytes:
+         async with httpx.AsyncClient() as client:
+             response = await client.get(url, timeout=10.0)
+             response.raise_for_status()
+             return response.content
+     ```
+
+8. **`@timeout(seconds=30.0)`**
+   - **Purpose:** Enforce timeout limits on async operations
+   - **Location:** `backend/utils/decorators/timeout.py`
+   - **Implementation:** 85 lines
+   - **Test Coverage:** 89% (5 tests)
+   - **Parameters:** `seconds` - Maximum execution time
+   - **Exceptions:**
+     - `asyncio.TimeoutError` when timeout exceeded
+     - `TypeError` if applied to synchronous function
+   - **Usage:** Apply to all async operations that could hang
+   - **Example:**
+     ```python
+     @timeout(seconds=10.0)
+     async def slow_operation(self, data: dict) -> dict:
+         await asyncio.sleep(2)  # Simulate slow processing
+         return self.process(data)
+     ```
+
+9. **`@rate_limit(max_calls=100, period=60.0, mode='block')`**
+   - **Purpose:** Rate limiting using token bucket algorithm
+   - **Location:** `backend/utils/decorators/rate_limit.py`
+   - **Implementation:** 217 lines (includes TokenBucket class)
+   - **Test Coverage:** 86% (5 tests)
+   - **Parameters:**
+     - `max_calls`: Maximum calls allowed in period
+     - `period`: Time window in seconds
+     - `burst_size`: Optional burst capacity (default: max_calls)
+     - `mode`: 'block' (wait for token) or 'reject' (raise error immediately)
+     - `scope`: 'instance' (per-instance bucket) or 'global' (shared bucket)
+   - **Exceptions:** `RateLimitExceededError` when limit exceeded (reject mode)
+   - **Usage:** Apply to resource-intensive operations, external API calls
+   - **Example:**
+     ```python
+     @rate_limit(max_calls=10, period=60.0, mode='reject')
+     async def expensive_operation(self, request_id: str) -> dict:
+         return await self.process_request(request_id)
+     ```
+
+10. **`@mutex(lock_key='default', timeout=30.0)`**
+    - **Purpose:** Thread-safe and async-safe critical section protection
+    - **Location:** `backend/utils/decorators/mutex.py`
+    - **Implementation:** 125 lines
+    - **Test Coverage:** 91% (4 tests)
+    - **Parameters:**
+      - `lock_key`: Unique identifier for lock (default: 'default')
+      - `timeout`: Maximum wait time for lock acquisition
+    - **Lock Types:**
+      - Async functions: Uses `asyncio.Lock`
+      - Sync functions: Uses `threading.Lock`
+    - **Exceptions:** `MutexTimeoutError` when lock acquisition times out
+    - **Usage:** Apply to methods modifying shared state, concurrent operations
+    - **Example:**
+      ```python
+      @mutex(lock_key='state_update', timeout=10.0)
+      async def update_shared_state(self, new_value: dict) -> None:
+          # Critical section - guaranteed exclusive access
+          self.shared_state.update(new_value)
+          await self.persist_state()
+      ```
+
+#### Security & Authorization Decorators (Session 29)
+
+11. **`@authorize(roles=None, permissions=None)`**
+    - **Purpose:** Role-based access control (RBAC) for method-level security
+    - **Location:** `backend/utils/decorators/authorize.py`
+    - **Implementation:** 148 lines
+    - **Test Coverage:** 98% (7 tests)
+    - **Parameters:**
+      - `roles`: List of allowed roles (OR logic - any role grants access)
+      - `permissions`: List of required permissions (AND logic - all required)
+    - **User Context:** Extracts user from method kwargs (key: 'user')
+    - **Expected User Object:**
+      ```python
+      user = {
+          'roles': ['admin', 'editor'],  # List of role strings
+          'permissions': ['read', 'write', 'delete']  # List of permission strings
+      }
+      ```
+    - **Exceptions:** `UnauthorizedError` with clear message when authorization fails
+    - **Usage:** Apply to privileged operations, admin endpoints
+    - **Example:**
+      ```python
+      @authorize(roles=['admin', 'moderator'])
+      def delete_content(self, content_id: str, user: dict) -> None:
+          self.content_repo.delete(content_id)
+      
+      @authorize(permissions=['read', 'write'])
+      async def update_document(self, doc_id: str, data: dict, user: dict) -> dict:
+          return await self.doc_service.update(doc_id, data)
+      ```
+
+#### Database & Transaction Decorators (Session 29)
+
+12. **`@transaction(isolation_level='READ_COMMITTED')`**
+    - **Purpose:** Automatic database transaction management with rollback
+    - **Location:** `backend/utils/decorators/transaction.py`
+    - **Implementation:** 182 lines
+    - **Test Coverage:** 87% (6 tests)
+    - **Linter Enforcement:** QLA010, QLA015
+    - **Parameters:** `isolation_level` - Transaction isolation level
+    - **Lifecycle:**
+      1. BEGIN transaction before method execution
+      2. COMMIT transaction on successful completion
+      3. ROLLBACK transaction on any exception
+    - **Current Status:** Infrastructure-ready (awaiting database integration)
+    - **Usage:** Apply to all methods performing database writes
+    - **Example:**
+      ```python
+      @transaction(isolation_level='SERIALIZABLE')
+      async def transfer_funds(self, from_account: str, to_account: str, amount: float) -> None:
+          # All operations within transaction
+          await self.debit_account(from_account, amount)
+          await self.credit_account(to_account, amount)
+          await self.log_transfer(from_account, to_account, amount)
+          # Auto-rollback on any exception
+      ```
+
+#### Deprecation & Migration Decorators (Session 29)
+
+13. **`@deprecated(reason='', replacement='', version='', removal_version='')`**
+    - **Purpose:** Mark deprecated methods with migration guidance
+    - **Location:** `backend/utils/decorators/deprecated.py`
+    - **Implementation:** 84 lines
+    - **Test Coverage:** 100% (5 tests)
+    - **Parameters:**
+      - `reason`: Why method is deprecated
+      - `replacement`: Suggested alternative method/approach
+      - `version`: Version when deprecation was introduced
+      - `removal_version`: Version when method will be removed
+    - **Behavior:**
+      - Emits Python `DeprecationWarning` on each call
+      - Attaches metadata to function (`__deprecated__`, `__replacement__`, etc.)
+      - Warnings visible in logs and development environments
+    - **Usage:** Apply to methods being phased out
+    - **Example:**
+      ```python
+      @deprecated(
+          reason='Inefficient algorithm, use new implementation',
+          replacement='calculate_qualia_v2',
+          version='1.2.0',
+          removal_version='2.0.0'
+      )
+      def calculate_qualia(self, state: dict) -> float:
+          # Old implementation
+          return self.legacy_calculation(state)
+      ```
+
+#### Event-Driven Decorators
+
+14. **`@OnEvent(event_type: str)`**
+    - **Purpose:** Automatic EventBus subscription management
+    - **Location:** `backend/utils/decorators/on_event.py`
+    - **Implementation:** Registers method as event listener
+    - **Lifecycle:** Managed by ApplicationInitializerService
+    - **Usage:** Apply to methods that should react to specific events
+    - **Example:**
+      ```python
+      @OnEvent('QualiaStateUpdated')
+      def handle_qualia_update(self, event: QualiaStateUpdatedEvent) -> None:
+          self.logger.info(f"Qualia updated: {event.data}")
+          self.update_visualization(event.data)
+      ```
+
+#### Decorator Composition & Ordering
+
+When combining multiple decorators, follow this ordering (top to bottom):
+
+```python
+@log_execution(level="INFO")       # 1. Logging (outermost)
+@handle_errors(fallback_value={})  # 2. Error handling
+@time_execution                     # 3. Performance monitoring
+@circuit_breaker(threshold=3)       # 4. Circuit breaker
+@retry(max_retries=3)               # 5. Retry logic
+@timeout(seconds=30.0)              # 6. Timeout enforcement
+@rate_limit(max_calls=10)           # 7. Rate limiting
+@mutex(lock_key='critical')         # 8. Concurrency control
+@authorize(roles=['admin'])         # 9. Authorization
+@transaction(isolation='SERIALIZABLE')  # 10. Transaction management
+@validate_schema(schema='MySchema')     # 11. Input validation (innermost)
+async def critical_operation(self, data: dict, user: dict) -> dict:
+    # Method implementation
+    pass
+```
+
+**Rationale:** Decorators execute in reverse order (bottom to top). This ordering ensures:
+- Logging captures all decorator operations
+- Errors from any decorator are caught
+- Performance measurement includes all overhead
+- Authorization happens before expensive operations
+- Validation happens closest to method logic
 
 ### 5.2. TypeScript Decorators (`frontend/src/utils/decorators.ts`)
 - `@logMethod()`: Logs method calls and arguments.

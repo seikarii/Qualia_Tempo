@@ -34,3 +34,16 @@ export type { RetryOptions } from './decorators/retry.decorator';
 export { mutex, lock } from './decorators/mutex.decorator';
 export { cache, memoize } from './decorators/cache.decorator';
 export type { CacheOptions } from './decorators/cache.decorator';
+
+// ==================== SESSION 30 DECORATORS (Phase III) ====================
+// Frontend implementation of authorization and profiling decorators
+export { authorize, UnauthorizedError } from './decorators/authorize.decorator';
+export type { AuthorizeOptions, UserContext } from './decorators/authorize.decorator';
+export { 
+  profile, 
+  getProfilingStats, 
+  getAllProfilingStats, 
+  clearProfilingStats, 
+  exportProfilingStats 
+} from './decorators/profile.decorator';
+export type { ProfileOptions, ProfileResult } from './decorators/profile.decorator';
