@@ -21,6 +21,7 @@ from .validate import validate_schema
 from .time_measure import time_execution
 from .cache import cache_result
 from .on_event import OnEvent
+from .circuit_breaker import circuit_breaker, CircuitBreakerOpenError
 
 # Export all decorators
 __all__ = [
@@ -30,6 +31,8 @@ __all__ = [
     "time_execution",
     "cache_result",
     "OnEvent",
+    "circuit_breaker",
+    "CircuitBreakerOpenError",
 ]
 
 # Version

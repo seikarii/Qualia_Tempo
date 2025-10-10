@@ -12,7 +12,7 @@ from typing import List, Optional
 
 from .rules import (
     QLA001, QLA002, QLA003, QLA004, QLA005, QLA006,
-    QLA007, QLA009, QLA010, QLA011, SourceFile
+    QLA007, QLA008, QLA009, QLA010, QLA011, SourceFile
 )
 
 
@@ -123,10 +123,10 @@ def main():
         print(f"Error: Directory '{directory}' does not exist or is not a directory")
         sys.exit(1)
     
-    # All QUALIA.CODE rules except the flawed QLA008
+    # All QUALIA.CODE rules including the new QLA008 (circuit breaker)
     rules = [
         QLA001, QLA002, QLA003, QLA004, QLA005, QLA006,
-        QLA007, QLA009, QLA010, QLA011
+        QLA007, QLA008, QLA009, QLA010, QLA011
     ]
     
     python_files = find_python_files(directory)
