@@ -1,7 +1,42 @@
 # ERROR LOG - QUALIA TEMPO
-*Última actualización: 3 de octubre de 2025 15:06*
+*Última actualización: 10 de enero de 2025 23:45*
 
 Este archivo documenta errores encontrados durante el desarrollo que requieren atención futura.
+
+## [2025-01-10] Session 15 - Linter Improvements & False Positive Elimination
+
+### Session Summary
+- **Objective**: Fix architectural linter false positives and improve rule precision
+- **Duration**: ~2 hours
+- **Progress**: Backend violations eliminated (6 → 0), frontend violations catalogued
+- **Errors Encountered**: 1 (file restoration required)
+
+### Error 1: File Corruption During String Replacement
+
+**Timestamp**: 2025-01-10 23:15  
+**File**: `/qualia-tempo-prototype/backend/services/ErrorReportingService.py`  
+**Error Type**: Incorrect string replacement boundaries
+
+**Description:**
+Attempted to add `type: ignore` comment to fix MyPy error. The `replace_string_in_file` tool incorrectly matched a substring that spanned across multiple methods, corrupting the file structure.
+
+**Root Cause:**
+Insufficient context provided in `oldString` parameter. The docstring `"""Report a caught exception..."""` appeared in multiple locations in the file header comments.
+
+**Resolution:**
+```bash
+git restore qualia-tempo-prototype/backend/services/ErrorReportingService.py
+```
+
+**Prevention:**
+- Always include 5+ lines of unique context before and after the target
+- Verify that `oldString` appears only once in the file using `grep_search` before replacement
+- For files with repeated patterns, include method signatures or unique identifiers
+
+**Lesson Learned:**
+When working with docstrings or common phrases, extend the context window significantly to ensure uniqueness.
+
+---
 
 ## [2025-10-03] Technical Debt Analysis - No Errors Found
 

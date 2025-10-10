@@ -869,11 +869,13 @@ function bindLevel2ServiceParams(fullConfig: FullGameConfig): void {
   
   // PHASE 5: Kairos Visual Engine - needs particleSystemService + reactionDiffusionService (Level 2 dependencies)
   // PHASE 5.6: Added viewLogicService + performanceService for SDF avatar integration
+  // QUALIA.CODE §4: Added httpService for platform abstraction (shader loading)
   safeBindConstant<KairosVisualEngineParams>(TYPES.KairosVisualEngineParams, {
     config: fullConfig.kairosVisual,
     logger: container.get<ILogger>(TYPES.ILogger),
     gameStateStore: container.get<IGameStateStore>(TYPES.IGameStateStore),
     eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    httpService: container.get(TYPES.IHttpService),
     particleSystemService: container.get(TYPES.IParticleSystemService),
     reactionDiffusionService: container.get(TYPES.IReactionDiffusionService),
     viewLogicService: container.get(TYPES.IViewLogicService), // PHASE 5.6

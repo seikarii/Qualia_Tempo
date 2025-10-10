@@ -7,10 +7,28 @@ render:
   targetFPS: 60
   antialias: true
   pixelRatio: 1.5 # 1.0 for low-end, 2.0 for high-end
+  maxDevicePixelRatio: 2.0 # Cap for window.devicePixelRatio (prevents excessive resolution)
   shadowsEnabled: true
   shadowMapSize: 2048 # 512, 1024, 2048, 4096
   toneMapping: 'ACESFilmic' # None, Linear, Reinhard, Cinematic, ACESFilmic
   toneMappingExposure: 1.0 # 0.5-2.0
+
+# Lighting Configuration
+lighting:
+  ambientIntensity: 0.4 # Base illumination
+  directionalIntensity: 0.8 # Main directional light
+  directionalPosition: # Directional light position (for shadows and god rays)
+    x: 10
+    y: 20
+    z: 10
+  shadowCameraNear: 0.5 # Shadow camera near plane
+  shadowCameraFar: 500 # Shadow camera far plane
+
+# SDF Shader Configuration (PHASE 4)
+sdfShader:
+  maxSteps: 64 # Raymarching maximum steps
+  maxDistance: 100.0 # Maximum raymarch distance
+  hitThreshold: 0.001 # Surface hit precision
 
 # Camera Configuration
 camera:

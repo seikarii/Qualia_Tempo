@@ -15,10 +15,31 @@ export interface RenderConfig {
   targetFPS: number; // Target framerate (default: 60)
   antialias: boolean; // Enable antialiasing
   pixelRatio: number; // Device pixel ratio multiplier (1-2)
+  maxDevicePixelRatio: number; // Maximum device pixel ratio cap (prevents excessive resolution on high-DPI displays)
   shadowsEnabled: boolean; // Enable dynamic shadows
   shadowMapSize: number; // Shadow map resolution (512, 1024, 2048)
   toneMapping: 'None' | 'Linear' | 'Reinhard' | 'Cinematic' | 'ACESFilmic';
   toneMappingExposure: number; // Exposure adjustment (0.5-2.0)
+}
+
+/**
+ * Lighting configuration
+ */
+export interface LightingConfig {
+  ambientIntensity: number; // Ambient light intensity (default: 0.4)
+  directionalIntensity: number; // Directional light intensity (default: 0.8)
+  directionalPosition: { x: number; y: number; z: number }; // Directional light position
+  shadowCameraNear: number; // Shadow camera near plane (default: 0.5)
+  shadowCameraFar: number; // Shadow camera far plane (default: 500)
+}
+
+/**
+ * SDF shader configuration
+ */
+export interface SdfShaderConfig {
+  maxSteps: number; // Maximum raymarching steps (default: 64)
+  maxDistance: number; // Maximum raymarch distance (default: 100.0)
+  hitThreshold: number; // Surface hit threshold (default: 0.001)
 }
 
 /**
@@ -161,6 +182,8 @@ export interface DevConfig {
  */
 export interface KairosVisualEngineConfig {
   render: RenderConfig;
+  lighting: LightingConfig;
+  sdfShader: SdfShaderConfig;
   camera: CameraConfig;
   effects: EffectConfig;
   qualiaMapping: QualiaStateMappingConfig;
@@ -177,6 +200,7 @@ export interface KairosVisualEngineParams {
   logger: any; // ILogger (avoiding circular import)
   gameStateStore: any; // IGameStateStore (avoiding circular import)
   eventBus: any; // IEventBus (avoiding circular import)
+  httpService: any; // IHttpService (avoiding circular import)
   particleSystemService: any; // IParticleSystemService (avoiding circular import)
   reactionDiffusionService: any; // IReactionDiffusionService (avoiding circular import)
   viewLogicService: any; // IViewLogicService (avoiding circular import) - PHASE 5.6

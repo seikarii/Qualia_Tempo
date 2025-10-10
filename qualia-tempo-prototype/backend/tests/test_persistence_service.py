@@ -618,17 +618,17 @@ class TestDataManagement:
 class TestEdgeCases:
     """Test edge cases and error handling."""
     
-    def test_operations_before_initialization(self):
+    def test_operations_before_initialization(self, mock_config_file):
         """Test that operations fail gracefully before initialization (QUALIA.CODE compliant)."""
-        # Create uninitialized service via CompositionRoot (not recommended in production)
-        from backend.services.FileSystemService import FileSystemService
-        from backend.services.PersistenceService import PersistenceService
+        # Create service via container but DO NOT initialize it
+        # This tests pre-initialization behavior while maintaining QUALIA.CODE compliance
+        from backend.services.container_config import get_configured_container
+        from backend.services.interfaces.IPersistenceService import IPersistenceService
         
-        # For this edge case test, we need an uninitialized service
-        # This is an exception to the rule as we're testing pre-initialization behavior
-        filesystem_service = FileSystemService()
-        service = PersistenceService(file_system_service=filesystem_service)
-        # DO NOT call initialize()
+        # Get container and resolve service
+        test_container = get_configured_container()
+        service = test_container.resolve(IPersistenceService)  # type: ignore[type-abstract]
+        # DO NOT call initialize() - that's the test condition
         
         result = service.save_leaderboard_entry(
             player_id="player_001", player_name="Player",

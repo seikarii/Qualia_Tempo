@@ -19,7 +19,7 @@
 export interface PerformanceMetrics {
   // Latency metrics
   latency: {
-    backend ToFrontend: number;      // Backend emit → Frontend receive (ms)
+    backendToFrontend: number;      // Backend emit → Frontend receive (ms)
     frontendToRender: number;       // Frontend receive → Three.js render (ms)
     endToEnd: number;               // Backend emit → Pixel on screen (ms)
     samples: number[];              // All latency samples

@@ -148,8 +148,7 @@ class ErrorReportingService(IErrorReportingService):
         
         return error_id
     
-    @log_execution(level="INFO")
-    @log_execution(level="INFO")
+    @log_execution(level="ERROR")
     def report_exception(
         self,
         exception: Exception,
@@ -161,15 +160,17 @@ class ErrorReportingService(IErrorReportingService):
         error_type = type(exception).__name__
         stack_trace = traceback.format_exc()
         
-        return self.report_error(
+        # MyPy limitation: Decorator doesn't preserve return type inference
+        # report_error is correctly typed as returning str, this call is safe
+        result: str = self.report_error(
             error_message=error_message,
             error_type=error_type,
             stack_trace=stack_trace,
             context=context,
             severity=severity
         )
+        return result
     
-    @log_execution(level="INFO")
     @log_execution(level="INFO")
     def set_user_context(
         self,

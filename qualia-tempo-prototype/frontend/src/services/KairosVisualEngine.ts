@@ -23,6 +23,7 @@ import type { IBaseService } from './interfaces/IBaseService';
 import type { ILogger } from './interfaces/ILogger';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { IGameStateStore } from './interfaces/IGameStateStore';
+import type { IHttpService } from './interfaces/IHttpService';
 import type { IParticleSystemService } from './interfaces/IParticleSystemService';
 import type { IReactionDiffusionService } from './interfaces/IReactionDiffusionService';
 import type { KairosVisualEngineParams, KairosVisualEngineConfig } from './contracts/IKairosVisualEngine.contracts';
@@ -133,6 +134,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   private readonly logger: ILogger;
   private readonly eventBus: IEventBus;
   private readonly gameStateStore: IGameStateStore;
+  private readonly httpService: IHttpService;
   private readonly particleSystemService: IParticleSystemService;
   private readonly reactionDiffusionService: IReactionDiffusionService;
   private readonly viewLogicService: any; // IViewLogicService - PHASE 5.6
@@ -201,6 +203,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     this.logger = params.logger;
     this.eventBus = params.eventBus;
     this.gameStateStore = params.gameStateStore;
+    this.httpService = params.httpService;
     this.particleSystemService = params.particleSystemService;
     this.reactionDiffusionService = params.reactionDiffusionService;
     this.viewLogicService = params.viewLogicService; // PHASE 5.6
@@ -254,8 +257,9 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
       powerPreference: 'high-performance'
     });
     
+    // Use configured max device pixel ratio cap instead of direct window access
     this.renderer.setPixelRatio(
-      Math.min(window.devicePixelRatio, this.config.render.pixelRatio)
+      Math.min(this.config.render.maxDevicePixelRatio, this.config.render.pixelRatio)
     );
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     
@@ -330,28 +334,32 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     if (!this.scene) return;
     
     // Ambient light for base illumination
-    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    this.ambientLight = new THREE.AmbientLight(0xffffff, this.config.lighting.ambientIntensity);
     this.scene.add(this.ambientLight);
     this.lights.push(this.ambientLight);
     
     // Directional light for shadows and god rays source
-    this.directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    this.directionalLight.position.set(10, 20, 10);
+    this.directionalLight = new THREE.DirectionalLight(0xffffff, this.config.lighting.directionalIntensity);
+    this.directionalLight.position.set(
+      this.config.lighting.directionalPosition.x,
+      this.config.lighting.directionalPosition.y,
+      this.config.lighting.directionalPosition.z
+    );
     
     if (this.config.render.shadowsEnabled) {
       this.directionalLight.castShadow = true;
       this.directionalLight.shadow.mapSize.width = this.config.render.shadowMapSize;
       this.directionalLight.shadow.mapSize.height = this.config.render.shadowMapSize;
-      this.directionalLight.shadow.camera.near = 0.5;
-      this.directionalLight.shadow.camera.far = 500;
+      this.directionalLight.shadow.camera.near = this.config.lighting.shadowCameraNear;
+      this.directionalLight.shadow.camera.far = this.config.lighting.shadowCameraFar;
     }
     
     this.scene.add(this.directionalLight);
     this.lights.push(this.directionalLight);
     
     this.logger.debug('[KairosVisualEngine] Lighting setup complete', {
-      ambientIntensity: 0.4,
-      directionalIntensity: 0.8,
+      ambientIntensity: this.config.lighting.ambientIntensity,
+      directionalIntensity: this.config.lighting.directionalIntensity,
       shadowsEnabled: this.config.render.shadowsEnabled
     });
   }
@@ -520,9 +528,9 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
           u_player_shape_params: { value: new THREE.Vector3(0.5, 0.5, 0.5) },
           u_base_color: { value: new THREE.Color(0.3, 0.5, 0.8) },
           u_emissive: { value: 0.5 },
-          u_max_steps: { value: 64 },
-          u_max_distance: { value: 100.0 },
-          u_hit_threshold: { value: 0.001 },
+          u_max_steps: { value: this.config.sdfShader.maxSteps },
+          u_max_distance: { value: this.config.sdfShader.maxDistance },
+          u_hit_threshold: { value: this.config.sdfShader.hitThreshold },
           // Mandelbulb uniforms (transcendence > 0.9)
           u_fractal_iterations: { value: 8 },
           u_fractal_power: { value: 8.0 },
@@ -545,9 +553,9 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
           u_boss_shape_params: { value: new THREE.Vector3(0.5, 0.5, 0.5) },
           u_base_color: { value: new THREE.Color(0.8, 0.3, 0.3) },
           u_emissive: { value: 0.7 },
-          u_max_steps: { value: 64 },
-          u_max_distance: { value: 100.0 },
-          u_hit_threshold: { value: 0.001 }
+          u_max_steps: { value: this.config.sdfShader.maxSteps },
+          u_max_distance: { value: this.config.sdfShader.maxDistance },
+          u_hit_threshold: { value: this.config.sdfShader.hitThreshold }
         },
         side: THREE.DoubleSide,
         transparent: true
@@ -579,13 +587,10 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   
   /**
    * Load shader from public/shaders directory
+   * QUALIA.CODE §4: Uses injected IHttpService instead of direct fetch
    */
   private async loadShader(shaderPath: string): Promise<string> {
-    const response = await fetch(shaderPath);
-    if (!response.ok) {
-      throw new Error(`Failed to load shader: ${shaderPath}`);
-    }
-    return await response.text();
+    return await this.httpService.get<string>(shaderPath);
   }
   
   /**

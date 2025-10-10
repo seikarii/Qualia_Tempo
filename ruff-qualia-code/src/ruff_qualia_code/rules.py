@@ -43,6 +43,7 @@ class QLA001Checker:
         self.filepath = filepath
         self.service_classes: set[str] = set()
         self.is_composition_root = "CompositionRoot.py" in str(filepath)
+        self.is_container_module = "container.py" in str(filepath) or "container_config.py" in str(filepath)
         self.diagnostic: Optional[Diagnostic] = None
 
     def visit(self, node: AST) -> None:
@@ -61,19 +62,22 @@ class QLA001Checker:
         if node.module and "services" in node.module:
             for alias in node.names:
                 name = alias.name
-                if name and name[0].isupper() and any(
+                # Exclude Config classes from the prohibition - they can be instantiated directly
+                if name and name[0].isupper() and not name.endswith("Config") and any(
                     suffix in name for suffix in ["Service", "Engine", "Manager", "Processor", "Handler"]
                 ):
                     self.service_classes.add(name)
 
     def _check_class_def(self, node: ast.ClassDef) -> None:
-        if "services" in str(self.filepath) and any(
+        # Exclude Config classes from the prohibition - they can be instantiated directly
+        if "services" in str(self.filepath) and not node.name.endswith("Config") and any(
             suffix in node.name for suffix in ["Service", "Engine", "Manager", "Processor", "Handler"]
         ):
             self.service_classes.add(node.name)
 
     def _check_call(self, node: ast.Call, range_: TextRange) -> None:
-        if self.is_composition_root:
+        # Allow instantiation in CompositionRoot and container modules
+        if self.is_composition_root or self.is_container_module:
             return
 
         if isinstance(node.func, ast.Name):
@@ -106,7 +110,9 @@ class QLA002:
 class QLA002Checker:
     def __init__(self, filepath: Path):
         self.filepath = filepath
-        self.is_service_file = "services" in str(filepath)
+        # Exclude test files from decorator enforcement
+        is_test_file = "test_" in str(filepath) or "/tests/" in str(filepath)
+        self.is_service_file = "services" in str(filepath) and not is_test_file
         self.current_class: Optional[str] = None
         self.in_service_class = False
         self.diagnostic: Optional[Diagnostic] = None

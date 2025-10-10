@@ -101,9 +101,9 @@ class TestCompositionRootFactory:
         test_container = get_configured_container()
         filesystem_service = test_container.resolve(IFileSystemService)  # type: ignore[type-abstract]
 
-        # Create REAL PersistenceService with real FileSystemService
-        from backend.services.PersistenceService import PersistenceService
-        persistence_service = PersistenceService(file_system_service=filesystem_service)
+        # Create REAL PersistenceService from container (Phase 1 migration - QUALIA.CODE compliant)
+        from backend.services.interfaces.IPersistenceService import IPersistenceService
+        persistence_service = test_container.resolve(IPersistenceService)  # type: ignore[type-abstract]
         persistence_service.initialize()
 
         # Create REAL ParticleEnginePoolManager from container (unstarted - tests will start it)

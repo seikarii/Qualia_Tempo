@@ -23,6 +23,7 @@ import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { ILogger } from './interfaces/ILogger';
+import type { ITimerService } from './interfaces/ITimerService';
 import type { IQualiaStateCalculatorService } from './interfaces/IQualiaStateCalculatorService';
 import type { IQualiaCalculatorWorkerService } from './interfaces/IQualiaCalculatorWorkerService';
 import type { QualiaCalculatorConfig } from './contracts/IQualiaStateCalculatorService.contracts';
@@ -78,6 +79,7 @@ export class QualiaCalculatorWorkerService
   private calculatorConfig: QualiaCalculatorConfig;
   private eventBus: IEventBus;
   private logger: ILogger;
+  private timerService: ITimerService;
   private fallbackService: IQualiaStateCalculatorService;
 
   // State
@@ -94,7 +96,7 @@ export class QualiaCalculatorWorkerService
   private lastSuccessfulOperation?: number;
 
   // Performance monitoring
-  private performanceMonitoringInterval?: ReturnType<typeof setInterval>;
+  private performanceMonitoringInterval?: number;
 
   // Worker initialization promise
   private initializationPromise?: Promise<void>;
@@ -104,12 +106,14 @@ export class QualiaCalculatorWorkerService
     @inject(TYPES.QualiaCalculatorConfig) calculatorConfig: QualiaCalculatorConfig,
     @inject(TYPES.IEventBus) eventBus: IEventBus,
     @inject(TYPES.ILogger) logger: ILogger,
+    @inject(TYPES.ITimerService) timerService: ITimerService,
     @inject(TYPES.IQualiaStateCalculatorService) fallbackService: IQualiaStateCalculatorService
   ) {
     this.workerConfig = workerConfig;
     this.calculatorConfig = calculatorConfig;
     this.eventBus = eventBus;
     this.logger = logger;
+    this.timerService = timerService;
     this.fallbackService = fallbackService;
 
     // Initialize current state from config
@@ -184,7 +188,7 @@ export class QualiaCalculatorWorkerService
 
     // Stop performance monitoring
     if (this.performanceMonitoringInterval) {
-      clearInterval(this.performanceMonitoringInterval);
+      this.timerService.clearInterval(this.performanceMonitoringInterval);
       this.performanceMonitoringInterval = undefined;
     }
 
@@ -241,17 +245,17 @@ export class QualiaCalculatorWorkerService
 
       // Initialize the worker with configuration
       const initPromise = new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
+        const timeout = this.timerService.setTimeout(() => {
           reject(new Error('Worker initialization timeout'));
         }, this.workerConfig.initializationTimeout);
 
         const tempHandler = (event: MessageEvent<WorkerOutputMessage>) => {
           if (event.data.type === 'INITIALIZED') {
-            clearTimeout(timeout);
+            this.timerService.clearTimeout(timeout);
             this.worker!.removeEventListener('message', tempHandler);
             resolve();
           } else if (event.data.type === 'ERROR') {
-            clearTimeout(timeout);
+            this.timerService.clearTimeout(timeout);
             this.worker!.removeEventListener('message', tempHandler);
             reject(new Error(event.data.error));
           }
@@ -724,7 +728,7 @@ export class QualiaCalculatorWorkerService
       return;
     }
 
-    this.performanceMonitoringInterval = setInterval(() => {
+    this.performanceMonitoringInterval = this.timerService.setInterval(() => {
       this.performPerformanceCheck();
     }, this.workerConfig.performanceMonitoringInterval);
 
