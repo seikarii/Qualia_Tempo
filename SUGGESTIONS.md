@@ -2,6 +2,453 @@
 *Generated: 2025-10-04 - Post Linter Remediation Analysis*
 *Updated: 2025-10-04 - Phase 3 & Phase 4 Implementation Complete*
 *Updated: 2025-10-06 - Shader Architecture & PostProcessingService Improvements*
+*Updated: 2025-01-10 - Linter Rule Enhancement Recommendations*
+*Updated: 2025-01-10 - ESLint Rule Calibration & Pattern Recognition*
+
+---
+
+## 🎯 NEW SUGGESTION 4: ESLint Rule Calibration Framework (2025-01-10)
+
+### Context
+Session 17 revealed that linter rules can conflict with architectural mandates (e.g., `max-params: 4` vs Direct Configuration Injection). Need systematic approach to rule calibration.
+
+### 4.1. Rule Calibration Protocol
+
+**Principle:** Rules serve architecture, not vice versa. When a rule conflicts with QUALIA.CODE mandates, the rule must adapt.
+
+**Decision Matrix:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Rule Conflict Resolution Decision Tree                         │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. Does rule conflict with QUALIA.CODE mandate?                │
+│    YES → Adjust rule globally or add targeted override         │
+│    NO  → Continue                                               │
+│                                                                 │
+│ 2. Is violation in a known architectural pattern?              │
+│    YES → Add pattern to whitelist with justification           │
+│    NO  → Continue                                               │
+│                                                                 │
+│ 3. Is violation in generated/external code?                    │
+│    YES → Add to ignorePatterns                                 │
+│    NO  → Continue                                               │
+│                                                                 │
+│ 4. Can violation be fixed without degrading architecture?      │
+│    YES → Fix code                                               │
+│    NO  → Re-evaluate rule (may be too strict)                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 4.2. Identified Architectural Patterns Requiring Special Rules
+
+#### Pattern 1: Direct Configuration Injection (QUALIA.CODE v1.1)
+```typescript
+// Legitimate: 6+ parameters for complex services
+constructor(
+  @inject(TYPES.Config) config: ServiceConfig,
+  @inject(TYPES.ILogger) logger: ILogger,
+  @inject(TYPES.IEventBus) eventBus: IEventBus,
+  @inject(TYPES.IHttpService) httpService: IHttpService,
+  @inject(TYPES.IParticleSystem) particleSystem: IParticleSystemService,
+  @inject(TYPES.IReactionDiffusion) reactionDiffusion: IReactionDiffusionService
+) { }
+```
+**Rule Adjustment:** `max-params: 4 → 6` (accommodates config + 5 dependencies)
+
+#### Pattern 2: Render Loop State Machines
+```typescript
+// Legitimate: High cyclomatic complexity in render loops
+private renderLoop() {
+  // WebSocket state check (complexity +1)
+  if (!this.isConnected) return;
+  
+  // Avatar visibility checks (complexity +2)
+  if (this.playerAvatar?.visible) { /* ... */ }
+  if (this.bossAvatar?.visible) { /* ... */ }
+  
+  // Post-processing pipeline (complexity +6)
+  if (this.bloomPass) { /* ... */ }
+  if (this.dofPass) { /* ... */ }
+  // ... 5 more passes
+  
+  // Performance monitoring (complexity +3)
+  // Total: ~34 complexity (inherent, not accidental)
+}
+```
+**Rule Adjustment:** `complexity: 10 → 35` for rendering engines
+
+#### Pattern 3: Comprehensive Validators
+```typescript
+// Legitimate: Validation trees have high complexity
+export function validateConfig(config: any): config is Config {
+  // Type check (complexity +1)
+  if (!config || typeof config !== 'object') throw new Error(...);
+  
+  // Required field checks (complexity +10)
+  if (!config.field1) throw new Error(...);
+  if (!config.field2) throw new Error(...);
+  // ... 8 more required fields
+  
+  // Nested object validation (complexity +15)
+  if (config.nested) {
+    if (!config.nested.subField1) throw new Error(...);
+    // ... 14 more sub-fields
+  }
+  // Total: ~30 complexity (validation branching)
+}
+```
+**Rule Adjustment:** `complexity: 10 → 30` for validators
+
+#### Pattern 4: Circular Import Prevention in Contracts
+```typescript
+// Legitimate: 'any' types in Params interfaces to avoid circular imports
+export interface ServiceParams {
+  config: ServiceConfig;
+  logger: any; // ILogger (importing would create circular dependency)
+  eventBus: any; // IEventBus (importing would create circular dependency)
+}
+```
+**Rule Adjustment:** File-level `/* eslint-disable @typescript-eslint/no-explicit-any */` for `*.contracts.ts`
+
+### 4.3. Recommended ESLint Override Block Template
+
+```javascript
+// Add to .eslintrc.cjs
+{
+  // Pattern-specific override
+  files: ["**/path/to/pattern/**/*.ts"],
+  rules: {
+    "rule-name": ["error", increased_limit],
+  },
+}
+```
+
+**Current Override Blocks:**
+1. Rendering engines (KairosVisualEngine, ReactionDiffusionService, *Avatar.tsx)
+2. Configuration validators (config-validators/*.ts)
+3. Worker implementations (workers/*.ts)
+4. IoC configuration (inversify.config.ts)
+5. Performance profiling tools (testing/performance-profiler.ts, utils/performance-profiler.ts)
+6. Test environment (\_\_tests\_\_/**, *.test.*, *.spec.*)
+7. Platform abstraction layer (TimerService.ts, HttpService.ts, providers/*.ts)
+8. Static utility classes (Logger.ts)
+9. Auto-generated files (contracts/*.ts, *.contracts.ts)
+10. Application entry points (index.tsx, main.ts)
+
+### 4.4. Warning vs Error Philosophy
+
+**Guideline:** Warnings suggest improvements, errors prevent builds.
+
+**Warning-Appropriate Rules:**
+- `@typescript-eslint/no-non-null-assertion` - Legitimate in GPU/Three.js refs where null is impossible
+- `@typescript-eslint/prefer-nullish-coalescing` - `??` vs `||` is a style preference, both work
+- `@typescript-eslint/prefer-optional-chain` - `?.` chaining is cleaner but not mandatory
+
+**Error-Appropriate Rules:**
+- `@qualia-tempo/qualia-code/no-direct-service-instantiation` - Architectural violation
+- `@qualia-tempo/qualia-code/enforce-use-services-hook` - Architectural violation
+- `@typescript-eslint/no-explicit-any` - Type safety violation (except justified cases)
+
+### 4.5. Documentation Standard for Rule Adjustments
+
+**Every rule adjustment MUST include:**
+1. **Rationale** - Why the adjustment is necessary
+2. **Impact** - How many false positives it fixes
+3. **Whitelist Exceptions** - Specific patterns that need higher limits
+4. **Example** - Code sample demonstrating legitimate usage
+
+**Example:**
+```javascript
+// Code quality rules
+// QUALIA.CODE v1.1 ADJUSTED: Increased limits for legitimate architectural patterns
+// - Rendering engines (KairosVisualEngine) have inherent complexity
+// - Direct Configuration Injection requires more parameters
+// - State machines and validators have legitimate line counts
+"complexity": ["error", 15], // Increased from 10 - allows state machines and render loops
+```
+
+### 4.6. Maintenance Protocol
+
+**Quarterly Review Cycle:**
+1. Analyze new architectural patterns introduced
+2. Review override blocks for obsolescence
+3. Consolidate similar overrides into general rules
+4. Update documentation with lessons learned
+
+**Trigger for Rule Re-evaluation:**
+- 5+ files in same category hitting the limit
+- New QUALIA.CODE version with architectural changes
+- Introduction of new framework/library with different patterns
+
+**Status:** RECOMMENDED for implementation in Q1 2025
+
+---
+
+## 🎯 NEW SUGGESTION 3: Advanced Linter Rule Enhancements (2025-01-10)
+
+### Context
+After Session 15 linter improvements, identified additional patterns that could improve architectural enforcement and reduce false positives.
+
+### 3.1. Smart Config Detection in QLA001
+
+**Current State:** Simple string matching on `Config` suffix  
+**Limitation:** Doesn't catch `*Settings`, `*Options`, `*Parameters` classes
+
+**Proposed Enhancement:**
+```python
+# In QLA001Checker._check_import_from
+DATA_CLASS_SUFFIXES = ["Config", "Settings", "Options", "Parameters", "Params", "Data"]
+
+def is_data_class(name: str) -> bool:
+    """Check if a class is a data container (not a service)."""
+    return any(name.endswith(suffix) for suffix in DATA_CLASS_SUFFIXES)
+
+# Filter out data classes
+if name and name[0].isupper() and not is_data_class(name) and any(...):
+    self.service_classes.add(name)
+```
+
+**Benefits:** More precise detection, fewer false positives
+
+---
+
+### 3.2. Whitelist for Legitimate Instantiation Patterns
+
+**Current State:** Hardcoded exceptions for CompositionRoot and container modules  
+**Limitation:** Can't handle new legitimate patterns without code changes
+
+**Proposed Enhancement:**
+```yaml
+# In ruff-qualia-code/config/whitelist.yaml
+instantiation_whitelist:
+  # Modules where service instantiation is allowed
+  modules:
+    - "CompositionRoot.py"
+    - "container.py"
+    - "container_config.py"
+    - "test_composition_root.py"  # Test factories
+  
+  # Class patterns that are always safe to instantiate
+  safe_classes:
+    - "*Config"
+    - "*Settings"
+    - "*Options"
+    - "*Data"
+    - "Mock*"  # Test mocks
+  
+  # Specific class + module combinations
+  exceptions:
+    - class: "ServiceContainer"
+      module: "container.py"
+```
+
+**Benefits:** Configurable without code changes, clearer rules
+
+---
+
+### 3.3. Enhanced MyPy Decorator Type Inference
+
+**Current Issue:** MyPy error on `report_exception` return type due to decorator  
+**Root Cause:** `log_execution` decorator not properly typed with `ParamSpec` and `TypeVar`
+
+**Proposed Fix:**
+```python
+# In backend/utils/decorators/log_method.py
+from typing import ParamSpec, TypeVar, Callable
+
+P = ParamSpec('P')
+R = TypeVar('R')
+
+def log_execution(level: str = "INFO") -> Callable[[Callable[P, R]], Callable[P, R]]:
+    """
+    Decorator with proper type preservation for MyPy.
+    """
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        @functools.wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            # ... implementation
+            return result
+        return wrapper  # type: ignore[return-value]  # functools.wraps limitation
+    return decorator
+```
+
+**Benefits:** Eliminates `type: ignore` comments, better type safety
+
+---
+
+### 3.4. Frontend Global API Detection - Whitelist for Workers
+
+**Current Issue:** Workers MUST use global APIs (no injected services in Web Worker context)  
+**Proposed Enhancement:**
+
+```typescript
+// In eslint-plugin-qualia-code/rules/no-global-api-calls.js
+module.exports = {
+  meta: {
+    // ...
+  },
+  create(context) {
+    // Skip worker files
+    const filename = context.getFilename();
+    if (filename.includes('/workers/') || filename.endsWith('.worker.ts')) {
+      return {};  // No checks in workers
+    }
+    
+    // ... existing checks for services
+  }
+};
+```
+
+**Benefits:** No false positives on `QualiaCalculatorWorker.ts` setTimeout/setInterval usage
+
+---
+
+### 3.5. Automatic Fix Suggestions for Common Violations
+
+**Proposed Feature:** ESLint auto-fix for simple violations
+
+**Example 1: Add missing decorators**
+```typescript
+// Before
+public async initialize(): Promise<void> {
+  // ...
+}
+
+// After (auto-fixed)
+@logMethod()
+@catchError()
+public async initialize(): Promise<void> {
+  // ...
+}
+```
+
+**Example 2: Replace global APIs**
+```typescript
+// Before
+setTimeout(() => this.poll(), 1000);
+
+// After (auto-fixed with quick action)
+this.timerService.setTimeout(() => this.poll(), 1000);
+// Note: Requires timerService to be injected
+```
+
+**Implementation:**
+```javascript
+context.report({
+  node,
+  message: 'Direct use of setTimeout forbidden',
+  fix(fixer) {
+    return fixer.replaceText(node, 'this.timerService.setTimeout');
+  }
+});
+```
+
+---
+
+### 3.6. Complexity Threshold Configuration
+
+**Current Issue:** Fixed complexity limit of 10 may be too strict for some algorithms  
+**Proposed Enhancement:**
+
+```json
+// .eslintrc.json
+{
+  "rules": {
+    "complexity": ["error", {
+      "max": 10,
+      "exceptions": {
+        // Allow higher complexity for specific patterns
+        "renderLoop": 35,  // Render loops are inherently complex
+        "initializeRenderer": 20,  // Setup methods
+        "updateSdfAvatars": 15
+      }
+    }]
+  }
+}
+```
+
+**Alternative:** Use method-specific comments:
+```typescript
+// eslint-disable-next-line complexity -- Render loop requires state machine
+public renderLoop(): void {
+  // Complex but necessary logic
+}
+```
+
+---
+
+### 3.7. Contract-Based Linting for `any` Types
+
+**Current Issue:** Many contracts use `any` for flexibility, but it's flagged  
+**Proposed Rule Enhancement:**
+
+Allow `any` in contract files but enforce specific types in implementations:
+
+```typescript
+// In IKairosVisualEngine.contracts.ts
+export interface ShaderUniforms {
+  [key: string]: any;  // ✅ OK in contract (flexibility)
+}
+
+// In KairosVisualEngine.ts
+private uniforms: Record<string, number | Vector3 | Color> = {};  // ✅ Specific types
+```
+
+**Linter Logic:**
+```javascript
+// In no-explicit-any rule
+if (filename.endsWith('.contracts.ts') || filename.endsWith('.d.ts')) {
+  // Allow any in type definitions
+  return;
+}
+```
+
+---
+
+### 3.8. Automated Decorator Order Validation
+
+**QUALIA.CODE Section 5.2:** Mandates specific decorator order  
+**Current State:** No automated enforcement
+
+**Proposed ESLint Rule:**
+```javascript
+module.exports = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description: 'Enforce QUALIA.CODE decorator order'
+    }
+  },
+  create(context) {
+    const DECORATOR_ORDER = [
+      // Transformation layer (outermost)
+      '@logMethod', '@throttle', '@catchError', '@validate',
+      // Registration layer (innermost)
+      '@OnEvent', '@AdaptAndEmit', '@BrowserOnly'
+    ];
+    
+    // Validate decorator stack matches required order
+  }
+};
+```
+
+---
+
+## Implementation Priority
+
+**HIGH (Next Session):**
+1. 3.4 - Worker whitelist (blocks current violations)
+2. 3.7 - Contract `any` allowance (reduces noise)
+3. 3.3 - MyPy type inference fix (eliminates type: ignore)
+
+**MEDIUM (Future):**
+1. 3.1 - Smart config detection
+2. 3.8 - Decorator order validation
+3. 3.2 - YAML-based whitelist
+
+**LOW (Nice to have):**
+1. 3.5 - Auto-fix suggestions
+2. 3.6 - Complexity thresholds
 
 ---
 
