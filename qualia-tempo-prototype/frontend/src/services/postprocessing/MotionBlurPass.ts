@@ -85,7 +85,7 @@ export class MotionBlurPass extends Pass implements IMotionBlurPass {
     });
   }
 
-  // eslint-disable-next-line max-params
+   
   public render(
     renderer: THREE.WebGLRenderer,
     writeBuffer: THREE.WebGLRenderTarget,

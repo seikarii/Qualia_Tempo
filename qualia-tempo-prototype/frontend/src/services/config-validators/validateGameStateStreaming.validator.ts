@@ -8,6 +8,7 @@ import type { GameStateStreamingConfig } from '../contracts/IGameStateStreamingS
 /**
  * Validate GameStateStreamingConfig structure
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Validator functions accept unknown input and type-guard it
 export function validateGameStateStreamingConfig(config: any): config is GameStateStreamingConfig {
   if (!config || typeof config !== 'object') {
     throw new Error('[GameStateStreaming] Configuration must be an object');

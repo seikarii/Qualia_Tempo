@@ -10,6 +10,9 @@
  * - Injectable: Designed for use in tests and production monitoring
  * - QUALIA.CODE: Production-grade profiling from inception
  * 
+ * LINT EXCEPTIONS:
+ * - console.log allowed: This is a testing/debugging utility that outputs to console by design
+ * 
  * PROFILING CAPABILITIES:
  * 1. Latency Measurement (Backend → Frontend → Render)
  * 2. Frame Rate Monitoring (WebSocket message rate, Three.js FPS)
@@ -17,7 +20,10 @@
  * 4. CPU Profiling (performance marks, execution time)
  * 5. GPU Utilization (Three.js renderer stats)
  * 6. Mapper Overhead Profiling (data transformation performance)
- * 
+ */
+/* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/prefer-optional-chain, @typescript-eslint/prefer-nullish-coalescing */
+
+/**
  * USAGE:
  * const profiler = new PerformanceProfiler();
  * profiler.startLatencyMeasurement('backend-to-render');

@@ -11,14 +11,18 @@
  */
 
 import { vi } from 'vitest';
-import type { IGameStateStreamingService, GameStateConnectionStatus } from '../../services/interfaces/IGameStateStreamingService';
-import type { CombatState } from '../../types/CombatState';
+import type { IGameStateStreamingService } from '../../services/interfaces/IGameStateStreamingService';
 
 export const mockGameStateStreamingService: IGameStateStreamingService = {
+  // Lifecycle
+  start: vi.fn().mockResolvedValue(undefined),
+  
   // Connection management
   connect: vi.fn().mockResolvedValue(undefined),
   disconnect: vi.fn().mockResolvedValue(undefined),
-  isConnected: vi.fn().mockReturnValue(false),
+  
+  // State access
+  requestState: vi.fn().mockResolvedValue(undefined),
   
   // Connection status
   getConnectionStatus: vi.fn().mockReturnValue({
@@ -28,7 +32,7 @@ export const mockGameStateStreamingService: IGameStateStreamingService = {
     connectedAt: undefined,
     reconnectAttempts: 0,
     lastCombatStateTimestamp: undefined
-  } as GameStateConnectionStatus),
+  }),
   
   // State access
   getLatestCombatState: vi.fn().mockReturnValue(null),
@@ -43,16 +47,4 @@ export const mockGameStateStreamingService: IGameStateStreamingService = {
     connectionDrops: 0
   }),
   
-  // Lifecycle (from IBaseService)
-  initialize: vi.fn().mockResolvedValue(undefined),
-  destroy: vi.fn().mockResolvedValue(undefined),
-  
-  // Service status
-  isEnabled: vi.fn().mockReturnValue(true),
-  getServiceStatus: vi.fn().mockReturnValue({
-    isEnabled: true,
-    isInitialized: true,
-    lastError: null,
-    statistics: {}
-  })
 };

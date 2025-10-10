@@ -14,7 +14,6 @@
  */
 
 import type { QualiaState } from '../../types/contracts';
-import type { PlayerActionEvent } from '../contracts/events.contracts';
 import type { QualiaCalculatorConfig } from '../contracts/IQualiaStateCalculatorService.contracts';
 import type {
   WorkerServiceStats,

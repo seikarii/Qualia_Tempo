@@ -24,9 +24,9 @@ import { PLAYER_ACTIONS } from '../services/contracts/constants';
  * Worker cannot access main thread logger, so it uses callbacks.
  */
 export type LoggerCallback = (
-  level: 'debug' | 'info' | 'warn' | 'error',
-  message: string,
-  data?: Record<string, unknown>
+  _level: 'debug' | 'info' | 'warn' | 'error',
+  _message: string,
+  _data?: Record<string, unknown>
 ) => void;
 
 /**
@@ -42,6 +42,7 @@ export type LoggerCallback = (
 export class QualiaCalculatorCore {
   private currentState: QualiaState;
   private config: QualiaCalculatorConfig;
+  // @ts-expect-error - Reserved for future delta-time calculations
   private lastUpdateTime: number;
   private previousState: QualiaState | null = null;
   

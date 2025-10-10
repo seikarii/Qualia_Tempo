@@ -79,7 +79,7 @@ export class DoFPass extends Pass implements IDoFPass {
     }) as THREE.ShaderMaterial;
   }
 
-  // eslint-disable-next-line max-params -- Three.js Pass base class signature requires 5 parameters
+   
   public render(
     renderer: THREE.WebGLRenderer,
     writeBuffer: THREE.WebGLRenderTarget,

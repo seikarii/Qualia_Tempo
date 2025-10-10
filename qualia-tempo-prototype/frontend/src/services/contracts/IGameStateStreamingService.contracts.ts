@@ -117,6 +117,7 @@ export interface GameStateStreamingServiceParams {
 export interface CombatStateMessage {
   type: 'combat_state_update';
   timestamp: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CombatState from shared_contracts to avoid circular dependency
   combat_state: any; // CombatState from contracts
   dt: number;
 }

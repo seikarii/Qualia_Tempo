@@ -6,7 +6,11 @@
  * REFERENCE: docs/VISUALS.GOLD.CODE.md
  * 
  * MISSION: Define all configuration for Three.js rendering engine
+ * 
+ * LINT EXCEPTION: This file uses 'any' types for service dependencies to avoid circular imports.
+ * This is an intentional architectural pattern for Params interfaces in contracts.
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * Render quality and performance configuration

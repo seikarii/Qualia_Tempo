@@ -372,7 +372,7 @@ const createDefaultBackendSyncParams = (
   httpService: IHttpService,
   timerService: ITimerService,
   performanceService: IPerformanceService
-): BackendSyncServiceParams => ({ // eslint-disable-line max-params
+): BackendSyncServiceParams => ({  
   eventBus,
   logger,
   config: defaultBackendSyncConfig,
@@ -443,7 +443,7 @@ const createDefaultRhythmicMovementParams = (
   timerService: ITimerService,
   inputStateService: any, // Using any for now since the type might be complex
   gameplayMechanicsService: IGameplayMechanicsService
-): RhythmicMovementControllerParams => ({ // eslint-disable-line max-params
+): RhythmicMovementControllerParams => ({  
   eventBus,
   logger,
   config: defaultRhythmicMovementConfig,

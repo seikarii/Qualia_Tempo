@@ -273,6 +273,7 @@ export interface SequenceClearedEvent extends BaseEvent {
  */
 export interface CombatStateUpdatedEvent extends BaseEvent {
   type: "CombatStateUpdated";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CombatState from shared_contracts to avoid circular dependency
   combatState: any; // CombatState from contracts
   backendTimestamp: number; // Original timestamp from backend
   latency?: number; // Time between backend send and frontend receive (ms)

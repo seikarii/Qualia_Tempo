@@ -33,7 +33,7 @@ import type {
   WorkerHealthStatus,
 } from './contracts/IQualiaCalculatorWorkerService.contracts';
 import type { QualiaState } from '../types/contracts';
-import type { PlayerActionEvent, GameTickEvent } from './contracts/events.contracts';
+import type { PlayerActionEvent, GameTickEvent, QualiaStateCalculatedEvent } from './contracts/events.contracts';
 import {
   logMethod,
   catchError,
@@ -42,7 +42,6 @@ import {
   initializeEventSubscriptions,
   cleanupEventSubscriptions,
 } from '../utils/decorators';
-import { EVENT_TYPES } from './contracts/constants';
 import type {
   WorkerInputMessage,
   WorkerOutputMessage,
@@ -166,7 +165,7 @@ export class QualiaCalculatorWorkerService
       await this.createWorker();
       this.logger.info('✅ [WorkerService] Initialized successfully');
     } catch (error) {
-      this.logger.error('❌ [WorkerService] Initialization failed, using fallback', error);
+      this.logger.error('❌ [WorkerService] Initialization failed, using fallback', error as Record<string, unknown>);
       await this.activateFallback();
     }
 
@@ -201,7 +200,7 @@ export class QualiaCalculatorWorkerService
         });
         this.worker.terminate();
       } catch (error) {
-        this.logger.error('Error terminating worker', error);
+        this.logger.error('Error terminating worker', error as Record<string, unknown>);
       }
       this.worker = null;
     }
@@ -282,7 +281,7 @@ export class QualiaCalculatorWorkerService
     } catch (error) {
       this.workerStatus = 'error';
       this.lastError = error instanceof Error ? error.message : String(error);
-      this.logger.error('❌ [WorkerService] Worker creation failed', error);
+      this.logger.error('❌ [WorkerService] Worker creation failed', error as Record<string, unknown>);
       throw error;
     }
   }
@@ -300,7 +299,7 @@ export class QualiaCalculatorWorkerService
       try {
         this.worker.terminate();
       } catch (error) {
-        this.logger.error('Error terminating old worker', error);
+        this.logger.error('Error terminating old worker', error as Record<string, unknown>);
       }
       this.worker = null;
     }
@@ -311,7 +310,7 @@ export class QualiaCalculatorWorkerService
       this.workerRecreations++;
       this.logger.info('✅ [WorkerService] Worker recreated successfully');
     } catch (error) {
-      this.logger.error('❌ [WorkerService] Worker recreation failed', error);
+      this.logger.error('❌ [WorkerService] Worker recreation failed', error as Record<string, unknown>);
       throw error;
     }
   }
@@ -350,8 +349,8 @@ export class QualiaCalculatorWorkerService
       this.consecutiveErrors = 0;
 
       // Emit to EventBus
-      this.eventBus.emit({
-        type: EVENT_TYPES.QUALIA_STATE_CALCULATED,
+      this.eventBus.emit<QualiaStateCalculatedEvent>({
+        type: "QualiaStateCalculated",
         qualiaState: message.state,
       });
 
@@ -482,7 +481,7 @@ export class QualiaCalculatorWorkerService
         this.logger.debug('[WorkerService] Sent message to worker', { type: message.type });
       }
     } catch (error) {
-      this.logger.error('[WorkerService] Failed to send message to worker', error);
+      this.logger.error('[WorkerService] Failed to send message to worker', error as Record<string, unknown>);
       throw error;
     }
   }
@@ -514,7 +513,7 @@ export class QualiaCalculatorWorkerService
         timestamp: performance.now(),
       });
     } catch (error) {
-      this.logger.error('[WorkerService] Failed to forward PlayerAction to worker', error);
+      this.logger.error('[WorkerService] Failed to forward PlayerAction to worker', error as Record<string, unknown>);
     }
   }
 
@@ -542,7 +541,7 @@ export class QualiaCalculatorWorkerService
         timestamp: performance.now(),
       });
     } catch (error) {
-      this.logger.error('[WorkerService] Failed to forward GameTick to worker', error);
+      this.logger.error('[WorkerService] Failed to forward GameTick to worker', error as Record<string, unknown>);
     }
   }
 
@@ -572,7 +571,7 @@ export class QualiaCalculatorWorkerService
     } as QualiaCalculatorConfig;
 
     if (this.usingFallback) {
-      this.fallbackService.updateConfig(newConfig);
+      this.fallbackService.updateConfig(this.calculatorConfig);
       return;
     }
 

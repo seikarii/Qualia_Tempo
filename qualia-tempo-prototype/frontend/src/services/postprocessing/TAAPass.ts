@@ -100,7 +100,7 @@ export class TAAPass extends Pass implements ITAAPass {
     }) as THREE.ShaderMaterial;
   }
 
-  // eslint-disable-next-line max-params
+   
   public render(
     renderer: THREE.WebGLRenderer,
     writeBuffer: THREE.WebGLRenderTarget,

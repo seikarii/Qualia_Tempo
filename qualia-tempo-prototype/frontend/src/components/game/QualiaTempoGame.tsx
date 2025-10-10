@@ -191,7 +191,7 @@ interface GameElementsProps {
   };
 }
 
-// eslint-disable-next-line max-lines-per-function
+ 
 const GameElements: React.FC<GameElementsProps> = ({
   zustandState,
   renderedNotes,
@@ -355,7 +355,7 @@ const GameplayInstructions: React.FC<GameplayInstructionsProps> = ({ zustandStat
  * - ZERO hardcoded values (all from configuration)
  * - React.useMemo for scene content (explicit dependencies)
  */
-// eslint-disable-next-line max-lines-per-function
+ 
 const QualiaTempoGame: React.FC<QualiaTempoGameProps> = ({
   onGameAction: _onGameAction,
   isActive = false,

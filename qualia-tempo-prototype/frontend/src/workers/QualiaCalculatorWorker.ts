@@ -339,6 +339,7 @@ self.onmessage = (event: MessageEvent<WorkerInputMessage>) => {
         handleTerminate(message);
         break;
       default:
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Unknown message type requires any for access
         workerLogger('warn', `[Worker] Unknown message type: ${(message as any).type}`);
     }
   } catch (error) {
@@ -352,12 +353,16 @@ self.onmessage = (event: MessageEvent<WorkerInputMessage>) => {
 /**
  * Handle worker errors.
  */
-self.onerror = (event: ErrorEvent) => {
-  sendError(new Error(event.message), {
-    filename: event.filename,
-    lineno: event.lineno,
-    colno: event.colno,
-  });
+self.onerror = (event: string | Event) => {
+  if (typeof event === 'string') {
+    sendError(new Error(event), {});
+  } else if (event instanceof ErrorEvent) {
+    sendError(new Error(event.message), {
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    });
+  }
 };
 
 /**

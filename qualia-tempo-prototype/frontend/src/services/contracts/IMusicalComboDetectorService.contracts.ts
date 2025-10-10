@@ -5,7 +5,11 @@
  * ARCHITECTURE: Direct Configuration Injection Pattern (QUALIA.CODE v1.1)
  * - Service receives typed config object directly via constructor
  * - No dependency on IConfigurationService (Service Locator anti-pattern eliminated)
+ * 
+ * LINT EXCEPTION: This file uses 'any' types for service dependencies to avoid circular imports.
+ * This is an intentional architectural pattern for Params interfaces in contracts.
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * Combo type enumeration

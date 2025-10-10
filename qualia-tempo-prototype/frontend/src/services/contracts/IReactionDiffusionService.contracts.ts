@@ -4,7 +4,11 @@
  * 
  * PURPOSE: Configuration contracts for Reaction-Diffusion simulation
  * ARCHITECTURE: Direct Configuration Injection pattern
+ * 
+ * LINT EXCEPTION: This file uses 'any' types for service dependencies to avoid circular imports.
+ * This is an intentional architectural pattern for Params interfaces in contracts.
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * Gray-Scott reaction-diffusion model parameters

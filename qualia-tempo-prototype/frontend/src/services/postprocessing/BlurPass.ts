@@ -71,7 +71,7 @@ export class BlurPass extends Pass implements IBlurPass {
     }) as THREE.ShaderMaterial;
   }
 
-  // eslint-disable-next-line max-params
+   
   public render(
     renderer: THREE.WebGLRenderer,
     writeBuffer: THREE.WebGLRenderTarget,

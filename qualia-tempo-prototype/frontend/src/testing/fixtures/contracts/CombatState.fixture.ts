@@ -6,10 +6,28 @@
 import { CombatState } from '../../../types/CombatState';
 
 export const createMockCombatState = (overrides?: Partial<CombatState>): CombatState => ({
+  gameState: 'idle',
   isActive: true,
   currentPhase: 0,
   elapsedTime: 0,
   songProgress: 0,
+  player: {
+    health: 100,
+    position: { x: 0, y: 0, z: 0 },
+    score: 0,
+    combo: 0,
+    maxCombo: 0,
+    moveSpeed: 1.0,
+    isInvulnerable: false,
+  },
+  boss: {
+    health: 100,
+    position: { x: 0, y: 0, z: 0 },
+    currentPhase: 0,
+    attackPattern: 'default',
+    isVulnerable: true,
+    nextPhaseThreshold: 0.75,
+  },
   activeEffects: [],
   environmentEffects: [],
   qualiaEventHistory: [],

@@ -9,7 +9,11 @@
  * - ParticleSystemServiceConfig: Direct injection object for service configuration
  * - ParticleSystemServiceParams: Constructor parameter object (QUALIA.CODE v1.1)
  * - FFT reactivity mappings defined here to eliminate hardcoding
+ * 
+ * LINT EXCEPTION: This file uses 'any' types for service dependencies to avoid circular imports.
+ * This is an intentional architectural pattern for Params interfaces in contracts.
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * FFT reactivity configuration

@@ -20,6 +20,7 @@
 
 import { injectable, inject } from 'inversify';
 import { TYPES } from './inversify.types';
+import { logMethod, catchError } from '../utils/decorators';
 import type { IGameStateStreamingService, GameStateConnectionStatus } from './interfaces/IGameStateStreamingService';
 import type { IWebSocketService } from './interfaces/IWebSocketService';
 import type { ITimerService } from './interfaces/ITimerService';
@@ -88,6 +89,7 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
   // Reconnection state
   private reconnectionTimeoutId: number | null = null;
   private currentReconnectDelay: number = 0;
+  // @ts-expect-error - Reserved for future reconnection logic implementation
   private isReconnecting: boolean = false;
 
   constructor(
@@ -119,6 +121,8 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
   /**
    * IBaseService lifecycle: cleanup service
    */
+  @logMethod
+  @catchError
   public async cleanup(): Promise<void> {
     this.logger.info('[GameStateStreaming] Cleaning up service...');
     await this.disconnect();
@@ -128,6 +132,8 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
   /**
    * IGameStateStreamingService: start service
    */
+  @logMethod
+  @catchError
   public async start(): Promise<void> {
     this.logger.info('[GameStateStreaming] Starting service...');
     this.startTime = this.performanceService.now();
@@ -138,6 +144,8 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
   /**
    * Connect to backend WebSocket endpoint
    */
+  @logMethod
+  @catchError
   public async connect(): Promise<void> {
     if (this.connectionStatus.connected) {
       this.logger.warn('[GameStateStreaming] Already connected, ignoring connect request');
@@ -178,6 +186,8 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
   /**
    * Disconnect from WebSocket
    */
+  @logMethod
+  @catchError
   public async disconnect(): Promise<void> {
     this.logger.info('[GameStateStreaming] Disconnecting...');
     this.clearTimers();
@@ -197,6 +207,7 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
   /**
    * Get current connection status
    */
+  @logMethod
   public getConnectionStatus(): GameStateConnectionStatus {
     return { ...this.connectionStatus };
   }
@@ -204,6 +215,7 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
   /**
    * Get latest cached CombatState (null if not yet received)
    */
+  @logMethod
   public getLatestCombatState(): CombatState | null {
     return this.latestCombatState ? { ...this.latestCombatState } : null;
   }
@@ -211,6 +223,8 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
   /**
    * Request fresh state from backend (sends state_request message)
    */
+  @logMethod
+  @catchError
   public async requestState(): Promise<void> {
     if (!this.webSocketService.isConnected()) {
       this.logger.warn('[GameStateStreaming] Cannot request state - not connected');
@@ -229,6 +243,7 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
   /**
    * Get streaming statistics
    */
+  @logMethod
   public getStatistics(): {
     messagesReceived: number;
     lastMessageTimestamp: number | null;

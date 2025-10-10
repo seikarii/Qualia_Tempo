@@ -120,7 +120,7 @@ const setupWindowEventHandlers = (window: BrowserWindow): void => {
  * Setup IPC handlers for window control
  * QUALIA.CODE COMPLIANT: Extracted method pattern
  */
-/* eslint-disable max-lines-per-function */
+ 
 const setupWindowIPCHandlers = (window: BrowserWindow): void => {
   ipcMain.handle("toggle-fullscreen", () => {
     const isFullScreen = window.isFullScreen();

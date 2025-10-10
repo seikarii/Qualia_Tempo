@@ -851,6 +851,16 @@ function bindLevel2ServiceParams(fullConfig: FullGameConfig): void {
     webSocketFactory: container.get<IWebSocketFactory>(TYPES.IWebSocketFactory),
     config: fullConfig.backendSync,
   });
+
+  // Audio Analysis - needs WebAudioAPIService (Level 1)
+  // CRITICAL: Must be bound BEFORE ParticleSystemServiceParams (line 861) because it's injected there
+  safeBindConstant<AudioAnalysisServiceParams>(TYPES.AudioAnalysisServiceParams, {
+    eventBus: container.get<IEventBus>(TYPES.IEventBus),
+    logger: container.get<ILogger>(TYPES.ILogger),
+    timerService: container.get<ITimerService>(TYPES.ITimerService),
+    webAudioService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),
+    config: fullConfig.audioAnalysis,
+  });
   
   // PHASE 5.3: Particle System Service - needs AudioAnalysisService (Level 2 dependency)
   // CRITICAL: Must be bound BEFORE KairosVisualEngineParams because it's injected there
@@ -900,15 +910,6 @@ function bindLevel3ServiceParams(fullConfig: FullGameConfig): void {
     timerService: container.get<ITimerService>(TYPES.ITimerService),
     inputStateService: container.get<IInputStateService>(TYPES.IInputStateService),
     gameplayMechanicsService: container.get<IGameplayMechanicsService>(TYPES.IGameplayMechanicsService),
-  });
-
-  // Audio Analysis - needs WebAudioAPIService (Level 1)
-  safeBindConstant<AudioAnalysisServiceParams>(TYPES.AudioAnalysisServiceParams, {
-    eventBus: container.get<IEventBus>(TYPES.IEventBus),
-    logger: container.get<ILogger>(TYPES.ILogger),
-    timerService: container.get<ITimerService>(TYPES.ITimerService),
-    webAudioService: container.get<IWebAudioAPIService>(TYPES.IWebAudioAPIService),
-    config: fullConfig.audioAnalysis,
   });
 
   // Audio 8D Spatial - needs WebAudioAPIService (Level 1)

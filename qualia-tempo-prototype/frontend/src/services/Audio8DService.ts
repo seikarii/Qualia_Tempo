@@ -36,6 +36,7 @@ import type { EntityPositionUpdatedEvent } from "./contracts/events.contracts";
 import {
   logMethod,
   catchError,
+  measureTime,
   OnEvent,
   IBaseService,
   initializeEventSubscriptions,
@@ -45,6 +46,8 @@ import {
 @injectable()
 export class Audio8DService implements IAudio8DService, IBaseService {
   private readonly config: Audio8DServiceConfig;
+  // QUALIA.CODE v1.1: EventBus required for @OnEvent decorator lifecycle management
+  // @ts-expect-error - Used by @OnEvent decorator infrastructure
   private readonly eventBus: IEventBus;
   private readonly logger: ILogger;
   private readonly timerService: ITimerService;
@@ -170,6 +173,7 @@ export class Audio8DService implements IAudio8DService, IBaseService {
     this.logger.debug(`Removed sound source: ${id}`);
   }
 
+  @measureTime
   @logMethod
   @catchError
   public updateSoundSourcePosition(
@@ -344,6 +348,7 @@ export class Audio8DService implements IAudio8DService, IBaseService {
     }, 1000);
   }
 
+  @measureTime
   @logMethod
   public getActiveSoundSources(): SpatialSoundSource[] {
     return Array.from(this.soundSources.values()).filter(source => source.active);

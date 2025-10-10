@@ -177,7 +177,7 @@ export class BloomPass extends Pass implements IBloomPass {
     });
   }
 
-  // eslint-disable-next-line max-params
+   
   public render(
     renderer: THREE.WebGLRenderer,
     writeBuffer: THREE.WebGLRenderTarget,

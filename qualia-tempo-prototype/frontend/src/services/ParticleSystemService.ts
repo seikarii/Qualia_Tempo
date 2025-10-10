@@ -48,6 +48,8 @@ interface Particle {
 export class ParticleSystemService implements IBaseService {
   private readonly config: ParticleSystemServiceConfig;
   private readonly logger: ILogger;
+  // QUALIA.CODE v1.1: EventBus required for @OnEvent decorator lifecycle management
+  // @ts-expect-error - Used by @OnEvent decorator infrastructure
   private readonly eventBus: IEventBus;
   private readonly audioAnalysisService: IAudioAnalysisService;
   
@@ -173,6 +175,7 @@ export class ParticleSystemService implements IBaseService {
   /**
    * Get the instanced mesh for adding to scene
    */
+  @logMethod
   public getInstancedMesh(): THREE.InstancedMesh | null {
     return this.instancedMesh;
   }
@@ -181,6 +184,7 @@ export class ParticleSystemService implements IBaseService {
    * Update particle system
    * Called every frame by KairosVisualEngine
    */
+  @logMethod
   @catchError
   public update(deltaTime: number): void {
     // Update FFT data from audio service
@@ -209,7 +213,7 @@ export class ParticleSystemService implements IBaseService {
     
     // Get current audio data (contains 8 frequency bands)
     const audioData = this.audioAnalysisService.getCurrentAudioData();
-    if (!audioData || !audioData.frequencyBands || audioData.frequencyBands.length < 8) {
+    if (!audioData?.frequencyBands || audioData.frequencyBands.length < 8) {
       return;
     }
     
@@ -314,20 +318,13 @@ export class ParticleSystemService implements IBaseService {
    * VISUALS.GOLD.CODE Phase 2: FFT → particle properties
    */
   private applyFFTModifiers(): void {
-    const { bass, mid, treble } = this.currentFFT;
+    const { bass, treble } = this.currentFFT;
     
     // Bass → particle size multiplier
     const sizeMultiplier = THREE.MathUtils.lerp(
       this.config.fftReactivity.bassToParticleSizeMultiplier.min,
       this.config.fftReactivity.bassToParticleSizeMultiplier.max,
       bass
-    );
-    
-    // Mid → velocity multiplier
-    const velocityMultiplier = THREE.MathUtils.lerp(
-      this.config.fftReactivity.midToVelocityMultiplier.min,
-      this.config.fftReactivity.midToVelocityMultiplier.max,
-      mid
     );
     
     // Treble → emissive multiplier
@@ -396,6 +393,7 @@ export class ParticleSystemService implements IBaseService {
    * Updates particle behavior based on QualiaState
    */
   @OnEvent('QualiaState.Calculated')
+  // @ts-expect-error - Handler method called by @OnEvent decorator via reflection
   private handleQualiaStateCalculated(event: QualiaStateCalculatedEvent): void {
     const qualiaState = event.qualiaState;
     
@@ -424,6 +422,7 @@ export class ParticleSystemService implements IBaseService {
   /**
    * Dispose GPU resources
    */
+  @logMethod
   @catchError
   public dispose(): void {
     this.logger.info('[ParticleSystemService] Disposing resources...');

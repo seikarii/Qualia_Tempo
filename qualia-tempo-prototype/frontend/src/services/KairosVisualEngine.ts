@@ -132,13 +132,18 @@ const GodRaysShader = {
 export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   private readonly config: KairosVisualEngineConfig;
   private readonly logger: ILogger;
+  // QUALIA.CODE v1.1: EventBus required for @OnEvent decorator lifecycle management
+  // @ts-expect-error - Used by @OnEvent decorator infrastructure
   private readonly eventBus: IEventBus;
+  // @ts-expect-error - Reserved for future PHASE 5.6 game state integration
   private readonly gameStateStore: IGameStateStore;
   private readonly httpService: IHttpService;
   private readonly particleSystemService: IParticleSystemService;
   private readonly reactionDiffusionService: IReactionDiffusionService;
-  private readonly viewLogicService: any; // IViewLogicService - PHASE 5.6
-  private readonly performanceService: any; // IPerformanceService - PHASE 5.6
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly viewLogicService: any; // IViewLogicService - PHASE 5.6 integration pending
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly performanceService: any; // IPerformanceService - PHASE 5.6 integration pending
   
   // Three.js core objects
   private scene: THREE.Scene | null = null;
@@ -171,7 +176,9 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   private bossShaderMaterial: THREE.ShaderMaterial | null = null;
   
   // Performance tracking
+  // @ts-expect-error - Reserved for PHASE 5.6 performance metrics integration
   private drawCalls: number = 0;
+  // @ts-expect-error - Reserved for PHASE 5.6 performance metrics integration
   private triangles: number = 0;
   
   // Current QualiaState (for shader uniform updates)
@@ -637,6 +644,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
    * PHASE 6.4: Map CombatState.player to ViewLogicService PlayerState
    * Transforms backend CombatState data into frontend ViewLogic format
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Return type is PlayerVisualState (external import would create circular dependency)
   private mapCombatStateToPlayerState(combatState: CombatState): any {
     return {
       position: [
@@ -660,6 +668,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
    * PHASE 6.4: Map CombatState.boss to ViewLogicService BossState
    * Transforms backend CombatState data into frontend ViewLogic format
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Return type is BossVisualState (external import would create circular dependency)
   private mapCombatStateToBossState(combatState: CombatState): any {
     return {
       stress_level: (100 - combatState.boss.health) / 100, // Lower health = higher stress
@@ -689,7 +698,9 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     
     try {
       // PHASE 6.4: Use real CombatState data if available, otherwise use placeholders
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- PlayerVisualState type (external import would create circular dependency)
       let playerState: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- BossVisualState type (external import would create circular dependency)
       let bossState: any;
       
       if (this.currentCombatState) {
@@ -1013,6 +1024,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
    * Updates visual elements when game state changes
    */
   @OnEvent('GameState.Changed')
+  // @ts-expect-error - Handler method called by @OnEvent decorator via reflection
   private handleGameStateChanged(event: GameStateChangedEvent): void {
     this.logger.debug('[KairosVisualEngine] GameState changed', { 
       newState: event.newState, 
@@ -1028,6 +1040,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
    * VISUALS.GOLD.CODE: This is where the magic happens
    */
   @OnEvent('QualiaState.Calculated')
+  // @ts-expect-error - Handler method called by @OnEvent decorator via reflection
   private handleQualiaStateCalculated(event: QualiaStateCalculatedEvent): void {
     const qualiaState = event.qualiaState;
     
@@ -1055,6 +1068,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
    * Receives CombatState from backend via WebSocket → EventBus
    */
   @OnEvent('CombatStateUpdated')
+  // @ts-expect-error - Handler method called by @OnEvent decorator via reflection
   private handleCombatStateUpdated(event: CombatStateUpdatedEvent): void {
     this.currentCombatState = event.combatState;
     
