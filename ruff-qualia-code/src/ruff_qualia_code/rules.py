@@ -1279,3 +1279,204 @@ class QLA020Checker:
                 message=f"Class '{node.name}' uses @OnEvent decorator but does not implement IBaseService interface. Add IBaseService to class signature and implement lifecycle methods.",
                 range=TextRange(0, 0),
             )
+
+class QLA005:
+    """Enforce async def for I/O operations"""
+
+    def check(self, node: AST, source_file: SourceFile) -> Optional[Diagnostic]:
+        checker = QLA005Checker(source_file.path)
+        checker.visit(node)
+        return checker.diagnostic
+
+
+class QLA005Checker:
+    def __init__(self, filepath: Path):
+        self.filepath = filepath
+        # Exclude test files
+        is_test_file = "test_" in str(filepath) or "/tests/" in str(filepath)
+        self.is_service_file = "services" in str(filepath) and not is_test_file
+        self.diagnostic: Optional[Diagnostic] = None
+
+    def visit(self, node: AST) -> None:
+        if not self.is_service_file:
+            return
+
+        if isinstance(node, ast.FunctionDef):
+            self._check_function(node)
+        
+        # Recursively visit children
+        for child in ast.iter_child_nodes(node):
+            self.visit(child)
+
+    def _check_function(self, node: ast.FunctionDef) -> None:
+        # Skip private methods (prefixed with _)
+        if node.name.startswith('_'):
+            return
+
+        # Skip constructors and special methods
+        if node.name in ['__init__', '__del__', '__enter__', '__exit__']:
+            return
+
+        # Check if function is already async
+        if isinstance(node, ast.AsyncFunctionDef):
+            return
+
+        # Check for I/O operation indicators in function body
+        io_operations = self._detect_io_operations(node)
+
+        if io_operations:
+            self.diagnostic = Diagnostic(
+                code="QLA005",
+                message=f"Method '{node.name}' performs I/O operations ({', '.join(io_operations)}) but is not async. Use 'async def' for I/O operations to prevent blocking.",
+                range=TextRange(0, 0),
+            )
+
+    def _detect_io_operations(self, node: ast.FunctionDef) -> list[str]:
+        """Detect I/O operations in function body"""
+        operations = []
+        
+        for child in ast.walk(node):
+            # HTTP requests - must be on an object that looks like an HTTP client
+            if isinstance(child, ast.Call):
+                if isinstance(child.func, ast.Attribute):
+                    attr_name = child.func.attr
+                    obj = child.func.value
+                    
+                    # Check if the object is likely an HTTP client or service
+                    is_http_client = False
+                    if isinstance(obj, ast.Attribute):
+                        # e.g., self.http_service.get()
+                        is_http_client = any(pattern in str(obj.attr).lower() 
+                                            for pattern in ['http', 'client', 'request', 'api'])
+                    elif isinstance(obj, ast.Name):
+                        # e.g., requests.get(), httpx.post()
+                        is_http_client = any(pattern in str(obj.id).lower() 
+                                            for pattern in ['http', 'client', 'request', 'api', 'session'])
+                    
+                    if is_http_client and attr_name in ['get', 'post', 'put', 'delete', 'request', 'fetch']:
+                        operations.append('HTTP request')
+                    elif attr_name in ['read', 'write']:
+                        # Check if it's file I/O (not dict/list operations)
+                        if isinstance(obj, ast.Name) and any(pattern in str(obj.id).lower() 
+                                                             for pattern in ['file', 'stream', 'buffer', 'path']):
+                            operations.append('File I/O')
+                    elif attr_name in ['connect', 'disconnect', 'send', 'receive']:
+                        # Check if it's network operation
+                        if isinstance(obj, ast.Name) and any(pattern in str(obj.id).lower() 
+                                                             for pattern in ['socket', 'websocket', 'connection', 'client']):
+                            operations.append('Network operation')
+                
+                # Check for explicit await usage (not keyword)
+                if isinstance(child.func, ast.Name) and child.func.id in ['aiohttp', 'asyncio']:
+                    operations.append('async I/O operation')
+            
+            # Database operations - check for database-like attribute access
+            if isinstance(child, ast.Attribute):
+                if child.attr in ['execute', 'query', 'commit', 'rollback']:
+                    # Check if parent object looks like a database connection
+                    if isinstance(child.value, ast.Name):
+                        if any(pattern in str(child.value.id).lower() 
+                              for pattern in ['db', 'database', 'connection', 'session', 'cursor']):
+                            operations.append('Database operation')
+        
+        # Remove duplicates
+        return list(set(operations))
+
+
+class QLA006:
+    """Enforce type hints on all public methods"""
+
+    def check(self, node: AST, source_file: SourceFile) -> Optional[Diagnostic]:
+        checker = QLA006Checker(source_file.path)
+        checker.visit(node)
+        return checker.diagnostic
+
+
+class QLA006Checker:
+    def __init__(self, filepath: Path):
+        self.filepath = filepath
+        # Exclude test files
+        is_test_file = "test_" in str(filepath) or "/tests/" in str(filepath)
+        self.is_service_file = "services" in str(filepath) and not is_test_file
+        self.diagnostic: Optional[Diagnostic] = None
+
+    def visit(self, node: AST) -> None:
+        if not self.is_service_file:
+            return
+
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            self._check_function(node)
+        
+        # Recursively visit children
+        for child in ast.iter_child_nodes(node):
+            self.visit(child)
+
+    def _check_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        # Skip private methods (prefixed with _)
+        if node.name.startswith('_'):
+            return
+
+        # Skip dunder methods
+        if node.name.startswith('__') and node.name.endswith('__'):
+            return
+
+        # Check return type annotation
+        if node.returns is None:
+            self.diagnostic = Diagnostic(
+                code="QLA006",
+                message=f"Method '{node.name}' lacks return type hint. QUALIA.CODE mandates type hints for all public methods for type safety and documentation.",
+                range=TextRange(0, 0),
+            )
+            return
+
+        # Check parameter type annotations
+        missing_params = []
+        for arg in node.args.args:
+            # Skip 'self' and 'cls' parameters
+            if arg.arg in ['self', 'cls']:
+                continue
+            
+            if arg.annotation is None:
+                missing_params.append(arg.arg)
+
+        if missing_params:
+            self.diagnostic = Diagnostic(
+                code="QLA006",
+                message=f"Method '{node.name}' has parameters without type hints: {', '.join(missing_params)}. QUALIA.CODE mandates type hints for all parameters.",
+                range=TextRange(0, 0),
+            )
+
+
+class QLA007:
+    """Prohibit print() statements outside of main.py"""
+
+    def check(self, node: AST, source_file: SourceFile) -> Optional[Diagnostic]:
+        checker = QLA007Checker(source_file.path)
+        checker.visit(node)
+        return checker.diagnostic
+
+
+class QLA007Checker:
+    def __init__(self, filepath: Path):
+        self.filepath = filepath
+        self.is_main_file = filepath.name == "main.py"
+        self.is_test_file = "test_" in filepath.name or "/tests/" in str(filepath)
+        self.diagnostic: Optional[Diagnostic] = None
+
+    def visit(self, node: AST) -> None:
+        # Allow print() in main.py and test files
+        if self.is_main_file or self.is_test_file:
+            return
+
+        if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name) and node.func.id == 'print':
+                self.diagnostic = Diagnostic(
+                    code="QLA007",
+                    message="print() statements are prohibited outside of main.py. Use logger instead for proper logging (QUALIA.CODE §5.3: Logging Standard).",
+                    range=TextRange(0, 0),
+                )
+                return
+        
+        # Recursively visit children
+        for child in ast.iter_child_nodes(node):
+            self.visit(child)

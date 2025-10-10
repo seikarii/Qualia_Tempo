@@ -103,12 +103,13 @@ ruleTester.run('enforce-method-decorators', rule, {
       `,
       filename: 'src/services/BackendSyncService.ts'
     },
-    // Async method with @catchError (REQUIRED)
+    // Async method with @catchError and @retry (REQUIRED)
     {
       code: `
         class BackendSyncService {
           @logMethod()
           @catchError()
+          @retry()
           async syncToBackend(data: any) {
             await this.httpService.post('/api/sync', data);
           }
@@ -200,7 +201,7 @@ ruleTester.run('enforce-method-decorators', rule, {
         { messageId: 'missingLogMethod' }
       ]
     },
-    // Async method without @catchError (VIOLATION)
+    // Async method without @catchError (VIOLATION) - Also triggers advisory retry
     {
       code: `
         class BackendSyncService {
@@ -212,7 +213,8 @@ ruleTester.run('enforce-method-decorators', rule, {
       `,
       filename: 'src/services/BackendSyncService.ts',
       errors: [
-        { messageId: 'missingCatchError' }
+        { messageId: 'missingCatchError' },
+        { messageId: 'advisoryRetry' }
       ]
     },
     // Simple getter with unnecessary @catchError (PERFORMANCE VIOLATION)
@@ -231,7 +233,7 @@ ruleTester.run('enforce-method-decorators', rule, {
         { messageId: 'unnecessaryCatchError' }
       ]
     },
-    // Multiple decorator violations
+    // Multiple decorator violations (now includes advisory retry for fetch)
     {
       code: `
         class ComplexService {
@@ -251,6 +253,7 @@ ruleTester.run('enforce-method-decorators', rule, {
       errors: [
         { messageId: 'missingLogMethod' },
         { messageId: 'missingCatchError' },
+        { messageId: 'advisoryRetry' },
         { messageId: 'unnecessaryCatchError' }
       ]
     }

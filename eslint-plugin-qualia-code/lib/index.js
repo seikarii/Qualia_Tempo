@@ -40,6 +40,14 @@ const enforceValidationOnBoundaries = require('./rules/enforce-validation-on-bou
 const enforcePerformanceBestPractices = require('./rules/enforce-performance-best-practices');
 // NEW RULES - QUALIA.CODE v1.3 IoC Binding Order Enforcement
 const enforceIocBindingOrder = require('./rules/enforce-ioc-binding-order');
+// NEW RULES - QUALIA.CODE v1.4 Enhanced Decorator Enforcement (ANALISIS.md §2.1)
+const enforceCacheDecorator = require('./rules/enforce-cache-decorator');
+const enforceMutexOnStateMutations = require('./rules/enforce-mutex-on-state-mutations');
+const enforceRetryOnIoOperations = require('./rules/enforce-retry-on-io-operations');
+// NEW RULES - QUALIA.CODE v1.5 Performance & Async Patterns
+const enforceAsyncOnHeavyMethods = require('./rules/enforce-async-on-heavy-methods');
+// NEW RULES - QUALIA.CODE v1.6 Timeout & Error Boundary Enforcement (ANALISIS.md §2.1 items #4, #10)
+const enforceTimeoutOnAsyncOperations = require('./rules/enforce-timeout-on-async-operations');
 
 module.exports = {
   rules: {
@@ -71,6 +79,14 @@ module.exports = {
     'enforce-performance-best-practices': enforcePerformanceBestPractices,
     // NEW RULES - QUALIA.CODE v1.3 IoC Binding Order Enforcement
     'enforce-ioc-binding-order': enforceIocBindingOrder,
+    // NEW RULES - QUALIA.CODE v1.4 Enhanced Decorator Enforcement (ANALISIS.md §2.1)
+    'enforce-cache-decorator': enforceCacheDecorator,
+    'enforce-mutex-on-state-mutations': enforceMutexOnStateMutations,
+    'enforce-retry-on-io-operations': enforceRetryOnIoOperations,
+    // NEW RULES - QUALIA.CODE v1.5 Performance & Async Patterns
+    'enforce-async-on-heavy-methods': enforceAsyncOnHeavyMethods,
+    // NEW RULES - QUALIA.CODE v1.6 Timeout & Error Boundary Enforcement (ANALISIS.md §2.1 items #4, #10)
+    'enforce-timeout-on-async-operations': enforceTimeoutOnAsyncOperations,
   },
   configs: {
     recommended: {
@@ -104,6 +120,14 @@ module.exports = {
         '@qualia-tempo/qualia-code/enforce-performance-best-practices': 'error',
         // NEW RULES - QUALIA.CODE v1.3 IoC Binding Order Enforcement
         '@qualia-tempo/qualia-code/enforce-ioc-binding-order': 'error',
+        // NEW RULES - QUALIA.CODE v1.4 Enhanced Decorator Enforcement (ANALISIS.md §2.1)
+        '@qualia-tempo/qualia-code/enforce-cache-decorator': 'warn', // Suggestion only
+        '@qualia-tempo/qualia-code/enforce-mutex-on-state-mutations': 'error',
+        '@qualia-tempo/qualia-code/enforce-retry-on-io-operations': 'error',
+        // NEW RULES - QUALIA.CODE v1.5 Performance & Async Patterns
+        '@qualia-tempo/qualia-code/enforce-async-on-heavy-methods': 'warn', // Suggestion only
+        // NEW RULES - QUALIA.CODE v1.6 Timeout & Error Boundary Enforcement (ANALISIS.md §2.1 items #4, #10)
+        '@qualia-tempo/qualia-code/enforce-timeout-on-async-operations': 'error',
       }
     }
   }

@@ -5,8 +5,9 @@
  * Intelligent enforcement of method decorators based on method complexity and type.
  * Requires @catchError on async methods that aren't simple getters.
  * Prohibits @catchError on simple synchronous getters for performance.
+ * Suggests @retry on I/O operations for transient failure handling.
  * 
- * This enforces QUALIA.CODE sections 5.2.1 and 8.1: Performance-aware decorator usage
+ * This enforces QUALIA.CODE sections 5.2.1, 6.4, and 8.1: Performance-aware decorator usage and error recovery
  */
 
 module.exports = {
@@ -23,7 +24,8 @@ module.exports = {
       missingLogMethod: 'Public methods in services must use @logMethod() decorator.',
       missingCatchError: 'Public async methods that aren\'t simple getters must use @catchError() decorator for proper error boundaries.',
       unnecessaryCatchError: 'Simple synchronous getters should NOT use @catchError() - it adds unnecessary performance overhead. (Section 8.1)',
-      performanceWarning: 'Consider removing @catchError from simple getter for better performance on hot paths.'
+      performanceWarning: 'Consider removing @catchError from simple getter for better performance on hot paths.',
+      advisoryRetry: 'ADVISORY: Method "{{methodName}}" appears to perform I/O operations. Consider adding @retry decorator for automatic transient failure handling (QUALIA.CODE §6.4).'
     }
   },
 
@@ -128,6 +130,28 @@ module.exports = {
       return node.value?.async === true;
     }
 
+    function isIoOperation(node) {
+      if (!node.value?.body) return false;
+      
+      const sourceCode = context.getSourceCode();
+      const methodText = sourceCode.getText(node.value);
+      
+      // I/O operation indicators
+      const ioPatterns = [
+        /\.fetch\(|fetch\(/,              // HTTP requests
+        /\.get\(|\.post\(|\.put\(|\.delete\(/,  // HTTP methods
+        /HttpService|httpService/,        // HttpService usage
+        /\.request\(/,                    // Request methods
+        /axios\.|fetch\(/,                // HTTP libraries
+        /\.load\(|\.save\(|\.read\(|\.write\(/,  // File I/O
+        /localStorage\.|sessionStorage\./, // Storage I/O
+        /\.connect\(|\.disconnect\(/,     // Connection operations
+        /WebSocket|websocket/,            // WebSocket operations
+      ];
+      
+      return ioPatterns.some(pattern => pattern.test(methodText));
+    }
+
     return {
       MethodDefinition(node) {
         // Only check if we're in a service class
@@ -147,9 +171,11 @@ module.exports = {
 
         const hasLogMethod = hasDecorator(node, 'logMethod');
         const hasCatchError = hasDecorator(node, 'catchError');
+        const hasRetry = hasDecorator(node, 'retry');
         const isAsync = isAsyncMethod(node);
         const isGetter = isSimpleGetter(node);
         const hasPerformanceExemption = hasPerformanceOptimizationComment(node);
+        const isIo = isIoOperation(node);
 
         // Rule 1: All public methods must have @logMethod() UNLESS explicitly documented as hot-path
         // QUALIA.CODE §11: Performance-critical methods may omit decorators with documentation
@@ -173,6 +199,18 @@ module.exports = {
           context.report({
             node,
             messageId: 'unnecessaryCatchError'
+          });
+        }
+
+        // Rule 4 (ADVISORY): I/O operations should consider @retry for transient failures
+        // This is a warning, not an error - allows developer discretion
+        if (isAsync && isIo && !hasRetry) {
+          context.report({
+            node,
+            messageId: 'advisoryRetry',
+            data: {
+              methodName: node.key.name
+            }
           });
         }
       }

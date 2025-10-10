@@ -26,3 +26,11 @@ export {
   initializeEventSubscriptions, 
   cleanupEventSubscriptions 
 } from './decorators/on-event.decorator';
+
+// ==================== NEW DECORATORS (QUALIA.CODE v1.4) ====================
+// ANALISIS.md §2.1: Critical missing decorators for production systems
+export { retry, isTransientError } from './decorators/retry.decorator';
+export type { RetryOptions } from './decorators/retry.decorator';
+export { mutex, lock } from './decorators/mutex.decorator';
+export { cache, memoize } from './decorators/cache.decorator';
+export type { CacheOptions } from './decorators/cache.decorator';
