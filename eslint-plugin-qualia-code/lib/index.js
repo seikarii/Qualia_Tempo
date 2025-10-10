@@ -54,6 +54,17 @@ const enforceWorkerOffloading = require('./rules/enforce-worker-offloading');
 const noDirectTimerAccess = require('./rules/no-direct-timer-access');
 const enforceValidationOnPublicMethods = require('./rules/enforce-validation-on-public-methods');
 const enforceErrorBoundaryOnAsync = require('./rules/enforce-error-boundary-on-async');
+// NEW RULES - QUALIA.CODE v1.9 Complete Decorator Coverage (Session 30 - Mission Critical)
+const enforceThrottleOnEventHandlers = require('./rules/enforce-throttle-on-event-handlers');
+const enforceDebounceOnUiInputs = require('./rules/enforce-debounce-on-ui-inputs');
+const enforceRateLimitOnApiCalls = require('./rules/enforce-rate-limit-on-api-calls');
+const enforceMeasureTimeOnLogicServices = require('./rules/enforce-measure-time-on-logic-services');
+const enforceValidateEventPropertyOnEmit = require('./rules/enforce-validate-event-property-on-emit');
+const enforceAdaptAndEmitOnRawHandlers = require('./rules/enforce-adapt-and-emit-on-raw-handlers');
+const enforceReadonlyOnConfigAccess = require('./rules/enforce-readonly-on-config-access');
+const enforceDeprecatedOnComment = require('./rules/enforce-deprecated-on-comment');
+const enforceAuthorizeOnSecureMethods = require('./rules/enforce-authorize-on-secure-methods');
+const enforceProfileOnHeavyComputation = require('./rules/enforce-profile-on-heavy-computation');
 
 module.exports = {
   rules: {
@@ -99,6 +110,17 @@ module.exports = {
     'no-direct-timer-access': noDirectTimerAccess,
     'enforce-validation-on-public-methods': enforceValidationOnPublicMethods,
     'enforce-error-boundary-on-async': enforceErrorBoundaryOnAsync,
+    // NEW RULES - QUALIA.CODE v1.9 Complete Decorator Coverage (Session 30 - Mission Critical)
+    'enforce-throttle-on-event-handlers': enforceThrottleOnEventHandlers,
+    'enforce-debounce-on-ui-inputs': enforceDebounceOnUiInputs,
+    'enforce-rate-limit-on-api-calls': enforceRateLimitOnApiCalls,
+    'enforce-measure-time-on-logic-services': enforceMeasureTimeOnLogicServices,
+    'enforce-validate-event-property-on-emit': enforceValidateEventPropertyOnEmit,
+    'enforce-adapt-and-emit-on-raw-handlers': enforceAdaptAndEmitOnRawHandlers,
+    'enforce-readonly-on-config-access': enforceReadonlyOnConfigAccess,
+    'enforce-deprecated-on-comment': enforceDeprecatedOnComment,
+    'enforce-authorize-on-secure-methods': enforceAuthorizeOnSecureMethods,
+    'enforce-profile-on-heavy-computation': enforceProfileOnHeavyComputation,
   },
   configs: {
     recommended: {
@@ -146,6 +168,17 @@ module.exports = {
         '@qualia-tempo/qualia-code/no-direct-timer-access': 'error', // MANDATORIO - Platform abstraction is law
         '@qualia-tempo/qualia-code/enforce-validation-on-public-methods': 'warn', // Suggestion with exemption option
         '@qualia-tempo/qualia-code/enforce-error-boundary-on-async': 'error', // MANDATORIO per QUALIA.CODE §6
+        // NEW RULES - QUALIA.CODE v1.9 Complete Decorator Coverage (Session 30 - Mission Critical)
+        '@qualia-tempo/qualia-code/enforce-throttle-on-event-handlers': 'error', // MANDATORIO - High-frequency events must be throttled
+        '@qualia-tempo/qualia-code/enforce-debounce-on-ui-inputs': 'error', // MANDATORIO - UI inputs must be debounced
+        '@qualia-tempo/qualia-code/enforce-rate-limit-on-api-calls': 'error', // MANDATORIO - Prevent API throttling
+        '@qualia-tempo/qualia-code/enforce-measure-time-on-logic-services': 'warn', // ADVISORY - Performance monitoring
+        '@qualia-tempo/qualia-code/enforce-validate-event-property-on-emit': 'error', // MANDATORIO - Event validation
+        '@qualia-tempo/qualia-code/enforce-adapt-and-emit-on-raw-handlers': 'error', // MANDATORIO - Protocol adaptation
+        '@qualia-tempo/qualia-code/enforce-readonly-on-config-access': 'warn', // ADVISORY - Immutability promotion
+        '@qualia-tempo/qualia-code/enforce-deprecated-on-comment': 'warn', // ADVISORY - Formal deprecation tracking
+        '@qualia-tempo/qualia-code/enforce-authorize-on-secure-methods': 'error', // MANDATORIO - Security critical
+        '@qualia-tempo/qualia-code/enforce-profile-on-heavy-computation': 'warn', // ADVISORY - Deep profiling
       }
     }
   }
