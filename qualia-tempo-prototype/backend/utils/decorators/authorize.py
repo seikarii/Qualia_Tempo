@@ -17,8 +17,8 @@ class UnauthorizedError(AuthorizationError):
 
 
 def authorize(
-    required_roles: Union[str, List[str]] = None,
-    required_permissions: Union[str, List[str]] = None,
+    required_roles: Optional[Union[str, List[str]]] = None,
+    required_permissions: Optional[Union[str, List[str]]] = None,
     allow_anonymous: bool = False
 ) -> Callable[[Callable], Callable]:
     """
@@ -138,9 +138,9 @@ def authorize(
             return func(*args, **kwargs)
         
         # Mark as protected in metadata
-        wrapper.__protected__ = True
-        wrapper.__required_roles__ = required_roles
-        wrapper.__required_permissions__ = required_permissions
+        wrapper.__protected__ = True  # type: ignore[attr-defined]
+        wrapper.__required_roles__ = required_roles  # type: ignore[attr-defined]
+        wrapper.__required_permissions__ = required_permissions  # type: ignore[attr-defined]
         
         return wrapper
     

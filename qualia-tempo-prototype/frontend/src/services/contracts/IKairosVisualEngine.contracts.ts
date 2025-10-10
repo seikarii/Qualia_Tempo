@@ -209,4 +209,5 @@ export interface KairosVisualEngineParams {
   reactionDiffusionService: any; // IReactionDiffusionService (avoiding circular import)
   viewLogicService: any; // IViewLogicService (avoiding circular import) - PHASE 5.6
   performanceService: any; // IPerformanceService (avoiding circular import) - PHASE 5.6
+  timerService: any; // ITimerService (avoiding circular import) - QUALIA.CODE Platform Abstraction
 }

@@ -24,6 +24,7 @@ import type { ILogger } from './interfaces/ILogger';
 import type { IEventBus } from './interfaces/IEventBus';
 import type { IGameStateStore } from './interfaces/IGameStateStore';
 import type { IHttpService } from './interfaces/IHttpService';
+import type { ITimerService } from './interfaces/ITimerService';
 import type { IParticleSystemService } from './interfaces/IParticleSystemService';
 import type { IReactionDiffusionService } from './interfaces/IReactionDiffusionService';
 import type { KairosVisualEngineParams, KairosVisualEngineConfig } from './contracts/IKairosVisualEngine.contracts';
@@ -138,6 +139,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   // @ts-expect-error - Reserved for future PHASE 5.6 game state integration
   private readonly gameStateStore: IGameStateStore;
   private readonly httpService: IHttpService;
+  private readonly timerService: ITimerService; // QUALIA.CODE Platform Abstraction
   private readonly particleSystemService: IParticleSystemService;
   private readonly reactionDiffusionService: IReactionDiffusionService;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -211,6 +213,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     this.eventBus = params.eventBus;
     this.gameStateStore = params.gameStateStore;
     this.httpService = params.httpService;
+    this.timerService = params.timerService; // QUALIA.CODE Platform Abstraction
     this.particleSystemService = params.particleSystemService;
     this.reactionDiffusionService = params.reactionDiffusionService;
     this.viewLogicService = params.viewLogicService; // PHASE 5.6
@@ -882,7 +885,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
     this.isRunning = false;
     
     if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
+      this.timerService.cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
     
@@ -902,8 +905,8 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
       this.performanceService.mark('frame-start');
     }
     
-    // Schedule next frame
-    this.animationFrameId = requestAnimationFrame(this.renderLoop);
+    // Schedule next frame (QUALIA.CODE Platform Abstraction)
+    this.animationFrameId = this.timerService.requestAnimationFrame(this.renderLoop);
     
     // Calculate delta time
     const now = performance.now();

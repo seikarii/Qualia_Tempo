@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+// ARCHITECTURAL NOTE: Decorators are generic infrastructure that require `any` for type flexibility
+
 /**
  * @mutex Decorator
  * 

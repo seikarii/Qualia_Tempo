@@ -890,6 +890,7 @@ function bindLevel2ServiceParams(fullConfig: FullGameConfig): void {
     reactionDiffusionService: container.get(TYPES.IReactionDiffusionService),
     viewLogicService: container.get(TYPES.IViewLogicService), // PHASE 5.6
     performanceService: container.get(TYPES.IPerformanceService), // PHASE 5.6
+    timerService: container.get(TYPES.ITimerService), // QUALIA.CODE Platform Abstraction
   });
 }
 

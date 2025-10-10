@@ -113,6 +113,7 @@ export class GameStateStreamingService implements IGameStateStreamingService, IB
   /**
    * IBaseService lifecycle: initialize service
    */
+  @catchError
   public async initialize(): Promise<void> {
     this.logger.info('[GameStateStreaming] Initializing service...');
     // No EventBus subscriptions needed - this service is a pure emitter

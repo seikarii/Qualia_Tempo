@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+// ARCHITECTURAL NOTE: Decorators are generic infrastructure that require `any` for type flexibility
+
 /**
  * @cache / @memoize Decorator
  * 

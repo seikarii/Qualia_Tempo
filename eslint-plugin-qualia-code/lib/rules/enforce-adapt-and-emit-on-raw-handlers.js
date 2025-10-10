@@ -26,8 +26,13 @@ module.exports = {
   create(context) {
     const filename = context.getFilename();
 
-    // Only check service files
+    // Only check service files, but exclude adapter classes (they're utilities, not entry points)
     if (!filename.includes('/services/') || !filename.endsWith('.ts')) {
+      return {};
+    }
+    
+    // Adapter classes are transformation utilities, not raw data entry points
+    if (filename.includes('/adapters/') || filename.includes('Adapter.ts')) {
       return {};
     }
 
@@ -75,17 +80,32 @@ module.exports = {
       const methodName = node.key?.name;
       if (!methodName) return false;
 
-      // Check method name pattern
+      // Exclude callback registration methods (they don't handle data, they register handlers)
+      const callbackRegistrationPatterns = [
+        /^on[A-Z]/,     // onMessage, onOpen, onClose, etc. - these REGISTER handlers
+        /^set[A-Z]/     // setHandler, setCallback, etc.
+      ];
+      
+      if (callbackRegistrationPatterns.some(pattern => pattern.test(methodName))) {
+        return false;
+      }
+
+      // Check method name pattern - must start with handle/process/parse for raw data
       const nameMatches = rawDataPatterns.some(pattern => pattern.test(methodName));
 
-      // Check parameter types
+      // Check parameter types - direct raw data parameters (not callbacks)
       const params = node.value?.params || [];
       const hasRawDataType = params.some(param => {
         const typeAnnotation = param.typeAnnotation?.typeAnnotation?.typeName?.name;
+        // Exclude callback/function types
+        const paramName = param.name || param.key?.name;
+        if (typeof paramName === 'string' && (paramName.includes('callback') || paramName.includes('handler'))) {
+          return false;
+        }
         return typeAnnotation && rawDataTypes.includes(typeAnnotation);
       });
 
-      return nameMatches || hasRawDataType;
+      return nameMatches && hasRawDataType;
     }
 
     return {

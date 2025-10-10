@@ -63,6 +63,7 @@ export class StateStreamingService implements IStateStreamingService {
   }
 
   @logMethod
+  @catchError
   public async start(): Promise<void> {
     this.logger.info("StateStreamingService started and EventBus injected.");
   }

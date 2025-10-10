@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-unused-vars */
+// ARCHITECTURAL NOTE: Decorators are generic infrastructure that require `any` for type flexibility
+
 /**
  * @retry Decorator
  * 

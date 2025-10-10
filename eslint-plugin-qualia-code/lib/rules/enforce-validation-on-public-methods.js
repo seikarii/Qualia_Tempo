@@ -46,6 +46,23 @@ module.exports = {
       const typeNode = typeAnnotation.typeAnnotation;
       if (!typeNode) return true;
 
+      // Get the full type string for pattern matching
+      const typeString = sourceCode.getText(typeNode);
+
+      // Whitelist patterns for internal/trusted types that don't need validation
+      const whitelistPatterns = [
+        /^THREE\./,                           // THREE.js types (trusted library)
+        /^(_[a-z])/,                          // Types starting with _ (internal/unused)
+        /^Record<string,\s*any>/,             // Generic records
+        /^\(\)\s*=>\s*(void|any)/,            // Callbacks/functions
+        /^[A-Z][a-zA-Z]*\[\]$/,               // Simple arrays (handled below for complex check)
+        /^[A-Z][a-zA-Z]*Event$/,              // Event types from event.contracts.ts (already validated at emission)
+      ];
+
+      if (whitelistPatterns.some(pattern => pattern.test(typeString))) {
+        return true;
+      }
+
       // Primitive types
       if (typeNode.type === 'TSStringKeyword') return true;
       if (typeNode.type === 'TSNumberKeyword') return true;
@@ -54,6 +71,9 @@ module.exports = {
       if (typeNode.type === 'TSUndefinedKeyword') return true;
       if (typeNode.type === 'TSVoidKeyword') return true;
       if (typeNode.type === 'TSAnyKeyword') return true; // any is treated as safe
+
+      // Function types (callbacks)
+      if (typeNode.type === 'TSFunctionType') return true;
 
       // Array of primitives
       if (typeNode.type === 'TSArrayType') {

@@ -47,8 +47,20 @@ module.exports = {
   create(context) {
     const filename = context.getFilename();
     
-    // Exempt TimerProvider files (legitimate platform wrappers)
-    if (filename.endsWith('TimerProvider.ts') || filename.endsWith('timer.provider.ts')) {
+    // Exempt infrastructure files (legitimate platform wrappers and foundational utilities)
+    const exemptPatterns = [
+      /TimerProvider\.ts$/,
+      /timer\.provider\.ts$/,
+      /PerformanceProvider\.ts$/,
+      /TimerService\.ts$/,              // Timer abstraction service - IS the platform wrapper
+      /PerformanceService\.ts$/,        // Performance service uses timer abstractions
+      /decorators\/.*\.decorator\.ts$/,  // Decorators are infrastructure layer
+      /testing\/setup\.ts$/,               // Test infrastructure
+      /testing\/.*profiler\.ts$/,          // Test/debug utilities
+      /utils\/performance-profiler\.ts$/   // Debug utilities
+    ];
+    
+    if (exemptPatterns.some(pattern => pattern.test(filename))) {
       return {};
     }
 

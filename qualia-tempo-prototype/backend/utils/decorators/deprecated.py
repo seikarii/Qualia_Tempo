@@ -8,9 +8,9 @@ from typing import Any, Callable, Optional
 
 
 def deprecated(
-    reason: str = None,
-    replacement: str = None,
-    removal_version: str = None
+    reason: Optional[str] = None,
+    replacement: Optional[str] = None,
+    removal_version: Optional[str] = None
 ) -> Callable[[Callable], Callable]:
     """
     Decorator to mark functions as deprecated with detailed guidance.
@@ -95,10 +95,10 @@ def deprecated(
             return func(*args, **kwargs)
         
         # Mark as deprecated in metadata
-        wrapper.__deprecated__ = True
-        wrapper.__deprecation_reason__ = reason
-        wrapper.__replacement__ = replacement
-        wrapper.__removal_version__ = removal_version
+        wrapper.__deprecated__ = True  # type: ignore[attr-defined]
+        wrapper.__deprecation_reason__ = reason  # type: ignore[attr-defined]
+        wrapper.__replacement__ = replacement  # type: ignore[attr-defined]
+        wrapper.__removal_version__ = removal_version  # type: ignore[attr-defined]
         
         return wrapper
     

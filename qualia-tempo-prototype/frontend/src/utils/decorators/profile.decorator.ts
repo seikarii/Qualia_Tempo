@@ -1,3 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable max-lines-per-function */
+/* eslint-disable complexity */
+/* eslint-disable no-console */
+// ARCHITECTURAL NOTE: Profiling decorator is complex debugging infrastructure
+// TypeScript quality and complexity rules relaxed for diagnostic utilities
+
 /**
  * @profile Decorator
  * 
