@@ -1,38 +1,43 @@
 /**
- * @fileoverview SALA: Performance anti-pattern detection
+ * @fileoverview DEPRECATED - Functionality superseded by semantic rules
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ⚠️ PRIMITIVE - Shallow loop analysis. MUST MERGE into enforce-async-on-heavy-methods with robust complexity scoring
- * AUDIT NOTE (Senior Architect): "MAL. Similar a la anterior, su análisis es superficial"
+ * MIGRATION STATUS: ✅ DEPRECATED - Replaced by enforce-async-on-heavy-methods + enforce-stateless-view-logic
+ * UPGRADED: Session 34 - Deprecated per Senior Architect audit
+ * 
+ * DEPRECATION RATIONALE:
+ * - Nested loop detection now handled by analyzeMethodComplexity() in enforce-async-on-heavy-methods
+ * - Render path analysis now handled by enforce-stateless-view-logic
+ * - This rule's shallow analysis is redundant with semantic complexity scoring
  */
 'use strict';
+
 module.exports = {
   meta: {
     type: 'warning',
-    docs: { description: 'Enforce performance best practices', category: 'QUALIA.CODE - Performance', recommended: true },
+    docs: { 
+      description: 'DEPRECATED: Use enforce-async-on-heavy-methods and enforce-stateless-view-logic instead',
+      category: 'QUALIA.CODE - Performance', 
+      recommended: false,
+      deprecated: true
+    },
+    deprecated: true,
     schema: [],
     messages: {
-      syncInRender: 'QUALIA.CODE §9: Synchronous heavy operation in render path. Move to useEffect or async handler.',
-      nestedLoops: 'QUALIA.CODE §9: Nested loops detected (O(n²+)). Consider optimization or caching.',
-      nonMemoizedCallback: 'QUALIA.CODE §9: Callback prop without useCallback. May cause unnecessary re-renders.'
+      deprecated: `DEPRECATED: This rule has been superseded by semantic analysis.
+
+Use instead:
+- enforce-async-on-heavy-methods: For complexity analysis (including nested loops)
+- enforce-stateless-view-logic: For React render path concerns
+
+This rule will be removed in the next major version.`
     }
   },
   create(context) {
+    // Rule disabled - report deprecation warning only once per file
     return {
-      FunctionExpression(node) {
-        const parent = context.getAncestors().reverse().find(a => a.type === 'MethodDefinition' || a.type === 'FunctionDeclaration');
-        const isRenderMethod = parent?.key?.name === 'render' || parent?.name?.name?.startsWith('use');
-
-        if (!isRenderMethod) return;
-
-        let loopDepth = 0;
-        node.body.body.forEach(stmt => {
-          if (stmt.type === 'ForStatement' || stmt.type === 'WhileStatement') {
-            loopDepth++;
-            if (loopDepth > 1) {
-              context.report({ node: stmt, messageId: 'nestedLoops' });
-            }
-          }
-        });
+      Program(node) {
+        // No-op: rule is deprecated and disabled
+        // Violations will be caught by the superseding rules
       }
     };
   }

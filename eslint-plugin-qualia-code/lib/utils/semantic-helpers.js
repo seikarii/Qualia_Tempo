@@ -280,6 +280,543 @@ function filePathMatches(filePath, pattern) {
   return filePath.includes(pattern);
 }
 
+//------------------------------------------------------------------------------
+// Complexity Analysis Helpers (Phase 2 Semantic Upgrade)
+//------------------------------------------------------------------------------
+
+/**
+ * Analyze computational complexity of a method
+ * @param {Object} methodNode - ESTree MethodDefinition or FunctionDeclaration node
+ * @param {ts.TypeChecker} checker - TypeScript type checker
+ * @param {Map} tsNodeMap - ESTree to TS node map
+ * @returns {Object} { score: number, reasons: string[], details: Object }
+ */
+function analyzeMethodComplexity(methodNode, checker, tsNodeMap) {
+  const analysis = {
+    score: 0,
+    reasons: [],
+    details: {
+      loops: 0,
+      nestedLoops: 0,
+      recursiveCalls: 0,
+      arrayIterations: [],
+      expensiveOperations: []
+    }
+  };
+
+  if (!methodNode.value || !methodNode.value.body) {
+    return analysis;
+  }
+
+  const methodName = methodNode.key ? methodNode.key.name : 'anonymous';
+  const body = methodNode.value.body;
+
+  // Analyze loop complexity
+  const loopAnalysis = countNestedLoops(body);
+  analysis.details.loops = loopAnalysis.totalLoops;
+  analysis.details.nestedLoops = loopAnalysis.maxNesting;
+  
+  if (loopAnalysis.totalLoops > 0) {
+    analysis.score += loopAnalysis.totalLoops * 10;
+    analysis.reasons.push(`${loopAnalysis.totalLoops} loop(s) detected`);
+  }
+  
+  if (loopAnalysis.maxNesting >= 2) {
+    const exponentialScore = Math.pow(50, loopAnalysis.maxNesting - 1);
+    analysis.score += exponentialScore;
+    analysis.reasons.push(`nested loops (depth ${loopAnalysis.maxNesting}) = O(n^${loopAnalysis.maxNesting}) complexity`);
+  }
+
+  // Analyze recursion
+  const recursionCount = detectRecursion(body, methodName);
+  if (recursionCount > 0) {
+    analysis.score += 100;
+    analysis.details.recursiveCalls = recursionCount;
+    analysis.reasons.push(`recursive calls detected (${recursionCount})`);
+  }
+
+  // Analyze array iterations with type checker
+  const arrayIterations = analyzeArrayIterations(body, checker, tsNodeMap);
+  analysis.details.arrayIterations = arrayIterations;
+  
+  arrayIterations.forEach(iteration => {
+    const typeScore = iteration.elementComplexity || 5;
+    analysis.score += typeScore;
+    if (typeScore > 20) {
+      analysis.reasons.push(`iterating over complex type ${iteration.elementType} (${iteration.elementComplexity} complexity)`);
+    }
+  });
+
+  // Analyze expensive operations (Math operations, string operations, etc.)
+  const expensiveOps = detectExpensiveOperations(body);
+  analysis.details.expensiveOperations = expensiveOps;
+  
+  if (expensiveOps.length > 5) {
+    analysis.score += expensiveOps.length * 2;
+    analysis.reasons.push(`${expensiveOps.length} expensive operations (Math, string manipulation)`);
+  }
+
+  return analysis;
+}
+
+/**
+ * Count loops and determine maximum nesting depth
+ * @param {Object} node - ESTree node
+ * @returns {Object} { totalLoops: number, maxNesting: number }
+ */
+function countNestedLoops(node) {
+  const result = { totalLoops: 0, maxNesting: 0 };
+  
+  function traverse(currentNode, depth = 0) {
+    if (!currentNode) return;
+
+    const isLoop = currentNode.type === 'ForStatement' ||
+                   currentNode.type === 'ForInStatement' ||
+                   currentNode.type === 'ForOfStatement' ||
+                   currentNode.type === 'WhileStatement' ||
+                   currentNode.type === 'DoWhileStatement';
+
+    if (isLoop) {
+      result.totalLoops++;
+      result.maxNesting = Math.max(result.maxNesting, depth + 1);
+      
+      // Traverse loop body at increased depth
+      if (currentNode.body) {
+        if (currentNode.body.type === 'BlockStatement') {
+          currentNode.body.body.forEach(stmt => traverse(stmt, depth + 1));
+        } else {
+          traverse(currentNode.body, depth + 1);
+        }
+      }
+      return; // Don't double-traverse
+    }
+
+    // Traverse child nodes
+    for (const key in currentNode) {
+      if (key === 'parent' || key === 'range' || key === 'loc') continue;
+      
+      const child = currentNode[key];
+      if (Array.isArray(child)) {
+        child.forEach(item => traverse(item, depth));
+      } else if (child && typeof child === 'object' && child.type) {
+        traverse(child, depth);
+      }
+    }
+  }
+
+  traverse(node);
+  return result;
+}
+
+/**
+ * Detect if method calls itself (recursion)
+ * @param {Object} node - ESTree node
+ * @param {string} methodName - Name of the method
+ * @returns {number} Count of recursive calls
+ */
+function detectRecursion(node, methodName) {
+  let count = 0;
+
+  function traverse(currentNode) {
+    if (!currentNode) return;
+
+    if (currentNode.type === 'CallExpression') {
+      // Check for this.methodName() or methodName()
+      if (currentNode.callee.type === 'MemberExpression' &&
+          currentNode.callee.property && 
+          currentNode.callee.property.name === methodName) {
+        count++;
+      } else if (currentNode.callee.type === 'Identifier' && 
+                 currentNode.callee.name === methodName) {
+        count++;
+      }
+    }
+
+    // Traverse children
+    for (const key in currentNode) {
+      if (key === 'parent' || key === 'range' || key === 'loc') continue;
+      
+      const child = currentNode[key];
+      if (Array.isArray(child)) {
+        child.forEach(item => traverse(item));
+      } else if (child && typeof child === 'object' && child.type) {
+        traverse(child);
+      }
+    }
+  }
+
+  traverse(node);
+  return count;
+}
+
+/**
+ * Analyze array iterations and get element type complexity
+ * @param {Object} node - ESTree node
+ * @param {ts.TypeChecker} checker - TypeScript type checker
+ * @param {Map} tsNodeMap - ESTree to TS node map
+ * @returns {Array} Array of { elementType: string, elementComplexity: number }
+ */
+function analyzeArrayIterations(node, checker, tsNodeMap) {
+  const iterations = [];
+
+  function traverse(currentNode) {
+    if (!currentNode) return;
+
+    // ForOf: for (const item of array)
+    if (currentNode.type === 'ForOfStatement' && currentNode.right) {
+      const arrayType = getNodeType(currentNode.right, tsNodeMap, checker);
+      if (arrayType) {
+        const elementInfo = getArrayElementTypeComplexity(arrayType, checker);
+        if (elementInfo) {
+          iterations.push(elementInfo);
+        }
+      }
+    }
+
+    // Array methods: array.forEach, array.map, etc.
+    if (currentNode.type === 'CallExpression' &&
+        currentNode.callee.type === 'MemberExpression' &&
+        currentNode.callee.property &&
+        ['forEach', 'map', 'filter', 'reduce', 'find', 'some', 'every'].includes(currentNode.callee.property.name)) {
+      
+      const arrayType = getNodeType(currentNode.callee.object, tsNodeMap, checker);
+      if (arrayType) {
+        const elementInfo = getArrayElementTypeComplexity(arrayType, checker);
+        if (elementInfo) {
+          iterations.push(elementInfo);
+        }
+      }
+    }
+
+    // Traverse children
+    for (const key in currentNode) {
+      if (key === 'parent' || key === 'range' || key === 'loc') continue;
+      
+      const child = currentNode[key];
+      if (Array.isArray(child)) {
+        child.forEach(item => traverse(item));
+      } else if (child && typeof child === 'object' && child.type) {
+        traverse(child);
+      }
+    }
+  }
+
+  traverse(node);
+  return iterations;
+}
+
+/**
+ * Get array element type and complexity score
+ * @param {ts.Type} arrayType - TypeScript array type
+ * @param {ts.TypeChecker} checker - TypeScript type checker
+ * @returns {Object|null} { elementType: string, elementComplexity: number }
+ */
+function getArrayElementTypeComplexity(arrayType, checker) {
+  try {
+    if (!arrayType) return null;
+
+    // Check if it's an array type
+    if (checker.isArrayType && checker.isArrayType(arrayType)) {
+      const typeArgs = arrayType.typeArguments;
+      if (typeArgs && typeArgs.length > 0) {
+        const elementType = typeArgs[0];
+        const typeName = checker.typeToString(elementType);
+        const complexity = getTypeComplexityScore(elementType, checker);
+        return { elementType: typeName, elementComplexity: complexity };
+      }
+    }
+
+    // Try to get type reference for Array<T>
+    if (arrayType.symbol && arrayType.symbol.name === 'Array') {
+      const typeArgs = checker.getTypeArguments(arrayType);
+      if (typeArgs && typeArgs.length > 0) {
+        const elementType = typeArgs[0];
+        const typeName = checker.typeToString(elementType);
+        const complexity = getTypeComplexityScore(elementType, checker);
+        return { elementType: typeName, elementComplexity: complexity };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Score type complexity based on properties and methods
+ * @param {ts.Type} type - TypeScript type
+ * @param {ts.TypeChecker} checker - TypeScript type checker
+ * @returns {number} Complexity score
+ */
+function getTypeComplexityScore(type, checker) {
+  if (!type) return 5; // Default for unknown types
+
+  try {
+    // Primitive types have low complexity
+    if (type.flags & ts.TypeFlags.String) return 1;
+    if (type.flags & ts.TypeFlags.Number) return 1;
+    if (type.flags & ts.TypeFlags.Boolean) return 1;
+    if (type.flags & ts.TypeFlags.Null) return 1;
+    if (type.flags & ts.TypeFlags.Undefined) return 1;
+
+    // Object types - count properties and methods
+    const properties = type.getProperties();
+    if (properties.length === 0) return 5;
+
+    let score = properties.length * 2; // Base score from property count
+
+    // Check for methods (higher complexity)
+    properties.forEach(prop => {
+      const propType = checker.getTypeOfSymbolAtLocation(prop, prop.valueDeclaration);
+      if (propType && propType.getCallSignatures && propType.getCallSignatures().length > 0) {
+        score += 5; // Methods add more complexity
+      }
+    });
+
+    // Cap the score for complex types (e.g., Particle with 20 properties)
+    return Math.min(score, 100);
+  } catch (error) {
+    return 10; // Default for error cases
+  }
+}
+
+/**
+ * Detect expensive operations (Math, string operations, etc.)
+ * @param {Object} node - ESTree node
+ * @returns {Array} Array of { type: string, operation: string }
+ */
+function detectExpensiveOperations(node) {
+  const operations = [];
+  const expensiveMathOps = ['sin', 'cos', 'tan', 'sqrt', 'pow', 'exp', 'log'];
+  const expensiveStringOps = ['replace', 'split', 'match', 'search'];
+
+  function traverse(currentNode) {
+    if (!currentNode) return;
+
+    if (currentNode.type === 'CallExpression' && currentNode.callee.type === 'MemberExpression') {
+      const object = currentNode.callee.object;
+      const property = currentNode.callee.property;
+
+      // Math operations
+      if (object.type === 'Identifier' && object.name === 'Math' && property && property.name) {
+        if (expensiveMathOps.includes(property.name)) {
+          operations.push({ type: 'Math', operation: property.name });
+        }
+      }
+
+      // String operations
+      if (property && expensiveStringOps.includes(property.name)) {
+        operations.push({ type: 'String', operation: property.name });
+      }
+    }
+
+    // Traverse children
+    for (const key in currentNode) {
+      if (key === 'parent' || key === 'range' || key === 'loc') continue;
+      
+      const child = currentNode[key];
+      if (Array.isArray(child)) {
+        child.forEach(item => traverse(item));
+      } else if (child && typeof child === 'object' && child.type) {
+        traverse(child);
+      }
+    }
+  }
+
+  traverse(node);
+  return operations;
+}
+
+//------------------------------------------------------------------------------
+// Operation Detection Helpers (For Decorator Rules)
+//------------------------------------------------------------------------------
+
+/**
+ * Detect DOM event subscriptions in method body
+ * @param {Object} methodNode - ESTree MethodDefinition node
+ * @returns {Array} Array of {eventType: string, isHighFrequency: boolean}
+ */
+function detectDOMEventSubscriptions(methodNode) {
+  const subscriptions = [];
+  const highFreqEvents = ['scroll', 'mousemove', 'resize', 'drag', 'wheel', 'touchmove', 'pointermove'];
+  
+  function traverse(node) {
+    if (!node) return;
+
+    // addEventListener('scroll', ...)
+    if (node.type === 'CallExpression' &&
+        node.callee.type === 'MemberExpression' &&
+        node.callee.property &&
+        node.callee.property.name === 'addEventListener' &&
+        node.arguments && node.arguments.length > 0) {
+      
+      const eventArg = node.arguments[0];
+      if (eventArg.type === 'Literal' && typeof eventArg.value === 'string') {
+        subscriptions.push({
+          eventType: eventArg.value,
+          isHighFrequency: highFreqEvents.includes(eventArg.value.toLowerCase())
+        });
+      }
+    }
+
+    // Traverse children
+    for (const key in node) {
+      if (key === 'parent' || key === 'range' || key === 'loc') continue;
+      const child = node[key];
+      if (Array.isArray(child)) {
+        child.forEach(item => traverse(item));
+      } else if (child && typeof child === 'object' && child.type) {
+        traverse(child);
+      }
+    }
+  }
+
+  const body = methodNode.value && methodNode.value.body;
+  if (body) traverse(body);
+  return subscriptions;
+}
+
+/**
+ * Detect state mutations in method body
+ * @param {Object} methodNode - ESTree MethodDefinition node
+ * @returns {Array} Array of {target: string, property: string}
+ */
+function detectStateMutations(methodNode) {
+  const mutations = [];
+  
+  function traverse(node) {
+    if (!node) return;
+
+    // this.state = ..., this.store.setState(...), store.set(...)
+    if (node.type === 'AssignmentExpression' &&
+        node.left.type === 'MemberExpression') {
+      const object = node.left.object;
+      const property = node.left.property;
+      
+      if (object.type === 'ThisExpression' && property && 
+          (property.name === 'state' || property.name === 'store')) {
+        mutations.push({
+          target: 'this',
+          property: property.name
+        });
+      }
+    }
+
+    // store.setState(...), store.set(...)
+    if (node.type === 'CallExpression' &&
+        node.callee.type === 'MemberExpression') {
+      const property = node.callee.property;
+      if (property && (property.name === 'setState' || property.name === 'set' || property.name === 'update')) {
+        mutations.push({
+          target: 'store',
+          property: property.name
+        });
+      }
+    }
+
+    // Traverse children
+    for (const key in node) {
+      if (key === 'parent' || key === 'range' || key === 'loc') continue;
+      const child = node[key];
+      if (Array.isArray(child)) {
+        child.forEach(item => traverse(item));
+      } else if (child && typeof child === 'object' && child.type) {
+        traverse(child);
+      }
+    }
+  }
+
+  const body = methodNode.value && methodNode.value.body;
+  if (body) traverse(body);
+  return mutations;
+}
+
+/**
+ * Detect privileged operations (database writes, auth checks, etc.)
+ * @param {Object} methodNode - ESTree MethodDefinition node
+ * @returns {Array} Array of {type: string, operation: string}
+ */
+function detectPrivilegedOperations(methodNode) {
+  const operations = [];
+  const privilegedMethods = ['delete', 'remove', 'destroy', 'update', 'modify', 'admin', 'grant', 'revoke'];
+  
+  function traverse(node) {
+    if (!node) return;
+
+    // Database/API operations
+    if (node.type === 'CallExpression' &&
+        node.callee.type === 'MemberExpression') {
+      const property = node.callee.property;
+      if (property && privilegedMethods.some(pm => property.name.toLowerCase().includes(pm))) {
+        operations.push({
+          type: 'database',
+          operation: property.name
+        });
+      }
+    }
+
+    // Traverse children
+    for (const key in node) {
+      if (key === 'parent' || key === 'range' || key === 'loc') continue;
+      const child = node[key];
+      if (Array.isArray(child)) {
+        child.forEach(item => traverse(item));
+      } else if (child && typeof child === 'object' && child.type) {
+        traverse(child);
+      }
+    }
+  }
+
+  const body = methodNode.value && methodNode.value.body;
+  if (body) traverse(body);
+  return operations;
+}
+
+/**
+ * Detect I/O operations (HTTP, fetch, database calls)
+ * @param {Object} methodNode - ESTree MethodDefinition node
+ * @returns {Array} Array of {type: string, operation: string}
+ */
+function detectIOOperations(methodNode) {
+  const operations = [];
+  
+  function traverse(node) {
+    if (!node) return;
+
+    // fetch(...), axios.get(...), httpService.post(...)
+    if (node.type === 'CallExpression') {
+      if (node.callee.type === 'Identifier' && node.callee.name === 'fetch') {
+        operations.push({ type: 'HTTP', operation: 'fetch' });
+      }
+      
+      if (node.callee.type === 'MemberExpression') {
+        const object = node.callee.object;
+        const property = node.callee.property;
+        
+        if (property && ['get', 'post', 'put', 'delete', 'patch', 'request'].includes(property.name)) {
+          operations.push({ type: 'HTTP', operation: property.name });
+        }
+      }
+    }
+
+    // Traverse children
+    for (const key in node) {
+      if (key === 'parent' || key === 'range' || key === 'loc') continue;
+      const child = node[key];
+      if (Array.isArray(child)) {
+        child.forEach(item => traverse(item));
+      } else if (child && typeof child === 'object' && child.type) {
+        traverse(child);
+      }
+    }
+  }
+
+  const body = methodNode.value && methodNode.value.body;
+  if (body) traverse(body);
+  return operations;
+}
+
 module.exports = {
   requireTypeChecker,
   getSymbolDeclarationFile,
@@ -294,5 +831,18 @@ module.exports = {
   hasDecorator,
   getDecoratorByName,
   getNodeType,
-  filePathMatches
+  filePathMatches,
+  // Complexity analysis helpers
+  analyzeMethodComplexity,
+  countNestedLoops,
+  detectRecursion,
+  analyzeArrayIterations,
+  getArrayElementTypeComplexity,
+  getTypeComplexityScore,
+  detectExpensiveOperations,
+  // Operation detection helpers (for decorator rules)
+  detectDOMEventSubscriptions,
+  detectStateMutations,
+  detectPrivilegedOperations,
+  detectIOOperations
 };

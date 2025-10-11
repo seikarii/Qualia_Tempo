@@ -2,8 +2,8 @@
  * @qualia-tempo/eslint-plugin-qualia-code
  * Rule: enforce-worker-offloading
  * 
- * MIGRATION STATUS: ⚠️ PARTIALLY SEMANTIC - Has advanced heuristics but needs TypeChecker for array size analysis
- * AUDIT NOTE (Senior Architect): "A MEDIAS. Es la regla con las heurísticas más avanzadas, pero aún carece de TypeChecker para analizar si Particle[] tiene 10k elementos vs string[] con 5"
+ * MIGRATION STATUS: ✅ FULLY SEMANTIC - Integrated TypeChecker for array complexity analysis
+ * UPGRADED: Session 34 - Added semantic array analysis per Senior Architect audit
  * 
  * Flags CPU-intensive methods that should use Web Workers for background processing
  * to maintain 60 FPS performance on the main thread.
@@ -13,33 +13,37 @@
  * this rule specifically targets methods that are TOO heavy even for async
  * and should be completely offloaded to Web Workers.
  * 
- * Detection heuristics (stricter than enforce-async-on-heavy-methods):
+ * Detection strategy (TypeChecker-based):
  * - Methods with nested loops (O(n²) or worse complexity)
- * - Methods processing arrays of 1000+ elements (particle systems, physics)
- * - Methods with expensive mathematical operations (matrix mult, FFT, convolution)
+ * - Methods processing arrays with complex element types (Particle[], Vec3[])
+ * - TypeChecker analyzes array element type complexity (property count, methods)
+ * - Expensive mathematical operations (matrix mult, FFT, convolution)
  * - Methods performing bulk transformations or bulk calculations
- * - Methods with explicit TODO/FIXME comments mentioning Workers
  * 
- * TODO: Integrate TypeChecker to analyze array sizes and complexity:
- *   - Particle[] with 10k elements → HIGH priority
- *   - string[] with 5 elements → LOW priority
+ * Semantic Analysis Upgrade:
+ * - ✅ Uses analyzeMethodComplexity() for holistic analysis
+ * - ✅ TypeChecker-based array element type scoring (Particle[] = high, string[] = low)
+ * - ✅ Nested loop detection with exponential complexity scoring
+ * - ✅ Recursive call detection
  * 
  * Indicators:
- * - Method names containing: 'calculate', 'process', 'update', 'transform', 'compute', 'simulate'
- * - Method names ending with: 'System', 'Engine', 'Processor', 'Calculator'
- * - Classes ending with: 'Service', 'Engine', 'System' (heavy service layer)
- * - Methods operating on 'particles', 'vertices', 'nodes', 'entities', 'state'
+ * - Complexity score > 200 (much higher threshold than enforce-async)
+ * - Nested loops with complex array element types
+ * - Heavy math operations inside loops
  * 
  * Exemptions:
  * - Methods already using Workers (workerService, postMessage, Worker constructor)
  * - Methods with @worker or @background decorators
  * - Test files
  * - Methods with comment: // WORKER-EXEMPT or // OPTIMIZED-PATH
+ * - Main thread operations (render, dispose, DOM/GPU)
  * 
  * @author Qualia Tempo Team
  */
 
 'use strict';
+
+const { requireTypeChecker, analyzeMethodComplexity } = require('../utils/semantic-helpers');
 
 //------------------------------------------------------------------------------
 // Rule Definition
@@ -420,7 +424,7 @@ module.exports = {
     }
 
     /**
-     * Main checker function
+     * Main checker function - UPGRADED with semantic analyzeMethodComplexity
      */
     function checkMethod(node) {
       // Skip async methods (async yields control)
@@ -440,7 +444,43 @@ module.exports = {
       // Skip if already uses Workers
       if (usesWorkers(node)) return;
 
-      // Collect indicators
+      // PRIMARY SEMANTIC ANALYSIS: Use complexity analyzer
+      let complexityAnalysis = null;
+      try {
+        const { checker, tsNodeMap } = requireTypeChecker(context);
+        complexityAnalysis = analyzeMethodComplexity(node, checker, tsNodeMap);
+      } catch (e) {
+        // TypeChecker unavailable, fall back to heuristic analysis
+        complexityAnalysis = null;
+      }
+
+      // If we have semantic analysis and complexity is EXTREME (>300), trigger critical warning
+      if (complexityAnalysis && complexityAnalysis.score > 300) {
+        context.report({
+          node,
+          messageId: 'needsWorker',
+          data: {
+            methodName,
+            reasons: `extreme computational complexity (score: ${complexityAnalysis.score}). ${complexityAnalysis.reasons.join('; ')}`
+          }
+        });
+        return;
+      }
+
+      // If complexity is HIGH (>200), trigger consideration warning
+      if (complexityAnalysis && complexityAnalysis.score > 200) {
+        context.report({
+          node,
+          messageId: 'considerWorker',
+          data: {
+            methodName,
+            reasons: `high computational complexity (score: ${complexityAnalysis.score}). ${complexityAnalysis.reasons.join('; ')}`
+          }
+        });
+        return;
+      }
+
+      // FALLBACK HEURISTIC ANALYSIS (when TypeChecker unavailable or low complexity score)
       const indicators = {
         nestedLoops: false,
         arrayOps: [],

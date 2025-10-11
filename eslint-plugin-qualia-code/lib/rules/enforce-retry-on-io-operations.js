@@ -1,37 +1,68 @@
 /**
- * @fileoverview SALA: Semantic I/O operation detection for retry enforcement
+ * @fileoverview SALA: Semantic I/O Operation Detection & Retry Enforcement
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ⚠️ PARTIALLY SEMANTIC - Uses TypeChecker but still pattern matches on method name. MUST UPGRADE: Analyze method body for HttpService/fetch calls
- * AUDIT NOTE (Senior Architect): "A MEDIAS. Tiene TypeChecker pero sigue pattern matching en nombre del método"
+ * MIGRATION STATUS: ✅ FULLY SEMANTIC - Analyzes method body for actual I/O operations
+ * UPGRADED: Session 34 - Complete semantic rewrite per Senior Architect audit
  */
 'use strict';
-const { requireTypeChecker, getNodeType, isPromiseType } = require('../utils/semantic-helpers');
+
+const { detectIOOperations } = require('../utils/semantic-helpers');
+
 module.exports = {
   meta: {
     type: 'error',
-    docs: { description: 'Enforce @retry on I/O operations', category: 'QUALIA.CODE - Resilience', recommended: true },
+    docs: { 
+      description: 'Enforce @retry on I/O operations using semantic body analysis', 
+      category: 'QUALIA.CODE - Resilience', 
+      recommended: true 
+    },
     schema: [],
     messages: {
-      missingRetry: 'QUALIA.CODE §6: Method "{{method}}" performs I/O operations without @retry decorator. Add @retry(max_retries=3) for resilience.'
+      missingRetry: `QUALIA.CODE §6: Method "{{method}}" performs I/O operations without @retry decorator.
+
+I/O operations detected:
+{{operations}}
+
+Resilience Risk: Network/database failures can crash the application without retry logic.
+
+Required: Add @retry({ maxRetries: 3, backoff: 'exponential' }) decorator for fault tolerance.`
     }
   },
   create(context) {
-    try {
-      const { checker, tsNodeMap } = requireTypeChecker(context);
-      const ioPatterns = ['fetch', 'get', 'post', 'put', 'delete', 'connect', 'send'];
-      
-      return {
-        MethodDefinition(node) {
-          if (!node.value?.body) return;
-          const hasRetry = node.decorators?.some(d => d.expression?.callee?.name === 'retry');
-          if (hasRetry) return;
+    const filename = context.getFilename();
+    if (!filename.includes('/services/')) return {};
 
-          const hasIO = ioPatterns.some(pattern => node.key.name?.toLowerCase().includes(pattern));
-          if (hasIO && node.value.async) {
-            context.report({ node, messageId: 'missingRetry', data: { method: node.key.name } });
-          }
+    return {
+      MethodDefinition(node) {
+        // Skip if already has @retry decorator
+        const hasRetry = node.decorators?.some(d => d.expression?.callee?.name === 'retry');
+        if (hasRetry) return;
+
+        // Skip if no body
+        if (!node.value?.body) return;
+
+        // Skip if has exemption comment
+        const comments = context.getSourceCode().getCommentsBefore(node);
+        if (comments.some(c => /@retry-exempt/i.test(c.value))) {
+          return;
         }
-      };
-    } catch { return {}; }
+
+        const methodName = node.key.name || 'anonymous';
+
+        // Perform semantic analysis: detect I/O operations in method body
+        const operations = detectIOOperations(node);
+
+        if (operations.length > 0) {
+          context.report({
+            node,
+            messageId: 'missingRetry',
+            data: {
+              method: methodName,
+              operations: operations.map(op => `• ${op.type}: ${op.operation}()`).join('\n')
+            }
+          });
+        }
+      }
+    };
   }
 };

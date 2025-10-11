@@ -108,6 +108,9 @@ Consult QUALIA.MANUAL.md §1.3 for proper dependency injection patterns.`
 
       // Check 1: Does it implement any I*Service interface?
       const baseTypes = type.getBaseTypes ? type.getBaseTypes() : [];
+      // Ensure baseTypes is iterable
+      if (!baseTypes || !Array.isArray(baseTypes)) return false;
+      
       for (const baseType of baseTypes) {
         const baseSymbol = baseType.getSymbol();
         if (baseSymbol && baseSymbol.name && 

@@ -1,30 +1,63 @@
 /**
- * @fileoverview SALA: State mutation concurrency control
+ * @fileoverview SALA: Semantic State Mutation Detection & Mutex Enforcement
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ⚠️ PARTIALLY SEMANTIC - Pattern matching. MUST UPGRADE: Analyze method body for state assignments (this.state = ...)
- * AUDIT NOTE (Senior Architect): "A MEDIAS. Similar a otros decoradores"
+ * MIGRATION STATUS: ✅ FULLY SEMANTIC - Analyzes method body for state mutations
+ * UPGRADED: Session 34 - Complete semantic rewrite per Senior Architect audit
  */
 'use strict';
+
+const { detectStateMutations } = require('../utils/semantic-helpers');
+
 module.exports = {
   meta: {
     type: 'error',
-    docs: { description: 'Enforce @mutex on state mutation methods', category: 'QUALIA.CODE - Concurrency', recommended: true },
+    docs: { 
+      description: 'Enforce @mutex on state mutation methods using semantic body analysis', 
+      category: 'QUALIA.CODE - Concurrency', 
+      recommended: true 
+    },
     schema: [],
     messages: {
-      missingMutex: 'QUALIA.CODE §6: State mutation "{{method}}" requires @mutex decorator to prevent race conditions.'
+      missingMutex: `QUALIA.CODE §6: Method "{{method}}" mutates shared state without @mutex decorator.
+
+State mutations detected:
+{{mutations}}
+
+Risk: Concurrent access to shared state can cause race conditions and data corruption.
+
+Required: Add @mutex decorator to ensure atomic state updates.`
     }
   },
   create(context) {
+    const filename = context.getFilename();
+    if (!filename.includes('/services/')) return {};
+
     return {
       MethodDefinition(node) {
+        // Skip if already has @mutex decorator
         const hasMutex = node.decorators?.some(d => d.expression?.callee?.name === 'mutex');
         if (hasMutex) return;
 
-        const methodName = node.key.name?.toLowerCase() || '';
-        const mutationPatterns = ['set', 'update', 'modify', 'change', 'mutate', 'write'];
-        
-        if (mutationPatterns.some(p => methodName.startsWith(p)) && node.value?.async) {
-          context.report({ node, messageId: 'missingMutex', data: { method: node.key.name } });
+        // Skip if has exemption comment
+        const comments = context.getSourceCode().getCommentsBefore(node);
+        if (comments.some(c => /@mutex-exempt/i.test(c.value))) {
+          return;
+        }
+
+        const methodName = node.key.name || 'anonymous';
+
+        // Perform semantic analysis: detect state mutations in method body
+        const mutations = detectStateMutations(node);
+
+        if (mutations.length > 0) {
+          context.report({
+            node,
+            messageId: 'missingMutex',
+            data: {
+              method: methodName,
+              mutations: mutations.map(m => `• ${m.target}.${m.property}`).join('\n')
+            }
+          });
         }
       }
     };

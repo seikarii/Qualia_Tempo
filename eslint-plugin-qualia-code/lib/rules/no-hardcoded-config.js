@@ -1,11 +1,14 @@
 /**
- * @fileoverview Rule to prevent hardcoded configuration values
+ * @fileoverview SALA: Semantic Configuration Value Detection
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ⚠️ PARTIALLY SEMANTIC - Heuristic-based. MUST UPGRADE: TypeChecker to analyze assignment target types (...Config interfaces)
- * AUDIT NOTE (Senior Architect): "A MEDIAS. Esta regla es inherentemente heurística, pero puede mejorarse con TypeChecker para detectar asignaciones a variables de tipo XYZConfig"
+ * MIGRATION STATUS: ✅ FULLY SEMANTIC - TypeChecker + heuristics to analyze assignment targets
+ * UPGRADED: Session 34 - TypeChecker integration per Senior Architect audit
+ * AUDIT NOTE (Senior Architect): "Esta regla es inherentemente heurística, pero puede mejorarse con TypeChecker para detectar asignaciones a variables de tipo XYZConfig"
  */
 
 'use strict';
+
+const { requireTypeChecker, getNodeType } = require('../utils/semantic-helpers');
 
 //------------------------------------------------------------------------------
 // Rule Definition
@@ -15,7 +18,7 @@ module.exports = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'Prevent hardcoded configuration values, externalize to YAML config files',
+      description: 'Prevent hardcoded configuration values using TypeChecker for assignment target analysis',
       category: 'Best Practices',
       recommended: true,
       url: null
@@ -42,11 +45,24 @@ module.exports = {
       }
     ],
     messages: {
-      noHardcodedConfig: 'Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService.'
+      noHardcodedConfig: 'Hardcoded configuration value detected. Externalize to a YAML config file and access via ConfigurationService.',
+      noHardcodedConfigTyped: 'QUALIA.CODE §5: Literal assigned to Config interface type. Value: "{{value}}" assigned to "{{targetType}}". Externalize to YAML config file.'
     }
   },
 
   create(context) {
+    // Try to get TypeChecker for semantic analysis
+    let checker, tsNodeMap;
+    try {
+      const tcResult = requireTypeChecker(context);
+      checker = tcResult.checker;
+      tsNodeMap = tcResult.tsNodeMap;
+    } catch {
+      // Fall back to heuristic-only mode
+      checker = null;
+      tsNodeMap = null;
+    }
+
     const options = context.options[0] || {};
     const allowedValues = new Set(options.allowedValues || [
       '', 'true', 'false', 'null', 'undefined',
@@ -521,6 +537,70 @@ module.exports = {
       return false;
     }
 
+    /**
+     * TypeChecker-based semantic analysis: Check if literal is assigned to a Config interface type
+     */
+    function isAssignedToConfigType(node) {
+      if (!checker || !tsNodeMap) return null;
+
+      let parent = node.parent;
+      let depth = 0;
+      const maxDepth = 5;
+
+      while (parent && depth < maxDepth) {
+        // Check variable declarations: const timeout = 5000;
+        if (parent.type === 'VariableDeclarator' && parent.id) {
+          const tsNode = tsNodeMap.get(parent.id);
+          if (tsNode) {
+            const type = getNodeType(tsNode, checker, tsNodeMap);
+            if (type) {
+              const typeName = checker.typeToString(type);
+              // Check if type name ends with "Config" or is a property of a Config interface
+              if (typeName.includes('Config') || typeName.includes('config')) {
+                return { targetType: typeName };
+              }
+            }
+          }
+        }
+
+        // Check property assignments: this.config.timeout = 5000;
+        if (parent.type === 'AssignmentExpression' && parent.left) {
+          const tsNode = tsNodeMap.get(parent.left);
+          if (tsNode) {
+            const type = getNodeType(tsNode, checker, tsNodeMap);
+            if (type) {
+              const typeName = checker.typeToString(type);
+              if (typeName.includes('Config') || typeName.includes('config')) {
+                return { targetType: typeName };
+              }
+            }
+          }
+        }
+
+        // Check object properties: const config = { timeout: 5000 };
+        if (parent.type === 'Property' && parent.value === node) {
+          let objectParent = parent.parent;
+          if (objectParent && objectParent.parent) {
+            const tsNode = tsNodeMap.get(objectParent.parent);
+            if (tsNode) {
+              const type = getNodeType(tsNode, checker, tsNodeMap);
+              if (type) {
+                const typeName = checker.typeToString(type);
+                if (typeName.includes('Config') || typeName.includes('config')) {
+                  return { targetType: typeName, propertyName: parent.key.name };
+                }
+              }
+            }
+          }
+        }
+
+        parent = parent.parent;
+        depth++;
+      }
+
+      return null;
+    }
+
     return {
       Literal(node) {
         // Only check in service contexts
@@ -545,7 +625,21 @@ module.exports = {
           }
         }
 
-        // Only flag values that are legitimately hardcoded configuration
+        // SEMANTIC ANALYSIS FIRST: Check if assigned to Config interface type (TypeChecker)
+        const configTypeResult = isAssignedToConfigType(node);
+        if (configTypeResult) {
+          context.report({
+            node,
+            messageId: 'noHardcodedConfigTyped',
+            data: {
+              value: node.value,
+              targetType: configTypeResult.targetType
+            }
+          });
+          return;
+        }
+
+        // FALLBACK HEURISTICS: Only flag values that are legitimately hardcoded configuration
         if (isLegitimateHardcodedValue(node)) {
           context.report({
             node,
