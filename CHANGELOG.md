@@ -1,5 +1,93 @@
 # CHANGELOG - QUALIA TEMPO
 
+## [Unreleased] - 2025-10-11 - SESSION 38: GRAPH GENERATOR (GMGA) - ARCHITECTURAL ANALYSIS TOOL
+
+### 🚀 NEW FEATURE: Graph Generator (GMGA) - Rust Static Analysis Tool
+
+**Location**: `/tools/graph_generator/`
+
+**Purpose**: Herramienta de análisis estático para generar mapas de grafos arquitectónicos de proyectos Rust, facilitando el entendimiento de la estructura del código por parte de IA y desarrolladores.
+
+#### Implementation Details:
+
+**Architecture**:
+- **types.rs**: Data structures (GraphNode, GraphEdge, ProjectGraph)
+- **file_discovery.rs**: Recursive directory traversal with intelligent filtering
+- **ast_analyzer.rs**: AST parsing using `syn` with Visitor pattern
+- **graph_builder.rs**: Graph construction orchestration
+- **output.rs**: JSON serialization and statistics generation
+- **main.rs**: CLI interface with `clap`
+
+**Features**:
+- 🔍 Smart file discovery (ignores `target/`, `node_modules/`, etc.)
+- 📏 Automatic filtering of large files (> 3000 lines by default)
+- 🌳 Precise AST analysis using `syn` (Rust's standard parser)
+- 📊 Complete extraction: structs, enums, traits, public functions, doc comments, dependencies
+- 🔗 Relationship mapping via `use` statements and trait implementations
+- 💾 Clean JSON output ready for AI consumption
+- 🧪 Full test suite (10 tests, 100% passing)
+
+**Dependencies**:
+- `syn 2.0` - AST parsing with full feature set
+- `serde/serde_json` - JSON serialization
+- `walkdir` - Efficient directory traversal
+- `clap 4.5` - CLI framework with derive macros
+- `anyhow/thiserror` - Error handling
+- `chrono` - Timestamp generation
+
+**Testing Results**:
+```
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+```
+
+**Usage Examples**:
+```bash
+# Basic analysis
+graph_generator --path /ruta/al/proyecto
+
+# Custom output file
+graph_generator --path /ruta/al/proyecto --output custom.json
+
+# Increase line limit
+graph_generator --path /ruta/al/proyecto --max-lines 5000
+
+# Show detailed statistics
+graph_generator --path /ruta/al/proyecto --stats
+
+# Verbose mode
+graph_generator --path /ruta/al/proyecto --verbose
+```
+
+**Output Format**:
+- **Nodes**: Structs, enums, traits, functions with doc comments and metadata
+- **Edges**: "uses" (imports), "implements" (trait implementations)
+- **Metadata**: Analysis timestamp, file counts, external dependencies
+
+**Architectural Compliance**:
+- ✅ **No Prototypes**: Production-ready code from inception
+- ✅ **Decoupling**: Clear module separation with single responsibilities
+- ✅ **Testing**: Comprehensive test coverage
+- ✅ **Documentation**: Full rustdoc comments on all public APIs
+
+**Deliverables**:
+- Complete Rust project in `/tools/graph_generator/`
+- Comprehensive README.md with usage examples
+- Test suite with 100% pass rate
+- Example usage script (`example_usage.sh`)
+- `.gitignore` for Rust artifacts
+
+**Build Status**:
+- Debug build: ✅ Success (2 non-critical dead_code warnings)
+- Release build: ✅ Success (optimized)
+- Self-analysis test: ✅ Success (6 files, 10 nodes, 3 edges analyzed)
+
+**Next Steps**:
+- Consider extending to TypeScript/Python analysis
+- Integration with CI/CD for architectural monitoring
+- Visualization tools for generated graphs
+
+---
+
 ## [Unreleased] - 2025-01-11 - SESSION 37: LINTER BUG FIXES + DECORATOR ADDITIONS
 
 ### 🔥 PHASE 1: CRITICAL BUG FIX - Decorator Detection System (54.5% Error Reduction)
