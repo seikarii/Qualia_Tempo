@@ -1,4 +1,4 @@
-# QUALIA.CODE.RUST v1.0 - The Definitive Rust Rewrite Manual
+# QUALIA.CODE.RUST v1.1 - The Definitive Rust Rewrite Manual
 # TARGET: Qualia Tempo - Complete Rust Implementation
 # COMPLIANCE: ABSOLUTE. NON-NEGOTIABLE.
 
@@ -37,8 +37,8 @@ This document defines the complete architectural rewrite of Qualia Tempo in Rust
 - **Shared Core (Rust Library Crate)**: Contracts (structs), traits, event definitions - compiled into BOTH
 
 ### 1.3. Performance by Design
-- **Lock-Free Data Structures**: Use crossbeam, flume, or async-channel instead of Mutex when possible
-- **Arena Allocation**: Use typed-arena or bumpalo for hot paths (particle systems)
+- **Lock-Free Data Structures**: Prefer `tokio::sync::broadcast` or `async-channel` over `Arc<RwLock<...>>`
+- **Arena Allocation**: Use `typed-arena` or `bumpalo` for hot paths (particle systems)
 - **Inline Aggressively**: `#[inline]` or `#[inline(always)]` on hot functions
 - **Profile-Guided Optimization**: Build with PGO for 10-20% performance gains
 
@@ -49,68 +49,15 @@ This document defines the complete architectural rewrite of Qualia Tempo in Rust
 ### 2.1. Core Principle
 Shaku provides **compile-time dependency injection** with zero runtime overhead. It's Rust's answer to InversifyJS.
 
-### 2.2. The Module Pattern
+**MANDATE**: All service instantiation MUST go through Shaku modules. Direct instantiation with `new()` is a CRITICAL VIOLATION.
 
-```rust
-use shaku::{module, Component, Interface};
-
-// Define interface trait
-trait ILogger: Interface {
-    fn info(&self, msg: &str);
-}
-
-// Implement component
-#[derive(Component)]
-#[shaku(interface = ILogger)]
-struct QualiaLogger {
-    #[shaku(default)]
-    level: LogLevel,
-}
-
-impl ILogger for QualiaLogger {
-    fn info(&self, msg: &str) {
-        println!("[INFO] {}", msg);
-    }
-}
-
-// Create module
-module! {
-    GameModule {
-        components = [QualiaLogger],
-        providers = []
-    }
-}
-
-// Usage
-let module = GameModule::builder().build();
-let logger: &dyn ILogger = module.resolve_ref();
-logger.info("System initialized");
-```
-
-### 2.3. Configuration Injection Pattern
+### 2.2. Configuration Injection Pattern
 
 **CRITICAL DIFFERENCE FROM TYPESCRIPT**: In Rust, configuration is loaded ONCE at startup and injected as **immutable references** or **Arc<Config>** for thread-safe sharing.
 
-```rust
-use serde::Deserialize;
-use std::sync::Arc;
+**PROHIBITED**: IConfigurationService pattern. Direct configuration injection eliminates the Service Locator anti-pattern.
 
-#[derive(Deserialize, Clone)]
-struct MyServiceConfig {
-    timeout_ms: u64,
-    retry_count: u32,
-}
-
-#[derive(Component)]
-#[shaku(interface = IMyService)]
-struct MyService {
-    config: Arc<MyServiceConfig>, // Shared, immutable
-    #[shaku(inject)]
-    logger: Arc<dyn ILogger>,
-}
-```
-
-### 2.4. PROHIBITED PATTERNS
+### 2.3. PROHIBITED PATTERNS
 
 1. **ANTI-PATTERN: Direct Instantiation**
    ```rust
@@ -132,6 +79,8 @@ struct MyService {
    }
    ```
 
+**Detailed Implementation**: See `QUALIA.MANUAL.RUST.md` Section 2.
+
 ---
 
 ## 3. SHARED CONTRACTS: SERDE + SCHEMARS (REVERSED FLOW!)
@@ -141,415 +90,180 @@ struct MyService {
 **OLD (TypeScript/Python)**: JSON Schema (source) → Generate Code (target)  
 **NEW (Rust)**: Rust Structs (source) → Generate JSON Schema (documentation)
 
-### 3.2. Contract Definition
+**RATIONALE**: Rust's type system is the source of truth. JSON schemas are generated artifacts for documentation and interoperability.
 
-```rust
-// shared_core/src/contracts.rs
-use serde::{Serialize, Deserialize};
-use schemars::JsonSchema;
+### 3.2. Contract Definition Rules
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct QualiaState {
-    pub intensity: f32,
-    pub harmony: f32,
-    pub chaos: f32,
-    pub kairos: f32,
-    pub timestamp: u64,
-}
+- **MANDATE**: All shared structs MUST derive `Serialize`, `Deserialize`, and `JsonSchema`
+- **MANDATE**: Use `#[serde(rename_all = "camelCase")]` for JavaScript interop
+- **MANDATE**: Use `#[serde(tag = "type")]` for tagged union enums
+- **VALIDATION**: Use `validator` crate for runtime boundary validation
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
-#[serde(tag = "type", rename_all = "camelCase")]
-pub enum PlayerAction {
-    KeyPressed { key: char, timestamp: u64, accuracy: f32 },
-    Dashed { direction: Vec2, timestamp: u64 },
-    MissNote { timestamp: u64 },
-}
-```
+### 3.3. Schema Generation Protocol
 
-### 3.3. Schema Generation (Build Script)
+**WORKFLOW**:
+1. Define structs in `shared_core/src/contracts.rs`
+2. Run build script `scripts/generate_schema.rs`
+3. JSON schemas written to `/shared_contracts/*.schema.json`
+4. NEVER manually edit generated schemas
 
-```rust
-// scripts/generate_schema.rs
-use schemars::schema_for;
-use std::fs;
-
-fn main() {
-    let schema = schema_for!(QualiaState);
-    let json = serde_json::to_string_pretty(&schema).unwrap();
-    fs::write("shared_contracts/QualiaState.schema.json", json).unwrap();
-}
-```
-
-### 3.4. Validation at Boundaries
-
-```rust
-use validator::Validate;
-
-#[derive(Deserialize, Validate)]
-struct IncomingData {
-    #[validate(range(min = 0.0, max = 1.0))]
-    intensity: f32,
-}
-
-fn handle_message(data: IncomingData) -> Result<(), ValidationError> {
-    data.validate()?; // Compile-time structure, runtime validation
-    // Process...
-    Ok(())
-}
-```
+**Detailed Implementation**: See `QUALIA.MANUAL.RUST.md` Section 3.
 
 ---
 
-## 4. EVENT-DRIVEN ARCHITECTURE: ASYNC-CHANNEL + TOKIO
+## 4. EVENT-DRIVEN ARCHITECTURE: TOKIO::SYNC::BROADCAST (CRITICAL CORRECTION)
 
-### 4.1. Event Bus Pattern
+### 4.1. The EventBus Pattern
+
+**CRITICAL MANDATE**: Use `tokio::sync::broadcast` for the EventBus. Manual implementations with `Arc<RwLock<HashMap<...>>>` or `Arc<RwLock<Vec<...>>>` are STRICTLY FORBIDDEN.
+
+**RATIONALE**:
+- `tokio::sync::broadcast` is the idiomatic Tokio solution for one-to-many event distribution
+- Manual `RwLock` implementations create lock contention under async load
+- `broadcast` is lock-free, optimized for the async runtime, and designed for this exact pattern
+
+### 4.2. Architecture Principles
+
+- **Multiple Consumers**: Each service subscribes and receives all events (fan-out pattern)
+- **Type-Safe Events**: Use Rust enums for compile-time event type safety
+- **No Slow Subscribers**: If a subscriber can't keep up, it lags (configurable behavior)
+- **Clone Events**: Events must be `Clone` for distribution to multiple subscribers
+
+### 4.3. ANTI-PATTERN: Manual EventBus with RwLock
 
 ```rust
-use async_channel::{Sender, Receiver, unbounded};
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-
-#[derive(Debug, Clone)]
-pub enum GameEvent {
-    PlayerAction(PlayerAction),
-    QualiaStateUpdated(QualiaState),
-    GameStateChanged(GameState),
-    BossAttack(AttackPattern),
-}
-
+// FORBIDDEN - CRITICAL ANTI-PATTERN
 pub struct EventBus {
-    subscribers: Arc<RwLock<HashMap<TypeId, Vec<Sender<GameEvent>>>>>,
+    subscribers: Arc<RwLock<Vec<Sender<GameEvent>>>>, // VIOLATION!
 }
 
 impl EventBus {
-    pub fn new() -> Self {
-        Self {
-            subscribers: Arc::new(RwLock::new(HashMap::new())),
-        }
-    }
-
     pub async fn emit(&self, event: GameEvent) {
-        let subscribers = self.subscribers.read().await;
-        let type_id = TypeId::of::<GameEvent>();
-        
-        if let Some(subs) = subscribers.get(&type_id) {
-            for sender in subs {
-                let _ = sender.send(event.clone()).await;
-            }
+        let subs = self.subscribers.read().await; // LOCK CONTENTION!
+        for sender in subs.iter() {
+            let _ = sender.send(event.clone()).await;
         }
-    }
-
-    pub async fn subscribe(&self) -> Receiver<GameEvent> {
-        let (tx, rx) = unbounded();
-        let mut subscribers = self.subscribers.write().await;
-        subscribers.entry(TypeId::of::<GameEvent>())
-            .or_insert_with(Vec::new)
-            .push(tx);
-        rx
     }
 }
 ```
 
-### 4.2. Service with Event Subscription
+**WHY FORBIDDEN**:
+- `RwLock` blocks under contention, degrading async performance
+- Manual subscriber management is error-prone (dead subscriber cleanup)
+- Reinventing what `tokio::sync::broadcast` does optimally
+
+### 4.4. CORRECT PATTERN: tokio::sync::broadcast
 
 ```rust
-use tracing::instrument;
+// CORRECT - Use tokio::sync::broadcast
+use tokio::sync::broadcast;
 
-pub struct GameLogicService {
-    event_bus: Arc<EventBus>,
-    config: Arc<GameLogicConfig>,
+pub struct EventBus {
+    tx: broadcast::Sender<GameEvent>,
 }
 
-impl GameLogicService {
-    #[instrument(skip(self))]
-    pub async fn start(&self) {
-        let mut events = self.event_bus.subscribe().await;
-        
-        while let Ok(event) = events.recv().await {
-            match event {
-                GameEvent::PlayerAction(action) => {
-                    self.handle_action(action).await;
-                }
-                _ => {}
-            }
-        }
+impl EventBus {
+    pub fn new(capacity: usize) -> Self {
+        let (tx, _rx) = broadcast::channel(capacity);
+        Self { tx }
     }
-    
-    async fn handle_action(&self, action: PlayerAction) {
-        // Process action...
-        let new_state = self.calculate_state(action);
-        self.event_bus.emit(GameEvent::QualiaStateUpdated(new_state)).await;
+
+    pub fn emit(&self, event: GameEvent) -> Result<usize, broadcast::error::SendError<GameEvent>> {
+        self.tx.send(event) // Lock-free!
+    }
+
+    pub fn subscribe(&self) -> broadcast::Receiver<GameEvent> {
+        self.tx.subscribe()
     }
 }
 ```
+
+**ADVANTAGES**:
+- Zero locks, zero contention
+- Built-in lagging subscriber detection
+- Automatic cleanup of dropped receivers
+- Battle-tested in production Tokio applications
+
+**Detailed Implementation**: See `QUALIA.MANUAL.RUST.md` Section 4.
 
 ---
 
 ## 5. PROCEDURAL MACROS: THE DECORATOR REPLACEMENT
 
-### 5.1. Attribute Macros (Most Common)
+### 5.1. Core Principle
 
-#### 5.1.1. The `#[instrument]` Macro (Logging)
+Procedural macros replace TypeScript decorators but operate at COMPILE TIME, generating code before the program runs.
 
-Replaces TypeScript's `@logMethod()`:
+### 5.2. Standard Macros
 
-```rust
-use tracing::{instrument, info, error};
+- **`#[derive(Serialize, Deserialize)]`**: Automatic serialization (Serde)
+- **`#[derive(Component)]`**: Dependency injection (Shaku)
+- **`#[instrument]`**: Automatic logging with entry/exit/timing (Tracing)
+- **`#[cached]`**: Memoization (cached crate)
 
-#[instrument(skip(self))] // Don't log 'self'
-pub async fn process_action(&self, action: PlayerAction) -> Result<(), GameError> {
-    info!("Processing action: {:?}", action);
-    // Automatically logs entry, exit, and execution time
-    let result = self.do_work(&action).await;
-    if let Err(e) = &result {
-        error!("Action failed: {}", e);
-    }
-    result
-}
-```
+### 5.3. Custom Macro Requirements
 
-#### 5.1.2. Custom `#[cached]` Macro (Memoization)
+- **LOCATION**: `qualia_macros/` separate crate (proc-macro = true)
+- **TESTING**: Macros must have expansion tests
+- **DOCUMENTATION**: Document macro behavior with examples
 
-Replaces manual caching:
-
-```rust
-use cached::proc_macro::cached;
-
-#[cached(time = 60)] // Cache for 60 seconds
-fn expensive_calculation(input: u32) -> f64 {
-    std::thread::sleep(Duration::from_secs(2));
-    (input as f64).sqrt()
-}
-```
-
-#### 5.1.3. Custom `#[validate]` Macro
-
-Replaces runtime validation:
-
-```rust
-#[validate_input]
-pub fn set_intensity(&mut self, #[range(0.0..=1.0)] intensity: f32) {
-    self.intensity = intensity; // Macro generates validation code
-}
-```
-
-### 5.2. Derive Macros
-
-#### 5.2.1. Serde (Serialization)
-
-```rust
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct MyData {
-    field_name: String,
-}
-```
-
-#### 5.2.2. Component (DI)
-
-```rust
-#[derive(Component)]
-#[shaku(interface = IMyService)]
-struct MyService { /* ... */ }
-```
-
-### 5.3. Building Custom Macros
-
-```rust
-// qualia_macros/src/lib.rs
-use proc_macro::TokenStream;
-use quote::quote;
-use syn::{parse_macro_input, ItemFn};
-
-#[proc_macro_attribute]
-pub fn catch_error(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(item as ItemFn);
-    let fn_name = &input.sig.ident;
-    let fn_block = &input.block;
-    
-    let output = quote! {
-        #input.sig {
-            match (|| #fn_block)() {
-                Ok(val) => Ok(val),
-                Err(e) => {
-                    tracing::error!("Error in {}: {:?}", stringify!(#fn_name), e);
-                    Err(e)
-                }
-            }
-        }
-    };
-    output.into()
-}
-```
+**Detailed Implementation**: See `QUALIA.MANUAL.RUST.md` Section 5.
 
 ---
 
 ## 6. ASYNC RUNTIME: TOKIO (THE STANDARD)
 
-### 6.1. Core Concepts
+### 6.1. Core Mandate
 
-- **Tasks**: Lightweight green threads (like Web Workers but managed by Tokio)
-- **Async/Await**: Non-blocking I/O without callbacks
-- **Channels**: Message passing between tasks (mpsc, broadcast, watch, oneshot)
+**TOKIO IS THE STANDARD**. Do not use `async-std` (deprecated in favor of `smol`). The Tokio ecosystem is the de-facto async standard in Rust.
 
-### 6.2. Backend Server Setup
+### 6.2. Key Principles
+
+- **Tasks**: Lightweight green threads (use `tokio::spawn`)
+- **Channels**: Message passing (`mpsc`, `broadcast`, `watch`, `oneshot`)
+- **No Blocking**: NEVER call blocking I/O in async contexts
+- **Runtime Configuration**: Multi-threaded by default (`#[tokio::main]`)
+
+### 6.3. ANTI-PATTERN: Blocking in Async
 
 ```rust
-// backend/src/main.rs
-use tokio;
-use axum::{Router, routing::get};
-use tower_http::trace::TraceLayer;
+// FORBIDDEN
+async fn load_config() -> String {
+    std::fs::read_to_string("config.yaml").unwrap() // BLOCKS RUNTIME!
+}
 
-#[tokio::main]
-async fn main() {
-    // Initialize tracing
-    tracing_subscriber::fmt()
-        .with_target(false)
-        .compact()
-        .init();
-
-    let app = Router::new()
-        .route("/ws", get(websocket_handler))
-        .layer(TraceLayer::new_for_http());
-
-    let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
-    tracing::info!("Server listening on {}", addr);
-    
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+// CORRECT
+async fn load_config() -> Result<String, std::io::Error> {
+    tokio::fs::read_to_string("config.yaml").await // ASYNC I/O
 }
 ```
 
-### 6.3. Parallel Task Spawning (Replacing Process Pools)
-
-```rust
-use tokio::task;
-
-async fn parallel_particle_calculation(particles: Vec<Particle>) -> Vec<Particle> {
-    let chunk_size = particles.len() / num_cpus::get();
-    
-    let handles: Vec<_> = particles
-        .chunks(chunk_size)
-        .map(|chunk| {
-            let chunk = chunk.to_vec();
-            task::spawn(async move {
-                chunk.iter().map(|p| update_particle(p)).collect::<Vec<_>>()
-            })
-        })
-        .collect();
-    
-    let results = futures::future::join_all(handles).await;
-    results.into_iter().flat_map(|r| r.unwrap()).collect()
-}
-```
+**Detailed Implementation**: See `QUALIA.MANUAL.RUST.md` Section 6.
 
 ---
 
 ## 7. FRONTEND: WASM + WGPU + LEPTOS
 
-### 7.1. Architecture
+### 7.1. Architecture Overview
 
-```
-┌─────────────────────────────────────────────────┐
-│  Browser                                        │
-│  ┌───────────────────────────────────────────┐  │
-│  │  Leptos (Rust → WASM)                     │  │
-│  │  - UI Components (reactive signals)       │  │
-│  │  - State Management (no Zustand needed!)  │  │
-│  └───────────────────────────────────────────┘  │
-│  ┌───────────────────────────────────────────┐  │
-│  │  wgpu (Rust → WebGPU)                     │  │
-│  │  - 3D Rendering                           │  │
-│  │  - Shaders (WGSL native)                  │  │
-│  │  - Particle Systems                       │  │
-│  └───────────────────────────────────────────┘  │
-│  ┌───────────────────────────────────────────┐  │
-│  │  Web Audio (via wasm-bindgen)             │  │
-│  │  - Audio playback                         │  │
-│  │  - FFT Analysis                           │  │
-│  └───────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
-```
+- **Leptos**: Reactive UI framework (signals replace Zustand)
+- **wgpu**: Cross-platform graphics (WebGPU API, native + WASM)
+- **wasm-bindgen**: JavaScript interop for Web Audio
 
-### 7.2. Leptos Component Example
+### 7.2. State Management
+
+**NO ZUSTAND NEEDED**: Leptos signals provide reactive state management with compile-time guarantees.
 
 ```rust
-use leptos::*;
-
-#[component]
-pub fn GameUI(cx: Scope) -> impl IntoView {
-    let (qualia_state, set_qualia_state) = create_signal(cx, QualiaState::default());
-    
-    // Connect to backend via WebSocket
-    create_effect(cx, move |_| {
-        spawn_local(async move {
-            let mut ws = WebSocket::connect("ws://localhost:8080/ws").await.unwrap();
-            
-            while let Ok(msg) = ws.recv().await {
-                let state: QualiaState = serde_json::from_str(&msg).unwrap();
-                set_qualia_state.set(state);
-            }
-        });
-    });
-
-    view! { cx,
-        <div class="game-container">
-            <QualiaDisplay state=qualia_state />
-            <BossRenderer />
-            <InputCapture />
-        </div>
-    }
-}
+let (state, set_state) = create_signal(cx, GameState::default());
+// Automatically reactive - UI updates when state changes
 ```
 
-### 7.3. wgpu Rendering
+### 7.3. Rendering Pipeline
 
-```rust
-use wgpu;
+**wgpu MANDATE**: All rendering must use wgpu (not Three.js). Shaders written in WGSL (WebGPU Shading Language).
 
-pub struct WgpuRenderer {
-    device: wgpu::Device,
-    queue: wgpu::Queue,
-    pipeline: wgpu::RenderPipeline,
-}
-
-impl WgpuRenderer {
-    pub fn new(window: &Window) -> Self {
-        // Initialize WebGPU
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::all(),
-            ..Default::default()
-        });
-        
-        // Create surface
-        let surface = unsafe { instance.create_surface(window) }.unwrap();
-        
-        // Request adapter and device
-        let adapter = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
-            power_preference: wgpu::PowerPreference::HighPerformance,
-            compatible_surface: Some(&surface),
-            ..Default::default()
-        })).unwrap();
-        
-        let (device, queue) = pollster::block_on(adapter.request_device(
-            &wgpu::DeviceDescriptor::default(),
-            None,
-        )).unwrap();
-        
-        // Create render pipeline with shaders...
-        
-        Self { device, queue, pipeline }
-    }
-    
-    pub fn render(&self, particles: &[Particle]) {
-        // Rendering logic...
-    }
-}
-```
+**Detailed Implementation**: See `QUALIA.MANUAL.RUST.md` Section 7.
 
 ---
 
@@ -557,102 +271,150 @@ impl WgpuRenderer {
 
 ### 8.1. Core Concepts
 
-- **Spans**: Time periods (replace manual timing)
-- **Events**: Log messages (replace console.log)
+- **Spans**: Time periods with context (replace manual timing)
+- **Events**: Log messages at levels (debug, info, warn, error)
 - **Subscribers**: Output targets (stdout, files, JSON, OpenTelemetry)
+- **Instrumentation**: `#[instrument]` macro for automatic method logging
 
-### 8.2. Service Implementation
+### 8.2. MANDATE
 
-```rust
-use tracing::{debug, info, warn, error, instrument, span, Level};
+- **PROHIBITED**: `println!`, `eprintln!`, `dbg!` in production code
+- **REQUIRED**: `tracing::info!`, `tracing::error!`, etc.
+- **REQUIRED**: `#[instrument]` on all public service methods
 
-pub struct ParticleEngine {
-    config: Arc<ParticleConfig>,
-}
-
-impl ParticleEngine {
-    #[instrument(skip(self), fields(particle_count = particles.len()))]
-    pub async fn update(&self, particles: &mut [Particle], dt: f32) {
-        let span = span!(Level::DEBUG, "particle_update");
-        let _enter = span.enter();
-        
-        debug!("Starting particle update");
-        
-        for particle in particles.iter_mut() {
-            particle.position += particle.velocity * dt;
-            particle.lifetime -= dt;
-        }
-        
-        info!(updated = particles.len(), "Particles updated");
-    }
-    
-    #[instrument(skip(self), err)]
-    pub async fn load_config(&self, path: &str) -> Result<Config, ConfigError> {
-        info!(path, "Loading particle config");
-        let config = tokio::fs::read_to_string(path).await?;
-        let parsed = toml::from_str(&config)?;
-        Ok(parsed)
-    }
-}
-```
-
-### 8.3. Initialization
-
-```rust
-// main.rs
-use tracing_subscriber::{fmt, EnvFilter, prelude::*};
-
-fn init_logging() {
-    tracing_subscriber::registry()
-        .with(fmt::layer().compact())
-        .with(EnvFilter::from_default_env()
-            .add_directive("qualia_tempo=debug".parse().unwrap())
-            .add_directive("tokio=info".parse().unwrap()))
-        .init();
-}
-```
+**Detailed Implementation**: See `QUALIA.MANUAL.RUST.md` Section 8.
 
 ---
 
-## 9. TESTING: CARGO TEST + PROPTEST
+## 9. TESTING: ISOLATED CONTAINER PATTERN + HIGH-FIDELITY MOCKING
 
-### 9.1. Unit Tests
+### 9.1. Core Philosophy (GOLD.CODE ALIGNMENT)
+
+**FROM QUALIA.CODE (MANDATORY)**:
+- **Isolated Container Pattern**: Each test receives a completely new container instance
+- **High-Fidelity Mocking**: Mocks must faithfully implement trait contracts with type-safe defaults
+- **Zero Tolerance**: A broken test is a broken build
+
+### 9.2. Isolated Container Pattern in Rust
+
+**MANDATE**: Create a test module factory that builds isolated Shaku containers per test.
+
+**PRINCIPLE**: Each test must receive a fresh `GameModule` with all dependencies mocked, preventing cross-contamination.
 
 ```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_qualia_calculation() {
-        let calculator = QualiaCalculator::new(Config::default());
-        let state = calculator.calculate(PlayerAction::KeyPressed {
-            key: 'Q',
-            timestamp: 1000,
-            accuracy: 0.95,
-        });
-        
-        assert!(state.intensity > 0.0);
-        assert!(state.intensity <= 1.0);
-    }
-    
-    #[tokio::test]
-    async fn test_event_bus() {
-        let bus = EventBus::new();
-        let mut rx = bus.subscribe().await;
-        
-        bus.emit(GameEvent::PlayerAction(PlayerAction::Dashed {
-            direction: Vec2::new(1.0, 0.0),
-            timestamp: 2000,
-        })).await;
-        
-        let event = rx.recv().await.unwrap();
-        assert!(matches!(event, GameEvent::PlayerAction(_)));
-    }
+// test_container_factory.rs
+pub fn create_test_module() -> GameModule {
+    GameModule::builder()
+        .with_component_override::<dyn ILogger>(Box::new(|| {
+            Box::new(MockLogger::new())
+        }))
+        .with_component_override::<dyn IEventBus>(Box::new(|| {
+            Box::new(MockEventBus::new())
+        }))
+        .build()
 }
 ```
 
-### 9.2. Property-Based Testing
+**PROHIBITED**:
+- Sharing a global container between tests
+- Parent/child container patterns for services
+- Direct `new()` instantiation in tests
+
+### 9.3. High-Fidelity Mocking with `mockall`
+
+**CRITICAL MANDATE**: All service mocks MUST use the `mockall` crate for trait implementation.
+
+**PRINCIPLE**: A mock must be a faithful, type-safe representation of the interface. Default behaviors must match return types.
+
+#### 9.3.1. The mockall Pattern
+
+```rust
+use mockall::*;
+
+#[automock]
+pub trait ILogger: Send + Sync {
+    fn info(&self, msg: &str);
+    fn error(&self, msg: &str);
+}
+
+#[automock]
+pub trait IGameLogicService: Send + Sync {
+    async fn process_action(&self, action: PlayerAction) -> Result<QualiaState, GameError>;
+    fn get_score(&self) -> u32;
+}
+```
+
+#### 9.3.2. High-Fidelity Mock Rules (MANDATORY)
+
+1. **Respect Return Types**: Mocks MUST return type-safe defaults
+   ```rust
+   // CORRECT
+   let mut mock = MockIGameLogicService::new();
+   mock.expect_get_score()
+       .return_const(0u32); // High-fidelity: returns u32, not undefined
+
+   // FORBIDDEN - No expectation = panic at runtime
+   let mock = MockIGameLogicService::new(); // VIOLATION
+   ```
+
+2. **Async Methods**: Use `returning` for futures
+   ```rust
+   mock.expect_process_action()
+       .returning(|_| Box::pin(async { Ok(QualiaState::default()) }));
+   ```
+
+3. **Complex Objects**: Provide sensible defaults
+   ```rust
+   mock.expect_get_dimensions()
+       .return_const(Dimensions { width: 1920, height: 1080 });
+   ```
+
+4. **Prohibition of Low-Fidelity Mocks**
+   ```rust
+   // FORBIDDEN - Bare mock without expectations
+   let mock = MockILogger::new(); // VIOLATION: Will panic if called!
+
+   // CORRECT - All used methods have expectations
+   let mut mock = MockILogger::new();
+   mock.expect_info().return_const(());
+   mock.expect_error().return_const(());
+   ```
+
+### 9.4. Testing Workflow (5-STEP PROTOCOL)
+
+#### STEP 1: Identify Service Under Test (SUT)
+- Choose ONE service to test in isolation
+
+#### STEP 2: Create Isolated Test Container
+```rust
+let module = create_test_module();
+```
+
+#### STEP 3: Configure Mock Behaviors
+```rust
+let mut mock_logger = MockILogger::new();
+mock_logger.expect_info()
+    .with(predicate::eq("Processing action"))
+    .times(1)
+    .return_const(());
+```
+
+#### STEP 4: Exercise the SUT
+```rust
+let sut: &dyn IGameLogicService = module.resolve_ref();
+let result = sut.process_action(action).await;
+```
+
+#### STEP 5: Assert Results and Interactions
+```rust
+assert!(result.is_ok());
+assert_eq!(result.unwrap().intensity, 0.95);
+// mockall automatically verifies expectations on drop
+```
+
+### 9.5. Property-Based Testing
+
+**MANDATE**: Use `proptest` for testing invariants over ranges of inputs.
 
 ```rust
 use proptest::prelude::*;
@@ -660,206 +422,227 @@ use proptest::prelude::*;
 proptest! {
     #[test]
     fn test_qualia_bounds(intensity in 0.0f32..=1.0) {
-        let state = QualiaState {
-            intensity,
-            harmony: 0.5,
-            chaos: 0.5,
-            kairos: 0.5,
-            timestamp: 0,
-        };
-        
+        let state = QualiaState { intensity, ..Default::default() };
         prop_assert!(state.intensity >= 0.0 && state.intensity <= 1.0);
     }
 }
 ```
 
+### 9.6. Test Organization
+
+**STRUCTURE**:
+```
+backend/
+├── src/
+│   └── services/
+│       ├── game_logic_service.rs
+│       └── tests/                    # Unit tests
+│           ├── mod.rs
+│           └── game_logic_tests.rs
+└── tests/                            # Integration tests
+    ├── test_container_factory.rs
+    └── full_game_loop.rs
+
+frontend/
+└── src/
+    └── services/
+        └── tests/
+            ├── mocks/                # Centralized mocks
+            │   ├── logger.rs
+            │   └── event_bus.rs
+            └── game_ui_tests.rs
+```
+
+**MANDATE**: All mocks centralized in `tests/mocks/` directory, one file per interface.
+
+**Detailed Implementation**: See `QUALIA.MANUAL.RUST.md` Section 9.
+
 ---
 
 ## 10. WEBSOCKET: TOKIO-TUNGSTENITE + AXUM
 
-### 10.1. Server Handler
+### 10.1. Core Pattern
 
-```rust
-use axum::{
-    extract::ws::{WebSocket, WebSocketUpgrade},
-    response::IntoResponse,
-};
-use futures::{StreamExt, SinkExt};
+- **Server**: Axum WebSocket handler with bidirectional channels
+- **Client (WASM)**: tokio-tungstenite compiled to WebAssembly
+- **Serialization**: Use `bincode` or `msgpack` for binary (faster than JSON)
 
-async fn websocket_handler(
-    ws: WebSocketUpgrade,
-) -> impl IntoResponse {
-    ws.on_upgrade(handle_socket)
-}
+### 10.2. Key Principles
 
-async fn handle_socket(mut socket: WebSocket) {
-    let (mut sender, mut receiver) = socket.split();
-    
-    // Spawn receiver task
-    let mut recv_task = tokio::spawn(async move {
-        while let Some(Ok(msg)) = receiver.next().await {
-            if let axum::extract::ws::Message::Text(text) = msg {
-                let action: PlayerAction = serde_json::from_str(&text).unwrap();
-                // Process action...
-            }
-        }
-    });
-    
-    // Spawn sender task (from event bus)
-    let mut send_task = tokio::spawn(async move {
-        let mut events = EVENT_BUS.subscribe().await;
-        while let Ok(event) = events.recv().await {
-            let json = serde_json::to_string(&event).unwrap();
-            let _ = sender.send(axum::extract::ws::Message::Text(json)).await;
-        }
-    });
-    
-    // Wait for both tasks
-    tokio::select! {
-        _ = &mut recv_task => {}
-        _ = &mut send_task => {}
-    }
-}
-```
+- **Split Socket**: Use `socket.split()` for independent send/receive tasks
+- **Graceful Shutdown**: Use `tokio::select!` for clean disconnection
+- **Error Handling**: Log errors, don't panic on client disconnect
+
+**Detailed Implementation**: See `QUALIA.MANUAL.RUST.md` Section 10.
 
 ---
 
-## 11. STATE MANAGEMENT: ARC + RWLOCK (NO ZUSTAND NEEDED!)
+## 11. STATE MANAGEMENT: ARC + RWLOCK VS SIGNALS
 
-### 11.1. Pattern
+### 11.1. Backend State
 
-Rust doesn't need Zustand because the type system + ownership prevents the chaos Zustand solves in JS.
+**Pattern**: `Arc<RwLock<T>>` for shared mutable state across async tasks.
 
 ```rust
-use std::sync::Arc;
-use tokio::sync::RwLock;
-
 #[derive(Clone)]
 pub struct GameState {
-    player: Arc<RwLock<PlayerState>>,
-    boss: Arc<RwLock<BossState>>,
     qualia: Arc<RwLock<QualiaState>>,
 }
-
-impl GameState {
-    pub async fn update_qualia(&self, new_state: QualiaState) {
-        let mut qualia = self.qualia.write().await;
-        *qualia = new_state;
-    }
-    
-    pub async fn get_qualia(&self) -> QualiaState {
-        self.qualia.read().await.clone()
-    }
-}
 ```
 
-### 11.2. Reactive Pattern (For UI)
+**MANDATE**: Minimize lock hold time. Read or write, then immediately release.
+
+### 11.2. Frontend State
+
+**Pattern**: Leptos signals (reactive, no locks needed).
 
 ```rust
-// In Leptos, use signals
 let (state, set_state) = create_signal(cx, GameState::default());
-
-// In backend, use channels
-let (state_tx, state_rx) = watch::channel(GameState::default());
 ```
+
+**NO ZUSTAND NEEDED**: Leptos provides reactive state management natively.
+
+**Detailed Implementation**: See `QUALIA.MANUAL.RUST.md` Section 11.
 
 ---
 
 ## 12. ARCHITECTURAL LINTING: CLIPPY + CUSTOM LINTS
 
-### 12.1. Standard Clippy
+### 12.1. Standard Clippy Configuration
 
 ```toml
-# Cargo.toml
 [workspace.lints.clippy]
 all = "warn"
 pedantic = "warn"
 nursery = "warn"
 cargo = "warn"
-
-# Disable some overly strict lints
-must_use_candidate = "allow"
+unwrap_used = "deny"           # No unwrap in production
+expect_used = "warn"           # Minimize expect
+missing_errors_doc = "warn"    # Document error returns
 ```
 
-### 12.2. Custom Lint (Via Dylint)
+### 12.2. Custom Lints
 
-```rust
-// qualia_lints/src/lib.rs
-use dylint_linting::DynLint;
+**Future**: Implement custom lints with `dylint` for QUALIA.CODE enforcement.
 
-#[allow(clippy::all)]
-impl DynLint for NoDirectServiceInstantiation {
-    fn check_item(&mut self, cx: &LateContext, item: &Item) {
-        // Detect manual instantiation...
-    }
-}
-```
+**Detailed Implementation**: See `QUALIA.MANUAL.RUST.md` Section 12.
 
 ---
 
-## 13. CRITICAL LIBRARIES REFERENCE
+## 13. DOCUMENTATION CONVENTION (GOLD.CODE MANDATORY)
 
-| Concern | Library | Notes |
-|---------|---------|-------|
-| Async Runtime | tokio | "Standard", use macros feature |
-| HTTP Server | axum | Built on Tokio, ergonomic |
-| WebSocket | tokio-tungstenite | Async WebSocket |
-| Serialization | serde + serde_json | Universal de-facto standard |
-| JSON Schema | schemars | Generate schemas from Rust |
-| DI Container | shaku | Compile-time DI |
-| Logging | tracing + tracing-subscriber | Structured logging |
-| Events | async-channel or tokio::sync::mpsc | MPSC/MPMC channels |
-| Frontend UI | leptos | Modern reactive framework |
-| 3D Rendering | wgpu | WebGPU, native + WASM |
-| Configuration | config | YAML/TOML/JSON loader |
-| Testing | proptest | Property-based testing |
-| Validation | validator | Derive-based validation |
-| Audio (WASM) | wasm-bindgen + web-sys | Bindings to Web Audio API |
-| Caching | cached | Derive macro for memoization |
-| Date/Time | chrono | Datetime handling |
-| Error Handling | thiserror + anyhow | Ergonomic errors |
-| UUID | uuid | UUID generation |
-| Regex | regex | Regex matching |
-| Parallel | rayon | Data parallelism |
+### 13.1. The Responsibility Header (MANDATORY)
 
----
+**FROM APPENDIX A OF QUALIA.CODE**: Every major component's docstring MUST begin with a `# Responsibility` header.
 
-## 14. PERFORMANCE OPTIMIZATION RULES
-
-### 14.1. Hot Path Optimization
-
+**FORMAT**:
 ```rust
-#[inline(always)]
-fn update_particle(p: &mut Particle, dt: f32) {
-    p.position += p.velocity * dt; // Simple math: always inline
-}
+//! # Responsibility
+//! [Single-sentence description of the component's architectural role]
+//!
+//! ---
+//!
+//! [Detailed technical documentation, if needed]
+```
 
-#[inline]
-pub fn process_batch(particles: &mut [Particle], dt: f32) {
-    for p in particles.iter_mut() {
-        update_particle(p, dt); // Compiler will inline this
-    }
+**RATIONALE**:
+1. **Clarity for AI**: Machine-parseable entry point for understanding purpose
+2. **Architectural Alignment**: Forces declaration of single responsibility
+3. **Automated Tooling**: Extracted by graph generators for architectural mapping
+
+### 13.2. Examples
+
+#### Module Docstring
+```rust
+//! # Responsibility
+//! Manages all real-time audio processing and spatialization based on game state.
+//!
+//! ---
+//!
+//! This module contains the AudioService and related components for sound layers,
+//! effects, and synchronization with gameplay events.
+```
+
+#### Struct Docstring
+```rust
+/// # Responsibility
+/// Represents the complete, serializable state of the game at any given moment.
+///
+/// ---
+///
+/// This struct is the single source of truth for game state, used for saving,
+/// loading, and network synchronization.
+pub struct GameState {
+    // fields...
 }
 ```
 
-### 14.2. Zero-Copy Deserialization
+#### FORBIDDEN Example
+```rust
+/// This struct holds game state. It has fields for player and boss.
+/// Created on Tuesday. Might refactor later.
+// VIOLATION: No structured # Responsibility header, verbose, mixes concerns
+pub struct GameState { /* ... */ }
+```
+
+### 13.3. MANDATE FOR ALL MAJOR COMPONENTS
+
+**REQUIRED** for:
+- All `pub struct` types
+- All `pub trait` definitions
+- All `pub mod` modules
+- All service implementations
+
+**Detailed Examples**: See `QUALIA.MANUAL.RUST.md` Section 13.
+
+---
+
+## 14. CRITICAL LIBRARIES REFERENCE
+
+| Concern | Library | Version | Notes |
+|---------|---------|---------|-------|
+| Async Runtime | tokio | 1.41+ | Use `features = ["full"]` |
+| HTTP Server | axum | 0.7+ | Built on Tokio |
+| WebSocket | tokio-tungstenite | 0.21+ | Async WebSocket |
+| Serialization | serde + serde_json | 1.0+ | Universal standard |
+| JSON Schema | schemars | 1.0+ | Generate from Rust |
+| DI Container | shaku | 0.6+ | Compile-time DI |
+| Logging | tracing | 0.1+ | Structured logging |
+| Event Bus | tokio::sync::broadcast | (built-in) | **MANDATE for EventBus** |
+| Frontend UI | leptos | 0.5+ | Reactive framework |
+| 3D Rendering | wgpu | 22.0+ | WebGPU (native + WASM) |
+| Testing Mocks | mockall | 0.12+ | **MANDATE for trait mocks** |
+| Property Tests | proptest | 1.0+ | Property-based testing |
+| Validation | validator | 0.16+ | Derive-based validation |
+| Audio (WASM) | wasm-bindgen + web-sys | 0.2+ | Web Audio bindings |
+| Parallel | rayon | 1.8+ | Data parallelism |
+| Error Handling | thiserror + anyhow | 1.0+ | Ergonomic errors |
+
+---
+
+## 15. PERFORMANCE OPTIMIZATION RULES
+
+### 15.1. Inlining Strategy
 
 ```rust
-use serde::Deserialize;
-use bytes::Bytes;
+#[inline(always)]  // Force inline (hot paths only)
+fn update_particle(p: &mut Particle, dt: f32) { /* ... */ }
 
+#[inline]  // Suggest inline (most public methods)
+pub fn process_batch(particles: &mut [Particle]) { /* ... */ }
+```
+
+### 15.2. Zero-Copy Deserialization
+
+```rust
 #[derive(Deserialize)]
 struct Message<'a> {
     #[serde(borrow)]
     data: &'a str, // No allocation!
 }
-
-fn parse_message(buf: &[u8]) -> Message<'_> {
-    serde_json::from_slice(buf).unwrap()
-}
 ```
 
-### 14.3. Arena Allocation
+### 15.3. Arena Allocation
 
 ```rust
 use typed_arena::Arena;
@@ -867,85 +650,87 @@ use typed_arena::Arena;
 pub struct ParticleSystem {
     arena: Arena<Particle>,
 }
-
-impl ParticleSystem {
-    pub fn spawn_particle(&self) -> &mut Particle {
-        self.arena.alloc(Particle::default()) // Fast!
-    }
-}
 ```
+
+**Detailed Techniques**: See `QUALIA.MANUAL.RUST.md` Section 14.
 
 ---
 
-## 15. ANTI-PATTERNS (CRITICAL VIOLATIONS)
+## 16. ANTI-PATTERNS (CRITICAL VIOLATIONS)
 
-### 15.1. FORBIDDEN: Unwrap in Production
+### 16.1. FORBIDDEN: Manual EventBus with RwLock
+
+```rust
+// CRITICAL VIOLATION
+struct EventBus {
+    subscribers: Arc<RwLock<Vec<Sender<Event>>>>, // ANTI-PATTERN!
+}
+```
+
+**USE**: `tokio::sync::broadcast` instead.
+
+### 16.2. FORBIDDEN: Unwrap in Production
 
 ```rust
 // FORBIDDEN
-let config = fs::read_to_string("config.yaml").unwrap(); // CRASH!
+let data = parse_input(input).unwrap(); // CRASH ON INVALID INPUT!
 
 // CORRECT
-let config = fs::read_to_string("config.yaml")
-    .context("Failed to read config")?;
+let data = parse_input(input).context("Failed to parse input")?;
 ```
 
-### 15.2. FORBIDDEN: Clone Without Reason
-
-```rust
-// FORBIDDEN (unnecessary clone)
-fn process_data(data: Vec<u8>) {
-    let copied = data.clone(); // WHY?
-    do_work(copied);
-}
-
-// CORRECT (pass by reference)
-fn process_data(data: &[u8]) {
-    do_work(data);
-}
-```
-
-### 15.3. FORBIDDEN: Blocking in Async
+### 16.3. FORBIDDEN: Blocking in Async
 
 ```rust
 // FORBIDDEN
-async fn load_file() -> String {
+async fn load() -> String {
     std::fs::read_to_string("file.txt").unwrap() // BLOCKS RUNTIME!
 }
 
 // CORRECT
-async fn load_file() -> Result<String, std::io::Error> {
+async fn load() -> Result<String, std::io::Error> {
     tokio::fs::read_to_string("file.txt").await
 }
 ```
 
+### 16.4. FORBIDDEN: Low-Fidelity Mocks
+
+```rust
+// FORBIDDEN
+let mock = MockILogger::new(); // No expectations = panic!
+
+// CORRECT
+let mut mock = MockILogger::new();
+mock.expect_info().return_const(());
+```
+
 ---
 
-## 16. MIGRATION PROTOCOL (FOR AI AGENTS)
+## 17. MIGRATION PROTOCOL (FOR AI AGENTS)
 
-### 16.1. Service Translation Checklist
+### 17.1. Service Translation Checklist
 
 For each TypeScript/Python service:
 
-1. ✅ Define trait interface
-2. ✅ Create Rust struct with #[derive(Component)]
-3. ✅ Inject dependencies via Shaku
-4. ✅ Replace @decorators with proc macros
-5. ✅ Add #[instrument] for logging
-6. ✅ Replace EventBus.emit with async-channel
-7. ✅ Add comprehensive tests
-8. ✅ Update module bindings
+1. ✅ Define trait interface with `# Responsibility` docstring
+2. ✅ Create struct with `#[derive(Component)]`
+3. ✅ Inject dependencies via Shaku (no `new()`)
+4. ✅ Replace `@logMethod` with `#[instrument]`
+5. ✅ Replace manual EventBus with `tokio::sync::broadcast`
+6. ✅ Add unit tests with `mockall` mocks
+7. ✅ Add integration tests with isolated container
+8. ✅ Verify Clippy passes (no warnings)
 
-### 16.2. Priority Order
+### 17.2. Priority Order
 
-1. **Shared Core**: Contract definitions
-2. **Backend**: EventBus, Services, WebSocket server
-3. **Frontend**: Basic rendering, Input, UI
-4. **Integration**: Connect frontend ↔ backend
-5. **Optimization**: Profile, optimize hot paths
+1. **Shared Core**: Contract definitions, event enums
+2. **Backend**: EventBus (broadcast), core services, WebSocket server
+3. **Frontend**: wgpu renderer, Leptos UI, input handling
+4. **Integration**: Connect frontend ↔ backend via WebSocket
+5. **Optimization**: Profile with `cargo flamegraph`, optimize hot paths
 
 ---
 
-**END OF QUALIA.CODE.RUST**
+**END OF QUALIA.CODE.RUST v1.1**
 
-*"In Rust we trust. The compiler is the guardian. The type system is the law."*
+*"In Rust we trust. The compiler is the guardian. The type system is the law. The broadcast channel is the EventBus."*

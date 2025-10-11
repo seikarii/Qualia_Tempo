@@ -1,12 +1,14 @@
-# QUALIA.MANUAL.RUST v1.0 - Implementation Guide
+# QUALIA.MANUAL.RUST v1.1 - Implementation Guide
 # TARGET: Qualia Tempo Rust Rewrite
-# COMPLIANCE: QUALIA.CODE.RUST
+# COMPLIANCE: QUALIA.CODE.RUST v1.1
 
 ---
 
 ## Introduction
 
 This manual provides step-by-step implementation examples for the Rust rewrite of Qualia Tempo. While QUALIA.CODE.RUST defines the architectural laws, this manual shows **HOW** to implement them with real code.
+
+**CRITICAL**: All code examples follow QUALIA.CODE.RUST v1.1 mandates, including `tokio::sync::broadcast` for EventBus, `mockall` for mocks, and `# Responsibility` docstrings.
 
 ---
 
@@ -64,11 +66,13 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 anyhow = "1.0"
 thiserror = "1.0"
+mockall = "0.12"
 
 [workspace.lints.clippy]
 all = "warn"
 pedantic = "warn"
 nursery = "warn"
+unwrap_used = "deny"
 must_use_candidate = "allow"
 
 [profile.release]
@@ -92,25 +96,41 @@ serde_json.workspace = true
 schemars = "1.0"
 uuid = { version = "1.0", features = ["serde", "v4"] }
 chrono = { version = "0.4", features = ["serde"] }
+validator = { version = "0.16", features = ["derive"] }
 
 [features]
 default = []
-wasm = ["uuid/js"]
+wasm = ["uuid/js", "chrono/wasmbind"]
 ```
 
 ---
 
 ## 2. SHARED CONTRACTS IMPLEMENTATION
 
-### 2.1. Core Data Structures
+### 2.1. Core Data Structures with # Responsibility
 
 ```rust
+//! # Responsibility
+//! Defines all shared data structures for communication between frontend and backend.
+//!
+//! ---
+//!
+//! This module contains the core contracts (QualiaState, PlayerAction, GameState)
+//! that are serialized over WebSocket connections. All structs implement Serde
+//! traits for JSON serialization and JsonSchema for documentation generation.
+
 // shared_core/src/contracts.rs
 use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
 
-/// The central qualia state representing player's musical/emotional state
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
+/// # Responsibility
+/// Represents the player's current emotional/musical state in the game.
+///
+/// ---
+///
+/// The qualia state is calculated in real-time based on player actions and
+/// musical input. All values are normalized to [0.0, 1.0] range.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct QualiaState {
     /// Intensity of player engagement (0.0 - 1.0)
@@ -141,7 +161,13 @@ impl Default for QualiaState {
     }
 }
 
-/// Player input actions
+/// # Responsibility
+/// Enumerates all possible player input actions in the game.
+///
+/// ---
+///
+/// This tagged enum uses Serde's `tag = "type"` for clean JSON serialization.
+/// Each variant contains the relevant data for that action type.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum PlayerAction {
@@ -159,7 +185,9 @@ pub enum PlayerAction {
     },
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
+/// # Responsibility
+/// Represents a 2D vector for positions and directions.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq)]
 pub struct Vec2 {
     pub x: f32,
     pub y: f32,
@@ -171,7 +199,12 @@ impl Vec2 {
     }
 }
 
-/// Complete game state snapshot
+/// # Responsibility
+/// Represents the complete game state snapshot at a given moment.
+///
+/// ---
+///
+/// This is the authoritative state sent from backend to frontend over WebSocket.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct GameState {
@@ -183,6 +216,8 @@ pub struct GameState {
     pub phase: GamePhase,
 }
 
+/// # Responsibility
+/// Represents the player entity's state.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PlayerState {
@@ -191,6 +226,8 @@ pub struct PlayerState {
     pub is_dashing: bool,
 }
 
+/// # Responsibility
+/// Represents the boss entity's state.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct BossState {
@@ -200,7 +237,9 @@ pub struct BossState {
     pub phase: u8,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
+/// # Responsibility
+/// Enumerates the possible game phases.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum GamePhase {
     Menu,
@@ -214,14 +253,20 @@ pub enum GamePhase {
 ### 2.2. Event Definitions
 
 ```rust
+//! # Responsibility
+//! Defines all event types for the EventBus communication pattern.
+
 // shared_core/src/events.rs
 use super::contracts::*;
 use serde::{Deserialize, Serialize};
 
-/// Base event trait for type safety
-pub trait Event: Send + Sync + 'static {}
-
-/// All possible game events
+/// # Responsibility
+/// Enumerates all events that can flow through the EventBus.
+///
+/// ---
+///
+/// Events are the primary communication mechanism between services.
+/// All variants must be Clone for broadcast distribution.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "eventType", rename_all = "camelCase")]
 pub enum GameEvent {
@@ -251,8 +296,6 @@ pub enum GameEvent {
         bpm: f32,
     },
 }
-
-impl Event for GameEvent {}
 ```
 
 ---
@@ -262,41 +305,52 @@ impl Event for GameEvent {}
 ### 3.1. Service Interface Definition
 
 ```rust
+//! # Responsibility
+//! Defines all service trait interfaces for dependency injection.
+
 // backend/src/services/interfaces.rs
 use shaku::Interface;
 use async_trait::async_trait;
 use anyhow::Result;
 use shared_core::contracts::*;
 
-/// Logger interface
+/// # Responsibility
+/// Provides structured logging throughout the application.
 pub trait ILogger: Interface {
     fn info(&self, message: &str);
     fn warn(&self, message: &str);
     fn error(&self, message: &str);
 }
 
-/// Game logic service interface
+/// # Responsibility
+/// Processes game logic, calculating state changes from player actions.
 #[async_trait]
 pub trait IGameLogicService: Interface {
     async fn process_action(&self, action: PlayerAction) -> Result<QualiaState>;
     async fn update_game_state(&self, dt: f32) -> Result<GameState>;
+    fn get_current_score(&self) -> u32;
 }
 
-/// Event bus interface
-#[async_trait]
+/// # Responsibility
+/// Manages event distribution using the broadcast pattern.
 pub trait IEventBus: Interface + Send + Sync {
-    async fn emit(&self, event: GameEvent);
-    async fn subscribe(&self) -> async_channel::Receiver<GameEvent>;
+    fn emit(&self, event: GameEvent) -> Result<usize, tokio::sync::broadcast::error::SendError<GameEvent>>;
+    fn subscribe(&self) -> tokio::sync::broadcast::Receiver<GameEvent>;
 }
 ```
 
 ### 3.2. Service Implementation
 
 ```rust
+//! # Responsibility
+//! Implements core game logic, processing player actions into state updates.
+
 // backend/src/services/game_logic_service.rs
 use shaku::Component;
 use std::sync::Arc;
 use tracing::{instrument, info};
+use shared_core::{contracts::*, events::*};
+use super::interfaces::{ILogger, IEventBus, IGameLogicService};
 
 #[derive(Component)]
 #[shaku(interface = IGameLogicService)]
@@ -310,7 +364,7 @@ pub struct GameLogicService {
     event_bus: Arc<dyn IEventBus>,
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 impl IGameLogicService for GameLogicService {
     #[instrument(skip(self))]
     async fn process_action(&self, action: PlayerAction) -> Result<QualiaState> {
@@ -329,22 +383,42 @@ impl IGameLogicService for GameLogicService {
             }
         };
         
-        // Emit event
-        self.event_bus.emit(GameEvent::QualiaStateUpdated(new_state)).await;
+        // Emit event via broadcast
+        let _ = self.event_bus.emit(GameEvent::QualiaStateUpdated(new_state));
         
         Ok(new_state)
     }
     
     async fn update_game_state(&self, dt: f32) -> Result<GameState> {
-        // Update logic...
-        Ok(GameState { /* ... */ })
+        // Update logic implementation...
+        Ok(GameState {
+            player: PlayerState {
+                position: Vec2::new(0.0, 0.0),
+                velocity: Vec2::new(0.0, 0.0),
+                is_dashing: false,
+            },
+            boss: BossState {
+                position: Vec2::new(0.0, 0.0),
+                health: 100.0,
+                current_pattern: None,
+                phase: 1,
+            },
+            qualia: QualiaState::default(),
+            score: 0,
+            health: 100.0,
+            phase: GamePhase::Playing,
+        })
+    }
+    
+    fn get_current_score(&self) -> u32 {
+        0 // Placeholder
     }
 }
 
 impl GameLogicService {
     fn calculate_qualia_from_accuracy(&self, accuracy: f32) -> QualiaState {
         QualiaState {
-            intensity: accuracy,
+            intensity: accuracy * self.config.base_intensity_multiplier,
             harmony: accuracy * 0.9,
             chaos: (1.0 - accuracy) * 0.5,
             kairos: accuracy,
@@ -353,13 +427,23 @@ impl GameLogicService {
     }
     
     fn apply_dash_bonus(&self) -> QualiaState {
-        // Implementation...
-        QualiaState::default()
+        QualiaState {
+            intensity: 0.8,
+            harmony: 0.6,
+            chaos: 0.9,
+            kairos: 0.7,
+            timestamp: chrono::Utc::now().timestamp_millis() as u64,
+        }
     }
     
     fn apply_miss_penalty(&self) -> QualiaState {
-        // Implementation...
-        QualiaState::default()
+        QualiaState {
+            intensity: 0.2,
+            harmony: 0.1,
+            chaos: 0.1,
+            kairos: 0.0,
+            timestamp: chrono::Utc::now().timestamp_millis() as u64,
+        }
     }
 }
 ```
@@ -367,6 +451,9 @@ impl GameLogicService {
 ### 3.3. Configuration Loading
 
 ```rust
+//! # Responsibility
+//! Loads and validates application configuration from YAML files.
+
 // backend/src/config.rs
 use serde::Deserialize;
 use anyhow::{Context, Result};
@@ -418,9 +505,8 @@ module! {
     pub GameModule {
         components = [
             QualiaLogger,
-            GameLogicService,
             EventBusService,
-            ParticleEngineService,
+            GameLogicService,
         ],
         providers = []
     }
@@ -439,7 +525,7 @@ async fn main() -> Result<()> {
         )
         .build();
     
-    let game_logic: &dyn IGameLogicService = module.resolve_ref();
+    let game_logic: Arc<dyn IGameLogicService> = module.resolve();
     
     // Use service...
     
@@ -449,85 +535,67 @@ async fn main() -> Result<()> {
 
 ---
 
-## 4. EVENT BUS IMPLEMENTATION
+## 4. EVENT BUS IMPLEMENTATION WITH TOKIO::SYNC::BROADCAST
 
-### 4.1. Async Channel-Based EventBus
+### 4.1. The Correct EventBus Pattern
 
 ```rust
+//! # Responsibility
+//! Provides lock-free event distribution using tokio::sync::broadcast.
+//!
+//! ---
+//!
+//! This implementation uses Tokio's broadcast channel for zero-contention,
+//! one-to-many event distribution. All subscribers receive all events.
+
 // backend/src/services/event_bus.rs
-use async_channel::{Sender, Receiver, unbounded};
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
+use tokio::sync::broadcast;
 use shared_core::events::GameEvent;
-use tracing::{instrument, debug};
+use shaku::Component;
+use super::interfaces::IEventBus;
+use tracing::{instrument, debug, warn};
 
+/// # Responsibility
+/// Manages event distribution to multiple subscribers using broadcast channels.
+#[derive(Component)]
+#[shaku(interface = IEventBus)]
 pub struct EventBusService {
-    subscribers: Arc<RwLock<Vec<Sender<GameEvent>>>>,
-}
-
-impl Default for EventBusService {
-    fn default() -> Self {
-        Self::new()
-    }
+    tx: broadcast::Sender<GameEvent>,
 }
 
 impl EventBusService {
-    pub fn new() -> Self {
-        Self {
-            subscribers: Arc::new(RwLock::new(Vec::new())),
-        }
+    pub fn new(capacity: usize) -> Self {
+        let (tx, _rx) = broadcast::channel(capacity);
+        Self { tx }
     }
-    
+}
+
+impl IEventBus for EventBusService {
     #[instrument(skip(self, event))]
-    pub async fn emit(&self, event: GameEvent) {
+    fn emit(&self, event: GameEvent) -> Result<usize, broadcast::error::SendError<GameEvent>> {
         debug!("Emitting event: {:?}", event);
         
-        let subscribers = self.subscribers.read().await;
-        let mut dead_senders = Vec::new();
-        
-        for (idx, sender) in subscribers.iter().enumerate() {
-            if sender.send(event.clone()).await.is_err() {
-                dead_senders.push(idx);
+        match self.tx.send(event) {
+            Ok(receiver_count) => {
+                debug!("Event delivered to {} receivers", receiver_count);
+                Ok(receiver_count)
             }
-        }
-        
-        // Cleanup dead subscribers
-        if !dead_senders.is_empty() {
-            drop(subscribers);
-            let mut subscribers = self.subscribers.write().await;
-            for idx in dead_senders.into_iter().rev() {
-                subscribers.swap_remove(idx);
+            Err(e) => {
+                warn!("Failed to emit event (no receivers): {:?}", e);
+                Err(e)
             }
         }
     }
     
-    pub async fn subscribe(&self) -> Receiver<GameEvent> {
-        let (tx, rx) = unbounded();
-        let mut subscribers = self.subscribers.write().await;
-        subscribers.push(tx);
-        rx
-    }
-    
-    pub async fn subscriber_count(&self) -> usize {
-        self.subscribers.read().await.len()
+    fn subscribe(&self) -> broadcast::Receiver<GameEvent> {
+        self.tx.subscribe()
     }
 }
 
-// Make it a Shaku component
-#[shaku::Component(interface = IEventBus)]
-impl EventBusService {
-    // Shaku constructor
-}
-
-#[async_trait]
-impl IEventBus for EventBusService {
-    async fn emit(&self, event: GameEvent) {
-        EventBusService::emit(self, event).await
-    }
-    
-    async fn subscribe(&self) -> Receiver<GameEvent> {
-        EventBusService::subscribe(self).await
+// Implement Default for Shaku
+impl Default for EventBusService {
+    fn default() -> Self {
+        Self::new(1000) // Default capacity
     }
 }
 ```
@@ -535,8 +603,11 @@ impl IEventBus for EventBusService {
 ### 4.2. Service with Event Subscription
 
 ```rust
-// Example: Boss AI Service that reacts to events
+//! # Responsibility
+//! Manages boss AI behavior, reacting to player actions and game events.
+
 use tokio::task;
+use tracing::{instrument, info};
 
 pub struct BossAIService {
     event_bus: Arc<dyn IEventBus>,
@@ -544,22 +615,34 @@ pub struct BossAIService {
 }
 
 impl BossAIService {
+    #[instrument(skip(self))]
     pub async fn start(&self) -> Result<()> {
         let event_bus = self.event_bus.clone();
         let config = self.config.clone();
         
         task::spawn(async move {
-            let mut events = event_bus.subscribe().await;
+            let mut events = event_bus.subscribe();
             
-            while let Ok(event) = events.recv().await {
-                match event {
-                    GameEvent::QualiaStateUpdated(state) => {
-                        Self::adapt_to_qualia(&config, state).await;
+            loop {
+                match events.recv().await {
+                    Ok(event) => {
+                        match event {
+                            GameEvent::QualiaStateUpdated(state) => {
+                                Self::adapt_to_qualia(&config, state).await;
+                            }
+                            GameEvent::PlayerAction(action) => {
+                                Self::counter_action(&config, action).await;
+                            }
+                            _ => {}
+                        }
                     }
-                    GameEvent::PlayerAction(action) => {
-                        Self::counter_action(&config, action).await;
+                    Err(broadcast::error::RecvError::Lagged(skipped)) => {
+                        warn!("BossAI lagged, skipped {} events", skipped);
                     }
-                    _ => {}
+                    Err(broadcast::error::RecvError::Closed) => {
+                        info!("EventBus closed, stopping BossAI");
+                        break;
+                    }
                 }
             }
         });
@@ -570,13 +653,45 @@ impl BossAIService {
     async fn adapt_to_qualia(config: &BossAIConfig, state: QualiaState) {
         if state.intensity > config.aggression_threshold {
             // Increase attack frequency
+            info!("Boss aggression increased due to high intensity");
         }
     }
     
     async fn counter_action(config: &BossAIConfig, action: PlayerAction) {
-        // React to player moves
+        match action {
+            PlayerAction::Dashed { direction, .. } => {
+                info!("Boss reacting to player dash: {:?}", direction);
+            }
+            _ => {}
+        }
     }
 }
+```
+
+### 4.3. Why broadcast > Manual RwLock Implementation
+
+**Performance Comparison**:
+
+```rust
+// ANTI-PATTERN (FORBIDDEN): Manual implementation with RwLock
+pub struct ManualEventBus {
+    subscribers: Arc<RwLock<Vec<Sender<GameEvent>>>>, // Lock contention!
+}
+
+// Under load:
+// - RwLock.write() blocks all other operations
+// - Dead subscriber cleanup requires write lock
+// - Performance degrades with subscriber count
+
+// CORRECT: tokio::sync::broadcast
+pub struct EventBusService {
+    tx: broadcast::Sender<GameEvent>, // Lock-free!
+}
+
+// Under load:
+// - Zero locks, zero contention
+// - Built-in lagging detection
+// - Performance scales with CPU cores
 ```
 
 ---
@@ -586,6 +701,9 @@ impl BossAIService {
 ### 5.1. WebSocket Handler
 
 ```rust
+//! # Responsibility
+//! Handles WebSocket connections for real-time client-server communication.
+
 // backend/src/handlers/websocket.rs
 use axum::{
     extract::{
@@ -596,7 +714,8 @@ use axum::{
 };
 use futures::{StreamExt, SinkExt};
 use std::sync::Arc;
-use tracing::{info, error, warn};
+use tracing::{info, error, warn, instrument};
+use shared_core::{contracts::*, events::*};
 
 pub async fn websocket_handler(
     ws: WebSocketUpgrade,
@@ -605,6 +724,7 @@ pub async fn websocket_handler(
     ws.on_upgrade(|socket| handle_socket(socket, state))
 }
 
+#[instrument(skip(socket, state))]
 async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
     let (mut sender, mut receiver) = socket.split();
     let client_id = uuid::Uuid::new_v4();
@@ -614,13 +734,24 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
     // Spawn sender task (events → client)
     let event_bus = state.event_bus.clone();
     let send_task = tokio::spawn(async move {
-        let mut events = event_bus.subscribe().await;
+        let mut events = event_bus.subscribe();
         
-        while let Ok(event) = events.recv().await {
-            let json = serde_json::to_string(&event).unwrap();
-            
-            if sender.send(Message::Text(json)).await.is_err() {
-                break;
+        loop {
+            match events.recv().await {
+                Ok(event) => {
+                    let json = serde_json::to_string(&event).unwrap();
+                    
+                    if sender.send(Message::Text(json)).await.is_err() {
+                        break;
+                    }
+                }
+                Err(broadcast::error::RecvError::Lagged(skipped)) => {
+                    warn!("Client {} lagged, skipped {} events", client_id, skipped);
+                }
+                Err(broadcast::error::RecvError::Closed) => {
+                    info!("EventBus closed");
+                    break;
+                }
             }
         }
     });
@@ -637,7 +768,7 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
                         }
                     }
                     Err(e) => {
-                        warn!("Invalid message: {}", e);
+                        warn!("Invalid message from client {}: {}", client_id, e);
                     }
                 }
             }
@@ -653,7 +784,8 @@ async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
     info!("Client {} disconnected", client_id);
 }
 
-// Application state
+/// # Responsibility
+/// Holds application state shared across WebSocket handlers.
 pub struct AppState {
     pub event_bus: Arc<dyn IEventBus>,
     pub game_logic: Arc<dyn IGameLogicService>,
@@ -663,6 +795,9 @@ pub struct AppState {
 ### 5.2. Server Main
 
 ```rust
+//! # Responsibility
+//! Application entry point, initializes services and starts the Axum server.
+
 // backend/src/main.rs
 use axum::{
     Router,
@@ -691,6 +826,11 @@ async fn main() -> anyhow::Result<()> {
     
     // Build DI container
     let module = services::GameModule::builder()
+        .with_component_parameters::<services::GameLogicService>(
+            services::GameLogicServiceParameters {
+                config: Arc::new(config.game_logic.clone()),
+            }
+        )
         .build();
     
     // Create app state
@@ -725,6 +865,9 @@ async fn main() -> anyhow::Result<()> {
 ### 6.1. Leptos Component
 
 ```rust
+//! # Responsibility
+//! Provides the root UI component for the game interface.
+
 // frontend/src/components/game_ui.rs
 use leptos::*;
 use shared_core::contracts::*;
@@ -763,6 +906,8 @@ pub fn GameUI(cx: Scope) -> impl IntoView {
     }
 }
 
+/// # Responsibility
+/// Displays the current qualia state with progress bars.
 #[component]
 fn QualiaDisplay(cx: Scope, state: Signal<QualiaState>) -> impl IntoView {
     view! { cx,
@@ -779,60 +924,28 @@ fn QualiaDisplay(cx: Scope, state: Signal<QualiaState>) -> impl IntoView {
                 <span>"Chaos: "</span>
                 <progress value=move || state.get().chaos max="1.0" />
             </div>
+            <div class="qualia-bar">
+                <span>"Kairos: "</span>
+                <progress value=move || state.get().kairos max="1.0" />
+            </div>
         </div>
     }
 }
 ```
 
-### 6.2. WebSocket Client (WASM)
+### 6.2. wgpu Renderer
 
 ```rust
-// frontend/src/websocket.rs
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
-use web_sys::{MessageEvent, WebSocket};
-use shared_core::{contracts::*, events::*};
-use anyhow::Result;
+//! # Responsibility
+//! Manages WebGPU rendering pipeline for 3D graphics.
 
-pub struct GameWebSocket {
-    ws: WebSocket,
-}
-
-impl GameWebSocket {
-    pub async fn connect(url: &str) -> Result<Self> {
-        let ws = WebSocket::new(url)?;
-        
-        // Set up event handlers
-        let onopen = Closure::wrap(Box::new(move |_| {
-            log::info!("WebSocket connected");
-        }) as Box<dyn FnMut(JsValue)>);
-        ws.set_onopen(Some(onopen.as_ref().unchecked_ref()));
-        onopen.forget();
-        
-        Ok(Self { ws })
-    }
-    
-    pub async fn send_action(&self, action: PlayerAction) -> Result<()> {
-        let json = serde_json::to_string(&action)?;
-        self.ws.send_with_str(&json)?;
-        Ok(())
-    }
-    
-    pub async fn recv_state(&self) -> Result<GameState> {
-        // Set up promise-based receiver
-        // (simplified, real implementation uses channels)
-        todo!("Implement promise-based state receiver")
-    }
-}
-```
-
-### 6.3. wgpu Renderer
-
-```rust
 // frontend/src/rendering/renderer.rs
 use wgpu;
 use winit::window::Window;
+use anyhow::Result;
 
+/// # Responsibility
+/// Initializes and manages the wgpu rendering context.
 pub struct WgpuRenderer {
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -884,7 +997,7 @@ impl WgpuRenderer {
         
         // Load shader
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Shader"),
+            label: Some("Main Shader"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
         });
         
@@ -927,7 +1040,7 @@ impl WgpuRenderer {
         })
     }
     
-    pub fn render(&self, particles: &[Particle]) -> Result<()> {
+    pub fn render(&self) -> Result<()> {
         let output = self.surface.get_current_texture()?;
         let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
         
@@ -965,71 +1078,208 @@ impl WgpuRenderer {
 
 ---
 
-## 7. TESTING EXAMPLES
+## 7. TESTING WITH MOCKALL AND ISOLATED CONTAINERS
 
-### 7.1. Unit Tests
+### 7.1. High-Fidelity Mock Creation
 
 ```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
+//! # Responsibility
+//! Provides centralized, high-fidelity mocks for all service interfaces.
 
-    #[test]
-    fn test_qualia_state_default() {
-        let state = QualiaState::default();
-        assert_eq!(state.intensity, 0.0);
-        assert_eq!(state.harmony, 0.0);
-        assert!(state.timestamp == 0);
-    }
+// backend/src/services/tests/mocks/logger.rs
+use mockall::*;
+use super::super::interfaces::ILogger;
+
+mock! {
+    /// # Responsibility
+    /// High-fidelity mock implementation of ILogger for testing.
+    pub Logger {}
     
-    #[tokio::test]
-    async fn test_event_bus_emit_receive() {
-        let bus = EventBusService::new();
-        let mut rx = bus.subscribe().await;
-        
-        let event = GameEvent::AudioBeat {
-            beat_number: 1,
-            timestamp: 1000,
-            bpm: 120.0,
-        };
-        
-        bus.emit(event.clone()).await;
-        
-        let received = rx.recv().await.unwrap();
-        assert!(matches!(received, GameEvent::AudioBeat { .. }));
+    impl ILogger for Logger {
+        fn info(&self, message: &str);
+        fn warn(&self, message: &str);
+        fn error(&self, message: &str);
     }
+}
+
+// backend/src/services/tests/mocks/event_bus.rs
+use mockall::*;
+use tokio::sync::broadcast;
+use shared_core::events::GameEvent;
+use super::super::interfaces::IEventBus;
+
+mock! {
+    /// # Responsibility
+    /// High-fidelity mock implementation of IEventBus for testing.
+    pub EventBus {}
     
-    #[test]
-    fn test_serde_round_trip() {
-        let state = QualiaState {
-            intensity: 0.8,
-            harmony: 0.6,
-            chaos: 0.3,
-            kairos: 0.9,
-            timestamp: 12345,
-        };
-        
-        let json = serde_json::to_string(&state).unwrap();
-        let deserialized: QualiaState = serde_json::from_str(&json).unwrap();
-        
-        assert_eq!(state.intensity, deserialized.intensity);
+    impl IEventBus for EventBus {
+        fn emit(&self, event: GameEvent) -> Result<usize, broadcast::error::SendError<GameEvent>>;
+        fn subscribe(&self) -> broadcast::Receiver<GameEvent>;
     }
 }
 ```
 
-### 7.2. Integration Tests
+### 7.2. Isolated Test Container Factory
 
 ```rust
-// tests/integration_test.rs
+//! # Responsibility
+//! Provides isolated Shaku containers for testing, preventing cross-contamination.
+
+// backend/src/services/tests/test_container_factory.rs
+use shaku::module;
+use std::sync::Arc;
+use super::mocks::*;
+use super::super::interfaces::*;
+
+/// # Responsibility
+/// Creates an isolated GameModule with all dependencies mocked.
+pub fn create_test_module() -> GameModule {
+    GameModule::builder()
+        .with_component_override::<dyn ILogger>(Box::new(|| {
+            let mut mock = MockLogger::new();
+            // High-fidelity: Set default expectations
+            mock.expect_info().return_const(());
+            mock.expect_warn().return_const(());
+            mock.expect_error().return_const(());
+            Box::new(mock)
+        }))
+        .with_component_override::<dyn IEventBus>(Box::new(|| {
+            let mut mock = MockEventBus::new();
+            // High-fidelity: Return realistic defaults
+            mock.expect_emit().returning(|_| Ok(1usize));
+            
+            let (tx, rx) = broadcast::channel(100);
+            mock.expect_subscribe().return_once(move || rx);
+            
+            Box::new(mock)
+        }))
+        .build()
+}
+```
+
+### 7.3. Unit Tests with High-Fidelity Mocks
+
+```rust
+// backend/src/services/tests/game_logic_tests.rs
+use super::*;
+use mockall::predicate::*;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_process_action_emits_qualia_event() {
+        // STEP 1: Identify SUT
+        // Testing: GameLogicService
+
+        // STEP 2: Create Isolated Test Container
+        let module = create_test_module();
+        
+        // STEP 3: Configure Mock Behaviors
+        let mut mock_event_bus = MockEventBus::new();
+        mock_event_bus.expect_emit()
+            .with(function(|event: &GameEvent| {
+                matches!(event, GameEvent::QualiaStateUpdated(_))
+            }))
+            .times(1)
+            .returning(|_| Ok(1));
+        
+        // STEP 4: Exercise the SUT
+        let sut: Arc<dyn IGameLogicService> = module.resolve();
+        let action = PlayerAction::KeyPressed {
+            key: 'Q',
+            timestamp: 1000,
+            accuracy: 0.95,
+        };
+        
+        let result = sut.process_action(action).await;
+        
+        // STEP 5: Assert Results and Interactions
+        assert!(result.is_ok());
+        let state = result.unwrap();
+        assert!(state.intensity > 0.0);
+        assert!(state.intensity <= 1.0);
+        
+        // mockall automatically verifies expectations on drop
+    }
+    
+    #[test]
+    fn test_qualia_calculation_accuracy_bounds() {
+        let config = GameLogicConfig {
+            base_intensity_multiplier: 1.0,
+            harmony_decay_rate: 0.1,
+            chaos_threshold: 0.5,
+            combo_multiplier: 1.2,
+        };
+        
+        let service = GameLogicService {
+            config: Arc::new(config),
+            logger: Arc::new(MockLogger::new()),
+            event_bus: Arc::new(MockEventBus::new()),
+        };
+        
+        let state = service.calculate_qualia_from_accuracy(0.95);
+        
+        assert_eq!(state.intensity, 0.95);
+        assert!(state.harmony >= 0.0 && state.harmony <= 1.0);
+    }
+}
+```
+
+### 7.4. Property-Based Tests
+
+```rust
+use proptest::prelude::*;
+
+proptest! {
+    #[test]
+    fn test_qualia_values_always_bounded(
+        intensity in 0.0f32..=1.0,
+        harmony in 0.0f32..=1.0,
+        chaos in 0.0f32..=1.0,
+        kairos in 0.0f32..=1.0,
+    ) {
+        let state = QualiaState {
+            intensity,
+            harmony,
+            chaos,
+            kairos,
+            timestamp: 0,
+        };
+        
+        prop_assert!(state.intensity >= 0.0 && state.intensity <= 1.0);
+        prop_assert!(state.harmony >= 0.0 && state.harmony <= 1.0);
+        prop_assert!(state.chaos >= 0.0 && state.chaos <= 1.0);
+        prop_assert!(state.kairos >= 0.0 && state.kairos <= 1.0);
+    }
+}
+```
+
+### 7.5. Integration Tests
+
+```rust
+// tests/integration/full_game_loop.rs
 use qualia_tempo_backend::*;
 
 #[tokio::test]
-async fn test_full_game_loop() {
-    let module = GameModule::builder().build();
-    let game_logic: &dyn IGameLogicService = module.resolve_ref();
-    let event_bus: &dyn IEventBus = module.resolve_ref();
+async fn test_full_event_flow() {
+    // Create real module (not mocked for integration test)
+    let config = AppConfig::load().unwrap();
+    let module = GameModule::builder()
+        .with_component_parameters::<GameLogicService>(
+            GameLogicServiceParameters {
+                config: Arc::new(config.game_logic),
+            }
+        )
+        .build();
     
-    let mut events = event_bus.subscribe().await;
+    let game_logic: Arc<dyn IGameLogicService> = module.resolve();
+    let event_bus: Arc<dyn IEventBus> = module.resolve();
+    
+    // Subscribe to events
+    let mut events = event_bus.subscribe();
     
     // Process action
     let action = PlayerAction::KeyPressed {
@@ -1041,41 +1291,16 @@ async fn test_full_game_loop() {
     let state = game_logic.process_action(action).await.unwrap();
     
     // Verify event was emitted
-    let event = events.recv().await.unwrap();
-    assert!(matches!(event, GameEvent::QualiaStateUpdated(_)));
+    let received_event = events.recv().await.unwrap();
+    assert!(matches!(received_event, GameEvent::QualiaStateUpdated(_)));
     
     // Verify state
     assert!(state.intensity > 0.0);
 }
 ```
 
-### 7.3. Property-Based Tests
-
-```rust
-use proptest::prelude::*;
-
-proptest! {
-    #[test]
-    fn test_qualia_values_bounded(
-        intensity in 0.0f32..=1.0,
-        harmony in 0.0f32..=1.0,
-    ) {
-        let state = QualiaState {
-            intensity,
-            harmony,
-            chaos: 0.5,
-            kairos: 0.5,
-            timestamp: 0,
-        };
-        
-        prop_assert!(state.intensity >= 0.0 && state.intensity <= 1.0);
-        prop_assert!(state.harmony >= 0.0 && state.harmony <= 1.0);
-    }
-}
-```
-
 ---
 
-**END OF QUALIA.MANUAL.RUST**
+**END OF QUALIA.MANUAL.RUST v1.1**
 
-*"From theory to practice. From architecture to implementation."*
+*"From principles to practice. From architecture to code. From broadcast channels to tested services."*

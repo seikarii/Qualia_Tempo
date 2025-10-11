@@ -63,7 +63,8 @@ Qualia Tempo Rust Edition is a complete rewrite that leverages Rust's strengths 
 │  └──────────────────────────────────┬────────────────────────────────────────┘  │
 │                                     │                                           │
 │  ┌──────────────────────────────────▼────────────────────────────────────────┐  │
-│  │                       Backend Event Bus (async-channel)                   │  │
+│  │              Backend Event Bus (tokio::sync::broadcast)                │  │
+│  │                    ⚡ Zero-contention, lock-free ⚡                    │  │
 │  └───┬──────────────────┬──────────────────┬──────────────────┬─────────────┘  │
 │      │                  │                  │                  │                 │
 │  ┌───▼────────────┐ ┌───▼────────────┐ ┌───▼────────────┐ ┌──▼──────────────┐  │
@@ -654,8 +655,8 @@ bincode = "1.3"
 shaku = "0.6"
 async-trait = "0.1"
 
-# Event Bus
-async-channel = "2.0"
+# Event Bus - tokio::sync::broadcast (built-in to tokio)
+# No external dependency needed - part of tokio "full" features
 
 # Logging
 tracing = "0.1"
@@ -681,6 +682,9 @@ validator = { version = "0.16", features = ["derive"] }
 
 # Schema generation
 schemars = "1.0"
+
+# Testing mocks
+mockall = "0.12"
 
 # Shared core
 shared_core = { path = "../shared_core" }

@@ -17,16 +17,29 @@ These rules are active at all times and supersede any other instruction.
 
 ### 2.1. Context is King
 - **ALWAYS** begin any task by consulting the holy trinity of documentation:
-  1.  `@/docs/QUALIA.CODE.md` - For architectural law.
-  2.  `@/docs/QUALIA.MANUAL.md` - For implementation patterns.
+  1.  **TypeScript/Python projects**: `@/docs/QUALIA.CODE.md` and `@/docs/QUALIA.MANUAL.md`
+  2.  **Rust projects**: `@/docs/QUALIA.CODE.RUST.md` and `@/docs/QUALIA.MANUAL.RUST.md`
   3.  The relevant `README.md` of the directory you are working in.
 - **ALWAYS** assume you lack context until you have verified it against these documents.
+- **ALWAYS** check which language/framework the task involves before proceeding.
 
 ### 2.2. Information Foraging
-- **ALWAYS** use the `web_fetch` tool to research external libraries, APIs, or concepts when you encounter something you don't know. Do not operate on incomplete information.
+- **ALWAYS** use the `fetch_webpage` tool to research external libraries, APIs, or concepts when you encounter something you don't know. Do not operate on incomplete information.
 - **ALWAYS** proactively suggest improvements based on your findings if they align with QUALIA.CODE principles or upgrade them, even if not explicitly requested. Always write it in SUGGESTIONS.md. EJ: new linter rules, new architectural patterns, etc.
 
-### 2.3. Documentation Stewardship
+### 2.3. When Stuck: Research Protocol
+- **MANDATE**: If you cannot find a solution in the project documentation, you **MUST** research externally.
+- **Sources (in order of priority)**:
+  1. Official documentation (docs.rs for Rust crates, MDN for Web APIs, etc.)
+  2. GitHub issues/discussions for the specific library
+  3. Stack Overflow or relevant forums
+- **Process**:
+  1. Use `fetch_webpage` to get official docs
+  2. If still unclear, search for "library_name error_message" + "github issues"
+  3. Document your findings in code comments or SUGGESTIONS.md
+- **PROHIBITED**: Guessing or implementing half-solutions without research.
+
+### 2.4. Documentation Stewardship
 - **ALWAYS** read the `README.md` of any directory you modify.
 - If your changes render a `README.md` outdated, you **MUST** update it as part of your task.
 
@@ -61,18 +74,31 @@ You **MUST** follow this sequence for every development task. This is your "Sequ
 3.  If you resolve a `TODO` or `FIXME`, you **MUST** remove the corresponding entry from `TODO.md`.   
 4.  DO NOT USE TODO.md as a channel to repport your progress. It is strictly for tracking TODO tasks. 
 
-### **Step 5: Proactive Testing**
+### **Step 5: Proactive Testing (USEFUL Tests, Not Checkbox Tests)**
 1.  After implementation, you **MUST** ensure the code is tested.
 2.  **Testing Protocol:**
     a. Check if a test file already exists for the modified file.
     b. **If YES:** Add new, relevant test cases to cover your changes.
-    c. **If NO:** Create a new test file from scratch. The new test file **MUST** follow the project's testing architecture (`test-container-factory.ts`, mocked dependencies, etc.) as defined in `QUALIA.CODE` and `QUALIA.MANUAL`.
+    c. **If NO:** Create a new test file from scratch. The new test file **MUST** follow the project's testing architecture (`test-container-factory.ts` for TypeScript, `create_test_module()` for Rust, mocked dependencies, etc.) as defined in `QUALIA.CODE` and `QUALIA.MANUAL`.
 
-### **Step 6: Validation & Verification**
+3.  **CRITICAL: Write USEFUL Tests (see Section 5.1 below)**
+    - ❌ **DO NOT** write tests that only verify happy path or trivial getters
+    - ✅ **DO** write tests that answer: "What production bug does this prevent?"
+    - ✅ **DO** test edge cases, error paths, boundary conditions, and integration flows
+    - ✅ **DO** test failure scenarios (network disconnect, invalid input, race conditions)
+
+### **Step 6: Validation & Verification (Task Is NOT Complete Until This Passes)**
 1.  Execute the tests you have written or modified to ensure they pass.
-2.  Execute the master architectural linter by running the command: `./scripts/lint-architecture.sh`.
-3.  If the linter fails, you **MUST** fix the violations.
-4.  Execute `git diff HEAD` to review your changes and provide a final summary to the user.
+2.  Execute the master architectural linter by running the command: `./scripts/lint-architecture.sh` (for TypeScript/Python) or appropriate Rust linter.
+3.  If the linter fails, you **MUST** fix the violations. Do not leave violations unfixed.
+4.  Update `CHANGELOG.md` with your changes (see Section 5).
+5.  Execute `git diff HEAD` to review your changes.
+6.  **MANDATE**: A task is NOT complete until ALL of the following pass:
+    - ✅ Tests pass
+    - ✅ Linter passes
+    - ✅ CHANGELOG.md updated
+    - ✅ No TODO/FIXME comments without corresponding TODO.md entry
+7.  If you cannot complete all steps in one turn, explicitly state blockers and propose next steps.
 
 ---
 
@@ -93,8 +119,112 @@ You **MUST** follow this sequence for every development task. This is your "Sequ
 
 ---
 ## 5. CHANGELOG PROTOCOL AND ERROR REPORTING
+
+### 5.1. CHANGELOG is Your ONLY Progress Report
 - **MANDATORY:** At the end of every turn you make a change to the codebase, you **MUST** update the `CHANGELOG.md` file located at the root of the project.
+- **PROHIBITED:** Creating separate summary documents, audit reports, or status reports UNLESS explicitly requested by the Senior Architect.
+- **CORRECT PATTERN**: All changes documented in CHANGELOG.md with:
+  - Session number and date
+  - Summary of changes
+  - Files modified/created
+  - Impact assessment
+- **ANTI-PATTERN**: Creating files like "SESSION_SUMMARY.md", "AUDIT_REPORT.md", etc. without explicit request.
+
+### 5.2. Error Logging
 - **MANDATORY:** If you encounter any errors during your operations, you **MUST** log them in the `ERROR_LOG.md` file located at the root of the project, including a timestamp and a brief description of the error.
+
+### 5.3. Testing Philosophy: Useful Tests vs Useless Tests
+
+**CRITICAL MANDATE**: Write tests that prevent production bugs, not tests that check obvious behavior.
+
+#### ❌ USELESS TESTS (DO NOT WRITE THESE):
+
+```typescript
+// Test 1: Testing trivial getters
+test('getIntensity returns intensity', () => {
+  const state = { intensity: 0.5 };
+  expect(state.intensity).toBe(0.5); // This is just a field access!
+});
+
+// Test 2: Only testing happy path
+test('emit succeeds with valid event', () => {
+  const bus = new EventBus();
+  expect(() => bus.emit(event)).not.toThrow(); // What about error cases?
+});
+
+// Test 3: Testing library behavior
+test('logger calls console.log', () => {
+  // This tests the library, not your code
+});
+```
+
+#### ✅ USEFUL TESTS (WRITE THESE):
+
+```typescript
+// Test 1: Edge case - Capacity overflow
+test('EventBus handles capacity overflow gracefully', () => {
+  const bus = new EventBus(2); // Small capacity
+  bus.emit(event1);
+  bus.emit(event2);
+  
+  // Does it panic or handle gracefully?
+  expect(() => bus.emit(event3)).not.toThrow();
+  // Does it drop old events or reject new ones?
+  expect(bus.getSubscriberLagCount()).toBeGreaterThan(0);
+});
+
+// Test 2: Error path - Network failure
+test('WebSocket reconnects after disconnect', async () => {
+  const ws = new WebSocketService(config);
+  await ws.connect();
+  
+  // Simulate network failure
+  ws.simulateDisconnect();
+  
+  // Does it retry with backoff?
+  await sleep(100);
+  expect(ws.isReconnecting()).toBe(true);
+  
+  // Does it eventually succeed?
+  await expect(ws.waitConnected()).resolves.not.toThrow();
+});
+
+// Test 3: Boundary condition - Zero/NaN handling
+test('QualiaCalculator handles zero accuracy without NaN', () => {
+  const calc = new QualiaCalculator(config);
+  
+  const state = calc.processAction({ accuracy: 0.0 });
+  
+  // Should not produce NaN or Inf
+  expect(state.intensity).not.toBeNaN();
+  expect(state.harmony).toBeGreaterThanOrEqual(0);
+  expect(state.harmony).toBeLessThanOrEqual(1);
+});
+
+// Test 4: Integration - Full flow
+test('Player action flows through EventBus to Store', async () => {
+  const container = createTestContainer();
+  const eventBus = container.get<IEventBus>(TYPES.IEventBus);
+  const store = container.get<IGameStateStore>(TYPES.IGameStateStore);
+  
+  // Emit player action
+  eventBus.emit({ type: 'PlayerAction', action: dashAction });
+  
+  // Wait for state update
+  await waitFor(() => store.getState().player.isDashing);
+  
+  // Verify full flow worked
+  expect(store.getState().player.isDashing).toBe(true);
+});
+```
+
+#### GOLDEN RULE:
+**Every test must answer: "What production bug does this prevent?"**
+
+If you cannot answer that question, the test is probably useless.
+
+---
+
 ## 6. Forbidden Actions
 
 The following actions are critical violations of your core directives:
