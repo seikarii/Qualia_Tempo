@@ -28,16 +28,36 @@ struct AstVisitor {
     nodes: Vec<GraphNode>,
     edges: Vec<GraphEdge>,
     current_source_id: Option<String>,
+    module_id: String, // ID del módulo actual (fichero)
 }
 
 impl AstVisitor {
     fn new(file_path: String, module_path: String) -> Self {
+        // Crear un nodo para el módulo (fichero) en sí
+        let module_id = if module_path.is_empty() {
+            "crate".to_string()
+        } else {
+            module_path.clone()
+        };
+        
+        let module_node = GraphNode {
+            id: module_id.clone(),
+            node_type: "module".to_string(),
+            file_path: file_path.clone(),
+            description: Some(format!("Module: {}", module_path)),
+            public_methods: Vec::new(),
+            public_fields: Vec::new(),
+            implements_traits: Vec::new(),
+            metadata: HashMap::new(),
+        };
+        
         Self {
             file_path,
             module_path,
-            nodes: Vec::new(),
+            nodes: vec![module_node],
             edges: Vec::new(),
-            current_source_id: None,
+            current_source_id: Some(module_id.clone()), // Por defecto, el módulo es la fuente
+            module_id,
         }
     }
     
@@ -112,12 +132,14 @@ impl<'ast> Visit<'ast> for AstVisitor {
             metadata: HashMap::new(),
         });
         
-        // Establecer como fuente para las aristas de dependencias
+        // Guardar el contexto anterior (el módulo) y establecer el struct como fuente
+        let previous_source = self.current_source_id.clone();
         self.current_source_id = Some(id);
         
         syn::visit::visit_item_struct(self, node);
         
-        self.current_source_id = None;
+        // Restaurar el contexto anterior (el módulo)
+        self.current_source_id = previous_source;
     }
     
     /// Visita declaraciones de enums.
@@ -144,9 +166,10 @@ impl<'ast> Visit<'ast> for AstVisitor {
             metadata: HashMap::new(),
         });
         
+        let previous_source = self.current_source_id.clone();
         self.current_source_id = Some(id);
         syn::visit::visit_item_enum(self, node);
-        self.current_source_id = None;
+        self.current_source_id = previous_source;
     }
     
     /// Visita declaraciones de traits.
@@ -183,9 +206,10 @@ impl<'ast> Visit<'ast> for AstVisitor {
             metadata: HashMap::new(),
         });
         
+        let previous_source = self.current_source_id.clone();
         self.current_source_id = Some(id);
         syn::visit::visit_item_trait(self, node);
-        self.current_source_id = None;
+        self.current_source_id = previous_source;
     }
     
     /// Visita funciones standalone.
@@ -209,9 +233,10 @@ impl<'ast> Visit<'ast> for AstVisitor {
             metadata: HashMap::new(),
         });
         
+        let previous_source = self.current_source_id.clone();
         self.current_source_id = Some(id);
         syn::visit::visit_item_fn(self, node);
-        self.current_source_id = None;
+        self.current_source_id = previous_source;
     }
     
     /// Visita bloques impl para extraer métodos.
@@ -450,11 +475,18 @@ mod tests {
         
         let result = AstAnalyzer::analyze_file(file.path(), "test").unwrap();
         
-        assert_eq!(result.nodes.len(), 1);
-        assert_eq!(result.nodes[0].node_type, "struct");
-        assert_eq!(result.nodes[0].id, "test::TestStruct");
-        assert!(result.nodes[0].description.is_some());
-        assert_eq!(result.nodes[0].public_fields.len(), 1);
-        assert_eq!(result.nodes[0].public_methods.len(), 1);
+        // Now we should have 2 nodes: 1 module + 1 struct
+        assert_eq!(result.nodes.len(), 2);
+        
+        // First node should be the module
+        assert_eq!(result.nodes[0].node_type, "module");
+        assert_eq!(result.nodes[0].id, "test");
+        
+        // Second node should be the struct
+        assert_eq!(result.nodes[1].node_type, "struct");
+        assert_eq!(result.nodes[1].id, "test::TestStruct");
+        assert!(result.nodes[1].description.is_some());
+        assert_eq!(result.nodes[1].public_fields.len(), 1);
+        assert_eq!(result.nodes[1].public_methods.len(), 1);
     }
 }

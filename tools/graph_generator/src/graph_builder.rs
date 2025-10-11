@@ -20,6 +20,10 @@ impl GraphBuilder {
         Self { discovery }
     }
     
+    /// Crea un constructor con configuración por defecto.
+    pub fn with_defaults() -> Self {
+        Self::new(FileDiscovery::with_defaults())
+    }
 
     /// Construye el grafo completo del proyecto.
     ///

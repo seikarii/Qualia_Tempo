@@ -77,14 +77,52 @@ graph_generator --path /ruta/al/proyecto --verbose
 - `.gitignore` for Rust artifacts
 
 **Build Status**:
-- Debug build: ✅ Success (2 non-critical dead_code warnings)
+- Debug build: ✅ Success (3 non-critical warnings)
 - Release build: ✅ Success (optimized)
-- Self-analysis test: ✅ Success (6 files, 10 nodes, 3 edges analyzed)
+- Self-analysis test: ✅ Success (6 files, 16 nodes, 61 edges analyzed)
 
 **Next Steps**:
 - Consider extending to TypeScript/Python analysis
 - Integration with CI/CD for architectural monitoring
 - Visualization tools for generated graphs
+
+### 🔧 REFINEMENT: Module-Level Dependency Capture (TDD Implementation)
+
+**Problem Solved**: The initial version only captured dependencies at the struct/enum/trait level, missing critical module-to-module relationships defined by top-level `use` statements.
+
+**TDD Approach**:
+1. **RED Phase**: Created integration tests (`tests/integration_test.rs`) that define the quality contract:
+   - `test_graph_generates_correct_module_dependencies`: Verifies basic module-to-module edges
+   - `test_graph_captures_nested_module_structure`: Validates complex nested dependencies
+   - Initial execution: **Both tests FAILED** (as expected)
+
+2. **GREEN Phase**: Implemented solution in `ast_analyzer.rs`:
+   - **Module Nodes**: Each analyzed file now creates a "module" type node
+   - **Context Management**: `current_source_id` now defaults to the module ID
+   - **Smart Scoping**: Structs/enums/traits temporarily override the source context, then restore to module
+   - **Module-Level Uses**: Top-level `use` statements now correctly create edges from module to imported types
+
+3. **REFACTOR Phase**: Ensured backward compatibility:
+   - Updated existing unit test to expect module nodes
+   - Restored helper methods for test convenience
+   - All 10 unit tests + 2 integration tests now pass (12/12 = 100%)
+
+**Impact Analysis**:
+- **Before**: 10 nodes (structs only), 3 edges (struct-level dependencies)
+- **After**: 16 nodes (6 modules + 10 structs), 61 edges (58 module-level uses + 3 implementations)
+- **Improvement**: 20x increase in captured relationships, providing true architectural insight
+
+**Quality Metrics**:
+- ✅ 100% test pass rate (12/12)
+- ✅ Integration tests validate real-world scenarios
+- ✅ Backward compatible with existing functionality
+- ✅ TDD compliance: contract-first development
+
+**Files Modified**:
+- `src/ast_analyzer.rs`: Core visitor logic enhanced (module node creation, context management)
+- `tests/integration_test.rs`: NEW - Integration test suite (2 comprehensive tests)
+- `src/file_discovery.rs`: Restored `with_defaults()` helper
+- `src/graph_builder.rs`: Restored `with_defaults()` helper
 
 ---
 

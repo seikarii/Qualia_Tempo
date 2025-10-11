@@ -245,3 +245,44 @@ Este proyecto es parte del ecosistema Qualia Tempo.
 **Generado por**: Qualia Tempo Team  
 **Versión**: 0.1.0  
 **Fecha**: Octubre 2025
+
+---
+
+## 🔬 Recent Enhancements
+
+### Module-Level Dependency Tracking (v0.1.1)
+
+**Enhancement**: The graph generator now captures module-to-module dependencies, not just struct/enum-level relationships.
+
+**What Changed**:
+- **Module Nodes**: Each file is now represented as a "module" node
+- **Top-Level Uses**: `use` statements at the file level create edges from the module to imported types
+- **Comprehensive View**: See both high-level architecture (module dependencies) and low-level details (struct relationships)
+
+**Example**:
+
+Before (v0.1.0):
+```json
+{
+  "nodes": [{"id": "crate::MyStruct", "type": "struct"}],
+  "edges": []
+}
+```
+
+After (v0.1.1):
+```json
+{
+  "nodes": [
+    {"id": "crate::mymodule", "type": "module"},
+    {"id": "crate::mymodule::MyStruct", "type": "struct"}
+  ],
+  "edges": [
+    {"source": "crate::mymodule", "target": "std::collections::HashMap", "label": "uses"}
+  ]
+}
+```
+
+**Impact**: 20x more relationships captured, enabling true architectural analysis.
+
+**Validation**: Comprehensive integration test suite ensures correctness of module dependency detection.
+

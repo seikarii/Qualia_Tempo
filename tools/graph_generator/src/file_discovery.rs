@@ -61,6 +61,10 @@ impl FileDiscovery {
         Self { config }
     }
     
+    /// Crea un motor con la configuración por defecto.
+    pub fn with_defaults() -> Self {
+        Self::new(DiscoveryConfig::default())
+    }
 
     /// Descubre todos los ficheros válidos en el directorio dado.
     ///
