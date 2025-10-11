@@ -12,5 +12,4 @@ Cargo.lock
 *~
 
 # Output files
-project_graph.json
 *.json

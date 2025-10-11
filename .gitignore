@@ -74,6 +74,5 @@ logs/
 *.tmp
 *.temp
 .gemini_checkpoints/
-# Graph Generator outputs
-project_graph.json
-graph_*.json
+
+
