@@ -272,7 +272,7 @@ qualia-tempo-rust/
        ▼
 ┌─────────────────────────┐
 │  Backend EventBus       │
-│  (async-channel)        │
+│(tokio::sync::broadcast) │
 └──────┬──────────────────┘
        │ 5. Emit PlayerAction event
        ├────────────────────────────┐
