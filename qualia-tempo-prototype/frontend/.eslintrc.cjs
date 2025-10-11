@@ -75,10 +75,10 @@ module.exports = {
     // Import rules (require eslint-plugin-import which is not installed)
     // "import/no-unused-modules": "off", // Can be too aggressive
 
-    // QUALIA.CODE CRITICAL RULES - ACTIVATED FOR FULL COMPLIANCE DETECTION
-    // NOTE: Decorator enforcement rules set to "warn" for gradual adoption
-    // These represent architectural best practices but retroactive application is a large undertaking
-    "@qualia-tempo/qualia-code/enforce-method-decorators": "warn",
+    // QUALIA.CODE CRITICAL RULES - ZERO TOLERANCE ENFORCEMENT
+    // ALL ARCHITECTURAL RULES ARE NOW ERRORS - NO GRADUAL ADOPTION PHASE
+    // RATIONALE: 1000+ warnings revealed massive architectural debt that must be addressed
+    "@qualia-tempo/qualia-code/enforce-method-decorators": "error",
     "@qualia-tempo/qualia-code/enforce-inversify-conventions": "error",
     "@qualia-tempo/qualia-code/no-global-api-calls": "error",
     "@qualia-tempo/qualia-code/no-direct-service-instantiation": "error",
@@ -93,30 +93,30 @@ module.exports = {
     // instead of using proper platform abstraction services (ITimerService, etc.)
     "@qualia-tempo/qualia-code/enforce-browser-only": "off",
     "@qualia-tempo/qualia-code/enforce-event-interfaces-location": "error",
-    // NEW RULES - QUALIA.CODE v1.2 Data Integrity & Performance (WARNINGS for gradual adoption)
-    "@qualia-tempo/qualia-code/enforce-validation-on-boundaries": "warn",
-    "@qualia-tempo/qualia-code/enforce-performance-best-practices": "warn",
-    // NEW RULES - QUALIA.CODE v1.3 IoC Binding Order Enforcement
+    // QUALIA.CODE v1.2 Data Integrity & Performance - NOW ERRORS
+    "@qualia-tempo/qualia-code/enforce-validation-on-boundaries": "error",
+    "@qualia-tempo/qualia-code/enforce-performance-best-practices": "error",
+    // QUALIA.CODE v1.3 IoC Binding Order Enforcement
     "@qualia-tempo/qualia-code/enforce-ioc-binding-order": "error",
-    // NEW RULES - QUALIA.CODE v1.4-1.9 Decorator Enforcement (WARNINGS for gradual adoption)
-    "@qualia-tempo/qualia-code/enforce-cache-decorator": "warn",
-    "@qualia-tempo/qualia-code/enforce-mutex-on-state-mutations": "warn",
-    "@qualia-tempo/qualia-code/enforce-retry-on-io-operations": "warn",
-    "@qualia-tempo/qualia-code/enforce-async-on-heavy-methods": "warn",
-    "@qualia-tempo/qualia-code/enforce-timeout-on-async-operations": "warn",
-    "@qualia-tempo/qualia-code/enforce-worker-offloading": "warn",
-    "@qualia-tempo/qualia-code/enforce-validation-on-public-methods": "warn",
-    "@qualia-tempo/qualia-code/enforce-error-boundary-on-async": "warn",
-    "@qualia-tempo/qualia-code/enforce-throttle-on-event-handlers": "warn",
-    "@qualia-tempo/qualia-code/enforce-debounce-on-ui-inputs": "warn",
-    "@qualia-tempo/qualia-code/enforce-rate-limit-on-api-calls": "warn",
-    "@qualia-tempo/qualia-code/enforce-measure-time-on-logic-services": "warn",
-    "@qualia-tempo/qualia-code/enforce-validate-event-property-on-emit": "warn",
-    "@qualia-tempo/qualia-code/enforce-adapt-and-emit-on-raw-handlers": "warn",
-    "@qualia-tempo/qualia-code/enforce-readonly-on-config-access": "warn",
-    "@qualia-tempo/qualia-code/enforce-deprecated-on-comment": "warn",
-    "@qualia-tempo/qualia-code/enforce-authorize-on-secure-methods": "warn",
-    "@qualia-tempo/qualia-code/enforce-profile-on-heavy-computation": "warn",
+    // QUALIA.CODE v1.4-1.9 Decorator Enforcement - NOW ERRORS
+    "@qualia-tempo/qualia-code/enforce-cache-decorator": "error",
+    "@qualia-tempo/qualia-code/enforce-mutex-on-state-mutations": "error",
+    "@qualia-tempo/qualia-code/enforce-retry-on-io-operations": "error",
+    "@qualia-tempo/qualia-code/enforce-async-on-heavy-methods": "error",
+    "@qualia-tempo/qualia-code/enforce-timeout-on-async-operations": "error",
+    "@qualia-tempo/qualia-code/enforce-worker-offloading": "error",
+    "@qualia-tempo/qualia-code/enforce-validation-on-public-methods": "error",
+    "@qualia-tempo/qualia-code/enforce-error-boundary-on-async": "error",
+    "@qualia-tempo/qualia-code/enforce-throttle-on-event-handlers": "error",
+    "@qualia-tempo/qualia-code/enforce-debounce-on-ui-inputs": "error",
+    "@qualia-tempo/qualia-code/enforce-rate-limit-on-api-calls": "error",
+    "@qualia-tempo/qualia-code/enforce-measure-time-on-logic-services": "error",
+    "@qualia-tempo/qualia-code/enforce-validate-event-property-on-emit": "error",
+    "@qualia-tempo/qualia-code/enforce-adapt-and-emit-on-raw-handlers": "error",
+    "@qualia-tempo/qualia-code/enforce-readonly-on-config-access": "error",
+    "@qualia-tempo/qualia-code/enforce-deprecated-on-comment": "error",
+    "@qualia-tempo/qualia-code/enforce-authorize-on-secure-methods": "error",
+    "@qualia-tempo/qualia-code/enforce-profile-on-heavy-computation": "error",
     // NEW RULES - QUALIA.CODE v2.0 SALA (CRITICAL - Keep as errors)
     "@qualia-tempo/qualia-code/enforce-high-fidelity-mocks": "error",
     "@qualia-tempo/qualia-code/enforce-decorator-order": "error",

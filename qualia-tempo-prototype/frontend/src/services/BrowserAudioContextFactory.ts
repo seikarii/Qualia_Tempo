@@ -8,6 +8,7 @@
 
 import { injectable } from 'inversify';
 import type { IAudioContextFactory } from './interfaces/IAudioContextFactory';
+import { logMethod } from '../utils/decorators';
 
 @injectable()
 export class BrowserAudioContextFactory implements IAudioContextFactory {
@@ -20,6 +21,7 @@ export class BrowserAudioContextFactory implements IAudioContextFactory {
    * 
    * @returns AudioContext instance or null if not available
    */
+  @logMethod
   public create(): AudioContext | null {
     // eslint-disable-next-line @qualia-tempo/qualia-code/no-global-api-calls
     if (typeof window === 'undefined') {

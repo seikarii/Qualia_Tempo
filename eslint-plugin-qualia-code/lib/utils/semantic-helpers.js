@@ -752,16 +752,50 @@ function detectStateMutations(methodNode) {
  */
 function detectPrivilegedOperations(methodNode) {
   const operations = [];
-  const privilegedMethods = ['delete', 'remove', 'destroy', 'update', 'modify', 'admin', 'grant', 'revoke'];
+  
+  // CRITICAL: Only flag ACTUAL database operations, not service method calls
+  // A method like updateGameState() on a service is NOT a privileged operation
+  // Only direct database/auth system calls should be flagged
+  const privilegedDatabaseOps = [
+    'executeQuery', 'rawQuery', 'executeRaw',
+    'deleteFrom', 'dropTable', 'truncate',
+    'grantRole', 'revokeRole', 'setPermissions'
+  ];
+  
+  // Known database client objects
+  const databaseClients = [
+    'db', 'database', 'connection', 'client',
+    'prisma', 'knex', 'sequelize', 'mongoose',
+    'pool', 'transaction', 'session'
+  ];
   
   function traverse(node) {
     if (!node) return;
 
-    // Database/API operations
+    // Database/API operations - must be on a known database client
     if (node.type === 'CallExpression' &&
         node.callee.type === 'MemberExpression') {
+      const object = node.callee.object;
       const property = node.callee.property;
-      if (property && privilegedMethods.some(pm => property.name.toLowerCase().includes(pm))) {
+      
+      if (!property) return;
+      
+      // Get the object name
+      let objectName = null;
+      if (object.type === 'Identifier') {
+        objectName = object.name;
+      } else if (object.type === 'MemberExpression' && object.property) {
+        objectName = object.property.name;
+      }
+      
+      // Only flag if it's a known database client AND a privileged operation
+      const isDatabaseClient = objectName && databaseClients.some(db => 
+        objectName.toLowerCase().includes(db.toLowerCase()));
+      
+      const isPrivilegedOp = privilegedDatabaseOps.some(pm => 
+        property.name.toLowerCase() === pm.toLowerCase());
+      
+      if (isDatabaseClient && isPrivilegedOp) {
         operations.push({
           type: 'database',
           operation: property.name
@@ -805,11 +839,24 @@ function detectIOOperations(methodNode) {
   ];
 
   // Common non-I/O objects that have similar method names
+  // CRITICAL: These are in-memory data structures and IoC containers, NOT I/O operations
   const nonIOObjects = [
-    'Map', 'Set', 'WeakMap', 'WeakSet',
-    'cache', 'pool', 'timers', 'activeTimeouts', 'activeNotifications',
+    // Data structures
+    'Map', 'Set', 'WeakMap', 'WeakSet', 'Array',
+    // In-memory caches and pools
+    'cache', 'pool', 'registry', 'store',
+    // Timers and event tracking
+    'timers', 'activeTimeouts', 'activeNotifications',
+    // Game state tracking
     'pressedKeys', 'justPressedKeys', 'soundSources',
-    'timerProvider', 'gainNode', 'pannerNode'
+    // Audio/rendering nodes
+    'timerProvider', 'gainNode', 'pannerNode', 'analyserNode', 'filterNode',
+    // IoC Container (CRITICAL FIX: container.get() is NOT I/O)
+    'container', 'Container', 'inversifyContainer',
+    // Service registries and managers
+    'serviceRegistry', 'serviceManager', 'dependencyManager',
+    // Queues and buffers
+    'queue', 'buffer', 'eventQueue', 'commandQueue'
   ];
   
   function traverse(node) {

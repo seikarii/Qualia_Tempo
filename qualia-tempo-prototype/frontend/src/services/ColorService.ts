@@ -42,6 +42,9 @@ export class ColorService implements IColorService {
    * - No allocations beyond the return array
    * - Suitable for hot paths (tested at >10k calls/sec)
    * 
+   * @logMethod-exempt Hot path operation (>100 calls/frame)
+   * @validate-exempt Primitive number parameters, TypeScript enforces types
+   * 
    * @param h - Hue in [0, 1] range
    * @param s - Saturation in [0, 1] range  
    * @param l - Lightness in [0, 1] range

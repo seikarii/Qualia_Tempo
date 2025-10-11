@@ -10,7 +10,7 @@
 
 import { injectable } from 'inversify';
 import { IWebSocketFactory } from './interfaces/IWebSocketFactory';
-import { BrowserOnly } from '../utils/decorators';
+import { BrowserOnly, logMethod } from '../utils/decorators';
 
 @injectable()
 export class BrowserWebSocketFactory implements IWebSocketFactory {
@@ -22,6 +22,7 @@ export class BrowserWebSocketFactory implements IWebSocketFactory {
    * @BrowserOnly ensures this method only executes in browser environments,
    * preventing crashes in SSR or Node.js test environments.
    */
+  @logMethod
   @BrowserOnly
   public create(url: string): WebSocket {
     return new WebSocket(url);

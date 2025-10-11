@@ -15,12 +15,21 @@ module.exports = {
   },
   create(context) {
     const filename = context.getFilename();
-    if (!filename.includes('/services/') || filename.includes('Provider.ts')) return {};
+    // Exclude non-service files, Providers, and Composition Roots (special bootstrap classes)
+    if (!filename.includes('/services/') || 
+        filename.includes('Provider.ts') ||
+        filename.includes('CompositionRoot.ts') ||
+        filename.includes('inversify.config.ts')) {
+      return {};
+    }
 
     return {
       MethodDefinition(node) {
         if (!node.key.name || node.key.name.startsWith('_')) return;
         if (node.accessibility === 'private' || node.accessibility === 'protected') return;
+        
+        // CRITICAL: Skip constructors - they should NOT have @logMethod
+        if (node.kind === 'constructor') return;
 
         const hasLogMethod = node.decorators?.some(d => d.expression?.callee?.name === 'logMethod');
         if (!hasLogMethod && node.value?.body) {
