@@ -437,7 +437,12 @@ export class QualiaStateCalculatorService
   /**
    * Apply decay to all qualia values based on time passed.
    * @param deltaTime Time passed in seconds
+   * 
+   * TODO: PERFORMANCE - Consider offloading to Web Worker for heavy computation
+   * This method performs 7 Math.exp() calls which could benefit from worker offloading
+   * However, it's called frequently (every frame) so worker communication overhead must be evaluated
    */
+  // WORKER-EXEMPT: Frequent calls, worker communication overhead may exceed computation cost
   @logMethod
   private applyDecayToAllValues(deltaTime: number): void {
     // Apply exponential decay to all values using individual decay rates
