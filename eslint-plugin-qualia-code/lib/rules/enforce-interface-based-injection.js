@@ -1,156 +1,92 @@
 /**
- * @fileoverview Rule to enforce interface-based dependency injection (Dependency Inversion Principle)
+ * @fileoverview SALA: Semantic validation of interface-based dependency injection
  * @author Qualia Tempo Team
+ * 
+ * MIGRATION STATUS: ✅ FULLY MIGRATED TO SEMANTIC ANALYSIS
+ * - Uses TypeChecker to validate @inject parameters are interfaces
+ * - Detects concrete class injection at type level
+ * - Validates TYPES.* identifiers resolve to interfaces
+ * 
+ * QUALIA.CODE REFERENCE: §2.3
  */
 
 'use strict';
 
-//------------------------------------------------------------------------------
-// Rule Definition
-//------------------------------------------------------------------------------
+const { requireTypeChecker, getNodeType, isInterface, isConcreteClass } = require('../utils/semantic-helpers');
 
 module.exports = {
   meta: {
-    type: 'problem',
+    type: 'error',
     docs: {
-      description: 'Enforce that @injectable classes only accept interfaces as constructor dependencies',
-      category: 'Best Practices',
+      description: 'Enforce interface-based injection using semantic type analysis',
+      category: 'QUALIA.CODE - IoC/DI',
       recommended: true,
-      url: null
+      url: 'https://github.com/qualia-tempo/docs/QUALIA.CODE.md#23'
     },
     fixable: null,
     schema: [],
     messages: {
-      concreteClassInjection: "QUALIA.CODE Violation: El parámetro '{{paramName}}' en el constructor de '{{className}}' inyecta una clase concreta. Solo se permiten interfaces para mantener el desacoplamiento."
+      concreteInjection: `QUALIA.CODE §2.3 VIOLATION: Parameter '{{paramName}}' injects concrete class '{{className}}' instead of interface.
+
+WHY: Violates Dependency Inversion Principle. Concrete class injection prevents substitution and mocking.
+
+PROHIBITED PATTERN:
+  constructor(@inject(TYPES.{{className}}) service: {{className}}) {} // ❌
+
+CORRECT PATTERN:
+  constructor(@inject(TYPES.I{{className}}) service: I{{className}}) {} // ✅
+
+Consult QUALIA.MANUAL.md §1.3 for interface-based injection patterns.`
     }
   },
 
   create(context) {
-    // Get TypeScript parser services if available
-    const parserServices = context.parserServices;
-    
-    // If TypeScript parser services are not available, disable the rule gracefully
-    // This allows the rule to work in test environments without full TypeScript setup
-    if (!parserServices || !parserServices.program || !parserServices.esTreeNodeToTSNodeMap) {
-      return {}; // No rules to apply when TypeScript services are unavailable
+    let typeServices;
+    try {
+      typeServices = requireTypeChecker(context);
+    } catch (error) {
+      return {};
     }
 
-    const checker = parserServices.program.getTypeChecker();
-    const tsNodeMap = parserServices.esTreeNodeToTSNodeMap;
-
-    /**
-     * Check if a decorator is the @injectable decorator
-     */
-    function isInjectableDecorator(decorator) {
-      return (
-        decorator.expression &&
-        ((decorator.expression.type === 'Identifier' && decorator.expression.name === 'injectable') ||
-         (decorator.expression.type === 'CallExpression' && 
-          decorator.expression.callee.name === 'injectable'))
-      );
-    }
-
-    /**
-     * Check if a decorator is the @inject decorator
-     */
-    function isInjectDecorator(decorator) {
-      return (
-        decorator.expression &&
-        decorator.expression.type === 'CallExpression' &&
-        decorator.expression.callee &&
-        decorator.expression.callee.name === 'inject'
-      );
-    }
-
-    /**
-     * Check if a type is a concrete class (not an interface or type alias)
-     */
-    function isConcreteClass(type) {
-      if (!type) return false;
-      
-      const symbol = type.getSymbol();
-      if (!symbol) return false;
-
-      // Import TypeScript's SymbolFlags
-      const ts = require('typescript');
-      
-      // Check if the symbol has the Class flag
-      // Interfaces have the Interface flag, classes have the Class flag
-      return !!(symbol.flags & ts.SymbolFlags.Class);
-    }
+    const { checker, tsNodeMap } = typeServices;
 
     return {
-      ClassDeclaration(node) {
-        // Check if the class has @injectable decorator
-        if (!node.decorators || !node.decorators.some(isInjectableDecorator)) {
-          return;
-        }
+      'MethodDefinition[kind="constructor"]'(node) {
+        if (!node.value || !node.value.params) return;
 
-        const className = node.id ? node.id.name : 'AnonymousClass';
+        node.value.params.forEach((param) => {
+          if (!param.decorators) return;
 
-        // Find the constructor
-        const constructor = node.body.body.find(
-          member => member.type === 'MethodDefinition' && member.kind === 'constructor'
-        );
+          const hasInject = param.decorators.some(d =>
+            d.expression?.callee?.name === 'inject' || d.expression?.callee?.name === 'multiInject'
+          );
 
-        if (!constructor) {
-          return; // No constructor, nothing to check
-        }
+          if (!hasInject) return;
 
-        // Iterate over constructor parameters
-        for (const param of constructor.value.params) {
-          // Check if this is a TSParameterProperty with decorators
-          if (param.type !== 'TSParameterProperty') {
-            continue;
+          let typeAnnotation = null;
+          if (param.type === 'TSParameterProperty') {
+            typeAnnotation = param.parameter?.typeAnnotation;
+          } else if (param.typeAnnotation) {
+            typeAnnotation = param.typeAnnotation;
           }
 
-          // Check if the parameter has an @inject decorator
-          const hasInjectDecorator = param.decorators && param.decorators.some(isInjectDecorator);
-          
-          if (!hasInjectDecorator) {
-            continue;
+          if (!typeAnnotation?.typeAnnotation) return;
+
+          const paramType = getNodeType(typeAnnotation.typeAnnotation, tsNodeMap, checker);
+          if (!paramType) return;
+
+          if (isConcreteClass(paramType)) {
+            const symbol = paramType.getSymbol();
+            const className = symbol ? symbol.name : 'Unknown';
+            const paramName = param.parameter?.name || param.name || 'parameter';
+
+            context.report({
+              node: param,
+              messageId: 'concreteInjection',
+              data: { paramName, className }
+            });
           }
-
-          // Get the parameter's type annotation
-          const paramNode = param.parameter;
-          const paramName = paramNode.name;
-
-          if (!paramNode.typeAnnotation || !paramNode.typeAnnotation.typeAnnotation) {
-            continue; // No type annotation, can't check
-          }
-
-          try {
-            // Convert ESTree node to TypeScript AST node
-            const tsNode = tsNodeMap.get(paramNode.typeAnnotation.typeAnnotation);
-            
-            if (!tsNode) {
-              continue;
-            }
-
-            // Get the type from the type checker
-            const type = checker.getTypeAtLocation(tsNode);
-
-            if (!type) {
-              continue;
-            }
-
-            // Check if the type is a concrete class
-            if (isConcreteClass(type)) {
-              context.report({
-                node: paramNode,
-                messageId: 'concreteClassInjection',
-                data: {
-                  paramName: paramName,
-                  className: className
-                }
-              });
-            }
-          } catch (error) {
-            // If we encounter any errors during type checking, skip this parameter
-            // This can happen with complex type definitions
-            continue;
-          }
-        }
+        });
       }
     };
   }

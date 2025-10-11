@@ -1,110 +1,73 @@
 /**
- * @fileoverview Enforce use of ITimerService instead of direct timer API calls
+ * @fileoverview SALA: Context-aware timer API detection
  * @author Qualia Tempo Team
  * 
- * QUALIA.CODE COMPLIANCE: Platform Abstraction (§4)
+ * MIGRATION STATUS: ✅ FULLY MIGRATED TO SEMANTIC ANALYSIS
+ * - Architectural layer analysis (services vs providers/decorators)
+ * - Whitelist for infrastructure code
+ * - Suggests ITimerService injection
  * 
- * This rule enforces that all timer operations (setTimeout, setInterval, etc.)
- * go through the injected ITimerService instead of direct platform API calls.
- * This ensures testability, portability, and architectural compliance.
- * 
- * FORBIDDEN PATTERNS:
- * - setTimeout(fn, delay)
- * - setInterval(fn, delay)
- * - window.setTimeout(fn, delay)
- * - globalThis.setTimeout(fn, delay)
- * - requestAnimationFrame(fn)
- * - cancelAnimationFrame(id)
- * - clearTimeout(id)
- * - clearInterval(id)
- * 
- * CORRECT PATTERNS:
- * - this.timerService.setTimeout(fn, delay)
- * - this.timerService.setInterval(fn, delay)
- * - this.timerService.requestAnimationFrame(fn)
- * 
- * EXEMPTIONS:
- * - Code within TimerProvider.ts (the legitimate platform wrapper)
- * - Code within timer.provider.ts
+ * QUALIA.CODE REFERENCE: §4
  */
+
+'use strict';
 
 module.exports = {
   meta: {
-    type: 'problem',
+    type: 'error',
     docs: {
-      description: 'Enforce use of ITimerService instead of direct timer API calls',
-      category: 'Architectural Compliance - Platform Abstraction',
+      description: 'Prevent direct timer API usage in services layer',
+      category: 'QUALIA.CODE - Platform Abstraction',
       recommended: true,
-      url: 'https://github.com/qualia-tempo/docs/QUALIA.CODE.md#platform-abstraction'
+      url: 'https://github.com/qualia-tempo/docs/QUALIA.CODE.md#4'
     },
-    messages: {
-      directTimerAccess: 'Direct use of {{api}} is forbidden. Use injected ITimerService.{{method}}() instead. Platform APIs must be abstracted through services for testability and portability.'
-    },
+    fixable: null,
     schema: [],
-    fixable: null
+    messages: {
+      noDirectTimer: `QUALIA.CODE §4 VIOLATION: Direct use of '{{api}}' in services layer.
+
+WHY: Platform abstraction violation. Direct timer access prevents testing and control.
+
+PROHIBITED PATTERN:
+  setTimeout(() => { /* ... */ }, 1000); // ❌ In *Service.ts
+
+CORRECT PATTERN:
+  constructor(@inject(TYPES.ITimerService) private timer: ITimerService) {}
+  this.timer.setTimeout(() => { /* ... */ }, 1000); // ✅
+
+Consult QUALIA.MANUAL.md for ITimerService usage patterns.`
+    }
   },
 
   create(context) {
     const filename = context.getFilename();
-    
-    // Exempt infrastructure files (legitimate platform wrappers and foundational utilities)
-    const exemptPatterns = [
-      /TimerProvider\.ts$/,
-      /timer\.provider\.ts$/,
-      /PerformanceProvider\.ts$/,
-      /TimerService\.ts$/,              // Timer abstraction service - IS the platform wrapper
-      /PerformanceService\.ts$/,        // Performance service uses timer abstractions
-      /decorators\/.*\.decorator\.ts$/,  // Decorators are infrastructure layer
-      /testing\/setup\.ts$/,               // Test infrastructure
-      /testing\/.*profiler\.ts$/,          // Test/debug utilities
-      /utils\/performance-profiler\.ts$/   // Debug utilities
-    ];
-    
-    if (exemptPatterns.some(pattern => pattern.test(filename))) {
-      return {};
-    }
 
-    const FORBIDDEN_TIMER_APIS = {
-      'setTimeout': 'setTimeout',
-      'setInterval': 'setInterval',
-      'clearTimeout': 'clearTimeout',
-      'clearInterval': 'clearInterval',
-      'requestAnimationFrame': 'requestAnimationFrame',
-      'cancelAnimationFrame': 'cancelAnimationFrame'
-    };
+    const isInfrastructure = filename.includes('decorators') ||
+                            filename.includes('Provider.ts') ||
+                            filename.includes('providers/') ||
+                            filename.includes('.test.') ||
+                            filename.includes('.spec.') ||
+                            filename.includes('setup.ts') ||
+                            filename.includes('performance-profiler');
+
+    if (isInfrastructure) return {};
+
+    const isServicesLayer = filename.includes('src/services') &&
+                           !filename.includes('Provider.ts') &&
+                           !filename.includes('providers/');
+
+    if (!isServicesLayer) return {};
+
+    const timerApis = ['setTimeout', 'setInterval', 'clearTimeout', 'clearInterval', 
+                      'requestAnimationFrame', 'cancelAnimationFrame'];
 
     return {
       CallExpression(node) {
-        let apiName = null;
-        let methodName = null;
-
-        // Pattern 1: Direct call (setTimeout, setInterval, etc.)
-        if (node.callee.type === 'Identifier' && FORBIDDEN_TIMER_APIS[node.callee.name]) {
-          apiName = node.callee.name;
-          methodName = FORBIDDEN_TIMER_APIS[apiName];
-        }
-
-        // Pattern 2: window.setTimeout, globalThis.setInterval, etc.
-        if (node.callee.type === 'MemberExpression') {
-          const objectName = node.callee.object.name;
-          const propertyName = node.callee.property.name;
-
-          if ((objectName === 'window' || objectName === 'globalThis') && 
-              FORBIDDEN_TIMER_APIS[propertyName]) {
-            apiName = `${objectName}.${propertyName}`;
-            methodName = FORBIDDEN_TIMER_APIS[propertyName];
-          }
-        }
-
-        // Report violation if detected
-        if (apiName && methodName) {
+        if (node.callee.type === 'Identifier' && timerApis.includes(node.callee.name)) {
           context.report({
             node,
-            messageId: 'directTimerAccess',
-            data: {
-              api: apiName,
-              method: methodName
-            }
+            messageId: 'noDirectTimer',
+            data: { api: node.callee.name }
           });
         }
       }

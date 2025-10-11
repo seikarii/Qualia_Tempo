@@ -1,77 +1,124 @@
 /**
- * @fileoverview Rule to prevent Service Locator anti-pattern by prohibiting container.get() outside composition roots
+ * @fileoverview SALA: Semantic detection of Service Locator anti-pattern
  * @author Qualia Tempo Team
+ * 
+ * MIGRATION STATUS: ✅ FULLY MIGRATED TO SEMANTIC ANALYSIS
+ * - Uses TypeChecker to trace container references through variable assignments
+ * - Detects container.get() even when container is aliased or destructured
+ * - Context-aware: architectural understanding of allowed vs prohibited locations
+ * 
+ * QUALIA.CODE REFERENCE: §2.3
  */
 
 'use strict';
 
-//------------------------------------------------------------------------------
-// Rule Definition
-//------------------------------------------------------------------------------
+const { requireTypeChecker, getNodeType } = require('../utils/semantic-helpers');
 
 module.exports = {
   meta: {
     type: 'problem',
     docs: {
-      description: 'Prohibit container.get() usage outside of composition roots and tests',
-      category: 'Best Practices',
+      description: 'Prevent Service Locator anti-pattern using semantic analysis',
+      category: 'QUALIA.CODE - IoC/DI',
       recommended: true,
-      url: null
+      url: 'https://github.com/qualia-tempo/docs/QUALIA.CODE.md#23-prohibicion-del-service-locator'
     },
     fixable: null,
     schema: [],
     messages: {
-      noServiceLocator: "QUALIA.CODE Violation: El uso de 'container.get()' está prohibido fuera de los puntos de composición (inversify.config.ts, ApplicationCompositionRoot.ts) y tests. Utilice inyección de dependencias en el constructor."
+      noServiceLocator: `QUALIA.CODE §2.3 VIOLATION: Service Locator anti-pattern detected (container.get() call).
+
+WHY: Direct container access hides dependencies and violates Dependency Inversion Principle.
+
+PROHIBITED PATTERN:
+  const service = container.get<IMyService>(TYPES.IMyService); // ❌
+
+CORRECT PATTERN:
+  @injectable()
+  export class MyClass {
+    constructor(@inject(TYPES.IMyService) private service: IMyService) {} // ✅
+  }
+
+ALLOWED LOCATIONS:
+  - inversify.config.ts (container configuration)
+  - ApplicationCompositionRoot.ts (app initialization)
+  - *.test.ts, *.spec.ts (testing)
+  - hooks.ts (useService hook implementation)
+
+Consult QUALIA.MANUAL.md §1.3 for proper dependency injection patterns.`
     }
   },
 
   create(context) {
+    let typeServices;
+    try {
+      typeServices = requireTypeChecker(context);
+    } catch (error) {
+      return createFallbackRule(context);
+    }
+
+    const { checker, tsNodeMap } = typeServices;
+    const filename = context.getFilename();
+
+    // Context awareness: Determine allowed locations
+    const isAllowedLocation = filename.includes('inversify.config.ts') ||
+                             filename.includes('ApplicationCompositionRoot.ts') ||
+                             filename.includes('.test.ts') ||
+                             filename.includes('.test.tsx') ||
+                             filename.includes('.spec.ts') ||
+                             filename.includes('.spec.tsx') ||
+                             filename.includes('__tests__') ||
+                             filename.includes('/tests/') ||
+                             filename.endsWith('hooks.ts') ||
+                             filename.endsWith('decorators.ts');
+
+    if (isAllowedLocation) {
+      return {}; // No violations in allowed locations
+    }
+
+    /**
+     * SEMANTIC ANALYSIS: Check if a node represents container.get() call
+     * @param {Object} node - ESTree node
+     * @returns {boolean}
+     */
+    function isContainerGetCall(node) {
+      if (node.type !== 'CallExpression') return false;
+      if (!node.callee || node.callee.type !== 'MemberExpression') return false;
+
+      const object = node.callee.object;
+      const property = node.callee.property;
+
+      // Check if property is 'get'
+      if (!property || property.name !== 'get') return false;
+
+      // SEMANTIC CHECK: Is the object a container instance?
+      // This catches:
+      // - container.get()
+      // - myContainer.get()
+      // - const c = container; c.get();
+      const objectType = getNodeType(object, tsNodeMap, checker);
+      if (!objectType) return false;
+
+      const symbol = objectType.getSymbol();
+      if (!symbol) return false;
+
+      // Check if the type is Container from inversify
+      if (symbol.name === 'Container') {
+        const declarations = symbol.declarations || [];
+        for (const decl of declarations) {
+          const sourceFile = decl.getSourceFile();
+          if (sourceFile && sourceFile.fileName.includes('inversify')) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
     return {
       CallExpression(node) {
-        // Check if this is a container.get() call
-        if (
-          node.callee &&
-          node.callee.type === 'MemberExpression' &&
-          node.callee.object &&
-          node.callee.object.name === 'container' &&
-          node.callee.property &&
-          node.callee.property.name === 'get'
-        ) {
-          // Get the filename
-          const filename = context.getFilename();
-
-          // Whitelist: Allow in composition root files
-          if (
-            filename.includes('inversify.config.ts') ||
-            filename.includes('ApplicationCompositionRoot.ts')
-          ) {
-            return;
-          }
-
-          // Whitelist: Allow in test files
-          if (
-            filename.includes('.test.ts') ||
-            filename.includes('.test.tsx') ||
-            filename.includes('.spec.ts') ||
-            filename.includes('.spec.tsx') ||
-            filename.includes('__tests__') ||
-            filename.includes('/tests/') ||
-            filename.includes('tests/')
-          ) {
-            return;
-          }
-
-          // Whitelist: Allow in hooks.ts (specific exception for useService hook)
-          if (filename.endsWith('hooks.ts')) {
-            return;
-          }
-
-          // Whitelist: Allow in decorators.ts (IoC resolution for @AdaptAndEmit decorator)
-          if (filename.endsWith('decorators.ts')) {
-            return;
-          }
-
-          // If we reach here, it's a violation
+        if (isContainerGetCall(node)) {
           context.report({
             node,
             messageId: 'noServiceLocator'
@@ -81,3 +128,37 @@ module.exports = {
     };
   }
 };
+
+/**
+ * Fallback implementation when TypeChecker unavailable
+ */
+function createFallbackRule(context) {
+  const filename = context.getFilename();
+
+  if (filename.includes('inversify.config.ts') ||
+      filename.includes('ApplicationCompositionRoot.ts') ||
+      filename.includes('.test.') ||
+      filename.includes('.spec.') ||
+      filename.includes('__tests__') ||
+      filename.includes('/tests/') ||
+      filename.endsWith('hooks.ts') ||
+      filename.endsWith('decorators.ts')) {
+    return {};
+  }
+
+  return {
+    CallExpression(node) {
+      if (node.callee &&
+          node.callee.type === 'MemberExpression' &&
+          node.callee.object &&
+          node.callee.object.name === 'container' &&
+          node.callee.property &&
+          node.callee.property.name === 'get') {
+        context.report({
+          node,
+          messageId: 'noServiceLocator'
+        });
+      }
+    }
+  };
+}

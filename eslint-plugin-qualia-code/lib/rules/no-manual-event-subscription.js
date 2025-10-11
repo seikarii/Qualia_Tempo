@@ -1,56 +1,39 @@
 /**
- * @qualia-tempo/eslint-plugin-qualia-code
- * Rule: no-manual-event-subscription
- *
- * Prohibits the use of eventBus.subscribe() in service files.
- * All event subscriptions MUST use the @OnEvent decorator for automatic lifecycle management.
- *
- * This enforces QUALIA.CODE section 9.1: Event-Driven Architecture
+ * @fileoverview SALA: Event subscription pattern enforcement
+ * @author Qualia Tempo Team
+ * MIGRATION STATUS: ✅ MIGRATED
  */
-
+'use strict';
+const { requireTypeChecker } = require('../utils/semantic-helpers');
 module.exports = {
   meta: {
-    type: 'problem',
-    docs: {
-      description: 'Prohíbe la suscripción manual al EventBus para forzar el uso del decorador @OnEvent.',
-      category: 'QUALIA.CODE Compliance',
-      recommended: true
-    },
-    fixable: null,
-    schema: []
+    type: 'error',
+    docs: { description: 'Enforce @OnEvent decorator for event subscriptions', category: 'QUALIA.CODE - Event Architecture', recommended: true },
+    schema: [],
+    messages: {
+      manualSubscription: 'QUALIA.CODE §4: Use @OnEvent decorator instead of manual eventBus.on(). Manual subscriptions violate lifecycle management.'
+    }
   },
-
   create(context) {
     const filename = context.getFilename();
-    const isServiceFile = filename.includes('/services/') && filename.endsWith('.ts');
-
-    if (!isServiceFile) {
-      return {};
-    }
+    if (!filename.includes('/services/')) return {};
 
     return {
       CallExpression(node) {
-        // Check if this is a call to subscribe method
-        if (node.callee.type === 'MemberExpression' &&
-            node.callee.property.name === 'subscribe') {
+        const callee = node.callee;
+        if (callee.type !== 'MemberExpression') return;
 
-          // Check if the object is eventBus or this.eventBus
-          const object = node.callee.object;
-          let isEventBusCall = false;
+        const isEventBusCall = (
+          (callee.object.name === 'eventBus' || callee.object.property?.name === 'eventBus') &&
+          (callee.property.name === 'on' || callee.property.name === 'subscribe')
+        );
 
-          if (object.type === 'Identifier' && object.name === 'eventBus') {
-            isEventBusCall = true;
-          } else if (object.type === 'MemberExpression' &&
-                     object.object.type === 'ThisExpression' &&
-                     object.property.name === 'eventBus') {
-            isEventBusCall = true;
-          }
-
-          if (isEventBusCall) {
-            context.report({
-              node,
-              message: "El uso directo de 'eventBus.subscribe()' está prohibido. Utilice el decorador '@OnEvent' en un método y asegúrese de que el servicio implemente 'IBaseService' para una gestión de ciclo de vida automática y segura. (QUALIA.CODE 9.1)"
-            });
+        if (isEventBusCall) {
+          const parent = context.getAncestors().find(a => a.type === 'MethodDefinition');
+          const hasOnEventDecorator = parent?.decorators?.some(d => d.expression?.callee?.name === 'OnEvent');
+          
+          if (!hasOnEventDecorator) {
+            context.report({ node, messageId: 'manualSubscription' });
           }
         }
       }

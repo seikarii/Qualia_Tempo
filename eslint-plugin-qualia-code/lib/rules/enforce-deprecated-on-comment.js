@@ -1,85 +1,29 @@
 /**
- * @qualia-tempo/eslint-plugin-qualia-code
- * Rule: enforce-deprecated-on-comment
- * 
- * Detects methods with deprecation comments (// DEPRECATED, // TO BE REMOVED) and suggests using @deprecated decorator.
- * 
- * Enforces QUALIA.CODE §5.1: Python Decorators - Complete Catalog (Frontend equivalent)
+ * @fileoverview SALA: Deprecation metadata validation
+ * @author Qualia Tempo Team
+ * MIGRATION STATUS: ✅ MIGRATED
  */
-
+'use strict';
 module.exports = {
   meta: {
-    type: 'suggestion',
-    docs: {
-      description: 'Suggest @deprecated decorator instead of deprecation comments',
-      category: 'QUALIA.CODE Compliance',
-      recommended: true
-    },
-    fixable: null,
+    type: 'warning',
+    docs: { description: 'Enforce @deprecated decorator on JSDoc @deprecated methods', category: 'QUALIA.CODE - Maintenance', recommended: true },
     schema: [],
     messages: {
-      useDeprecatedDecorator: 'Method "{{methodName}}" has deprecation comment. Use @deprecated() decorator instead for formal deprecation tracking. (QUALIA.CODE §5.1)'
+      missingDecorator: 'QUALIA.CODE §6: Method has @deprecated JSDoc but lacks @deprecated decorator. Add decorator with metadata.'
     }
   },
-
   create(context) {
-    const filename = context.getFilename();
-
-    // Only check service files
-    if (!filename.includes('/services/') || !filename.endsWith('.ts')) {
-      return {};
-    }
-
-    const deprecationPatterns = [
-      /deprecated/i,
-      /to be removed/i,
-      /will be removed/i,
-      /obsolete/i,
-      /do not use/i,
-      /legacy/i
-    ];
-
-    function hasDecorator(node, decoratorName) {
-      if (!node.decorators || !Array.isArray(node.decorators)) {
-        return false;
-      }
-
-      return node.decorators.some(decorator => {
-        if (decorator.expression?.type === 'Identifier') {
-          return decorator.expression.name === decoratorName;
-        }
-        if (decorator.expression?.type === 'CallExpression') {
-          return decorator.expression.callee?.name === decoratorName;
-        }
-        return false;
-      });
-    }
-
-    function hasDeprecationComment(node) {
-      const sourceCode = context.getSourceCode();
-      const comments = sourceCode.getCommentsBefore(node);
-      
-      return comments.some(comment => {
-        const text = comment.value.toLowerCase();
-        return deprecationPatterns.some(pattern => pattern.test(text));
-      });
-    }
+    const sourceCode = context.getSourceCode();
 
     return {
       MethodDefinition(node) {
-        const methodName = node.key?.name;
-        if (!methodName) {
-          return;
-        }
+        const comments = sourceCode.getCommentsBefore(node);
+        const hasJSDocDeprecated = comments.some(c => c.value.includes('@deprecated'));
+        const hasDecorator = node.decorators?.some(d => d.expression?.callee?.name === 'deprecated');
 
-        if (hasDeprecationComment(node) && !hasDecorator(node, 'deprecated')) {
-          context.report({
-            node,
-            messageId: 'useDeprecatedDecorator',
-            data: {
-              methodName
-            }
-          });
+        if (hasJSDocDeprecated && !hasDecorator) {
+          context.report({ node, messageId: 'missingDecorator' });
         }
       }
     };

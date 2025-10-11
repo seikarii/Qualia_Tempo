@@ -1,135 +1,32 @@
 /**
- * @qualia-tempo/eslint-plugin-qualia-code
- * Rule: enforce-measure-time-on-logic-services
- * 
- * Suggests @measureTime decorator on public methods of logic services (ViewLogicService, GameplayMechanicsService)
- * that aren't simple getters. Helps with performance monitoring.
- * 
- * Enforces QUALIA.CODE §5.2: Decorator-Driven Development (Advisory)
+ * @fileoverview SALA: Performance measurement enforcement
+ * @author Qualia Tempo Team
+ * MIGRATION STATUS: ✅ MIGRATED
  */
-
+'use strict';
 module.exports = {
   meta: {
-    type: 'suggestion',
-    docs: {
-      description: 'Suggest @measureTime decorator on business logic methods for performance monitoring',
-      category: 'QUALIA.CODE Compliance',
-      recommended: true
-    },
-    fixable: null,
+    type: 'warning',
+    docs: { description: 'Enforce @measureTime on logic-heavy methods', category: 'QUALIA.CODE - Performance', recommended: true },
     schema: [],
     messages: {
-      suggestMeasureTime: 'ADVISORY: Method "{{methodName}}" in logic service should consider using @measureTime() for performance monitoring. (QUALIA.CODE §5.2)'
+      missingMeasureTime: 'QUALIA.CODE §6: Logic method "{{method}}" should use @measureTime for performance monitoring.'
     }
   },
-
   create(context) {
     const filename = context.getFilename();
-
-    // Only check logic service files
-    const logicServicePatterns = [
-      /ViewLogicService/,
-      /GameplayMechanicsService/,
-      /CalculatorService/,
-      /ProcessorService/,
-      /EngineService/,
-      /AlgorithmService/
-    ];
-
-    const isLogicService = logicServicePatterns.some(pattern => pattern.test(filename));
-    
-    if (!isLogicService || !filename.endsWith('.ts')) {
-      return {};
-    }
-
-    function hasDecorator(node, decoratorName) {
-      if (!node.decorators || !Array.isArray(node.decorators)) {
-        return false;
-      }
-
-      return node.decorators.some(decorator => {
-        if (decorator.expression?.type === 'Identifier') {
-          return decorator.expression.name === decoratorName;
-        }
-        if (decorator.expression?.type === 'CallExpression') {
-          return decorator.expression.callee?.name === decoratorName;
-        }
-        return false;
-      });
-    }
-
-    function isPublicMethod(node) {
-      if (node.accessibility === 'private' || node.accessibility === 'protected') {
-        return false;
-      }
-      if (node.key?.name?.startsWith('_')) {
-        return false;
-      }
-      return true;
-    }
-
-    function isSimpleGetter(node) {
-      const methodName = node.key?.name;
-      if (!methodName) return false;
-
-      // Check if method name starts with 'get' and has simple implementation
-      if (!methodName.startsWith('get')) {
-        return false;
-      }
-
-      // Check if body is simple (single return statement)
-      const body = node.value?.body;
-      if (!body || !body.body || body.body.length !== 1) {
-        return false;
-      }
-
-      const firstStatement = body.body[0];
-      return firstStatement.type === 'ReturnStatement';
-    }
+    if (!filename.includes('ViewLogicService') && !filename.includes('CalculatorService')) return {};
 
     return {
       MethodDefinition(node) {
-        if (!isPublicMethod(node)) {
-          return;
-        }
+        const hasMeasureTime = node.decorators?.some(d => 
+          d.expression?.callee?.name === 'measureTime' || d.expression?.callee?.name === 'profile'
+        );
+        if (hasMeasureTime || !node.value?.body) return;
 
-        const methodName = node.key?.name;
-        if (!methodName) {
-          return;
-        }
-
-        // Skip lifecycle methods
-        const exemptMethods = ['constructor', 'initialize', 'cleanup', 'start', 'stop', 'destroy'];
-        if (exemptMethods.includes(methodName)) {
-          return;
-        }
-
-        // Skip simple getters
-        if (isSimpleGetter(node)) {
-          return;
-        }
-
-        // Only flag methods that are clearly computational
-        const computationalPatterns = [
-          /^calculate/i,
-          /^compute/i,
-          /^process/i,
-          /^transform/i,
-          /^generate/i,
-          /^build/i,
-        ];
-
-        const isComputational = computationalPatterns.some(pattern => pattern.test(methodName));
-
-        // Only suggest @measureTime for computational methods without it
-        if (isComputational && !hasDecorator(node, 'measureTime')) {
-          context.report({
-            node,
-            messageId: 'suggestMeasureTime',
-            data: {
-              methodName
-            }
-          });
+        const bodyLength = node.value.body.body?.length || 0;
+        if (bodyLength > 10 || node.key.name?.match(/(calculate|compute|generate|process)/i)) {
+          context.report({ node, messageId: 'missingMeasureTime', data: { method: node.key.name } });
         }
       }
     };

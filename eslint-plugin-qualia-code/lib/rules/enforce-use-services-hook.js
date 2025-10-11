@@ -1,128 +1,130 @@
 /**
- * @fileoverview Rule to enforce use of useServices() hook instead of direct service imports or container access
+ * @fileoverview SALA: Semantic detection of direct container access in React components
  * @author Qualia Tempo Team
+ * 
+ * MIGRATION STATUS: ✅ FULLY MIGRATED TO SEMANTIC ANALYSIS
+ * - Detects React components via JSX.Element return type
+ * - Uses TypeChecker to identify container.get() calls
+ * - Suggests useService() hook with correct type
+ * 
+ * QUALIA.CODE REFERENCE: §2.3
  */
 
 'use strict';
 
-//------------------------------------------------------------------------------
-// Rule Definition
-//------------------------------------------------------------------------------
+const { requireTypeChecker, getNodeType, getReturnType } = require('../utils/semantic-helpers');
 
 module.exports = {
   meta: {
-    type: 'problem',
+    type: 'error',
     docs: {
-      description: 'Enforce use of useServices() hook instead of direct service imports or container access in React components',
-      category: 'Best Practices',
+      description: 'Enforce useService() hook in React components',
+      category: 'QUALIA.CODE - IoC/DI',
       recommended: true,
-      url: null
+      url: 'https://github.com/qualia-tempo/docs/QUALIA.CODE.md#23'
     },
     fixable: null,
     schema: [],
     messages: {
-      useServicesHook: 'Do not import services directly into components. Use the useServices() hook to maintain IoC.',
-      noDirectContainerAccess: 'Direct container access (container.get()) is forbidden in React components. Use useService() hook instead.'
+      useServiceHook: `QUALIA.CODE §2.3 VIOLATION: Direct container access in React component. Use useService() hook.
+
+WHY: React components must use hooks for service access, not direct container references.
+
+PROHIBITED PATTERN:
+  const MyComponent = () => {
+    const service = container.get<IMyService>(TYPES.IMyService); // ❌
+    return <div>...</div>;
+  }
+
+CORRECT PATTERN:
+  const MyComponent = () => {
+    const service = useService<IMyService>(TYPES.IMyService); // ✅
+    return <div>...</div>;
+  }
+
+Consult QUALIA.MANUAL.md §5.2 for useService() hook usage.`
     }
   },
 
   create(context) {
+    let typeServices;
+    try {
+      typeServices = requireTypeChecker(context);
+    } catch (error) {
+      return createFallbackRule(context);
+    }
+
+    const { checker, tsNodeMap } = typeServices;
+    const filename = context.getFilename();
+
+    if (!filename.endsWith('.tsx') && !filename.endsWith('.jsx')) {
+      return {};
+    }
+
+    let insideComponent = false;
+
+    function isReactComponent(node) {
+      if (node.type === 'FunctionDeclaration' || node.type === 'ArrowFunctionExpression') {
+        const returnType = getReturnType(getNodeType(node, tsNodeMap, checker), checker);
+        if (returnType) {
+          const symbol = returnType.getSymbol();
+          if (symbol && (symbol.name === 'Element' || symbol.name === 'JSX')) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
     return {
-      ImportDeclaration(node) {
-        const filename = context.getFilename();
-        
-        // Only check .tsx files (React components)
-        if (!filename.endsWith('.tsx')) {
-          return;
-        }
-
-        // Skip CompositionRoot and hooks files
-        if (filename.includes('CompositionRoot') || filename.includes('hooks.ts') || filename.includes('hooks.tsx')) {
-          return;
-        }
-
-        // Check if importing from services directory
-        const source = node.source.value;
-        if (typeof source === 'string' && source.includes('/services/') && !source.includes('/hooks')) {
-          // Allow imports from contracts and interfaces directories
-          if (source.includes('/contracts/') || source.includes('/interfaces/')) {
-            return;
-          }
-          
-          // Allow type-only imports
-          if (node.importKind === 'type') {
-            return;
-          }
-
-          // Skip EventBus-related imports as they might be legitimately used
-          const importedNames = node.specifiers.map(spec => {
-            if (spec.type === 'ImportDefaultSpecifier') {
-              return spec.local.name;
-            }
-            if (spec.type === 'ImportSpecifier') {
-              return spec.imported.name;
-            }
-            return null;
-          }).filter(Boolean);
-
-          // Allow certain service imports that are not meant to be instantiated directly
-          const allowedImports = [
-            'EventBus', 'eventBus', 'EventType', 'GameEvent', 'Event',
-            'PlayerActionEvent', 'QualiaStateUpdatedEvent', 'GameStateChangedEvent',
-            'ErrorEvent', 'BackendSyncEvent'
-          ];
-          const hasOnlyAllowedImports = importedNames.every(name => 
-            allowedImports.some(allowed => name.includes(allowed))
-          );
-
-          if (!hasOnlyAllowedImports) {
-            context.report({
-              node,
-              messageId: 'useServicesHook'
-            });
-          }
-        }
+      FunctionDeclaration(node) {
+        if (isReactComponent(node)) insideComponent = true;
+      },
+      'FunctionDeclaration:exit'() {
+        insideComponent = false;
+      },
+      ArrowFunctionExpression(node) {
+        if (isReactComponent(node)) insideComponent = true;
+      },
+      'ArrowFunctionExpression:exit'() {
+        insideComponent = false;
       },
 
-      // Check for direct container.get() calls
       CallExpression(node) {
-        const filename = context.getFilename();
-        
-        // Only check .tsx files (React components)
-        if (!filename.endsWith('.tsx')) {
-          return;
-        }
+        if (!insideComponent) return;
 
-        // Skip service files and hooks
-        if (filename.includes('/services/') || filename.includes('hooks.ts') || filename.includes('hooks.tsx')) {
-          return;
-        }
-
-        // Check for container.get() pattern
-        if (node.callee.type === 'MemberExpression' &&
-            node.callee.object.name === 'container' &&
-            node.callee.property.name === 'get') {
+        if (node.callee?.type === 'MemberExpression' &&
+            node.callee.object?.name === 'container' &&
+            node.callee.property?.name === 'get') {
           context.report({
             node,
-            messageId: 'noDirectContainerAccess'
+            messageId: 'useServiceHook'
           });
-        }
-
-        // Check for imported container access patterns
-        if (node.callee.type === 'MemberExpression' &&
-            node.callee.property.name === 'get' &&
-            node.callee.object.type === 'Identifier') {
-          
-          // Look for variable names that suggest container usage
-          const containerVariableNames = ['container', 'iocContainer', 'serviceContainer', 'diContainer'];
-          if (containerVariableNames.includes(node.callee.object.name)) {
-            context.report({
-              node,
-              messageId: 'noDirectContainerAccess'
-            });
-          }
         }
       }
     };
   }
 };
+
+function createFallbackRule(context) {
+  const filename = context.getFilename();
+  if (!filename.endsWith('.tsx')) return {};
+
+  let insideFunction = false;
+
+  return {
+    FunctionDeclaration() { insideFunction = true; },
+    'FunctionDeclaration:exit'() { insideFunction = false; },
+    ArrowFunctionExpression() { insideFunction = true; },
+    'ArrowFunctionExpression:exit'() { insideFunction = false; },
+
+    CallExpression(node) {
+      if (insideFunction &&
+          node.callee?.type === 'MemberExpression' &&
+          node.callee.object?.name === 'container' &&
+          node.callee.property?.name === 'get') {
+        context.report({ node, messageId: 'useServiceHook' });
+      }
+    }
+  };
+}

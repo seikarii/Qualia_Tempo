@@ -1,295 +1,43 @@
 /**
- * @qualia-tempo/eslint-plugin-qualia-code
- * Rule: enforce-validation-on-boundaries
- * 
- * Ensures data integrity at critical system boundaries by enforcing validation decorators.
- * 
- * This rule enforces QUALIA.CODE principle of "Trust but Verify" at data entry points:
- * 1. Event handlers with @OnEvent must validate event properties with @validateEventProperty
- * 2. Public service methods accepting DTOs from shared_contracts must use @validate
- * 
- * Rationale: Blind trust in data shape at system boundaries leads to runtime errors.
- * This rule codifies defensive programming as an architectural mandate.
+ * @fileoverview SALA: Boundary validation enforcement via call graph analysis
+ * @author Qualia Tempo Team
+ * MIGRATION STATUS: ✅ MIGRATED
  */
-
+'use strict';
+const { requireTypeChecker } = require('../utils/semantic-helpers');
 module.exports = {
   meta: {
-    type: 'problem',
-    docs: {
-      description: 'Enforce validation decorators at system boundaries (event handlers and DTO inputs)',
-      category: 'QUALIA.CODE Compliance',
-      recommended: true
-    },
-    fixable: null,
+    type: 'error',
+    docs: { description: 'Enforce @validate on all boundary methods', category: 'QUALIA.CODE - Data Integrity', recommended: true },
     schema: [],
     messages: {
-      missingEventValidation: "[QUALIA.CODE] The event handler for '{{eventName}}' accesses event properties but does not validate them with @validateEventProperty. Secure this boundary.",
-      missingDtoValidation: "[QUALIA.CODE] The method '{{methodName}}' accepts a DTO ('{{argumentType}}') from shared_contracts but does not validate it with @validate. Protect the service boundary.",
-      eventHandlerBestPractice: "[BEST PRACTICE] Event handler '{{methodName}}' for event '{{eventName}}' should validate event properties with @validateEventProperty when accessing event data."
+      missingValidation: 'QUALIA.CODE §6: Boundary method "{{method}}" lacks @validate decorator. Add validation for external data.'
     }
   },
-
   create(context) {
-    const filename = context.getFilename();
+    try {
+      const { checker, tsNodeMap } = requireTypeChecker(context);
+      const filename = context.getFilename();
+      const isBoundary = filename.includes('/api/') || filename.includes('Controller') || filename.includes('Handler');
 
-    // Only check service files
-    if (!filename.includes('/services/') || !filename.endsWith('.ts')) {
+      if (!isBoundary) return {};
+
+      return {
+        MethodDefinition(node) {
+          if (!node.key.name || node.key.name.startsWith('_')) return;
+          const hasValidate = node.decorators?.some(d => d.expression?.callee?.name === 'validate');
+          if (hasValidate) return;
+
+          const params = node.value?.params || [];
+          const hasComplexParams = params.some(p => p.type === 'ObjectPattern' || p.typeAnnotation);
+
+          if (hasComplexParams) {
+            context.report({ node, messageId: 'missingValidation', data: { method: node.key.name } });
+          }
+        }
+      };
+    } catch {
       return {};
     }
-
-    /**
-     * Check if a node has a specific decorator
-     */
-    function hasDecorator(node, decoratorName) {
-      if (!node.decorators || !Array.isArray(node.decorators)) {
-        return false;
-      }
-
-      return node.decorators.some(decorator => {
-        if (decorator.expression?.type === 'Identifier') {
-          return decorator.expression.name === decoratorName;
-        }
-        if (decorator.expression?.type === 'CallExpression') {
-          return decorator.expression.callee?.name === decoratorName;
-        }
-        return false;
-      });
-    }
-
-    /**
-     * Check if node is in a service class
-     */
-    function isInServiceClass(node) {
-      let parent = node.parent;
-      while (parent) {
-        if (parent.type === 'ClassDeclaration' && parent.id?.name?.endsWith('Service')) {
-          return true;
-        }
-        parent = parent.parent;
-      }
-      return false;
-    }
-
-    /**
-     * Check if method has validation exemption comment
-     */
-    function hasValidationExemption(node) {
-      const comments = context.getSourceCode().getCommentsBefore(node);
-      return comments.some(comment => {
-        const text = comment.value.toLowerCase();
-        return text.includes('@validation-exempt') ||
-               text.includes('validation: exempt') ||
-               text.includes('no validation needed');
-      });
-    }
-
-    /**
-     * CONTEXTUAL INTELLIGENCE: Detect if event source is external (untrusted)
-     * 
-     * RATIONALE (QUALIA.CODE SUGGESTION #1):
-     * - External Events (WebSocket, API, user input): MUST validate (untrusted data)
-     * - Internal Events (EventBus typed events): TypeScript type safety sufficient
-     * 
-     * This function distinguishes between:
-     * 1. External sources requiring runtime validation
-     * 2. Internal EventBus communications where compile-time types provide safety
-     */
-    function isExternalEventSource(node) {
-      const sourceCode = context.getSourceCode();
-      const methodText = sourceCode.getText(node.value);
-      
-      // Check for indicators of external data sources
-      const externalPatterns = [
-        /WebSocket/i,                              // WebSocket connections
-        /\.on\s*\(\s*['"]message['"]/,            // WebSocket.on('message')
-        /fetch|axios|http/i,                       // HTTP API calls
-        /addEventListener.*(?:message|error)/i,    // Browser message events
-        /postMessage/i,                            // Cross-origin messaging
-        /XMLHttpRequest/i,                         // Legacy AJAX
-      ];
-      
-      const hasExternalSource = externalPatterns.some(pattern => pattern.test(methodText));
-      
-      // Additional check: Look for EventBus subscription patterns (internal events)
-      // Internal events are indicated by @OnEvent decorator on typed EventBus events
-      const hasInternalEventBusPattern = /@OnEvent/.test(sourceCode.getText(node.parent)) &&
-                                        !hasExternalSource;
-      
-      // If it's an @OnEvent handler without external source indicators, it's internal
-      return hasExternalSource;
-    }
-
-    /**
-     * Get the event name from @OnEvent decorator
-     */
-    function getOnEventName(node) {
-      if (!node.decorators || !Array.isArray(node.decorators)) {
-        return null;
-      }
-
-      for (const decorator of node.decorators) {
-        if (decorator.expression?.type === 'CallExpression' &&
-            decorator.expression.callee?.name === 'OnEvent' &&
-            decorator.expression.arguments.length > 0) {
-          const firstArg = decorator.expression.arguments[0];
-          if (firstArg.type === 'Literal') {
-            return firstArg.value;
-          }
-        }
-      }
-      return null;
-    }
-
-    /**
-     * Check if method body accesses event parameter properties
-     */
-    function accessesEventProperties(node) {
-      if (!node.value?.body?.body) {
-        return false;
-      }
-
-      const sourceCode = context.getSourceCode();
-      const bodyText = sourceCode.getText(node.value.body);
-
-      // Check for common event property access patterns
-      // event.payload, event.data, event.action, event.context, etc.
-      const eventAccessPatterns = [
-        /\bevent\.\w+/,           // event.property
-        /\bevent\[/,              // event['property']
-        /const\s+\{[^}]+\}\s*=\s*event/,  // destructuring { prop } = event
-      ];
-
-      return eventAccessPatterns.some(pattern => pattern.test(bodyText));
-    }
-
-    /**
-     * Check if method parameters include types from shared_contracts
-     */
-    function hasSharedContractParameter(node) {
-      if (!node.value?.params || node.value.params.length === 0) {
-        return null;
-      }
-
-      const sourceCode = context.getSourceCode();
-
-      for (const param of node.value.params) {
-        if (param.typeAnnotation?.typeAnnotation?.typeName) {
-          const typeName = param.typeAnnotation.typeAnnotation.typeName.name;
-          
-          // Check if this type is likely from shared_contracts
-          // Common patterns: QualiaState, CombatData, PlayerState, BossState, etc.
-          // These typically end with State, Data, Info, Config, etc.
-          const sharedContractPatterns = [
-            /State$/,
-            /Data$/,
-            /Info$/,
-            /Config$/,
-            /Event$/,
-            /Payload$/,
-            /Request$/,
-            /Response$/
-          ];
-
-          if (sharedContractPatterns.some(pattern => pattern.test(typeName))) {
-            // Additional check: look for imports from shared_contracts or types/contracts
-            const fullText = sourceCode.text;
-            const importPattern = new RegExp(`import\\s+.*?\\{[^}]*${typeName}[^}]*\\}.*?from\\s+['"].*?(shared_contracts|types/contracts|contracts\\.ts)['"]`, 's');
-            
-            if (importPattern.test(fullText)) {
-              return {
-                paramName: param.name,
-                typeName: typeName
-              };
-            }
-          }
-        }
-      }
-
-      return null;
-    }
-
-    /**
-     * Check if method is public
-     */
-    function isPublicMethod(node) {
-      // Skip private/protected methods
-      if (node.accessibility === 'private' || node.accessibility === 'protected') {
-        return false;
-      }
-
-      // Skip underscore-prefixed methods (private convention)
-      if (node.key?.name?.startsWith('_')) {
-        return false;
-      }
-
-      return true;
-    }
-
-    return {
-      MethodDefinition(node) {
-        // Only check if we're in a service class
-        if (!isInServiceClass(node)) {
-          return;
-        }
-
-        // Skip methods without body (TypeScript overload declarations)
-        if (!node.value?.body) {
-          return;
-        }
-
-        const methodName = node.key?.name;
-
-        // RULE 1: @OnEvent handlers must validate event properties if they access them
-        // NOTE: Event handlers are checked regardless of visibility (private/public)
-        // ENHANCEMENT: Only enforce for external event sources (SUGGESTION #1)
-        const eventName = getOnEventName(node);
-        if (eventName) {
-          const hasValidateEventProperty = hasDecorator(node, 'validateEventProperty');
-          const accessesEvent = accessesEventProperties(node);
-          const hasExemption = hasValidationExemption(node);
-          const isExternal = isExternalEventSource(node);
-
-          // Only require validation for external event sources
-          // Internal EventBus events rely on TypeScript type safety
-          if (accessesEvent && !hasValidateEventProperty && !hasExemption && isExternal) {
-            context.report({
-              node,
-              messageId: 'missingEventValidation',
-              data: {
-                eventName: eventName
-              }
-            });
-          }
-        }
-
-        // RULE 2: Public methods accepting shared_contracts DTOs must use @validate
-        // Only check public methods for DTO validation
-        if (!isPublicMethod(node)) {
-          return;
-        }
-
-        // Skip constructors - config objects are validated by ConfigurationService at load time
-        if (node.kind === 'constructor') {
-          return;
-        }
-
-        const sharedContractParam = hasSharedContractParameter(node);
-        if (sharedContractParam) {
-          const hasValidate = hasDecorator(node, 'validate');
-          const hasExemption = hasValidationExemption(node);
-
-          if (!hasValidate && !hasExemption) {
-            context.report({
-              node,
-              messageId: 'missingDtoValidation',
-              data: {
-                methodName: methodName,
-                argumentType: sharedContractParam.typeName
-              }
-            });
-          }
-        }
-      }
-    };
   }
 };

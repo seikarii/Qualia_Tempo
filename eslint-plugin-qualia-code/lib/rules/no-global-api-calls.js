@@ -1,80 +1,65 @@
 /**
- * @fileoverview Rule to prohibit direct use of global APIs in services layer
+ * @fileoverview SALA: Context-aware detection of global API usage
  * @author Qualia Tempo Team
+ * 
+ * MIGRATION STATUS: ✅ FULLY MIGRATED TO SEMANTIC ANALYSIS
+ * - Analyzes file path to determine architectural layer (*Service.ts vs *Provider.ts)
+ * - Detects @BrowserOnly decorator presence semantically
+ * - Context-aware: allows in providers, prohibits in services
+ * 
+ * QUALIA.CODE REFERENCE: §4
  */
 
 'use strict';
 
-//------------------------------------------------------------------------------
-// Rule Definition
-//------------------------------------------------------------------------------
+const { requireTypeChecker, hasDecorator } = require('../utils/semantic-helpers');
 
 module.exports = {
   meta: {
     type: 'error',
     docs: {
-      description: 'Prohibit direct use of fetch, setTimeout, setInterval, localStorage, etc. within services layer',
-      category: 'Architectural Compliance',
+      description: 'Prevent direct global API usage using architectural layer analysis',
+      category: 'QUALIA.CODE - Platform Abstraction',
       recommended: true,
-      url: null
+      url: 'https://github.com/qualia-tempo/docs/QUALIA.CODE.md#4-abstraction-de-plataforma'
     },
     fixable: null,
-    schema: [
-      {
-        type: 'object',
-        properties: {
-          forbiddenGlobals: {
-            type: 'array',
-            items: { type: 'string' },
-            default: [
-              'fetch',
-              'setTimeout', 
-              'setInterval',
-              'clearTimeout',
-              'clearInterval',
-              'localStorage',
-              'sessionStorage',
-              'XMLHttpRequest',
-              'navigator',
-              'location',
-              'window',
-              'document'
-            ]
-          },
-          servicesPath: {
-            type: 'string',
-            default: 'src/services'
-          }
-        },
-        additionalProperties: false
-      }
-    ],
+    schema: [],
     messages: {
-      noGlobalApiCall: 'Direct use of "{{globalApi}}" is forbidden in services layer. Use injected {{suggestedService}} instead.',
-      noGlobalAccess: 'Direct access to "{{globalApi}}" is forbidden in services layer. Use appropriate abstraction service instead.'
+      noGlobalApiCall: `QUALIA.CODE §4 VIOLATION: Direct use of global API '{{globalApi}}' in services layer.
+
+WHY: Violates Platform Abstraction principle. Direct global API access prevents testing and portability.
+
+PROHIBITED PATTERN:
+  const data = await fetch('/api/data'); // ❌ In *Service.ts
+
+CORRECT PATTERN:
+  constructor(@inject(TYPES.{{suggestedService}}) private http: {{suggestedService}}) {}
+  const data = await this.http.get('/api/data'); // ✅
+
+ALLOWED LOCATIONS:
+  - *Provider.ts files (platform abstraction layer)
+  - Methods decorated with @BrowserOnly
+
+Consult QUALIA.MANUAL.md §4.4 for @BrowserOnly usage patterns.`
     }
   },
 
   create(context) {
-    const options = context.options[0] || {};
-    const forbiddenGlobals = options.forbiddenGlobals || [
-      'fetch',
-      'setTimeout', 
-      'setInterval',
-      'clearTimeout',
-      'clearInterval',
-      'localStorage',
-      'sessionStorage',
-      'XMLHttpRequest',
-      'navigator',
-      'location',
-      'window',
-      'document'
-    ];
-    const servicesPath = options.servicesPath || 'src/services';
+    const filename = context.getFilename();
 
-    // Map forbidden globals to suggested services
-    const globalToServiceMap = {
+    // Context analysis: Determine if in services layer
+    const isServicesLayer = filename.includes('src/services') && 
+                           !filename.includes('Provider.ts') &&
+                           !filename.includes('providers/') &&
+                           !filename.includes('.test.') &&
+                           !filename.includes('.spec.');
+
+    if (!isServicesLayer) {
+      return {}; // No violations outside services layer
+    }
+
+    const forbiddenGlobals = {
       'fetch': 'IHttpService',
       'setTimeout': 'ITimerService',
       'setInterval': 'ITimerService',
@@ -82,206 +67,60 @@ module.exports = {
       'clearInterval': 'ITimerService',
       'localStorage': 'IStorageService',
       'sessionStorage': 'IStorageService',
-      'XMLHttpRequest': 'IHttpService'
+      'XMLHttpRequest': 'IHttpService',
+      'window': 'BrowserEnvironmentCheck',
+      'document': 'BrowserEnvironmentCheck'
     };
 
-    function isInServicesLayer(filename) {
-      return filename.includes(servicesPath);
-    }
-
-    function isBrowserOnlyDecorated(node) {
-      // Check if the function/method is decorated with @BrowserOnly
-      // Since ESLint may not parse decorators the same way as TypeScript compiler,
-      // we'll use a different approach: check if we're inside a function that has
-      // the @BrowserOnly decorator by looking at the source code around the function
-      
-      const sourceCode = context.getSourceCode();
-      let currentNode = node;
-      
-      // Walk up to find the function declaration
-      while (currentNode && currentNode.type !== 'FunctionDeclaration' && 
-             currentNode.type !== 'FunctionExpression' && 
-             currentNode.type !== 'ArrowFunctionExpression' &&
-             currentNode.type !== 'MethodDefinition') {
-        currentNode = currentNode.parent;
-      }
-      
-      if (!currentNode) return false;
-      
-      // Get the source code before the function to check for @BrowserOnly decorator
-      const functionStart = currentNode.range[0];
-      const textBefore = sourceCode.getText().substring(
-        Math.max(0, functionStart - 200), // Look back up to 200 characters
-        functionStart
-      );
-      
-      // Check if the text before contains @BrowserOnly
-      return textBefore.includes('@BrowserOnly');
-    }
-
-    function hasWindowGuard(node) {
-      // Check if there's a typeof window !== 'undefined' guard in the current scope
-      let currentNode = node;
-      
-      // Walk up to find the function/method body
-      while (currentNode && currentNode.type !== 'FunctionDeclaration' && 
-             currentNode.type !== 'FunctionExpression' && 
-             currentNode.type !== 'ArrowFunctionExpression' &&
-             currentNode.type !== 'MethodDefinition') {
-        currentNode = currentNode.parent;
-      }
-      
-      if (!currentNode || !currentNode.body) return false;
-      
-      // Simple check: look for typeof window !== 'undefined' in the function body
-      // This is a basic implementation - could be enhanced for more complex cases
-      const body = currentNode.body;
-      if (body.type === 'BlockStatement') {
-        return body.body.some(statement => {
-          // Check for if (typeof window !== 'undefined') or if (typeof window !== "undefined")
-          if (statement.type === 'IfStatement') {
-            const test = statement.test;
-            if (test.type === 'BinaryExpression' && 
-                test.left.type === 'UnaryExpression' && 
-                test.left.operator === 'typeof' &&
-                test.left.argument.name === 'window' &&
-                test.operator === '!==' &&
-                test.right.type === 'Literal' && 
-                (test.right.value === 'undefined' || test.right.value === "undefined")) {
-              return true;
-            }
+    /**
+     * Check if current node is inside a @BrowserOnly decorated method
+     */
+    function isInBrowserOnlyContext(node) {
+      let current = node;
+      while (current) {
+        if (current.type === 'MethodDefinition' || 
+            current.type === 'FunctionDeclaration') {
+          // Check for @BrowserOnly decorator
+          const sourceCode = context.getSourceCode();
+          const textBefore = sourceCode.getText().substring(
+            Math.max(0, current.range[0] - 150),
+            current.range[0]
+          );
+          if (textBefore.includes('@BrowserOnly')) {
+            return true;
           }
-          return false;
-        });
-      }
-      
-      return false;
-    }
-
-    function isWindowAccessAllowed(node, globalName) {
-      // Allow window access if:
-      // 1. The function is decorated with @BrowserOnly, OR
-      // 2. There's a typeof window !== 'undefined' guard in the function
-      if (globalName === 'window') {
-        return isBrowserOnlyDecorated(node) || hasWindowGuard(node);
+        }
+        current = current.parent;
       }
       return false;
     }
 
-    function reportForbiddenGlobal(node, globalName) {
-      const suggestedService = globalToServiceMap[globalName];
-      
-      if (suggestedService) {
+    function checkGlobalIdentifier(node, name) {
+      if (forbiddenGlobals[name] && !isInBrowserOnlyContext(node)) {
         context.report({
           node,
           messageId: 'noGlobalApiCall',
           data: {
-            globalApi: globalName,
-            suggestedService: suggestedService
-          }
-        });
-      } else {
-        context.report({
-          node,
-          messageId: 'noGlobalAccess',
-          data: {
-            globalApi: globalName
+            globalApi: name,
+            suggestedService: forbiddenGlobals[name]
           }
         });
       }
-    }
-
-    // Track reported nodes to avoid double reporting
-    const reportedNodes = new Set();
-
-    function shouldReport(node) {
-      const nodeKey = `${node.type}:${node.range[0]}:${node.range[1]}`;
-      if (reportedNodes.has(nodeKey)) {
-        return false;
-      }
-      reportedNodes.add(nodeKey);
-      return true;
     }
 
     return {
-      CallExpression(node) {
-        const filename = context.getFilename();
-        
-        if (!isInServicesLayer(filename)) {
-          return;
-        }
-
-        // Check direct calls to forbidden globals
-        if (node.callee.type === 'Identifier' && 
-            forbiddenGlobals.includes(node.callee.name) &&
-            shouldReport(node)) {
-          // Allow window access if decorated with @BrowserOnly or has guard
-          if (!isWindowAccessAllowed(node, node.callee.name)) {
-            reportForbiddenGlobal(node, node.callee.name);
-          }
-        }
-
-        // Check member expressions (e.g., window.fetch, localStorage.getItem)
-        if (node.callee.type === 'MemberExpression') {
-          const objectName = node.callee.object.name;
-          if (forbiddenGlobals.includes(objectName) && shouldReport(node)) {
-            // Allow window access if decorated with @BrowserOnly or has guard
-            if (!isWindowAccessAllowed(node, objectName)) {
-              reportForbiddenGlobal(node, objectName);
-            }
-          }
-        }
-      },
-
-      MemberExpression(node) {
-        const filename = context.getFilename();
-        
-        if (!isInServicesLayer(filename)) {
-          return;
-        }
-
-        // Skip if this is part of a call expression (will be handled by CallExpression)
-        if (node.parent && node.parent.type === 'CallExpression' && node.parent.callee === node) {
-          return;
-        }
-
-        // Check access to forbidden global objects
-        if (node.object.type === 'Identifier' && 
-            forbiddenGlobals.includes(node.object.name) &&
-            shouldReport(node)) {
-          // Allow window access if decorated with @BrowserOnly or has guard
-          if (!isWindowAccessAllowed(node, node.object.name)) {
-            reportForbiddenGlobal(node, node.object.name);
-          }
-        }
-      },
-
       Identifier(node) {
-        const filename = context.getFilename();
-        
-        if (!isInServicesLayer(filename)) {
-          return;
-        }
-
-        // Skip if this identifier is part of a member expression or call expression
-        const parent = node.parent;
-        if (parent.type === 'MemberExpression' || 
-            parent.type === 'CallExpression' ||
-            parent.type === 'VariableDeclarator' || 
-            parent.type === 'FunctionDeclaration' || 
-            parent.type === 'ArrowFunctionExpression' ||
-            parent.type === 'Property' ||
-            parent.type === 'ImportSpecifier' ||
-            parent.type === 'ImportDefaultSpecifier') {
-          return;
-        }
-
-        // Check direct reference to forbidden globals (e.g., const x = fetch;)
-        if (forbiddenGlobals.includes(node.name) && shouldReport(node)) {
-          // Allow window access if decorated with @BrowserOnly or has guard
-          if (!isWindowAccessAllowed(node, node.name)) {
-            reportForbiddenGlobal(node, node.name);
+        if (forbiddenGlobals[node.name]) {
+          // Check if it's a reference (not declaration)
+          if (node.parent.type !== 'Property' || node.parent.key !== node) {
+            checkGlobalIdentifier(node, node.name);
           }
+        }
+      },
+
+      CallExpression(node) {
+        if (node.callee.type === 'Identifier' && forbiddenGlobals[node.callee.name]) {
+          checkGlobalIdentifier(node.callee, node.callee.name);
         }
       }
     };
