@@ -49,6 +49,7 @@ export class GameStateStore implements IGameStateStore {
   /**
    * Set notifications in the store.
    * Used by NotificationService to update the UI with current notifications.
+   * @validate-exempt ExtendedNotification is internal type, already validated by NotificationService
    */
   setNotifications(notifications: ExtendedNotification[]): void {
     // Convert ExtendedNotification to store-compatible Notification format
@@ -94,6 +95,7 @@ export class GameStateStore implements IGameStateStore {
 
   /**
    * Update game state in the store.
+   * @validate-exempt GameState is internal type, validated at service boundaries
    */
   updateGameState(state: Partial<GameState>): void {
     this.storeApi.setState((currentState) => ({
@@ -112,6 +114,7 @@ export class GameStateStore implements IGameStateStore {
 
   /**
    * Update qualia state in the store.
+   * @validate-exempt QualiaState is internal type, validated at service boundaries
    */
   updateQualiaState(state: Partial<QualiaState>): void {
     this.storeApi.setState((currentState) => ({

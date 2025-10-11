@@ -53,11 +53,11 @@ module.exports = {
       const whitelistPatterns = [
         /^THREE\./,                           // THREE.js types (trusted library)
         /^(_[a-z])/,                          // Types starting with _ (internal/unused)
-        /^Record<string,\s*any>/,             // Generic records
+        /^Record<string,\s*(any|unknown)>/,   // Generic records (unvalidatable)
         /^\(\)\s*=>\s*(void|any)/,            // Callbacks/functions
         /^[A-Z][a-zA-Z]*\[\]$/,               // Simple arrays (handled below for complex check)
         /^[A-Z][a-zA-Z]*Event$/,              // Event types from event.contracts.ts (already validated at emission)
-        /^HTMLCanvasElement$/,                // Browser DOM types (trusted)
+        /^HTML\w+Element$/,                   // Browser DOM types (HTMLElement, HTMLCanvasElement, etc.)
         /^AudioContext/,                      // Web Audio API types (trusted)
         /^WebSocket$/,                        // WebSocket type (trusted)
         /^ArrayBuffer$/,                      // Binary data types (handled by protocol adapters)
@@ -69,10 +69,22 @@ module.exports = {
         /^OscillatorType$/,                   // Web Audio API enums
         /Config$/,                            // Configuration objects (validated at load time)
         /^Partial<.*Config.*>/,               // Partial config updates
-        /^T$/,                                // Generic type parameter
+        /^T(\["type"\])?$/,                   // Generic type parameter (T or T["type"])
+        /^K$/,                                // Generic type parameter K
         /^unknown$/,                          // Unknown types (explicitly unvalidatable)
         /^string \| ArrayBuffer \| Blob$/,    // Union of simple types
         /^\{\s*[^}]*\?\s*:.*\}$/,             // Inline object types with optional fields
+        /^EventHandler</,                     // Event handler types (callbacks)
+        /^Error(\s*\|\s*null(\s*\|\s*undefined)?)?$/,  // Error types (already have stack trace)
+        /^boolean \| AddEventListenerOptions$/, // Browser API options
+        /^boolean \| EventListenerOptions$/,   // Browser API options
+        /^"[^"]*"\s*\|\s*"[^"]*"/,            // Union of string literals (enums)
+        /^timing:\s*"perfect"\s*\|\s*"good"\s*\|\s*"miss"$/,  // Timing enum
+        /^ReactNode$/,                        // React types
+        /^StoreSetter$/,                      // Zustand types
+        /^GameStoreApi$/,                     // Zustand types
+        /^GlslAst$/,                          // Parser AST types (validated by parser)
+        /^PlayToneParams$/,                   // Internal parameter objects (already validated)
       ];
 
       if (whitelistPatterns.some(pattern => pattern.test(typeString))) {

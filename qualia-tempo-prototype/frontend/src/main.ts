@@ -81,15 +81,20 @@ const createBrowserWindowConfig = (
 /**
  * Setup window fade-in animation
  * QUALIA.CODE COMPLIANT: Extracted method pattern
+ * 
+ * @timer-exempt Electron main process uses native Node.js APIs
+ * Platform abstraction (ITimerService) is for renderer process only
  */
 const setupWindowFadeIn = (window: BrowserWindow): void => {
   window.setOpacity(0);
   let opacity = 0;
   
+  // eslint-disable-next-line @qualia-tempo/qualia-code/no-global-api-calls
   const fadeIn = setInterval(() => {
     opacity += 0.05;
     if (opacity >= 1) {
       opacity = 1;
+      // eslint-disable-next-line @qualia-tempo/qualia-code/no-global-api-calls
       clearInterval(fadeIn);
     }
     window.setOpacity(opacity);

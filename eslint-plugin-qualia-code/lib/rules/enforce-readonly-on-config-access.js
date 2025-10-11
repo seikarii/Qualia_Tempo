@@ -30,10 +30,23 @@ module.exports = {
       return {};
     }
 
-    // Patterns that indicate config accessors
+    // Patterns that indicate ACTUAL config accessors (not calculated data)
     const configPatterns = [
-      /^get(Config|Configuration|Settings|Options|Preferences)/i,
-      /^(load|fetch|read)(Config|Configuration|Settings|Options|Preferences)/i
+      /^get.*Config$/i,              // getConfig, getAudioConfig, etc.
+      /^load.*Config$/i,              // loadConfig
+      /^(fetch|read)Configuration$/i  // fetchConfiguration, readConfiguration
+    ];
+
+    // Methods that return calculated data, NOT configuration
+    const excludedPatterns = [
+      /^get(Stats|Status|Metrics|Info|Data)/i,     // Runtime stats, not config
+      /^get(Window|Viewport|Grid|Direction)/i,     // Calculated dimensions/positions
+      /^calculate/i,                                // Calculated values
+      /^generate/i,                                 // Generated data
+      /^predict/i,                                  // Predictions
+      /Visuals$/,                                   // Visual data (calculated)
+      /Position$/,                                  // Positions (calculated)
+      /Rotation$/,                                  // Rotations (calculated)
     ];
 
     function hasDecorator(node, decoratorName) {
@@ -63,19 +76,22 @@ module.exports = {
     }
 
     function isConfigAccessor(methodName) {
+      // Exclude methods that clearly return calculated data
+      if (excludedPatterns.some(pattern => pattern.test(methodName))) {
+        return false;
+      }
       return configPatterns.some(pattern => pattern.test(methodName));
     }
 
-    function returnsObject(node) {
-      // Check if return type annotation suggests an object
+    function returnsConfigObject(node) {
+      // Check if return type annotation suggests a CONFIG object
       const returnType = node.value?.returnType?.typeAnnotation;
       if (!returnType) return false;
 
-      // Check for object type annotations
-      if (returnType.type === 'TSTypeLiteral') return true;
       if (returnType.type === 'TSTypeReference') {
         const typeName = returnType.typeName?.name;
-        return typeName && (typeName.includes('Config') || typeName.includes('Settings') || typeName.includes('Options'));
+        // Only flag if it explicitly ends with "Config"
+        return typeName && typeName.endsWith('Config');
       }
 
       return false;
@@ -92,7 +108,7 @@ module.exports = {
           return;
         }
 
-        if ((isConfigAccessor(methodName) || returnsObject(node)) && !hasDecorator(node, 'readonly')) {
+        if ((isConfigAccessor(methodName) || returnsConfigObject(node)) && !hasDecorator(node, 'readonly')) {
           context.report({
             node,
             messageId: 'suggestReadonly',

@@ -107,11 +107,36 @@ module.exports = {
         'setInterval',      // Timer operations
         'clearTimeout',     // Timer operations
         'clearInterval',    // Timer operations
+        'performanceNow',   // Performance timing
         'cleanup',          // Lifecycle cleanup
+        'resize',           // DOM/GPU resize operations
+        'send',             // WebSocket send (I/O)
       ];
       
       if (mainThreadMethods.includes(methodName)) {
         return true; // These MUST run on main thread
+      }
+
+      // Exempt platform abstraction services (TimerService, PerformanceService)
+      // These are thin wrappers around browser APIs and MUST be synchronous
+      const platformAbstractionServices = [
+        'TimerService',
+        'PerformanceService',
+        'PerformanceProvider',
+        'BrowserTimerProvider',
+      ];
+      
+      // Get class name from ClassDeclaration parent
+      let currentNode = node;
+      while (currentNode && currentNode.type !== 'ClassDeclaration') {
+        currentNode = currentNode.parent;
+      }
+      
+      if (currentNode && currentNode.id && currentNode.id.name) {
+        const className = currentNode.id.name;
+        if (platformAbstractionServices.includes(className)) {
+          return true; // Platform abstraction wrappers are exempt
+        }
       }
 
       return false;

@@ -107,6 +107,32 @@ module.exports = {
     }
 
     /**
+     * Check if node is in a platform abstraction service
+     * These services MUST be synchronous wrappers around browser APIs
+     */
+    function isInPlatformAbstractionService(node) {
+      let parent = node.parent;
+      while (parent) {
+        if (parent.type === 'ClassDeclaration') {
+          const className = parent.id?.name;
+          const platformAbstractionServices = [
+            'TimerService',
+            'PerformanceService',
+            'PerformanceProvider',
+            'BrowserTimerProvider',
+            'HttpService',  // Thin wrapper around fetch
+            'WebSocketService',  // Wrapper around WebSocket API
+          ];
+          if (className && platformAbstractionServices.includes(className)) {
+            return true;
+          }
+        }
+        parent = parent.parent;
+      }
+      return false;
+    }
+
+    /**
      * Check if method is public
      */
     function isPublicMethod(node) {
@@ -212,6 +238,11 @@ module.exports = {
       MethodDefinition(node) {
         // Only check if we're in a service class
         if (!isInServiceClass(node)) {
+          return;
+        }
+
+        // Skip platform abstraction services (MUST be synchronous)
+        if (isInPlatformAbstractionService(node)) {
           return;
         }
 

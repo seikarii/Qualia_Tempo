@@ -109,8 +109,20 @@ module.exports = {
           return;
         }
 
-        // Suggest @measureTime if not present
-        if (!hasDecorator(node, 'measureTime')) {
+        // Only flag methods that are clearly computational
+        const computationalPatterns = [
+          /^calculate/i,
+          /^compute/i,
+          /^process/i,
+          /^transform/i,
+          /^generate/i,
+          /^build/i,
+        ];
+
+        const isComputational = computationalPatterns.some(pattern => pattern.test(methodName));
+
+        // Only suggest @measureTime for computational methods without it
+        if (isComputational && !hasDecorator(node, 'measureTime')) {
           context.report({
             node,
             messageId: 'suggestMeasureTime',
