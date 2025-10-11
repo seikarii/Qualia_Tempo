@@ -51,6 +51,15 @@ if [ $CONTRACT_ERRORS -eq 1 ] || [ $CONFIG_ERRORS -eq 1 ]; then
     exit 1
 fi
 
+echo -e "${BLUE}📋 Phase 0.5: Generate Dependency Graph${NC}"
+echo "   Parsing InversifyJS container configuration..."
+if node "$PROJECT_ROOT/scripts/parse-inversify-graph.js"; then
+    echo -e "   ${GREEN}✅ Dependency graph generated successfully${NC}"
+else
+    echo -e "   ${RED}❌ Dependency graph generation failed${NC}"
+    exit 1
+fi
+
 echo -e "${BLUE}📋 Phase 1A: Frontend TypeScript Type Checking${NC}"
 if [ -d "$FRONTEND_PATH" ]; then
     cd "$FRONTEND_PATH"

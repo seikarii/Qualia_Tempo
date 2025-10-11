@@ -1,7 +1,8 @@
 /**
  * @fileoverview SALA: Event handler frequency detection
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ✅ MIGRATED
+ * MIGRATION STATUS: ⚠️ PARTIALLY SEMANTIC - Pattern matching on method name. MUST UPGRADE: Analyze method body for DOM event subscriptions
+ * AUDIT NOTE (Senior Architect): "A MEDIAS. Busca 'mouse' o 'scroll' en el nombre del método. Debe analizar el cuerpo del método para ver si suscribe a eventos DOM"
  */
 'use strict';
 module.exports = {

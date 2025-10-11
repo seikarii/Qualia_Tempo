@@ -1,7 +1,8 @@
 /**
  * @fileoverview SALA: State mutation concurrency control
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ✅ MIGRATED
+ * MIGRATION STATUS: ⚠️ PARTIALLY SEMANTIC - Pattern matching. MUST UPGRADE: Analyze method body for state assignments (this.state = ...)
+ * AUDIT NOTE (Senior Architect): "A MEDIAS. Similar a otros decoradores"
  */
 'use strict';
 module.exports = {

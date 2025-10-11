@@ -2,6 +2,9 @@
  * @qualia-tempo/eslint-plugin-qualia-code
  * Rule: enforce-worker-offloading
  * 
+ * MIGRATION STATUS: ⚠️ PARTIALLY SEMANTIC - Has advanced heuristics but needs TypeChecker for array size analysis
+ * AUDIT NOTE (Senior Architect): "A MEDIAS. Es la regla con las heurísticas más avanzadas, pero aún carece de TypeChecker para analizar si Particle[] tiene 10k elementos vs string[] con 5"
+ * 
  * Flags CPU-intensive methods that should use Web Workers for background processing
  * to maintain 60 FPS performance on the main thread.
  * 
@@ -16,6 +19,10 @@
  * - Methods with expensive mathematical operations (matrix mult, FFT, convolution)
  * - Methods performing bulk transformations or bulk calculations
  * - Methods with explicit TODO/FIXME comments mentioning Workers
+ * 
+ * TODO: Integrate TypeChecker to analyze array sizes and complexity:
+ *   - Particle[] with 10k elements → HIGH priority
+ *   - string[] with 5 elements → LOW priority
  * 
  * Indicators:
  * - Method names containing: 'calculate', 'process', 'update', 'transform', 'compute', 'simulate'

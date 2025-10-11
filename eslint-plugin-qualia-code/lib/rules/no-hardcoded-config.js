@@ -1,6 +1,8 @@
 /**
  * @fileoverview Rule to prevent hardcoded configuration values
  * @author Qualia Tempo Team
+ * MIGRATION STATUS: ⚠️ PARTIALLY SEMANTIC - Heuristic-based. MUST UPGRADE: TypeChecker to analyze assignment target types (...Config interfaces)
+ * AUDIT NOTE (Senior Architect): "A MEDIAS. Esta regla es inherentemente heurística, pero puede mejorarse con TypeChecker para detectar asignaciones a variables de tipo XYZConfig"
  */
 
 'use strict';

@@ -1,0 +1,645 @@
+{
+  "bindings": {
+    "TYPES.IEventBus": {
+      "interface": "IEventBus",
+      "implementation": "EventBus",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IEventBus",
+      "file": "./EventBus"
+    },
+    "TYPES.ILogger": {
+      "interface": "ILogger",
+      "implementation": "QualiaLogger",
+      "scope": "transient",
+      "typeSymbol": "TYPES.ILogger",
+      "file": "./Logger"
+    },
+    "TYPES.IConfigurationService": {
+      "interface": "IConfigurationService",
+      "implementation": "ConfigurationService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IConfigurationService",
+      "file": null
+    },
+    "TYPES.IHttpService": {
+      "interface": "IHttpService",
+      "implementation": "HttpService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IHttpService",
+      "file": "./HttpService"
+    },
+    "TYPES.ITimerService": {
+      "interface": "ITimerService",
+      "implementation": "TimerService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.ITimerService",
+      "file": "./TimerService"
+    },
+    "TYPES.IPerformanceService": {
+      "interface": "IPerformanceService",
+      "implementation": "PerformanceService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IPerformanceService",
+      "file": "./PerformanceService"
+    },
+    "TYPES.IPerformanceProvider": {
+      "interface": "IPerformanceProvider",
+      "implementation": "PerformanceProvider",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IPerformanceProvider",
+      "file": "./providers/PerformanceProvider"
+    },
+    "TYPES.ITimerProvider": {
+      "interface": "ITimerProvider",
+      "implementation": "BrowserTimerProvider",
+      "scope": "transient",
+      "typeSymbol": "TYPES.ITimerProvider",
+      "file": "./providers/BrowserTimerProvider"
+    },
+    "TYPES.IGameStateStore": {
+      "interface": "IGameStateStore",
+      "implementation": "GameStateStore",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IGameStateStore",
+      "file": "./GameStateStore"
+    },
+    "TYPES.ThrottlingManager": {
+      "interface": "ThrottlingManager",
+      "implementation": "ThrottlingManager",
+      "scope": "transient",
+      "typeSymbol": "TYPES.ThrottlingManager",
+      "file": "./utils/ThrottlingManager"
+    },
+    "TYPES.IQualiaStateCalculatorService": {
+      "interface": "IQualiaStateCalculatorService",
+      "implementation": "QualiaStateCalculatorService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IQualiaStateCalculatorService",
+      "file": "./QualiaStateCalculatorService"
+    },
+    "TYPES.ManagedService": {
+      "interface": "IBaseService",
+      "implementation": "@alias:TYPES.IParticleSystemService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.ManagedService",
+      "file": null
+    },
+    "TYPES.IQualiaCalculatorWorkerService": {
+      "interface": "IQualiaCalculatorWorkerService",
+      "implementation": "QualiaCalculatorWorkerService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IQualiaCalculatorWorkerService",
+      "file": "./QualiaCalculatorWorkerService"
+    },
+    "TYPES.IBackendSyncService": {
+      "interface": "IBackendSyncService",
+      "implementation": "BackendSyncService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IBackendSyncService",
+      "file": "./BackendSyncService"
+    },
+    "TYPES.IAudioService": {
+      "interface": "IAudioService",
+      "implementation": "AudioService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IAudioService",
+      "file": "./AudioService"
+    },
+    "TYPES.IGameControllerService": {
+      "interface": "IGameControllerService",
+      "implementation": "GameControllerService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IGameControllerService",
+      "file": "./GameControllerService"
+    },
+    "TYPES.IGameInputControllerService": {
+      "interface": "IGameInputControllerService",
+      "implementation": "GameInputControllerService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IGameInputControllerService",
+      "file": "./GameInputControllerService"
+    },
+    "TYPES.IGameStateStoreService": {
+      "interface": "IGameStateStoreService",
+      "implementation": "GameStateStoreService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IGameStateStoreService",
+      "file": "./GameStateStoreService"
+    },
+    "TYPES.INotificationService": {
+      "interface": "INotificationService",
+      "implementation": "NotificationService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.INotificationService",
+      "file": "./NotificationService"
+    },
+    "TYPES.IStateMergerService": {
+      "interface": "IStateMergerService",
+      "implementation": "StateMergerService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IStateMergerService",
+      "file": "./StateMergerService"
+    },
+    "TYPES.IErrorReportingService": {
+      "interface": "IErrorReportingService",
+      "implementation": "ErrorReportingService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IErrorReportingService",
+      "file": "./ErrorReportingService"
+    },
+    "TYPES.IDebugService": {
+      "interface": "IDebugService",
+      "implementation": "DebugService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IDebugService",
+      "file": "./DebugService"
+    },
+    "TYPES.IRhythmicMovementController": {
+      "interface": "IRhythmicMovementController",
+      "implementation": "RhythmicMovementController",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IRhythmicMovementController",
+      "file": "./RhythmicMovementController"
+    },
+    "TYPES.IOntologicalAudioEngine": {
+      "interface": "IOntologicalAudioEngine",
+      "implementation": "OntologicalAudioEngine",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IOntologicalAudioEngine",
+      "file": "../audio/OntologicalAudioEngine"
+    },
+    "TYPES.IToneFactoryService": {
+      "interface": "IToneFactoryService",
+      "implementation": "ToneFactoryService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IToneFactoryService",
+      "file": "../audio/ToneFactoryService"
+    },
+    "TYPES.IApplicationInitializerService": {
+      "interface": "IApplicationInitializerService",
+      "implementation": "ApplicationInitializerService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IApplicationInitializerService",
+      "file": "./ApplicationInitializerService"
+    },
+    "TYPES.IInputStateService": {
+      "interface": "IInputStateService",
+      "implementation": "InputStateService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IInputStateService",
+      "file": null
+    },
+    "TYPES.IAudioContextFactory": {
+      "interface": "IAudioContextFactory",
+      "implementation": "BrowserAudioContextFactory",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IAudioContextFactory",
+      "file": "./BrowserAudioContextFactory"
+    },
+    "TYPES.IWebAudioAPIService": {
+      "interface": "IWebAudioAPIService",
+      "implementation": "WebAudioAPIService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IWebAudioAPIService",
+      "file": "./WebAudioAPIService"
+    },
+    "TYPES.IFrontendRenderingService": {
+      "interface": "IFrontendRenderingService",
+      "implementation": "FrontendRenderingService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IFrontendRenderingService",
+      "file": "./FrontendRenderingService"
+    },
+    "TYPES.IStateStreamingService": {
+      "interface": "IStateStreamingService",
+      "implementation": "StateStreamingService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IStateStreamingService",
+      "file": "./StateStreamingService"
+    },
+    "TYPES.IGameStateStreamingService": {
+      "interface": "IGameStateStreamingService",
+      "implementation": "GameStateStreamingService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IGameStateStreamingService",
+      "file": "./GameStateStreamingService"
+    },
+    "TYPES.IWebSocketFactory": {
+      "interface": "IWebSocketFactory",
+      "implementation": "BrowserWebSocketFactory",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IWebSocketFactory",
+      "file": "./BrowserWebSocketFactory"
+    },
+    "TYPES.IWebSocketService": {
+      "interface": "IWebSocketService",
+      "implementation": "WebSocketService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IWebSocketService",
+      "file": "./WebSocketService"
+    },
+    "TYPES.IBrowserEventsService": {
+      "interface": "IBrowserEventsService",
+      "implementation": "BrowserEventsService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IBrowserEventsService",
+      "file": "./BrowserEventsService"
+    },
+    "TYPES.IAudioSystemBridge": {
+      "interface": "IAudioSystemBridge",
+      "implementation": "AudioSystemBridge",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IAudioSystemBridge",
+      "file": "./AudioSystemBridge"
+    },
+    "TYPES.ICoordinateSystemService": {
+      "interface": "ICoordinateSystemService",
+      "implementation": "CoordinateSystemService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.ICoordinateSystemService",
+      "file": "./CoordinateSystemService"
+    },
+    "TYPES.IColorService": {
+      "interface": "IColorService",
+      "implementation": "ColorService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IColorService",
+      "file": "./ColorService"
+    },
+    "TYPES.IGameplayMechanicsService": {
+      "interface": "IGameplayMechanicsService",
+      "implementation": "GameplayMechanicsService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IGameplayMechanicsService",
+      "file": "./GameplayMechanicsService"
+    },
+    "TYPES.IViewLogicService": {
+      "interface": "IViewLogicService",
+      "implementation": "ViewLogicService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IViewLogicService",
+      "file": "./ViewLogicService"
+    },
+    "TYPES.ISubtitleService": {
+      "interface": "ISubtitleService",
+      "implementation": "SubtitleService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.ISubtitleService",
+      "file": "./SubtitleService"
+    },
+    "TYPES.IDebugOrchestratorService": {
+      "interface": "IDebugOrchestratorService",
+      "implementation": "DebugOrchestratorService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IDebugOrchestratorService",
+      "file": "./DebugOrchestratorService"
+    },
+    "TYPES.IAudioAnalysisService": {
+      "interface": "IAudioAnalysisService",
+      "implementation": "AudioAnalysisService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IAudioAnalysisService",
+      "file": "./AudioAnalysisService"
+    },
+    "TYPES.IAudio8DService": {
+      "interface": "IAudio8DService",
+      "implementation": "Audio8DService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IAudio8DService",
+      "file": "./Audio8DService"
+    },
+    "TYPES.IMusicalComboDetectorService": {
+      "interface": "IMusicalComboDetectorService",
+      "implementation": "MusicalComboDetectorService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IMusicalComboDetectorService",
+      "file": "./MusicalComboDetectorService"
+    },
+    "TYPES.IPhysicsService": {
+      "interface": "IPhysicsService",
+      "implementation": "PhysicsService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IPhysicsService",
+      "file": "./PhysicsService"
+    },
+    "TYPES.IShaderLoaderService": {
+      "interface": "IShaderLoaderService",
+      "implementation": "ShaderLoaderService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IShaderLoaderService",
+      "file": "./ShaderLoaderService"
+    },
+    "TYPES.IGlslParser": {
+      "interface": "IGlslParser",
+      "implementation": "JsGlslParserService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IGlslParser",
+      "file": "./JsGlslParserService"
+    },
+    "TYPES.IShaderIntrospectionService": {
+      "interface": "IShaderIntrospectionService",
+      "implementation": "ShaderIntrospectionService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IShaderIntrospectionService",
+      "file": "./ShaderIntrospectionService"
+    },
+    "TYPES.IPostProcessingService": {
+      "interface": "IPostProcessingService",
+      "implementation": "PostProcessingService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IPostProcessingService",
+      "file": "./PostProcessingService"
+    },
+    "TYPES.IRenderTargetPoolService": {
+      "interface": "IRenderTargetPoolService",
+      "implementation": "RenderTargetPoolService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IRenderTargetPoolService",
+      "file": "./RenderTargetPoolService"
+    },
+    "TYPES.IKairosVisualEngine": {
+      "interface": "IKairosVisualEngine",
+      "implementation": "KairosVisualEngine",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IKairosVisualEngine",
+      "file": "./KairosVisualEngine"
+    },
+    "TYPES.IParticleSystemService": {
+      "interface": "IParticleSystemService",
+      "implementation": "ParticleSystemService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IParticleSystemService",
+      "file": "./ParticleSystemService"
+    },
+    "TYPES.IReactionDiffusionService": {
+      "interface": "IReactionDiffusionService",
+      "implementation": "ReactionDiffusionService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IReactionDiffusionService",
+      "file": "./ReactionDiffusionService"
+    },
+    "TYPES.IJitterService": {
+      "interface": "IJitterService",
+      "implementation": "JitterService",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IJitterService",
+      "file": "./JitterService"
+    },
+    "TYPES.IRawToParticleEventAdapter": {
+      "interface": "IMessageAdapter",
+      "implementation": "RawToParticleEventAdapter",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IRawToParticleEventAdapter",
+      "file": "./protocol/adapters/RawToParticleEventAdapter"
+    },
+    "TYPES.IKeyToDirectionAdapter": {
+      "interface": "IEventTransformer<PlayerInputEvent, PlayerDirectionEvent>",
+      "implementation": "KeyToDirectionAdapter",
+      "scope": "transient",
+      "typeSymbol": "TYPES.IKeyToDirectionAdapter",
+      "file": "./protocol/adapters/KeyToDirectionAdapter"
+    }
+  },
+  "dependencies": {
+    "EventBus": [
+      "TYPES.ILogger",
+      "TYPES.ITimerService",
+      "TYPES.EventBusConfig"
+    ],
+    "HttpService": [
+      "TYPES.ILogger",
+      "TYPES.ITimerService",
+      "TYPES.HttpConfig"
+    ],
+    "TimerService": [
+      "TYPES.TimerServiceConfig",
+      "TYPES.ILogger",
+      "TYPES.ITimerProvider"
+    ],
+    "PerformanceService": [
+      "TYPES.TimerServiceConfig",
+      "TYPES.ILogger",
+      "TYPES.IPerformanceProvider"
+    ],
+    "GameStateStore": [
+      "TYPES.NotificationServiceConfig"
+    ],
+    "ThrottlingManager": [
+      "TYPES.ThrottlingConfig",
+      "TYPES.ITimerService"
+    ],
+    "QualiaStateCalculatorService": [
+      "TYPES.QualiaStateCalculatorServiceParams"
+    ],
+    "QualiaCalculatorWorkerService": [
+      "TYPES.QualiaCalculatorWorkerServiceConfig",
+      "TYPES.QualiaCalculatorConfig",
+      "TYPES.IEventBus",
+      "TYPES.ILogger",
+      "TYPES.ITimerService",
+      "TYPES.IQualiaStateCalculatorService"
+    ],
+    "BackendSyncService": [
+      "TYPES.BackendSyncServiceParams"
+    ],
+    "AudioService": [
+      "TYPES.AudioServiceParams"
+    ],
+    "GameControllerService": [
+      "TYPES.GameControllerServiceParams"
+    ],
+    "GameInputControllerService": [
+      "TYPES.IInputStateService",
+      "TYPES.IBrowserEventsService",
+      "TYPES.IEventBus",
+      "TYPES.ILogger"
+    ],
+    "GameStateStoreService": [
+      "TYPES.IEventBus",
+      "TYPES.ILogger",
+      "TYPES.IStateMergerService",
+      "TYPES.GameStateStoreConfig"
+    ],
+    "NotificationService": [
+      "TYPES.NotificationServiceParams"
+    ],
+    "StateMergerService": [
+      "TYPES.ILogger"
+    ],
+    "ErrorReportingService": [
+      "TYPES.ErrorReportingServiceParams"
+    ],
+    "DebugService": [
+      "TYPES.DebugServiceParams"
+    ],
+    "RhythmicMovementController": [
+      "TYPES.RhythmicMovementControllerParams"
+    ],
+    "OntologicalAudioEngine": [
+      "TYPES.ILogger",
+      "TYPES.ITimerService",
+      "TYPES.IToneFactoryService"
+    ],
+    "ApplicationInitializerService": [
+      "TYPES.ApplicationInitializerServiceParams"
+    ],
+    "WebAudioAPIService": [
+      "TYPES.IAudioContextFactory"
+    ],
+    "FrontendRenderingService": [
+      "TYPES.FrontendRenderingServiceParams"
+    ],
+    "StateStreamingService": [
+      "TYPES.StateStreamingServiceParams",
+      "TYPES.IRawToParticleEventAdapter"
+    ],
+    "GameStateStreamingService": [
+      "TYPES.GameStateStreamingConfig",
+      "TYPES.ILogger",
+      "TYPES.IEventBus",
+      "TYPES.IWebSocketService",
+      "TYPES.ITimerService",
+      "TYPES.IPerformanceService"
+    ],
+    "WebSocketService": [
+      "TYPES.WebSocketServiceParams"
+    ],
+    "BrowserEventsService": [
+      "TYPES.ILogger",
+      "TYPES.IEventBus"
+    ],
+    "AudioSystemBridge": [
+      "TYPES.AudioSessionConfig",
+      "TYPES.ILogger"
+    ],
+    "CoordinateSystemService": [
+      "TYPES.CoordinateSystemConfig",
+      "TYPES.ILogger"
+    ],
+    "GameplayMechanicsService": [
+      "TYPES.GameplayMechanicsConfig",
+      "TYPES.ILogger"
+    ],
+    "ViewLogicService": [
+      "TYPES.ViewLogicConfig",
+      "TYPES.ILogger",
+      "TYPES.ICoordinateSystemService",
+      "TYPES.IColorService"
+    ],
+    "SubtitleService": [
+      "TYPES.SubtitleConfig",
+      "TYPES.ILogger"
+    ],
+    "DebugOrchestratorService": [
+      "TYPES.DebugOrchestratorServiceParams",
+      "TYPES.IEventBus"
+    ],
+    "AudioAnalysisService": [
+      "TYPES.AudioAnalysisServiceParams"
+    ],
+    "Audio8DService": [
+      "TYPES.Audio8DServiceParams"
+    ],
+    "MusicalComboDetectorService": [
+      "TYPES.MusicalComboDetectorServiceParams"
+    ],
+    "PhysicsService": [
+      "TYPES.PhysicsServiceParams"
+    ],
+    "ShaderLoaderService": [
+      "TYPES.ILogger",
+      "TYPES.IHttpService"
+    ],
+    "JsGlslParserService": [
+      "TYPES.ILogger"
+    ],
+    "ShaderIntrospectionService": [
+      "TYPES.ILogger",
+      "TYPES.IGlslParser"
+    ],
+    "PostProcessingService": [
+      "TYPES.PostProcessingServiceParams"
+    ],
+    "RenderTargetPoolService": [
+      "TYPES.RenderTargetPoolConfig",
+      "TYPES.ILogger"
+    ],
+    "KairosVisualEngine": [
+      "TYPES.KairosVisualEngineParams"
+    ],
+    "ParticleSystemService": [
+      "TYPES.ParticleSystemServiceParams"
+    ],
+    "ReactionDiffusionService": [
+      "TYPES.ReactionDiffusionServiceParams"
+    ],
+    "JitterService": [
+      "TYPES.JitterServiceConfig",
+      "TYPES.ILogger"
+    ],
+    "RawToParticleEventAdapter": [
+      "TYPES.ProtocolAdapterConfig"
+    ]
+  },
+  "cycles": [],
+  "serviceFiles": {
+    "container": "./inversify.container",
+    "TYPES": "./inversify.types",
+    "EventBus": "./EventBus",
+    "QualiaLogger": "./Logger",
+    "HttpService": "./HttpService",
+    "TimerService": "./TimerService",
+    "PerformanceService": "./PerformanceService",
+    "PerformanceProvider": "./providers/PerformanceProvider",
+    "BrowserTimerProvider": "./providers/BrowserTimerProvider",
+    "QualiaStateCalculatorService": "./QualiaStateCalculatorService",
+    "QualiaCalculatorWorkerService": "./QualiaCalculatorWorkerService",
+    "BackendSyncService": "./BackendSyncService",
+    "AudioService": "./AudioService",
+    "GameControllerService": "./GameControllerService",
+    "GameInputControllerService": "./GameInputControllerService",
+    "GameStateStoreService": "./GameStateStoreService",
+    "NotificationService": "./NotificationService",
+    "ErrorReportingService": "./ErrorReportingService",
+    "DebugService": "./DebugService",
+    "RhythmicMovementController": "./RhythmicMovementController",
+    "OntologicalAudioEngine": "../audio/OntologicalAudioEngine",
+    "ApplicationInitializerService": "./ApplicationInitializerService",
+    "WebAudioAPIService": "./WebAudioAPIService",
+    "BrowserAudioContextFactory": "./BrowserAudioContextFactory",
+    "GameStateStore": "./GameStateStore",
+    "FrontendRenderingService": "./FrontendRenderingService",
+    "StateStreamingService": "./StateStreamingService",
+    "WebSocketService": "./WebSocketService",
+    "BrowserWebSocketFactory": "./BrowserWebSocketFactory",
+    "BrowserEventsService": "./BrowserEventsService",
+    "GameStateStreamingService": "./GameStateStreamingService",
+    "ThrottlingManager": "./utils/ThrottlingManager",
+    "CoordinateSystemService": "./CoordinateSystemService",
+    "ToneFactoryService": "../audio/ToneFactoryService",
+    "StateMergerService": "./StateMergerService",
+    "AudioSystemBridge": "./AudioSystemBridge",
+    "JitterService": "./JitterService",
+    "KairosVisualEngine": "./KairosVisualEngine",
+    "ParticleSystemService": "./ParticleSystemService",
+    "ReactionDiffusionService": "./ReactionDiffusionService",
+    "RawToParticleEventAdapter": "./protocol/adapters/RawToParticleEventAdapter",
+    "KeyToDirectionAdapter": "./protocol/adapters/KeyToDirectionAdapter",
+    "PlayerInputEvent": "./contracts/events.contracts",
+    "PlayerDirectionEvent": "./contracts/events.contracts",
+    "ColorService": "./ColorService",
+    "GameplayMechanicsService": "./GameplayMechanicsService",
+    "ViewLogicService": "./ViewLogicService",
+    "SubtitleService": "./SubtitleService",
+    "DebugOrchestratorService": "./DebugOrchestratorService",
+    "ShaderLoaderService": "./ShaderLoaderService",
+    "JsGlslParserService": "./JsGlslParserService",
+    "ShaderIntrospectionService": "./ShaderIntrospectionService",
+    "PostProcessingService": "./PostProcessingService",
+    "RenderTargetPoolService": "./RenderTargetPoolService",
+    "AudioAnalysisService": "./AudioAnalysisService",
+    "PhysicsService": "./PhysicsService",
+    "Audio8DService": "./Audio8DService",
+    "MusicalComboDetectorService": "./MusicalComboDetectorService"
+  }
+}

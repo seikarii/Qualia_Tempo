@@ -1,7 +1,8 @@
 /**
  * @fileoverview SALA: Async operation timeout enforcement
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ✅ MIGRATED
+ * MIGRATION STATUS: ⚠️ PARTIALLY SEMANTIC - Checks async flag only. MUST UPGRADE: Analyze method body for I/O operations (HttpService, fetch)
+ * AUDIT NOTE (Senior Architect): "A MEDIAS. Similar a otros decoradores"
  */
 'use strict';
 module.exports = {

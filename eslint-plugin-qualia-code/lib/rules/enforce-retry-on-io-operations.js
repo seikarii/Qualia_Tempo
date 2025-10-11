@@ -1,7 +1,8 @@
 /**
  * @fileoverview SALA: Semantic I/O operation detection for retry enforcement
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ✅ MIGRATED
+ * MIGRATION STATUS: ⚠️ PARTIALLY SEMANTIC - Uses TypeChecker but still pattern matches on method name. MUST UPGRADE: Analyze method body for HttpService/fetch calls
+ * AUDIT NOTE (Senior Architect): "A MEDIAS. Tiene TypeChecker pero sigue pattern matching en nombre del método"
  */
 'use strict';
 const { requireTypeChecker, getNodeType, isPromiseType } = require('../utils/semantic-helpers');

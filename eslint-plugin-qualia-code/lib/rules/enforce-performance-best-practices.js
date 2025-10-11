@@ -1,7 +1,8 @@
 /**
  * @fileoverview SALA: Performance anti-pattern detection
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ✅ MIGRATED
+ * MIGRATION STATUS: ⚠️ PRIMITIVE - Shallow loop analysis. MUST MERGE into enforce-async-on-heavy-methods with robust complexity scoring
+ * AUDIT NOTE (Senior Architect): "MAL. Similar a la anterior, su análisis es superficial"
  */
 'use strict';
 module.exports = {

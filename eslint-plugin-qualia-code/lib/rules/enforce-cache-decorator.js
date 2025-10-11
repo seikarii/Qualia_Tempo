@@ -1,7 +1,8 @@
 /**
  * @fileoverview SALA: Expensive operation caching enforcement
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ✅ MIGRATED
+ * MIGRATION STATUS: ⚠️ PARTIALLY SEMANTIC - Pattern matching. MUST UPGRADE: Analyze getter body for expensive operations (loops, calculations)
+ * AUDIT NOTE (Senior Architect): "A MEDIAS. Similar a otros decoradores"
  */
 'use strict';
 module.exports = {

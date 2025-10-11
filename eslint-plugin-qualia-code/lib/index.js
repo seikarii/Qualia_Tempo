@@ -70,6 +70,11 @@ const enforceHighFidelityMocks = require('./rules/enforce-high-fidelity-mocks');
 const enforceDecoratorOrder = require('./rules/enforce-decorator-order');
 const enforceEventBusTypeSafety = require('./rules/enforce-event-bus-type-safety');
 const enforceStatelessViewLogic = require('./rules/enforce-stateless-view-logic');
+// NEW RULES - QUALIA.CODE v2.1 PHASE 3 (Dependency Graph Intelligence)
+const detectCircularDependencies = require('./rules/detect-circular-dependencies');
+const enforceCorrectInjectionScope = require('./rules/enforce-correct-injection-scope');
+const validateInjectionExistence = require('./rules/validate-injection-existence');
+const enforceIocInitializationOrder = require('./rules/enforce-ioc-initialization-order');
 
 module.exports = {
   rules: {
@@ -131,6 +136,11 @@ module.exports = {
     'enforce-decorator-order': enforceDecoratorOrder, // §5.2 - CRITICAL
     'enforce-event-bus-type-safety': enforceEventBusTypeSafety, // §5 - CRITICAL
     'enforce-stateless-view-logic': enforceStatelessViewLogic, // §8.1 - CRITICAL
+    // NEW RULES - QUALIA.CODE v2.1 PHASE 3 (Dependency Graph Intelligence) - MISSION CRITICAL
+    'detect-circular-dependencies': detectCircularDependencies, // §2 IoC/DI - BLOCKER
+    'enforce-correct-injection-scope': enforceCorrectInjectionScope, // §2 IoC/DI - Memory Leak Prevention
+    'validate-injection-existence': validateInjectionExistence, // §2 IoC/DI - Type Safety
+    'enforce-ioc-initialization-order': enforceIocInitializationOrder, // §2 IoC/DI - Code Quality
   },
   configs: {
     recommended: {
@@ -194,7 +204,12 @@ module.exports = {
         '@qualia-tempo/qualia-code/enforce-high-fidelity-mocks': 'error', // CRITICAL - §10.3.1 High-Fidelity Mocking Standard
         '@qualia-tempo/qualia-code/enforce-decorator-order': 'error', // CRITICAL - §5.2 Decorator Order Protocol
         '@qualia-tempo/qualia-code/enforce-event-bus-type-safety': 'error', // CRITICAL - §5 Event Contract Compliance
-        '@qualia-tempo/qualia-code/enforce-stateless-view-logic': 'error' // CRITICAL - §8.1 View Logic Separation
+        '@qualia-tempo/qualia-code/enforce-stateless-view-logic': 'error', // CRITICAL - §8.1 View Logic Separation
+        // NEW RULES - QUALIA.CODE v2.1 PHASE 3 (Dependency Graph Intelligence) - MISSION CRITICAL
+        '@qualia-tempo/qualia-code/detect-circular-dependencies': 'error', // BLOCKER - §2 IoC/DI Circular Dependency Detection
+        '@qualia-tempo/qualia-code/enforce-correct-injection-scope': 'error', // CRITICAL - §2 IoC/DI Memory Leak Prevention
+        '@qualia-tempo/qualia-code/validate-injection-existence': 'error', // CRITICAL - §2 IoC/DI Type Safety
+        '@qualia-tempo/qualia-code/enforce-ioc-initialization-order': 'warn' // CODE QUALITY - §2 IoC/DI Initialization Order
       }
     }
   }

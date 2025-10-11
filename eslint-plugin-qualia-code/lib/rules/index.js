@@ -61,6 +61,14 @@ module.exports = {
   'enforce-async-on-heavy-methods': require('./enforce-async-on-heavy-methods'),
 
   // ========================================
+  // PHASE 3: DEPENDENCY GRAPH INTELLIGENCE (4 rules - NEW)
+  // ========================================
+  'detect-circular-dependencies': require('./detect-circular-dependencies'),
+  'enforce-correct-injection-scope': require('./enforce-correct-injection-scope'),
+  'validate-injection-existence': require('./validate-injection-existence'),
+  'enforce-ioc-initialization-order': require('./enforce-ioc-initialization-order'),
+
+  // ========================================
   // LEGACY PRE-EXISTING RULES (8 rules)
   // ========================================
   'enforce-adapter-factory-pattern': require('./enforce-adapter-factory-pattern'),

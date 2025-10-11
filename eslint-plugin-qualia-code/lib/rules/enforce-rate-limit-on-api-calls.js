@@ -1,7 +1,8 @@
 /**
  * @fileoverview SALA: API rate limiting enforcement
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ✅ MIGRATED
+ * MIGRATION STATUS: ⚠️ PARTIALLY SEMANTIC - Pattern matching. MUST UPGRADE: Analyze method body for HttpService calls
+ * AUDIT NOTE (Senior Architect): "A MEDIAS. Similar a otros decoradores"
  */
 'use strict';
 module.exports = {

@@ -1,7 +1,8 @@
 /**
  * @fileoverview SALA: Heavy computation async enforcement
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ✅ MIGRATED
+ * MIGRATION STATUS: ⚠️ PRIMITIVE - Uses bodyLength > 30. MUST UPGRADE: cyclomatic complexity, loop depth, recursion detection, array size analysis
+ * AUDIT NOTE (Senior Architect): "MAL. Marcada como migrada, pero su lógica es bodyLength > 30 y pattern matching en nombre"
  */
 'use strict';
 module.exports = {

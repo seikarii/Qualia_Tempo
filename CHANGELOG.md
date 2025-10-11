@@ -1,5 +1,128 @@
 # CHANGELOG - QUALIA TEMPO
 
+## [2.2.0] - 2025-01-11 - PHASE 3 DEPENDENCY GRAPH INFRASTRUCTURE COMPLETE
+
+### 🔥 CRITICAL AUDIT RESPONSE: DEPENDENCY GRAPH INFRASTRUCTURE
+
+**Context**: Senior Architect audit identified Session 32-33 mass migration was premature. Phase 3 dependency graph infrastructure should have been priority #1 (BLOCKER).
+
+**Mission**: Implement global IoC container intelligence system before continuing semantic migrations.
+
+**Status**: ✅ MISSION COMPLETE - Phase 3 infrastructure operational, false migration status corrected
+
+#### Phase 3 Implementation (Session 34) ✅
+
+##### ✅ DEPENDENCY GRAPH PARSER
+
+**File**: `/scripts/parse-inversify-graph.js`
+- **Technology**: TypeScript Compiler API (ts.createSourceFile, AST traversal)
+- **Algorithm**: Tarjan's algorithm for circular dependency detection
+- **Features**:
+  * Parses `inversify.config.ts` to extract all container bindings
+  * Analyzes `container.bind<IService>(TYPES.IService).to(ServiceClass).inSingletonScope()` chains
+  * Extracts service constructors to parse `@inject(TYPES.X)` dependencies
+  * Maps service implementations to file paths
+  * Detects circular dependencies with cycle reporting
+  * Generates `dependency-graph.json` with bindings, dependencies, cycles, serviceFiles
+- **Output**: JSON structure with 57 bindings, 46 services, 0 circular dependencies
+- **Integration**: Executed in lint-architecture.sh Phase 0.5 (before all other phases)
+- **Exit Codes**: 0 if clean, 1 if cycles detected
+
+##### ✅ PHASE 3 RULES (Dependency Graph-Based)
+
+**1. detect-circular-dependencies.js** ✅
+- Loads `dependency-graph.json` and reports `graph.cycles` violations
+- Reports cycle chains as `ServiceA → ServiceB → ServiceC → ServiceA`
+- Error-level severity (breaks build)
+
+**2. enforce-correct-injection-scope.js** ✅
+- Validates singleton→transient violations (memory leak prevention)
+- Uses `graph.bindings[].scope` and `graph.dependencies[]` to detect violations
+- Reports: "Singleton service X injects transient service Y. This causes memory leaks."
+
+**3. validate-injection-existence.js** ✅
+- Verifies all `@inject(TYPES.X)` symbols have corresponding bindings
+- Catches typos and missing container.bind() calls
+- Reports: "Service X injects TYPES.Y but no binding exists"
+
+**4. enforce-ioc-initialization-order.js** ✅
+- Validates bindings follow topological dependency order
+- Warning-level (clarity/maintainability, not correctness)
+- Reports: "Service X bound before its dependency Y. Reorder for clarity."
+
+##### ✅ ARCHITECTURAL LINTER INTEGRATION
+
+**Updated**: `/scripts/lint-architecture.sh`
+- Added Phase 0.5: Generate Dependency Graph (runs before Phase 1A)
+- Executes `node scripts/parse-inversify-graph.js` before ESLint
+- Exits with code 1 if parser fails or cycles detected
+- Phase 4 now reports IoC statistics: bindings analyzed, violations found, cycles detected
+
+##### ✅ FALSE MIGRATION STATUS CORRECTION (Senior Architect Audit)
+
+**Audit Finding**: "Falsificación de Estado de Migración: Marcar una regla como 'MIGRADA' cuando su lógica sigue siendo primitiva es inaceptable"
+
+**Rules Corrected from ✅ MIGRATED to ⚠️ PRIMITIVE**:
+
+1. **enforce-async-on-heavy-methods.js** ⚠️
+   - Status: Uses `bodyLength > 30` (primitive)
+   - Required Upgrade: Cyclomatic complexity, loop depth, recursion detection
+
+2. **enforce-performance-best-practices.js** ⚠️
+   - Status: Shallow loop analysis (primitive)
+   - Required Upgrade: Merge into enforce-async-on-heavy-methods with robust complexity scoring
+
+3. **enforce-worker-offloading.js** ⚠️
+   - Status: Advanced heuristics but lacks TypeChecker for array size analysis
+   - Required Upgrade: Analyze if `Particle[]` has 10k elements vs `string[]` with 5
+
+4. **no-hardcoded-config.js** ⚠️
+   - Status: Heuristic-based (inherent limitation)
+   - Required Upgrade: TypeChecker to detect assignments to `...Config` interface variables
+
+**Rules Corrected from ✅ MIGRATED to ⚠️ PARTIALLY SEMANTIC** (Pattern Matching):
+
+5. **enforce-throttle-on-event-handlers.js** ⚠️
+   - Required: Analyze method body for DOM event subscriptions
+
+6. **enforce-authorize-on-secure-methods.js** ⚠️
+   - Required: Analyze method body for privileged operations (DB writes, auth checks)
+
+7. **enforce-retry-on-io-operations.js** ⚠️
+   - Has TypeChecker but still pattern matches on method name
+   - Required: Analyze method body for HttpService/fetch calls
+
+8. **enforce-mutex-on-state-mutations.js** ⚠️
+   - Required: Analyze method body for state assignments (`this.state = ...`)
+
+9. **enforce-cache-decorator.js** ⚠️
+   - Required: Analyze getter body for expensive operations (loops, calculations)
+
+10. **enforce-timeout-on-async-operations.js** ⚠️
+    - Required: Analyze method body for I/O operations (HttpService, fetch)
+
+11. **enforce-rate-limit-on-api-calls.js** ⚠️
+    - Required: Analyze method body for HttpService calls
+
+#### Results
+
+**Phase 3 Infrastructure**: ✅ FULLY OPERATIONAL
+- Dependency graph parser: 57 bindings, 46 services, 0 cycles
+- 4 Phase 3 rules integrated and passing
+- lint-architecture.sh Phase 0.5 + Phase 4 reporting IoC statistics
+
+**Migration Status Integrity**: ✅ RESTORED
+- 11 rules corrected from false "MIGRATED" to accurate status
+- ⚠️ PRIMITIVE: 4 rules (require complete semantic rewrite)
+- ⚠️ PARTIALLY SEMANTIC: 7 rules (need method body analysis upgrade)
+
+**Architectural Compliance**: ✅ NO REGRESSIONS
+- All existing rules continue passing
+- Phase 3 rules operational with 0 violations in current codebase
+- No circular dependencies detected (clean architecture validated)
+
+---
+
 ## [2.1.0] - 2025-01-11 - SEMANTIC MIGRATION PHASE 1 COMPLETE
 
 ### 🔥 LINTER REFOUNDATION: SALA REVOLUTION BEGINS

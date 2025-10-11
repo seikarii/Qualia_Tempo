@@ -1,7 +1,8 @@
 /**
  * @fileoverview SALA: Security-sensitive method authorization
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ✅ MIGRATED
+ * MIGRATION STATUS: ⚠️ PARTIALLY SEMANTIC - Pattern matching on method name. MUST UPGRADE: Analyze method body for privileged operations (DB writes, auth checks)
+ * AUDIT NOTE (Senior Architect): "A MEDIAS. Similar a throttle, busca 'admin' o 'delete' en el nombre"
  */
 'use strict';
 module.exports = {
