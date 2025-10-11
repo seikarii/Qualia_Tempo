@@ -65,6 +65,11 @@ const enforceReadonlyOnConfigAccess = require('./rules/enforce-readonly-on-confi
 const enforceDeprecatedOnComment = require('./rules/enforce-deprecated-on-comment');
 const enforceAuthorizeOnSecureMethods = require('./rules/enforce-authorize-on-secure-methods');
 const enforceProfileOnHeavyComputation = require('./rules/enforce-profile-on-heavy-computation');
+// NEW RULES - QUALIA.CODE v2.0 SALA (Semantically-Aware Linting Architecture)
+const enforceHighFidelityMocks = require('./rules/enforce-high-fidelity-mocks');
+const enforceDecoratorOrder = require('./rules/enforce-decorator-order');
+const enforceEventBusTypeSafety = require('./rules/enforce-event-bus-type-safety');
+const enforceStatelessViewLogic = require('./rules/enforce-stateless-view-logic');
 
 module.exports = {
   rules: {
@@ -121,6 +126,11 @@ module.exports = {
     'enforce-deprecated-on-comment': enforceDeprecatedOnComment,
     'enforce-authorize-on-secure-methods': enforceAuthorizeOnSecureMethods,
     'enforce-profile-on-heavy-computation': enforceProfileOnHeavyComputation,
+    // NEW RULES - QUALIA.CODE v2.0 SALA (Semantically-Aware Linting Architecture) - MISSION CRITICAL
+    'enforce-high-fidelity-mocks': enforceHighFidelityMocks, // §10.3.1 - CRITICAL
+    'enforce-decorator-order': enforceDecoratorOrder, // §5.2 - CRITICAL
+    'enforce-event-bus-type-safety': enforceEventBusTypeSafety, // §5 - CRITICAL
+    'enforce-stateless-view-logic': enforceStatelessViewLogic, // §8.1 - CRITICAL
   },
   configs: {
     recommended: {
@@ -179,7 +189,12 @@ module.exports = {
         '@qualia-tempo/qualia-code/enforce-readonly-on-config-access': 'error',
         '@qualia-tempo/qualia-code/enforce-deprecated-on-comment': 'error',
         '@qualia-tempo/qualia-code/enforce-authorize-on-secure-methods': 'error', // MANDATORIO - Security critical
-        '@qualia-tempo/qualia-code/enforce-profile-on-heavy-computation': 'error'
+        '@qualia-tempo/qualia-code/enforce-profile-on-heavy-computation': 'error',
+        // NEW RULES - QUALIA.CODE v2.0 SALA (Semantically-Aware Linting Architecture) - MISSION CRITICAL
+        '@qualia-tempo/qualia-code/enforce-high-fidelity-mocks': 'error', // CRITICAL - §10.3.1 High-Fidelity Mocking Standard
+        '@qualia-tempo/qualia-code/enforce-decorator-order': 'error', // CRITICAL - §5.2 Decorator Order Protocol
+        '@qualia-tempo/qualia-code/enforce-event-bus-type-safety': 'error', // CRITICAL - §5 Event Contract Compliance
+        '@qualia-tempo/qualia-code/enforce-stateless-view-logic': 'error' // CRITICAL - §8.1 View Logic Separation
       }
     }
   }

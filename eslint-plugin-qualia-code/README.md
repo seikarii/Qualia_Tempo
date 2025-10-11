@@ -1,10 +1,16 @@
 # @qualia-tempo/eslint-plugin-qualia-code
 
-**ESLint plugin enforcing QUALIA.CODE v1.1 architectural principles** in the Qualia Tempo project.
+**SALA (Semantically-Aware Linting Architecture) - ESLint plugin enforcing QUALIA.CODE v2.0** in the Qualia Tempo project.
+
+## Revolutionary Approach: Type-Based, Not Text-Based
+
+This plugin represents a paradigm shift in architectural linting. Instead of regex patterns and string matching, SALA uses **TypeScript's Type Checker** to understand code semantically. We don't search for text—we analyze types, resolve symbols, and comprehend architectural intent.
+
+**Core Principle**: *"We operate on types, not text. We understand code, not parse strings."*
 
 ## Overview
 
-This plugin automatically validates compliance with the architectural patterns defined in QUALIA.CODE v1.1, ensuring:
+This plugin automatically validates compliance with the architectural patterns defined in QUALIA.CODE v2.0, ensuring:
 
 - ✅ **InversifyJS IoC/DI patterns** with CompositionRoot
 - ✅ **Event-driven architecture** via EventBus
