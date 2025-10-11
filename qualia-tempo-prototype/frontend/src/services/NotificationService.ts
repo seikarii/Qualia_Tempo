@@ -776,6 +776,7 @@ export class NotificationService implements INotificationService, IBaseService {
    * Process notification through filtering, throttling, and queuing
    * QUALIA.CODE COMPLIANT: Extract Method Pattern (51→18 lines, 65% reduction)
    */
+  @catchError
   private async processNotification(
     notification: ExtendedNotification,
   ): Promise<void> {

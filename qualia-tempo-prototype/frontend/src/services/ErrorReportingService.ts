@@ -483,6 +483,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     };
   }
 
+  @catchError
   private async processErrorReport(
     errorReport: ExtendedErrorReport,
   ): Promise<void> {
@@ -570,6 +571,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     }
   }
 
+  @catchError
   private async processBatchQueue(): Promise<void> {
     if (this.errorQueue.length === 0) {
       return;
@@ -607,6 +609,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
    * Process error batch with circuit breaker and rate limiting
    * QUALIA.CODE COMPLIANT: Extract Method Pattern (52→18 lines, 65% reduction)
    */
+  @catchError
   private async processBatch(batch: ExtendedErrorBatch): Promise<void> {
     if (!this.canProcessBatch()) {
       return;
@@ -650,6 +653,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
   /**
    * Execute batch submission and handle success
    */
+  @catchError
   private async executeBatchSubmission(batch: ExtendedErrorBatch): Promise<void> {
     const success = await this.submitBatch(batch);
 
@@ -676,6 +680,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     this.logger.error(`❌ [ErrorReportingService] Batch processing failed: ${batch.id}`, { error });
   }
 
+  @catchError
   private async submitBatch(batch: ExtendedErrorBatch): Promise<boolean> {
     if (!this.config.externalService.enabled) {
       // Simulate successful submission for testing
@@ -717,6 +722,7 @@ export class ErrorReportingService implements IErrorReportingService, IBaseServi
     }
   }
 
+  @catchError
   private async retryFailedBatches(): Promise<void> {
     const retryableBatches = Array.from(this.pendingBatches.values()).filter(
       (batch) =>

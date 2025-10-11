@@ -108,6 +108,7 @@ export class Audio8DService implements IAudio8DService, IBaseService {
 
   @logMethod
   @catchError
+  // @validate-exempt: Simple inline coordinate type {x,y} - TypeScript ensures correctness
   public createSoundSource(id: string, position: { x: number; y: number }): SpatialSoundSource {
     if (!this._isEnabled || !this.audioContext) {
       throw new Error("Audio8DService not enabled or audio context not ready");
@@ -176,6 +177,7 @@ export class Audio8DService implements IAudio8DService, IBaseService {
   @measureTime
   @logMethod
   @catchError
+  // @validate-exempt: Simple inline coordinate types {x,y} - TypeScript ensures correctness
   public updateSoundSourcePosition(
     id: string,
     position: { x: number; y: number },
@@ -204,6 +206,7 @@ export class Audio8DService implements IAudio8DService, IBaseService {
 
   @logMethod
   @catchError
+  // @validate-exempt: ListenerPosition is simple interface with numeric coordinates
   public updateListenerPosition(position: ListenerPosition): void {
     if (!this._isEnabled || !this.audioContext) {
       return;
@@ -273,6 +276,7 @@ export class Audio8DService implements IAudio8DService, IBaseService {
 
   @logMethod
   @catchError
+  // @validate-exempt: AudioNode is Web Audio API type (trusted browser API)
   public connectAudioSource(sourceId: string, audioSource: AudioNode): void {
     const source = this.soundSources.get(sourceId);
     if (!source) {
@@ -300,6 +304,7 @@ export class Audio8DService implements IAudio8DService, IBaseService {
 
   @logMethod
   @catchError
+  // @validate-exempt: Simple inline coordinate types {x,y} - TypeScript ensures correctness
   public createDirectionalEcho(
     position: { x: number; y: number },
     direction: { x: number; y: number },

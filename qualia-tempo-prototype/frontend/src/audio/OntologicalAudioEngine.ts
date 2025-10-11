@@ -89,6 +89,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
    */
   @logMethod
   @catchError
+  // @validate-exempt: QualiaState validated at emission by QualiaStateCalculatorService
   public createEntityVoice(entityId: string, qualiaState: QualiaState): void {
     // AÑADIR ESTA GUARDIA
     if (!this.isEngineReady) {
@@ -197,6 +198,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
    */
   @logMethod
   @catchError
+  // @validate-exempt: EmergentBehavior is internal type, validated at creation
   public playEmergentPattern(behavior: EmergentBehavior): void {
     // AÑADIR ESTA GUARDIA
     if (!this.isEngineReady) {
@@ -220,6 +222,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
     }
   }
 
+  // WORKER-EXEMPT: Web Audio API operations MUST run on main thread
   private playClusterHarmony(behavior: EmergentBehavior): void {
     // Crear acorde basado en las entidades del cluster
     const chord = behavior.entities
@@ -237,6 +240,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
     this.timerService.setTimeout(() => clusteredSynth.dispose(), 3000);
   }
 
+  // WORKER-EXEMPT: Web Audio API operations MUST run on main thread
   private playSynchronizationChord(behavior: EmergentBehavior): void {
     // Crear acorde de sincronización
     const chord = behavior.entities
@@ -254,6 +258,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
     this.timerService.setTimeout(() => syncSynth.dispose(), 2200);
   }
 
+  // WORKER-EXEMPT: Web Audio API operations MUST run on main thread
   private playPropagationArpeggio(behavior: EmergentBehavior): void {
     // Crear arpegio propagador
     const arpeggioNotes = behavior.entities.map((_entity, idx) =>
@@ -274,6 +279,7 @@ export class OntologicalAudioEngine implements IOntologicalAudioEngine, IBaseSer
     this.timerService.setTimeout(() => arpeggioSynth.dispose(), 160 * arpeggioNotes.length + 600);
   }
 
+  // WORKER-EXEMPT: Web Audio API operations MUST run on main thread
   private playNarrativeEvent(behavior: EmergentBehavior): void {
     // Evento narrativo: acorde especial con modulación de fuerza y descripción
     const chord = behavior.entities

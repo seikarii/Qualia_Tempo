@@ -338,6 +338,7 @@ export class EventBus implements IEventBus {
   /**
    * Execute all handlers for an event with error isolation.
    */
+  @catchError
   private async executeHandlers<T extends EventTypes>(
     completeEvent: T,
     listeners: EventListener[],
@@ -495,6 +496,7 @@ export class EventBus implements IEventBus {
     return `${config.idPrefix}_${Date.now()}_${Math.random().toString(config.randomBase).substr(config.idStart, config.idLength)}`;
   }
 
+  @catchError
   private async executeHandler(
     listener: EventListener,
     event: BaseEvent,

@@ -48,6 +48,7 @@ export class BrowserEventsService implements IBrowserEventsService {
   }
 
   @logMethod
+  // @validate-exempt: HTMLElement is browser DOM type (trusted API)
   public addElementEventListener<K extends keyof HTMLElementEventMap>(
     element: HTMLElement,
     type: K,

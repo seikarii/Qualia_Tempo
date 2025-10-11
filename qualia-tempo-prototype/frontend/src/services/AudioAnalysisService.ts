@@ -208,6 +208,7 @@ export class AudioAnalysisService implements IAudioAnalysisService, IBaseService
    * Detects energy spikes in the frequency data
    */
   @catchError
+  // WORKER-EXEMPT: Real-time audio analysis requires Web Audio API on main thread
   private detectBeat(): void {
     if (!this.frequencyData) return;
 
@@ -287,6 +288,7 @@ export class AudioAnalysisService implements IAudioAnalysisService, IBaseService
    * Get frequency bands for visualization
    */
   @catchError
+  // WORKER-EXEMPT: Real-time audio visualization requires immediate main thread access
   private getFrequencyBands(): number[] {
     if (!this.frequencyData) {
       return new Array(this.config.frequencyBands).fill(0);

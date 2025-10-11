@@ -28,7 +28,7 @@ import type { ITimerService } from './interfaces/ITimerService';
 import type { IParticleSystemService } from './interfaces/IParticleSystemService';
 import type { IReactionDiffusionService } from './interfaces/IReactionDiffusionService';
 import type { KairosVisualEngineParams, KairosVisualEngineConfig } from './contracts/IKairosVisualEngine.contracts';
-import { OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions } from '../utils/decorators';
+import { OnEvent, initializeEventSubscriptions, cleanupEventSubscriptions, catchError } from '../utils/decorators';
 import type { GameStateChangedEvent, QualiaStateCalculatedEvent, CombatStateUpdatedEvent } from './contracts/events.contracts';
 import type { CombatState } from '../types/CombatState';
 
@@ -251,6 +251,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
    * 
    * NOTE: This is separate from IBaseService.initialize() which sets up event subscriptions
    */
+  @catchError
   public async initializeRenderer(canvas: HTMLCanvasElement): Promise<void> {
     this.logger.info('[KairosVisualEngine] Initializing Three.js with canvas', { 
       width: canvas.width, 
@@ -510,6 +511,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
    * Creates player and boss avatar meshes using raymarching shaders
    * Conditionally switches to Mandelbulb fractal when transcendence > 0.9
    */
+  @catchError
   private async setupSdfAvatars(): Promise<void> {
     if (!this.scene) {
       this.logger.error('[KairosVisualEngine] Cannot setup SDF avatars - scene not initialized');
@@ -599,6 +601,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
    * Load shader from public/shaders directory
    * QUALIA.CODE §4: Uses injected IHttpService instead of direct fetch
    */
+  @catchError
   private async loadShader(shaderPath: string): Promise<string> {
     return await this.httpService.get<string>(shaderPath);
   }
@@ -1154,6 +1157,7 @@ export class KairosVisualEngine implements IKairosVisualEngine, IBaseService {
   /**
    * Update engine configuration at runtime
    */
+  @catchError
   public async updateConfig(config: Partial<Record<string, unknown>>): Promise<void> {
     this.logger.info('[KairosVisualEngine] Configuration updated', config);
     

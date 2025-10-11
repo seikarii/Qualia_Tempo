@@ -147,6 +147,7 @@ export class QualiaCalculatorWorkerService
     return this.initializationPromise;
   }
 
+  @catchError
   private async _initializeInternal(): Promise<void> {
     this.logger.info('🚀 [WorkerService] Initializing...');
 
@@ -219,6 +220,7 @@ export class QualiaCalculatorWorkerService
   /**
    * Create and initialize the Web Worker.
    */
+  @catchError
   private async createWorker(): Promise<void> {
     this.logger.info('👷 [WorkerService] Creating worker...');
     this.workerStatus = 'initializing';
@@ -323,6 +325,7 @@ export class QualiaCalculatorWorkerService
   /**
    * Activate fallback to main thread service.
    */
+  @catchError
   private async activateFallback(): Promise<void> {
     this.logger.warn('⚠️ [WorkerService] Activating fallback to main thread');
 

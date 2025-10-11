@@ -32,6 +32,7 @@ export class ApplicationCompositionRoot {
   /**
    * Bridge the UI layer to the service layer
    * QUALIA.CODE COMPLIANT: UI delivers its dependencies to services, not vice versa
+   * @catchError-exempt: Bootstrap method has explicit try-catch with error logging
    */
   public async bridgeUi(gameStoreApi: GameStoreApi): Promise<void> {
     try {
@@ -66,6 +67,7 @@ export class ApplicationCompositionRoot {
   /**
    * Initialize the service layer only (without UI dependencies)
    * This method handles service bootstrap logic without touching UI layer
+   * @catchError-exempt: Called from try-catch in bridgeUi and index.tsx
    */
   public async initializeServices(): Promise<void> {
     // STEP 0: CRITICAL - Configure services with Direct Configuration Injection
@@ -85,6 +87,7 @@ export class ApplicationCompositionRoot {
 
   /**
    * Start the application after UI bridge is established
+   * @catchError-exempt: Called from try-catch in index.tsx
    */
   public async startApplication(): Promise<void> {
     const logger = container.get<ILogger>(TYPES.ILogger);
@@ -110,6 +113,7 @@ export class ApplicationCompositionRoot {
    * Shutdown the application gracefully
    * Handles cleanup of services and resources
    * QUALIA.CODE v1.1: Properly invokes service cleanup to prevent memory leaks
+   * @catchError-exempt: Has explicit try-catch with error logging
    */
   public async shutdownApplication(): Promise<void> {
     try {

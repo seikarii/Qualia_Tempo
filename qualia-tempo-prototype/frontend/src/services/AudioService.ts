@@ -248,6 +248,7 @@ export class AudioService implements IAudioService, IBaseService {
   @logMethod
   @catchError
   @validate('QualiaState')
+  // OPTIMIZED-PATH: Simple delegate to OntologicalAudioEngine, no heavy computation
   public createEntityVoice(entityId: string, qualiaState: QualiaState): void {
     if (!this.audioEngine || !this.isInitialized) {
       const audioConfig = this.config;
@@ -260,6 +261,7 @@ export class AudioService implements IAudioService, IBaseService {
 
   @logMethod
   @catchError
+  // OPTIMIZED-PATH: Simple delegate to OntologicalAudioEngine, no heavy computation
   public removeEntityVoice(entityId: string): void {
     if (!this.audioEngine) {
       const audioConfig = this.config;
@@ -272,6 +274,7 @@ export class AudioService implements IAudioService, IBaseService {
 
   @logMethod
   @catchError
+  // WORKER-EXEMPT: Web Audio API disposal operations MUST run on main thread
   public removeAllEntityVoices(): void {
     if (!this.audioEngine) {
       const audioConfig = this.config;

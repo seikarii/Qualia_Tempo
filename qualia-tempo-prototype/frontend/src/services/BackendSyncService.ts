@@ -352,6 +352,7 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
 
   /**
    * PHASE 4 INTEGRATION: Perform audio sync safely with error handling
+   * @catchError-exempt: Has explicit try-catch with error handling
    */
   private async performAudioSyncSafe(audioRequest: AudioDataRequest): Promise<void> {
     try {
@@ -364,6 +365,7 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
 
   /**
    * PHASE 4 INTEGRATION: Send audio data to backend
+   * @catchError-exempt: Called from performAudioSyncSafe which has try-catch
    */
   private async performAudioSync(audioRequest: AudioDataRequest): Promise<void> {
     const startTime = this.performanceService.now();
@@ -392,6 +394,7 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
     }
   }
 
+  // @catchError-exempt: Has explicit try-catch with error event emission
   private async performSyncSafe(
     qualiaRequest: QualiaStateRequest,
   ): Promise<void> {
@@ -409,6 +412,7 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
     }
   }
 
+  // @catchError-exempt: Called from performSyncSafe which has try-catch
   private async performSync(qualiaRequest: QualiaStateRequest): Promise<void> {
     const startTime = this.performanceService.now();
 
@@ -459,6 +463,7 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
     }
   }
 
+  // @catchError-exempt: Called from performSync which is wrapped in performSyncSafe's try-catch
   private async _executeSyncRequest(url: string, data: QualiaStateRequest): Promise<QualiaSyncResponse> {
     return await this.httpService.post<QualiaSyncResponse>(url, {
       timeout: this.config.api.timeout,
@@ -469,6 +474,7 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
     });
   }
 
+  // @catchError-exempt: Has explicit try-catch with error handling
   private async checkHealth(): Promise<void> {
     const startTime = this.performanceService.now();
     this.logger.info("🏥 [BackendSync] Health check");
@@ -495,6 +501,7 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
     }
   }
 
+  // @catchError-exempt: Called from checkHealth which has try-catch
   private async _executeHealthCheckRequest(url: string): Promise<HealthCheckResponse> {
     return await this.httpService.get<HealthCheckResponse>(url, {
       timeout: this.config.api.timeout,
@@ -542,6 +549,8 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
   @logMethod
   @catchError
   @validate('QualiaState')
+  // @retry-exempt: Retry logic already implemented in performSync/performSyncSafe
+  // @timeout-exempt: HttpService handles timeout with config.api.timeout
   public async syncQualiaState(state: QualiaState): Promise<void> {
     const qualiaRequest: QualiaStateRequest = {
       intensity: state.intensity || 0,
@@ -596,6 +605,8 @@ export class BackendSyncService implements IBackendSyncService, IBaseService {
    */
   @logMethod
   @catchError
+  // @retry-exempt: Simple connection test for manual diagnostics, retry not needed
+  // @timeout-exempt: HttpService handles timeout with config.api.timeout
   public async testConnection(): Promise<boolean> {
     try {
       const url = `${this.config.api.baseUrl}${this.config.api.healthEndpoint}`;

@@ -63,6 +63,7 @@ export class HttpService implements IHttpService {
     return this.request<T>("DELETE", url, options);
   }
 
+  @catchError
   private async request<T>(
     method: string,
     url: string,
@@ -126,6 +127,7 @@ export class HttpService implements IHttpService {
     return requestInit;
   }
 
+  @catchError
   private async handleResponse<T>(
     response: Response,
     method: string,
@@ -161,6 +163,7 @@ export class HttpService implements IHttpService {
     return data;
   }
 
+  @catchError
   private async parseResponseData<T>(response: Response): Promise<T> {
     const contentType = response.headers.get("content-type");
     

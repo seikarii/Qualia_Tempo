@@ -104,6 +104,7 @@ export class ApplicationInitializerService
     }
   }
 
+  // @catchError-exempt: Private method called from start() which has try-catch
   private async initializeServices(): Promise<void> {
     // Configuration is already loaded by ApplicationCompositionRoot.configureServices()
     this.logger.info(this.config.messages.configurationLoaded);
@@ -113,6 +114,7 @@ export class ApplicationInitializerService
     await this.startBackendServices();
   }
 
+  // @catchError-exempt: Private method called from initializeServices which is wrapped in start()'s try-catch
   private async startCoreServices(): Promise<void> {
     // Step 0: Initialize EventBus - fundamental dependency for all services
     this.logger.debug("Initializing EventBus with status monitoring");
@@ -185,6 +187,7 @@ export class ApplicationInitializerService
     }
   }
 
+  // @catchError-exempt: Private method called from initializeServices which is wrapped in start()'s try-catch
   private async startGameServices(): Promise<void> {
     // Step 6: Start rhythmic movement controller
     this.logger.debug(this.config.steps.startRhythmicController);
@@ -192,6 +195,7 @@ export class ApplicationInitializerService
     this.logger.info(this.config.messages.rhythmicControllerStarted);
   }
 
+  // @catchError-exempt: Private method called from initializeServices which is wrapped in start()'s try-catch
   private async startBackendServices(): Promise<void> {
     // Step 7: Start backend synchronization
     this.logger.debug(this.config.steps.startBackendSync);
@@ -209,6 +213,7 @@ export class ApplicationInitializerService
    * 
    * Cleanup is now fully automated using the same multi-injected service array.
    * All services are cleaned up in reverse order for dependency safety.
+   * @async-exempt: Cleanup must be synchronous for lifecycle management. Simple loop, not heavy computation.
    */
   @logMethod
   @catchError
