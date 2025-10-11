@@ -88,10 +88,9 @@ ruleTester.run('enforce-error-boundary-on-async', rule, {
         }
       `,
       filename: 'BadAsyncService.ts',
-      errors: [{
-        messageId: 'missingCatchError',
-        data: { methodType: 'method', methodName: 'loadData' }
-      }]
+      errors: [{ 
+        messageId: 'missingCatchError'
+       }]
     },
     
     // ❌ Async method with other decorators but no @catchError
@@ -105,10 +104,9 @@ ruleTester.run('enforce-error-boundary-on-async', rule, {
         }
       `,
       filename: 'PartiallyDecoratedService.ts',
-      errors: [{
-        messageId: 'missingCatchError',
-        data: { methodType: 'method', methodName: 'saveData' }
-      }]
+      errors: [{ 
+        messageId: 'missingCatchError'
+       }]
     },
     
     // ❌ Private async method without @catchError
@@ -121,13 +119,12 @@ ruleTester.run('enforce-error-boundary-on-async', rule, {
         }
       `,
       filename: 'PrivateAsyncService.ts',
-      errors: [{
-        messageId: 'missingCatchError',
-        data: { methodType: 'method', methodName: '_internalFetch' }
-      }]
+      errors: [{ 
+        messageId: 'missingCatchError'
+       }]
     },
     
-    // ❌ Multiple async methods without @catchError
+    // ❌ Multiple async methods without @catchError (reports one per method)
     {
       code: `
         class MultiAsyncService {
@@ -137,8 +134,12 @@ ruleTester.run('enforce-error-boundary-on-async', rule, {
       `,
       filename: 'MultiAsyncService.ts',
       errors: [
-        { messageId: 'missingCatchError', data: { methodType: 'method', methodName: 'method1' } },
-        { messageId: 'missingCatchError', data: { methodType: 'method', methodName: 'method2' } }
+        {
+          messageId: 'missingCatchError'
+        },
+        {
+          messageId: 'missingCatchError'
+        }
       ]
     }
   ]

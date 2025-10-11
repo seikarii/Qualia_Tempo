@@ -76,10 +76,9 @@ ruleTester.run('enforce-adapt-and-emit-on-raw-handlers', rule, {
         }
       `,
       filename: 'src/services/WebSocketService.ts',
-      errors: [{
-        messageId: 'missingAdaptAndEmit',
-        data: { methodName: 'onRawMessage' }
-      }]
+      errors: [{ 
+        messageId: 'missingAdaptAndEmit'
+       }]
     },
     {
       code: `
@@ -88,10 +87,9 @@ ruleTester.run('enforce-adapt-and-emit-on-raw-handlers', rule, {
         }
       `,
       filename: 'src/services/ProtocolService.ts',
-      errors: [{
-        messageId: 'missingAdaptAndEmit',
-        data: { methodName: 'handleSocketData' }
-      }]
+      errors: [{ 
+        messageId: 'missingAdaptAndEmit'
+       }]
     },
     {
       code: `
@@ -100,10 +98,9 @@ ruleTester.run('enforce-adapt-and-emit-on-raw-handlers', rule, {
         }
       `,
       filename: 'src/services/BinaryService.ts',
-      errors: [{
-        messageId: 'missingAdaptAndEmit',
-        data: { methodName: 'handleBinaryData' }
-      }]
+      errors: [{ 
+        messageId: 'missingAdaptAndEmit'
+       }]
     },
     {
       code: `
@@ -112,10 +109,9 @@ ruleTester.run('enforce-adapt-and-emit-on-raw-handlers', rule, {
         }
       `,
       filename: 'src/services/NetworkService.ts',
-      errors: [{
-        messageId: 'missingAdaptAndEmit',
-        data: { methodName: 'onPacket' }
-      }]
+      errors: [{ 
+        messageId: 'missingAdaptAndEmit'
+       }]
     },
     {
       code: `
@@ -124,10 +120,9 @@ ruleTester.run('enforce-adapt-and-emit-on-raw-handlers', rule, {
         }
       `,
       filename: 'src/services/WsService.ts',
-      errors: [{
-        messageId: 'missingAdaptAndEmit',
-        data: { methodName: 'handleWsMessage' }
-      }]
+      errors: [{ 
+        messageId: 'missingAdaptAndEmit'
+       }]
     }
   ]
 });

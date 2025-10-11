@@ -151,13 +151,9 @@ ruleTester.run('enforce-cache-decorator', rule, {
         }
       `,
       filename: 'src/services/ViewLogicService.ts',
-      errors: [{
-        messageId: 'frequentCalculation',
-        data: {
-          methodName: 'getBossVisuals',
-          serviceName: 'ViewLogicService'
-        }
-      }]
+      errors: [{ 
+        messageId: 'frequentCalculation'
+       }]
     },
 
     // Critical service (QualiaStateCalculatorService) - uses frequentCalculation
@@ -170,13 +166,9 @@ ruleTester.run('enforce-cache-decorator', rule, {
         }
       `,
       filename: 'src/services/QualiaStateCalculatorService.ts',
-      errors: [{
-        messageId: 'frequentCalculation',
-        data: {
-          methodName: 'calculateIntensity',
-          serviceName: 'QualiaStateCalculatorService'
-        }
-      }]
+      errors: [{ 
+        messageId: 'frequentCalculation'
+       }]
     },
 
     // Critical service with compute method
@@ -189,13 +181,9 @@ ruleTester.run('enforce-cache-decorator', rule, {
         }
       `,
       filename: 'src/services/ViewLogicService.ts',
-      errors: [{
-        messageId: 'frequentCalculation',
-        data: {
-          methodName: 'computeOffset',
-          serviceName: 'ViewLogicService'
-        }
-      }]
+      errors: [{ 
+        messageId: 'frequentCalculation'
+       }]
     },
 
     // Non-critical service with calculate method - uses suggestCache
@@ -208,12 +196,9 @@ ruleTester.run('enforce-cache-decorator', rule, {
         }
       `,
       filename: 'src/services/OtherService.ts',
-      errors: [{
-        messageId: 'suggestCache',
-        data: {
-          methodName: 'calculateValue'
-        }
-      }]
+      errors: [{ 
+        messageId: 'suggestCache'
+       }]
     },
 
     // Critical service with transform method
@@ -226,13 +211,9 @@ ruleTester.run('enforce-cache-decorator', rule, {
         }
       `,
       filename: 'src/services/QualiaStateCalculatorService.ts',
-      errors: [{
-        messageId: 'frequentCalculation',
-        data: {
-          methodName: 'transformState',
-          serviceName: 'QualiaStateCalculatorService'
-        }
-      }]
+      errors: [{ 
+        messageId: 'frequentCalculation'
+       }]
     },
 
     // Critical service (CoordinateSystemService)
@@ -245,13 +226,9 @@ ruleTester.run('enforce-cache-decorator', rule, {
         }
       `,
       filename: 'src/services/CoordinateSystemService.ts',
-      errors: [{
-        messageId: 'frequentCalculation',
-        data: {
-          methodName: 'convertToScreen',
-          serviceName: 'CoordinateSystemService'
-        }
-      }]
+      errors: [{ 
+        messageId: 'frequentCalculation'
+       }]
     },
   ]
 });

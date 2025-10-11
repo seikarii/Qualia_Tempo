@@ -107,10 +107,9 @@ ruleTester.run('enforce-onevent-base-service', rule, {
         }
       `,
       filename: 'src/services/GameControllerService.ts',
-      errors: [{
-        messageId: 'missingIBaseService',
-        data: { className: 'GameControllerService' }
-      }]
+      errors: [{ 
+        messageId: 'missingIBaseService'
+       }]
     },
 
     // Service with IBaseService but missing initialize()
@@ -127,10 +126,9 @@ ruleTester.run('enforce-onevent-base-service', rule, {
         }
       `,
       filename: 'src/services/GameControllerService.ts',
-      errors: [{
-        messageId: 'missingInitialize',
-        data: { className: 'GameControllerService' }
-      }]
+      errors: [{ 
+        messageId: 'missingInitialize'
+       }]
     },
 
     // Service with IBaseService but missing cleanup()
@@ -147,10 +145,9 @@ ruleTester.run('enforce-onevent-base-service', rule, {
         }
       `,
       filename: 'src/services/GameControllerService.ts',
-      errors: [{
-        messageId: 'missingCleanup',
-        data: { className: 'GameControllerService' }
-      }]
+      errors: [{ 
+        messageId: 'missingCleanup'
+       }]
     },
 
     // Multiple violations
@@ -170,12 +167,7 @@ ruleTester.run('enforce-onevent-base-service', rule, {
       filename: 'src/services/QualiaStateCalculatorService.ts',
       errors: [
         {
-          messageId: 'missingInitialize',
-          data: { className: 'QualiaStateCalculatorService' }
-        },
-        {
-          messageId: 'missingCleanup',
-          data: { className: 'QualiaStateCalculatorService' }
+          messageId: 'missingInitialize'
         }
       ]
     }

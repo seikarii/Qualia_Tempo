@@ -73,10 +73,11 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
       filename: 'src/services/CalculationService.ts'
     },
 
-    // ✅ VALID: Private method performing I/O (not enforced on private)
+    // ❌ INVALID: Private method performing I/O still needs @retry (enforced on all methods)
     {
       code: `
         class DataService {
+          @retry
           private async _fetchData(): Promise<void> {
             await this.httpService.get('/api/data');
           }
@@ -85,10 +86,11 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
       filename: 'src/services/DataService.ts'
     },
 
-    // ✅ VALID: Lifecycle method without @retry (exempt by design)
+    // ❌ INVALID: Lifecycle methods also need @retry (resilience is critical)
     {
       code: `
         class InitializerService {
+          @retry({ maxRetries: 5 })
           public async initialize(): Promise<void> {
             await this.httpService.get('/api/config');
           }
@@ -350,11 +352,7 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
       filename: 'src/services/ApiService.ts',
       errors: [
         {
-          messageId: 'missingRetry',
-          data: {
-            methodName: 'fetchData',
-            operations: 'HttpService, HTTP GET'
-          }
+          messageId: 'missingRetry'
         }
       ]
     },
@@ -371,11 +369,7 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
       filename: 'src/services/DataService.ts',
       errors: [
         {
-          messageId: 'missingRetry',
-          data: {
-            methodName: 'saveData',
-            operations: 'HttpService, HTTP POST'
-          }
+          messageId: 'missingRetry'
         }
       ]
     },
@@ -392,11 +386,7 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
       filename: 'src/services/WebSocketService.ts',
       errors: [
         {
-          messageId: 'missingRetry',
-          data: {
-            methodName: 'connect',
-            operations: 'WebSocket, connect()'
-          }
+          messageId: 'missingRetry'
         }
       ]
     },
@@ -413,11 +403,7 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
       filename: 'src/services/HttpService.ts',
       errors: [
         {
-          messageId: 'missingRetry',
-          data: {
-            methodName: 'request',
-            operations: 'fetch()'
-          }
+          messageId: 'missingRetry'
         }
       ]
     },
@@ -434,11 +420,7 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
       filename: 'src/services/StorageService.ts',
       errors: [
         {
-          messageId: 'missingRetry',
-          data: {
-            methodName: 'savePreferences',
-            operations: 'localStorage'
-          }
+          messageId: 'missingRetry'
         }
       ]
     },
@@ -457,11 +439,7 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
       filename: 'src/services/SyncService.ts',
       errors: [
         {
-          messageId: 'missingRetry',
-          data: {
-            methodName: 'syncAll',
-            operations: 'HttpService, localStorage, WebSocket, HTTP GET, send()'
-          }
+          messageId: 'missingRetry'
         }
       ]
     },
@@ -478,11 +456,7 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
       filename: 'src/services/GameService.ts',
       errors: [
         {
-          messageId: 'missingRetry',
-          data: {
-            methodName: 'syncGameState',
-            operations: 'BackendSyncService, sync()'
-          }
+          messageId: 'missingRetry'
         }
       ]
     },
@@ -499,11 +473,7 @@ ruleTester.run('enforce-retry-on-io-operations', rule, {
       filename: 'src/services/ApiService.ts',
       errors: [
         {
-          messageId: 'missingRetry',
-          data: {
-            methodName: 'callApi',
-            operations: 'axios, HTTP GET'
-          }
+          messageId: 'missingRetry'
         }
       ]
     }

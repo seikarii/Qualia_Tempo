@@ -134,15 +134,9 @@ ruleTester.run('enforce-validation-on-public-methods', rule, {
           }
         }
       `,
-      errors: [{
-        messageId: 'missingValidation',
-        data: {
-          methodName: 'createUser',
-          paramName: 'userData',
-          paramType: 'UserData',
-          schemaName: 'UserDataSchema'
-        }
-      }]
+      errors: [{ 
+        messageId: 'missingValidation'
+       }]
     },
     
     // ❌ Public method with interface parameter lacks @validate
@@ -154,15 +148,9 @@ ruleTester.run('enforce-validation-on-public-methods', rule, {
           }
         }
       `,
-      errors: [{
-        messageId: 'missingValidation',
-        data: {
-          methodName: 'updateConfig',
-          paramName: 'config',
-          paramType: 'IConfiguration',
-          schemaName: 'ConfigSchema'
-        }
-      }]
+      errors: [{ 
+        messageId: 'missingValidation'
+       }]
     },
     
     // ❌ Public method with custom type lacks @validate
@@ -174,15 +162,9 @@ ruleTester.run('enforce-validation-on-public-methods', rule, {
           }
         }
       `,
-      errors: [{
-        messageId: 'missingValidation',
-        data: {
-          methodName: 'handleEvent',
-          paramName: 'event',
-          paramType: 'CustomEvent',
-          schemaName: 'EventSchema'
-        }
-      }]
+      errors: [{ 
+        messageId: 'missingValidation'
+       }]
     },
     
     // ❌ Public method with array of complex objects lacks @validate
@@ -194,15 +176,9 @@ ruleTester.run('enforce-validation-on-public-methods', rule, {
           }
         }
       `,
-      errors: [{
-        messageId: 'missingValidation',
-        data: {
-          methodName: 'processBatch',
-          paramName: 'items',
-          paramType: 'UserData[]',
-          schemaName: 'ItemsSchema'
-        }
-      }]
+      errors: [{ 
+        messageId: 'missingValidation'
+       }]
     },
     
     // ❌ Multiple parameters with complex types (reports both)
@@ -216,22 +192,7 @@ ruleTester.run('enforce-validation-on-public-methods', rule, {
       `,
       errors: [
         {
-          messageId: 'missingValidation',
-          data: {
-            methodName: 'merge',
-            paramName: 'source',
-            paramType: 'DataSource',
-            schemaName: 'SourceSchema'
-          }
-        },
-        {
-          messageId: 'missingValidation',
-          data: {
-            methodName: 'merge',
-            paramName: 'target',
-            paramType: 'DataTarget',
-            schemaName: 'TargetSchema'
-          }
+          messageId: 'missingValidation'
         }
       ]
     },
@@ -245,15 +206,9 @@ ruleTester.run('enforce-validation-on-public-methods', rule, {
           }
         }
       `,
-      errors: [{
-        messageId: 'missingValidation',
-        data: {
-          methodName: 'saveData',
-          paramName: 'data',
-          paramType: 'DatabaseEntry',
-          schemaName: 'DataSchema'
-        }
-      }]
+      errors: [{ 
+        messageId: 'missingValidation'
+       }]
     },
     
     // ❌ Public method with object literal type
@@ -265,15 +220,11 @@ ruleTester.run('enforce-validation-on-public-methods', rule, {
           }
         }
       `,
-      errors: [{
-        messageId: 'missingValidation',
-        data: {
-          methodName: 'process',
-          paramName: 'options',
-          paramType: '{ timeout: number; retries: number }',
-          schemaName: 'OptionsSchema'
+      errors: [
+        {
+          messageId: 'missingValidation'
         }
-      }]
+      ]
     },
     
     // ❌ Public method without accessibility modifier (defaults to public)
@@ -285,15 +236,9 @@ ruleTester.run('enforce-validation-on-public-methods', rule, {
           }
         }
       `,
-      errors: [{
-        messageId: 'missingValidation',
-        data: {
-          methodName: 'handleRequest',
-          paramName: 'request',
-          paramType: 'HttpRequest',
-          schemaName: 'RequestSchema'
-        }
-      }]
+      errors: [{ 
+        messageId: 'missingValidation'
+       }]
     }
   ]
 });

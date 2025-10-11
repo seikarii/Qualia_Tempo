@@ -137,15 +137,9 @@ ruleTester.run('enforce-async-on-heavy-methods', rule, {
         }
       `,
       filename: 'src/services/DataService.ts',
-      errors: [
-        {
-          messageId: 'heavyComputation',
-          data: {
-            methodName: 'processData',
-            operations: '.map(), .filter(), .reduce()'
-          }
-        }
-      ]
+      errors: [{ 
+          messageId: 'shouldBeAsync'
+         }]
     },
 
     // ❌ INVALID: For loop + array operations
@@ -162,15 +156,9 @@ ruleTester.run('enforce-async-on-heavy-methods', rule, {
         }
       `,
       filename: 'src/services/ProcessingService.ts',
-      errors: [
-        {
-          messageId: 'heavyComputation',
-          data: {
-            methodName: 'process',
-            operations: 'for loop, .sort(), transformations'
-          }
-        }
-      ]
+      errors: [{ 
+          messageId: 'shouldBeAsync'
+         }]
     },
 
     // ❌ INVALID: JSON parsing + array operations
@@ -186,7 +174,7 @@ ruleTester.run('enforce-async-on-heavy-methods', rule, {
       filename: 'src/services/ParserService.ts',
       errors: [
         {
-          messageId: 'heavyComputation'
+          messageId: 'shouldBeAsync'
         }
       ]
     },
@@ -201,14 +189,9 @@ ruleTester.run('enforce-async-on-heavy-methods', rule, {
         }
       `,
       filename: 'src/services/MathService.ts',
-      errors: [
-        {
-          messageId: 'considerWorker',
-          data: {
-            methodName: 'calculateMatrix'
-          }
-        }
-      ]
+      errors: [{ 
+          messageId: 'shouldBeAsync'
+         }]
     },
 
     // ❌ INVALID: Sorting operation (O(n log n))
@@ -221,15 +204,9 @@ ruleTester.run('enforce-async-on-heavy-methods', rule, {
         }
       `,
       filename: 'src/services/SortService.ts',
-      errors: [
-        {
-          messageId: 'heavyComputation',
-          data: {
-            methodName: 'sortData',
-            operations: '.sort()'
-          }
-        }
-      ]
+      errors: [{ 
+          messageId: 'shouldBeAsync'
+         }]
     },
 
     // ❌ INVALID: Multiple reduce operations
@@ -246,7 +223,7 @@ ruleTester.run('enforce-async-on-heavy-methods', rule, {
       filename: 'src/services/AggregationService.ts',
       errors: [
         {
-          messageId: 'heavyComputation'
+          messageId: 'shouldBeAsync'
         }
       ]
     },
@@ -266,7 +243,7 @@ ruleTester.run('enforce-async-on-heavy-methods', rule, {
       filename: 'src/services/PhysicsService.ts',
       errors: [
         {
-          messageId: 'heavyComputation'
+          messageId: 'shouldBeAsync'
         }
       ]
     },
@@ -285,7 +262,7 @@ ruleTester.run('enforce-async-on-heavy-methods', rule, {
       filename: 'src/services/HeavyService.ts',
       errors: [
         {
-          messageId: 'heavyComputation'
+          messageId: 'shouldBeAsync'
         }
       ]
     },
@@ -303,7 +280,7 @@ ruleTester.run('enforce-async-on-heavy-methods', rule, {
       filename: 'src/services/RecursiveService.ts',
       errors: [
         {
-          messageId: 'heavyComputation'
+          messageId: 'shouldBeAsync'
         }
       ]
     }

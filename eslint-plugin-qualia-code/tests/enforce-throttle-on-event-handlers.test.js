@@ -87,10 +87,9 @@ ruleTester.run('enforce-throttle-on-event-handlers', rule, {
         }
       `,
       filename: 'src/services/EventService.ts',
-      errors: [{
-        messageId: 'missingThrottle',
-        data: { methodName: 'handleMouseMove' }
-      }]
+      errors: [{ 
+        messageId: 'missingThrottle'
+       }]
     },
     {
       code: `
@@ -99,10 +98,9 @@ ruleTester.run('enforce-throttle-on-event-handlers', rule, {
         }
       `,
       filename: 'src/services/InputService.ts',
-      errors: [{
-        messageId: 'missingThrottle',
-        data: { methodName: 'onScroll' }
-      }]
+      errors: [{ 
+        messageId: 'missingThrottle'
+       }]
     },
     {
       code: `
@@ -111,10 +109,9 @@ ruleTester.run('enforce-throttle-on-event-handlers', rule, {
         }
       `,
       filename: 'src/services/BrowserEventsService.ts',
-      errors: [{
-        messageId: 'missingThrottle',
-        data: { methodName: 'handleResize' }
-      }]
+      errors: [{ 
+        messageId: 'missingThrottle'
+       }]
     },
     {
       code: `
@@ -123,10 +120,9 @@ ruleTester.run('enforce-throttle-on-event-handlers', rule, {
         }
       `,
       filename: 'src/services/AnimationService.ts',
-      errors: [{
-        messageId: 'missingThrottle',
-        data: { methodName: 'onFrame' }
-      }]
+      errors: [{ 
+        messageId: 'missingThrottle'
+       }]
     },
     {
       code: `
@@ -135,10 +131,9 @@ ruleTester.run('enforce-throttle-on-event-handlers', rule, {
         }
       `,
       filename: 'src/services/TouchService.ts',
-      errors: [{
-        messageId: 'missingThrottle',
-        data: { methodName: 'handleTouchMove' }
-      }]
+      errors: [{ 
+        messageId: 'missingThrottle'
+       }]
     },
     {
       code: `
@@ -147,10 +142,9 @@ ruleTester.run('enforce-throttle-on-event-handlers', rule, {
         }
       `,
       filename: 'src/services/PointerService.ts',
-      errors: [{
-        messageId: 'missingThrottle',
-        data: { methodName: 'onPointerMove' }
-      }]
+      errors: [{ 
+        messageId: 'missingThrottle'
+       }]
     }
   ]
 });

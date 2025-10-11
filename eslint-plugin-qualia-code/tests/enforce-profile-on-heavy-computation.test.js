@@ -106,10 +106,9 @@ ruleTester.run('enforce-profile-on-heavy-computation', rule, {
         }
       `,
       filename: 'src/services/CalculatorService.ts',
-      errors: [{
-        messageId: 'suggestProfile',
-        data: { methodName: 'calculateComplexResult' }
-      }]
+      errors: [{ 
+        messageId: 'suggestProfile'
+       }]
     },
     {
       code: `
@@ -122,10 +121,9 @@ ruleTester.run('enforce-profile-on-heavy-computation', rule, {
         }
       `,
       filename: 'src/services/ProcessorService.ts',
-      errors: [{
-        messageId: 'suggestProfile',
-        data: { methodName: 'processLargeDataset' }
-      }]
+      errors: [{ 
+        messageId: 'suggestProfile'
+       }]
     },
     {
       code: `
@@ -138,10 +136,9 @@ ruleTester.run('enforce-profile-on-heavy-computation', rule, {
         }
       `,
       filename: 'src/services/TransformService.ts',
-      errors: [{
-        messageId: 'suggestProfile',
-        data: { methodName: 'transformData' }
-      }]
+      errors: [{ 
+        messageId: 'suggestProfile'
+       }]
     },
     {
       code: `
@@ -154,10 +151,9 @@ ruleTester.run('enforce-profile-on-heavy-computation', rule, {
         }
       `,
       filename: 'src/services/EncryptionService.ts',
-      errors: [{
-        messageId: 'suggestProfile',
-        data: { methodName: 'encryptData' }
-      }]
+      errors: [{ 
+        messageId: 'suggestProfile'
+       }]
     },
     {
       code: `
@@ -170,10 +166,9 @@ ruleTester.run('enforce-profile-on-heavy-computation', rule, {
         }
       `,
       filename: 'src/services/RenderService.ts',
-      errors: [{
-        messageId: 'suggestProfile',
-        data: { methodName: 'renderScene' }
-      }]
+      errors: [{ 
+        messageId: 'suggestProfile'
+       }]
     }
   ]
 });

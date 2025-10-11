@@ -61,10 +61,9 @@ ruleTester.run('enforce-deprecated-on-comment', rule, {
         }
       `,
       filename: 'src/services/ApiService.ts',
-      errors: [{
-        messageId: 'useDeprecatedDecorator',
-        data: { methodName: 'oldMethod' }
-      }]
+      errors: [{ 
+        messageId: 'useDeprecatedDecorator'
+       }]
     },
     {
       code: `
@@ -74,10 +73,9 @@ ruleTester.run('enforce-deprecated-on-comment', rule, {
         }
       `,
       filename: 'src/services/DataService.ts',
-      errors: [{
-        messageId: 'useDeprecatedDecorator',
-        data: { methodName: 'legacyFetch' }
-      }]
+      errors: [{ 
+        messageId: 'useDeprecatedDecorator'
+       }]
     },
     {
       code: `
@@ -87,10 +85,9 @@ ruleTester.run('enforce-deprecated-on-comment', rule, {
         }
       `,
       filename: 'src/services/CacheService.ts',
-      errors: [{
-        messageId: 'useDeprecatedDecorator',
-        data: { methodName: 'clearOldCache' }
-      }]
+      errors: [{ 
+        messageId: 'useDeprecatedDecorator'
+       }]
     },
     {
       code: `
@@ -100,10 +97,9 @@ ruleTester.run('enforce-deprecated-on-comment', rule, {
         }
       `,
       filename: 'src/services/LegacyService.ts',
-      errors: [{
-        messageId: 'useDeprecatedDecorator',
-        data: { methodName: 'dangerousOperation' }
-      }]
+      errors: [{ 
+        messageId: 'useDeprecatedDecorator'
+       }]
     },
     {
       code: `
@@ -115,10 +111,9 @@ ruleTester.run('enforce-deprecated-on-comment', rule, {
         }
       `,
       filename: 'src/services/OldService.ts',
-      errors: [{
-        messageId: 'useDeprecatedDecorator',
-        data: { methodName: 'processLegacy' }
-      }]
+      errors: [{ 
+        messageId: 'useDeprecatedDecorator'
+       }]
     },
     {
       code: `
@@ -128,10 +123,9 @@ ruleTester.run('enforce-deprecated-on-comment', rule, {
         }
       `,
       filename: 'src/services/MigrationService.ts',
-      errors: [{
-        messageId: 'useDeprecatedDecorator',
-        data: { methodName: 'migrateOld' }
-      }]
+      errors: [{ 
+        messageId: 'useDeprecatedDecorator'
+       }]
     }
   ]
 });

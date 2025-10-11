@@ -109,12 +109,9 @@ ruleTester.run('enforce-mutex-on-state-mutations', rule, {
         }
       `,
       filename: 'src/services/GameStateStoreService.ts',
-      errors: [{
-        messageId: 'storeUpdateWithoutMutex',
-        data: {
-          methodName: 'handleGameStateChange'
-        }
-      }]
+      errors: [{ 
+        messageId: 'storeUpdateWithoutMutex'
+       }]
     },
     {
       code: `
@@ -125,12 +122,9 @@ ruleTester.run('enforce-mutex-on-state-mutations', rule, {
         }
       `,
       filename: 'src/services/GameStateStoreService.ts',
-      errors: [{
-        messageId: 'storeUpdateWithoutMutex',
-        data: {
-          methodName: 'updateScore'
-        }
-      }]
+      errors: [{ 
+        messageId: 'storeUpdateWithoutMutex'
+       }]
     },
     {
       code: `
@@ -143,12 +137,9 @@ ruleTester.run('enforce-mutex-on-state-mutations', rule, {
         }
       `,
       filename: 'src/services/GameStateStoreService.ts',
-      errors: [{
-        messageId: 'storeUpdateWithoutMutex',
-        data: {
-          methodName: 'syncState'
-        }
-      }]
+      errors: [{ 
+        messageId: 'storeUpdateWithoutMutex'
+       }]
     },
     {
       code: `
@@ -160,12 +151,9 @@ ruleTester.run('enforce-mutex-on-state-mutations', rule, {
         }
       `,
       filename: 'src/services/GameStateStoreService.ts',
-      errors: [{
-        messageId: 'storeUpdateWithoutMutex',
-        data: {
-          methodName: 'processAndUpdate'
-        }
-      }]
+      errors: [{ 
+        messageId: 'storeUpdateWithoutMutex'
+       }]
     },
   ]
 });

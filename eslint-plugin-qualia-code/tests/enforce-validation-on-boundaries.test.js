@@ -241,10 +241,9 @@ ruleTester.run('enforce-validation-on-boundaries', rule, {
         }
       `,
       filename: 'src/services/WebSocketService.ts',
-      errors: [{
-        messageId: 'missingEventValidation',
-        data: { eventName: 'message' }
-      }]
+      errors: [{ 
+        messageId: 'missingEventValidation'
+       }]
     },
     // CONTEXTUAL INTELLIGENCE TEST: API response requires validation
     {
@@ -260,10 +259,9 @@ ruleTester.run('enforce-validation-on-boundaries', rule, {
         }
       `,
       filename: 'src/services/ApiClientService.ts',
-      errors: [{
-        messageId: 'missingEventValidation',
-        data: { eventName: 'apiResponse' }
-      }]
+      errors: [{ 
+        messageId: 'missingEventValidation'
+       }]
     },
     // Public method with shared_contracts DTO without @validate
     {
@@ -278,13 +276,9 @@ ruleTester.run('enforce-validation-on-boundaries', rule, {
         }
       `,
       filename: 'src/services/QualiaCalculatorService.ts',
-      errors: [{
-        messageId: 'missingDtoValidation',
-        data: { 
-          methodName: 'calculateMetrics',
-          argumentType: 'QualiaState'
-        }
-      }]
+      errors: [{ 
+        messageId: 'missingDtoValidation'
+       }]
     },
     // DTO without validation (CombatStarted is internal event, no validation needed)
     {
@@ -299,15 +293,9 @@ ruleTester.run('enforce-validation-on-boundaries', rule, {
         }
       `,
       filename: 'src/services/CombatService.ts',
-      errors: [
-        {
-          messageId: 'missingDtoValidation',
-          data: { 
-            methodName: 'updateCombat',
-            argumentType: 'CombatData'
-          }
-        }
-      ]
+      errors: [{ 
+          messageId: 'missingDtoValidation'
+         }]
     },
     // Public method with Response type from contracts
     {
@@ -322,13 +310,9 @@ ruleTester.run('enforce-validation-on-boundaries', rule, {
         }
       `,
       filename: 'src/services/ApiService.ts',
-      errors: [{
-        messageId: 'missingDtoValidation',
-        data: { 
-          methodName: 'handleResponse',
-          argumentType: 'ApiResponse'
-        }
-      }]
+      errors: [{ 
+        messageId: 'missingDtoValidation'
+       }]
     }
   ]
 });

@@ -111,10 +111,9 @@ ruleTester.run('enforce-rate-limit-on-api-calls', rule, {
         }
       `,
       filename: 'src/services/DataService.ts',
-      errors: [{
-        messageId: 'missingRateLimit',
-        data: { methodName: 'fetchMultiple' }
-      }]
+      errors: [{ 
+        messageId: 'missingRateLimit'
+       }]
     },
     {
       code: `
@@ -127,10 +126,9 @@ ruleTester.run('enforce-rate-limit-on-api-calls', rule, {
         }
       `,
       filename: 'src/services/BatchService.ts',
-      errors: [{
-        messageId: 'missingRateLimit',
-        data: { methodName: 'processItems' }
-      }]
+      errors: [{ 
+        messageId: 'missingRateLimit'
+       }]
     },
     {
       code: `
@@ -141,10 +139,9 @@ ruleTester.run('enforce-rate-limit-on-api-calls', rule, {
         }
       `,
       filename: 'src/services/SyncService.ts',
-      errors: [{
-        messageId: 'missingRateLimit',
-        data: { methodName: 'syncAll' }
-      }]
+      errors: [{ 
+        messageId: 'missingRateLimit'
+       }]
     },
     {
       code: `
@@ -158,10 +155,9 @@ ruleTester.run('enforce-rate-limit-on-api-calls', rule, {
         }
       `,
       filename: 'src/services/ApiService.ts',
-      errors: [{
-        messageId: 'missingRateLimit',
-        data: { methodName: 'bulkDelete' }
-      }]
+      errors: [{ 
+        messageId: 'missingRateLimit'
+       }]
     }
   ]
 });

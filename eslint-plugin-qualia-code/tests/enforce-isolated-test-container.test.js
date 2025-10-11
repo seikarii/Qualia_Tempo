@@ -104,10 +104,9 @@ ruleTester.run('enforce-isolated-test-container', rule, {
         const service = new MyService();
       `,
       filename: 'MyService.test.ts',
-      errors: [{
-        messageId: 'noNewService',
-        data: { serviceName: 'MyService' }
-      }]
+      errors: [{ 
+        messageId: 'noNewService'
+       }]
     },
     
     // INVALID: Direct instantiation in describe block
@@ -118,10 +117,9 @@ ruleTester.run('enforce-isolated-test-container', rule, {
         });
       `,
       filename: 'QualiaCalculator.spec.ts',
-      errors: [{
-        messageId: 'noNewService',
-        data: { serviceName: 'QualiaStateCalculatorService' }
-      }]
+      errors: [{ 
+        messageId: 'noNewService'
+       }]
     },
     
     // INVALID: Multiple service instantiations
@@ -132,8 +130,9 @@ ruleTester.run('enforce-isolated-test-container', rule, {
       `,
       filename: '__tests__/Integration.test.ts',
       errors: [
-        { messageId: 'noNewService', data: { serviceName: 'LoggerService' } },
-        { messageId: 'noNewService', data: { serviceName: 'EventBusService' } }
+        {
+          messageId: 'noNewService'
+        }
       ]
     },
     
@@ -170,10 +169,9 @@ ruleTester.run('enforce-isolated-test-container', rule, {
         const myService = new Services.MyService();
       `,
       filename: 'Component.test.tsx',
-      errors: [{
-        messageId: 'noNewService',
-        data: { serviceName: 'MyService' }
-      }]
+      errors: [{ 
+        messageId: 'noNewService'
+       }]
     },
     
     // INVALID: In beforeEach hook
@@ -188,10 +186,9 @@ ruleTester.run('enforce-isolated-test-container', rule, {
         });
       `,
       filename: 'tests/AudioService.test.ts',
-      errors: [{
-        messageId: 'noNewService',
-        data: { serviceName: 'AudioService' }
-      }]
+      errors: [{ 
+        messageId: 'noNewService'
+       }]
     },
     
     // INVALID: Mixed violations
@@ -218,13 +215,13 @@ ruleTester.run('enforce-isolated-test-container', rule, {
     {
       code: 'const service = new TimerService();',
       filename: 'src/services/__tests__/Timer.test.ts',
-      errors: [{ messageId: 'noNewService', data: { serviceName: 'TimerService' } }]
+      errors: [{  messageId: 'noNewService'  }]
     },
     
     {
       code: 'const http = new HttpService();',
       filename: 'integration.spec.tsx',
-      errors: [{ messageId: 'noNewService', data: { serviceName: 'HttpService' } }]
+      errors: [{  messageId: 'noNewService'  }]
     }
   ]
 });

@@ -794,21 +794,100 @@ function detectPrivilegedOperations(methodNode) {
 function detectIOOperations(methodNode) {
   const operations = [];
   
+  // Known I/O-related object names (services, libraries, APIs)
+  const ioServiceNames = [
+    'httpService', 'HttpService', 'apiService', 'ApiService',
+    'fetch', 'axios', 'request',
+    'backendSyncService', 'BackendSyncService',
+    'websocket', 'WebSocket', 'webSocketService', 'WebSocketService',
+    'database', 'db', 'dbService', 'DatabaseService',
+    'localStorage', 'sessionStorage', 'indexedDB'
+  ];
+
+  // Common non-I/O objects that have similar method names
+  const nonIOObjects = [
+    'Map', 'Set', 'WeakMap', 'WeakSet',
+    'cache', 'pool', 'timers', 'activeTimeouts', 'activeNotifications',
+    'pressedKeys', 'justPressedKeys', 'soundSources',
+    'timerProvider', 'gainNode', 'pannerNode'
+  ];
+  
   function traverse(node) {
     if (!node) return;
 
-    // fetch(...), axios.get(...), httpService.post(...)
+    // fetch(...) - standalone function call
     if (node.type === 'CallExpression') {
       if (node.callee.type === 'Identifier' && node.callee.name === 'fetch') {
         operations.push({ type: 'HTTP', operation: 'fetch' });
       }
       
+      // this.httpService.get(...), axios.get(...), etc.
       if (node.callee.type === 'MemberExpression') {
         const object = node.callee.object;
         const property = node.callee.property;
         
-        if (property && ['get', 'post', 'put', 'delete', 'patch', 'request'].includes(property.name)) {
-          operations.push({ type: 'HTTP', operation: property.name });
+        if (!property) return;
+        
+        const httpMethods = ['get', 'post', 'put', 'delete', 'patch', 'request', 'fetch'];
+        
+        // Check if it's an HTTP method call
+        if (httpMethods.includes(property.name)) {
+          // Determine the object name
+          let objectName = null;
+          
+          if (object.type === 'Identifier') {
+            objectName = object.name;
+          } else if (object.type === 'MemberExpression' && object.property) {
+            // this.httpService -> httpService
+            objectName = object.property.name;
+          } else if (object.type === 'ThisExpression') {
+            // this.get() - unlikely to be I/O but check context
+            return;
+          }
+          
+          // Skip if it's a known non-I/O object (Map, Set, cache, etc.)
+          if (objectName && nonIOObjects.some(nonIO => 
+            objectName === nonIO || objectName.toLowerCase().includes(nonIO.toLowerCase()))) {
+            return;
+          }
+          
+          // Include if it's a known I/O service OR uses typical HTTP method names on unknown services
+          const isKnownIOService = objectName && ioServiceNames.some(io => 
+            objectName === io || objectName.toLowerCase().includes(io.toLowerCase()));
+          
+          const isLikelyHTTPMethod = ['get', 'post', 'put', 'patch'].includes(property.name);
+          
+          if (isKnownIOService || (isLikelyHTTPMethod && objectName && !objectName.match(/^(this|self)$/i))) {
+            operations.push({ type: 'HTTP', operation: property.name });
+          }
+        }
+        
+        // WebSocket operations
+        const webSocketMethods = ['send', 'connect', 'disconnect', 'emit'];
+        if (webSocketMethods.includes(property.name)) {
+          let objectName = null;
+          if (object.type === 'Identifier') {
+            objectName = object.name;
+          } else if (object.type === 'MemberExpression' && object.property) {
+            objectName = object.property.name;
+          }
+          
+          if (objectName && (objectName.toLowerCase().includes('websocket') || objectName.toLowerCase().includes('socket'))) {
+            operations.push({ type: 'WebSocket', operation: property.name });
+          }
+        }
+        
+        // localStorage, sessionStorage operations
+        const storageOps = ['getItem', 'setItem', 'removeItem', 'clear'];
+        if (storageOps.includes(property.name)) {
+          let objectName = null;
+          if (object.type === 'Identifier') {
+            objectName = object.name;
+          }
+          
+          if (objectName && (objectName === 'localStorage' || objectName === 'sessionStorage')) {
+            operations.push({ type: 'Storage', operation: property.name });
+          }
         }
       }
     }

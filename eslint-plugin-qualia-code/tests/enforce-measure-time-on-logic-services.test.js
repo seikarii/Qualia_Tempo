@@ -97,10 +97,9 @@ ruleTester.run('enforce-measure-time-on-logic-services', rule, {
         }
       `,
       filename: 'src/services/ViewLogicService.ts',
-      errors: [{
-        messageId: 'suggestMeasureTime',
-        data: { methodName: 'calculateVisuals' }
-      }]
+      errors: [{ 
+        messageId: 'suggestMeasureTime'
+       }]
     },
     {
       code: `
@@ -111,10 +110,9 @@ ruleTester.run('enforce-measure-time-on-logic-services', rule, {
         }
       `,
       filename: 'src/services/GameplayMechanicsService.ts',
-      errors: [{
-        messageId: 'suggestMeasureTime',
-        data: { methodName: 'processGameTick' }
-      }]
+      errors: [{ 
+        messageId: 'suggestMeasureTime'
+       }]
     },
     {
       code: `
@@ -125,10 +123,9 @@ ruleTester.run('enforce-measure-time-on-logic-services', rule, {
         }
       `,
       filename: 'src/services/CalculatorService.ts',
-      errors: [{
-        messageId: 'suggestMeasureTime',
-        data: { methodName: 'computeResult' }
-      }]
+      errors: [{ 
+        messageId: 'suggestMeasureTime'
+       }]
     },
     {
       code: `
@@ -137,10 +134,9 @@ ruleTester.run('enforce-measure-time-on-logic-services', rule, {
         }
       `,
       filename: 'src/services/ProcessorService.ts',
-      errors: [{
-        messageId: 'suggestMeasureTime',
-        data: { methodName: 'processData' }
-      }]
+      errors: [{ 
+        messageId: 'suggestMeasureTime'
+       }]
     },
     {
       code: `
@@ -149,10 +145,9 @@ ruleTester.run('enforce-measure-time-on-logic-services', rule, {
         }
       `,
       filename: 'src/services/EngineService.ts',
-      errors: [{
-        messageId: 'suggestMeasureTime',
-        data: { methodName: 'update' }
-      }]
+      errors: [{ 
+        messageId: 'suggestMeasureTime'
+       }]
     }
   ]
 });

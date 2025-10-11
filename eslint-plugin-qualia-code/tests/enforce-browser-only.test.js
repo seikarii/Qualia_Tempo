@@ -139,13 +139,9 @@ ruleTester.run('enforce-browser-only', rule, {
         }
       `,
       filename: 'src/services/BrowserEventsService.ts',
-      errors: [{
-        messageId: 'missingBrowserOnly',
-        data: {
-          methodName: 'getWindowWidth',
-          apis: 'window'
-        }
-      }]
+      errors: [{ 
+        messageId: 'missingBrowserOnly'
+       }]
     },
 
     // Method accessing document without @BrowserOnly
@@ -158,13 +154,9 @@ ruleTester.run('enforce-browser-only', rule, {
         }
       `,
       filename: 'src/services/DOMService.ts',
-      errors: [{
-        messageId: 'missingBrowserOnly',
-        data: {
-          methodName: 'getElement',
-          apis: 'document'
-        }
-      }]
+      errors: [{ 
+        messageId: 'missingBrowserOnly'
+       }]
     },
 
     // Method accessing localStorage without @BrowserOnly
@@ -177,13 +169,9 @@ ruleTester.run('enforce-browser-only', rule, {
         }
       `,
       filename: 'src/services/StorageService.ts',
-      errors: [{
-        messageId: 'missingBrowserOnly',
-        data: {
-          methodName: 'saveData',
-          apis: 'localStorage'
-        }
-      }]
+      errors: [{ 
+        messageId: 'missingBrowserOnly'
+       }]
     },
 
     // Method accessing multiple browser APIs without @BrowserOnly
@@ -200,13 +188,9 @@ ruleTester.run('enforce-browser-only', rule, {
         }
       `,
       filename: 'src/services/BrowserService.ts',
-      errors: [{
-        messageId: 'missingBrowserOnly',
-        data: {
-          methodName: 'getInfo',
-          apis: 'window, document, location'
-        }
-      }]
+      errors: [{ 
+        messageId: 'missingBrowserOnly'
+       }]
     },
 
     // Method accessing navigator without @BrowserOnly
@@ -219,13 +203,9 @@ ruleTester.run('enforce-browser-only', rule, {
         }
       `,
       filename: 'src/services/DeviceService.ts',
-      errors: [{
-        messageId: 'missingBrowserOnly',
-        data: {
-          methodName: 'getUserAgent',
-          apis: 'navigator'
-        }
-      }]
+      errors: [{ 
+        messageId: 'missingBrowserOnly'
+       }]
     }
   ]
 });

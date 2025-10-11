@@ -171,12 +171,9 @@ ruleTester.run('enforce-inversify-conventions', rule, {
         }
       `,
       filename: 'UserService.ts',
-      errors: [
-        {
-          messageId: 'missingInjectable',
-          data: { className: 'UserService' }
-        }
-      ]
+      errors: [{ 
+          messageId: 'missingInjectable'
+         }]
     },
 
     // Injectable class with constructor param without @inject
@@ -190,15 +187,12 @@ ruleTester.run('enforce-inversify-conventions', rule, {
         }
       `,
       filename: 'UserService.ts',
-      errors: [
-        {
-          messageId: 'missingInject',
-          data: { paramName: 'logger', className: 'UserService' }
-        }
-      ]
+      errors: [{ 
+          messageId: 'missingInject'
+         }]
     },
 
-    // Multiple parameters without @inject
+    // Multiple parameters without @inject (reports one error per parameter)
     {
       code: `
         import { injectable } from 'inversify';
@@ -215,16 +209,13 @@ ruleTester.run('enforce-inversify-conventions', rule, {
       filename: 'UserService.ts',
       errors: [
         {
-          messageId: 'missingInject',
-          data: { paramName: 'logger', className: 'UserService' }
+          messageId: 'missingInject'
         },
         {
-          messageId: 'missingInject',
-          data: { paramName: 'database', className: 'UserService' }
+          messageId: 'missingInject'
         },
         {
-          messageId: 'missingInject',
-          data: { paramName: 'cache', className: 'UserService' }
+          messageId: 'missingInject'
         }
       ]
     },

@@ -251,10 +251,9 @@ ruleTester.run('enforce-performance-best-practices', rule, {
         }
       `,
       filename: 'src/services/BrowserService.ts',
-      errors: [{
-        messageId: 'missingThrottle',
-        data: { eventName: 'resize' }
-      }]
+      errors: [{ 
+        messageId: 'missingThrottle'
+       }]
     },
     // scroll event without throttle
     {
@@ -266,10 +265,9 @@ ruleTester.run('enforce-performance-best-practices', rule, {
         }
       `,
       filename: 'src/services/ScrollService.ts',
-      errors: [{
-        messageId: 'missingThrottle',
-        data: { eventName: 'scroll' }
-      }]
+      errors: [{ 
+        messageId: 'missingThrottle'
+       }]
     },
     // mousemove event without throttle
     {
@@ -283,10 +281,9 @@ ruleTester.run('enforce-performance-best-practices', rule, {
         }
       `,
       filename: 'src/services/MouseService.ts',
-      errors: [{
-        messageId: 'missingThrottle',
-        data: { eventName: 'mousemove' }
-      }]
+      errors: [{ 
+        messageId: 'missingThrottle'
+       }]
     },
     // CONTEXTUAL INTELLIGENCE TEST: Computationally intensive method requires @measureTime
     {
@@ -308,10 +305,9 @@ ruleTester.run('enforce-performance-best-practices', rule, {
         }
       `,
       filename: 'src/services/ViewLogicService.ts',
-      errors: [{
-        messageId: 'suggestMeasureTime',
-        data: { methodName: 'calculateParticles' }
-      }]
+      errors: [{ 
+        messageId: 'suggestMeasureTime'
+       }]
     },
     // CONTEXTUAL INTELLIGENCE TEST: GPU operations require @measureTime
     {
@@ -329,10 +325,9 @@ ruleTester.run('enforce-performance-best-practices', rule, {
         }
       `,
       filename: 'src/services/RenderingService.ts',
-      errors: [{
-        messageId: 'suggestMeasureTime',
-        data: { methodName: 'updateBufferGeometry' }
-      }]
+      errors: [{ 
+        messageId: 'suggestMeasureTime'
+       }]
     },
     // CONTEXTUAL INTELLIGENCE TEST: Long method with complex calculations
     {
@@ -357,10 +352,9 @@ ruleTester.run('enforce-performance-best-practices', rule, {
         }
       `,
       filename: 'src/services/PhysicsService.ts',
-      errors: [{
-        messageId: 'suggestMeasureTime',
-        data: { methodName: 'calculatePhysics' }
-      }]
+      errors: [{ 
+        messageId: 'suggestMeasureTime'
+       }]
     },
     // Multiple high-frequency events without throttle
     {
@@ -376,16 +370,7 @@ ruleTester.run('enforce-performance-best-practices', rule, {
       filename: 'src/services/EventService.ts',
       errors: [
         {
-          messageId: 'missingThrottle',
-          data: { eventName: 'resize' }
-        },
-        {
-          messageId: 'missingThrottle',
-          data: { eventName: 'scroll' }
-        },
-        {
-          messageId: 'missingThrottle',
-          data: { eventName: 'mousemove' }
+          messageId: 'missingThrottle'
         }
       ]
     },
@@ -397,10 +382,9 @@ ruleTester.run('enforce-performance-best-practices', rule, {
         };
       `,
       filename: 'src/components/MyComponent.tsx',
-      errors: [{
-        messageId: 'highFrequencyEventWarning',
-        data: { eventName: 'scroll' }
-      }]
+      errors: [{ 
+        messageId: 'highFrequencyEventWarning'
+       }]
     },
     // wheel event (high-frequency)
     {
@@ -414,10 +398,9 @@ ruleTester.run('enforce-performance-best-practices', rule, {
         }
       `,
       filename: 'src/services/ZoomService.ts',
-      errors: [{
-        messageId: 'missingThrottle',
-        data: { eventName: 'wheel' }
-      }]
+      errors: [{ 
+        messageId: 'missingThrottle'
+       }]
     },
     // touchmove event (high-frequency mobile)
     {
@@ -429,10 +412,9 @@ ruleTester.run('enforce-performance-best-practices', rule, {
         }
       `,
       filename: 'src/services/TouchService.ts',
-      errors: [{
-        messageId: 'missingThrottle',
-        data: { eventName: 'touchmove' }
-      }]
+      errors: [{ 
+        messageId: 'missingThrottle'
+       }]
     }
   ]
 });

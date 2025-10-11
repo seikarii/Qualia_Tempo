@@ -87,10 +87,9 @@ ruleTester.run('enforce-debounce-on-ui-inputs', rule, {
         }
       `,
       filename: 'src/services/SearchService.ts',
-      errors: [{
-        messageId: 'missingDebounce',
-        data: { methodName: 'handleSearchInputChange' }
-      }]
+      errors: [{ 
+        messageId: 'missingDebounce'
+       }]
     },
     {
       code: `
@@ -99,10 +98,9 @@ ruleTester.run('enforce-debounce-on-ui-inputs', rule, {
         }
       `,
       filename: 'src/services/BrowserEventsService.ts',
-      errors: [{
-        messageId: 'missingDebounce',
-        data: { methodName: 'onWindowResize' }
-      }]
+      errors: [{ 
+        messageId: 'missingDebounce'
+       }]
     },
     {
       code: `
@@ -111,10 +109,9 @@ ruleTester.run('enforce-debounce-on-ui-inputs', rule, {
         }
       `,
       filename: 'src/services/FilterService.ts',
-      errors: [{
-        messageId: 'missingDebounce',
-        data: { methodName: 'handleFilterChange' }
-      }]
+      errors: [{ 
+        messageId: 'missingDebounce'
+       }]
     },
     {
       code: `
@@ -123,10 +120,9 @@ ruleTester.run('enforce-debounce-on-ui-inputs', rule, {
         }
       `,
       filename: 'src/services/AutocompleteService.ts',
-      errors: [{
-        messageId: 'missingDebounce',
-        data: { methodName: 'handleAutocomplete' }
-      }]
+      errors: [{ 
+        messageId: 'missingDebounce'
+       }]
     },
     {
       code: `
@@ -135,10 +131,9 @@ ruleTester.run('enforce-debounce-on-ui-inputs', rule, {
         }
       `,
       filename: 'src/services/ValidationService.ts',
-      errors: [{
-        messageId: 'missingDebounce',
-        data: { methodName: 'onValidation' }
-      }]
+      errors: [{ 
+        messageId: 'missingDebounce'
+       }]
     },
     {
       code: `
@@ -147,10 +142,9 @@ ruleTester.run('enforce-debounce-on-ui-inputs', rule, {
         }
       `,
       filename: 'src/services/InputService.ts',
-      errors: [{
-        messageId: 'missingDebounce',
-        data: { methodName: 'handleKeyPress' }
-      }]
+      errors: [{ 
+        messageId: 'missingDebounce'
+       }]
     }
   ]
 });

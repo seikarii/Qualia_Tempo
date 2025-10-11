@@ -34,8 +34,10 @@ Required: Add @retry({ maxRetries: 3, backoff: 'exponential' }) decorator for fa
 
     return {
       MethodDefinition(node) {
-        // Skip if already has @retry decorator
-        const hasRetry = node.decorators?.some(d => d.expression?.callee?.name === 'retry');
+        // Skip if already has @retry decorator (with or without args)
+        const hasRetry = node.decorators?.some(d => {
+          return d.expression?.name === 'retry' || d.expression?.callee?.name === 'retry';
+        });
         if (hasRetry) return;
 
         // Skip if no body

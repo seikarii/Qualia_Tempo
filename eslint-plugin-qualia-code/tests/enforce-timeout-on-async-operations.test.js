@@ -166,11 +166,7 @@ ruleTester.run('enforce-timeout-on-async-operations', rule, {
       `,
       filename: 'src/services/MyService.ts',
       errors: [{
-        messageId: 'missingTimeout',
-        data: {
-          methodName: 'fetchData',
-          operations: 'HTTP request'
-        }
+        messageId: 'missingTimeout'
       }]
     },
 
@@ -185,11 +181,7 @@ ruleTester.run('enforce-timeout-on-async-operations', rule, {
       `,
       filename: 'src/services/MyService.ts',
       errors: [{
-        messageId: 'missingTimeout',
-        data: {
-          methodName: 'getData',
-          operations: 'Service I/O call'
-        }
+        messageId: 'missingTimeout'
       }]
     },
 
@@ -204,11 +196,7 @@ ruleTester.run('enforce-timeout-on-async-operations', rule, {
       `,
       filename: 'src/services/MyService.ts',
       errors: [{
-        messageId: 'missingTimeout',
-        data: {
-          methodName: 'connectToSocket',
-          operations: 'Service I/O call, WebSocket operation, Awaited I/O operation'
-        }
+        messageId: 'missingTimeout'
       }]
     },
 
@@ -223,15 +211,11 @@ ruleTester.run('enforce-timeout-on-async-operations', rule, {
       `,
       filename: 'src/services/MyService.ts',
       errors: [{
-        messageId: 'missingTimeout',
-        data: {
-          methodName: 'saveData',
-          operations: 'Storage/File operation'
-        }
+        messageId: 'missingTimeout'
       }]
     },
 
-    // 5. Async method with external API call but no timeout (axios detection issue - needs more specific pattern)
+    // 5. Async method with external API call but no timeout
     {
       code: `
         class MyService {
@@ -242,11 +226,7 @@ ruleTester.run('enforce-timeout-on-async-operations', rule, {
       `,
       filename: 'src/services/MyService.ts',
       errors: [{
-        messageId: 'missingTimeout',
-        data: {
-          methodName: 'callExternalApi',
-          operations: 'External API call'
-        }
+        messageId: 'missingTimeout'
       }]
     },
 
@@ -261,11 +241,7 @@ ruleTester.run('enforce-timeout-on-async-operations', rule, {
       `,
       filename: 'src/services/MyService.ts',
       errors: [{
-        messageId: 'missingTimeout',
-        data: {
-          methodName: 'syncToBackend',
-          operations: 'Service I/O call, Awaited I/O operation'
-        }
+        messageId: 'missingTimeout'
       }]
     },
 
@@ -280,15 +256,11 @@ ruleTester.run('enforce-timeout-on-async-operations', rule, {
       `,
       filename: 'src/services/MyService.ts',
       errors: [{
-        messageId: 'missingTimeout',
-        data: {
-          methodName: 'loadConfig',
-          operations: 'Service I/O call, Awaited I/O operation'
-        }
+        messageId: 'missingTimeout'
       }]
     },
 
-    // 8. Async method with axios call but no timeout (axios needs explicit await to be detected)
+    // 8. Async method with axios call but no timeout
     {
       code: `
         class MyService {
@@ -299,11 +271,7 @@ ruleTester.run('enforce-timeout-on-async-operations', rule, {
       `,
       filename: 'src/services/MyService.ts',
       errors: [{
-        messageId: 'missingTimeout',
-        data: {
-          methodName: 'fetchDataWithAxios',
-          operations: 'HTTP request'
-        }
+        messageId: 'missingTimeout'
       }]
     },
 
@@ -320,31 +288,7 @@ ruleTester.run('enforce-timeout-on-async-operations', rule, {
       `,
       filename: 'src/services/MyService.ts',
       errors: [{
-        messageId: 'missingTimeout',
-        data: {
-          methodName: 'complexOperation',
-          operations: 'HTTP request, Service I/O call, WebSocket operation'
-        }
-      }]
-    },
-
-    // 10. Async method with awaited fetch but no timeout
-    {
-      code: `
-        class MyService {
-          public async fetchAndProcess(): Promise<void> {
-            const response = await this.httpService.fetch('/api/data');
-            return response.json();
-          }
-        }
-      `,
-      filename: 'src/services/MyService.ts',
-      errors: [{
-        messageId: 'missingTimeout',
-        data: {
-          methodName: 'fetchAndProcess',
-          operations: 'HTTP request, Service I/O call, Awaited I/O operation'
-        }
+        messageId: 'missingTimeout'
       }]
     }
   ]

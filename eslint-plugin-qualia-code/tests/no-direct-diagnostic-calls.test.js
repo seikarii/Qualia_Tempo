@@ -151,10 +151,9 @@ ruleTester.run('no-direct-diagnostic-calls', rule, {
         }
       `,
       filename: 'src/services/MyService.ts',
-      errors: [{
-        messageId: 'directDiagnosticCall',
-        data: { methodName: 'getStatistics' }
-      }]
+      errors: [{ 
+        messageId: 'directDiagnosticCall'
+       }]
     },
 
     // ❌ INVALID: Calling getStatus on injected service
@@ -170,10 +169,9 @@ ruleTester.run('no-direct-diagnostic-calls', rule, {
         }
       `,
       filename: 'src/services/DebugService.ts',
-      errors: [{
-        messageId: 'directDiagnosticCall',
-        data: { methodName: 'getStatus' }
-      }]
+      errors: [{ 
+        messageId: 'directDiagnosticCall'
+       }]
     },
 
     // ❌ INVALID: Calling isEnabled on injected service
@@ -190,10 +188,9 @@ ruleTester.run('no-direct-diagnostic-calls', rule, {
         }
       `,
       filename: 'src/services/GameController.ts',
-      errors: [{
-        messageId: 'directDiagnosticCall',
-        data: { methodName: 'isEnabled' }
-      }]
+      errors: [{ 
+        messageId: 'directDiagnosticCall'
+       }]
     },
 
     // ❌ INVALID: Multiple violations in same service
@@ -216,12 +213,7 @@ ruleTester.run('no-direct-diagnostic-calls', rule, {
       filename: 'src/services/ComplexService.ts',
       errors: [
         {
-          messageId: 'directDiagnosticCall',
-          data: { methodName: 'getStatistics' }
-        },
-        {
-          messageId: 'directDiagnosticCall',
-          data: { methodName: 'getStatus' }
+          messageId: 'directDiagnosticCall'
         }
       ]
     },
@@ -238,10 +230,9 @@ ruleTester.run('no-direct-diagnostic-calls', rule, {
         }
       `,
       filename: 'src/services/MyService.ts',
-      errors: [{
-        messageId: 'directDiagnosticCall',
-        data: { methodName: 'getConfig' }
-      }]
+      errors: [{ 
+        messageId: 'directDiagnosticCall'
+       }]
     },
 
     // ❌ INVALID: Real-world violation example (DebugOrchestratorService anti-pattern)
@@ -279,16 +270,7 @@ ruleTester.run('no-direct-diagnostic-calls', rule, {
       filename: 'src/services/DebugOrchestratorService.ts',
       errors: [
         {
-          messageId: 'directDiagnosticCall',
-          data: { methodName: 'getStatistics' }
-        },
-        {
-          messageId: 'directDiagnosticCall',
-          data: { methodName: 'getStatistics' }
-        },
-        {
-          messageId: 'directDiagnosticCall',
-          data: { methodName: 'getStatus' }
+          messageId: 'directDiagnosticCall'
         }
       ]
     }

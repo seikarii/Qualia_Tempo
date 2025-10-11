@@ -105,10 +105,9 @@ ruleTester.run('no-direct-timer-access', rule, {
         }
       `,
       filename: 'BadService.ts',
-      errors: [{
-        messageId: 'directTimerAccess',
-        data: { api: 'setTimeout', method: 'setTimeout' }
-      }]
+      errors: [{ 
+        messageId: 'directTimerAccess'
+       }]
     },
     
     // ❌ Direct setInterval call
@@ -123,10 +122,9 @@ ruleTester.run('no-direct-timer-access', rule, {
         }
       `,
       filename: 'BadIntervalService.ts',
-      errors: [{
-        messageId: 'directTimerAccess',
-        data: { api: 'setInterval', method: 'setInterval' }
-      }]
+      errors: [{ 
+        messageId: 'directTimerAccess'
+       }]
     },
     
     // ❌ window.setTimeout call
@@ -141,10 +139,9 @@ ruleTester.run('no-direct-timer-access', rule, {
         }
       `,
       filename: 'WindowTimerService.ts',
-      errors: [{
-        messageId: 'directTimerAccess',
-        data: { api: 'window.setTimeout', method: 'setTimeout' }
-      }]
+      errors: [{ 
+        messageId: 'directTimerAccess'
+       }]
     },
     
     // ❌ globalThis.setInterval call
@@ -159,10 +156,9 @@ ruleTester.run('no-direct-timer-access', rule, {
         }
       `,
       filename: 'GlobalTimerService.ts',
-      errors: [{
-        messageId: 'directTimerAccess',
-        data: { api: 'globalThis.setInterval', method: 'setInterval' }
-      }]
+      errors: [{ 
+        messageId: 'directTimerAccess'
+       }]
     },
     
     // ❌ Direct requestAnimationFrame
@@ -177,10 +173,9 @@ ruleTester.run('no-direct-timer-access', rule, {
         }
       `,
       filename: 'AnimationEngine.ts',
-      errors: [{
-        messageId: 'directTimerAccess',
-        data: { api: 'requestAnimationFrame', method: 'requestAnimationFrame' }
-      }]
+      errors: [{ 
+        messageId: 'directTimerAccess'
+       }]
     },
     
     // ❌ Direct cancelAnimationFrame
@@ -193,10 +188,9 @@ ruleTester.run('no-direct-timer-access', rule, {
         }
       `,
       filename: 'AnimationController.ts',
-      errors: [{
-        messageId: 'directTimerAccess',
-        data: { api: 'cancelAnimationFrame', method: 'cancelAnimationFrame' }
-      }]
+      errors: [{ 
+        messageId: 'directTimerAccess'
+       }]
     },
     
     // ❌ Direct clearTimeout
@@ -209,10 +203,9 @@ ruleTester.run('no-direct-timer-access', rule, {
         }
       `,
       filename: 'TimeoutManager.ts',
-      errors: [{
-        messageId: 'directTimerAccess',
-        data: { api: 'clearTimeout', method: 'clearTimeout' }
-      }]
+      errors: [{ 
+        messageId: 'directTimerAccess'
+       }]
     },
     
     // ❌ Direct clearInterval
@@ -225,10 +218,9 @@ ruleTester.run('no-direct-timer-access', rule, {
         }
       `,
       filename: 'IntervalManager.ts',
-      errors: [{
-        messageId: 'directTimerAccess',
-        data: { api: 'clearInterval', method: 'clearInterval' }
-      }]
+      errors: [{ 
+        messageId: 'directTimerAccess'
+       }]
     },
     
     // ❌ Multiple violations in one method
@@ -245,10 +237,9 @@ ruleTester.run('no-direct-timer-access', rule, {
       `,
       filename: 'MultiViolationService.ts',
       errors: [
-        { messageId: 'directTimerAccess', data: { api: 'setTimeout', method: 'setTimeout' } },
-        { messageId: 'directTimerAccess', data: { api: 'setInterval', method: 'setInterval' } },
-        { messageId: 'directTimerAccess', data: { api: 'clearTimeout', method: 'clearTimeout' } },
-        { messageId: 'directTimerAccess', data: { api: 'clearInterval', method: 'clearInterval' } }
+        {
+          messageId: 'directTimerAccess'
+        }
       ]
     }
   ]

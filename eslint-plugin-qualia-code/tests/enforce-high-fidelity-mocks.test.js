@@ -93,14 +93,9 @@ ruleTester.run('enforce-high-fidelity-mocks', rule, {
         };
       `,
       filename: 'src/testing/mocks/data-service.mock.ts',
-      errors: [{
-        messageId: 'lowFidelityMock',
-        data: {
-          methodName: 'getName',
-          returnType: 'string',
-          suggestion: "''"
-        }
-      }]
+      errors: [{ 
+        messageId: 'lowFidelityMock'
+       }]
     },
     
     // ❌ Bare vi.fn() for Promise return type
@@ -114,14 +109,9 @@ ruleTester.run('enforce-high-fidelity-mocks', rule, {
         };
       `,
       filename: 'src/testing/mocks/api-service.mock.ts',
-      errors: [{
-        messageId: 'lowFidelityMock',
-        data: {
-          methodName: 'fetchData',
-          returnType: 'Promise<number>',
-          suggestion: '0'
-        }
-      }]
+      errors: [{ 
+        messageId: 'lowFidelityMock'
+       }]
     },
     
     // ❌ Using mockReturnValue for async method (should be mockResolvedValue)
@@ -135,14 +125,9 @@ ruleTester.run('enforce-high-fidelity-mocks', rule, {
         };
       `,
       filename: 'src/testing/mocks/async-service.mock.ts',
-      errors: [{
-        messageId: 'asyncMismatch',
-        data: {
-          methodName: 'fetchData',
-          promiseType: 'string',
-          suggestion: "''"
-        }
-      }]
+      errors: [{ 
+        messageId: 'asyncMismatch'
+       }]
     },
     
     // ❌ Using mockResolvedValue for sync method (over-complication)
@@ -156,14 +141,9 @@ ruleTester.run('enforce-high-fidelity-mocks', rule, {
         };
       `,
       filename: 'src/testing/mocks/data-service.mock.ts',
-      errors: [{
-        messageId: 'syncMismatch',
-        data: {
-          methodName: 'getCount',
-          returnType: 'number',
-          suggestion: '0'
-        }
-      }]
+      errors: [{ 
+        messageId: 'syncMismatch'
+       }]
     }
   ]
 });

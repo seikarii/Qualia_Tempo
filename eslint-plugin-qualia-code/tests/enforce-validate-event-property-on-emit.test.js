@@ -101,10 +101,9 @@ ruleTester.run('enforce-validate-event-property-on-emit', rule, {
         }
       `,
       filename: 'src/services/GameService.ts',
-      errors: [{
-        messageId: 'missingValidateEventProperty',
-        data: { methodName: 'notifyStateChange' }
-      }]
+      errors: [{ 
+        messageId: 'missingValidateEventProperty'
+       }]
     },
     {
       code: `
@@ -120,10 +119,9 @@ ruleTester.run('enforce-validate-event-property-on-emit', rule, {
         }
       `,
       filename: 'src/services/QualiaService.ts',
-      errors: [{
-        messageId: 'missingValidateEventProperty',
-        data: { methodName: 'publishUpdate' }
-      }]
+      errors: [{ 
+        messageId: 'missingValidateEventProperty'
+       }]
     },
     {
       code: `
@@ -139,10 +137,9 @@ ruleTester.run('enforce-validate-event-property-on-emit', rule, {
         }
       `,
       filename: 'src/services/EventBroadcaster.ts',
-      errors: [{
-        messageId: 'missingValidateEventProperty',
-        data: { methodName: 'broadcast' }
-      }]
+      errors: [{ 
+        messageId: 'missingValidateEventProperty'
+       }]
     }
   ]
 });

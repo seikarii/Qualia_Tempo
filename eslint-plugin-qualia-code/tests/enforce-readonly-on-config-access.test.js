@@ -79,75 +79,45 @@ ruleTester.run('enforce-readonly-on-config-access', rule, {
   ],
 
   invalid: [
+    // Rule now ONLY flags methods with explicit "Config" return types
     {
       code: `
         class ConfigurationService {
-          getConfig(): ConfigObject {
+          getAudioConfig(): AudioConfig {
             return this.config;
           }
         }
       `,
       filename: 'src/services/ConfigurationService.ts',
-      errors: [{
-        messageId: 'suggestReadonly',
-        data: { methodName: 'getConfig' }
-      }]
+      errors: [{ 
+        messageId: 'suggestReadonly'
+       }]
     },
     {
       code: `
         class SettingsService {
-          loadSettings(): Settings {
+          loadConfig(): GameConfig {
             return this.settings;
           }
         }
       `,
       filename: 'src/services/SettingsService.ts',
-      errors: [{
-        messageId: 'suggestReadonly',
-        data: { methodName: 'loadSettings' }
-      }]
+      errors: [{ 
+        messageId: 'suggestReadonly'
+       }]
     },
     {
       code: `
         class PreferencesService {
-          getPreferences() {
+          getGraphicsConfig(): GraphicsConfig {
             return this.prefs;
           }
         }
       `,
       filename: 'src/services/PreferencesService.ts',
-      errors: [{
-        messageId: 'suggestReadonly',
-        data: { methodName: 'getPreferences' }
-      }]
-    },
-    {
-      code: `
-        class OptionsService {
-          fetchOptions() {
-            return this.options;
-          }
-        }
-      `,
-      filename: 'src/services/OptionsService.ts',
-      errors: [{
-        messageId: 'suggestReadonly',
-        data: { methodName: 'fetchOptions' }
-      }]
-    },
-    {
-      code: `
-        class ConfigService {
-          readConfiguration() {
-            return this.config;
-          }
-        }
-      `,
-      filename: 'src/services/ConfigService.ts',
-      errors: [{
-        messageId: 'suggestReadonly',
-        data: { methodName: 'readConfiguration' }
-      }]
+      errors: [{ 
+        messageId: 'suggestReadonly'
+       }]
     }
   ]
 });

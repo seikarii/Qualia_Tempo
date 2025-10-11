@@ -34,8 +34,10 @@ Required: Add @timeout(30000) decorator to prevent hanging operations (30s typic
 
     return {
       MethodDefinition(node) {
-        // Skip if already has @timeout decorator
-        const hasTimeout = node.decorators?.some(d => d.expression?.callee?.name === 'timeout');
+        // Skip if already has @timeout decorator (with or without args)
+        const hasTimeout = node.decorators?.some(d => {
+          return d.expression?.name === 'timeout' || d.expression?.callee?.name === 'timeout';
+        });
         if (hasTimeout) return;
 
         // Skip if no body

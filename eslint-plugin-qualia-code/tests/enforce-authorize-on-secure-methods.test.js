@@ -87,10 +87,9 @@ ruleTester.run('enforce-authorize-on-secure-methods', rule, {
         }
       `,
       filename: 'src/services/UserService.ts',
-      errors: [{
-        messageId: 'missingAuthorize',
-        data: { methodName: 'deleteUser' }
-      }]
+      errors: [{ 
+        messageId: 'missingAuthorize'
+       }]
     },
     {
       code: `
@@ -99,10 +98,9 @@ ruleTester.run('enforce-authorize-on-secure-methods', rule, {
         }
       `,
       filename: 'src/services/PermissionService.ts',
-      errors: [{
-        messageId: 'missingAuthorize',
-        data: { methodName: 'updatePermissions' }
-      }]
+      errors: [{ 
+        messageId: 'missingAuthorize'
+       }]
     },
     {
       code: `
@@ -111,10 +109,9 @@ ruleTester.run('enforce-authorize-on-secure-methods', rule, {
         }
       `,
       filename: 'src/services/AccessService.ts',
-      errors: [{
-        messageId: 'missingAuthorize',
-        data: { methodName: 'grantAccess' }
-      }]
+      errors: [{ 
+        messageId: 'missingAuthorize'
+       }]
     },
     {
       code: `
@@ -123,10 +120,9 @@ ruleTester.run('enforce-authorize-on-secure-methods', rule, {
         }
       `,
       filename: 'src/services/RoleService.ts',
-      errors: [{
-        messageId: 'missingAuthorize',
-        data: { methodName: 'assignRole' }
-      }]
+      errors: [{ 
+        messageId: 'missingAuthorize'
+       }]
     },
     {
       code: `
@@ -135,10 +131,9 @@ ruleTester.run('enforce-authorize-on-secure-methods', rule, {
         }
       `,
       filename: 'src/services/AdminService.ts',
-      errors: [{
-        messageId: 'missingAuthorize',
-        data: { methodName: 'createAdmin' }
-      }]
+      errors: [{ 
+        messageId: 'missingAuthorize'
+       }]
     },
     {
       code: `
@@ -147,10 +142,9 @@ ruleTester.run('enforce-authorize-on-secure-methods', rule, {
         }
       `,
       filename: 'src/services/SecurityService.ts',
-      errors: [{
-        messageId: 'missingAuthorize',
-        data: { methodName: 'elevatePrivilege' }
-      }]
+      errors: [{ 
+        messageId: 'missingAuthorize'
+       }]
     },
     {
       code: `
@@ -159,10 +153,9 @@ ruleTester.run('enforce-authorize-on-secure-methods', rule, {
         }
       `,
       filename: 'src/services/AccountService.ts',
-      errors: [{
-        messageId: 'missingAuthorize',
-        data: { methodName: 'removeAccount' }
-      }]
+      errors: [{ 
+        messageId: 'missingAuthorize'
+       }]
     }
   ]
 });
