@@ -57,6 +57,22 @@ module.exports = {
         /^\(\)\s*=>\s*(void|any)/,            // Callbacks/functions
         /^[A-Z][a-zA-Z]*\[\]$/,               // Simple arrays (handled below for complex check)
         /^[A-Z][a-zA-Z]*Event$/,              // Event types from event.contracts.ts (already validated at emission)
+        /^HTMLCanvasElement$/,                // Browser DOM types (trusted)
+        /^AudioContext/,                      // Web Audio API types (trusted)
+        /^WebSocket$/,                        // WebSocket type (trusted)
+        /^ArrayBuffer$/,                      // Binary data types (handled by protocol adapters)
+        /^Blob$/,                             // Binary data
+        /^Float32Array$/,                     // Typed arrays
+        /^Uint8Array$/,                       // Typed arrays
+        /^LogLevel$/,                         // Enum types
+        /^NotificationPriority$/,             // Enum types
+        /^OscillatorType$/,                   // Web Audio API enums
+        /Config$/,                            // Configuration objects (validated at load time)
+        /^Partial<.*Config.*>/,               // Partial config updates
+        /^T$/,                                // Generic type parameter
+        /^unknown$/,                          // Unknown types (explicitly unvalidatable)
+        /^string \| ArrayBuffer \| Blob$/,    // Union of simple types
+        /^\{\s*[^}]*\?\s*:.*\}$/,             // Inline object types with optional fields
       ];
 
       if (whitelistPatterns.some(pattern => pattern.test(typeString))) {

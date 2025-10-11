@@ -155,30 +155,31 @@ module.exports = {
         // NEW RULES - QUALIA.CODE v1.3 IoC Binding Order Enforcement
         '@qualia-tempo/qualia-code/enforce-ioc-binding-order': 'error',
         // NEW RULES - QUALIA.CODE v1.4 Enhanced Decorator Enforcement (ANALISIS.md §2.1)
-        '@qualia-tempo/qualia-code/enforce-cache-decorator': 'warn', // Suggestion only
+        // CONVERTED ALL TO ERROR - NO WARNINGS ALLOWED IN THIS PROJECT
+        '@qualia-tempo/qualia-code/enforce-cache-decorator': 'error',
         '@qualia-tempo/qualia-code/enforce-mutex-on-state-mutations': 'error',
         '@qualia-tempo/qualia-code/enforce-retry-on-io-operations': 'error',
         // NEW RULES - QUALIA.CODE v1.5 Performance & Async Patterns
-        '@qualia-tempo/qualia-code/enforce-async-on-heavy-methods': 'warn', // Suggestion only
+        '@qualia-tempo/qualia-code/enforce-async-on-heavy-methods': 'error',
         // NEW RULES - QUALIA.CODE v1.6 Timeout & Error Boundary Enforcement (ANALISIS.md §2.1 items #4, #10)
         '@qualia-tempo/qualia-code/enforce-timeout-on-async-operations': 'error',
         // NEW RULES - QUALIA.CODE v1.7 Worker Offloading & Advanced Performance (ANALISIS.md §2.1 item #2)
-        '@qualia-tempo/qualia-code/enforce-worker-offloading': 'warn', // Suggestion only - requires major refactoring
+        '@qualia-tempo/qualia-code/enforce-worker-offloading': 'error',
         // NEW RULES - QUALIA.CODE v1.8 Stricter Platform Abstraction (Session 27)
         '@qualia-tempo/qualia-code/no-direct-timer-access': 'error', // MANDATORIO - Platform abstraction is law
-        '@qualia-tempo/qualia-code/enforce-validation-on-public-methods': 'warn', // Suggestion with exemption option
+        '@qualia-tempo/qualia-code/enforce-validation-on-public-methods': 'error',
         '@qualia-tempo/qualia-code/enforce-error-boundary-on-async': 'error', // MANDATORIO per QUALIA.CODE §6
         // NEW RULES - QUALIA.CODE v1.9 Complete Decorator Coverage (Session 30 - Mission Critical)
         '@qualia-tempo/qualia-code/enforce-throttle-on-event-handlers': 'error', // MANDATORIO - High-frequency events must be throttled
         '@qualia-tempo/qualia-code/enforce-debounce-on-ui-inputs': 'error', // MANDATORIO - UI inputs must be debounced
         '@qualia-tempo/qualia-code/enforce-rate-limit-on-api-calls': 'error', // MANDATORIO - Prevent API throttling
-        '@qualia-tempo/qualia-code/enforce-measure-time-on-logic-services': 'warn', // ADVISORY - Performance monitoring
+        '@qualia-tempo/qualia-code/enforce-measure-time-on-logic-services': 'error',
         '@qualia-tempo/qualia-code/enforce-validate-event-property-on-emit': 'error', // MANDATORIO - Event validation
         '@qualia-tempo/qualia-code/enforce-adapt-and-emit-on-raw-handlers': 'error', // MANDATORIO - Protocol adaptation
-        '@qualia-tempo/qualia-code/enforce-readonly-on-config-access': 'warn', // ADVISORY - Immutability promotion
-        '@qualia-tempo/qualia-code/enforce-deprecated-on-comment': 'warn', // ADVISORY - Formal deprecation tracking
+        '@qualia-tempo/qualia-code/enforce-readonly-on-config-access': 'error',
+        '@qualia-tempo/qualia-code/enforce-deprecated-on-comment': 'error',
         '@qualia-tempo/qualia-code/enforce-authorize-on-secure-methods': 'error', // MANDATORIO - Security critical
-        '@qualia-tempo/qualia-code/enforce-profile-on-heavy-computation': 'warn', // ADVISORY - Deep profiling
+        '@qualia-tempo/qualia-code/enforce-profile-on-heavy-computation': 'error'
       }
     }
   }

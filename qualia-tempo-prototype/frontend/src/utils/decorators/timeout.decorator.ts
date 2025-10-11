@@ -21,9 +21,9 @@ export function timeout(milliseconds: number) {
         setTimeout(() => {
           const error = new Error(`${methodKey} timed out after ${milliseconds}ms`);
           if (instanceLogger) {
-            instanceLogger.error(`Timeout: ${methodKey}`, error);
+            instanceLogger.error(`Timeout: ${methodKey}`, { error: error.message, stack: error.stack });
           } else {
-            EmergencyLogger.error(`Timeout: ${methodKey}`, error);
+            EmergencyLogger.error(`Timeout: ${methodKey}`, { error: error.message, stack: error.stack });
           }
           reject(error);
         }, milliseconds);

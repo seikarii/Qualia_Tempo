@@ -43,9 +43,9 @@ export function rateLimit(maxRequests: number, windowMs: number) {
       if (bucket.tokens < 1) {
         const error = new Error(`Rate limit exceeded for ${methodKey}`);
         if (instanceLogger) {
-          instanceLogger.warn(`Rate limit exceeded: ${methodKey}`, error);
+          instanceLogger.warn(`Rate limit exceeded: ${methodKey}`, { error: error.message, stack: error.stack });
         } else {
-          EmergencyLogger.warn(`Rate limit exceeded: ${methodKey}`, error);
+          EmergencyLogger.warn(`Rate limit exceeded: ${methodKey}`, { error: error.message, stack: error.stack });
         }
         throw error;
       }

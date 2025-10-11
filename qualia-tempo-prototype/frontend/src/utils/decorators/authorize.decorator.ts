@@ -189,7 +189,7 @@ export class UnauthorizedError extends Error {
  */
 export function authorize(options: AuthorizeOptions = {}) {
   return function (
-    target: any,
+    _target: any, // Renamed to indicate intentionally unused (decorator infrastructure)
     propertyKey: string,
     descriptor: PropertyDescriptor
   ): PropertyDescriptor {

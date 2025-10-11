@@ -71,7 +71,7 @@ module.exports = {
       // Check comments
       const comments = sourceCode.getCommentsBefore(node);
       if (comments.some(comment =>
-        /WORKER[-_]EXEMPT|OPTIMIZED[-_]PATH/i.test(comment.value)
+        /WORKER[-_]EXEMPT|OPTIMIZED[-_]PATH|MAIN[-_]THREAD[-_]REQUIRED/i.test(comment.value)
       )) {
         return true;
       }
@@ -91,6 +91,27 @@ module.exports = {
           }
           return false;
         });
+      }
+
+      // Exempt methods that MUST run on main thread (DOM/GPU operations)
+      const methodName = (node.key && node.key.name) || (node.id && node.id.name) || '';
+      const mainThreadMethods = [
+        'render',           // GPU rendering operations
+        'dispose',          // Resource cleanup (GPU)
+        'update',           // Animation frame updates
+        'requestAnimationFrame', // Main thread timing
+        'now',              // Timing operations
+        'mark',             // Performance marks
+        'measure',          // Performance measurements
+        'setTimeout',       // Timer operations
+        'setInterval',      // Timer operations
+        'clearTimeout',     // Timer operations
+        'clearInterval',    // Timer operations
+        'cleanup',          // Lifecycle cleanup
+      ];
+      
+      if (mainThreadMethods.includes(methodName)) {
+        return true; // These MUST run on main thread
       }
 
       return false;

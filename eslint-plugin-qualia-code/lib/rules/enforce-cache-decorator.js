@@ -85,6 +85,28 @@ module.exports = {
     function isPureCalculationMethod(node) {
       const methodName = node.key?.name || '';
       
+      // FALSE POSITIVE PREVENTION: Exclude state getters and status methods
+      // These return current state and should NOT be cached
+      const stateGetterKeywords = [
+        'getstatus',
+        'getstate',
+        'getcurrentstate',
+        'getactivestatus',
+        'getconnectionstatus',
+        'getreadystate',
+        'getlateststate',
+        'getstatistics', // Statistics are usually real-time
+        'isrunning',
+        'isenabled',
+        'isdisabled',
+        'isactive',
+      ];
+      
+      const lowerMethodName = methodName.toLowerCase();
+      if (stateGetterKeywords.some(keyword => lowerMethodName === keyword || lowerMethodName.includes(keyword))) {
+        return false; // Don't flag these as needing cache
+      }
+      
       // Keywords that indicate calculation/transformation
       const calculationKeywords = [
         'calculate',
@@ -96,10 +118,10 @@ module.exports = {
         'normalize',
         'clamp',
         'map',
-        'get' // Getters that compute values
+        // Removed 'get' as it's too broad - many getters return current state
       ];
 
-      return calculationKeywords.some(keyword => methodName.toLowerCase().includes(keyword));
+      return calculationKeywords.some(keyword => lowerMethodName.includes(keyword));
     }
 
     function hasNonDeterministicCalls(node) {

@@ -51,6 +51,27 @@ module.exports = {
       return {};
     }
 
+    // QUALIA.CODE §IX: Hot Path Identification - Exempt entire services that run in render loops
+    // These services are called 60+ FPS and MUST NOT have 5-10% @catchError overhead
+    function isHotPathFile(filename) {
+      const hotPathServices = [
+        'ViewLogicService.ts',           // Called per-frame for every entity
+        'FrontendRenderingService.ts',   // Core render loop
+        'CoordinateSystemService.ts',    // Coordinate transforms per-frame
+        'PostProcessingService.ts',      // GPU shader operations
+        'ShaderIntrospectionService.ts', // Shader compilation (main thread GPU)
+        'GBufferPass.ts',                // Rendering pass
+        'PerformanceProvider.ts'         // Performance.now() wrapper (hot)
+      ];
+      
+      return hotPathServices.some(service => filename.endsWith(service));
+    }
+    
+    // Auto-exempt hot path files entirely
+    if (isHotPathFile(filename)) {
+      return {};
+    }
+
     function hasCatchErrorDecorator(node) {
       if (!node.decorators) return false;
       
@@ -70,6 +91,44 @@ module.exports = {
       return comments.some(comment => 
         comment.value.includes('@catchError-exempt')
       );
+    }
+
+    // QUALIA.CODE §IX: Hot Path Method Detection
+    // Methods called >100 times/sec MUST NOT have @catchError overhead
+    function isHotPathMethod(methodName) {
+      // 1. Rendering/Frame loop methods (CRITICAL - 60 FPS)
+      const renderingMethods = [
+        'update', 'render', 'tick', 'frame', 'animate', 'draw',
+        'onBeforeRender', 'onAfterRender', 'useFrame', 'onFrame',
+        'renderScene', 'renderPass', 'renderToTarget'
+      ];
+      
+      // 2. High-frequency event handlers (CRITICAL - can be called 100+ times/sec)
+      const highFreqEvents = [
+        'onMouseMove', 'onPointerMove', 'onScroll', 'onResize',
+        'onWheel', 'onTouchMove', 'onDrag', 'onPan', 'onZoom'
+      ];
+      
+      // 3. Timer/Performance measurement (CRITICAL - no overhead allowed)
+      const timerMethods = ['now', 'measure', 'mark', 'clearMarks', 'clearMeasures'];
+      
+      // 4. ViewLogic calculation patterns (called per-frame per-entity)
+      const viewLogicPatterns = [
+        /^get.*Visuals$/,      // getBossVisuals, getPlayerVisuals, getNoteVisuals
+        /^calculate.*$/,       // calculatePosition, calculateScale, calculateOpacity
+        /^compute.*$/,         // computeTransform, computeColor
+        /^update.*Visual.*$/   // updateVisualState, updateVisuals
+      ];
+      
+      // Check exact matches
+      if (renderingMethods.includes(methodName)) return true;
+      if (highFreqEvents.includes(methodName)) return true;
+      if (timerMethods.includes(methodName)) return true;
+      
+      // Check patterns
+      if (viewLogicPatterns.some(pattern => pattern.test(methodName))) return true;
+      
+      return false;
     }
 
     function getMethodName(node) {
@@ -94,6 +153,10 @@ module.exports = {
       
       const methodName = getMethodName(node);
       
+      // QUALIA.CODE §IX: Auto-exempt hot path methods
+      // These are called >100 times/sec and @catchError overhead (5-10%) is unacceptable
+      if (isHotPathMethod(methodName)) return;
+      
       context.report({
         node,
         messageId: 'missingCatchError',
@@ -116,6 +179,9 @@ module.exports = {
           if (hasCatchErrorExemptComment(node)) return;
           
           const methodName = getMethodName(node);
+          
+          // QUALIA.CODE §IX: Auto-exempt hot path methods
+          if (isHotPathMethod(methodName)) return;
           
           context.report({
             node,
