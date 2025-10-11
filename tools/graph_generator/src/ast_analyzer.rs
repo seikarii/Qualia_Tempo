@@ -5,6 +5,7 @@
 
 use crate::types::{GraphEdge, GraphNode};
 use anyhow::{Context, Result};
+use quote::quote;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -32,7 +33,48 @@ struct AstVisitor {
 }
 
 impl AstVisitor {
-    fn new(file_path: String, module_path: String) -> Self {
+    /// Normaliza el espaciado de una firma generada por quote!
+    /// Elimina espacios extra alrededor de & y :: para mejorar legibilidad
+    fn normalize_signature(sig: String) -> String {
+        // Multiple passes to clean up all spacing issues
+        let mut result = sig;
+        
+        // Fix references: "& mut" -> "&mut", "& str" -> "&str", etc.
+        result = result.replace(" &mut ", "&mut ");
+        result = result.replace(" & ", "&");
+        result = result.replace("& ", "&");
+        
+        // Fix path separators: " :: " -> "::"
+        result = result.replace(" :: ", "::");
+        result = result.replace(" ::", "::");
+        result = result.replace(":: ", "::");
+        
+        // Fix colons: " :" -> ":", ": " -> ": " (space after, not before)
+        result = result.replace(" :", ":");
+        result = result.replace(":", ": ");
+        result = result.replace(":  ", ": "); // Fix double spaces
+        result = result.replace("::  ", "::"); // But don't break :: paths
+        result = result.replace(": :", "::"); // Fix broken :: paths
+        
+        // Fix commas: ensure space after, not before
+        result = result.replace(" , ", ", ");
+        result = result.replace(" ,", ",");
+        result = result.replace(",", ", ");
+        result = result.replace(",  ", ", "); // Fix double spaces
+        
+        // Fix parentheses: no space inside
+        result = result.replace("( ", "(");
+        result = result.replace(" )", ")");
+        
+        // Fix arrows: " -> " is correct
+        result = result.replace("->", " -> ");
+        result = result.replace("  ->", " ->");
+        result = result.replace("->  ", " -> ");
+        
+        result
+    }
+
+    fn new_with_doc(file_path: String, module_path: String, module_doc: Option<String>) -> Self {
         // Crear un nodo para el módulo (fichero) en sí
         let module_id = if module_path.is_empty() {
             "crate".to_string()
@@ -43,8 +85,8 @@ impl AstVisitor {
         let module_node = GraphNode {
             id: module_id.clone(),
             node_type: "module".to_string(),
-            file_path: file_path.clone(),
-            description: Some(format!("Module: {}", module_path)),
+            file_path: Some(file_path.clone()), // Only modules have file_path to avoid redundancy
+            description: module_doc, // Use actual doc comment or None (no redundant auto-generated text)
             public_methods: Vec::new(),
             public_fields: Vec::new(),
             implements_traits: Vec::new(),
@@ -113,18 +155,28 @@ impl<'ast> Visit<'ast> for AstVisitor {
         let id = self.build_item_id(&name);
         let description = self.extract_doc_comment(&node.attrs);
         
-        // Extraer campos públicos
+        // Extraer campos públicos con FULL type information
         let public_fields: Vec<String> = node
             .fields
             .iter()
             .filter(|f| Self::is_public(&f.vis))
-            .filter_map(|f| f.ident.as_ref().map(|i| i.to_string()))
+            .filter_map(|f| {
+                if let Some(ident) = &f.ident {
+                    let vis = &f.vis;
+                    let ty = &f.ty;
+                    // Use quote! to convert AST back to Rust code string
+                    let field_decl = quote! { #vis #ident: #ty };
+                    Some(Self::normalize_signature(field_decl.to_string()))
+                } else {
+                    None
+                }
+            })
             .collect();
         
         self.nodes.push(GraphNode {
             id: id.clone(),
             node_type: "struct".to_string(),
-            file_path: self.file_path.clone(),
+            file_path: None, // Omit file_path for non-module nodes to reduce redundancy
             description,
             public_methods: Vec::new(), // Se añadirán desde impl blocks
             public_fields,
@@ -158,7 +210,7 @@ impl<'ast> Visit<'ast> for AstVisitor {
         self.nodes.push(GraphNode {
             id: id.clone(),
             node_type: "enum".to_string(),
-            file_path: self.file_path.clone(),
+            file_path: None, // Omit file_path for non-module nodes to reduce redundancy
             description,
             public_methods: variants,
             public_fields: Vec::new(),
@@ -182,13 +234,16 @@ impl<'ast> Visit<'ast> for AstVisitor {
         let id = self.build_item_id(&name);
         let description = self.extract_doc_comment(&node.attrs);
         
-        // Extraer métodos del trait
+        // Extraer métodos del trait con FULL signatures
         let methods: Vec<String> = node
             .items
             .iter()
             .filter_map(|item| {
                 if let syn::TraitItem::Fn(method) = item {
-                    Some(method.sig.ident.to_string())
+                    let sig = &method.sig;
+                    // Trait methods don't have visibility modifiers, but we want to show "fn" keyword
+                    let method_signature = quote! { #sig };
+                    Some(Self::normalize_signature(method_signature.to_string()))
                 } else {
                     None
                 }
@@ -198,7 +253,7 @@ impl<'ast> Visit<'ast> for AstVisitor {
         self.nodes.push(GraphNode {
             id: id.clone(),
             node_type: "trait".to_string(),
-            file_path: self.file_path.clone(),
+            file_path: None, // Omit file_path for non-module nodes to reduce redundancy
             description,
             public_methods: methods,
             public_fields: Vec::new(),
@@ -225,7 +280,7 @@ impl<'ast> Visit<'ast> for AstVisitor {
         self.nodes.push(GraphNode {
             id: id.clone(),
             node_type: "function".to_string(),
-            file_path: self.file_path.clone(),
+            file_path: None, // Omit file_path for non-module nodes to reduce redundancy
             description,
             public_methods: Vec::new(),
             public_fields: Vec::new(),
@@ -277,16 +332,21 @@ impl<'ast> Visit<'ast> for AstVisitor {
                 }
             }
             
-            // Extraer métodos públicos
+            // Extraer métodos públicos con FULL signatures
             for item in &node.items {
                 if let ImplItem::Fn(method) = item {
                     if Self::is_public(&method.vis) {
-                        let method_name = method.sig.ident.to_string();
+                        let vis = &method.vis;
+                        let sig = &method.sig;
+                        
+                        // Use quote! to convert full signature to Rust code string
+                        let method_signature = quote! { #vis #sig };
+                        let method_string = Self::normalize_signature(method_signature.to_string());
                         
                         // Añadir método al nodo correspondiente
                         if let Some(node) = self.nodes.iter_mut().find(|n| n.id == type_id) {
-                            if !node.public_methods.contains(&method_name) {
-                                node.public_methods.push(method_name);
+                            if !node.public_methods.contains(&method_string) {
+                                node.public_methods.push(method_string);
                             }
                         }
                     }
@@ -370,9 +430,13 @@ impl AstAnalyzer {
         let ast: File = syn::parse_file(&content)
             .with_context(|| format!("Error al parsear fichero: {}", file_path.display()))?;
         
-        let mut visitor = AstVisitor::new(
+        // Extraer documentación del módulo (//! comments) desde el AST
+        let module_doc = Self::extract_module_doc(&ast.attrs);
+        
+        let mut visitor = AstVisitor::new_with_doc(
             file_path.display().to_string(),
             module_path.to_string(),
+            module_doc,
         );
         
         // Recorrer el AST
@@ -384,6 +448,32 @@ impl AstAnalyzer {
             nodes: visitor.nodes,
             edges: visitor.edges,
         })
+    }
+    
+    /// Extrae la documentación del módulo (//! comments)
+    fn extract_module_doc(attrs: &[Attribute]) -> Option<String> {
+        let mut docs = Vec::new();
+        
+        for attr in attrs {
+            if attr.path().is_ident("doc") {
+                if let syn::Meta::NameValue(meta) = &attr.meta {
+                    if let syn::Expr::Lit(expr_lit) = &meta.value {
+                        if let syn::Lit::Str(lit_str) = &expr_lit.lit {
+                            let doc = lit_str.value().trim().to_string();
+                            if !doc.is_empty() {
+                                docs.push(doc);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        if docs.is_empty() {
+            None
+        } else {
+            Some(docs.join(" "))
+        }
     }
     
     /// Infiere el module path desde el file path.

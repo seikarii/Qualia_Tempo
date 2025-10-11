@@ -121,7 +121,7 @@ mod tests {
         graph.add_node(GraphNode {
             id: "test::MyStruct".to_string(),
             node_type: "struct".to_string(),
-            file_path: "/test.rs".to_string(),
+            file_path: None,
             description: Some("Test".to_string()),
             public_methods: vec![],
             public_fields: vec![],
@@ -146,7 +146,7 @@ mod tests {
         graph.add_node(GraphNode {
             id: "test::Struct1".to_string(),
             node_type: "struct".to_string(),
-            file_path: "/test.rs".to_string(),
+            file_path: None,
             description: None,
             public_methods: vec![],
             public_fields: vec![],
@@ -156,7 +156,7 @@ mod tests {
         graph.add_node(GraphNode {
             id: "test::Enum1".to_string(),
             node_type: "enum".to_string(),
-            file_path: "/test.rs".to_string(),
+            file_path: None,
             description: None,
             public_methods: vec![],
             public_fields: vec![],

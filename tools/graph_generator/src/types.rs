@@ -13,12 +13,15 @@ pub struct GraphNode {
     /// Identificador único del nodo (ej. "crate::services::audio::AudioService")
     pub id: String,
     
-    /// Tipo de nodo: "struct", "enum", "trait", "function"
+    /// Tipo de nodo: "struct", "enum", "trait", "function", "module"
     #[serde(rename = "type")]
     pub node_type: String,
     
-    /// Ruta del fichero donde se define este nodo
-    pub file_path: String,
+    /// Ruta del fichero donde se define este nodo.
+    /// ONLY present for "module" nodes to avoid redundancy.
+    /// For other nodes, the file can be inferred from the module ID.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_path: Option<String>,
     
     /// Descripción extraída de los doc comments (///)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -119,7 +122,7 @@ mod tests {
         graph.add_node(GraphNode {
             id: "test::MyStruct".to_string(),
             node_type: "struct".to_string(),
-            file_path: "/test.rs".to_string(),
+            file_path: None,
             description: Some("Test struct".to_string()),
             public_methods: vec!["new".to_string()],
             public_fields: vec![],
@@ -136,7 +139,7 @@ mod tests {
         let node = GraphNode {
             id: "test::MyStruct".to_string(),
             node_type: "struct".to_string(),
-            file_path: "/test.rs".to_string(),
+            file_path: None,
             description: None,
             public_methods: vec![],
             public_fields: vec![],
