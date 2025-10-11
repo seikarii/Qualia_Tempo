@@ -1,7 +1,18 @@
 /**
  * @fileoverview SALA: IoC binding dependency order validation
  * @author Qualia Tempo Team
- * MIGRATION STATUS: ✅ MIGRATED
+ * MIGRATION STATUS: ✅ REFACTORED - Disabled for now (requires deep semantic analysis of service constructors)
+ * 
+ * RATIONALE FOR DISABLE:
+ * This rule needs to analyze constructor dependencies of each service class, not just the .bind().to() chain.
+ * In modern Direct Configuration Injection pattern, dependencies are in constructors, not visible in bindings.
+ * Proper implementation requires TypeScript type checker to traverse service constructors.
+ * 
+ * TODO: Implement proper semantic analysis using TypeScript compiler API to:
+ * 1. For each `.bind<IService>().to(ServiceClass)`, locate ServiceClass definition
+ * 2. Parse constructor parameters to extract @inject() dependencies
+ * 3. Build dependency graph and validate order
+ * 4. This is a PHASE 2 enhancement after core compliance
  */
 'use strict';
 const { requireTypeChecker } = require('../utils/semantic-helpers');
@@ -19,58 +30,9 @@ module.exports = {
     const filename = context.getFilename();
     if (!filename.includes('inversify.config')) return {};
 
-    const bindings = [];
-    const dependencies = new Map();
-
-    return {
-      CallExpression(node) {
-        if (node.callee?.property?.name !== 'bind') return;
-
-        const typeArg = node.arguments[0];
-        if (!typeArg || typeArg.type !== 'MemberExpression') return;
-
-        const serviceName = typeArg.property.name;
-        const chainedTo = node.parent?.property?.name === 'to' ? node.parent?.parent?.arguments[0] : null;
-        
-        bindings.push({ service: serviceName, line: node.loc.start.line });
-
-        if (chainedTo?.name) {
-          if (!dependencies.has(serviceName)) {
-            dependencies.set(serviceName, []);
-          }
-          dependencies.get(serviceName).push(chainedTo.name);
-        }
-      },
-
-      'Program:exit'() {
-        const boundServices = new Set();
-        
-        bindings.sort((a, b) => a.line - b.line).forEach(binding => {
-          const deps = dependencies.get(binding.service) || [];
-          const unboundDeps = deps.filter(dep => !boundServices.has(dep));
-
-          if (unboundDeps.length > 0) {
-            context.report({
-              node: context.getSourceCode().ast,
-              messageId: 'bindBeforeDeps',
-              data: { service: binding.service }
-            });
-          }
-
-          boundServices.add(binding.service);
-        });
-
-        // Simple cycle detection
-        dependencies.forEach((deps, service) => {
-          if (deps.includes(service)) {
-            context.report({
-              node: context.getSourceCode().ast,
-              messageId: 'circularDep',
-              data: { cycle: `${service} → ${service}` }
-            });
-          }
-        });
-      }
-    };
+    // DISABLED: Rule needs complete rewrite with semantic analysis
+    // Current implementation has too many false positives
+    // See rationale in fileoverview comment above
+    return {};
   }
 };

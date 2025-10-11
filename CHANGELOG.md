@@ -1,22 +1,200 @@
 # CHANGELOG - QUALIA TEMPO
 
-## [Unreleased] - 2025-01-11 - ZERO TOLERANCE ENFORCEMENT & LINTER IMPROVEMENTS
+## [Unreleased] - 2025-01-11 - SESSION 37: LINTER BUG FIXES + DECORATOR ADDITIONS
 
-### 🔥 ZERO TOLERANCE POLICY ACTIVATED - Architectural Debt Elimination
+### 🔥 PHASE 1: CRITICAL BUG FIX - Decorator Detection System (54.5% Error Reduction)
 
-**Context**: Transitioned from gradual adoption to ZERO TOLERANCE enforcement. All QUALIA.CODE architectural rules now set to "error" level. Massive false positive elimination campaign completed.
+### 🎯 PHASE 2: LEGITIMATE VIOLATION CORRECTIONS - Decorator Additions (In Progress)
 
-#### Phase 1: Linter Configuration Hardening (Session 36)
+**Starting Point**: 463 legitimate violations (after Phase 1 bug fixes)
+**Current Status**: 455 errors (8 violations corrected, 1.7% reduction)
 
-1. **Configuration Change: All Rules to ERROR**
-   - **Action**: Changed all decorator enforcement rules from "warn" to "error" in `.eslintrc.cjs`
-   - **Rules Affected**: 21 rules including enforce-method-decorators, enforce-retry-on-io-operations, enforce-timeout-on-async-operations, etc.
-   - **Rationale**: End of gradual adoption phase. 1000+ warnings revealed massive architectural debt that must be addressed immediately
-   - **File**: `qualia-tempo-prototype/frontend/.eslintrc.cjs`
+#### Services Corrected:
 
-#### Phase 2: False Positive Elimination - Critical Fixes
+1. **ThrottlingManager.ts** (3 errors eliminated)
+   - Added `@logMethod` to `canProcess()` method
+   - Added `@profile()` to `canProcess()` method (performance monitoring)
+   - Added `@logMethod` to `recordNotification()` method
+   - Added `ILogger` injection to constructor
+   - **Impact**: Service now compliant with observability requirements
 
-2. **detectIOOperations() Enhancement** (CRITICAL FIX)
+2. **EventBus.ts** (5 errors eliminated)
+   - Added `@logMethod` to `once()` method
+   - Added `@logMethod` to `unsubscribe()` method
+   - Added `@logMethod` to `clear()` method
+   - Added `@logMethod` to `destroy()` method
+   - Added `@logMethod` to `getStats()` method
+   - **Impact**: Core event system now has comprehensive method-level observability
+   - **Note**: QualiaEvents helper class (lines 588-650) requires architectural discussion - it's a factory pattern class without IoC, should be excluded from decorator requirements
+
+#### Remaining Violations by Category (455 total):
+
+- **87** `enforce-profile-on-heavy-computation` - Methods with heavy computation missing `@profile()` decorator
+- **78** `enforce-validation-on-public-methods` - Methods with complex parameters missing `@validate()` decorator
+- **56** `enforce-method-decorators` - Public service methods missing `@logMethod` decorator (down from 61)
+- **44** `enforce-worker-offloading` - Heavy computation that should be in Web Workers
+- **32** `enforce-mutex-on-state-mutations` - State mutations missing `@mutex()` decorator
+- **31** `enforce-measure-time-on-logic-services` - Logic service methods missing `@measureTime()` or `@profile()`
+- **25** `enforce-validation-on-boundaries` - API boundary methods missing `@validate()` decorator
+- **25** `enforce-timeout-on-async-operations` - Async operations missing `@timeout()` decorator
+- **25** `enforce-retry-on-io-operations` - I/O operations missing `@retry()` decorator
+- **18** `enforce-rate-limit-on-api-calls` - API calls missing `@rateLimit()` decorator
+- Other categories: 34 errors total
+
+**Files Affected**: 52 files with violations remaining
+
+**Context**: Discovered and fixed critical bug in ESLint plugin's decorator detection system. TypeScript decorators without parentheses (e.g., `@logMethod`) were not being detected, causing massive false positives across all decorator enforcement rules.
+
+**Impact**: 
+- Error count: 1017 → 528 (48% reduction)
+- False positive elimination: 489 violations
+- Architectural violations validated: 528 legitimate issues remain
+
+#### Phase 1: Root Cause Analysis
+
+**THE BUG:**
+ESLint rules checked only `d.expression?.callee?.name` which works for `@decorator()` (with parens) but fails for `@decorator` (without parens). The correct pattern requires checking BOTH:
+- `d.expression?.callee?.name` (for `@decorator()`)
+- `d.expression?.name` (for `@decorator`)
+
+**DISCOVERY:**
+While fixing platform abstraction violations in `AudioSystemBridge.ts`, discovered that `@BrowserOnly` decorator was not being detected by `no-global-api-calls` rule despite being present on the method.
+
+#### Phase 2: Systematic Rule Fixes
+
+1. **no-global-api-calls.js** (CRITICAL FIX - 14 errors eliminated)
+   - **Bug**: Used text-based search looking backwards 150 chars from violation node, not from method definition
+   - **Problem**: Decorators exist BEFORE method definition, but AST `range[0]` points to JSDoc comment end
+   - **Solution**: 
+     a. Check AST `decorators` array directly (most reliable)
+     b. Fallback to token-based search using `getTokensBefore()` (for edge cases)
+   - **Code Pattern**: 
+     ```javascript
+     // OLD (BROKEN)
+     const textBefore = sourceCode.getText().substring(current.range[0] - 150, current.range[0]);
+     if (textBefore.includes('@BrowserOnly')) return true;
+     
+     // NEW (CORRECT)
+     if (current.decorators && Array.isArray(current.decorators)) {
+       for (const decorator of current.decorators) {
+         const decoratorName = decorator.expression?.callee?.name || decorator.expression?.name;
+         if (decoratorName === 'BrowserOnly') return true;
+       }
+     }
+     ```
+   - **Impact**: 14 legitimate `@BrowserOnly` methods no longer report false violations
+   - **File**: `eslint-plugin-qualia-code/lib/rules/no-global-api-calls.js`
+
+2. **enforce-method-decorators.js** (MASSIVE FIX - 316 errors eliminated)
+   - **Bug**: Only checked `d.expression?.callee?.name === 'logMethod'` (with parens syntax)
+   - **Impact**: ~380 methods with `@logMethod` (no parens) falsely reported as missing decorator
+   - **Solution**: Added dual syntax check + exemption comment support
+   - **Code Pattern**:
+     ```javascript
+     // OLD (BROKEN)
+     const hasLogMethod = node.decorators?.some(d => d.expression?.callee?.name === 'logMethod');
+     
+     // NEW (CORRECT)
+     const hasLogMethod = node.decorators?.some(d => {
+       const decoratorName = d.expression?.callee?.name || d.expression?.name;
+       return decoratorName === 'logMethod';
+     });
+     
+     // BONUS: Added exemption comment support
+     const comments = sourceCode.getCommentsBefore(node);
+     const hasExemption = comments.some(c => c.value.includes('@logMethod-exempt'));
+     ```
+   - **Impact**: Reduced enforce-method-decorators errors from ~380 to 61 (genuine missing decorators)
+   - **File**: `eslint-plugin-qualia-code/lib/rules/enforce-method-decorators.js`
+
+3. **enforce-validation-on-public-methods.js** (3 errors eliminated)
+   - **Bug**: Same decorator detection bug
+   - **Solution**: Dual syntax check + `@validate-exempt` comment support
+   - **Impact**: 81 → 78 errors (3 false positives eliminated)
+   - **File**: `eslint-plugin-qualia-code/lib/rules/enforce-validation-on-public-methods.js`
+
+4. **enforce-profile-on-heavy-computation.js** (No errors eliminated - all legitimate)
+   - **Bug**: Same decorator detection bug
+   - **Solution**: Dual syntax check
+   - **Impact**: 87 errors remain (all are genuine missing `@profile` decorators)
+   - **File**: `eslint-plugin-qualia-code/lib/rules/enforce-profile-on-heavy-computation.js`
+
+5. **enforce-measure-time-on-logic-services.js** (4 errors eliminated)
+   - **Bug**: Same decorator detection bug
+   - **Solution**: Dual syntax check
+   - **Impact**: 35 → 31 errors (4 false positives eliminated)
+   - **File**: `eslint-plugin-qualia-code/lib/rules/enforce-measure-time-on-logic-services.js`
+
+6. **enforce-mutex-on-state-mutations.js** (No errors eliminated - all legitimate)
+   - **Bug**: Same decorator detection bug
+   - **Solution**: Dual syntax check
+   - **Impact**: 32 errors remain (all are genuine missing `@mutex` decorators)
+   - **File**: `eslint-plugin-qualia-code/lib/rules/enforce-mutex-on-state-mutations.js`
+
+7. **enforce-validation-on-boundaries.js** (No errors eliminated - all legitimate)
+   - **Bug**: Same decorator detection bug
+   - **Solution**: Dual syntax check
+   - **Impact**: 25 errors remain (all are genuine missing `@validate` decorators)
+   - **File**: `eslint-plugin-qualia-code/lib/rules/enforce-validation-on-boundaries.js`
+
+8. **no-global-api-calls.js - SECOND BUG FIX** (MASSIVE FIX - 65 errors eliminated)
+   - **Bug**: `Identifier` visitor flagged ALL identifiers matching forbidden names, including property names in MemberExpressions
+   - **Problem**: `this.timerService.setTimeout()` was flagged because "setTimeout" identifier appeared as property name
+   - **Example**: 
+     ```typescript
+     // CORRECT PATTERN (using injected service)
+     this.timerService.setTimeout(() => { ... });  // ❌ Was falsely flagged as violation
+     
+     // VIOLATION (direct global API)
+     setTimeout(() => { ... });  // ✅ Correctly flagged
+     ```
+   - **Root Cause**: AST Identifier visitor doesn't distinguish between:
+     - Standalone identifier: `setTimeout()` → VIOLATION
+     - Property name in MemberExpression: `obj.setTimeout()` → CORRECT (using injected service)
+   - **Solution**: Added MemberExpression check in Identifier visitor
+   - **Code Pattern**:
+     ```javascript
+     Identifier(node) {
+       if (Object.prototype.hasOwnProperty.call(forbiddenGlobals, node.name)) {
+         // CRITICAL FIX: Skip identifiers that are property names in MemberExpressions
+         if (node.parent.type === 'MemberExpression' && node.parent.property === node) {
+           // This is a property access like obj.setTimeout - NOT a global API call
+           return;
+         }
+         checkGlobalIdentifier(node, node.name);
+       }
+     }
+     ```
+   - **Impact**: 
+     - Eliminated 65 false positives (services correctly using ITimerService)
+     - Error count: 528 → 463 (12.3% reduction)
+     - Files affected: EventBus.ts, BackendSyncService.ts, GameControllerService.ts, etc. (13 files total)
+   - **File**: `eslint-plugin-qualia-code/lib/rules/no-global-api-calls.js`
+
+#### Phase 3: Final Impact Summary
+
+**TOTAL FALSE POSITIVE ELIMINATION:**
+- Starting Point: 1017 errors (Session 36 start)
+- After Decorator Detection Fixes: 528 errors (489 false positives eliminated, 48% reduction)
+- After MemberExpression Fix: 463 errors (65 false positives eliminated, additional 12% reduction)
+- **TOTAL REDUCTION: 554 errors (54.5% reduction)**
+
+**VALIDATION:**
+All remaining 463 errors are LEGITIMATE architectural violations requiring code fixes:
+- 87 `enforce-profile-on-heavy-computation` - Heavy methods missing `@profile` decorator
+- 78 `enforce-validation-on-public-methods` - Complex parameters missing `@validate` decorator  
+- 61 `enforce-method-decorators` - Public service methods missing `@logMethod` decorator
+- 44 `enforce-worker-offloading` - Heavy computation not offloaded to Web Workers
+- 32 `enforce-mutex-on-state-mutations` - State mutations missing `@mutex` decorator
+- 31 `enforce-measure-time-on-logic-services` - Logic methods missing `@measureTime`/`@profile`
+- 25 `enforce-validation-on-boundaries` - API boundary methods missing `@validate`
+- 25 `enforce-timeout-on-async-operations` - Async methods missing `@timeout`
+- 25 `enforce-retry-on-io-operations` - I/O operations missing `@retry`
+- And 10 other rule categories with <20 errors each
+
+#### Phase 3: Previous Session Fixes (Session 36)
+
+8. **detectIOOperations() Enhancement** (CRITICAL FIX)
    - **Issue**: Massive false positives - `container.get()` flagged as HTTP I/O operation
    - **Root Cause**: Missing IoC container in non-I/O object whitelist
    - **Fix**: Added comprehensive whitelist including:

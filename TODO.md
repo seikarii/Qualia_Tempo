@@ -1,18 +1,31 @@
 # 📋 DEUDA TÉCNICA - QUALIA TEMPO
-*Última actualización: 10 de enero de 2025 - Session 31*
+*Última actualización: 11 de enero de 2025 - Session 37 (MASSIVE LINTER BUG FIX CAMPAIGN)*
 
 ---
 
-## ✅ ARCHITECTURAL COMPLIANCE PROGRESS (Session 31)
+## 🔥 ARCHITECTURAL COMPLIANCE PROGRESS (Session 37)
 
-**Achievement**: 28% violation reduction (587 → 420)  
+### MILESTONE ACHIEVED: 54.5% Violation Reduction via Linter Bug Fixes
+
+**Session 37 Impact**:
+- Starting Point (Session 36): 1017 errors (after hardening to "error" level)
+- After Decorator Detection Bug Fixes: 528 errors (48% reduction)
+- After MemberExpression Bug Fix: **463 errors** (54.5% total reduction)
+- **False Positives Eliminated**: 554 violations (all linter bugs, not code issues)
+
 **Backend Status**: ✅ 100% COMPLIANT  
-**Frontend Status**: 🟡 420 violations remaining  
-**Detailed Report**: See `ARCHITECTURAL_COMPLIANCE_STATUS.md`
+**Frontend Status**: 🟡 463 violations remaining (ALL LEGITIMATE)  
+**Linter Status**: ✅ ALL MAJOR BUGS FIXED (decorator detection system validated)
+
+### Bug Fixes Completed:
+1. ✅ Decorator Detection System - Fixed 7 rules (enforce-method-decorators, enforce-validation-on-public-methods, etc.)
+2. ✅ MemberExpression False Positives - Fixed no-global-api-calls rule (65 errors eliminated)
+3. ✅ CompositionRoot Exclusions - Bootstrap classes excluded from decorator rules
+4. ✅ Constructor Exclusions - Constructors no longer require @logMethod/@validate
 
 ---
 
-## 🚨 PRIORITY 0: CRITICAL VIOLATIONS (11 remaining)
+## 🚨 PRIORITY 0: REMAINING LEGITIMATE VIOLATIONS (463 errors)
 
 ### 🔴 Direct Timer API Usage (4 violations)
 **Rule**: `@qualia-tempo/qualia-code/no-direct-timer-access`  
