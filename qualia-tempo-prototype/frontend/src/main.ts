@@ -89,12 +89,12 @@ const setupWindowFadeIn = (window: BrowserWindow): void => {
   window.setOpacity(0);
   let opacity = 0;
   
-  // eslint-disable-next-line @qualia-tempo/qualia-code/no-direct-timer-access
+   
   const fadeIn = setInterval(() => {
     opacity += 0.05;
     if (opacity >= 1) {
       opacity = 1;
-      // eslint-disable-next-line @qualia-tempo/qualia-code/no-direct-timer-access
+       
       clearInterval(fadeIn);
     }
     window.setOpacity(opacity);

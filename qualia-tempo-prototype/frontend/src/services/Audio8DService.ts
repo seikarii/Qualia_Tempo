@@ -174,9 +174,9 @@ export class Audio8DService implements IAudio8DService, IBaseService {
     this.logger.debug(`Removed sound source: ${id}`);
   }
 
-  @measureTime
   @logMethod
   @catchError
+  @measureTime
   // @validate-exempt: Simple inline coordinate types {x,y} - TypeScript ensures correctness
   public updateSoundSourcePosition(
     id: string,
@@ -353,8 +353,8 @@ export class Audio8DService implements IAudio8DService, IBaseService {
     }, 1000);
   }
 
-  @measureTime
   @logMethod
+  @measureTime
   public getActiveSoundSources(): SpatialSoundSource[] {
     return Array.from(this.soundSources.values()).filter(source => source.active);
   }

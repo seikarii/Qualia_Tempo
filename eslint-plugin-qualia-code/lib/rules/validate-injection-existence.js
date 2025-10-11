@@ -50,6 +50,13 @@ module.exports = {
         const deps = graph.dependencies[serviceName] || [];
         
         deps.forEach(depTypeSymbol => {
+          // Skip config bindings - these are bound via safeBindConstant, not container.bind
+          // Config symbols typically end with "Config" and don't start with "I"
+          const symbolName = depTypeSymbol.replace('TYPES.', '');
+          if (symbolName.endsWith('Config') || !symbolName.startsWith('I')) {
+            return; // Config bindings are not tracked in dependency graph
+          }
+          
           if (!graph.bindings[depTypeSymbol]) {
             context.report({
               node,

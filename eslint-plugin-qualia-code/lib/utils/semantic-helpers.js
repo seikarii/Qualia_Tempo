@@ -113,8 +113,10 @@ function extendsType(type, baseTypeName, checker) {
     return true;
   }
   
-  // Check base types
-  const baseTypes = type.getBaseTypes ? type.getBaseTypes() : [];
+  // Check base types - ensure we always have an iterable array
+  const baseTypes = (type.getBaseTypes && type.getBaseTypes()) || [];
+  if (!Array.isArray(baseTypes)) return false; // Safety check
+  
   for (const baseType of baseTypes) {
     if (extendsType(baseType, baseTypeName, checker)) {
       return true;
@@ -421,13 +423,24 @@ function detectRecursion(node, methodName) {
     if (!currentNode) return;
 
     if (currentNode.type === 'CallExpression') {
-      // Check for this.methodName() or methodName()
-      if (currentNode.callee.type === 'MemberExpression' &&
-          currentNode.callee.property && 
-          currentNode.callee.property.name === methodName) {
-        count++;
+      // ONLY count as recursive if:
+      // 1. this.methodName() - calling own method
+      // 2. super.methodName() - calling parent's version
+      // 3. Plain methodName() - only for non-method functions
+      if (currentNode.callee.type === 'MemberExpression') {
+        const object = currentNode.callee.object;
+        const property = currentNode.callee.property;
+        
+        // Only count if calling this.methodName() or super.methodName()
+        if (property && property.name === methodName &&
+            object.type === 'ThisExpression' || object.type === 'Super') {
+          count++;
+        }
+        // DO NOT count other.methodName() - that's not recursion!
       } else if (currentNode.callee.type === 'Identifier' && 
                  currentNode.callee.name === methodName) {
+        // Plain methodName() - only count for standalone functions, not methods
+        // For methods, only this.methodName() should count
         count++;
       }
     }

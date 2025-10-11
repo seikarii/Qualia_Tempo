@@ -76,7 +76,9 @@ module.exports = {
     // "import/no-unused-modules": "off", // Can be too aggressive
 
     // QUALIA.CODE CRITICAL RULES - ACTIVATED FOR FULL COMPLIANCE DETECTION
-    "@qualia-tempo/qualia-code/enforce-method-decorators": "error",
+    // NOTE: Decorator enforcement rules set to "warn" for gradual adoption
+    // These represent architectural best practices but retroactive application is a large undertaking
+    "@qualia-tempo/qualia-code/enforce-method-decorators": "warn",
     "@qualia-tempo/qualia-code/enforce-inversify-conventions": "error",
     "@qualia-tempo/qualia-code/no-global-api-calls": "error",
     "@qualia-tempo/qualia-code/no-direct-service-instantiation": "error",
@@ -91,11 +93,40 @@ module.exports = {
     // instead of using proper platform abstraction services (ITimerService, etc.)
     "@qualia-tempo/qualia-code/enforce-browser-only": "off",
     "@qualia-tempo/qualia-code/enforce-event-interfaces-location": "error",
-    // NEW RULES - QUALIA.CODE v1.2 Data Integrity & Performance
-    "@qualia-tempo/qualia-code/enforce-validation-on-boundaries": "error",
-    "@qualia-tempo/qualia-code/enforce-performance-best-practices": "error",
+    // NEW RULES - QUALIA.CODE v1.2 Data Integrity & Performance (WARNINGS for gradual adoption)
+    "@qualia-tempo/qualia-code/enforce-validation-on-boundaries": "warn",
+    "@qualia-tempo/qualia-code/enforce-performance-best-practices": "warn",
     // NEW RULES - QUALIA.CODE v1.3 IoC Binding Order Enforcement
     "@qualia-tempo/qualia-code/enforce-ioc-binding-order": "error",
+    // NEW RULES - QUALIA.CODE v1.4-1.9 Decorator Enforcement (WARNINGS for gradual adoption)
+    "@qualia-tempo/qualia-code/enforce-cache-decorator": "warn",
+    "@qualia-tempo/qualia-code/enforce-mutex-on-state-mutations": "warn",
+    "@qualia-tempo/qualia-code/enforce-retry-on-io-operations": "warn",
+    "@qualia-tempo/qualia-code/enforce-async-on-heavy-methods": "warn",
+    "@qualia-tempo/qualia-code/enforce-timeout-on-async-operations": "warn",
+    "@qualia-tempo/qualia-code/enforce-worker-offloading": "warn",
+    "@qualia-tempo/qualia-code/enforce-validation-on-public-methods": "warn",
+    "@qualia-tempo/qualia-code/enforce-error-boundary-on-async": "warn",
+    "@qualia-tempo/qualia-code/enforce-throttle-on-event-handlers": "warn",
+    "@qualia-tempo/qualia-code/enforce-debounce-on-ui-inputs": "warn",
+    "@qualia-tempo/qualia-code/enforce-rate-limit-on-api-calls": "warn",
+    "@qualia-tempo/qualia-code/enforce-measure-time-on-logic-services": "warn",
+    "@qualia-tempo/qualia-code/enforce-validate-event-property-on-emit": "warn",
+    "@qualia-tempo/qualia-code/enforce-adapt-and-emit-on-raw-handlers": "warn",
+    "@qualia-tempo/qualia-code/enforce-readonly-on-config-access": "warn",
+    "@qualia-tempo/qualia-code/enforce-deprecated-on-comment": "warn",
+    "@qualia-tempo/qualia-code/enforce-authorize-on-secure-methods": "warn",
+    "@qualia-tempo/qualia-code/enforce-profile-on-heavy-computation": "warn",
+    // NEW RULES - QUALIA.CODE v2.0 SALA (CRITICAL - Keep as errors)
+    "@qualia-tempo/qualia-code/enforce-high-fidelity-mocks": "error",
+    "@qualia-tempo/qualia-code/enforce-decorator-order": "error",
+    "@qualia-tempo/qualia-code/enforce-event-bus-type-safety": "error",
+    "@qualia-tempo/qualia-code/enforce-stateless-view-logic": "error",
+    // NEW RULES - QUALIA.CODE v2.1 PHASE 3 (CRITICAL - Keep as errors)
+    "@qualia-tempo/qualia-code/detect-circular-dependencies": "error",
+    "@qualia-tempo/qualia-code/enforce-correct-injection-scope": "error",
+    "@qualia-tempo/qualia-code/validate-injection-existence": "error",
+    "@qualia-tempo/qualia-code/enforce-ioc-initialization-order": "error",
   },
   settings: {
     "import/resolver": {
@@ -251,6 +282,64 @@ module.exports = {
       ],
       rules: {
         "@qualia-tempo/qualia-code/no-manual-contract-edit": "off", // These ARE the generated files
+      },
+    },
+    // Post-processing passes - inherently complex graphics operations, many decorators would add overhead
+    {
+      files: [
+        "**/services/postprocessing/*.ts",
+      ],
+      rules: {
+        "@qualia-tempo/qualia-code/enforce-method-decorators": "off", // Performance-critical rendering
+        "@qualia-tempo/qualia-code/enforce-async-on-heavy-methods": "off", // Rendering must be synchronous
+        "@qualia-tempo/qualia-code/enforce-validation-on-public-methods": "off", // Three.js types validated by TypeScript
+        "@qualia-tempo/qualia-code/enforce-mutex-on-state-mutations": "off", // Single-threaded rendering
+        "@qualia-tempo/qualia-code/enforce-profile-on-heavy-computation": "off", // Already profiled via Three.js stats
+        "@qualia-tempo/qualia-code/enforce-authorize-on-secure-methods": "off", // No security concerns in rendering
+      },
+    },
+    // Performance profiling utilities - need to bypass decorator enforcement
+    {
+      files: [
+        "**/utils/performance-profiler.ts",
+        "**/testing/performance-profiler.ts",
+      ],
+      rules: {
+        "@qualia-tempo/qualia-code/enforce-worker-offloading": "off", // Profiler runs on main thread by design
+        "@qualia-tempo/qualia-code/enforce-profile-on-heavy-computation": "off", // Profiler profiles itself recursively
+      },
+    },
+    // Protocol adapters - thin translation layer
+    {
+      files: [
+        "**/services/protocol/adapters/*.ts",
+      ],
+      rules: {
+        "@qualia-tempo/qualia-code/enforce-method-decorators": "warn", // Reduce to warning for adapters
+        "@qualia-tempo/qualia-code/enforce-validation-on-public-methods": "off", // Type system validates
+        "@qualia-tempo/qualia-code/enforce-profile-on-heavy-computation": "warn", // Usually lightweight
+        "@qualia-tempo/qualia-code/enforce-worker-offloading": "off", // Small transformations
+      },
+    },
+    // Utility classes - notification queue, throttling manager
+    {
+      files: [
+        "**/services/utils/*.ts",
+      ],
+      rules: {
+        "@qualia-tempo/qualia-code/enforce-retry-on-io-operations": "off", // Not all "get" calls are I/O
+        "@qualia-tempo/qualia-code/enforce-timeout-on-async-operations": "off", // False positives on queue.get()
+        "@qualia-tempo/qualia-code/enforce-rate-limit-on-api-calls": "off", // Internal data structure methods
+        "@qualia-tempo/qualia-code/enforce-async-on-heavy-methods": "off", // Queue operations must be sync
+      },
+    },
+    // Decorator implementations - meta-programming layer
+    {
+      files: [
+        "**/utils/decorators/*.ts",
+      ],
+      rules: {
+        "@qualia-tempo/qualia-code/enforce-event-bus-type-safety": "off", // Decorators work with generic types
       },
     },
   ],

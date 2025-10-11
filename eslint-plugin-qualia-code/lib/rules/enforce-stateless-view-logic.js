@@ -137,25 +137,35 @@ module.exports = {
      */
     function hasViewLogicServiceCall(useFrameNode) {
       let hasCall = false;
+      const visited = new WeakSet(); // Prevent infinite recursion on circular references
       
       function traverse(node) {
         if (!node) return;
+        if (typeof node !== 'object') return;
+        
+        // Prevent revisiting nodes (handles circular references like parent)
+        if (visited.has(node)) return;
+        visited.add(node);
         
         if (isViewLogicServiceCall(node)) {
           hasCall = true;
           return;
         }
         
-        // Traverse child nodes
-        for (const key in node) {
-          if (node.hasOwnProperty(key)) {
-            const child = node[key];
-            if (child && typeof child === 'object') {
-              if (Array.isArray(child)) {
-                child.forEach(traverse);
-              } else {
-                traverse(child);
-              }
+        // Traverse only known safe AST properties, avoiding 'parent' and other circular refs
+        const safeProps = ['body', 'expression', 'callee', 'arguments', 'params', 
+                          'elements', 'properties', 'consequent', 'alternate', 
+                          'left', 'right', 'declarations', 'init', 'test', 'update'];
+        
+        for (const key of safeProps) {
+          if (!node.hasOwnProperty(key)) continue;
+          
+          const child = node[key];
+          if (child && typeof child === 'object') {
+            if (Array.isArray(child)) {
+              child.forEach(traverse);
+            } else {
+              traverse(child);
             }
           }
         }

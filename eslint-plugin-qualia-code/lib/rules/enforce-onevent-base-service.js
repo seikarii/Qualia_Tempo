@@ -66,19 +66,35 @@ Consult QUALIA.MANUAL.md §2.3 for @OnEvent implementation patterns.`
 
     /**
      * SEMANTIC CHECK: Does class implement IBaseService?
+     * NOTE: TypeScript's getBaseTypes() only returns `extends` base classes, not `implements` interfaces!
+     * We must use fallback to check the AST 'implements' clause.
      */
     function implementsIBaseService(classNode) {
+      // First try semantic analysis
       const classType = getNodeType(classNode, tsNodeMap, checker);
-      if (!classType) return false;
-
-      const baseTypes = classType.getBaseTypes ? classType.getBaseTypes() : [];
-      for (const baseType of baseTypes) {
-        const symbol = baseType.getSymbol();
-        if (symbol && symbol.name === 'IBaseService') {
-          return true;
+      if (classType) {
+        // Check base classes (from extends)
+        const baseTypes = (classType.getBaseTypes && classType.getBaseTypes()) || [];
+        if (Array.isArray(baseTypes)) {
+          for (const baseType of baseTypes) {
+            const symbol = baseType.getSymbol();
+            if (symbol && symbol.name === 'IBaseService') {
+              return true;
+            }
+          }
         }
+        
+        // For interfaces, we need to check the class symbol's implements clause
+        // This is not exposed by the Type API, so we fall back to AST checking
       }
-      return false;
+      
+      // Fallback: Check AST implements clause (works for both semantic and non-semantic contexts)
+      if (!classNode.implements) return false;
+      return classNode.implements.some(impl => {
+        // Handle both direct identifier and qualified names
+        return impl.expression?.name === 'IBaseService' ||
+               impl.expression?.right?.name === 'IBaseService';
+      });
     }
 
     /**

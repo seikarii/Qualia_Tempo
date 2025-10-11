@@ -211,8 +211,8 @@ export class GameControllerService implements IGameControllerService, IBaseServi
 
   // === PRIVATE METHODS ===
 
-  @OnEvent('PlayerAction')
   @catchError
+  @OnEvent('PlayerAction')
   // @ts-expect-error - Reserved for future player action handling
   private async _handlePlayerAction(event: PlayerActionEvent): Promise<void> {
     this.logger.info(

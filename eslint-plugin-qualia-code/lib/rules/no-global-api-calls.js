@@ -110,7 +110,8 @@ Consult QUALIA.MANUAL.md §4.4 for @BrowserOnly usage patterns.`
 
     return {
       Identifier(node) {
-        if (forbiddenGlobals[node.name]) {
+        // CRITICAL: Use hasOwnProperty to avoid matching Object.prototype properties like 'constructor'
+        if (Object.prototype.hasOwnProperty.call(forbiddenGlobals, node.name)) {
           // Check if it's a reference (not declaration)
           if (node.parent.type !== 'Property' || node.parent.key !== node) {
             checkGlobalIdentifier(node, node.name);
@@ -119,7 +120,8 @@ Consult QUALIA.MANUAL.md §4.4 for @BrowserOnly usage patterns.`
       },
 
       CallExpression(node) {
-        if (node.callee.type === 'Identifier' && forbiddenGlobals[node.callee.name]) {
+        if (node.callee.type === 'Identifier' && 
+            Object.prototype.hasOwnProperty.call(forbiddenGlobals, node.callee.name)) {
           checkGlobalIdentifier(node.callee, node.callee.name);
         }
       }

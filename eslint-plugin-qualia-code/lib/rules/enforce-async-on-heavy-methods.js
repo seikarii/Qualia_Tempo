@@ -30,6 +30,12 @@ Recommendation: Make method async and use requestIdleCallback or Web Worker for 
   create(context) {
     const filename = context.getFilename();
     if (!filename.includes('/services/')) return {};
+    
+    // WHITELIST: Provider files are platform abstraction layer - their methods delegate to browser APIs
+    // and should NOT be made async as that would break the synchronous browser API contract
+    if (filename.includes('Provider.ts') || filename.includes('/providers/')) {
+      return {};
+    }
 
     // Try to get TypeChecker, fallback to name-based heuristic if unavailable
     let typeServices;
