@@ -1102,4 +1102,83 @@ que se considera el estándar GOLD.CODE para esta funcionalidad.
 
 ---
 
-*"Code is the architecture of thought. Choose the language that best expresses your computational intent."*
+*"Code is the architecture of thought. Choose the language that best expresses your computational intent."
+
+---
+
+## APPENDIX A: ARCHITECTURAL DOCUMENTATION CONVENTION
+
+### A.1. Mandate: Docstrings as an Architectural Artifact
+
+To ensure that the purpose and architectural role of every major component (module, public struct, public class) is immediately apparent to both human and AI engineers, a documentation convention is hereby established.
+
+This convention is **MANDATORY** for the primary docstring (`//!` for modules, `///` for items) of all major architectural components.
+
+### A.2. The Responsibility Header
+
+Every major component's docstring **MUST** begin with a `Responsibility` header. This provides a concise, single-sentence summary of the component's role in the system from a business or architectural perspective.
+
+**FORMAT:**
+
+```rust
+//! # Responsibility
+//! [Descripción concisa de la responsabilidad del componente en una sola frase.]
+//!
+//! ---
+//!
+//! [Descripción técnica detallada, si es necesaria...]
+```
+
+**RATIONALE:**
+
+1.  **Clarity for AI:** Provides a predictable, machine-parseable entry point for an AI agent to understand the *purpose* of a component before analyzing its implementation.
+2.  **Architectural Alignment:** Forces the engineer (human or AI) to think about and declare the single responsibility of the component, promoting better, more cohesive design.
+3.  **Automated Tooling:** This structured comment is extracted by `graph_generator` into the `description` field of the graph node, making the architectural map instantly more informative.
+
+### A.3. Examples
+
+#### Example 1: Module Docstring (`//!`)
+
+```rust
+//! # Responsibility
+//! Handles all real-time audio processing and spatialization based on game state.
+//!
+//! ---
+//!
+//! This module contains the main `AudioService` and related components for managing
+//! sound layers, applying effects, and synchronizing audio events with gameplay.
+pub mod audio {
+    // ...
+}
+```
+
+#### Example 2: Struct Docstring (`///`)
+
+```rust
+/// # Responsibility
+/// Represents the complete, serializable state of the game at any given moment.
+///
+/// ---
+///
+/// This struct is the single source of truth for game state and is used for
+/// saving, loading, and network synchronization.
+pub struct GameState {
+    // ...
+}
+```
+
+#### Example 3: Bad Example (FORBIDDEN)
+
+```rust
+/// This struct holds game state. It has a player and a boss.
+/// It was created on a Tuesday. It might be refactored later.
+/// It is used by the rendering engine.
+// VIOLATION: Lacks the structured # Responsibility header. The information is
+// unstructured, verbose, and mixes purpose with implementation details.
+pub struct GameState {
+    // ...
+}
+```
+
+This convention ensures that our codebase is not just a collection of implementations, but a self-documenting architectural blueprint.
+*
