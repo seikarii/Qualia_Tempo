@@ -8,8 +8,10 @@
 
 import type { ThrottlingConfig } from '../contracts/INotificationService.contracts';
 import type { ITimerService } from '../interfaces/ITimerService';
+import type { ILogger } from '../interfaces/ILogger';
 import { injectable, inject } from 'inversify';
 import { TYPES } from '../inversify.types';
+import { logMethod, profile } from '../../utils/decorators';
 
 @injectable()
 export class ThrottlingManager {
@@ -20,9 +22,12 @@ export class ThrottlingManager {
 
   constructor(
     @inject(TYPES.ThrottlingConfig) private _config: ThrottlingConfig,
-    @inject(TYPES.ITimerService) private _timerService: ITimerService
+    @inject(TYPES.ITimerService) private _timerService: ITimerService,
+    @inject(TYPES.ILogger) private _logger: ILogger
   ) {}
 
+  @logMethod
+  @profile()
   canProcess(): boolean {
     if (!this._config.enabled) {
       return true;
@@ -72,6 +77,7 @@ export class ThrottlingManager {
     return true;
   }
 
+  @logMethod
   recordNotification(): void {
     const now = new Date(this._timerService.now());
     this.recentNotifications.push(now);

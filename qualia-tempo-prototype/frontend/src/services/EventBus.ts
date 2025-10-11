@@ -182,6 +182,7 @@ export class EventBus implements IEventBus {
   /**
    * Subscribe to an event that will only fire once.
    */
+  @logMethod
   public once<T extends EventTypes>(
     eventType: T["type"],
     handler: EventHandler<T>,
@@ -199,6 +200,7 @@ export class EventBus implements IEventBus {
   /**
    * Unsubscribe from events using the listener ID.
    */
+  @logMethod
   public unsubscribe(listenerId: string): boolean {
     this.logger.info(`🔌 [EventBus] Unsubscribe called for ID: ${listenerId}`);
 
@@ -408,6 +410,7 @@ export class EventBus implements IEventBus {
   /**
    * Clear all listeners and event history.
    */
+  @logMethod
   public clear(): void {
     this.logger.info("🧹 [EventBus] Clear called");
 
@@ -431,6 +434,7 @@ export class EventBus implements IEventBus {
   /**
    * Destroy the EventBus and clean up resources.
    */
+  @logMethod
   public destroy(): void {
     this.logger.info("💀 [EventBus] Destroy called");
 
@@ -446,6 +450,7 @@ export class EventBus implements IEventBus {
   /**
    * Get statistics about the EventBus state.
    */
+  @logMethod
   public getStats(): {
     totalListeners: number;
     eventTypes: string[];
