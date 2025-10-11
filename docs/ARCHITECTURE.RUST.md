@@ -41,7 +41,7 @@ Qualia Tempo Rust Edition is a complete rewrite that leverages Rust's strengths 
 │  │                                │                                         │  │
 │  │  ┌─────────────────────────────▼──────────────────────────────────────┐  │  │
 │  │  │                     Frontend Event Bus                             │  │  │
-│  │  │                  (async-channel, in-WASM)                           │  │  │
+│  │  │                  (tokio::sync::broadcast, in-WASM)                 │  │  │
 │  │  └─────────────────────────────┬──────────────────────────────────────┘  │  │
 │  │                                │                                         │  │
 │  │  ┌─────────────────────────────▼──────────────────────────────────────┐  │  │
@@ -331,18 +331,18 @@ Backend GameLogicService
         ▼
 ┌──────────────────────────────────┐
 │  Particle Engine Pool Manager    │
-│  (Manages worker threads)        │
+│  (Dynamic thread pool: num_cpus) │
 └───┬──────────────────────────────┘
     │ Distribute work
     ├────────────┬────────────┬────────────┐
     ▼            ▼            ▼            ▼
 ┌──────┐    ┌──────┐    ┌──────┐    ┌──────┐
 │Thread│    │Thread│    │Thread│    │Thread│
-│  1   │    │  2   │    │  3   │    │  4   │
+│  N   │    │  N+1 │    │  N+2 │    │  N+3 │
 └───┬──┘    └───┬──┘    └───┬──┘    └───┬──┘
     │ Calculate   │ Calculate   │ Calculate   │ Calculate
     │ particles   │ particles   │ particles   │ particles
-    │ 0-999       │ 1000-1999   │ 2000-2999   │ 3000-3999
+    │ 0-M         │ M+1-N       │ N+1-O       │ O+1-P
     └────────────┴────────────┴────────────┘
                     │ Join results
                     ▼
@@ -357,6 +357,11 @@ Backend GameLogicService
             │  (Adds to GameState) │
             └──────────────────────┘
 ```
+
+**Thread Pool Configuration**:
+- Default: `num_cpus::get()` logical cores
+- Configurable via `particle_engine.yaml`
+- Scales automatically with hardware capabilities
 
 ---
 
@@ -588,46 +593,45 @@ cargo tarpaulin --out Html --workspace
 
 ## 11. MIGRATION STRATEGY
 
-### 11.1. Phase 1: Foundation (Weeks 1-2)
+**PRINCIPLE RECTOR**: The reescritura a Rust no es una simplificación, sino una mejora y optimización del sistema existente. La estrategia consiste en una traducción de alta fidelidad de la lógica de negocio ya validada, aplicando desde el primer día los patrones de concurrencia, rendimiento y seguridad idiomáticos de Rust. Se prohíbe la introducción de implementaciones 'básicas' o 'single-threaded' para funcionalidades críticas que ya existen de forma robusta en el sistema original. El objetivo es la paridad de funcionalidades mejorada, no la reinvención.
 
-- [ ] Set up workspace structure
-- [ ] Implement `shared_core` contracts
-- [ ] Create backend EventBus
-- [ ] Basic Axum server with WebSocket handler
-- [ ] Minimal frontend with Leptos (just connection status)
+### 11.1. Phase 1: High-Fidelity Translation Foundation (Weeks 1-2)
 
-### 11.2. Phase 2: Core Services (Weeks 3-5)
+- [ ] Set up workspace structure with full QUALIA.CODE.RUST compliance
+- [ ] Implement `shared_core` contracts with complete Serde/JsonSchema support
+- [ ] Create backend EventBus using `tokio::sync::broadcast` (lock-free from day one)
+- [ ] Implement Axum WebSocket server with full binary serialization (bincode)
+- [ ] Minimal frontend with Leptos and tokio::sync::broadcast for EventBus
 
-- [ ] GameLogicService (scoring, combos)
-- [ ] QualiaStateCalculatorService
-- [ ] BossAIService (basic patterns)
-- [ ] HarmonyAnalysisService
-- [ ] ParticleEngineService (single-threaded first)
+### 11.2. Phase 2: Core Business Logic Translation (Weeks 3-6)
 
-### 11.3. Phase 3: Frontend Rendering (Weeks 6-8)
+- [ ] GameLogicService with full scoring, combo, and health systems (parallel-ready)
+- [ ] QualiaStateCalculatorService with real-time qualia computation
+- [ ] BossAIService with complete pattern recognition and adaptive behavior
+- [ ] HarmonyAnalysisService with chord detection and musical analysis
+- [ ] ParticleEngineService with dynamic Rayon thread pool (num_cpus::get() default)
 
-- [ ] wgpu renderer setup
-- [ ] Particle rendering
-- [ ] Basic shaders (vertex + fragment)
-- [ ] Post-processing (bloom)
-- [ ] Audio integration (playback only)
+### 11.3. Phase 3: Frontend Rendering & Audio Integration (Weeks 7-9)
 
-### 11.4. Phase 4: Integration & Polish (Weeks 9-10)
+- [ ] wgpu renderer with full shader pipeline (vertex, fragment, compute)
+- [ ] Particle rendering system with GPU acceleration
+- [ ] Advanced post-processing (bloom, reaction-diffusion, SDFs)
+- [ ] Complete audio integration (FFT analysis, 8D positioning, Web Audio API)
 
-- [ ] Full frontend ↔ backend communication
-- [ ] FFT analysis integration
-- [ ] Advanced shaders (reaction-diffusion, SDFs)
-- [ ] Performance optimization
-- [ ] Comprehensive testing
+### 11.4. Phase 4: Full System Integration & Optimization (Weeks 10-11)
 
-### 11.5. Phase 5: Production Readiness (Weeks 11-12)
+- [ ] Complete frontend ↔ backend communication with binary protocols
+- [ ] Performance optimization (PGO, SIMD, arena allocation)
+- [ ] Comprehensive testing with high-fidelity mocks (mockall)
+- [ ] Load testing and profiling for production readiness
 
-- [ ] Docker containerization
-- [ ] CI/CD pipelines
-- [ ] Load testing
-- [ ] Security audit
-- [ ] Documentation completion
-- [ ] Deployment to production
+### 11.5. Phase 5: Production Deployment (Weeks 12-13)
+
+- [ ] Docker containerization with multi-stage builds
+- [ ] CI/CD pipelines with automated testing and deployment
+- [ ] Security audit and penetration testing
+- [ ] Documentation completion and API stabilization
+- [ ] Production deployment with monitoring and rollback capabilities
 
 ---
 
