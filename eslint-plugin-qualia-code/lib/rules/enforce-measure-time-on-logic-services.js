@@ -19,9 +19,11 @@ module.exports = {
 
     return {
       MethodDefinition(node) {
-        const hasMeasureTime = node.decorators?.some(d => 
-          d.expression?.callee?.name === 'measureTime' || d.expression?.callee?.name === 'profile'
-        );
+        // Check for @measureTime or @profile decorators - handle both syntaxes
+        const hasMeasureTime = node.decorators?.some(d => {
+          const decoratorName = d.expression?.callee?.name || d.expression?.name;
+          return decoratorName === 'measureTime' || decoratorName === 'profile';
+        });
         if (hasMeasureTime || !node.value?.body) return;
 
         const bodyLength = node.value.body.body?.length || 0;

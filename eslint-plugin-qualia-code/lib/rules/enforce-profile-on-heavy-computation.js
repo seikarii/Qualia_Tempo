@@ -16,7 +16,10 @@ module.exports = {
   create(context) {
     return {
       MethodDefinition(node) {
-        const hasProfile = node.decorators?.some(d => d.expression?.callee?.name === 'profile');
+        // Check for @profile decorator - handle both @profile and @profile() syntaxes
+        const hasProfile = node.decorators?.some(d => 
+          d.expression?.callee?.name === 'profile' || d.expression?.name === 'profile'
+        );
         if (hasProfile || !node.value?.body) return;
 
         const bodyLength = node.value.body.body?.length || 0;

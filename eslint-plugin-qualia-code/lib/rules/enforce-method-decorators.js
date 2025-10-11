@@ -31,8 +31,21 @@ module.exports = {
         // CRITICAL: Skip constructors - they should NOT have @logMethod
         if (node.kind === 'constructor') return;
 
-        const hasLogMethod = node.decorators?.some(d => d.expression?.callee?.name === 'logMethod');
-        if (!hasLogMethod && node.value?.body) {
+        // Check for @logMethod decorator
+        // CRITICAL: Handle both syntaxes:
+        //   - @logMethod (without parens): d.expression.name === 'logMethod'
+        //   - @logMethod() (with parens): d.expression.callee.name === 'logMethod'
+        const hasLogMethod = node.decorators?.some(d => {
+          const decoratorName = d.expression?.callee?.name || d.expression?.name;
+          return decoratorName === 'logMethod';
+        });
+        
+        // Also check for @logMethod-exempt comment (hot path optimization)
+        const sourceCode = context.getSourceCode();
+        const comments = sourceCode.getCommentsBefore(node);
+        const hasExemption = comments.some(c => c.value.includes('@logMethod-exempt'));
+        
+        if (!hasLogMethod && !hasExemption && node.value?.body) {
           context.report({ node, messageId: 'missingLogMethod', data: { method: node.key.name } });
         }
       }

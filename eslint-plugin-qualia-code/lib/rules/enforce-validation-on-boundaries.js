@@ -25,7 +25,11 @@ module.exports = {
       return {
         MethodDefinition(node) {
           if (!node.key.name || node.key.name.startsWith('_')) return;
-          const hasValidate = node.decorators?.some(d => d.expression?.callee?.name === 'validate');
+          
+          // Check for @validate decorator - handle both syntaxes
+          const hasValidate = node.decorators?.some(d => 
+            d.expression?.callee?.name === 'validate' || d.expression?.name === 'validate'
+          );
           if (hasValidate) return;
 
           const params = node.value?.params || [];

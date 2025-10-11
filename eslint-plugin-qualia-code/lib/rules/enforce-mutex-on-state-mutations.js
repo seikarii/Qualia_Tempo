@@ -34,8 +34,10 @@ Required: Add @mutex decorator to ensure atomic state updates.`
 
     return {
       MethodDefinition(node) {
-        // Skip if already has @mutex decorator
-        const hasMutex = node.decorators?.some(d => d.expression?.callee?.name === 'mutex');
+        // Skip if already has @mutex decorator - handle both syntaxes
+        const hasMutex = node.decorators?.some(d => 
+          d.expression?.callee?.name === 'mutex' || d.expression?.name === 'mutex'
+        );
         if (hasMutex) return;
 
         // Skip if has exemption comment

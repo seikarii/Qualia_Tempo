@@ -74,24 +74,59 @@ Consult QUALIA.MANUAL.md §4.4 for @BrowserOnly usage patterns.`
 
     /**
      * Check if current node is inside a @BrowserOnly decorated method
+     * 
+     * CRITICAL BUG FIX: TypeScript decorators are NOT included in the MethodDefinition's range.
+     * They exist as separate AST nodes. We must check the decorators property directly,
+     * not search backwards in the text.
+     * 
+     * IMPLEMENTATION:
+     * 1. Traverse UP the AST to find the enclosing MethodDefinition or FunctionDeclaration
+     * 2. Check the node's `decorators` array for a decorator named 'BrowserOnly'
+     * 3. If not in decorators array, fall back to text search (for edge cases)
      */
     function isInBrowserOnlyContext(node) {
       let current = node;
+      
+      // Traverse up the AST to find the enclosing method/function
       while (current) {
         if (current.type === 'MethodDefinition' || 
             current.type === 'FunctionDeclaration') {
-          // Check for @BrowserOnly decorator
-          const sourceCode = context.getSourceCode();
-          const textBefore = sourceCode.getText().substring(
-            Math.max(0, current.range[0] - 150),
-            current.range[0]
-          );
-          if (textBefore.includes('@BrowserOnly')) {
-            return true;
+          
+          // METHOD 1: Check the AST decorators array (most reliable)
+          if (current.decorators && Array.isArray(current.decorators)) {
+            for (const decorator of current.decorators) {
+              // Decorator structure: { expression: { callee: { name: 'BrowserOnly' } } }
+              // Or for decorators without parens: { expression: { name: 'BrowserOnly' } }
+              const decoratorName = decorator.expression?.callee?.name || decorator.expression?.name;
+              if (decoratorName === 'BrowserOnly') {
+                return true;
+              }
+            }
           }
+          
+          // METHOD 2: Fallback to text search (for edge cases where AST doesn't capture decorators)
+          // This can happen with experimental TypeScript features or parser limitations
+          const sourceCode = context.getSourceCode();
+          
+          // Get the full text of the method including leading comments and decorators
+          // We need to look at the tokens BEFORE the method definition
+          const methodToken = sourceCode.getFirstToken(current);
+          if (methodToken) {
+            const tokensBefore = sourceCode.getTokensBefore(methodToken, { count: 20 });
+            for (const token of tokensBefore) {
+              if (token.type === 'Identifier' && token.value === 'BrowserOnly') {
+                return true;
+              }
+            }
+          }
+          
+          // No decorator found - this is a violation
+          return false;
         }
         current = current.parent;
       }
+      
+      // Not inside any method - this is top-level code (also a violation)
       return false;
     }
 
@@ -114,6 +149,15 @@ Consult QUALIA.MANUAL.md §4.4 for @BrowserOnly usage patterns.`
         if (Object.prototype.hasOwnProperty.call(forbiddenGlobals, node.name)) {
           // Check if it's a reference (not declaration)
           if (node.parent.type !== 'Property' || node.parent.key !== node) {
+            // CRITICAL FIX: Skip identifiers that are property names in MemberExpressions
+            // Example: this.timerService.setTimeout() - "setTimeout" here is a PROPERTY NAME, not a global API reference
+            // Only flag direct global references like: setTimeout() or window.location
+            if (node.parent.type === 'MemberExpression' && node.parent.property === node) {
+              // This is a property access like obj.setTimeout - NOT a global API call
+              // The object could be an injected service (correct pattern)
+              return;
+            }
+            
             checkGlobalIdentifier(node, node.name);
           }
         }

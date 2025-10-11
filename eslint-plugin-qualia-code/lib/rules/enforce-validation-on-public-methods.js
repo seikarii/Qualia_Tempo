@@ -31,8 +31,17 @@ module.exports = {
         // CRITICAL: Skip constructors - validation in constructors is IoC container's responsibility
         if (node.kind === 'constructor') return;
 
-        const hasValidate = node.decorators?.some(d => d.expression?.callee?.name === 'validate');
-        if (hasValidate) return;
+        // Check for @validate decorator - handle both @validate and @validate() syntaxes
+        const hasValidate = node.decorators?.some(d => 
+          d.expression?.callee?.name === 'validate' || d.expression?.name === 'validate'
+        );
+        
+        // Also check for @validate-exempt comment (for hot paths or simple parameters)
+        const sourceCode = context.getSourceCode();
+        const comments = sourceCode.getCommentsBefore(node);
+        const hasExemption = comments.some(c => c.value.includes('@validate-exempt'));
+        
+        if (hasValidate || hasExemption) return;
 
         const params = node.value?.params || [];
         const hasComplexParams = params.length > 2 || params.some(p => 
