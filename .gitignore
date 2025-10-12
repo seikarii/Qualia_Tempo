@@ -37,6 +37,9 @@ dist/
 build/
 *.tsbuildinfo
 
+# Rust build outputs (target/ directories cause 200+ file noise)
+**/target/
+
 # Electron build outputs
 dist-electron/
 *.AppImage
