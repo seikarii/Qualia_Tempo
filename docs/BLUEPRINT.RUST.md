@@ -181,6 +181,11 @@ qualia-tempo-rust/
 │       │   ├── health_bar.rs          # Health/shield bars
 │       │   └── subtitle_display.rs    # Lyric subtitles
 │       │
+│       ├── scenes/                     # 🆕 SCENE ABSTRACTION
+│       │   ├── mod.rs
+│       │   ├── i_scene.rs             # Defines the IScene trait
+│       │   └── qualia_tempo_scene.rs  # Concrete implementation for Qualia Tempo
+│       │
 │       ├── state/                      # Leptos Signals state management
 │       │   ├── mod.rs
 │       │   ├── game_store.rs          # ✅ GameStateStore (Leptos RwSignal)
@@ -263,7 +268,7 @@ qualia-tempo-rust/
 │       ├── rendering/                  # wgpu rendering engine
 │       │   ├── mod.rs
 │       │   ├── renderer.rs            # ✅ FrontendRenderingService
-│       │   ├── kairos_engine.rs       # ✅ KairosVisualEngine (main visual orchestrator)
+│       │   ├── kairos_engine.rs       # ✅ KairosVisualEngine (pure renderer + scene orchestrator)
 │       │   ├── particle_system.rs     # ✅ ParticleSystemService
 │       │   ├── physics.rs             # ✅ PhysicsService
 │       │   ├── post_processing.rs     # ✅ PostProcessingService
