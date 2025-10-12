@@ -948,218 +948,348 @@ async fn main() -> anyhow::Result<()> {
 
 ---
 
-## 6. FRONTEND: LEPTOS UI + WGPU RENDERING
+## 6. FRONTEND: LEPTOS UI + DEFERRED RENDERING PIPELINE (wgpu)
 
-### 6.1. Leptos Component
+### 6.1. Deferred Rendering Architecture Overview
+
+La pipeline de renderizado sigue la arquitectura **Deferred Rendering** definida en VISUALS.RUST.md:
+
+1. **G-Buffer Pass**: Renderiza geometría a múltiples texturas (albedo, normal, depth, material, velocity)
+2. **Lighting Pass**: Computa iluminación usando G-Buffer (evita iluminación por objeto/luz)
+3. **Post-Processing Chain**: Bloom → God Rays → DoF → Motion Blur
+4. **Composite + Tonemapping + TAA**: Composición final con ACES tonemapping y anti-aliasing temporal
+
+### 6.2. G-Buffer Pass Implementation
 
 ```rust
 //! # Responsibility
-//! Provides the root UI component for the game interface.
+//! Renders scene geometry to G-Buffer textures for deferred lighting.
 
-// frontend/src/components/game_ui.rs
-use leptos::*;
+// frontend/src/rendering/passes/g_buffer_pass.rs
+use wgpu::*;
 use shared_core::contracts::*;
-use wasm_bindgen::prelude::*;
-
-#[component]
-pub fn GameUI(cx: Scope) -> impl IntoView {
-    let (game_state, set_game_state) = create_signal(cx, GameState::default());
-    let (connected, set_connected) = create_signal(cx, false);
-    
-    // WebSocket connection
-    create_effect(cx, move |_| {
-        spawn_local(async move {
-            match connect_to_backend().await {
-                Ok(mut ws) => {
-                    set_connected.set(true);
-                    
-                    while let Ok(state) = ws.recv_state().await {
-                        set_game_state.set(state);
-                    }
-                }
-                Err(e) => {
-                    log::error!("WebSocket error: {}", e);
-                }
-            }
-        });
-    });
-    
-    view! { cx,
-        <div class="game-container">
-            <StatusBar connected=connected />
-            <QualiaDisplay state=move || game_state.get().qualia />
-            <Canvas />
-            <Controls />
-        </div>
-    }
-}
+use anyhow::Result;
 
 /// # Responsibility
-/// Displays the current qualia state with progress bars.
-#[component]
-fn QualiaDisplay(cx: Scope, state: Signal<QualiaState>) -> impl IntoView {
-    view! { cx,
-        <div class="qualia-display">
-            <div class="qualia-bar">
-                <span>"Intensity: "</span>
-                <progress value=move || state.get().intensity max="1.0" />
-            </div>
-            <div class="qualia-bar">
-                <span>"Harmony: "</span>
-                <progress value=move || state.get().harmony max="1.0" />
-            </div>
-            <div class="qualia-bar">
-                <span>"Chaos: "</span>
-                <progress value=move || state.get().chaos max="1.0" />
-            </div>
-            <div class="qualia-bar">
-                <span>"Kairos: "</span>
-                <progress value=move || state.get().kairos max="1.0" />
-            </div>
-        </div>
+/// Manages G-Buffer render targets and geometry rendering.
+pub struct GBufferPass {
+    pipeline: RenderPipeline,
+    g_albedo: Texture,
+    g_normal: Texture,
+    g_depth: Texture,
+    g_material: Texture,
+    g_velocity: Texture,
+}
+
+impl GBufferPass {
+    pub fn new(device: &Device, config: &SurfaceConfiguration) -> Result<Self> {
+        // Create G-Buffer textures
+        let g_albedo = device.create_texture(&TextureDescriptor {
+            label: Some("G-Albedo"),
+            size: Extent3d { width: config.width, height: config.height, depth_or_array_layers: 1 },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: TextureDimension::D2,
+            format: TextureFormat::Rgba8Unorm,
+            usage: TextureUsages::RENDER_ATTACHMENT | TextureUsages::TEXTURE_BINDING,
+            view_formats: &[],
+        });
+        
+        // Similar for g_normal (Rgba16Float), g_depth (Depth32Float), etc.
+        
+        // Create render pipeline for geometry
+        let shader = device.create_shader_module(ShaderModuleDescriptor {
+            label: Some("G-Buffer Shader"),
+            source: ShaderSource::Wgsl(include_str!("../shaders/g_buffer.wgsl").into()),
+        });
+        
+        let pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
+            label: Some("G-Buffer Pipeline"),
+            layout: Some(&device.create_pipeline_layout(&PipelineLayoutDescriptor {
+                label: Some("G-Buffer Layout"),
+                bind_group_layouts: &[],
+                push_constant_ranges: &[],
+            })),
+            vertex: VertexState {
+                module: &shader,
+                entry_point: "vs_main",
+                buffers: &[/* vertex buffers */],
+            },
+            fragment: Some(FragmentState {
+                module: &shader,
+                entry_point: "fs_main",
+                targets: &[
+                    Some(ColorTargetState { format: TextureFormat::Rgba8Unorm, ..Default::default() }), // albedo
+                    Some(ColorTargetState { format: TextureFormat::Rgba16Float, ..Default::default() }), // normal
+                    Some(ColorTargetState { format: TextureFormat::Rgba8Unorm, ..Default::default() }), // material
+                    Some(ColorTargetState { format: TextureFormat::Rg16Float, ..Default::default() }), // velocity
+                ],
+            }),
+            primitive: PrimitiveState::default(),
+            depth_stencil: Some(DepthStencilState {
+                format: TextureFormat::Depth32Float,
+                depth_write_enabled: true,
+                depth_compare: CompareFunction::Less,
+                stencil: StencilState::default(),
+                bias: DepthBiasState::default(),
+            }),
+            multisample: MultisampleState::default(),
+            multiview: None,
+        });
+        
+        Ok(Self { pipeline, g_albedo, g_normal, g_depth, g_material, g_velocity })
+    }
+    
+    pub fn render_geometry(&self, encoder: &mut CommandEncoder, state: &CombatState) {
+        let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
+            label: Some("G-Buffer Pass"),
+            color_attachments: &[
+                Some(RenderPassColorAttachment {
+                    view: &self.g_albedo.create_view(&TextureViewDescriptor::default()),
+                    resolve_target: None,
+                    ops: Operations { load: LoadOp::Clear(Color::BLACK), store: StoreOp::Store },
+                }),
+                // Similar for other G-Buffer targets
+            ],
+            depth_stencil_attachment: Some(RenderPassDepthStencilAttachment {
+                view: &self.g_depth.create_view(&TextureViewDescriptor::default()),
+                depth_ops: Some(Operations { load: LoadOp::Clear(1.0), store: StoreOp::Store }),
+                stencil_ops: None,
+            }),
+            ..Default::default()
+        });
+        
+        render_pass.set_pipeline(&self.pipeline);
+        
+        // Render particles
+        // render_pass.set_vertex_buffer(...);
+        // render_pass.draw(...);
+        
+        // Render SDFs
+        // render_pass.set_vertex_buffer(...);
+        // render_pass.draw(...);
     }
 }
 ```
 
-### 6.2. wgpu Renderer
+### 6.3. Lighting Pass Implementation
 
 ```rust
 //! # Responsibility
-//! Manages WebGPU rendering pipeline for 3D graphics.
+//! Computes deferred lighting using G-Buffer data.
 
-// frontend/src/rendering/renderer.rs
-use wgpu;
-use winit::window::Window;
+// frontend/src/rendering/passes/lighting_pass.rs
+use wgpu::*;
+use super::GBufferPass;
 use anyhow::Result;
 
 /// # Responsibility
-/// Initializes and manages the wgpu rendering context.
-pub struct WgpuRenderer {
-    device: wgpu::Device,
-    queue: wgpu::Queue,
-    surface: wgpu::Surface,
-    config: wgpu::SurfaceConfiguration,
-    pipeline: wgpu::RenderPipeline,
+/// Performs deferred lighting computation with HBAO and SSR.
+pub struct LightingPass {
+    pipeline: RenderPipeline,
+    output: Texture, // Lit scene
 }
 
-impl WgpuRenderer {
-    pub async fn new(window: &Window) -> Result<Self> {
-        // Create instance
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::all(),
+impl LightingPass {
+    pub fn new(device: &Device, g_buffer: &GBufferPass) -> Result<Self> {
+        let shader = device.create_shader_module(ShaderModuleDescriptor {
+            label: Some("Lighting Shader"),
+            source: ShaderSource::Wgsl(include_str!("../shaders/lighting.wgsl").into()),
+        });
+        
+        // Create bind group layout for G-Buffer textures
+        let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+            label: Some("Lighting Bind Group Layout"),
+            entries: &[
+                // G-Albedo
+                BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: ShaderStages::FRAGMENT,
+                    ty: BindingType::Texture { sample_type: TextureSampleType::Float { filterable: true }, view_dimension: TextureViewDimension::D2, multisampled: false },
+                    count: None,
+                },
+                // G-Normal
+                BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: ShaderStages::FRAGMENT,
+                    ty: BindingType::Texture { sample_type: TextureSampleType::Float { filterable: false }, view_dimension: TextureViewDimension::D2, multisampled: false },
+                    count: None,
+                },
+                // G-Depth
+                BindGroupLayoutEntry {
+                    binding: 2,
+                    visibility: ShaderStages::FRAGMENT,
+                    ty: BindingType::Texture { sample_type: TextureSampleType::Depth, view_dimension: TextureViewDimension::D2, multisampled: false },
+                    count: None,
+                },
+                // G-Material
+                BindGroupLayoutEntry {
+                    binding: 3,
+                    visibility: ShaderStages::FRAGMENT,
+                    ty: BindingType::Texture { sample_type: TextureSampleType::Float { filterable: true }, view_dimension: TextureViewDimension::D2, multisampled: false },
+                    count: None,
+                },
+            ],
+        });
+        
+        let pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
+            label: Some("Lighting Pipeline"),
+            layout: Some(&device.create_pipeline_layout(&PipelineLayoutDescriptor {
+                label: Some("Lighting Layout"),
+                bind_group_layouts: &[&bind_group_layout],
+                push_constant_ranges: &[],
+            })),
+            vertex: VertexState {
+                module: &shader,
+                entry_point: "vs_main",
+                buffers: &[], // Fullscreen quad
+            },
+            fragment: Some(FragmentState {
+                module: &shader,
+                entry_point: "fs_main",
+                targets: &[Some(ColorTargetState {
+                    format: TextureFormat::Rgba16Float, // HDR
+                    blend: Some(BlendState::REPLACE),
+                    write_mask: ColorWrites::ALL,
+                })],
+            }),
+            primitive: PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: MultisampleState::default(),
+            multiview: None,
+        });
+        
+        Ok(Self { pipeline, output: /* create output texture */ })
+    }
+    
+    pub fn compute_lighting(&self, encoder: &mut CommandEncoder, g_buffer: &GBufferPass) {
+        // Create bind group with G-Buffer textures
+        let bind_group = device.create_bind_group(&BindGroupDescriptor {
+            label: Some("Lighting Bind Group"),
+            layout: &bind_group_layout,
+            entries: &[
+                BindGroupEntry { binding: 0, resource: BindingResource::TextureView(&g_buffer.g_albedo_view) },
+                BindGroupEntry { binding: 1, resource: BindingResource::TextureView(&g_buffer.g_normal_view) },
+                BindGroupEntry { binding: 2, resource: BindingResource::TextureView(&g_buffer.g_depth_view) },
+                BindGroupEntry { binding: 3, resource: BindingResource::TextureView(&g_buffer.g_material_view) },
+            ],
+        });
+        
+        let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
+            label: Some("Lighting Pass"),
+            color_attachments: &[Some(RenderPassColorAttachment {
+                view: &self.output.create_view(&TextureViewDescriptor::default()),
+                resolve_target: None,
+                ops: Operations { load: LoadOp::Clear(Color::BLACK), store: StoreOp::Store },
+            })],
             ..Default::default()
         });
         
-        // Create surface
-        let surface = unsafe { instance.create_surface(window) }?;
+        render_pass.set_pipeline(&self.pipeline);
+        render_pass.set_bind_group(0, &bind_group, &[]);
+        render_pass.draw(0..3, 0..1); // Fullscreen quad
+    }
+}
+```
+
+### 6.4. Post-Processing Chain Implementation
+
+```rust
+//! # Responsibility
+//! Manages the sequence of post-processing effects.
+
+// frontend/src/rendering/post_fx/mod.rs
+pub mod bloom;
+pub mod god_rays;
+pub mod dof;
+pub mod motion_blur;
+
+use wgpu::*;
+use shared_core::contracts::QualiaState;
+use anyhow::Result;
+
+/// # Responsibility
+/// Orchestrates post-processing effect chain.
+pub struct PostProcessingChain {
+    bloom_pass: bloom::BloomPass,
+    god_rays_pass: god_rays::GodRaysPass,
+    dof_pass: dof::DoFPass,
+    motion_blur_pass: motion_blur::MotionBlurPass,
+}
+
+impl PostProcessingChain {
+    pub fn apply_effects(&self, encoder: &mut CommandEncoder, input: &Texture, qualia: &QualiaState) -> Texture {
+        // Chain effects with ping-pong textures
+        let after_bloom = self.bloom_pass.apply(encoder, input, qualia.intensity);
+        let after_god_rays = self.god_rays_pass.apply(encoder, &after_bloom, qualia.precision);
+        let after_dof = self.dof_pass.apply(encoder, &after_god_rays);
+        let final_output = self.motion_blur_pass.apply(encoder, &after_dof);
         
-        // Request adapter
-        let adapter = instance.request_adapter(&wgpu::RequestAdapterOptions {
-            power_preference: wgpu::PowerPreference::HighPerformance,
-            compatible_surface: Some(&surface),
-            force_fallback_adapter: false,
-        }).await.unwrap();
-        
-        // Request device
-        let (device, queue) = adapter.request_device(
-            &wgpu::DeviceDescriptor {
-                features: wgpu::Features::empty(),
-                limits: wgpu::Limits::default(),
-                label: None,
-            },
-            None,
-        ).await?;
-        
-        // Configure surface
-        let size = window.inner_size();
-        let config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: surface.get_capabilities(&adapter).formats[0],
-            width: size.width,
-            height: size.height,
-            present_mode: wgpu::PresentMode::Fifo,
-            alpha_mode: wgpu::CompositeAlphaMode::Auto,
-            view_formats: vec![],
-        };
-        surface.configure(&device, &config);
-        
-        // Load shader
-        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Main Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
-        });
-        
-        // Create pipeline
-        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("Pipeline Layout"),
-            bind_group_layouts: &[],
-            push_constant_ranges: &[],
-        });
-        
-        let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
-            layout: Some(&pipeline_layout),
-            vertex: wgpu::VertexState {
-                module: &shader,
-                entry_point: "vs_main",
-                buffers: &[],
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &shader,
-                entry_point: "fs_main",
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-            primitive: wgpu::PrimitiveState::default(),
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState::default(),
-            multiview: None,
-        });
+        final_output
+    }
+}
+```
+
+### 6.5. Leptos Integration
+
+```rust
+//! # Responsibility
+//! Integrates wgpu rendering with Leptos reactive state.
+
+// frontend/src/rendering/kairos_engine.rs
+use leptos::*;
+use wgpu::*;
+use shared_core::contracts::*;
+use super::passes::*;
+use super::post_fx::*;
+use super::compute::*;
+
+/// # Responsibility
+/// Main rendering engine coordinating all passes.
+pub struct KairosVisualEngine {
+    device: Device,
+    queue: Queue,
+    surface: Surface,
+    
+    g_buffer_pass: GBufferPass,
+    lighting_pass: LightingPass,
+    post_processing: PostProcessingChain,
+    
+    particle_compute: ParticleCompute,
+    reaction_diffusion_compute: ReactionDiffusionCompute,
+}
+
+impl KairosVisualEngine {
+    pub async fn new(window: &web_sys::Window) -> Result<Self> {
+        // Initialize wgpu...
         
         Ok(Self {
             device,
             queue,
             surface,
-            config,
-            pipeline,
+            g_buffer_pass: GBufferPass::new(&device, &config)?,
+            lighting_pass: LightingPass::new(&device, &g_buffer_pass)?,
+            post_processing: PostProcessingChain::new(&device)?,
+            particle_compute: ParticleCompute::new(&device)?,
+            reaction_diffusion_compute: ReactionDiffusionCompute::new(&device)?,
         })
     }
     
-    pub fn render(&self) -> Result<()> {
-        let output = self.surface.get_current_texture()?;
-        let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
+    pub fn render(&mut self, state: &CombatState) {
+        // Update compute shaders
+        self.particle_compute.update(&state.particles, &state.fft_data, state.qualia_state.intensity);
+        self.reaction_diffusion_compute.update(state.qualia_state.chaos, state.qualia_state.flow);
         
-        let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("Render Encoder"),
-        });
+        let mut encoder = self.device.create_command_encoder(&CommandEncoderDescriptor::default());
         
-        {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: Some("Render Pass"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-                        store: wgpu::StoreOp::Store,
-                    },
-                })],
-                depth_stencil_attachment: None,
-                occlusion_query_set: None,
-                timestamp_writes: None,
-            });
-            
-            render_pass.set_pipeline(&self.pipeline);
-            render_pass.draw(0..3, 0..1); // Draw triangle
-        }
+        // Deferred rendering pipeline
+        self.g_buffer_pass.render_geometry(&mut encoder, state);
+        self.lighting_pass.compute_lighting(&mut encoder, &self.g_buffer_pass);
+        let final_image = self.post_processing.apply_effects(&mut encoder, &self.lighting_pass.output, &state.qualia_state);
         
-        self.queue.submit(std::iter::once(encoder.finish()));
-        output.present();
-        
-        Ok(())
+        // Present
+        let output = self.surface.get_current_texture().unwrap();
+        // ... copy final_image to output and present
     }
 }
 ```

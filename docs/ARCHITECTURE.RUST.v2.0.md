@@ -561,71 +561,75 @@
         use shared_core::contracts::{QualiaState, CombatState, OptimizedParticle};
         
         /// # Responsibility
-        /// Orchestrates the entire rendering pipeline: particles, SDFs, post-processing.
+        /// Orchestrates the complete Deferred Rendering pipeline: G-Buffer → Lighting → Post-Processing Chain.
         ///
         /// ---
         ///
         /// Subscribes to GameStateStore (Leptos Signals) and updates visuals at 60+ FPS.
-        /// Implements the 4-phase visual roadmap from VISUALS.GOLD.CODE.md.
+        /// Implements the Deferred Rendering architecture from VISUALS.RUST.md.
         pub struct KairosVisualEngine {
             device: Device,
             queue: Queue,
             surface: Surface,
             
-            // Phase 1: Atmosphere
-            bloom_pass: BloomPass,
-            god_rays_pass: GodRaysPass,
+            // Deferred Rendering Pipeline
+            g_buffer_pass: GBufferPass,
+            lighting_pass: LightingPass,
+            post_processing_chain: PostProcessingChain,
             
-            // Phase 2: Synesthesia
-            fft_data: FFTData,
-            particle_system: ParticleSystem,
+            // Compute shaders for dynamic content
+            particle_compute: ParticleCompute,
+            reaction_diffusion_compute: ReactionDiffusionCompute,
             
-            // Phase 3: Living World
-            reaction_diffusion_pass: ReactionDiffusionPass,
-            
-            // Phase 4: Avatars
+            // SDF renderers for procedural avatars
             sdf_renderer: SDFRenderer,
         }
         
         impl KairosVisualEngine {
             pub fn render(&mut self, state: &CombatState) {
-                // 1. Update reaction-diffusion floor (Phase 3)
-                self.reaction_diffusion_pass.update(
-                    state.qualia_state.chaos,
-                    state.qualia_state.flow,
+                // 1. G-Buffer Pass: Render geometry to multiple textures
+                self.g_buffer_pass.render_geometry(state);
+                
+                // 2. Lighting Pass: Compute illumination using G-Buffer data
+                self.lighting_pass.compute_lighting(&self.g_buffer_pass);
+                
+                // 3. Post-Processing Chain: Apply atmospheric and camera effects
+                self.post_processing_chain.apply_effects(
+                    &self.lighting_pass.output,
+                    state.qualia_state,
                 );
                 
-                // 2. Update particles with FFT data (Phase 2)
-                self.particle_system.update(
-                    &state.particles,
-                    &self.fft_data,
-                    state.qualia_state.intensity,
-                );
-                
-                // 3. Render SDFs (Phase 4)
-                self.sdf_renderer.render_player(
-                    state.player.position,
-                    state.qualia_state.transcendence,
-                );
-                self.sdf_renderer.render_boss(
-                    state.boss.position,
-                    state.boss.current_phase,
-                );
-                
-                // 4. Apply post-processing (Phase 1)
-                self.bloom_pass.apply(
-                    state.qualia_state.intensity,
-                    state.qualia_state.transcendence,
-                );
-                self.god_rays_pass.apply(
-                    state.qualia_state.precision,
-                    state.qualia_state.aggression,
-                );
+                // 4. Composite, tonemap, and present
+                self.present_final_image();
             }
         }
         ```
         
-        **6.2.2. Phase 1: Atmosphere** (`shaders/bloom.rs` + `god_rays.rs`)
+        **6.2.2. Deferred Rendering Pipeline Architecture**
+        
+        La pipeline sigue la arquitectura de Deferred Rendering definida en VISUALS.RUST.md:
+        
+        **Paso 1: G-Buffer Pass** (`passes/g_buffer_pass.rs`)
+        - Renderiza geometría de escena (partículas, SDFs) en múltiples texturas (G-Buffer)
+        - Salidas: `g_albedo`, `g_normal`, `g_depth`, `g_material`, `g_velocity`
+        - Implementación: Un solo pase de renderizado con múltiples render targets
+        
+        **Paso 2: Lighting Pass** (`passes/lighting_pass.rs`) 
+        - Calcula iluminación usando datos del G-Buffer (evita iluminación por objeto/luz)
+        - Técnicas: Iluminación directa, HBAO, SSR
+        - Implementación: Shader de pantalla completa que lee del G-Buffer
+        
+        **Paso 3: Post-Processing Chain** (`post_fx/`)
+        - Cadena de efectos aplicados en secuencia: Bloom → God Rays → DoF → Motion Blur
+        - Cada efecto: Ping-pong entre texturas para composición acumulativa
+        - Parámetros actualizados desde QualiaState en cada frame
+        
+        **Paso 4: Composite + Tonemapping + TAA** (`passes/composite_pass.rs`)
+        - Combina escena iluminada con efectos de post-procesado
+        - Aplica ACES Filmic Tonemapping para look cinematográfico
+        - TAA (Temporal Anti-Aliasing) para suavizado de bordes
+        
+        **6.2.3. Fase 1: Atmósfera (Post-Processing Effects)**
         
         Bloom shader parameters:
         - `u_intensity` ← QualiaState.intensity (threshold)
@@ -634,20 +638,6 @@
         God Rays shader parameters:
         - `u_precision` ← QualiaState.precision (ray sharpness)
         - `u_aggression_color_tint` ← QualiaState.aggression (red/orange tint)
-        
-        **6.2.3. Phase 2: Synesthesia** (`audio/fft_analyzer.rs` + `particle_system.rs`)
-        
-        ```rust
-        /// # Responsibility
-        /// Analyzes audio in real-time using Web Audio API AnalyserNode.
-        ///
-        /// ---
-        ///
-        /// Extracts frequency data (bass, mids, treble) and sends to particle shaders.
-        pub struct FFTAnalyzerService {
-            analyser: web_sys::AnalyserNode,
-            fft_data: Vec<f32>,
-        }
         
         impl FFTAnalyzerService {
             pub fn analyze(&mut self) -> FFTData {
@@ -663,49 +653,73 @@
         }
         ```
         
+        **6.2.4. Fase 2: Synesthesia (Particle System + FFT)**
+        
+        ```rust
+        /// # Responsibility
+        /// Manages particle simulation and rendering in the Deferred pipeline.
+        ///
+        /// ---
+        ///
+        /// Updates particles via compute shader, then renders to G-Buffer in geometry pass.
+        pub struct ParticleCompute {
+            compute_pipeline: ComputePipeline,
+            particle_buffer: Buffer,
+            uniforms: ParticleUniforms,
+        }
+        
+        impl ParticleCompute {
+            pub fn update(&mut self, particles: &[OptimizedParticle], fft_data: &FFTData, intensity: f32) {
+                // Update particle positions/velocities via compute shader
+                // FFT data modulates size, velocity, emissive strength
+            }
+        }
+        ```
+        
         Particle shader uniforms (WGSL):
         ```wgsl
-        struct Uniforms {
+        struct ParticleUniforms {
             bass_level: f32,      // Modulates size + emission rate
-            mid_level: f32,       // Controls velocity + turbulence
+            mid_level: f32,       // Controls velocity + turbulence  
             treble_level: f32,    // Affects brightness (emissive)
             fft_aggression_mod: f32, // Multiplier from QualiaState.aggression
         }
         ```
         
-        **6.2.4. Phase 3: Living World** (`shaders/reaction_diffusion.rs`)
+        ```rust
+        **6.2.5. Fase 3: Mundo Viviente (Reaction-Diffusion)**
         
         ```rust
         /// # Responsibility
-        /// Simulates Reaction-Diffusion patterns on the floor using compute shaders.
+        /// Simulates Reaction-Diffusion patterns using compute shaders.
         ///
         /// ---
         ///
         /// Updated every frame based on QualiaState.chaos and .flow.
-        /// Creates organic, evolving patterns (Turing patterns).
-        pub struct ReactionDiffusionPass {
+        /// Creates organic, evolving patterns (Turing patterns) rendered in G-Buffer pass.
+        pub struct ReactionDiffusionCompute {
             compute_pipeline: ComputePipeline,
             texture: Texture,
             uniforms: ReactionDiffusionUniforms,
         }
         
-        impl ReactionDiffusionPass {
+        impl ReactionDiffusionCompute {
             pub fn update(&mut self, chaos: f32, flow: f32) {
                 // Chaos increases diffusion rate, flow increases feed rate
                 self.uniforms.diffusion_rate = 0.1 + (chaos * 0.4);
                 self.uniforms.feed_rate = 0.02 + (flow * 0.04);
                 
-                // Dispatch compute shader
-                // ...
+                // Dispatch compute shader to update texture
             }
         }
         ```
+        ```
         
-        **6.2.5. Phase 4: Avatars** (`shaders/sdf_renderer.rs`)
+        **6.2.6. Fase 4: Avatares Procedurales (SDF Rendering)**
         
         ```rust
         /// # Responsibility
-        /// Renders player and boss as procedural SDFs (Signed Distance Fields).
+        /// Renders player and boss as procedural SDFs in the G-Buffer pass.
         ///
         /// ---
         ///
@@ -723,8 +737,7 @@
                     SDFType::Sphere { radius: 1.0 + transcendence }
                 };
                 
-                // Set shader uniforms and draw
-                // ...
+                // Set shader uniforms and render to G-Buffer
             }
         }
         ```
@@ -875,7 +888,7 @@
 
     *   6.6. Catálogo Completo de Servicios Frontend
     
-        **Total: 50 servicios (ver BLUEPRINT.RUST.md para lista completa)**
+        **Total: 50+ servicios (ver BLUEPRINT.RUST.md para lista completa)**
         
         Agrupados por dominio:
         - **Core** (4): EventBus, Logger, Timer, ErrorReporter
@@ -885,7 +898,7 @@
         - **Gameplay** (4): GameController, Mechanics, ComboDetector, QualiaWorkerBridge
         - **State** (2): StateMerger, ViewLogic
         - **Networking** (4): Sync, StateStreaming, WebSocketClient, JitterCompensator
-        - **Rendering** (9): Renderer, KairosEngine, ParticleSystem, Physics, PostProcessing, RenderTargetPool, ShaderLoader, ShaderIntrospector, ReactionDiffusion
+        - **Rendering** (15+): GBufferPass, LightingPass, BloomPass, GodRaysPass, DoFPass, MotionBlurPass, TAAPass, CompositePass, ParticleCompute, ReactionDiffusionCompute, SDFRenderer, RenderTargetPool, ShaderLoader, ShaderIntrospector, KairosEngine
         - **UI** (2): Notifications, Subtitles
         - **Utils** (2): Color, Coordinates
         - **Monitoring** (1): Performance
@@ -898,6 +911,8 @@
         - HttpService → Direct reqwest
         - JsGlslParserService → naga (Rust GLSL parser)
         - GameStateStoreService → Direct Leptos Signals access
+        - FrontendRenderingService → Desglosado en pipeline granular
+        - PostProcessingService → Desglosado en BloomPass, GodRaysPass, etc.
 
 7.  **Lógica Transversal (Macros Procedurales)**
 

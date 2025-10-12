@@ -307,24 +307,37 @@ qualia-tempo-rust/
 │       │       ├── mod.rs
 │       │       └── mocks/             # High-fidelity mocks
 │       │
-│       ├── rendering/                  # wgpu rendering engine
+│       ├── rendering/                  # wgpu Deferred Rendering pipeline
 │       │   ├── mod.rs
-│       │   ├── renderer.rs            # ✅ FrontendRenderingService
-│       │   ├── kairos_engine.rs       # ✅ KairosVisualEngine
-│       │   ├── particle_system.rs     # ✅ ParticleSystemService
-│       │   ├── physics.rs             # ✅ PhysicsService
-│       │   ├── post_processing.rs     # ✅ PostProcessingService
+│       │   ├── kairos_engine.rs       # ✅ KairosVisualEngine (orchestrator)
+│       │   │
+│       │   ├── passes/                # Render passes (Deferred pipeline)
+│       │   │   ├── mod.rs
+│       │   │   ├── g_buffer_pass.rs   # ✅ GBufferPassService
+│       │   │   ├── lighting_pass.rs   # ✅ LightingPassService
+│       │   │   ├── composite_pass.rs  # ✅ CompositePassService
+│       │   │   └── taa_pass.rs        # ✅ TAAPassService
+│       │   │
+│       │   ├── post_fx/               # Post-processing effects chain
+│       │   │   ├── mod.rs
+│       │   │   ├── bloom_pass.rs      # ✅ BloomPassService
+│       │   │   ├── god_rays_pass.rs   # ✅ GodRaysPassService
+│       │   │   ├── dof_pass.rs        # ✅ DoFPassService
+│       │   │   └── motion_blur_pass.rs # ✅ MotionBlurPassService
+│       │   │
+│       │   ├── compute/               # Compute shaders
+│       │   │   ├── mod.rs
+│       │   │   ├── particle_compute.rs # ✅ ParticleComputeService
+│       │   │   └── reaction_diffusion_compute.rs # ✅ ReactionDiffusionComputeService
+│       │   │
+│       │   ├── sdf/                   # SDF renderers
+│       │   │   ├── mod.rs
+│       │   │   ├── player_avatar.rs   # Player SDF renderer
+│       │   │   └── boss_avatar.rs     # Boss SDF renderer
+│       │   │
 │       │   ├── render_target_pool.rs  # ✅ RenderTargetPoolService
 │       │   ├── shader_loader.rs       # ✅ ShaderLoaderService (naga)
-│       │   ├── shader_introspector.rs # ✅ ShaderIntrospectionService
-│       │   │
-│       │   └── shaders/               # Shader implementations
-│       │       ├── mod.rs
-│       │       ├── reaction_diffusion.rs # ✅ ReactionDiffusionService
-│       │       ├── bloom.rs           # Bloom post-processing
-│       │       ├── god_rays.rs        # Volumetric lighting
-│       │       ├── sdf_renderer.rs    # Signed Distance Fields
-│       │       └── particle.wgsl      # Particle shader (WGSL)
+│       │   └── shader_introspector.rs # ✅ ShaderIntrospectionService
 │       │
 │       ├── workers/                    # Web Workers (compute offload)
 │       │   ├── mod.rs
@@ -418,7 +431,7 @@ qualia-tempo-rust/
 
 ---
 
-### Frontend Services (50 Total)
+### Frontend Services (58 Total)
 
 | # | Prototype Service | Rust Implementation | Status | Notes |
 |---|-------------------|---------------------|--------|-------|
@@ -439,40 +452,47 @@ qualia-tempo-rust/
 | 15 | DebugService | `frontend/src/services/debug/debug.rs` | ✅ Migrate | Debug utilities |
 | 16 | ErrorReportingService | `frontend/src/services/core/error_reporter.rs` | ✅ Migrate | Error handling |
 | 17 | EventBus | `frontend/src/services/core/event_bus.rs` | 🔄 Replace | tokio::sync::broadcast |
-| 18 | FrontendRenderingService | `frontend/src/rendering/renderer.rs` | 🔄 Replace | wgpu renderer |
-| 19 | GameControllerService | `frontend/src/services/gameplay/game_controller.rs` | ✅ Migrate | Game loop control |
-| 20 | GameInputControllerService | `frontend/src/services/input/input_controller.rs` | ✅ Migrate | Input handling |
-| 21 | GameStateStore | `frontend/src/state/game_store.rs` | 🔄 Replace | Leptos Signals |
-| 22 | GameStateStoreService | ❌ REMOVED | 🔄 Replace | Direct signal access |
-| 23 | GameStateStreamingService | `frontend/src/services/networking/state_streaming.rs` | ✅ Migrate | State streaming |
-| 24 | GameplayMechanicsService | `frontend/src/services/gameplay/mechanics.rs` | ✅ Migrate | Gameplay rules |
-| 25 | HttpService | ❌ REMOVED | 🔄 Replace | Direct reqwest usage |
-| 26 | InputStateService | `frontend/src/services/input/input_state.rs` | ✅ Migrate | Input state management |
-| 27 | JitterService | `frontend/src/services/networking/jitter_compensator.rs` | ✅ Migrate | Network jitter compensation |
-| 28 | JsGlslParserService | ❌ REMOVED | 🔄 Replace | naga (WGSL/GLSL parser) |
-| 29 | KairosVisualEngine | `frontend/src/rendering/kairos_engine.rs` | ✅ Migrate | Main visual engine |
-| 30 | Logger | `frontend/src/services/core/logger.rs` | 🔄 Replace | tracing to console |
-| 31 | MusicalComboDetectorService | `frontend/src/services/gameplay/combo_detector.rs` | ✅ Migrate | Combo detection |
-| 32 | NotificationService | `frontend/src/services/ui/notifications.rs` | ✅ Migrate | User notifications |
-| 33 | ParticleSystemService | `frontend/src/rendering/particle_system.rs` | 🔄 Replace | wgpu particle system |
-| 34 | PerformanceService | `frontend/src/services/monitoring/performance.rs` | ✅ Migrate | Performance monitoring |
-| 35 | PhysicsService | `frontend/src/rendering/physics.rs` | ✅ Migrate | Physics simulation |
-| 36 | PostProcessingService | `frontend/src/rendering/post_processing.rs` | 🔄 Replace | wgpu post-processing |
-| 37 | QualiaCalculatorWorkerService | `frontend/src/services/gameplay/qualia_worker_bridge.rs` | ✅ Migrate | Worker communication |
-| 38 | QualiaStateCalculatorService | `frontend/src/workers/qualia_calculator.rs` | ✅ Migrate | Qualia calculation (Web Worker) |
-| 39 | ReactionDiffusionService | `frontend/src/rendering/shaders/reaction_diffusion.rs` | 🔄 Replace | WGSL shader |
-| 40 | RenderTargetPoolService | `frontend/src/rendering/render_target_pool.rs` | ✅ Migrate | Render target pooling |
-| 41 | RhythmicMovementController | `frontend/src/services/input/rhythmic_movement.rs` | ✅ Migrate | Rhythmic movement |
-| 42 | ShaderIntrospectionService | `frontend/src/rendering/shader_introspector.rs` | ✅ Migrate | Shader metadata |
-| 43 | ShaderLoaderService | `frontend/src/rendering/shader_loader.rs` | 🔄 Replace | naga + wgpu |
-| 44 | SceneManagerService | `frontend/src/services/scenes/manager.rs` | ✨ New | Orchestrates scene transitions (Menu, Combat, Cinematic) |
-| 45 | StateMergerService | `frontend/src/services/state/state_merger.rs` | ✅ Migrate | State merging |
-| 45 | StateStreamingService | `frontend/src/services/networking/websocket_client.rs` | 🔄 Replace | tokio-tungstenite WASM |
-| 46 | SubtitleService | `frontend/src/services/ui/subtitles.rs` | ✅ Migrate | Lyric display |
-| 47 | TimerService | `frontend/src/services/core/timer.rs` | 🔄 Replace | gloo-timers |
-| 48 | ViewLogicService | `frontend/src/services/state/view_logic.rs` | ✅ Migrate | View state logic |
-| 49 | WebAudioAPIService | `frontend/src/services/audio/web_audio_api.rs` | ✅ Migrate | Web Audio API wrapper |
-| 50 | WebSocketService | `frontend/src/services/networking/websocket_client.rs` | 🔄 Replace | tokio-tungstenite WASM |
+| 18 | GBufferPassService | `frontend/src/rendering/passes/g_buffer_pass.rs` | ✨ New | Deferred G-Buffer rendering |
+| 19 | LightingPassService | `frontend/src/rendering/passes/lighting_pass.rs` | ✨ New | Deferred lighting computation |
+| 20 | BloomPassService | `frontend/src/rendering/post_fx/bloom_pass.rs` | ✨ New | Bloom post-processing |
+| 21 | GodRaysPassService | `frontend/src/rendering/post_fx/god_rays_pass.rs` | ✨ New | Volumetric lighting |
+| 22 | DoFPassService | `frontend/src/rendering/post_fx/dof_pass.rs` | ✨ New | Depth of field |
+| 23 | MotionBlurPassService | `frontend/src/rendering/post_fx/motion_blur_pass.rs` | ✨ New | Motion blur |
+| 24 | TAAPassService | `frontend/src/rendering/passes/taa_pass.rs` | ✨ New | Temporal anti-aliasing |
+| 25 | CompositePassService | `frontend/src/rendering/passes/composite_pass.rs` | ✨ New | Final composition + tonemapping |
+| 26 | ParticleComputeService | `frontend/src/rendering/compute/particle_compute.rs` | ✨ New | Particle simulation compute |
+| 27 | ReactionDiffusionComputeService | `frontend/src/rendering/compute/reaction_diffusion_compute.rs` | ✨ New | Reaction-diffusion compute |
+| 28 | SDFRendererService | `frontend/src/rendering/sdf/player_avatar.rs` + `boss_avatar.rs` | ✨ New | SDF avatar rendering |
+| 29 | GameControllerService | `frontend/src/services/gameplay/game_controller.rs` | ✅ Migrate | Game loop control |
+| 30 | GameInputControllerService | `frontend/src/services/input/input_controller.rs` | ✅ Migrate | Input handling |
+| 31 | GameStateStore | `frontend/src/state/game_store.rs` | 🔄 Replace | Leptos Signals |
+| 32 | GameStateStoreService | ❌ REMOVED | 🔄 Replace | Direct signal access |
+| 33 | GameStateStreamingService | `frontend/src/services/networking/state_streaming.rs` | ✅ Migrate | State streaming |
+| 34 | GameplayMechanicsService | `frontend/src/services/gameplay/mechanics.rs` | ✅ Migrate | Gameplay rules |
+| 35 | HttpService | ❌ REMOVED | 🔄 Replace | Direct reqwest usage |
+| 36 | InputStateService | `frontend/src/services/input/input_state.rs` | ✅ Migrate | Input state management |
+| 37 | JitterService | `frontend/src/services/networking/jitter_compensator.rs` | ✅ Migrate | Network jitter compensation |
+| 38 | JsGlslParserService | ❌ REMOVED | 🔄 Replace | naga (WGSL/GLSL parser) |
+| 39 | KairosVisualEngine | `frontend/src/rendering/kairos_engine.rs` | ✅ Migrate | Main visual engine |
+| 40 | Logger | `frontend/src/services/core/logger.rs` | 🔄 Replace | tracing to console |
+| 41 | MusicalComboDetectorService | `frontend/src/services/gameplay/combo_detector.rs` | ✅ Migrate | Combo detection |
+| 42 | NotificationService | `frontend/src/services/ui/notifications.rs` | ✅ Migrate | User notifications |
+| 43 | PerformanceService | `frontend/src/services/monitoring/performance.rs` | ✅ Migrate | Performance monitoring |
+| 44 | PhysicsService | `frontend/src/rendering/physics.rs` | ✅ Migrate | Physics simulation |
+| 45 | QualiaCalculatorWorkerService | `frontend/src/services/gameplay/qualia_worker_bridge.rs` | ✅ Migrate | Worker communication |
+| 46 | QualiaStateCalculatorService | `frontend/src/workers/qualia_calculator.rs` | ✅ Migrate | Qualia calculation (Web Worker) |
+| 47 | RenderTargetPoolService | `frontend/src/rendering/render_target_pool.rs` | ✅ Migrate | Render target pooling |
+| 48 | RhythmicMovementController | `frontend/src/services/input/rhythmic_movement.rs` | ✅ Migrate | Rhythmic movement |
+| 49 | ShaderIntrospectionService | `frontend/src/rendering/shader_introspector.rs` | ✅ Migrate | Shader metadata |
+| 50 | ShaderLoaderService | `frontend/src/rendering/shader_loader.rs` | 🔄 Replace | naga + wgpu |
+| 51 | SceneManagerService | `frontend/src/services/scenes/manager.rs` | ✨ New | Orchestrates scene transitions (Menu, Combat, Cinematic) |
+| 52 | StateMergerService | `frontend/src/services/state/state_merger.rs` | ✅ Migrate | State merging |
+| 53 | StateStreamingService | `frontend/src/services/networking/websocket_client.rs` | 🔄 Replace | tokio-tungstenite WASM |
+| 54 | SubtitleService | `frontend/src/services/ui/subtitles.rs` | ✅ Migrate | Lyric display |
+| 55 | TimerService | `frontend/src/services/core/timer.rs` | 🔄 Replace | gloo-timers |
+| 56 | ViewLogicService | `frontend/src/services/state/view_logic.rs` | ✅ Migrate | View state logic |
+| 57 | WebAudioAPIService | `frontend/src/services/audio/web_audio_api.rs` | ✅ Migrate | Web Audio API wrapper |
+| 58 | WebSocketService | `frontend/src/services/networking/websocket_client.rs` | 🔄 Replace | tokio-tungstenite WASM |
 
 ---
 

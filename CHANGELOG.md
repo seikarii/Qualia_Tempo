@@ -1,6 +1,54 @@
 # CHANGELOG - QUALIA TEMPO
 
-## [Unreleased] - 2025-10-12 - SESSION: Legacy Linting Rules Analysis & Rust Linter Update (MANDATORY CORRECTIONS APPLIED)
+## [Unreleased] - 2025-10-12 - SESSION: VISUALS.RUST.md Synchronization - Deferred Rendering Pipeline Integration (ARCHITECTURAL COHERENCE RESTORED)
+
+### 🎨 VISUALS.RUST.md Synchronization - Deferred Rendering Pipeline Integration (ARCHITECTURAL COHERENCE RESTORED)
+
+**Status**: ✅ COMPLETE (ARCHITECTURAL COHERENCE RESTORED)  
+**Objective**: Synchronize all documentation with VISUALS.RUST.md's advanced Deferred Rendering pipeline, resolving critical inconsistencies across ARCHITECTURE.RUST.v2.0.md, BLUEPRINT.RUST.md, and QUALIA.MANUAL.RUST.md
+
+#### Impact Assessment
+- **Documents Synchronized**: 3 core architectural documents aligned with VISUALS.RUST.md
+- **Pipeline Architecture**: Forward Rendering → Deferred Rendering (G-Buffer → Lighting → Post-Processing Chain)
+- **Service Granularity**: Monolithic services (PostProcessingService) → Granular pipeline passes (BloomPass, LightingPass, TAAPass, etc.)
+- **Folder Structure**: Flat shaders/ → Organized passes/, post_fx/, compute/, sdf/
+- **Implementation Guidance**: Basic wgpu tutorial → Complete Deferred Rendering pipeline tutorial
+- **Service Count**: Frontend services increased from 50 to 58 with granular rendering services
+
+#### Files Modified
+
+1. **UPDATED: `docs/ARCHITECTURE.RUST.v2.0.md`**
+   - **Section 6.2**: Rebuilt "Proyecto Kairos" to describe Deferred Rendering pipeline (G-Buffer Pass → Lighting Pass → Post-Processing Chain → Composite + TAA)
+   - **KairosVisualEngine**: Updated to orchestrate deferred pipeline with GBufferPass, LightingPass, PostProcessingChain
+   - **Section 6.6**: Desglosado servicios monolíticos en granulares (PostProcessingService → BloomPass, GodRaysPass, DoFPass, MotionBlurPass, TAAPass, etc.)
+   - **Rendering Services**: Increased from 9 to 15+ granular services
+
+2. **UPDATED: `docs/BLUEPRINT.RUST.md`**
+   - **Folder Structure**: Reorganized `frontend/src/rendering/` with passes/, post_fx/, compute/, sdf/ subdirectories
+   - **Service Table**: Updated from 50 to 58 services, replacing monolithic rendering services with granular pipeline components
+   - **New Services Added**: GBufferPassService, LightingPassService, BloomPassService, GodRaysPassService, DoFPassService, MotionBlurPassService, TAAPassService, CompositePassService, ParticleComputeService, ReactionDiffusionComputeService, SDFRendererService
+
+3. **UPDATED: `docs/QUALIA.MANUAL.RUST.md`**
+   - **Section 6**: Complete rewrite from basic wgpu tutorial to comprehensive Deferred Rendering pipeline implementation guide
+   - **New Sections**: G-Buffer Pass, Lighting Pass, Post-Processing Chain, Leptos Integration with KairosVisualEngine
+   - **Code Examples**: Full implementations for each pipeline stage with WGSL shader integration
+   - **Architecture Guidance**: Step-by-step tutorial for implementing deferred rendering in wgpu
+
+#### Deferred Rendering Pipeline Implementation (NOW UNIFIED ACROSS ALL DOCS)
+
+**Pipeline Stages (VISUALS.RUST.md Aligned):**
+- **G-Buffer Pass**: Geometry → Multiple render targets (albedo, normal, depth, material, velocity)
+- **Lighting Pass**: G-Buffer sampling → Direct lighting, HBAO, SSR
+- **Post-Processing Chain**: Bloom → God Rays → DoF → Motion Blur (ping-pong composition)
+- **Composite + Tonemapping + TAA**: Final composition with ACES tonemapping and temporal anti-aliasing
+
+**Service Architecture (Granular):**
+- **Pass Services**: Individual services for each rendering pass
+- **Compute Services**: Separate services for particle simulation and reaction-diffusion
+- **SDF Services**: Dedicated services for procedural avatar rendering
+- **Integration**: KairosVisualEngine orchestrates all passes in correct order
+
+#### Legacy Rules Analysis Summary (MANDATORY CORRECTIONS APPLIED)
 
 ### 🔍 Comprehensive Legacy Rules Analysis & Rust Linter Mapping (MANDATORY CORRECTIONS APPLIED)
 
