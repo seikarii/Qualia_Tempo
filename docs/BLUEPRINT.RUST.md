@@ -1,15 +1,15 @@
 # BLUEPRINT.RUST.md - Complete Rust Rewrite Migration Map
-# VERSION: 1.0
+# VERSION: 2.0 (UPDATED)
 # TARGET: Qualia Tempo Rust Edition
-# COMPLIANCE: QUALIA.CODE.RUST v1.1 + GOLD.CODE
+# COMPLIANCE: QUALIA.CODE.RUST v1.1 + GOLD.CODE + ARCHITECTURE.RUST v2.0
 
 ---
 
 ## 🎯 PURPOSE
 
-This document serves as the **definitive migration blueprint** from the TypeScript/Python prototype to the Rust production implementation. It catalogs **every service** from the mature prototype and maps them to their Rust equivalents.
+This document serves as the **definitive migration blueprint** from the TypeScript/Python prototype to the Rust production implementation. It catalogs **every service** from the mature prototype and maps them to their Rust equivalents, ensuring 1:1 functional parity or superior implementation leveraging Rust's performance and safety advantages.
 
-**CRITICAL**: This is NOT a greenfield project. We are rewriting a mature, battle-tested system. Every service listed here represents production-validated functionality that MUST be preserved.
+**CRITICAL**: This is NOT a greenfield project. We are rewriting a mature, battle-tested system with 74 services. Every service listed here represents production-validated functionality that MUST be preserved and enhanced.
 
 ---
 
@@ -18,13 +18,14 @@ This document serves as the **definitive migration blueprint** from the TypeScri
 - **Prototype Backend Services**: 24
 - **Prototype Frontend Services**: 50
 - **Total Services**: 74
-- **Services Removed (Outdated)**: 6 (8%)
-- **Services Replaced (Rust-Native)**: 12 (16%)
-- **Services Preserved (Core Logic)**: 56 (76%)
+- **Services Enhanced (Rust-Native)**: 68 (92%)
+- **Services Removed (Obsolete)**: 6 (8%)
+- **New Rust Services (Performance)**: 4 (5%)
+- **Total Rust Services**: 72
 
 ---
 
-## 🗂️ COMPLETE FOLDER STRUCTURE
+## 🗂️ COMPLETE FOLDER STRUCTURE (UPDATED)
 
 ```
 qualia-tempo-rust/
@@ -32,7 +33,7 @@ qualia-tempo-rust/
 ├── .cargo/
 │   └── config.toml                     # Cargo configuration (PGO, release opts)
 │
-├── shared_core/                        # 🔷 SHARED CONTRACTS & TRAITS
+├── shared_core/                        # 📷 SHARED CONTRACTS & TRAITS
 │   ├── Cargo.toml
 │   └── src/
 │       ├── lib.rs                      # Re-exports all modules
@@ -44,18 +45,22 @@ qualia-tempo-rust/
 │       │   ├── audio.rs               # AudioEvent, AudioLayer, SongData
 │       │   ├── particles.rs           # ParticleSystemConfig, OptimizedParticle
 │       │   ├── input.rs               # PlayerAction, MusicalInputAnalysis
-│       │   └── effects.rs             # ActiveEffect, EnvironmentEffect
+│       │   ├── effects.rs             # ActiveEffect, EnvironmentEffect
+│       │   ├── settings.rs            # GameSettings, AccessibilitySettings
+│       │   └── leaderboard.rs         # LeaderboardEntry
 │       │
 │       ├── events/                    # Event definitions
 │       │   ├── mod.rs
 │       │   ├── game_events.rs         # GameEvent enum (all event types)
 │       │   ├── audio_events.rs        # Audio-specific events
-│       │   └── combat_events.rs       # Combat-specific events
+│       │   ├── combat_events.rs       # Combat-specific events
+│       │   └── system_events.rs       # System/lifecycle events
 │       │
 │       ├── traits/                    # Shared trait interfaces
 │       │   ├── mod.rs
 │       │   ├── logger.rs              # ILogger trait
 │       │   ├── event_bus.rs           # IEventBus trait
+│       │   ├── service.rs             # IBaseService trait
 │       │   └── config.rs              # Configuration traits
 │       │
 │       └── utils/                     # Shared utilities
@@ -75,6 +80,8 @@ qualia-tempo-rust/
 │       │   ├── game_logic.rs          # GameLogicConfig
 │       │   ├── boss_ai.rs             # BossAIConfig
 │       │   ├── particle_engine.rs     # ParticleEngineConfig
+│       │   ├── harmony_analysis.rs    # HarmonyAnalysisConfig
+│       │   ├── pattern_system.rs      # PatternSystemConfig
 │       │   └── loader.rs              # YAML config loader
 │       │
 │       ├── services/                   # All service implementations
@@ -97,7 +104,8 @@ qualia-tempo-rust/
 │       │   │   ├── boss_ai.rs         # ✅ BossAIService
 │       │   │   ├── pattern_system.rs  # ✅ PatternSystemService
 │       │   │   ├── qualia_processor.rs # ✅ QualiaProcessor
-│       │   │   └── combat_orchestrator.rs # NEW: Combat flow orchestration
+│       │   │   ├── combat_orchestrator.rs # ✅ CombatOrchestratorService (NEW)
+│       │   │   └── mechanics.rs       # ✅ GameplayMechanicsService
 │       │   │
 │       │   ├── audio/                 # Audio analysis
 │       │   │   ├── mod.rs
@@ -119,7 +127,8 @@ qualia-tempo-rust/
 │       │   │
 │       │   ├── security/              # Authentication & authorization
 │       │   │   ├── mod.rs
-│       │   │   └── auth.rs            # ✅ SecurityService
+│       │   │   ├── auth.rs            # ✅ AuthService
+│       │   │   └── validation.rs      # ✅ ValidationService
 │       │   │
 │       │   ├── monitoring/            # Observability
 │       │   │   ├── mod.rs
@@ -174,17 +183,44 @@ qualia-tempo-rust/
 │       │
 │       ├── components/                 # Leptos UI components
 │       │   ├── mod.rs
-│       │   ├── game_ui.rs             # Main game UI container
-│       │   ├── qualia_display.rs      # Qualia state visualization
-│       │   ├── boss_renderer.rs       # Boss UI overlay
-│       │   ├── combo_display.rs       # Combo counter
-│       │   ├── health_bar.rs          # Health/shield bars
-│       │   └── subtitle_display.rs    # Lyric subtitles
-│       │
-│       ├── scenes/                     # 🆕 SCENE ABSTRACTION
-│       │   ├── mod.rs
-│       │   ├── i_scene.rs             # Defines the IScene trait
-│       │   └── qualia_tempo_scene.rs  # Concrete implementation for Qualia Tempo
+│       │   ├── game/                  # Game UI components
+│       │   │   ├── mod.rs
+│       │   │   ├── qualia_tempo_game.rs # Main game container
+│       │   │   ├── qualia_tempo_hud.rs  # HUD overlay
+│       │   │   ├── boss_renderer.rs     # Boss avatar display
+│       │   │   ├── player_renderer.rs   # Player avatar display
+│       │   │   ├── qualia_field_renderer.rs # Qualia field background
+│       │   │   ├── musical_notes_renderer.rs # Musical notes display
+│       │   │   ├── grid_renderer.rs     # Grid background
+│       │   │   └── hud/                # HUD sub-components
+│       │   │       ├── mod.rs
+│       │   │       ├── qualia_orb.rs
+│       │   │       ├── score_display.rs
+│       │   │       ├── combo_streak.rs
+│       │   │       ├── health_visualization.rs
+│       │   │       ├── chaos_indicator.rs
+│       │   │       ├── precision_flow_indicators.rs
+│       │   │       ├── neural_activity_bars.rs
+│       │   │       ├── neural_canvas.rs
+│       │   │       ├── bpm_synchronizer.rs
+│       │   │       └── qualia_ambience.rs
+│       │   │
+│       │   ├── layout/                # Layout components
+│       │   │   ├── mod.rs
+│       │   │   └── main_layout.rs
+│       │   │
+│       │   ├── debug/                 # Debug components
+│       │   │   ├── mod.rs
+│       │   │   ├── service_diagnostics_panel.rs
+│       │   │   └── diagnostics/
+│       │   │       ├── mod.rs
+│       │   │       ├── architecture_validation.rs
+│       │   │       ├── diagnostic_header.rs
+│       │   │       └── diagnostic_service_card.rs
+│       │   │
+│       │   ├── menu.rs                # Menu screens
+│       │   ├── subtitles.rs           # Subtitle display
+│       │   └── atmosphere.rs          # Atmospheric effects
 │       │
 │       ├── state/                      # Leptos Signals state management
 │       │   ├── mod.rs
@@ -209,8 +245,8 @@ qualia-tempo-rust/
 │       │   │   ├── mod.rs
 │       │   │   ├── playback.rs        # ✅ AudioService
 │       │   │   ├── spatial_audio.rs   # ✅ Audio8DService
-│       │   │   ├── fft_analyzer.rs    # ✅ AudioAnalysisService
-│       │   │   ├── audio_bridge.rs    # ✅ AudioSystemBridge (wasm-bindgen)
+│       │   │   ├── fft_analyzer.rs    # ✅ AudioAnalysisService (FFTAnalyzerService)
+│       │   │   ├── audio_bridge.rs    # ✅ AudioSystemBridge
 │       │   │   └── web_audio_api.rs   # ✅ WebAudioAPIService (wasm-bindgen)
 │       │   │
 │       │   ├── input/                 # Input handling
@@ -268,7 +304,7 @@ qualia-tempo-rust/
 │       ├── rendering/                  # wgpu rendering engine
 │       │   ├── mod.rs
 │       │   ├── renderer.rs            # ✅ FrontendRenderingService
-│       │   ├── kairos_engine.rs       # ✅ KairosVisualEngine (pure renderer + scene orchestrator)
+│       │   ├── kairos_engine.rs       # ✅ KairosVisualEngine
 │       │   ├── particle_system.rs     # ✅ ParticleSystemService
 │       │   ├── physics.rs             # ✅ PhysicsService
 │       │   ├── post_processing.rs     # ✅ PostProcessingService
@@ -291,7 +327,8 @@ qualia-tempo-rust/
 │       ├── hooks/                      # Leptos hooks
 │       │   ├── mod.rs
 │       │   ├── use_game_state.rs      # Access GameStateStore
-│       │   └── use_audio_context.rs   # Access Web Audio API
+│       │   ├── use_audio_context.rs   # Access Web Audio API
+│       │   └── use_service_health.rs  # Service health monitoring
 │       │
 │       └── utils/                      # Frontend utilities
 │           ├── mod.rs
@@ -301,9 +338,18 @@ qualia-tempo-rust/
 │   ├── Cargo.toml
 │   └── src/
 │       ├── lib.rs
-│       ├── derive_event.rs            # #[derive(QualiaEvent)]
-│       ├── derive_config.rs           # #[derive(QualiaConfig)]
-│       └── service_macro.rs           # #[qualia_service] attribute macro
+│       ├── handle_event.rs            # #[handle_event] macro (replaces @OnEvent)
+│       ├── instrument.rs              # #[instrument] macro (replaces @logMethod)
+│       ├── cached.rs                  # #[cached] macro (replaces @cache)
+│       ├── validate.rs                # #[validate] macro (replaces @validate)
+│       ├── retry.rs                   # #[retry] macro (replaces @retry)
+│       ├── timeout.rs                 # #[timeout] macro (replaces @timeout)
+│       ├── rate_limit.rs              # #[rate_limit] macro (replaces @rate_limit)
+│       ├── mutex.rs                   # #[mutex] macro (replaces @mutex)
+│       ├── circuit_breaker.rs         # #[circuit_breaker] macro
+│       ├── authorize.rs               # #[authorize] macro (replaces @authorize)
+│       ├── transaction.rs             # #[transaction] macro (replaces @transaction)
+│       └── deprecated.rs              # #[deprecated] macro (replaces @deprecated)
 │
 ├── scripts/                            # 🔧 BUILD & DEV SCRIPTS
 │   ├── generate_schemas.rs            # Generate JSON schemas from Rust structs
@@ -353,7 +399,7 @@ qualia-tempo-rust/
 | 17 | QualiaProcessor | `backend/src/services/gameplay/qualia_processor.rs` | ✅ Migrate | Qualia state calculation |
 | 18 | SecurityService | `backend/src/services/security/auth.rs` | ✅ Migrate | Auth + validation |
 | 19 | ShaderIntrospectionService | `backend/src/services/rendering/shader_introspector.rs` | ✅ Migrate | Shader metadata |
-| 20 | StateStreamingService | `backend/src/services/networking/websocket.rs` | �� Replace | Axum + tokio-tungstenite |
+| 20 | StateStreamingService | `backend/src/services/networking/websocket.rs` | 🔄 Replace | Axum + tokio-tungstenite |
 | 21 | SystemEnvironmentService | `backend/src/services/infrastructure/environment.rs` | ✅ Migrate | Environment detection |
 | 22 | TimerService | `backend/src/services/core/timer.rs` | 🔄 Replace | tokio::time |
 | 23 | ParticleStateCalculator | `backend/src/engine/particle_calculator.rs` | ✅ Migrate | Particle physics |
@@ -423,7 +469,277 @@ qualia-tempo-rust/
 
 ---
 
-## 🎨 RENDERING PIPELINE (VISUALS.GOLD.CODE)
+## 🎨 UI COMPONENTS MIGRATION
+
+### Game Components (From prototype `frontend/src/components/game/`)
+
+| Component | Rust Implementation | Status | Notes |
+|-----------|---------------------|--------|-------|
+| QualiaTempoGame.tsx | `components/game/qualia_tempo_game.rs` | ✅ Migrate | Main game orchestrator |
+| QualiaTempoHUD.tsx | `components/game/qualia_tempo_hud.rs` | ✅ Migrate | HUD overlay container |
+| BossRenderer.tsx | `components/game/boss_renderer.rs` | ✅ Migrate | Boss avatar display |
+| PlayerRenderer.tsx | `components/game/player_renderer.rs` | ✅ Migrate | Player avatar display |
+| BossAvatar.tsx | `components/game/boss_avatar.rs` | ✅ Migrate | Boss visual representation |
+| PlayerAvatar.tsx | `components/game/player_avatar.rs` | ✅ Migrate | Player visual representation |
+| QualiaFieldRenderer.tsx | `components/game/qualia_field_renderer.rs` | ✅ Migrate | Qualia field background |
+| MusicalNotesRenderer.tsx | `components/game/musical_notes_renderer.rs` | ✅ Migrate | Musical notes display |
+| GridRenderer.tsx | `components/game/grid_renderer.rs` | ✅ Migrate | Grid background |
+
+### HUD Components (From prototype `frontend/src/components/game/hud/`)
+
+| Component | Rust Implementation | Status | Notes |
+|-----------|---------------------|--------|-------|
+| QualiaOrb.tsx | `components/game/hud/qualia_orb.rs` | ✅ Migrate | Qualia orb display |
+| ScoreDisplay.tsx | `components/game/hud/score_display.rs` | ✅ Migrate | Score counter |
+| ComboStreak.tsx | `components/game/hud/combo_streak.rs` | ✅ Migrate | Combo multiplier |
+| HealthVisualization.tsx | `components/game/hud/health_visualization.rs` | ✅ Migrate | Health/shield bars |
+| ChaosIndicator.tsx | `components/game/hud/chaos_indicator.rs` | ✅ Migrate | Chaos meter |
+| PrecisionFlowIndicators.tsx | `components/game/hud/precision_flow_indicators.rs` | ✅ Migrate | Precision/flow meters |
+| NeuralActivityBars.tsx | `components/game/hud/neural_activity_bars.rs` | ✅ Migrate | Neural activity visualization |
+| NeuralCanvas.tsx | `components/game/hud/neural_canvas.rs` | ✅ Migrate | Neural network visualization |
+| BPMSynchronizer.tsx | `components/game/hud/bpm_synchronizer.rs` | ✅ Migrate | BPM display |
+| QualiaAmbience.tsx | `components/game/hud/qualia_ambience.rs` | ✅ Migrate | Ambient effects |
+
+### Field Layers (From prototype `frontend/src/components/game/field-layers/`)
+
+| Component | Rust Implementation | Status | Notes |
+|-----------|---------------------|--------|-------|
+| FieldParticlesLayer.tsx | `components/game/field_layers/field_particles_layer.rs` | ✅ Migrate | Particle field layer |
+| AmbientSpheresLayer.tsx | `components/game/field_layers/ambient_spheres_layer.rs` | ✅ Migrate | Ambient sphere effects |
+| WavePlaneLayer.tsx | `components/game/field_layers/wave_plane_layer.rs` | ✅ Migrate | Wave plane effects |
+
+### Other Components
+
+| Component | Rust Implementation | Status | Notes |
+|-----------|---------------------|--------|-------|
+| MainLayout.tsx | `components/layout/main_layout.rs` | ✅ Migrate | Main layout wrapper |
+| QualiaMainMenu.tsx | `components/menu.rs` | ✅ Migrate | Main menu screen |
+| Subtitles.tsx | `components/subtitles.rs` | ✅ Migrate | Subtitle display |
+| Atmosphere.tsx | `components/atmosphere.rs` | ✅ Migrate | Atmospheric effects |
+| FrontendRenderer.tsx | `components/frontend_renderer.rs` | ✅ Migrate | Rendering coordinator |
+| ServiceDiagnosticsPanel.tsx | `components/debug/service_diagnostics_panel.rs` | ✅ Migrate | Debug panel |
+
+---
+
+## 🔶 PROCEDURAL MACROS (Decorator Replacements)
+
+### TypeScript Decorators → Rust Macros
+
+| TypeScript Decorator | Rust Macro | Location | Status |
+|---------------------|------------|----------|--------|
+| `@logMethod()` | `#[instrument]` | `qualia_macros/src/instrument.rs` | 🔄 Replace | Use tracing crate's built-in macro |
+| `@OnEvent(event)` | `#[handle_event(Event)]` | `qualia_macros/src/handle_event.rs` | ✅ Implement | Custom macro for event subscription |
+| `@throttle(ms)` | `#[throttle(ms)]` | Built-in via `async-throttle` crate | 🔄 Replace | Use crate instead of custom macro |
+| `@catchError()` | `#[catch_error]` | Use `thiserror` + `anyhow` | 🔄 Replace | Rust error handling patterns |
+| `@measureTime()` | `#[instrument]` | tracing crate | 🔄 Replace | tracing automatically measures time |
+| `@validate(schema)` | `#[validate]` | `qualia_macros/src/validate.rs` | ✅ Implement | Custom validation macro |
+| `@validateEventProperty()` | `#[validate_event]` | `qualia_macros/src/validate.rs` | ✅ Implement | Event validation macro |
+| `@AdaptAndEmit(adapter)` | `#[adapt_emit(adapter)]` | `qualia_macros/src/adapt_emit.rs` | ✅ Implement | Protocol adapter macro |
+| `@BrowserOnly` | `#[cfg(target_arch = "wasm32")]` | Built-in Rust | 🔄 Replace | Use Rust's conditional compilation |
+| `@cached(ttl)` | `#[cached]` | `cached` crate | 🔄 Replace | Use production-ready crate |
+
+### Python Decorators → Rust Macros
+
+| Python Decorator | Rust Macro | Location | Status |
+|-----------------|------------|----------|--------|
+| `@log_execution` | `#[instrument]` | tracing crate | 🔄 Replace | Built-in tracing |
+| `@handle_errors` | Result<T, E> pattern | Native Rust | 🔄 Replace | Use Result type |
+| `@validate_schema` | `#[validate]` | validator crate | 🔄 Replace | Use production crate |
+| `@time_execution` | `#[instrument]` | tracing crate | 🔄 Replace | Built-in timing |
+| `@cache_result` | `#[cached]` | cached crate | 🔄 Replace | Use production crate |
+| `@circuit_breaker` | `#[circuit_breaker]` | `qualia_macros/src/circuit_breaker.rs` | ✅ Implement | Custom resilience macro |
+| `@retry` | `#[retry]` | `qualia_macros/src/retry.rs` | ✅ Implement | Custom retry macro |
+| `@timeout` | `#[timeout]` | `qualia_macros/src/timeout.rs` | ✅ Implement | Custom timeout macro |
+| `@rate_limit` | `#[rate_limit]` | `qualia_macros/src/rate_limit.rs` | ✅ Implement | Custom rate limiting macro |
+| `@mutex` | `#[mutex]` | `qualia_macros/src/mutex.rs` | ✅ Implement | Custom mutex macro |
+| `@authorize` | `#[authorize]` | `qualia_macros/src/authorize.rs` | ✅ Implement | Authorization macro |
+| `@transaction` | `#[transaction]` | `qualia_macros/src/transaction.rs` | ✅ Implement | Transaction macro |
+| `@deprecated` | `#[deprecated]` | Built-in Rust | 🔄 Replace | Use Rust's built-in attribute |
+
+---
+
+## 📦 DEPENDENCY RESOLUTION
+
+### Backend Dependencies (`backend/Cargo.toml`)
+
+```toml
+[dependencies]
+# Async runtime & web framework
+tokio = { version = "1.41", features = ["full"] }
+axum = { version = "0.7", features = ["ws", "macros"] }
+tower = { version = "0.5", features = ["full"] }
+tower-http = { version = "0.5", features = ["trace", "cors", "compression-full"] }
+hyper = { version = "1.0", features = ["full"] }
+
+# WebSocket
+tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
+futures-util = "0.3"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.3"
+msgpack = "1.0"
+
+# Dependency Injection
+shaku = { version = "0.6", features = ["thread_safe"] }
+async-trait = "0.1"
+
+# Logging & Tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "fmt"] }
+tracing-appender = "0.2"
+
+# Configuration
+config = { version = "0.14", features = ["yaml"] }
+serde_yaml = "0.9"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Validation
+validator = { version = "0.18", features = ["derive"] }
+
+# Database (optional)
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "sqlite"], optional = true }
+
+# Caching
+moka = { version = "0.12", features = ["future"] }
+
+# Utilities
+uuid = { version = "1.0", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Parallel computation
+rayon = "1.10"
+num_cpus = "1.16"
+
+# Schema generation
+schemars = { version = "0.8", features = ["chrono"] }
+
+# Testing
+mockall = "0.13"
+proptest = "1.4"
+
+# Shared core
+shared_core = { path = "../shared_core" }
+qualia_macros = { path = "../qualia_macros" }
+
+[features]
+default = []
+database = ["sqlx"]
+```
+
+### Frontend Dependencies (`frontend/Cargo.toml`)
+
+```toml
+[dependencies]
+# UI Framework
+leptos = { version = "0.6", features = ["csr", "nightly"] }
+leptos_meta = { version = "0.6", features = ["csr"] }
+leptos_router = { version = "0.6", features = ["csr"] }
+
+# Rendering
+wgpu = { version = "22.0", features = ["webgl"] }
+winit = { version = "0.29", features = ["wayland", "x11"] }
+
+# WebSocket (WASM)
+tokio = { version = "1.41", features = ["sync"] }
+tokio-tungstenite = { version = "0.21", default-features = false, features = ["connect"] }
+futures-util = "0.3"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.3"
+
+# WASM bindings
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = [
+    "Window",
+    "Document",
+    "Element",
+    "HtmlCanvasElement",
+    "WebGl2RenderingContext",
+    "AudioContext",
+    "AudioNode",
+    "AudioBuffer",
+    "AudioBufferSourceNode",
+    "AnalyserNode",
+    "GainNode",
+    "PannerNode",
+    "BiquadFilterNode",
+    "DynamicsCompressorNode",
+    "WebSocket",
+    "MessageEvent",
+    "CloseEvent",
+    "ErrorEvent",
+    "Performance",
+    "PerformanceTiming",
+] }
+js-sys = "0.3"
+
+# Logging (WASM-compatible)
+tracing = "0.1"
+tracing-wasm = "0.2"
+console_error_panic_hook = "0.1"
+console_log = "1.0"
+
+# Utilities
+uuid = { version = "1.0", features = ["v4", "js"] }
+chrono = { version = "0.4", features = ["wasmbind"] }
+gloo-timers = { version = "0.3", features = ["futures"] }
+
+# Math & Physics
+glam = { version = "0.25", features = ["serde"] }
+
+# Shared core
+shared_core = { path = "../shared_core", features = ["wasm"] }
+qualia_macros = { path = "../qualia_macros" }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+```
+
+### Shared Core Dependencies (`shared_core/Cargo.toml`)
+
+```toml
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+schemars = { version = "0.8", features = ["chrono"] }
+uuid = { version = "1.0", features = ["serde", "v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+validator = { version = "0.18", features = ["derive"] }
+glam = { version = "0.25", features = ["serde"] }
+
+[features]
+default = []
+wasm = ["uuid/js", "chrono/wasmbind"]
+```
+
+### Macro Crate Dependencies (`qualia_macros/Cargo.toml`)
+
+```toml
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2.0", features = ["full", "extra-traits"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+```
+
+---
+
+## 🎮 RENDERING PIPELINE (VISUALS.GOLD.CODE)
 
 ### Phase 1: Atmosphere (Bloom + God Rays)
 - **Implementation**: `frontend/src/rendering/shaders/bloom.rs` + `god_rays.rs`
@@ -450,7 +766,7 @@ qualia-tempo-rust/
 
 ---
 
-## 🎮 GAMEPLAY SYSTEMS (qualiaupgrade.txt Integration)
+## 🎮 GAMEPLAY SYSTEMS (GDD.md Integration)
 
 ### Qualia Generation Sources
 1. **Player Dash** → Generates Qualia at dash origin
@@ -514,53 +830,32 @@ qualia-tempo-rust/
 
 ---
 
-## 📦 DEPENDENCY GRAPH
-
-```
-┌─────────────────┐
-│  shared_core    │ (No dependencies on backend/frontend)
-└─────────────────┘
-         ▲
-         │
-    ┌────┴────┐
-    │         │
-┌───▼───┐ ┌──▼──────┐
-│backend│ │frontend │
-└───┬───┘ └──┬──────┘
-    │        │
-    │        ├─> wgpu (rendering)
-    │        ├─> Leptos (UI)
-    │        └─> wasm-bindgen (browser APIs)
-    │
-    ├─> Axum (HTTP/WebSocket)
-    ├─> Tokio (async runtime)
-    └─> Shaku (DI)
-```
-
----
-
 ## 🚀 MIGRATION PHASES
 
 ### Phase 1: Foundation (Weeks 1-2)
 - [ ] Setup Cargo workspace
-- [ ] Implement shared_core contracts
+- [ ] Implement shared_core contracts (100% from DATA.RUST.md)
 - [ ] Backend: EventBus, Logger, Timer (core services)
 - [ ] Frontend: EventBus, Logger, basic Leptos setup
+- [ ] Implement all procedural macros
 
 ### Phase 2: Networking (Week 3)
 - [ ] Backend: WebSocket server (Axum + tokio-tungstenite)
 - [ ] Frontend: WebSocket client (WASM)
 - [ ] GameStateStreaming bidirectional flow
+- [ ] Binary serialization (bincode)
 
 ### Phase 3: Core Gameplay (Weeks 4-5)
 - [ ] Backend: GameLogicService, QualiaProcessor, BossAI
 - [ ] Frontend: QualiaCalculator (Web Worker), ComboDetector
-- [ ] Input system (musical keys)
+- [ ] Input system (musical keys Q-E-R-T-F-G-C)
+- [ ] Dash system with metronome sync
 
 ### Phase 4: Audio (Week 6)
 - [ ] Frontend: Web Audio API bindings (wasm-bindgen)
 - [ ] Audio8DService, FFTAnalyzer
 - [ ] Backend: HarmonyAnalysisService
+- [ ] Musical combo detection
 
 ### Phase 5: Rendering (Weeks 7-9)
 - [ ] Frontend: wgpu setup, KairosVisualEngine
@@ -568,10 +863,11 @@ qualia-tempo-rust/
 - [ ] Phase 2: FFT → Shaders
 - [ ] Phase 3: Reaction-diffusion floor
 - [ ] Phase 4: SDF avatars
+- [ ] All UI components (50 components total)
 
 ### Phase 6: Polish (Weeks 10-12)
 - [ ] Backend: Persistence, Metrics, HealthCheck
-- [ ] Frontend: UI components (health bars, combo display, subtitles)
+- [ ] Frontend: All HUD components (10 components)
 - [ ] Performance optimization (PGO)
 - [ ] End-to-end testing
 
@@ -579,4 +875,4 @@ qualia-tempo-rust/
 
 *"From 74 services to a unified Rust architecture. Zero compromise. Maximum performance."*
 
-**END OF BLUEPRINT v1.0**
+**END OF BLUEPRINT v2.0**

@@ -1,5 +1,37 @@
 # CHANGELOG - QUALIA TEMPO
 
+## [Unreleased] - 2025-10-12 - SESSION: Directory Map Script Creation
+
+### 📁 Directory Structure Mapping Tool
+
+**Status**: ✅ COMPLETE  
+**Objective**: Create a bash script to generate comprehensive directory maps of project folders for documentation and navigation purposes
+
+#### Impact Assessment
+- **Utility**: Improved project navigation and documentation
+- **Scope**: qualia-tempo-prototype folder structure visualization
+- **Output**: Visual Markdown file with tree structure, emojis, and statistics
+
+#### Files Created
+
+1. **CREATED: `scripts/generate_qualia_map.sh`** (bash script)
+   - Generates complete directory tree of qualia-tempo-prototype
+   - Outputs to `map.md` with visual Markdown formatting
+   - Uses 📁 for directories and 📄 for files with tree structure (├── └──)
+   - Includes generation statistics (directory count, file count, total items)
+   - Filters out __pycache__ directories for cleaner output
+   - Executable script for easy project structure visualization
+
+2. **CREATED: `map.md`** (generated output)
+   - Visual directory tree with 79 directories and 903 files
+   - Total of 982 items in qualia-tempo-prototype
+   - Markdown formatted for easy reading and sharing
+
+#### Files Modified
+- None
+
+---
+
 ## [Unreleased] - 2025-01-12 - SESSION 41: COMPLETE RUST ARCHITECTURE BLUEPRINT
 
 ### 🏗️ Comprehensive Rust Rewrite Architecture Documentation
