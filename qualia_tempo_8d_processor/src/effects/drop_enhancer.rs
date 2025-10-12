@@ -52,7 +52,7 @@ impl DropEnhancer {
             threshold,
             energy_history: vec![0.0; history_samples],
             history_index: 0,
-            max_db_boost: 12.0, // Up to +12 dB boost when drop detected
+            max_db_boost: 18.0, // MISSION v2.1: Up to +18 dB boost (was 12.0)
             current_db_gain: 0.0,
             last_updated_db: 0.0,
             attack: 0.9999,   // Fast attack for drops

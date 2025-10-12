@@ -15,7 +15,7 @@ use std::f32::consts::PI;
 use tracing::{debug, info};
 
 /// # Responsibility
-/// Enum representing the four stem types produced by spectral separation.
+/// Enum representing the five stem types produced by spectral separation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Stem {
     /// Bass frequencies (20Hz - 200Hz): sub-bass and bass fundamentals
@@ -26,6 +26,8 @@ pub enum Stem {
     Vocals,
     /// Presence (4kHz - 20kHz): air, cymbals, sibilance
     Presence,
+    /// Residual: Everything else (ambiguities, bleeding, room tone)
+    Residual,
 }
 
 /// # Responsibility
@@ -149,9 +151,9 @@ impl IStemSeparator for SpectralSeparator {
         let frame_count = audio.samples.len();
         let sample_rate = audio.sample_rate;
 
-        // Initialize stems with empty audio data
+        // Initialize stems with empty audio data (now 5 stems with Residual)
         let mut stems: HashMap<Stem, AudioData> = HashMap::new();
-        for stem_type in [Stem::Bass, Stem::Drums, Stem::Vocals, Stem::Presence] {
+        for stem_type in [Stem::Bass, Stem::Drums, Stem::Vocals, Stem::Presence, Stem::Residual] {
             stems.insert(
                 stem_type,
                 AudioData {
@@ -209,39 +211,69 @@ impl IStemSeparator for SpectralSeparator {
                 let flux = self.compute_spectral_flux(&prev_magnitude, &magnitude);
                 let is_transient = flux > self.transient_threshold;
 
-                // Create four filtered spectra
+                // SUBTRACTIVE SEPARATION LOGIC (Conservative Principle)
+                // Start with full spectrum, extract stems sequentially, subtract each
+                let mut residual_spectrum = spectrum.clone();
+                
+                // Step 1: Extract Bass (20-200Hz)
                 let mut bass_spectrum = spectrum.clone();
-                let mut presence_spectrum = spectrum.clone();
-                let mut drums_spectrum = spectrum.clone();
-                let mut vocals_spectrum = spectrum.clone();
-
                 for i in 0..bin_count {
-                    // Apply masks (symmetric for conjugate bins)
                     bass_spectrum[i] *= bass_mask[i];
                     bass_spectrum[self.block_size - i - 1] *= bass_mask[i];
-
+                    
+                    // Subtract bass from residual
+                    residual_spectrum[i] -= bass_spectrum[i];
+                    residual_spectrum[self.block_size - i - 1] -= bass_spectrum[self.block_size - i - 1];
+                }
+                
+                // Step 2: Extract Presence (4kHz-20kHz) from remaining spectrum
+                let mut presence_spectrum = residual_spectrum.clone();
+                for i in 0..bin_count {
                     presence_spectrum[i] *= presence_mask[i];
                     presence_spectrum[self.block_size - i - 1] *= presence_mask[i];
-
-                    // Midrange: split based on transient detection
+                    
+                    // Subtract presence from residual
+                    residual_spectrum[i] -= presence_spectrum[i];
+                    residual_spectrum[self.block_size - i - 1] -= presence_spectrum[self.block_size - i - 1];
+                }
+                
+                // Step 3: Extract Drums/Vocals from remaining midrange spectrum
+                let mut drums_spectrum = residual_spectrum.clone();
+                let mut vocals_spectrum = residual_spectrum.clone();
+                
+                for i in 0..bin_count {
+                    // Apply midrange mask and split by transient detection
                     if is_transient {
+                        // High flux → Drums
                         drums_spectrum[i] *= midrange_mask[i];
                         drums_spectrum[self.block_size - i - 1] *= midrange_mask[i];
                         vocals_spectrum[i] *= 0.0;
                         vocals_spectrum[self.block_size - i - 1] *= 0.0;
+                        
+                        // Subtract drums from residual
+                        residual_spectrum[i] -= drums_spectrum[i];
+                        residual_spectrum[self.block_size - i - 1] -= drums_spectrum[self.block_size - i - 1];
                     } else {
+                        // Low flux → Vocals
                         drums_spectrum[i] *= 0.0;
                         drums_spectrum[self.block_size - i - 1] *= 0.0;
                         vocals_spectrum[i] *= midrange_mask[i];
                         vocals_spectrum[self.block_size - i - 1] *= midrange_mask[i];
+                        
+                        // Subtract vocals from residual
+                        residual_spectrum[i] -= vocals_spectrum[i];
+                        residual_spectrum[self.block_size - i - 1] -= vocals_spectrum[self.block_size - i - 1];
                     }
                 }
+                
+                // What remains in residual_spectrum is truly ambiguous content
 
-                // Inverse FFT for each stem
+                // Inverse FFT for all 5 stems
                 ifft.process(&mut bass_spectrum);
                 ifft.process(&mut presence_spectrum);
                 ifft.process(&mut drums_spectrum);
                 ifft.process(&mut vocals_spectrum);
+                ifft.process(&mut residual_spectrum);
 
                 // Overlap-add reconstruction (with normalization)
                 let norm = 1.0 / self.block_size as f32;
@@ -254,13 +286,15 @@ impl IStemSeparator for SpectralSeparator {
                         drums_spectrum[i].re * norm;
                     stems.get_mut(&Stem::Vocals).unwrap().samples[offset][channel] +=
                         vocals_spectrum[i].re * norm;
+                    stems.get_mut(&Stem::Residual).unwrap().samples[offset][channel] +=
+                        residual_spectrum[i].re * norm;
                 }
 
                 prev_magnitude = magnitude;
             }
         }
 
-        info!("Spectral separation complete: 4 stems generated");
+        info!("Spectral separation complete: 5 stems generated (Bass, Drums, Vocals, Presence, Residual)");
         Ok(stems)
     }
 }
@@ -325,12 +359,13 @@ mod tests {
 
         let stems = separator.separate(&audio).expect("Separation failed");
 
-        // Verify we got 4 stems
-        assert_eq!(stems.len(), 4);
+        // MISSION v2.1: Verify we got 5 stems (including Residual)
+        assert_eq!(stems.len(), 5);
         assert!(stems.contains_key(&Stem::Bass));
         assert!(stems.contains_key(&Stem::Drums));
         assert!(stems.contains_key(&Stem::Vocals));
         assert!(stems.contains_key(&Stem::Presence));
+        assert!(stems.contains_key(&Stem::Residual));
 
         // Bass stem should have significant energy (100 Hz is in 20-200 Hz band)
         let bass_energy: f32 = stems[&Stem::Bass]

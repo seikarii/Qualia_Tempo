@@ -74,12 +74,12 @@ impl Default for StemConfig {
 }
 
 /// # Responsibility
-/// Complete processor configuration for parallel stem processing (v2.0).
+/// Complete processor configuration for parallel stem processing (v2.1).
 ///
 /// ---
 ///
-/// **Architecture**: Quasar Mixer
-/// - Separate audio into 4 stems (Bass, Drums, Vocals, Presence)
+/// **Architecture**: Quasar Mixer with Conservative Subtractive Separation
+/// - Separate audio into 5 stems (Bass, Drums, Vocals, Presence, Residual)
 /// - Apply independent effect chains to each stem
 /// - Mix stems with anti-clipping
 #[derive(Debug, Clone)]
@@ -92,6 +92,8 @@ pub struct ProcessorConfigV2 {
     pub vocals: StemConfig,
     /// Configuration for Presence stem (4kHz-20kHz)
     pub presence: StemConfig,
+    /// Configuration for Residual stem (ambiguities, bleeding, room tone)
+    pub residual: StemConfig,
     /// Mixdown configuration (limiting, normalization)
     pub mixdown: MixdownConfig,
 }
@@ -99,18 +101,20 @@ pub struct ProcessorConfigV2 {
 impl Default for ProcessorConfigV2 {
     fn default() -> Self {
         Self {
-            // Bass: Drop enhancer + slow spatial rotation
+            // Bass: AGGRESSIVE drop enhancer + slow spatial rotation
+            // MISSION v2.1: Boost bass more aggressively (threshold 0.7→0.5)
             bass: StemConfig {
                 enable_drop_enhancer: true,
-                drop_threshold: 0.7,
+                drop_threshold: 0.5, // Lower threshold = more bass boost
                 enable_spatial: true,
                 rotation_speed: 0.1, // Slow rotation for grounding effect
                 ..Default::default()
             },
-            // Drums: Drop enhancer + medium spatial rotation
+            // Drums: BOOSTED drop enhancer for tempo-marking punch
+            // DEV NOTE: Boost drums more to emphasize rhythm section
             drums: StemConfig {
                 enable_drop_enhancer: true,
-                drop_threshold: 0.6,
+                drop_threshold: 0.4, // Even lower threshold for more punch
                 enable_spatial: true,
                 rotation_speed: 0.25, // Medium rotation for presence
                 ..Default::default()
@@ -127,6 +131,16 @@ impl Default for ProcessorConfigV2 {
                 enable_spatial: true,
                 rotation_speed: 0.4, // Very fast rotation for width
                 ..Default::default()
+            },
+            // Residual: STATIC and UNPROCESSED (foundation bed of the mix)
+            // MISSION v2.1: Keep centered with NO effects
+            residual: StemConfig {
+                enable_spatial: false, // CRITICAL: Keep centered!
+                enable_drop_enhancer: false,
+                enable_orchestra: false,
+                enable_vocal_adjust: false,
+                rotation_speed: 0.0, // No movement
+                drop_threshold: 1.0, // Irrelevant but safe
             },
             mixdown: MixdownConfig::default(),
         }

@@ -202,6 +202,7 @@ impl AudioProcessorV2 {
                     Stem::Drums => &self.config.drums,
                     Stem::Vocals => &self.config.vocals,
                     Stem::Presence => &self.config.presence,
+                    Stem::Residual => &self.config.residual,
                 };
 
                 // Apply effects chain
