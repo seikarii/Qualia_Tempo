@@ -220,7 +220,13 @@ qualia-tempo-rust/
 │       │   │
 │       │   ├── menu.rs                # Menu screens
 │       │   ├── subtitles.rs           # Subtitle display
-│       │   └── atmosphere.rs          # Atmospheric effects
+│       │   ├── atmosphere.rs          # Atmospheric effects
+│       │   │
+│       │   └── scenes/                  # Scene implementations
+│       │       ├── mod.rs
+│       │       ├── combat_scene.rs      # Qualia Tempo combat loop
+│       │       ├── cinematic_scene.rs   # Narrative/cutscene player
+│       │       └── menu_scene.rs        # Main menu
 │       │
 │       ├── state/                      # Leptos Signals state management
 │       │   ├── mod.rs
@@ -459,7 +465,8 @@ qualia-tempo-rust/
 | 41 | RhythmicMovementController | `frontend/src/services/input/rhythmic_movement.rs` | ✅ Migrate | Rhythmic movement |
 | 42 | ShaderIntrospectionService | `frontend/src/rendering/shader_introspector.rs` | ✅ Migrate | Shader metadata |
 | 43 | ShaderLoaderService | `frontend/src/rendering/shader_loader.rs` | 🔄 Replace | naga + wgpu |
-| 44 | StateMergerService | `frontend/src/services/state/state_merger.rs` | ✅ Migrate | State merging |
+| 44 | SceneManagerService | `frontend/src/services/scenes/manager.rs` | ✨ New | Orchestrates scene transitions (Menu, Combat, Cinematic) |
+| 45 | StateMergerService | `frontend/src/services/state/state_merger.rs` | ✅ Migrate | State merging |
 | 45 | StateStreamingService | `frontend/src/services/networking/websocket_client.rs` | 🔄 Replace | tokio-tungstenite WASM |
 | 46 | SubtitleService | `frontend/src/services/ui/subtitles.rs` | ✅ Migrate | Lyric display |
 | 47 | TimerService | `frontend/src/services/core/timer.rs` | 🔄 Replace | gloo-timers |

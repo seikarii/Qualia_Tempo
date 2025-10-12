@@ -757,4 +757,76 @@ pub struct ParticleSystemConfig {
     // ... Campos como max_particles, emission, shape, etc. ...
     // ... que contienen structs como EmissionModule, ShapeModule, etc. ...
 }
+```
+
+---
+
+## 6. Estructuras de Escena y Cinemáticas
+
+Estas estructuras definen el flujo entre diferentes partes del juego (menús, cinemáticas, gameplay) y el contenido de las secuencias narrativas.
+
+### 6.1. SceneData
+
+*   **Propósito:** Define la configuración de una escena cargable.
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum SceneType {
+    Menu,
+    Combat,
+    Cinematic,
+    ScoreScreen,
+}
+
+/// # Responsibility
+/// Defines the data required to load and initialize a game scene.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct SceneData {
+    pub id: String,
+    pub scene_type: SceneType,
+    /// Path to specific data for this scene (e.g., path to a CombatData JSON file).
+    pub data_path: String,
+    /// ID of the next scene to transition to automatically, if any.
+    pub next_scene_id: Option<String>,
+}
+```
+
+### 6.2. CinematicData
+
+*   **Propósito:** Define una secuencia de eventos para una cinemática.
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum CinematicEventType {
+    ShowSubtitle,
+    HideSubtitle,
+    CameraMove,
+    PlayAudio,
+    WaitForInput,
+    TriggerGameEvent,
+    EndCinematic,
+}
+
+/// # Responsibility
+/// Defines a single event within a cinematic timeline.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CinematicEvent {
+    pub timestamp_ms: u64,
+    pub event_type: CinematicEventType,
+    /// JSON-encoded payload for the event (e.g., subtitle text, camera coordinates).
+    pub payload: Option<serde_json::Value>,
+}
+
+/// # Responsibility
+/// Defines a complete cinematic sequence.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CinematicData {
+    pub id: String,
+    pub events: Vec<CinematicEvent>,
+}
 ``````

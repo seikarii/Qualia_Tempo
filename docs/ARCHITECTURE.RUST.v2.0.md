@@ -530,8 +530,30 @@
         *   El `KairosVisualEngine` (Sección 6.2) se convierte en un **renderizador puro**. No tendrá conocimiento de "jugadores" o "jefes", sino que simplemente recibirá una lista de objetos `Renderable` desde la escena activa a través del trait `IScene` y los dibujará.
         *   `Qualia Tempo` se implementará como una `struct` concreta, `QualiaTempoScene`, que implementa `IScene`. Futuros modos de juego (3D, no-euclidianos) serán simplemente nuevas implementaciones de este trait, asegurando que el motor de renderizado no necesite modificación.
 
+        }
+        ```
+
+    *   6.1.6. Sistema de Gestión de Escenas y Cinemáticas
+        *   **Problema:** La arquitectura se centra en el bucle de combate, pero no formaliza cómo se transita entre diferentes estados del juego (Menú, Cinemática, Gameplay).
+        *   **Solución:** Se introduce un `SceneManagerService` en el frontend para orquestar la carga y transición entre escenas.
+        *   **`IScene` Trait:** Como se mencionó en 6.1.5, este es el contrato clave. Cada escena (`MenuScene`, `CombatScene`, `CinematicScene`) implementará este trait, que define métodos como `on_enter()`, `update(dt: f32)`, `render(&mut KairosVisualEngine)`, y `on_exit()`.
+        *   **`SceneManagerService`:**
+            *   **Responsabilidad:** Mantiene la escena activa, gestiona su ciclo de vida y facilita las transiciones.
+            *   **Flujo de Transición:**
+                1.  El `GameControllerService` o un evento de UI solicita una transición de escena (ej. `request_scene_change("intro_cinematic")`).
+                2.  El `SceneManagerService` recibe la petición.
+                3.  Llama a `on_exit()` en la escena actual.
+                4.  Carga los datos de la nueva escena (usando `SceneData` de `DATA.RUST.md`).
+                5.  Instancia la nueva implementación de `IScene` (ej. `CinematicScene`).
+                6.  Llama a `on_enter()` en la nueva escena, pasándole los recursos necesarios.
+                7.  En el bucle principal de la aplicación, el `SceneManagerService` llama a `update()` y `render()` de la escena activa en cada frame.
+        *   **`CinematicScene`:**
+            *   Una implementación de `IScene` que lee `CinematicData`.
+            *   Su método `update()` procesa la línea de tiempo de eventos, utilizando otros servicios como `SubtitleService` y `AudioService` para ejecutar la cinemática.
+            *   Al finalizar, solicita una transición a la siguiente escena (ej. `request_scene_change("combat_level_1")`).
+
     *   6.2. El "Proyecto Kairos" - Motor Visual (`wgpu`)
-    
+        
         **6.2.1. KairosVisualEngine - El Orquestador** (`kairos_engine.rs`)
         
         ```rust
