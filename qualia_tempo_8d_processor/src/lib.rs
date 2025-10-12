@@ -16,3 +16,5 @@ pub mod config;
 pub mod effects;
 pub mod error;
 pub mod processor;
+pub mod stem_mixer;
+pub mod stem_separator;
