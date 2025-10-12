@@ -28,46 +28,6 @@ This is your **practical guide** for Rust development in Qualia Tempo. While `@Q
 
 ---
 
-## 📁 FILE STRUCTURE PROTOCOL
-
-### Workspace Layout (Mandatory)
-
-```
-qualia-tempo-rust/
-├── Cargo.toml                      # Workspace manifest
-├── shared_core/                    # Shared types (no dependencies on backend/frontend)
-│   ├── Cargo.toml
-│   └── src/
-│       ├── lib.rs
-│       ├── contracts.rs            # QualiaState, PlayerAction, GameState
-│       ├── events.rs               # GameEvent enum
-│       └── traits.rs               # Shared trait interfaces
-├── backend/                        # Server (async runtime, WebSocket, services)
-│   ├── Cargo.toml
-│   └── src/
-│       ├── main.rs                 # Entry point (Tokio runtime)
-│       ├── config.rs               # YAML configuration loading
-│       ├── services/               # Business logic
-│       │   ├── mod.rs
-│       │   ├── interfaces/         # Trait definitions (ILogger, IEventBus, etc.)
-│       │   ├── event_bus.rs        # EventBus implementation
-│       │   ├── game_logic.rs       # Game logic service
-│       │   └── tests/              # Unit tests
-│       │       ├── mod.rs
-│       │       ├── mocks/          # Centralized mocks (MockLogger, MockEventBus)
-│       │       └── test_container_factory.rs
-│       └── handlers/               # HTTP/WebSocket handlers
-│           └── websocket.rs
-└── frontend/                       # WASM client (Leptos UI + wgpu)
-    ├── Cargo.toml
-    ├── index.html
-    └── src/
-        ├── lib.rs
-        ├── components/             # Leptos UI components
-        ├── rendering/              # wgpu rendering pipeline
-        └── audio/                  # Web Audio bindings
-```
-
 ### Naming Conventions
 
 | Type | Convention | Example |
