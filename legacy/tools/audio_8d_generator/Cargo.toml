@@ -1,0 +1,34 @@
+[package]
+name = "audio_8d_generator"
+version = "0.1.0"
+edition = "2021"
+authors = ["Qualia Tempo Team"]
+description = "Sophisticated 8D audio generator with advanced DSP effects"
+
+[dependencies]
+# CLI
+clap = { version = "4.5", features = ["derive"] }
+
+# Audio I/O
+symphonia = { version = "0.5", features = ["all-codecs", "all-formats"] }
+hound = "3.5"
+
+# DSP & Effects
+fundsp = "0.20"
+dasp = { version = "0.11", features = ["all"] }
+rubato = "0.16"
+
+# Math & Utilities
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 1

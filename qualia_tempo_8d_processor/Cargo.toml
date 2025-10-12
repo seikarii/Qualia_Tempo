@@ -1,0 +1,31 @@
+[package]
+name = "qualia_tempo_8d_processor"
+version = "0.1.0"
+edition = "2021"
+authors = ["Qualia Tempo Engineering Team"]
+
+[dependencies]
+# Audio I/O
+symphonia = { version = "0.5", features = ["mp3", "wav", "flac", "ogg"] }
+hound = "3.5"
+
+# CLI
+clap = { version = "4.5", features = ["derive"] }
+
+# DSP
+rustfft = "6.2"
+
+# Error handling
+anyhow = "1.0"
+
+# Utilities
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[profile.dev.package."*"]
+opt-level = 3

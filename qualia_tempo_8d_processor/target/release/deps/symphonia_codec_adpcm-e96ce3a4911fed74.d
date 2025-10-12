@@ -1,0 +1,10 @@
+/media/seikarii/Nvme/QualiaTempo/qualia_tempo_8d_processor/target/release/deps/libsymphonia_codec_adpcm-e96ce3a4911fed74.rmeta: /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/lib.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/codec_ima.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/codec_ms.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/common.rs
+
+/media/seikarii/Nvme/QualiaTempo/qualia_tempo_8d_processor/target/release/deps/libsymphonia_codec_adpcm-e96ce3a4911fed74.rlib: /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/lib.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/codec_ima.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/codec_ms.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/common.rs
+
+/media/seikarii/Nvme/QualiaTempo/qualia_tempo_8d_processor/target/release/deps/symphonia_codec_adpcm-e96ce3a4911fed74.d: /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/lib.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/codec_ima.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/codec_ms.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/common.rs
+
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/lib.rs:
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/codec_ima.rs:
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/codec_ms.rs:
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-codec-adpcm-0.5.5/src/common.rs:

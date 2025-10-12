@@ -1,0 +1,10 @@
+/media/seikarii/Nvme/QualiaTempo/qualia_tempo_8d_processor/target/release/deps/libsymphonia_format_riff-e768d7e0fe8ee1e4.rmeta: /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/lib.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/common.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/wave/mod.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/wave/chunks.rs
+
+/media/seikarii/Nvme/QualiaTempo/qualia_tempo_8d_processor/target/release/deps/libsymphonia_format_riff-e768d7e0fe8ee1e4.rlib: /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/lib.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/common.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/wave/mod.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/wave/chunks.rs
+
+/media/seikarii/Nvme/QualiaTempo/qualia_tempo_8d_processor/target/release/deps/symphonia_format_riff-e768d7e0fe8ee1e4.d: /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/lib.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/common.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/wave/mod.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/wave/chunks.rs
+
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/lib.rs:
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/common.rs:
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/wave/mod.rs:
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/symphonia-format-riff-0.5.5/src/wave/chunks.rs:

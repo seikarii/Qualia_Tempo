@@ -1,0 +1,11 @@
+/media/seikarii/Nvme/QualiaTempo/tools/audio_8d_generator/target/release/deps/libtinyvec-f02ec38fa9574812.rmeta: /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/lib.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/array.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/array/const_generic_impl.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/arrayvec.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/arrayvec_drain.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/slicevec.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/tinyvec.rs
+
+/media/seikarii/Nvme/QualiaTempo/tools/audio_8d_generator/target/release/deps/tinyvec-f02ec38fa9574812.d: /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/lib.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/array.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/array/const_generic_impl.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/arrayvec.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/arrayvec_drain.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/slicevec.rs /home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/tinyvec.rs
+
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/lib.rs:
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/array.rs:
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/array/const_generic_impl.rs:
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/arrayvec.rs:
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/arrayvec_drain.rs:
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/slicevec.rs:
+/home/seikarii/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.10.0/src/tinyvec.rs:

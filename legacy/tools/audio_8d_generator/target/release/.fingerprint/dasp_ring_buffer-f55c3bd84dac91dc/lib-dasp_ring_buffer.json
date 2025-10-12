@@ -1,0 +1,1 @@
+{"rustc":12047664292709028906,"features":"[\"std\"]","target":17717478068915503395,"profile":4796947518211079586,"path":17729277670528800716,"deps":[],"local":[{"CheckDepInfo":{"dep_info":"release/.fingerprint/dasp_ring_buffer-f55c3bd84dac91dc/dep-lib-dasp_ring_buffer"}}],"rustflags":[],"metadata":3334055934864764,"config":2202906307356721367,"compile_kind":0}
