@@ -1,5 +1,96 @@
 # CHANGELOG - QUALIA TEMPO
 
+## [Unreleased] - 2025-10-12 - SESSION: Legacy Linting Rules Analysis & Rust Linter Update (MANDATORY CORRECTIONS APPLIED)
+
+### 🔍 Comprehensive Legacy Rules Analysis & Rust Linter Mapping (MANDATORY CORRECTIONS APPLIED)
+
+**Status**: ✅ COMPLETE (MANDATORY CORRECTIONS APPLIED)  
+**Objective**: Analyze all legacy linting rules (ESLint, MyPy, Ruff) and create complete Rust counterparts in LINTER.RUST.md, with mandatory corrections for versionado, IScene rules, and structural consolidation
+
+#### Impact Assessment
+- **Rules Analyzed**: 40+ ESLint rules, 4 MyPy rules, Ruff rules
+- **Rust Mappings**: 25+ rules mapped, 20+ adapted to macros, 5+ obsolete
+- **Documentation**: Complete consolidated mapping table with architectural justifications
+- **Architecture**: Enhanced qualia-lints with IScene enforcement and macro-based implementations
+- **MANDATORY FIXES**: Version corrected to v1.0, IScene rules added, redundant sections consolidated
+
+#### Files Modified
+
+1. **CORRECTED: `docs/LINTER.RUST.md`** (v2.0 INCORRECT → v1.0 CORRECTED)
+   - **MANDATORY FIX 1**: Version header corrected from v2.0 to v1.0 (document is new, not updated)
+   - **MANDATORY FIX 2**: Added critical IScene pattern rules:
+     - `qualia-lints::enforce-scene-trait-usage`: Forces IScene implementation for game loop components
+     - `qualia-lints::no-direct-renderer-access`: Prevents direct KairosVisualEngine access from game logic
+   - **MANDATORY FIX 3**: Consolidated redundant sections - Section 4 merged into Section 3 master table
+   - **MANDATORY FIX 4**: Enhanced table with architectural justifications linked to QUALIA.CODE.RUST and ARCHITECTURE.RUST.v2.0
+   - Added comprehensive macro adaptation section for TypeScript decorators
+   - Expanded qualia-lints with 15+ macro-based rules
+   - Added implementation examples for qualia_macros crate
+   - Included CI/CD configuration for macro expansion testing
+
+#### Legacy Rules Analysis Summary (MANDATORY CORRECTIONS APPLIED)
+
+**ESLint Plugin Rules (40+ rules):**
+- **Architecture IoC/DI**: 7 rules → 7 Rust equivalents
+- **Event Architecture**: 4 rules → 4 Rust equivalents  
+- **Frontend IScene Pattern**: 2 new critical rules added
+- **Macro Adaptations**: 15+ decorator rules → 15+ Rust macro equivalents
+- **Performance**: 10 rules → 8 Rust equivalents
+- **Validation**: 5 rules → 5 Rust equivalents
+- **Obsolete**: 5+ rules (React-specific, JS APIs)
+
+**Decorator to Macro Adaptations (CORRECTED):**
+- `@cache` → `#[cached]` macro
+- `@mutex` → `#[with_mutex]` macro  
+- `@retry` → `#[retry]` macro
+- `@timeout` → `#[with_timeout]` macro
+- `@throttle` → `#[throttle]` macro
+- `@authorize` → `#[authorize]` macro
+- `@instrument` → `#[tracing::instrument]` attribute
+- `@validate` → `#[validate]` macro
+- `@deprecated` → `#[deprecated]` native attribute
+
+#### New Qualia-Lints Proposals Added (Macro-Based + IScene)
+
+**Critical IScene Enforcement Rules (NEW):**
+- `enforce-scene-trait-usage`: Forces IScene implementation for CombatScene, MenuScene, etc.
+- `no-direct-renderer-access`: Prevents game logic from directly accessing KairosVisualEngine
+
+**Macro Enforcement Rules (15+):**
+- `enforce-cached-macro`: Detect manual caching, suggest `#[cached]`
+- `enforce-mutex-macro`: State mutations require `#[with_mutex]`
+- `enforce-retry-macro`: I/O operations need `#[retry]`
+- `enforce-timeout-macro`: Async ops require `#[with_timeout]`
+- `enforce-throttle-macro`: Event handlers need `#[throttle]`
+- `enforce-rate-limit-macro`: API calls need `#[rate_limit]`
+- `enforce-authorize-macro`: Secure methods need `#[authorize]`
+- `enforce-profile-macro`: Heavy computation needs `#[profile]`
+- `enforce-worker-macro`: Blocking ops need `#[spawn_blocking]`
+- `enforce-validation-macro`: Boundaries need `#[validate]`
+- `enforce-readonly-macro`: Config access needs `#[readonly]`
+- `enforce-deprecated-macro`: Obsolete APIs need `#[deprecated]`
+- `enforce-async-macro`: Heavy methods need async macros
+- `enforce-debounce-macro`: Adapted for backend event throttling
+- `enforce-tracing-instrument`: All service methods need `#[tracing::instrument]`
+
+#### Implementation Guidance Added
+
+- qualia_macros crate structure and examples
+- Macro usage patterns with code samples
+- CI/CD integration for macro expansion testing
+- Dylint setup for linting macro usage
+
+#### Obsolete Rules (Reduced from Previous Version)
+
+**Truly Obsolete Rules (5 rules):**
+- React hooks (`useService`) - No hooks in Rust
+- React state patterns (`useState`) - Ownership/borrowing instead
+- Browser-only decorators - Target triples instead
+- UI-specific patterns - Backend-only architecture
+- Decorator ordering - Macros don't have order dependencies
+
+---
+
 ## [Unreleased] - 2025-10-12 - SESSION: Directory Map Script Creation
 
 ### 📁 Directory Structure Mapping Tool
