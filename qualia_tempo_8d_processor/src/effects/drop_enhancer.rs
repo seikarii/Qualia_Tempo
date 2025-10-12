@@ -3,9 +3,10 @@
 //!
 //! ---
 //!
-//! Analyzes low-frequency energy and applies adaptive EQ boost when drops
-//! are detected. Uses RMS energy tracking and spectral analysis.
+//! Analyzes low-frequency energy and applies adaptive low-shelf EQ when drops
+//! are detected. Uses RMS energy tracking and biquad IIR filtering.
 
+use super::biquad::BiquadFilter;
 use super::IEffect;
 
 /// # Responsibility
@@ -13,15 +14,20 @@ use super::IEffect;
 ///
 /// ---
 ///
-/// Uses a simple low-shelf filter and energy detection to identify drops.
+/// Uses a low-shelf biquad filter with dynamic gain control based on energy analysis.
 pub struct DropEnhancer {
     threshold: f32,
     energy_history: Vec<f32>,
     history_index: usize,
-    boost_gain: f32,
-    current_boost: f32,
+    max_db_boost: f32,
+    current_db_gain: f32,
+    last_updated_db: f32,
     attack: f32,
     release: f32,
+    
+    // Biquad filter for frequency-selective bass boost
+    filter: BiquadFilter,
+    sample_rate: u32,
 }
 
 impl DropEnhancer {
@@ -29,19 +35,30 @@ impl DropEnhancer {
     ///
     /// # Arguments
     /// * `threshold` - Energy threshold for drop detection (0.0-1.0)
-    /// * `sample_rate` - Sample rate for buffer sizing
+    /// * `sample_rate` - Sample rate for buffer sizing and filter design
     pub fn new(threshold: f32, sample_rate: u32) -> Self {
         // Track energy over last 100ms
         let history_samples = (sample_rate as f32 * 0.1) as usize;
+
+        // Initialize with flat response (0 dB gain)
+        let filter = BiquadFilter::low_shelf(
+            sample_rate,
+            200.0,  // Boost frequencies below 200 Hz
+            0.0,    // Start with 0 dB gain
+            0.7,    // Smooth shelf slope
+        );
 
         Self {
             threshold,
             energy_history: vec![0.0; history_samples],
             history_index: 0,
-            boost_gain: 3.0, // 3x boost when drop detected
-            current_boost: 1.0,
+            max_db_boost: 12.0, // Up to +12 dB boost when drop detected
+            current_db_gain: 0.0,
+            last_updated_db: 0.0,
             attack: 0.9999,   // Fast attack for drops
             release: 0.9995,  // Slow release for smooth decay
+            filter,
+            sample_rate,
         }
     }
 
@@ -55,15 +72,14 @@ impl DropEnhancer {
         self.energy_history.iter().sum::<f32>() / self.energy_history.len() as f32
     }
 
-    /// Apply low-shelf boost for bass enhancement.
-    fn apply_bass_boost(&self, frame: &mut [f32; 2], gain: f32) {
-        // Simple gain boost (proper low-shelf EQ would use biquad filter)
-        frame[0] *= gain;
-        frame[1] *= gain;
-
-        // Clamp to prevent clipping
-        frame[0] = frame[0].clamp(-1.0, 1.0);
-        frame[1] = frame[1].clamp(-1.0, 1.0);
+    /// Update filter coefficients based on current gain.
+    fn update_filter(&mut self) {
+        self.filter = BiquadFilter::low_shelf(
+            self.sample_rate,
+            200.0,
+            self.current_db_gain,
+            0.7,
+        );
     }
 }
 
@@ -82,20 +98,35 @@ impl IEffect for DropEnhancer {
         // Detect drop: current energy significantly above average
         let is_drop = energy > avg_energy * (1.0 + self.threshold);
 
-        // Update boost with envelope follower
+        // Update dB gain with envelope follower
+        let target_db = if is_drop { self.max_db_boost } else { 0.0 };
+        
         if is_drop {
-            self.current_boost += (self.boost_gain - self.current_boost) * (1.0 - self.attack);
+            self.current_db_gain += (target_db - self.current_db_gain) * (1.0 - self.attack);
         } else {
-            self.current_boost += (1.0 - self.current_boost) * (1.0 - self.release);
+            self.current_db_gain += (target_db - self.current_db_gain) * (1.0 - self.release);
         }
 
-        // Apply bass boost
-        self.apply_bass_boost(frame, self.current_boost);
+        // Update filter coefficients if gain changed significantly
+        // (Avoid recalculating every sample for performance)
+        if (self.current_db_gain - self.last_updated_db).abs() > 0.5 {
+            self.update_filter();
+            self.last_updated_db = self.current_db_gain;
+        }
+
+        // Apply low-shelf filter to boost bass frequencies
+        self.filter.process_frame(frame);
+        
+        // Soft clip to prevent harsh clipping
+        frame[0] = frame[0].clamp(-1.0, 1.0);
+        frame[1] = frame[1].clamp(-1.0, 1.0);
     }
 
     fn reset(&mut self) {
         self.energy_history.fill(0.0);
         self.history_index = 0;
-        self.current_boost = 1.0;
+        self.current_db_gain = 0.0;
+        self.last_updated_db = 0.0;
+        self.filter.reset();
     }
 }

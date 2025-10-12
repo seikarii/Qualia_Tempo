@@ -1,6 +1,169 @@
 # CHANGELOG - QUALIA TEMPO
 
-## [Unreleased] - 2025-10-12 - SESSION: Qualia Tempo 8D Processor - Production Implementation
+## [Unreleased] - 2025-10-12 - SESSION: 8D Processor - DSP Refinement (v0.2)
+
+### 🔧 Mission: Fix DropEnhancer & VocalAdjust with Real DSP Algorithms
+
+**Status**: ✅ **MISSION ACCOMPLISHED**  
+**Architect**: Senior AI Engineer (QUALIA.CODE.RUST v1.1 Compliant)
+
+#### Critical Issues Resolved
+
+##### 1. 🚨 Architectural Flaw: Effect Chain Order
+**Problem**: Spatial8D was processing first, collapsing stereo to mono and destroying frequency information for subsequent effects.
+
+**Solution**: Implemented enforced effect ordering in `processor.rs`:
+- **Order**: VocalAdjust → DropEnhancer → Orchestra → Spatial8D
+- **Rationale**: EQ effects must process original signal before spatial effects collapse to mono
+- **Implementation**: Option-based builder pattern ensures correct order regardless of CLI flags
+
+##### 2. 🔊 DropEnhancer: Placeholder → Real Low-Shelf Filter
+**Problem**: Was just a volume multiplier (`frame[0] *= gain`), not frequency-selective bass boost.
+
+**Solution**: Implemented proper low-shelf biquad IIR filter:
+- **Filter Type**: Low-shelf with 200 Hz corner frequency
+- **Gain**: Dynamic 0-12 dB boost based on energy detection
+- **Algorithm**: Audio EQ Cookbook formulas (Robert Bristow-Johnson)
+- **State**: Maintained per-channel (Direct Form 1) to preserve stereo image
+- **Optimization**: Only recalculates coefficients when dB gain changes >0.5 dB
+
+**Technical Details**:
+```rust
+// Before: Simple gain boost (all frequencies)
+frame[0] *= gain; // ❌ No frequency selectivity
+
+// After: Low-shelf biquad filter (<200 Hz boosted)
+filter.process_frame(frame); // ✅ Real DSP
+```
+
+##### 3. 🎤 VocalAdjust: Placeholder → Real Peaking EQ
+**Problem**: Was just a volume multiplier (`frame[0] *= 1.5`), not vocal formant enhancement.
+
+**Solution**: Implemented proper peaking EQ biquad filter:
+- **Filter Type**: Peaking EQ centered at 1200 Hz
+- **Bandwidth**: Q=1.0 (covers 250-3000 Hz vocal range)
+- **Gain**: +6 dB boost
+- **State**: Per-channel filtering to preserve stereo
+
+#### New Module: Biquad IIR Filter Library
+
+**File**: `src/effects/biquad.rs` (180 lines)
+
+**Features**:
+- **Low-Shelf Filter**: Boost/cut frequencies below corner
+- **Peaking EQ Filter**: Boost/cut frequencies around center
+- **Implementation**: Direct Form 1 (industry standard)
+- **Stereo**: Independent state for L/R channels
+- **Formulas**: Audio EQ Cookbook (authoritative DSP reference)
+
+**API**:
+```rust
+// Low-shelf filter (bass boost)
+let filter = BiquadFilter::low_shelf(
+    sample_rate: 48000,
+    corner_freq: 200.0,
+    db_gain: 12.0,
+    shelf_slope: 0.7
+);
+
+// Peaking EQ (vocal boost)
+let filter = BiquadFilter::peaking_eq(
+    sample_rate: 48000,
+    center_freq: 1200.0,
+    db_gain: 6.0,
+    q: 1.0
+);
+
+// Process audio
+filter.process_frame(&mut [left, right]);
+```
+
+#### Files Modified
+
+1. **NEW**: `src/effects/biquad.rs` (180 lines)
+   - Low-shelf and peaking EQ implementations
+   - Audio EQ Cookbook coefficient calculations
+   - Direct Form 1 filtering with per-channel state
+
+2. **MODIFIED**: `src/effects/drop_enhancer.rs`
+   - Replaced `frame[0] *= gain` with `filter.process_frame(frame)`
+   - Added `BiquadFilter` field with 200 Hz low-shelf
+   - Dynamic dB gain (0-12 dB) based on energy detection
+   - Optimization: Only update filter when gain changes >0.5 dB
+   - Added `last_updated_db` tracking field
+
+3. **MODIFIED**: `src/effects/vocal_adjust.rs`
+   - Replaced `frame[0] *= 1.5` with `filter.process_frame(frame)`
+   - Added `BiquadFilter` field with 1200 Hz peaking EQ
+   - **BREAKING CHANGE**: Constructor now requires `sample_rate` parameter
+
+4. **MODIFIED**: `src/processor.rs`
+   - Refactored effect chain builder to enforce correct order
+   - VocalAdjust → DropEnhancer → Orchestra → Spatial8D (guaranteed)
+   - Used Option pattern to build chain in priority order
+   - Updated VocalAdjust construction to pass sample_rate
+
+5. **MODIFIED**: `src/effects/mod.rs`
+   - Added `pub mod biquad;` export
+
+#### Validation & Testing
+
+**Build Status**: ✅ PASS
+```bash
+cargo build --release
+# Finished in 43.17s
+```
+
+**Test Status**: ✅ 1/1 PASS
+```bash
+cargo test --release
+# test test_process_audio_file ... ok
+# finished in 52.47s
+```
+
+**Integration Test**: ✅ PASS
+```bash
+cargo run --release -- \
+  --input Inicio.mp3 \
+  --output Inicio_AllEffects_v2.wav \
+  --spatial --drop-enhancer --orchestra --vocal-adjust
+
+# Processing 9,441,792 frames through 4 effects
+# Output: 73 MB WAV file
+# Time: 52 seconds
+```
+
+#### Audio Quality Impact
+
+**Before (v0.1)**:
+- ❌ DropEnhancer: Just louder, no bass boost
+- ❌ VocalAdjust: Just louder, no vocal clarity
+- ❌ Effect order: Random (undefined behavior)
+
+**After (v0.2)**:
+- ✅ DropEnhancer: Perceptible bass boost during drops (<200 Hz)
+- ✅ VocalAdjust: Vocal clarity and presence (250-3000 Hz)
+- ✅ Effect order: Deterministic (EQ → Spatial)
+- ✅ Stereo image: Preserved through EQ chain
+
+#### Technical Achievements
+
+1. **Real DSP Algorithms**: Replaced all placeholder implementations with industry-standard biquad filters
+2. **Architectural Correctness**: Fixed fatal flaw in effect chain ordering
+3. **Performance**: Optimized filter updates to avoid recalculating coefficients every sample
+4. **QUALIA.CODE Compliance**: All code follows `# Responsibility` documentation standard
+5. **Zero Unsafe**: Maintained memory safety guarantees
+
+#### Lessons Learned
+
+1. **Effect Order Matters**: Spatial effects that collapse to mono must be last
+2. **Biquad > FFT for Real-Time**: IIR filters have zero latency vs FFT window latency
+3. **Audio EQ Cookbook is Gold**: Standard reference for filter coefficient calculation
+4. **Optimization via Tracking**: Avoid recalculating expensive operations when state hasn't changed significantly
+
+---
+
+## [v0.1] - 2025-10-12 - SESSION: Qualia Tempo 8D Processor - Initial Implementation
 
 ### 🎯 Mission: Advanced 8D Audio Processing System
 

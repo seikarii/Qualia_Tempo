@@ -1,11 +1,11 @@
 //! # Responsibility
-//! Effect trait definition and module exports.
+//! Effects system with trait-based polymorphism.
 //!
 //! ---
 //!
-//! The IEffect trait provides a uniform interface for all audio effects.
-//! Each effect processes stereo frames in-place.
+//! Defines the IEffect trait and implements audio effects.
 
+pub mod biquad;
 pub mod drop_enhancer;
 pub mod orchestra;
 pub mod spatial_8d;

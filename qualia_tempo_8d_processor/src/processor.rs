@@ -57,33 +57,59 @@ impl AudioProcessor {
     fn process_audio(&self, mut audio_data: AudioData) -> Result<AudioData> {
         info!("Initializing effects chain");
 
-        // Build effects chain based on configuration
-        let mut effects: Vec<Box<dyn IEffect>> = Vec::new();
+        // Create effects based on configuration
+        let vocal_adjust = if self.config.enable_vocal_adjust {
+            info!("Enabling vocal adjustment");
+            Some(Box::new(VocalAdjust::new(audio_data.sample_rate)))
+        } else {
+            None
+        };
 
-        if self.config.enable_spatial {
-            info!("Enabling 8D spatial effect");
-            effects.push(Box::new(Spatial8D::new(
-                self.config.rotation_speed,
-                audio_data.sample_rate,
-            )));
-        }
-
-        if self.config.enable_drop_enhancer {
+        let drop_enhancer = if self.config.enable_drop_enhancer {
             info!("Enabling drop enhancer");
-            effects.push(Box::new(DropEnhancer::new(
+            Some(Box::new(DropEnhancer::new(
                 self.config.drop_threshold,
                 audio_data.sample_rate,
-            )));
-        }
+            )))
+        } else {
+            None
+        };
 
-        if self.config.enable_orchestra {
+        let orchestra = if self.config.enable_orchestra {
             info!("Enabling orchestra effect");
-            effects.push(Box::new(Orchestra::new(audio_data.sample_rate)));
-        }
+            Some(Box::new(Orchestra::new(audio_data.sample_rate)))
+        } else {
+            None
+        };
 
-        if self.config.enable_vocal_adjust {
-            info!("Enabling vocal adjustment");
-            effects.push(Box::new(VocalAdjust::new()));
+        let spatial = if self.config.enable_spatial {
+            info!("Enabling 8D spatial effect");
+            Some(Box::new(Spatial8D::new(
+                self.config.rotation_speed,
+                audio_data.sample_rate,
+            )))
+        } else {
+            None
+        };
+
+        // Build effects chain in correct order:
+        // 1. VocalAdjust (EQ on original signal)
+        // 2. DropEnhancer (EQ on original signal)
+        // 3. Orchestra (delay/widening on EQ'd signal)
+        // 4. Spatial8D (MUST BE LAST - collapses to mono)
+        let mut effects: Vec<Box<dyn IEffect>> = Vec::new();
+        
+        if let Some(v) = vocal_adjust {
+            effects.push(v);
+        }
+        if let Some(d) = drop_enhancer {
+            effects.push(d);
+        }
+        if let Some(o) = orchestra {
+            effects.push(o);
+        }
+        if let Some(s) = spatial {
+            effects.push(s);
         }
 
         info!("Processing {} frames through {} effects", audio_data.samples.len(), effects.len());
