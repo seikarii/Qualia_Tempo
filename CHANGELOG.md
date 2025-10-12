@@ -1,5 +1,63 @@
 # CHANGELOG - QUALIA TEMPO
 
+## [Unreleased] - 2025-10-12 - SESSION: MUSIC.RUST Integration - Dual Engine Architecture Sync
+
+### 🎯 Mission: Synchronize Documentation with MUSIC.RUST.md Dual Engine Architecture
+
+**Status**: ✅ **MISSION ACCOMPLISHED**  
+**Architect**: Senior AI Engineer (QUALIA.CODE.RUST v1.1 Compliant)  
+**Architecture**: MUSIC.RUST.md Integration - Harmony Engine + Performance Engine
+
+#### Architectural Integration: MUSIC.RUST.md Compliance
+
+##### 1. 📋 ARCHITECTURE.RUST.v2.0.md Updates
+**Problem**: High-level architecture diagram didn't reflect the sophisticated audio system introduced in MUSIC.RUST.md  
+**Solution**: Updated component descriptions and data flow to match dual engine paradigm
+
+**Changes**:
+- **Audio Engine (8D)** → **Audio Engine (Performance)**: Renamed to reflect Performance Engine (Sampler + Synth) + 8D spatialization
+- **Harmony Analysis Service**: "Musical harmony analysis" → "Audio-to-MIDI Transcription & Harmony Analysis"
+- **Data Flow Updates**: Added musical generation flow (steps 6.1, 6.2, 11.1) showing GameLogicService consulting HarmonyMap and emitting PlayGenerativeNote events
+
+**Impact**: Architecture diagram now accurately represents the dual engine system (Harmony Engine backend + Performance Engine frontend)
+
+##### 2. 🗂️ BLUEPRINT.RUST.md Updates
+**Problem**: Migration blueprint didn't reflect new contracts and service responsibilities  
+**Solution**: Updated file annotations and service descriptions
+
+**Changes**:
+- `shared_core/src/contracts/audio.rs`: Added HarmonyMap, InstrumentPatch to annotations
+- `shared_core/src/events/audio_events.rs`: Added PlayGenerativeNote event
+- **HarmonyAnalysisService**: "Musical harmony detection" → "Performs Audio-to-MIDI transcription to generate the Harmony Map for generative music"
+- **AudioService**: "Audio playback" → "Manages BGM playback and houses the Performance Engine (Sampler/Synth) for generative audio"
+- **Audio8DService**: "8D spatial audio" → "SpatialAudioService - handles 8D spatialization only"
+
+**Impact**: Blueprint now correctly maps the dual engine responsibilities and new data structures
+
+##### 3. 📊 DATA.RUST.md Updates
+**Problem**: Contract catalog missing the new musical generative structures from MUSIC.RUST.md  
+**Solution**: Added complete section 4 with all new data structures and GameEvent enum
+
+**New Structures Added**:
+- **GameEvent enum**: Complete event system definition with PlayGenerativeNote variant
+- **PlayGenerativeNote**: Command structure for Performance Engine
+- **HarmonicContext**: Single harmonic region definition
+- **HarmonyMap**: Complete musical theory analysis container
+- **PatchType enum**: Sampler vs Synth instrument types
+- **SynthParameters**: ADSR and oscillator configuration
+- **InstrumentPatch**: Playable instrument definition (player/boss assigned per level)
+
+**Impact**: DATA.RUST.md now serves as the complete source of truth for all musical generative contracts
+
+**Files Modified**:
+- `docs/ARCHITECTURE.RUST.v2.0.md`: Component diagram and data flow updates
+- `docs/BLUEPRINT.RUST.md`: Service descriptions and file annotations
+- `docs/DATA.RUST.md`: Added section 4 with complete musical structures
+
+**Validation**: All changes maintain QUALIA.CODE.RUST v1.1 compliance and align with MUSIC.RUST.md dual engine architecture
+
+---
+
 ## [Unreleased] - 2025-10-12 - SESSION: Quasar Mixer v2.1 - Conservative Subtractive Separation
 
 ### 🎯 Mission: Implement Conservative Subtractive Stem Separation + Bass/Drums Boost

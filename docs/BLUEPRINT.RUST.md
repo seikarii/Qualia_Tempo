@@ -42,7 +42,7 @@ qualia-tempo-rust/
 │       │   ├── mod.rs
 │       │   ├── game_state.rs          # QualiaState, PlayerState, BossState
 │       │   ├── combat_data.rs         # CombatData, PatternData, LyricData
-│       │   ├── audio.rs               # AudioEvent, AudioLayer, SongData
+│       │   ├── audio.rs               # AudioEvent, AudioLayer, SongData, HarmonyMap, InstrumentPatch
 │       │   ├── particles.rs           # ParticleSystemConfig, OptimizedParticle
 │       │   ├── input.rs               # PlayerAction, MusicalInputAnalysis
 │       │   ├── effects.rs             # ActiveEffect, EnvironmentEffect
@@ -52,7 +52,7 @@ qualia-tempo-rust/
 │       ├── events/                    # Event definitions
 │       │   ├── mod.rs
 │       │   ├── game_events.rs         # GameEvent enum (all event types)
-│       │   ├── audio_events.rs        # Audio-specific events
+│       │   ├── audio_events.rs        # Audio-specific events, PlayGenerativeNote
 │       │   ├── combat_events.rs       # Combat-specific events
 │       │   └── system_events.rs       # System/lifecycle events
 │       │
@@ -407,7 +407,7 @@ qualia-tempo-rust/
 | 6 | FileSystemService | `backend/src/services/infrastructure/file_system.rs` | ✅ Migrate | File I/O with tokio::fs |
 | 7 | GameLogicService | `backend/src/services/gameplay/game_logic.rs` | ✅ Migrate | Core game rules |
 | 8 | GameStateStreamingService | `backend/src/services/networking/state_streaming.rs` | ✅ Migrate | State broadcasting |
-| 9 | HarmonyAnalysisService | `backend/src/services/audio/harmony_analyzer.rs` | ✅ Migrate | Musical harmony detection |
+| 9 | HarmonyAnalysisService | `backend/src/services/audio/harmony_analyzer.rs` | ✅ Migrate | Performs Audio-to-MIDI transcription to generate the Harmony Map for generative music |
 | 10 | HealthCheckService | `backend/src/services/monitoring/health_check.rs` | ✅ Migrate | System health checks |
 | 11 | MetricsService | `backend/src/services/monitoring/metrics.rs` | ✅ Migrate | Performance metrics |
 | 12 | ParticleEnginePoolManager | `backend/src/services/rendering/particle_pool.rs` | 🔄 Replace | Tokio task pool (not process pool) |
@@ -437,9 +437,9 @@ qualia-tempo-rust/
 |---|-------------------|---------------------|--------|-------|
 | 1 | ApplicationCompositionRoot | `frontend/src/main.rs` (Shaku setup) | 🔄 Replace | Shaku DI container |
 | 2 | ApplicationInitializerService | `frontend/src/services/lifecycle/initializer.rs` | ✅ Migrate | Lifecycle orchestration |
-| 3 | Audio8DService | `frontend/src/services/audio/spatial_audio.rs` | ✅ Migrate | 8D spatial audio |
+| 3 | Audio8DService | `frontend/src/services/audio/spatial_audio.rs` | ✅ Migrate | SpatialAudioService - handles 8D spatialization only |
 | 4 | AudioAnalysisService | `frontend/src/services/audio/fft_analyzer.rs` | ✅ Migrate | FFT analysis |
-| 5 | AudioService | `frontend/src/services/audio/playback.rs` | ✅ Migrate | Audio playback |
+| 5 | AudioService | `frontend/src/services/audio/playback.rs` | ✅ Migrate | Manages BGM playback and houses the Performance Engine (Sampler/Synth) for generative audio |
 | 6 | AudioSystemBridge | `frontend/src/services/audio/audio_bridge.rs` | ✅ Migrate | Audio abstraction |
 | 7 | BackendSyncService | `frontend/src/services/networking/sync.rs` | ✅ Migrate | Backend synchronization |
 | 8 | BrowserAudioContextFactory | ❌ REMOVED | 🔄 Replace | Direct wasm-bindgen |

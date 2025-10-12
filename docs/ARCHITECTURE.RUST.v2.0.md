@@ -30,8 +30,8 @@
             │                                  FRONTEND (WASM / Leptos)                                 │
             │                                                                                           │
             │   ┌──────────────────────────┐   ┌──────────────────────────┐   ┌────────────────────────┐   │
-            │   │      Input Manager       │   │     Audio Engine (8D)    │   │   FFT Analyzer (Local) │   │
-            │   │ (Leptos Event Listeners) │   │   (Web Audio via WASM)   │   │   (Web Audio via WASM) │   │
+            │   │      Input Manager       │   │   Audio Engine (Performance) │   │   FFT Analyzer (Local) │   │
+            │   │ (Leptos Event Listeners) │   │   (Web Audio via WASM)       │   │   (Web Audio via WASM) │   │
             │   └─────────────┬────────────┘   └─────────────┬────────────┘   └────────────┬───────────┘   │
             │                 │                              │                           │               │
             │                 └───────────────┬──────────────┴───────────────────────────┘               │
@@ -62,7 +62,7 @@
                     │     ┌──────────────────────────┐   ┌────────────▼───────────┐   ┌────────────────────────┐   │
                     │     │ Game Logic Service       │   │ Boss AI & Pattern      │   │ Harmony Analysis     │   │
                     │     │ (Reglas, Combos, Vida)   │◄──┤ System                 │──►│ Service              │   │
-                    │   └──────────────────────────┘   └────────────────────────┘   └────────────────────────┘   │
+                    │   └──────────────────────────┘   └────────────────────────┘   └───────────────────────┘   │
                     │                                                 │                                          │
                     │                                                 ▼                                          │
                     │   ┌──────────────────────────────────────────────────────────┐                             │
@@ -80,11 +80,14 @@
         4.  El **WebSocket Client** envía la acción del jugador y los datos del **FFTAnalyzer** al backend.
         5.  El **API Gateway (Axum)** del backend recibe los datos y los publica en su EventBus.
         6.  El **GameLogicService** procesa la acción, consulta al **HarmonyAnalysisService**, y actualiza el estado del juego.
+        6.1. Tras recibir la acción del jugador, el GameLogicService consulta el HarmonyMap generado por el HarmonyAnalysisService.
+        6.2. El GameLogicService emite un nuevo evento PlayGenerativeNote en el EventBus (Backend).
         7.  La **BossAI** ve el nuevo estado y decide lanzar un ataque.
         8.  Todos estos cambios de estado se envían al **Particle Engine (Worker Pool)**.
         9.  El Particle Engine calcula el nuevo estado de todas las partículas y empaqueta todo en un `CombatState` optimizado.
         10. El `CombatState` se envía de vuelta al frontend a través del WebSocket.
         11. El **WebSocket Client** del frontend recibe el `CombatState` y actualiza el **GameState Store (Leptos Signals)**.
+        11.1 (Frontend): El AudioService (ahora Audio Engine (Performance)) recibe el evento PlayGenerativeNote y utiliza su Performance Engine para generar el sonido correspondiente.
         12. El **Kairos Visual Engine (wgpu)**, que está suscrito a las señales del store, recibe el nuevo estado y actualiza la pantalla: renderiza las nuevas partículas, intensifica el bloom, etc.
         13. El ciclo se repite, idealmente a 60+ FPS.
 

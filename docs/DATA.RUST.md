@@ -622,7 +622,145 @@ pub struct MusicalInputAnalysis {
 
 ---
 
-## 4. Estructuras del Sistema de Audio (Frontend)
+## 4. Estructuras del Sistema Musical Generativo
+
+### 4.1. GameEvent (Eventos del Sistema)
+
+*   **Propósito:** Enumeración de todos los eventos que pueden fluir a través del EventBus.
+
+```rust
+/// # Responsibility
+/// Enumerates all events that can flow through the EventBus.
+///
+/// ---
+///
+/// Events are the primary communication mechanism between services.
+/// All variants must be Clone for broadcast distribution.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "eventType", rename_all = "camelCase")]
+pub enum GameEvent {
+    /// Player performed an action
+    PlayerAction(PlayerAction),
+    /// Qualia state was updated
+    QualiaStateUpdated(QualiaState),
+    /// Boss state changed
+    BossStateChanged(BossState),
+    /// Combat state snapshot
+    CombatStateUpdated(CombatState),
+    /// Commands the frontend Performance Engine to generate a sound
+    PlayGenerativeNote(PlayGenerativeNote),
+}
+```
+
+### 4.2. PlayGenerativeNote
+
+*   **Propósito:** Comando para que el Performance Engine del frontend genere un sonido.
+
+```rust
+/// # Responsibility
+/// Commands the frontend Performance Engine to generate a sound.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayGenerativeNote {
+    /// MIDI pitch value (0-127)
+    pub note_pitch: u8,
+    /// Note velocity (0-127)
+    pub velocity: u8,
+    /// ID of the InstrumentPatch to use
+    pub instrument_patch_id: String,
+    /// World position for 8D spatialization
+    pub position: Vec2,
+}
+```
+
+### 4.3. HarmonicContext
+
+*   **Propósito:** Define una región armónica dentro de la línea de tiempo de una canción.
+
+```rust
+/// # Responsibility
+/// Defines a single harmonic region within a song's timeline.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct HarmonicContext {
+    pub start_time_sec: f64,
+    pub end_time_sec: f64,
+    pub chord: String, // ej. "Am7", "G", "Cmaj7"
+    pub scale: Vec<u8>, // Vector de notas MIDI (0-127) permitidas en esta sección
+}
+```
+
+### 4.4. HarmonyMap
+
+*   **Propósito:** Contiene el análisis completo de teoría musical de una canción.
+
+```rust
+/// # Responsibility
+/// Contains the complete musical theory analysis of a song.
+/// This map is the "ruleset" for all generative music.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct HarmonyMap {
+    pub song_id: String,
+    pub key_signature: String, // ej. "C Major"
+    pub time_signature: (u8, u8),
+    pub progression: Vec<HarmonicContext>,
+}
+```
+
+### 4.5. PatchType
+
+*   **Propósito:** Define los tipos de parches de instrumento disponibles.
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub enum PatchType {
+    Sampler {
+        /// URL a un JSON que mapea notas MIDI a archivos .wav
+        sample_map_url: String
+    },
+    Synth {
+        parameters: SynthParameters
+    },
+}
+```
+
+### 4.6. SynthParameters
+
+*   **Propósito:** Parámetros para un parche de sintetizador.
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct SynthParameters {
+    pub oscillator1_type: String, // "sine", "square", "sawtooth"
+    pub filter_cutoff: f32,
+    pub adsr_attack: f32,
+    pub adsr_decay: f32,
+    pub adsr_sustain: f32,
+    pub adsr_release: f32,
+}
+```
+
+### 4.7. InstrumentPatch
+
+*   **Propósito:** Define un instrumento reproducible, ya sea basado en muestras o sintetizado.
+
+```rust
+/// # Responsibility
+/// Defines a playable instrument, either sample-based or synthesized.
+/// Player and Boss will have a collection of these assigned per level.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct InstrumentPatch {
+    pub id: String,
+    pub name: String,
+    pub patch_type: PatchType,
+}
+```
+
+## 5. Estructuras del Sistema de Audio (Frontend)
 
 **NOTA ARQUITECTÓNICA:** Estas estructuras son para la configuración interna del motor de audio del frontend y no se sincronizan por la red.
 
@@ -740,7 +878,7 @@ pub struct AudioLayer {
 
 ---
 
-## 5. Configuración del Sistema de Partículas (Frontend)
+## 6. Configuración del Sistema de Partículas (Frontend)
 
 **NOTA ARQUITECTÓNICA:** Estas estructuras son para la configuración interna del motor de partículas del frontend (`wgpu`) y no se sincronizan por la red.
 
@@ -761,7 +899,7 @@ pub struct ParticleSystemConfig {
 
 ---
 
-## 6. Estructuras de Escena y Cinemáticas
+## 7. Estructuras de Escena y Cinemáticas
 
 Estas estructuras definen el flujo entre diferentes partes del juego (menús, cinemáticas, gameplay) y el contenido de las secuencias narrativas.
 
