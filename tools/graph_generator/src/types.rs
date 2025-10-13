@@ -5,6 +5,51 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt;
+
+/// # Responsibility
+/// Representa los lenguajes soportados por el analizador.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Language {
+    /// Lenguaje Rust (.rs)
+    Rust,
+    /// Lenguaje TypeScript (.ts, .tsx)
+    TypeScript,
+    /// Lenguaje Python (.py)
+    Python,
+}
+
+impl Language {
+    /// Detecta el lenguaje a partir de una extensión de archivo.
+    pub fn from_extension(ext: &str) -> Option<Self> {
+        match ext.to_lowercase().as_str() {
+            "rs" => Some(Language::Rust),
+            "ts" | "tsx" => Some(Language::TypeScript),
+            "py" => Some(Language::Python),
+            _ => None,
+        }
+    }
+    
+    /// Retorna todas las extensiones válidas para este lenguaje.
+    pub fn extensions(&self) -> &'static [&'static str] {
+        match self {
+            Language::Rust => &["rs"],
+            Language::TypeScript => &["ts", "tsx"],
+            Language::Python => &["py"],
+        }
+    }
+}
+
+impl fmt::Display for Language {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Language::Rust => write!(f, "Rust"),
+            Language::TypeScript => write!(f, "TypeScript"),
+            Language::Python => write!(f, "Python"),
+        }
+    }
+}
 
 /// Representa un nodo en el grafo arquitectónico.
 /// Puede ser un struct, enum, trait u otro tipo de definición pública.

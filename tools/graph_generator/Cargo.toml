@@ -1,24 +1,35 @@
 [package]
 name = "graph_generator"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Qualia Tempo Team"]
-description = "Herramienta de análisis estático para generar mapas de grafos arquitectónicos de proyectos Rust"
+description = "Multi-language AST analyzer (Rust, TypeScript, Python) for generating architectural graph maps"
 
 [[bin]]
 name = "graph_generator"
 path = "src/main.rs"
 
 [dependencies]
+# Rust parsing
 syn = { version = "2.0", features = ["full", "parsing", "visit"] }
 quote = "1.0"
+
+# Multi-language parsing with tree-sitter
+tree-sitter = "0.22"
+tree-sitter-typescript = "0.21"
+tree-sitter-python = "0.21"
+
+# Serialization & CLI
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-walkdir = "2.5"
 clap = { version = "4.5", features = ["derive"] }
+
+# Error handling & utilities
 anyhow = "1.0"
 thiserror = "1.0"
 chrono = "0.4"
+walkdir = "2.5"
+regex = "1.10"
 
 [dev-dependencies]
 tempfile = "3.10"

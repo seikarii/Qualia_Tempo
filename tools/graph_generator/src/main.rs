@@ -1,19 +1,21 @@
 //! Graph Generator - Generador de Mapa de Grafo Arquitectónico (GMGA)
 //!
-//! Herramienta de línea de comandos para analizar código Rust y generar
-//! un mapa completo del grafo arquitectónico del proyecto.
+//! # Responsibility
+//! Herramienta de línea de comandos para analizar código multi-lenguaje
+//! (Rust, TypeScript, Python) y generar un mapa completo del grafo arquitectónico.
 //!
 //! # Uso
 //!
 //! ```bash
 //! graph_generator --path /ruta/al/proyecto
 //! graph_generator --path /ruta/al/proyecto --output custom_graph.json
-//! graph_generator --path /ruta/al/proyecto --max-lines 5000
+//! graph_generator --path /ruta/al/proyecto --max-lines 5000 --extensions "rs,ts,py"
 //! ```
 
 mod ast_analyzer;
 mod file_discovery;
 mod graph_builder;
+mod language_analyzers;
 mod output;
 mod types;
 
@@ -50,7 +52,7 @@ struct Cli {
     max_lines: usize,
 
     /// Extensiones de fichero a analizar (separadas por comas)
-    #[arg(long, value_name = "EXTS", default_value = "rs")]
+    #[arg(long, value_name = "EXTS", default_value = "rs,ts,tsx,py")]
     extensions: String,
 
     /// Directorios a ignorar (separados por comas)

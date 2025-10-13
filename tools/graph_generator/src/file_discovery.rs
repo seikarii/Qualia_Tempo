@@ -3,6 +3,7 @@
 //! Este módulo se encarga de recorrer el árbol de directorios y
 //! filtrar los ficheros que cumplen los criterios para ser analizados.
 
+use crate::types::Language;
 use anyhow::{Context, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -37,6 +38,7 @@ impl Default for DiscoveryConfig {
     }
 }
 
+/// # Responsibility
 /// Información sobre un fichero descubierto.
 #[derive(Debug, Clone)]
 pub struct DiscoveredFile {
@@ -48,6 +50,9 @@ pub struct DiscoveredFile {
     
     /// Extensión del fichero
     pub extension: String,
+    
+    /// Lenguaje detectado del fichero
+    pub language: Language,
 }
 
 /// Motor de descubrimiento de ficheros.
@@ -93,11 +98,20 @@ impl FileDiscovery {
             
             let path = entry.path();
             
-            // Verificar extensión
+            // Verificar extensión y detectar lenguaje
             if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
                 if !self.config.allowed_extensions.contains(&ext.to_string()) {
                     continue;
                 }
+                
+                // Detectar lenguaje a partir de la extensión
+                let language = match Language::from_extension(ext) {
+                    Some(lang) => lang,
+                    None => {
+                        eprintln!("  ⚠ Extensión no soportada: {}", ext);
+                        continue;
+                    }
+                };
                 
                 // Contar líneas
                 match self.count_lines(path) {
@@ -107,8 +121,9 @@ impl FileDiscovery {
                                 path: path.to_path_buf(),
                                 line_count,
                                 extension: ext.to_string(),
+                                language,
                             });
-                            println!("  ✓ {} ({} líneas)", path.display(), line_count);
+                            println!("  ✓ {} ({} líneas, {})", path.display(), line_count, language);
                         } else {
                             println!(
                                 "  ⊗ {} (IGNORADO: {} líneas > {} límite)",

@@ -94,8 +94,8 @@ impl GraphBuilder {
     
     /// Analiza un fichero individual.
     fn analyze_file(&self, file: &DiscoveredFile, root_path: &Path) -> Result<AnalysisResult> {
-        let module_path = AstAnalyzer::infer_module_path(&file.path, root_path);
-        AstAnalyzer::analyze_file(&file.path, &module_path)
+        let module_path = AstAnalyzer::infer_module_path(&file.path, root_path, file.language);
+        AstAnalyzer::analyze_file(&file.path, &module_path, file.language)
     }
     
     /// Combina el resultado de un análisis en el grafo principal.
