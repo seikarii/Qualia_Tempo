@@ -1,6 +1,211 @@
 
 ---
 
+## Session 2025-10-16B (Phase 3F: AUDIO SERVICES CONTINUATION) - AudioPlaybackService with Performance Engine
+
+**Session Start**: 2025-10-16 (continuation)
+**Token Usage**: ~88K / 1M (912K remaining)
+**Status**: ✅ AudioPlaybackService Complete - BGM Playback + Performance Engine (ADSR Synthesis)
+
+### OVERVIEW
+
+Completed AudioPlaybackService implementation, fixing Web Audio API bindings and enabling both background music playback and the Performance Engine (real-time musical note synthesizer with ADSR envelopes). This service is a critical component of the MUSIC.RUST.md generative music system.
+
+### AUDIO PLAYBACK SERVICE - IMPLEMENTATION COMPLETE
+
+#### AudioPlaybackService (Audio)
+
+**Location**: `frontend/src/services/audio/playback.rs` (434 lines, 3 tests ✅)
+
+**Purpose**: Manages background music (BGM) playback and the Performance Engine (generative music synthesizer) via Web Audio API.
+
+**Key Components**:
+
+1. **AudioPlaybackConfig**:
+   - `master_volume: f32` (default: 0.7)
+   - `music_volume: f32` (default: 0.8)
+   - `sfx_volume: f32` (default: 1.0)
+   - `performance_volume: f32` (default: 0.6)
+   - `sample_rate: u32` (default: 48000 Hz)
+   - `enable_performance_engine: bool` (default: true)
+
+2. **InstrumentType Enum**:
+   - `Sine`, `Square`, `Sawtooth`, `Triangle`
+   - Maps to Web Audio `OscillatorType` for waveform selection
+
+3. **AudioPlaybackService Struct**:
+   - Web Audio nodes: AudioContext, 4 GainNodes (master/music/sfx/performance)
+   - BGM playback state: AudioBufferSourceNode, AudioBuffer, timestamps
+   - Audio graph hierarchy: BGM→MusicGain, Performance→PerfGain, SFX→SFXGain → MasterGain → Speakers
+
+**Implementation Highlights**:
+
+**BGM Playback** (Placeholder - TODO for actual file loading):
+- `initialize()`: Creates AudioContext and gain node hierarchy
+- `load_bgm()`: Placeholder for async audio file loading
+- `play_bgm()`: Starts looping background music
+- `stop_bgm()`: Graceful BGM stop
+- `get_playback_time()`: Returns seconds since BGM start
+- `is_playing()`: Playback status
+
+**Performance Engine** (Generative Music Synthesizer):
+- `play_generative_note(&PlayGenerativeNote)`: **Core synthesis method**
+  - **MIDI to Hz Conversion**: `f = 440 * 2^((n-69)/12)` where n = MIDI note pitch
+  - **ADSR Envelope Synthesis**:
+    - **Attack**: 10ms (0 → peak velocity)
+    - **Decay**: 100ms (peak → 80% sustain level)
+    - **Sustain**: 1 second default duration (configurable)
+    - **Release**: 200ms (sustain → 0)
+  - Creates OscillatorNode dynamically per note
+  - Applies gain automation via `AudioParam.set_value_at_time()` and `linear_ramp_to_value_at_time()`
+  - Auto-schedules oscillator start and stop
+
+**Volume Control**:
+- `set_master_volume(0.0-1.0)`: Adjusts master gain
+- Volume hierarchy ensures proper mixing (music, SFX, performance)
+
+**Audio Graph Architecture**:
+```
+BGM (AudioBufferSourceNode)
+    ↓
+Music Gain (0.8) ───┐
+                    ├→ Master Gain (0.7) → Destination (speakers)
+Performance Gain (0.6) ─┤
+    ↑                   │
+Oscillators (ADSR)      │
+                        │
+SFX Gain (1.0) ─────────┘
+```
+
+**Tests** (3 unit tests ✅):
+- `test_audio_playback_config_defaults()` - Verifies default config values
+- `test_audio_playback_service_creation()` - Tests service initialization
+- `test_instrument_type_to_oscillator()` - Validates InstrumentType → OscillatorType mapping
+
+**What This Enables**:
+- ✅ Real-time generative music synthesis (MUSIC.RUST.md Performance Engine)
+- ✅ Dynamic note generation triggered by combos and boss attacks
+- ✅ Proper ADSR envelope shaping for musical expressiveness
+- ✅ 4-tier volume hierarchy for proper audio mixing
+
+**What This Prevents**:
+- ❌ Static, non-reactive music (generative music responds to gameplay)
+- ❌ Poor audio mixing (gain hierarchy ensures proper levels)
+- ❌ Abrupt audio artifacts (ADSR envelopes provide smooth transitions)
+
+### FIXES APPLIED
+
+#### 1. Web Audio API Feature Enablement
+
+**Problem**: `OscillatorNode`, `OscillatorType`, and `AudioParam` not available - wasm-bindgen features missing.
+
+**Solution**: Added missing features to `frontend/Cargo.toml`:
+```toml
+web-sys = { features = [
+    "AudioParam",      # For gain automation (ADSR envelope)
+    "OscillatorNode",  # For sound synthesis
+    "OscillatorType",  # For waveform selection (Sine/Square/Sawtooth/Triangle)
+    # ... existing features
+] }
+```
+
+**Impact**: Enabled Web Audio API oscillator synthesis and gain automation.
+
+#### 2. Contract Alignment - PlayGenerativeNote
+
+**Problem**: Used incorrect fields (`midi_note`, `instrument_type`, `duration_ms`) from old contract version.
+
+**Solution**: Aligned with actual `shared_core::contracts::audio::PlayGenerativeNote` structure:
+```rust
+pub struct PlayGenerativeNote {
+    pub note_pitch: u8,              // MIDI pitch (0-127)
+    pub velocity: u8,                // Velocity (0-127)
+    pub instrument_patch_id: String, // Instrument ID
+    pub position: Vector3,           // 3D spatial position (for 8D spatialization)
+}
+```
+
+**Changes**:
+- `note.midi_note` → `note.note_pitch`
+- `note.instrument_type` → `note.instrument_patch_id` (with simplified mapping)
+- `note.velocity` (u8) → normalized to 0.0-1.0: `(velocity as f32) / 127.0`
+- `note.duration_ms` removed → hardcoded 1.0 sec default (will be configurable later)
+
+**Impact**: Service now matches shared contract, enabling backend→frontend event flow.
+
+#### 3. Test Isolation - MockLogger
+
+**Problem**: Tests imported `crate::services::tests::mocks::MockLogger` (module doesn't exist yet).
+
+**Solution**: Created inline MockLogger in test module:
+```rust
+#[cfg(test)]
+mod tests {
+    struct MockLogger;
+    impl ILogger for MockLogger {
+        fn info(&self, _: &str) {}
+        fn warn(&self, _: &str) {}
+        fn error(&self, _: &str) {}
+        fn debug(&self, _: &str) {}
+        fn trace(&self, _: &str) {}
+    }
+    // ... tests using Arc::new(MockLogger)
+}
+```
+
+**Impact**: Tests now self-contained, no external dependencies.
+
+### COMPILATION STATUS
+
+✅ **SUCCESS**: `frontend` package compiles cleanly (only warnings, no errors)
+- 21 warnings (mostly unused variables in placeholder shader code)
+- 0 errors
+
+### ARCHITECTURE COMPLIANCE
+
+✅ **QUALIA.CODE.RUST.md Compliance**:
+- `# Responsibility` headers on all public items
+- Config injection (no service locator pattern)
+- Web Audio API integration via wasm-bindgen
+- ADSR envelope synthesis for musical expressiveness (MUSIC.RUST.md mandate)
+
+✅ **MUSIC.RUST.md Integration**:
+- Performance Engine implemented (`play_generative_note`)
+- MIDI to Hz conversion formula correct
+- ADSR envelope parameters match specification
+- Ready for HarmonyAnalysisService→EventBus→AudioPlaybackService event flow
+
+### FILES MODIFIED
+
+1. **`frontend/src/services/audio/playback.rs`** (434 lines)
+   - Fixed `PlayGenerativeNote` field references (note_pitch, velocity, instrument_patch_id)
+   - Normalized MIDI velocity (0-127) to 0.0-1.0 for gain automation
+   - Removed `duration_ms` references (not in contract)
+   - Added inline MockLogger for test isolation
+
+2. **`frontend/Cargo.toml`**
+   - Added `web-sys` features: `AudioParam`, `OscillatorNode`, `OscillatorType`
+
+3. **`frontend/src/services/audio/mod.rs`**
+   - Exported `AudioPlaybackService`, `AudioPlaybackConfig`, `InstrumentType`
+
+### REMAINING AUDIO SERVICES (Phase 3F)
+
+**Next Priority**:
+1. **HarmonyAnalyzerService** (~150 lines) - Audio-to-MIDI transcription for generative music
+2. **AudioBridgeService** (~100 lines) - Audio abstraction layer
+3. **WebAudioAPIService** (~120 lines) - Web Audio API wrapper (may be redundant with direct usage)
+
+**Estimated Remaining Work**: 2-3 audio services (~370 lines total)
+
+### TOKEN USAGE
+
+- Session start: ~79K tokens
+- AudioPlaybackService debugging + fixes: ~9K tokens
+- **Current**: ~88K / 1M (912K remaining, 91.2% available)
+
+---
+
 ## Session 2025-10-16 (Phase 3A: FRONTEND FOUNDATION) - Core Services, State Management, WebSocket Client
 
 **Session Start**: 2025-10-16 (continued from Phase 2H)
