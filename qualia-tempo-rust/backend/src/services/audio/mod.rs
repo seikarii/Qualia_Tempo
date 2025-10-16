@@ -7,9 +7,11 @@
 //! chord patterns, and scoring player input against song harmony.
 
 pub mod harmony_analyzer;
+pub mod metronome;
 
 pub use harmony_analyzer::{
     HarmonyAnalysisService,
     IHarmonyAnalysisService,
     HarmonyAnalysisConfig,
 };
+pub use metronome::MetronomeService;

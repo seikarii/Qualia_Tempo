@@ -29,6 +29,13 @@ pub enum GameEvent {
     /// Player performed an action (boxed due to size)
     PlayerAction(Box<PlayerAction>),
     
+    /// Player action validated with timing accuracy
+    PlayerActionValidated {
+        action: Box<PlayerAction>,
+        accuracy: f32,        // 0.0 to 1.0 (0.0 = Miss, 1.0 = Perfect)
+        timing_offset_ms: f32, // Distance from nearest beat in milliseconds
+    },
+    
     /// Qualia state was updated
     QualiaStateUpdated(QualiaState),
     

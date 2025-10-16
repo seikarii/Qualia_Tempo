@@ -66,11 +66,11 @@ async fn main() -> Result<()> {
 
     // Manually create EventBusService with configured capacity
     // NOTE: EventBusService will be migrated to Shaku Provider in Phase 2
-    let event_bus: Arc<dyn IEventBus> = Arc::new(EventBusService::new(config.event_bus.capacity));
+    let event_bus: Arc<dyn IEventBus> = Arc::new(EventBusService::new(config.event_bus_capacity));
 
     logger.info("=== Qualia Tempo Backend Starting ===");
     logger.info(&format!("Server: {}:{}", config.websocket.bind_address, config.websocket.port));
-    logger.info(&format!("EventBus capacity: {}", config.event_bus.capacity));
+    logger.info(&format!("EventBus capacity: {}", config.event_bus_capacity));
     logger.info(&format!("Log level: {}", config.log_level));
 
     // Test EventBus connectivity

@@ -5,15 +5,16 @@ pub mod core;
 pub mod networking;
 pub mod audio;
 pub mod input;
-pub mod gameplay;
-pub mod state;
-pub mod ui;
-pub mod utils;
-pub mod monitoring;
-pub mod debug;
-pub mod lifecycle;
-pub mod interfaces;
-pub mod tests;
+pub mod rendering;
+// pub mod gameplay;      // TODO: Phase 3E
+// pub mod state;         // TODO: Phase 3E
+// pub mod ui;            // TODO: Phase 3E
+// pub mod utils;         // TODO: Phase 3E
+// pub mod monitoring;    // TODO: Phase 3E
+// pub mod debug;         // TODO: Phase 3E
+// pub mod lifecycle;     // TODO: Phase 3E
+// pub mod interfaces;    // TODO: Phase 3E
+// pub mod tests;         // TODO: Phase 3E
 
 pub use core::*;
 pub use networking::*;

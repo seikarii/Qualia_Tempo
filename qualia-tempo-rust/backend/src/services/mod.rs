@@ -14,6 +14,9 @@ pub mod rendering;
 pub mod persistence;
 pub mod security;
 
+#[cfg(test)]
+pub mod tests;
+
 pub use infrastructure::*;
 pub use gameplay::*;
 pub use network::*;
