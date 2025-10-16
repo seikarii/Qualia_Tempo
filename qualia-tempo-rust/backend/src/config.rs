@@ -136,6 +136,122 @@ impl Default for CombatOrchestratorConfig {
 }
 
 /// # Responsibility
+/// Configuration for HarmonyAnalysis service.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct HarmonyAnalysisConfig {
+    /// Threshold for perfect harmony classification (0.0-1.0)
+    pub perfect_harmony_threshold: f32,
+    
+    /// Threshold for harmonic classification (0.0-1.0)
+    pub harmonic_threshold: f32,
+    
+    /// Threshold for chaotic classification (0.0-1.0)
+    pub chaotic_threshold: f32,
+    
+    /// Threshold for extreme chaos classification (0.0-1.0)
+    pub extreme_chaos_threshold: f32,
+    
+    /// Minimum notes required for chord detection
+    pub min_notes_for_chord: usize,
+    
+    /// Weight for song harmony in overall score
+    pub song_harmony_weight: f32,
+    
+    /// Weight for qualia harmony in overall score
+    pub qualia_harmony_weight: f32,
+    
+    /// Tempo modifier for context-sensitive scoring
+    pub tempo_modifier: f32,
+    
+    /// Enable chord detection feature
+    pub enable_chord_detection: bool,
+    
+    /// Enable harmony trend tracking
+    pub enable_trend_tracking: bool,
+    
+    /// Enable context modifiers (tempo, combo)
+    pub enable_context_modifiers: bool,
+    
+    /// Max length of harmony history buffer
+    pub harmony_history_length: usize,
+    
+    /// Max collected notes to track
+    pub max_collected_notes: usize,
+}
+
+impl Default for HarmonyAnalysisConfig {
+    fn default() -> Self {
+        Self {
+            perfect_harmony_threshold: 0.9,
+            harmonic_threshold: 0.65,
+            chaotic_threshold: 0.35,
+            extreme_chaos_threshold: 0.1,
+            min_notes_for_chord: 3,
+            song_harmony_weight: 0.6,
+            qualia_harmony_weight: 0.4,
+            tempo_modifier: 0.001,
+            enable_chord_detection: true,
+            enable_trend_tracking: true,
+            enable_context_modifiers: true,
+            harmony_history_length: 50,
+            max_collected_notes: 10,
+        }
+    }
+}
+
+/// # Responsibility
+/// Configuration for QualiaProcessor service.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct QualiaProcessorConfig {
+    /// Threshold for intensity spike detection
+    pub intensity_spike_threshold: f32,
+    
+    /// Threshold for transcendence activation
+    pub transcendence_threshold: f32,
+    
+    /// Threshold for chaos breach detection
+    pub chaos_threshold: f32,
+    
+    /// Enable qualia state processing
+    pub processing_enabled: bool,
+}
+
+impl Default for QualiaProcessorConfig {
+    fn default() -> Self {
+        Self {
+            intensity_spike_threshold: 0.3,
+            transcendence_threshold: 0.85,
+            chaos_threshold: 0.7,
+            processing_enabled: true,
+        }
+    }
+}
+
+/// # Responsibility
+/// Configuration for ApplicationInitializer service.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ApplicationInitializerConfig {
+    /// Enable lifecycle logging
+    pub enable_lifecycle_logging: bool,
+    
+    /// Timeout for service initialization (seconds)
+    pub init_timeout_sec: u64,
+    
+    /// Timeout for service cleanup (seconds)
+    pub cleanup_timeout_sec: u64,
+}
+
+impl Default for ApplicationInitializerConfig {
+    fn default() -> Self {
+        Self {
+            enable_lifecycle_logging: true,
+            init_timeout_sec: 30,
+            cleanup_timeout_sec: 10,
+        }
+    }
+}
+
+/// # Responsibility
 /// Master configuration aggregating all service configs.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct BackendConfig {
@@ -154,6 +270,15 @@ pub struct BackendConfig {
     /// CombatOrchestrator configuration
     pub combat_orchestrator: CombatOrchestratorConfig,
     
+    /// HarmonyAnalysis configuration
+    pub harmony_analysis: HarmonyAnalysisConfig,
+    
+    /// QualiaProcessor configuration
+    pub qualia_processor: QualiaProcessorConfig,
+    
+    /// ApplicationInitializer configuration
+    pub application_initializer: ApplicationInitializerConfig,
+    
     /// Logging level
     pub log_level: String,
 }
@@ -166,6 +291,9 @@ impl Default for BackendConfig {
             boss_ai: BossAIConfig::default(),
             websocket: WebSocketConfig::default(),
             combat_orchestrator: CombatOrchestratorConfig::default(),
+            harmony_analysis: HarmonyAnalysisConfig::default(),
+            qualia_processor: QualiaProcessorConfig::default(),
+            application_initializer: ApplicationInitializerConfig::default(),
             log_level: "info".to_string(),
         }
     }

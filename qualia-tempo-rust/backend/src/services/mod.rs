@@ -9,7 +9,15 @@
 pub mod infrastructure;
 pub mod gameplay;
 pub mod network;
+pub mod audio;
+pub mod rendering;
+pub mod persistence;
+pub mod security;
 
 pub use infrastructure::*;
 pub use gameplay::*;
 pub use network::*;
+pub use audio::*;
+pub use rendering::*;
+pub use persistence::*;
+pub use security::*;

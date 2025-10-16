@@ -9,7 +9,7 @@
 
 use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
-use crate::utils::math::{Vector2, Vector3};
+use crate::utils::math::Vector3;
 
 /// # Responsibility
 /// Defines the blend mode for particle rendering.

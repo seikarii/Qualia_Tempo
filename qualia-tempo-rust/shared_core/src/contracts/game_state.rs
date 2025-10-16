@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
-use crate::utils::Vector2;
+use crate::utils::Vector3;
 
 /// # Responsibility
 /// Central data structure representing player mastery in Qualia Tempo.
@@ -94,14 +94,19 @@ pub struct PlayerAbilities {
 }
 
 /// # Responsibility
-/// Represents the complete state of the player entity.
+/// Represents the complete state of the player entity in 3D space.
+///
+/// ---
+///
+/// CRITICAL: Uses Vector3 for positions and velocities to support
+/// the deferred rendering pipeline with proper depth information.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct PlayerState {
-    /// Player position in world space
-    pub position: Vector2,
-    /// Player velocity
-    pub velocity: Vector2,
+    /// Player position in 3D world space
+    pub position: Vector3,
+    /// Player velocity vector
+    pub velocity: Vector3,
     /// Health points (0-100)
     pub health: f32,
     /// Current combo multiplier
@@ -123,8 +128,8 @@ pub struct PlayerState {
 impl Default for PlayerState {
     fn default() -> Self {
         Self {
-            position: Vector2::zero(),
-            velocity: Vector2::zero(),
+            position: Vector3::zero(),
+            velocity: Vector3::zero(),
             health: 100.0,
             combo: 0,
             score: 0,
@@ -138,7 +143,12 @@ impl Default for PlayerState {
 }
 
 /// # Responsibility
-/// Represents the complete state of the boss entity.
+/// Represents the complete state of the boss entity in 3D space.
+///
+/// ---
+///
+/// CRITICAL: Uses Vector3 for position to support procedural SDF rendering
+/// with raymarching in the deferred rendering pipeline.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct BossState {
@@ -146,8 +156,8 @@ pub struct BossState {
     pub id: String,
     /// Boss name
     pub name: String,
-    /// Boss position in world space
-    pub position: Vector2,
+    /// Boss position in 3D world space
+    pub position: Vector3,
     /// Current health points (0-100)
     pub health: f32,
     /// Maximum health points
@@ -169,7 +179,7 @@ impl Default for BossState {
         Self {
             id: String::from("default_boss"),
             name: String::from("Unknown"),
-            position: Vector2::zero(),
+            position: Vector3::zero(),
             health: 100.0,
             max_health: 100.0,
             current_phase: 0,
@@ -205,8 +215,8 @@ pub struct QualiaEvent {
     pub id: String,
     /// Timestamp of event
     pub timestamp: f64,
-    /// Position where event occurred
-    pub position: Vector2,
+    /// Position where event occurred in 3D space
+    pub position: Vector3,
     /// Qualia value generated
     pub value: f32,
 }

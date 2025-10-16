@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
-use crate::utils::Vector2;
+use crate::utils::Vector3;
 
 /// # Responsibility
 /// Enumerates all possible player input actions in the game.
@@ -24,10 +24,10 @@ pub enum PlayerAction {
         /// Accuracy of the timing (0-1)
         accuracy: f32,
     },
-    /// Player performed a dash
+    /// Player performed a dash in 3D space
     Dash {
-        /// Direction of the dash
-        direction: Vector2,
+        /// Direction of the dash (normalized Vector3)
+        direction: Vector3,
         /// Timestamp of the action
         timestamp: f64,
     },

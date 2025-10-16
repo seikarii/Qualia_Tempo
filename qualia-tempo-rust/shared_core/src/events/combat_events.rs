@@ -8,7 +8,7 @@
 
 use serde::{Deserialize, Serialize};
 use crate::contracts::game_state::QualiaState;
-use crate::utils::math::Vector2;
+use crate::utils::math::Vector3;
 
 /// # Responsibility
 /// Event signaling a player combo completion.
@@ -56,7 +56,7 @@ pub struct BossAttackStartEvent {
     pub pattern_id: String,
     pub pattern_name: String,
     pub telegraph_duration_sec: f64,
-    pub spawn_position: Vector2,
+    pub spawn_position: Vector3,
     pub timestamp: f64,
 }
 
@@ -106,7 +106,7 @@ pub struct BossDamagedEvent {
 #[serde(rename_all = "camelCase")]
 pub struct QualiaCollectedEvent {
     pub qualia_value: f32,
-    pub collection_position: Vector2,
+    pub collection_position: Vector3,
     pub was_perfect_timing: bool,
     pub new_qualia_state: QualiaState,
     pub timestamp: f64,

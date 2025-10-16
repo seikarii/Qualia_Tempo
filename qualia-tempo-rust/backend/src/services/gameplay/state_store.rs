@@ -10,7 +10,7 @@
 use shaku::Component;
 use std::sync::{Arc, RwLock};
 use shared_core::contracts::game_state::{CombatState, GameStatus, QualiaState, PlayerState, BossState};
-use shared_core::utils::math::Vector2;
+use shared_core::utils::math::Vector3;
 
 /// # Responsibility
 /// Provides thread-safe mutable access to combat state.

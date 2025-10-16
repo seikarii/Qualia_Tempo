@@ -180,7 +180,7 @@ mod tests {
         let mut rx3 = bus.subscribe();
 
         let event = GameEvent::PlayerAction(Box::new(PlayerAction::Dash {
-            direction: shared_core::utils::Vector2 { x: 1.0, y: 0.0 },
+            direction: shared_core::utils::Vector3 { x: 1.0, y: 0.0, z: 0.0 },
             timestamp: 42.0,
         }));
 

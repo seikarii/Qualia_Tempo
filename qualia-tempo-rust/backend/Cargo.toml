@@ -33,3 +33,4 @@ rand = "0.9.2"
 [dev-dependencies]
 mockall.workspace = true
 proptest.workspace = true
+tempfile = "3.15"

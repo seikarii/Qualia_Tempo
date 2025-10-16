@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
-use crate::utils::Vector2;
+use crate::utils::Vector3;
 
 /// # Responsibility
 /// Defines a single harmonic region within a song's timeline.
@@ -87,7 +87,12 @@ pub struct InstrumentPatch {
 }
 
 /// # Responsibility
-/// Commands the frontend Performance Engine to generate a sound.
+/// Commands the frontend Performance Engine to generate a sound in 3D space.
+///
+/// ---
+///
+/// CRITICAL: Uses Vector3 for 3D spatial audio positioning.
+/// The audio engine will use this position for proper 8D spatialization.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PlayGenerativeNote {
@@ -97,6 +102,6 @@ pub struct PlayGenerativeNote {
     pub velocity: u8,
     /// ID of the InstrumentPatch to use
     pub instrument_patch_id: String,
-    /// World position for 8D spatialization
-    pub position: Vector2,
+    /// World position for 3D/8D spatialization
+    pub position: Vector3,
 }

@@ -181,7 +181,7 @@ mod tests {
     use super::*;
     use crate::services::infrastructure::{QualiaLogger, EventBusService};
     use crate::services::gameplay::StateStoreService;
-    use shared_core::utils::math::Vector2;
+    use shared_core::utils::math::Vector3;
 
     fn create_test_service() -> BossAIService {
         let logger = Arc::new(QualiaLogger) as Arc<dyn ILogger>;
