@@ -7,7 +7,76 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+# Shared core
 shared_core = { path = "../shared_core", features = ["wasm"] }
+
+# UI Framework
+leptos = { version = "0.6", features = ["csr", "nightly"] }
+leptos_meta = { version = "0.6", features = ["csr"] }
+leptos_router = { version = "0.6", features = ["csr"] }
+
+# Rendering
+wgpu = { version = "22.0", features = ["webgl"] }
+
+# WebSocket (WASM)
+tokio = { version = "1.41", features = ["sync", "macros"] }
+tokio-tungstenite = { version = "0.21", default-features = false, features = ["connect"] }
+futures-util = "0.3"
+
+# Serialization
 serde.workspace = true
 serde_json.workspace = true
-tokio.workspace = true
+bincode = "1.3"
+
+# WASM bindings
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = [
+    "Window",
+    "Document",
+    "Element",
+    "HtmlCanvasElement",
+    "WebGl2RenderingContext",
+    "AudioContext",
+    "AudioNode",
+    "AudioBuffer",
+    "AudioBufferSourceNode",
+    "AnalyserNode",
+    "GainNode",
+    "PannerNode",
+    "AudioListener",
+    "AudioDestinationNode",
+    "BiquadFilterNode",
+    "DynamicsCompressorNode",
+    "WebSocket",
+    "MessageEvent",
+    "CloseEvent",
+    "ErrorEvent",
+    "Performance",
+    "PerformanceTiming",
+] }
+js-sys = "0.3"
+
+# Logging (WASM-compatible)
+tracing = "0.1"
+tracing-wasm = "0.2"
+console_error_panic_hook = "0.1"
+
+# Utilities
+uuid = { version = "1.0", features = ["v4", "js"] }
+chrono = { version = "0.4", features = ["wasmbind"] }
+gloo-timers = { version = "0.3", features = ["futures"] }
+
+# Math & Physics
+glam = { version = "0.25", features = ["serde"] }
+
+# DI
+shaku = { version = "0.6", features = ["thread_safe"] }
+async-trait = "0.1"
+
+# Error handling
+anyhow.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"

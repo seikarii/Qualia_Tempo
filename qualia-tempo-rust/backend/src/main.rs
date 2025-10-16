@@ -69,6 +69,7 @@ async fn main() -> Result<()> {
     let event_bus: Arc<dyn IEventBus> = Arc::new(EventBusService::new(config.event_bus.capacity));
 
     logger.info("=== Qualia Tempo Backend Starting ===");
+    logger.info(&format!("Server: {}:{}", config.websocket.bind_address, config.websocket.port));
     logger.info(&format!("EventBus capacity: {}", config.event_bus.capacity));
     logger.info(&format!("Log level: {}", config.log_level));
 
@@ -76,12 +77,53 @@ async fn main() -> Result<()> {
     let _subscriber = event_bus.subscribe();
     logger.info("EventBus initialized successfully");
 
-    // TODO: Start WebSocket server
-    // TODO: Start game loop
-    // TODO: Initialize all gameplay services
+    // Build Axum application
+    use backend::handlers::{AppState, websocket_handler, health_check, readiness_check};
+    use backend::handlers::{get_combat_data, list_combat_data};
+    use axum::{
+        routing::get,
+        Router,
+    };
+    use tower_http::cors::{CorsLayer, Any};
     
-    logger.info("Backend initialized successfully");
-    logger.warn("Server not yet implemented - exiting");
+    let app_state = AppState {
+        event_bus: event_bus.clone(),
+    };
+    
+    let app = Router::new()
+        // WebSocket endpoint
+        .route("/ws", get(websocket_handler))
+        
+        // Health check endpoints
+        .route("/health", get(health_check))
+        .route("/ready", get(readiness_check))
+        
+        // API endpoints
+        .route("/api/combat/:id", get(get_combat_data))
+        .route("/api/combat", get(list_combat_data))
+        
+        // CORS middleware
+        .layer(
+            CorsLayer::new()
+                .allow_origin(Any)
+                .allow_methods(Any)
+                .allow_headers(Any)
+        )
+        
+        // Shared state
+        .with_state(app_state);
+    
+    // Bind and serve
+    let addr = format!("{}:{}", config.websocket.bind_address, config.websocket.port);
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    
+    logger.info(&format!("🚀 Server listening on {}", addr));
+    logger.info("✅ Backend initialized successfully");
+    logger.info(&format!("📡 WebSocket endpoint: ws://{}/ws", addr));
+    logger.info(&format!("❤️  Health check: http://{}/health", addr));
+    
+    axum::serve(listener, app).await?;
 
     Ok(())
 }
+
