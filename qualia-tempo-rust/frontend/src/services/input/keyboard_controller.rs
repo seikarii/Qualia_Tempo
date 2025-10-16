@@ -162,19 +162,23 @@ impl KeyboardControllerService {
                     // Key was not pressed before - this is a new press
                     drop(keys); // Release lock before emitting event
                     
-                    let timestamp = (js_sys::Date::now() * 1000.0) as u64; // microseconds
+                    let timestamp = js_sys::Date::now(); // milliseconds as f64
                     
                     // Emit appropriate action
                     let action = if game_key.is_dash() {
-                        PlayerAction::Dash { timestamp }
-                    } else if let Some(note_index) = game_key.note_index() {
-                        PlayerAction::KeyPressed {
-                            key: code.chars().last().unwrap_or('?'),
-                            note_index,
+                        // Default dash direction (forward in 2D, normalized)
+                        use shared_core::Vector3;
+                        PlayerAction::Dash {
+                            direction: Vector3::new(0.0, 0.0, 1.0), // Forward direction
                             timestamp,
                         }
                     } else {
-                        return;
+                        // Musical key press (note_index is for internal use, accuracy filled later)
+                        PlayerAction::KeyPressed {
+                            key: code.chars().last().unwrap_or('?'),
+                            timestamp,
+                            accuracy: 0.0, // Will be calculated by RhythmValidator
+                        }
                     };
                     
                     // Emit to EventBus

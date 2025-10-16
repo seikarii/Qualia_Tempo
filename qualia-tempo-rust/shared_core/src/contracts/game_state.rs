@@ -6,6 +6,26 @@ use schemars::JsonSchema;
 use crate::utils::Vector3;
 
 /// # Responsibility
+/// Enumerates the possible game phases/states.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Default)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum GamePhase {
+    /// Main menu
+    #[default]
+    MainMenu,
+    /// Loading assets
+    Loading,
+    /// In active combat
+    InCombat,
+    /// Combat paused
+    Paused,
+    /// Victory screen
+    Victory,
+    /// Game over screen
+    GameOver,
+}
+
+/// # Responsibility
 /// Central data structure representing player mastery in Qualia Tempo.
 ///
 /// ---
@@ -229,6 +249,8 @@ pub struct QualiaEvent {
 pub struct CombatState {
     /// Current game status
     pub game_state: GameStatus,
+    /// Current game phase (UI state)
+    pub game_phase: GamePhase,
     /// Whether combat is active
     pub is_active: bool,
     /// Current phase number
@@ -243,6 +265,10 @@ pub struct CombatState {
     pub boss: BossState,
     /// Current qualia state
     pub qualia_state: QualiaState,
+    /// Current combo streak
+    pub combo_streak: u32,
+    /// Current score
+    pub score: u32,
     /// IDs of active visual effects
     pub active_effects: Vec<String>,
     /// IDs of active environmental effects
@@ -255,6 +281,7 @@ impl Default for CombatState {
     fn default() -> Self {
         Self {
             game_state: GameStatus::Idle,
+            game_phase: GamePhase::default(),
             is_active: false,
             current_phase: 0,
             elapsed_time: 0.0,
@@ -262,6 +289,8 @@ impl Default for CombatState {
             player: PlayerState::default(),
             boss: BossState::default(),
             qualia_state: QualiaState::default(),
+            combo_streak: 0,
+            score: 0,
             active_effects: Vec::new(),
             environment_effects: Vec::new(),
             qualia_event_history: Vec::new(),

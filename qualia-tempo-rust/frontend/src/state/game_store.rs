@@ -6,7 +6,7 @@
 //! Provided via provide_context at app root. Components access via use_context.
 //! Automatically triggers re-renders when state changes.
 
-use leptos::*;
+use leptos::prelude::*;
 use shared_core::contracts::{
     game_state::{CombatState, PlayerState, BossState, QualiaState, GamePhase},
     input::PlayerAction,
@@ -53,15 +53,15 @@ impl GameStateStore {
     /// Creates a new GameStateStore with default values
     pub fn new() -> Self {
         Self {
-            combat_state: create_rw_signal(CombatState::default()),
-            player_state: create_rw_signal(PlayerState::default()),
-            boss_state: create_rw_signal(BossState::default()),
-            qualia_state: create_rw_signal(QualiaState::default()),
-            game_phase: create_rw_signal(GamePhase::Menu),
-            is_connected: create_rw_signal(false),
-            connection_latency: create_rw_signal(0),
-            combo_streak: create_rw_signal(0),
-            score: create_rw_signal(0),
+            combat_state: RwSignal::new(CombatState::default()),
+            player_state: RwSignal::new(PlayerState::default()),
+            boss_state: RwSignal::new(BossState::default()),
+            qualia_state: RwSignal::new(QualiaState::default()),
+            game_phase: RwSignal::new(GamePhase::default()),
+            is_connected: RwSignal::new(false),
+            connection_latency: RwSignal::new(0),
+            combo_streak: RwSignal::new(0),
+            score: RwSignal::new(0),
         }
     }
     

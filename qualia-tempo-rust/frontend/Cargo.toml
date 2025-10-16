@@ -11,9 +11,9 @@ crate-type = ["cdylib", "rlib"]
 shared_core = { path = "../shared_core", features = ["wasm"] }
 
 # UI Framework
-leptos = { version = "0.6", features = ["csr", "nightly"] }
-leptos_meta = { version = "0.6", features = ["csr"] }
-leptos_router = { version = "0.6", features = ["csr"] }
+leptos = { version = "0.7", features = ["csr"] }
+leptos_meta = { version = "0.7" }
+leptos_router = { version = "0.7" }
 
 # Rendering
 wgpu = { version = "22.0", features = ["webgl"] }
@@ -38,6 +38,7 @@ web-sys = { version = "0.3", features = [
     "HtmlCanvasElement",
     "WebGl2RenderingContext",
     "AudioContext",
+    "AudioContextState",
     "AudioNode",
     "AudioBuffer",
     "AudioBufferSourceNode",
@@ -54,6 +55,7 @@ web-sys = { version = "0.3", features = [
     "ErrorEvent",
     "Performance",
     "PerformanceTiming",
+    "KeyboardEvent",
 ] }
 js-sys = "0.3"
 

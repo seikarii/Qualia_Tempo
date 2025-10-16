@@ -18,3 +18,6 @@ pub mod rendering;
 
 pub use core::*;
 pub use networking::*;
+pub use audio::*;
+pub use input::*;
+pub use rendering::*;

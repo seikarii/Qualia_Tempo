@@ -157,16 +157,11 @@ impl KairosVisualEngine {
     /// # Responsibility
     /// Creates a wgpu surface from an HTML canvas element.
     fn create_surface_from_canvas(&self, canvas: &web_sys::HtmlCanvasElement) -> Result<wgpu::Surface<'static>, String> {
-        use wasm_bindgen::JsCast;
-        
-        // Create surface target
-        let window = web_sys::window().ok_or("No window found")?;
+        // For WASM, wgpu 22 needs the SurfaceTarget::Canvas variant
         let surface_target = wgpu::SurfaceTarget::Canvas(canvas.clone());
-        
-        // SAFETY: Canvas is owned by the DOM and will outlive the surface
-        let surface = unsafe {
-            self.instance.create_surface_unsafe(surface_target)
-        }.map_err(|e| format!("Failed to create surface: {:?}", e))?;
+        let surface = self.instance
+            .create_surface(surface_target)
+            .map_err(|e| format!("Failed to create surface: {:?}", e))?;
         
         Ok(surface)
     }

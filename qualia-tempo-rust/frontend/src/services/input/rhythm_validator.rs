@@ -172,12 +172,15 @@ impl RhythmValidatorService {
                         // Validate timing
                         let action_timestamp = match *action {
                             PlayerAction::KeyPressed { timestamp, .. } => timestamp,
-                            PlayerAction::Dash { timestamp } => timestamp,
+                            PlayerAction::Dash { timestamp, .. } => timestamp,
                             _ => continue,
                         };
                         
+                        // Convert f64 milliseconds to u64 microseconds
+                        let action_timestamp_us = (action_timestamp * 1000.0) as u64;
+                        
                         let tracker = beat_tracker.lock().unwrap();
-                        if let Some((beat_ts, distance_us)) = tracker.find_closest_beat(action_timestamp) {
+                        if let Some((beat_ts, distance_us)) = tracker.find_closest_beat(action_timestamp_us) {
                             let distance_ms = (distance_us as f64) / 1000.0;
                             
                             // Calculate accuracy

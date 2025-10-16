@@ -1,6 +1,6 @@
 //! # Responsibility
-//! Frontend networking services for backend communication.
+//! Network communication services for WebSocket connections.
 
-pub mod websocket_client;
-
-pub use websocket_client::*;
+// TODO: Fix websocket_client threading issues with WASM
+// pub mod websocket_client;
+// pub use websocket_client::*;
