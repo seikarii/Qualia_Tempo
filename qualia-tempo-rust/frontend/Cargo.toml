@@ -59,6 +59,7 @@ web-sys = { version = "0.3", features = [
     "Performance",
     "PerformanceTiming",
     "KeyboardEvent",
+    "Worker",
 ] }
 js-sys = "0.3"
 

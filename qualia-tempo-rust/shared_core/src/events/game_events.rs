@@ -26,6 +26,18 @@ use super::system_events::SystemEvent;
 pub enum GameEvent {
     // ===== Core Game Events =====
     
+    /// Game loop started (frontend game controller initialized)
+    GameStarted,
+    
+    /// Game loop paused (player paused or switched to menu)
+    GamePaused,
+    
+    /// Frame update event (emitted every frame at ~60 FPS)
+    FrameUpdate {
+        delta_time: f64,     // Time since last frame in seconds
+        frame_number: u32,   // Monotonically increasing frame counter
+    },
+    
     /// Player performed an action (boxed due to size)
     PlayerAction(Box<PlayerAction>),
     
