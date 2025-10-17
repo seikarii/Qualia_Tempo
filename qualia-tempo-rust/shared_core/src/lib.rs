@@ -19,6 +19,8 @@
 
 pub mod contracts;
 pub mod events;
+pub mod traits;
+pub mod utils;
 
 // Re-export commonly used types at crate root for convenience
 pub use contracts::{
@@ -26,3 +28,4 @@ pub use contracts::{
     Vec2, GamePhase, PlayerAction,
 };
 pub use events::GameEvent;
+pub use traits::{ILogger, IEventBus, IBaseService};

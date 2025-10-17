@@ -10,6 +10,10 @@ schemars.workspace = true
 uuid.workspace = true
 chrono.workspace = true
 thiserror.workspace = true
+shaku.workspace = true
+async-trait.workspace = true
+anyhow.workspace = true
+tokio.workspace = true
 
 [features]
 default = []

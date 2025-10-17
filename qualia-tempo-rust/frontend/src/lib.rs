@@ -1,14 +1,17 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+//! # Responsibility
+//! Frontend WASM entry point for Qualia Tempo client.
+//!
+//! ---
+//!
+//! This crate compiles to WebAssembly and implements the Leptos-based UI
+//! with wgpu rendering per ARCHITECTURE.RUST v2.0.
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+#![deny(clippy::panic)]
+#![deny(clippy::print_stdout)]
+#![deny(clippy::print_stderr)]
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+// TODO: Phase 3 - Implement Leptos components
+// TODO: Phase 3 - Implement wgpu renderer
+// TODO: Phase 3 - Implement Web Audio integration

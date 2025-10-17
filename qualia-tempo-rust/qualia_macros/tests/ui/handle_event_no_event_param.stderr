@@ -1,0 +1,5 @@
+error: Event handler must have at least 2 parameters: &self and event data
+ --> tests/ui/handle_event_no_event_param.rs:8:5
+  |
+8 |     fn only_self_handler(&self) {}
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
