@@ -237,3 +237,11 @@ pub fn transaction(_attr: TokenStream, item: TokenStream) -> TokenStream {
         .unwrap_or_else(|e| e.to_compile_error())
         .into()
 }
+
+// Note: For deprecation warnings, use Rust's built-in #[deprecated] attribute:
+//
+// #[deprecated(since = "1.0.0", note = "Use new_function instead")]
+// fn old_function() { }
+//
+// This provides compile-time warnings with migration guidance without requiring
+// a custom procedural macro.

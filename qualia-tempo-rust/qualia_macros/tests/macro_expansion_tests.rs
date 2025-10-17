@@ -6,12 +6,11 @@
 //! This test file validates that all macros expand without compile errors
 //! and generate the expected code structure per QUALIA.CODE.RUST specifications.
 
-use qualia_macros::*;
-
 #[test]
 fn test_cached_macro_expansion() {
     // Validates #[cached] macro compiles
 }
+
 
 #[test]
 fn test_retry_macro_expansion() {
