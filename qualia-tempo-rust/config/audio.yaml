@@ -1,0 +1,62 @@
+# Audio Service Configuration
+# Qualia Tempo - Rust Version
+
+# Web Audio API Settings
+web_audio:
+  sample_rate: 48000
+  buffer_size: 4096
+  latency_hint: "interactive"  # "balanced", "interactive", "playback"
+
+# FFT Analysis
+fft:
+  fft_size: 2048  # Must be power of 2
+  smoothing_time_constant: 0.8
+  min_decibels: -90
+  max_decibels: -10
+  frequency_bins: 32  # Number of bars to display
+
+# Music Playback
+playback:
+  preload_buffer_ms: 5000
+  crossfade_duration_ms: 1000
+  volume_range: [0.0, 1.0]
+  default_volume: 0.7
+
+# Beat Detection
+beat_detection:
+  enabled: true
+  threshold: 0.8
+  cooldown_ms: 100
+  history_size: 43  # ~1 second at 43Hz update rate
+
+# Audio Effects
+effects:
+  reverb:
+    enabled: false
+    decay_time: 2.0
+    pre_delay: 0.05
+
+  compression:
+    enabled: true
+    threshold: -24
+    ratio: 12
+    attack: 0.003
+    release: 0.25
+
+# Song Metadata
+songs:
+  - id: "song_001"
+    title: "Eternal Resonance"
+    artist: "Synthetic Echo"
+    duration_ms: 240000
+    bpm: 140
+    difficulty: "hard"
+    file_path: "/assets/music/eternal_resonance.ogg"
+
+  - id: "song_002"
+    title: "Fractal Descent"
+    artist: "Digital Abyss"
+    duration_ms: 180000
+    bpm: 160
+    difficulty: "insane"
+    file_path: "/assets/music/fractal_descent.ogg"
