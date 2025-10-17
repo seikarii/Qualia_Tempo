@@ -1,0 +1,19 @@
+[package]
+name = "shared_core"
+version = "0.1.0"
+edition = "2021"
+authors = ["Qualia Tempo Team"]
+description = "Shared contracts, traits, and events for Qualia Tempo"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+schemars = { workspace = true }
+validator = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+glam = { workspace = true }
+
+[features]
+default = []
+wasm = ["uuid/js", "chrono/wasmbind"]

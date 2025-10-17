@@ -1,0 +1,28 @@
+# QUALIA MACROS - PROCEDURAL MACRO LIBRARY
+# VERSION: 1.0
+# COMPLIANCE: QUALIA.CODE.RUST v1.1
+
+[package]
+name = "qualia_macros"
+version = "0.1.0"
+edition = "2021"
+authors = ["Qualia Tempo Team"]
+description = "Procedural macros for the Qualia Tempo Rust rewrite"
+license = "MIT"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { workspace = true }
+quote = { workspace = true }
+proc-macro2 = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+tracing = { workspace = true }
+cached = { workspace = true }
+validator = { workspace = true }
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+macrotest = "1.0"

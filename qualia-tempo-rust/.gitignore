@@ -1,0 +1,49 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+*.profraw
+*.profdata
+
+# Build artifacts
+dist/
+build/
+*.wasm
+*.d.ts
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# PGO data
+/tmp/pgo-data/
+
+# Generated schemas
+/shared_contracts/*.schema.json
+
+# Flamegraphs
+flamegraph.svg
+perf.data
+perf.data.old
