@@ -1,9 +1,10 @@
 [package]
 name = "frontend"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
+shared_core = { path = "../shared_core" }
 
 [lints]
 workspace = true
