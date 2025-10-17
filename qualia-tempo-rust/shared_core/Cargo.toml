@@ -9,3 +9,7 @@ serde_json = { workspace = true }
 schemars = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+shaku = { workspace = true }
+async-trait = "0.1"

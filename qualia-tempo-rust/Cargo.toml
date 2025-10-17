@@ -20,7 +20,7 @@ anyhow = "1.0"
 thiserror = "1.0"
 
 # Dependency injection
-shaku = "0.7"
+shaku = "0.6"
 async-trait = "0.1"
 
 # Testing

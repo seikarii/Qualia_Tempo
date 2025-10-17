@@ -38,6 +38,7 @@ mod handle_event_tests {
     #[derive(Debug, Clone)]
     enum TestEvent {
         TestData(String),
+        #[allow(dead_code)]
         OtherEvent(i32),
     }
 

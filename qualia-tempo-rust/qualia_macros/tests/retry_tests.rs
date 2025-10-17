@@ -12,7 +12,6 @@
 #[cfg(test)]
 mod retry_tests {
     use std::sync::atomic::{AtomicU32, Ordering};
-    use std::sync::Arc;
     use tokio::time::Instant;
 
     static ATTEMPT_COUNTER: AtomicU32 = AtomicU32::new(0);
