@@ -1,527 +1,431 @@
 //! # Responsibility
-//! Persistence service for leaderboard and score management.
+//! Implements leaderboard persistence with SQLite/PostgreSQL for score tracking.
 //!
 //! ---
 //!
-//! Provides thread-safe leaderboard storage with JSON persistence.
-//! Phase 1: JSON file storage. Phase 3: SQLite/PostgreSQL migration.
+//! Provides async database operations for score insertion, ranking queries,
+//! player best score retrieval, and leaderboard resets. Uses sqlx for
+//! connection pooling and async queries.
 
-use tokio::fs;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use tokio::sync::RwLock;
-use anyhow::{Result, Context, bail};
+use crate::services::interfaces::{ILeaderboardService, LeaderboardEntry, LeaderboardQuery};
+use anyhow::{Context, Result};
+use async_trait::async_trait;
 use shaku::{Component, Interface};
-use serde::{Serialize, Deserialize};
-use chrono::{DateTime, Utc};
-use crate::services::infrastructure::ILogger;
+use sqlx::{SqlitePool, Row};
+use std::sync::Arc;
+use tracing::{info, warn};
+use uuid::Uuid;
 
 /// # Responsibility
-/// Configuration for persistence service.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PersistenceConfig {
-    /// Storage directory for leaderboard data
-    pub storage_directory: String,
-    
-    /// Leaderboard JSON filename
-    pub leaderboard_filename: String,
-    
-    /// Maximum entries per song
-    pub max_entries_per_song: usize,
-    
-    /// Maximum entries globally
-    pub max_entries_global: usize,
-    
-    /// Enable score validation
-    pub enable_validation: bool,
-}
-
-impl Default for PersistenceConfig {
-    fn default() -> Self {
-        Self {
-            storage_directory: "./data/leaderboard".to_string(),
-            leaderboard_filename: "leaderboard.json".to_string(),
-            max_entries_per_song: 1000,
-            max_entries_global: 10000,
-            enable_validation: true,
-        }
-    }
-}
-
-/// # Responsibility
-/// Represents a single leaderboard entry.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct LeaderboardEntry {
-    pub player_id: String,
-    pub player_name: String,
-    pub score: f32,
-    pub song_id: String,
-    pub song_title: String,
-    pub difficulty_volume: f32,
-    pub timestamp: DateTime<Utc>,
-    
-    // Optional metadata
-    pub max_combo: Option<u32>,
-    pub notes_hit: Option<u32>,
-    pub notes_total: Option<u32>,
-    pub accuracy: Option<f32>,
-}
-
-/// # Responsibility
-/// Interface for persistence service.
-#[async_trait::async_trait]
-pub trait IPersistenceService: Interface + Send + Sync {
-    /// Saves a leaderboard entry
-    async fn save_entry(&self, entry: LeaderboardEntry) -> Result<()>;
-    
-    /// Gets leaderboard entries with optional filtering
-    async fn get_leaderboard(
-        &self,
-        song_id: Option<&str>,
-        limit: Option<usize>,
-    ) -> Result<Vec<LeaderboardEntry>>;
-    
-    /// Gets player's best score
-    async fn get_player_best_score(
-        &self,
-        player_id: &str,
-        song_id: Option<&str>,
-    ) -> Result<Option<LeaderboardEntry>>;
-    
-    /// Gets player's rank
-    async fn get_player_rank(
-        &self,
-        player_id: &str,
-        song_id: Option<&str>,
-    ) -> Result<Option<usize>>;
-    
-    /// Validates a score (anti-cheat)
-    fn validate_score(&self, entry: &LeaderboardEntry) -> bool;
-}
-
-/// # Responsibility
-/// Persistence service for leaderboard and score management.
-///
-/// ---
-///
-/// Thread-safe JSON file storage. Phase 1 implementation.
-/// Phase 3: Migrate to SQLite/PostgreSQL.
+/// Implements ILeaderboardService with SQLite persistence and ranking queries.
 #[derive(Component)]
-#[shaku(interface = IPersistenceService)]
-pub struct PersistenceService {
-    #[shaku(inject)]
-    logger: Arc<dyn ILogger>,
-    
-    config: Arc<PersistenceConfig>,
-    
-    // RwLock for thread-safe concurrent reads, exclusive writes
-    leaderboard: Arc<RwLock<Vec<LeaderboardEntry>>>,
+#[shaku(interface = ILeaderboardService)]
+pub struct LeaderboardService {
+    pool: Arc<SqlitePool>,
 }
 
-impl PersistenceService {
-    pub fn new(logger: Arc<dyn ILogger>, config: Arc<PersistenceConfig>) -> Self {
-        logger.info(&format!(
-            "PersistenceService initialized (storage: {})",
-            config.storage_directory
-        ));
+impl LeaderboardService {
+    /// # Responsibility
+    /// Creates new LeaderboardService and initializes database schema.
+    pub async fn new(database_url: &str) -> Result<Self> {
+        let pool = SqlitePool::connect(database_url)
+            .await
+            .context("Failed to connect to SQLite database")?;
         
-        let service = Self {
-            logger,
-            config,
-            leaderboard: Arc::new(RwLock::new(Vec::new())),
-        };
+        // Create leaderboard table if not exists
+        sqlx::query(
+            r#"
+            CREATE TABLE IF NOT EXISTS leaderboard (
+                id TEXT PRIMARY KEY,
+                player_id TEXT NOT NULL,
+                player_name TEXT NOT NULL,
+                score INTEGER NOT NULL,
+                song_id TEXT NOT NULL,
+                timestamp INTEGER NOT NULL,
+                UNIQUE(player_id, song_id)
+            )
+            "#,
+        )
+        .execute(&pool)
+        .await
+        .context("Failed to create leaderboard table")?;
         
-        service
+        // Create index on song_id for faster queries
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_song_id ON leaderboard(song_id)")
+            .execute(&pool)
+            .await
+            .context("Failed to create song_id index")?;
+        
+        // Create index on score for faster ranking
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_score ON leaderboard(score DESC)")
+            .execute(&pool)
+            .await
+            .context("Failed to create score index")?;
+        
+        info!("LeaderboardService initialized with database: {}", database_url);
+        
+        Ok(Self {
+            pool: Arc::new(pool),
+        })
     }
     
-    /// Initializes service (loads existing data from disk).
-    pub async fn initialize(&self) -> Result<()> {
-        // Create storage directory if it doesn't exist
-        let storage_path = Path::new(&self.config.storage_directory);
-        fs::create_dir_all(storage_path)
-            .await
-            .context("Failed to create storage directory")?;
+    /// # Responsibility
+    /// Calculates rank for given score and song_id.
+    async fn calculate_rank(&self, score: u64, song_id: &str) -> Result<usize> {
+        let rank: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) + 1 FROM leaderboard WHERE song_id = ? AND score > ?"
+        )
+        .bind(song_id)
+        .bind(score as i64)
+        .fetch_one(self.pool.as_ref())
+        .await
+        .context("Failed to calculate rank")?;
         
-        // Load existing leaderboard
-        let leaderboard_path = storage_path.join(&self.config.leaderboard_filename);
-        
-        if leaderboard_path.exists() {
-            let contents = fs::read_to_string(&leaderboard_path)
-                .await
-                .context("Failed to read leaderboard file")?;
-            
-            let entries: Vec<LeaderboardEntry> = serde_json::from_str(&contents)
-                .context("Failed to parse leaderboard JSON")?;
-            
-            let mut leaderboard = self.leaderboard.write().await;
-            *leaderboard = entries;
-            
-            self.logger.info(&format!("Loaded {} leaderboard entries from disk", leaderboard.len()));
-        } else {
-            self.logger.info("No existing leaderboard found, starting fresh");
-        }
-        
-        Ok(())
-    }
-    
-    /// Saves leaderboard to disk (thread-safe).
-    async fn save_to_disk(&self) -> Result<()> {
-        let leaderboard = self.leaderboard.read().await;
-        
-        let json = serde_json::to_string_pretty(&*leaderboard)
-            .context("Failed to serialize leaderboard")?;
-        
-        let storage_path = Path::new(&self.config.storage_directory);
-        let leaderboard_path = storage_path.join(&self.config.leaderboard_filename);
-        
-        // Atomic write: write to temp file, then rename
-        let temp_path = leaderboard_path.with_extension("tmp");
-        fs::write(&temp_path, &json)
-            .await
-            .context("Failed to write temp file")?;
-        
-        fs::rename(&temp_path, &leaderboard_path)
-            .await
-            .context("Failed to rename temp file")?;
-        
-        self.logger.info(&format!("Saved {} entries to disk", leaderboard.len()));
-        
-        Ok(())
-    }
-    
-    /// Prunes leaderboard to enforce size limits.
-    async fn prune_leaderboard(&self) {
-        let mut leaderboard = self.leaderboard.write().await;
-        
-        // Sort by score descending
-        leaderboard.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
-        
-        // Enforce global limit
-        if leaderboard.len() > self.config.max_entries_global {
-            leaderboard.truncate(self.config.max_entries_global);
-            self.logger.info(&format!("Pruned to {} global entries", self.config.max_entries_global));
-        }
-        
-        // Enforce per-song limit
-        let mut song_counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
-        leaderboard.retain(|entry| {
-            let count = song_counts.entry(entry.song_id.clone()).or_insert(0);
-            *count += 1;
-            *count <= self.config.max_entries_per_song
-        });
+        Ok(rank as usize)
     }
 }
 
-#[async_trait::async_trait]
-impl IPersistenceService for PersistenceService {
-    async fn save_entry(&self, entry: LeaderboardEntry) -> Result<()> {
-        // Validate entry
-        if self.config.enable_validation && !self.validate_score(&entry) {
-            bail!("Score validation failed");
-        }
+#[async_trait]
+impl ILeaderboardService for LeaderboardService {
+    async fn insert_score(&self, entry: LeaderboardEntry) -> Result<()> {
+        let rank = self.calculate_rank(entry.score, &entry.song_id).await?;
         
-        // Basic validation
-        if entry.score < 0.0 {
-            bail!("Score cannot be negative");
-        }
+        // Use INSERT OR REPLACE to handle duplicate (player_id, song_id)
+        sqlx::query(
+            r#"
+            INSERT OR REPLACE INTO leaderboard 
+            (id, player_id, player_name, score, song_id, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?)
+            "#,
+        )
+        .bind(Uuid::new_v4().to_string())
+        .bind(entry.player_id.to_string())
+        .bind(&entry.player_name)
+        .bind(entry.score as i64)
+        .bind(&entry.song_id)
+        .bind(entry.timestamp as i64)
+        .execute(self.pool.as_ref())
+        .await
+        .context("Failed to insert score")?;
         
-        if !(0.0..=1.0).contains(&entry.difficulty_volume) {
-            bail!("Difficulty volume must be between 0.0 and 1.0");
-        }
-        
-        // Add to leaderboard
-        {
-            let mut leaderboard = self.leaderboard.write().await;
-            leaderboard.push(entry.clone());
-        }
-        
-        // Prune if necessary
-        self.prune_leaderboard().await;
-        
-        // Save to disk
-        self.save_to_disk().await?;
-        
-        self.logger.info(&format!(
-            "Saved entry: {} scored {:.0} on {} (difficulty: {:.2})",
-            entry.player_name, entry.score, entry.song_title, entry.difficulty_volume
-        ));
+        info!(
+            "Inserted score: player={}, score={}, rank={}, song={}",
+            entry.player_name, entry.score, rank, entry.song_id
+        );
         
         Ok(())
     }
     
-    async fn get_leaderboard(
-        &self,
-        song_id: Option<&str>,
-        limit: Option<usize>,
-    ) -> Result<Vec<LeaderboardEntry>> {
-        let leaderboard = self.leaderboard.read().await;
-        
-        // Filter by song_id if specified
-        let mut entries: Vec<LeaderboardEntry> = if let Some(song_id) = song_id {
-            leaderboard.iter()
-                .filter(|e| e.song_id == song_id)
-                .cloned()
-                .collect()
+    async fn get_leaderboard(&self, query: LeaderboardQuery) -> Result<Vec<LeaderboardEntry>> {
+        let sql = if let Some(song_id) = &query.song_id {
+            format!(
+                "SELECT * FROM leaderboard WHERE song_id = '{}' ORDER BY score DESC LIMIT {} OFFSET {}",
+                song_id, query.limit, query.offset
+            )
         } else {
-            leaderboard.clone()
+            format!(
+                "SELECT * FROM leaderboard ORDER BY score DESC LIMIT {} OFFSET {}",
+                query.limit, query.offset
+            )
         };
         
-        // Sort by score descending
-        entries.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        let rows = sqlx::query(&sql)
+            .fetch_all(self.pool.as_ref())
+            .await
+            .context("Failed to fetch leaderboard")?;
         
-        // Apply limit
-        if let Some(limit) = limit {
-            entries.truncate(limit);
+        let mut entries = Vec::new();
+        for (idx, row) in rows.iter().enumerate() {
+            let player_id_str: String = row.get("player_id");
+            let player_id = Uuid::parse_str(&player_id_str)
+                .context("Invalid player_id UUID")?;
+            
+            let entry = LeaderboardEntry {
+                player_id,
+                player_name: row.get("player_name"),
+                score: row.get::<i64, _>("score") as u64,
+                rank: query.offset + idx + 1,
+                song_id: row.get("song_id"),
+                timestamp: row.get::<i64, _>("timestamp") as u64,
+            };
+            entries.push(entry);
         }
+        
+        info!("Retrieved {} leaderboard entries (offset={})", entries.len(), query.offset);
         
         Ok(entries)
     }
     
-    async fn get_player_best_score(
-        &self,
-        player_id: &str,
-        song_id: Option<&str>,
-    ) -> Result<Option<LeaderboardEntry>> {
-        let leaderboard = self.leaderboard.read().await;
+    async fn get_player_best(&self, player_id: Uuid, song_id: &str) -> Result<Option<LeaderboardEntry>> {
+        let row = sqlx::query(
+            "SELECT * FROM leaderboard WHERE player_id = ? AND song_id = ? ORDER BY score DESC LIMIT 1"
+        )
+        .bind(player_id.to_string())
+        .bind(song_id)
+        .fetch_optional(self.pool.as_ref())
+        .await
+        .context("Failed to fetch player best score")?;
         
-        let mut player_entries: Vec<LeaderboardEntry> = leaderboard.iter()
-            .filter(|e| e.player_id == player_id)
-            .cloned()
-            .collect();
-        
-        // Filter by song if specified
-        if let Some(song_id) = song_id {
-            player_entries.retain(|e| e.song_id == song_id);
+        if let Some(row) = row {
+            let score = row.get::<i64, _>("score") as u64;
+            let rank = self.calculate_rank(score, song_id).await?;
+            
+            let entry = LeaderboardEntry {
+                player_id,
+                player_name: row.get("player_name"),
+                score,
+                rank,
+                song_id: song_id.to_string(),
+                timestamp: row.get::<i64, _>("timestamp") as u64,
+            };
+            
+            info!("Retrieved player best: player={}, score={}, rank={}", entry.player_name, score, rank);
+            
+            Ok(Some(entry))
+        } else {
+            warn!("No score found for player={}, song={}", player_id, song_id);
+            Ok(None)
         }
-        
-        // Find best score
-        player_entries.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
-        
-        Ok(player_entries.first().cloned())
     }
     
-    async fn get_player_rank(
-        &self,
-        player_id: &str,
-        song_id: Option<&str>,
-    ) -> Result<Option<usize>> {
-        let leaderboard = self.get_leaderboard(song_id, None).await?;
+    async fn reset_leaderboard(&self, song_id: &str) -> Result<()> {
+        let result = sqlx::query("DELETE FROM leaderboard WHERE song_id = ?")
+            .bind(song_id)
+            .execute(self.pool.as_ref())
+            .await
+            .context("Failed to reset leaderboard")?;
         
-        // Find player's position (1-indexed)
-        for (index, entry) in leaderboard.iter().enumerate() {
-            if entry.player_id == player_id {
-                return Ok(Some(index + 1));
-            }
-        }
+        info!("Reset leaderboard for song={}, deleted {} rows", song_id, result.rows_affected());
         
-        Ok(None)
-    }
-    
-    fn validate_score(&self, entry: &LeaderboardEntry) -> bool {
-        // Phase 1: Basic validation
-        // Phase 3: Advanced anti-cheat (score per second, accuracy bounds, etc.)
-        
-        // Check accuracy bounds if present
-        if let Some(accuracy) = entry.accuracy {
-            if !(0.0..=1.0).contains(&accuracy) {
-                return false;
-            }
-        }
-        
-        // Check notes_hit <= notes_total if present
-        if let (Some(notes_hit), Some(notes_total)) = (entry.notes_hit, entry.notes_total) {
-            if notes_hit > notes_total {
-                return false;
-            }
-        }
-        
-        true
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::infrastructure::QualiaLogger;
-    use tempfile::TempDir;
+    use std::time::{SystemTime, UNIX_EPOCH};
     
-    fn create_test_service(storage_dir: &str) -> PersistenceService {
-        let logger = Arc::new(QualiaLogger) as Arc<dyn ILogger>;
-        let config = Arc::new(PersistenceConfig {
-            storage_directory: storage_dir.to_string(),
-            leaderboard_filename: "leaderboard.json".to_string(),
-            max_entries_per_song: 10,
-            max_entries_global: 100,
-            enable_validation: true,
-        });
-        
-        PersistenceService::new(logger, config)
+    async fn create_test_service() -> Result<LeaderboardService> {
+        LeaderboardService::new(":memory:").await
     }
     
-    fn create_test_entry(score: f32) -> LeaderboardEntry {
+    fn create_test_entry(player_name: &str, score: u64, song_id: &str) -> LeaderboardEntry {
         LeaderboardEntry {
-            player_id: "player_001".to_string(),
-            player_name: "TestPlayer".to_string(),
+            player_id: Uuid::new_v4(),
+            player_name: player_name.to_string(),
             score,
-            song_id: "song_001".to_string(),
-            song_title: "Test Song".to_string(),
-            difficulty_volume: 0.8,
-            timestamp: Utc::now(),
-            max_combo: Some(100),
-            notes_hit: Some(95),
-            notes_total: Some(100),
-            accuracy: Some(0.95),
+            rank: 0,
+            song_id: song_id.to_string(),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
         }
     }
     
     #[tokio::test]
-    async fn test_persistence_initialization() {
-        let temp_dir = TempDir::new().unwrap();
-        let service = create_test_service(temp_dir.path().to_str().unwrap());
+    async fn test_insert_score_updates_rank() {
+        let service = create_test_service().await.unwrap();
         
-        let result = service.initialize().await;
-        assert!(result.is_ok(), "Initialization should succeed");
+        let entry1 = create_test_entry("Alice", 1000, "song1");
+        let entry2 = create_test_entry("Bob", 2000, "song1");
+        
+        service.insert_score(entry1).await.unwrap();
+        service.insert_score(entry2.clone()).await.unwrap();
+        
+        // Bob should be rank 1 (higher score)
+        let bob_best = service.get_player_best(entry2.player_id, "song1").await.unwrap().unwrap();
+        assert_eq!(bob_best.rank, 1);
     }
     
     #[tokio::test]
-    async fn test_save_entry_success() {
-        let temp_dir = TempDir::new().unwrap();
-        let service = create_test_service(temp_dir.path().to_str().unwrap());
-        service.initialize().await.unwrap();
+    async fn test_get_leaderboard_pagination() {
+        let service = create_test_service().await.unwrap();
         
-        let entry = create_test_entry(5000.0);
-        let result = service.save_entry(entry).await;
-        
-        assert!(result.is_ok(), "Should save entry successfully");
-    }
-    
-    #[tokio::test]
-    async fn test_save_entry_rejects_negative_score() {
-        let temp_dir = TempDir::new().unwrap();
-        let service = create_test_service(temp_dir.path().to_str().unwrap());
-        service.initialize().await.unwrap();
-        
-        let mut entry = create_test_entry(-1000.0);
-        entry.score = -1000.0;
-        
-        let result = service.save_entry(entry).await;
-        assert!(result.is_err(), "Should reject negative score");
-    }
-    
-    #[tokio::test]
-    async fn test_get_leaderboard_sorted_by_score() {
-        let temp_dir = TempDir::new().unwrap();
-        let service = create_test_service(temp_dir.path().to_str().unwrap());
-        service.initialize().await.unwrap();
-        
-        // Add entries in random order
-        for score in &[3000.0, 5000.0, 1000.0, 4000.0, 2000.0] {
-            service.save_entry(create_test_entry(*score)).await.unwrap();
+        // Insert 5 scores
+        for i in 1..=5 {
+            let entry = create_test_entry(&format!("Player{}", i), (i * 100) as u64, "song1");
+            service.insert_score(entry).await.unwrap();
         }
         
-        let leaderboard = service.get_leaderboard(None, None).await.unwrap();
+        // Get page 1 (top 2)
+        let query = LeaderboardQuery {
+            song_id: Some("song1".to_string()),
+            limit: 2,
+            offset: 0,
+        };
+        let page1 = service.get_leaderboard(query).await.unwrap();
+        assert_eq!(page1.len(), 2);
+        assert_eq!(page1[0].score, 500); // Highest score first
         
-        assert_eq!(leaderboard.len(), 5);
-        assert_eq!(leaderboard[0].score, 5000.0);
-        assert_eq!(leaderboard[1].score, 4000.0);
-        assert_eq!(leaderboard[4].score, 1000.0);
+        // Get page 2 (next 2)
+        let query = LeaderboardQuery {
+            song_id: Some("song1".to_string()),
+            limit: 2,
+            offset: 2,
+        };
+        let page2 = service.get_leaderboard(query).await.unwrap();
+        assert_eq!(page2.len(), 2);
+        assert_eq!(page2[0].score, 300);
     }
     
     #[tokio::test]
-    async fn test_get_leaderboard_with_limit() {
-        let temp_dir = TempDir::new().unwrap();
-        let service = create_test_service(temp_dir.path().to_str().unwrap());
-        service.initialize().await.unwrap();
+    async fn test_get_player_best_found() {
+        let service = create_test_service().await.unwrap();
         
-        for score in &[3000.0, 5000.0, 1000.0] {
-            service.save_entry(create_test_entry(*score)).await.unwrap();
-        }
+        let entry = create_test_entry("Alice", 1500, "song1");
+        let player_id = entry.player_id;
+        service.insert_score(entry).await.unwrap();
         
-        let leaderboard = service.get_leaderboard(None, Some(2)).await.unwrap();
-        
-        assert_eq!(leaderboard.len(), 2);
-        assert_eq!(leaderboard[0].score, 5000.0);
-        assert_eq!(leaderboard[1].score, 3000.0);
-    }
-    
-    #[tokio::test]
-    async fn test_get_player_best_score() {
-        let temp_dir = TempDir::new().unwrap();
-        let service = create_test_service(temp_dir.path().to_str().unwrap());
-        service.initialize().await.unwrap();
-        
-        service.save_entry(create_test_entry(3000.0)).await.unwrap();
-        service.save_entry(create_test_entry(5000.0)).await.unwrap();
-        service.save_entry(create_test_entry(4000.0)).await.unwrap();
-        
-        let best = service.get_player_best_score("player_001", None).await.unwrap();
-        
+        let best = service.get_player_best(player_id, "song1").await.unwrap();
         assert!(best.is_some());
-        assert_eq!(best.unwrap().score, 5000.0);
+        assert_eq!(best.unwrap().score, 1500);
     }
     
     #[tokio::test]
-    async fn test_get_player_rank() {
-        let temp_dir = TempDir::new().unwrap();
-        let service = create_test_service(temp_dir.path().to_str().unwrap());
-        service.initialize().await.unwrap();
+    async fn test_get_player_best_not_found() {
+        let service = create_test_service().await.unwrap();
         
-        let mut entry1 = create_test_entry(3000.0);
-        entry1.player_id = "player_001".to_string();
-        
-        let mut entry2 = create_test_entry(5000.0);
-        entry2.player_id = "player_002".to_string();
-        
-        let mut entry3 = create_test_entry(4000.0);
-        entry3.player_id = "player_003".to_string();
-        
-        service.save_entry(entry1).await.unwrap();
-        service.save_entry(entry2).await.unwrap();
-        service.save_entry(entry3).await.unwrap();
-        
-        let rank = service.get_player_rank("player_001", None).await.unwrap();
-        
-        assert_eq!(rank, Some(3)); // 3rd place
+        let best = service.get_player_best(Uuid::new_v4(), "nonexistent").await.unwrap();
+        assert!(best.is_none());
     }
     
     #[tokio::test]
-    async fn test_validate_score_invalid_accuracy() {
-        let service = create_test_service("/tmp");
+    async fn test_reset_leaderboard_clears_entries() {
+        let service = create_test_service().await.unwrap();
         
-        let mut entry = create_test_entry(1000.0);
-        entry.accuracy = Some(1.5); // Invalid: > 1.0
+        let entry = create_test_entry("Alice", 1000, "song1");
+        service.insert_score(entry).await.unwrap();
         
-        assert!(!service.validate_score(&entry));
+        service.reset_leaderboard("song1").await.unwrap();
+        
+        let query = LeaderboardQuery {
+            song_id: Some("song1".to_string()),
+            limit: 10,
+            offset: 0,
+        };
+        let entries = service.get_leaderboard(query).await.unwrap();
+        assert_eq!(entries.len(), 0);
     }
     
     #[tokio::test]
-    async fn test_validate_score_invalid_notes() {
-        let service = create_test_service("/tmp");
+    async fn test_ranking_calculation_correctness() {
+        let service = create_test_service().await.unwrap();
         
-        let mut entry = create_test_entry(1000.0);
-        entry.notes_hit = Some(150);
-        entry.notes_total = Some(100); // Invalid: hit > total
+        // Insert scores in random order
+        let entries = vec![
+            create_test_entry("Charlie", 300, "song1"),
+            create_test_entry("Alice", 500, "song1"),
+            create_test_entry("Bob", 400, "song1"),
+        ];
         
-        assert!(!service.validate_score(&entry));
+        for entry in entries {
+            service.insert_score(entry).await.unwrap();
+        }
+        
+        let query = LeaderboardQuery {
+            song_id: Some("song1".to_string()),
+            limit: 10,
+            offset: 0,
+        };
+        let leaderboard = service.get_leaderboard(query).await.unwrap();
+        
+        // Should be sorted: Alice (500), Bob (400), Charlie (300)
+        assert_eq!(leaderboard[0].player_name, "Alice");
+        assert_eq!(leaderboard[0].rank, 1);
+        assert_eq!(leaderboard[1].player_name, "Bob");
+        assert_eq!(leaderboard[1].rank, 2);
+        assert_eq!(leaderboard[2].player_name, "Charlie");
+        assert_eq!(leaderboard[2].rank, 3);
     }
     
     #[tokio::test]
-    async fn test_persistence_to_disk() {
-        let temp_dir = TempDir::new().unwrap();
-        let service = create_test_service(temp_dir.path().to_str().unwrap());
-        service.initialize().await.unwrap();
+    async fn test_concurrent_insert_handling() {
+        let service = Arc::new(create_test_service().await.unwrap());
         
-        service.save_entry(create_test_entry(5000.0)).await.unwrap();
+        let mut handles = vec![];
         
-        // Verify file exists
-        let leaderboard_path = temp_dir.path().join("leaderboard.json");
-        assert!(leaderboard_path.exists());
+        for i in 0..10 {
+            let service_clone = service.clone();
+            let handle = tokio::spawn(async move {
+                let entry = create_test_entry(&format!("Player{}", i), (i * 10) as u64, "song1");
+                service_clone.insert_score(entry).await.unwrap();
+            });
+            handles.push(handle);
+        }
         
-        // Load from disk and verify
-        let contents = fs::read_to_string(&leaderboard_path).await.unwrap();
-        let entries: Vec<LeaderboardEntry> = serde_json::from_str(&contents).unwrap();
+        for handle in handles {
+            handle.await.unwrap();
+        }
         
-        assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].score, 5000.0);
+        let query = LeaderboardQuery {
+            song_id: Some("song1".to_string()),
+            limit: 100,
+            offset: 0,
+        };
+        let entries = service.get_leaderboard(query).await.unwrap();
+        assert_eq!(entries.len(), 10);
+    }
+    
+    #[tokio::test]
+    async fn test_pagination_boundary_conditions() {
+        let service = create_test_service().await.unwrap();
+        
+        // Insert 3 scores
+        for i in 1..=3 {
+            let entry = create_test_entry(&format!("Player{}", i), (i * 100) as u64, "song1");
+            service.insert_score(entry).await.unwrap();
+        }
+        
+        // Request beyond available entries
+        let query = LeaderboardQuery {
+            song_id: Some("song1".to_string()),
+            limit: 10,
+            offset: 5,
+        };
+        let entries = service.get_leaderboard(query).await.unwrap();
+        assert_eq!(entries.len(), 0);
+    }
+    
+    #[tokio::test]
+    async fn test_multiple_songs_isolation() {
+        let service = create_test_service().await.unwrap();
+        
+        let entry_song1 = create_test_entry("Alice", 1000, "song1");
+        let entry_song2 = create_test_entry("Bob", 2000, "song2");
+        
+        service.insert_score(entry_song1).await.unwrap();
+        service.insert_score(entry_song2).await.unwrap();
+        
+        let query = LeaderboardQuery {
+            song_id: Some("song1".to_string()),
+            limit: 10,
+            offset: 0,
+        };
+        let song1_entries = service.get_leaderboard(query).await.unwrap();
+        assert_eq!(song1_entries.len(), 1);
+        assert_eq!(song1_entries[0].player_name, "Alice");
+    }
+    
+    #[tokio::test]
+    async fn test_connection_pool_exhaustion_recovery() {
+        let service = Arc::new(create_test_service().await.unwrap());
+        
+        // Simulate many concurrent queries (stress test)
+        let mut handles = vec![];
+        for i in 0..50 {
+            let service_clone = service.clone();
+            let handle = tokio::spawn(async move {
+                let entry = create_test_entry(&format!("Player{}", i), i as u64, "song1");
+                service_clone.insert_score(entry).await
+            });
+            handles.push(handle);
+        }
+        
+        // All should succeed despite concurrent access
+        for handle in handles {
+            assert!(handle.await.unwrap().is_ok());
+        }
     }
 }

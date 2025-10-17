@@ -22,3 +22,11 @@ pub use pattern_system::MockPatternSystemService;
 pub use qualia_processor::MockQualiaProcessorService;
 pub use combat_orchestrator::MockCombatOrchestratorService;
 pub use websocket::MockWebSocketService;
+
+// Part 11 mocks
+pub mod leaderboard;
+pub mod health_check;
+pub mod filesystem;
+pub mod environment;
+pub mod gameplay_mechanics;
+pub mod harmony_analysis;

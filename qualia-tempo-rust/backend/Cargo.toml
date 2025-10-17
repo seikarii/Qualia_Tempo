@@ -29,6 +29,13 @@ chrono.workspace = true
 rayon.workspace = true
 num_cpus.workspace = true
 rand = "0.9.2"
+# Part 10 & 11 dependencies
+flate2 = "1.0"
+naga = { version = "0.14", features = ["wgsl-in"] }
+argon2 = "0.5"
+jsonwebtoken = "9.2"
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite"] }
+sysinfo = "0.30"
 
 [dev-dependencies]
 mockall.workspace = true

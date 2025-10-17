@@ -15,7 +15,7 @@ use anyhow::{Result, Context, bail};
 use shaku::{Component, Interface};
 use serde::{Serialize, Deserialize};
 use async_trait::async_trait;
-use crate::services::infrastructure::ILogger;
+use crate::services::interfaces::ILogger;
 
 /// # Responsibility
 /// Configuration for shader introspection service.

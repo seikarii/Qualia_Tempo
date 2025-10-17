@@ -1,16 +1,10 @@
 //! # Responsibility
-//! Persistence services for data storage and leaderboard management.
+//! Persistence services module aggregator.
 //!
 //! ---
 //!
-//! This module contains services for persistent data storage, including
-//! leaderboard entries and player statistics.
+//! Exports all persistence services (leaderboard, database interactions).
 
 pub mod leaderboard;
 
-pub use leaderboard::{
-    PersistenceService,
-    IPersistenceService,
-    PersistenceConfig,
-    LeaderboardEntry,
-};
+pub use leaderboard::LeaderboardService;

@@ -17,7 +17,7 @@ use shared_core::{
     contracts::input::PlayerAction,
     events::GameEvent,
 };
-use crate::services::infrastructure::IEventBus;
+use crate::services::interfaces::IEventBus;
 
 /// # Responsibility
 /// Shared application state for WebSocket handlers.

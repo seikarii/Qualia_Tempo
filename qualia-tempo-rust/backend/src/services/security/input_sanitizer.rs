@@ -10,7 +10,7 @@ use shaku::Component;
 use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
-use super::super::infrastructure::ILogger;
+use super::super::interfaces::ILogger;
 
 /// # Responsibility
 /// Input sanitizer configuration.

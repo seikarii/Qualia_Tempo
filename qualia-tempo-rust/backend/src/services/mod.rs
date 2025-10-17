@@ -18,6 +18,8 @@ pub mod audio;
 pub mod rendering;
 pub mod persistence;
 pub mod security;
+pub mod io;
+pub mod utilities;
 
 #[cfg(test)]
 pub mod tests;
@@ -32,3 +34,5 @@ pub use audio::*;
 pub use rendering::*;
 pub use persistence::*;
 pub use security::*;
+pub use io::*;
+pub use utilities::*;

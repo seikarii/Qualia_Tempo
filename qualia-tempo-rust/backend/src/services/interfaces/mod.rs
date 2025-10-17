@@ -39,8 +39,8 @@ pub mod i_harmony_analysis;
 // Re-export all interface traits
 pub use i_event_bus::IEventBus;
 pub use i_logger::ILogger;
-pub use i_metrics::IMetricsService;
-pub use i_performance::IPerformanceService;
+pub use i_metrics::IMetrics;
+pub use i_performance::IPerformance;
 
 // Gameplay interfaces
 pub use i_game_logic::IGameLogicService;

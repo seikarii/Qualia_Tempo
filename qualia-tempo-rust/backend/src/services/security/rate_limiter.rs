@@ -14,7 +14,7 @@ use std::time::Instant;
 use serde::{Deserialize, Serialize};
 use async_trait::async_trait;
 
-use super::super::infrastructure::ILogger;
+use super::super::interfaces::ILogger;
 
 /// # Responsibility
 /// Rate limiter configuration.

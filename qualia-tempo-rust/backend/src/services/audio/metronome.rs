@@ -9,7 +9,7 @@
 use std::sync::Arc;
 use tokio::time::{interval, Duration};
 use shared_core::events::{GameEvent, MetronomeTickEvent};
-use crate::services::infrastructure::{ILogger, IEventBus};
+use crate::services::interfaces::{ILogger, IEventBus};
 use crate::config::MetronomeConfig;
 
 /// # Responsibility

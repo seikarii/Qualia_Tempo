@@ -12,7 +12,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use anyhow::Result;
 
-use super::super::infrastructure::{ILogger, IEventBus};
+use super::super::interfaces::{ILogger, IEventBus};
 use super::super::gameplay::IStateStore;
 use shared_core::events::GameEvent;
 

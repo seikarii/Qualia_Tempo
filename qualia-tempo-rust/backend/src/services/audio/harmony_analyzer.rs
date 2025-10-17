@@ -13,7 +13,7 @@ use async_trait::async_trait;
 use anyhow::{Result, Context};
 use shared_core::contracts::audio::{HarmonyMap, HarmonicContext};
 use shared_core::contracts::combat_data::SongData;
-use crate::services::infrastructure::ILogger;
+use crate::services::interfaces::ILogger;
 
 /// # Responsibility
 /// Configuration for harmony analysis.

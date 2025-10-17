@@ -27,7 +27,7 @@ use shared_core::{
     contracts::input::PlayerAction,
     events::GameEvent,
 };
-use super::super::infrastructure::{ILogger, IEventBus};
+use super::super::interfaces::{ILogger, IEventBus};
 use super::super::gameplay::IStateStore;
 use crate::config::WebSocketConfig;
 
