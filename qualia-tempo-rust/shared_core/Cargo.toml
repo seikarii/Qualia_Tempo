@@ -15,6 +15,9 @@ async-trait.workspace = true
 anyhow.workspace = true
 tokio.workspace = true
 
+[build-dependencies]
+qualia_lints = { path = "../qualia_lints" }
+
 [features]
 default = []
 wasm = ["uuid/js", "chrono/wasmbind"]

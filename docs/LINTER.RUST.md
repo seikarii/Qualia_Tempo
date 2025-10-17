@@ -92,6 +92,8 @@ A continuación se presenta la **tabla maestra** de reglas propuestas para `qual
 
 | ID de la Regla (Propuesta) | Intención Original (ESLint/MyPy/Ruff) | Descripción de la Regla en Rust | Nivel | Justificación Arquitectónica |
 | :--- | :--- | :--- | :--- | :--- |
+| **TESTING (✅ IMPLEMENTED - BUILD-TIME)** |
+| `qualia_lints::no_inline_tests` | N/A (Nuevo) | **✅ ACTIVO:** Implementado via `build.rs`. Prohíbe `#[cfg(test)]` en archivos `src/`. Tests DEBEN estar en `tests/`. **FALLA LA COMPILACIÓN** automáticamente. Excepciones: `lib.rs`, `main.rs`. | `deny` | QUALIA.CODE.RUST §3.2: Separación producción/tests. Enforcement en tiempo de compilación. |
 | **ARQUITECTURA Y DI** |
 | `qualia-lints::enforce-responsibility-header` | N/A (Nuevo) | **MANDATO:** Cada `pub struct`, `pub trait` y `pub mod` DEBE tener un comentario de documentación que comience con `/// # Responsibility`. | `deny` | QUALIA.CODE.RUST §1.1: Documentación estructurada para claridad arquitectónica. |
 | `qualia-lints::no-direct-service-instantiation` | `no-direct-service-instantiation` | Prohíbe la llamada a `Struct::new()` en cualquier struct que implemente un trait de servicio (ej. `IGameLogicService`). Solo se permite dentro del `CompositionRoot` (`main.rs`). | `deny` | QUALIA.CODE.RUST §2.1: Inversion of Control - servicios solo se instancian via DI container. |
@@ -253,17 +255,39 @@ pub async fn process_game_action(&self, action: PlayerAction) -> Result<GameStat
 ```yaml
 # .github/workflows/rust.yml
 - name: Run Clippy
-  run: cargo clippy -- -D warnings
+  run: cargo clippy --all-targets -- -D warnings
 
-- name: Run Qualia Lints
-  run: cargo dylint --all
+- name: Build (includes qualia_lints enforcement)
+  run: cargo build --all-targets  # Will FAIL if architectural violations exist
 
-- name: Check Macro Expansion
-  run: cargo check --features macro-expansion
+- name: Test
+  run: cargo test --all-targets
 ```
+
+**Note:** `qualia_lints` enforcement happens automatically during build via `build.rs`. No separate lint command required.
+
+---
+
+## 9. Implementation Status
+
+| Lint Rule | Status | Mechanism | Crates | Failure |
+|-----------|--------|-----------|--------|---------|
+| `no_inline_tests` | ✅ **ENFORCED** | `build.rs` | shared_core | Compilation fails |
+| All other rules | 📋 Roadmap | Future `build.rs` | TBD | TBD |
+
+**Integration:** Add `qualia_lints` as `build-dependency`:
+
+```toml
+[build-dependencies]
+qualia_lints = { path = "../qualia_lints" }
+```
+
+**Execution:** Automatic on `cargo build`. Exits with code 1 if violations detected.
 
 ---
 
 *"From TypeScript Decorators to Rust Macros. Every architectural pattern, reborn in compile-time power."*
 
-**END OF LINTER.RUST.md v1.0**
+**Last Updated:** 2025-01-18 - NO_INLINE_TESTS enforced via build.rs ✅
+
+**END OF LINTER.RUST.md v1.1**

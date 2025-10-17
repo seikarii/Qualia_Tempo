@@ -1,5 +1,5 @@
 [workspace]
-members = ["qualia_macros", "shared_core", "backend", "frontend"]
+members = ["qualia_macros", "shared_core", "backend", "frontend", "qualia_lints"]
 resolver = "2"
 
 [workspace.dependencies]
