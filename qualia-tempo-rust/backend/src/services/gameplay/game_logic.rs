@@ -1,270 +1,375 @@
 //! # Responsibility
-//! Implements core game logic: qualia calculation, player action processing, combo detection.
+//! GameLogicService implementation for core game rule processing.
 //!
 //! ---
 //!
-//! This is the "brain" of Qualia Tempo. It receives PlayerAction events, calculates
-//! the resulting QualiaState changes, detects combos, and emits gameplay events.
+//! Processes player actions, calculates damage/score/combo, and emits game events.
+//! This is the authoritative source for all game state mutations.
 
-use shaku::{Component, Interface};
-use std::sync::Arc;
+use shaku::Component;
 use async_trait::async_trait;
-use anyhow::Result;
-use shared_core::{
-    contracts::{
-        PlayerAction, QualiaState,
-        game_state::GameStatus,
-        combat_data::MusicalComboData,
-    },
-    events::{GameEvent, combat_events::ComboCompletedEvent},
-};
-use super::state_store::IStateStore;
-use crate::services::infrastructure::{ILogger, IEventBus};
-use crate::config::GameLogicConfig;
+use std::sync::Arc;
+use anyhow::{Context, Result};
+use tracing::{info, warn};
+
+use crate::config::game_logic::GameLogicConfig;
+use crate::services::interfaces::{IGameLogicService, ILogger, IEventBus};
+use shared_core::contracts::{PlayerAction, QualiaState, PlayerState, BossState};
+use shared_core::events::GameEvent;
 
 /// # Responsibility
-/// Interface for game logic operations.
-#[async_trait]
-pub trait IGameLogicService: Interface {
-    /// Processes a player action and updates game state
-    async fn process_action(&self, action: PlayerAction) -> Result<()>;
-    
-    /// Calculates qualia state from accuracy and timing
-    fn calculate_qualia(&self, accuracy: f32, perfect_timing: bool) -> QualiaState;
-    
-    /// Detects if a combo was completed
-    fn detect_combo(&self, recent_notes: &[String]) -> Option<String>;
-}
-
-/// # Responsibility
-/// Implements game logic service with qualia calculation and combo detection.
+/// Implements core game logic rules for Qualia Tempo combat.
+///
+/// ---
+///
+/// This service is the authoritative source for:
+/// - Damage calculation (accuracy + combo based)
+/// - Score calculation (base score * accuracy * combo multiplier)
+/// - Combo management (maintains/breaks based on accuracy)
+/// - Victory/defeat detection (health checks)
+///
+/// Injected dependencies:
+/// - GameLogicConfig: Game rule parameters
+/// - ILogger: Structured logging
+/// - IEventBus: Event emission for state updates
 #[derive(Component)]
 #[shaku(interface = IGameLogicService)]
 pub struct GameLogicService {
+    config: Arc<GameLogicConfig>,
+    
     #[shaku(inject)]
     logger: Arc<dyn ILogger>,
     
     #[shaku(inject)]
     event_bus: Arc<dyn IEventBus>,
-    
-    #[shaku(inject)]
-    state_store: Arc<dyn IStateStore>,
-    
-    config: Arc<GameLogicConfig>,
-}
-
-impl GameLogicService {
-    /// Applies intensity calculation with accuracy multiplier
-    fn apply_intensity_multiplier(&self, base_intensity: f32, accuracy: f32) -> f32 {
-        let multiplier = 1.0 + (accuracy * self.config.intensity_multiplier);
-        (base_intensity * multiplier).clamp(0.0, 1.0)
-    }
-    
-    /// Applies decay to a qualia component
-    fn apply_decay(&self, value: f32, decay_rate: f32, delta_time: f32) -> f32 {
-        (value - decay_rate * delta_time).max(0.0)
-    }
 }
 
 #[async_trait]
 impl IGameLogicService for GameLogicService {
-    async fn process_action(&self, action: PlayerAction) -> Result<()> {
-        self.logger.debug("Processing player action");
+    async fn process_action(
+        &self,
+        action: PlayerAction,
+        current_qualia: QualiaState,
+        current_player: &PlayerState,
+        current_boss: &BossState,
+    ) -> Result<(QualiaState, Vec<GameEvent>)> {
+        let mut events = Vec::new();
         
-        // Get current state
-        let current_state = self.state_store.get_state();
+        // Extract accuracy from action
+        let accuracy = self.extract_accuracy(&action)?;
         
-        // Only process actions if game is playing
-        if current_state.game_state != GameStatus::Playing {
-            self.logger.warn("Ignoring action - game not in playing state");
-            return Ok(());
+        // Calculate damage
+        let damage = self.calculate_damage(accuracy, current_player.combo);
+        
+        // Emit damage event
+        events.push(GameEvent::DamageDealt {
+            damage,
+            target: "boss".to_string(),
+        });
+        
+        // Update combo
+        let new_combo = self.update_combo(current_player.combo, accuracy >= self.config.combo.min_accuracy_for_combo, accuracy);
+        if new_combo != current_player.combo {
+            events.push(GameEvent::ComboUpdated { combo: new_combo });
         }
         
-        // Calculate new qualia based on action
-        let accuracy = match &action {
-            PlayerAction::KeyPressed { accuracy, .. } => *accuracy,
-            PlayerAction::Dash { .. } => 0.7, // Dash has moderate accuracy
-            _ => 0.5, // Default for other actions
-        };
+        // Calculate score
+        let score_gain = self.calculate_score(self.config.scoring.base_score_per_action, accuracy, new_combo);
+        events.push(GameEvent::ScoreUpdated { score_delta: score_gain as i32 });
         
-        let perfect_timing = accuracy > 0.9;
-        let new_qualia = self.calculate_qualia(accuracy, perfect_timing);
+        self.logger.info(&format!(
+            "Processed action: damage={:.1}, combo={}, score_gain={}",
+            damage, new_combo, score_gain
+        ));
         
-        // Update state store
-        self.state_store.update_qualia(new_qualia);
-        
-        // Emit qualia update event
-        let event = GameEvent::QualiaStateUpdated(new_qualia);
-        if let Err(e) = self.event_bus.emit(event) {
-            self.logger.warn(&format!("Failed to emit QualiaStateUpdated: {:?}", e));
-        }
-        
-        // Emit player action event for other services
-        let action_event = GameEvent::PlayerAction(Box::new(action));
-        if let Err(e) = self.event_bus.emit(action_event) {
-            self.logger.warn(&format!("Failed to emit PlayerAction: {:?}", e));
-        }
-        
-        Ok(())
+        Ok((current_qualia, events))
     }
     
-    fn calculate_qualia(&self, accuracy: f32, perfect_timing: bool) -> QualiaState {
-        let mut qualia = self.state_store.get_state().qualia_state;
+    fn calculate_damage(&self, accuracy: f32, combo: u32) -> f32 {
+        let accuracy_clamped = accuracy.clamp(0.0, 1.0);
+        let combo_multiplier = 1.0 + (combo as f32 * self.config.scoring.combo_multiplier_per_hit).min(self.config.scoring.max_combo_multiplier - 1.0);
         
-        // Intensity increases with accuracy
-        qualia.intensity = self.apply_intensity_multiplier(qualia.intensity, accuracy);
+        let damage = self.config.player.base_damage * accuracy_clamped * combo_multiplier;
         
-        // Precision increases with perfect timing
-        if perfect_timing {
-            qualia.precision = (qualia.precision + 0.1).min(1.0);
-        } else {
-            qualia.precision = self.apply_decay(qualia.precision, 0.05, 0.016); // ~60fps
-        }
-        
-        // Aggression correlates with intensity
-        qualia.aggression = (qualia.intensity * 0.8).min(1.0);
-        
-        // Flow builds with sustained high precision
-        if qualia.precision > 0.7 {
-            qualia.flow = (qualia.flow + 0.05).min(1.0);
-        } else {
-            qualia.flow = self.apply_decay(qualia.flow, 0.02, 0.016);
-        }
-        
-        // Chaos increases with low accuracy
-        if accuracy < 0.5 {
-            qualia.chaos = (qualia.chaos + 0.1).min(1.0);
-        } else {
-            qualia.chaos = self.apply_decay(qualia.chaos, 0.08, 0.016);
-        }
-        
-        qualia
+        damage.clamp(0.0, self.config.player.base_damage * self.config.scoring.max_combo_multiplier)
     }
     
-    fn detect_combo(&self, recent_notes: &[String]) -> Option<String> {
-        // TODO: Load combo definitions from CombatData
-        // For now, hardcode some basic combos
-        
-        if recent_notes.len() < 3 {
-            return None;
+    fn update_combo(&self, current_combo: u32, action_success: bool, accuracy: f32) -> u32 {
+        if !action_success || accuracy < self.config.combo.min_accuracy_for_combo {
+            // Combo broken
+            0
+        } else {
+            // Combo continues
+            (current_combo + 1).min(self.config.combo.max_combo)
         }
+    }
+    
+    fn calculate_score(&self, base_score: u32, accuracy: f32, combo: u32) -> u32 {
+        let accuracy_clamped = accuracy.clamp(0.0, 1.0);
+        let combo_multiplier = 1.0 + (combo as f32 * self.config.scoring.combo_multiplier_per_hit).min(self.config.scoring.max_combo_multiplier - 1.0);
         
-        let last_three = &recent_notes[recent_notes.len() - 3..];
+        let score = (base_score as f32) * accuracy_clamped * self.config.scoring.accuracy_multiplier * combo_multiplier;
         
-        // Check for Q+E+R (Whirlwind)
-        if last_three == ["Q", "E", "R"] {
-            return Some("whirlwind".to_string());
+        score.round() as u32
+    }
+    
+    fn is_player_defeated(&self, player: &PlayerState) -> bool {
+        player.health <= 0.0
+    }
+    
+    fn is_boss_defeated(&self, boss: &BossState) -> bool {
+        boss.health <= 0.0
+    }
+}
+
+impl GameLogicService {
+    /// Extracts accuracy value from PlayerAction.
+    fn extract_accuracy(&self, action: &PlayerAction) -> Result<f32> {
+        match action {
+            PlayerAction::KeyPressed { accuracy, .. } => Ok(*accuracy),
+            PlayerAction::Dash { accuracy, .. } => Ok(*accuracy),
+            PlayerAction::Special { accuracy, .. } => Ok(*accuracy),
         }
-        
-        // Check for Q+R+F (Attractor)
-        if last_three == ["Q", "R", "F"] {
-            return Some("attractor".to_string());
-        }
-        
-        None
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::infrastructure::{QualiaLogger, EventBusService};
-    use crate::services::gameplay::StateStoreService;
-
-    fn create_test_service() -> GameLogicService {
-        let logger = Arc::new(QualiaLogger) as Arc<dyn ILogger>;
-        let event_bus = Arc::new(EventBusService::new(100)) as Arc<dyn IEventBus>;
-        let state_store = Arc::new(StateStoreService::new()) as Arc<dyn IStateStore>;
-        let config = Arc::new(GameLogicConfig::default());
-        
-        GameLogicService {
-            logger,
-            event_bus,
-            state_store,
-            config,
+    use crate::config::game_logic::{PlayerConfig, BossConfig, ScoringConfig, ComboConfig};
+    
+    fn create_test_config() -> GameLogicConfig {
+        GameLogicConfig {
+            player: PlayerConfig {
+                max_health: 100.0,
+                base_damage: 10.0,
+                dash_cooldown_ms: 1000,
+                dash_duration_ms: 200,
+                invulnerability_frames: 10,
+            },
+            boss: BossConfig {
+                max_health: 1000.0,
+                phase_count: 4,
+                phase_health_thresholds: vec![1.0, 0.75, 0.5, 0.25],
+                attack_speed_multipliers: vec![1.0, 1.2, 1.5, 2.0],
+            },
+            scoring: ScoringConfig {
+                base_score_per_action: 100,
+                accuracy_multiplier: 2.0,
+                combo_multiplier_per_hit: 0.1,
+                max_combo_multiplier: 5.0,
+            },
+            combo: ComboConfig {
+                min_accuracy_for_combo: 0.7,
+                combo_break_time_ms: 2000,
+                max_combo: 999,
+            },
         }
     }
-
-    #[test]
-    fn test_calculate_qualia_high_accuracy() {
-        let service = create_test_service();
-        
-        // Set initial qualia state
-        let mut initial_qualia = QualiaState::default();
-        initial_qualia.intensity = 0.5;
-        service.state_store.update_qualia(initial_qualia);
-        
-        let qualia = service.calculate_qualia(0.95, true);
-        
-        assert!(qualia.intensity > 0.5, "Intensity should increase from base");
-        assert!(qualia.precision > 0.0, "Precision should increase with perfect timing");
+    
+    fn create_test_service() -> Arc<GameLogicConfig> {
+        Arc::new(create_test_config())
     }
-
+    
     #[test]
-    fn test_calculate_qualia_low_accuracy() {
-        let service = create_test_service();
-        
-        let qualia = service.calculate_qualia(0.3, false);
-        
-        // Low accuracy should increase chaos
-        assert!(qualia.chaos > 0.0, "Chaos should increase with low accuracy");
-    }
-
-    #[test]
-    fn test_detect_combo_whirlwind() {
-        let service = create_test_service();
-        
-        let notes = vec!["Q".to_string(), "E".to_string(), "R".to_string()];
-        let combo = service.detect_combo(&notes);
-        
-        assert_eq!(combo, Some("whirlwind".to_string()));
-    }
-
-    #[test]
-    fn test_detect_combo_attractor() {
-        let service = create_test_service();
-        
-        let notes = vec!["Q".to_string(), "R".to_string(), "F".to_string()];
-        let combo = service.detect_combo(&notes);
-        
-        assert_eq!(combo, Some("attractor".to_string()));
-    }
-
-    #[test]
-    fn test_detect_combo_none() {
-        let service = create_test_service();
-        
-        let notes = vec!["Q".to_string(), "Q".to_string()];
-        let combo = service.detect_combo(&notes);
-        
-        assert_eq!(combo, None);
-    }
-
-    #[tokio::test]
-    async fn test_process_action_updates_state() {
-        let service = create_test_service();
-        
-        // Set initial qualia and game state
-        let mut initial_qualia = QualiaState::default();
-        initial_qualia.intensity = 0.5;
-        service.state_store.update_qualia(initial_qualia);
-        
-        // Set game state to Playing
-        let mut state = service.state_store.get_state();
-        state.game_state = GameStatus::Playing;
-        service.state_store.update_state(state);
-        
-        let action = PlayerAction::KeyPressed {
-            key: 'Q',
-            timestamp: 0.0,
-            accuracy: 0.9,
+    fn test_calculate_damage_perfect_accuracy() {
+        let config = create_test_service();
+        let service = GameLogicService {
+            config: config.clone(),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            event_bus: Arc::new(crate::services::core::EventBusService::new(100)),
         };
         
-        let result = service.process_action(action).await;
-        assert!(result.is_ok());
+        let damage = service.calculate_damage(1.0, 0);
+        assert_eq!(damage, config.player.base_damage);
+    }
+    
+    #[test]
+    fn test_calculate_damage_with_combo() {
+        let config = create_test_service();
+        let service = GameLogicService {
+            config: config.clone(),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            event_bus: Arc::new(crate::services::core::EventBusService::new(100)),
+        };
         
-        // Verify state was updated
-        let new_state = service.state_store.get_state();
-        assert!(new_state.qualia_state.intensity > 0.5 || new_state.qualia_state.precision > 0.0);
+        // Combo of 10 → multiplier = 1 + (10 * 0.1) = 2.0x
+        let damage = service.calculate_damage(1.0, 10);
+        assert_eq!(damage, config.player.base_damage * 2.0);
+    }
+    
+    #[test]
+    fn test_calculate_damage_caps_at_max_multiplier() {
+        let config = create_test_service();
+        let service = GameLogicService {
+            config: config.clone(),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            event_bus: Arc::new(crate::services::core::EventBusService::new(100)),
+        };
+        
+        // Combo of 100 should cap at max_combo_multiplier (5.0x)
+        let damage = service.calculate_damage(1.0, 100);
+        assert_eq!(damage, config.player.base_damage * config.scoring.max_combo_multiplier);
+    }
+    
+    #[test]
+    fn test_calculate_damage_zero_accuracy() {
+        let config = create_test_service();
+        let service = GameLogicService {
+            config: config.clone(),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            event_bus: Arc::new(crate::services::core::EventBusService::new(100)),
+        };
+        
+        let damage = service.calculate_damage(0.0, 10);
+        assert_eq!(damage, 0.0);
+    }
+    
+    #[test]
+    fn test_update_combo_success() {
+        let config = create_test_service();
+        let service = GameLogicService {
+            config: config.clone(),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            event_bus: Arc::new(crate::services::core::EventBusService::new(100)),
+        };
+        
+        let new_combo = service.update_combo(5, true, 0.9);
+        assert_eq!(new_combo, 6);
+    }
+    
+    #[test]
+    fn test_update_combo_failure_breaks_combo() {
+        let config = create_test_service();
+        let service = GameLogicService {
+            config: config.clone(),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            event_bus: Arc::new(crate::services::core::EventBusService::new(100)),
+        };
+        
+        let new_combo = service.update_combo(10, false, 0.5);
+        assert_eq!(new_combo, 0);
+    }
+    
+    #[test]
+    fn test_update_combo_low_accuracy_breaks_combo() {
+        let config = create_test_service();
+        let service = GameLogicService {
+            config: config.clone(),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            event_bus: Arc::new(crate::services::core::EventBusService::new(100)),
+        };
+        
+        // Accuracy below min_accuracy_for_combo (0.7)
+        let new_combo = service.update_combo(10, true, 0.6);
+        assert_eq!(new_combo, 0);
+    }
+    
+    #[test]
+    fn test_update_combo_caps_at_max() {
+        let config = create_test_service();
+        let service = GameLogicService {
+            config: config.clone(),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            event_bus: Arc::new(crate::services::core::EventBusService::new(100)),
+        };
+        
+        let new_combo = service.update_combo(config.combo.max_combo - 1, true, 1.0);
+        assert_eq!(new_combo, config.combo.max_combo);
+        
+        // Should not exceed max_combo
+        let capped_combo = service.update_combo(config.combo.max_combo, true, 1.0);
+        assert_eq!(capped_combo, config.combo.max_combo);
+    }
+    
+    #[test]
+    fn test_calculate_score_perfect() {
+        let config = create_test_service();
+        let service = GameLogicService {
+            config: config.clone(),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            event_bus: Arc::new(crate::services::core::EventBusService::new(100)),
+        };
+        
+        // base=100, accuracy=1.0, accuracy_mult=2.0, combo=0 → 100 * 1.0 * 2.0 * 1.0 = 200
+        let score = service.calculate_score(100, 1.0, 0);
+        assert_eq!(score, 200);
+    }
+    
+    #[test]
+    fn test_calculate_score_with_combo() {
+        let config = create_test_service();
+        let service = GameLogicService {
+            config: config.clone(),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            event_bus: Arc::new(crate::services::core::EventBusService::new(100)),
+        };
+        
+        // base=100, accuracy=1.0, accuracy_mult=2.0, combo=10 (mult=2.0x) → 100 * 1.0 * 2.0 * 2.0 = 400
+        let score = service.calculate_score(100, 1.0, 10);
+        assert_eq!(score, 400);
+    }
+    
+    #[test]
+    fn test_calculate_score_zero_accuracy() {
+        let config = create_test_service();
+        let service = GameLogicService {
+            config: config.clone(),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            event_bus: Arc::new(crate::services::core::EventBusService::new(100)),
+        };
+        
+        let score = service.calculate_score(100, 0.0, 10);
+        assert_eq!(score, 0);
+    }
+    
+    #[test]
+    fn test_is_player_defeated() {
+        let config = create_test_service();
+        let service = GameLogicService {
+            config: config.clone(),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            event_bus: Arc::new(crate::services::core::EventBusService::new(100)),
+        };
+        
+        let alive_player = PlayerState {
+            health: 50.0,
+            position: (0.0, 0.0),
+            is_dashing: false,
+            combo: 0,
+        };
+        assert!(!service.is_player_defeated(&alive_player));
+        
+        let dead_player = PlayerState {
+            health: 0.0,
+            position: (0.0, 0.0),
+            is_dashing: false,
+            combo: 0,
+        };
+        assert!(service.is_player_defeated(&dead_player));
+    }
+    
+    #[test]
+    fn test_is_boss_defeated() {
+        let config = create_test_service();
+        let service = GameLogicService {
+            config: config.clone(),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            event_bus: Arc::new(crate::services::core::EventBusService::new(100)),
+        };
+        
+        let alive_boss = BossState {
+            health: 500.0,
+            position: (0.0, 10.0),
+            current_phase: 2,
+        };
+        assert!(!service.is_boss_defeated(&alive_boss));
+        
+        let dead_boss = BossState {
+            health: 0.0,
+            position: (0.0, 10.0),
+            current_phase: 3,
+        };
+        assert!(service.is_boss_defeated(&dead_boss));
     }
 }

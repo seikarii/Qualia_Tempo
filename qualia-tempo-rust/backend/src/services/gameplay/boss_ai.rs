@@ -1,253 +1,300 @@
 //! # Responsibility
-//! Implements reactive boss AI that responds to player actions and qualia changes.
+//! BossAIService implementation for boss behavior and attack pattern selection.
 //!
 //! ---
 //!
-//! This service subscribes to the EventBus and reacts to player performance.
-//! It selects attack patterns based on current game phase, player qualia state,
-//! and its own aggression level. Implements the reactive AI pattern from GDD.md.
+//! Reacts to player qualia state changes and selects appropriate attack patterns
+//! based on aggression level and current boss phase.
 
-use shaku::{Component, Interface};
-use std::sync::Arc;
+use shaku::Component;
 use async_trait::async_trait;
-use anyhow::Result;
-use tokio::sync::broadcast;
-use shared_core::{
-    contracts::{
-        QualiaState,
-        game_state::BossState,
-        combat_data::{PatternData, PatternShape, PatternElement},
-    },
-    events::{GameEvent, combat_events::BossAttackStartEvent},
-};
-use super::state_store::IStateStore;
-use crate::services::infrastructure::{ILogger, IEventBus};
-use crate::config::BossAIConfig;
+use std::sync::Arc;
+use anyhow::{Context, Result};
+use tracing::info;
+
+use crate::config::boss_ai::BossAIConfig;
+use crate::services::interfaces::{IBossAIService, ILogger};
+use shared_core::contracts::{QualiaState, BossState};
+use shared_core::events::GameEvent;
 
 /// # Responsibility
-/// Interface for boss AI operations.
-#[async_trait]
-pub trait IBossAIService: Interface {
-    /// Starts the boss AI event loop
-    async fn start(&self) -> Result<()>;
-    
-    /// Selects the next attack pattern based on current state
-    fn select_attack_pattern(&self, boss: &BossState, qualia: &QualiaState) -> PatternData;
-    
-    /// Calculates aggression level based on qualia chaos
-    fn calculate_aggression(&self, qualia: &QualiaState) -> f32;
-}
-
-/// # Responsibility
-/// Implements reactive boss AI with pattern selection and aggression scaling.
+/// Implements boss AI for reactive attack pattern selection.
+///
+/// ---
+///
+/// This service:
+/// - Monitors player qualia state (intensity, chaos, transcendence)
+/// - Calculates boss aggression level dynamically
+/// - Selects attack patterns based on aggression + phase
+/// - Manages boss phase transitions (health thresholds)
+///
+/// Injected dependencies:
+/// - BossAIConfig: AI behavior parameters
+/// - ILogger: Structured logging
 #[derive(Component)]
 #[shaku(interface = IBossAIService)]
 pub struct BossAIService {
+    config: Arc<BossAIConfig>,
+    
     #[shaku(inject)]
     logger: Arc<dyn ILogger>,
-    
-    #[shaku(inject)]
-    event_bus: Arc<dyn IEventBus>,
-    
-    #[shaku(inject)]
-    state_store: Arc<dyn IStateStore>,
-    
-    config: Arc<BossAIConfig>,
-}
-
-impl BossAIService {
-    /// Creates a sample attack pattern for testing
-    fn create_sample_pattern(&self, phase: u32, aggression: f32) -> PatternData {
-        let shape = if aggression > 0.7 {
-            PatternShape::Spiral
-        } else if aggression > 0.4 {
-            PatternShape::Wave
-        } else {
-            PatternShape::Circle
-        };
-        
-        let element = match phase {
-            0 => PatternElement::Fire,
-            1 => PatternElement::Lightning,
-            2 => PatternElement::Void,
-            _ => PatternElement::Chaos,
-        };
-        
-        PatternData {
-            id: format!("pattern_phase{}_agg{}", phase, (aggression * 10.0) as u32),
-            name: format!("{:?} {:?} Pattern", element, shape),  // Use Debug format for both
-            shape,
-            element,
-            duration_sec: 3.0 + (aggression * 2.0) as f64,
-            telegraph_duration_sec: 1.0 - (aggression * 0.3) as f64,
-            projectile_count: 5 + (aggression * 15.0) as u32,
-            projectile_speed: 5.0 + (aggression * 10.0),
-            damage: 10.0 + (aggression * 20.0),
-            required_phase: phase as u8,
-        }
-    }
 }
 
 #[async_trait]
 impl IBossAIService for BossAIService {
-    async fn start(&self) -> Result<()> {
-        self.logger.info("BossAIService starting event loop");
+    async fn decide_next_action(
+        &self,
+        qualia_state: &QualiaState,
+        boss_state: &BossState,
+    ) -> Result<GameEvent> {
+        let aggression = self.calculate_aggression(qualia_state);
+        let phase = boss_state.current_phase;
         
-        let event_bus = self.event_bus.clone();
-        let state_store = self.state_store.clone();
-        let logger = self.logger.clone();
-        let config = self.config.clone();
-        
-        let service_clone = Self {
-            logger: logger.clone(),
-            event_bus: event_bus.clone(),
-            state_store: state_store.clone(),
-            config: config.clone(),
+        // Select pattern based on aggression
+        let pattern_id = if aggression > 0.7 {
+            format!("aggressive_pattern_phase_{}", phase)
+        } else if aggression > 0.4 {
+            format!("moderate_pattern_phase_{}", phase)
+        } else {
+            format!("defensive_pattern_phase_{}", phase)
         };
         
-        tokio::spawn(async move {
-            let mut events = event_bus.subscribe();
-            logger.info("BossAI subscribed to EventBus");
-            
-            loop {
-                match events.recv().await {
-                    Ok(GameEvent::QualiaStateUpdated(qualia)) => {
-                        // React to qualia changes
-                        let aggression = service_clone.calculate_aggression(&qualia);
-                        
-                        // Update boss aggression in state
-                        let mut boss = state_store.get_state().boss;
-                        boss.current_aggression_level = aggression;
-                        state_store.update_boss(boss.clone());
-                        
-                        // Randomly trigger attack based on aggression
-                        if rand::random::<f32>() < aggression * 0.1 {
-                            let pattern = service_clone.select_attack_pattern(&boss, &qualia);
-                            
-                            let attack_event = GameEvent::Combat(
-                                shared_core::events::combat_events::CombatEvent::BossAttackStart(
-                                    BossAttackStartEvent {
-                                        pattern_id: pattern.id.clone(),
-                                        pattern_name: pattern.name.clone(),
-                                        telegraph_duration_sec: pattern.telegraph_duration_sec,
-                                        spawn_position: boss.position,
-                                        timestamp: 0.0, // TODO: Use proper timestamp
-                                    }
-                                )
-                            );
-                            
-                            let _ = event_bus.emit(attack_event);
-                        }
-                    }
-                    Ok(GameEvent::PlayerAction(_)) => {
-                        // React to player actions if needed
-                    }
-                    Err(broadcast::error::RecvError::Lagged(skipped)) => {
-                        logger.warn(&format!("BossAI lagging! Skipped {} events", skipped));
-                    }
-                    Err(broadcast::error::RecvError::Closed) => {
-                        logger.info("EventBus closed, BossAI stopping");
-                        break;
-                    }
-                    _ => {}
-                }
-            }
-        });
+        self.logger.info(&format!(
+            "Boss decided action: pattern={}, aggression={:.2}, phase={}",
+            pattern_id, aggression, phase
+        ));
         
-        Ok(())
+        Ok(GameEvent::BossActionSelected {
+            pattern_id,
+            aggression,
+        })
     }
     
-    fn select_attack_pattern(&self, boss: &BossState, qualia: &QualiaState) -> PatternData {
-        // Select pattern based on boss phase and player qualia
-        let phase = boss.current_phase;
-        let aggression = self.calculate_aggression(qualia);
+    fn calculate_aggression(&self, qualia_state: &QualiaState) -> f32 {
+        // Aggression increases with player intensity and chaos
+        let intensity_contrib = qualia_state.intensity * 0.4;
+        let chaos_contrib = qualia_state.chaos * 0.3;
+        let transcendence_contrib = qualia_state.transcendence * 0.3;
         
-        // TODO: Load patterns from CombatData configuration
-        // For now, generate a sample pattern
-        self.create_sample_pattern(phase, aggression)
+        let raw_aggression = self.config.base_aggression + intensity_contrib + chaos_contrib + transcendence_contrib;
+        
+        raw_aggression.clamp(0.0, 1.0)
     }
     
-    fn calculate_aggression(&self, qualia: &QualiaState) -> f32 {
-        // Aggression increases with player chaos and intensity
-        let chaos_factor = qualia.chaos * self.config.chaos_aggression_multiplier;
-        let intensity_factor = qualia.intensity * self.config.intensity_aggression_multiplier;
+    fn should_transition_phase(&self, boss_state: &BossState) -> bool {
+        // Phase transition happens at specific health thresholds
+        // This is typically handled by CombatOrchestrator, but provided for reference
+        let health_percentage = boss_state.health / 1000.0; // Assuming max health = 1000
         
-        ((chaos_factor + intensity_factor) / 2.0).clamp(0.0, 1.0)
+        match boss_state.current_phase {
+            0 => health_percentage < 0.75,
+            1 => health_percentage < 0.5,
+            2 => health_percentage < 0.25,
+            _ => false,
+        }
+    }
+    
+    fn get_next_phase(&self, current_phase: u8) -> u8 {
+        (current_phase + 1).min(3) // Max phase = 3 (0-indexed, 4 phases total)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::infrastructure::{QualiaLogger, EventBusService};
-    use crate::services::gameplay::StateStoreService;
-    use shared_core::utils::math::Vector3;
-
-    fn create_test_service() -> BossAIService {
-        let logger = Arc::new(QualiaLogger) as Arc<dyn ILogger>;
-        let event_bus = Arc::new(EventBusService::new(100)) as Arc<dyn IEventBus>;
-        let state_store = Arc::new(StateStoreService::new()) as Arc<dyn IStateStore>;
-        let config = Arc::new(BossAIConfig::default());
-        
-        BossAIService {
-            logger,
-            event_bus,
-            state_store,
-            config,
+    use crate::config::boss_ai::{BossAIConfig, PatternSelectionConfig};
+    use shared_core::contracts::QualiaState;
+    
+    fn create_test_config() -> BossAIConfig {
+        BossAIConfig {
+            base_aggression: 0.3,
+            aggression_per_phase: vec![1.0, 1.3, 1.6, 2.0],
+            reaction_time_ms: 500,
+            pattern_selection: PatternSelectionConfig {
+                random_chance: 0.2,
+                prefer_high_aggression_patterns: true,
+                cooldown_between_patterns_ms: 3000,
+            },
         }
     }
-
+    
+    fn create_test_service() -> BossAIService {
+        BossAIService {
+            config: Arc::new(create_test_config()),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+        }
+    }
+    
+    #[test]
+    fn test_calculate_aggression_low_qualia() {
+        let service = create_test_service();
+        let qualia = QualiaState {
+            intensity: 0.0,
+            harmony: 0.5,
+            chaos: 0.0,
+            kairos: 0.5,
+            transcendence: 0.0,
+            ..Default::default()
+        };
+        
+        let aggression = service.calculate_aggression(&qualia);
+        assert!(aggression >= 0.3 && aggression < 0.5); // Should be close to base_aggression
+    }
+    
+    #[test]
+    fn test_calculate_aggression_high_intensity() {
+        let service = create_test_service();
+        let qualia = QualiaState {
+            intensity: 1.0,
+            harmony: 0.5,
+            chaos: 0.0,
+            kairos: 0.5,
+            transcendence: 0.0,
+            ..Default::default()
+        };
+        
+        let aggression = service.calculate_aggression(&qualia);
+        assert!(aggression > 0.5); // Intensity contributes 40%
+    }
+    
     #[test]
     fn test_calculate_aggression_high_chaos() {
         let service = create_test_service();
-        
-        let mut qualia = QualiaState::default();
-        qualia.chaos = 0.8;
-        qualia.intensity = 0.6;
-        
-        let aggression = service.calculate_aggression(&qualia);
-        
-        assert!(aggression > 0.5, "High chaos should increase aggression");
-        assert!(aggression <= 1.0, "Aggression should be clamped to 1.0");
-    }
-
-    #[test]
-    fn test_calculate_aggression_low_chaos() {
-        let service = create_test_service();
-        
-        let mut qualia = QualiaState::default();
-        qualia.chaos = 0.1;
-        qualia.intensity = 0.2;
+        let qualia = QualiaState {
+            intensity: 0.0,
+            harmony: 0.5,
+            chaos: 1.0,
+            kairos: 0.5,
+            transcendence: 0.0,
+            ..Default::default()
+        };
         
         let aggression = service.calculate_aggression(&qualia);
-        
-        assert!(aggression < 0.3, "Low chaos should result in low aggression");
+        assert!(aggression > 0.5); // Chaos contributes 30%
     }
-
+    
     #[test]
-    fn test_select_attack_pattern_scales_with_aggression() {
+    fn test_calculate_aggression_max_qualia() {
         let service = create_test_service();
+        let qualia = QualiaState {
+            intensity: 1.0,
+            harmony: 1.0,
+            chaos: 1.0,
+            kairos: 1.0,
+            transcendence: 1.0,
+            ..Default::default()
+        };
         
-        let boss = BossState::default();
-        let mut qualia = QualiaState::default();
-        qualia.chaos = 0.9;
-        qualia.intensity = 0.9;
-        
-        let pattern = service.select_attack_pattern(&boss, &qualia);
-        
-        // High aggression should produce more dangerous patterns
-        assert!(pattern.projectile_count > 10, "High aggression should spawn more projectiles");
-        assert!(pattern.damage > 15.0, "High aggression should deal more damage");
+        let aggression = service.calculate_aggression(&qualia);
+        assert_eq!(aggression, 1.0); // Should clamp at 1.0
     }
-
+    
+    #[test]
+    fn test_calculate_aggression_clamped_to_range() {
+        let service = create_test_service();
+        let qualia = QualiaState::default(); // All zeros
+        
+        let aggression = service.calculate_aggression(&qualia);
+        assert!(aggression >= 0.0 && aggression <= 1.0);
+    }
+    
+    #[test]
+    fn test_should_transition_phase_0_to_1() {
+        let service = create_test_service();
+        let boss_high_health = BossState {
+            health: 800.0,
+            position: (0.0, 10.0),
+            current_phase: 0,
+        };
+        assert!(!service.should_transition_phase(&boss_high_health));
+        
+        let boss_low_health = BossState {
+            health: 700.0, // < 75% of 1000
+            position: (0.0, 10.0),
+            current_phase: 0,
+        };
+        assert!(service.should_transition_phase(&boss_low_health));
+    }
+    
+    #[test]
+    fn test_should_transition_phase_1_to_2() {
+        let service = create_test_service();
+        let boss = BossState {
+            health: 400.0, // < 50% of 1000
+            position: (0.0, 10.0),
+            current_phase: 1,
+        };
+        assert!(service.should_transition_phase(&boss));
+    }
+    
+    #[test]
+    fn test_should_transition_phase_final_phase() {
+        let service = create_test_service();
+        let boss = BossState {
+            health: 100.0,
+            position: (0.0, 10.0),
+            current_phase: 3, // Final phase
+        };
+        assert!(!service.should_transition_phase(&boss)); // No transition from final phase
+    }
+    
+    #[test]
+    fn test_get_next_phase() {
+        let service = create_test_service();
+        assert_eq!(service.get_next_phase(0), 1);
+        assert_eq!(service.get_next_phase(1), 2);
+        assert_eq!(service.get_next_phase(2), 3);
+        assert_eq!(service.get_next_phase(3), 3); // Caps at 3
+        assert_eq!(service.get_next_phase(10), 3); // Caps at 3
+    }
+    
     #[tokio::test]
-    async fn test_boss_ai_starts_without_panic() {
+    async fn test_decide_next_action_aggressive() {
         let service = create_test_service();
+        let high_qualia = QualiaState {
+            intensity: 1.0,
+            harmony: 0.5,
+            chaos: 1.0,
+            kairos: 0.5,
+            transcendence: 1.0,
+            ..Default::default()
+        };
+        let boss = BossState {
+            health: 500.0,
+            position: (0.0, 10.0),
+            current_phase: 2,
+        };
         
-        let result = service.start().await;
-        assert!(result.is_ok(), "BossAI should start successfully");
+        let result = service.decide_next_action(&high_qualia, &boss).await;
+        assert!(result.is_ok());
         
-        // Give it a moment to initialize
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        if let Ok(GameEvent::BossActionSelected { pattern_id, aggression }) = result {
+            assert!(pattern_id.contains("aggressive"));
+            assert!(pattern_id.contains("phase_2"));
+            assert!(aggression > 0.7);
+        } else {
+            panic!("Expected BossActionSelected event");
+        }
+    }
+    
+    #[tokio::test]
+    async fn test_decide_next_action_defensive() {
+        let service = create_test_service();
+        let low_qualia = QualiaState::default(); // All zeros
+        let boss = BossState {
+            health: 900.0,
+            position: (0.0, 10.0),
+            current_phase: 0,
+        };
+        
+        let result = service.decide_next_action(&low_qualia, &boss).await;
+        assert!(result.is_ok());
+        
+        if let Ok(GameEvent::BossActionSelected { pattern_id, .. }) = result {
+            assert!(pattern_id.contains("defensive"));
+            assert!(pattern_id.contains("phase_0"));
+        } else {
+            panic!("Expected BossActionSelected event");
+        }
     }
 }

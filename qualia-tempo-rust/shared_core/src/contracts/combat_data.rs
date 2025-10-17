@@ -125,11 +125,23 @@ pub struct PatternData {
     pub shape: PatternShape,
     pub element: PatternElement,
     pub duration_sec: f64,
+    /// Duration in milliseconds (alternative to duration_sec)
+    #[serde(default)]
+    pub duration_ms: f64,
     pub telegraph_duration_sec: f64,
     pub projectile_count: u32,
     pub projectile_speed: f32,
     pub damage: f32,
     pub required_phase: u8, // Minimum boss phase to use this pattern
+    /// Minimum boss phase to use this pattern (alternative to required_phase)
+    #[serde(default)]
+    pub phase: u8,
+    /// Song BPM for timing validation
+    #[serde(default)]
+    pub bpm: u32,
+    /// Individual attacks within the pattern (used by PatternSystemService)
+    #[serde(default)]
+    pub attacks: Vec<AttackData>,
 }
 
 /// # Responsibility
@@ -177,4 +189,21 @@ pub struct CombatData {
     pub boss_id: String,
     pub patterns: Vec<PatternData>,
     pub combos: Vec<MusicalComboData>,
+}
+
+/// # Responsibility
+/// Defines a single attack within a boss pattern execution.
+///
+/// ---
+///
+/// Used by PatternSystemService to execute individual attacks at specific
+/// timing offsets within a pattern. Each attack has precise timing (in ms),
+/// damage, and position coordinates.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct AttackData {
+    pub attack_type: String,
+    pub timing_ms: f64,
+    pub damage: f32,
+    pub position: (f32, f32),
 }

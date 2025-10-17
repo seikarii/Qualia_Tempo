@@ -1,434 +1,321 @@
 //! # Responsibility
-//! Manages boss attack patterns with loading, validation, and procedural generation.
+//! PatternSystemService implementation for boss attack pattern management.
 //!
 //! ---
 //!
-//! This service provides pattern data for boss attacks. It supports:
-//! - Loading patterns from YAML/JSON configuration files
-//! - Pattern validation (required_phase, timing, damage ranges)
-//! - Caching for performance
-//! - Procedural pattern generation for variety
-//! - Pattern queries by phase, element, difficulty
+//! Loads boss attack patterns from combat_data/*.json files, validates timing,
+//! and executes patterns with beat synchronization.
 
-use shaku::{Component, Interface};
-use std::sync::Arc;
+use shaku::Component;
 use async_trait::async_trait;
-use anyhow::{Result, Context};
+use std::sync::Arc;
 use std::collections::HashMap;
+use anyhow::{Context, Result, bail};
+use tracing::{info, warn};
 use tokio::sync::RwLock;
-use shared_core::contracts::combat_data::{PatternData, PatternShape, PatternElement};
-use crate::services::infrastructure::ILogger;
+
+use crate::config::pattern_system::PatternSystemConfig;
+use crate::services::interfaces::{IPatternSystemService, ILogger};
+use shared_core::contracts::PatternData;
+use shared_core::events::GameEvent;
 
 /// # Responsibility
-/// Configuration for pattern system behavior.
-#[derive(Debug, Clone)]
-pub struct PatternSystemConfig {
-    pub patterns_path: String,
-    pub enable_procedural_generation: bool,
-    pub cache_capacity: usize,
-}
-
-impl Default for PatternSystemConfig {
-    fn default() -> Self {
-        Self {
-            patterns_path: "config/patterns.yaml".to_string(),
-            enable_procedural_generation: true,
-            cache_capacity: 100,
-        }
-    }
-}
-
-/// # Responsibility
-/// Interface for pattern system operations.
-#[async_trait]
-pub trait IPatternSystemService: Interface {
-    /// Loads all patterns from configuration
-    async fn load_patterns(&self) -> Result<usize>;
-    
-    /// Gets a pattern by ID
-    async fn get_pattern(&self, pattern_id: &str) -> Option<PatternData>;
-    
-    /// Gets all patterns for a specific boss phase
-    async fn get_patterns_for_phase(&self, phase: u8) -> Vec<PatternData>;
-    
-    /// Generates a procedural pattern
-    fn generate_procedural_pattern(&self, phase: u8, element: PatternElement, difficulty: f32) -> PatternData;
-    
-    /// Validates a pattern's data integrity
-    fn validate_pattern(&self, pattern: &PatternData) -> Result<()>;
-}
-
-/// # Responsibility
-/// Implements pattern loading, caching, and generation.
+/// Implements boss attack pattern loading, validation, and execution.
+///
+/// ---
+///
+/// This service:
+/// - Loads patterns from combat_data/*.json files
+/// - Caches patterns in memory (if enabled)
+/// - Validates pattern timing against song BPM
+/// - Executes patterns and emits attack events
+/// - Provides random pattern selection per phase
+///
+/// Injected dependencies:
+/// - PatternSystemConfig: Pattern system configuration
+/// - ILogger: Structured logging
 #[derive(Component)]
 #[shaku(interface = IPatternSystemService)]
 pub struct PatternSystemService {
+    config: Arc<PatternSystemConfig>,
+    
     #[shaku(inject)]
     logger: Arc<dyn ILogger>,
     
-    config: Arc<PatternSystemConfig>,
-    
-    /// Pattern cache: pattern_id -> PatternData
-    cache: Arc<RwLock<HashMap<String, PatternData>>>,
-}
-
-impl PatternSystemService {
-    /// Creates hardcoded patterns for initial implementation
-    fn create_default_patterns(&self) -> Vec<PatternData> {
-        vec![
-            // Phase 0: Fire patterns
-            PatternData {
-                id: "fire_circle_easy".to_string(),
-                name: "Ember Ring".to_string(),
-                shape: PatternShape::Circle,
-                element: PatternElement::Fire,
-                duration_sec: 3.0,
-                telegraph_duration_sec: 1.0,
-                projectile_count: 8,
-                projectile_speed: 5.0,
-                damage: 10.0,
-                required_phase: 0,
-            },
-            PatternData {
-                id: "fire_wave_medium".to_string(),
-                name: "Flame Wave".to_string(),
-                shape: PatternShape::Wave,
-                element: PatternElement::Fire,
-                duration_sec: 4.0,
-                telegraph_duration_sec: 0.8,
-                projectile_count: 12,
-                projectile_speed: 7.0,
-                damage: 15.0,
-                required_phase: 0,
-            },
-            
-            // Phase 1: Lightning patterns
-            PatternData {
-                id: "lightning_spiral_medium".to_string(),
-                name: "Thunder Spiral".to_string(),
-                shape: PatternShape::Spiral,
-                element: PatternElement::Lightning,
-                duration_sec: 3.5,
-                telegraph_duration_sec: 0.7,
-                projectile_count: 16,
-                projectile_speed: 10.0,
-                damage: 20.0,
-                required_phase: 1,
-            },
-            PatternData {
-                id: "lightning_cross_hard".to_string(),
-                name: "Lightning Cross".to_string(),
-                shape: PatternShape::Cross,
-                element: PatternElement::Lightning,
-                duration_sec: 2.5,
-                telegraph_duration_sec: 0.5,
-                projectile_count: 20,
-                projectile_speed: 12.0,
-                damage: 25.0,
-                required_phase: 1,
-            },
-            
-            // Phase 2: Void patterns
-            PatternData {
-                id: "void_spiral_hard".to_string(),
-                name: "Void Vortex".to_string(),
-                shape: PatternShape::Spiral,
-                element: PatternElement::Void,
-                duration_sec: 5.0,
-                telegraph_duration_sec: 0.6,
-                projectile_count: 24,
-                projectile_speed: 8.0,
-                damage: 30.0,
-                required_phase: 2,
-            },
-            PatternData {
-                id: "void_circle_extreme".to_string(),
-                name: "Void Nova".to_string(),
-                shape: PatternShape::Circle,
-                element: PatternElement::Void,
-                duration_sec: 3.0,
-                telegraph_duration_sec: 0.4,
-                projectile_count: 32,
-                projectile_speed: 15.0,
-                damage: 35.0,
-                required_phase: 2,
-            },
-            
-            // Phase 3: Chaos patterns
-            PatternData {
-                id: "chaos_random_extreme".to_string(),
-                name: "Chaos Storm".to_string(),
-                shape: PatternShape::Random,
-                element: PatternElement::Chaos,
-                duration_sec: 6.0,
-                telegraph_duration_sec: 0.3,
-                projectile_count: 40,
-                projectile_speed: 12.0,
-                damage: 40.0,
-                required_phase: 3,
-            },
-        ]
-    }
+    // Pattern cache (RwLock for concurrent reads)
+    pattern_cache: RwLock<HashMap<String, PatternData>>,
 }
 
 #[async_trait]
 impl IPatternSystemService for PatternSystemService {
-    async fn load_patterns(&self) -> Result<usize> {
-        self.logger.info("Loading attack patterns");
-        
-        // For initial implementation, use hardcoded patterns
-        let patterns = self.create_default_patterns();
-        
-        // Validate all patterns
-        for pattern in &patterns {
-            self.validate_pattern(pattern)
-                .context(format!("Pattern validation failed for: {}", pattern.id))?;
+    async fn load_pattern(&self, pattern_id: &str) -> Result<PatternData> {
+        // Check cache first
+        if self.config.enable_pattern_caching {
+            let cache = self.pattern_cache.read().await;
+            if let Some(pattern) = cache.get(pattern_id) {
+                return Ok(pattern.clone());
+            }
         }
         
-        // Cache all patterns
-        let mut cache = self.cache.write().await;
-        for pattern in patterns {
-            cache.insert(pattern.id.clone(), pattern);
+        // Load from file
+        let file_path = format!("{}{}.json", self.config.pattern_data_directory, pattern_id);
+        let contents = tokio::fs::read_to_string(&file_path).await
+            .context(format!("Failed to read pattern file: {}", file_path))?;
+        
+        let pattern: PatternData = serde_json::from_str(&contents)
+            .context("Failed to parse pattern JSON")?;
+        
+        // Cache if enabled
+        if self.config.enable_pattern_caching {
+            let mut cache = self.pattern_cache.write().await;
+            if cache.len() < self.config.max_cached_patterns {
+                cache.insert(pattern_id.to_string(), pattern.clone());
+            }
         }
         
-        let count = cache.len();
-        self.logger.info(&format!("Loaded {} attack patterns", count));
+        self.logger.info(&format!("Loaded pattern: {}", pattern_id));
         
-        Ok(count)
+        Ok(pattern)
     }
     
-    async fn get_pattern(&self, pattern_id: &str) -> Option<PatternData> {
-        let cache = self.cache.read().await;
-        cache.get(pattern_id).cloned()
+    fn validate_pattern_timing(&self, pattern: &PatternData, song_bpm: f32) -> bool {
+        let beat_duration_ms = 60_000.0 / song_bpm; // Milliseconds per beat
+        
+        // Validate all attack timings
+        for attack in &pattern.attacks {
+            let timing_mod = attack.timing_ms % beat_duration_ms;
+            
+            // Check if timing is within tolerance of a beat
+            if timing_mod > self.config.timing_tolerance_ms && timing_mod < (beat_duration_ms - self.config.timing_tolerance_ms) {
+                warn!(
+                    "Pattern {} has off-beat attack at {}ms (beat={}ms)",
+                    pattern.id, attack.timing_ms, beat_duration_ms
+                );
+                return false;
+            }
+        }
+        
+        true
     }
     
-    async fn get_patterns_for_phase(&self, phase: u8) -> Vec<PatternData> {
-        let cache = self.cache.read().await;
-        cache.values()
-            .filter(|p| p.required_phase == phase)
-            .cloned()
-            .collect()
+    async fn execute_pattern(&self, pattern: &PatternData, current_beat: f64) -> Result<Vec<GameEvent>> {
+        let mut events = Vec::new();
+        
+        // Convert current beat to milliseconds
+        let current_time_ms = current_beat * (60_000.0 / pattern.bpm as f64);
+        
+        // Find attacks that should execute now
+        for attack in &pattern.attacks {
+            let attack_time_diff = (attack.timing_ms - current_time_ms).abs();
+            
+            // If within tolerance, emit attack event
+            if attack_time_diff < self.config.timing_tolerance_ms {
+                events.push(GameEvent::BossAttack {
+                    attack_type: attack.attack_type.clone(),
+                    damage: attack.damage,
+                    position: attack.position,
+                });
+            }
+        }
+        
+        if !events.is_empty() {
+            self.logger.info(&format!("Executed pattern {}: {} attacks", pattern.id, events.len()));
+        }
+        
+        Ok(events)
     }
     
-    fn generate_procedural_pattern(&self, phase: u8, element: PatternElement, difficulty: f32) -> PatternData {
-        // Generate unique ID
-        let id = format!("proc_{}_{:?}_{}",
-            phase,
-            element,
-            (difficulty * 100.0) as u32
-        );
+    fn get_random_pattern_for_phase(&self, phase: u8) -> String {
+        // Simplified random selection
+        // In production, this would use rand crate and load from config
+        let patterns_per_phase = vec![
+            vec!["pattern_phase_0_a", "pattern_phase_0_b"],
+            vec!["pattern_phase_1_a", "pattern_phase_1_b", "pattern_phase_1_c"],
+            vec!["pattern_phase_2_a", "pattern_phase_2_b"],
+            vec!["pattern_phase_3_final"],
+        ];
         
-        // Select shape based on difficulty
-        let shape = if difficulty > 0.8 {
-            PatternShape::Random
-        } else if difficulty > 0.6 {
-            PatternShape::Spiral
-        } else if difficulty > 0.4 {
-            PatternShape::Wave
-        } else if difficulty > 0.2 {
-            PatternShape::Cross
-        } else {
-            PatternShape::Circle
-        };
+        let phase_patterns = &patterns_per_phase[phase as usize % patterns_per_phase.len()];
+        let index = (chrono::Utc::now().timestamp() as usize) % phase_patterns.len();
         
-        // Scale parameters by difficulty
-        let base_projectiles = 8;
-        let projectile_count = base_projectiles + (difficulty * 32.0) as u32;
-        let projectile_speed = 5.0 + (difficulty * 10.0);
-        let damage = 10.0 + (difficulty * 30.0);
-        let telegraph_duration = 1.0 - (difficulty * 0.6);
-        
-        PatternData {
-            id,
-            name: format!("{:?} {:?} (Procedural)", element, shape),
-            shape,
-            element,
-            duration_sec: 3.0 + (difficulty * 3.0) as f64,
-            telegraph_duration_sec: telegraph_duration as f64,
-            projectile_count,
-            projectile_speed,
-            damage,
-            required_phase: phase,
-        }
-    }
-    
-    fn validate_pattern(&self, pattern: &PatternData) -> Result<()> {
-        // Validate required_phase
-        if pattern.required_phase > 3 {
-            anyhow::bail!("Invalid required_phase: {} (must be 0-3)", pattern.required_phase);
-        }
-        
-        // Validate durations
-        if pattern.duration_sec <= 0.0 {
-            anyhow::bail!("Invalid duration_sec: {} (must be > 0)", pattern.duration_sec);
-        }
-        
-        if pattern.telegraph_duration_sec < 0.0 || pattern.telegraph_duration_sec > pattern.duration_sec {
-            anyhow::bail!(
-                "Invalid telegraph_duration_sec: {} (must be 0 <= x <= duration)",
-                pattern.telegraph_duration_sec
-            );
-        }
-        
-        // Validate projectile count
-        if pattern.projectile_count == 0 || pattern.projectile_count > 100 {
-            anyhow::bail!(
-                "Invalid projectile_count: {} (must be 1-100)",
-                pattern.projectile_count
-            );
-        }
-        
-        // Validate projectile speed
-        if pattern.projectile_speed <= 0.0 || pattern.projectile_speed > 50.0 {
-            anyhow::bail!(
-                "Invalid projectile_speed: {} (must be 0 < x <= 50)",
-                pattern.projectile_speed
-            );
-        }
-        
-        // Validate damage
-        if pattern.damage <= 0.0 || pattern.damage > 100.0 {
-            anyhow::bail!("Invalid damage: {} (must be 0 < x <= 100)", pattern.damage);
-        }
-        
-        Ok(())
+        phase_patterns[index].to_string()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::infrastructure::QualiaLogger;
-
+    use crate::config::pattern_system::PatternSystemConfig;
+    use shared_core::contracts::{PatternData, AttackData};
+    
+    fn create_test_config() -> PatternSystemConfig {
+        PatternSystemConfig {
+            pattern_data_directory: "test_combat_data/".to_string(),
+            enable_pattern_caching: true,
+            max_cached_patterns: 10,
+            timing_tolerance_ms: 50.0,
+        }
+    }
+    
     fn create_test_service() -> PatternSystemService {
-        let logger = Arc::new(QualiaLogger) as Arc<dyn ILogger>;
-        let config = Arc::new(PatternSystemConfig::default());
-        let cache = Arc::new(RwLock::new(HashMap::new()));
-        
         PatternSystemService {
-            logger,
-            config,
-            cache,
+            config: Arc::new(create_test_config()),
+            logger: Arc::new(crate::services::core::QualiaLogger::default()),
+            pattern_cache: RwLock::new(HashMap::new()),
         }
     }
-
-    #[tokio::test]
-    async fn test_load_patterns_success() {
-        let service = create_test_service();
-        
-        let result = service.load_patterns().await;
-        assert!(result.is_ok(), "Pattern loading should succeed");
-        
-        let count = result.unwrap();
-        assert!(count > 0, "Should load at least one pattern");
-    }
-
-    #[tokio::test]
-    async fn test_get_pattern_by_id() {
-        let service = create_test_service();
-        service.load_patterns().await.unwrap();
-        
-        let pattern = service.get_pattern("fire_circle_easy").await;
-        assert!(pattern.is_some(), "Should find fire_circle_easy pattern");
-        
-        let pattern = pattern.unwrap();
-        assert_eq!(pattern.element, PatternElement::Fire);
-        assert_eq!(pattern.required_phase, 0);
-    }
-
-    #[tokio::test]
-    async fn test_get_patterns_for_phase() {
-        let service = create_test_service();
-        service.load_patterns().await.unwrap();
-        
-        let phase0_patterns = service.get_patterns_for_phase(0).await;
-        assert!(!phase0_patterns.is_empty(), "Phase 0 should have patterns");
-        
-        // All returned patterns should be for phase 0
-        for pattern in &phase0_patterns {
-            assert_eq!(pattern.required_phase, 0, "All patterns should be for phase 0");
+    
+    fn create_test_pattern(id: &str, bpm: u32, attacks: Vec<AttackData>) -> PatternData {
+        PatternData {
+            id: id.to_string(),
+            name: format!("Test Pattern {}", id),
+            phase: 0,
+            bpm,
+            attacks,
+            duration_ms: 10000.0,
         }
-        
-        let phase1_patterns = service.get_patterns_for_phase(1).await;
-        assert!(!phase1_patterns.is_empty(), "Phase 1 should have patterns");
     }
-
+    
+    #[test]
+    fn test_validate_pattern_timing_on_beat() {
+        let service = create_test_service();
+        let pattern = create_test_pattern(
+            "test_on_beat",
+            120, // 120 BPM = 500ms per beat
+            vec![
+                AttackData {
+                    attack_type: "laser".to_string(),
+                    timing_ms: 0.0, // On beat 0
+                    damage: 10.0,
+                    position: (0.0, 0.0),
+                },
+                AttackData {
+                    attack_type: "laser".to_string(),
+                    timing_ms: 500.0, // On beat 1
+                    damage: 10.0,
+                    position: (0.0, 0.0),
+                },
+                AttackData {
+                    attack_type: "laser".to_string(),
+                    timing_ms: 1000.0, // On beat 2
+                    damage: 10.0,
+                    position: (0.0, 0.0),
+                },
+            ],
+        );
+        
+        assert!(service.validate_pattern_timing(&pattern, 120.0));
+    }
+    
+    #[test]
+    fn test_validate_pattern_timing_off_beat() {
+        let service = create_test_service();
+        let pattern = create_test_pattern(
+            "test_off_beat",
+            120, // 120 BPM = 500ms per beat
+            vec![
+                AttackData {
+                    attack_type: "laser".to_string(),
+                    timing_ms: 250.0, // Off beat (midpoint between beats)
+                    damage: 10.0,
+                    position: (0.0, 0.0),
+                },
+            ],
+        );
+        
+        assert!(!service.validate_pattern_timing(&pattern, 120.0));
+    }
+    
+    #[test]
+    fn test_validate_pattern_timing_within_tolerance() {
+        let service = create_test_service();
+        let pattern = create_test_pattern(
+            "test_tolerance",
+            120,
+            vec![
+                AttackData {
+                    attack_type: "laser".to_string(),
+                    timing_ms: 25.0, // Within 50ms tolerance of beat 0
+                    damage: 10.0,
+                    position: (0.0, 0.0),
+                },
+            ],
+        );
+        
+        assert!(service.validate_pattern_timing(&pattern, 120.0));
+    }
+    
     #[tokio::test]
-    async fn test_generate_procedural_pattern() {
+    async fn test_execute_pattern_no_attacks_ready() {
         let service = create_test_service();
+        let pattern = create_test_pattern(
+            "test_execute",
+            120,
+            vec![
+                AttackData {
+                    attack_type: "laser".to_string(),
+                    timing_ms: 5000.0, // Far in future
+                    damage: 10.0,
+                    position: (0.0, 0.0),
+                },
+            ],
+        );
         
-        // Generate easy pattern
-        let easy_pattern = service.generate_procedural_pattern(0, PatternElement::Fire, 0.2);
-        assert!(easy_pattern.projectile_count < 15, "Easy pattern should have few projectiles");
-        assert!(easy_pattern.damage < 20.0, "Easy pattern should have low damage");
-        
-        // Generate hard pattern
-        let hard_pattern = service.generate_procedural_pattern(2, PatternElement::Void, 0.9);
-        assert!(hard_pattern.projectile_count > 30, "Hard pattern should have many projectiles");
-        assert!(hard_pattern.damage > 30.0, "Hard pattern should have high damage");
-        assert!(hard_pattern.telegraph_duration_sec < 0.5, "Hard pattern should have short telegraph");
+        let events = service.execute_pattern(&pattern, 0.0).await.unwrap();
+        assert_eq!(events.len(), 0); // No attacks should execute yet
     }
-
-    #[test]
-    fn test_validate_pattern_success() {
+    
+    #[tokio::test]
+    async fn test_execute_pattern_attack_ready() {
         let service = create_test_service();
+        let pattern = create_test_pattern(
+            "test_execute",
+            120,
+            vec![
+                AttackData {
+                    attack_type: "laser".to_string(),
+                    timing_ms: 0.0, // Immediate
+                    damage: 10.0,
+                    position: (5.0, 5.0),
+                },
+            ],
+        );
         
-        let valid_pattern = PatternData {
-            id: "test".to_string(),
-            name: "Test Pattern".to_string(),
-            shape: PatternShape::Circle,
-            element: PatternElement::Fire,
-            duration_sec: 3.0,
-            telegraph_duration_sec: 1.0,
-            projectile_count: 10,
-            projectile_speed: 8.0,
-            damage: 15.0,
-            required_phase: 1,
-        };
+        let events = service.execute_pattern(&pattern, 0.0).await.unwrap();
+        assert_eq!(events.len(), 1);
         
-        let result = service.validate_pattern(&valid_pattern);
-        assert!(result.is_ok(), "Valid pattern should pass validation");
+        if let GameEvent::BossAttack { attack_type, damage, position } = &events[0] {
+            assert_eq!(attack_type, "laser");
+            assert_eq!(*damage, 10.0);
+            assert_eq!(*position, (5.0, 5.0));
+        } else {
+            panic!("Expected BossAttack event");
+        }
     }
-
+    
     #[test]
-    fn test_validate_pattern_invalid_phase() {
+    fn test_get_random_pattern_for_phase() {
         let service = create_test_service();
         
-        let invalid_pattern = PatternData {
-            id: "test".to_string(),
-            name: "Test".to_string(),
-            shape: PatternShape::Circle,
-            element: PatternElement::Fire,
-            duration_sec: 3.0,
-            telegraph_duration_sec: 1.0,
-            projectile_count: 10,
-            projectile_speed: 8.0,
-            damage: 15.0,
-            required_phase: 5, // Invalid!
-        };
+        let pattern_0 = service.get_random_pattern_for_phase(0);
+        assert!(pattern_0.contains("phase_0"));
         
-        let result = service.validate_pattern(&invalid_pattern);
-        assert!(result.is_err(), "Should reject invalid phase");
+        let pattern_1 = service.get_random_pattern_for_phase(1);
+        assert!(pattern_1.contains("phase_1"));
+        
+        let pattern_2 = service.get_random_pattern_for_phase(2);
+        assert!(pattern_2.contains("phase_2"));
+        
+        let pattern_3 = service.get_random_pattern_for_phase(3);
+        assert!(pattern_3.contains("phase_3"));
     }
-
+    
     #[test]
-    fn test_validate_pattern_invalid_projectile_count() {
+    fn test_get_random_pattern_handles_invalid_phase() {
         let service = create_test_service();
         
-        let invalid_pattern = PatternData {
-            id: "test".to_string(),
-            name: "Test".to_string(),
-            shape: PatternShape::Circle,
-            element: PatternElement::Fire,
-            duration_sec: 3.0,
-            telegraph_duration_sec: 1.0,
-            projectile_count: 0, // Invalid!
-            projectile_speed: 8.0,
-            damage: 15.0,
-            required_phase: 1,
-        };
-        
-        let result = service.validate_pattern(&invalid_pattern);
-        assert!(result.is_err(), "Should reject zero projectiles");
+        // Should wrap around to valid phase
+        let pattern = service.get_random_pattern_for_phase(10);
+        assert!(!pattern.is_empty());
     }
 }

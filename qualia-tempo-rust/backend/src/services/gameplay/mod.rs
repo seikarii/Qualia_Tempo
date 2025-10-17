@@ -1,19 +1,23 @@
 //! # Responsibility
-//! Provides gameplay services - game logic, state management, boss AI, pattern system.
+//! Gameplay services module aggregator.
 //!
 //! ---
 //!
-//! This module contains the core gameplay loop: processing player actions,
-//! calculating qualia state, managing boss behavior, coordinating combat, and loading attack patterns.
+//! Exports all gameplay-related services:
+//! - GameLogicService: Core game rules and calculations
+//! - BossAIService: Boss AI decision-making
+//! - PatternSystemService: Boss attack pattern management
+//! - QualiaProcessorService: Qualia state calculations
+//! - CombatOrchestratorService: Combat coordination
 
-pub mod state_store;
 pub mod game_logic;
 pub mod boss_ai;
-pub mod combat_orchestrator;
 pub mod pattern_system;
+pub mod qualia_processor;
+pub mod combat_orchestrator;
 
-pub use state_store::{StateStoreService, IStateStore};
-pub use game_logic::{GameLogicService, IGameLogicService};
-pub use boss_ai::{BossAIService, IBossAIService};
-pub use combat_orchestrator::{CombatOrchestratorService, ICombatOrchestratorService};
-pub use pattern_system::{PatternSystemService, IPatternSystemService, PatternSystemConfig};
+pub use game_logic::GameLogicService;
+pub use boss_ai::BossAIService;
+pub use pattern_system::PatternSystemService;
+pub use qualia_processor::QualiaProcessorService;
+pub use combat_orchestrator::CombatOrchestratorService;

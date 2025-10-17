@@ -77,5 +77,56 @@ pub enum GameEvent {
     
     /// System/lifecycle events (connection, shutdown, errors)
     System(SystemEvent),
+    
+    // ===== Gameplay Events (Part 9 additions) =====
+    
+    /// Damage was dealt to a target entity
+    DamageDealt {
+        source_id: String,
+        target_id: String,
+        amount: f32,
+        was_critical: bool,
+    },
+    
+    /// Player combo counter was updated
+    ComboUpdated {
+        combo: u32,
+    },
+    
+    /// Player score was updated
+    ScoreUpdated {
+        score: u32,
+    },
+    
+    /// Boss AI selected next action/pattern
+    BossActionSelected {
+        pattern_id: String,
+        aggression: f32,
+    },
+    
+    /// Boss executed an attack
+    BossAttack {
+        attack_type: String,
+        damage: f32,
+        position: (f32, f32),
+    },
+    
+    /// Game phase changed (menu, combat, victory, defeat)
+    GamePhaseChanged {
+        previous_phase: crate::contracts::GamePhase,
+        new_phase: crate::contracts::GamePhase,
+        boss_phase: Option<u8>,
+    },
+    
+    /// Victory achieved (boss defeated)
+    VictoryAchieved {
+        final_score: u32,
+        final_qualia: QualiaState,
+    },
+    
+    /// Defeat occurred (player died)
+    DefeatOccurred {
+        reason: String,
+    },
 }
 

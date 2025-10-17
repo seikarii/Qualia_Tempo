@@ -10,5 +10,5 @@
 pub mod event_bus;
 pub mod logger;
 
-pub use event_bus::{EventBusService, IEventBus};
-pub use logger::{QualiaLogger, ILogger};
+pub use event_bus::EventBusService;
+pub use logger::QualiaLogger;
