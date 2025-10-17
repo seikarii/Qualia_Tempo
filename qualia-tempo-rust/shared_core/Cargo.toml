@@ -13,6 +13,9 @@ validator = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 glam = { workspace = true }
+shaku = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
 
 [features]
 default = []

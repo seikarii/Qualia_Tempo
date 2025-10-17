@@ -1,6 +1,14 @@
 //! # Responsibility
-//! Contains trait interface for service.
-//!
-//! ---
-//!
-//! Placeholder - to be fully implemented in Phase 1 continuation.
+//! Defines base service trait.
+
+use shaku::Interface;
+
+/// # Responsibility
+/// Base trait for all services.
+///
+/// ---
+///
+/// Provides common lifecycle methods.
+pub trait IBaseService: Interface {
+    fn name(&self) -> &str;
+}

@@ -27,11 +27,14 @@ pub mod events;
 pub mod traits;
 pub mod utils;
 
-// Re-export commonly used types for convenience
+// Re-export public types for convenience
 pub use contracts::game_state::*;
 pub use contracts::combat_data::*;
 pub use contracts::audio::*;
 pub use contracts::input::*;
+pub use contracts::effects::*;
+pub use contracts::settings::*;
+pub use contracts::leaderboard::*;
 pub use events::game_events::*;
 pub use traits::*;
 pub use utils::math::*;
