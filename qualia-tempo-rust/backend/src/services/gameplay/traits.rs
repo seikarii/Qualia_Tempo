@@ -58,3 +58,62 @@ pub trait IBossAI: Interface {
     /// Calculate telegraph duration in milliseconds for current phase/aggression.
     fn calculate_telegraph_duration(&self) -> u64;
 }
+
+/// # Responsibility
+/// Represents a detected combo pattern with timing and context.
+///
+/// ---
+///
+/// Contains the matched pattern ID, keys pressed, and timing information
+/// for validation and effect triggering.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DetectedCombo {
+    /// ID of the matched combo pattern (e.g., "vortex", "attractor")
+    pub pattern_id: String,
+    /// Keys that were pressed to trigger this combo
+    pub keys: Vec<char>,
+    /// Timestamp when combo was completed (ms)
+    pub timestamp: u64,
+    /// Whether this combo is beneficial (true) or malicious (false)
+    pub is_beneficial: bool,
+    /// Calculated harmonic score (0.0-1.0) at time of detection
+    pub harmonic_score: f32,
+}
+
+/// # Responsibility
+/// Represents an input event for pattern recognition.
+///
+/// ---
+///
+/// Captures key presses with timestamps for combo detection.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct InputEvent {
+    /// Key pressed (Q, E, R, T, F, G, C)
+    pub key: char,
+    /// Timestamp when key was pressed (ms)
+    pub timestamp: u64,
+}
+
+/// # Responsibility
+/// Interface for pattern recognition and combo detection system.
+///
+/// ---
+///
+/// Detects musical combos from player input sequences, analyzes harmonic
+/// context, and determines beneficial vs malicious combo effects per GDD.md §3.4.
+#[async_trait]
+pub trait IPatternSystem: Interface {
+    /// Register a new input event for pattern matching.
+    /// Returns detected combo if pattern was completed.
+    async fn register_input(&self, event: InputEvent) -> Result<Option<DetectedCombo>>;
+    
+    /// Calculate current harmonic score based on qualia state and musical context.
+    /// Returns value in range [0.0, 1.0] where higher is more harmonic.
+    fn calculate_harmonic_score(&self, qualia: QualiaState) -> f32;
+    
+    /// Clear input history (e.g., on combo completion or timeout).
+    async fn clear_input_buffer(&self) -> Result<()>;
+    
+    /// Get current input buffer for debugging/telemetry.
+    fn get_input_buffer(&self) -> Vec<InputEvent>;
+}
