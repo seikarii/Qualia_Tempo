@@ -1,5 +1,13 @@
 //! # Responsibility
-//! Configuration structures and loading logic.
+//! Configuration loading and management.
+
+pub mod boss_ai;
+pub mod game_logic;
+pub mod server;
+
+pub use boss_ai::BossAIConfig;
+pub use game_logic::GameLogicConfig;
+pub use server::ServerConfig;
 
 pub mod server;
 pub mod game_logic;

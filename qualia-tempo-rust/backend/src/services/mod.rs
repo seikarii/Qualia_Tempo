@@ -16,7 +16,7 @@ use shaku::module;
 // Re-export service implementations for composition root
 pub use core::{EventBusService, QualiaLogger, IGameEventBus};
 pub use lifecycle::{ApplicationInitializerService, IApplicationInitializer};
-pub use gameplay::{GameLogicService, IGameLogicService};
+pub use gameplay::{GameLogicService, BossAIService, IGameLogicService, IBossAI};
 
 // Re-export trait interfaces
 pub use shared_core::traits::ILogger;
@@ -31,6 +31,7 @@ module! {
             EventBusService,
             ApplicationInitializerService,
             GameLogicService,
+            BossAIService,
         ],
         providers = []
     }

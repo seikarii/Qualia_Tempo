@@ -1,8 +1,12 @@
 //! # Responsibility
 //! Gameplay logic services (game loop, qualia processing, boss AI).
 
-mod game_logic;
-mod traits;
+pub mod boss_ai;
+pub mod game_logic;
+pub mod qualia_processor;
+pub mod traits;
 
+pub use boss_ai::BossAIService;
 pub use game_logic::GameLogicService;
-pub use traits::IGameLogicService;
+pub use qualia_processor::QualiaProcessor;
+pub use traits::*;
