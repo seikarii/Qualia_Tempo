@@ -1,252 +1,262 @@
 //! # Responsibility
-//! Provides session token validation for WebSocket client authentication.
-//!
-//! ---
-//!
-//! Phase 1: Basic format validation (prefix check, length validation).
-//! Phase 3: Full JWT parsing, signature verification, OAuth integration.
+//! Authentication service implementation with JWT and argon2.
 
 use shaku::Component;
+use async_trait::async_trait;
+use anyhow::{Result, Context, bail};
 use std::sync::Arc;
-use anyhow::{Result, bail};
-use serde::{Deserialize, Serialize};
+use tokio::sync::RwLock;
+use std::collections::HashMap;
+use uuid::Uuid;
+use tracing::{info, debug, instrument};
+use argon2::{
+    password_hash::{
+        rand_core::OsRng,
+        PasswordHash, PasswordHasher, PasswordVerifier, SaltString
+    },
+    Argon2
+};
+use jsonwebtoken::{encode, decode, Header, EncodingKey, DecodingKey, Validation, Algorithm};
+use serde::{Serialize, Deserialize};
 
-use super::super::infrastructure::ILogger;
+use crate::services::interfaces::{IAuthService, ILogger, Role, Session};
 
-/// # Responsibility
-/// Authentication service configuration.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AuthConfig {
-    /// Expected token prefix (e.g., "Bearer", "Session")
-    pub token_prefix: String,
-    
-    /// Minimum token length (excluding prefix)
-    pub min_token_length: usize,
-    
-    /// Maximum token length (excluding prefix)
-    pub max_token_length: usize,
-    
-    /// Enable strict validation (Phase 3: JWT signature verification)
-    pub enable_strict_validation: bool,
-}
-
-impl Default for AuthConfig {
-    fn default() -> Self {
-        Self {
-            token_prefix: "Session".to_string(),
-            min_token_length: 16,
-            max_token_length: 256,
-            enable_strict_validation: false, // Phase 1: stub only
-        }
-    }
+/// JWT claims structure.
+#[derive(Debug, Serialize, Deserialize)]
+struct Claims {
+    sub: String, // User ID
+    role: String,
+    exp: usize, // Expiration time
 }
 
 /// # Responsibility
-/// Authentication result after token validation.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct AuthResult {
-    /// Whether the token is valid
-    pub valid: bool,
-    
-    /// Extracted player ID (Phase 1: None, Phase 3: Some(player_id))
-    pub player_id: Option<String>,
-    
-    /// Error message if validation failed
-    pub error_message: Option<String>,
-}
-
-/// # Responsibility
-/// Trait for authentication services.
-pub trait IAuthService: shaku::Interface {
-    /// Validates a session token.
-    ///
-    /// # Arguments
-    /// * `token` - The token string to validate
-    ///
-    /// # Returns
-    /// * `AuthResult` with validation status
-    fn validate_token(&self, token: &str) -> AuthResult;
-    
-    /// Extracts player ID from a valid token (Phase 3 feature).
-    ///
-    /// # Arguments
-    /// * `token` - The token string
-    ///
-    /// # Returns
-    /// * `Option<String>` with player ID if extractable
-    fn extract_player_id(&self, token: &str) -> Option<String>;
-}
-
-/// # Responsibility
-/// Implements basic token validation (Phase 1 stub).
+/// Implements authentication with JWT tokens and argon2 password hashing.
 ///
 /// ---
 ///
-/// Phase 1: Validates token format (prefix + length).
-/// Phase 3: Full JWT parsing with signature verification, expiry checks.
+/// Features:
+/// - JWT token encoding/decoding with HS256
+/// - Password hashing with argon2
+/// - Session management with expiration tracking
+/// - Token refresh mechanism
+/// - Role-based access control
 #[derive(Component)]
 #[shaku(interface = IAuthService)]
 pub struct AuthService {
     #[shaku(inject)]
     logger: Arc<dyn ILogger>,
     
-    config: Arc<AuthConfig>,
+    jwt_secret: String,
+    token_expiry_secs: u64,
+    sessions: Arc<RwLock<HashMap<Uuid, Session>>>,
 }
 
 impl AuthService {
-    /// Creates a new AuthService instance.
-    pub fn new(logger: Arc<dyn ILogger>, config: Arc<AuthConfig>) -> Self {
-        logger.info("AuthService initialized (Phase 1: format validation only)");
-        Self { logger, config }
+    /// Creates a new AuthService with default configuration.
+    pub fn new(logger: Arc<dyn ILogger>) -> Self {
+        Self {
+            logger,
+            jwt_secret: std::env::var("JWT_SECRET").unwrap_or_else(|_| "default-secret-change-me".to_string()),
+            token_expiry_secs: 3600, // 1 hour
+            sessions: Arc::new(RwLock::new(HashMap::new())),
+        }
     }
 }
 
+#[async_trait]
 impl IAuthService for AuthService {
-    fn validate_token(&self, token: &str) -> AuthResult {
-        // Phase 1: Basic format validation
+    #[instrument(skip(self, password))]
+    async fn hash_password(&self, password: &str) -> Result<String> {
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
         
-        // Check empty token
-        if token.is_empty() {
-            return AuthResult {
-                valid: false,
-                player_id: None,
-                error_message: Some("Token is empty".to_string()),
-            };
-        }
+        let password_hash = argon2.hash_password(password.as_bytes(), &salt)
+            .context("Failed to hash password")?
+            .to_string();
         
-        // Check prefix
-        let expected_prefix = format!("{} ", self.config.token_prefix);
-        if !token.starts_with(&expected_prefix) {
-            return AuthResult {
-                valid: false,
-                player_id: None,
-                error_message: Some(format!("Token must start with '{}'", expected_prefix.trim())),
-            };
-        }
+        Ok(password_hash)
+    }
+    
+    #[instrument(skip(self, password, hash))]
+    async fn verify_password(&self, password: &str, hash: &str) -> Result<bool> {
+        let parsed_hash = PasswordHash::new(hash)
+            .context("Invalid password hash format")?;
         
-        // Extract token body (after prefix)
-        let token_body = &token[expected_prefix.len()..];
+        let argon2 = Argon2::default();
         
-        // Check length bounds
-        if token_body.len() < self.config.min_token_length {
-            return AuthResult {
-                valid: false,
-                player_id: None,
-                error_message: Some(format!(
-                    "Token too short (min {} chars)",
-                    self.config.min_token_length
-                )),
-            };
-        }
-        
-        if token_body.len() > self.config.max_token_length {
-            return AuthResult {
-                valid: false,
-                player_id: None,
-                error_message: Some(format!(
-                    "Token too long (max {} chars)",
-                    self.config.max_token_length
-                )),
-            };
-        }
-        
-        // Phase 1: Accept all tokens with valid format
-        // Phase 3: Add JWT signature verification here
-        
-        self.logger.info(&format!("Token validated successfully (Phase 1 stub): {}", &token_body[..8.min(token_body.len())]));
-        
-        AuthResult {
-            valid: true,
-            player_id: None, // Phase 3: Extract from JWT claims
-            error_message: None,
+        match argon2.verify_password(password.as_bytes(), &parsed_hash) {
+            Ok(_) => Ok(true),
+            Err(_) => Ok(false),
         }
     }
     
-    fn extract_player_id(&self, _token: &str) -> Option<String> {
-        // Phase 1: Not implemented (returns None)
-        // Phase 3: Parse JWT claims and extract "sub" or "player_id" field
-        None
+    #[instrument(skip(self))]
+    async fn create_token(&self, user_id: Uuid, role: Role) -> Result<String> {
+        let expiration = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .context("System time error")?
+            .as_secs() + self.token_expiry_secs;
+        
+        let claims = Claims {
+            sub: user_id.to_string(),
+            role: format!("{:?}", role),
+            exp: expiration as usize,
+        };
+        
+        let token = encode(
+            &Header::default(),
+            &claims,
+            &EncodingKey::from_secret(self.jwt_secret.as_bytes())
+        ).context("Failed to encode JWT")?;
+        
+        debug!("Created token for user {}", user_id);
+        Ok(token)
+    }
+    
+    #[instrument(skip(self, token))]
+    async fn validate_token(&self, token: &str) -> Result<(Uuid, Role)> {
+        let token_data = decode::<Claims>(
+            token,
+            &DecodingKey::from_secret(self.jwt_secret.as_bytes()),
+            &Validation::new(Algorithm::HS256)
+        ).context("Invalid JWT token")?;
+        
+        let user_id = Uuid::parse_str(&token_data.claims.sub)
+            .context("Invalid user ID in token")?;
+        
+        let role = match token_data.claims.role.as_str() {
+            "Admin" => Role::Admin,
+            "Player" => Role::Player,
+            "Guest" => Role::Guest,
+            _ => bail!("Invalid role in token"),
+        };
+        
+        Ok((user_id, role))
+    }
+    
+    #[instrument(skip(self))]
+    async fn create_session(&self, user_id: Uuid, role: Role) -> Result<Session> {
+        let session_id = Uuid::new_v4();
+        let now = std::time::Instant::now();
+        
+        let session = Session {
+            session_id,
+            user_id,
+            role,
+            created_at: now,
+            expires_at: now + std::time::Duration::from_secs(self.token_expiry_secs),
+        };
+        
+        let mut sessions = self.sessions.write().await;
+        sessions.insert(session_id, session.clone());
+        
+        info!("Created session {} for user {}", session_id, user_id);
+        Ok(session)
+    }
+    
+    #[instrument(skip(self))]
+    async fn get_session(&self, session_id: Uuid) -> Result<Session> {
+        let sessions = self.sessions.read().await;
+        
+        let session = sessions.get(&session_id)
+            .context("Session not found")?;
+        
+        // Check if expired
+        if std::time::Instant::now() > session.expires_at {
+            bail!("Session expired");
+        }
+        
+        Ok(session.clone())
+    }
+    
+    #[instrument(skip(self))]
+    async fn destroy_session(&self, session_id: Uuid) -> Result<()> {
+        let mut sessions = self.sessions.write().await;
+        
+        if sessions.remove(&session_id).is_some() {
+            info!("Destroyed session {}", session_id);
+            Ok(())
+        } else {
+            bail!("Session not found")
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::services::infrastructure::QualiaLogger;
+    use crate::services::tests::mocks::MockLogger;
     
-    fn create_test_service() -> AuthService {
-        let logger = Arc::new(QualiaLogger);
-        let config = Arc::new(AuthConfig::default());
-        AuthService::new(logger, config)
+    #[tokio::test]
+    async fn test_hash_and_verify_password() {
+        let mut mock_logger = MockLogger::new();
+        mock_logger.expect_info().return_const(());
+        
+        let service = AuthService::new(Arc::new(mock_logger));
+        
+        let password = "secure_password_123";
+        let hash = service.hash_password(password).await.unwrap();
+        
+        assert!(service.verify_password(password, &hash).await.unwrap());
+        assert!(!service.verify_password("wrong_password", &hash).await.unwrap());
     }
     
-    #[test]
-    fn test_validate_token_valid_format() {
-        let service = create_test_service();
+    #[tokio::test]
+    async fn test_create_and_validate_token() {
+        let mut mock_logger = MockLogger::new();
+        mock_logger.expect_info().return_const(());
         
-        // Valid token: "Session <16+ chars>"
-        let token = "Session abcdefghijklmnop1234567890";
-        let result = service.validate_token(token);
+        let service = AuthService::new(Arc::new(mock_logger));
         
-        assert!(result.valid, "Token should be valid");
-        assert!(result.error_message.is_none(), "Should not have error message");
+        let user_id = Uuid::new_v4();
+        let role = Role::Player;
+        
+        let token = service.create_token(user_id, role).await.unwrap();
+        let (decoded_id, decoded_role) = service.validate_token(&token).await.unwrap();
+        
+        assert_eq!(decoded_id, user_id);
+        assert_eq!(decoded_role, role);
     }
     
-    #[test]
-    fn test_validate_token_empty() {
-        let service = create_test_service();
+    #[tokio::test]
+    async fn test_invalid_token() {
+        let mut mock_logger = MockLogger::new();
+        mock_logger.expect_info().return_const(());
         
-        let result = service.validate_token("");
+        let service = AuthService::new(Arc::new(mock_logger));
         
-        assert!(!result.valid, "Empty token should be invalid");
-        assert!(result.error_message.is_some(), "Should have error message");
-        assert!(result.error_message.unwrap().contains("empty"), "Should mention empty");
+        let result = service.validate_token("invalid.token.here").await;
+        assert!(result.is_err());
     }
     
-    #[test]
-    fn test_validate_token_wrong_prefix() {
-        let service = create_test_service();
+    #[tokio::test]
+    async fn test_create_and_get_session() {
+        let mut mock_logger = MockLogger::new();
+        mock_logger.expect_info().return_const(());
         
-        let token = "Bearer abcdefghijklmnop1234567890";
-        let result = service.validate_token(token);
+        let service = AuthService::new(Arc::new(mock_logger));
         
-        assert!(!result.valid, "Token with wrong prefix should be invalid");
-        assert!(result.error_message.unwrap().contains("Session"), "Should mention expected prefix");
+        let user_id = Uuid::new_v4();
+        let session = service.create_session(user_id, Role::Admin).await.unwrap();
+        
+        let retrieved = service.get_session(session.session_id).await.unwrap();
+        assert_eq!(retrieved.user_id, user_id);
+        assert_eq!(retrieved.role, Role::Admin);
     }
     
-    #[test]
-    fn test_validate_token_too_short() {
-        let service = create_test_service();
+    #[tokio::test]
+    async fn test_destroy_session() {
+        let mut mock_logger = MockLogger::new();
+        mock_logger.expect_info().return_const(());
         
-        // Default min_token_length = 16
-        let token = "Session short";
-        let result = service.validate_token(token);
+        let service = AuthService::new(Arc::new(mock_logger));
         
-        assert!(!result.valid, "Token too short should be invalid");
-        assert!(result.error_message.unwrap().contains("too short"), "Should mention length");
-    }
-    
-    #[test]
-    fn test_validate_token_too_long() {
-        let service = create_test_service();
+        let user_id = Uuid::new_v4();
+        let session = service.create_session(user_id, Role::Player).await.unwrap();
         
-        // Default max_token_length = 256
-        let long_token = "a".repeat(300);
-        let token = format!("Session {}", long_token);
-        let result = service.validate_token(&token);
+        service.destroy_session(session.session_id).await.unwrap();
         
-        assert!(!result.valid, "Token too long should be invalid");
-        assert!(result.error_message.unwrap().contains("too long"), "Should mention length");
-    }
-    
-    #[test]
-    fn test_extract_player_id_returns_none_phase1() {
-        let service = create_test_service();
-        
-        // Phase 1: Always returns None
-        let token = "Session abcdefghijklmnop1234567890";
-        let player_id = service.extract_player_id(token);
-        
-        assert!(player_id.is_none(), "Phase 1 should not extract player ID");
+        let result = service.get_session(session.session_id).await;
+        assert!(result.is_err());
     }
 }

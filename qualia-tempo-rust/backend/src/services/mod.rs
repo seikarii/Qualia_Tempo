@@ -13,7 +13,7 @@ pub mod monitoring;
 // Service categories
 pub mod infrastructure;
 pub mod gameplay;
-pub mod network;
+pub mod networking;
 pub mod audio;
 pub mod rendering;
 pub mod persistence;
@@ -27,7 +27,7 @@ pub use interfaces::*;
 pub use monitoring::*;
 pub use infrastructure::*;
 pub use gameplay::*;
-pub use network::*;
+pub use networking::*;
 pub use audio::*;
 pub use rendering::*;
 pub use persistence::*;

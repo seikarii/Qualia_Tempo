@@ -1,10 +1,8 @@
 //! # Responsibility
-//! Security services for authentication, input sanitization, and rate limiting.
+//! Security services module aggregator.
 
-mod auth;
-mod input_sanitizer;
-mod rate_limiter;
+pub mod auth;
+pub mod validation;
 
-pub use auth::{AuthConfig, AuthResult, AuthService, IAuthService};
-pub use input_sanitizer::{InputSanitizerConfig, InputSanitizerService, IInputSanitizer, SanitizationResult};
-pub use rate_limiter::{RateLimiterConfig, RateLimiterService, IRateLimiter};
+pub use auth::AuthService;
+pub use validation::ValidationService;

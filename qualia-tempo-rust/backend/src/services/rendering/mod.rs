@@ -1,26 +1,8 @@
 //! # Responsibility
-//! Rendering-related services for particle simulation and shader introspection.
-//!
-//! ---
-//!
-//! This module contains services that handle compute-heavy rendering tasks,
-//! offloading work from the network I/O threads to dedicated Tokio task pools.
+//! Rendering services module aggregator.
 
 pub mod particle_pool;
-pub mod shader_introspector;
+pub mod shader_introspection;
 
-pub use particle_pool::{
-    ParticlePoolService,
-    IParticlePoolService,
-    ParticlePoolConfig,
-    ParticleWorkRequest,
-    ParticleWorkResult,
-};
-
-pub use shader_introspector::{
-    ShaderIntrospectionService,
-    IShaderIntrospectionService,
-    ShaderIntrospectionConfig,
-    ShaderMetadata,
-    ShaderType,
-};
+pub use particle_pool::ParticlePoolService;
+pub use shader_introspection::ShaderIntrospectionService;
