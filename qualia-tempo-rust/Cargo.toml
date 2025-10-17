@@ -1,0 +1,67 @@
+[workspace]
+members = ["qualia_macros", "shared_core", "backend", "frontend"]
+resolver = "2"
+
+[workspace.dependencies]
+# Core async runtime
+tokio = { version = "1.41", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging & observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Testing
+mockall = "0.13"
+
+[workspace.lints.clippy]
+# Pedantic rules (warn with lower priority to allow specific denies)
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+
+# Critical safety rules (DENY - no exceptions)
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+dbg_macro = "deny"
+
+# Type safety
+cast_possible_truncation = "deny"
+cast_precision_loss = "deny"
+cast_sign_loss = "deny"
+
+# Complexity limits
+cognitive_complexity = "deny"
+too_many_lines = "deny"
+too_many_arguments = "deny"
+
+# Documentation requirements
+missing_errors_doc = "deny"
+missing_panics_doc = "deny"
+
+# Performance
+clone_on_copy = "deny"
+
+# Allowed exceptions (deliberate design decisions)
+must_use_candidate = "allow"
+module_name_repetitions = "allow"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true
