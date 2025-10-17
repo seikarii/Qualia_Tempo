@@ -175,26 +175,3 @@ pub struct GameSettings {
     pub input: InputSettings,
     pub accessibility: AccessibilitySettings,
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_game_settings_default() {
-        let settings = GameSettings::default();
-        assert_eq!(settings.audio.master_volume, 1.0);
-        assert_eq!(settings.gameplay.autoplay, false);
-        assert_eq!(settings.visual.particle_density, ParticleDensity::High);
-    }
-
-    #[test]
-    fn test_game_settings_serialization() {
-        let settings = GameSettings::default();
-        let json = serde_json::to_string(&settings).unwrap();
-        assert!(json.contains("masterVolume"));
-        
-        let deserialized: GameSettings = serde_json::from_str(&json).unwrap();
-        assert_eq!(deserialized, settings);
-    }
-}

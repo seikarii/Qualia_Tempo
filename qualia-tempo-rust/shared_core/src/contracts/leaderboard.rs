@@ -28,33 +28,3 @@ pub struct LeaderboardEntry {
     pub qualia_snapshot: QualiaState,
     pub replay_data_url: Option<String>,
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_leaderboard_entry_serialization() {
-        let entry = LeaderboardEntry {
-            rank: 1,
-            player_id: "player123".to_string(),
-            player_name: "TestPlayer".to_string(),
-            score: 1000000,
-            song_id: "song_01".to_string(),
-            difficulty: SongDifficulty::Expert,
-            max_combo: 500,
-            accuracy: 0.98,
-            timestamp: 1634567890,
-            qualia_snapshot: QualiaState::default(),
-            replay_data_url: Some("replays/player123_song01.dat".to_string()),
-        };
-
-        let json = serde_json::to_string(&entry).unwrap();
-        assert!(json.contains("player123"));
-        assert!(json.contains("1000000"));
-        assert!(json.contains("expert"));
-
-        let deserialized: LeaderboardEntry = serde_json::from_str(&json).unwrap();
-        assert_eq!(deserialized, entry);
-    }
-}

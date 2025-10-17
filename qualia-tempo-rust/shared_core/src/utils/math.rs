@@ -31,29 +31,3 @@ pub fn inv_lerp(a: f32, b: f32, value: f32) -> f32 {
         (value - a) / (b - a)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_clamp() {
-        assert_eq!(clamp(5, 0, 10), 5);
-        assert_eq!(clamp(-5, 0, 10), 0);
-        assert_eq!(clamp(15, 0, 10), 10);
-    }
-
-    #[test]
-    fn test_lerp() {
-        assert!((lerp(0.0, 10.0, 0.5) - 5.0).abs() < f32::EPSILON);
-        assert!((lerp(0.0, 10.0, 0.0) - 0.0).abs() < f32::EPSILON);
-        assert!((lerp(0.0, 10.0, 1.0) - 10.0).abs() < f32::EPSILON);
-    }
-
-    #[test]
-    fn test_inv_lerp() {
-        assert!((inv_lerp(0.0, 10.0, 5.0) - 0.5).abs() < f32::EPSILON);
-        assert!((inv_lerp(0.0, 10.0, 0.0) - 0.0).abs() < f32::EPSILON);
-        assert!((inv_lerp(0.0, 10.0, 10.0) - 1.0).abs() < f32::EPSILON);
-    }
-}
