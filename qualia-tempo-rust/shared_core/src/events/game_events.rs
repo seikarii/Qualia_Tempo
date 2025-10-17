@@ -22,6 +22,11 @@ pub enum GameEvent {
         timestamp: u64,
     },
     
+    /// Game system shutting down
+    SystemShutdown {
+        timestamp: u64,
+    },
+    
     /// Game started (player pressed start)
     GameStarted {
         timestamp: u64,
