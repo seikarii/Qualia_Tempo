@@ -1,4 +1,9 @@
 //! # Responsibility
-//! Test module for rendering subsystem.
+//! Rendering subsystem integration tests.
+//!
+//! ---
+//!
+//! Tests complete deferred rendering pipeline implementation.
 
-mod deferred_pipeline_tests;
+pub mod deferred_pipeline_tests;
+pub mod pipeline_integration_tests;
