@@ -22,5 +22,12 @@ pub use input::{
     MusicalInputAnalyzerService, TimingWindows,
 };
 pub use scene_manager::SceneManagerService;
-pub use state::GameStateStoreService;
+pub use state::{
+    CombatStateAggregatorService, GameStateStoreService, GameStateSubscriberService,
+    LocalQualiaStateService,
+};
+pub use ui::{
+    DebugOverlayService, FrameTiming, HUDService, ToastNotification, ToastNotificationService,
+    ToastType,
+};
 pub use websocket::WebSocketService;

@@ -5,9 +5,11 @@
 //!
 //! Provides UI rendering services that react to game state changes.
 
-// Placeholder for future implementation in Phase 9.5 continuation
-// Services defined in PLAN.md:
-// - HUDService
-// - ToastNotificationService
-// - DebugOverlayService
+pub mod debug_overlay_service;
+pub mod hud_service;
+pub mod toast_notification_service;
+
+pub use debug_overlay_service::{DebugOverlayService, FrameTiming};
+pub use hud_service::HUDService;
+pub use toast_notification_service::{ToastNotification, ToastNotificationService, ToastType};
 
