@@ -1,0 +1,62 @@
+# backend/Cargo.toml - Backend Server Binary
+# VERSION: 1.0
+# COMPLIANCE: QUALIA.CODE.RUST v1.1 + ARCHITECTURE.RUST v2.0
+
+[package]
+name = "backend"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "qualia-tempo-backend"
+path = "src/main.rs"
+
+[lib]
+name = "backend"
+path = "src/lib.rs"
+
+[dependencies]
+# Async runtime
+tokio.workspace = true
+
+# Web framework
+axum = { version = "0.7", features = ["ws", "macros"] }
+tower = { version = "0.5", features = ["full"] }
+tower-http = { version = "0.5", features = ["trace", "cors", "compression-full"] }
+
+# WebSocket
+tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
+futures-util = "0.3"
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+bincode = "1.3"
+
+# DI Container
+shaku = { version = "0.6", features = ["thread_safe"] }
+async-trait = "0.1"
+
+# Logging
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# Configuration
+config = { version = "0.14", features = ["yaml"] }
+serde_yaml = "0.9"
+
+# Error handling
+anyhow.workspace = true
+thiserror.workspace = true
+
+# Shared crates
+shared_core = { path = "../shared_core" }
+qualia_macros = { path = "../qualia_macros" }
+
+[dev-dependencies]
+mockall.workspace = true
+
+[lints]
+workspace = true
