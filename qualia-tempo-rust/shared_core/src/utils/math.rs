@@ -21,6 +21,18 @@ use serde::{Deserialize, Serialize};
 pub struct Vec2(pub glam::Vec2);
 
 impl Vec2 {
+    /// Zero vector constant (0, 0)
+    pub const ZERO: Self = Self(glam::Vec2::ZERO);
+
+    /// Unit vector on X axis (1, 0)
+    pub const X: Self = Self(glam::Vec2::X);
+
+    /// Unit vector on Y axis (0, 1)
+    pub const Y: Self = Self(glam::Vec2::Y);
+
+    /// Vector with all components set to 1.0
+    pub const ONE: Self = Self(glam::Vec2::ONE);
+
     #[inline]
     #[must_use]
     pub const fn new(x: f32, y: f32) -> Self {

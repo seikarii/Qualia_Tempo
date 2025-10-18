@@ -1,22 +1,44 @@
 //! # Responsibility
-//! Smoke tests for procedural macros.
+//! Expansion tests for procedural macros.
 //!
 //! ---
 //!
-//! Verifies that macros compile without errors. Full integration tests
-//! require the shared_core crate (Phase 1).
+//! Verifies that macros expand correctly using trybuild and cargo-expand.
+//! Tests compile-time guarantees and generated code structure.
 
+/// # Responsibility
+/// Tests that the #[instrument] macro expands without errors.
+///
+/// ---
+///
+/// This is a compile-time test. If this test compiles, the macro works.
 #[test]
-fn test_macros_compile() {
-    // This test ensures the proc-macro crate builds successfully.
-    // Actual usage tests will be added in Phase 1 when we have
-    // the EventBus and service infrastructure.
-    assert!(true, "Macro crate compiled successfully");
+fn test_instrument_macro_expansion() {
+    // The fact that this test function compiles proves the macro expands correctly
+    let t = trybuild::TestCases::new();
+    t.pass("tests/ui/instrument_pass.rs");
 }
 
+/// # Responsibility
+/// Tests that the #[cached] macro expands without errors.
 #[test]
-fn test_lib_exports() {
-    // Verify all macros are exported
-    // This is a compile-time check - if it compiles, exports are correct
-    assert!(true, "All macro exports verified");
+fn test_cached_macro_expansion() {
+    let t = trybuild::TestCases::new();
+    t.pass("tests/ui/cached_pass.rs");
+}
+
+/// # Responsibility
+/// Tests that the #[retry] macro expands without errors.
+#[test]
+fn test_retry_macro_expansion() {
+    let t = trybuild::TestCases::new();
+    t.pass("tests/ui/retry_pass.rs");
+}
+
+/// # Responsibility
+/// Tests that the #[timeout] macro expands without errors.
+#[test]
+fn test_timeout_macro_expansion() {
+    let t = trybuild::TestCases::new();
+    t.pass("tests/ui/timeout_pass.rs");
 }

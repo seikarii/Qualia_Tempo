@@ -54,6 +54,19 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     let fn_block = &input_fn.block;
     let fn_asyncness = &input_fn.sig.asyncness;
 
+    // Extract parameter names for forwarding
+    let param_names: Vec<_> = fn_inputs
+        .iter()
+        .filter_map(|arg| {
+            if let syn::FnArg::Typed(pat_type) = arg {
+                if let syn::Pat::Ident(pat_ident) = &*pat_type.pat {
+                    return Some(&pat_ident.ident);
+                }
+            }
+            None
+        })
+        .collect();
+
     let delay_calculation = if exponential_backoff {
         quote! {
             let current_delay = base_delay * 2u64.pow(attempt as u32);
@@ -84,7 +97,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
             let mut last_error = None;
 
             for attempt in 0..MAX_ATTEMPTS {
-                match #inner_fn_name(/* forward parameters */).await {
+                match #inner_fn_name(#(#param_names),*).await {
                     Ok(result) => return Ok(result),
                     Err(e) => {
                         tracing::warn!(

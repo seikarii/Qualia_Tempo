@@ -40,6 +40,19 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     let fn_block = &input_fn.block;
     let fn_asyncness = &input_fn.sig.asyncness;
 
+    // Extract parameter names for forwarding
+    let param_names: Vec<_> = fn_inputs
+        .iter()
+        .filter_map(|arg| {
+            if let syn::FnArg::Typed(pat_type) = arg {
+                if let syn::Pat::Ident(pat_ident) = &*pat_type.pat {
+                    return Some(&pat_ident.ident);
+                }
+            }
+            None
+        })
+        .collect();
+
     let expanded = quote! {
         /// # Responsibility
         /// Inner implementation (kept for testing/direct calls).
@@ -57,7 +70,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
 
             match tokio::time::timeout(
                 tokio::time::Duration::from_millis(TIMEOUT_MS),
-                #inner_fn_name(/* forward parameters */)
+                #inner_fn_name(#(#param_names),*)
             ).await {
                 Ok(result) => result,
                 Err(_elapsed) => {

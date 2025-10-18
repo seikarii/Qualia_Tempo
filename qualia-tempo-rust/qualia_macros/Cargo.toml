@@ -15,3 +15,4 @@ proc-macro2 = "1.0"
 tokio.workspace = true
 tracing.workspace = true
 anyhow.workspace = true
+trybuild = "1.0"

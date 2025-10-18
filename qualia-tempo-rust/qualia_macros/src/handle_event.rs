@@ -39,23 +39,20 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     let fn_inputs = &input_fn.sig.inputs;
     let fn_output = &input_fn.sig.output;
 
-    // Extract parameter name (should be second param after &self)
-    let param_name = match fn_inputs.iter().nth(1) {
-        Some(syn::FnArg::Typed(pat_type)) => &pat_type.pat,
-        _ => {
-            return syn::Error::new_spanned(
-                fn_inputs,
-                "Handler must have signature: fn(&self, data: EventData)",
-            )
-            .to_compile_error()
-            .into();
-        }
-    };
+    // Validate handler signature (must have &self + data parameter)
+    if fn_inputs.len() < 2 {
+        return syn::Error::new_spanned(
+            fn_inputs,
+            "Handler must have signature: fn(&self, data: EventData) -> Result<()>",
+        )
+        .to_compile_error()
+        .into();
+    }
 
     let expanded = quote! {
         /// # Responsibility
         /// Original handler logic (kept for direct calls if needed).
-        #fn_vis async fn #fn_name(&self, #param_name: impl std::fmt::Debug) #fn_output #fn_block
+        #fn_vis async fn #fn_name(#fn_inputs) #fn_output #fn_block
 
         /// # Responsibility
         /// Generated event subscription handler.
