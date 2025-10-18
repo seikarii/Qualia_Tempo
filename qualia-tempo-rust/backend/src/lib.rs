@@ -11,7 +11,7 @@ pub mod services;
 
 // Re-export for convenience
 pub use services::{
-    ILogger, IEventBus, ITimer, IErrorReporter, IGameLogicService,
+    ILogger, IEventBus, ITimer, IGameLogicService,
     EventBusService, QualiaLogger, TimerService, ErrorReportingService, GameLogicService,
 };
 pub use config::GameLogicConfig;

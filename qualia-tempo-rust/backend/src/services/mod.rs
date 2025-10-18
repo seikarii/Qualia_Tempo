@@ -18,7 +18,7 @@ pub use interfaces::{ILogger, IEventBus, ITimer, IGameLogicService};
 pub use shared_core::traits::{IBossAIService, IPatternSystemService, IQualiaProcessorService};
 
 // Re-export core services
-pub use core::{EventBusService, QualiaLogger, TimerService, ErrorReportingService, IErrorReporter};
+pub use core::{EventBusService, QualiaLogger, TimerService, ErrorReportingService};
 
 // Re-export gameplay services
 pub use gameplay::{GameLogicService, BossAIService, PatternSystemService, QualiaProcessorService};

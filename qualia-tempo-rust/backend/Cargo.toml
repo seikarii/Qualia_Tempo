@@ -37,6 +37,7 @@ qualia_macros = { path = "../qualia_macros" }
 
 [dev-dependencies]
 mockall = { workspace = true }
+tempfile = "3.8"
 
 [lints]
 workspace = true

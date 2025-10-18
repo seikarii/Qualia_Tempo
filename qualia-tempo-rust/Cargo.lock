@@ -207,6 +207,7 @@ dependencies = [
  "serde_yaml",
  "shaku",
  "shared_core",
+ "tempfile",
  "thiserror",
  "tokio",
  "tokio-tungstenite 0.21.0",

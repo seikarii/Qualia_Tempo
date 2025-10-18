@@ -10,8 +10,9 @@
 use tokio::sync::broadcast;
 use shared_core::events::GameEvent;
 use crate::services::interfaces::IEventBus;
-use shaku::Component;
 use tracing::{debug, warn};
+
+const DEFAULT_EVENT_BUS_CAPACITY: usize = 1000;
 
 /// # Responsibility
 /// Manages event distribution to multiple subscribers using broadcast channels.
@@ -26,8 +27,6 @@ use tracing::{debug, warn};
 /// - Lock-free: Uses atomic operations for contention-free publishing
 /// - O(1) emit: Constant time event emission
 /// - O(1) subscribe: Constant time subscription creation
-#[derive(Component)]
-#[shaku(interface = IEventBus)]
 pub struct EventBusService {
     tx: broadcast::Sender<GameEvent>,
 }
