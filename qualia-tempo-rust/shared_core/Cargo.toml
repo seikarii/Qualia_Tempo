@@ -1,0 +1,24 @@
+[package]
+name = "shared_core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+schemars = { version = "0.8", features = ["chrono"] }
+uuid = { version = "1.0", features = ["serde", "v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+validator = { version = "0.18", features = ["derive"] }
+glam = { version = "0.29", features = ["serde"] }
+shaku = { workspace = true }
+async-trait = { workspace = true }
+anyhow = { workspace = true }
+tokio = { workspace = true }
+
+[features]
+default = []
+wasm = ["uuid/js", "chrono/wasmbind"]
+
+[lints]
+workspace = true
