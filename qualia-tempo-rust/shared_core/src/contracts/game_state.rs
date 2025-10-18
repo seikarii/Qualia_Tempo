@@ -50,6 +50,7 @@ impl QualiaState {
     ///
     /// This constructor ensures all values are within valid bounds.
     #[must_use]
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         intensity: f32,
         precision: f32,

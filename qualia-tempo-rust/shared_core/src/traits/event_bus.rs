@@ -21,6 +21,9 @@ pub trait IEventBus: Interface + Send + Sync {
     ///
     /// # Returns
     /// Ok(subscriber_count) on success, Err if no active subscribers
+    ///
+    /// # Errors
+    /// Returns `SendError` if there are no active subscribers
     fn emit(&self, event: GameEvent) -> Result<usize, broadcast::error::SendError<GameEvent>>;
 
     /// Subscribe to receive events

@@ -7,6 +7,9 @@
 //! and service interfaces (traits) shared between backend and frontend.
 //! It is the single source of truth for type definitions.
 
+#![allow(clippy::doc_markdown)]
+#![allow(deprecated)]
+
 pub mod contracts;
 pub mod events;
 pub mod traits;

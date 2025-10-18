@@ -17,7 +17,10 @@ pub mod settings;
 
 // Re-export commonly used types
 pub use audio::{HarmonyMap, InstrumentPatch, PatchType, SongData};
-pub use combat_data::{CombatData, LyricData, MusicalComboData, PatternData};
+pub use combat_data::{
+    CombatData, LyricData, MusicalComboData, MusicalComboDataFull, PatternData, PatternDataFull,
+    SongData as CombatSongData, SongDifficulty, TimeSignature,
+};
 pub use effects::{ActiveEffect, EffectType, EnvironmentEffect};
 pub use game_state::{
     BossState, CombatState, GamePhase, PlayerAbilities, PlayerState, QualiaEvent, QualiaState,
@@ -27,4 +30,7 @@ pub use input::{MusicalInputAnalysis, PlayerAction};
 pub use leaderboard::LeaderboardEntry;
 pub use particles::{OptimizedParticle, ParticleSystemConfig};
 pub use scenes::{CinematicData, SceneData};
-pub use settings::{AccessibilitySettings, GameSettings, GraphicsQuality};
+pub use settings::{
+    AccessibilitySettings, AudioSettings, ColorblindMode, GameSettings, GameplaySettings,
+    InputSettings, ParticleDensity, TimingWindowSettings, VisualSettings,
+};

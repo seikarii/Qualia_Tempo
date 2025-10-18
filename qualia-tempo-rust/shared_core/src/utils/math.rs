@@ -34,13 +34,13 @@ impl Vec2 {
 
     #[inline]
     #[must_use]
-    pub fn x(&self) -> f32 {
+    pub const fn x(&self) -> f32 {
         self.0.x
     }
 
     #[inline]
     #[must_use]
-    pub fn y(&self) -> f32 {
+    pub const fn y(&self) -> f32 {
         self.0.y
     }
 }
@@ -111,19 +111,19 @@ impl Vec3 {
 
     #[inline]
     #[must_use]
-    pub fn x(&self) -> f32 {
+    pub const fn x(&self) -> f32 {
         self.0.x
     }
 
     #[inline]
     #[must_use]
-    pub fn y(&self) -> f32 {
+    pub const fn y(&self) -> f32 {
         self.0.y
     }
 
     #[inline]
     #[must_use]
-    pub fn z(&self) -> f32 {
+    pub const fn z(&self) -> f32 {
         self.0.z
     }
 }
@@ -213,7 +213,7 @@ pub fn clamp(value: f32, min: f32, max: f32) -> f32 {
 #[inline]
 #[must_use]
 pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
-    a + (b - a) * t
+    (b - a).mul_add(t, a)
 }
 
 #[cfg(test)]

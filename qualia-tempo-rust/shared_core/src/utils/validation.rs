@@ -17,6 +17,9 @@ pub use validator::{Validate, ValidationError};
 ///
 /// # Returns
 /// Ok(()) if valid, Err(ValidationError) otherwise
+///
+/// # Errors
+/// Returns `ValidationError` if value is outside the range [0.0, 1.0]
 pub fn validate_normalized_range(value: f32) -> Result<(), ValidationError> {
     if (0.0..=1.0).contains(&value) {
         Ok(())
