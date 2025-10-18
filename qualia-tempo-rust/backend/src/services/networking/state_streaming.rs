@@ -15,6 +15,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use shared_core::traits::{IGameStateStreamingService, IWebSocketService};
 use crate::services::interfaces::{ILogger, IEventBus};
+use crate::services::networking::WebSocketService;
 use shared_core::events::GameEvent;
 use shared_core::contracts::{CombatState, QualiaState};
 
@@ -38,6 +39,22 @@ pub struct GameStateStreamingService {
     
     #[shaku(inject)]
     logger: Arc<dyn ILogger>,
+}
+
+impl GameStateStreamingService {
+    /// Creates a new GameStateStreamingService (manual instantiation for Phase 4)
+    pub fn new(
+        websocket: Arc<WebSocketService>,
+        event_bus: Arc<dyn IEventBus>,
+        logger: Arc<dyn ILogger>,
+    ) -> Self {
+        Self {
+            is_running: Arc::new(AtomicBool::new(false)),
+            websocket,
+            event_bus,
+            logger,
+        }
+    }
 }
 
 #[async_trait]

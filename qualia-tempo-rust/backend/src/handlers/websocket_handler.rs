@@ -82,11 +82,20 @@ async fn handle_socket(socket: WebSocket, ws_service: Arc<WebSocketService>) {
             match message {
                 Message::Text(text) => {
                     debug!("Received text message from client: {}", text);
-                    // TODO: Process client messages (e.g., player actions)
+                    // Parse and validate player action JSON
+                    match serde_json::from_str::<shared_core::contracts::PlayerAction>(&text) {
+                        Ok(action) => {
+                            debug!("Parsed PlayerAction: {:?}", action);
+                            // Future Phase 3 integration: Emit to EventBus for processing
+                        }
+                        Err(e) => {
+                            warn!("Failed to parse PlayerAction: {:?}", e);
+                        }
+                    }
                 }
                 Message::Binary(data) => {
                     debug!("Received binary message from client: {} bytes", data.len());
-                    // TODO: Process binary messages (e.g., audio data)
+                    // Binary messages reserved for future high-frequency data (audio FFT, etc.)
                 }
                 Message::Ping(ping) => {
                     debug!("Received ping: {:?}", ping);
@@ -119,13 +128,8 @@ async fn handle_socket(socket: WebSocket, ws_service: Arc<WebSocketService>) {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::services::core::QualiaLogger;
-    use tokio_tungstenite::connect_async;
-    use futures_util::StreamExt;
-    
-    // Integration test would require spinning up Axum server
-    // This is a placeholder for the test structure
+    // Integration tests would require spinning up Axum server
+    // Placeholder for future end-to-end WebSocket tests
     
     #[tokio::test]
     #[ignore] // Requires running server
