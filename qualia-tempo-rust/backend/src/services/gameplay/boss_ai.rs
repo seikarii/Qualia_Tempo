@@ -84,8 +84,10 @@ impl IBossAIService for BossAIService {
             }
         });
 
-        let mut handle_lock = self.subscriber_handle.write().await;
-        *handle_lock = Some(handle);
+        {
+            let mut handle_lock = self.subscriber_handle.write().await;
+            *handle_lock = Some(handle);
+        }
 
         Ok(())
     }
@@ -94,9 +96,11 @@ impl IBossAIService for BossAIService {
     async fn stop(&self) -> Result<()> {
         self.logger.info("Stopping Boss AI event loop");
 
-        let mut handle_lock = self.subscriber_handle.write().await;
-        if let Some(handle) = handle_lock.take() {
-            handle.abort();
+        {
+            let mut handle_lock = self.subscriber_handle.write().await;
+            if let Some(handle) = handle_lock.take() {
+                handle.abort();
+            }
         }
 
         Ok(())
@@ -111,10 +115,10 @@ impl IBossAIService for BossAIService {
         let mut boss = self.boss_state.write().await;
 
         // Update boss state based on qualia (aggression increases with player intensity)
-        boss.current_aggression_level = (boss.current_aggression_level + qualia.intensity * dt * 0.1).min(1.0);
+        boss.current_aggression_level = (qualia.intensity * dt).mul_add(0.1, boss.current_aggression_level).min(1.0);
 
         // Decay aggression over time
-        boss.current_aggression_level = (boss.current_aggression_level - dt * 0.05).max(0.0);
+        boss.current_aggression_level = dt.mul_add(-0.05, boss.current_aggression_level).max(0.0);
 
         Ok(boss.clone())
     }

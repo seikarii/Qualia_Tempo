@@ -53,8 +53,10 @@ impl ICombatOrchestrator for CombatOrchestratorService {
         self.boss_ai.start().await?;
 
         // Mark combat as active
-        let mut is_active = self.is_active.write().await;
-        *is_active = true;
+        {
+            let mut is_active = self.is_active.write().await;
+            *is_active = true;
+        }
 
         info!("Combat session started");
 
@@ -69,8 +71,10 @@ impl ICombatOrchestrator for CombatOrchestratorService {
         self.boss_ai.stop().await?;
 
         // Mark combat as inactive
-        let mut is_active = self.is_active.write().await;
-        *is_active = false;
+        {
+            let mut is_active = self.is_active.write().await;
+            *is_active = false;
+        }
 
         info!("Combat session ended");
 
@@ -89,8 +93,10 @@ impl ICombatOrchestrator for CombatOrchestratorService {
         let combat_state = self.game_logic.update_game_state(dt).await?;
 
         // Update current state
-        let mut current = self.current_state.write().await;
-        *current = combat_state;
+        {
+            let mut current = self.current_state.write().await;
+            *current = combat_state;
+        }
 
         Ok(())
     }

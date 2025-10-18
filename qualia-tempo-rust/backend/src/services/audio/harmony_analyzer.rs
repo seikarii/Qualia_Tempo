@@ -44,7 +44,7 @@ impl IHarmonyAnalysis for HarmonyAnalysisService {
             tokio::runtime::Handle::current().block_on(async {
                 let mut current = self.current_harmony.write().await;
                 *current = Some(harmony_clone);
-            })
+            });
         });
 
         info!("Harmony analysis complete: key={}", harmony_map.key_signature);
@@ -53,6 +53,7 @@ impl IHarmonyAnalysis for HarmonyAnalysisService {
     }
 
     #[instrument(skip(self))]
+    #[allow(clippy::used_underscore_binding)] // Parameter reserved for future implementation
     fn get_current_chord_at_time(&self, _timestamp_ms: f64) -> Result<ChordProgression> {
         // NOTE: Sync trait method - should be called from async context only
         // For now, return stub chord. Full implementation requires async trait method.
@@ -122,7 +123,7 @@ impl HarmonyAnalysisService {
         // Simplified chord parsing (TODO: Use music theory library)
         let root_note = chord_str.chars().next().unwrap_or('C').to_string();
 
-        let chord_type = if chord_str.contains("m") {
+        let chord_type = if chord_str.contains('m') {
             "minor"
         } else {
             "major"

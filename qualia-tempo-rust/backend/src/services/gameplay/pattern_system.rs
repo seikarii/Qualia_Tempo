@@ -10,20 +10,26 @@ use async_trait::async_trait;
 use shaku::Component;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::RwLock;
 use tracing::{info, instrument, warn};
 
 use shared_core::contracts::combat_data::PatternData;
+use shared_core::events::combat_events::BossPatternTriggered;
 use shared_core::events::GameEvent;
 use shared_core::traits::gameplay::IPatternSystemService;
 use shared_core::traits::{IEventBus, ILogger};
 
 /// # Responsibility
 /// Active pattern instance with execution state.
+///
+/// ---
+///
+/// Internal struct for tracking pattern lifecycle. Public to satisfy Shaku visibility requirements.
 #[derive(Debug, Clone)]
-pub(crate) struct ActivePattern {
+pub struct ActivePattern {
     pattern_id: String,
-    #[allow(dead_code)] // Used for future trajectory calculation
+    #[allow(dead_code)] // Will be used for projectile trajectory calculation
     boss_position: (f32, f32),
     time_elapsed: f32,
     is_telegraphing: bool,
@@ -57,10 +63,13 @@ impl IPatternSystemService for PatternSystemService {
         ));
 
         // Verify pattern exists
-        let definitions = self.pattern_definitions.read().await;
-        let pattern_data = definitions
-            .get(pattern_id)
-            .context(format!("Pattern not found: {}", pattern_id))?;
+        let pattern_data = {
+            let definitions = self.pattern_definitions.read().await;
+            definitions
+                .get(pattern_id)
+                .cloned()
+                .context(format!("Pattern not found: {pattern_id}"))?
+        };
 
         // Create active pattern instance
         let active = ActivePattern {
@@ -71,9 +80,7 @@ impl IPatternSystemService for PatternSystemService {
         };
 
         // Emit telegraph event
-        use shared_core::events::combat_events::BossPatternTriggered;
-        use std::time::{SystemTime, UNIX_EPOCH};
-        
+        #[allow(clippy::cast_precision_loss)] // Timestamp precision loss acceptable
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
@@ -90,8 +97,10 @@ impl IPatternSystemService for PatternSystemService {
             .ok();
 
         // Add to active patterns
-        let mut actives = self.active_patterns.write().await;
-        actives.push(active);
+        {
+            let mut actives = self.active_patterns.write().await;
+            actives.push(active);
+        }
 
         info!("Pattern {} activated with {}ms telegraph", pattern_id, pattern_data.telegraph_duration_ms);
 
@@ -99,6 +108,7 @@ impl IPatternSystemService for PatternSystemService {
     }
 
     #[instrument(skip(self))]
+    #[allow(clippy::cast_possible_truncation)] // Telegraph duration intentionally truncated to f32
     async fn update(&self, dt: f32) -> Result<()> {
         let mut actives = self.active_patterns.write().await;
         let definitions = self.pattern_definitions.read().await;
@@ -109,13 +119,10 @@ impl IPatternSystemService for PatternSystemService {
         for (idx, pattern) in actives.iter_mut().enumerate() {
             pattern.time_elapsed += dt;
 
-            let definition = match definitions.get(&pattern.pattern_id) {
-                Some(def) => def,
-                None => {
-                    warn!("Active pattern has no definition: {}", pattern.pattern_id);
-                    to_remove.push(idx);
-                    continue;
-                }
+            let Some(definition) = definitions.get(&pattern.pattern_id) else {
+                warn!("Active pattern has no definition: {}", pattern.pattern_id);
+                to_remove.push(idx);
+                continue;
             };
 
             let telegraph_duration = definition.telegraph_duration_ms as f32 / 1000.0;
@@ -125,7 +132,7 @@ impl IPatternSystemService for PatternSystemService {
                 pattern.is_telegraphing = false;
 
                 // Spawn projectiles/zones
-                self.spawn_pattern_entities(pattern, definition)?;
+                self.spawn_pattern_entities(pattern, definition);
 
                 info!("Pattern {} telegraph complete, spawning entities", pattern.pattern_id);
             }
@@ -138,21 +145,27 @@ impl IPatternSystemService for PatternSystemService {
         }
 
         // Remove completed patterns (iterate in reverse to avoid index shifts)
+        drop(definitions); // Drop early to release read lock
         for idx in to_remove.iter().rev() {
             actives.remove(*idx);
         }
+        drop(actives);
 
         Ok(())
     }
 
     async fn load_patterns(&self, patterns: Vec<PatternData>) -> Result<()> {
-        let mut definitions = self.pattern_definitions.write().await;
+        let count = {
+            let mut definitions = self.pattern_definitions.write().await;
 
-        for pattern in patterns {
-            definitions.insert(pattern.id.clone(), pattern);
-        }
+            for pattern in patterns {
+                definitions.insert(pattern.id.clone(), pattern);
+            }
 
-        self.logger.info(&format!("Loaded {} pattern definitions", definitions.len()));
+            definitions.len()
+        };
+
+        self.logger.info(&format!("Loaded {count} pattern definitions"));
 
         Ok(())
     }
@@ -160,13 +173,12 @@ impl IPatternSystemService for PatternSystemService {
 
 impl PatternSystemService {
     /// Spawns projectiles/zones for a pattern after telegraph.
-    fn spawn_pattern_entities(&self, _pattern: &ActivePattern, definition: &PatternData) -> Result<()> {
+    #[allow(clippy::unused_self)] // Will use self for event emission in full implementation
+    fn spawn_pattern_entities(&self, _pattern: &ActivePattern, definition: &PatternData) {
         // Emit visual effect spawning based on pattern definition
         // TODO: Implement projectile/zone spawning system with proper trajectory calculation
         // For now, we just log that the pattern has been executed
         info!("Pattern {} executing with damage={}", definition.id, definition.damage);
-
-        Ok(())
     }
 }
 
