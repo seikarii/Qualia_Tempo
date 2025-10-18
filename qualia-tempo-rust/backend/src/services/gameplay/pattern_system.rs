@@ -232,11 +232,10 @@ mod tests {
         let result = service.load_patterns(patterns).await;
 
         assert!(result.is_ok());
-        {
-            let definitions = service.pattern_definitions.read().await;
-            assert_eq!(definitions.len(), 1);
-            assert!(definitions.contains_key("test_pattern"));
-        } // Explicit drop guard
+        let definitions = service.pattern_definitions.read().await;
+        assert_eq!(definitions.len(), 1);
+        assert!(definitions.contains_key("test_pattern"));
+        drop(definitions);
     }
 
     #[tokio::test]
@@ -249,13 +248,12 @@ mod tests {
         let result = service.execute_pattern("test_pattern", (100.0, 200.0)).await;
 
         assert!(result.is_ok());
-        {
-            let actives = service.active_patterns.read().await;
-            assert_eq!(actives.len(), 1);
-            assert_eq!(actives[0].pattern_id, "test_pattern");
-            assert_eq!(actives[0].boss_position, (100.0, 200.0));
-            assert!(actives[0].is_telegraphing);
-        } // Drop guard
+        let actives = service.active_patterns.read().await;
+        assert_eq!(actives.len(), 1);
+        assert_eq!(actives[0].pattern_id, "test_pattern");
+        assert_eq!(actives[0].boss_position, (100.0, 200.0));
+        assert!(actives[0].is_telegraphing);
+        drop(actives);
     }
 
     #[tokio::test]
@@ -270,10 +268,9 @@ mod tests {
         let result = service.update(0.6).await;
 
         assert!(result.is_ok());
-        {
-            let actives = service.active_patterns.read().await;
-            assert!(!actives[0].is_telegraphing, "Telegraph should be complete");
-        } // Drop guard
+        let actives = service.active_patterns.read().await;
+        assert!(!actives[0].is_telegraphing, "Telegraph should be complete");
+        drop(actives);
     }
 
     #[tokio::test]
@@ -287,10 +284,9 @@ mod tests {
         // Update with dt > total duration (telegraph 0.5s + active 2s = 2.5s)
         service.update(3.0).await.expect("Test should not panic");
 
-        {
-            let actives = service.active_patterns.read().await;
-            assert_eq!(actives.len(), 0, "Expired pattern should be removed");
-        } // Drop guard
+        let actives = service.active_patterns.read().await;
+        assert_eq!(actives.len(), 0, "Expired pattern should be removed");
+        drop(actives);
     }
 
 }

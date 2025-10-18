@@ -360,18 +360,19 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread")]
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)]
     async fn test_analyze_song_returns_harmony_map() {
         let service = create_test_service();
         
         // Generate test audio: 440 Hz sine wave (A4 note) for 2 seconds
-        let sample_rate = 44100;
-        let duration_sec = 2.0;
-        let num_samples = (sample_rate as f32 * duration_sec) as usize;
+        let sample_rate: u32 = 44100;
+        let duration_sec: f64 = 2.0;
+        let num_samples = (f64::from(sample_rate) * duration_sec).round() as usize;
         let frequency = 440.0; // A4
         
         let audio_data: Vec<f32> = (0..num_samples)
             .map(|i| {
-                let t = i as f32 / sample_rate as f32;
+                let t = (i as f64 / f64::from(sample_rate)) as f32;
                 (2.0 * std::f32::consts::PI * frequency * t).sin() * 0.5
             })
             .collect();

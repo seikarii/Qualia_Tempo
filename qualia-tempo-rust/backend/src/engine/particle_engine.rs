@@ -514,14 +514,14 @@ mod tests {
         }
         
         let start = Instant::now();
-        let snapshot: Vec<OptimizedParticle> = particles
+        let active_count = particles
             .iter()
             .copied()
             .filter(|p| p.is_active)
-            .collect();
+            .count();
         let elapsed = start.elapsed();
         
         println!("Snapshot 10,000 particles: {elapsed:?}");
-        println!("Snapshot collected: {} particles", snapshot.len());
+        println!("Snapshot collected: {active_count} particles");
     }
 }

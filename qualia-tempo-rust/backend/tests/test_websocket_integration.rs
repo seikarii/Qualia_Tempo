@@ -48,15 +48,16 @@ fn create_test_module() -> WebSocketIntegrationTestModule {
 // INTEGRATION TEST: Basic WebSocket Connectivity
 // ============================================================================
 
+#[derive(Clone)]
+struct AppState {
+    _module: Arc<WebSocketIntegrationTestModule>,
+}
+
 #[tokio::test]
+#[allow(clippy::items_after_statements)]
 async fn test_websocket_basic_connection() {
     // Arrange
     let module = Arc::new(create_test_module());
-    
-    #[derive(Clone)]
-    struct AppState {
-        _module: Arc<WebSocketIntegrationTestModule>,
-    }
     
     // Minimal WebSocket handler for testing
     async fn ws_handler(
@@ -123,7 +124,7 @@ async fn test_websocket_basic_connection() {
         TMessage::Text(text) => {
             assert_eq!(text, test_message, "Echo should match");
         }
-        _ => panic!("Expected text message"),
+        _ => unreachable!("Expected text message, got other type"),
     }
     
     // Cleanup
@@ -131,21 +132,22 @@ async fn test_websocket_basic_connection() {
     server_handle.abort();
 }
 
+#[derive(Clone)]
+struct AppState2 {
+    module: Arc<WebSocketIntegrationTestModule>,
+}
+
 #[tokio::test]
+#[allow(clippy::items_after_statements)]
 async fn test_websocket_eventbus_propagation() {
     // Arrange
     let module = Arc::new(create_test_module());
     let event_bus: Arc<dyn IEventBus> = module.resolve();
     
-    #[derive(Clone)]
-    struct AppState {
-        module: Arc<WebSocketIntegrationTestModule>,
-    }
-    
     // Handler that emits to EventBus when receiving PlayerAction
     async fn ws_handler(
         ws: WebSocketUpgrade,
-        State(state): State<AppState>,
+        State(state): State<AppState2>,
     ) -> impl IntoResponse {
         ws.on_upgrade(move |socket| async move {
             use axum::extract::ws::Message;
@@ -169,7 +171,7 @@ async fn test_websocket_eventbus_propagation() {
     }
     
     // Create server
-    let app_state = AppState { module: module.clone() };
+    let app_state = AppState2 { module: module.clone() };
     let app = Router::new()
         .route("/ws", get(ws_handler))
         .with_state(app_state);
@@ -220,7 +222,7 @@ async fn test_websocket_eventbus_propagation() {
             assert_eq!(key, 'Q');
             assert_eq!(accuracy, 0.9);
         }
-        _ => panic!("Expected KeyPressed"),
+        _ => unreachable!("Expected KeyPressed action type"),
     }
     
     // Assert 2: Client receives acknowledgment
@@ -242,19 +244,20 @@ async fn test_websocket_eventbus_propagation() {
     server_handle.abort();
 }
 
+#[derive(Clone)]
+struct AppState3 {
+    _module: Arc<WebSocketIntegrationTestModule>,
+}
+
 #[tokio::test]
+#[allow(clippy::items_after_statements)]
 async fn test_websocket_handles_disconnection() {
     // Arrange
     let module = Arc::new(create_test_module());
     
-    #[derive(Clone)]
-    struct AppState {
-        _module: Arc<WebSocketIntegrationTestModule>,
-    }
-    
     async fn ws_handler(
         ws: WebSocketUpgrade,
-        State(_state): State<AppState>,
+        State(_state): State<AppState3>,
     ) -> impl IntoResponse {
         ws.on_upgrade(move |mut socket| async move {
             while let Some(Ok(_msg)) = socket.recv().await {
@@ -263,7 +266,7 @@ async fn test_websocket_handles_disconnection() {
         })
     }
     
-    let app_state = AppState { _module: module };
+    let app_state = AppState3 { _module: module };
     let app = Router::new()
         .route("/ws", get(ws_handler))
         .with_state(app_state);

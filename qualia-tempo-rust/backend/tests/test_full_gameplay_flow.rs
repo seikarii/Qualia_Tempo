@@ -100,7 +100,7 @@ async fn test_complete_gameplay_flow_input_to_state() {
     .await;
     
     assert!(event_result.is_ok(), "Should receive QualiaStateUpdated event within 100ms");
-    let emitted_state = event_result.unwrap();
+    let emitted_state = event_result.expect("Event should be received");
     assert_eq!(emitted_state, validated_state, "Emitted state should match validated state");
 }
 
@@ -133,7 +133,7 @@ async fn test_invalid_qualia_state_rejected() {
     
     assert!(result.is_ok(), "Validator should handle invalid input gracefully");
     
-    let validated = result.unwrap();
+    let validated = result.expect("Validator should return clamped state");
     assert!(validated.is_valid(), "Validated state must be clamped to [0.0, 1.0]");
     assert!(validated.intensity <= 1.0, "Intensity should be clamped");
 }
@@ -158,7 +158,7 @@ async fn test_event_bus_multi_subscriber_broadcast() {
     
     let emit_result = event_bus.emit(event.clone());
     assert!(emit_result.is_ok(), "Emit should succeed");
-    assert_eq!(emit_result.unwrap(), 3, "Should report 3 active subscribers");
+    assert_eq!(emit_result.expect("Emit should report subscriber count"), 3, "Should report 3 active subscribers");
     
     // Assert: All subscribers receive event
     let received1 = timeout(Duration::from_millis(50), rx1.recv()).await;
@@ -171,7 +171,7 @@ async fn test_event_bus_multi_subscriber_broadcast() {
     
     // Verify event content
     assert!(matches!(
-        received1.unwrap().unwrap(),
+        received1.expect("Timeout should not occur").expect("Event should be received"),
         GameEvent::QualiaStateUpdated { .. }
     ));
 }
@@ -204,7 +204,8 @@ async fn test_event_bus_lagging_subscriber_recovery() {
             assert!(n > 0, "Should report number of skipped messages");
         }
         Err(e) => {
-            panic!("Unexpected error: {e:?}");
+            // Test failure: unexpected error type
+            unreachable!("Unexpected error: {e:?}");
         }
     }
 }
@@ -293,7 +294,7 @@ async fn test_zero_accuracy_input_handling() {
     let result = game_logic.process_action(action, qualia).await;
     assert!(result.is_ok(), "Zero accuracy should not cause error");
     
-    let validated = result.unwrap();
+    let validated = result.expect("Zero accuracy should be handled gracefully");
     assert!(validated.is_valid(), "State should remain valid with zero accuracy");
     assert!(validated.intensity.is_finite(), "Intensity must be finite");
     assert!(validated.chaos.is_finite(), "Chaos must be finite");

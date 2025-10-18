@@ -78,8 +78,8 @@ mod tests {
         let bus = EventBusService::new(100);
         
         // Create and drop a subscriber to initialize the channel
-        let _rx = bus.subscribe();
-        drop(_rx);
+        let rx = bus.subscribe();
+        drop(rx);
         
         let event = GameEvent::QualiaStateUpdated {
             state: QualiaState::default(),
