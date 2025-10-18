@@ -168,11 +168,8 @@ mod tests {
 
         // Verify all 3 received
         let mut count = 0;
-        loop {
-            match event_receiver.try_recv() {
-                Ok(GameEvent::CombatStateUpdated { .. }) => count += 1,
-                _ => break,
-            }
+        while let Ok(GameEvent::CombatStateUpdated { .. }) = event_receiver.try_recv() {
+            count += 1;
         }
 
         assert_eq!(count, 3, "Should receive all 3 CombatState updates");

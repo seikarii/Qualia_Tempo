@@ -96,8 +96,9 @@ fn bench_bincode_size_reduction(c: &mut Criterion) {
     
     c.bench_function("size_comparison", |b| {
         b.iter(|| {
-            let json_size = serde_json::to_vec(&state).unwrap().len();
-            let bincode_size = bincode::serialize(&state).unwrap().len();
+            let json_size = serde_json::to_vec(&state).expect("JSON serialization failed").len();
+            let bincode_size = bincode::serialize(&state).expect("Bincode serialization failed").len();
+            #[allow(clippy::cast_precision_loss)]
             let reduction = (1.0 - (bincode_size as f64 / json_size as f64)) * 100.0;
             
             black_box((json_size, bincode_size, reduction))
@@ -106,7 +107,7 @@ fn bench_bincode_size_reduction(c: &mut Criterion) {
 }
 
 fn bench_streaming_throughput(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Failed to create Tokio runtime for benchmark");
     
     let mut group = c.benchmark_group("streaming_throughput");
     group.throughput(Throughput::Elements(1));
@@ -132,7 +133,7 @@ fn bench_streaming_throughput(c: &mut Criterion) {
 }
 
 fn bench_harmony_cache_performance(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Failed to create Tokio runtime for benchmark");
     let container = Phase11BenchModule::builder().build();
     let cache: Arc<dyn IHarmonyCacheService> = container.resolve();
     
@@ -157,7 +158,7 @@ fn bench_harmony_cache_performance(c: &mut Criterion) {
 }
 
 fn bench_eventbus_broadcast_latency(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Failed to create Tokio runtime for benchmark");
     let container = Phase11BenchModule::builder().build();
     let event_bus: Arc<dyn IEventBus> = container.resolve();
     

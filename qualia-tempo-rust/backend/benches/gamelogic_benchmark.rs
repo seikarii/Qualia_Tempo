@@ -33,7 +33,7 @@ fn create_bench_container() -> BenchModule {
 }
 
 fn bench_process_single_action(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Failed to create Tokio runtime for benchmark");
     let container = create_bench_container();
     let game_logic: Arc<dyn IGameLogicService> = container.resolve();
     
@@ -67,7 +67,7 @@ fn bench_process_single_action(c: &mut Criterion) {
 }
 
 fn bench_process_action_burst(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Failed to create Tokio runtime for benchmark");
     
     let mut group = c.benchmark_group("process_action_burst");
     
@@ -114,7 +114,7 @@ fn bench_process_action_burst(c: &mut Criterion) {
 }
 
 fn bench_qualia_state_validation(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
+    let rt = Runtime::new().expect("Failed to create Tokio runtime for benchmark");
     let container = create_bench_container();
     let game_logic: Arc<dyn IGameLogicService> = container.resolve();
     

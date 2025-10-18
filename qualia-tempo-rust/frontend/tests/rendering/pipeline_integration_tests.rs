@@ -10,7 +10,7 @@
 //! 4. Composite Pass
 
 #[cfg(test)]
-mod pipeline_integration_tests {
+mod tests {
     #[test]
     fn test_deferred_pipeline_phases_exist() {
         // Phase 8: Verify all pass types compile
@@ -21,7 +21,7 @@ mod pipeline_integration_tests {
         // 2. Type system enforces correct pipeline order
         // 3. No circular dependencies exist
         
-        assert!(true, "Deferred pipeline structure validated at compile time");
+        // Compile-time validation - no runtime assertions needed
     }
     
     #[test]
@@ -49,7 +49,6 @@ mod pipeline_integration_tests {
         // - CompositePass requires PostProcessPass output
         // - Compile-time enforcement via type system
         
-        // If this compiles, the type system guarantees correct pass ordering
-        assert!(true, "Pipeline order enforced by type system");
+        // Compile-time validation - no runtime assertions needed
     }
 }

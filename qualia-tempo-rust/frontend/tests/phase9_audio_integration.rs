@@ -47,7 +47,7 @@ async fn test_phase9_complete_audio_pipeline() {
 
     // Verification: If no panic occurred, the pipeline works
     // (Direct audio verification not possible in WASM tests)
-    assert!(true, "Complete audio pipeline executed without errors");
+    // Test passes by virtue of not panicking - audio system operational
 }
 
 #[wasm_bindgen_test]
@@ -80,7 +80,7 @@ async fn test_phase9_multiple_notes_no_stutter() {
     // Wait for all notes to process
     gloo_timers::future::TimeoutFuture::new(200).await;
 
-    assert!(true, "Rapid note emission handled without stuttering");
+    // Test passes by virtue of not panicking - rapid emission handled correctly
 }
 
 #[wasm_bindgen_test]
@@ -116,5 +116,5 @@ async fn test_phase9_8d_spatial_positioning() {
         gloo_timers::future::TimeoutFuture::new(50).await;
     }
 
-    assert!(true, "8D spatial positioning executed successfully");
+    // Test passes by virtue of not panicking - 8D spatial audio operational
 }
