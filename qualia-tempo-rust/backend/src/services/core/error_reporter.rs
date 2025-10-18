@@ -9,7 +9,7 @@
 use shaku::Component;
 use tracing::{error, warn, info};
 use std::sync::Arc;
-use crate::services::interfaces::ILogger;
+use crate::services::interfaces::{ILogger, IErrorReporter};
 
 /// # Responsibility
 /// Manages error reporting and tracking across the application.
@@ -56,22 +56,6 @@ impl ErrorReportingService {
         info!("LOW SEVERITY ERROR - {context}: {message}");
         self.logger.info(&format!("LOW: {context} - {message}"));
     }
-}
-
-/// # Responsibility
-/// Interface for error reporting across services.
-pub trait IErrorReporter: shaku::Interface {
-    /// Report critical error
-    fn report_critical(&self, context: &str, error: &anyhow::Error);
-    
-    /// Report high-severity error
-    fn report_high(&self, context: &str, error: &anyhow::Error);
-    
-    /// Report medium-severity error
-    fn report_medium(&self, context: &str, error: &anyhow::Error);
-    
-    /// Report low-severity error
-    fn report_low(&self, context: &str, message: &str);
 }
 
 impl IErrorReporter for ErrorReportingService {

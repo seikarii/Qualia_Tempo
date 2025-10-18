@@ -6,6 +6,9 @@
 //! This service encapsulates the core qualia calculation math, applying
 //! combos, accuracy, timing, and decay logic according to GDD.md rules.
 
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::suboptimal_flops)]
+
 use crate::config::GameLogicConfig;
 use crate::services::interfaces::ILogger;
 use anyhow::Result;
@@ -29,6 +32,7 @@ pub struct QualiaProcessorService {
     config: Arc<GameLogicConfig>,
 
     #[shaku(inject)]
+    #[allow(dead_code)] // Will be used for logging calculation details
     logger: Arc<dyn ILogger>,
 }
 

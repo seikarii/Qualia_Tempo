@@ -12,8 +12,6 @@ use shared_core::events::GameEvent;
 use crate::services::interfaces::IEventBus;
 use tracing::{debug, warn};
 
-const DEFAULT_EVENT_BUS_CAPACITY: usize = 1000;
-
 /// # Responsibility
 /// Manages event distribution to multiple subscribers using broadcast channels.
 ///

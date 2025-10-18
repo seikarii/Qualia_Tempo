@@ -40,7 +40,7 @@ pub struct GameLogicService {
 
 /// # Responsibility
 /// Internal mutable game state not exposed to external services.
-struct InternalGameState {
+pub struct InternalGameState {
     score: u32,
     combo: u32,
     player_health: f32,

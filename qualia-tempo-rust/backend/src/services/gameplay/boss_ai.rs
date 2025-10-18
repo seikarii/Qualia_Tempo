@@ -46,10 +46,11 @@ pub struct BossAIService {
 
 /// # Responsibility
 /// Internal mutable boss AI state.
-struct InternalBossState {
+pub struct InternalBossState {
     health: f32,
     current_phase: u8,
     aggression_level: f32,
+    #[allow(dead_code)] // Will be used in attack logic implementation
     last_attack_time: f64,
     patterns_loaded: Vec<PatternData>,
 }
