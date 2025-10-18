@@ -21,12 +21,18 @@ pub trait LoadableConfig: Sized {
     ///
     /// # Returns
     /// Ok(config) on success, Err on parse/IO failure
+    ///
+    /// # Errors
+    /// Returns `Err` if file cannot be read or parsed
     fn load_from_file(path: &str) -> Result<Self>;
 
     /// Validate configuration after loading
     ///
     /// # Returns
     /// Ok(()) if valid, Err with validation errors
+    ///
+    /// # Errors
+    /// Returns `Err` if configuration values are invalid or out of range
     fn validate(&self) -> Result<()> {
         Ok(()) // Default: no validation
     }

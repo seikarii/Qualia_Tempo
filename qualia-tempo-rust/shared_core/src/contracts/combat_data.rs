@@ -114,7 +114,7 @@ pub enum ComboTiming {
 
 /// # Responsibility
 /// Defines a single step in a musical combo sequence.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ComboStep {
     pub action: ComboActionType,
@@ -230,6 +230,7 @@ pub struct PatternDataFull {
 /// This is a streamlined version used for emergent harmonic detection.
 /// For full combo configuration, use MusicalComboDataFull.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[allow(clippy::derive_partial_eq_without_eq)] // Contains String (not Eq)
 #[serde(rename_all = "camelCase")]
 pub struct MusicalComboData {
     pub id: String,

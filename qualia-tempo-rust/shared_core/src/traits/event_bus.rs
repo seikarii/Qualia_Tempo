@@ -24,6 +24,7 @@ pub trait IEventBus: Interface + Send + Sync {
     ///
     /// # Errors
     /// Returns `SendError` if there are no active subscribers
+    #[allow(clippy::result_large_err)] // GameEvent is large by design (enum with Vec<f32>)
     fn emit(&self, event: GameEvent) -> Result<usize, broadcast::error::SendError<GameEvent>>;
 
     /// Subscribe to receive events

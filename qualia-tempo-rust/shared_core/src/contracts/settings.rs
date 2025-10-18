@@ -39,7 +39,7 @@ impl Default for AudioSettings {
 
 /// # Responsibility
 /// Defines timing windows for rhythm accuracy judgments.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct TimingWindowSettings {
     /// Perfect hit window in milliseconds
@@ -62,7 +62,7 @@ impl Default for TimingWindowSettings {
 
 /// # Responsibility
 /// Defines gameplay-specific configuration options.
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct GameplaySettings {
     pub timing_window_ms: TimingWindowSettings,
@@ -97,6 +97,7 @@ pub enum ParticleDensity {
 /// Defines visual/graphics configuration options.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
+#[allow(clippy::struct_excessive_bools)]
 pub struct VisualSettings {
     pub brightness: f32, // 0.0 to 1.0
     pub particle_density: ParticleDensity,
@@ -126,7 +127,7 @@ impl Default for VisualSettings {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct InputSettings {
-    /// Maps action names to key codes (e.g., "dash" -> ["Space", "LeftClick"])
+    /// Maps action names to key codes (e.g., `"dash"` -> `["Space", "LeftClick"]`)
     pub key_bindings: HashMap<String, Vec<String>>,
     pub mouse_sensitivity: f32, // 0.0 to 1.0
 }
@@ -190,7 +191,7 @@ impl Default for AccessibilitySettings {
 ///
 /// This is the complete settings structure persisted to local storage
 /// and synchronized between game sessions per DATA.RUST.md Section 3.1.
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct GameSettings {
     pub audio: AudioSettings,
@@ -198,18 +199,6 @@ pub struct GameSettings {
     pub visual: VisualSettings,
     pub input: InputSettings,
     pub accessibility: AccessibilitySettings,
-}
-
-impl Default for GameSettings {
-    fn default() -> Self {
-        Self {
-            audio: AudioSettings::default(),
-            gameplay: GameplaySettings::default(),
-            visual: VisualSettings::default(),
-            input: InputSettings::default(),
-            accessibility: AccessibilitySettings::default(),
-        }
-    }
 }
 
 // ============================================================================
