@@ -271,6 +271,7 @@ dependencies = [
  "async-trait",
  "axum",
  "bincode",
+ "cached",
  "config",
  "criterion",
  "dashmap 6.1.0",

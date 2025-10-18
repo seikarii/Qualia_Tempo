@@ -71,3 +71,25 @@ pub trait IConnectionManagerService: Interface + Send + Sync {
     /// Returns all active connection IDs
     fn get_active_connections(&self) -> Vec<String>;
 }
+
+/// # Responsibility
+/// Provides rate limiting for WebSocket connections to prevent abuse.
+///
+/// ---
+///
+/// Uses token bucket algorithm for smooth rate limiting with burst capacity.
+/// COMPLIANCE: QUALIA.CODE.RUST §1.1 - Performance by design
+#[async_trait]
+pub trait IRateLimiterService: Interface + Send + Sync {
+    /// Checks if a message is allowed for the given connection.
+    ///
+    /// # Errors
+    /// Returns error if rate limit is exceeded.
+    async fn check_rate_limit(&self, connection_id: &str) -> Result<()>;
+    
+    /// Removes rate limiting state for a disconnected connection.
+    async fn remove_connection(&self, connection_id: &str);
+    
+    /// Resets rate limit for a connection (admin override).
+    async fn reset_limit(&self, connection_id: &str);
+}

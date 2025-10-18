@@ -9,6 +9,7 @@
 
 #![allow(clippy::doc_markdown)]
 #![allow(deprecated)]
+#![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used))]
 
 pub mod contracts;
 pub mod events;

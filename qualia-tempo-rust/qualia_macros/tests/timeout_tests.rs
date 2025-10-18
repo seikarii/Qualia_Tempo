@@ -5,6 +5,8 @@
 //!
 //! Verifies timeout enforcement for long-running operations.
 
+#![allow(clippy::unwrap_used, clippy::unwrap_err_used)]
+
 use qualia_macros::timeout;
 
 // Standalone functions with timeout macro

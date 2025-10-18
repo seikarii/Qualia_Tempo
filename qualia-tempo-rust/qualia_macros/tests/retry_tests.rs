@@ -5,6 +5,8 @@
 //!
 //! Verifies retry logic with exponential backoff.
 
+#![allow(clippy::unwrap_used)]
+
 use qualia_macros::retry;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;

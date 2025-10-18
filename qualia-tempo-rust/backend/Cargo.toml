@@ -44,6 +44,9 @@ rand = "0.8"
 # Concurrency
 dashmap = "6.1"
 
+# Caching
+cached.workspace = true
+
 # DI Container
 shaku = { version = "0.6", features = ["thread_safe"] }
 async-trait = "0.1"
