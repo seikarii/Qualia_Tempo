@@ -76,6 +76,11 @@ pub enum GameEvent {
         final_score: u64,
         victory: bool,
     },
+    
+    // Server Events
+    ServerTick {
+        timestamp: std::time::SystemTime,
+    },
 }
 
 #[cfg(test)]
