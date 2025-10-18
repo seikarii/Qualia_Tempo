@@ -7,6 +7,8 @@
 
 pub mod mock_logger;
 pub mod mock_event_bus;
+pub mod mock_connection_manager;
 
 pub use mock_logger::MockLogger;
 pub use mock_event_bus::MockEventBus;
+pub use mock_connection_manager::MockConnectionManager;

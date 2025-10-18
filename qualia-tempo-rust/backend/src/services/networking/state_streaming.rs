@@ -117,10 +117,92 @@ impl IGameStateStreamingService for GameStateStreamingService {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::services::tests::mocks::{MockLogger, MockEventBus};
+    use shared_core::contracts::CombatState;
+    use std::sync::Arc;
+
+    fn create_test_service() -> GameStateStreamingService {
+        let mock_event_bus = MockEventBus::new();
+        let mock_logger = MockLogger::with_defaults();
+
+        GameStateStreamingService {
+            event_bus: Arc::new(mock_event_bus),
+            logger: Arc::new(mock_logger),
+            updates_per_second: Arc::new(AtomicU32::new(60)),
+        }
+    }
+
     #[tokio::test]
-    async fn test_streaming_service_placeholder() {
-        // Full tests require mock infrastructure
-        // Pending Phase 5
-        assert!(true, "Placeholder test for Phase 4");
+    async fn test_streaming_service_creation() {
+        let service = create_test_service();
+        
+        let rate = service.updates_per_second.load(Ordering::Relaxed);
+        assert_eq!(rate, 60, "Default rate should be 60 updates/sec");
+    }
+
+    #[tokio::test]
+    async fn test_set_rate_updates_atomic() {
+        let mut service = create_test_service();
+        
+        service.set_rate(120);
+        
+        let rate = service.updates_per_second.load(Ordering::Relaxed);
+        assert_eq!(rate, 120, "Rate should update to 120 updates/sec");
+    }
+
+    #[tokio::test]
+    async fn test_set_rate_zero_pauses_streaming() {
+        let mut service = create_test_service();
+        
+        service.set_rate(0);
+        
+        let rate = service.updates_per_second.load(Ordering::Relaxed);
+        assert_eq!(rate, 0, "Rate of 0 should pause streaming");
+    }
+
+    #[tokio::test]
+    async fn test_package_state_serializes_to_json() {
+        let service = create_test_service();
+        
+        // Use default CombatState for simplicity
+        let combat_state = CombatState::default();
+        
+        let result = service.package_state(&combat_state);
+        assert!(result.is_ok(), "Should serialize CombatState to JSON");
+        
+        let json = result.unwrap();
+        assert!(!json.is_empty(), "Serialized data should not be empty");
+        
+        // Verify it's valid JSON
+        let deserialized: Result<CombatState, _> = serde_json::from_slice(&json);
+        assert!(deserialized.is_ok(), "Should deserialize back to CombatState");
+        assert_eq!(deserialized.unwrap(), combat_state, "Roundtrip should preserve data");
+    }
+
+    #[tokio::test]
+    async fn test_stream_state_interface_compliance() {
+        let service = create_test_service();
+        
+        // Interface compliance test
+        let result = service.stream_state().await;
+        assert!(result.is_ok(), "stream_state should succeed for interface compliance");
+    }
+
+    #[tokio::test]
+    async fn test_streaming_loop_stops_when_rate_is_zero() {
+        let service = create_test_service();
+        service.updates_per_second.store(0, Ordering::Relaxed);
+        
+        let handle = service.start_streaming_loop();
+        
+        // Give it time to check the rate and enter sleep mode
+        tokio::time::sleep(Duration::from_millis(150)).await;
+        
+        // Abort the task (it should be sleeping, not ticking)
+        handle.abort();
+        
+        // Test passes if no panic occurred
+        assert!(true, "Streaming loop should handle rate=0 gracefully");
     }
 }

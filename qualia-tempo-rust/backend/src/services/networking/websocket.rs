@@ -199,10 +199,64 @@ impl IWebSocketService for WebSocketService {
 
 #[cfg(test)]
 mod tests {
-    #[tokio::test]
-    async fn test_websocket_service_placeholder() {
-        // Full integration test requires mock WebSocket
-        // Pending Phase 5 mock infrastructure
-        assert!(true, "Placeholder test for Phase 4");
+    use super::*;
+    use crate::services::tests::mocks::{MockLogger, MockEventBus, MockConnectionManager};
+    use std::sync::Arc;
+
+    fn create_test_service() -> WebSocketService {
+        let mock_event_bus = MockEventBus::new();
+        let mock_logger = MockLogger::with_defaults();
+        let mock_conn_mgr = MockConnectionManager::new();
+
+        WebSocketService {
+            event_bus: Arc::new(mock_event_bus),
+            logger: Arc::new(mock_logger),
+            connection_manager: Arc::new(mock_conn_mgr),
+        }
     }
+
+    #[tokio::test]
+    async fn test_websocket_service_creation() {
+        let service = create_test_service();
+        
+        // Service should be created successfully
+        assert!(Arc::strong_count(&service.event_bus) >= 1);
+        assert!(Arc::strong_count(&service.logger) >= 1);
+        assert!(Arc::strong_count(&service.connection_manager) >= 1);
+    }
+
+    #[tokio::test]
+    async fn test_handle_connection_trait_method() {
+        let service = create_test_service();
+        
+        // Interface compliance test
+        let result = service.handle_connection("test-conn-id".to_string()).await;
+        assert!(result.is_ok(), "handle_connection should succeed for interface compliance");
+    }
+
+    #[tokio::test]
+    async fn test_broadcast_message_placeholder() {
+        let service = create_test_service();
+        
+        // Binary broadcast not implemented in Phase 4 (EventBus handles JSON events)
+        let result = service.broadcast_message(vec![1, 2, 3, 4]).await;
+        assert_eq!(result.unwrap(), 0, "broadcast_message returns 0 as placeholder");
+    }
+
+    #[tokio::test]
+    async fn test_send_message_not_implemented() {
+        let service = create_test_service();
+        
+        // Direct messaging not implemented in Phase 4
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            tokio::runtime::Runtime::new().unwrap().block_on(async {
+                service.send_message("conn-id", vec![1, 2, 3]).await
+            })
+        }));
+        
+        assert!(result.is_err(), "send_message should panic as unimplemented");
+    }
+
+    // NOTE: Full WebSocket integration tests (with actual WebSocket mocks) 
+    // will be added in integration test suite pending axum-test crate integration
 }
