@@ -14,6 +14,7 @@ use shaku::Component;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, Ordering};
 use tokio::time::{Duration, interval};
+use tokio::sync::broadcast;
 
 /// # Responsibility
 /// Streams game state updates at configurable rate (default 60 updates/sec).
@@ -55,36 +56,70 @@ impl GameStateStreamingService {
         let updates_per_second = self.updates_per_second.clone();
         
         tokio::spawn(async move {
+            logger.info("State streaming loop started");
+            
+            // Subscribe to CombatStateUpdated events from game logic
+            let mut state_events = event_bus.subscribe();
+            
+            // Track last streamed state to avoid duplicates
+            let mut last_state: Option<CombatState> = None;
+            
             loop {
                 let rate = updates_per_second.load(Ordering::Relaxed);
+                
+                // If rate is 0, pause streaming
                 if rate == 0 {
-                    // Paused
                     tokio::time::sleep(Duration::from_millis(100)).await;
                     continue;
                 }
                 
-                let interval_duration = Duration::from_millis(1000 / u64::from(rate));
-                let mut ticker = interval(interval_duration);
+                // Calculate interval from rate (e.g., 60 FPS = 16.67ms)
+                let interval_ms = 1000 / rate.max(1);
+                let mut tick_interval = interval(Duration::from_millis(interval_ms.into()));
                 
-                ticker.tick().await; // First tick completes immediately
-                
-                loop {
-                    ticker.tick().await;
-                    
-                    // Check if rate changed (break to recreate interval)
-                    let current_rate = updates_per_second.load(Ordering::Relaxed);
-                    if current_rate != rate {
-                        break;
+                tokio::select! {
+                    // Wait for next tick
+                    _ = tick_interval.tick() => {
+                        // If we have a cached state, emit it
+                        if let Some(ref state) = last_state {
+                            match bincode::serialize(state) {
+                                Ok(_binary) => {
+                                    // Emit as GameEvent for WebSocket broadcasting
+                                    let event = GameEvent::CombatStateUpdated { 
+                                        state: state.clone() 
+                                    };
+                                    
+                                    if let Err(e) = event_bus.emit(event) {
+                                        logger.warn(&format!("Failed to broadcast state: {e:?}"));
+                                    }
+                                }
+                                Err(e) => {
+                                    logger.error(&format!("Serialization error: {e:?}"));
+                                }
+                            }
+                        }
                     }
                     
-                    // Stream current state (placeholder - actual state comes from GameLogicService)
-                    // In production, this would query current CombatState from a state manager
-                    // For Phase 4, we emit a streaming tick event
-                    if let Err(e) = event_bus.emit(GameEvent::ServerTick { timestamp: std::time::SystemTime::now() }) {
-                        logger.warn(&format!("Failed to emit streaming tick: {e:?}"));
+                    // Listen for updated states from game logic
+                    event_result = state_events.recv() => {
+                        match event_result {
+                            Ok(GameEvent::CombatStateUpdated { state }) => {
+                                last_state = Some(state);
+                            }
+                            Err(broadcast::error::RecvError::Lagged(skipped)) => {
+                                logger.warn(&format!("State streaming lagging! Skipped {skipped} updates"));
+                            }
+                            Err(broadcast::error::RecvError::Closed) => {
+                                logger.error("EventBus closed, stopping streaming loop");
+                                break;
+                            }
+                            _ => {} // Ignore other events
+                        }
                     }
                 }
             }
+            
+            logger.info("State streaming loop stopped");
         })
     }
     
@@ -111,7 +146,7 @@ impl IGameStateStreamingService for GameStateStreamingService {
         Ok(())
     }
     
-    fn set_rate(&mut self, updates_per_second: u32) {
+    fn set_rate(&self, updates_per_second: u32) {
         self.updates_per_second.store(updates_per_second, Ordering::Relaxed);
         self.logger.info(&format!("Streaming rate set to {updates_per_second} updates/sec"));
     }
@@ -145,7 +180,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_set_rate_updates_atomic() {
-        let mut service = create_test_service();
+        let service = create_test_service();
         
         service.set_rate(120);
         
@@ -155,7 +190,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_set_rate_zero_pauses_streaming() {
-        let mut service = create_test_service();
+        let service = create_test_service();
         
         service.set_rate(0);
         

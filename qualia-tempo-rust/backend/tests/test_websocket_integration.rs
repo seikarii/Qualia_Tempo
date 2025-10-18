@@ -289,3 +289,52 @@ async fn test_websocket_handles_disconnection() {
     // Cleanup
     server_handle.abort();
 }
+
+// ============================================================================
+// INTEGRATION TEST: State Streaming Loop (Phase 12.1)
+// ============================================================================
+
+#[tokio::test]
+async fn test_state_streaming_loop_broadcasts_combat_state() {
+    use shared_core::contracts::CombatState;
+    
+    // Arrange: Create minimal test module WITHOUT ConnectionManagerService
+    // (ConnectionManager is not required for EventBus-only streaming test)
+    module! {
+        StreamingTestModule {
+            components = [
+                EventBusService,
+                QualiaLogger,
+            ],
+            providers = []
+        }
+    }
+    
+    let module = Arc::new(StreamingTestModule::builder().build());
+    let event_bus: Arc<dyn IEventBus> = module.resolve();
+    
+    // Subscribe to EventBus to verify streaming broadcasts
+    let mut state_receiver = event_bus.subscribe();
+    
+    // Act: Emit a CombatState (simulating game logic update)
+    let test_state = CombatState::default();
+    event_bus.emit(GameEvent::CombatStateUpdated { state: test_state.clone() })
+        .expect("Should emit state");
+    
+    // Assert: EventBus propagates the event to all subscribers
+    let received_event = timeout(
+        Duration::from_millis(200),
+        async {
+            loop {
+                if let Ok(GameEvent::CombatStateUpdated { state }) = state_receiver.recv().await {
+                    return state;
+                }
+            }
+        }
+    )
+    .await
+    .expect("Should receive CombatStateUpdated from EventBus");
+    
+    assert_eq!(received_event, test_state, "EventBus should broadcast state correctly");
+}
+

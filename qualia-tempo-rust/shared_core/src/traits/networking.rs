@@ -45,7 +45,8 @@ pub trait IGameStateStreamingService: Interface + Send + Sync {
     async fn stream_state(&self) -> Result<()>;
     
     /// Sets the streaming rate (updates per second)
-    fn set_rate(&mut self, updates_per_second: u32);
+    /// Uses interior mutability (AtomicU32) for thread-safe modification
+    fn set_rate(&self, updates_per_second: u32);
 }
 
 /// # Responsibility
