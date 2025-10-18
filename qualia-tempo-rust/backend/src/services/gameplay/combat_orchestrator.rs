@@ -31,9 +31,11 @@ pub struct CombatOrchestratorService {
     boss_ai: Arc<dyn IBossAIService>,
 
     /// Aggregated combat state.
+    #[shaku(default = Arc::new(RwLock::new(CombatState::default())))]
     current_state: Arc<RwLock<CombatState>>,
 
     /// Combat session active flag.
+    #[shaku(default = Arc::new(RwLock::new(false)))]
     is_active: Arc<RwLock<bool>>,
 }
 

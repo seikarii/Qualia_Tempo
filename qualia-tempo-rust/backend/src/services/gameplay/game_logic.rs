@@ -37,9 +37,11 @@ pub struct GameLogicService {
     harmony_analysis: Arc<dyn IHarmonyAnalysis>,
 
     /// Current player score tracked server-side
+    #[shaku(default = Arc::new(RwLock::new(0)))]
     current_score: Arc<RwLock<u32>>,
 
     /// Combo counter for musical combo validation
+    #[shaku(default = Arc::new(RwLock::new(0)))]
     combo_counter: Arc<RwLock<u32>>,
 }
 

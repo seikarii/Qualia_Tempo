@@ -67,6 +67,11 @@ qualia_macros = { path = "../qualia_macros" }
 [dev-dependencies]
 mockall.workspace = true
 tempfile = "3.8"
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+
+[[bench]]
+name = "gamelogic_benchmark"
+harness = false
 
 [lints]
 workspace = true

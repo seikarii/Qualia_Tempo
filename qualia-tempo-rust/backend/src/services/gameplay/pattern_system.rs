@@ -47,9 +47,11 @@ pub struct PatternSystemService {
     event_bus: Arc<dyn IEventBus>,
 
     /// Pattern definitions loaded from data.
+    #[shaku(default = Arc::new(RwLock::new(HashMap::new())))]
     pattern_definitions: Arc<RwLock<HashMap<String, PatternData>>>,
 
     /// Currently active patterns being executed.
+    #[shaku(default = Arc::new(RwLock::new(Vec::new())))]
     active_patterns: Arc<RwLock<Vec<ActivePattern>>>,
 }
 

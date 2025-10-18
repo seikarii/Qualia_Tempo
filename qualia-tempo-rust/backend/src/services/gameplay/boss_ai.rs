@@ -33,10 +33,12 @@ pub struct BossAIService {
     pattern_system: Arc<dyn IPatternSystemService>,
 
     /// Current boss state.
+    #[shaku(default = Arc::new(RwLock::new(BossState::default())))]
     boss_state: Arc<RwLock<BossState>>,
 
     /// Event subscriber loop handle.
     #[allow(clippy::type_complexity)]
+    #[shaku(default = Arc::new(RwLock::new(None)))]
     subscriber_handle: Arc<RwLock<Option<JoinHandle<()>>>>,
 }
 

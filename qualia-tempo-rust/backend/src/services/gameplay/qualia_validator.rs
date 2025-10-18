@@ -36,6 +36,7 @@ pub struct QualiaValidatorService {
     logger: Arc<dyn ILogger>,
 
     /// Stores the last validated state for temporal coherence checks.
+    #[shaku(default = Arc::new(RwLock::new(None)))]
     last_state: Arc<RwLock<Option<QualiaState>>>,
 }
 

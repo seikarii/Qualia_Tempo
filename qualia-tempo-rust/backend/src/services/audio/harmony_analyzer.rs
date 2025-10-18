@@ -35,9 +35,11 @@ pub struct HarmonyAnalysisService {
 
     /// Internal storage for the analyzed harmony map.
     /// CRITICAL: NOT exposed via RwLock. Access only through async methods.
+    #[shaku(default = Arc::new(std::sync::Mutex::new(None)))]
     current_harmony: Arc<std::sync::Mutex<Option<HarmonyMap>>>,
     
     /// Broadcast channel for harmony updates (optional subscribers).
+    #[shaku(default = broadcast::channel::<HarmonyMap>(100).0)]
     harmony_updates: broadcast::Sender<HarmonyMap>,
 }
 
