@@ -67,20 +67,24 @@ impl HarmonyCacheService {
 #[cached(
     size = 100,
     key = "String",
-    convert = r#"{ _song_id.clone() }"#
+    convert = r#"{ song_id.clone() }"#
 )]
-fn get_cached_harmony_map(_song_id: String) -> Option<Arc<HarmonyMap>> {
+#[allow(clippy::used_underscore_binding)]
+fn get_cached_harmony_map(song_id: String) -> Option<Arc<HarmonyMap>> {
     // This function body is never called for cache hits
     // The macro intercepts the call and returns cached value if present
+    let _ = song_id; // Suppress unused warning
     None
 }
 
 #[cached(
     size = 100,
     key = "String",
-    convert = r#"{ _song_id.clone() }"#
+    convert = r#"{ song_id.clone() }"#
 )]
-fn set_cached_harmony_map(_song_id: String, map: Arc<HarmonyMap>) -> Arc<HarmonyMap> {
+#[allow(clippy::used_underscore_binding)]
+fn set_cached_harmony_map(song_id: String, map: Arc<HarmonyMap>) -> Arc<HarmonyMap> {
+    let _ = song_id; // Suppress unused warning
     map
 }
 

@@ -41,7 +41,7 @@ impl Default for RateLimiterConfig {
 /// # Responsibility
 /// Tracks rate limiting state for a single connection using token bucket algorithm.
 #[derive(Debug, Clone)]
-pub(crate) struct ConnectionRateLimitState {
+pub struct ConnectionRateLimitState {
     /// Current number of available tokens
     tokens: f64,
     
@@ -56,7 +56,7 @@ pub(crate) struct ConnectionRateLimitState {
 }
 
 impl ConnectionRateLimitState {
-    fn new(capacity: f64, refill_rate: f64) -> Self {
+    pub fn new(capacity: f64, refill_rate: f64) -> Self {
         Self {
             tokens: capacity,
             last_refill: Instant::now(),
@@ -66,7 +66,7 @@ impl ConnectionRateLimitState {
     }
     
     /// Attempts to consume one token. Returns true if allowed, false if rate limited.
-    fn try_consume(&mut self) -> bool {
+    pub fn try_consume(&mut self) -> bool {
         self.refill();
         
         if self.tokens >= 1.0 {
@@ -129,8 +129,8 @@ impl IRateLimiterService for RateLimiterService {
     /// # Errors
     /// Returns error if rate limit is exceeded.
     async fn check_rate_limit(&self, connection_id: &str) -> Result<()> {
-        let capacity = (self.config.max_messages + self.config.burst_capacity) as f64;
-        let refill_rate = self.config.max_messages as f64 
+        let capacity = f64::from(self.config.max_messages + self.config.burst_capacity);
+        let refill_rate = f64::from(self.config.max_messages) 
             / self.config.window_duration.as_secs_f64();
         
         // Get or insert connection state
