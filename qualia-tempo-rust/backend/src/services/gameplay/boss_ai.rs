@@ -210,3 +210,252 @@ impl Default for BossAIService {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::BossAIConfig;
+    use crate::services::tests::mocks::{MockEventBus, MockLogger};
+    use shared_core::contracts::{AttackPatternType, PatternData, QualiaState};
+    use shared_core::utils::Vec2;
+
+    fn create_test_boss_ai() -> BossAIService {
+        let mut mock_logger = MockLogger::new();
+        mock_logger.expect_info().returning(|_| ());
+        mock_logger.expect_debug().returning(|_| ());
+        mock_logger.expect_warn().returning(|_| ());
+        mock_logger.expect_error().returning(|_| ());
+
+        let mut mock_event_bus = MockEventBus::new();
+        mock_event_bus.expect_emit().returning(|_| Ok(1));
+        mock_event_bus.expect_subscribe().returning(|| {
+            let (_tx, rx) = tokio::sync::broadcast::channel(100);
+            rx
+        });
+
+        BossAIService {
+            config: Arc::new(BossAIConfig {
+                aggression_multiplier: 1.5,
+                attack_threshold: 0.6,
+                attack_cooldown_sec: 1.0,
+                phase_thresholds: vec![0.75, 0.5, 0.25],
+            }),
+            logger: Arc::new(mock_logger),
+            event_bus: Arc::new(mock_event_bus),
+            state: Arc::new(Mutex::new(InternalBossState::default())),
+            event_loop_handle: Arc::new(Mutex::new(None)),
+        }
+    }
+
+    fn create_test_pattern() -> PatternData {
+        PatternData {
+            id: "pattern_001".to_string(),
+            name: "Test Pattern".to_string(),
+            pattern_type: AttackPatternType::Projectile,
+            trigger_time_sec: 0.0,
+            telegraph_duration_sec: 0.5,
+            attack_duration_sec: 2.0,
+            damage: 10.0,
+            spawn_positions: vec![Vec2::new(0.0, 0.0)],
+            metadata: serde_json::json!({}),
+        }
+    }
+
+    #[tokio::test]
+    async fn test_boss_ai_starts_successfully() {
+        let boss_ai = create_test_boss_ai();
+        let result = boss_ai.start().await;
+
+        assert!(result.is_ok(), "BossAI should start successfully");
+
+        // Cleanup
+        let _ = boss_ai.stop().await;
+    }
+
+    #[tokio::test]
+    async fn test_boss_ai_stops_successfully() {
+        let boss_ai = create_test_boss_ai();
+        boss_ai.start().await.unwrap();
+
+        let result = boss_ai.stop().await;
+        assert!(result.is_ok(), "BossAI should stop successfully");
+    }
+
+    #[tokio::test]
+    async fn test_trigger_pattern_emits_event() {
+        let boss_ai = create_test_boss_ai();
+        let pattern = create_test_pattern();
+        boss_ai.load_patterns(vec![pattern.clone()]);
+
+        let result = boss_ai.trigger_pattern("pattern_001").await;
+        assert!(result.is_ok(), "Pattern trigger should succeed");
+    }
+
+    #[tokio::test]
+    async fn test_trigger_nonexistent_pattern_fails() {
+        let boss_ai = create_test_boss_ai();
+
+        let result = boss_ai.trigger_pattern("nonexistent").await;
+        assert!(result.is_err(), "Triggering nonexistent pattern should fail");
+        assert!(result.unwrap_err().to_string().contains("Pattern not found"));
+    }
+
+    #[test]
+    fn test_get_boss_state_returns_correct_values() {
+        let boss_ai = create_test_boss_ai();
+        let state = boss_ai.get_boss_state();
+
+        assert_eq!(state.health, 100.0);
+        assert_eq!(state.max_health, 100.0);
+        assert_eq!(state.phase, 1);
+        assert_eq!(state.current_aggression_level, 0.5);
+    }
+
+    #[test]
+    fn test_load_patterns_updates_internal_state() {
+        let boss_ai = create_test_boss_ai();
+        let pattern = create_test_pattern();
+
+        boss_ai.load_patterns(vec![pattern.clone()]);
+
+        let state = boss_ai.state.lock().unwrap();
+        assert_eq!(state.patterns_loaded.len(), 1);
+        assert_eq!(state.patterns_loaded[0].id, "pattern_001");
+    }
+
+    #[tokio::test]
+    async fn test_high_qualia_increases_aggression() {
+        let config = Arc::new(BossAIConfig {
+            aggression_multiplier: 2.0,
+            attack_threshold: 0.5,
+            attack_cooldown_sec: 1.0,
+            phase_thresholds: vec![0.75, 0.5, 0.25],
+        });
+
+        let mut mock_logger = MockLogger::new();
+        mock_logger.expect_debug().returning(|_| ());
+        mock_logger.expect_info().returning(|_| ());
+
+        let mut mock_event_bus = MockEventBus::new();
+        mock_event_bus.expect_emit().returning(|_| Ok(1));
+
+        let logger: Arc<dyn ILogger> = Arc::new(mock_logger);
+        let event_bus: Arc<dyn IEventBus> = Arc::new(mock_event_bus);
+        let state = Arc::new(Mutex::new(InternalBossState::default()));
+
+        let high_intensity_qualia = QualiaState {
+            intensity: 0.9,
+            precision: 0.8,
+            aggression: 0.7,
+            flow: 0.8,
+            chaos: 0.1,
+            recovery: 0.0,
+            transcendence: 0.5,
+            collection_window_end: 1000.0,
+        };
+
+        let result = BossAIService::on_qualia_updated(
+            &logger,
+            &state,
+            &config,
+            &event_bus,
+            high_intensity_qualia,
+        )
+        .await;
+
+        assert!(result.is_ok(), "Handler should process qualia state successfully");
+
+        let state_lock = state.lock().unwrap();
+        assert!(state_lock.aggression_level > 1.0, "Aggression should scale with intensity");
+    }
+
+    #[tokio::test]
+    async fn test_low_qualia_reduces_aggression() {
+        let config = Arc::new(BossAIConfig {
+            aggression_multiplier: 1.0,
+            attack_threshold: 0.5,
+            attack_cooldown_sec: 1.0,
+            phase_thresholds: vec![0.75, 0.5, 0.25],
+        });
+
+        let mut mock_logger = MockLogger::new();
+        mock_logger.expect_debug().returning(|_| ());
+
+        let mut mock_event_bus = MockEventBus::new();
+        mock_event_bus.expect_emit().returning(|_| Ok(1));
+
+        let logger: Arc<dyn ILogger> = Arc::new(mock_logger);
+        let event_bus: Arc<dyn IEventBus> = Arc::new(mock_event_bus);
+        let state = Arc::new(Mutex::new(InternalBossState::default()));
+
+        let low_intensity_qualia = QualiaState {
+            intensity: 0.2,
+            precision: 0.3,
+            aggression: 0.1,
+            flow: 0.2,
+            chaos: 0.6,
+            recovery: 0.0,
+            transcendence: 0.0,
+            collection_window_end: 1000.0,
+        };
+
+        let result = BossAIService::on_qualia_updated(
+            &logger,
+            &state,
+            &config,
+            &event_bus,
+            low_intensity_qualia,
+        )
+        .await;
+
+        assert!(result.is_ok(), "Handler should process qualia state successfully");
+
+        let state_lock = state.lock().unwrap();
+        assert!(state_lock.aggression_level < 0.5, "Aggression should remain low");
+    }
+
+    #[tokio::test]
+    async fn test_boss_attacks_when_aggression_above_threshold() {
+        let config = Arc::new(BossAIConfig {
+            aggression_multiplier: 2.0,
+            attack_threshold: 0.5,
+            attack_cooldown_sec: 1.0,
+            phase_thresholds: vec![0.75, 0.5, 0.25],
+        });
+
+        let mut mock_logger = MockLogger::new();
+        mock_logger.expect_debug().returning(|_| ());
+        mock_logger.expect_info().returning(|_| ());
+
+        let mut mock_event_bus = MockEventBus::new();
+        mock_event_bus.expect_emit().returning(|_| Ok(1));
+
+        let logger: Arc<dyn ILogger> = Arc::new(mock_logger);
+        let event_bus: Arc<dyn IEventBus> = Arc::new(mock_event_bus);
+        let mut initial_state = InternalBossState::default();
+        initial_state.patterns_loaded = vec![create_test_pattern()];
+        let state = Arc::new(Mutex::new(initial_state));
+
+        let high_intensity_qualia = QualiaState {
+            intensity: 0.8,
+            precision: 0.9,
+            aggression: 0.7,
+            flow: 0.9,
+            chaos: 0.1,
+            recovery: 0.0,
+            transcendence: 0.0,
+            collection_window_end: 1000.0,
+        };
+
+        let result = BossAIService::on_qualia_updated(
+            &logger,
+            &state,
+            &config,
+            &event_bus,
+            high_intensity_qualia,
+        )
+        .await;
+
+        assert!(result.is_ok(), "Should emit attack event when aggression is high");
+    }
+}

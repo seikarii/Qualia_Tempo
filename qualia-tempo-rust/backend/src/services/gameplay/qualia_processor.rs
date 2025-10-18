@@ -199,3 +199,289 @@ impl Default for QualiaProcessorService {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::GameLogicConfig;
+    use crate::services::tests::mocks::MockLogger;
+    use shared_core::utils::Vec2;
+
+    fn create_test_processor() -> QualiaProcessorService {
+        let mut mock_logger = MockLogger::new();
+        mock_logger.expect_debug().returning(|_| ());
+
+        QualiaProcessorService {
+            config: Arc::new(GameLogicConfig {
+                base_intensity_multiplier: 1.0,
+                harmony_decay_rate: 0.1,
+                chaos_threshold: 0.5,
+                combo_multiplier: 0.1,
+                combo_threshold: 5,
+                max_combo: 100,
+            }),
+            logger: Arc::new(mock_logger),
+        }
+    }
+
+    fn default_qualia_state() -> QualiaState {
+        QualiaState {
+            intensity: 0.5,
+            precision: 0.5,
+            aggression: 0.5,
+            flow: 0.5,
+            chaos: 0.5,
+            recovery: 0.5,
+            transcendence: 0.0,
+            collection_window_end: 1000.0,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_calculate_qualia_from_high_accuracy_key_press() {
+        let processor = create_test_processor();
+        let previous = default_qualia_state();
+        let action = PlayerAction::KeyPressed {
+            key: 'Q',
+            timestamp: 1000.0,
+            accuracy: 0.95,
+        };
+
+        let result = processor.calculate_qualia(&action, &previous).await;
+        assert!(result.is_ok());
+
+        let new_state = result.unwrap();
+        assert!(new_state.intensity > previous.intensity, "High accuracy should increase intensity");
+        assert!(new_state.precision > previous.precision, "High accuracy should increase precision");
+        assert!(new_state.flow > previous.flow, "High accuracy should increase flow");
+        assert!(new_state.chaos <= previous.chaos, "High accuracy should not increase chaos");
+    }
+
+    #[tokio::test]
+    async fn test_calculate_qualia_from_low_accuracy_key_press() {
+        let processor = create_test_processor();
+        let previous = default_qualia_state();
+        let action = PlayerAction::KeyPressed {
+            key: 'Q',
+            timestamp: 1000.0,
+            accuracy: 0.2,
+        };
+
+        let result = processor.calculate_qualia(&action, &previous).await;
+        assert!(result.is_ok());
+
+        let new_state = result.unwrap();
+        assert!(new_state.chaos > previous.chaos, "Low accuracy should increase chaos");
+    }
+
+    #[tokio::test]
+    async fn test_calculate_qualia_from_dash() {
+        let processor = create_test_processor();
+        let previous = default_qualia_state();
+        let action = PlayerAction::Dash {
+            direction: Vec2::new(1.0, 0.0),
+            timestamp: 1000.0,
+        };
+
+        let result = processor.calculate_qualia(&action, &previous).await;
+        assert!(result.is_ok());
+
+        let new_state = result.unwrap();
+        assert!(new_state.aggression > previous.aggression, "Dash should increase aggression");
+        assert!(new_state.intensity > previous.intensity, "Dash should increase intensity");
+    }
+
+    #[tokio::test]
+    async fn test_calculate_qualia_from_parry() {
+        let processor = create_test_processor();
+        let previous = QualiaState {
+            chaos: 0.8,
+            ..default_qualia_state()
+        };
+        let action = PlayerAction::Parry { timestamp: 1000.0 };
+
+        let result = processor.calculate_qualia(&action, &previous).await;
+        assert!(result.is_ok());
+
+        let new_state = result.unwrap();
+        assert!(new_state.precision > previous.precision, "Parry should increase precision");
+        assert!(new_state.chaos < previous.chaos, "Parry should reduce chaos");
+        assert!(new_state.flow > previous.flow, "Parry should increase flow");
+    }
+
+    #[tokio::test]
+    async fn test_calculate_qualia_from_ultimate_activation() {
+        let processor = create_test_processor();
+        let previous = default_qualia_state();
+        let action = PlayerAction::ActivateUltimate { timestamp: 1000.0 };
+
+        let result = processor.calculate_qualia(&action, &previous).await;
+        assert!(result.is_ok());
+
+        let new_state = result.unwrap();
+        assert_eq!(new_state.intensity, 1.0, "Ultimate should maximize intensity");
+        assert_eq!(new_state.aggression, 1.0, "Ultimate should maximize aggression");
+        assert_eq!(new_state.transcendence, 1.0, "Ultimate should activate transcendence");
+    }
+
+    #[tokio::test]
+    async fn test_calculate_qualia_from_ultimate_deactivation() {
+        let processor = create_test_processor();
+        let previous = QualiaState {
+            intensity: 1.0,
+            aggression: 1.0,
+            transcendence: 1.0,
+            ..default_qualia_state()
+        };
+        let action = PlayerAction::DeactivateUltimate { timestamp: 1000.0 };
+
+        let result = processor.calculate_qualia(&action, &previous).await;
+        assert!(result.is_ok());
+
+        let new_state = result.unwrap();
+        assert!(new_state.intensity < previous.intensity, "Deactivation should reduce intensity");
+        assert!(new_state.aggression < previous.aggression, "Deactivation should reduce aggression");
+        assert_eq!(new_state.transcendence, 0.0, "Transcendence should deactivate");
+    }
+
+    #[tokio::test]
+    async fn test_movement_does_not_affect_qualia() {
+        let processor = create_test_processor();
+        let previous = default_qualia_state();
+        let action = PlayerAction::Move {
+            direction: Vec2::new(1.0, 0.0),
+            timestamp: 1000.0,
+        };
+
+        let result = processor.calculate_qualia(&action, &previous).await;
+        assert!(result.is_ok());
+
+        let new_state = result.unwrap();
+        assert_eq!(new_state, previous, "Movement should not change qualia state");
+    }
+
+    #[test]
+    fn test_apply_decay_reduces_values() {
+        let processor = create_test_processor();
+        let state = QualiaState {
+            intensity: 1.0,
+            precision: 1.0,
+            aggression: 1.0,
+            flow: 1.0,
+            chaos: 1.0,
+            recovery: 1.0,
+            transcendence: 1.0,
+            collection_window_end: 1000.0,
+        };
+
+        let decayed = processor.apply_decay(&state, 1.0);
+
+        assert!(decayed.intensity < state.intensity, "Intensity should decay");
+        assert!(decayed.precision < state.precision, "Precision should decay");
+        assert!(decayed.aggression < state.aggression, "Aggression should decay");
+        assert!(decayed.flow < state.flow, "Flow should decay");
+        assert!(decayed.chaos < state.chaos, "Chaos should decay (faster)");
+        assert!(decayed.recovery < state.recovery, "Recovery should decay");
+        assert_eq!(decayed.transcendence, state.transcendence, "Transcendence should not decay");
+    }
+
+    #[test]
+    fn test_apply_decay_never_goes_negative() {
+        let processor = create_test_processor();
+        let state = QualiaState {
+            intensity: 0.01,
+            precision: 0.01,
+            aggression: 0.01,
+            flow: 0.01,
+            chaos: 0.01,
+            recovery: 0.01,
+            transcendence: 0.0,
+            collection_window_end: 1000.0,
+        };
+
+        // Apply massive decay
+        let decayed = processor.apply_decay(&state, 100.0);
+
+        assert!(decayed.intensity >= 0.0, "Intensity should not go negative");
+        assert!(decayed.precision >= 0.0, "Precision should not go negative");
+        assert!(decayed.aggression >= 0.0, "Aggression should not go negative");
+        assert!(decayed.flow >= 0.0, "Flow should not go negative");
+        assert!(decayed.chaos >= 0.0, "Chaos should not go negative");
+        assert!(decayed.recovery >= 0.0, "Recovery should not go negative");
+    }
+
+    #[test]
+    fn test_get_combo_multiplier_scales_correctly() {
+        let processor = create_test_processor();
+
+        assert_eq!(processor.get_combo_multiplier(0), 1.0);
+        assert!(processor.get_combo_multiplier(10) > 1.0);
+        assert!(processor.get_combo_multiplier(20) > processor.get_combo_multiplier(10));
+
+        // Should cap at 4x (1 + 3)
+        let max_multiplier = processor.get_combo_multiplier(100);
+        assert!(max_multiplier <= 4.0, "Multiplier should cap at 4x");
+    }
+
+    #[test]
+    fn test_clamp_state_enforces_valid_range() {
+        let invalid_state = QualiaState {
+            intensity: 1.5,
+            precision: -0.5,
+            aggression: 2.0,
+            flow: 1.2,
+            chaos: -1.0,
+            recovery: 3.0,
+            transcendence: 1.8,
+            collection_window_end: 1000.0,
+        };
+
+        let clamped = QualiaProcessorService::clamp_state(invalid_state);
+
+        assert_eq!(clamped.intensity, 1.0, "Should clamp to 1.0");
+        assert_eq!(clamped.precision, 0.0, "Should clamp to 0.0");
+        assert_eq!(clamped.aggression, 1.0, "Should clamp to 1.0");
+        assert_eq!(clamped.flow, 1.0, "Should clamp to 1.0");
+        assert_eq!(clamped.chaos, 0.0, "Should clamp to 0.0");
+        assert_eq!(clamped.recovery, 1.0, "Should clamp to 1.0");
+        assert_eq!(clamped.transcendence, 1.0, "Should clamp to 1.0");
+    }
+
+    #[tokio::test]
+    async fn test_zero_accuracy_produces_valid_qualia() {
+        let processor = create_test_processor();
+        let previous = default_qualia_state();
+        let action = PlayerAction::KeyPressed {
+            key: 'Q',
+            timestamp: 1000.0,
+            accuracy: 0.0, // Edge case: zero accuracy
+        };
+
+        let result = processor.calculate_qualia(&action, &previous).await;
+        assert!(result.is_ok());
+
+        let new_state = result.unwrap();
+        assert!(new_state.intensity.is_finite(), "Intensity should be finite");
+        assert!(new_state.precision.is_finite(), "Precision should be finite");
+        assert!(new_state.chaos.is_finite(), "Chaos should be finite");
+        assert!(new_state.intensity >= 0.0 && new_state.intensity <= 1.0);
+    }
+
+    #[tokio::test]
+    async fn test_perfect_accuracy_produces_valid_qualia() {
+        let processor = create_test_processor();
+        let previous = default_qualia_state();
+        let action = PlayerAction::KeyPressed {
+            key: 'Q',
+            timestamp: 1000.0,
+            accuracy: 1.0, // Edge case: perfect accuracy
+        };
+
+        let result = processor.calculate_qualia(&action, &previous).await;
+        assert!(result.is_ok());
+
+        let new_state = result.unwrap();
+        assert!(new_state.intensity >= 0.0 && new_state.intensity <= 1.0);
+        assert!(new_state.precision >= 0.0 && new_state.precision <= 1.0);
+    }
+}
