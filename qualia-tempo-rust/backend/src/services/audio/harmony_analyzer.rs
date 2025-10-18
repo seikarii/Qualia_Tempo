@@ -1,15 +1,19 @@
 //! # Responsibility
-//! Analyzes musical audio to extract harmony information.
+//! Analyzes musical audio to extract harmony information (MUSIC.RUST.md §2).
 //!
 //! ---
 //!
-//! Implements the "Harmony Engine" from MUSIC.RUST.md §2.
+//! Implements the "Harmony Engine" backend component.
 //! Provides chord progressions and key signatures for generative music.
+//! MANDATE: Uses broadcast channel for harmony updates, NOT RwLock.
 
-use anyhow::Result;
+#![allow(clippy::expect_used)] // Mutex::lock().expect() is acceptable for unrecoverable poison errors
+
+use anyhow::{Context, Result};
+use async_trait::async_trait;
 use shaku::Component;
 use std::sync::Arc;
-use tokio::sync::RwLock;
+use tokio::sync::broadcast;
 use tracing::{info, instrument};
 
 use shared_core::contracts::audio::{HarmonicContext, HarmonyMap};
@@ -18,34 +22,47 @@ use shared_core::traits::ILogger;
 
 /// # Responsibility
 /// Analyzes songs to generate harmony maps for musical combat.
+///
+/// ---
+///
+/// Architecture: Stores HarmonyMap internally, exposes async query methods.
+/// Emits harmony update events via broadcast channel for real-time subscribers.
 #[derive(Component)]
 #[shaku(interface = IHarmonyAnalysis)]
 pub struct HarmonyAnalysisService {
     #[shaku(inject)]
     logger: Arc<dyn ILogger>,
 
-    /// Stores the currently loaded harmony map.
-    current_harmony: Arc<RwLock<Option<HarmonyMap>>>,
+    /// Internal storage for the analyzed harmony map.
+    /// CRITICAL: NOT exposed via RwLock. Access only through async methods.
+    current_harmony: Arc<std::sync::Mutex<Option<HarmonyMap>>>,
+    
+    /// Broadcast channel for harmony updates (optional subscribers).
+    harmony_updates: broadcast::Sender<HarmonyMap>,
 }
 
+#[async_trait]
 impl IHarmonyAnalysis for HarmonyAnalysisService {
     #[instrument(skip(self, audio_data))]
-    fn analyze_song(&self, audio_data: &[f32], sample_rate: u32) -> Result<HarmonyMap> {
-        self.logger
-            .info(&format!("Analyzing song: {} samples at {}Hz", audio_data.len(), sample_rate));
+    async fn analyze_song(&self, audio_data: &[f32], sample_rate: u32) -> Result<HarmonyMap> {
+        self.logger.info(&format!(
+            "Analyzing song: {} samples at {}Hz",
+            audio_data.len(),
+            sample_rate
+        ));
 
         // TODO: Implement actual audio analysis using pitch detection + chord recognition
         // For now, return a stub harmony map for testing
         let harmony_map = Self::create_stub_harmony_map();
 
-        // Store for later queries
-        let harmony_clone = harmony_map.clone();
-        tokio::task::block_in_place(|| {
-            tokio::runtime::Handle::current().block_on(async {
-                let mut current = self.current_harmony.write().await;
-                *current = Some(harmony_clone);
-            });
-        });
+        // Store for later queries (sync mutex - minimal lock time)
+        {
+            let mut current = self.current_harmony.lock().expect("Mutex poisoned");
+            *current = Some(harmony_map.clone());
+        }
+
+        // Broadcast update (fire-and-forget)
+        let _ = self.harmony_updates.send(harmony_map.clone());
 
         info!("Harmony analysis complete: key={}", harmony_map.key_signature);
 
@@ -53,17 +70,32 @@ impl IHarmonyAnalysis for HarmonyAnalysisService {
     }
 
     #[instrument(skip(self))]
-    #[allow(clippy::used_underscore_binding)] // Parameter reserved for future implementation
-    fn get_current_chord_at_time(&self, _timestamp_ms: f64) -> Result<ChordProgression> {
-        // NOTE: Sync trait method - should be called from async context only
-        // For now, return stub chord. Full implementation requires async trait method.
-        Ok(Self::parse_chord("C"))
+    async fn get_current_chord_at_time(&self, timestamp_ms: f64) -> Result<ChordProgression> {
+        let current = self
+            .current_harmony
+            .lock()
+            .expect("Mutex poisoned")
+            .clone();
+        let harmony_map = current.context("No harmony map loaded")?;
+
+        // Find the harmonic context for this timestamp
+        let context = harmony_map
+            .progression
+            .iter()
+            .find(|ctx| timestamp_ms >= ctx.start_time_sec * 1000.0 && timestamp_ms < ctx.end_time_sec * 1000.0)
+            .context("Timestamp out of range")?;
+
+        Ok(Self::parse_chord(&context.chord))
     }
 
-    fn get_current_key(&self) -> Result<String> {
-        // NOTE: Sync trait method - should be called from async context only
-        // For now, return stub key. Full implementation requires async trait method.
-        Ok("C Major".to_string())
+    async fn get_current_key(&self) -> Result<String> {
+        let current = self
+            .current_harmony
+            .lock()
+            .expect("Mutex poisoned")
+            .clone();
+        let harmony_map = current.context("No harmony map loaded")?;
+        Ok(harmony_map.key_signature)
     }
 }
 
@@ -148,9 +180,11 @@ impl HarmonyAnalysisService {
 
 impl Default for HarmonyAnalysisService {
     fn default() -> Self {
+        let (tx, _rx) = broadcast::channel(100);
         Self {
             logger: Arc::new(crate::services::core::QualiaLogger),
-            current_harmony: Arc::new(RwLock::new(None)),
+            current_harmony: Arc::new(std::sync::Mutex::new(None)),
+            harmony_updates: tx,
         }
     }
 }
@@ -161,9 +195,11 @@ mod tests {
     use crate::services::tests::mocks::MockLogger;
 
     fn create_test_service() -> HarmonyAnalysisService {
+        let (tx, _rx) = broadcast::channel(100);
         HarmonyAnalysisService {
             logger: Arc::new(MockLogger::with_defaults()),
-            current_harmony: Arc::new(RwLock::new(None)),
+            current_harmony: Arc::new(std::sync::Mutex::new(None)),
+            harmony_updates: tx,
         }
     }
 
@@ -172,7 +208,7 @@ mod tests {
         let service = create_test_service();
         let audio_data: Vec<f32> = vec![0.0; 44100]; // 1 second of silence
 
-        let result = service.analyze_song(&audio_data, 44100);
+        let result = service.analyze_song(&audio_data, 44100).await;
 
         assert!(result.is_ok());
         let harmony_map = result.unwrap();

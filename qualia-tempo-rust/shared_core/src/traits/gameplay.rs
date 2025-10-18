@@ -116,29 +116,71 @@ pub trait IPatternSystemService: Interface + Send + Sync {
 }
 
 /// # Responsibility
-/// Manages musical harmony analysis for combat.
+/// Manages musical harmony analysis for combat (MUSIC.RUST.md §2).
 ///
 /// ---
 ///
 /// Provides harmony context for generative music generation.
+/// All methods are async to support event-driven architecture.
+#[async_trait]
 pub trait IHarmonyAnalysis: Interface + Send + Sync {
     /// Analyzes a song and generates its harmony map.
     ///
     /// # Errors
     /// Returns error if audio data is invalid or analysis fails.
-    fn analyze_song(&self, audio_data: &[f32], sample_rate: u32) -> Result<HarmonyMap>;
+    async fn analyze_song(&self, audio_data: &[f32], sample_rate: u32) -> Result<HarmonyMap>;
 
     /// Returns the current chord at a given timestamp.
     ///
     /// # Errors
     /// Returns error if timestamp is out of range or no harmony data available.
-    fn get_current_chord_at_time(&self, timestamp_ms: f64) -> Result<ChordProgression>;
+    async fn get_current_chord_at_time(&self, timestamp_ms: f64) -> Result<ChordProgression>;
 
     /// Returns the current key signature.
     ///
     /// # Errors
     /// Returns error if no harmony analysis has been performed yet.
-    fn get_current_key(&self) -> Result<String>;
+    async fn get_current_key(&self) -> Result<String>;
+}
+
+/// # Responsibility
+/// Validates player actions against musical harmony (MUSIC.RUST.md §4).
+///
+/// ---
+///
+/// Determines if player input creates harmonic or chaotic effects.
+#[async_trait]
+pub trait IMusicalCoherenceService: Interface + Send + Sync {
+    /// Scores a player action based on current harmonic context.
+    ///
+    /// # Returns
+    /// * `f32` - Coherence score: 1.0 = perfect harmony, 0.0 = chaos, -1.0 = dissonance
+    ///
+    /// # Errors
+    /// Returns error if harmony context is unavailable.
+    async fn score_action_coherence(
+        &self,
+        action: PlayerAction,
+        timestamp_ms: f64,
+    ) -> Result<f32>;
+}
+
+/// # Responsibility
+/// Orchestrates generative note events based on gameplay state (MUSIC.RUST.md §4).
+///
+/// ---
+///
+/// Emits PlayGenerativeNote events to the EventBus for frontend audio synthesis.
+#[async_trait]
+pub trait IGenerativeNoteOrchestratorService: Interface + Send + Sync {
+    /// Emits a note event based on player action.
+    ///
+    /// # Errors
+    /// Returns error if note emission fails.
+    async fn emit_note_for_action(&self, action: PlayerAction, qualia_state: QualiaState) -> Result<()>;
+
+    /// Updates the orchestrator state (e.g., fades out layers).
+    async fn update(&self, dt: f32) -> Result<()>;
 }
 
 /// # Responsibility
