@@ -69,8 +69,8 @@ mod tests {
         let chord = mock.get_current_chord_at_time(0.0).await;
         assert!(chord.is_ok());
 
-        let key = mock.get_current_key().await;
-        assert_eq!(key.unwrap(), "C Major");
+        let key = mock.get_current_key().await.expect("Mock should return key");
+        assert_eq!(key, "C Major");
     }
 
     #[tokio::test]
@@ -87,7 +87,7 @@ mod tests {
                 })
             });
 
-        let chord = mock.get_current_chord_at_time(1000.0).await.unwrap();
+        let chord = mock.get_current_chord_at_time(1000.0).await.expect("Mock should return chord");
         assert_eq!(chord.root_note, "A");
         assert_eq!(chord.chord_type, "minor");
     }

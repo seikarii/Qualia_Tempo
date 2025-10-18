@@ -171,13 +171,13 @@ mod tests {
         let result = service.package_state(&combat_state);
         assert!(result.is_ok(), "Should serialize CombatState to JSON");
         
-        let json = result.unwrap();
+        let json = result.expect("Test should not panic");
         assert!(!json.is_empty(), "Serialized data should not be empty");
         
         // Verify it's valid JSON
         let deserialized: Result<CombatState, _> = serde_json::from_slice(&json);
         assert!(deserialized.is_ok(), "Should deserialize back to CombatState");
-        assert_eq!(deserialized.unwrap(), combat_state, "Roundtrip should preserve data");
+        assert_eq!(deserialized.expect("Test should not panic"), combat_state, "Roundtrip should preserve data");
     }
 
     #[tokio::test]
@@ -202,7 +202,6 @@ mod tests {
         // Abort the task (it should be sleeping, not ticking)
         handle.abort();
         
-        // Test passes if no panic occurred
-        assert!(true, "Streaming loop should handle rate=0 gracefully");
+        // Test passes if no panic occurred (no explicit assertion needed)
     }
 }

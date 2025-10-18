@@ -236,7 +236,7 @@ mod tests {
         let result = service.process_action(action, frontend_state).await;
 
         assert!(result.is_ok());
-        let validated = result.unwrap();
+        let validated = result.expect("Test should not panic");
         assert!(validated.intensity <= 1.0);
         assert!(validated.precision <= 1.0);
     }

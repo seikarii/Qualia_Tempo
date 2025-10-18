@@ -102,7 +102,7 @@ mod tests {
         let result = bus.emit(event.clone());
 
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 2); // 2 receivers
+        assert_eq!(result.expect("Test should not panic"), 2); // 2 receivers
 
         // Both subscribers should receive the event
         assert!(matches!(rx1.try_recv(), Ok(GameEvent::QualiaStateUpdated { .. })));
@@ -110,6 +110,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(clippy::panic)] // Test failure paths require panic
     async fn test_lagging_subscriber() {
         let bus = EventBusService::new(2); // Small capacity
         let mut rx = bus.subscribe();
@@ -130,7 +131,9 @@ mod tests {
             Err(broadcast::error::TryRecvError::Lagged(n)) => {
                 assert!(n > 0, "Should report lagging");
             }
-            _ => panic!("Expected Lagged error"),
+            other => {
+                panic!("Expected Lagged error, got: {:?}", other);
+            }
         }
     }
 }

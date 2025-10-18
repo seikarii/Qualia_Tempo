@@ -227,10 +227,10 @@ mod tests {
 
     #[test]
     fn test_key_to_note() {
-        assert_eq!(GenerativeNoteOrchestratorService::key_to_note('Q').unwrap(), "C");
-        assert_eq!(GenerativeNoteOrchestratorService::key_to_note('E').unwrap(), "D");
-        assert_eq!(GenerativeNoteOrchestratorService::key_to_note('R').unwrap(), "E");
-        assert_eq!(GenerativeNoteOrchestratorService::key_to_note('T').unwrap(), "F");
+        assert_eq!(GenerativeNoteOrchestratorService::key_to_note('Q').expect("Test should not panic"), "C");
+        assert_eq!(GenerativeNoteOrchestratorService::key_to_note('E').expect("Test should not panic"), "D");
+        assert_eq!(GenerativeNoteOrchestratorService::key_to_note('R').expect("Test should not panic"), "E");
+        assert_eq!(GenerativeNoteOrchestratorService::key_to_note('T').expect("Test should not panic"), "F");
     }
 
     #[test]

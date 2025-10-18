@@ -153,7 +153,7 @@ mod tests {
     async fn test_unregister_connection() {
         let service = create_test_service();
         
-        service.register_connection("conn-001".to_string()).await.unwrap();
+        service.register_connection("conn-001".to_string()).await.expect("Test should not panic");
         assert_eq!(service.active_connection_count(), 1);
         
         let result = service.unregister_connection("conn-001").await;
@@ -175,10 +175,10 @@ mod tests {
     async fn test_update_heartbeat() {
         let service = create_test_service();
         
-        service.register_connection("conn-001".to_string()).await.unwrap();
+        service.register_connection("conn-001".to_string()).await.expect("Test should not panic");
         
         // Get initial heartbeat timestamp
-        let initial_heartbeat = service.connections.get("conn-001").unwrap().last_heartbeat;
+        let initial_heartbeat = service.connections.get("conn-001").expect("Test should not panic").last_heartbeat;
         
         // Wait a bit to ensure timestamp changes
         tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
@@ -187,7 +187,7 @@ mod tests {
         service.update_heartbeat("conn-001");
         
         // Get updated heartbeat
-        let updated_heartbeat = service.connections.get("conn-001").unwrap().last_heartbeat;
+        let updated_heartbeat = service.connections.get("conn-001").expect("Test should not panic").last_heartbeat;
         
         assert!(updated_heartbeat > initial_heartbeat, "Heartbeat should be updated");
     }
@@ -196,9 +196,9 @@ mod tests {
     async fn test_get_active_connections() {
         let service = create_test_service();
         
-        service.register_connection("conn-001".to_string()).await.unwrap();
-        service.register_connection("conn-002".to_string()).await.unwrap();
-        service.register_connection("conn-003".to_string()).await.unwrap();
+        service.register_connection("conn-001".to_string()).await.expect("Test should not panic");
+        service.register_connection("conn-002".to_string()).await.expect("Test should not panic");
+        service.register_connection("conn-003".to_string()).await.expect("Test should not panic");
         
         let active = service.get_active_connections();
         
@@ -213,16 +213,16 @@ mod tests {
         let service = create_test_service();
         
         // Register connection
-        service.register_connection("conn-001".to_string()).await.unwrap();
+        service.register_connection("conn-001".to_string()).await.expect("Test should not panic");
         
         // Manually set heartbeat to 35 seconds ago (beyond 30s threshold)
         {
-            let mut conn = service.connections.get_mut("conn-001").unwrap();
+            let mut conn = service.connections.get_mut("conn-001").expect("Test should not panic");
             conn.last_heartbeat = Instant::now() - tokio::time::Duration::from_secs(35);
         }
         
         // Cleanup stale connections
-        let removed_count = service.cleanup_stale_connections().await.unwrap();
+        let removed_count = service.cleanup_stale_connections().await.expect("Test should not panic");
         
         assert_eq!(removed_count, 1, "Should remove 1 stale connection");
         assert_eq!(service.active_connection_count(), 0, "Should have 0 connections after cleanup");
@@ -233,20 +233,20 @@ mod tests {
         let service = create_test_service();
         
         // Register connections
-        service.register_connection("conn-001".to_string()).await.unwrap();
-        service.register_connection("conn-002".to_string()).await.unwrap();
+        service.register_connection("conn-001".to_string()).await.expect("Test should not panic");
+        service.register_connection("conn-002".to_string()).await.expect("Test should not panic");
         
         // Update heartbeat for conn-001 (fresh)
         service.update_heartbeat("conn-001");
         
         // Set conn-002 heartbeat to stale (35 seconds ago)
         {
-            let mut conn = service.connections.get_mut("conn-002").unwrap();
+            let mut conn = service.connections.get_mut("conn-002").expect("Test should not panic");
             conn.last_heartbeat = Instant::now() - tokio::time::Duration::from_secs(35);
         }
         
         // Cleanup
-        let removed_count = service.cleanup_stale_connections().await.unwrap();
+        let removed_count = service.cleanup_stale_connections().await.expect("Test should not panic");
         
         assert_eq!(removed_count, 1, "Should remove only stale connection");
         assert_eq!(service.active_connection_count(), 1, "Should keep fresh connection");
@@ -273,7 +273,7 @@ mod tests {
         
         // Wait for all tasks
         for handle in handles {
-            handle.await.unwrap().unwrap();
+            handle.await.expect("Test should not panic").expect("Test should not panic");
         }
         
         assert_eq!(service.active_connection_count(), 100, "Should register all 100 connections");
@@ -283,9 +283,9 @@ mod tests {
     async fn test_connection_metadata_fields() {
         let service = create_test_service();
         
-        service.register_connection("conn-001".to_string()).await.unwrap();
+        service.register_connection("conn-001".to_string()).await.expect("Test should not panic");
         
-        let metadata = service.connections.get("conn-001").unwrap();
+        let metadata = service.connections.get("conn-001").expect("Test should not panic");
         
         assert_eq!(metadata.connection_id, "conn-001");
         assert!(metadata.connected_at.elapsed().as_secs() < 1, "Should be recently connected");

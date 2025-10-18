@@ -240,7 +240,7 @@ mod tests {
         let service = create_test_service();
         
         // Load pattern first
-        service.load_patterns(vec![create_test_pattern()]).await.unwrap();
+        service.load_patterns(vec![create_test_pattern()]).await.expect("Test should not panic");
 
         let result = service.execute_pattern("test_pattern", (100.0, 200.0)).await;
 
@@ -257,8 +257,8 @@ mod tests {
         let service = create_test_service();
         
         // Load and execute pattern
-        service.load_patterns(vec![create_test_pattern()]).await.unwrap();
-        service.execute_pattern("test_pattern", (0.0, 0.0)).await.unwrap();
+        service.load_patterns(vec![create_test_pattern()]).await.expect("Test should not panic");
+        service.execute_pattern("test_pattern", (0.0, 0.0)).await.expect("Test should not panic");
 
         // Update with dt > telegraph duration (500ms = 0.5s)
         let result = service.update(0.6).await;
@@ -273,11 +273,11 @@ mod tests {
         let service = create_test_service();
         
         // Load and execute pattern
-        service.load_patterns(vec![create_test_pattern()]).await.unwrap();
-        service.execute_pattern("test_pattern", (0.0, 0.0)).await.unwrap();
+        service.load_patterns(vec![create_test_pattern()]).await.expect("Test should not panic");
+        service.execute_pattern("test_pattern", (0.0, 0.0)).await.expect("Test should not panic");
 
         // Update with dt > total duration (telegraph 0.5s + active 2s = 2.5s)
-        service.update(3.0).await.unwrap();
+        service.update(3.0).await.expect("Test should not panic");
 
         let actives = service.active_patterns.read().await;
         assert_eq!(actives.len(), 0, "Expired pattern should be removed");

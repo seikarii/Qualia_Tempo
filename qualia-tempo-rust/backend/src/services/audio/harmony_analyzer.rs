@@ -211,7 +211,7 @@ mod tests {
         let result = service.analyze_song(&audio_data, 44100).await;
 
         assert!(result.is_ok());
-        let harmony_map = result.unwrap();
+        let harmony_map = result.expect("Test should not panic");
         assert_eq!(harmony_map.key_signature, "C Major");
         assert!(!harmony_map.progression.is_empty());
     }

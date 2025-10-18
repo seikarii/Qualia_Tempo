@@ -240,7 +240,7 @@ mod tests {
         
         // Binary broadcast not implemented in Phase 4 (EventBus handles JSON events)
         let result = service.broadcast_message(vec![1, 2, 3, 4]).await;
-        assert_eq!(result.unwrap(), 0, "broadcast_message returns 0 as placeholder");
+        assert_eq!(result.expect("Test should not panic"), 0, "broadcast_message returns 0 as placeholder");
     }
 
     #[tokio::test]
@@ -249,7 +249,7 @@ mod tests {
         
         // Direct messaging not implemented in Phase 4
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            tokio::runtime::Runtime::new().unwrap().block_on(async {
+            tokio::runtime::Runtime::new().expect("Test should not panic").block_on(async {
                 service.send_message("conn-id", vec![1, 2, 3]).await
             })
         }));

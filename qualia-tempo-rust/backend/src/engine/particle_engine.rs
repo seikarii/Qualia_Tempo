@@ -317,7 +317,7 @@ mod tests {
     async fn test_spawn_particles_activates_particles() {
         let engine = create_test_engine();
 
-        engine.spawn_particles(50).await.unwrap();
+        engine.spawn_particles(50).await.expect("Test should not panic");
 
         let active_count = engine.get_active_count().await;
         assert_eq!(active_count, 50, "50 particles should be active");
@@ -327,12 +327,12 @@ mod tests {
     async fn test_update_moves_particles() {
         let engine = create_test_engine();
 
-        engine.spawn_particles(10).await.unwrap();
+        engine.spawn_particles(10).await.expect("Test should not panic");
 
         let particles_before = engine.get_particles().await;
         let pos_before = particles_before[0].position;
 
-        engine.update(0.016).await.unwrap(); // ~60 FPS
+        engine.update(0.016).await.expect("Test should not panic"); // ~60 FPS
 
         let particles_after = engine.get_particles().await;
         let pos_after = particles_after[0].position;
@@ -347,10 +347,10 @@ mod tests {
     async fn test_cull_dead_particles_removes_expired() {
         let engine = create_test_engine();
 
-        engine.spawn_particles(10).await.unwrap();
+        engine.spawn_particles(10).await.expect("Test should not panic");
 
         // Force particles to expire by updating with large delta
-        engine.update(3.0).await.unwrap(); // 3 seconds (> lifetime_max)
+        engine.update(3.0).await.expect("Test should not panic"); // 3 seconds (> lifetime_max)
 
         let active_count = engine.get_active_count().await;
         assert_eq!(
@@ -363,7 +363,7 @@ mod tests {
     async fn test_spawn_blocking_does_not_block_runtime() {
         let engine = Arc::new(create_test_engine());
 
-        engine.spawn_particles(100).await.unwrap();
+        engine.spawn_particles(100).await.expect("Test should not panic");
 
         let start = Instant::now();
 
@@ -372,13 +372,13 @@ mod tests {
             .map(|_| {
                 let engine_clone = Arc::clone(&engine);
                 tokio::spawn(async move {
-                    engine_clone.update(0.016).await.unwrap();
+                    engine_clone.update(0.016).await.expect("Test should not panic");
                 })
             })
             .collect();
 
         for handle in handles {
-            handle.await.unwrap();
+            handle.await.expect("Test should not panic");
         }
 
         let elapsed = start.elapsed();
@@ -395,14 +395,15 @@ mod tests {
     async fn test_reset_clears_all_particles() {
         let engine = create_test_engine();
 
-        engine.spawn_particles(50).await.unwrap();
+        engine.spawn_particles(50).await.expect("Test should not panic");
         assert_eq!(engine.get_active_count().await, 50);
 
-        engine.reset().await.unwrap();
+        engine.reset().await.expect("Test should not panic");
         assert_eq!(engine.get_active_count().await, 0);
     }
 
     #[tokio::test]
+    #[allow(clippy::print_stdout)] // Benchmark diagnostic output
     async fn test_performance_10k_particles() {
         let config = Arc::new(ParticleSystemConfig {
             max_particles: 10_000,
@@ -412,14 +413,14 @@ mod tests {
         let mock_event_bus = MockEventBus::with_defaults();
         let engine = QualiaParticleEngine::new(config, Arc::new(mock_event_bus));
 
-        engine.spawn_particles(10_000).await.unwrap();
+        engine.spawn_particles(10_000).await.expect("Test should not panic");
 
         // Warmup run to eliminate JIT/cache cold start
-        engine.update(0.016).await.unwrap();
+        engine.update(0.016).await.expect("Test should not panic");
 
         // Measure actual performance
         let start = Instant::now();
-        engine.update(0.016).await.unwrap();
+        engine.update(0.016).await.expect("Test should not panic");
         let elapsed = start.elapsed();
 
         println!("10,000 particles updated in {:?}", elapsed);
@@ -463,6 +464,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::print_stdout)] // Benchmark diagnostic output
     fn test_pure_compute_performance() {
         use std::time::Instant;
         
@@ -494,6 +496,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::print_stdout)] // Benchmark diagnostic output
     fn test_snapshot_performance() {
         use std::time::Instant;
         

@@ -188,7 +188,7 @@ mod tests {
             accuracy: 1.0,
         };
 
-        let score = service.score_action_coherence(action, 1000.0).await.unwrap();
+        let score = service.score_action_coherence(action, 1000.0).await.expect("Test should not panic");
 
         // C against C chord should be perfect consonance
         assert_eq!(score, 1.0);
@@ -220,7 +220,7 @@ mod tests {
             accuracy: 1.0,
         };
 
-        let score = service.score_action_coherence(action, 1000.0).await.unwrap();
+        let score = service.score_action_coherence(action, 1000.0).await.expect("Test should not panic");
 
         // F against C is a perfect 4th - should be consonant (not dissonant)
         // Testing that the coherence system correctly identifies consonance
@@ -256,7 +256,7 @@ mod tests {
             accuracy: 1.0,
         };
 
-        let score = service.score_action_coherence(action, 1000.0).await.unwrap();
+        let score = service.score_action_coherence(action, 1000.0).await.expect("Test should not panic");
 
         // Perfect unison should be perfect consonance
         assert_eq!(score, 1.0);

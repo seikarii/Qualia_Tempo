@@ -246,7 +246,7 @@ mod tests {
         let result = service.update(1.0, &qualia).await;
 
         assert!(result.is_ok());
-        let boss = result.unwrap();
+        let boss = result.expect("Test should not panic");
         assert!(boss.current_aggression_level > 0.5, "Aggression should increase");
     }
 

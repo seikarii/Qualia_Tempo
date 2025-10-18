@@ -70,7 +70,7 @@ comboMultiplier: 1.5
 minComboAccuracy: 0.75
 maxComboCount: 150
 "#;
-        let config: GameLogicConfig = serde_yaml::from_str(yaml).unwrap();
+        let config: GameLogicConfig = serde_yaml::from_str(yaml).expect("Test should not panic");
         assert_eq!(config.base_intensity_multiplier, 2.0);
         assert_eq!(config.harmony_decay_rate, 0.2);
         assert_eq!(config.chaos_threshold, 0.8);

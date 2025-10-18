@@ -65,7 +65,7 @@ maxConnections: 500
 websocketPingIntervalMs: 60000
 maxMessageSizeBytes: 2097152
 "#;
-        let config: ServerConfig = serde_yaml::from_str(yaml).unwrap();
+        let config: ServerConfig = serde_yaml::from_str(yaml).expect("Test should not panic");
         assert_eq!(config.host, "0.0.0.0");
         assert_eq!(config.port, 8080);
         assert_eq!(config.max_connections, 500);

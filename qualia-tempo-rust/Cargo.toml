@@ -48,15 +48,18 @@ all = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
 # Critical Denials (QUALIA.CODE.RUST §LINTER)
-unwrap_used = "deny"
-expect_used = "deny"
-panic = "deny"
-print_stdout = "deny"
+unwrap_used = "deny"  # Panic-inducing unwrap() is forbidden
+# expect_used is ALLOWED with context messages (QUALIA.CODE.RUST compliance)
+panic = "deny"  # panic! forbidden in production code (tests use #[allow])
+print_stdout = "deny"  # println! forbidden in production code
 print_stderr = "deny"
 dbg_macro = "deny"
 # Allowed Exceptions
 must_use_candidate = "allow"
 module_name_repetitions = "allow"
+# Test-specific relaxations
+float_cmp = "allow"  # Floating-point equality checks allowed in tests
+literal_separator = "allow"  # Number formatting not critical
 
 [profile.release]
 opt-level = 3

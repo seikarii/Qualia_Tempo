@@ -177,7 +177,7 @@ mod tests {
     async fn test_end_combat_deactivates_session() {
         let orchestrator = create_test_orchestrator();
 
-        orchestrator.start_combat().await.unwrap();
+        orchestrator.start_combat().await.expect("Test should not panic");
         let result = orchestrator.end_combat().await;
 
         assert!(result.is_ok());
@@ -192,7 +192,7 @@ mod tests {
         let result = orchestrator.get_combat_state().await;
 
         assert!(result.is_ok());
-        let state = result.unwrap();
+        let state = result.expect("Test should not panic");
         assert_eq!(state.score, 0); // Default state
     }
 
@@ -210,18 +210,18 @@ mod tests {
         let orchestrator = create_test_orchestrator();
 
         // Start combat
-        orchestrator.start_combat().await.unwrap();
+        orchestrator.start_combat().await.expect("Test should not panic");
 
         // Update a few frames
-        orchestrator.update(0.016).await.unwrap();
-        orchestrator.update(0.016).await.unwrap();
+        orchestrator.update(0.016).await.expect("Test should not panic");
+        orchestrator.update(0.016).await.expect("Test should not panic");
 
         // Get state
-        let state = orchestrator.get_combat_state().await.unwrap();
+        let state = orchestrator.get_combat_state().await.expect("Test should not panic");
         assert_eq!(state.score, 0);
 
         // End combat
-        orchestrator.end_combat().await.unwrap();
+        orchestrator.end_combat().await.expect("Test should not panic");
 
         let is_active = *orchestrator.is_active.read().await;
         assert!(!is_active);

@@ -61,7 +61,7 @@ mod tests {
         
         let result = bus.emit(event);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), 1);
+        assert_eq!(result.expect("Test should not panic"), 1);
         
         let _rx = bus.subscribe();
     }

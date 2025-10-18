@@ -82,11 +82,11 @@ async fn test_particle_lifecycle_full_cycle() {
     let particle_engine = QualiaParticleEngine::new(config, event_bus);
     
     // Act: Spawn → Update → Cull
-    particle_engine.spawn_particles(50).await.unwrap();
+    particle_engine.spawn_particles(50).await.expect("Test should not panic");
     assert_eq!(particle_engine.get_active_count().await, 50);
     
     // Update with large delta_time to expire particles
-    particle_engine.update(0.05).await.unwrap(); // 50ms > max lifetime
+    particle_engine.update(0.05).await.expect("Test should not panic"); // 50ms > max lifetime
     
     // Assert: All particles culled
     let count_after_expiry = particle_engine.get_active_count().await;
@@ -116,7 +116,7 @@ async fn test_particle_engine_respects_max_particles() {
     let particle_engine = QualiaParticleEngine::new(config, event_bus);
     
     // Act: Try to spawn more than max
-    particle_engine.spawn_particles(200).await.unwrap();
+    particle_engine.spawn_particles(200).await.expect("Test should not panic");
     
     // Assert: Capped at max_particles
     let count = particle_engine.get_active_count().await;

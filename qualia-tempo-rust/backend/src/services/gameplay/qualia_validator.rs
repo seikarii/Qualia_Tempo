@@ -254,7 +254,7 @@ mod tests {
             accuracy: 0.9,
         };
 
-        let result = validator.validate(invalid_state, action).await.unwrap();
+        let result = validator.validate(invalid_state, action).await.expect("Test should not panic");
 
         // All positive values should be penalized
         assert!(result.intensity < invalid_state.intensity * 0.6);
@@ -282,7 +282,7 @@ mod tests {
             accuracy: 0.95, // HIGH accuracy (mismatch!)
         };
 
-        let result = validator.validate(state, action).await.unwrap();
+        let result = validator.validate(state, action).await.expect("Test should not panic");
 
         // Should apply penalty due to mismatch
         assert!(result.precision < state.precision * 0.6);

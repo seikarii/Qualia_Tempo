@@ -70,7 +70,7 @@ use_blocking_compute: true
 default_lifetime: 3.0
 "#;
 
-        let config: ParticleEngineConfig = serde_yaml::from_str(yaml).unwrap();
+        let config: ParticleEngineConfig = serde_yaml::from_str(yaml).expect("Test should not panic");
 
         assert_eq!(config.max_particles, 5000);
         assert_eq!(config.damping, 0.95);

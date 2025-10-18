@@ -49,31 +49,33 @@ mod tests {
 
     #[test]
     fn test_load_valid_config() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "value: test").unwrap();
-        writeln!(temp_file, "number: 42").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test should not panic");
+        writeln!(temp_file, "value: test").expect("Test should not panic");
+        writeln!(temp_file, "number: 42").expect("Test should not panic");
+        temp_file.flush().expect("Test should not panic");
 
-        let config: TestConfig = load_config(temp_file.path()).unwrap();
+        let config: TestConfig = load_config(temp_file.path()).expect("Test should not panic");
         assert_eq!(config.value, "test");
         assert_eq!(config.number, 42);
     }
 
     #[test]
     fn test_load_invalid_yaml() {
-        let mut temp_file = NamedTempFile::new().unwrap();
-        writeln!(temp_file, "value: [unclosed array").unwrap();
-        temp_file.flush().unwrap();
+        let mut temp_file = NamedTempFile::new().expect("Test should not panic");
+        writeln!(temp_file, "value: [unclosed array").expect("Test should not panic");
+        temp_file.flush().expect("Test should not panic");
 
         let result: Result<TestConfig> = load_config(temp_file.path());
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Failed to parse YAML"));
+        let error_msg = result.expect_err("Should fail with invalid YAML").to_string();
+        assert!(error_msg.contains("Failed to parse YAML"));
     }
 
     #[test]
     fn test_load_missing_file() {
         let result: Result<TestConfig> = load_config("/nonexistent/path/config.yaml");
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Failed to read config file"));
+        let error_msg = result.expect_err("Should fail with missing file").to_string();
+        assert!(error_msg.contains("Failed to read config file"));
     }
 }
