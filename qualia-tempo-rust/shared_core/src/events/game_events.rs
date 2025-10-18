@@ -100,6 +100,9 @@ pub enum GameEvent {
         message: String,
         timestamp: f64,
     },
+
+    /// Combat event (wrapping `CombatEvent` variants)
+    Combat(super::combat_events::CombatEvent),
 }
 
 #[cfg(test)]

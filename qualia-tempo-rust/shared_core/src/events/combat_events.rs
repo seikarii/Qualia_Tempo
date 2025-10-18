@@ -152,6 +152,28 @@ pub enum CombatEvent {
         /// Affected area radius
         radius: f32,
     },
+
+    /// Boss is triggering an attack pattern
+    BossAttack {
+        /// Pattern data to execute
+        pattern: crate::contracts::PatternData,
+    },
+
+    /// Boss attack pattern is being telegraphed
+    PatternTelegraph {
+        /// Pattern being telegraphed
+        pattern: crate::contracts::PatternData,
+    },
+
+    /// Projectile spawned from pattern
+    ProjectileSpawned {
+        /// Spawn position
+        position: crate::utils::Vec2,
+        /// Damage value
+        damage: f32,
+        /// Source pattern ID
+        pattern_id: String,
+    },
 }
 
 #[cfg(test)]

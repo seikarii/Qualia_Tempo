@@ -7,5 +7,7 @@
 //! at application startup.
 
 pub mod game_logic;
+pub mod boss_ai;
 
 pub use game_logic::GameLogicConfig;
+pub use boss_ai::BossAIConfig;
