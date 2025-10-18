@@ -4,7 +4,7 @@
 
 [workspace]
 members = [
-    "qualia_macros",
+    "qualia_macros", "shared_core",
 ]
 resolver = "2"
 
