@@ -12,8 +12,12 @@ use backend::services::core::{EventBusService, QualiaLogger};
 use backend::services::audio::HarmonyCacheService;
 use backend::services::networking::GameStateStreamingService;
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId, Throughput};
-use shared_core::contracts::{CombatState, GamePhase, PlayerState, BossState, QualiaState, Vec2};
-use shared_core::traits::{IHarmonyCacheService, IGameStateStreamingService};
+use shared_core::contracts::{
+    CombatState, GamePhase, PlayerState, BossState, QualiaState,
+    PlayerAbilities
+};
+use shared_core::{Vec2};
+use shared_core::traits::{IHarmonyCacheService, IGameStateStreamingService, IEventBus};
 use shaku::{module, HasComponent};
 use std::sync::Arc;
 use tokio::runtime::Runtime;
@@ -32,23 +36,36 @@ module! {
 
 fn create_sample_combat_state() -> CombatState {
     CombatState {
-        game_phase: GamePhase::Combat,
+        game_phase: GamePhase::Playing,
         player: PlayerState {
             position: Vec2::new(100.0, 100.0),
+            velocity: Vec2::new(0.0, 0.0),
             health: 100.0,
             max_health: 100.0,
             is_dashing: false,
+            is_invulnerable: false,
+            combo: 10,
+            abilities: PlayerAbilities::default(),
+            buffs: Vec::new(),
+            debuffs: Vec::new(),
         },
         boss: BossState {
+            id: "benchmark_boss".to_string(),
             position: Vec2::new(400.0, 300.0),
+            velocity: Vec2::new(0.0, 0.0),
             health: 500.0,
             max_health: 500.0,
+            current_pattern_id: None,
+            is_stunned: false,
             phase: 1,
+            current_aggression_level: 0.5,
         },
-        current_qualia: QualiaState::default(),
+        qualia: QualiaState::default(),
+        timestamp: 12_345.0,
+        song_position: 10.0,
+        song_duration: 180.0,
         score: 1000,
-        combo: 10,
-        timestamp: 12345,
+        qualia_event_history: Vec::new(),
     }
 }
 
@@ -103,7 +120,6 @@ fn bench_streaming_throughput(c: &mut Criterion) {
                 let streaming: Arc<dyn IGameStateStreamingService> = container.resolve();
                 
                 b.to_async(&rt).iter(|| async {
-                    let mut streaming = streaming.clone();
                     streaming.set_rate(rate);
                     black_box(streaming.stream_state().await.expect("Streaming failed"))
                 });
@@ -142,7 +158,7 @@ fn bench_harmony_cache_performance(c: &mut Criterion) {
 fn bench_eventbus_broadcast_latency(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
     let container = Phase11BenchModule::builder().build();
-    let event_bus = container.resolve_ref::<EventBusService>();
+    let event_bus: Arc<dyn IEventBus> = container.resolve();
     
     c.bench_function("eventbus_emit_latency", |b| {
         b.to_async(&rt).iter(|| async {

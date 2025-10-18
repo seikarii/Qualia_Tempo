@@ -7,4 +7,5 @@
 
 pub mod initializer;
 
-pub use initializer::{ApplicationInitializerService, IApplicationInitializer};
+pub use initializer::ApplicationInitializerService;
+pub use shared_core::traits::IApplicationInitializer;

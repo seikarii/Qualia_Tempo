@@ -285,10 +285,12 @@ mod tests {
         
         service.register_connection("conn-001".to_string()).await.expect("Test should not panic");
         
-        let metadata = service.connections.get("conn-001").expect("Test should not panic");
-        
-        assert_eq!(metadata.connection_id, "conn-001");
-        assert!(metadata.connected_at.elapsed().as_secs() < 1, "Should be recently connected");
-        assert!(metadata.last_heartbeat.elapsed().as_secs() < 1, "Heartbeat should be recent");
+        {
+            let metadata = service.connections.get("conn-001").expect("Test should not panic");
+            
+            assert_eq!(metadata.connection_id, "conn-001");
+            assert!(metadata.connected_at.elapsed().as_secs() < 1, "Should be recently connected");
+            assert!(metadata.last_heartbeat.elapsed().as_secs() < 1, "Heartbeat should be recent");
+        } // Drop metadata guard here explicitly
     }
 }

@@ -247,11 +247,13 @@ mod tests {
         let result = service.execute_pattern("test_pattern", (100.0, 200.0)).await;
 
         assert!(result.is_ok());
-        let actives = service.active_patterns.read().await;
-        assert_eq!(actives.len(), 1);
-        assert_eq!(actives[0].pattern_id, "test_pattern");
-        assert_eq!(actives[0].boss_position, (100.0, 200.0));
-        assert!(actives[0].is_telegraphing);
+        {
+            let actives = service.active_patterns.read().await;
+            assert_eq!(actives.len(), 1);
+            assert_eq!(actives[0].pattern_id, "test_pattern");
+            assert_eq!(actives[0].boss_position, (100.0, 200.0));
+            assert!(actives[0].is_telegraphing);
+        } // Drop guard
     }
 
     #[tokio::test]
@@ -266,8 +268,10 @@ mod tests {
         let result = service.update(0.6).await;
 
         assert!(result.is_ok());
-        let actives = service.active_patterns.read().await;
-        assert!(!actives[0].is_telegraphing, "Telegraph should be complete");
+        {
+            let actives = service.active_patterns.read().await;
+            assert!(!actives[0].is_telegraphing, "Telegraph should be complete");
+        } // Drop guard
     }
 
     #[tokio::test]
@@ -281,7 +285,10 @@ mod tests {
         // Update with dt > total duration (telegraph 0.5s + active 2s = 2.5s)
         service.update(3.0).await.expect("Test should not panic");
 
-        let actives = service.active_patterns.read().await;
-        assert_eq!(actives.len(), 0, "Expired pattern should be removed");
+        {
+            let actives = service.active_patterns.read().await;
+            assert_eq!(actives.len(), 0, "Expired pattern should be removed");
+        } // Drop guard
     }
+
 }

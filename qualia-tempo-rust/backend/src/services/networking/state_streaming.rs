@@ -219,6 +219,8 @@ mod tests {
         // Verify size reduction vs JSON
         let json_size = serde_json::to_vec(&combat_state).expect("JSON serialization").len();
         let bincode_size = binary.len();
+        
+        #[allow(clippy::cast_precision_loss)]
         let reduction = (1.0 - (bincode_size as f64 / json_size as f64)) * 100.0;
         
         // Phase 11 target: 60-80% reduction

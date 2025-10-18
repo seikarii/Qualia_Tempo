@@ -6,19 +6,11 @@
 //! Manages startup sequence for all IBaseService implementations and
 //! ensures graceful shutdown when application terminates.
 
-use shaku::{Component, Interface};
+use shaku::Component;
 use std::sync::Arc;
 use async_trait::async_trait;
 use anyhow::Result;
-use shared_core::traits::{ILogger, IBaseService};
-
-/// # Responsibility
-/// Interface for application lifecycle management.
-#[async_trait]
-pub trait IApplicationInitializer: Interface {
-    async fn initialize(&self) -> Result<()>;
-    async fn shutdown(&self) -> Result<()>;
-}
+use shared_core::traits::{ILogger, IBaseService, IApplicationInitializer};
 
 /// # Responsibility
 /// Coordinates initialization and shutdown of all registered services.
