@@ -9,16 +9,20 @@
 pub mod interfaces;
 pub mod core;
 pub mod gameplay;
+pub mod networking;
 
 #[cfg(test)]
 pub mod tests;
 
 // Re-export interfaces for convenience
 pub use interfaces::{ILogger, IEventBus, ITimer, IGameLogicService};
-pub use shared_core::traits::{IBossAIService, IPatternSystemService, IQualiaProcessorService};
+pub use shared_core::traits::{IBossAIService, IPatternSystemService, IQualiaProcessorService, IWebSocketService, IGameStateStreamingService};
 
 // Re-export core services
 pub use core::{EventBusService, QualiaLogger, TimerService, ErrorReportingService};
 
 // Re-export gameplay services
 pub use gameplay::{GameLogicService, BossAIService, PatternSystemService, QualiaProcessorService};
+
+// Re-export networking services
+pub use networking::{WebSocketService, GameStateStreamingService};

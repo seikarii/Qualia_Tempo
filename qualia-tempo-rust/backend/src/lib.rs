@@ -1,17 +1,15 @@
 //! # Responsibility
-//! Backend library exports for testing and modular access.
+//! Backend library crate for Qualia Tempo.
 //!
 //! ---
 //!
-//! This library crate exposes all backend services, allowing them to be
-//! tested independently and used by integration test modules.
+//! This crate provides all backend functionality including services, handlers,
+//! and configuration management. Used by main.rs and tests.
 
-pub mod config;
 pub mod services;
+pub mod config;
+pub mod handlers;
 
-// Re-export for convenience
-pub use services::{
-    ILogger, IEventBus, ITimer, IGameLogicService,
-    EventBusService, QualiaLogger, TimerService, ErrorReportingService, GameLogicService,
-};
-pub use config::GameLogicConfig;
+// Re-export commonly used items
+pub use services::*;
+pub use config::*;
