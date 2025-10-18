@@ -7,6 +7,7 @@
 //! events that can flow through the `EventBus` (`tokio::sync::broadcast`).
 
 use crate::contracts::{
+    audio::PlayGenerativeNote,
     game_state::{CombatState, QualiaState},
     input::PlayerAction,
 };
@@ -100,6 +101,9 @@ pub enum GameEvent {
         message: String,
         timestamp: f64,
     },
+
+    /// Generative note should be played (sent to frontend)
+    PlayGenerativeNote(PlayGenerativeNote),
 
     /// Combat event (wrapping `CombatEvent` variants)
     Combat(super::combat_events::CombatEvent),

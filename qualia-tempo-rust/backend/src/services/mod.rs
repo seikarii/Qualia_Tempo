@@ -10,6 +10,7 @@ pub mod interfaces;
 pub mod core;
 pub mod gameplay;
 pub mod networking;
+pub mod audio;
 
 #[cfg(test)]
 pub mod tests;
@@ -26,3 +27,6 @@ pub use gameplay::{GameLogicService, BossAIService, PatternSystemService, Qualia
 
 // Re-export networking services
 pub use networking::{WebSocketService, GameStateStreamingService, ConnectionManagerService};
+
+// Re-export audio services
+pub use audio::{HarmonyAnalysisService, MusicalCoherenceService, GenerativeNoteOrchestratorService};
