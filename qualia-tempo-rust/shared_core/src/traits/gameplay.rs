@@ -179,3 +179,45 @@ pub trait IQualiaProcessorService: Interface + Send + Sync {
     /// * Combo multiplier (1.0 = no bonus, > 1.0 = bonus)
     fn get_combo_multiplier(&self, combo: u32) -> f32;
 }
+
+/// # Responsibility
+/// Coordinates all combat-related services to produce unified `CombatState`.
+///
+/// ---
+///
+/// This service aggregates outputs from `GameLogicService`, `BossAIService`,
+/// and `PatternSystemService` into a single authoritative `CombatState` that
+/// is streamed to clients. It ensures all subsystems remain synchronized.
+#[async_trait]
+pub trait ICombatOrchestratorService: Interface + Send + Sync {
+    /// Start the combat orchestrator and all managed subsystems.
+    ///
+    /// # Returns
+    /// * `Ok(())` - All subsystems started successfully
+    /// * `Err(anyhow::Error)` - If any subsystem fails to start
+    async fn start(&self) -> Result<()>;
+
+    /// Stop the combat orchestrator and all managed subsystems.
+    ///
+    /// # Returns
+    /// * `Ok(())` - All subsystems stopped successfully
+    /// * `Err(anyhow::Error)` - If any subsystem fails to stop
+    async fn stop(&self) -> Result<()>;
+
+    /// Get the current aggregated combat state.
+    ///
+    /// # Returns
+    /// * `Ok(CombatState)` - The complete combat state snapshot
+    /// * `Err(anyhow::Error)` - If state cannot be retrieved
+    async fn get_current_state(&self) -> Result<CombatState>;
+
+    /// Update the combat state with time delta.
+    ///
+    /// # Arguments
+    /// * `dt` - Delta time in seconds since last update
+    ///
+    /// # Returns
+    /// * `Ok(CombatState)` - The updated combat state
+    /// * `Err(anyhow::Error)` - If update fails
+    async fn update(&self, dt: f32) -> Result<CombatState>;
+}

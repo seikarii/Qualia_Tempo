@@ -17,3 +17,8 @@ pub use i_event_bus::IEventBus;
 pub use i_timer::ITimer;
 pub use i_game_logic::IGameLogicService;
 pub use i_error_reporter::IErrorReporter;
+
+// Re-export traits from shared_core for convenience
+pub use shared_core::traits::{
+    IBossAIService, ICombatOrchestratorService, IPatternSystemService, IQualiaProcessorService,
+};

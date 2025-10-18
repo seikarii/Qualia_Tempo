@@ -5,7 +5,6 @@
 //!
 //! Test modules built here ensure complete isolation between tests.
 //! Each test gets fresh service instances.
-//! Phase 2 uses manual DI; will migrate to Shaku in future phases.
 
 use backend::services::core::{EventBusService, QualiaLogger, TimerService};
 use backend::services::interfaces::{IEventBus, ILogger, ITimer};
