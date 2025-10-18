@@ -1,0 +1,67 @@
+# Cargo.toml - Workspace Root for Qualia Tempo Rust Edition
+# VERSION: 1.0
+# COMPLIANCE: QUALIA.CODE.RUST v1.1 + ARCHITECTURE.RUST v2.0
+
+[workspace]
+members = [
+    "qualia_macros",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Qualia Tempo Team"]
+license = "MIT"
+
+[workspace.dependencies]
+# Core async runtime
+tokio = { version = "1.41", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Logging & Tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error Handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Testing
+mockall = "0.13"
+
+# Procedural Macro Dependencies
+syn = { version = "2.0", features = ["full", "extra-traits"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+
+# Utility Crates
+cached = "0.53"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+# Critical Denials (QUALIA.CODE.RUST §LINTER)
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+dbg_macro = "deny"
+# Allowed Exceptions
+must_use_candidate = "allow"
+module_name_repetitions = "allow"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true
