@@ -232,9 +232,11 @@ mod tests {
         let result = service.load_patterns(patterns).await;
 
         assert!(result.is_ok());
-        let definitions = service.pattern_definitions.read().await;
-        assert_eq!(definitions.len(), 1);
-        assert!(definitions.contains_key("test_pattern"));
+        {
+            let definitions = service.pattern_definitions.read().await;
+            assert_eq!(definitions.len(), 1);
+            assert!(definitions.contains_key("test_pattern"));
+        } // Explicit drop guard
     }
 
     #[tokio::test]
