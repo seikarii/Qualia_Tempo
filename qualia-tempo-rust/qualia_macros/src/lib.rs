@@ -38,7 +38,7 @@ mod deprecated;
 /// ```
 #[proc_macro_attribute]
 pub fn handle_event(args: TokenStream, input: TokenStream) -> TokenStream {
-    handle_event::expand(args, input)
+    crate::handle_event::expand(args, input)
 }
 
 /// # Responsibility
@@ -57,7 +57,7 @@ pub fn handle_event(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn cached(args: TokenStream, input: TokenStream) -> TokenStream {
-    cached::expand(args, input)
+    crate::cached::expand(args, input)
 }
 
 /// # Responsibility
@@ -76,7 +76,7 @@ pub fn cached(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn retry(args: TokenStream, input: TokenStream) -> TokenStream {
-    retry::expand(args, input)
+    crate::retry::expand(args, input)
 }
 
 /// # Responsibility
@@ -95,7 +95,7 @@ pub fn retry(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn timeout(args: TokenStream, input: TokenStream) -> TokenStream {
-    timeout::expand(args, input)
+    crate::timeout::expand(args, input)
 }
 
 /// # Responsibility
@@ -114,7 +114,7 @@ pub fn timeout(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn rate_limit(args: TokenStream, input: TokenStream) -> TokenStream {
-    rate_limit::expand(args, input)
+    crate::rate_limit::expand(args, input)
 }
 
 /// # Responsibility
@@ -133,7 +133,7 @@ pub fn rate_limit(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn circuit_breaker(args: TokenStream, input: TokenStream) -> TokenStream {
-    circuit_breaker::expand(args, input)
+    crate::circuit_breaker::expand(args, input)
 }
 
 /// # Responsibility
@@ -152,7 +152,7 @@ pub fn circuit_breaker(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn instrument(args: TokenStream, input: TokenStream) -> TokenStream {
-    instrument::expand(args, input)
+    crate::instrument::expand(args, input)
 }
 
 /// # Responsibility
@@ -171,7 +171,7 @@ pub fn instrument(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn validate(args: TokenStream, input: TokenStream) -> TokenStream {
-    validate::expand(args, input)
+    crate::validate::expand(args, input)
 }
 
 /// # Responsibility
@@ -190,7 +190,7 @@ pub fn validate(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn authorize(args: TokenStream, input: TokenStream) -> TokenStream {
-    authorize::expand(args, input)
+    crate::authorize::expand(args, input)
 }
 
 /// # Responsibility
@@ -209,7 +209,7 @@ pub fn authorize(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn transaction(args: TokenStream, input: TokenStream) -> TokenStream {
-    transaction::expand(args, input)
+    crate::transaction::expand(args, input)
 }
 
 /// # Responsibility
@@ -228,5 +228,5 @@ pub fn transaction(args: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn deprecated(args: TokenStream, input: TokenStream) -> TokenStream {
-    deprecated::expand(args, input)
+    crate::deprecated::expand(args, input)
 }

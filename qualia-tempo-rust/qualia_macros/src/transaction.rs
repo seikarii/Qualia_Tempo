@@ -1,5 +1,6 @@
+#![allow(clippy::doc_markdown)]
 //! # Responsibility
-//! Implements #[transaction] procedural macro.
+//! Implements `#[transaction]` procedural macro.
 //!
 //! ---
 //!
@@ -11,7 +12,7 @@ use quote::quote;
 use syn::{parse_macro_input, ItemFn};
 
 /// # Responsibility
-/// Expands #[transaction] into wrapped function (Phase 0 passthrough).
+/// Expands `#[transaction]` into wrapped function (Phase 0 passthrough).
 pub fn expand(_args: TokenStream, input: TokenStream) -> TokenStream {
     let handler_fn = parse_macro_input!(input as ItemFn);
     

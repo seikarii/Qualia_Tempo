@@ -13,7 +13,7 @@ use shaku::Interface;
 /// ---
 ///
 /// Implemented by QualiaLogger which wraps the tracing crate.
-/// All services inject Arc<dyn ILogger> for logging capabilities.
+/// All services inject `Arc<dyn ILogger>` for logging capabilities.
 pub trait ILogger: Interface {
     /// Log informational message
     fn info(&self, message: &str);

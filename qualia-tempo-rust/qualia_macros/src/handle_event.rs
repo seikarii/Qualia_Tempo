@@ -1,6 +1,6 @@
 #![allow(clippy::doc_markdown)]
 //! # Responsibility
-//! Implements #[`handle_event`] procedural macro for event subscription pattern.
+//! Implements `#[handle_event]` procedural macro for event subscription pattern.
 //!
 //! ---
 //!
@@ -13,7 +13,7 @@ use quote::quote;
 use syn::{parse_macro_input, ItemFn, Path};
 
 /// # Responsibility
-/// Expands #[`handle_event(EventVariant)`] into full event handler boilerplate.
+/// Expands `#[handle_event(EventVariant)]` into full event handler boilerplate.
 pub fn expand(args: TokenStream, input: TokenStream) -> TokenStream {
     let event_variant = parse_macro_input!(args as Path);
     let handler_fn = parse_macro_input!(input as ItemFn);

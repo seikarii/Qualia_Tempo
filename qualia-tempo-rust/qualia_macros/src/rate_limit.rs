@@ -1,6 +1,6 @@
 #![allow(clippy::doc_markdown)]
 //! # Responsibility
-//! Implements #[rate_limit] procedural macro for API rate limiting.
+//! Implements `#[rate_limit]` procedural macro for API rate limiting.
 //!
 //! ---
 //!

@@ -1,5 +1,6 @@
+#![allow(clippy::doc_markdown)]
 //! # Responsibility
-//! Implements #[cached] procedural macro for function memoization.
+//! Implements `#[cached]` procedural macro for function memoization.
 //!
 //! ---
 //!

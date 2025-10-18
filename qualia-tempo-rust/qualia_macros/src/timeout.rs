@@ -1,6 +1,6 @@
 #![allow(clippy::doc_markdown)]
 //! # Responsibility
-//! Implements #[timeout] procedural macro for async operation timeouts.
+//! Implements `#[timeout]` procedural macro for async operation timeouts.
 //!
 //! ---
 //!

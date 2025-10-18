@@ -1,6 +1,6 @@
 #![allow(clippy::doc_markdown)]
 //! # Responsibility
-//! Implements #[retry] procedural macro for automatic retry with backoff.
+//! Implements `#[retry]` procedural macro for automatic retry with backoff.
 //!
 //! ---
 //!
@@ -12,7 +12,7 @@ use quote::quote;
 use syn::{parse_macro_input, ItemFn};
 
 /// # Responsibility
-/// Expands #[retry(max_attempts = 3, delay_ms = 100)] into retry wrapper.
+/// Expands `#[retry(max_attempts = 3, delay_ms = 100)]` into retry wrapper.
 pub fn expand(_args: TokenStream, input: TokenStream) -> TokenStream {
     let handler_fn = parse_macro_input!(input as ItemFn);
     
