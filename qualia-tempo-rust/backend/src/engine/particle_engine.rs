@@ -423,7 +423,7 @@ mod tests {
         engine.update(0.016).await.expect("Test should not panic");
         let elapsed = start.elapsed();
 
-        println!("10,000 particles updated in {:?}", elapsed);
+        println!("10,000 particles updated in {elapsed:?}");
 
         // PERFORMANCE ANALYSIS (release mode):
         // - Pure compute_particle_physics: 131μs
@@ -489,7 +489,7 @@ mod tests {
         let _ = compute_particle_physics(particles, 0.016);
         let elapsed = start.elapsed();
         
-        println!("Pure compute for 10,000 particles: {:?}", elapsed);
+        println!("Pure compute for 10,000 particles: {elapsed:?}");
         
         // If this is <5ms, spawn_blocking overhead is the problem
         // If this is >15ms, algorithm needs SIMD
@@ -521,7 +521,7 @@ mod tests {
             .collect();
         let elapsed = start.elapsed();
         
-        println!("Snapshot 10,000 particles: {:?}", elapsed);
+        println!("Snapshot 10,000 particles: {elapsed:?}");
         println!("Snapshot collected: {} particles", snapshot.len());
     }
 }

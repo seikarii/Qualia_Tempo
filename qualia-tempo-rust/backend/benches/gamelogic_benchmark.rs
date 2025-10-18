@@ -1,5 +1,5 @@
 //! # Responsibility
-//! Performance benchmarks for GameLogicService.
+//! Performance benchmarks for `GameLogicService`.
 //!
 //! ---
 //!
@@ -71,7 +71,7 @@ fn bench_process_action_burst(c: &mut Criterion) {
     
     let mut group = c.benchmark_group("process_action_burst");
     
-    for burst_size in [10, 50, 100, 500].iter() {
+    for burst_size in &[10, 50, 100, 500] {
         group.bench_with_input(
             BenchmarkId::from_parameter(burst_size),
             burst_size,
@@ -83,7 +83,7 @@ fn bench_process_action_burst(c: &mut Criterion) {
                     for i in 0..burst_size {
                         let action = PlayerAction::KeyPressed {
                             key: 'Q',
-                            timestamp: 1000.0 + (i as f64 * 10.0),
+                            timestamp: f64::from(i).mul_add(10.0, 1000.0),
                             accuracy: 0.8,
                         };
                         

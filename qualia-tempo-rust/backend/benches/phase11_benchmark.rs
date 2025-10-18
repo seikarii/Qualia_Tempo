@@ -111,7 +111,7 @@ fn bench_streaming_throughput(c: &mut Criterion) {
     let mut group = c.benchmark_group("streaming_throughput");
     group.throughput(Throughput::Elements(1));
     
-    for rate in [30, 60, 120].iter() {
+    for rate in &[30, 60, 120] {
         group.bench_with_input(
             BenchmarkId::new("updates_per_second", rate),
             rate,
@@ -121,7 +121,8 @@ fn bench_streaming_throughput(c: &mut Criterion) {
                 
                 b.to_async(&rt).iter(|| async {
                     streaming.set_rate(rate);
-                    black_box(streaming.stream_state().await.expect("Streaming failed"))
+                    let _: () = streaming.stream_state().await.expect("Streaming failed");
+                    black_box(());
                 });
             },
         );

@@ -5,7 +5,7 @@
 //!
 //! Verifies timeout enforcement for long-running operations.
 
-#![allow(clippy::unwrap_used, clippy::unwrap_err_used)]
+#![allow(clippy::unwrap_used)]
 
 use qualia_macros::timeout;
 
@@ -45,7 +45,6 @@ async fn test_timeout_cancels_slow_operations() {
     let error_msg = result.unwrap_err().to_string();
     assert!(
         error_msg.contains("timed out") || error_msg.contains("timeout"),
-        "Error should mention timeout: {}",
-        error_msg
+        "Error should mention timeout: {error_msg}"
     );
 }

@@ -24,11 +24,12 @@ impl RetryTestService {
         }
     }
 
+    #[allow(clippy::unused_async)]
     async fn failing_operation_inner(&self) -> Result<String, anyhow::Error> {
         let count = self.failure_count.fetch_add(1, Ordering::SeqCst);
         
         if count < self.max_failures {
-            anyhow::bail!("Simulated failure #{}", count + 1);
+            anyhow::bail!("Failure {count}");
         }
         
         Ok("Success!".to_string())
@@ -86,6 +87,6 @@ async fn test_retry_succeeds_immediately() {
     );
     assert!(
         elapsed.as_millis() < 50,
-        "Should complete quickly without retries"
+        "Should complete quickly without retries: {elapsed:?}"
     );
 }

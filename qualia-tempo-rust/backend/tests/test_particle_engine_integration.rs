@@ -1,5 +1,5 @@
 //! # Responsibility
-//! Integration tests for ParticleEngine with EventBus.
+//! Integration tests for `ParticleEngine` with `EventBus`.
 //!
 //! ---
 //!

@@ -25,10 +25,10 @@ fn create_test_qualia() -> QualiaState {
 fn bench_vec2_operations(c: &mut Criterion) {
     c.bench_function("vec2_addition", |b| {
         let a = Vec2::new(10.0, 20.0);
-        let b = Vec2::new(5.0, 15.0);
+        let b_vec = Vec2::new(5.0, 15.0);
         
         b.iter(|| {
-            let result = a + b;
+            let result = a + b_vec;
             black_box(result);
         });
     });
@@ -37,7 +37,7 @@ fn bench_vec2_operations(c: &mut Criterion) {
         let v = Vec2::new(3.0, 4.0);
         
         b.iter(|| {
-            let mag = v.magnitude();
+            let mag = v.length();
             black_box(mag);
         });
     });
@@ -51,7 +51,7 @@ fn bench_vec3_color_interpolation(c: &mut Criterion) {
         b.iter(|| {
             for i in 0..10 {
                 let t = i as f32 / 10.0;
-                let result = start.lerp(end, t);
+                let result = Vec3::from(start.lerp(end.0, t));
                 black_box(result);
             }
         });
@@ -75,11 +75,11 @@ fn bench_qualia_to_color_mapping(c: &mut Criterion) {
     
     let mut group = c.benchmark_group("qualia_color_mapping_burst");
     
-    for count in [10, 100, 1000].iter() {
+    for count in [10, 100, 1000] {
         group.bench_with_input(
             BenchmarkId::from_parameter(count),
-            count,
-            |b, &&count| {
+            &count,
+            |b, &count| {
                 let qualias: Vec<QualiaState> = (0..count)
                     .map(|i| {
                         let t = i as f32 / count as f32;
@@ -120,11 +120,11 @@ fn bench_qualia_to_color_mapping(c: &mut Criterion) {
 fn bench_transform_2d(c: &mut Criterion) {
     let mut group = c.benchmark_group("transform_2d_batch");
     
-    for count in [100, 1000, 10000].iter() {
+    for count in [100, 1000, 10_000] {
         group.bench_with_input(
             BenchmarkId::from_parameter(count),
-            count,
-            |b, &&count| {
+            &count,
+            |b, &count| {
                 let positions: Vec<Vec2> = (0..count)
                     .map(|i| Vec2::new(i as f32, i as f32 * 0.5))
                     .collect();

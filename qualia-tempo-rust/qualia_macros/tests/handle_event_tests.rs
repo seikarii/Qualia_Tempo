@@ -1,5 +1,6 @@
 //! # Responsibility
-//! Integration tests for #[handle_event] macro expansion.
+#![allow(clippy::doc_markdown)]
+//! Integration tests for `#[handle_event]` macro expansion.
 //!
 //! ---
 //!
@@ -9,18 +10,20 @@ use qualia_macros::handle_event;
 
 // Mock event types for testing
 #[derive(Debug, Clone)]
-enum TestEvent {
+pub enum TestEvent {
     StateUpdated(TestState),
+    #[allow(dead_code)]
     PlayerAction(TestAction),
 }
 
 #[derive(Debug, Clone)]
-struct TestState {
-    value: u32,
+pub struct TestState {
+    pub value: u32,
 }
 
 #[derive(Debug, Clone)]
-struct TestAction {
+pub struct TestAction {
+    #[allow(dead_code)]
     action_type: String,
 }
 
@@ -60,6 +63,7 @@ impl TestService {
     }
 
     #[handle_event(TestEvent::StateUpdated)]
+    #[allow(clippy::unused_async)]
     async fn on_state_updated(&self, state: TestState) -> Result<(), anyhow::Error> {
         self.counter.fetch_add(state.value, std::sync::atomic::Ordering::SeqCst);
         Ok(())

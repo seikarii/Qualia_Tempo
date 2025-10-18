@@ -39,11 +39,11 @@ mod tests {
         let entry = LeaderboardEntry {
             player_id: "player_123".to_string(),
             player_name: "Charlie".to_string(),
-            score: 999999,
+            score: 999_999,
             final_qualia: QualiaState::default(),
             song_id: "song_1".to_string(),
             boss_id: "boss_1".to_string(),
-            timestamp: 1729267200000.0,
+            timestamp: 1_729_267_200_000.0,
             rank: 1,
             max_combo: 450,
             accuracy_percentage: 98.5,

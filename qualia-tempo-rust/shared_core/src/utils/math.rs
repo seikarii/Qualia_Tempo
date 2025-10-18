@@ -89,6 +89,21 @@ impl From<Vec2> for GlamVec2 {
     }
 }
 
+// Arithmetic ops for Vec2
+impl std::ops::Add for Vec2 {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 + rhs.0)
+    }
+}
+
+impl std::ops::Mul<f32> for Vec2 {
+    type Output = Self;
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self(self.0 * rhs)
+    }
+}
+
 /// # Responsibility
 /// 3D vector with full serialization and schema support.
 ///
@@ -171,6 +186,21 @@ impl From<GlamVec3> for Vec3 {
 impl From<Vec3> for GlamVec3 {
     fn from(v: Vec3) -> Self {
         v.0
+    }
+}
+
+// Arithmetic ops for Vec3
+impl std::ops::Add for Vec3 {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 + rhs.0)
+    }
+}
+
+impl std::ops::Mul<f32> for Vec3 {
+    type Output = Self;
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self(self.0 * rhs)
     }
 }
 

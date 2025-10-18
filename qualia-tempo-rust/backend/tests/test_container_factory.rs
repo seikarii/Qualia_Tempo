@@ -58,7 +58,7 @@ mod tests {
             state: shared_core::contracts::QualiaState::default(),
         };
         
-        let result = event_bus.emit(event.clone());
+        let result = event_bus.emit(event);
         assert!(result.is_ok());
         
         let received = rx.try_recv();
@@ -77,6 +77,6 @@ mod tests {
         let bus2: Arc<dyn IEventBus> = container2.resolve();
         
         // These should be different instances
-        assert!(Arc::ptr_eq(&bus1, &bus2) == false);
+        assert!(!Arc::ptr_eq(&bus1, &bus2));
     }
 }

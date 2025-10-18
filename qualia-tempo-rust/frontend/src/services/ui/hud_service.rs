@@ -189,11 +189,11 @@ impl HUDService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use shared_core::utils::Vec2;
+    use shared_core::contracts::{QualiaState, PlayerState, BossState};
 
     #[test]
     fn test_render_player_hp() {
-        let (player_reader, player_signal) = create_signal(PlayerState {
+        let (player_reader, _player_signal) = create_signal(PlayerState {
             health: 75.0,
             max_health: 100.0,
             ..Default::default()

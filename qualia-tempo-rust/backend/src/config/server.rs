@@ -70,6 +70,6 @@ maxMessageSizeBytes: 2097152
         assert_eq!(config.port, 8080);
         assert_eq!(config.max_connections, 500);
         assert_eq!(config.websocket_ping_interval_ms, 60000);
-        assert_eq!(config.max_message_size_bytes, 2097152);
+        assert_eq!(config.max_message_size_bytes, 2_097_152);
     }
 }

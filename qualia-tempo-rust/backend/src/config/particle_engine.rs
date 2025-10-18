@@ -62,13 +62,13 @@ mod tests {
 
     #[test]
     fn test_particle_engine_config_deserialize() {
-        let yaml = r#"
+                let yaml = r"
 max_particles: 5000
 damping: 0.95
 gravity_y: -10.0
 use_blocking_compute: true
 default_lifetime: 3.0
-"#;
+";
 
         let config: ParticleEngineConfig = serde_yaml::from_str(yaml).expect("Test should not panic");
 

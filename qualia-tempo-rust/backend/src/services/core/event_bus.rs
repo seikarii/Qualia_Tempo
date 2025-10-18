@@ -99,7 +99,7 @@ mod tests {
         let event = GameEvent::QualiaStateUpdated {
             state: QualiaState::default(),
         };
-        let result = bus.emit(event.clone());
+        let result = bus.emit(event);
 
         assert!(result.is_ok());
         assert_eq!(result.expect("Test should not panic"), 2); // 2 receivers
@@ -132,7 +132,7 @@ mod tests {
                 assert!(n > 0, "Should report lagging");
             }
             other => {
-                panic!("Expected Lagged error, got: {:?}", other);
+                panic!("Expected Lagged error, got: {other:?}");
             }
         }
     }

@@ -276,6 +276,10 @@ pub struct AudioLayerFull {
     pub qualia_modulation: Option<std::collections::HashMap<String, bool>>,
 }
 
+// NOTE: PlayGenerativeNote is defined in shared_core::events::audio_events
+// Re-export here for convenience
+pub use crate::events::audio_events::PlayGenerativeNote;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -489,7 +493,3 @@ mod tests {
         assert_eq!(layer, deserialized);
     }
 }
-
-// NOTE: PlayGenerativeNote is defined in shared_core::events::audio_events
-// Re-export here for convenience
-pub use crate::events::audio_events::PlayGenerativeNote;

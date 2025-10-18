@@ -1,12 +1,12 @@
 //! # Responsibility
-//! WebSocket integration test - validates basic connectivity and EventBus propagation.
+//! WebSocket integration test - validates basic connectivity and `EventBus` propagation.
 //!
 //! ---
 //!
 //! Simplified integration test focusing on core WebSocket functionality:
 //! - Server startup and client connection
 //! - Basic message exchange
-//! - EventBus bidirectional communication
+//! - `EventBus` bidirectional communication
 
 use axum::{
     extract::{ws::WebSocketUpgrade, State},
@@ -95,7 +95,7 @@ async fn test_websocket_basic_connection() {
     tokio::time::sleep(Duration::from_millis(50)).await;
     
     // Act: Connect and send message
-    let url = format!("ws://{}/ws", addr);
+    let url = format!("ws://{addr}/ws");
     let (ws_stream, _) = timeout(
         Duration::from_secs(2),
         connect_async(&url)
@@ -187,7 +187,7 @@ async fn test_websocket_eventbus_propagation() {
     let mut backend_events = event_bus.subscribe();
     
     // Connect client
-    let url = format!("ws://{}/ws", addr);
+    let url = format!("ws://{addr}/ws");
     let (ws_stream, _) = connect_async(&url).await.expect("Failed to connect");
     let (mut write, mut read) = ws_stream.split();
     
@@ -278,7 +278,7 @@ async fn test_websocket_handles_disconnection() {
     tokio::time::sleep(Duration::from_millis(50)).await;
     
     // Connect and immediately disconnect
-    let url = format!("ws://{}/ws", addr);
+    let url = format!("ws://{addr}/ws");
     let (ws_stream, _) = connect_async(&url).await.expect("Failed to connect");
     let (mut write, _) = ws_stream.split();
     
