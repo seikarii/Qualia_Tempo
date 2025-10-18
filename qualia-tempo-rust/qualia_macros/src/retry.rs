@@ -1,3 +1,4 @@
+#![allow(clippy::doc_markdown)]
 //! # Responsibility
 //! Implements #[retry] procedural macro for automatic retry with backoff.
 //!
@@ -29,16 +30,16 @@ pub fn expand(_args: TokenStream, input: TokenStream) -> TokenStream {
     // Extract input parameter patterns (including &self)
     let param_patterns: Vec<_> = fn_inputs
         .iter()
-        .filter_map(|arg| match arg {
-            syn::FnArg::Receiver(_) => Some(quote! { self }),
+        .map(|arg| match arg {
+            syn::FnArg::Receiver(_) => quote! { self },
             syn::FnArg::Typed(pat_type) => {
                 let pat = &pat_type.pat;
-                Some(quote! { #pat })
+                quote! { #pat }
             }
         })
         .collect();
 
-    let inner_fn_name = syn::Ident::new(&format!("{}_inner", fn_name), fn_name.span());
+    let inner_fn_name = syn::Ident::new(&format!("{fn_name}_inner"), fn_name.span());
 
     let expanded = quote! {
         #fn_vis async fn #fn_name #fn_generics(#fn_inputs) #fn_output {

@@ -12,15 +12,17 @@ use syn::{parse_macro_input, ItemFn};
 
 /// # Responsibility
 /// Expands #[cached(ttl = 60)] into memoization wrapper.
+#[allow(clippy::needless_pass_by_value)] // proc_macro signature required
 pub fn expand(args: TokenStream, input: TokenStream) -> TokenStream {
     let handler_fn = parse_macro_input!(input as ItemFn);
     
-    // Parse TTL from args (default 60 seconds)
-    let ttl: u64 = if args.is_empty() {
+    // Parse TTL from args (default 60 seconds) - consuming args
+    let args_str = args.to_string();
+    let ttl: u64 = if args_str.is_empty() {
         60
     } else {
         // Simple parsing for ttl = N format
-        args.to_string()
+        args_str
             .split('=')
             .nth(1)
             .and_then(|s| s.trim().parse().ok())

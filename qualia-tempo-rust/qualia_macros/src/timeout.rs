@@ -1,9 +1,10 @@
+#![allow(clippy::doc_markdown)]
 //! # Responsibility
 //! Implements #[timeout] procedural macro for async operation timeouts.
 //!
 //! ---
 //!
-//! Wraps async functions with tokio::time::timeout to prevent hangs.
+//! Wraps async functions with `tokio::time::timeout` to prevent hangs.
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -11,14 +12,16 @@ use syn::{parse_macro_input, ItemFn};
 
 /// # Responsibility
 /// Expands #[timeout(5000)] into timeout wrapper (milliseconds).
+#[allow(clippy::needless_pass_by_value)] // proc_macro signature required
 pub fn expand(args: TokenStream, input: TokenStream) -> TokenStream {
     let handler_fn = parse_macro_input!(input as ItemFn);
     
-    // Parse timeout from args (default 5000ms)
-    let timeout_ms: u64 = if args.is_empty() {
+    // Parse timeout from args (default 5000ms) - consuming args
+    let args_str = args.to_string();
+    let timeout_ms: u64 = if args_str.is_empty() {
         5000
     } else {
-        args.to_string()
+        args_str
             .trim()
             .parse()
             .unwrap_or(5000)
@@ -34,16 +37,16 @@ pub fn expand(args: TokenStream, input: TokenStream) -> TokenStream {
     // Extract parameter patterns (including &self)
     let param_patterns: Vec<_> = fn_inputs
         .iter()
-        .filter_map(|arg| match arg {
-            syn::FnArg::Receiver(_) => Some(quote! { self }),
+        .map(|arg| match arg {
+            syn::FnArg::Receiver(_) => quote! { self },
             syn::FnArg::Typed(pat_type) => {
                 let pat = &pat_type.pat;
-                Some(quote! { #pat })
+                quote! { #pat }
             }
         })
         .collect();
 
-    let inner_fn_name = syn::Ident::new(&format!("{}_inner", fn_name), fn_name.span());
+    let inner_fn_name = syn::Ident::new(&format!("{fn_name}_inner"), fn_name.span());
 
     let expanded = quote! {
         #fn_vis async fn #fn_name #fn_generics(#fn_inputs) #fn_output {

@@ -1,25 +1,26 @@
+#![allow(clippy::doc_markdown)]
 //! # Responsibility
-//! Implements #[handle_event] procedural macro for event subscription pattern.
+//! Implements #[`handle_event`] procedural macro for event subscription pattern.
 //!
 //! ---
 //!
-//! Generates tokio::spawn boilerplate that subscribes to EventBus,
+//! Generates `tokio::spawn` boilerplate that subscribes to `EventBus`,
 //! matches event variants, and dispatches to user-defined handler.
-//! Replaces @OnEvent decorator from TypeScript prototype.
+//! Replaces `@OnEvent` decorator from TypeScript prototype.
 
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, ItemFn, Path};
 
 /// # Responsibility
-/// Expands #[handle_event(EventVariant)] into full event handler boilerplate.
+/// Expands #[`handle_event(EventVariant)`] into full event handler boilerplate.
 pub fn expand(args: TokenStream, input: TokenStream) -> TokenStream {
     let event_variant = parse_macro_input!(args as Path);
     let handler_fn = parse_macro_input!(input as ItemFn);
 
     let fn_name = &handler_fn.sig.ident;
     let handler_name = syn::Ident::new(
-        &format!("{}_handler", fn_name),
+        &format!("{fn_name}_handler"),
         fn_name.span(),
     );
 
