@@ -3,6 +3,7 @@
 
 use qualia_macros::instrument;
 
+#[derive(Debug, Clone)]
 struct TestService {}
 
 impl TestService {

@@ -46,26 +46,12 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 
     let fn_name = &input_fn.sig.ident;
-    let inner_fn_name = syn::Ident::new(&format!("{}_inner", fn_name), fn_name.span());
     let fn_vis = &input_fn.vis;
     let fn_generics = &input_fn.sig.generics;
     let fn_inputs = &input_fn.sig.inputs;
     let fn_output = &input_fn.sig.output;
     let fn_block = &input_fn.block;
     let fn_asyncness = &input_fn.sig.asyncness;
-
-    // Extract parameter names for forwarding
-    let param_names: Vec<_> = fn_inputs
-        .iter()
-        .filter_map(|arg| {
-            if let syn::FnArg::Typed(pat_type) = arg {
-                if let syn::Pat::Ident(pat_ident) = &*pat_type.pat {
-                    return Some(&pat_ident.ident);
-                }
-            }
-            None
-        })
-        .collect();
 
     let delay_calculation = if exponential_backoff {
         quote! {
@@ -80,10 +66,6 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         /// # Responsibility
-        /// Inner implementation (kept for testing/direct calls).
-        #fn_asyncness fn #inner_fn_name #fn_generics(#fn_inputs) #fn_output #fn_block
-
-        /// # Responsibility
         /// Wrapper with retry logic and exponential backoff.
         ///
         /// ---
@@ -97,8 +79,11 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
             let mut last_error = None;
 
             for attempt in 0..MAX_ATTEMPTS {
-                match #inner_fn_name(#(#param_names),*).await {
-                    Ok(result) => return Ok(result),
+                // Execute original function body inline
+                let result: std::result::Result<_, _> = async #fn_block.await;
+                
+                match result {
+                    Ok(value) => return Ok(value),
                     Err(e) => {
                         tracing::warn!(
                             function = stringify!(#fn_name),

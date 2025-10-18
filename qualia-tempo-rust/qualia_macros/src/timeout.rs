@@ -16,23 +16,34 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     let args = parse_macro_input!(attr with Punctuated::<Meta, Token![,]>::parse_terminated);
     let input_fn = parse_macro_input!(item as ItemFn);
 
-    // Parse timeout duration
-    let timeout_ms: u64 = match args.first() {
-        Some(Meta::Path(path)) if path.get_ident().is_some() => {
-            path.get_ident().unwrap().to_string().parse().unwrap_or(5000)
+    // Parse timeout duration from first argument (should be a literal integer)
+    let timeout_ms: u64 = if let Some(first_arg) = args.first() {
+        match first_arg {
+            Meta::Path(path) => {
+                // Try to parse path as number (e.g., #[timeout(5000)])
+                path.get_ident()
+                    .and_then(|ident| ident.to_string().parse().ok())
+                    .unwrap_or(5000)
+            }
+            Meta::NameValue(nv) if nv.path.is_ident("timeout") => {
+                // Parse from timeout = 5000
+                if let Expr::Lit(expr_lit) = &nv.value {
+                    if let Lit::Int(lit_int) = &expr_lit.lit {
+                        lit_int.base10_parse().unwrap_or(5000)
+                    } else {
+                        5000
+                    }
+                } else {
+                    5000
+                }
+            }
+            _ => 5000,
         }
-        Some(Meta::NameValue(nv)) => {
-            if let Expr::Lit(expr_lit) = &nv.value {
-                if let Lit::Int(lit_int) = &expr_lit.lit {
-                    lit_int.base10_parse().unwrap_or(5000)
-                } else { 5000 }
-            } else { 5000 }
-        }
-        _ => 5000, // Default 5 seconds
+    } else {
+        5000 // Default 5 seconds
     };
 
     let fn_name = &input_fn.sig.ident;
-    let inner_fn_name = syn::Ident::new(&format!("{}_inner", fn_name), fn_name.span());
     let fn_vis = &input_fn.vis;
     let fn_generics = &input_fn.sig.generics;
     let fn_inputs = &input_fn.sig.inputs;
@@ -40,24 +51,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     let fn_block = &input_fn.block;
     let fn_asyncness = &input_fn.sig.asyncness;
 
-    // Extract parameter names for forwarding
-    let param_names: Vec<_> = fn_inputs
-        .iter()
-        .filter_map(|arg| {
-            if let syn::FnArg::Typed(pat_type) = arg {
-                if let syn::Pat::Ident(pat_ident) = &*pat_type.pat {
-                    return Some(&pat_ident.ident);
-                }
-            }
-            None
-        })
-        .collect();
-
     let expanded = quote! {
-        /// # Responsibility
-        /// Inner implementation (kept for testing/direct calls).
-        #fn_asyncness fn #inner_fn_name #fn_generics(#fn_inputs) #fn_output #fn_block
-
         /// # Responsibility
         /// Wrapper with timeout protection.
         ///
@@ -70,7 +64,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
 
             match tokio::time::timeout(
                 tokio::time::Duration::from_millis(TIMEOUT_MS),
-                #inner_fn_name(#(#param_names),*)
+                async #fn_block
             ).await {
                 Ok(result) => result,
                 Err(_elapsed) => {
