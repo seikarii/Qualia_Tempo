@@ -20,6 +20,14 @@ web-sys = { version = "0.3", features = [
     "WebGl2RenderingContext",
     "CanvasRenderingContext2d",
     "OffscreenCanvas",
+    "AudioContext",
+    "AudioNode",
+    "AudioDestinationNode",
+    "GainNode",
+    "OscillatorNode",
+    "OscillatorType",
+    "PannerNode",
+    "AudioParam",
 ] }
 js-sys = "0.3"
 console_error_panic_hook = "0.1"
