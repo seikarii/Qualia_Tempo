@@ -130,8 +130,8 @@ mod tests {
             icon_id: Some("haste_icon".to_string()),
         };
 
-        let json = serde_json::to_string(&effect).expect("Failed to serialize");
-        let deserialized: ActiveEffect = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&effect).unwrap(); // Failed to serialize");
+        let deserialized: ActiveEffect = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert_eq!(effect.id, deserialized.id);
         assert_eq!(effect.category, deserialized.category);
@@ -153,8 +153,8 @@ mod tests {
             visual_effect_id: Some("fire_particles".to_string()),
         };
 
-        let json = serde_json::to_string(&effect).expect("Failed to serialize");
-        let deserialized: EnvironmentEffect = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&effect).unwrap(); // Failed to serialize");
+        let deserialized: EnvironmentEffect = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert_eq!(effect.effect_type, deserialized.effect_type);
         assert_eq!(effect.position, deserialized.position);
@@ -163,7 +163,7 @@ mod tests {
     #[test]
     fn test_effect_type_enum() {
         let buff = EffectType::Buff;
-        let json = serde_json::to_string(&buff).expect("Failed to serialize");
+        let json = serde_json::to_string(&buff).unwrap(); // Failed to serialize");
         assert_eq!(json, r#""buff""#);
     }
 }

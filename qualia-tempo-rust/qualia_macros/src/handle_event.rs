@@ -61,9 +61,11 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
         ///
         /// Spawns a tokio task that subscribes to EventBus and routes matching
         /// events to the original handler function. Handles errors gracefully.
-        #fn_vis fn #handler_name(&self) -> tokio::task::JoinHandle<()> {
+        ///
+        /// **CRITICAL**: Assumes `self` is `Arc<Self>` from Shaku DI container.
+        #fn_vis fn #handler_name(self: std::sync::Arc<Self>) -> tokio::task::JoinHandle<()> {
             let event_bus = self.event_bus.clone();
-            let self_clone = std::sync::Arc::new(self.clone());
+            let self_clone = self.clone();
             
             tokio::spawn(async move {
                 let mut events = event_bus.subscribe();

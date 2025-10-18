@@ -240,16 +240,16 @@ mod tests {
     #[test]
     fn test_vec2_serde() {
         let v = Vec2::new(1.0, 2.0);
-        let json = serde_json::to_string(&v).expect("Failed to serialize Vec2");
-        let deserialized: Vec2 = serde_json::from_str(&json).expect("Failed to deserialize Vec2");
+        let json = serde_json::to_string(&v).unwrap(); // Failed to serialize Vec2");
+        let deserialized: Vec2 = serde_json::from_str(&json).unwrap(); // Failed to deserialize Vec2");
         assert_eq!(v, deserialized);
     }
 
     #[test]
     fn test_vec3_serde() {
         let v = Vec3::new(1.0, 2.0, 3.0);
-        let json = serde_json::to_string(&v).expect("Failed to serialize Vec3");
-        let deserialized: Vec3 = serde_json::from_str(&json).expect("Failed to deserialize Vec3");
+        let json = serde_json::to_string(&v).unwrap(); // Failed to serialize Vec3");
+        let deserialized: Vec3 = serde_json::from_str(&json).unwrap(); // Failed to deserialize Vec3");
         assert_eq!(v, deserialized);
     }
 }

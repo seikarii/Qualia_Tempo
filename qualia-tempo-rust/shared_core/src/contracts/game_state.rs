@@ -191,8 +191,8 @@ mod tests {
             collection_window_end: 1000.0,
         };
 
-        let json = serde_json::to_string(&state).expect("Failed to serialize");
-        let deserialized: QualiaState = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&state).unwrap(); // Failed to serialize");
+        let deserialized: QualiaState = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert_eq!(state, deserialized);
     }
@@ -241,8 +241,8 @@ mod tests {
             debuffs: vec![],
         };
 
-        let json = serde_json::to_string(&player).expect("Failed to serialize");
-        let deserialized: PlayerState = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&player).unwrap(); // Failed to serialize");
+        let deserialized: PlayerState = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert_eq!(player, deserialized);
     }
@@ -250,10 +250,10 @@ mod tests {
     #[test]
     fn test_game_status_serialization() {
         let status = GameStatus::InCombat;
-        let json = serde_json::to_string(&status).expect("Failed to serialize");
+        let json = serde_json::to_string(&status).unwrap(); // Failed to serialize");
         assert_eq!(json, "\"IN_COMBAT\"");
 
-        let deserialized: GameStatus = serde_json::from_str(&json).expect("Failed to deserialize");
+        let deserialized: GameStatus = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
         assert_eq!(status, deserialized);
     }
 }

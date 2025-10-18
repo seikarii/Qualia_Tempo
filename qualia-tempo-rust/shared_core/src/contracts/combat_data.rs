@@ -194,8 +194,8 @@ mod tests {
             }],
         };
 
-        let json = serde_json::to_string(&song).expect("Failed to serialize");
-        let deserialized: SongData = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&song).unwrap(); // Failed to serialize");
+        let deserialized: SongData = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert_eq!(song, deserialized);
     }
@@ -214,9 +214,9 @@ mod tests {
             metadata: serde_json::json!({ "spiral_arms": 4 }),
         };
 
-        let json = serde_json::to_string(&pattern).expect("Failed to serialize");
+        let json = serde_json::to_string(&pattern).unwrap(); // Failed to serialize");
         let deserialized: PatternData =
-            serde_json::from_str(&json).expect("Failed to deserialize");
+            serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert_eq!(pattern.id, deserialized.id);
         assert_eq!(pattern.pattern_type, deserialized.pattern_type);
@@ -234,8 +234,8 @@ mod tests {
             }],
         };
 
-        let json = serde_json::to_string(&lyrics).expect("Failed to serialize");
-        let deserialized: LyricData = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&lyrics).unwrap(); // Failed to serialize");
+        let deserialized: LyricData = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert_eq!(lyrics, deserialized);
     }
@@ -263,8 +263,8 @@ mod tests {
             lyrics: None,
         };
 
-        let json = serde_json::to_string(&combat).expect("Failed to serialize");
+        let json = serde_json::to_string(&combat).unwrap(); // Failed to serialize");
         let _deserialized: CombatData =
-            serde_json::from_str(&json).expect("Failed to deserialize");
+            serde_json::from_str(&json).unwrap(); // Failed to deserialize");
     }
 }

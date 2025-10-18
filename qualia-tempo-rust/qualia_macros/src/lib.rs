@@ -23,6 +23,13 @@ mod cached;
 mod retry;
 mod timeout;
 mod instrument;
+mod validate;
+mod rate_limit;
+mod mutex;
+mod circuit_breaker;
+mod authorize;
+mod transaction;
+mod deprecated;
 
 /// # Responsibility
 /// Generates an event handler that spawns a tokio task and listens to EventBus.
@@ -133,4 +140,126 @@ pub fn timeout(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn instrument(attr: TokenStream, item: TokenStream) -> TokenStream {
     instrument::expand(attr, item)
+}
+
+/// # Responsibility
+/// Adds input validation checks before function execution.
+///
+/// ---
+///
+/// Generates validation logic using the validator crate.
+///
+/// ## Example
+///
+/// ```ignore
+/// #[validate]
+/// async fn create_user(&self, username: String) -> Result<User> {
+///     // Validation happens automatically
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn validate(attr: TokenStream, item: TokenStream) -> TokenStream {
+    validate::expand(attr, item)
+}
+
+/// # Responsibility
+/// Adds rate limiting to prevent resource exhaustion.
+///
+/// ---
+///
+/// Enforces maximum call rate per time window.
+///
+/// ## Example
+///
+/// ```ignore
+/// #[rate_limit(per_second = 10)]
+/// async fn expensive_api_call(&self) -> Result<Response> {
+///     // Rate limited automatically
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn rate_limit(attr: TokenStream, item: TokenStream) -> TokenStream {
+    rate_limit::expand(attr, item)
+}
+
+/// # Responsibility
+/// Wraps function execution in a tokio::sync::Mutex.
+///
+/// ---
+///
+/// Ensures exclusive access to critical sections.
+#[proc_macro_attribute]
+pub fn mutex(attr: TokenStream, item: TokenStream) -> TokenStream {
+    mutex::expand(attr, item)
+}
+
+/// # Responsibility
+/// Implements circuit breaker pattern for fault tolerance.
+///
+/// ---
+///
+/// Prevents cascading failures by breaking circuit after threshold.
+///
+/// ## Example
+///
+/// ```ignore
+/// #[circuit_breaker(failure_threshold = 5)]
+/// async fn unreliable_service_call(&self) -> Result<Data> {
+///     // Circuit breaker protects against cascading failures
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn circuit_breaker(attr: TokenStream, item: TokenStream) -> TokenStream {
+    circuit_breaker::expand(attr, item)
+}
+
+/// # Responsibility
+/// Adds authorization checks before function execution.
+///
+/// ---
+///
+/// Verifies user permissions before allowing access.
+///
+/// ## Example
+///
+/// ```ignore
+/// #[authorize(role = "admin")]
+/// async fn delete_user(&self, user_id: String) -> Result<()> {
+///     // Only admins can execute this
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn authorize(attr: TokenStream, item: TokenStream) -> TokenStream {
+    authorize::expand(attr, item)
+}
+
+/// # Responsibility
+/// Wraps database operations in transactions.
+///
+/// ---
+///
+/// Automatically handles begin/commit/rollback.
+#[proc_macro_attribute]
+pub fn transaction(attr: TokenStream, item: TokenStream) -> TokenStream {
+    transaction::expand(attr, item)
+}
+
+/// # Responsibility
+/// Marks functions as deprecated with custom messages.
+///
+/// ---
+///
+/// Extended deprecation warnings for migration paths.
+///
+/// ## Example
+///
+/// ```ignore
+/// #[deprecated(since = "1.0", note = "Use new_method instead")]
+/// fn old_method(&self) -> Result<()> {
+///     // Legacy code
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn deprecated(attr: TokenStream, item: TokenStream) -> TokenStream {
+    deprecated::expand(attr, item)
 }

@@ -59,10 +59,10 @@ mod tests {
             id: "entry_001".to_string(),
             player_name: "TestPlayer".to_string(),
             player_id: Some("player_123".to_string()),
-            score: 999999,
+            score: 999_999,
             song_id: "song_metal_hellfire".to_string(),
             difficulty: "expert".to_string(),
-            timestamp: 1634567890,
+            timestamp: 1_634_567_890,
             max_combo: 500,
             accuracy: 98.5,
             final_qualia: r#"{"intensity":1.0,"precision":0.95}"#.to_string(),
@@ -72,8 +72,8 @@ mod tests {
             replay_path: Some("/replays/entry_001.replay".to_string()),
         };
 
-        let json = serde_json::to_string(&entry).expect("Failed to serialize");
-        let deserialized: LeaderboardEntry = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&entry).unwrap(); // Failed to serialize");
+        let deserialized: LeaderboardEntry = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert_eq!(entry.score, deserialized.score);
         assert_eq!(entry.player_name, deserialized.player_name);
@@ -86,21 +86,21 @@ mod tests {
             id: "entry_002".to_string(),
             player_name: "Guest".to_string(),
             player_id: None,
-            score: 50000,
+            score: 50_000,
             song_id: "song_intro".to_string(),
             difficulty: "normal".to_string(),
-            timestamp: 1634567890,
+            timestamp: 1_634_567_890,
             max_combo: 100,
             accuracy: 85.0,
-            final_qualia: r#"{}"#.to_string(),
+            final_qualia: "{}".to_string(),
             duration_sec: 90.0,
             deaths: 3,
             is_perfect: false,
             replay_path: None,
         };
 
-        let json = serde_json::to_string(&entry).expect("Failed to serialize");
-        let deserialized: LeaderboardEntry = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&entry).unwrap(); // Failed to serialize");
+        let deserialized: LeaderboardEntry = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert!(deserialized.player_id.is_none());
         assert!(deserialized.replay_path.is_none());

@@ -187,9 +187,9 @@ mod tests {
             beat_map: vec![(0.0, 1.0), (500.0, 0.5)],
         };
 
-        let json = serde_json::to_string(&harmony_map).expect("Failed to serialize");
+        let json = serde_json::to_string(&harmony_map).unwrap(); // Failed to serialize");
         let deserialized: HarmonyMap =
-            serde_json::from_str(&json).expect("Failed to deserialize");
+            serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert_eq!(harmony_map, deserialized);
     }
@@ -214,9 +214,9 @@ mod tests {
             }],
         };
 
-        let json = serde_json::to_string(&patch).expect("Failed to serialize");
+        let json = serde_json::to_string(&patch).unwrap(); // Failed to serialize");
         let deserialized: InstrumentPatch =
-            serde_json::from_str(&json).expect("Failed to deserialize");
+            serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert_eq!(patch, deserialized);
     }
@@ -231,7 +231,7 @@ mod tests {
             spatial_position: Some((0.0, 0.0, 1.0)),
         };
 
-        let json = serde_json::to_string(&note).expect("Failed to serialize");
+        let json = serde_json::to_string(&note).unwrap(); // Failed to serialize");
         assert!(json.contains(r#""note":60"#));
     }
 
@@ -254,9 +254,9 @@ mod tests {
         ];
 
         for effect in effects {
-            let json = serde_json::to_string(&effect).expect("Failed to serialize");
+            let json = serde_json::to_string(&effect).unwrap(); // Failed to serialize");
             let _deserialized: AudioEffect =
-                serde_json::from_str(&json).expect("Failed to deserialize");
+                serde_json::from_str(&json).unwrap(); // Failed to deserialize");
         }
     }
 }

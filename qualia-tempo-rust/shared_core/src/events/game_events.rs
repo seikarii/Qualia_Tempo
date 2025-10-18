@@ -112,8 +112,8 @@ mod tests {
             action: PlayerAction::Parry { timestamp: 1000.0 },
         };
 
-        let json = serde_json::to_string(&event).expect("Failed to serialize");
-        let deserialized: GameEvent = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&event).unwrap(); // Failed to serialize");
+        let deserialized: GameEvent = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         matches!(deserialized, GameEvent::PlayerAction { .. });
     }
@@ -124,7 +124,7 @@ mod tests {
             state: QualiaState::default(),
         };
 
-        let json = serde_json::to_string(&event).expect("Failed to serialize");
+        let json = serde_json::to_string(&event).unwrap(); // Failed to serialize");
         assert!(json.contains(r#""eventType":"qualiaStateUpdated"#));
     }
 
@@ -136,8 +136,8 @@ mod tests {
             new_phase: 2,
         };
 
-        let json = serde_json::to_string(&event).expect("Failed to serialize");
-        let deserialized: GameEvent = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&event).unwrap(); // Failed to serialize");
+        let deserialized: GameEvent = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         if let GameEvent::BossPhaseTransition {
             old_phase,
@@ -159,7 +159,7 @@ mod tests {
             timestamp: 5000.0,
         };
 
-        let json = serde_json::to_string(&event).expect("Failed to serialize");
+        let json = serde_json::to_string(&event).unwrap(); // Failed to serialize");
         assert!(json.contains("Test error"));
     }
 }

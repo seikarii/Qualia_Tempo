@@ -111,8 +111,8 @@ mod tests {
             is_qualia_reactive: true,
         };
 
-        let json = serde_json::to_string(&config).expect("Failed to serialize");
-        let deserialized: ParticleSystemConfig = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&config).unwrap(); // Failed to serialize");
+        let deserialized: ParticleSystemConfig = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert_eq!(config, deserialized);
     }
@@ -137,8 +137,8 @@ mod tests {
             is_active: true,
         };
 
-        let json = serde_json::to_string(&particle).expect("Failed to serialize");
-        let deserialized: OptimizedParticle = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&particle).unwrap(); // Failed to serialize");
+        let deserialized: OptimizedParticle = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert_eq!(particle, deserialized);
     }

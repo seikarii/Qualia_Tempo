@@ -179,8 +179,8 @@ mod tests {
     #[test]
     fn test_game_settings_serialization() {
         let settings = GameSettings::default();
-        let json = serde_json::to_string(&settings).expect("Failed to serialize");
-        let deserialized: GameSettings = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&settings).unwrap(); // Failed to serialize");
+        let deserialized: GameSettings = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         assert_eq!(settings.difficulty, deserialized.difficulty);
         assert_eq!(settings.graphics_quality, deserialized.graphics_quality);
@@ -197,7 +197,7 @@ mod tests {
     #[test]
     fn test_difficulty_level_serialization() {
         let difficulty = DifficultyLevel::Expert;
-        let json = serde_json::to_string(&difficulty).expect("Failed to serialize");
+        let json = serde_json::to_string(&difficulty).unwrap(); // Failed to serialize");
         assert_eq!(json, r#""expert""#);
     }
 }

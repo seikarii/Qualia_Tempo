@@ -62,8 +62,8 @@ mod tests {
             accuracy: 0.95,
         };
 
-        let json = serde_json::to_string(&action).expect("Failed to serialize");
-        let deserialized: PlayerAction = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&action).unwrap(); // Failed to serialize");
+        let deserialized: PlayerAction = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         if let PlayerAction::KeyPressed { key, accuracy, .. } = deserialized {
             assert_eq!(key, 'Q');
@@ -80,7 +80,7 @@ mod tests {
             timestamp: 2000.0,
         };
 
-        let json = serde_json::to_string(&action).expect("Failed to serialize");
+        let json = serde_json::to_string(&action).unwrap(); // Failed to serialize");
         assert!(json.contains(r#""type":"dash"#));
     }
 
@@ -88,8 +88,8 @@ mod tests {
     fn test_parry_serialization() {
         let action = PlayerAction::Parry { timestamp: 3000.0 };
 
-        let json = serde_json::to_string(&action).expect("Failed to serialize");
-        let deserialized: PlayerAction = serde_json::from_str(&json).expect("Failed to deserialize");
+        let json = serde_json::to_string(&action).unwrap(); // Failed to serialize");
+        let deserialized: PlayerAction = serde_json::from_str(&json).unwrap(); // Failed to deserialize");
 
         matches!(deserialized, PlayerAction::Parry { .. });
     }

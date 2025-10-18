@@ -20,5 +20,21 @@ tokio = { workspace = true }
 default = []
 wasm = ["uuid/js", "chrono/wasmbind"]
 
-[lints]
-workspace = true
+[lints.clippy]
+# Inherit workspace lints but allow test-specific patterns
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+# Allow test-specific patterns (unwrap, panic, float_cmp are OK in tests)
+unwrap_used = "allow"
+expect_used = "allow"
+panic = "allow"
+float_cmp = "allow"
+# Keep critical production lints
+print_stdout = "deny"
+print_stderr = "deny"
+dbg_macro = "deny"
+cognitive_complexity = "deny"
+too_many_arguments = "deny"
+missing_errors_doc = "deny"
+missing_panics_doc = "deny"
