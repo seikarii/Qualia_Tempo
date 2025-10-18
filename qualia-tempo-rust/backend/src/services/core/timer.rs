@@ -12,6 +12,7 @@ use anyhow::Result;
 #[derive(Component)]
 #[shaku(interface = IBaseService)]
 pub struct TimerService {
+    #[shaku(default = Instant::now())]
     start_time: Instant,
 }
 

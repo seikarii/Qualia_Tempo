@@ -12,6 +12,11 @@ use shared_core::traits::IEventBus;
 use shaku::Component;
 use tracing::{instrument, debug, warn};
 
+fn create_default_event_channel() -> broadcast::Sender<GameEvent> {
+    let (tx, _rx) = broadcast::channel(1000);
+    tx
+}
+
 /// # Responsibility
 /// Manages event distribution to multiple subscribers using broadcast channels.
 ///
@@ -23,6 +28,7 @@ use tracing::{instrument, debug, warn};
 #[derive(Component)]
 #[shaku(interface = IEventBus)]
 pub struct EventBusService {
+    #[shaku(default = create_default_event_channel())]
     tx: broadcast::Sender<GameEvent>,
 }
 

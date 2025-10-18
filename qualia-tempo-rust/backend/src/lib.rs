@@ -8,7 +8,12 @@
 
 #![allow(clippy::doc_markdown)]
 
+pub mod config;
 pub mod services;
+pub mod utils;
 
 // Re-export core services for convenience
 pub use services::core::{EventBusService, QualiaLogger, TimerService};
+
+// Re-export config types
+pub use config::{GameLogicConfig, ServerConfig, load_config};

@@ -1,0 +1,9 @@
+# Game Logic Configuration
+# VERSION: 1.0
+
+baseIntensityMultiplier: 1.5
+harmonyDecayRate: 0.1
+chaosThreshold: 0.7
+comboMultiplier: 1.2
+minComboAccuracy: 0.7
+maxComboCount: 100
