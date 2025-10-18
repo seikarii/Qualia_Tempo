@@ -5,9 +5,11 @@
 //!
 //! Third rendering pass: applies screen-space post-processing effects
 //! on the lit scene:
+//!
 //! - Bloom (bright pass + blur + composite)
 //! - God rays (volumetric lighting)
 //! - Motion blur (velocity-based)
+//!
 //! Follows VISUALS.RUST.md §2 specification.
 
 use wgpu;
@@ -390,6 +392,14 @@ impl PostProcessPass {
         }
         
         Ok(self.output_texture.create_view(&Default::default()))
+    }
+    
+    /// Get reference to output texture for binding to next pass
+    ///
+    /// # Returns
+    /// Reference to post-processed scene texture
+    pub fn output_texture(&self) -> &wgpu::Texture {
+        &self.output_texture
     }
     
     /// Get output texture view for next pass

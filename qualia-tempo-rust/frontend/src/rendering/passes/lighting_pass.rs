@@ -253,6 +253,14 @@ impl LightingPass {
         Ok(())
     }
     
+    /// Get reference to output texture for binding to next pass
+    ///
+    /// # Returns
+    /// Reference to lit scene texture
+    pub fn output_texture(&self) -> &wgpu::Texture {
+        &self.output_texture
+    }
+    
     /// Get output texture view for binding to next pass
     pub fn output_view(&self) -> wgpu::TextureView {
         self.output_texture.create_view(&wgpu::TextureViewDescriptor::default())
