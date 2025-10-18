@@ -9,7 +9,9 @@
 pub mod i_logger;
 pub mod i_event_bus;
 pub mod i_timer;
+pub mod i_game_logic;
 
 pub use i_logger::ILogger;
 pub use i_event_bus::IEventBus;
 pub use i_timer::ITimer;
+pub use i_game_logic::IGameLogicService;
