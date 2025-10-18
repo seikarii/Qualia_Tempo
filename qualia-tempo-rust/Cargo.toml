@@ -59,7 +59,6 @@ must_use_candidate = "allow"
 module_name_repetitions = "allow"
 # Test-specific relaxations
 float_cmp = "allow"  # Floating-point equality checks allowed in tests
-literal_separator = "allow"  # Number formatting not critical
 
 [profile.release]
 opt-level = 3
