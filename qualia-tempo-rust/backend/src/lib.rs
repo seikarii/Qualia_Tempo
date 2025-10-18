@@ -9,11 +9,15 @@
 #![allow(clippy::doc_markdown)]
 
 pub mod config;
+pub mod engine;
 pub mod services;
 pub mod utils;
 
 // Re-export core services for convenience
 pub use services::core::{EventBusService, QualiaLogger, TimerService};
+
+// Re-export engine modules
+pub use engine::{IParticleEngine, QualiaParticleEngine};
 
 // Re-export config types
 pub use config::{GameLogicConfig, ServerConfig, load_config};

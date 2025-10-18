@@ -8,6 +8,7 @@
 
 use crate::contracts::game_state::{CombatState, QualiaState};
 use crate::contracts::input::PlayerAction;
+use crate::contracts::particles::OptimizedParticle;
 use crate::events::{audio_events, combat_events, system_events};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -33,6 +34,9 @@ pub enum GameEvent {
     },
     CombatStateUpdated {
         state: CombatState,
+    },
+    ParticleSystemUpdated {
+        active_particles: Vec<OptimizedParticle>,
     },
 
     // Audio Events
