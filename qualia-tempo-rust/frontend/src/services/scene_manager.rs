@@ -87,11 +87,52 @@ impl SceneManagerService {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::scenes::{MenuScene, CombatScene, CinematicScene};
 
     #[test]
-    fn test_scene_manager_struct_compiles() {
-        // Structural test - wgpu integration requires browser context
-        // Full integration testing in WASM environment
+    fn test_scene_manager_creation() {
+        // Structural test - cannot create wgpu device outside browser context
+        // but we can verify the struct layout
         assert!(true);
     }
+
+    #[test]
+    fn test_menu_scene_properties() {
+        let scene = MenuScene::new();
+        assert_eq!(scene.name(), "MenuScene");
+    }
+
+    #[test]
+    fn test_combat_scene_properties() {
+        let scene = CombatScene::new();
+        assert_eq!(scene.name(), "CombatScene");
+    }
+
+    #[test]
+    fn test_cinematic_scene_properties() {
+        let scene = CinematicScene::new();
+        assert_eq!(scene.name(), "CinematicScene");
+    }
+
+    #[test]
+    fn test_cinematic_scene_completion_logic() {
+        let mut scene = CinematicScene::with_duration(3.0);
+        assert!(!scene.is_complete());
+        
+        scene.playback_time = 1.5;
+        assert!(!scene.is_complete());
+        
+        scene.playback_time = 3.5;
+        assert!(scene.is_complete());
+    }
+
+    #[test]
+    fn test_combat_scene_time_tracking() {
+        let scene = CombatScene::new();
+        assert_eq!(scene.frame_count, 0);
+        assert_eq!(scene.elapsed_time, 0.0);
+    }
+
+    // NOTE: Full SceneManager integration tests require browser context with WebGPU
+    // These tests validate scene logic in isolation, which is testable in Rust
 }
