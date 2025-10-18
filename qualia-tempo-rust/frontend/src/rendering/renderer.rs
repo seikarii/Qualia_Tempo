@@ -54,6 +54,6 @@ mod tests {
     fn test_renderer_struct_compiles() {
         // Structural test - full wgpu initialization requires browser context
         // Integration testing in WASM environment for Phase 8
-        assert!(true);
+        // Test passes if it compiles
     }
 }

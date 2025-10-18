@@ -93,7 +93,7 @@ mod tests {
     fn test_scene_manager_creation() {
         // Structural test - cannot create wgpu device outside browser context
         // but we can verify the struct layout
-        assert!(true);
+        // Test passes if it compiles
     }
 
     #[test]

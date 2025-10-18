@@ -50,6 +50,6 @@ mod tests {
     fn test_worker_bridge_placeholder() {
         // Phase 7: Structural placeholder only
         // Phase 8: Full Worker API tests
-        assert!(true);
+        // Test passes if it compiles
     }
 }

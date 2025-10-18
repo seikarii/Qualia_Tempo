@@ -12,6 +12,7 @@ use async_trait::async_trait;
 use wgpu;
 use tracing::{info, debug};
 use crate::scenes::i_scene::IScene;
+use crate::rendering::{GBufferPass, LightingPass};
 
 /// # Responsibility
 /// Manages the combat scene lifecycle and rendering.
@@ -26,7 +27,10 @@ pub struct CombatScene {
     pub(crate) frame_count: u64,
     pub(crate) elapsed_time: f32,
     
-    // Phase 8: Rendering resources (pipelines, buffers, textures)
+    // Phase 8: Rendering resources (deferred pipeline)
+    gbuffer_pass: Option<GBufferPass>,
+    lighting_pass: Option<LightingPass>,
+    
     // Phase 9: Audio resources (Web Audio context, spatial panner)
 }
 
@@ -37,6 +41,8 @@ impl CombatScene {
         Self {
             frame_count: 0,
             elapsed_time: 0.0,
+            gbuffer_pass: None,
+            lighting_pass: None,
         }
     }
 }
@@ -49,17 +55,36 @@ impl Default for CombatScene {
 
 #[async_trait(?Send)]
 impl IScene for CombatScene {
-    async fn on_enter(&mut self, _device: &wgpu::Device, _queue: &wgpu::Queue) -> Result<()> {
+    async fn on_enter(&mut self, device: &wgpu::Device, _queue: &wgpu::Queue) -> Result<()> {
         info!("Combat scene initialized - loading resources");
         
         // Phase 7: Basic initialization
         self.frame_count = 0;
         self.elapsed_time = 0.0;
         
-        // Phase 8: Initialize rendering pipeline
-        // - Create G-Buffer textures
-        // - Compile shaders (gbuffer.wgsl, lighting.wgsl, composite.wgsl)
-        // - Build render pipelines
+        // Phase 8: Initialize deferred rendering pipeline
+        let config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: wgpu::TextureFormat::Bgra8UnormSrgb,
+            width: 1920,
+            height: 1080,
+            present_mode: wgpu::PresentMode::Fifo,
+            alpha_mode: wgpu::CompositeAlphaMode::Auto,
+            view_formats: vec![],
+            desired_maximum_frame_latency: 2,
+        };
+        
+        // Create G-Buffer pass
+        let gbuffer_pass = GBufferPass::new(device, &config)?;
+        info!("G-Buffer pass created");
+        
+        // Create Lighting pass
+        let gbuffer_views = gbuffer_pass.texture_views();
+        let lighting_pass = LightingPass::new(device, &gbuffer_views, &config)?;
+        info!("Lighting pass created");
+        
+        self.gbuffer_pass = Some(gbuffer_pass);
+        self.lighting_pass = Some(lighting_pass);
         
         // Phase 9: Initialize audio
         // - Create Web Audio context
@@ -99,35 +124,64 @@ impl IScene for CombatScene {
     }
     
     async fn render(&self, encoder: &mut wgpu::CommandEncoder, view: &wgpu::TextureView) -> Result<()> {
-        // Phase 7: Basic clear with animated color based on elapsed time
-        let hue = (self.elapsed_time * 0.1) % 1.0;
-        let color = Self::hue_to_rgb(hue);
-        
-        let _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("Combat Scene Pass"),
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view,
-                resolve_target: None,
-                ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color {
-                        r: color.0,
-                        g: color.1,
-                        b: color.2,
-                        a: 1.0,
-                    }),
-                    store: wgpu::StoreOp::Store,
-                },
-            })],
-            depth_stencil_attachment: None,
-            timestamp_writes: None,
-            occlusion_query_set: None,
-        });
-        
         // Phase 8: Full deferred rendering pipeline
-        // 1. G-Buffer pass (geometry to textures)
-        // 2. Lighting pass (deferred shading)
-        // 3. Post-processing pass (bloom, god rays, motion blur)
-        // 4. Composite pass (TAA, tonemapping)
+        if let (Some(gbuffer), Some(lighting)) = (&self.gbuffer_pass, &self.lighting_pass) {
+            // 1. G-Buffer pass (geometry to textures)
+            gbuffer.render(encoder)?;
+            debug!("G-Buffer pass executed (frame {})", self.frame_count);
+            
+            // 2. Lighting pass (deferred shading)
+            lighting.render(encoder)?;
+            debug!("Lighting pass executed");
+            
+            // 3. Composite pass: Copy lighting output to swapchain (blit)
+            // Phase 8: Simplified blit via render pass
+            // Full composite pass with tonemapping and TAA in future phases
+            let _lighting_output = lighting.output_view(); // Used in future blit shader
+            let _blit_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("Blit to Swapchain"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                        store: wgpu::StoreOp::Store,
+                    },
+                })],
+                depth_stencil_attachment: None,
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            });
+            
+            // TODO: Implement blit shader to copy lighting_output to view
+            // For Phase 8, deferred pipeline architecture is established
+            
+            debug!("Deferred pipeline complete");
+        } else {
+            // Fallback: Clear to animated color (Phase 7 behavior)
+            let hue = (self.elapsed_time * 0.1) % 1.0;
+            let color = Self::hue_to_rgb(hue);
+            
+            let _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("Combat Scene Fallback Pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color {
+                            r: color.0,
+                            g: color.1,
+                            b: color.2,
+                            a: 1.0,
+                        }),
+                        store: wgpu::StoreOp::Store,
+                    },
+                })],
+                depth_stencil_attachment: None,
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            });
+        }
         
         // Phase 9: UI overlay
         // - Combo counter
