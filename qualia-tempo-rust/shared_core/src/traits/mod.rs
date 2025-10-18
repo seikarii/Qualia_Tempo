@@ -13,4 +13,4 @@ pub use event_bus::IEventBus;
 pub use logger::ILogger;
 pub use service::IBaseService;
 pub use gameplay::{IGameLogicService, IBossAIService, IPatternSystemService, IQualiaProcessorService, ICombatOrchestratorService};
-pub use networking::{IWebSocketService, IGameStateStreamingService};
+pub use networking::{IConnectionManagerService, IWebSocketService, IGameStateStreamingService};

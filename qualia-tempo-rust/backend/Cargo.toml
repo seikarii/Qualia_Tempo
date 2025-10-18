@@ -31,6 +31,7 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 # Time
 chrono = "0.4"
+uuid = { version = "1.0", features = ["v4", "serde"] }
 # Shared
 shared_core = { path = "../shared_core" }
 qualia_macros = { path = "../qualia_macros" }
