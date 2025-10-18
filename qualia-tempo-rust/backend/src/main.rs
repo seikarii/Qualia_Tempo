@@ -14,7 +14,7 @@ use shared_core::contracts::QualiaState;
 // Import services
 use backend::services::core::{EventBusService, QualiaLogger, TimerService};
 
-// Define Shaku module with all services
+// Define Shaku module with core services
 module! {
     pub GameModule {
         components = [
