@@ -7,6 +7,7 @@ members = [
     "qualia_macros",
     "shared_core",
     "backend",
+    "frontend",
 ]
 resolver = "2"
 
