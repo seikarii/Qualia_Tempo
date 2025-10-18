@@ -9,7 +9,9 @@
 pub mod loader;
 pub mod server;
 pub mod game_logic;
+pub mod particle_engine;
 
 pub use loader::load_config;
 pub use server::ServerConfig;
 pub use game_logic::GameLogicConfig;
+pub use particle_engine::ParticleEngineConfig;

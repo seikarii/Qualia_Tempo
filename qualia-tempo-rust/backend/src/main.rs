@@ -28,8 +28,9 @@ use backend::services::core::{EventBusService, QualiaLogger, TimerService};
 use backend::services::networking::{
     ConnectionManagerService, GameStateStreamingService, WebSocketService,
 };
+use backend::engine::QualiaParticleEngine;
 
-// Define Shaku module with all services (PHASE 4: Added networking services)
+// Define Shaku module with all services (PHASE 6: Added ParticleEngine)
 module! {
     pub GameModule {
         components = [
@@ -39,6 +40,7 @@ module! {
             ConnectionManagerService,
             GameStateStreamingService,
             WebSocketService,
+            QualiaParticleEngine,
         ],
         providers = []
     }
