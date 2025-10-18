@@ -186,7 +186,7 @@ La experiencia visual sigue una **hoja de ruta en 4 fases**, todas controladas p
 ## 5. Prototipo Vertical (Misión Inmediata)
 
 * **Objetivo:** Probar el loop de Qualia + dash + notas musicales.
-* **Entregable:** 90s de gameplay en 2D.
+* **Entregable:** 90s de gameplay en 2.5D.
 * **Contenido mínimo:**
 
   * Dash rítmico funcional.
@@ -201,7 +201,7 @@ La experiencia visual sigue una **hoja de ruta en 4 fases**, todas controladas p
 
 ## 6. Futuras Expansiones
 
-* Migración de 2D a **combate 3D procedural**.
+* Migración de 2.5D a **combate 3D procedural**.
 * Nuevos bosses diseñados como **arquitecturas sonoras**.
 * Integración de VR para inmersión total en el espacio 8D.
 
