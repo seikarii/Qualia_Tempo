@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// This tagged enum uses Serde's `tag = "type"` for clean JSON serialization.
 /// Each variant contains the relevant data for that action type.
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum PlayerAction {
     /// Player pressed a musical key

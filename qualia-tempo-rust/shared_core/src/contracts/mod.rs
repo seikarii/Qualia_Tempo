@@ -8,6 +8,7 @@ pub mod game_state;
 pub mod input;
 pub mod leaderboard;
 pub mod particles;
+pub mod scenes;
 pub mod settings;
 
 pub use audio::{
@@ -26,6 +27,10 @@ pub use game_state::{
 pub use input::PlayerAction;
 pub use leaderboard::LeaderboardEntry;
 pub use particles::{OptimizedParticle, ParticleSystemConfig};
+pub use scenes::{
+    CameraInterpolation, CameraKeyframe, CinematicData, DialogueLine, SceneData, SceneTransition,
+    SceneType,
+};
 pub use settings::{
     AccessibilitySettings, AudioQuality, DifficultyLevel, GameSettings, GraphicsQuality,
 };
