@@ -9,15 +9,17 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 leptos = { version = "0.6", features = ["csr"] }
 leptos_router = "0.6"
-wgpu = "22.0"
+wgpu = { version = "22.0", features = ["webgl"] }
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
+raw-window-handle = { version = "0.6", features = ["std"] }
 web-sys = { version = "0.3", features = [
     "Window",
     "Document",
     "HtmlCanvasElement",
     "WebGl2RenderingContext",
     "CanvasRenderingContext2d",
+    "OffscreenCanvas",
 ] }
 js-sys = "0.3"
 console_error_panic_hook = "0.1"

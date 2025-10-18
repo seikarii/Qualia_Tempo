@@ -975,6 +975,7 @@ dependencies = [
  "js-sys",
  "leptos",
  "leptos_router",
+ "raw-window-handle",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
