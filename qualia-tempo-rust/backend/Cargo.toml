@@ -44,6 +44,10 @@ rand = "0.8"
 # Concurrency
 dashmap = "6.1"
 
+# Audio Analysis (PHASE 5: Music System)
+rustfft = "6.2"
+pitch-detection = "0.3"
+
 # Caching
 cached.workspace = true
 
