@@ -147,15 +147,20 @@ impl FrequencyBoosterConfig {
     }
 
     /// Create default 8D audio EQ configuration
+    /// 
+    /// Optimized for immersive spatial audio with musical transparency:
+    /// - Bass: 70Hz +2.5dB (Q=0.8) - Warmth without muddiness
+    /// - Mids: 1200Hz +1.2dB (Q=1.5) - Presence boost for vocals/instruments
+    /// - Highs: 12kHz +3.0dB (Q=0.7) - Air and sparkle without harshness
     pub fn default_8d(sample_rate: u32) -> Self {
         Self {
-            bass_freq: 80.0,      // 80 Hz bass
-            bass_gain_db: 3.0,    // +3dB bass boost
-            mid_freq: 500.0,      // 500 Hz mids
-            mid_gain_db: 1.5,     // +1.5dB mid boost
-            high_freq: 10000.0,   // 10 kHz highs
-            high_gain_db: 2.5,    // +2.5dB high boost
-            q_factor: 1.0,
+            bass_freq: 70.0,      // 70 Hz bass (optimal for warmth)
+            bass_gain_db: 2.5,    // +2.5dB bass boost (moderate)
+            mid_freq: 1200.0,     // 1.2 kHz mids (vocal presence range)
+            mid_gain_db: 1.2,     // +1.2dB mid boost (subtle clarity)
+            high_freq: 12000.0,   // 12 kHz highs (air band)
+            high_gain_db: 3.0,    // +3.0dB high boost (spatial enhancement)
+            q_factor: 1.0,        // Moderate bandwidth (musical)
             sample_rate,
         }
     }

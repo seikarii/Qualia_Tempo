@@ -85,6 +85,10 @@ struct ProcessArgs {
     #[arg(long, default_value_t = 48000)]
     sample_rate: u32,
 
+    /// Path to SOFA HRTF file (.sofa) - falls back to mock dataset if not provided
+    #[arg(long, value_name = "FILE")]
+    sofa_path: Option<PathBuf>,
+
     /// Log level (trace, debug, info, warn, error)
     #[arg(long, env = "RUST_LOG", default_value = "info")]
     log_level: String,
@@ -139,6 +143,10 @@ struct BatchArgs {
     /// Target sample rate (Hz)
     #[arg(long, default_value_t = 48000)]
     sample_rate: u32,
+
+    /// Path to SOFA HRTF file (.sofa) - falls back to mock dataset if not provided
+    #[arg(long, value_name = "FILE")]
+    sofa_path: Option<PathBuf>,
 
     /// Log level (trace, debug, info, warn, error)
     #[arg(long, env = "RUST_LOG", default_value = "info")]
@@ -209,8 +217,8 @@ fn run_audio_effects(
         
         let ensemble_config = EnsembleConfig::new(
             args.ensemble_voices,
-            5.0,  // max_delay_ms
-            3.0,  // max_pitch_shift_cents
+            3.5,  // max_delay_ms (reduced from 5ms for tighter ensemble)
+            2.0,  // max_pitch_shift_cents (reduced from 3 cents for subtle chorusing)
             audio_buffer.sample_rate,
         )?;
         let ensemble_effect = EnsembleEffect::new(ensemble_config);
@@ -232,8 +240,14 @@ fn run_spatialization(
 ) -> Result<BinauralSignal> {
     info!(rpm = args.rotation_rpm, "Phase 4: HRTF-based circular motion");
     
-    // Create SOFA loader with mock dataset
-    let sofa_loader = Arc::new(SofaLoader::create_mock_dataset());
+    // Load SOFA HRTF dataset (real file or mock fallback)
+    let sofa_loader = if let Some(ref sofa_path) = args.sofa_path {
+        info!(path = ?sofa_path, "Loading SOFA HRTF dataset");
+        Arc::new(SofaLoader::load_or_mock(sofa_path))
+    } else {
+        info!("Using synthetic mock HRTF dataset (72 positions)");
+        Arc::new(SofaLoader::create_mock_dataset())
+    };
     
     // Create HRTF convolver
     let hrtf_convolver = HrtfConvolver::new(
@@ -602,6 +616,7 @@ fn process_batch(args: BatchArgs) -> Result<()> {
                     eq_boost: args.eq_boost,
                     rotation_rpm: args.rotation_rpm,
                     sample_rate: args.sample_rate,
+                    sofa_path: args.sofa_path.clone(),
                     log_level: args.log_level.clone(),
                     json_logs: args.json_logs,
                 };
