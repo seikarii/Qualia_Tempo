@@ -211,7 +211,7 @@ impl SofaLoader {
                 };
                 
                 // Special case: front/back (azimuth near 0° or 180°)
-                let (left_gain, right_gain) = if azimuth < 30 || azimuth > 330 || (azimuth > 150 && azimuth < 210) {
+                let (left_gain, right_gain) = if !(30..=330).contains(&azimuth) || (azimuth > 150 && azimuth < 210) {
                     (1.0, 1.0) // Balanced for front/back
                 } else {
                     (left_gain, right_gain)

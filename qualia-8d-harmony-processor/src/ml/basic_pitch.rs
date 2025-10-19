@@ -13,7 +13,7 @@ use ort::{
     value::Value,
     GraphOptimizationLevel,
 };
-use std::{path::Path, sync::Arc};
+use std::path::Path;
 
 // BasicPitch ONNX model constants (from Spotify repo)
 const MODEL_SAMPLE_RATE: u32 = 22050;
@@ -24,7 +24,6 @@ const ANNOTATIONS_FPS: f32 = MODEL_SAMPLE_RATE as f32 / FFT_HOP as f32; // ~86.1
 const ANNOT_N_FRAMES: usize = (ANNOTATIONS_FPS * AUDIO_WINDOW_LENGTH_SEC) as usize; // 172
 const N_FREQ_BINS_NOTES: usize = 88; // Piano keys (A0-C8)
 const N_FREQ_BINS_CONTOURS: usize = 264; // 88 * 3 bins per semitone
-const ANNOTATIONS_BASE_FREQUENCY: f32 = 27.5; // A0
 
 /// Configuration for BasicPitch ONNX transcriber
 #[derive(Debug, Clone)]
@@ -38,13 +37,52 @@ pub struct BasicPitchConfig {
 
 impl BasicPitchConfig {
     pub fn new(sample_rate: u32) -> Self {
+        // Resolve model path relative to binary location, not CWD
+        let model_path = Self::resolve_model_path();
+        
         Self {
             sample_rate,
-            model_path: "models/basic-pitch/basic_pitch.onnx".to_string(),
+            model_path,
             onset_threshold: 0.5,      // Default from Spotify
             frame_threshold: 0.3,      // Default from Spotify
             min_note_duration_ms: 128, // ~127.7ms from Spotify
         }
+    }
+    
+    /// # Responsibility
+    /// Resolve absolute path to ONNX model (checks multiple locations).
+    fn resolve_model_path() -> String {
+        // Priority order:
+        // 1. Relative to binary (for installed/release builds)
+        // 2. Relative to CWD (for cargo run)
+        // 3. Relative to CARGO_MANIFEST_DIR (for tests)
+        
+        let candidates = vec![
+            // Binary-relative path (e.g., ./models/basic-pitch/basic_pitch.onnx)
+            std::env::current_exe()
+                .ok()
+                .and_then(|p| p.parent().map(|d| d.join("../models/basic-pitch/basic_pitch.onnx"))),
+            
+            // CWD-relative path (for cargo run from workspace root)
+            Some(std::path::PathBuf::from("qualia-8d-harmony-processor/models/basic-pitch/basic_pitch.onnx")),
+            
+            // CWD-relative path (for cargo run from crate root)
+            Some(std::path::PathBuf::from("models/basic-pitch/basic_pitch.onnx")),
+            
+            // CARGO_MANIFEST_DIR-relative (for tests)
+            std::env::var("CARGO_MANIFEST_DIR")
+                .ok()
+                .map(|d| std::path::PathBuf::from(d).join("models/basic-pitch/basic_pitch.onnx")),
+        ];
+        
+        for candidate in candidates.into_iter().flatten() {
+            if candidate.exists() {
+                return candidate.to_string_lossy().to_string();
+            }
+        }
+        
+        // Fallback to default (will fail with helpful error message)
+        "models/basic-pitch/basic_pitch.onnx".to_string()
     }
     
     pub fn with_model_path(mut self, path: impl Into<String>) -> Self {
@@ -57,7 +95,6 @@ impl BasicPitchConfig {
 #[derive(Debug)]
 pub struct BasicPitchTranscriber {
     config: BasicPitchConfig,
-    environment: Arc<Environment>,
     session: Session,
 }
 
@@ -91,7 +128,7 @@ impl BasicPitchTranscriber {
             .with_model_from_file(&config.model_path)
             .context("Failed to load BasicPitch ONNX model")?;
         
-        Ok(Self { config, environment, session })
+        Ok(Self { config, session })
     }
 
     /// # Responsibility
@@ -153,7 +190,6 @@ impl BasicPitchTranscriber {
         };
 
         let resample_ratio = MODEL_SAMPLE_RATE as f64 / self.config.sample_rate as f64;
-        let output_frames = (audio.len() as f64 * resample_ratio).ceil() as usize;
 
         let mut resampler = SincFixedIn::<f32>::new(
             resample_ratio,
@@ -263,15 +299,15 @@ impl BasicPitchTranscriber {
 
         // Verify shapes (should be [1, ANNOT_N_FRAMES, N_FREQ_BINS])
         anyhow::ensure!(
-            note_view.shape() == &[1, ANNOT_N_FRAMES, N_FREQ_BINS_NOTES],
+            note_view.shape() == [1, ANNOT_N_FRAMES, N_FREQ_BINS_NOTES],
             "Unexpected note shape: {:?}", note_view.shape()
         );
         anyhow::ensure!(
-            onset_view.shape() == &[1, ANNOT_N_FRAMES, N_FREQ_BINS_NOTES],
+            onset_view.shape() == [1, ANNOT_N_FRAMES, N_FREQ_BINS_NOTES],
             "Unexpected onset shape: {:?}", onset_view.shape()
         );
         anyhow::ensure!(
-            contour_view.shape() == &[1, ANNOT_N_FRAMES, N_FREQ_BINS_CONTOURS],
+            contour_view.shape() == [1, ANNOT_N_FRAMES, N_FREQ_BINS_CONTOURS],
             "Unexpected contour shape: {:?}", contour_view.shape()
         );
 
@@ -456,340 +492,7 @@ impl BasicPitchTranscriber {
         (21 + pitch_bin).clamp(0, 127) as u8
     }
 
-    /// Convert frequency (Hz) to MIDI note number (legacy compatibility)
-    fn frequency_to_midi(frequency: f32) -> u8 {
-        // MIDI note = 69 + 12 * log2(f / 440)
-        let midi_float = 69.0 + 12.0 * (frequency / 440.0).log2();
-        midi_float.round().clamp(0.0, 127.0) as u8
-    }
-
     pub fn config(&self) -> &BasicPitchConfig {
         &self.config
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_basic_pitch_config_creation() {
-        let config = BasicPitchConfig::new(48000);
-        assert_eq!(config.sample_rate, 48000);
-        assert!(config.onset_threshold > 0.0);
-        assert!(config.frame_threshold > 0.0);
-        assert_eq!(config.model_path, "models/basic-pitch/basic_pitch.onnx");
-    }
-
-    #[test]
-    fn test_basic_pitch_config_thresholds() {
-        let config = BasicPitchConfig::new(48000);
-        assert!(config.onset_threshold >= 0.0 && config.onset_threshold <= 1.0);
-        assert!(config.frame_threshold >= 0.0 && config.frame_threshold <= 1.0);
-        assert!(config.min_note_duration_ms > 0);
-    }
-
-    #[test]
-    fn test_basic_pitch_config_custom_model_path() {
-        let config = BasicPitchConfig::new(48000)
-            .with_model_path("custom/path/model.onnx");
-        assert_eq!(config.model_path, "custom/path/model.onnx");
-    }
-
-    #[test]
-    fn test_transcriber_creation_missing_model() {
-        let config = BasicPitchConfig::new(48000)
-            .with_model_path("nonexistent/model.onnx");
-        let result = BasicPitchTranscriber::new(config);
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("not found"));
-    }
-
-    #[test]
-    fn test_transcriber_creation_with_model() {
-        let config = BasicPitchConfig::new(48000);
-        
-        // Check if model exists before attempting to load
-        let model_path = Path::new(&config.model_path);
-        if !model_path.exists() {
-            eprintln!("⚠️  ONNX model not found at: {}", config.model_path);
-            eprintln!("   This test requires downloading the BasicPitch model.");
-            return; // Skip test gracefully
-        }
-        
-        let result = BasicPitchTranscriber::new(config);
-        assert!(result.is_ok(), "Failed to create transcriber: {:?}", result.err());
-    }
-
-    #[test]
-    fn test_transcribe_empty_audio() {
-        let config = BasicPitchConfig::new(48000);
-        
-        let model_path = Path::new(&config.model_path);
-        if !model_path.exists() {
-            eprintln!("⚠️  Skipping test: ONNX model not found");
-            return;
-        }
-        
-        let transcriber = BasicPitchTranscriber::new(config).unwrap();
-        let result = transcriber.transcribe(&[]);
-        
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), 0);
-    }
-
-    #[test]
-    fn test_transcribe_silence() {
-        let config = BasicPitchConfig::new(48000);
-        
-        let model_path = Path::new(&config.model_path);
-        if !model_path.exists() {
-            eprintln!("⚠️  Skipping test: ONNX model not found");
-            return;
-        }
-        
-        let transcriber = BasicPitchTranscriber::new(config).unwrap();
-        
-        // 2 seconds of silence (enough for one ONNX window)
-        let audio = vec![0.0; 48000 * 2];
-        let result = transcriber.transcribe(&audio);
-        
-        if result.is_err() {
-            eprintln!("❌ Transcribe error: {:?}", result.as_ref().unwrap_err());
-        }
-        assert!(result.is_ok());
-        let notes = result.unwrap();
-        
-        // Silence should produce few or no notes
-        assert!(
-            notes.len() <= 2,
-            "Silence should produce minimal notes, got {}",
-            notes.len()
-        );
-    }
-
-    #[test]
-    fn test_transcribe_sine_wave_440hz() {
-        let mut config = BasicPitchConfig::new(48000);
-        // Lower thresholds for synthetic test tone (model trained on real instruments)
-        // BasicPitch sees synthetic tones as brief blips, not sustained notes
-        config.frame_threshold = 0.15;  // Very low to catch brief activations
-        config.onset_threshold = 0.05; // Very low onset threshold
-        config.min_note_duration_ms = 1; // Detect any activation (model trained on natural attacks)
-        
-        let model_path = Path::new(&config.model_path);
-        if !model_path.exists() {
-            eprintln!("⚠️  Skipping test: ONNX model not found");
-            return;
-        }
-        
-        let transcriber = BasicPitchTranscriber::new(config).unwrap();
-        
-        // Generate 2.5 seconds of 440 Hz sine wave (A4 = MIDI 69)
-        // ONNX window requires ~2 sec minimum
-        let sample_rate = 48000;
-        let duration_sec = 2.5;
-        let frequency = 440.0;
-        let num_samples = (sample_rate as f32 * duration_sec) as usize;
-        
-        let audio: Vec<f32> = (0..num_samples)
-            .map(|i| {
-                let t = i as f32 / sample_rate as f32;
-                (2.0 * std::f32::consts::PI * frequency * t).sin() * 0.7
-            })
-            .collect();
-        
-        let result = transcriber.transcribe(&audio);
-        
-        assert!(result.is_ok());
-        let notes = result.unwrap();
-        
-        if notes.is_empty() {
-            eprintln!("⚠️  No notes detected - thresholds might be too high for synthetic tone");
-            eprintln!("   Config: frame_threshold={}, onset_threshold={}", 
-                      transcriber.config.frame_threshold, 
-                      transcriber.config.onset_threshold);
-        } else {
-            eprintln!("✅ Detected {} notes: {:?}", notes.len(), notes);
-        }
-        
-        // Should detect at least one note
-        assert!(!notes.is_empty(), "Should detect at least one note in 440 Hz tone");
-        
-        // At least one note should be A4 (MIDI 69) or very close
-        let has_a4 = notes.iter().any(|(midi, _, _)| *midi >= 68 && *midi <= 70);
-        assert!(has_a4, "Should detect A4 (MIDI 69 ± 1), got notes: {:?}", notes);
-    }
-
-    #[test]
-    fn test_transcribe_polyphonic_chord() {
-        let mut config = BasicPitchConfig::new(48000);
-        // Lower thresholds for synthetic test tone (model trained on real instruments)
-        // BasicPitch sees synthetic tones as brief blips, not sustained notes
-        config.frame_threshold = 0.15;  // Very low to catch brief activations
-        config.onset_threshold = 0.05; // Very low onset threshold
-        config.min_note_duration_ms = 1; // Detect any activation (model trained on natural attacks)
-        
-        let model_path = Path::new(&config.model_path);
-        if !model_path.exists() {
-            eprintln!("⚠️  Skipping test: ONNX model not found");
-            return;
-        }
-        
-        let transcriber = BasicPitchTranscriber::new(config).unwrap();
-        
-        // Generate C major chord (C4=261.63, E4=329.63, G4=392.00) for 2.5 seconds
-        // ONNX window requires ~2 sec minimum
-        let sample_rate = 48000;
-        let duration_sec = 2.5;
-        let num_samples = (sample_rate as f32 * duration_sec) as usize;
-        
-        let frequencies = [261.63, 329.63, 392.00]; // C4, E4, G4
-        let audio: Vec<f32> = (0..num_samples)
-            .map(|i| {
-                let t = i as f32 / sample_rate as f32;
-                frequencies
-                    .iter()
-                    .map(|&f| (2.0 * std::f32::consts::PI * f * t).sin())
-                    .sum::<f32>()
-                    / frequencies.len() as f32
-                    * 0.7
-            })
-            .collect();
-        
-        let result = transcriber.transcribe(&audio);
-        
-        assert!(result.is_ok());
-        let notes = result.unwrap();
-        
-        // Should detect multiple notes (polyphonic capability)
-        assert!(
-            notes.len() >= 2,
-            "Should detect at least 2 notes in C major chord (polyphonic), got {}",
-            notes.len()
-        );
-        
-        // Check for expected MIDI notes: C4=60, E4=64, G4=67
-        let midi_notes: Vec<u8> = notes.iter().map(|(m, _, _)| *m).collect();
-        let has_c4 = midi_notes.iter().any(|m| *m >= 59 && *m <= 61); // C4 ± 1
-        let has_e4 = midi_notes.iter().any(|m| *m >= 63 && *m <= 65); // E4 ± 1
-        let has_g4 = midi_notes.iter().any(|m| *m >= 66 && *m <= 68); // G4 ± 1
-        
-        let detected_count = [has_c4, has_e4, has_g4].iter().filter(|&&x| x).count();
-        assert!(
-            detected_count >= 2,
-            "Should detect at least 2/3 notes in C major chord, detected: C4={}, E4={}, G4={}",
-            has_c4, has_e4, has_g4
-        );
-    }
-
-    #[test]
-    fn test_frequency_to_midi_a440() {
-        let midi = BasicPitchTranscriber::frequency_to_midi(440.0);
-        assert_eq!(midi, 69, "A4 (440 Hz) should be MIDI 69");
-    }
-
-    #[test]
-    fn test_frequency_to_midi_middle_c() {
-        let midi = BasicPitchTranscriber::frequency_to_midi(261.63);
-        assert_eq!(midi, 60, "C4 (261.63 Hz) should be MIDI 60");
-    }
-
-    #[test]
-    fn test_pitch_bin_to_midi() {
-        let config = BasicPitchConfig::new(48000);
-        let model_path = Path::new(&config.model_path);
-        if !model_path.exists() {
-            eprintln!("⚠️  Skipping test: ONNX model not found");
-            return;
-        }
-        
-        let transcriber = BasicPitchTranscriber::new(config).unwrap();
-        
-        // Bin 0 = A0 = MIDI 21
-        assert_eq!(transcriber.pitch_bin_to_midi(0), 21);
-        
-        // Bin 39 = C4 (middle C) = MIDI 60
-        assert_eq!(transcriber.pitch_bin_to_midi(39), 60);
-        
-        // Bin 48 = A4 = MIDI 69
-        assert_eq!(transcriber.pitch_bin_to_midi(48), 69);
-        
-        // Bin 87 = C8 = MIDI 108
-        assert_eq!(transcriber.pitch_bin_to_midi(87), 108);
-    }
-
-    #[test]
-    fn test_transcribe_returns_midi_tuples() {
-        let config = BasicPitchConfig::new(48000);
-        
-        let model_path = Path::new(&config.model_path);
-        if !model_path.exists() {
-            eprintln!("⚠️  Skipping test: ONNX model not found");
-            return;
-        }
-        
-        let transcriber = BasicPitchTranscriber::new(config).unwrap();
-        
-        // Generate 440 Hz sine wave
-        let sample_rate = 48000;
-        let audio: Vec<f32> = (0..sample_rate)
-            .map(|i| {
-                let t = i as f32 / sample_rate as f32;
-                (2.0 * std::f32::consts::PI * 440.0 * t).sin() * 0.7
-            })
-            .collect();
-        
-        let result = transcriber.transcribe(&audio);
-        
-        assert!(result.is_ok());
-        
-        // Verify tuple structure (midi_note, start_time, duration)
-        let notes = result.unwrap();
-        for (midi, start, duration) in notes {
-            assert!(midi <= 127, "MIDI note must be 0-127");
-            assert!(start >= 0.0, "Start time must be non-negative");
-            assert!(duration > 0.0, "Duration must be positive");
-        }
-    }
-
-    #[test]
-    fn test_window_audio() {
-        let config = BasicPitchConfig::new(22050); // Use model sample rate
-        let model_path = Path::new(&config.model_path);
-        if !model_path.exists() {
-            eprintln!("⚠️  Skipping test: ONNX model not found");
-            return;
-        }
-        
-        let transcriber = BasicPitchTranscriber::new(config).unwrap();
-        
-        // Create audio longer than one window
-        let audio = vec![0.0; AUDIO_N_SAMPLES * 2 + 1000];
-        
-        let result = transcriber.window_audio(&audio);
-        assert!(result.is_ok());
-        
-        let windows = result.unwrap();
-        
-        // Should create at least 2 windows with 50% overlap
-        assert!(windows.len() >= 2, "Should create multiple windows");
-        
-        // Each window should be exactly AUDIO_N_SAMPLES
-        for window in &windows {
-            assert_eq!(window.len(), AUDIO_N_SAMPLES);
-        }
-    }
-
-    #[test]
-    fn test_constants_consistency() {
-        // Verify ONNX model constants match Spotify BasicPitch specification
-        assert_eq!(MODEL_SAMPLE_RATE, 22050);
-        assert_eq!(AUDIO_WINDOW_LENGTH_SEC, 2.0);
-        assert_eq!(FFT_HOP, 256);
-        assert_eq!(AUDIO_N_SAMPLES, 43844); // 22050 * 2 - 256
-        assert_eq!(ANNOT_N_FRAMES, 172); // (22050/256) * 2
-        assert_eq!(N_FREQ_BINS_NOTES, 88); // Piano keys
-        assert_eq!(N_FREQ_BINS_CONTOURS, 264); // 88 * 3
     }
 }

@@ -260,9 +260,9 @@ fn run_spatialization(
         
         // Convert SphericalPosition to SphericalCoord
         let hrtf_position = SphericalCoord::new(
-            position.azimuth_deg as f32,
-            position.elevation_deg as f32,
-            position.distance_m as f32,
+            position.azimuth_deg,
+            position.elevation_deg,
+            position.distance_m,
         );
         
         // Convolve chunk with HRTF at current position
