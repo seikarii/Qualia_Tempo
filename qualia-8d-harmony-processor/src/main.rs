@@ -184,33 +184,12 @@ fn process_single_file(args: ProcessArgs) -> Result<()> {
     Ok(())
 }
 
-/// Core processing logic (shared between single and batch modes)
-/// Core processing logic (shared between single and batch modes)
-fn process_file_core(args: &ProcessArgs) -> Result<()> {
-    // Validate input file exists
-    if !args.input.exists() {
-        anyhow::bail!("Input file does not exist: {:?}", args.input);
-    }
-
-    // Create output directory
-    std::fs::create_dir_all(&args.output_dir)
-        .context("Failed to create output directory")?;
-
-    // Phase 1: Load and decode audio
-    info!("Phase 1: Audio decoding");
-    
-    let input_config = InputHandlerConfig::new(args.sample_rate);
-    let input_handler = InputHandler::new(input_config)?;
-    let audio_buffer = input_handler.load_stem(&args.input)
-        .context("Failed to load input audio file")?;
-    
-    info!(
-        duration_sec = audio_buffer.duration_sec,
-        sample_rate = audio_buffer.sample_rate,
-        num_samples = audio_buffer.samples.len(),
-        "Audio loaded successfully"
-    );
-
+/// # Responsibility
+/// Apply EQ and ensemble effects to audio buffer.
+fn run_audio_effects(
+    args: &ProcessArgs,
+    audio_buffer: &qualia_8d_harmony_processor::audio::AudioBuffer,
+) -> Result<Vec<f32>> {
     // Phase 2: Apply frequency boost (EQ)
     let eq_boosted_audio = if args.eq_boost {
         info!("Phase 2: Frequency boost (bass/mid/high EQ)");
@@ -241,7 +220,16 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
         eq_boosted_audio.clone()
     };
 
-    // Phase 4: 8D spatialization with HRTF convolution
+    Ok(processed_audio)
+}
+
+/// # Responsibility
+/// Apply HRTF-based circular motion spatialization.
+fn run_spatialization(
+    processed_audio: &[f32],
+    args: &ProcessArgs,
+    sample_rate: u32,
+) -> Result<BinauralSignal> {
     info!(rpm = args.rotation_rpm, "Phase 4: HRTF-based circular motion");
     
     // Create SOFA loader with mock dataset
@@ -251,7 +239,7 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
     let hrtf_convolver = HrtfConvolver::new(
         512,  // FFT size
         256,  // Hop size
-        audio_buffer.sample_rate,
+        sample_rate,
         sofa_loader,
     ).context("Failed to create HRTF convolver")?;
     
@@ -267,7 +255,7 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
     let chunk_size = 2048; // Process in chunks for time-varying spatialization
     
     for (chunk_idx, chunk) in processed_audio.chunks(chunk_size).enumerate() {
-        let time_sec = (chunk_idx * chunk_size) as f64 / audio_buffer.sample_rate as f64;
+        let time_sec = (chunk_idx * chunk_size) as f64 / sample_rate as f64;
         let position = motion_engine.calculate_position(time_sec);
         
         // Convert SphericalPosition to SphericalCoord
@@ -298,6 +286,16 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
         "HRTF-based 8D spatialization complete (72 HRIR positions)"
     );
 
+    Ok(spatial_audio)
+}
+
+/// # Responsibility
+/// Run ML analysis: MIDI transcription + harmonic analysis.
+fn run_ml_analysis(
+    audio_buffer: &qualia_8d_harmony_processor::audio::AudioBuffer,
+    args: &ProcessArgs,
+) -> Result<(Vec<(u8, f64, f64)>, Option<qualia_8d_harmony_processor::contracts::HarmonyMap>)> {
+    
     // Phase 5: MIDI transcription (if enabled)
     let midi_notes: Vec<(u8, f64, f64)> = if args.transcribe_midi {
         info!("Phase 5: ML-powered MIDI transcription (McLeod Pitch Method)");
@@ -383,18 +381,24 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
         None
     };
 
-    // Phase 7: Export files
+    Ok((midi_notes, harmony_map))
+}
+
+/// # Responsibility
+/// Export all output files (WAV, MIDI, JSON).
+fn export_outputs(
+    spatial_audio: &BinauralSignal,
+    midi_notes: &[(u8, f64, f64)],
+    harmony_map: &Option<qualia_8d_harmony_processor::contracts::HarmonyMap>,
+    args: &ProcessArgs,
+    base_name: &str,
+) -> Result<()> {
+    
     info!(output_dir = ?args.output_dir, "Phase 7: File export");
     
     // Ensure output directory exists
     std::fs::create_dir_all(&args.output_dir)
         .context("Failed to create output directory")?;
-    
-    // Derive base filename from input
-    let base_name = args.input.file_stem()
-        .unwrap_or_default()
-        .to_string_lossy()
-        .to_string();
     
     // Export 8D WAV
     let wav_path = args.output_dir.join(format!("{}_8d.wav", base_name));
@@ -405,7 +409,7 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
     };
     let wav_exporter = WavExporter::new(wav_config)?;
     
-    wav_exporter.export_binaural(&spatial_audio, &wav_path)
+    wav_exporter.export_binaural(spatial_audio, &wav_path)
         .context("Failed to export 8D WAV file")?;
     info!(path = ?wav_path, "Exported 8D WAV");
     
@@ -433,7 +437,7 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
         let midi_transcription_path = args.output_dir.join(format!("{}_transcription.mid", base_name));
         let midi_exporter = MidiExporter::with_defaults();
         
-        midi_exporter.export_notes(&midi_notes, &midi_transcription_path)
+        midi_exporter.export_notes(midi_notes, &midi_transcription_path)
             .context("Failed to export transcription MIDI file")?;
         info!(
             path = ?midi_transcription_path,
@@ -441,6 +445,52 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
             "Exported pitch-tracked MIDI transcription"
         );
     }
+
+    Ok(())
+}
+
+/// Core processing logic (shared between single and batch modes)
+fn process_file_core(args: &ProcessArgs) -> Result<()> {
+    // Validate input file exists
+    if !args.input.exists() {
+        anyhow::bail!("Input file does not exist: {:?}", args.input);
+    }
+
+    // Create output directory
+    std::fs::create_dir_all(&args.output_dir)
+        .context("Failed to create output directory")?;
+
+    // Phase 1: Load and decode audio
+    info!("Phase 1: Audio decoding");
+    
+    let input_config = InputHandlerConfig::new(args.sample_rate);
+    let input_handler = InputHandler::new(input_config)?;
+    let audio_buffer = input_handler.load_stem(&args.input)
+        .context("Failed to load input audio file")?;
+    
+    info!(
+        duration_sec = audio_buffer.duration_sec,
+        sample_rate = audio_buffer.sample_rate,
+        num_samples = audio_buffer.samples.len(),
+        "Audio loaded successfully"
+    );
+
+    // Phase 2-3: Apply audio effects (EQ + Ensemble)
+    let processed_audio = run_audio_effects(args, &audio_buffer)?;
+
+    // Phase 4: 8D spatialization with HRTF convolution
+    let spatial_audio = run_spatialization(&processed_audio, args, audio_buffer.sample_rate)?;
+
+    // Phase 5-6: ML analysis (MIDI transcription + harmonic analysis)
+    let (midi_notes, harmony_map) = run_ml_analysis(&audio_buffer, args)?;
+
+    // Phase 7: Export files
+    let base_name = args.input.file_stem()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string();
+    
+    export_outputs(&spatial_audio, &midi_notes, &harmony_map, args, &base_name)?;
 
     Ok(())
 }

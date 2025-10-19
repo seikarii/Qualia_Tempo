@@ -5,6 +5,7 @@
 //! audio spatialization.
 
 use anyhow::{Context, Result, bail};
+use sofar::reader::{Sofar, Filter};
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -33,6 +34,23 @@ impl SphericalCoord {
         }
         normalized
     }
+}
+
+/// Convert spherical coordinates to Cartesian (x, y, z)
+///
+/// SOFA/libmysofa convention:
+/// - x: front/back axis (positive = front)
+/// - y: left/right axis (positive = left)
+/// - z: up/down axis (positive = up)
+fn spherical_to_cartesian(azimuth_deg: f32, elevation_deg: f32, radius_m: f32) -> (f32, f32, f32) {
+    let az_rad = azimuth_deg.to_radians();
+    let el_rad = elevation_deg.to_radians();
+    
+    let x = radius_m * el_rad.cos() * az_rad.cos();
+    let y = radius_m * el_rad.cos() * az_rad.sin();
+    let z = radius_m * el_rad.sin();
+    
+    (x, y, z)
 }
 
 /// HRIR (Head-Related Impulse Response) data for a specific position
@@ -87,9 +105,67 @@ impl SofaLoader {
             bail!("SOFA file not found: {:?}", path);
         }
 
-        // TODO: Actual SOFA loading with sofar crate
-        // For now, create a mock dataset with synthetic HRIRs
-        Ok(Self::create_mock_dataset())
+        // Load SOFA file using sofar crate (libmysofa wrapper)
+        let sofar_handle = Sofar::open(path)
+            .with_context(|| format!("Failed to open SOFA file: {:?}", path))?;
+
+        let hrir_length = sofar_handle.filter_len();
+        
+        // Assume 48kHz sample rate (SOFA files don't always expose this in sofar API)
+        // User can override via OpenOptions if needed
+        let sample_rate = 48000u32;
+
+        tracing::info!(
+            hrir_length,
+            sample_rate,
+            "Loaded SOFA file (libmysofa)"
+        );
+
+        // Build HRIR cache by sampling the sphere
+        // Standard KEMAR positions: 24 azimuths × 3 elevations
+        let mut hrirs = HashMap::new();
+        let mut available_positions = Vec::new();
+
+        for azimuth in (0..360).step_by(15) {
+            for elevation in [-45, 0, 45] {
+                let position = SphericalCoord::new(azimuth as f32, elevation as f32, 1.5);
+                
+                // Convert spherical to Cartesian for sofar API
+                let (x, y, z) = spherical_to_cartesian(
+                    position.azimuth_deg,
+                    position.elevation_deg,
+                    position.distance_m,
+                );
+
+                // Query HRIR from sofar (libmysofa handles interpolation internally)
+                let mut filter = Filter::new(hrir_length);
+                sofar_handle.filter(x, y, z, &mut filter);
+
+                // Extract left/right channels (sofar::Filter uses Box<[f32]>)
+                let left = filter.left.to_vec();
+                let right = filter.right.to_vec();
+
+                let hrir_data = HrirData::new(position, left, right, sample_rate)
+                    .with_context(|| format!("Failed to create HRIR for az={} el={}", azimuth, elevation))?;
+
+                let key = (azimuth, elevation);
+                hrirs.insert(key, hrir_data);
+                available_positions.push(position);
+            }
+        }
+
+        if hrirs.is_empty() {
+            bail!("No valid HRIRs extracted from SOFA file");
+        }
+
+        tracing::info!(num_positions = hrirs.len(), "HRIR cache built");
+
+        Ok(Self {
+            hrirs,
+            sample_rate,
+            hrir_length,
+            available_positions,
+        })
     }
 
     /// Create mock HRIR dataset for testing (24 azimuths × 3 elevations = 72 positions)
@@ -209,10 +285,93 @@ impl SofaLoader {
     }
 
     /// Get interpolated HRIR between nearest positions
+    ///
+    /// Uses bilinear interpolation in the azimuth/elevation grid for smooth transitions.
     pub fn get_interpolated(&self, target: &SphericalCoord) -> Result<HrirData> {
-        // For simplicity, use nearest-neighbor for now
-        // TODO: Implement proper VBAP (Vector Base Amplitude Panning) interpolation
-        self.get_nearest(target)
+        if self.hrirs.is_empty() {
+            bail!("No HRIRs loaded");
+        }
+
+        // Find 4 nearest neighbors in azimuth/elevation grid
+        let az = SphericalCoord::normalize_azimuth(target.azimuth_deg);
+        let el = target.elevation_deg.clamp(-90.0, 90.0);
+
+        // Round to grid points (assumes 15° azimuth, 45° elevation steps)
+        let az_floor = (az / 15.0).floor() * 15.0;
+        let az_ceil = ((az / 15.0).ceil() * 15.0) % 360.0;
+        
+        let el_floor = if el < -45.0 {
+            -45.0
+        } else if el < 0.0 {
+            -45.0
+        } else if el < 45.0 {
+            0.0
+        } else {
+            45.0
+        };
+        
+        let el_ceil = if el_floor < 0.0 {
+            0.0
+        } else if el_floor == 0.0 {
+            45.0
+        } else {
+            45.0
+        };
+
+        // Fetch 4 corner HRIRs
+        let hrir_00 = self.hrirs.get(&(az_floor as i32, el_floor as i32));
+        let hrir_10 = self.hrirs.get(&(az_ceil as i32, el_floor as i32));
+        let hrir_01 = self.hrirs.get(&(az_floor as i32, el_ceil as i32));
+        let hrir_11 = self.hrirs.get(&(az_ceil as i32, el_ceil as i32));
+
+        // If any corner is missing, fall back to nearest neighbor
+        if hrir_00.is_none() || hrir_10.is_none() || hrir_01.is_none() || hrir_11.is_none() {
+            tracing::debug!("HRTF interpolation: missing grid point, using nearest neighbor");
+            return self.get_nearest(target);
+        }
+
+        // Bilinear interpolation weights
+        let az_weight = if az_ceil == az_floor {
+            0.0
+        } else {
+            (az - az_floor) / (az_ceil - az_floor)
+        };
+        
+        let el_weight = if el_ceil == el_floor {
+            0.0
+        } else {
+            (el - el_floor) / (el_ceil - el_floor)
+        };
+
+        // Interpolate left/right channels
+        let hrir_00 = hrir_00.unwrap();
+        let hrir_10 = hrir_10.unwrap();
+        let hrir_01 = hrir_01.unwrap();
+        let hrir_11 = hrir_11.unwrap();
+
+        let hrir_len = hrir_00.len();
+        let mut left = vec![0.0; hrir_len];
+        let mut right = vec![0.0; hrir_len];
+
+        for i in 0..hrir_len {
+            // Bilinear interpolation: f(x,y) = (1-x)(1-y)f00 + x(1-y)f10 + (1-x)y f01 + xy f11
+            let w00 = (1.0 - az_weight) * (1.0 - el_weight);
+            let w10 = az_weight * (1.0 - el_weight);
+            let w01 = (1.0 - az_weight) * el_weight;
+            let w11 = az_weight * el_weight;
+
+            left[i] = w00 * hrir_00.left[i] 
+                    + w10 * hrir_10.left[i] 
+                    + w01 * hrir_01.left[i] 
+                    + w11 * hrir_11.left[i];
+
+            right[i] = w00 * hrir_00.right[i] 
+                     + w10 * hrir_10.right[i] 
+                     + w01 * hrir_01.right[i] 
+                     + w11 * hrir_11.right[i];
+        }
+
+        HrirData::new(*target, left, right, self.sample_rate)
     }
 
     /// Calculate angular distance between two spherical positions
@@ -223,6 +382,26 @@ impl SofaLoader {
         let el_diff = (a.elevation_deg - b.elevation_deg).abs();
         
         (az_dist * az_dist + el_diff * el_diff).sqrt()
+    }
+
+    /// Load SOFA file with fallback to mock dataset
+    ///
+    /// Attempts to load real SOFA file. If file doesn't exist or fails to parse,
+    /// falls back to mock dataset with warning.
+    pub fn load_or_mock(path: &Path) -> Self {
+        match Self::load(path) {
+            Ok(loader) => {
+                tracing::info!("Loaded real SOFA dataset from {:?}", path);
+                loader
+            }
+            Err(e) => {
+                tracing::warn!(
+                    error = %e,
+                    "Failed to load SOFA file, using mock dataset"
+                );
+                Self::create_mock_dataset()
+            }
+        }
     }
 
     pub fn sample_rate(&self) -> u32 {
@@ -349,5 +528,55 @@ mod tests {
         let dist = loader.angular_distance(&a, &b);
         // Should be 20° (via wraparound), not 340°
         assert!(dist < 30.0);
+    }
+
+    #[test]
+    fn test_hrtf_interpolation_between_grid_points() {
+        let loader = SofaLoader::create_mock_dataset();
+        
+        // Request HRIR at position between grid points (7.5° azimuth, 0° elevation)
+        // Should interpolate between 0° and 15° azimuth
+        let target = SphericalCoord::new(7.5, 0.0, 1.5);
+        let interpolated = loader.get_interpolated(&target).unwrap();
+        
+        // Verify interpolated HRIR has correct length
+        assert_eq!(interpolated.len(), 200);
+        
+        // Get corner HRIRs for comparison
+        let hrir_0 = loader.get_exact(0.0, 0.0).unwrap();
+        let hrir_15 = loader.get_exact(15.0, 0.0).unwrap();
+        
+        // Interpolated value at midpoint should be roughly average of corners
+        // Check first non-zero sample
+        let sample_idx = 5;
+        let interpolated_val = interpolated.left[sample_idx];
+        let avg_val = (hrir_0.left[sample_idx] + hrir_15.left[sample_idx]) / 2.0;
+        
+        // Allow 20% tolerance due to bilinear weighting
+        assert!(
+            (interpolated_val - avg_val).abs() < 0.2,
+            "Interpolated HRIR should be blend of neighbors: {} vs {} (avg)",
+            interpolated_val,
+            avg_val
+        );
+    }
+
+    #[test]
+    fn test_hrtf_interpolation_at_grid_point() {
+        let loader = SofaLoader::create_mock_dataset();
+        
+        // Request HRIR exactly at grid point (30° azimuth, 0° elevation)
+        let target = SphericalCoord::new(30.0, 0.0, 1.5);
+        let interpolated = loader.get_interpolated(&target).unwrap();
+        let exact = loader.get_exact(30.0, 0.0).unwrap();
+        
+        // Interpolation at exact grid point should match exact HRIR
+        for i in 0..interpolated.len().min(10) {
+            assert_relative_eq!(
+                interpolated.left[i],
+                exact.left[i],
+                epsilon = 0.001
+            );
+        }
     }
 }
