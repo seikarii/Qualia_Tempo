@@ -1,0 +1,90 @@
+[package]
+name = "qualia-8d-harmony-processor"
+version = "0.1.0"
+edition = "2021"
+authors = ["QualiaTempo Team"]
+description = "Production-grade 8D audio processor with ML-powered harmonic analysis"
+license = "MIT"
+
+[dependencies]
+# Audio I/O
+cpal = "0.16"
+hound = "3.5"
+
+# DSP Core
+dasp = "0.11"
+symphonia = { version = "0.5", features = ["mp3", "flac", "ogg", "wav"] }
+rubato = "0.15"
+rustfft = "6.2"
+realfft = "3.3"
+
+# ML/ONNX
+ort = { version = "1.16", features = ["load-dynamic", "half"], optional = true }
+ndarray = "0.15"
+
+# Audio Analysis
+pitch-detection = "0.3"
+aubio-rs = { version = "0.2", optional = true }
+spectrum-analyzer = { version = "1.5", optional = true }
+
+# HRTF
+sofar = "0.1"
+
+# MIDI
+midly = "0.5"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+toml = "0.8"
+
+# CLI
+clap = { version = "4.5", features = ["derive", "env"] }
+indicatif = "0.17"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
+
+# Async
+tokio = { version = "1.41", features = ["full"] }
+async-trait = "0.1"
+
+# Concurrency
+rayon = "1.10"
+
+# Random Number Generation
+rand = "0.8"
+
+# Error Handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+[dev-dependencies]
+approx = "0.5"
+criterion = { version = "0.5", features = ["html_reports"] }
+tempfile = "3.8"
+
+[[bench]]
+name = "hrtf_convolution"
+harness = false
+
+[[bench]]
+name = "midi_transcription"
+harness = false
+
+[[bench]]
+name = "full_pipeline"
+harness = false
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+
+[features]
+default = ["ml-analysis"]
+ml-analysis = ["ort", "aubio-rs", "spectrum-analyzer"]
+gpu-acceleration = ["ort/cuda"]
