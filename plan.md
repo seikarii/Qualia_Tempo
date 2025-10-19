@@ -1,24 +1,42 @@
-# Qualia Tempo 8D Audio Processor
-## Standalone Rust-Native Spatial Audio Engine
+# Qualia Tempo 8D Audio Processor + Harmony Analysis Engine
+## Production-Grade Standalone Spatial Audio & Musical Intelligence System
 
-**VERSION**: 1.0  
+**VERSION**: 2.0  
 **COMPLIANCE**: QUALIA.CODE.RUST v1.1 (RUST ONLY - ZERO PYTHON)  
-**STATUS**: Mission-Ready Architecture  
-**TARGET**: Batch processing de canciones con efecto 8D orbital
+**STATUS**: Production-Ready Architecture (NO MVP)  
+**TARGET**: Industrial-strength batch processing with ML-powered music theory extraction
 
 ---
 
 ## 🎯 MISSION OBJECTIVE
 
-Construir un procesador de audio 8D **standalone** en Rust puro que transforme canciones en experiencias espaciales inmersivas mediante:
+Construir un procesador de audio **PRODUCTION-GRADE STANDALONE** en Rust puro que:
 
-1. **Separación por instrumento** (stems individuales)
-2. **Movimiento circular automático** (rotación orbital de cada instrumento)
-3. **Efecto orquesta** (duplicación con microshifts para densidad)
-4. **Boosting selectivo** (ancla de bass, claridad vocal, potencia de coros)
-5. **Calidad sin pérdidas** (no audio bleeding, convolución HRTF precisa)
+### Core Capabilities (NO Optional Features)
 
-**CRÍTICO**: Este sistema es **INDEPENDIENTE** del juego. Produce assets de audio procesados que pueden usarse standalone O integrarse posteriormente en Qualia Tempo.
+1. **HRTF-Based 8D Spatialization** (MIT KEMAR + cubic interpolation)
+2. **ML-Powered MIDI Transcription** (Basic-Pitch ONNX + onset detection)
+3. **Harmonic Analysis Engine** (chromagram → chord recognition → tonality extraction)
+4. **Source Separation Ready** (Demucs v4 ONNX integration OR pre-separated stems)
+5. **Ensemble Orchestration** (micro-delays + pitch shifting + spatial spread)
+6. **Frequency Sculpting** (parametric EQ with presets per instrument class)
+7. **Production Audio Pipeline** (48kHz 24-bit, THD+N <0.001%, zero artifacts)
+
+### System Architecture Philosophy
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  THIS IS A STANDALONE TOOL. NO GAME DEPENDENCIES.          │
+│  Input:  Raw audio files (.mp3, .flac, .wav, .ogg)         │
+│  Output: 8D WAV + JSON HarmonyMap + MIDI file              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**CRITICAL CLARIFICATIONS:**
+- ❌ **NO WebSocket events** - This tool does NOT communicate with a game server
+- ❌ **NO "GameLogicService"** - Harmony analysis produces JSON files, not runtime events
+- ❌ **NO optional features** - Every component is production-mandatory
+- ✅ **Outputs are artifacts** - Generated files can be consumed by ANY system later (game or otherwise)
 
 ---
 
@@ -68,34 +86,102 @@ Construir un procesador de audio 8D **standalone** en Rust puro que transforme c
 
 ---
 
-## 🛠️ STACK TECNOLÓGICO (100% RUST)
+## 🛠️ STACK TECNOLÓGICO (100% RUST - 2025 CUTTING-EDGE)
 
-### Core Audio Libraries
+### Core Audio Processing
+
+| Crate | Versión | Propósito | Justificación |
+|-------|---------|-----------|---------------|
+| **cpal** | 0.16+ | Cross-platform audio I/O | Industry standard for Rust audio |
+| **dasp** | 0.11+ | DSP fundamentals (filtering, interpolation) | RustAudio ecosystem core |
+| **symphonia** | 0.5+ | Multi-codec decoding (MP3/FLAC/OGG/WAV) | Zero-copy, pure Rust decoder |
+| **rubato** | 0.15+ | High-quality resampling | Sinc interpolation for 48kHz normalization |
+| **hound** | 3.5+ | WAV file writing (24-bit support) | Production-quality audio export |
+| **rustfft** | 6.2+ | FFT for convolution | SIMD-accelerated transforms |
+| **rayon** | 1.10+ | Parallel stem processing | Data parallelism across cores |
+
+### HRTF Spatialization
 
 | Crate | Versión | Propósito |
 |-------|---------|-----------|
-| **cpal** | 0.16+ | Audio I/O cross-platform (real-time + batch) |
-| **dasp** | 0.11+ | DSP fundamentals (sample manipulation, filtering) |
-| **sofar** | 0.1+ | Bindings para libmysofa (carga HRTF/SOFA datasets) |
-| **symphonia** | 0.5+ | Decodificación multi-formato (MP3, FLAC, OGG, WAV) |
-| **rubato** | 0.15+ | Resampling de alta calidad |
-| **hound** | 3.5+ | Escritura de archivos WAV |
-| **rustfft** | 6.2+ | FFT para convolución eficiente |
-| **rayon** | 1.8+ | Paralelización de procesamiento por stems |
+| **sofar** | 0.1+ | SOFA dataset loading (libmysofa bindings) |
+| **realfft** | 3.3+ | Real-valued FFT for HRIR convolution |
 
-### Opcional (Futura Fase)
+### Machine Learning (ONNX Inference)
+
+| Crate | Versión | Propósito | Why NOT Tract |
+|-------|---------|-----------|---------------|
+| **ort** | 1.16+ | ONNX Runtime bindings | ✅ Twitter-scale production (100M+ users) |
+|  |  |  | ✅ Microsoft ONNX Runtime 1.16 (latest) |
+|  |  |  | ✅ GPU acceleration (CUDA/TensorRT/DirectML) |
+|  |  |  | ✅ Dynamic model loading (`load-dynamic` feature) |
+|  |  |  | ❌ Tract is 0.22 (older, less optimized) |
+
+### Audio Analysis
+
+| Crate | Versión | Propósito |
+|-------|---------|-----------|
+| **pitch-detection** | 0.3+ | McLeod/YIN pitch detectors |
+| **aubio-rs** | 0.2+ | Onset detection, tempo estimation |
+| **spectrum-analyzer** | 1.5+ | Real-time FFT spectrum analysis |
+
+### Source Separation (Optional Path)
+
+| Crate | Versión | Propósito |
+|-------|---------|-----------|
+| **charon-audio** | 0.1+ | Modern ML-powered stem separation |
+| **ort** | 1.16+ | Demucs v4 ONNX model inference |
+
+### Pitch Manipulation
+
+| Crate | Versión | Propósito |
+|-------|---------|-----------|
+| **rubato** | 0.15+ | Pitch shifting via resampling |
+| **dasp_sample** | 0.11+ | Sample rate conversion |
+
+### Configuration & Serialization
+
+| Crate | Versión | Propósito |
+|-------|---------|-----------|
+| **serde** | 1.0 | Serialization framework |
+| **serde_json** | 1.0 | JSON output (HarmonyMap contracts) |
+| **serde_yaml** | 0.9 | YAML config files |
+| **toml** | 0.8 | Alternative config format |
+
+### CLI & Logging
+
+| Crate | Versión | Propósito |
+|-------|---------|-----------|
+| **clap** | 4.5+ | CLI argument parsing (derive API) |
+| **tracing** | 0.1 | Structured logging |
+| **tracing-subscriber** | 0.3 | Log output formatting |
+| **indicatif** | 0.17+ | Progress bars for batch processing |
+
+### Async Runtime
+
+| Crate | Versión | Propósito |
+|-------|---------|-----------|
+| **tokio** | 1.41+ | Async runtime for I/O-bound tasks |
+| **async-trait** | 0.1 | Async trait methods |
+
+### Optional (Future Enhancement)
 
 | Crate | Propósito |
 |-------|-----------|
-| **tract** | Inferencia ONNX (si se integra Demucs convertido) |
-| **rodio** | Preview en tiempo real (playback con procesamiento) |
+| **rodio** | Real-time audio preview |
+| **egui** | Optional GUI (if needed) |
+| **vst3** | VST3 plugin wrapper |
 
-### Datasets Externos
+### External Datasets
 
-- **MIT KEMAR HRTF**: Dataset SOFA con 710 posiciones (azimuth/elevation)
-  - Fuente: [https://sound.media.mit.edu/resources/KEMAR.html](https://sound.media.mit.edu/resources/KEMAR.html)
-  - Formato: AES69-2015 SOFA
-  - Tamaño: ~50MB
+- **MIT KEMAR HRTF**: 710 SOFA positions (azimuth/elevation)
+  - Source: [https://sound.media.mit.edu/resources/KEMAR.html](https://sound.media.mit.edu/resources/KEMAR.html)
+  - Format: AES69-2015 SOFA
+  - Size: ~50MB
+- **Basic-Pitch ONNX Model**: Spotify's MIDI transcription
+  - Source: [https://github.com/spotify/basic-pitch](https://github.com/spotify/basic-pitch)
+  - Format: ONNX (TensorFlow → ONNX export)
+  - Capabilities: Polyphonic transcription, pitch bends, onset detection
 
 ---
 
@@ -104,73 +190,87 @@ Construir un procesador de audio 8D **standalone** en Rust puro que transforme c
 ### Diagrama de Componentes
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                   INPUT HANDLER                                 │
-│  - Carga stems individuales O archivo completo                 │
-│  - Decodificación vía symphonia                                │
-│  - Normalización sample rate → 48kHz                           │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-                           ▼
-         ┌─────────────────────────────────────────┐
-         │  Para cada stem en paralelo (rayon):    │
-         └─────────────────────────────────────────┘
-                           │
-      ┌────────────────────┼────────────────────┐
-      │                    │                    │
-      ▼                    ▼                    ▼
-┌─────────────┐   ┌─────────────────┐   ┌──────────────┐
-│  ENSEMBLE   │   │ CIRCULAR MOTION │   │ FREQ BOOST   │
-│  EFFECT     │   │    ENGINE       │   │   MODULE     │
-│             │   │                 │   │              │
-│ - Duplicate │   │ - θ(t) calc    │   │ - Parametric │
-│ - Delays    │   │ - HRTF lookup  │   │   EQ         │
-│ - Detuning  │   │ - Interpolate  │   │ - Presets    │
-└──────┬──────┘   └────────┬────────┘   └──────┬───────┘
-       │                   │                   │
-       └─────────┬─────────┴────────┬──────────┘
-                 │                  │
-                 ▼                  ▼
-         ┌──────────────┐   ┌─────────────────┐
-         │ HRTF CONVOLVE│   │  SPATIAL MIX    │
-         │              │   │                 │
-         │ - FFT conv   │   │ - Combine stems │
-         │ - Binaural L │   │ - Level balance │
-         │ - Binaural R │   │ - Final limiter │
-         └──────┬───────┘   └────────┬────────┘
-                │                    │
-                └────────┬───────────┘
-                         │
-                         ▼
-                ┌────────────────┐
-                │ OUTPUT WRITER  │
-                │                │
-                │ - WAV 48kHz    │
-                │ - 24-bit depth │
-                └────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                        INPUT HANDLER                                 │
+│  - Multi-codec decoding (symphonia)                                  │
+│  - Resampling to 48kHz (rubato)                                      │
+│  - Mono/Stereo normalization                                         │
+└────────────────────────────┬─────────────────────────────────────────┘
+                             │
+                             ▼
+         ┌───────────────────────────────────────────────┐
+         │  PARALLEL PROCESSING (rayon ThreadPool)       │
+         │  For each stem: 8D + ML Analysis              │
+         └───────────────────────────────────────────────┘
+                             │
+      ┌──────────────────────┼──────────────────────┬──────────────────┐
+      │                      │                      │                  │
+      ▼                      ▼                      ▼                  ▼
+┌─────────────┐   ┌──────────────────┐   ┌─────────────┐   ┌─────────────────┐
+│  ENSEMBLE   │   │ CIRCULAR MOTION  │   │  FREQ EQ    │   │ ML ANALYZER     │
+│  EFFECT     │   │  + HRTF ENGINE   │   │  BOOST      │   │                 │
+│             │   │                  │   │             │   │ - MIDI Trans.   │
+│ - Duplicate │   │ - θ(t) calc      │   │ - Parametric│   │ - Onset Detect  │
+│ - Delays    │   │ - HRTF lookup    │   │ - Presets   │   │ - Chromagram    │
+│ - Detuning  │   │ - Cubic interp.  │   │             │   │ - Chord Recog.  │
+│ - Spread    │   │ - FFT convolve   │   │             │   │                 │
+└──────┬──────┘   └────────┬─────────┘   └──────┬──────┘   └────────┬────────┘
+       │                   │                    │                   │
+       └─────────┬─────────┴──────────┬─────────┘                   │
+                 │                    │                             │
+                 ▼                    │                             │
+         ┌──────────────┐             │                             │
+         │ SPATIAL      │             │                             │
+         │ MIXER        │             │                             │
+         │ - Sum stems  │             │                             │
+         │ - Limiter    │             │                             │
+         └──────┬───────┘             │                             │
+                │                     │                             │
+                ▼                     ▼                             ▼
+         ┌──────────────┐   ┌────────────────┐         ┌───────────────────┐
+         │ 8D WAV FILE  │   │ EQ METADATA    │         │ HarmonyMap JSON   │
+         │ (24-bit)     │   │ (JSON)         │         │ + MIDI FILE       │
+         └──────────────┘   └────────────────┘         └───────────────────┘
 ```
 
 ### Módulos del Código
 
 ```
 src/
-├── main.rs                 # CLI entry point
-├── lib.rs                  # Public API
-├── config.rs               # Config loading (YAML)
+├── main.rs                      # CLI entry point
+├── lib.rs                       # Public API
+├── config.rs                    # Config loading (YAML/JSON)
+│
 ├── audio/
 │   ├── mod.rs
-│   ├── input_handler.rs    # InputHandler struct
-│   ├── hrtf_convolution.rs # HRTFConvolver struct
-│   ├── circular_motion.rs  # CircularMotionEngine struct
-│   ├── ensemble_effect.rs  # EnsembleEffect struct
-│   ├── eq_boost.rs         # FrequencyBooster struct
-│   └── mixer.rs            # SpatialMixer struct
-└── cli.rs                  # Clap argument parsing
+│   ├── input_handler.rs         # InputHandler struct
+│   ├── hrtf_convolution.rs      # HRTFConvolver struct (FFT-based)
+│   ├── circular_motion.rs       # CircularMotionEngine struct
+│   ├── ensemble_effect.rs       # EnsembleEffect struct
+│   ├── eq_boost.rs              # FrequencyBooster struct
+│   └── mixer.rs                 # SpatialMixer struct
+│
+├── ml/
+│   ├── mod.rs
+│   ├── midi_transcription.rs    # BasicPitchTranscriber (ort-based)
+│   ├── onset_detection.rs       # OnsetDetector (aubio-rs)
+│   ├── chromagram.rs            # ChromagramAnalyzer (spectrum-analyzer)
+│   ├── chord_recognition.rs     # ChordRecognizer (chromagram → chords)
+│   └── harmony_map_builder.rs   # HarmonyMapBuilder (tonality extraction)
+│
+├── contracts/
+│   ├── mod.rs
+│   ├── harmony_map.rs           # HarmonyMap struct (JSON serializable)
+│   ├── midi_note.rs             # MidiNote struct
+│   └── audio_metadata.rs        # AudioMetadata struct
+│
 ```
 
 ---
 
-## 🔧 MÓDULOS DETALLADOS
+## 🔧 MÓDULOS DETALLADOS - PRODUCCIÓN COMPLETA
+
+### 1. InputHandler (Audio Decoding & Normalization)
 
 ### 1. InputHandler
 
@@ -485,6 +585,632 @@ impl SpatialMixer {
 
 fn db_to_linear(db: f32) -> f32 {
     10.0_f32.powf(db / 20.0)
+}
+```
+
+---
+
+### 7. BasicPitchTranscriber (ML-Powered MIDI Transcription)
+
+**Responsabilidad**: Transcribe audio a MIDI usando modelo ONNX de Spotify Basic-Pitch.
+
+```rust
+// src/ml/midi_transcription.rs
+use ort::{Session, Value, inputs};
+
+/// # Responsibility
+/// Transcribes audio to MIDI using Spotify's Basic-Pitch ONNX model.
+/// Outputs polyphonic MIDI notes with pitch bends and onset timestamps.
+pub struct BasicPitchTranscriber {
+    session: Session,
+    sample_rate: u32,
+    frame_size: usize,
+}
+
+impl BasicPitchTranscriber {
+    pub fn new(model_path: &Path, sample_rate: u32) -> Result<Self> {
+        let session = Session::builder()?
+            .with_optimization_level(ort::GraphOptimizationLevel::Level3)?
+            .with_intra_threads(4)?
+            .commit_from_file(model_path)?;
+        
+        Ok(Self {
+            session,
+            sample_rate,
+            frame_size: 2048,
+        })
+    }
+    
+    pub fn transcribe(&self, audio: &[f32]) -> Result<Vec<MidiNote>> {
+        // 1. Pre-procesamiento: spectrogramas para el modelo
+        let input_tensor = self.prepare_input(audio)?;
+        
+        // 2. Inferencia ONNX
+        let outputs = self.session.run(inputs![input_tensor]?)?;
+        
+        // 3. Post-procesamiento: extraer notas MIDI
+        let note_probabilities = outputs["note_probabilities"].try_extract_tensor::<f32>()?;
+        let onset_probabilities = outputs["onset_probabilities"].try_extract_tensor::<f32>()?;
+        let contour_probabilities = outputs["contour_probabilities"].try_extract_tensor::<f32>()?;
+        
+        let midi_notes = self.decode_to_midi(
+            note_probabilities.view(),
+            onset_probabilities.view(),
+            contour_probabilities.view(),
+        )?;
+        
+        Ok(midi_notes)
+    }
+    
+    fn prepare_input(&self, audio: &[f32]) -> Result<Value> {
+        // Convertir audio a mel-spectrogram
+        // Normalizar a [-1, 1]
+        // Reshape para formato ONNX [batch, channels, time, freq]
+        todo!("Implementar con spectrum-analyzer crate")
+    }
+    
+    fn decode_to_midi(
+        &self,
+        notes: ndarray::ArrayViewD<f32>,
+        onsets: ndarray::ArrayViewD<f32>,
+        contours: ndarray::ArrayViewD<f32>,
+    ) -> Result<Vec<MidiNote>> {
+        // Algoritmo de pico + seguimiento de contorno
+        // Threshold-based note onset detection
+        // Tracking de pitch bends via contours
+        todo!("Implementar decodificador de probabilidades")
+    }
+}
+```
+
+---
+
+### 8. OnsetDetector (Aubio-based Onset Detection)
+
+**Responsabilidad**: Detecta onsets (ataques) de notas para análisis rítmico.
+
+```rust
+// src/ml/onset_detection.rs
+use aubio_rs::Onset;
+
+/// # Responsibility
+/// Detects note onsets (attacks) using aubio's ComplexDomain method.
+pub struct OnsetDetector {
+    detector: Onset,
+    threshold: f32,
+}
+
+impl OnsetDetector {
+    pub fn new(sample_rate: u32, hop_size: usize) -> Result<Self> {
+        let detector = Onset::new(
+            aubio_rs::OnsetMode::ComplexDomain,
+            1024,  // window size
+            hop_size,
+            sample_rate,
+        )?;
+        
+        Ok(Self {
+            detector,
+            threshold: 0.3,
+        })
+    }
+    
+    pub fn detect_onsets(&mut self, audio: &[f32]) -> Result<Vec<OnsetEvent>> {
+        let mut onsets = Vec::new();
+        
+        for (frame_idx, chunk) in audio.chunks(512).enumerate() {
+            if self.detector.do_result(chunk)? {
+                let time_sec = (frame_idx * 512) as f64 / self.sample_rate as f64;
+                let confidence = self.detector.get_descriptor();
+                
+                if confidence > self.threshold {
+                    onsets.push(OnsetEvent {
+                        time_sec,
+                        confidence,
+                    });
+                }
+            }
+        }
+        
+        Ok(onsets)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct OnsetEvent {
+    pub time_sec: f64,
+    pub confidence: f32,
+}
+```
+
+---
+
+### 9. ChromagramAnalyzer (Pitch Class Analysis)
+
+**Responsabilidad**: Genera chromagrams (distribución de pitch classes) para chord recognition.
+
+```rust
+// src/ml/chromagram.rs
+use spectrum_analyzer::{FrequencySpectrum, samples_fft_to_spectrum};
+use rustfft::FftPlanner;
+
+/// # Responsibility
+/// Generates 12-bin chromagrams (pitch class distributions) from audio.
+/// Used for chord recognition and key detection.
+pub struct ChromagramAnalyzer {
+    fft_size: usize,
+    hop_size: usize,
+    sample_rate: u32,
+    fft_planner: FftPlanner<f32>,
+}
+
+impl ChromagramAnalyzer {
+    pub fn new(sample_rate: u32) -> Self {
+        Self {
+            fft_size: 8192,  // High resolution for pitch accuracy
+            hop_size: 2048,
+            sample_rate,
+            fft_planner: FftPlanner::new(),
+        }
+    }
+    
+    pub fn analyze(&self, audio: &[f32]) -> Result<Vec<Chromagram>> {
+        let mut chromagrams = Vec::new();
+        
+        for (frame_idx, window) in audio.windows(self.fft_size)
+            .step_by(self.hop_size)
+            .enumerate() 
+        {
+            let chroma = self.compute_chromagram(window)?;
+            
+            chromagrams.push(Chromagram {
+                time_sec: (frame_idx * self.hop_size) as f64 / self.sample_rate as f64,
+                bins: chroma,
+            });
+        }
+        
+        Ok(chromagrams)
+    }
+    
+    fn compute_chromagram(&self, window: &[f32]) -> Result<[f32; 12]> {
+        // 1. Apply Hann window
+        let windowed: Vec<f32> = window.iter()
+            .enumerate()
+            .map(|(i, &x)| {
+                let hann = 0.5 * (1.0 - (2.0 * PI * i as f32 / window.len() as f32).cos());
+                x * hann
+            })
+            .collect();
+        
+        // 2. FFT
+        let spectrum = self.compute_fft(&windowed)?;
+        
+        // 3. Bin frequencies into 12 pitch classes
+        let mut chroma = [0.0; 12];
+        
+        for (freq_hz, magnitude) in spectrum.iter() {
+            if *freq_hz < 20.0 || *freq_hz > 5000.0 {
+                continue; // Ignore out-of-range frequencies
+            }
+            
+            let midi_note = Self::hz_to_midi(*freq_hz);
+            let pitch_class = (midi_note % 12) as usize;
+            chroma[pitch_class] += magnitude;
+        }
+        
+        // 4. Normalize
+        let sum: f32 = chroma.iter().sum();
+        if sum > 0.0 {
+            for bin in &mut chroma {
+                *bin /= sum;
+            }
+        }
+        
+        Ok(chroma)
+    }
+    
+    fn hz_to_midi(freq_hz: f32) -> i32 {
+        (69.0 + 12.0 * (freq_hz / 440.0).log2()).round() as i32
+    }
+    
+    fn compute_fft(&self, samples: &[f32]) -> Result<Vec<(f32, f32)>> {
+        // Use rustfft + spectrum-analyzer for clean FFT → frequency/magnitude pairs
+        todo!("Implementar con rustfft")
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Chromagram {
+    pub time_sec: f64,
+    pub bins: [f32; 12],  // C, C#, D, D#, E, F, F#, G, G#, A, A#, B
+}
+```
+
+---
+
+### 10. ChordRecognizer (Template-Based Chord Detection)
+
+**Responsabilidad**: Reconoce acordes a partir de chromagrams usando template matching.
+
+```rust
+// src/ml/chord_recognition.rs
+
+/// # Responsibility
+/// Recognizes chords from chromagrams using template-based pattern matching.
+/// Supports major, minor, diminished, augmented, 7th chords.
+pub struct ChordRecognizer {
+    chord_templates: HashMap<String, [f32; 12]>,
+}
+
+impl ChordRecognizer {
+    pub fn new() -> Self {
+        let mut templates = HashMap::new();
+        
+        // Major triads: root, major third, perfect fifth
+        templates.insert("C".to_string(), Self::build_template(&[0, 4, 7]));
+        templates.insert("C#".to_string(), Self::build_template(&[1, 5, 8]));
+        // ... (all 12 major keys)
+        
+        // Minor triads: root, minor third, perfect fifth
+        templates.insert("Cm".to_string(), Self::build_template(&[0, 3, 7]));
+        // ... (all 12 minor keys)
+        
+        // 7th chords
+        templates.insert("Cmaj7".to_string(), Self::build_template(&[0, 4, 7, 11]));
+        templates.insert("Cm7".to_string(), Self::build_template(&[0, 3, 7, 10]));
+        // ... (all variations)
+        
+        Self { chord_templates: templates }
+    }
+    
+    pub fn recognize(&self, chromagram: &Chromagram) -> Option<ChordLabel> {
+        let mut best_match = None;
+        let mut best_score = 0.0;
+        
+        for (chord_name, template) in &self.chord_templates {
+            let score = self.cosine_similarity(&chromagram.bins, template);
+            
+            if score > best_score && score > 0.7 {  // Confidence threshold
+                best_score = score;
+                best_match = Some(ChordLabel {
+                    name: chord_name.clone(),
+                    confidence: score,
+                    time_sec: chromagram.time_sec,
+                });
+            }
+        }
+        
+        best_match
+    }
+    
+    fn build_template(pitch_classes: &[usize]) -> [f32; 12] {
+        let mut template = [0.0; 12];
+        for &pc in pitch_classes {
+            template[pc % 12] = 1.0;
+        }
+        // Normalize
+        let sum: f32 = template.iter().sum();
+        if sum > 0.0 {
+            for bin in &mut template {
+                *bin /= sum;
+            }
+        }
+        template
+    }
+    
+    fn cosine_similarity(&self, a: &[f32; 12], b: &[f32; 12]) -> f32 {
+        let dot_product: f32 = a.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
+        let mag_a: f32 = a.iter().map(|x| x * x).sum::<f32>().sqrt();
+        let mag_b: f32 = b.iter().map(|x| x * x).sum::<f32>().sqrt();
+        
+        if mag_a == 0.0 || mag_b == 0.0 {
+            0.0
+        } else {
+            dot_product / (mag_a * mag_b)
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ChordLabel {
+    pub name: String,       // e.g., "Cm7", "G", "F#maj7"
+    pub confidence: f32,
+    pub time_sec: f64,
+}
+```
+
+---
+
+### 11. HarmonyMapBuilder (Tonality & Structure Extraction)
+
+**Responsabilidad**: Construye HarmonyMap final combinando MIDI, chords y análisis tonal.
+
+```rust
+// src/ml/harmony_map_builder.rs
+
+/// # Responsibility
+/// Builds final HarmonyMap by analyzing MIDI notes, chord progressions,
+/// and extracting key signature via Krumhansl-Schmuckler algorithm.
+pub struct HarmonyMapBuilder {
+    chord_recognizer: ChordRecognizer,
+}
+
+impl HarmonyMapBuilder {
+    pub fn new() -> Self {
+        Self {
+            chord_recognizer: ChordRecognizer::new(),
+        }
+    }
+    
+    pub fn build(
+        &self,
+        midi_notes: &[MidiNote],
+        chromagrams: &[Chromagram],
+        audio_duration_sec: f64,
+    ) -> Result<HarmonyMap> {
+        // 1. Detect chord progression
+        let chord_progression: Vec<ChordLabel> = chromagrams.iter()
+            .filter_map(|chroma| self.chord_recognizer.recognize(chroma))
+            .collect();
+        
+        // 2. Estimate key signature via Krumhansl-Schmuckler
+        let key_signature = self.estimate_key(chromagrams)?;
+        
+        // 3. Detect time signature via onset analysis
+        let time_signature = self.estimate_time_signature(midi_notes)?;
+        
+        // 4. Build harmonic contexts (time regions with stable chords)
+        let contexts = self.build_harmonic_contexts(&chord_progression, audio_duration_sec)?;
+        
+        Ok(HarmonyMap {
+            song_id: format!("processed_{}", chrono::Utc::now().timestamp()),
+            key_signature,
+            time_signature,
+            tempo_bpm: self.estimate_tempo(midi_notes)?,
+            progression: contexts,
+        })
+    }
+    
+    fn estimate_key(&self, chromagrams: &[Chromagram]) -> Result<String> {
+        // Krumhansl-Schmuckler key-finding algorithm
+        // Correlate average chromagram with major/minor key profiles
+        
+        let avg_chroma = self.average_chromagram(chromagrams);
+        
+        let key_profiles = Self::get_key_profiles();
+        let mut best_key = String::from("C Major");
+        let mut best_score = 0.0;
+        
+        for (key_name, profile) in key_profiles {
+            let score = self.correlate(&avg_chroma, &profile);
+            if score > best_score {
+                best_score = score;
+                best_key = key_name;
+            }
+        }
+        
+        Ok(best_key)
+    }
+    
+    fn estimate_time_signature(&self, midi_notes: &[MidiNote]) -> Result<(u8, u8)> {
+        // Analyze onset patterns → detect meter (4/4, 3/4, 6/8, etc.)
+        // Default to 4/4 if uncertain
+        Ok((4, 4))
+    }
+    
+    fn estimate_tempo(&self, midi_notes: &[MidiNote]) -> Result<f32> {
+        // Calculate inter-onset intervals (IOI)
+        // Peak detection in IOI histogram → dominant tempo
+        
+        if midi_notes.is_empty() {
+            return Ok(120.0);  // Default BPM
+        }
+        
+        let mut iois: Vec<f64> = midi_notes.windows(2)
+            .map(|pair| pair[1].start_time_sec - pair[0].start_time_sec)
+            .filter(|&ioi| ioi > 0.1 && ioi < 2.0)  // Filter outliers
+            .collect();
+        
+        if iois.is_empty() {
+            return Ok(120.0);
+        }
+        
+        iois.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let median_ioi = iois[iois.len() / 2];
+        
+        let tempo_bpm = 60.0 / median_ioi;
+        Ok(tempo_bpm as f32)
+    }
+    
+    fn build_harmonic_contexts(
+        &self,
+        chords: &[ChordLabel],
+        duration_sec: f64,
+    ) -> Result<Vec<HarmonicContext>> {
+        // Group consecutive identical chords into regions
+        let mut contexts = Vec::new();
+        let mut current_chord: Option<&ChordLabel> = None;
+        let mut region_start = 0.0;
+        
+        for chord in chords {
+            match current_chord {
+                Some(prev) if prev.name == chord.name => {
+                    // Continue current region
+                }
+                _ => {
+                    // Start new region
+                    if let Some(prev) = current_chord {
+                        contexts.push(HarmonicContext {
+                            start_time_sec: region_start,
+                            end_time_sec: chord.time_sec,
+                            chord: prev.name.clone(),
+                            scale: Self::chord_to_scale(&prev.name),
+                        });
+                    }
+                    current_chord = Some(chord);
+                    region_start = chord.time_sec;
+                }
+            }
+        }
+        
+        // Close final region
+        if let Some(chord) = current_chord {
+            contexts.push(HarmonicContext {
+                start_time_sec: region_start,
+                end_time_sec: duration_sec,
+                chord: chord.name.clone(),
+                scale: Self::chord_to_scale(&chord.name),
+            });
+        }
+        
+        Ok(contexts)
+    }
+    
+    fn chord_to_scale(chord_name: &str) -> Vec<String> {
+        // Map chord to appropriate scale notes
+        // e.g., "Cm7" → C Dorian scale
+        // This is a simplified heuristic
+        
+        let root = &chord_name[0..1];  // Extract root note
+        
+        if chord_name.contains('m') {
+            // Minor chord → Natural minor scale
+            Self::build_minor_scale(root)
+        } else {
+            // Major chord → Major scale
+            Self::build_major_scale(root)
+        }
+    }
+    
+    fn build_major_scale(root: &str) -> Vec<String> {
+        let intervals = [0, 2, 4, 5, 7, 9, 11];  // Major scale intervals
+        Self::build_scale(root, &intervals)
+    }
+    
+    fn build_minor_scale(root: &str) -> Vec<String> {
+        let intervals = [0, 2, 3, 5, 7, 8, 10];  // Natural minor scale intervals
+        Self::build_scale(root, &intervals)
+    }
+    
+    fn build_scale(root: &str, intervals: &[i32]) -> Vec<String> {
+        let note_names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        let root_idx = note_names.iter().position(|&n| n == root).unwrap_or(0);
+        
+        intervals.iter()
+            .map(|&interval| note_names[(root_idx + interval as usize) % 12].to_string())
+            .collect()
+    }
+    
+    fn average_chromagram(&self, chromagrams: &[Chromagram]) -> [f32; 12] {
+        let mut avg = [0.0; 12];
+        for chroma in chromagrams {
+            for (i, &val) in chroma.bins.iter().enumerate() {
+                avg[i] += val;
+            }
+        }
+        let count = chromagrams.len() as f32;
+        for bin in &mut avg {
+            *bin /= count;
+        }
+        avg
+    }
+    
+    fn correlate(&self, a: &[f32; 12], b: &[f32; 12]) -> f32 {
+        // Pearson correlation
+        let mean_a: f32 = a.iter().sum::<f32>() / 12.0;
+        let mean_b: f32 = b.iter().sum::<f32>() / 12.0;
+        
+        let mut numerator = 0.0;
+        let mut denom_a = 0.0;
+        let mut denom_b = 0.0;
+        
+        for i in 0..12 {
+            let diff_a = a[i] - mean_a;
+            let diff_b = b[i] - mean_b;
+            numerator += diff_a * diff_b;
+            denom_a += diff_a * diff_a;
+            denom_b += diff_b * diff_b;
+        }
+        
+        if denom_a == 0.0 || denom_b == 0.0 {
+            0.0
+        } else {
+            numerator / (denom_a.sqrt() * denom_b.sqrt())
+        }
+    }
+    
+    fn get_key_profiles() -> HashMap<String, [f32; 12]> {
+        // Krumhansl-Kessler key profiles (empirically derived)
+        let mut profiles = HashMap::new();
+        
+        // C Major profile (normalized)
+        profiles.insert("C Major".to_string(), [
+            6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88
+        ]);
+        
+        // C Minor profile
+        profiles.insert("C Minor".to_string(), [
+            6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17
+        ]);
+        
+        // TODO: Add all 24 key profiles (12 major + 12 minor)
+        // Each transposed by semitone offsets
+        
+        profiles
+    }
+}
+```
+
+---
+
+## 📋 DATA CONTRACTS (JSON Serializable)
+
+### HarmonyMap Structure
+
+```rust
+// src/contracts/harmony_map.rs
+
+/// # Responsibility
+/// Complete musical theory analysis of a song, serializable to JSON.
+/// This is the PRIMARY OUTPUT of the ML analysis pipeline.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HarmonyMap {
+    pub song_id: String,
+    pub key_signature: String,         // e.g., "C Major", "A Minor"
+    pub time_signature: (u8, u8),      // e.g., (4, 4) for 4/4 time
+    pub tempo_bpm: f32,
+    pub progression: Vec<HarmonicContext>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HarmonicContext {
+    pub start_time_sec: f64,
+    pub end_time_sec: f64,
+    pub chord: String,                 // e.g., "Am7", "G", "Cmaj7"
+    pub scale: Vec<String>,            // e.g., ["A", "B", "C", "D", "E", "F", "G"]
+}
+```
+
+### MidiNote Structure
+
+```rust
+// src/contracts/midi_note.rs
+
+/// # Responsibility
+/// Represents a single MIDI note with pitch bend information.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MidiNote {
+    pub midi_number: u8,               // 0-127 MIDI note number
+    pub start_time_sec: f64,
+    pub duration_sec: f64,
+    pub velocity: u8,                  // 0-127 velocity
+    pub pitch_bend: Option<Vec<PitchBendPoint>>,  // Optional pitch bend automation
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PitchBendPoint {
+    pub time_offset_sec: f64,          // Relative to note start
+    pub bend_semitones: f32,           // ±2 semitones typical range
 }
 ```
 
@@ -866,82 +1592,222 @@ qualia-8d-processor/
 
 ---
 
-## 📦 CARGO.TOML
+## 📦 CARGO.TOML - PRODUCTION 2025 STACK
 
 ```toml
 [package]
-name = "qualia-8d-processor"
-version = "0.1.0"
+name = "qualia-8d-harmony-processor"
+version = "2.0.0"
 edition = "2021"
 rust-version = "1.75"
+authors = ["QualiaTempo Team"]
+description = "Production-grade 8D spatial audio processor with ML-powered harmonic analysis"
+license = "Apache-2.0"
 
 [dependencies]
-# Audio I/O and DSP
-cpal = "0.16"
-dasp = "0.11"
-symphonia = { version = "0.5", features = ["all"] }
-rubato = "0.15"
-hound = "3.5"
-rustfft = "6.2"
+# ============================================================================
+# CORE AUDIO PROCESSING
+# ============================================================================
+cpal = "0.16"                          # Cross-platform audio I/O
+dasp = "0.11"                          # DSP fundamentals
+symphonia = { version = "0.5", features = ["all"] }  # Multi-codec decoding
+rubato = "0.15"                        # High-quality resampling
+hound = "3.5"                          # WAV file writing (24-bit)
+rustfft = "6.2"                        # SIMD-accelerated FFT
+realfft = "3.3"                        # Real-valued FFT optimization
 
-# HRTF
-sofar = "0.1"  # Rust bindings for libmysofa
+# ============================================================================
+# HRTF SPATIALIZATION
+# ============================================================================
+sofar = "0.1"                          # SOFA dataset loader (libmysofa bindings)
 
-# Concurrency
-rayon = "1.8"
-tokio = { version = "1.41", features = ["full"] }
+# ============================================================================
+# MACHINE LEARNING (ONNX INFERENCE)
+# ============================================================================
+ort = { version = "1.16", features = ["load-dynamic", "half"] }  # ONNX Runtime
+ndarray = "0.15"                       # N-dimensional arrays for ML tensors
 
-# Configuration
+# ============================================================================
+# AUDIO ANALYSIS
+# ============================================================================
+pitch-detection = "0.3"                # McLeod/YIN pitch detectors
+aubio-rs = "0.2"                       # Onset detection, tempo estimation
+spectrum-analyzer = "1.5"              # Real-time FFT spectrum analysis
+
+# ============================================================================
+# PITCH MANIPULATION
+# ============================================================================
+# pitch_shift = "0.1"                  # Future: Phase vocoder pitch shifting
+
+# ============================================================================
+# CONCURRENCY
+# ============================================================================
+rayon = "1.10"                         # Data parallelism (stem processing)
+tokio = { version = "1.41", features = ["full"] }  # Async runtime
+async-trait = "0.1"                    # Async trait methods
+
+# ============================================================================
+# CONFIGURATION & SERIALIZATION
+# ============================================================================
 serde = { version = "1.0", features = ["derive"] }
-serde_yaml = "0.9"
+serde_json = "1.0"                     # JSON output (HarmonyMap)
+serde_yaml = "0.9"                     # YAML config files
+toml = "0.8"                           # Alternative config format
 
-# CLI
-clap = { version = "4.5", features = ["derive"] }
+# ============================================================================
+# CLI & USER INTERFACE
+# ============================================================================
+clap = { version = "4.5", features = ["derive", "env"] }  # CLI argument parsing
+indicatif = "0.17"                     # Progress bars for batch processing
 
-# Error handling
-anyhow = "1.0"
-thiserror = "1.0"
+# ============================================================================
+# ERROR HANDLING & LOGGING
+# ============================================================================
+anyhow = "1.0"                         # Flexible error handling
+thiserror = "1.0"                      # Custom error types
+tracing = "0.1"                        # Structured logging
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
 
-# Logging
-tracing = "0.1"
-tracing-subscriber = "0.3"
+# ============================================================================
+# UTILITIES
+# ============================================================================
+chrono = "0.4"                         # Timestamps for output files
+num-traits = "0.2"                     # Generic numeric traits
+
+# ============================================================================
+# OPTIONAL (FUTURE ENHANCEMENTS)
+# ============================================================================
+# rodio = "0.18"                       # Real-time audio preview
+# egui = "0.28"                        # Optional GUI
+# vst3 = "0.1"                         # VST3 plugin wrapper
+# charon-audio = "0.1"                 # ML-powered stem separation
 
 [dev-dependencies]
-criterion = "0.5"
-approx = "0.5"  # For float comparisons in tests
+criterion = { version = "0.5", features = ["html_reports"] }  # Benchmarking
+approx = "0.5"                         # Float comparisons in tests
+tempfile = "3.10"                      # Temporary files for tests
 
 [[bin]]
 name = "qualia-8d"
 path = "src/main.rs"
 
 [lib]
-name = "qualia_8d"
+name = "qualia_8d_harmony"
 path = "src/lib.rs"
 
 [[bench]]
-name = "processing_bench"
+name = "hrtf_convolution_bench"
 harness = false
+
+[[bench]]
+name = "midi_transcription_bench"
+harness = false
+
+[[bench]]
+name = "full_pipeline_bench"
+harness = false
+
+[profile.release]
+opt-level = 3
+lto = "fat"                            # Link-time optimization for max perf
+codegen-units = 1                      # Single codegen unit for better optimization
+panic = "abort"                        # Smaller binary, faster unwinds
+
+[profile.bench]
+inherits = "release"
+
+[profile.dev]
+opt-level = 0                          # Fast compilation
+
+[features]
+default = ["ml-analysis"]
+ml-analysis = ["ort", "pitch-detection", "aubio-rs", "spectrum-analyzer"]  # ML features
+gpu-acceleration = ["ort/cuda"]        # CUDA support for ONNX models
 ```
 
 ---
 
-## 🛣️ ROADMAP DE DESARROLLO
+## 🛣️ ROADMAP DE DESARROLLO - PRODUCTION-READY
 
-### Fase 1: Foundation (Semanas 1-2)
+### Fase 1: Audio Foundation (Week 1-2)
 
-- [ ] Setup proyecto Rust con estructura de archivos
-- [ ] Implementar `InputHandler` (carga + decodificación)
-- [ ] Implementar `CircularMotionEngine` (cálculo posiciones)
-- [ ] Tests unitarios para módulos básicos
+- [ ] **Setup proyecto** con estructura completa
+- [ ] **InputHandler**: symphonia decoding + rubato resampling
+- [ ] **CircularMotionEngine**: spherical position calculator
+- [ ] **Unit tests** para audio primitives
+- [ ] **CI/CD**: GitHub Actions para automated testing
 
-### Fase 2: HRTF Core (Semanas 3-4)
+### Fase 2: HRTF Core (Week 3-4)
 
-- [ ] Integrar `sofar` crate + descargar MIT KEMAR dataset
-- [ ] Implementar `HRTFConvolver` con FFT convolution
-- [ ] Implementar interpolación HRTF
-- [ ] Benchmark de performance (target: <50ms/chunk)
+- [ ] **HRTFConvolver**: sofar integration + MIT KEMAR loading
+- [ ] **FFT convolution**: rustfft overlap-add implementation
+- [ ] **HRTF interpolation**: cubic spline for smooth motion
+- [ ] **Benchmark**: <5ms/chunk target validation
+- [ ] **Integration tests**: real SOFA dataset verification
 
-### Fase 3: Effects (Semanas 5-6)
+### Fase 3: Audio Effects (Week 5-6)
+
+- [ ] **EnsembleEffect**: voice duplication + micro-variations
+- [ ] **FrequencyBooster**: parametric EQ with biquad filters
+- [ ] **SpatialMixer**: stem summing + brick-wall limiter
+- [ ] **Audio quality tests**: THD+N measurement, artifact detection
+- [ ] **Config system**: YAML loading with validation
+
+### Fase 4: ML Pipeline - MIDI Transcription (Week 7-8)
+
+- [ ] **ort integration**: ONNX Runtime setup + Basic-Pitch model loading
+- [ ] **BasicPitchTranscriber**: inference pipeline with pre/post-processing
+- [ ] **MIDI decoder**: probability → note conversion with onset tracking
+- [ ] **Pitch bend extraction**: contour following algorithm
+- [ ] **ML benchmarks**: inference latency + GPU acceleration tests
+
+### Fase 5: ML Pipeline - Harmonic Analysis (Week 9-10)
+
+- [ ] **OnsetDetector**: aubio-rs integration for rhythm analysis
+- [ ] **ChromagramAnalyzer**: 12-bin pitch class distribution
+- [ ] **ChordRecognizer**: template-based chord detection
+- [ ] **HarmonyMapBuilder**: key estimation (Krumhansl-Schmuckler)
+- [ ] **Integration tests**: validate HarmonyMap JSON output
+
+### Fase 6: CLI & Batch Processing (Week 11-12)
+
+- [ ] **CLI**: clap interface with all options
+- [ ] **Batch mode**: parallel processing with rayon
+- [ ] **Progress bars**: indicatif for user feedback
+- [ ] **File I/O**: robust path handling + error messages
+- [ ] **Documentation**: README + usage examples
+
+### Fase 7: Optimization & Polish (Week 13-14)
+
+- [ ] **Memory profiling**: valgrind/heaptrack analysis
+- [ ] **CPU profiling**: perf/flamegraph optimization
+- [ ] **SIMD optimization**: manual vectorization of hot paths
+- [ ] **Cargo release profile**: LTO + codegen tuning
+- [ ] **Stress tests**: 1-hour songs, 100-stem mixes
+
+### Fase 8: Production Deployment (Week 15-16)
+
+- [ ] **Docker image**: multi-stage build for Linux deployment
+- [ ] **Release artifacts**: binaries for Windows/macOS/Linux
+- [ ] **User documentation**: full tutorial + troubleshooting guide
+- [ ] **Example datasets**: sample stems + expected outputs
+- [ ] **Performance report**: benchmarks vs. competitors
+
+---
+
+## 🎓 DIFERENCIACIÓN vs MUSIC.RUST.MD
+
+| Aspecto | MUSIC.RUST.MD (Game Engine) | Este Sistema (Standalone Tool) |
+|---------|-----------------------------|---------------------------------|
+| **Propósito** | Música generativa reactiva al gameplay | Batch processing + análisis ML de canciones |
+| **Input** | Acciones de jugador en tiempo real | Archivos de audio pre-existentes |
+| **Output** | Notas/samples generados proceduralmente | 8D WAV + HarmonyMap JSON + MIDI |
+| **Armonía** | HarmonyEngine CONSUME HarmonyMaps en runtime | HarmonyEngine GENERA HarmonyMaps offline |
+| **Integración** | Parte del game loop (60fps) | Pre-procesamiento de assets (offline) |
+| **Uso** | Runtime durante combate | Pre-producción de contenido |
+| **WebSocket** | ✅ Sí - comunica con frontend | ❌ No - herramienta CLI standalone |
+
+**COMPLEMENTARIEDAD CRÍTICA**: Este sistema GENERA los HarmonyMaps que `MUSIC.RUST.MD` CONSUME. El juego NO genera HarmonyMaps en runtime, los CARGA desde JSON. Este es el pipeline de producción de contenido musical.
 
 - [ ] Implementar `EnsembleEffect` (delays + pitch shift)
 - [ ] Implementar `FrequencyBooster` (EQ paramétrico)
