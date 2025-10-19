@@ -48,7 +48,7 @@ dashmap = "6.1"
 rustfft = "6.2"
 pitch-detection = "0.3"
 
-# Caching
+# Caching (LazyLock is std, no dependency needed)
 cached.workspace = true
 
 # DI Container
