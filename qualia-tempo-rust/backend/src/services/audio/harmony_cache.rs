@@ -154,10 +154,10 @@ mod tests {
         fn debug(&self, _message: &str) {}
     }
 
-    fn create_test_harmony_map(root: &str) -> HarmonyMap {
+        fn create_test_harmony_map(root: &str) -> HarmonyMap {
         HarmonyMap {
-            song_id: format!("test_song_{}", root),
-            key_signature: format!("{} Major", root),
+            song_id: format!("test_song_{root}"),
+            key_signature: format!("{root} Major"),
             time_signature: (4, 4),
             bpm: 120.0,
             progression: vec![],
@@ -170,11 +170,11 @@ mod tests {
         let service = HarmonyCacheService::new(logger);
         
         let map = create_test_harmony_map("C");
-        service.set("test_song", map.clone()).await.unwrap();
+        service.set("test_song", map.clone()).await.expect("Failed to set cache entry");
         
         let retrieved = service.get("test_song").await;
         assert!(retrieved.is_some());
-        assert_eq!(retrieved.unwrap().key_signature, "C Major");
+        assert_eq!(retrieved.expect("Cache entry should exist").key_signature, "C Major");
     }
 
     #[tokio::test]
@@ -192,7 +192,7 @@ mod tests {
         let service = HarmonyCacheService::new(logger);
         
         let map = create_test_harmony_map("D");
-        service.set("song_to_invalidate", map).await.unwrap();
+        service.set("song_to_invalidate", map).await.expect("Failed to set cache entry");
         
         // Verify it's cached
         assert!(service.get("song_to_invalidate").await.is_some());
@@ -210,9 +210,9 @@ mod tests {
         let service = HarmonyCacheService::new(logger);
         
         // Add multiple entries
-        service.set("song1", create_test_harmony_map("C")).await.unwrap();
-        service.set("song2", create_test_harmony_map("D")).await.unwrap();
-        service.set("song3", create_test_harmony_map("E")).await.unwrap();
+        service.set("song1", create_test_harmony_map("C")).await.expect("Failed to set song1");
+        service.set("song2", create_test_harmony_map("D")).await.expect("Failed to set song2");
+        service.set("song3", create_test_harmony_map("E")).await.expect("Failed to set song3");
         
         // Clear cache
         service.clear().await;
@@ -229,13 +229,13 @@ mod tests {
         let service = HarmonyCacheService::new(logger);
         
         // Set initial value
-        service.set("song", create_test_harmony_map("C")).await.unwrap();
+        service.set("song", create_test_harmony_map("C")).await.expect("Failed to set initial entry");
         
         // Overwrite with new value
-        service.set("song", create_test_harmony_map("G")).await.unwrap();
+        service.set("song", create_test_harmony_map("G")).await.expect("Failed to overwrite entry");
         
         // Verify new value
         let result = service.get("song").await;
-        assert_eq!(result.unwrap().key_signature, "G Major");
+        assert_eq!(result.expect("Entry should exist").key_signature, "G Major");
     }
 }
