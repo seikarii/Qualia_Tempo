@@ -14,15 +14,16 @@ path = "src/lib.rs"
 
 [dependencies]
 # Audio I/O and DSP
-# cpal = "0.15"  # Disabled - not needed for batch processing
 dasp = "0.11"
 symphonia = { version = "0.5", features = ["all"] }
 rubato = "0.15"
 hound = "3.5"
 rustfft = "6.2"
 
-# HRTF - using alternative since sofar may not be available
-# We'll implement SOFA loading manually if needed
+# HRTF - Production implementation (no system dependencies)
+ndarray = "0.16"  # N-dimensional arrays for HRIR data
+pitch_shift = "1.0"  # Real pitch shifting for ensemble effect
+byteorder = "1.5"  # Binary parsing for SOFA alternative formats
 
 # Concurrency
 rayon = "1.10"
