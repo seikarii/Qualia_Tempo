@@ -127,6 +127,57 @@ impl AudioProcessingPipeline {
     }
     
     /// # Responsibility
+    /// Generate Hann window for overlap-add processing.
+    ///
+    /// ---
+    ///
+    /// Hann window formula: w[n] = 0.5 * (1 - cos(2π * n / (N - 1)))
+    /// This provides smooth tapering at window edges to minimize spectral leakage.
+    ///
+    /// For 50% overlap (hop_size = window_size / 2), Hann window provides
+    /// perfect reconstruction with normalization factor of 2/3.
+    fn generate_hann_window(size: usize) -> Vec<f32> {
+        (0..size)
+            .map(|n| {
+                0.5 * (1.0 - (2.0 * std::f32::consts::PI * n as f32 / (size - 1) as f32).cos())
+            })
+            .collect()
+    }
+    
+    /// # Responsibility
+    /// Apply Hann window to audio chunk in-place.
+    ///
+    /// Multiplies each sample by corresponding window coefficient.
+    fn apply_hann_window(chunk: &mut [f32], window: &[f32]) {
+        for (sample, &window_val) in chunk.iter_mut().zip(window.iter()) {
+            *sample *= window_val;
+        }
+    }
+    
+    /// # Responsibility
+    /// Apply full effects chain to a single audio chunk with given intensity.
+    ///
+    /// ---
+    ///
+    /// **Processing Chain**:
+    /// 1. Frequency Boost (EQ)
+    /// 2. Harmonic Exciter (presence/air)
+    /// 3. Psychoacoustic Bass (missing fundamental)
+    /// 4. Convolution Reverb (acoustic space)
+    ///
+    /// Note: Ensemble is applied AFTER overlap-add reconstruction in process_time_varying_v2.
+    fn apply_effects_chain(&mut self, chunk: &[f32], intensity: f32) -> Result<Vec<f32>> {
+        let boosted = self.frequency_booster.process(chunk, intensity)
+            .context("Frequency boost failed")?;
+        let excited = self.harmonic_exciter.process(&boosted, intensity)
+            .context("Harmonic exciter failed")?;
+        let bass = self.psychoacoustic_bass.process(&excited, intensity)
+            .context("Psychoacoustic bass failed")?;
+        self.convolution_reverb.process(&bass, intensity)
+            .context("Convolution reverb failed")
+    }
+    
+    /// # Responsibility
     /// Process audio through entire pipeline with GLOBAL intensity (legacy method).
     ///
     /// ---
@@ -166,13 +217,13 @@ impl AudioProcessingPipeline {
     }
     
     /// # Responsibility
-    /// Process audio with TIME-VARYING intensity modulation (RECOMMENDED).
+    /// Process audio with TIME-VARYING intensity modulation using OVERLAP-ADD.
     ///
     /// ---
     ///
-    /// **CRITICAL IMPROVEMENT**: Uses frame-by-frame intensity curve for dynamic
-    /// effect modulation. Effects "breathe" with the music - louder/more aggressive
-    /// during intense moments, subtle during quiet passages.
+    /// **REFACTORED ARCHITECTURE**: Unified single-pass pipeline with Hann windowing
+    /// and overlap-add reconstruction. Eliminates artifacts from previous two-pass
+    /// approach with incorrect crossfading.
     ///
     /// **Arguments**:
     /// - `audio`: Mono input samples
@@ -182,9 +233,11 @@ impl AudioProcessingPipeline {
     /// - Vector of independent voice outputs with time-varying processing
     ///
     /// **Processing Strategy**:
-    /// - Maps intensity windows to audio chunks via hop_size
-    /// - Processes each chunk with its corresponding intensity value
-    /// - Seamlessly concatenates processed chunks with crossfade
+    /// 1. Window audio with Hann function (smooth edges)
+    /// 2. Apply effects chain with per-window intensity
+    /// 3. Overlap-add accumulation (not crossfade!)
+    /// 4. Ensemble generates spatial voices from reconstructed audio
+    /// 5. Normalize by overlap factor (2/3 for 50% overlap)
     pub fn process_time_varying(
         &mut self, 
         audio: &[f32], 
@@ -197,95 +250,54 @@ impl AudioProcessingPipeline {
         let hop_size = self.intensity_analyzer.config().hop_samples();
         let window_size = self.intensity_analyzer.config().window_samples();
         
-        // Process audio in chunks matching intensity windows
-        let mut processed_audio = Vec::with_capacity(audio.len());
+        // Generate Hann window ONCE (reuse for all chunks)
+        let hann_window = Self::generate_hann_window(window_size);
         
-        for (window_idx, &window_intensity) in intensity_curve.iter().enumerate() {
-            let start_sample = window_idx * hop_size;
-            let end_sample = (start_sample + window_size).min(audio.len());
-            
-            if start_sample >= audio.len() {
+        // Accumulation buffer for overlap-add (with tail padding)
+        let mut processed_audio = vec![0.0; audio.len() + window_size];
+        
+        // SINGLE-PASS: window → effects → overlap-add
+        for (window_idx, &intensity) in intensity_curve.iter().enumerate() {
+            let start = window_idx * hop_size;
+            if start >= audio.len() {
                 break;
             }
             
-            let chunk = &audio[start_sample..end_sample];
+            let end = (start + window_size).min(audio.len());
+            let chunk_len = end - start;
             
-            // Apply effects with THIS window's intensity
-            let boosted = self.frequency_booster.process(chunk, window_intensity)
-                .context("Frequency boost failed")?;
-            let excited = self.harmonic_exciter.process(&boosted, window_intensity)
-                .context("Harmonic exciter failed")?;
-            let bass_enhanced = self.psychoacoustic_bass.process(&excited, window_intensity)
-                .context("Psychoacoustic bass failed")?;
-            let reverbed = self.convolution_reverb.process(&bass_enhanced, window_intensity)
-                .context("Convolution reverb failed")?;
+            // Extract chunk with zero-padding if at end
+            let mut chunk = vec![0.0; window_size];
+            chunk[..chunk_len].copy_from_slice(&audio[start..end]);
             
-            // Crossfade with previous chunk to avoid discontinuities
-            let crossfade_samples = 256; // ~5ms @ 48kHz
-            if processed_audio.len() > crossfade_samples && window_idx > 0 {
-                let overlap_start = processed_audio.len() - crossfade_samples;
-                for i in 0..crossfade_samples.min(reverbed.len()) {
-                    let fade_out = 1.0 - (i as f32 / crossfade_samples as f32);
-                    let fade_in = i as f32 / crossfade_samples as f32;
-                    processed_audio[overlap_start + i] = 
-                        processed_audio[overlap_start + i] * fade_out + reverbed[i] * fade_in;
-                }
-                processed_audio.extend_from_slice(&reverbed[crossfade_samples..]);
-            } else {
-                processed_audio.extend_from_slice(&reverbed);
+            // 1. Apply Hann window
+            Self::apply_hann_window(&mut chunk, &hann_window);
+            
+            // 2. Effects chain with dynamic intensity
+            let processed = self.apply_effects_chain(&chunk, intensity)?;
+            
+            // 3. OVERLAP-ADD (accumulate into output buffer)
+            for (i, &sample) in processed.iter().enumerate() {
+                processed_audio[start + i] += sample;
             }
         }
         
-        // Trim to original length
+        // 4. Normalize by overlap factor (Hann @ 50% overlap = 2/3)
+        let norm_factor = 2.0 / 3.0;
+        for sample in processed_audio.iter_mut() {
+            *sample *= norm_factor;
+        }
+        
+        // 5. Trim to original length (remove tail padding)
         processed_audio.truncate(audio.len());
         
-        // Generate ensemble voices DYNAMICALLY per temporal block (improved approach)
-        // Instead of average intensity, apply ensemble per block with local intensity
-        let ensemble_block_size = 48000; // ~1 second blocks @ 48kHz
-        let mut all_voices: Vec<VoiceOutput> = Vec::new();
+        // 6. Apply ensemble effect with AVERAGE intensity for entire audio
+        // (Ensemble generates spatial voices, doesn't need per-window modulation)
+        let avg_intensity: f32 = intensity_curve.iter().sum::<f32>() / intensity_curve.len() as f32;
+        let voices = self.ensemble_effect.process_dynamic(&processed_audio, avg_intensity)
+            .context("Ensemble effect failed")?;
         
-        let mut block_start = 0;
-        while block_start < processed_audio.len() {
-            let block_end = (block_start + ensemble_block_size).min(processed_audio.len());
-            let block_audio = &processed_audio[block_start..block_end];
-            
-            // Calculate intensity for THIS block (not global average)
-            let block_start_window = block_start / hop_size;
-            let block_end_window = block_end / hop_size;
-            let block_intensity_slice = &intensity_curve[
-                block_start_window.min(intensity_curve.len())..
-                block_end_window.min(intensity_curve.len())
-            ];
-            
-            let block_intensity = if block_intensity_slice.is_empty() {
-                0.5 // Default mid intensity if no curve data
-            } else {
-                block_intensity_slice.iter().sum::<f32>() / block_intensity_slice.len() as f32
-            };
-            
-            // Apply ensemble effect with LOCAL intensity
-            let block_voices = self.ensemble_effect.process_dynamic(block_audio, block_intensity)
-                .context("Ensemble effect failed")?;
-            
-            // Accumulate voices (first block initializes, subsequent blocks concat)
-            if all_voices.is_empty() {
-                all_voices = block_voices;
-            } else {
-                // Extend each voice with corresponding block voice samples
-                for (voice_idx, block_voice) in block_voices.iter().enumerate() {
-                    if voice_idx < all_voices.len() {
-                        all_voices[voice_idx].samples.extend_from_slice(&block_voice.samples);
-                    } else {
-                        // New voice appeared (intensity increased voice count)
-                        all_voices.push(block_voice.clone());
-                    }
-                }
-            }
-            
-            block_start = block_end;
-        }
-        
-        Ok(all_voices)
+        Ok(voices)
     }
     
     /// # Responsibility

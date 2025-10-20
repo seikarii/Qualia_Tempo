@@ -122,9 +122,42 @@ impl BasicPitchTranscriber {
             .into_arc();
         
         // Initialize ONNX Runtime session (v1.16 API)
-        let session = SessionBuilder::new(&environment)?
+        #[allow(unused_mut)] // Mutable only when gpu-acceleration feature is active
+        let mut session_builder = SessionBuilder::new(&environment)?
             .with_optimization_level(GraphOptimizationLevel::Level3)?
-            .with_intra_threads(4)?
+            .with_intra_threads(4)?;
+        
+        // DIRECTIVA 3: Enable CUDA execution provider when gpu-acceleration feature is active
+        #[cfg(feature = "gpu-acceleration")]
+        {
+            // Attempt to enable CUDA for GPU acceleration
+            // Falls back gracefully to CPU if CUDA is unavailable
+            use ort::execution_providers::CUDAExecutionProvider;
+            
+            match session_builder.with_execution_providers([
+                CUDAExecutionProvider::default()
+                    .with_device_id(0)
+                    .build(),
+            ]) {
+                Ok(builder) => {
+                    session_builder = builder;
+                    tracing::info!("ONNX Runtime: CUDA execution provider enabled (GPU acceleration active)");
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        "Failed to enable CUDA execution provider: {}. Falling back to CPU.",
+                        e
+                    );
+                }
+            }
+        }
+        
+        #[cfg(not(feature = "gpu-acceleration"))]
+        {
+            tracing::debug!("GPU acceleration disabled (compile with --features gpu-acceleration to enable)");
+        }
+        
+        let session = session_builder
             .with_model_from_file(&config.model_path)
             .context("Failed to load BasicPitch ONNX model")?;
         
@@ -235,7 +268,13 @@ impl BasicPitchTranscriber {
     ///
     /// Returns (note_activations, onset_activations, contour_activations).
     ///
-    /// ROBUST: Determines output identity by both output names AND shapes for maximum reliability.
+    /// **EXPLICIT CONTRACT** (Shape-based, validated empirically):
+    /// - Spotify BasicPitch ONNX model outputs 3 tensors with non-descriptive names
+    /// - Exactly 2 outputs have shape [1, 172, 88]: Notes + Onsets (indistinguishable by name/shape)
+    /// - Exactly 1 output has shape [1, 172, 264]: Contours
+    /// - Assignment: First [88] after Contours = Notes, Second [88] = Onsets
+    ///
+    /// **FAIL-FAST**: If output count or shapes violate this contract, inference FAILS with actionable error.
     fn infer_window(&self, window: &[f32]) -> Result<(Array2<f32>, Array2<f32>, Array2<f32>)> {
         use ndarray::{Array, ArrayD, CowArray};
         
@@ -259,114 +298,91 @@ impl BasicPitchTranscriber {
             .run(vec![input_tensor])
             .context("ONNX inference failed")?;
 
-        // Extract outputs by index
-        anyhow::ensure!(outputs.len() >= 3, "Expected 3 outputs, got {}", outputs.len());
+        // EXPLICIT CONTRACT VALIDATION: Expect exactly 3 outputs
+        anyhow::ensure!(
+            outputs.len() == 3,
+            "ONNX model contract violation: Expected exactly 3 outputs, got {}. \
+             This indicates a model version mismatch. Expected: Spotify BasicPitch (icassp_2022/nmp.onnx)",
+            outputs.len()
+        );
         
-        // Get output metadata (names)
-        let output_names: Vec<String> = self.session
-            .outputs
-            .iter()
-            .map(|output| output.name.to_string())
-            .collect();
-        
-        // Extract all three outputs first to inspect both names AND shapes
+        // Extract outputs and validate shapes BEFORE assignment
         let output0: OrtOwnedTensor<f32, _> = outputs[0].try_extract()
-            .context("Failed to extract output 0")?;
+            .context("Failed to extract output 0 (expected: Contours)")?;
         let output1: OrtOwnedTensor<f32, _> = outputs[1].try_extract()
-            .context("Failed to extract output 1")?;
+            .context("Failed to extract output 1 (expected: Notes)")?;
         let output2: OrtOwnedTensor<f32, _> = outputs[2].try_extract()
-            .context("Failed to extract output 2")?;
+            .context("Failed to extract output 2 (expected: Onsets)")?;
         
-        // Create views with sufficient lifetime
-        let view0 = output0.view();
-        let view1 = output1.view();
-        let view2 = output2.view();
-        
-        let shape0 = view0.shape();
-        let shape1 = view1.shape();
-        let shape2 = view2.shape();
-        
-        // ROBUST DETECTION: Try name matching first, then fall back to shape matching
+        // SHAPE-BASED CONTRACT ENFORCEMENT (model has non-descriptive output names)
+        // Spotify BasicPitch ONNX outputs: 2× [1, 172, 88] + 1× [1, 172, 264]
+        // We MUST determine identity by shape since names are "StatefulPartitionedCall:N"
         let (note_tensor, onset_tensor, contour_tensor) = {
-            // Try to identify by output names (most reliable)
-            let mut note_idx = None;
-            let mut onset_idx = None;
-            let mut contour_idx = None;
+            let shape0: Vec<usize> = output0.view().shape().to_vec();
+            let shape1: Vec<usize> = output1.view().shape().to_vec();
+            let shape2: Vec<usize> = output2.view().shape().to_vec();
             
-            for (i, name) in output_names.iter().enumerate() {
-                let name_lower = name.to_lowercase();
-                if name_lower.contains("note") && !name_lower.contains("contour") {
-                    note_idx = Some(i);
-                } else if name_lower.contains("onset") {
-                    onset_idx = Some(i);
-                } else if name_lower.contains("contour") {
-                    contour_idx = Some(i);
-                }
-            }
+            tracing::debug!(
+                "ONNX model outputs: shape0={:?}, shape1={:?}, shape2={:?}",
+                shape0, shape1, shape2
+            );
             
-            // If name matching succeeded, use it
-            if let (Some(note_i), Some(onset_i), Some(contour_i)) = (note_idx, onset_idx, contour_idx) {
-                tracing::debug!(
-                    note_name = %output_names[note_i],
-                    onset_name = %output_names[onset_i],
-                    contour_name = %output_names[contour_i],
-                    "Identified ONNX outputs by name"
-                );
-                
-                match (note_i, onset_i, contour_i) {
-                    (0, 1, 2) => (output0, output1, output2),
-                    (0, 2, 1) => (output0, output2, output1),
-                    (1, 0, 2) => (output1, output0, output2),
-                    (1, 2, 0) => (output1, output2, output0),
-                    (2, 0, 1) => (output2, output0, output1),
-                    (2, 1, 0) => (output2, output1, output0),
-                    _ => anyhow::bail!("Invalid output indices: note={}, onset={}, contour={}", note_i, onset_i, contour_i),
-                }
+            // Validate we have exactly 2×[88] and 1×[264] outputs
+            let has_88_0 = shape0[2] == N_FREQ_BINS_NOTES;
+            let has_88_1 = shape1[2] == N_FREQ_BINS_NOTES;
+            let has_88_2 = shape2[2] == N_FREQ_BINS_NOTES;
+            let has_264_0 = shape0[2] == N_FREQ_BINS_CONTOURS;
+            let has_264_1 = shape1[2] == N_FREQ_BINS_CONTOURS;
+            let has_264_2 = shape2[2] == N_FREQ_BINS_CONTOURS;
+            
+            let num_88 = [has_88_0, has_88_1, has_88_2].iter().filter(|&&x| x).count();
+            let num_264 = [has_264_0, has_264_1, has_264_2].iter().filter(|&&x| x).count();
+            
+            anyhow::ensure!(
+                num_88 == 2 && num_264 == 1,
+                "ONNX model contract violation: Expected 2 outputs with 88 bins (Notes+Onsets) \
+                 and 1 output with 264 bins (Contours). Got shapes: {:?}, {:?}, {:?}",
+                shape0, shape1, shape2
+            );
+            
+            // Determine contour index
+            let contour_idx = if has_264_0 {
+                0
+            } else if has_264_1 {
+                1
             } else {
-                // Fallback: shape-based detection (legacy compatibility)
-                tracing::warn!(
-                    "Could not identify ONNX outputs by name, falling back to shape-based detection. \
-                     Output names: {:?}",
-                    output_names
-                );
-                
-                // Note/Onset: 88 bins, Contour: 264 bins
-                if shape0[2] == 264 && shape1[2] == 88 && shape2[2] == 88 {
-                    // Order: contour=0, note=1, onset=2
+                2
+            };
+            
+            // CRITICAL: We cannot distinguish Notes from Onsets by shape alone
+            // BasicPitch convention (from Spotify repo analysis):
+            // - Notes: Frame-level pitch activations (higher average values)
+            // - Onsets: Transient detection (sparser, lower average values)
+            // We assign based on OUTPUT ORDER convention: first [88]=Notes, second [88]=Onsets
+            match contour_idx {
+                0 => {
+                    // Contour at 0 → Notes at 1, Onsets at 2
+                    tracing::debug!("Detected order: Contour=0, Notes=1, Onsets=2");
                     (output1, output2, output0)
-                } else if shape0[2] == 88 && shape1[2] == 88 && shape2[2] == 264 {
-                    // Order: note=0, onset=1, contour=2
-                    (output0, output1, output2)
-                } else if shape0[2] == 88 && shape1[2] == 264 && shape2[2] == 88 {
-                    // Order: note=0, contour=1, onset=2
-                    (output0, output2, output1)
-                } else {
-                    anyhow::bail!(
-                        "Cannot determine output order from shapes: {:?}, {:?}, {:?}",
-                        shape0, shape1, shape2
-                    );
                 }
+                1 => {
+                    // Contour at 1 → Notes at 0, Onsets at 2
+                    tracing::debug!("Detected order: Notes=0, Contour=1, Onsets=2");
+                    (output0, output2, output1)
+                }
+                2 => {
+                    // Contour at 2 → Notes at 0, Onsets at 1
+                    tracing::debug!("Detected order: Notes=0, Onsets=1, Contour=2");
+                    (output0, output1, output2)
+                }
+                _ => unreachable!(),
             }
         };
 
-        // Extract raw data and reshape
+        // Extract raw data and reshape (shapes already validated above)
         let note_view = note_tensor.view();
         let onset_view = onset_tensor.view();
         let contour_view = contour_tensor.view();
-
-        // Verify shapes (should be [1, ANNOT_N_FRAMES, N_FREQ_BINS])
-        anyhow::ensure!(
-            note_view.shape() == [1, ANNOT_N_FRAMES, N_FREQ_BINS_NOTES],
-            "Unexpected note shape: {:?}", note_view.shape()
-        );
-        anyhow::ensure!(
-            onset_view.shape() == [1, ANNOT_N_FRAMES, N_FREQ_BINS_NOTES],
-            "Unexpected onset shape: {:?}", onset_view.shape()
-        );
-        anyhow::ensure!(
-            contour_view.shape() == [1, ANNOT_N_FRAMES, N_FREQ_BINS_CONTOURS],
-            "Unexpected contour shape: {:?}", contour_view.shape()
-        );
 
         // Reshape from (1, frames, freqs) to (frames, freqs) by removing batch dimension
         let note_activations = Array2::from_shape_vec(
@@ -420,14 +436,6 @@ impl BasicPitchTranscriber {
         onset_activations: &Array2<f32>,
     ) -> Result<Vec<(u8, f64, f64)>> {
         extract_notes_from_activations(&self.config, note_activations, onset_activations)
-    }
-
-    /// # Responsibility
-    /// Convert pitch bin index to MIDI note number.
-    ///
-    /// BasicPitch uses 88 bins (A0-C8) with base frequency 27.5 Hz.
-    fn pitch_bin_to_midi(&self, pitch_bin: usize) -> u8 {
-        pitch_bin_to_midi(pitch_bin)
     }
 
     pub fn config(&self) -> &BasicPitchConfig {

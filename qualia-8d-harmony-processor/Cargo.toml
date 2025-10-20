@@ -89,6 +89,16 @@ lto = "fat"
 codegen-units = 1
 panic = "abort"
 
+# Development profile with optimizations for faster iteration cycles
+# Usage: cargo build --profile dev-optimized
+[profile.dev-optimized]
+inherits = "dev"
+opt-level = 2              # Moderate optimization for decent performance
+codegen-units = 4          # Enable parallel codegen (faster compilation)
+lto = false                # Disable LTO for faster builds
+incremental = true         # Enable incremental compilation
+debug = true               # Keep debug symbols for debugging
+
 [features]
 default = ["ml-analysis"]
 ml-analysis = ["ort", "aubio-rs", "spectrum-analyzer"]
