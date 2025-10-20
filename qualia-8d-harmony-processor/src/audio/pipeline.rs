@@ -217,13 +217,14 @@ impl AudioProcessingPipeline {
     }
     
     /// # Responsibility
-    /// Process audio with TIME-VARYING intensity modulation using OVERLAP-ADD.
+    /// Process audio with TIME-VARYING intensity modulation using PER-VOICE OVERLAP-ADD.
     ///
     /// ---
     ///
-    /// **REFACTORED ARCHITECTURE**: Unified single-pass pipeline with Hann windowing
-    /// and overlap-add reconstruction. Eliminates artifacts from previous two-pass
-    /// approach with incorrect crossfading.
+    /// **CORRECTED ARCHITECTURE (DIRECTIVA 1.1 COMPLIANCE)**:
+    /// Single-pass pipeline with per-window dynamic ensemble processing.
+    /// Each window generates independent voice outputs that are accumulated
+    /// into per-voice buffers using overlap-add.
     ///
     /// **Arguments**:
     /// - `audio`: Mono input samples
@@ -233,11 +234,17 @@ impl AudioProcessingPipeline {
     /// - Vector of independent voice outputs with time-varying processing
     ///
     /// **Processing Strategy**:
-    /// 1. Window audio with Hann function (smooth edges)
-    /// 2. Apply effects chain with per-window intensity
-    /// 3. Overlap-add accumulation (not crossfade!)
-    /// 4. Ensemble generates spatial voices from reconstructed audio
-    /// 5. Normalize by overlap factor (2/3 for 50% overlap)
+    /// 1. For EACH window in intensity_curve:
+    ///    a. Window audio with Hann function
+    ///    b. Apply effects chain with window-specific intensity
+    ///    c. Generate Vec<VoiceOutput> via ensemble.process_dynamic() with that intensity
+    ///    d. Accumulate each voice into its own buffer via overlap-add
+    /// 2. Voice buffer count grows dynamically (high intensity → more voices)
+    /// 3. Normalize by overlap factor (2/3 for 50% overlap)
+    /// 4. Return final voice outputs with accumulated samples
+    ///
+    /// **CRITICAL**: NO intermediate processed_audio buffer. NO avg_intensity.
+    /// Ensemble effect "breathes" with the music via per-window intensity.
     pub fn process_time_varying(
         &mut self, 
         audio: &[f32], 
@@ -253,10 +260,14 @@ impl AudioProcessingPipeline {
         // Generate Hann window ONCE (reuse for all chunks)
         let hann_window = Self::generate_hann_window(window_size);
         
-        // Accumulation buffer for overlap-add (with tail padding)
-        let mut processed_audio = vec![0.0; audio.len() + window_size];
+        // Per-voice accumulation buffers (grows dynamically)
+        // Structure: voice_buffers[voice_idx][sample_idx]
+        let mut voice_buffers: Vec<Vec<f32>> = Vec::new();
         
-        // SINGLE-PASS: window → effects → overlap-add
+        // Track spatial metadata for each voice (for final VoiceOutput construction)
+        let mut voice_metadata: Vec<(f32, f32)> = Vec::new(); // (spatial_offset_deg, gain)
+        
+        // === MAIN PROCESSING LOOP: Per-window dynamic ensemble processing ===
         for (window_idx, &intensity) in intensity_curve.iter().enumerate() {
             let start = window_idx * hop_size;
             if start >= audio.len() {
@@ -273,31 +284,55 @@ impl AudioProcessingPipeline {
             // 1. Apply Hann window
             Self::apply_hann_window(&mut chunk, &hann_window);
             
-            // 2. Effects chain with dynamic intensity
-            let processed = self.apply_effects_chain(&chunk, intensity)?;
+            // 2. Apply effects chain with THIS window's intensity
+            let processed_chunk = self.apply_effects_chain(&chunk, intensity)?;
             
-            // 3. OVERLAP-ADD (accumulate into output buffer)
-            for (i, &sample) in processed.iter().enumerate() {
-                processed_audio[start + i] += sample;
+            // 3. Generate voice outputs for THIS window with THIS intensity
+            let window_voices = self.ensemble_effect.process_dynamic(&processed_chunk, intensity)
+                .context(format!("Ensemble effect failed at window {}", window_idx))?;
+            
+            // 4. Accumulate into per-voice buffers via OVERLAP-ADD
+            for (voice_idx, voice_output) in window_voices.iter().enumerate() {
+                // Grow voice buffer array if this is a new voice (high intensity moments)
+                if voice_idx >= voice_buffers.len() {
+                    voice_buffers.push(vec![0.0; audio.len() + window_size]);
+                    voice_metadata.push((
+                        voice_output.spatial_offset_deg,
+                        voice_output.gain,
+                    ));
+                }
+                
+                // OVERLAP-ADD: Accumulate this voice's samples into its buffer
+                let voice_buffer = &mut voice_buffers[voice_idx];
+                for (i, &sample) in voice_output.samples.iter().enumerate() {
+                    voice_buffer[start + i] += sample;
+                }
             }
         }
         
-        // 4. Normalize by overlap factor (Hann @ 50% overlap = 2/3)
+        // 5. Normalize by overlap factor (Hann @ 50% overlap = 2/3)
         let norm_factor = 2.0 / 3.0;
-        for sample in processed_audio.iter_mut() {
-            *sample *= norm_factor;
+        for voice_buffer in voice_buffers.iter_mut() {
+            for sample in voice_buffer.iter_mut() {
+                *sample *= norm_factor;
+            }
         }
         
-        // 5. Trim to original length (remove tail padding)
-        processed_audio.truncate(audio.len());
+        // 6. Trim to original length and construct final VoiceOutput vector
+        let final_voices: Vec<VoiceOutput> = voice_buffers
+            .into_iter()
+            .zip(voice_metadata.iter())
+            .map(|(mut buffer, &(spatial_offset_deg, gain))| {
+                buffer.truncate(audio.len());
+                VoiceOutput {
+                    samples: buffer,
+                    spatial_offset_deg,
+                    gain,
+                }
+            })
+            .collect();
         
-        // 6. Apply ensemble effect with AVERAGE intensity for entire audio
-        // (Ensemble generates spatial voices, doesn't need per-window modulation)
-        let avg_intensity: f32 = intensity_curve.iter().sum::<f32>() / intensity_curve.len() as f32;
-        let voices = self.ensemble_effect.process_dynamic(&processed_audio, avg_intensity)
-            .context("Ensemble effect failed")?;
-        
-        Ok(voices)
+        Ok(final_voices)
     }
     
     /// # Responsibility
