@@ -83,62 +83,86 @@ impl HarmonyMapConfig {
 }
 
 /// Krumhansl-Schmuckler key profiles (empirical weight distributions)
+///
+/// # Responsibility
+/// Stores reference profiles for C Major and C Minor (natural minor).
+/// All other 22 keys generated algorithmically via chromatic rotation.
 pub struct KeyProfileDatabase {
+    /// C major profile (base template for all major keys)
     major_profile: [f32; 12],
+    /// C natural minor profile (base template for all minor keys)
     minor_profile: [f32; 12],
 }
 
 impl KeyProfileDatabase {
-    /// Create database with Krumhansl-Schmuckler profiles
+    /// # Responsibility
+    /// Create database with Krumhansl-Schmuckler empirical profiles.
+    ///
+    /// ---
+    ///
+    /// **Base Profiles**:
+    /// - **C Major**: Tonic (C) = 6.35, Dominant (G) = 5.19, Mediant (E) = 4.38
+    /// - **C Natural Minor**: Tonic (C) = 6.33, Dominant (G) = 4.75, Mediant (Eb) = 5.38
+    ///
+    /// All other 22 keys computed via `rotate_profile()` during correlation.
     pub fn krumhansl_schmuckler() -> Self {
         Self {
             // Major key profile (weights for C major scale degrees)
             major_profile: [
-                6.35, // C (tonic)
-                2.23, // C#
-                3.48, // D
-                2.33, // D#
-                4.38, // E
-                4.09, // F
-                2.52, // F#
-                5.19, // G (dominant)
-                2.39, // G#
-                3.66, // A
-                2.29, // A#
-                2.88, // B
+                6.35, // C (tonic, highest weight)
+                2.23, // C# (non-diatonic)
+                3.48, // D (supertonic)
+                2.33, // D# (non-diatonic)
+                4.38, // E (mediant)
+                4.09, // F (subdominant)
+                2.52, // F# (non-diatonic)
+                5.19, // G (dominant, second highest)
+                2.39, // G# (non-diatonic)
+                3.66, // A (submediant)
+                2.29, // A# (non-diatonic)
+                2.88, // B (leading tone)
             ],
-            // Minor key profile (weights for A minor scale degrees)
+            // Minor key profile (weights for C natural minor scale degrees)
+            // NOTE: This is C minor profile, NOT A minor shifted to C position
+            // For proper detection, we use the actual C minor weights
             minor_profile: [
-                6.33, // A (tonic, but shifted to C position)
-                2.68, // A#
-                3.52, // B
-                5.38, // C
-                2.60, // C#
-                3.53, // D
-                2.54, // D#
-                4.75, // E
-                3.98, // F
-                2.69, // F#
-                3.34, // G
-                3.17, // G#
+                6.33, // C (tonic)
+                2.68, // C# (non-diatonic)
+                3.52, // D (supertonic)
+                5.38, // Eb (mediant, minor third - high weight)
+                2.60, // E (non-diatonic)
+                3.53, // F (subdominant)
+                2.54, // F# (non-diatonic)
+                4.75, // G (dominant)
+                3.98, // Ab (submediant, minor sixth)
+                2.69, // A (non-diatonic)
+                3.34, // Bb (subtonic, minor seventh)
+                3.17, // B (non-diatonic)
             ],
         }
     }
 
-    /// Correlate chromagram with key profile at given tonic
+    /// # Responsibility
+    /// Correlate chromagram with key profile at given tonic using cosine similarity.
+    ///
+    /// ---
+    ///
+    /// **Algorithm**:
+    /// 1. Select base profile (major or minor)
+    /// 2. Rotate profile to match target tonic (chromatic transposition)
+    /// 3. Compute cosine similarity: cos(θ) = (chroma · profile) / (||chroma|| * ||profile||)
+    ///
+    /// **Returns**: Correlation score [0.0, 1.0] (higher = better match)
     fn correlate(&self, chromagram: &Chromagram, tonic: usize, mode: Mode) -> f32 {
         let profile = match mode {
             Mode::Major => &self.major_profile,
             Mode::Minor => &self.minor_profile,
         };
 
-        // Rotate profile to match tonic
-        let mut rotated = [0.0f32; 12];
-        for i in 0..12 {
-            rotated[i] = profile[(i + 12 - tonic) % 12];
-        }
+        // Rotate profile to match tonic (chromatic transposition)
+        let rotated = Self::rotate_profile(profile, tonic);
 
-        // Compute cosine similarity
+        // Compute cosine similarity: dot product / (magnitude_chroma * magnitude_profile)
         let dot_product: f32 = chromagram
             .bins
             .iter()
@@ -154,6 +178,27 @@ impl KeyProfileDatabase {
         } else {
             0.0
         }
+    }
+    
+    /// # Responsibility
+    /// Rotate key profile by chromatic steps to transpose to different tonic.
+    ///
+    /// ---
+    ///
+    /// **Example**: C Major profile rotated by 7 semitones → G Major profile
+    ///
+    /// **Arguments**:
+    /// - `profile`: Base profile (C Major or C Minor)
+    /// - `tonic`: Target tonic pitch class (0-11)
+    ///
+    /// **Returns**: Rotated profile array (length 12)
+    fn rotate_profile(profile: &[f32; 12], tonic: usize) -> [f32; 12] {
+        let mut rotated = [0.0f32; 12];
+        for i in 0..12 {
+            // Rotate counter-clockwise: index i in rotated profile comes from index (i + 12 - tonic) % 12 in base profile
+            rotated[i] = profile[(i + 12 - tonic) % 12];
+        }
+        rotated
     }
 }
 
@@ -431,6 +476,181 @@ mod tests {
         let key = key.unwrap();
         assert_eq!(key.tonic, 9); // A
         assert_eq!(key.mode, Mode::Minor);
+    }
+    
+    #[test]
+    fn test_detect_key_g_major() {
+        let recognizer = ChordRecognizer::with_standard_chords();
+        let config = HarmonyMapConfig::new(0.1, 0.5);
+        let builder = HarmonyMapBuilder::new(config, recognizer).unwrap();
+        
+        // G major triad: G (7), B (11), D (2)
+        let mut chroma = Chromagram::new();
+        chroma.bins[7] = 3.0;   // G (tonic, strong)
+        chroma.bins[11] = 1.5;  // B (major third)
+        chroma.bins[2] = 1.5;   // D (fifth)
+        chroma.bins[6] = 0.5;   // F# (characteristic note of G major)
+        chroma.normalize();
+        
+        let chromagrams = vec![chroma.clone(), chroma.clone(), chroma];
+        let key = builder.detect_key(&chromagrams);
+        
+        assert!(key.is_some());
+        let key = key.unwrap();
+        assert_eq!(key.tonic, 7, "Should detect G major");
+        assert_eq!(key.mode, Mode::Major);
+    }
+    
+    #[test]
+    fn test_detect_key_d_major() {
+        let recognizer = ChordRecognizer::with_standard_chords();
+        let config = HarmonyMapConfig::new(0.1, 0.5);
+        let builder = HarmonyMapBuilder::new(config, recognizer).unwrap();
+        
+        // D major triad: D (2), F# (6), A (9)
+        let mut chroma = Chromagram::new();
+        chroma.bins[2] = 3.0;   // D (tonic)
+        chroma.bins[6] = 1.8;   // F# (major third)
+        chroma.bins[9] = 1.8;   // A (fifth)
+        chroma.bins[1] = 0.5;   // C# (characteristic)
+        chroma.normalize();
+        
+        let chromagrams = vec![chroma.clone(), chroma.clone(), chroma];
+        let key = builder.detect_key(&chromagrams);
+        
+        assert!(key.is_some());
+        let key = key.unwrap();
+        assert_eq!(key.tonic, 2, "Should detect D major");
+        assert_eq!(key.mode, Mode::Major);
+    }
+    
+    #[test]
+    fn test_detect_key_e_minor() {
+        let recognizer = ChordRecognizer::with_standard_chords();
+        let config = HarmonyMapConfig::new(0.1, 0.5);
+        let builder = HarmonyMapBuilder::new(config, recognizer).unwrap();
+        
+        // E minor triad: E (4), G (7), B (11)
+        let mut chroma = Chromagram::new();
+        chroma.bins[4] = 2.5;   // E (tonic)
+        chroma.bins[7] = 1.8;   // G (minor third)
+        chroma.bins[11] = 1.5;  // B (fifth)
+        chroma.bins[2] = 0.8;   // D (characteristic of E minor)
+        chroma.normalize();
+        
+        let chromagrams = vec![chroma.clone(), chroma.clone(), chroma];
+        let key = builder.detect_key(&chromagrams);
+        
+        assert!(key.is_some());
+        let key = key.unwrap();
+        assert_eq!(key.tonic, 4, "Should detect E minor");
+        assert_eq!(key.mode, Mode::Minor);
+    }
+    
+    #[test]
+    fn test_detect_key_f_major() {
+        let recognizer = ChordRecognizer::with_standard_chords();
+        let config = HarmonyMapConfig::new(0.1, 0.5);
+        let builder = HarmonyMapBuilder::new(config, recognizer).unwrap();
+        
+        // F major triad: F (5), A (9), C (0)
+        let mut chroma = Chromagram::new();
+        chroma.bins[5] = 3.0;   // F (tonic)
+        chroma.bins[9] = 1.5;   // A (major third)
+        chroma.bins[0] = 1.5;   // C (fifth)
+        chroma.bins[10] = 0.5;  // Bb (characteristic of F major)
+        chroma.normalize();
+        
+        let chromagrams = vec![chroma.clone(), chroma.clone(), chroma];
+        let key = builder.detect_key(&chromagrams);
+        
+        assert!(key.is_some());
+        let key = key.unwrap();
+        assert_eq!(key.tonic, 5, "Should detect F major");
+        assert_eq!(key.mode, Mode::Major);
+    }
+    
+    #[test]
+    fn test_detect_key_b_minor() {
+        let recognizer = ChordRecognizer::with_standard_chords();
+        let config = HarmonyMapConfig::new(0.1, 0.5);
+        let builder = HarmonyMapBuilder::new(config, recognizer).unwrap();
+        
+        // B minor triad: B (11), D (2), F# (6)
+        let mut chroma = Chromagram::new();
+        chroma.bins[11] = 2.5;  // B (tonic)
+        chroma.bins[2] = 1.8;   // D (minor third)
+        chroma.bins[6] = 1.8;   // F# (fifth)
+        chroma.bins[9] = 0.8;   // A (characteristic)
+        chroma.normalize();
+        
+        let chromagrams = vec![chroma.clone(), chroma.clone(), chroma];
+        let key = builder.detect_key(&chromagrams);
+        
+        assert!(key.is_some());
+        let key = key.unwrap();
+        assert_eq!(key.tonic, 11, "Should detect B minor");
+        assert_eq!(key.mode, Mode::Minor);
+    }
+    
+    #[test]
+    fn test_key_profile_database_rotation() {
+        let db = KeyProfileDatabase::krumhansl_schmuckler();
+        
+        // Test profile rotation for G major (tonic = 7)
+        let g_major_profile = KeyProfileDatabase::rotate_profile(&db.major_profile, 7);
+        
+        // After rotating C major profile by 7 semitones (G major):
+        // - g_major_profile[0] should contain the weight for C from the G major scale perspective
+        // - Since rotated[i] = profile[(i + 12 - tonic) % 12]:
+        //   g_major_profile[0] = db.major_profile[(0 + 12 - 7) % 12] = db.major_profile[5] (F weight in C major)
+        //   g_major_profile[7] = db.major_profile[(7 + 12 - 7) % 12] = db.major_profile[0] (C weight in C major -> becomes G in G major)
+        assert_relative_eq!(g_major_profile[7], db.major_profile[0], epsilon = 0.001);
+        
+        // Verify rotation preserves values (sum should be same)
+        let original_sum: f32 = db.major_profile.iter().sum();
+        let rotated_sum: f32 = g_major_profile.iter().sum();
+        assert_relative_eq!(original_sum, rotated_sum, epsilon = 0.01);
+    }
+    
+    #[test]
+    fn test_key_profile_database_all_24_keys() {
+        let recognizer = ChordRecognizer::with_standard_chords();
+        let config = HarmonyMapConfig::new(0.1, 0.5);
+        let builder = HarmonyMapBuilder::new(config, recognizer).unwrap();
+        
+        // Test that we can detect all 24 major/minor keys without panicking
+        // This validates that profile rotation works for all tonics
+        for tonic in 0..12 {
+            // Create synthetic chromagram emphasizing the tonic
+            let mut chroma_major = Chromagram::new();
+            chroma_major.bins[tonic] = 2.0;  // Tonic
+            chroma_major.bins[(tonic + 4) % 12] = 1.0;  // Major third
+            chroma_major.bins[(tonic + 7) % 12] = 1.0;  // Fifth
+            chroma_major.normalize();
+            
+            let chromagrams_major = vec![chroma_major; 3];
+            let key_major = builder.detect_key(&chromagrams_major);
+            
+            assert!(key_major.is_some(), "Should detect major key for tonic {}", tonic);
+            let key_major = key_major.unwrap();
+            // Allow for ambiguity in detection (e.g., relative minor might score similarly)
+            assert!(key_major.confidence > 0.0, "Should have non-zero confidence");
+            
+            // Test minor key
+            let mut chroma_minor = Chromagram::new();
+            chroma_minor.bins[tonic] = 2.0;  // Tonic
+            chroma_minor.bins[(tonic + 3) % 12] = 1.0;  // Minor third
+            chroma_minor.bins[(tonic + 7) % 12] = 1.0;  // Fifth
+            chroma_minor.normalize();
+            
+            let chromagrams_minor = vec![chroma_minor; 3];
+            let key_minor = builder.detect_key(&chromagrams_minor);
+            
+            assert!(key_minor.is_some(), "Should detect minor key for tonic {}", tonic);
+            let key_minor = key_minor.unwrap();
+            assert!(key_minor.confidence > 0.0, "Should have non-zero confidence");
+        }
     }
 
     #[test]

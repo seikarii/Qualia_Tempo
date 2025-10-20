@@ -239,12 +239,53 @@ impl AudioProcessingPipeline {
         // Trim to original length
         processed_audio.truncate(audio.len());
         
-        // Generate ensemble voices with AVERAGE intensity (voice count decision)
-        let avg_intensity = intensity_curve.iter().sum::<f32>() / intensity_curve.len().max(1) as f32;
-        let voices = self.ensemble_effect.process_dynamic(&processed_audio, avg_intensity)
-            .context("Ensemble effect failed")?;
+        // Generate ensemble voices DYNAMICALLY per temporal block (improved approach)
+        // Instead of average intensity, apply ensemble per block with local intensity
+        let ensemble_block_size = 48000; // ~1 second blocks @ 48kHz
+        let mut all_voices: Vec<VoiceOutput> = Vec::new();
         
-        Ok(voices)
+        let mut block_start = 0;
+        while block_start < processed_audio.len() {
+            let block_end = (block_start + ensemble_block_size).min(processed_audio.len());
+            let block_audio = &processed_audio[block_start..block_end];
+            
+            // Calculate intensity for THIS block (not global average)
+            let block_start_window = block_start / hop_size;
+            let block_end_window = block_end / hop_size;
+            let block_intensity_slice = &intensity_curve[
+                block_start_window.min(intensity_curve.len())..
+                block_end_window.min(intensity_curve.len())
+            ];
+            
+            let block_intensity = if block_intensity_slice.is_empty() {
+                0.5 // Default mid intensity if no curve data
+            } else {
+                block_intensity_slice.iter().sum::<f32>() / block_intensity_slice.len() as f32
+            };
+            
+            // Apply ensemble effect with LOCAL intensity
+            let block_voices = self.ensemble_effect.process_dynamic(block_audio, block_intensity)
+                .context("Ensemble effect failed")?;
+            
+            // Accumulate voices (first block initializes, subsequent blocks concat)
+            if all_voices.is_empty() {
+                all_voices = block_voices;
+            } else {
+                // Extend each voice with corresponding block voice samples
+                for (voice_idx, block_voice) in block_voices.iter().enumerate() {
+                    if voice_idx < all_voices.len() {
+                        all_voices[voice_idx].samples.extend_from_slice(&block_voice.samples);
+                    } else {
+                        // New voice appeared (intensity increased voice count)
+                        all_voices.push(block_voice.clone());
+                    }
+                }
+            }
+            
+            block_start = block_end;
+        }
+        
+        Ok(all_voices)
     }
     
     /// # Responsibility

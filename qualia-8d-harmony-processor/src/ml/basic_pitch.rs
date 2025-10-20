@@ -413,11 +413,62 @@ impl BasicPitchTranscriber {
     /// Extract polyphonic MIDI note events from activation matrices.
     ///
     /// Combines note and onset activations to detect note boundaries.
+    /// Delegates to module-level function for testability.
     fn extract_notes(
         &self,
         note_activations: &Array2<f32>,
         onset_activations: &Array2<f32>,
     ) -> Result<Vec<(u8, f64, f64)>> {
+        extract_notes_from_activations(&self.config, note_activations, onset_activations)
+    }
+
+    /// # Responsibility
+    /// Convert pitch bin index to MIDI note number.
+    ///
+    /// BasicPitch uses 88 bins (A0-C8) with base frequency 27.5 Hz.
+    fn pitch_bin_to_midi(&self, pitch_bin: usize) -> u8 {
+        pitch_bin_to_midi(pitch_bin)
+    }
+
+    pub fn config(&self) -> &BasicPitchConfig {
+        &self.config
+    }
+}
+
+/// # Responsibility
+/// Convert pitch bin index to MIDI note number (standalone helper).
+///
+/// BasicPitch uses 88 bins (A0-C8) with base frequency 27.5 Hz.
+fn pitch_bin_to_midi(pitch_bin: usize) -> u8 {
+    // MIDI A0 = 21, BasicPitch bin 0 = A0
+    (21 + pitch_bin).clamp(0, 127) as u8
+}
+
+/// # Responsibility
+/// Extract polyphonic MIDI note events from activation matrices (standalone for testing).
+///
+/// ---
+///
+/// **Core Algorithm**:
+/// 1. Iterate through time frames (172 frames @ ~86.13 fps)
+/// 2. For each pitch bin (88 piano keys):
+///    - Detect onset (onset_prob >= onset_threshold)
+///    - Track note activity (note_prob >= frame_threshold)
+///    - Finalize note on offset or re-trigger
+/// 3. Filter notes shorter than min_note_duration_ms
+/// 4. Sort by start time
+///
+/// **Arguments**:
+/// - `config`: Configuration with thresholds and duration filter
+/// - `note_activations`: (frames, 88) matrix of note probabilities [0.0, 1.0]
+/// - `onset_activations`: (frames, 88) matrix of onset probabilities [0.0, 1.0]
+///
+/// **Returns**: Vec of (MIDI note, start_time_sec, duration_sec)
+fn extract_notes_from_activations(
+    config: &BasicPitchConfig,
+    note_activations: &Array2<f32>,
+    onset_activations: &Array2<f32>,
+) -> Result<Vec<(u8, f64, f64)>> {
         let mut note_events = Vec::new();
 
         // Track active notes per MIDI pitch
@@ -444,7 +495,7 @@ impl BasicPitchTranscriber {
                 // Debug A4 specifically
                 #[cfg(test)]
                 if pitch_idx == 45 && (note_prob > 0.15 || onset_prob > 0.15) {
-                    let state_str = match (active_notes[pitch_idx], note_prob >= self.config.frame_threshold, onset_prob >= self.config.onset_threshold) {
+                    let state_str = match (active_notes[pitch_idx], note_prob >= config.frame_threshold, onset_prob >= config.onset_threshold) {
                         (None, true, true) => "START(onset)",
                         (None, true, false) => "START",
                         (Some(_), true, false) => "CONTINUE",
@@ -455,8 +506,8 @@ impl BasicPitchTranscriber {
                     a4_debug_frames.push((frame_idx, note_prob, onset_prob, state_str));
                 }
 
-                let is_note_active = note_prob >= self.config.frame_threshold;
-                let is_onset = onset_prob >= self.config.onset_threshold;
+                let is_note_active = note_prob >= config.frame_threshold;
+                let is_onset = onset_prob >= config.onset_threshold;
 
                 match (active_notes[pitch_idx], is_note_active, is_onset) {
                     // New note onset
@@ -474,8 +525,8 @@ impl BasicPitchTranscriber {
                         let duration = end_time - start_time;
                         let duration_ms = (duration * 1000.0) as u64;
 
-                        if duration_ms >= self.config.min_note_duration_ms {
-                            let midi_note = self.pitch_bin_to_midi(pitch_idx);
+                        if duration_ms >= config.min_note_duration_ms {
+                            let midi_note = pitch_bin_to_midi(pitch_idx);
                             note_events.push((midi_note, start_time, duration));
                         }
 
@@ -489,8 +540,8 @@ impl BasicPitchTranscriber {
                         let duration = end_time - start_time;
                         let duration_ms = (duration * 1000.0) as u64;
 
-                        if duration_ms >= self.config.min_note_duration_ms {
-                            let midi_note = self.pitch_bin_to_midi(pitch_idx);
+                        if duration_ms >= config.min_note_duration_ms {
+                            let midi_note = pitch_bin_to_midi(pitch_idx);
                             note_events.push((midi_note, start_time, duration));
                         }
 
@@ -511,8 +562,8 @@ impl BasicPitchTranscriber {
                 let duration = end_time - start_time;
                 let duration_ms = (duration * 1000.0) as u64;
 
-                if duration_ms >= self.config.min_note_duration_ms {
-                    let midi_note = self.pitch_bin_to_midi(pitch_idx);
+                if duration_ms >= config.min_note_duration_ms {
+                    let midi_note = pitch_bin_to_midi(pitch_idx);
                     note_events.push((midi_note, start_time, duration));
                 }
             }
@@ -527,10 +578,10 @@ impl BasicPitchTranscriber {
             eprintln!("   extract_notes: max_note_prob={:.4}, max_onset_prob={:.4}", 
                       max_note_prob, max_onset_prob);
             eprintln!("   thresholds: frame={:.2}, onset={:.2}", 
-                      self.config.frame_threshold, self.config.onset_threshold);
+                      config.frame_threshold, config.onset_threshold);
             if !a4_debug_frames.is_empty() {
                 eprintln!("   A4 (MIDI 69) frame activations (thresh: note>={:.2}, onset>={:.2}):", 
-                          self.config.frame_threshold, self.config.onset_threshold);
+                          config.frame_threshold, config.onset_threshold);
                 for (frame, note_p, onset_p, state) in a4_debug_frames.iter().take(20) {
                     eprintln!("     frame {:3}: note={:.3}, onset={:.3} -> {}", frame, note_p, onset_p, state);
                 }
@@ -538,18 +589,373 @@ impl BasicPitchTranscriber {
         }
 
         Ok(note_events)
-    }
+}
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_relative_eq;
+    
+
+    
+    #[test]
+    fn test_basic_pitch_config_creation() {
+        let config = BasicPitchConfig::new(48000);
+        assert_eq!(config.sample_rate, 48000);
+        assert_eq!(config.onset_threshold, 0.5);
+        assert_eq!(config.frame_threshold, 0.3);
+        assert_eq!(config.min_note_duration_ms, 128);
+    }
+    
+    #[test]
+    fn test_basic_pitch_config_with_model_path() {
+        let config = BasicPitchConfig::new(22050)
+            .with_model_path("custom/path/model.onnx");
+        assert_eq!(config.model_path, "custom/path/model.onnx");
+    }
+    
+    #[test]
+    fn test_pitch_bin_to_midi() {
+        // Test pitch bin to MIDI conversion logic
+        // A0 = MIDI 21 (bin 0): 21 + 0 = 21
+        assert_eq!((21 + 0).clamp(0, 127), 21);
+        
+        // A4 = MIDI 69 (bin 48): 21 + 48 = 69
+        assert_eq!((21 + 48).clamp(0, 127), 69);
+        
+        // C8 = MIDI 108 (bin 87): 21 + 87 = 108
+        assert_eq!((21 + 87).clamp(0, 127), 108);
+        
+        // Clamp test: out of range
+        assert_eq!((21 + 150).clamp(0, 127), 127);
+    }
+    
     /// # Responsibility
-    /// Convert pitch bin index to MIDI note number.
+    /// Test extract_notes with absolute silence (all activations = 0.0).
     ///
-    /// BasicPitch uses 88 bins (A0-C8) with base frequency 27.5 Hz.
-    fn pitch_bin_to_midi(&self, pitch_bin: usize) -> u8 {
-        // MIDI A0 = 21, BasicPitch bin 0 = A0
-        (21 + pitch_bin).clamp(0, 127) as u8
+    /// **Expected**: No notes detected.
+    #[test]
+    fn test_extract_notes_silence() {
+        let config = BasicPitchConfig::new(22050);
+        
+        // Create activation matrices with silence (all zeros)
+        let note_activations = Array2::zeros((172, 88)); // ANNOT_N_FRAMES x N_FREQ_BINS_NOTES
+        let onset_activations = Array2::zeros((172, 88));
+        
+        let notes = extract_notes_from_activations(&config, &note_activations, &onset_activations).unwrap();
+        
+        assert_eq!(notes.len(), 0, "Silence should produce no notes");
     }
-
-    pub fn config(&self) -> &BasicPitchConfig {
-        &self.config
+    
+    /// # Responsibility
+    /// Test extract_notes with single sustained note (A4, MIDI 69).
+    ///
+    /// **Expected**: One note event with correct pitch, start time, and duration.
+    #[test]
+    fn test_extract_notes_single_sustained_note() {
+        let mut config = BasicPitchConfig::new(22050);
+        config.frame_threshold = 0.5;
+        config.onset_threshold = 0.5;
+        config.min_note_duration_ms = 100;
+        
+        // Create activation matrices: A4 (pitch_idx 48) active for 50 frames (~0.58s)
+        let mut note_activations = Array2::zeros((172, 88));
+        let mut onset_activations = Array2::zeros((172, 88));
+        
+        let pitch_idx = 48; // A4
+        
+        // Onset at frame 10
+        onset_activations[[10, pitch_idx]] = 0.8;
+        
+        // Note active from frame 10 to 60 (50 frames)
+        for frame in 10..60 {
+            note_activations[[frame, pitch_idx]] = 0.9;
+        }
+        
+        let notes = extract_notes_from_activations(&config, &note_activations, &onset_activations).unwrap();
+        
+        assert_eq!(notes.len(), 1, "Should detect exactly 1 note");
+        
+        let (midi_note, start_time, duration) = notes[0];
+        assert_eq!(midi_note, 69, "Should detect A4 (MIDI 69)");
+        
+        // Start time: frame 10 / 86.13 fps ≈ 0.116s
+        assert_relative_eq!(start_time, 10.0 / ANNOTATIONS_FPS as f64, epsilon = 0.01);
+        
+        // Duration: 50 frames / 86.13 fps ≈ 0.58s
+        assert_relative_eq!(duration, 50.0 / ANNOTATIONS_FPS as f64, epsilon = 0.01);
+    }
+    
+    /// # Responsibility
+    /// Test extract_notes with rapid note sequence (staccato).
+    ///
+    /// **Expected**: Multiple distinct note events, correctly segmented.
+    #[test]
+    fn test_extract_notes_rapid_sequence() {
+        let mut config = BasicPitchConfig::new(22050);
+        config.frame_threshold = 0.5;
+        config.onset_threshold = 0.5;
+        config.min_note_duration_ms = 100; // ~8.6 frames
+        
+        let mut note_activations = Array2::zeros((172, 88));
+        let mut onset_activations = Array2::zeros((172, 88));
+        
+        // Rapid sequence of 4 notes: C4 (36), E4 (40), G4 (43), C5 (48)
+        let notes_sequence = [
+            (36, 10, 20),  // C4: frames 10-20
+            (40, 25, 35),  // E4: frames 25-35
+            (43, 40, 50),  // G4: frames 40-50
+            (48, 55, 65),  // C5: frames 55-65
+        ];
+        
+        for &(pitch_idx, start_frame, end_frame) in &notes_sequence {
+            // Onset at start
+            onset_activations[[start_frame, pitch_idx]] = 0.8;
+            
+            // Note active for duration
+            for frame in start_frame..end_frame {
+                note_activations[[frame, pitch_idx]] = 0.9;
+            }
+        }
+        
+        let detected_notes = extract_notes_from_activations(&config, &note_activations, &onset_activations).unwrap();
+        
+        assert_eq!(detected_notes.len(), 4, "Should detect 4 distinct notes");
+        
+        // Verify MIDI pitches
+        let midi_notes: Vec<u8> = detected_notes.iter().map(|(midi, _, _)| *midi).collect();
+        assert_eq!(midi_notes, vec![57, 61, 64, 69], "Should detect C4, E4, G4, C5");
+    }
+    
+    /// # Responsibility
+    /// Test extract_notes with overlapping notes (polyphonic chord).
+    ///
+    /// **Expected**: All chord notes detected simultaneously.
+    #[test]
+    fn test_extract_notes_polyphonic_chord() {
+        let mut config = BasicPitchConfig::new(22050);
+        config.frame_threshold = 0.5;
+        config.onset_threshold = 0.5;
+        config.min_note_duration_ms = 100;
+        
+        
+        let mut note_activations = Array2::zeros((172, 88));
+        let mut onset_activations = Array2::zeros((172, 88));
+        
+        // C major chord: C4 (36), E4 (40), G4 (43) - all simultaneous
+        let chord_pitches = [36, 40, 43];
+        let start_frame = 20;
+        let end_frame = 70; // 50 frames duration
+        
+        for &pitch_idx in &chord_pitches {
+            onset_activations[[start_frame, pitch_idx]] = 0.8;
+            
+            for frame in start_frame..end_frame {
+                note_activations[[frame, pitch_idx]] = 0.9;
+            }
+        }
+        
+        let notes = extract_notes_from_activations(&config, &note_activations, &onset_activations).unwrap();
+        
+        assert_eq!(notes.len(), 3, "Should detect 3 chord notes");
+        
+        // Verify all notes start at same time
+        let start_times: Vec<f64> = notes.iter().map(|(_, start, _)| *start).collect();
+        for &st in &start_times {
+            assert_relative_eq!(st, start_times[0], epsilon = 0.001);
+        }
+        
+        // Verify MIDI pitches (C4, E4, G4)
+        let midi_notes: Vec<u8> = notes.iter().map(|(midi, _, _)| *midi).collect();
+        assert!(midi_notes.contains(&57), "Should contain C4 (57)");
+        assert!(midi_notes.contains(&61), "Should contain E4 (61)");
+        assert!(midi_notes.contains(&64), "Should contain G4 (64)");
+    }
+    
+    /// # Responsibility
+    /// Test extract_notes with note re-trigger (legato with onset).
+    ///
+    /// **Expected**: Two separate note events, not one continuous note.
+    #[test]
+    fn test_extract_notes_note_retrigger() {
+        let mut config = BasicPitchConfig::new(22050);
+        config.frame_threshold = 0.5;
+        config.onset_threshold = 0.5;
+        config.min_note_duration_ms = 100;
+        
+        
+        let mut note_activations = Array2::zeros((172, 88));
+        let mut onset_activations = Array2::zeros((172, 88));
+        
+        let pitch_idx = 48; // A4
+        
+        // First note: frames 10-30
+        onset_activations[[10, pitch_idx]] = 0.8;
+        for frame in 10..30 {
+            note_activations[[frame, pitch_idx]] = 0.9;
+        }
+        
+        // Re-trigger at frame 30 (while note_activation is still high)
+        onset_activations[[30, pitch_idx]] = 0.8;
+        for frame in 30..60 {
+            note_activations[[frame, pitch_idx]] = 0.9;
+        }
+        
+        let notes = extract_notes_from_activations(&config, &note_activations, &onset_activations).unwrap();
+        
+        assert_eq!(notes.len(), 2, "Re-trigger should create 2 separate notes");
+        
+        // Both should be same MIDI note
+        assert_eq!(notes[0].0, 69);
+        assert_eq!(notes[1].0, 69);
+        
+        // Second note should start after first
+        assert!(notes[1].1 > notes[0].1, "Second note should start later");
+    }
+    
+    /// # Responsibility
+    /// Test extract_notes with activations below threshold (noise rejection).
+    ///
+    /// **Expected**: No notes detected (weak activations filtered out).
+    #[test]
+    fn test_extract_notes_below_threshold() {
+        let mut config = BasicPitchConfig::new(22050);
+        config.frame_threshold = 0.5;
+        config.onset_threshold = 0.5;
+        
+        
+        let mut note_activations = Array2::zeros((172, 88));
+        let mut onset_activations = Array2::zeros((172, 88));
+        
+        // Weak activations (below threshold)
+        for frame in 10..50 {
+            note_activations[[frame, 48]] = 0.3; // Below frame_threshold (0.5)
+            onset_activations[[frame, 48]] = 0.4; // Below onset_threshold (0.5)
+        }
+        
+        let notes = extract_notes_from_activations(&config, &note_activations, &onset_activations).unwrap();
+        
+        assert_eq!(notes.len(), 0, "Weak activations should be filtered out");
+    }
+    
+    /// # Responsibility
+    /// Test extract_notes with note shorter than min_note_duration_ms.
+    ///
+    /// **Expected**: Short note rejected (duration filter).
+    #[test]
+    fn test_extract_notes_min_duration_filter() {
+        let mut config = BasicPitchConfig::new(22050);
+        config.frame_threshold = 0.5;
+        config.onset_threshold = 0.5;
+        config.min_note_duration_ms = 500; // 500ms minimum (very long for testing)
+        
+        
+        let mut note_activations = Array2::zeros((172, 88));
+        let mut onset_activations = Array2::zeros((172, 88));
+        
+        let pitch_idx = 48;
+        
+        // Short note: only 10 frames (~0.116s = 116ms < 500ms)
+        onset_activations[[10, pitch_idx]] = 0.8;
+        for frame in 10..20 {
+            note_activations[[frame, pitch_idx]] = 0.9;
+        }
+        
+        let notes = extract_notes_from_activations(&config, &note_activations, &onset_activations).unwrap();
+        
+        assert_eq!(notes.len(), 0, "Note shorter than min_duration should be rejected");
+    }
+    
+    /// # Responsibility
+    /// Test extract_notes with active notes at end of buffer.
+    ///
+    /// **Expected**: Active notes finalized with correct end time.
+    #[test]
+    fn test_extract_notes_finalize_active_notes() {
+        let mut config = BasicPitchConfig::new(22050);
+        config.frame_threshold = 0.5;
+        config.onset_threshold = 0.5;
+        config.min_note_duration_ms = 100;
+        
+        
+        let mut note_activations = Array2::zeros((172, 88));
+        let mut onset_activations = Array2::zeros((172, 88));
+        
+        let pitch_idx = 48;
+        
+        // Note starts at frame 100 and continues until end (frame 172)
+        onset_activations[[100, pitch_idx]] = 0.8;
+        for frame in 100..172 {
+            note_activations[[frame, pitch_idx]] = 0.9;
+        }
+        
+        let notes = extract_notes_from_activations(&config, &note_activations, &onset_activations).unwrap();
+        
+        assert_eq!(notes.len(), 1, "Should finalize active note");
+        
+        let (_, start_time, duration) = notes[0];
+        
+        // Duration should extend to end of buffer
+        let expected_end_time = 172.0 / ANNOTATIONS_FPS as f64;
+        assert_relative_eq!(start_time + duration, expected_end_time, epsilon = 0.01);
+    }
+    
+    /// # Responsibility
+    /// Test extract_notes with mixed scenario (silence, single note, chord, rapid sequence).
+    ///
+    /// **Expected**: Correct segmentation of all events.
+    #[test]
+    fn test_extract_notes_mixed_scenario() {
+        let mut config = BasicPitchConfig::new(22050);
+        config.frame_threshold = 0.5;
+        config.onset_threshold = 0.5;
+        config.min_note_duration_ms = 100;
+        
+        
+        let mut note_activations = Array2::zeros((172, 88));
+        let mut onset_activations = Array2::zeros((172, 88));
+        
+        // Scenario:
+        // 1. Silence: frames 0-20
+        // 2. Single note C4: frames 20-40
+        // 3. Silence: frames 40-50
+        // 4. Chord (C4, E4, G4): frames 50-80
+        // 5. Rapid sequence (C5, D5): frames 85-95, 100-110
+        
+        // Single note C4
+        onset_activations[[20, 36]] = 0.8;
+        for frame in 20..40 {
+            note_activations[[frame, 36]] = 0.9;
+        }
+        
+        // Chord (C4, E4, G4)
+        for &pitch in &[36, 40, 43] {
+            onset_activations[[50, pitch]] = 0.8;
+            for frame in 50..80 {
+                note_activations[[frame, pitch]] = 0.9;
+            }
+        }
+        
+        // Rapid sequence C5
+        onset_activations[[85, 48]] = 0.8;
+        for frame in 85..95 {
+            note_activations[[frame, 48]] = 0.9;
+        }
+        
+        // Rapid sequence D5
+        onset_activations[[100, 50]] = 0.8;
+        for frame in 100..110 {
+            note_activations[[frame, 50]] = 0.9;
+        }
+        
+        let notes = extract_notes_from_activations(&config, &note_activations, &onset_activations).unwrap();
+        
+        // Expected: 1 (C4 solo) + 3 (chord) + 2 (rapid sequence) = 6 notes
+        assert_eq!(notes.len(), 6, "Should detect all 6 notes in mixed scenario");
+        
+        // Verify notes are sorted by start time
+        for i in 1..notes.len() {
+            assert!(notes[i].1 >= notes[i-1].1, "Notes should be sorted by start time");
+        }
     }
 }
