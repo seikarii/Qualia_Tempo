@@ -159,10 +159,23 @@ impl EnsembleEffect {
             .max()
             .unwrap_or(0);
 
-        // Add extra padding for pitch-shifted samples (pitch up = shorter, pitch down = longer)
-        let max_length_factor = 1.1; // Allow 10% extra for downward pitch shifts
-        let output_len = ((input.len() + max_delay) as f32 * max_length_factor) as usize;
-        let mut output = vec![0.0; output_len];
+        // QUALITY FIX: Pre-calculate exact buffer sizes for pitch-shifted audio
+        // instead of using heuristic 1.1x factor
+        let max_pitched_len = self.voices.iter()
+            .map(|v| {
+                // For pitch shifts: output_len ≈ input_len / pitch_factor
+                // We need ceiling to ensure no truncation
+                let pitch_factor = 2.0_f32.powf(v.pitch_shift_cents / 1200.0);
+                let rubato_ratio = 1.0 / pitch_factor;
+                
+                // Rubato's output length calculation (conservative estimate)
+                let output_samples = ((input.len() as f32 * rubato_ratio) as usize).saturating_add(64);
+                output_samples + v.delay_samples
+            })
+            .max()
+            .unwrap_or(input.len() + max_delay);
+
+        let mut output = vec![0.0; max_pitched_len];
 
         // Process each voice with pitch shift + delay
         for voice in &self.voices {
@@ -179,7 +192,7 @@ impl EnsembleEffect {
                 }
             };
 
-            // Mix into output with delay
+            // Mix into output with delay (no truncation needed - buffer is pre-sized)
             for (i, &sample) in pitched.iter().enumerate() {
                 let output_idx = i + voice.delay_samples;
                 if output_idx < output.len() {
@@ -187,10 +200,6 @@ impl EnsembleEffect {
                 }
             }
         }
-
-        // Trim output to remove excessive padding
-        let actual_len = input.len() + max_delay;
-        output.truncate(actual_len);
 
         output
     }

@@ -4,7 +4,7 @@
 //! Uses real-valued FFT for efficient overlap-add convolution with HRIR filters
 //! loaded from SOFA datasets (MIT KEMAR).
 
-use realfft::{RealFftPlanner, RealToComplex};
+use realfft::{RealFftPlanner, RealToComplex, ComplexToReal};
 use rustfft::num_complex::Complex;
 use std::sync::Arc;
 use anyhow::{Result, bail};
@@ -37,8 +37,8 @@ impl HrirFilter {
 
 /// FFT-based HRTF convolution engine using overlap-add method
 pub struct HrtfConvolver {
-    #[allow(dead_code)] // Reserved for future FFT-based overlap-add implementation
     fft: Arc<dyn RealToComplex<f32>>,
+    ifft: Arc<dyn ComplexToReal<f32>>,  // PERFORMANCE FIX: Pre-computed iFFT plan
     fft_size: usize,
     hop_size: usize,
     sample_rate: u32,
@@ -64,9 +64,11 @@ impl HrtfConvolver {
 
         let mut planner = RealFftPlanner::<f32>::new();
         let fft = planner.plan_fft_forward(fft_size);
+        let ifft = planner.plan_fft_inverse(fft_size);  // PERFORMANCE FIX: Pre-compute iFFT once
 
         Ok(Self {
             fft,
+            ifft,
             fft_size,
             hop_size,
             sample_rate,
@@ -181,12 +183,9 @@ impl HrtfConvolver {
             *seg_bin *= imp_bin;
         }
         
-        // Inverse FFT back to time domain
-        let mut planner = RealFftPlanner::<f32>::new();
-        let ifft = planner.plan_fft_inverse(self.fft_size);
-        
+        // Inverse FFT back to time domain (PERFORMANCE FIX: Reuse pre-computed plan)
         let mut output_time = vec![0.0; self.fft_size];
-        ifft.process(&mut segment_spectrum, &mut output_time)?;
+        self.ifft.process(&mut segment_spectrum, &mut output_time)?;
         
         // Normalize by FFT size
         let scale = 1.0 / self.fft_size as f32;

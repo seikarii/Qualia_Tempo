@@ -217,8 +217,8 @@ fn run_audio_effects(
         
         let ensemble_config = EnsembleConfig::new(
             args.ensemble_voices,
-            3.5,  // max_delay_ms (reduced from 5ms for tighter ensemble)
-            2.0,  // max_pitch_shift_cents (reduced from 3 cents for subtle chorusing)
+            15.0,  // INCREASED from 3.5ms: More perceptible ensemble spread
+            5.0,   // INCREASED from 2.0 cents: More noticeable chorusing effect
             audio_buffer.sample_rate,
         )?;
         let ensemble_effect = EnsembleEffect::new(ensemble_config);
@@ -283,13 +283,14 @@ fn run_spatialization(
         let (left_chunk, right_chunk) = hrtf_convolver.convolve_at_position(chunk, &hrtf_position)
             .context("HRTF convolution failed")?;
         
-        // Mix convolved chunk into binaural output (handle variable length from convolution)
+        // OVERLAP-ADD: Sum convolved chunks to preserve HRTF tail (CRITICAL FIX)
+        // Previous bug: Overwriting with = destroyed convolution overlap, causing audio clicks
         let start_idx = chunk_idx * chunk_size;
         for (i, (&left_sample, &right_sample)) in left_chunk.iter().zip(right_chunk.iter()).enumerate() {
             let output_idx = start_idx + i;
             if output_idx < spatial_audio.left.len() {
-                spatial_audio.left[output_idx] = left_sample;
-                spatial_audio.right[output_idx] = right_sample;
+                spatial_audio.left[output_idx] += left_sample;   // SUM, not assign
+                spatial_audio.right[output_idx] += right_sample;  // SUM, not assign
             }
         }
     }
@@ -493,7 +494,14 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
     let processed_audio = run_audio_effects(args, &audio_buffer)?;
 
     // Phase 4: 8D spatialization with HRTF convolution
-    let spatial_audio = run_spatialization(&processed_audio, args, audio_buffer.sample_rate)?;
+    let mut spatial_audio = run_spatialization(&processed_audio, args, audio_buffer.sample_rate)?;
+
+    // Phase 4.5: Musical lookahead limiting (CRITICAL: Prevents clipping distortion)
+    info!("Phase 4.5: Musical lookahead limiting");
+    let mixer_config = qualia_8d_harmony_processor::audio::SpatialMixerConfig::default_8d(args.sample_rate);
+    let spatial_mixer = qualia_8d_harmony_processor::audio::SpatialMixer::new(mixer_config);
+    spatial_audio = spatial_mixer.mix(&[spatial_audio]);
+    info!("Lookahead limiter applied (threshold: 0.95, knee: 3dB)");
 
     // Phase 5-6: ML analysis (MIDI transcription + harmonic analysis)
     let (midi_notes, harmony_map) = run_ml_analysis(&audio_buffer, args)?;

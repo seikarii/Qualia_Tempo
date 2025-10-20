@@ -54,10 +54,7 @@ fn test_ensemble_effect_configuration() {
 
 #[test]
 fn test_spatial_mixer_limiter() {
-    let config = SpatialMixerConfig {
-        limiter_threshold: 0.95,
-        num_stems: 4,
-    };
+    let config = SpatialMixerConfig::default_8d(48000);
 
     let _mixer = SpatialMixer::new(config.clone());
     assert!((config.limiter_threshold - 0.95).abs() < 0.001);
