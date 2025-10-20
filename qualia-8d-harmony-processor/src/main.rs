@@ -8,12 +8,10 @@ use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use qualia_8d_harmony_processor::{
-    analysis::{IntensityAnalyzer, IntensityAnalyzerConfig},
     audio::{
-        BinauralSignal, CircularMotionEngine, ConvolutionReverb, 
-        ConvolutionReverbConfig, EnsembleConfig, EnsembleEffect, EnsembleMode,
-        FrequencyBooster, FrequencyBoosterConfig, HrtfConvolver, InputHandler,
-        InputHandlerConfig, PsychoacousticBass, PsychoacousticBassConfig,
+        AudioProcessingPipeline, BinauralSignal, CircularMotionEngine, 
+        HrtfConvolver, InputHandler,
+        InputHandlerConfig, PipelineConfig,
         RotationDirection, SofaLoader, SphericalCoord, SpatialMixer, 
         SpatialMixerConfig, VoiceOutput,
     },
@@ -194,97 +192,6 @@ fn process_single_file(args: ProcessArgs) -> Result<()> {
     info!("All phases completed successfully");
 
     Ok(())
-}
-
-/// # Responsibility
-/// Apply EQ with dynamic intensity modulation to audio buffer.
-///
-/// Analyzes audio intensity curve and applies frequency boost with
-/// real-time gain adaptation based on musical dynamics.
-fn run_audio_effects(
-    args: &ProcessArgs,
-    audio_buffer: &qualia_8d_harmony_processor::audio::AudioBuffer,
-) -> Result<(Vec<f32>, Vec<f32>)> {
-    // Phase 1.5: Analyze intensity curve for dynamic effects
-    info!("Phase 1.5: Analyzing audio intensity dynamics (RMS + Crest + Spectral Flux)");
-    
-    let intensity_config = IntensityAnalyzerConfig::new(audio_buffer.sample_rate);
-    let hop_samples = intensity_config.hop_samples(); // Store before move
-    
-    let mut intensity_analyzer = IntensityAnalyzer::new(intensity_config)
-        .context("Failed to create IntensityAnalyzer")?;
-    
-    let intensity_curve = intensity_analyzer.analyze(&audio_buffer.samples)
-        .context("Failed to analyze intensity curve")?;
-    
-    info!(
-        num_windows = intensity_curve.len(),
-        avg_intensity = intensity_curve.iter().sum::<f32>() / intensity_curve.len().max(1) as f32,
-        "Intensity analysis complete"
-    );
-    
-    // Phase 2: Apply frequency boost (EQ) with dynamic intensity modulation
-    let eq_boosted_audio = if args.eq_boost {
-        info!("Phase 2: Dynamic frequency boost (intensity-driven EQ)");
-        
-        let booster_config = FrequencyBoosterConfig::default_8d(audio_buffer.sample_rate);
-        let mut booster = FrequencyBooster::new(booster_config)
-            .context("Failed to create FrequencyBooster")?;
-        
-        // Apply chunk-based intensity modulation
-        let mut eq_output = Vec::with_capacity(audio_buffer.samples.len());
-        
-        for (chunk_idx, chunk) in audio_buffer.samples.chunks(hop_samples).enumerate() {
-            let intensity = intensity_curve.get(chunk_idx).copied().unwrap_or(0.5);
-            let chunk_output = booster.process(chunk, intensity)?;
-            eq_output.extend_from_slice(&chunk_output);
-        }
-        
-        eq_output
-    } else {
-        audio_buffer.samples.clone()
-    };
-    
-    // Phase 2.4: Apply psychoacoustic bass enhancement
-    info!("Phase 2.4: Psychoacoustic bass enhancement (2x/3x harmonic generation)");
-    
-    let bass_config = PsychoacousticBassConfig::new(audio_buffer.sample_rate)
-        .context("Failed to create PsychoacousticBassConfig")?;
-    
-    let mut bass_enhancer = PsychoacousticBass::new(bass_config)
-        .context("Failed to create PsychoacousticBass")?;
-    
-    // Apply bass enhancement with average intensity
-    let avg_intensity = intensity_curve.iter().sum::<f32>() / intensity_curve.len().max(1) as f32;
-    let bass_enhanced_audio = bass_enhancer.process(&eq_boosted_audio, avg_intensity)
-        .context("Failed to apply psychoacoustic bass enhancement")?;
-    
-    info!(
-        avg_intensity = avg_intensity,
-        "Bass enhancement applied with average intensity modulation"
-    );
-    
-    // Phase 2.5: Apply convolution reverb for spatial depth
-    info!("Phase 2.5: Convolution reverb (synthetic IR with intensity-modulated wet mix)");
-    
-    let reverb_config = ConvolutionReverbConfig::new(audio_buffer.sample_rate)
-        .context("Failed to create ConvolutionReverbConfig")?;
-    
-    let ir_length_samples = reverb_config.ir_length_samples; // Cache before move
-    
-    let mut reverb = ConvolutionReverb::new(reverb_config)
-        .context("Failed to create ConvolutionReverb")?;
-    
-    let reverb_processed_audio = reverb.process(&bass_enhanced_audio, avg_intensity)
-        .context("Failed to apply convolution reverb")?;
-    
-    info!(
-        avg_intensity = avg_intensity,
-        ir_length_sec = ir_length_samples as f32 / audio_buffer.sample_rate as f32,
-        "Convolution reverb applied with intensity-modulated wet mix"
-    );
-
-    Ok((reverb_processed_audio, intensity_curve))
 }
 
 /// # Responsibility
@@ -575,57 +482,53 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
         "Audio loaded successfully"
     );
 
-    // Phase 1.5-2: Analyze intensity + Apply dynamic EQ
-    let (eq_boosted_audio, _intensity_curve) = run_audio_effects(args, &audio_buffer)?;
-
-    // Phase 3: Generate independent ensemble voices (NO MIXING YET)
+    // Phase 2: Create AudioProcessingPipeline (COMPOSITION ROOT)
+    info!("Phase 2: Initializing audio processing pipeline");
+    
+    let pipeline_config = PipelineConfig::new(audio_buffer.sample_rate)?;
+    let mut pipeline = AudioProcessingPipeline::new(pipeline_config)
+        .context("Failed to create AudioProcessingPipeline")?;
+    
+    // Phase 3: Analyze intensity for dynamic modulation
+    info!("Phase 3: Analyzing intensity dynamics (RMS + Crest + Spectral Flux)");
+    
+    let intensity_curve = pipeline.analyze_intensity(&audio_buffer.samples)
+        .context("Failed to analyze intensity curve")?;
+    
+    let avg_intensity = intensity_curve.iter().sum::<f32>() / intensity_curve.len().max(1) as f32;
+    
+    info!(
+        num_windows = intensity_curve.len(),
+        avg_intensity = avg_intensity,
+        "Intensity analysis complete"
+    );
+    
+    // Phase 4: Process audio through pipeline (EQ → Bass → Reverb → Ensemble)
+    info!("Phase 4: Processing audio through pipeline");
+    
     let voice_outputs = if args.ensemble {
-        info!(voices = args.ensemble_voices, "Phase 3: Generating independent ensemble voices");
-        
-        // Dynamic ensemble configuration: voice count + spatial spread modulated by intensity
-        // Low intensity: 5 voices, 60° spread (tight orchestral)
-        // High intensity: 13 voices, 120° spread (wide cinematic)
-        let min_voices = (args.ensemble_voices as f32 * 0.5).max(5.0) as usize;
-        let max_voices = args.ensemble_voices.max(13);
-        
-        let ensemble_config = EnsembleConfig::new(
-            EnsembleMode::Humanized, // Default to Humanized mode (random delays)
-            None, // No tempo required for Humanized mode
-            (min_voices, max_voices),  // Dynamic voice count range
-            15.0,  // max_delay_ms
-            5.0,   // max_pitch_shift_cents
-            (60.0, 120.0),  // Dynamic spatial spread range (degrees)
-            audio_buffer.sample_rate,
-        )?;
-        let mut ensemble_effect = EnsembleEffect::new(ensemble_config);
-        
-        // TODO: Use average intensity from intensity_curve for now (will be chunk-based later)
-        // let avg_intensity = _intensity_curve.iter().sum::<f32>() / _intensity_curve.len().max(1) as f32;
-        let avg_intensity = 0.7; // Placeholder: 70% intensity (10 voices, 102° spread)
-        
-        let voices = ensemble_effect.process_dynamic(&eq_boosted_audio, avg_intensity)
-            .context("Failed to generate ensemble voices")?;
-        
-        info!(
-            num_voices = voices.len(),
-            spatial_spread = 90.0,
-            "Ensemble voices generated with spatial distribution"
-        );
-        
-        voices
+        // Pipeline already configured with ensemble effect - just process
+        pipeline.process(&audio_buffer.samples, avg_intensity)
+            .context("Audio processing pipeline failed")?
     } else {
-        // Single voice at center (0° offset)
+        // Single voice at center (no ensemble)
         vec![VoiceOutput {
-            samples: eq_boosted_audio.clone(),
+            samples: audio_buffer.samples.clone(),
             spatial_offset_deg: 0.0,
             gain: 1.0,
         }]
     };
+    
+    info!(
+        num_voices = voice_outputs.len(),
+        "Audio processing complete - {} voices generated",
+        voice_outputs.len()
+    );
 
-    // Phase 4-4.5: Spatialize and mix voices
+    // Phase 5: Spatialize and mix voices
     let final_mix = run_spatialization(voice_outputs, args)?;
 
-    // Phase 5-6: ML analysis (MIDI transcription + harmonic analysis)
+    // Phase 6: ML analysis (MIDI transcription + harmonic analysis)
     let (midi_notes, harmony_map) = run_ml_analysis(&audio_buffer, args)?;
 
     // Phase 7: Export files

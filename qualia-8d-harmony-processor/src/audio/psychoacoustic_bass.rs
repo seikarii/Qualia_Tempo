@@ -14,7 +14,7 @@
 //! without actual low-frequency energy (ideal for small speakers).
 
 use anyhow::{Result, bail};
-use std::f32::consts::PI;
+use biquad::{Biquad, Coefficients, DirectForm2Transposed, frequency::ToHertz, Type};
 
 /// # Responsibility
 /// Configuration for psychoacoustic bass enhancement.
@@ -84,103 +84,6 @@ impl PsychoacousticBassConfig {
 }
 
 /// # Responsibility
-/// Simple biquad filter for lowpass/highpass operations.
-///
-/// Uses Direct Form I implementation for stability.
-#[derive(Debug, Clone)]
-struct BiquadFilter {
-    // Coefficients
-    b0: f32,
-    b1: f32,
-    b2: f32,
-    a1: f32,
-    a2: f32,
-    
-    // State (Direct Form I)
-    x1: f32,
-    x2: f32,
-    y1: f32,
-    y2: f32,
-}
-
-impl BiquadFilter {
-    /// Create lowpass Butterworth filter
-    fn lowpass(cutoff_hz: f32, sample_rate: u32, q: f32) -> Self {
-        let omega = 2.0 * PI * cutoff_hz / sample_rate as f32;
-        let sin_omega = omega.sin();
-        let cos_omega = omega.cos();
-        let alpha = sin_omega / (2.0 * q);
-        
-        let b0 = (1.0 - cos_omega) / 2.0;
-        let b1 = 1.0 - cos_omega;
-        let b2 = (1.0 - cos_omega) / 2.0;
-        let a0 = 1.0 + alpha;
-        let a1 = -2.0 * cos_omega;
-        let a2 = 1.0 - alpha;
-        
-        // Normalize by a0
-        Self {
-            b0: b0 / a0,
-            b1: b1 / a0,
-            b2: b2 / a0,
-            a1: a1 / a0,
-            a2: a2 / a0,
-            x1: 0.0,
-            x2: 0.0,
-            y1: 0.0,
-            y2: 0.0,
-        }
-    }
-    
-    /// Create highpass Butterworth filter
-    fn highpass(cutoff_hz: f32, sample_rate: u32, q: f32) -> Self {
-        let omega = 2.0 * PI * cutoff_hz / sample_rate as f32;
-        let sin_omega = omega.sin();
-        let cos_omega = omega.cos();
-        let alpha = sin_omega / (2.0 * q);
-        
-        let b0 = (1.0 + cos_omega) / 2.0;
-        let b1 = -(1.0 + cos_omega);
-        let b2 = (1.0 + cos_omega) / 2.0;
-        let a0 = 1.0 + alpha;
-        let a1 = -2.0 * cos_omega;
-        let a2 = 1.0 - alpha;
-        
-        // Normalize by a0
-        Self {
-            b0: b0 / a0,
-            b1: b1 / a0,
-            b2: b2 / a0,
-            a1: a1 / a0,
-            a2: a2 / a0,
-            x1: 0.0,
-            x2: 0.0,
-            y1: 0.0,
-            y2: 0.0,
-        }
-    }
-    
-    /// Process single sample (Direct Form I)
-    fn process_sample(&mut self, input: f32) -> f32 {
-        let output = self.b0 * input + self.b1 * self.x1 + self.b2 * self.x2
-                     - self.a1 * self.y1 - self.a2 * self.y2;
-        
-        // Update state
-        self.x2 = self.x1;
-        self.x1 = input;
-        self.y2 = self.y1;
-        self.y1 = output;
-        
-        output
-    }
-    
-    /// Process buffer (convenience method)
-    fn process(&mut self, input: &[f32]) -> Vec<f32> {
-        input.iter().map(|&sample| self.process_sample(sample)).collect()
-    }
-}
-
-/// # Responsibility
 /// Psychoacoustic bass enhancer using controlled harmonic synthesis.
 ///
 /// ---
@@ -193,17 +96,17 @@ impl BiquadFilter {
 pub struct PsychoacousticBass {
     config: PsychoacousticBassConfig,
     
-    // Fundamental extraction chain
-    fundamental_lowpass: BiquadFilter,   // 150Hz LP (keeps 20-150Hz)
-    fundamental_highpass: BiquadFilter,  // 20Hz HP (removes subsonic)
+    // Fundamental extraction chain (using external biquad crate)
+    fundamental_lowpass: DirectForm2Transposed<f32>,   // 150Hz LP (keeps 20-150Hz)
+    fundamental_highpass: DirectForm2Transposed<f32>,  // 20Hz HP (removes subsonic)
     
     // Harmonic isolation chain (per harmonic)
-    harmonic_2x_highpass: BiquadFilter,  // 80Hz HP (removes fundamentals)
-    harmonic_3x_highpass: BiquadFilter,  // 80Hz HP (removes fundamentals)
+    harmonic_2x_highpass: DirectForm2Transposed<f32>,  // 80Hz HP (removes fundamentals)
+    harmonic_3x_highpass: DirectForm2Transposed<f32>,  // 80Hz HP (removes fundamentals)
     
     // Bandpass filters for harmonic focusing
-    harmonic_2x_lowpass: BiquadFilter,   // 600Hz LP (limits 2x bandwidth)
-    harmonic_3x_lowpass: BiquadFilter,   // 900Hz LP (limits 3x bandwidth)
+    harmonic_2x_lowpass: DirectForm2Transposed<f32>,   // 600Hz LP (limits 2x bandwidth)
+    harmonic_3x_lowpass: DirectForm2Transposed<f32>,   // 900Hz LP (limits 3x bandwidth)
 }
 
 impl PsychoacousticBass {
@@ -212,56 +115,61 @@ impl PsychoacousticBass {
         
         let q_butterworth = 0.707; // Butterworth Q for flat passband
         let q_focused = 1.0;       // Higher Q for harmonic bandpass
+        let fs = (config.sample_rate as f32).hz();
         
         // Fundamental extraction filters (20-150Hz bandpass)
-        let fundamental_lowpass = BiquadFilter::lowpass(
-            config.fundamental_highcut_hz,
-            config.sample_rate,
+        let fundamental_lowpass_coeffs = Coefficients::<f32>::from_params(
+            Type::LowPass,
+            fs,
+            config.fundamental_highcut_hz.hz(),
             q_butterworth,
-        );
+        )
+        .map_err(|e| anyhow::anyhow!("Fundamental lowpass creation failed: {:?}", e))?;
         
-        let fundamental_highpass = BiquadFilter::highpass(
-            config.fundamental_lowcut_hz,
-            config.sample_rate,
+        let fundamental_highpass_coeffs = Coefficients::<f32>::from_params(
+            Type::HighPass,
+            fs,
+            config.fundamental_lowcut_hz.hz(),
             q_butterworth,
-        );
+        )
+        .map_err(|e| anyhow::anyhow!("Fundamental highpass creation failed: {:?}", e))?;
         
         // Harmonic isolation highpass (removes fundamentals)
-        let harmonic_2x_highpass = BiquadFilter::highpass(
-            config.harmonic_highpass_hz,
-            config.sample_rate,
+        let harmonic_highpass_coeffs = Coefficients::<f32>::from_params(
+            Type::HighPass,
+            fs,
+            config.harmonic_highpass_hz.hz(),
             q_butterworth,
-        );
-        
-        let harmonic_3x_highpass = BiquadFilter::highpass(
-            config.harmonic_highpass_hz,
-            config.sample_rate,
-            q_butterworth,
-        );
+        )
+        .map_err(|e| anyhow::anyhow!("Harmonic highpass creation failed: {:?}", e))?;
         
         // Bandpass limits for harmonics (prevent excessive high-frequency content)
         // 2x harmonic: 40-300Hz fundamental → 80-600Hz harmonic range
-        let harmonic_2x_lowpass = BiquadFilter::lowpass(
-            600.0,
-            config.sample_rate,
+        let harmonic_2x_lowpass_coeffs = Coefficients::<f32>::from_params(
+            Type::LowPass,
+            fs,
+            600.0_f32.hz(),
             q_focused,
-        );
+        )
+        .map_err(|e| anyhow::anyhow!("Harmonic 2x lowpass creation failed: {:?}", e))?;
         
         // 3x harmonic: 40-300Hz fundamental → 120-900Hz harmonic range
-        let harmonic_3x_lowpass = BiquadFilter::lowpass(
-            900.0,
-            config.sample_rate,
+        let harmonic_3x_lowpass_coeffs = Coefficients::<f32>::from_params(
+            Type::LowPass,
+            fs,
+            900.0_f32.hz(),
             q_focused,
-        );
+        )
+        .map_err(|e| anyhow::anyhow!("Harmonic 3x lowpass creation failed: {:?}", e))?;
         
         Ok(Self {
             config,
-            fundamental_lowpass,
-            fundamental_highpass,
-            harmonic_2x_highpass,
-            harmonic_3x_highpass,
-            harmonic_2x_lowpass,
-            harmonic_3x_lowpass,
+            fundamental_lowpass: DirectForm2Transposed::<f32>::new(fundamental_lowpass_coeffs),
+            fundamental_highpass: DirectForm2Transposed::<f32>::new(fundamental_highpass_coeffs),
+            harmonic_2x_highpass: DirectForm2Transposed::<f32>::new(harmonic_highpass_coeffs),
+            harmonic_3x_highpass: DirectForm2Transposed::<f32>::new(harmonic_highpass_coeffs),
+            harmonic_2x_lowpass: DirectForm2Transposed::<f32>::new(harmonic_2x_lowpass_coeffs),
+            harmonic_3x_lowpass: DirectForm2Transposed::<f32>::new(harmonic_3x_lowpass_coeffs),
         })
     }
     
@@ -305,25 +213,20 @@ impl PsychoacousticBass {
         }
         
         // Step 1: Extract bass fundamentals (20-150Hz bandpass)
-        let mut bass_signal: Vec<f32> = input.to_vec();
+        let mut bass_signal = Vec::with_capacity(input.len());
         
-        // Apply lowpass (keeps 0-150Hz)
-        bass_signal = bass_signal
-            .iter()
-            .map(|&x| self.fundamental_lowpass.process_sample(x))
-            .collect();
-        
-        // Apply highpass (removes 0-20Hz subsonic)
-        bass_signal = bass_signal
-            .iter()
-            .map(|&x| self.fundamental_highpass.process_sample(x))
-            .collect();
+        // Apply lowpass (keeps 0-150Hz) then highpass (removes 0-20Hz subsonic)
+        for &sample in input {
+            let lowpassed = self.fundamental_lowpass.run(sample);
+            let bass_fundamental = self.fundamental_highpass.run(lowpassed);
+            bass_signal.push(bass_fundamental);
+        }
         
         // Step 2: Generate harmonics via asymmetric waveshaping
         // CRITICAL: Use asymmetric function to emphasize even/odd harmonics
         
         // 2x Harmonic Generation (octave doubling)
-        let mut harmonic_2x: Vec<f32> = bass_signal
+        let harmonic_2x: Vec<f32> = bass_signal
             .iter()
             .map(|&x| {
                 // Asymmetric soft clipping emphasizes 2x harmonic
@@ -338,7 +241,7 @@ impl PsychoacousticBass {
             .collect();
         
         // 3x Harmonic Generation (fifth above octave)
-        let mut harmonic_3x: Vec<f32> = bass_signal
+        let harmonic_3x: Vec<f32> = bass_signal
             .iter()
             .map(|&x| {
                 // Different asymmetry for 3x harmonic
@@ -352,26 +255,21 @@ impl PsychoacousticBass {
             })
             .collect();
         
-        // Step 3a: Highpass filter harmonics (remove fundamental contamination)
-        harmonic_2x = harmonic_2x
+        // Step 3: Filter harmonics (highpass to remove fundamentals, lowpass to limit bandwidth)
+        let harmonic_2x_filtered: Vec<f32> = harmonic_2x
             .iter()
-            .map(|&x| self.harmonic_2x_highpass.process_sample(x))
+            .map(|&x| {
+                let highpassed = self.harmonic_2x_highpass.run(x);
+                self.harmonic_2x_lowpass.run(highpassed)
+            })
             .collect();
         
-        harmonic_3x = harmonic_3x
+        let harmonic_3x_filtered: Vec<f32> = harmonic_3x
             .iter()
-            .map(|&x| self.harmonic_3x_highpass.process_sample(x))
-            .collect();
-        
-        // Step 3b: Lowpass filter harmonics (limit bandwidth)
-        harmonic_2x = harmonic_2x
-            .iter()
-            .map(|&x| self.harmonic_2x_lowpass.process_sample(x))
-            .collect();
-        
-        harmonic_3x = harmonic_3x
-            .iter()
-            .map(|&x| self.harmonic_3x_lowpass.process_sample(x))
+            .map(|&x| {
+                let highpassed = self.harmonic_3x_highpass.run(x);
+                self.harmonic_3x_lowpass.run(highpassed)
+            })
             .collect();
         
         // Step 4: Blend harmonics with original signal (intensity-modulated)
@@ -379,8 +277,8 @@ impl PsychoacousticBass {
             .iter()
             .enumerate()
             .map(|(i, &orig)| {
-                let h2 = harmonic_2x.get(i).copied().unwrap_or(0.0);
-                let h3 = harmonic_3x.get(i).copied().unwrap_or(0.0);
+                let h2 = harmonic_2x_filtered.get(i).copied().unwrap_or(0.0);
+                let h3 = harmonic_3x_filtered.get(i).copied().unwrap_or(0.0);
                 
                 // Intensity-scaled harmonic injection
                 let enhanced = orig + (h2 + h3) * intensity_clamped;
@@ -393,11 +291,11 @@ impl PsychoacousticBass {
         Ok(output)
     }
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
+    use std::f32::consts::PI;
     
     #[test]
     fn test_config_creation() {
@@ -506,47 +404,12 @@ mod tests {
     }
     
     #[test]
-    fn test_biquad_lowpass_attenuates_high_frequencies() {
-        let mut filter = BiquadFilter::lowpass(150.0, 48000, 0.707);
-        
-        // 50Hz tone (should pass through)
-        let low_freq: Vec<f32> = (0..1000)
-            .map(|i| (2.0 * PI * 50.0 * i as f32 / 48000.0).sin())
-            .collect();
-        
-        let filtered_low = filter.process(&low_freq);
-        let rms_low: f32 = filtered_low.iter().map(|&x| x * x).sum::<f32>() / filtered_low.len() as f32;
-        
-        // Reset filter state
-        filter.x1 = 0.0;
-        filter.x2 = 0.0;
-        filter.y1 = 0.0;
-        filter.y2 = 0.0;
-        
-        // 1000Hz tone (should be attenuated)
-        let high_freq: Vec<f32> = (0..1000)
-            .map(|i| (2.0 * PI * 1000.0 * i as f32 / 48000.0).sin())
-            .collect();
-        
-        let filtered_high = filter.process(&high_freq);
-        let rms_high: f32 = filtered_high.iter().map(|&x| x * x).sum::<f32>() / filtered_high.len() as f32;
-        
-        // High frequency should be significantly attenuated
-        assert!(
-            rms_low.sqrt() > rms_high.sqrt() * 5.0,
-            "Lowpass should attenuate high frequencies: low_rms={}, high_rms={}",
-            rms_low.sqrt(),
-            rms_high.sqrt()
-        );
-    }
-    
-    #[test]
     fn test_intensity_modulation() {
         let config = PsychoacousticBassConfig::new(48000).unwrap();
         let mut enhancer = PsychoacousticBass::new(config).unwrap();
         
         let input: Vec<f32> = (0..1000)
-            .map(|i| (2.0 * PI * 60.0 * i as f32 / 48000.0).sin() * 0.5)
+            .map(|i| (2.0 * std::f32::consts::PI * 60.0 * i as f32 / 48000.0).sin() * 0.5)
             .collect();
         
         let output_low = enhancer.process(&input, 0.2).unwrap();

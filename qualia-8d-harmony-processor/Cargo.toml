@@ -13,6 +13,7 @@ hound = "3.5"
 
 # DSP Core
 dasp = "0.11"
+biquad = "0.4"
 symphonia = { version = "0.5", features = ["mp3", "flac", "ogg", "wav"] }
 rubato = "0.15"
 rustfft = "6.2"
