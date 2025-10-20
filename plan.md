@@ -187,7 +187,7 @@ Construir un procesador de audio **PRODUCTION-GRADE STANDALONE** en Rust puro qu
 
 ## 🏗️ ARQUITECTURA DEL SISTEMA
 
-### Diagrama de Componentes
+### Diagrama de Componentes (v2.0 - Dynamic Intensity Pipeline)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -198,40 +198,71 @@ Construir un procesador de audio **PRODUCTION-GRADE STANDALONE** en Rust puro qu
 └────────────────────────────┬─────────────────────────────────────────┘
                              │
                              ▼
-         ┌───────────────────────────────────────────────┐
-         │  PARALLEL PROCESSING (rayon ThreadPool)       │
-         │  For each stem: 8D + ML Analysis              │
-         └───────────────────────────────────────────────┘
+         ┌────────────────────────────────────────────────────┐
+         │         INTENSITY ANALYZER (NEW v2.0)              │
+         │  - RMS-based intensity curve generation            │
+         │  - Frame-by-frame analysis [0.0, 1.0]              │
+         │  - Drives dynamic effect parameters                │
+         └───────────────────┬────────────────────────────────┘
                              │
-      ┌──────────────────────┼──────────────────────┬──────────────────┐
-      │                      │                      │                  │
-      ▼                      ▼                      ▼                  ▼
-┌─────────────┐   ┌──────────────────┐   ┌─────────────┐   ┌─────────────────┐
-│  ENSEMBLE   │   │ CIRCULAR MOTION  │   │  FREQ EQ    │   │ ML ANALYZER     │
-│  EFFECT     │   │  + HRTF ENGINE   │   │  BOOST      │   │                 │
-│             │   │                  │   │             │   │ - MIDI Trans.   │
-│ - Duplicate │   │ - θ(t) calc      │   │ - Parametric│   │ - Onset Detect  │
-│ - Delays    │   │ - HRTF lookup    │   │ - Presets   │   │ - Chromagram    │
-│ - Detuning  │   │ - Cubic interp.  │   │             │   │ - Chord Recog.  │
-│ - Spread    │   │ - FFT convolve   │   │             │   │                 │
-└──────┬──────┘   └────────┬─────────┘   └──────┬──────┘   └────────┬────────┘
-       │                   │                    │                   │
-       └─────────┬─────────┴──────────┬─────────┘                   │
-                 │                    │                             │
-                 ▼                    │                             │
-         ┌──────────────┐             │                             │
-         │ SPATIAL      │             │                             │
-         │ MIXER        │             │                             │
-         │ - Sum stems  │             │                             │
-         │ - Limiter    │             │                             │
-         └──────┬───────┘             │                             │
-                │                     │                             │
-                ▼                     ▼                             ▼
-         ┌──────────────┐   ┌────────────────┐         ┌───────────────────┐
-         │ 8D WAV FILE  │   │ EQ METADATA    │         │ HarmonyMap JSON   │
-         │ (24-bit)     │   │ (JSON)         │         │ + MIDI FILE       │
-         └──────────────┘   └────────────────┘         └───────────────────┘
+                             ▼
+         ┌────────────────────────────────────────────────────┐
+         │   AUDIO PROCESSING PIPELINE (Composition Root)     │
+         │                                                     │
+         │   process_time_varying(audio, intensity_curve)     │
+         │                                                     │
+         │   Dynamic effect chain (intensity-modulated):      │
+         │   1. FrequencyBooster    (EQ with intensity)       │
+         │   2. HarmonicExciter     (3-16kHz psychoacoustic)  │
+         │   3. PsychoacousticBass  (missing fundamental)     │
+         │   4. ConvolutionReverb   (impulse response)        │
+         │   5. EnsembleEffect      (Synchronized mode NEW)   │
+         │   6. StereoWidener       (Haas + Mid-Side)         │
+         │   7. TransientShaper     (attack/sustain shaping)  │
+         └───────────────────┬────────────────────────────────┘
+                             │
+                             ▼
+         ┌────────────────────────────────────────────────────┐
+         │  PARALLEL PROCESSING (rayon ThreadPool)            │
+         │  For each voice: HRTF spatialization + ML analysis │
+         └───────────────────┬────────────────────────────────┘
+                             │
+      ┌──────────────────────┼──────────────────────┐
+      │                      │                      │
+      ▼                      ▼                      ▼
+┌─────────────┐   ┌──────────────────┐   ┌─────────────────┐
+│ CIRCULAR    │   │ HRTF ENGINE      │   │ ML ANALYZER     │
+│ MOTION      │   │                  │   │                 │
+│             │   │ - SOFA loader    │   │ - MIDI Trans.   │
+│ - θ(t) calc │   │ - Position interp│   │ - Chromagram    │
+│ - Azimuth   │   │ - FFT convolve   │   │ - Chord Recog.  │
+│ - Elevation │   │                  │   │ - HarmonyMap    │
+└──────┬──────┘   └────────┬─────────┘   └────────┬────────┘
+       │                   │                      │
+       └─────────┬─────────┴──────────────────────┘
+                 │
+                 ▼
+         ┌──────────────┐
+         │ SPATIAL      │
+         │ MIXER        │
+         │ - Voice sum  │
+         │ - Limiter    │
+         └──────┬───────┘
+                │
+    ┌───────────┼────────────┐
+    ▼           ▼            ▼
+┌──────────┐ ┌──────┐ ┌──────────────┐
+│ 8D WAV   │ │ MIDI │ │ HarmonyMap   │
+│ (24-bit) │ │ File │ │ JSON         │
+└──────────┘ └──────┘ └──────────────┘
 ```
+
+**CAMBIOS ARQUITECTÓNICOS CLAVE v2.0:**
+- ✅ **IntensityAnalyzer**: Nuevo módulo que genera curva de intensidad [0.0, 1.0] frame-by-frame
+- ✅ **AudioProcessingPipeline**: Composition Root centralizado que orquesta todos los efectos
+- ✅ **process_time_varying()**: Método principal que aplica efectos con modulación dinámica por intensidad
+- ✅ **EnsembleMode::Synchronized**: Nuevo modo con intensity gating (activación >= 0.7)
+- ✅ **7 Efectos Modulados**: Todos los efectos ahora reciben parámetro `intensity` para modulación expresiva
 
 ### Módulos del Código
 
@@ -243,36 +274,47 @@ src/
 │
 ├── audio/
 │   ├── mod.rs
-│   ├── input_handler.rs         # InputHandler struct
-│   ├── hrtf_convolution.rs      # HRTFConvolver struct (FFT-based)
-│   ├── circular_motion.rs       # CircularMotionEngine struct
-│   ├── ensemble_effect.rs       # EnsembleEffect struct
-│   ├── eq_boost.rs              # FrequencyBooster struct
-│   └── mixer.rs                 # SpatialMixer struct
+│   ├── input_handler.rs         # InputHandler struct (Symphonia decoder + resampler)
+│   ├── pipeline.rs              # AudioProcessingPipeline (Composition Root - CENTRAL)
+│   ├── hrtf_convolution.rs      # HRTFConvolver struct (FFT-based SOFA convolution)
+│   ├── circular_motion.rs       # CircularMotionEngine struct (θ(t) calculator)
+│   ├── ensemble_effect.rs       # EnsembleEffect struct (Humanized/Rhythmic/Synchronized modes)
+│   ├── frequency_booster.rs     # FrequencyBooster struct (parametric EQ with intensity)
+│   ├── harmonic_exciter.rs      # HarmonicExciter struct (3-16kHz psychoacoustic enhancement)
+│   ├── stereo_widener.rs        # StereoWidener struct (Haas + Mid-Side processing)
+│   ├── transient_shaper.rs      # TransientShaper struct (attack/sustain dynamic shaping)
+│   ├── psychoacoustic_bass.rs   # PsychoacousticBass struct (missing fundamental synthesis)
+│   ├── convolution_reverb.rs    # ConvolutionReverb struct (impulse response convolution)
+│   ├── sofa_loader.rs           # SofaLoader struct (MIT KEMAR dataset loader)
+│   └── spatial_mixer.rs         # SpatialMixer struct (stem summing + limiter)
+│
+├── analysis/
+│   ├── mod.rs
+│   ├── intensity_analyzer.rs    # IntensityAnalyzer struct (RMS-based intensity curve)
 │
 ├── ml/
 │   ├── mod.rs
-│   ├── midi_transcription.rs    # BasicPitchTranscriber (ort-based)
+│   ├── midi_transcription.rs    # BasicPitchTranscriber (monophonic MPM transcription)
 │   ├── onset_detection.rs       # OnsetDetector (aubio-rs)
-│   ├── chromagram.rs            # ChromagramAnalyzer (spectrum-analyzer)
-│   ├── chord_recognition.rs     # ChordRecognizer (chromagram → chords)
-│   └── harmony_map_builder.rs   # HarmonyMapBuilder (tonality extraction)
+│   ├── chromagram.rs            # ChromagramAnalyzer (12-bin pitch class analysis)
+│   ├── chord_recognition.rs     # ChordRecognizer (template matching)
+│   └── harmony_map_builder.rs   # HarmonyMapBuilder (Krumhansl-Schmuckler tonality)
 │
 ├── contracts/
 │   ├── mod.rs
-│   ├── harmony_map.rs           # HarmonyMap struct (JSON serializable)
-│   ├── midi_note.rs             # MidiNote struct
-│   └── audio_metadata.rs        # AudioMetadata struct
+│   ├── harmony_map.rs           # HarmonyMap struct (JSON serializable music theory)
+│   ├── midi_note.rs             # MidiNote struct (transcription output)
+│   └── audio_metadata.rs        # AudioMetadata struct (processing metadata)
 │
 ```
+
+**NOTA ARQUITECTÓNICA CRÍTICA**: `pipeline.rs` es el **Composition Root** del sistema. Orquesta todos los efectos (FrequencyBooster → HarmonicExciter → PsychoacousticBass → ConvolutionReverb → EnsembleEffect → StereoWidener → TransientShaper) con procesamiento **dinámico basado en curva de intensidad** vía método `process_time_varying()`.
 
 ---
 
 ## 🔧 MÓDULOS DETALLADOS - PRODUCCIÓN COMPLETA
 
 ### 1. InputHandler (Audio Decoding & Normalization)
-
-### 1. InputHandler
 
 **Responsabilidad**: Carga, decodifica y normaliza streams de audio.
 

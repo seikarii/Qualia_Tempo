@@ -1,10 +1,10 @@
 [package]
 name = "qualia-8d-harmony-processor"
-version = "0.1.0"
+version = "2.0.0"
 edition = "2021"
 authors = ["QualiaTempo Team"]
 description = "Production-grade 8D audio processor with ML-powered harmonic analysis"
-license = "MIT"
+license = "Apache-2.0"
 
 [dependencies]
 # Audio I/O
@@ -14,7 +14,7 @@ hound = "3.5"
 # DSP Core
 dasp = "0.11"
 biquad = "0.4"
-symphonia = { version = "0.5", features = ["mp3", "flac", "ogg", "wav"] }
+symphonia = { version = "0.5", features = ["all"] }
 rubato = "0.15"
 rustfft = "6.2"
 realfft = "3.3"

@@ -7,9 +7,10 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use qualia_8d_harmony_processor::{
     audio::{
-        BinauralSignal, CircularMotionEngine, EnsembleConfig, EnsembleEffect, EnsembleMode,
+        AudioProcessingPipeline, BinauralSignal, CircularMotionEngine, 
+        EnsembleConfig, EnsembleEffect, EnsembleMode,
         FrequencyBooster, FrequencyBoosterConfig, HrtfConvolver,
-        RotationDirection, SofaLoader, SphericalCoord,
+        PipelineConfig, RotationDirection, SofaLoader, SphericalCoord,
     },
 };
 use std::sync::Arc;
@@ -141,7 +142,7 @@ fn bench_hrtf_spatialization(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark full end-to-end pipeline (all phases)
+/// Benchmark full end-to-end pipeline using AudioProcessingPipeline (PRODUCTION API)
 fn bench_full_pipeline(c: &mut Criterion) {
     let sample_rate = 48000;
     let audio = generate_test_audio(sample_rate, 1.0);
@@ -150,34 +151,47 @@ fn bench_full_pipeline(c: &mut Criterion) {
     group.throughput(Throughput::Elements(audio.len() as u64));
     group.sample_size(10); // Reduce iterations for expensive benchmark
     
-    group.bench_function("eq_ensemble_hrtf", |b| {
-        // Pre-create all processors
-        let eq_config = FrequencyBoosterConfig::default_8d(sample_rate);
-        let ensemble_config = EnsembleConfig::new(
-            EnsembleMode::Humanized,
-            None,
-            (5, 5), // Static 5 voices for benchmark
-            5.0,
-            3.0,
-            (60.0, 60.0),
-            sample_rate
-        ).expect("Failed to create ensemble config");
+    // Benchmark: AudioProcessingPipeline.process_time_varying() - REALISTIC WORKFLOW
+    group.bench_function("pipeline_time_varying", |b| {
+        // Create pipeline with default configuration (Composition Root)
+        let pipeline_config = PipelineConfig::new(sample_rate)
+            .expect("Failed to create PipelineConfig");
+        let mut pipeline = AudioProcessingPipeline::new(pipeline_config)
+            .expect("Failed to create AudioProcessingPipeline");
+        
+        // Pre-analyze intensity curve (done once per track in production)
+        let intensity_curve = pipeline.analyze_intensity(&audio)
+            .expect("Failed to analyze intensity");
+        
+        b.iter(|| {
+            // PRODUCTION API: Single call to process_time_varying()
+            let voice_outputs = pipeline.process_time_varying(&audio, &intensity_curve)
+                .expect("Failed to process audio");
+            
+            black_box(voice_outputs)
+        });
+    });
+    
+    // Benchmark: HRTF spatialization of pipeline output (post-processing phase)
+    group.bench_function("pipeline_plus_hrtf", |b| {
+        let pipeline_config = PipelineConfig::new(sample_rate)
+            .expect("Failed to create PipelineConfig");
+        let mut pipeline = AudioProcessingPipeline::new(pipeline_config)
+            .expect("Failed to create AudioProcessingPipeline");
+        
+        let intensity_curve = pipeline.analyze_intensity(&audio)
+            .expect("Failed to analyze intensity");
+        
+        // Pre-create HRTF convolver and motion engine
         let sofa_loader = Arc::new(SofaLoader::create_mock_dataset());
         let hrtf_convolver = HrtfConvolver::new(512, 256, sample_rate, sofa_loader)
             .expect("Failed to create convolver");
         let motion_engine = CircularMotionEngine::new(8.0, 1.5, 0.0, RotationDirection::Clockwise);
         
         b.iter(|| {
-            let intensity = 0.8;
-            
-            // Phase 1: EQ
-            let mut booster = FrequencyBooster::new(eq_config.clone())
-                .expect("Failed to create booster");
-            let eq_audio = booster.process(&audio, intensity).unwrap();
-            
-            // Phase 2: Ensemble (produces Vec<VoiceOutput>)
-            let mut ensemble = EnsembleEffect::new(ensemble_config.clone());
-            let voice_outputs = ensemble.process_dynamic(&eq_audio, intensity).unwrap();
+            // Phase 1: Pipeline processing (7 effects + ensemble voice generation)
+            let voice_outputs = pipeline.process_time_varying(&audio, &intensity_curve)
+                .expect("Failed to process audio");
             
             // Mix ensemble voices to mono for HRTF input
             let ensemble_audio = if !voice_outputs.is_empty() {
@@ -193,10 +207,10 @@ fn bench_full_pipeline(c: &mut Criterion) {
                 }
                 mixed
             } else {
-                eq_audio // Fallback if no voices generated
+                audio.clone() // Fallback if no voices generated
             };
             
-            // Phase 3: HRTF
+            // Phase 2: HRTF spatialization with circular motion
             let mut spatial_audio = BinauralSignal::new(ensemble_audio.len());
             let chunk_size = 2048;
             
