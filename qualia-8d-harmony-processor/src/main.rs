@@ -12,6 +12,7 @@ use qualia_8d_harmony_processor::{
         BinauralSignal, CircularMotionEngine, EnsembleConfig, EnsembleEffect, 
         FrequencyBooster, FrequencyBoosterConfig, HrtfConvolver, InputHandler,
         InputHandlerConfig, RotationDirection, SofaLoader, SphericalCoord,
+        SpatialMixer, SpatialMixerConfig, VoiceOutput,
     },
     export::{HarmonyMapExporter, MidiExporter, WavExporter, WavExporterConfig},
     ml::{
@@ -211,99 +212,11 @@ fn run_audio_effects(
         audio_buffer.samples.clone()
     };
 
-    // Phase 3: Apply ensemble effect
-    let processed_audio = if args.ensemble {
-        info!(voices = args.ensemble_voices, "Phase 3: Ensemble orchestration");
-        
-        let ensemble_config = EnsembleConfig::new(
-            args.ensemble_voices,
-            15.0,  // INCREASED from 3.5ms: More perceptible ensemble spread
-            5.0,   // INCREASED from 2.0 cents: More noticeable chorusing effect
-            audio_buffer.sample_rate,
-        )?;
-        let ensemble_effect = EnsembleEffect::new(ensemble_config);
-        
-        ensemble_effect.process(&eq_boosted_audio)
-    } else {
-        eq_boosted_audio.clone()
-    };
-
-    Ok(processed_audio)
+    Ok(eq_boosted_audio)
 }
 
 /// # Responsibility
 /// Apply HRTF-based circular motion spatialization.
-fn run_spatialization(
-    processed_audio: &[f32],
-    args: &ProcessArgs,
-    sample_rate: u32,
-) -> Result<BinauralSignal> {
-    info!(rpm = args.rotation_rpm, "Phase 4: HRTF-based circular motion");
-    
-    // Load SOFA HRTF dataset (real file or mock fallback)
-    let sofa_loader = if let Some(ref sofa_path) = args.sofa_path {
-        info!(path = ?sofa_path, "Loading SOFA HRTF dataset");
-        Arc::new(SofaLoader::load_or_mock(sofa_path))
-    } else {
-        info!("Using synthetic mock HRTF dataset (72 positions)");
-        Arc::new(SofaLoader::create_mock_dataset())
-    };
-    
-    // Create HRTF convolver
-    let hrtf_convolver = HrtfConvolver::new(
-        512,  // FFT size
-        256,  // Hop size
-        sample_rate,
-        sofa_loader,
-    ).context("Failed to create HRTF convolver")?;
-    
-    let motion_engine = CircularMotionEngine::new(
-        args.rotation_rpm,
-        1.5,  // radius_meters
-        0.0,  // elevation_degrees
-        RotationDirection::Clockwise,
-    );
-    
-    // Apply HRTF convolution with circular motion
-    let mut spatial_audio = BinauralSignal::new(processed_audio.len());
-    let chunk_size = 2048; // Process in chunks for time-varying spatialization
-    
-    for (chunk_idx, chunk) in processed_audio.chunks(chunk_size).enumerate() {
-        let time_sec = (chunk_idx * chunk_size) as f64 / sample_rate as f64;
-        let position = motion_engine.calculate_position(time_sec);
-        
-        // Convert SphericalPosition to SphericalCoord
-        let hrtf_position = SphericalCoord::new(
-            position.azimuth_deg,
-            position.elevation_deg,
-            position.distance_m,
-        );
-        
-        // Convolve chunk with HRTF at current position
-        let (left_chunk, right_chunk) = hrtf_convolver.convolve_at_position(chunk, &hrtf_position)
-            .context("HRTF convolution failed")?;
-        
-        // OVERLAP-ADD: Sum convolved chunks to preserve HRTF tail (CRITICAL FIX)
-        // Previous bug: Overwriting with = destroyed convolution overlap, causing audio clicks
-        let start_idx = chunk_idx * chunk_size;
-        for (i, (&left_sample, &right_sample)) in left_chunk.iter().zip(right_chunk.iter()).enumerate() {
-            let output_idx = start_idx + i;
-            if output_idx < spatial_audio.left.len() {
-                spatial_audio.left[output_idx] += left_sample;   // SUM, not assign
-                spatial_audio.right[output_idx] += right_sample;  // SUM, not assign
-            }
-        }
-    }
-    
-    info!(
-        left_samples = spatial_audio.left.len(),
-        right_samples = spatial_audio.right.len(),
-        "HRTF-based 8D spatialization complete (72 HRIR positions)"
-    );
-
-    Ok(spatial_audio)
-}
-
 /// # Responsibility
 /// Run ML analysis: MIDI transcription + harmonic analysis.
 fn run_ml_analysis(
@@ -490,17 +403,128 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
         "Audio loaded successfully"
     );
 
-    // Phase 2-3: Apply audio effects (EQ + Ensemble)
-    let processed_audio = run_audio_effects(args, &audio_buffer)?;
+    // Phase 2: Apply EQ
+    let eq_boosted_audio = run_audio_effects(args, &audio_buffer)?;
 
-    // Phase 4: 8D spatialization with HRTF convolution
-    let mut spatial_audio = run_spatialization(&processed_audio, args, audio_buffer.sample_rate)?;
+    // Phase 3: Generate independent ensemble voices (NO MIXING YET)
+    let voice_outputs = if args.ensemble {
+        info!(voices = args.ensemble_voices, "Phase 3: Generating independent ensemble voices");
+        
+        let ensemble_config = EnsembleConfig::new(
+            args.ensemble_voices,
+            15.0,  // max_delay_ms
+            5.0,   // max_pitch_shift_cents
+            90.0,  // spatial_spread_deg (90° = quarter-circle distribution)
+            audio_buffer.sample_rate,
+        )?;
+        let ensemble_effect = EnsembleEffect::new(ensemble_config);
+        
+        let voices = ensemble_effect.process(&eq_boosted_audio)
+            .context("Failed to generate ensemble voices")?;
+        
+        info!(
+            num_voices = voices.len(),
+            spatial_spread = 90.0,
+            "Ensemble voices generated with spatial distribution"
+        );
+        
+        voices
+    } else {
+        // Single voice at center (0° offset)
+        vec![VoiceOutput {
+            samples: eq_boosted_audio.clone(),
+            spatial_offset_deg: 0.0,
+            gain: 1.0,
+        }]
+    };
 
-    // Phase 4.5: Musical lookahead limiting (CRITICAL: Prevents clipping distortion)
-    info!("Phase 4.5: Musical lookahead limiting");
-    let mixer_config = qualia_8d_harmony_processor::audio::SpatialMixerConfig::default_8d(args.sample_rate);
-    let spatial_mixer = qualia_8d_harmony_processor::audio::SpatialMixer::new(mixer_config);
-    spatial_audio = spatial_mixer.mix(&[spatial_audio]);
+    // Phase 4: Spatialize each voice independently with HRTF + circular motion
+    info!(
+        rpm = args.rotation_rpm,
+        num_voices = voice_outputs.len(),
+        "Phase 4: Individual voice spatialization (HRTF + circular motion)"
+    );
+    
+    // Load SOFA HRTF dataset (real file or mock fallback)
+    let sofa_loader = if let Some(ref sofa_path) = args.sofa_path {
+        info!(path = ?sofa_path, "Loading SOFA HRTF dataset");
+        Arc::new(SofaLoader::load_or_mock(sofa_path))
+    } else {
+        info!("Using synthetic mock HRTF dataset (72 positions)");
+        Arc::new(SofaLoader::create_mock_dataset())
+    };
+    
+    // Create HRTF convolver (shared across all voices)
+    let hrtf_convolver = HrtfConvolver::new(
+        512,  // FFT size
+        256,  // Hop size
+        args.sample_rate,
+        sofa_loader,
+    ).context("Failed to create HRTF convolver")?;
+    
+    let motion_engine = CircularMotionEngine::new(
+        args.rotation_rpm,
+        1.5,  // radius_meters
+        0.0,  // elevation_degrees
+        RotationDirection::Clockwise,
+    );
+    
+    let chunk_size = 2048;
+    let mut binaural_voices: Vec<BinauralSignal> = Vec::new();
+    
+    // CRITICAL: Process each voice independently
+    for (voice_idx, voice) in voice_outputs.iter().enumerate() {
+        info!(
+            voice_index = voice_idx,
+            spatial_offset = voice.spatial_offset_deg,
+            num_samples = voice.samples.len(),
+            "Spatializing voice"
+        );
+        
+        let mut spatial_audio = BinauralSignal::new(voice.samples.len());
+        
+        // Process voice in chunks with time-varying position
+        for (chunk_idx, chunk) in voice.samples.chunks(chunk_size).enumerate() {
+            let time_sec = (chunk_idx * chunk_size) as f64 / args.sample_rate as f64;
+            
+            // Calculate position: base rotation + voice's spatial offset
+            let base_position = motion_engine.calculate_position(time_sec);
+            let final_azimuth = base_position.azimuth_deg + voice.spatial_offset_deg;
+            
+            let hrtf_position = SphericalCoord::new(
+                final_azimuth,
+                base_position.elevation_deg,
+                base_position.distance_m,
+            );
+            
+            // Convolve chunk with HRTF at this voice's unique position
+            let (left_chunk, right_chunk) = hrtf_convolver.convolve_at_position(chunk, &hrtf_position)
+                .context("HRTF convolution failed")?;
+            
+            // OVERLAP-ADD: Sum convolved chunks (preserves HRTF tail)
+            let start_idx = chunk_idx * chunk_size;
+            for (i, (&left_sample, &right_sample)) in left_chunk.iter().zip(right_chunk.iter()).enumerate() {
+                let output_idx = start_idx + i;
+                if output_idx < spatial_audio.left.len() {
+                    spatial_audio.left[output_idx] += left_sample * voice.gain;
+                    spatial_audio.right[output_idx] += right_sample * voice.gain;
+                }
+            }
+        }
+        
+        binaural_voices.push(spatial_audio);
+    }
+    
+    info!(
+        num_spatialized_voices = binaural_voices.len(),
+        "All voices spatialized independently"
+    );
+
+    // Phase 4.5: Mix all spatialized voices with musical lookahead limiting
+    info!("Phase 4.5: Mixing {} voices with lookahead limiter", binaural_voices.len());
+    let mixer_config = SpatialMixerConfig::default_8d(args.sample_rate);
+    let spatial_mixer = SpatialMixer::new(mixer_config);
+    let final_mix = spatial_mixer.mix(&binaural_voices);
     info!("Lookahead limiter applied (threshold: 0.95, knee: 3dB)");
 
     // Phase 5-6: ML analysis (MIDI transcription + harmonic analysis)
@@ -512,7 +536,7 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
         .to_string_lossy()
         .to_string();
     
-    export_outputs(&spatial_audio, &midi_notes, &harmony_map, args, &base_name)?;
+    export_outputs(&final_mix, &midi_notes, &harmony_map, args, &base_name)?;
 
     Ok(())
 }

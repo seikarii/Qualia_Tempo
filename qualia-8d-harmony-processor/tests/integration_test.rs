@@ -41,12 +41,13 @@ fn test_circular_motion_engine_rotation() {
 
 #[test]
 fn test_ensemble_effect_configuration() {
-    let config = EnsembleConfig {
-        num_voices: 5,
-        max_delay_ms: 30.0,
-        max_pitch_shift_cents: 8.0,
-        sample_rate: 48000,
-    };
+    let config = EnsembleConfig::new(
+        5,      // num_voices
+        30.0,   // max_delay_ms
+        8.0,    // max_pitch_shift_cents
+        90.0,   // spatial_spread_deg
+        48000,  // sample_rate
+    ).unwrap();
 
     let _effect = EnsembleEffect::new(config.clone());
     assert_eq!(config.num_voices, 5);

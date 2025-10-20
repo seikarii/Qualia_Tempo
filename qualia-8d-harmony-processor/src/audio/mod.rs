@@ -10,7 +10,7 @@ pub mod sofa_loader;
 pub mod spatial_mixer;
 
 pub use circular_motion::{CircularMotionEngine, RotationDirection, SphericalPosition};
-pub use ensemble_effect::{EnsembleConfig, EnsembleEffect};
+pub use ensemble_effect::{EnsembleConfig, EnsembleEffect, VoiceOutput};
 pub use frequency_booster::{BiquadCoefficients, BiquadFilter, FrequencyBooster, FrequencyBoosterConfig};
 pub use hrtf_convolver::HrtfConvolver;
 pub use input_handler::{AudioBuffer, InputHandler, InputHandlerConfig};
