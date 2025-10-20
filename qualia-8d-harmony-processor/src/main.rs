@@ -11,7 +11,7 @@ use qualia_8d_harmony_processor::{
     analysis::{IntensityAnalyzer, IntensityAnalyzerConfig},
     audio::{
         BinauralSignal, CircularMotionEngine, ConvolutionReverb, 
-        ConvolutionReverbConfig, EnsembleConfig, EnsembleEffect, 
+        ConvolutionReverbConfig, EnsembleConfig, EnsembleEffect, EnsembleMode,
         FrequencyBooster, FrequencyBoosterConfig, HrtfConvolver, InputHandler,
         InputHandlerConfig, PsychoacousticBass, PsychoacousticBassConfig,
         RotationDirection, SofaLoader, SphericalCoord, SpatialMixer, 
@@ -270,6 +270,8 @@ fn run_audio_effects(
     let reverb_config = ConvolutionReverbConfig::new(audio_buffer.sample_rate)
         .context("Failed to create ConvolutionReverbConfig")?;
     
+    let ir_length_samples = reverb_config.ir_length_samples; // Cache before move
+    
     let mut reverb = ConvolutionReverb::new(reverb_config)
         .context("Failed to create ConvolutionReverb")?;
     
@@ -278,7 +280,7 @@ fn run_audio_effects(
     
     info!(
         avg_intensity = avg_intensity,
-        ir_length_sec = reverb_config.ir_length_samples as f32 / audio_buffer.sample_rate as f32,
+        ir_length_sec = ir_length_samples as f32 / audio_buffer.sample_rate as f32,
         "Convolution reverb applied with intensity-modulated wet mix"
     );
 
@@ -587,6 +589,8 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
         let max_voices = args.ensemble_voices.max(13);
         
         let ensemble_config = EnsembleConfig::new(
+            EnsembleMode::Humanized, // Default to Humanized mode (random delays)
+            None, // No tempo required for Humanized mode
             (min_voices, max_voices),  // Dynamic voice count range
             15.0,  // max_delay_ms
             5.0,   // max_pitch_shift_cents

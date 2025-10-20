@@ -1,21 +1,32 @@
 //! # Responsibility
 //! FFT-based convolution reverb for spatial depth enhancement.
 //!
-//! Implements overlap-add convolution with synthetic impulse response generation
-//! for realistic room acoustics simulation.
+//! ---
+//!
+//! Implements overlap-add convolution with:
+//! - Primary: Real impulse response loading from .wav files (gold standard)
+//! - Fallback: Synthetic IR generation if file loading fails
+//!
+//! Real IRs provide authentic acoustic spaces (concert halls, churches, studios).
+//! Synthetic IRs serve as algorithmic fallback for testing/prototyping.
 
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use realfft::{num_complex, RealFftPlanner};
+use std::path::{Path, PathBuf};
 
 
 /// # Responsibility
 /// Holds configuration parameters for convolution reverb processing.
-#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ConvolutionReverbConfig {
-    /// Impulse response length in samples (power of 2 recommended)
+    /// Path to .wav impulse response file (PREFERRED - real acoustic space)
+    /// If None or load fails, falls back to synthetic IR generation
+    pub ir_file_path: Option<PathBuf>,
+    
+    /// Impulse response length in samples (used for synthetic IR only)
     pub ir_length_samples: usize,
     
-    /// Reverb decay time in seconds (controls exponential decay)
+    /// Reverb decay time in seconds (synthetic IR parameter)
     pub decay_time_sec: f32,
     
     /// Wet/dry mix range for intensity modulation: (min_wet, max_wet)
@@ -29,18 +40,35 @@ pub struct ConvolutionReverbConfig {
 }
 
 impl ConvolutionReverbConfig {
+    /// # Responsibility
+    /// Create default configuration with synthetic IR (no file specified).
     pub fn new(sample_rate: u32) -> Result<Self> {
         if sample_rate == 0 {
             bail!("Sample rate must be non-zero");
         }
         
         Ok(Self {
+            ir_file_path: None, // No real IR file - will use synthetic
             ir_length_samples: 24000, // 0.5 seconds at 48kHz
             decay_time_sec: 1.5,
             wet_mix_range: (0.0, 0.4), // 0-40% wet mix
             block_size: 4096,
             sample_rate,
         })
+    }
+    
+    /// # Responsibility
+    /// Create configuration with real IR file path (PREFERRED for production).
+    ///
+    /// ---
+    ///
+    /// Example IR sources:
+    /// - OpenAIR library: https://www.openair.hosted.york.ac.uk/
+    /// - Free concert hall IRs: search "concert hall impulse response wav download"
+    pub fn with_ir_file<P: AsRef<Path>>(sample_rate: u32, ir_path: P) -> Result<Self> {
+        let mut config = Self::new(sample_rate)?;
+        config.ir_file_path = Some(ir_path.as_ref().to_path_buf());
+        Ok(config)
     }
     
     pub fn validate(&self) -> Result<()> {
@@ -84,15 +112,52 @@ pub struct ConvolutionReverb {
 }
 
 impl ConvolutionReverb {
+    /// # Responsibility
+    /// Create new convolution reverb processor.
+    ///
+    /// ---
+    ///
+    /// Loading strategy:
+    /// 1. If config.ir_file_path is Some, attempt to load real IR from file
+    /// 2. If file load succeeds, use real IR (GOLD STANDARD)
+    /// 3. If file load fails or path is None, generate synthetic IR (FALLBACK)
     pub fn new(config: ConvolutionReverbConfig) -> Result<Self> {
         config.validate()?;
         
-        // Generate synthetic impulse response
-        let ir = Self::generate_synthetic_ir(&config);
+        // Attempt to load real IR, fallback to synthetic
+        let ir = match &config.ir_file_path {
+            Some(path) => {
+                tracing::info!(
+                    path = ?path,
+                    "Attempting to load real impulse response from file"
+                );
+                match Self::load_ir_from_file(path, config.sample_rate) {
+                    Ok(ir) => {
+                        tracing::info!(
+                            ir_length_samples = ir.len(),
+                            ir_duration_sec = ir.len() as f32 / config.sample_rate as f32,
+                            "Successfully loaded real IR from file"
+                        );
+                        ir
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            error = %e,
+                            "Failed to load IR file, falling back to synthetic IR"
+                        );
+                        Self::generate_synthetic_ir(&config)
+                    }
+                }
+            }
+            None => {
+                tracing::info!("No IR file specified, using synthetic IR");
+                Self::generate_synthetic_ir(&config)
+            }
+        };
         
         // Pre-compute FFT of IR
         let mut fft_planner = RealFftPlanner::<f32>::new();
-        let fft_size = (config.block_size + config.ir_length_samples).next_power_of_two();
+        let fft_size = (config.block_size + ir.len()).next_power_of_two();
         
         let fft = fft_planner.plan_fft_forward(fft_size);
         
@@ -104,12 +169,110 @@ impl ConvolutionReverb {
         let mut ir_spectrum = fft.make_output_vec();
         fft.process(&mut ir_padded, &mut ir_spectrum)?;
         
+        // Overlap buffer size depends on actual IR length
+        let overlap_size = ir.len().saturating_sub(1);
+        
         Ok(Self {
             config,
             ir_fft: ir_spectrum,
             fft_size,
-            overlap_buffer: vec![0.0; config.ir_length_samples - 1],
+            overlap_buffer: vec![0.0; overlap_size],
         })
+    }
+    
+    /// # Responsibility
+    /// Load impulse response from .wav file.
+    ///
+    /// ---
+    ///
+    /// Supports:
+    /// - Mono or stereo .wav files (stereo downmixed to mono)
+    /// - Any sample rate (automatically resampled to target rate)
+    /// - 16-bit, 24-bit, 32-bit integer or 32-bit float PCM
+    ///
+    /// Returns mono impulse response at target sample_rate.
+    fn load_ir_from_file(path: &Path, target_sample_rate: u32) -> Result<Vec<f32>> {
+        use hound::WavReader;
+        
+        let reader = WavReader::open(path)
+            .with_context(|| format!("Failed to open IR file: {}", path.display()))?;
+        
+        let spec = reader.spec();
+        
+        // Read samples based on format
+        let samples_raw: Vec<f32> = match spec.sample_format {
+            hound::SampleFormat::Int => {
+                let bits = spec.bits_per_sample;
+                let max_value = (1 << (bits - 1)) as f32;
+                
+                reader.into_samples::<i32>()
+                    .collect::<Result<Vec<_>, _>>()
+                    .context("Failed to read integer samples")?
+                    .into_iter()
+                    .map(|s| s as f32 / max_value)
+                    .collect()
+            }
+            hound::SampleFormat::Float => {
+                reader.into_samples::<f32>()
+                    .collect::<Result<Vec<_>, _>>()
+                    .context("Failed to read float samples")?
+            }
+        };
+        
+        // Convert stereo to mono if needed
+        let mono_samples = if spec.channels == 2 {
+            samples_raw
+                .chunks_exact(2)
+                .map(|frame| (frame[0] + frame[1]) / 2.0)
+                .collect()
+        } else if spec.channels == 1 {
+            samples_raw
+        } else {
+            bail!("Unsupported channel count: {}. Expected 1 or 2.", spec.channels);
+        };
+        
+        // Resample if necessary
+        let resampled = if spec.sample_rate != target_sample_rate {
+            tracing::info!(
+                from_rate = spec.sample_rate,
+                to_rate = target_sample_rate,
+                "Resampling IR"
+            );
+            
+            use rubato::{Resampler, SincFixedIn, SincInterpolationType, SincInterpolationParameters, WindowFunction};
+            
+            let params = SincInterpolationParameters {
+                sinc_len: 256,
+                f_cutoff: 0.95,
+                interpolation: SincInterpolationType::Linear,
+                oversampling_factor: 256,
+                window: WindowFunction::BlackmanHarris2,
+            };
+            
+            let mut resampler = SincFixedIn::<f32>::new(
+                target_sample_rate as f64 / spec.sample_rate as f64,
+                2.0, // max_resample_ratio_relative
+                params,
+                mono_samples.len(),
+                1, // 1 channel
+            ).context("Failed to create resampler for IR")?;
+            
+            let input_frames = vec![mono_samples.clone()];
+            let output_frames = resampler.process(&input_frames, None)
+                .context("Failed to resample IR")?;
+            
+            output_frames[0].clone()
+        } else {
+            mono_samples
+        };
+        
+        tracing::info!(
+            ir_length_samples = resampled.len(),
+            ir_duration_sec = resampled.len() as f32 / target_sample_rate as f32,
+            "IR loaded and prepared"
+        );
+        
+        Ok(resampled)
     }
     
     /// # Responsibility

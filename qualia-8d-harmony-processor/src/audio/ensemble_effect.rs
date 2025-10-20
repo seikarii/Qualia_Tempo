@@ -1,12 +1,28 @@
 //! # Responsibility
-//! Creates ensemble effect by generating independent orchestral voices with spatial distribution.
+//! Creates ensemble effect with two modes: Humanized (random delays) and Rhythmic (tempo-synchronized).
 //!
-//! Produces 5-13 distinct VoiceOutput structs, each with unique audio processing
-//! (delay, pitch shift) and spatial position for true 8D orchestral spatialization.
+//! ---
+//!
+//! **Humanized Mode**: Random delays create natural choir/orchestral spread
+//! **Rhythmic Mode**: Tempo-locked delays create rhythmic echo patterns (1/8, 1/16 note subdivisions)
+//!
+//! Produces 5-13 distinct VoiceOutput structs with spatial distribution.
 
 use anyhow::{Result, bail};
 use rand::Rng;
 use rubato::{Resampler, SincFixedIn, SincInterpolationParameters, SincInterpolationType, WindowFunction};
+
+/// # Responsibility
+/// Ensemble effect mode: Humanized (random) vs Rhythmic (tempo-synchronized).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EnsembleMode {
+    /// Random delays for natural choir/orchestra spread (default)
+    Humanized,
+    
+    /// Tempo-locked delays creating rhythmic echo patterns
+    /// Delays calculated as subdivisions of quarter note (1/8, 1/16, etc.)
+    Rhythmic,
+}
 
 /// Single voice output with independent audio samples and spatial position
 #[derive(Debug, Clone)]
@@ -22,14 +38,29 @@ pub struct VoiceOutput {
     pub gain: f32,
 }
 
-/// Configuration for ensemble effect generation with dynamic parameter ranges
+/// # Responsibility
+/// Configuration for ensemble effect generation with dynamic parameter ranges.
+///
+/// ---
+///
+/// Supports two modes:
+/// - **Humanized**: Random delays for natural choir/orchestra spread
+/// - **Rhythmic**: Tempo-locked delays creating rhythmic echo patterns
+///
+/// Dynamic ranges scale with intensity for expressive modulation.
 #[derive(Debug, Clone)]
 pub struct EnsembleConfig {
+    /// Ensemble effect mode
+    pub mode: EnsembleMode,
+    
+    /// Tempo in BPM (REQUIRED for Rhythmic mode, optional for Humanized)
+    pub tempo_bpm: Option<f32>,
+    
     /// Number of virtual voices: (min, max) range for intensity-driven interpolation
     /// Example: (5, 13) = 5 voices at low intensity, 13 at high intensity
     pub num_voices_range: (usize, usize),
     
-    pub max_delay_ms: f32,          // Maximum delay spread in milliseconds (typically 15ms)
+    pub max_delay_ms: f32,          // Maximum delay spread in milliseconds (Humanized mode)
     pub max_pitch_shift_cents: f32, // Maximum pitch shift in cents (typically 5 cents)
     
     /// Spatial distribution width in degrees: (min, max) range for intensity modulation
@@ -42,12 +73,23 @@ pub struct EnsembleConfig {
 impl EnsembleConfig {
     /// Create dynamic EnsembleConfig with intensity-driven parameter ranges
     pub fn new(
+        mode: EnsembleMode,
+        tempo_bpm: Option<f32>,
         num_voices_range: (usize, usize),
         max_delay_ms: f32, 
         max_pitch_shift_cents: f32, 
         spatial_spread_deg_range: (f32, f32),
         sample_rate: u32
     ) -> Result<Self> {
+        // Validate Rhythmic mode requirements
+        if mode == EnsembleMode::Rhythmic {
+            match tempo_bpm {
+                None => bail!("Rhythmic mode requires tempo_bpm to be set"),
+                Some(tempo) if tempo <= 0.0 => bail!("tempo_bpm must be positive, got {}", tempo),
+                _ => {}
+            }
+        }
+        
         let (min_voices, max_voices) = num_voices_range;
         if min_voices < 1 || max_voices < min_voices {
             bail!(
@@ -73,6 +115,8 @@ impl EnsembleConfig {
         }
 
         Ok(Self {
+            mode,
+            tempo_bpm,
             num_voices_range,
             max_delay_ms,
             max_pitch_shift_cents,
@@ -91,6 +135,8 @@ impl EnsembleConfig {
         sample_rate: u32
     ) -> Result<Self> {
         Self::new(
+            EnsembleMode::Humanized, // Default to Humanized for backward compatibility
+            None,
             (num_voices, num_voices),
             max_delay_ms,
             max_pitch_shift_cents,
@@ -219,7 +265,10 @@ impl EnsembleEffect {
     }
     
     /// # Responsibility
-    /// Generate voices based on current intensity level.
+    /// Generate voices based on current intensity level and config mode.
+    ///
+    /// **Humanized Mode**: Random delays for natural spread
+    /// **Rhythmic Mode**: Tempo-locked delays for rhythmic echo (1/8, 1/16, 1/32 note subdivisions)
     ///
     /// This method regenerates the voice configuration on every call to match
     /// the target intensity. Use for dynamic orchestral density modulation.
@@ -232,8 +281,29 @@ impl EnsembleEffect {
 
         (0..num_voices)
             .map(|i| {
-                // Random delay between -max_delay_ms and +max_delay_ms
-                let delay_ms = rng.gen_range(-self.config.max_delay_ms..=self.config.max_delay_ms);
+                // Calculate delay based on mode
+                let delay_ms = match self.config.mode {
+                    EnsembleMode::Humanized => {
+                        // Random delay between -max_delay_ms and +max_delay_ms
+                        rng.gen_range(-self.config.max_delay_ms..=self.config.max_delay_ms)
+                    }
+                    EnsembleMode::Rhythmic => {
+                        // Tempo-synchronized delay: quarter_note_ms * subdivision
+                        let tempo = self.config.tempo_bpm.unwrap_or(120.0); // Safe: validated in new()
+                        let quarter_note_ms = 60_000.0 / tempo;
+                        
+                        // Assign subdivisions cyclically: 1/4, 1/8, 1/16, 1/32, repeat
+                        let subdivision = match i % 4 {
+                            0 => 0.25,  // 1/4 note
+                            1 => 0.125, // 1/8 note
+                            2 => 0.0625, // 1/16 note
+                            _ => 0.03125, // 1/32 note
+                        };
+                        
+                        quarter_note_ms * subdivision
+                    }
+                };
+                
                 let delay_samples = if delay_ms >= 0.0 {
                     self.config.delay_ms_to_samples(delay_ms)
                 } else {
@@ -364,53 +434,252 @@ mod tests {
 
     #[test]
     fn test_ensemble_config_creation() {
-        let config = EnsembleConfig::new((5, 10), 5.0, 3.0, (60.0, 90.0), 48000).unwrap();
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 10),
+            5.0,
+            3.0,
+            (60.0, 90.0),
+            48000
+        ).unwrap();
+        assert_eq!(config.mode, EnsembleMode::Humanized);
+        assert_eq!(config.tempo_bpm, None);
         assert_eq!(config.num_voices_range, (5, 10));
         assert_relative_eq!(config.max_delay_ms, 5.0);
         assert_relative_eq!(config.max_pitch_shift_cents, 3.0);
         assert_eq!(config.spatial_spread_deg_range, (60.0, 90.0));
         assert_eq!(config.sample_rate, 48000);
     }
+    
+    #[test]
+    fn test_rhythmic_mode_requires_tempo() {
+        let result = EnsembleConfig::new(
+            EnsembleMode::Rhythmic,
+            None, // Missing tempo!
+            (5, 10),
+            5.0,
+            3.0,
+            (60.0, 90.0),
+            48000
+        );
+        assert!(result.is_err(), "Rhythmic mode should require tempo_bpm");
+    }
+    
+    #[test]
+    fn test_rhythmic_mode_rejects_zero_tempo() {
+        let result = EnsembleConfig::new(
+            EnsembleMode::Rhythmic,
+            Some(0.0), // Invalid tempo!
+            (5, 10),
+            5.0,
+            3.0,
+            (60.0, 90.0),
+            48000
+        );
+        assert!(result.is_err(), "Rhythmic mode should reject tempo <= 0");
+    }
+    
+    #[test]
+    fn test_rhythmic_mode_tempo_sync() {
+        let config = EnsembleConfig::new(
+            EnsembleMode::Rhythmic,
+            Some(120.0), // 120 BPM
+            (4, 4), // Fixed 4 voices for predictable subdivisions
+            5.0,
+            3.0,
+            (60.0, 90.0),
+            48000
+        ).unwrap();
+        
+        let effect = EnsembleEffect::new(config);
+        let voices = effect.generate_voices_for_intensity(0.5);
+        
+        // 120 BPM → quarter note = 500ms
+        let quarter_note_ms: f32 = 60_000.0 / 120.0;
+        assert_relative_eq!(quarter_note_ms, 500.0, epsilon = 0.01);
+        
+        // Expected delays: 1/4=125ms, 1/8=62.5ms, 1/16=31.25ms, 1/32=15.625ms
+        let expected_delays_ms: [f32; 4] = [
+            quarter_note_ms * 0.25,    // Voice 0: 1/4 note
+            quarter_note_ms * 0.125,   // Voice 1: 1/8 note
+            quarter_note_ms * 0.0625,  // Voice 2: 1/16 note
+            quarter_note_ms * 0.03125, // Voice 3: 1/32 note
+        ];
+        
+        for (i, voice) in voices.iter().enumerate() {
+            let expected_samples = ((expected_delays_ms[i] / 1000.0) * 48000.0_f32).round() as usize;
+            assert_eq!(
+                voice.delay_samples,
+                expected_samples,
+                "Voice {} should have rhythmic delay matching subdivision",
+                i
+            );
+        }
+    }
+    
+    #[test]
+    fn test_rhythmic_mode_subdivision_cycling() {
+        let config = EnsembleConfig::new(
+            EnsembleMode::Rhythmic,
+            Some(140.0), // 140 BPM
+            (8, 8), // 8 voices to test cycling (4 subdivisions cycle twice)
+            5.0,
+            3.0,
+            (60.0, 90.0),
+            48000
+        ).unwrap();
+        
+        let effect = EnsembleEffect::new(config);
+        let voices = effect.generate_voices_for_intensity(0.5);
+        
+        // Subdivisions should cycle: 1/4, 1/8, 1/16, 1/32, 1/4, 1/8, 1/16, 1/32
+        let subdivisions: [f32; 8] = [0.25, 0.125, 0.0625, 0.03125, 0.25, 0.125, 0.0625, 0.03125];
+        let quarter_note_ms: f32 = 60_000.0 / 140.0;
+        
+        for (i, voice) in voices.iter().enumerate() {
+            let expected_delay_ms: f32 = quarter_note_ms * subdivisions[i];
+            let expected_samples = ((expected_delay_ms / 1000.0) * 48000.0_f32).round() as usize;
+            
+            assert_eq!(
+                voice.delay_samples,
+                expected_samples,
+                "Voice {} should match cyclic subdivision pattern",
+                i
+            );
+        }
+    }
+    
+    #[test]
+    fn test_humanized_mode_unchanged() {
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 5),
+            5.0,
+            3.0,
+            (60.0, 90.0),
+            48000
+        ).unwrap();
+        
+        let effect = EnsembleEffect::new(config);
+        let voices = effect.generate_voices_for_intensity(0.5);
+        
+        // Humanized mode: delays should be random within [-5ms, +5ms]
+        // We can't predict exact values, but verify they're within range
+        for voice in voices.iter() {
+            let delay_ms = (voice.delay_samples as f32 / 48000.0) * 1000.0;
+            assert!(
+                delay_ms >= 0.0 && delay_ms <= 5.0,
+                "Humanized delay {} should be within max_delay_ms range",
+                delay_ms
+            );
+        }
+    }
 
     #[test]
     fn test_ensemble_config_zero_voices() {
-        let result = EnsembleConfig::new((0, 10), 5.0, 3.0, (60.0, 90.0), 48000);
+        let result = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (0, 10),
+            5.0,
+            3.0,
+            (60.0, 90.0),
+            48000
+        );
         assert!(result.is_err(), "Should reject min_voices = 0");
     }
     
     #[test]
     fn test_ensemble_config_inverted_voice_range() {
-        let result = EnsembleConfig::new((10, 5), 5.0, 3.0, (60.0, 90.0), 48000);
+        let result = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (10, 5),
+            5.0,
+            3.0,
+            (60.0, 90.0),
+            48000
+        );
         assert!(result.is_err(), "Should reject max < min for voices");
     }
 
     #[test]
     fn test_ensemble_config_negative_delay() {
-        let result = EnsembleConfig::new((5, 10), -5.0, 3.0, (60.0, 90.0), 48000);
+        let result = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 10),
+            -5.0,
+            3.0,
+            (60.0, 90.0),
+            48000
+        );
         assert!(result.is_err());
     }
 
     #[test]
     fn test_ensemble_config_zero_sample_rate() {
-        let result = EnsembleConfig::new((5, 10), 5.0, 3.0, (60.0, 90.0), 0);
+        let result = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 10),
+            5.0,
+            3.0,
+            (60.0, 90.0),
+            0
+        );
         assert!(result.is_err());
     }
 
     #[test]
     fn test_ensemble_config_invalid_spatial_spread() {
-        let result = EnsembleConfig::new((5, 10), 5.0, 3.0, (0.0, 90.0), 48000);
+        let result = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 10),
+            5.0,
+            3.0,
+            (0.0, 90.0),
+            48000
+        );
         assert!(result.is_err(), "Should reject min_spread = 0");
         
-        let result = EnsembleConfig::new((5, 10), 5.0, 3.0, (60.0, 400.0), 48000);
+        let result = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 10),
+            5.0,
+            3.0,
+            (60.0, 400.0),
+            48000
+        );
         assert!(result.is_err(), "Should reject max_spread > 360");
         
-        let result = EnsembleConfig::new((5, 10), 5.0, 3.0, (90.0, 60.0), 48000);
+        let result = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 10),
+            5.0,
+            3.0,
+            (90.0, 60.0),
+            48000
+        );
         assert!(result.is_err(), "Should reject max < min for spatial spread");
     }
     
     #[test]
     fn test_calculate_num_voices_interpolation() {
-        let config = EnsembleConfig::new((5, 13), 5.0, 3.0, (60.0, 120.0), 48000).unwrap();
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 13),
+            5.0,
+            3.0,
+            (60.0, 120.0),
+            48000
+        ).unwrap();
         
         assert_eq!(config.calculate_num_voices(0.0), 5, "Min intensity → min voices");
         assert_eq!(config.calculate_num_voices(1.0), 13, "Max intensity → max voices");
@@ -419,7 +688,15 @@ mod tests {
     
     #[test]
     fn test_calculate_spatial_spread_interpolation() {
-        let config = EnsembleConfig::new((5, 13), 5.0, 3.0, (60.0, 120.0), 48000).unwrap();
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 13),
+            5.0,
+            3.0,
+            (60.0, 120.0),
+            48000
+        ).unwrap();
         
         assert_relative_eq!(config.calculate_spatial_spread(0.0), 60.0, epsilon = 0.01);
         assert_relative_eq!(config.calculate_spatial_spread(1.0), 120.0, epsilon = 0.01);
@@ -428,7 +705,15 @@ mod tests {
 
     #[test]
     fn test_delay_ms_to_samples_conversion() {
-        let config = EnsembleConfig::new((5, 10), 5.0, 3.0, (60.0, 90.0), 48000).unwrap();
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 10),
+            5.0,
+            3.0,
+            (60.0, 90.0),
+            48000
+        ).unwrap();
         
         // 1ms at 48kHz = 48 samples
         assert_eq!(config.delay_ms_to_samples(1.0), 48);
@@ -439,7 +724,15 @@ mod tests {
 
     #[test]
     fn test_ensemble_effect_creation() {
-        let config = EnsembleConfig::new((8, 10), 5.0, 3.0, (80.0, 90.0), 48000).unwrap();
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (8, 10),
+            5.0,
+            3.0,
+            (80.0, 90.0),
+            48000
+        ).unwrap();
         let effect = EnsembleEffect::new(config);
         
         // Effect starts empty, voices generated on first process_dynamic()
@@ -448,7 +741,15 @@ mod tests {
     
     #[test]
     fn test_ensemble_dynamic_processing() {
-        let config = EnsembleConfig::new((5, 13), 5.0, 3.0, (60.0, 120.0), 48000).unwrap();
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 13),
+            5.0,
+            3.0,
+            (60.0, 120.0),
+            48000
+        ).unwrap();
         let mut effect = EnsembleEffect::new(config);
         
         let input = vec![0.5; 500];
@@ -468,7 +769,15 @@ mod tests {
 
     #[test]
     fn test_ensemble_process_returns_independent_voices() {
-        let config = EnsembleConfig::new((5, 5), 1.0, 2.0, (60.0, 60.0), 48000).unwrap();
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 5),
+            1.0,
+            2.0,
+            (60.0, 60.0),
+            48000
+        ).unwrap();
         let mut effect = EnsembleEffect::new(config);
         
         let input = vec![0.5; 500];
@@ -493,7 +802,15 @@ mod tests {
 
     #[test]
     fn test_ensemble_process_empty_input() {
-        let config = EnsembleConfig::new((5, 5), 1.0, 0.0, (60.0, 60.0), 48000).unwrap();
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 5),
+            1.0,
+            0.0,
+            (60.0, 60.0),
+            48000
+        ).unwrap();
         let mut effect = EnsembleEffect::new(config);
         
         let voices = effect.process_dynamic(&[], 0.5).unwrap();
@@ -502,7 +819,15 @@ mod tests {
 
     #[test]
     fn test_voice_delays_within_bounds() {
-        let config = EnsembleConfig::new((18, 20), 5.0, 3.0, (85.0, 90.0), 48000).unwrap();
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (18, 20),
+            5.0,
+            3.0,
+            (85.0, 90.0),
+            48000
+        ).unwrap();
         let max_expected_delay = config.delay_ms_to_samples(5.0);
         let mut effect = EnsembleEffect::new(config);
         
@@ -516,7 +841,15 @@ mod tests {
 
     #[test]
     fn test_voice_pitch_shifts_within_bounds() {
-        let config = EnsembleConfig::new((18, 20), 5.0, 3.0, (85.0, 90.0), 48000).unwrap();
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (18, 20),
+            5.0,
+            3.0,
+            (85.0, 90.0),
+            48000
+        ).unwrap();
         let mut effect = EnsembleEffect::new(config);
         
         let input = vec![0.5; 500];
@@ -530,7 +863,15 @@ mod tests {
     
     #[test]
     fn test_spatial_distribution_single_voice() {
-        let config = EnsembleConfig::new((1, 1), 5.0, 3.0, (90.0, 90.0), 48000).unwrap();
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (1, 1),
+            5.0,
+            3.0,
+            (90.0, 90.0),
+            48000
+        ).unwrap();
         let mut effect = EnsembleEffect::new(config);
         
         let input = vec![0.5; 500];
@@ -543,7 +884,15 @@ mod tests {
     
     #[test]
     fn test_spatial_distribution_symmetric() {
-        let config = EnsembleConfig::new((5, 5), 5.0, 3.0, (60.0, 60.0), 48000).unwrap();
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 5),
+            5.0,
+            3.0,
+            (60.0, 60.0),
+            48000
+        ).unwrap();
         let mut effect = EnsembleEffect::new(config);
         
         let input = vec![0.5; 500];
@@ -601,7 +950,15 @@ mod tests {
 
     #[test]
     fn test_ensemble_with_pitch_shifting_active() {
-        let config = EnsembleConfig::new((5, 5), 1.0, 5.0, (60.0, 60.0), 48000).unwrap(); // 5 cents max shift
+        let config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 5),
+            1.0,
+            5.0,
+            (60.0, 60.0),
+            48000
+        ).unwrap(); // 5 cents max shift
         let mut effect = EnsembleEffect::new(config);
         
         // Generate 440Hz sine wave

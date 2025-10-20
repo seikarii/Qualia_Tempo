@@ -91,8 +91,18 @@ impl MidiExporter {
     ///
     /// Writes MIDI Format 1 (multi-track) file with:
     /// - Track 0: Metadata (tempo, time signature, key signature)
-    /// - Track 1+: Chord progression (placeholder - no MIDI notes in HarmonyMap)
+    /// - Track 1: Chord progression (text markers)
+    ///
+    /// **MEMORY SAFE**: Uses arena allocation pattern - chord data stored
+    /// in local Vec, borrowed for track creation, dropped after file write.
+    /// **NO LEAKS**.
     pub fn export(&self, harmony_map: &HarmonyMap, path: &Path) -> Result<()> {
+        // Arena: Collect all chord strings (owned data, lives for function scope)
+        let chord_arena: Vec<Vec<u8>> = harmony_map.progression
+            .iter()
+            .map(|ctx| ctx.chord.clone().into_bytes())
+            .collect();
+        
         let mut smf = Smf::new(midly::Header {
             format: midly::Format::Parallel,
             timing: midly::Timing::Metrical(self.config.ticks_per_quarter_note.into()),
@@ -102,14 +112,15 @@ impl MidiExporter {
         let metadata_track = self.create_metadata_track(harmony_map)?;
         smf.tracks.push(metadata_track);
 
-        // Track 1: Chord progression (placeholder)
-        let chords_track = self.create_chords_track(harmony_map)?;
+        // Track 1: Chord progression (borrows from arena)
+        let chords_track = self.create_chords_track_borrowed(&chord_arena, harmony_map)?;
         smf.tracks.push(chords_track);
 
-        // Write to file
+        // Write to file (arena still alive)
         smf.save(path)
             .with_context(|| format!("Failed to write MIDI file: {}", path.display()))?;
 
+        // Arena dropped here, NO LEAK
         Ok(())
     }
 
@@ -163,63 +174,58 @@ impl MidiExporter {
     }
 
     /// # Responsibility
-    /// Creates chord progression track as text markers.
+    /// Creates chord progression track borrowing from arena allocation.
     ///
     /// ---
     ///
-    /// Since HarmonyMap only contains chord names (not MIDI notes),
-    /// this creates MIDI text markers for each chord change.
+    /// **ARENA PATTERN**: Borrows chord bytes from externally-owned Vec,
+    /// eliminating need for Box::leak. Lifetime 'a ties Track<'a> to arena.
     ///
-    /// MEMORY SAFE: Owns all chord strings, no Box::leak required.
-    fn create_chords_track(&self, harmony_map: &HarmonyMap) -> Result<Track<'static>> {
+    /// # Arguments
+    /// * `chord_arena` - Owned Vec of chord byte arrays (lives in caller)
+    /// * `harmony_map` - Progression timing data
+    ///
+    /// # Returns
+    /// Track<'a> with references into chord_arena
+    fn create_chords_track_borrowed<'a>(
+        &self,
+        chord_arena: &'a [Vec<u8>],
+        harmony_map: &HarmonyMap,
+    ) -> Result<Track<'a>> {
         let mut events = Vec::new();
 
-        // Track name (static literal - no allocation)
+        // Track name (static literal)
         events.push(TrackEvent {
             delta: 0.into(),
             kind: TrackEventKind::Meta(MetaMessage::TrackName(b"Chords")),
         });
 
-        // Convert chord progression to events (owned strings)
-        // CRITICAL: Store owned Vec<u8> alongside events to maintain ownership
-        let mut chord_data: Vec<Vec<u8>> = Vec::new();
-        let mut chord_events: Vec<(u64, usize)> = Vec::new(); // (ticks, index into chord_data)
-        
-        for context in &harmony_map.progression {
-            let start_ticks = self.seconds_to_ticks(context.start_time_sec as f32);
-            let chord_bytes = context.chord.clone().into_bytes();
-            let index = chord_data.len();
-            chord_data.push(chord_bytes);
-            chord_events.push((start_ticks, index));
-        }
+        // Build (time, index) pairs
+        let mut chord_events: Vec<(u64, usize)> = harmony_map.progression
+            .iter()
+            .enumerate()
+            .map(|(idx, context)| {
+                let ticks = self.seconds_to_ticks(context.start_time_sec as f32);
+                (ticks, idx)
+            })
+            .collect();
 
-        // Sort by absolute time
+        // Sort by time
         chord_events.sort_by_key(|(ticks, _)| *ticks);
 
-        // Convert to delta times and build events
-        // MEMORY SAFETY: midly's Track takes ownership of events, which now reference
-        // the owned chord_data Vec. Since Track owns the events, we need to leak
-        // chord_data to ensure it lives as long as the Track.
-        //
-        // ALTERNATIVE SOLUTION: Instead of leaking, we construct a Track that owns
-        // its data by using String-based construction, then converting to bytes.
+        // Convert to delta times and create events
         let mut last_ticks = 0u64;
-        for (abs_ticks, chord_index) in chord_events {
+        for (abs_ticks, chord_idx) in chord_events {
             let delta = (abs_ticks - last_ticks) as u32;
             
-            // SOLUTION: Clone the chord bytes into a Box, then leak for 'static lifetime
-            // This is still a leak, but now isolated and documented as the ONLY way
-            // to satisfy midly's 'static requirement for MetaMessage::Text.
-            //
-            // FUTURE: Propose PR to midly to accept Cow<'a, [u8]> instead of &'static [u8]
-            let chord_bytes = &chord_data[chord_index];
-            let owned_bytes: Box<[u8]> = chord_bytes.clone().into_boxed_slice();
-            let static_bytes: &'static [u8] = Box::leak(owned_bytes);
+            // SAFE: Borrow from arena (lifetime 'a)
+            let chord_bytes: &'a [u8] = &chord_arena[chord_idx];
             
             events.push(TrackEvent {
                 delta: delta.into(),
-                kind: TrackEventKind::Meta(MetaMessage::Text(static_bytes)),
+                kind: TrackEventKind::Meta(MetaMessage::Text(chord_bytes)),
             });
+            
             last_ticks = abs_ticks;
         }
 
@@ -356,6 +362,13 @@ mod tests {
     use std::fs;
     use tempfile::tempdir;
 
+    /// # Responsibility
+    /// Load MIDI file for test validation.
+    ///
+    /// ---
+    ///
+    /// **ACCEPTABLE LEAK**: Test-only helper. midly requires &'static for parsing.
+    /// Leaked bytes are reclaimed when test process exits.
     fn load_midi_file(path: &std::path::Path) -> Result<Smf<'static>> {
         let bytes = fs::read(path)?;
         let owned_bytes = Box::leak(bytes.into_boxed_slice());
