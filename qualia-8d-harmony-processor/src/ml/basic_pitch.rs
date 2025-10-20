@@ -234,6 +234,8 @@ impl BasicPitchTranscriber {
     /// Run ONNX inference on a single audio window.
     ///
     /// Returns (note_activations, onset_activations, contour_activations).
+    ///
+    /// ROBUST: Determines output identity by both output names AND shapes for maximum reliability.
     fn infer_window(&self, window: &[f32]) -> Result<(Array2<f32>, Array2<f32>, Array2<f32>)> {
         use ndarray::{Array, ArrayD, CowArray};
         
@@ -257,10 +259,17 @@ impl BasicPitchTranscriber {
             .run(vec![input_tensor])
             .context("ONNX inference failed")?;
 
-        // Extract outputs by index - need to determine actual order from shapes
+        // Extract outputs by index
         anyhow::ensure!(outputs.len() >= 3, "Expected 3 outputs, got {}", outputs.len());
         
-        // Extract all three outputs first to inspect shapes
+        // Get output metadata (names)
+        let output_names: Vec<String> = self.session
+            .outputs
+            .iter()
+            .map(|output| output.name.to_string())
+            .collect();
+        
+        // Extract all three outputs first to inspect both names AND shapes
         let output0: OrtOwnedTensor<f32, _> = outputs[0].try_extract()
             .context("Failed to extract output 0")?;
         let output1: OrtOwnedTensor<f32, _> = outputs[1].try_extract()
@@ -277,19 +286,67 @@ impl BasicPitchTranscriber {
         let shape1 = view1.shape();
         let shape2 = view2.shape();
         
-        // Determine which output is which based on last dimension
-        // Note/Onset: 88 bins, Contour: 264 bins
-        let (note_tensor, onset_tensor, contour_tensor) = if shape0[2] == 264 && shape1[2] == 88 && shape2[2] == 88 {
-            // Order: contour=0, note=1, onset=2
-            (output1, output2, output0)
-        } else if shape0[2] == 88 && shape1[2] == 88 && shape2[2] == 264 {
-            // Order: note=0, onset=1, contour=2
-            (output0, output1, output2)
-        } else if shape0[2] == 88 && shape1[2] == 264 && shape2[2] == 88 {
-            // Order: note=0, contour=1, onset=2
-            (output0, output2, output1)
-        } else {
-            anyhow::bail!("Cannot determine output order from shapes: {:?}, {:?}, {:?}", shape0, shape1, shape2);
+        // ROBUST DETECTION: Try name matching first, then fall back to shape matching
+        let (note_tensor, onset_tensor, contour_tensor) = {
+            // Try to identify by output names (most reliable)
+            let mut note_idx = None;
+            let mut onset_idx = None;
+            let mut contour_idx = None;
+            
+            for (i, name) in output_names.iter().enumerate() {
+                let name_lower = name.to_lowercase();
+                if name_lower.contains("note") && !name_lower.contains("contour") {
+                    note_idx = Some(i);
+                } else if name_lower.contains("onset") {
+                    onset_idx = Some(i);
+                } else if name_lower.contains("contour") {
+                    contour_idx = Some(i);
+                }
+            }
+            
+            // If name matching succeeded, use it
+            if let (Some(note_i), Some(onset_i), Some(contour_i)) = (note_idx, onset_idx, contour_idx) {
+                tracing::debug!(
+                    note_name = %output_names[note_i],
+                    onset_name = %output_names[onset_i],
+                    contour_name = %output_names[contour_i],
+                    "Identified ONNX outputs by name"
+                );
+                
+                match (note_i, onset_i, contour_i) {
+                    (0, 1, 2) => (output0, output1, output2),
+                    (0, 2, 1) => (output0, output2, output1),
+                    (1, 0, 2) => (output1, output0, output2),
+                    (1, 2, 0) => (output1, output2, output0),
+                    (2, 0, 1) => (output2, output0, output1),
+                    (2, 1, 0) => (output2, output1, output0),
+                    _ => anyhow::bail!("Invalid output indices: note={}, onset={}, contour={}", note_i, onset_i, contour_i),
+                }
+            } else {
+                // Fallback: shape-based detection (legacy compatibility)
+                tracing::warn!(
+                    "Could not identify ONNX outputs by name, falling back to shape-based detection. \
+                     Output names: {:?}",
+                    output_names
+                );
+                
+                // Note/Onset: 88 bins, Contour: 264 bins
+                if shape0[2] == 264 && shape1[2] == 88 && shape2[2] == 88 {
+                    // Order: contour=0, note=1, onset=2
+                    (output1, output2, output0)
+                } else if shape0[2] == 88 && shape1[2] == 88 && shape2[2] == 264 {
+                    // Order: note=0, onset=1, contour=2
+                    (output0, output1, output2)
+                } else if shape0[2] == 88 && shape1[2] == 264 && shape2[2] == 88 {
+                    // Order: note=0, contour=1, onset=2
+                    (output0, output2, output1)
+                } else {
+                    anyhow::bail!(
+                        "Cannot determine output order from shapes: {:?}, {:?}, {:?}",
+                        shape0, shape1, shape2
+                    );
+                }
+            }
         };
 
         // Extract raw data and reshape

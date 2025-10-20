@@ -4,7 +4,7 @@
 //! Uses Symphonia for multi-codec decoding and Rubato for high-quality resampling.
 
 use anyhow::{Context, Result};
-use rubato::{FftFixedInOut, Resampler};
+use rubato::Resampler;
 use std::path::Path;
 use symphonia::core::audio::SampleBuffer;
 use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
@@ -188,44 +188,41 @@ impl InputHandler {
         mono
     }
 
-    /// Resample audio using high-quality FFT-based resampling
+    /// # Responsibility
+    /// Resample audio using high-quality sinc interpolation (whole-stream processing).
+    ///
+    /// SIMPLIFIED: Processes entire audio stream in one call, eliminating manual chunking
+    /// and remainder handling complexity.
     fn resample(&self, input: &[f32], from_rate: u32, to_rate: u32) -> Result<Vec<f32>> {
-        let chunk_size = 1024;
-        let mut resampler = FftFixedInOut::<f32>::new(
-            from_rate as usize,
-            to_rate as usize,
-            chunk_size,
-            1, // mono
+        use rubato::{SincFixedIn, SincInterpolationParameters, SincInterpolationType, WindowFunction};
+
+        let resample_ratio = to_rate as f64 / from_rate as f64;
+
+        let params = SincInterpolationParameters {
+            sinc_len: 256,
+            f_cutoff: 0.95,
+            interpolation: SincInterpolationType::Linear,
+            oversampling_factor: 256,
+            window: WindowFunction::BlackmanHarris2,
+        };
+
+        // SincFixedIn processes entire input in one call (input_len = total samples)
+        let mut resampler = SincFixedIn::<f32>::new(
+            resample_ratio,
+            2.0, // Max ratio change (not used for fixed resampling)
+            params,
+            input.len(),
+            1, // Mono channel
         )
         .context("Failed to create resampler")?;
 
-        let mut output = Vec::new();
-        let mut input_chunks = input.chunks_exact(chunk_size);
+        // Process entire stream at once
+        let waves_in = vec![input.to_vec()];
+        let mut waves_out = resampler
+            .process(&waves_in, None)
+            .context("Resampling failed")?;
 
-        for chunk in input_chunks.by_ref() {
-            let waves_in = vec![chunk.to_vec()];
-            let waves_out = resampler
-                .process(&waves_in, None)
-                .context("Resampling failed")?;
-            output.extend_from_slice(&waves_out[0]);
-        }
-
-        // Handle remainder
-        let remainder = input_chunks.remainder();
-        if !remainder.is_empty() {
-            let mut padded = remainder.to_vec();
-            padded.resize(chunk_size, 0.0);
-            let waves_in = vec![padded];
-            let waves_out = resampler
-                .process(&waves_in, None)
-                .context("Resampling remainder failed")?;
-            
-            // Only take valid samples (not padding)
-            let valid_out_len = (remainder.len() as f64 * to_rate as f64 / from_rate as f64) as usize;
-            output.extend_from_slice(&waves_out[0][..valid_out_len]);
-        }
-
-        Ok(output)
+        Ok(waves_out.remove(0))
     }
 
     pub fn config(&self) -> &InputHandlerConfig {

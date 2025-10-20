@@ -8,11 +8,14 @@ use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use qualia_8d_harmony_processor::{
+    analysis::{IntensityAnalyzer, IntensityAnalyzerConfig},
     audio::{
-        BinauralSignal, CircularMotionEngine, EnsembleConfig, EnsembleEffect, 
+        BinauralSignal, CircularMotionEngine, ConvolutionReverb, 
+        ConvolutionReverbConfig, EnsembleConfig, EnsembleEffect, 
         FrequencyBooster, FrequencyBoosterConfig, HrtfConvolver, InputHandler,
-        InputHandlerConfig, RotationDirection, SofaLoader, SphericalCoord,
-        SpatialMixer, SpatialMixerConfig, VoiceOutput,
+        InputHandlerConfig, PsychoacousticBass, PsychoacousticBassConfig,
+        RotationDirection, SofaLoader, SphericalCoord, SpatialMixer, 
+        SpatialMixerConfig, VoiceOutput,
     },
     export::{HarmonyMapExporter, MidiExporter, WavExporter, WavExporterConfig},
     ml::{
@@ -194,25 +197,192 @@ fn process_single_file(args: ProcessArgs) -> Result<()> {
 }
 
 /// # Responsibility
-/// Apply EQ and ensemble effects to audio buffer.
+/// Apply EQ with dynamic intensity modulation to audio buffer.
+///
+/// Analyzes audio intensity curve and applies frequency boost with
+/// real-time gain adaptation based on musical dynamics.
 fn run_audio_effects(
     args: &ProcessArgs,
     audio_buffer: &qualia_8d_harmony_processor::audio::AudioBuffer,
-) -> Result<Vec<f32>> {
-    // Phase 2: Apply frequency boost (EQ)
+) -> Result<(Vec<f32>, Vec<f32>)> {
+    // Phase 1.5: Analyze intensity curve for dynamic effects
+    info!("Phase 1.5: Analyzing audio intensity dynamics (RMS + Crest + Spectral Flux)");
+    
+    let intensity_config = IntensityAnalyzerConfig::new(audio_buffer.sample_rate);
+    let hop_samples = intensity_config.hop_samples(); // Store before move
+    
+    let mut intensity_analyzer = IntensityAnalyzer::new(intensity_config)
+        .context("Failed to create IntensityAnalyzer")?;
+    
+    let intensity_curve = intensity_analyzer.analyze(&audio_buffer.samples)
+        .context("Failed to analyze intensity curve")?;
+    
+    info!(
+        num_windows = intensity_curve.len(),
+        avg_intensity = intensity_curve.iter().sum::<f32>() / intensity_curve.len().max(1) as f32,
+        "Intensity analysis complete"
+    );
+    
+    // Phase 2: Apply frequency boost (EQ) with dynamic intensity modulation
     let eq_boosted_audio = if args.eq_boost {
-        info!("Phase 2: Frequency boost (bass/mid/high EQ)");
+        info!("Phase 2: Dynamic frequency boost (intensity-driven EQ)");
         
         let booster_config = FrequencyBoosterConfig::default_8d(audio_buffer.sample_rate);
         let mut booster = FrequencyBooster::new(booster_config)
             .context("Failed to create FrequencyBooster")?;
         
-        booster.process(&audio_buffer.samples)
+        // Apply chunk-based intensity modulation
+        let mut eq_output = Vec::with_capacity(audio_buffer.samples.len());
+        
+        for (chunk_idx, chunk) in audio_buffer.samples.chunks(hop_samples).enumerate() {
+            let intensity = intensity_curve.get(chunk_idx).copied().unwrap_or(0.5);
+            let chunk_output = booster.process(chunk, intensity)?;
+            eq_output.extend_from_slice(&chunk_output);
+        }
+        
+        eq_output
     } else {
         audio_buffer.samples.clone()
     };
+    
+    // Phase 2.4: Apply psychoacoustic bass enhancement
+    info!("Phase 2.4: Psychoacoustic bass enhancement (2x/3x harmonic generation)");
+    
+    let bass_config = PsychoacousticBassConfig::new(audio_buffer.sample_rate)
+        .context("Failed to create PsychoacousticBassConfig")?;
+    
+    let mut bass_enhancer = PsychoacousticBass::new(bass_config)
+        .context("Failed to create PsychoacousticBass")?;
+    
+    // Apply bass enhancement with average intensity
+    let avg_intensity = intensity_curve.iter().sum::<f32>() / intensity_curve.len().max(1) as f32;
+    let bass_enhanced_audio = bass_enhancer.process(&eq_boosted_audio, avg_intensity)
+        .context("Failed to apply psychoacoustic bass enhancement")?;
+    
+    info!(
+        avg_intensity = avg_intensity,
+        "Bass enhancement applied with average intensity modulation"
+    );
+    
+    // Phase 2.5: Apply convolution reverb for spatial depth
+    info!("Phase 2.5: Convolution reverb (synthetic IR with intensity-modulated wet mix)");
+    
+    let reverb_config = ConvolutionReverbConfig::new(audio_buffer.sample_rate)
+        .context("Failed to create ConvolutionReverbConfig")?;
+    
+    let mut reverb = ConvolutionReverb::new(reverb_config)
+        .context("Failed to create ConvolutionReverb")?;
+    
+    let reverb_processed_audio = reverb.process(&bass_enhanced_audio, avg_intensity)
+        .context("Failed to apply convolution reverb")?;
+    
+    info!(
+        avg_intensity = avg_intensity,
+        ir_length_sec = reverb_config.ir_length_samples as f32 / audio_buffer.sample_rate as f32,
+        "Convolution reverb applied with intensity-modulated wet mix"
+    );
 
-    Ok(eq_boosted_audio)
+    Ok((reverb_processed_audio, intensity_curve))
+}
+
+/// # Responsibility
+/// Spatialize independent ensemble voices with HRTF-based circular motion.
+///
+/// Processes each voice through HRTF convolution with time-varying positions,
+/// then mixes all spatialized voices with lookahead limiting.
+fn run_spatialization(
+    voice_outputs: Vec<VoiceOutput>,
+    args: &ProcessArgs,
+) -> Result<BinauralSignal> {
+    info!(
+        rpm = args.rotation_rpm,
+        num_voices = voice_outputs.len(),
+        "Phase 4: Individual voice spatialization (HRTF + circular motion)"
+    );
+    
+    // Load SOFA HRTF dataset (real file or mock fallback)
+    let sofa_loader = if let Some(ref sofa_path) = args.sofa_path {
+        info!(path = ?sofa_path, "Loading SOFA HRTF dataset");
+        Arc::new(SofaLoader::load_or_mock(sofa_path))
+    } else {
+        info!("Using synthetic mock HRTF dataset (72 positions)");
+        Arc::new(SofaLoader::create_mock_dataset())
+    };
+    
+    // Create HRTF convolver (shared across all voices)
+    let hrtf_convolver = HrtfConvolver::new(
+        512,  // FFT size
+        256,  // Hop size
+        args.sample_rate,
+        sofa_loader,
+    ).context("Failed to create HRTF convolver")?;
+    
+    let motion_engine = CircularMotionEngine::new(
+        args.rotation_rpm,
+        1.5,  // radius_meters
+        0.0,  // elevation_degrees
+        RotationDirection::Clockwise,
+    );
+    
+    let chunk_size = 2048;
+    let mut binaural_voices: Vec<BinauralSignal> = Vec::new();
+    
+    // CRITICAL: Process each voice independently
+    for (voice_idx, voice) in voice_outputs.iter().enumerate() {
+        info!(
+            voice_index = voice_idx,
+            spatial_offset = voice.spatial_offset_deg,
+            num_samples = voice.samples.len(),
+            "Spatializing voice"
+        );
+        
+        let mut spatial_audio = BinauralSignal::new(voice.samples.len());
+        
+        // Process voice in chunks with time-varying position
+        for (chunk_idx, chunk) in voice.samples.chunks(chunk_size).enumerate() {
+            let time_sec = (chunk_idx * chunk_size) as f64 / args.sample_rate as f64;
+            
+            // Calculate position: base rotation + voice's spatial offset
+            let base_position = motion_engine.calculate_position(time_sec);
+            let final_azimuth = base_position.azimuth_deg + voice.spatial_offset_deg;
+            
+            let hrtf_position = SphericalCoord::new(
+                final_azimuth,
+                base_position.elevation_deg,
+                base_position.distance_m,
+            );
+            
+            // Convolve chunk with HRTF at this voice's unique position
+            let (left_chunk, right_chunk) = hrtf_convolver.convolve_at_position(chunk, &hrtf_position)
+                .context("HRTF convolution failed")?;
+            
+            // OVERLAP-ADD: Sum convolved chunks (preserves HRTF tail)
+            let start_idx = chunk_idx * chunk_size;
+            for (i, (&left_sample, &right_sample)) in left_chunk.iter().zip(right_chunk.iter()).enumerate() {
+                let output_idx = start_idx + i;
+                if output_idx < spatial_audio.left.len() {
+                    spatial_audio.left[output_idx] += left_sample * voice.gain;
+                    spatial_audio.right[output_idx] += right_sample * voice.gain;
+                }
+            }
+        }
+        
+        binaural_voices.push(spatial_audio);
+    }
+    
+    info!(
+        num_spatialized_voices = binaural_voices.len(),
+        "All voices spatialized independently"
+    );
+
+    // Phase 4.5: Mix all spatialized voices with musical lookahead limiting
+    info!("Phase 4.5: Mixing {} voices with lookahead limiter", binaural_voices.len());
+    let mixer_config = SpatialMixerConfig::default_8d(args.sample_rate);
+    let spatial_mixer = SpatialMixer::new(mixer_config);
+    let final_mix = spatial_mixer.mix(&binaural_voices);
+    info!("Lookahead limiter applied (threshold: 0.95, knee: 3dB)");
+
+    Ok(final_mix)
 }
 
 /// # Responsibility
@@ -403,23 +573,33 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
         "Audio loaded successfully"
     );
 
-    // Phase 2: Apply EQ
-    let eq_boosted_audio = run_audio_effects(args, &audio_buffer)?;
+    // Phase 1.5-2: Analyze intensity + Apply dynamic EQ
+    let (eq_boosted_audio, _intensity_curve) = run_audio_effects(args, &audio_buffer)?;
 
     // Phase 3: Generate independent ensemble voices (NO MIXING YET)
     let voice_outputs = if args.ensemble {
         info!(voices = args.ensemble_voices, "Phase 3: Generating independent ensemble voices");
         
+        // Dynamic ensemble configuration: voice count + spatial spread modulated by intensity
+        // Low intensity: 5 voices, 60° spread (tight orchestral)
+        // High intensity: 13 voices, 120° spread (wide cinematic)
+        let min_voices = (args.ensemble_voices as f32 * 0.5).max(5.0) as usize;
+        let max_voices = args.ensemble_voices.max(13);
+        
         let ensemble_config = EnsembleConfig::new(
-            args.ensemble_voices,
+            (min_voices, max_voices),  // Dynamic voice count range
             15.0,  // max_delay_ms
             5.0,   // max_pitch_shift_cents
-            90.0,  // spatial_spread_deg (90° = quarter-circle distribution)
+            (60.0, 120.0),  // Dynamic spatial spread range (degrees)
             audio_buffer.sample_rate,
         )?;
-        let ensemble_effect = EnsembleEffect::new(ensemble_config);
+        let mut ensemble_effect = EnsembleEffect::new(ensemble_config);
         
-        let voices = ensemble_effect.process(&eq_boosted_audio)
+        // TODO: Use average intensity from intensity_curve for now (will be chunk-based later)
+        // let avg_intensity = _intensity_curve.iter().sum::<f32>() / _intensity_curve.len().max(1) as f32;
+        let avg_intensity = 0.7; // Placeholder: 70% intensity (10 voices, 102° spread)
+        
+        let voices = ensemble_effect.process_dynamic(&eq_boosted_audio, avg_intensity)
             .context("Failed to generate ensemble voices")?;
         
         info!(
@@ -438,94 +618,8 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
         }]
     };
 
-    // Phase 4: Spatialize each voice independently with HRTF + circular motion
-    info!(
-        rpm = args.rotation_rpm,
-        num_voices = voice_outputs.len(),
-        "Phase 4: Individual voice spatialization (HRTF + circular motion)"
-    );
-    
-    // Load SOFA HRTF dataset (real file or mock fallback)
-    let sofa_loader = if let Some(ref sofa_path) = args.sofa_path {
-        info!(path = ?sofa_path, "Loading SOFA HRTF dataset");
-        Arc::new(SofaLoader::load_or_mock(sofa_path))
-    } else {
-        info!("Using synthetic mock HRTF dataset (72 positions)");
-        Arc::new(SofaLoader::create_mock_dataset())
-    };
-    
-    // Create HRTF convolver (shared across all voices)
-    let hrtf_convolver = HrtfConvolver::new(
-        512,  // FFT size
-        256,  // Hop size
-        args.sample_rate,
-        sofa_loader,
-    ).context("Failed to create HRTF convolver")?;
-    
-    let motion_engine = CircularMotionEngine::new(
-        args.rotation_rpm,
-        1.5,  // radius_meters
-        0.0,  // elevation_degrees
-        RotationDirection::Clockwise,
-    );
-    
-    let chunk_size = 2048;
-    let mut binaural_voices: Vec<BinauralSignal> = Vec::new();
-    
-    // CRITICAL: Process each voice independently
-    for (voice_idx, voice) in voice_outputs.iter().enumerate() {
-        info!(
-            voice_index = voice_idx,
-            spatial_offset = voice.spatial_offset_deg,
-            num_samples = voice.samples.len(),
-            "Spatializing voice"
-        );
-        
-        let mut spatial_audio = BinauralSignal::new(voice.samples.len());
-        
-        // Process voice in chunks with time-varying position
-        for (chunk_idx, chunk) in voice.samples.chunks(chunk_size).enumerate() {
-            let time_sec = (chunk_idx * chunk_size) as f64 / args.sample_rate as f64;
-            
-            // Calculate position: base rotation + voice's spatial offset
-            let base_position = motion_engine.calculate_position(time_sec);
-            let final_azimuth = base_position.azimuth_deg + voice.spatial_offset_deg;
-            
-            let hrtf_position = SphericalCoord::new(
-                final_azimuth,
-                base_position.elevation_deg,
-                base_position.distance_m,
-            );
-            
-            // Convolve chunk with HRTF at this voice's unique position
-            let (left_chunk, right_chunk) = hrtf_convolver.convolve_at_position(chunk, &hrtf_position)
-                .context("HRTF convolution failed")?;
-            
-            // OVERLAP-ADD: Sum convolved chunks (preserves HRTF tail)
-            let start_idx = chunk_idx * chunk_size;
-            for (i, (&left_sample, &right_sample)) in left_chunk.iter().zip(right_chunk.iter()).enumerate() {
-                let output_idx = start_idx + i;
-                if output_idx < spatial_audio.left.len() {
-                    spatial_audio.left[output_idx] += left_sample * voice.gain;
-                    spatial_audio.right[output_idx] += right_sample * voice.gain;
-                }
-            }
-        }
-        
-        binaural_voices.push(spatial_audio);
-    }
-    
-    info!(
-        num_spatialized_voices = binaural_voices.len(),
-        "All voices spatialized independently"
-    );
-
-    // Phase 4.5: Mix all spatialized voices with musical lookahead limiting
-    info!("Phase 4.5: Mixing {} voices with lookahead limiter", binaural_voices.len());
-    let mixer_config = SpatialMixerConfig::default_8d(args.sample_rate);
-    let spatial_mixer = SpatialMixer::new(mixer_config);
-    let final_mix = spatial_mixer.mix(&binaural_voices);
-    info!("Lookahead limiter applied (threshold: 0.95, knee: 3dB)");
+    // Phase 4-4.5: Spatialize and mix voices
+    let final_mix = run_spatialization(voice_outputs, args)?;
 
     // Phase 5-6: ML analysis (MIDI transcription + harmonic analysis)
     let (midi_notes, harmony_map) = run_ml_analysis(&audio_buffer, args)?;

@@ -22,34 +22,50 @@ pub struct VoiceOutput {
     pub gain: f32,
 }
 
-/// Configuration for ensemble effect generation
+/// Configuration for ensemble effect generation with dynamic parameter ranges
 #[derive(Debug, Clone)]
 pub struct EnsembleConfig {
-    pub num_voices: usize,          // Number of virtual voices (5-13 recommended)
+    /// Number of virtual voices: (min, max) range for intensity-driven interpolation
+    /// Example: (5, 13) = 5 voices at low intensity, 13 at high intensity
+    pub num_voices_range: (usize, usize),
+    
     pub max_delay_ms: f32,          // Maximum delay spread in milliseconds (typically 15ms)
     pub max_pitch_shift_cents: f32, // Maximum pitch shift in cents (typically 5 cents)
-    pub spatial_spread_deg: f32,    // Spatial distribution width in degrees (typically 60-120°)
+    
+    /// Spatial distribution width in degrees: (min, max) range for intensity modulation
+    /// Example: (60.0, 120.0) = tight spread at low intensity, wide spread at high intensity
+    pub spatial_spread_deg_range: (f32, f32),
+    
     pub sample_rate: u32,           // Audio sample rate in Hz
 }
 
 impl EnsembleConfig {
+    /// Create dynamic EnsembleConfig with intensity-driven parameter ranges
     pub fn new(
-        num_voices: usize, 
+        num_voices_range: (usize, usize),
         max_delay_ms: f32, 
         max_pitch_shift_cents: f32, 
-        spatial_spread_deg: f32,
+        spatial_spread_deg_range: (f32, f32),
         sample_rate: u32
     ) -> Result<Self> {
-        if num_voices < 1 {
-            bail!("Number of voices must be at least 1, got {}", num_voices);
+        let (min_voices, max_voices) = num_voices_range;
+        if min_voices < 1 || max_voices < min_voices {
+            bail!(
+                "Invalid num_voices_range: ({}, {}). Must satisfy: 1 <= min <= max",
+                min_voices, max_voices
+            );
         }
         
         if max_delay_ms < 0.0 {
             bail!("Max delay must be non-negative, got {}", max_delay_ms);
         }
         
-        if spatial_spread_deg <= 0.0 || spatial_spread_deg > 360.0 {
-            bail!("Spatial spread must be in (0, 360] degrees, got {}", spatial_spread_deg);
+        let (min_spread, max_spread) = spatial_spread_deg_range;
+        if min_spread <= 0.0 || max_spread < min_spread || max_spread > 360.0 {
+            bail!(
+                "Invalid spatial_spread_deg_range: ({}, {}). Must satisfy: 0 < min <= max <= 360",
+                min_spread, max_spread
+            );
         }
         
         if sample_rate == 0 {
@@ -57,12 +73,49 @@ impl EnsembleConfig {
         }
 
         Ok(Self {
-            num_voices,
+            num_voices_range,
             max_delay_ms,
             max_pitch_shift_cents,
-            spatial_spread_deg,
+            spatial_spread_deg_range,
             sample_rate,
         })
+    }
+    
+    /// Legacy constructor for static configuration (backward compatibility)
+    #[allow(dead_code)]
+    pub fn new_static(
+        num_voices: usize, 
+        max_delay_ms: f32, 
+        max_pitch_shift_cents: f32, 
+        spatial_spread_deg: f32,
+        sample_rate: u32
+    ) -> Result<Self> {
+        Self::new(
+            (num_voices, num_voices),
+            max_delay_ms,
+            max_pitch_shift_cents,
+            (spatial_spread_deg, spatial_spread_deg),
+            sample_rate,
+        )
+    }
+    
+    /// Calculate dynamic num_voices based on intensity [0.0, 1.0]
+    pub fn calculate_num_voices(&self, intensity: f32) -> usize {
+        let intensity_clamped = intensity.clamp(0.0, 1.0);
+        let (min_voices, max_voices) = self.num_voices_range;
+        
+        let range = (max_voices - min_voices) as f32;
+        let interpolated = min_voices as f32 + (range * intensity_clamped);
+        
+        interpolated.round() as usize
+    }
+    
+    /// Calculate dynamic spatial_spread_deg based on intensity [0.0, 1.0]
+    pub fn calculate_spatial_spread(&self, intensity: f32) -> f32 {
+        let intensity_clamped = intensity.clamp(0.0, 1.0);
+        let (min_spread, max_spread) = self.spatial_spread_deg_range;
+        
+        min_spread + ((max_spread - min_spread) * intensity_clamped)
     }
 
     /// Convert delay in milliseconds to samples
@@ -80,92 +133,127 @@ pub struct Voice {
     pub gain: f32, // Amplitude scaling (typically 1.0 / num_voices for normalization)
 }
 
-/// Apply pitch shift to audio via resampling
+/// # Responsibility
+/// Reusable pitch shifter with pre-configured resampler.
 ///
-/// # Arguments
-/// * `input` - Input samples
-/// * `pitch_shift_cents` - Pitch shift in cents (100 cents = 1 semitone)
-/// * `sample_rate` - Audio sample rate
-///
-/// # Returns
-/// Pitch-shifted samples
-fn apply_pitch_shift(input: &[f32], pitch_shift_cents: f32, _sample_rate: u32) -> Result<Vec<f32>> {
-    if pitch_shift_cents.abs() < 0.1 {
-        // Skip resampling for negligible pitch shifts
-        return Ok(input.to_vec());
-    }
-
-    // Pitch shift factor: 2^(cents/1200)
-    // Positive cents = higher pitch, negative cents = lower pitch
-    let pitch_factor = 2.0_f32.powf(pitch_shift_cents / 1200.0);
-    
-    // Rubato ratio = output_rate / input_rate
-    // To pitch UP (faster playback), we need LESS time (resample DOWN) → ratio < 1.0
-    // To pitch DOWN (slower playback), we need MORE time (resample UP) → ratio > 1.0
-    // Therefore: rubato_ratio = 1.0 / pitch_factor
-    let rubato_ratio = 1.0 / pitch_factor;
-    
-    // Rubato resampler (high-quality sinc interpolation)
-    let params = SincInterpolationParameters {
-        sinc_len: 256,
-        f_cutoff: 0.95,
-        interpolation: SincInterpolationType::Linear,
-        oversampling_factor: 256,
-        window: WindowFunction::BlackmanHarris2,
-    };
-
-    let mut resampler = SincFixedIn::<f32>::new(
-        rubato_ratio as f64,
-        2.0,          // Max ratio change (not used for fixed resampling)
-        params,
-        input.len(),
-        1,            // Mono channel
-    )?;
-
-    // Resample (rubato expects Vec<Vec<f32>> for multi-channel)
-    let input_buf = vec![input.to_vec()];
-    let output_buf = resampler.process(&input_buf, None)?;
-    
-    Ok(output_buf[0].clone())
+/// Avoids recreating Resampler on every invocation (CRISALIDA.CODE compliance).
+struct PitchShifter {
+    #[allow(dead_code)] // Stored for potential debugging/introspection
+    pitch_shift_cents: f32,
+    resampler: Option<SincFixedIn<f32>>,
+    #[allow(dead_code)] // Stored for potential debugging/introspection
+    sample_rate: u32,
 }
 
-/// Ensemble effect processor
+impl PitchShifter {
+    /// # Responsibility
+    /// Create pitch shifter with pre-configured resampler for given pitch shift.
+    fn new(pitch_shift_cents: f32, expected_input_len: usize, sample_rate: u32) -> Result<Self> {
+        let resampler = if pitch_shift_cents.abs() < 0.1 {
+            None // Skip resampling for negligible shifts
+        } else {
+            // Pitch shift factor: 2^(cents/1200)
+            let pitch_factor = 2.0_f32.powf(pitch_shift_cents / 1200.0);
+            let rubato_ratio = 1.0 / pitch_factor;
+            
+            let params = SincInterpolationParameters {
+                sinc_len: 256,
+                f_cutoff: 0.95,
+                interpolation: SincInterpolationType::Linear,
+                oversampling_factor: 256,
+                window: WindowFunction::BlackmanHarris2,
+            };
+
+            let resampler = SincFixedIn::<f32>::new(
+                rubato_ratio as f64,
+                2.0,
+                params,
+                expected_input_len,
+                1, // Mono
+            )?;
+            
+            Some(resampler)
+        };
+
+        Ok(Self {
+            pitch_shift_cents,
+            resampler,
+            sample_rate,
+        })
+    }
+
+    /// # Responsibility
+    /// Apply pitch shift to input using pre-configured resampler.
+    fn process(&mut self, input: &[f32]) -> Result<Vec<f32>> {
+        match &mut self.resampler {
+            None => Ok(input.to_vec()), // No shift needed
+            Some(resampler) => {
+                let input_buf = vec![input.to_vec()];
+                let output_buf = resampler.process(&input_buf, None)?;
+                Ok(output_buf[0].clone())
+            }
+        }
+    }
+}
+
+/// Ensemble effect processor with reusable pitch shifters
 pub struct EnsembleEffect {
     #[allow(dead_code)] // Reserved for future configuration queries
     config: EnsembleConfig,
     voices: Vec<Voice>,
+    pitch_shifters: Vec<PitchShifter>,
 }
 
 impl EnsembleEffect {
-    /// Create new ensemble effect with specified configuration
+    /// # Responsibility
+    /// Create new ensemble effect with dynamic intensity-driven configuration.
+    ///
+    /// NOTE: This constructor uses DEFAULT intensity (0.5) to initialize voices.
+    /// Use process_dynamic() to apply runtime intensity modulation.
     pub fn new(config: EnsembleConfig) -> Self {
+        Self {
+            config,
+            voices: Vec::new(),
+            pitch_shifters: Vec::new(),
+        }
+    }
+    
+    /// # Responsibility
+    /// Generate voices based on current intensity level.
+    ///
+    /// This method regenerates the voice configuration on every call to match
+    /// the target intensity. Use for dynamic orchestral density modulation.
+    fn generate_voices_for_intensity(&self, intensity: f32) -> Vec<Voice> {
         let mut rng = rand::thread_rng();
-        let gain = 1.0 / config.num_voices as f32;
+        
+        let num_voices = self.config.calculate_num_voices(intensity);
+        let spatial_spread = self.config.calculate_spatial_spread(intensity);
+        let gain = 1.0 / num_voices.max(1) as f32;
 
-        let voices: Vec<Voice> = (0..config.num_voices)
+        (0..num_voices)
             .map(|i| {
                 // Random delay between -max_delay_ms and +max_delay_ms
-                let delay_ms = rng.gen_range(-config.max_delay_ms..=config.max_delay_ms);
+                let delay_ms = rng.gen_range(-self.config.max_delay_ms..=self.config.max_delay_ms);
                 let delay_samples = if delay_ms >= 0.0 {
-                    config.delay_ms_to_samples(delay_ms)
+                    self.config.delay_ms_to_samples(delay_ms)
                 } else {
                     0 // Negative delays not supported in simple implementation
                 };
 
                 // Random pitch shift between -max_pitch_shift and +max_pitch_shift
                 let pitch_shift_cents = rng.gen_range(
-                    -config.max_pitch_shift_cents..=config.max_pitch_shift_cents
+                    -self.config.max_pitch_shift_cents..=self.config.max_pitch_shift_cents
                 );
 
                 // CRITICAL: Calculate spatial distribution
-                // Distribute voices evenly across spatial_spread_deg range
+                // Distribute voices evenly across spatial_spread range
                 // Example: 5 voices, 60° spread → positions at -30°, -15°, 0°, +15°, +30°
-                let spatial_offset_deg = if config.num_voices == 1 {
+                let spatial_offset_deg = if num_voices == 1 {
                     0.0 // Single voice at center
                 } else {
                     // Map voice index to position in range [-spatial_spread/2, +spatial_spread/2]
-                    let normalized_pos = (i as f32 / (config.num_voices - 1) as f32) - 0.5;
-                    normalized_pos * config.spatial_spread_deg
+                    let normalized_pos = (i as f32 / (num_voices - 1) as f32) - 0.5;
+                    normalized_pos * spatial_spread
                 };
 
                 Voice {
@@ -175,35 +263,50 @@ impl EnsembleEffect {
                     gain,
                 }
             })
-            .collect();
-
-        Self { config, voices }
+            .collect()
     }
 
     /// Process input samples through ensemble effect to generate independent spatial voices
     ///
     /// # Responsibility
-    /// Generates Vec<VoiceOutput> where each voice has:
-    /// - Unique audio samples (delayed + pitch-shifted)
-    /// - Spatial position (spatial_offset_deg)
-    /// - Normalized gain
+    /// # Responsibility
+    /// Process audio with DYNAMIC intensity-driven voice configuration.
+    ///
+    /// This method regenerates voices on every call based on intensity parameter,
+    /// enabling runtime orchestral density modulation (5-13 voices interpolated).
     ///
     /// # Arguments
     /// * `input` - Mono input samples
+    /// * `intensity` - Intensity level [0.0, 1.0] for voice count + spatial spread interpolation
     ///
     /// # Returns
     /// Vector of independent voice outputs ready for individual spatialization
-    pub fn process(&self, input: &[f32]) -> Result<Vec<VoiceOutput>> {
+    pub fn process_dynamic(&mut self, input: &[f32], intensity: f32) -> Result<Vec<VoiceOutput>> {
         if input.is_empty() {
             return Ok(Vec::new());
         }
 
+        // Regenerate voices based on intensity
+        self.voices = self.generate_voices_for_intensity(intensity);
+        
+        // Regenerate pitch shifters for new voice configuration
+        self.pitch_shifters = self.voices
+            .iter()
+            .map(|voice| {
+                PitchShifter::new(
+                    voice.pitch_shift_cents,
+                    input.len(),
+                    self.config.sample_rate,
+                )
+            })
+            .collect::<Result<Vec<_>>>()?;
+
         let mut voice_outputs = Vec::with_capacity(self.voices.len());
 
         // Process each voice independently (NO MIXING)
-        for voice in &self.voices {
-            // Apply pitch shift via resampling
-            let pitched = match apply_pitch_shift(input, voice.pitch_shift_cents, self.config.sample_rate) {
+        for (voice, pitch_shifter) in self.voices.iter().zip(self.pitch_shifters.iter_mut()) {
+            // Apply pitch shift via reusable resampler
+            let pitched = match pitch_shifter.process(input) {
                 Ok(samples) => samples,
                 Err(e) => {
                     tracing::warn!(
@@ -229,6 +332,21 @@ impl EnsembleEffect {
 
         Ok(voice_outputs)
     }
+    
+    /// # Responsibility
+    /// Legacy static processing method (backward compatibility).
+    ///
+    /// WARNING: This method uses default intensity (0.5) on first call.
+    /// For dynamic processing, use process_dynamic() instead.
+    #[allow(dead_code)]
+    pub fn process(&mut self, input: &[f32]) -> Result<Vec<VoiceOutput>> {
+        // Initialize voices with default intensity if empty
+        if self.voices.is_empty() {
+            self.voices = self.generate_voices_for_intensity(0.5);
+        }
+        
+        self.process_dynamic(input, 0.5)
+    }
 
     pub fn num_voices(&self) -> usize {
         self.voices.len()
@@ -246,44 +364,71 @@ mod tests {
 
     #[test]
     fn test_ensemble_config_creation() {
-        let config = EnsembleConfig::new(10, 5.0, 3.0, 90.0, 48000).unwrap();
-        assert_eq!(config.num_voices, 10);
+        let config = EnsembleConfig::new((5, 10), 5.0, 3.0, (60.0, 90.0), 48000).unwrap();
+        assert_eq!(config.num_voices_range, (5, 10));
         assert_relative_eq!(config.max_delay_ms, 5.0);
         assert_relative_eq!(config.max_pitch_shift_cents, 3.0);
-        assert_relative_eq!(config.spatial_spread_deg, 90.0);
+        assert_eq!(config.spatial_spread_deg_range, (60.0, 90.0));
         assert_eq!(config.sample_rate, 48000);
     }
 
     #[test]
     fn test_ensemble_config_zero_voices() {
-        let result = EnsembleConfig::new(0, 5.0, 3.0, 90.0, 48000);
-        assert!(result.is_err());
+        let result = EnsembleConfig::new((0, 10), 5.0, 3.0, (60.0, 90.0), 48000);
+        assert!(result.is_err(), "Should reject min_voices = 0");
+    }
+    
+    #[test]
+    fn test_ensemble_config_inverted_voice_range() {
+        let result = EnsembleConfig::new((10, 5), 5.0, 3.0, (60.0, 90.0), 48000);
+        assert!(result.is_err(), "Should reject max < min for voices");
     }
 
     #[test]
     fn test_ensemble_config_negative_delay() {
-        let result = EnsembleConfig::new(10, -5.0, 3.0, 90.0, 48000);
+        let result = EnsembleConfig::new((5, 10), -5.0, 3.0, (60.0, 90.0), 48000);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_ensemble_config_zero_sample_rate() {
-        let result = EnsembleConfig::new(10, 5.0, 3.0, 90.0, 0);
+        let result = EnsembleConfig::new((5, 10), 5.0, 3.0, (60.0, 90.0), 0);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_ensemble_config_invalid_spatial_spread() {
-        let result = EnsembleConfig::new(10, 5.0, 3.0, 0.0, 48000);
-        assert!(result.is_err());
+        let result = EnsembleConfig::new((5, 10), 5.0, 3.0, (0.0, 90.0), 48000);
+        assert!(result.is_err(), "Should reject min_spread = 0");
         
-        let result = EnsembleConfig::new(10, 5.0, 3.0, 400.0, 48000);
-        assert!(result.is_err());
+        let result = EnsembleConfig::new((5, 10), 5.0, 3.0, (60.0, 400.0), 48000);
+        assert!(result.is_err(), "Should reject max_spread > 360");
+        
+        let result = EnsembleConfig::new((5, 10), 5.0, 3.0, (90.0, 60.0), 48000);
+        assert!(result.is_err(), "Should reject max < min for spatial spread");
+    }
+    
+    #[test]
+    fn test_calculate_num_voices_interpolation() {
+        let config = EnsembleConfig::new((5, 13), 5.0, 3.0, (60.0, 120.0), 48000).unwrap();
+        
+        assert_eq!(config.calculate_num_voices(0.0), 5, "Min intensity → min voices");
+        assert_eq!(config.calculate_num_voices(1.0), 13, "Max intensity → max voices");
+        assert_eq!(config.calculate_num_voices(0.5), 9, "50% intensity → mid voices");
+    }
+    
+    #[test]
+    fn test_calculate_spatial_spread_interpolation() {
+        let config = EnsembleConfig::new((5, 13), 5.0, 3.0, (60.0, 120.0), 48000).unwrap();
+        
+        assert_relative_eq!(config.calculate_spatial_spread(0.0), 60.0, epsilon = 0.01);
+        assert_relative_eq!(config.calculate_spatial_spread(1.0), 120.0, epsilon = 0.01);
+        assert_relative_eq!(config.calculate_spatial_spread(0.5), 90.0, epsilon = 0.01);
     }
 
     #[test]
     fn test_delay_ms_to_samples_conversion() {
-        let config = EnsembleConfig::new(10, 5.0, 3.0, 90.0, 48000).unwrap();
+        let config = EnsembleConfig::new((5, 10), 5.0, 3.0, (60.0, 90.0), 48000).unwrap();
         
         // 1ms at 48kHz = 48 samples
         assert_eq!(config.delay_ms_to_samples(1.0), 48);
@@ -294,30 +439,40 @@ mod tests {
 
     #[test]
     fn test_ensemble_effect_creation() {
-        let config = EnsembleConfig::new(10, 5.0, 3.0, 90.0, 48000).unwrap();
+        let config = EnsembleConfig::new((8, 10), 5.0, 3.0, (80.0, 90.0), 48000).unwrap();
         let effect = EnsembleEffect::new(config);
         
-        assert_eq!(effect.num_voices(), 10);
+        // Effect starts empty, voices generated on first process_dynamic()
+        assert_eq!(effect.num_voices(), 0);
+    }
+    
+    #[test]
+    fn test_ensemble_dynamic_processing() {
+        let config = EnsembleConfig::new((5, 13), 5.0, 3.0, (60.0, 120.0), 48000).unwrap();
+        let mut effect = EnsembleEffect::new(config);
         
-        // Verify gain normalization
-        for voice in effect.voices() {
-            assert_relative_eq!(voice.gain, 0.1, epsilon = 0.001);
-        }
+        let input = vec![0.5; 500];
         
-        // Verify spatial distribution
-        // 10 voices across 90° → -45° to +45°
-        let spatial_positions: Vec<f32> = effect.voices().iter().map(|v| v.spatial_offset_deg).collect();
-        assert_relative_eq!(spatial_positions[0], -45.0, epsilon = 0.1);
-        assert_relative_eq!(spatial_positions[9], 45.0, epsilon = 0.1);
+        // Low intensity: should generate ~5 voices
+        let voices_low = effect.process_dynamic(&input, 0.0).unwrap();
+        assert_eq!(voices_low.len(), 5, "Low intensity should use min voices");
+        
+        // High intensity: should generate ~13 voices
+        let voices_high = effect.process_dynamic(&input, 1.0).unwrap();
+        assert_eq!(voices_high.len(), 13, "High intensity should use max voices");
+        
+        // Mid intensity: should generate ~9 voices
+        let voices_mid = effect.process_dynamic(&input, 0.5).unwrap();
+        assert_eq!(voices_mid.len(), 9, "Mid intensity should interpolate voices");
     }
 
     #[test]
     fn test_ensemble_process_returns_independent_voices() {
-        let config = EnsembleConfig::new(5, 1.0, 2.0, 60.0, 48000).unwrap();
-        let effect = EnsembleEffect::new(config);
+        let config = EnsembleConfig::new((5, 5), 1.0, 2.0, (60.0, 60.0), 48000).unwrap();
+        let mut effect = EnsembleEffect::new(config);
         
         let input = vec![0.5; 500];
-        let voices = effect.process(&input).unwrap();
+        let voices = effect.process_dynamic(&input, 0.7).unwrap();
         
         // Should return Vec<VoiceOutput>, not mixed audio
         assert_eq!(voices.len(), 5);
@@ -338,18 +493,21 @@ mod tests {
 
     #[test]
     fn test_ensemble_process_empty_input() {
-        let config = EnsembleConfig::new(5, 1.0, 0.0, 60.0, 48000).unwrap();
-        let effect = EnsembleEffect::new(config);
+        let config = EnsembleConfig::new((5, 5), 1.0, 0.0, (60.0, 60.0), 48000).unwrap();
+        let mut effect = EnsembleEffect::new(config);
         
-        let voices = effect.process(&[]).unwrap();
+        let voices = effect.process_dynamic(&[], 0.5).unwrap();
         assert!(voices.is_empty());
     }
 
     #[test]
     fn test_voice_delays_within_bounds() {
-        let config = EnsembleConfig::new(20, 5.0, 3.0, 90.0, 48000).unwrap();
+        let config = EnsembleConfig::new((18, 20), 5.0, 3.0, (85.0, 90.0), 48000).unwrap();
         let max_expected_delay = config.delay_ms_to_samples(5.0);
-        let effect = EnsembleEffect::new(config);
+        let mut effect = EnsembleEffect::new(config);
+        
+        let input = vec![0.5; 500];
+        let _ = effect.process_dynamic(&input, 0.9).unwrap();
         
         for voice in effect.voices() {
             assert!(voice.delay_samples <= max_expected_delay);
@@ -358,8 +516,11 @@ mod tests {
 
     #[test]
     fn test_voice_pitch_shifts_within_bounds() {
-        let config = EnsembleConfig::new(20, 5.0, 3.0, 90.0, 48000).unwrap();
-        let effect = EnsembleEffect::new(config);
+        let config = EnsembleConfig::new((18, 20), 5.0, 3.0, (85.0, 90.0), 48000).unwrap();
+        let mut effect = EnsembleEffect::new(config);
+        
+        let input = vec![0.5; 500];
+        let _ = effect.process_dynamic(&input, 0.9).unwrap();
         
         for voice in effect.voices() {
             assert!(voice.pitch_shift_cents >= -3.0);
@@ -369,8 +530,11 @@ mod tests {
     
     #[test]
     fn test_spatial_distribution_single_voice() {
-        let config = EnsembleConfig::new(1, 5.0, 3.0, 90.0, 48000).unwrap();
-        let effect = EnsembleEffect::new(config);
+        let config = EnsembleConfig::new((1, 1), 5.0, 3.0, (90.0, 90.0), 48000).unwrap();
+        let mut effect = EnsembleEffect::new(config);
+        
+        let input = vec![0.5; 500];
+        let _ = effect.process_dynamic(&input, 0.5).unwrap();
         
         let voices = effect.voices();
         assert_eq!(voices.len(), 1);
@@ -379,8 +543,11 @@ mod tests {
     
     #[test]
     fn test_spatial_distribution_symmetric() {
-        let config = EnsembleConfig::new(5, 5.0, 3.0, 60.0, 48000).unwrap();
-        let effect = EnsembleEffect::new(config);
+        let config = EnsembleConfig::new((5, 5), 5.0, 3.0, (60.0, 60.0), 48000).unwrap();
+        let mut effect = EnsembleEffect::new(config);
+        
+        let input = vec![0.5; 500];
+        let _ = effect.process_dynamic(&input, 0.5).unwrap();
         
         let positions: Vec<f32> = effect.voices().iter().map(|v| v.spatial_offset_deg).collect();
         
@@ -400,10 +567,12 @@ mod tests {
         let input = vec![0.5; 1000];
         
         // Pitch up by 100 cents (1 semitone) → 2^(100/1200) = 1.0595x faster
-        let pitched_up = apply_pitch_shift(&input, 100.0, 48000).unwrap();
+        let mut shifter_up = PitchShifter::new(100.0, input.len(), 48000).unwrap();
+        let pitched_up = shifter_up.process(&input).unwrap();
         
         // Pitch down by 100 cents → 2^(-100/1200) = 0.9439x slower
-        let pitched_down = apply_pitch_shift(&input, -100.0, 48000).unwrap();
+        let mut shifter_down = PitchShifter::new(-100.0, input.len(), 48000).unwrap();
+        let pitched_down = shifter_down.process(&input).unwrap();
         
         println!("Input: {}, Pitch UP: {}, Pitch DOWN: {}", 
                  input.len(), pitched_up.len(), pitched_down.len());
@@ -432,15 +601,15 @@ mod tests {
 
     #[test]
     fn test_ensemble_with_pitch_shifting_active() {
-        let config = EnsembleConfig::new(5, 1.0, 5.0, 60.0, 48000).unwrap(); // 5 cents max shift
-        let effect = EnsembleEffect::new(config);
+        let config = EnsembleConfig::new((5, 5), 1.0, 5.0, (60.0, 60.0), 48000).unwrap(); // 5 cents max shift
+        let mut effect = EnsembleEffect::new(config);
         
         // Generate 440Hz sine wave
         let input: Vec<f32> = (0..1000)
             .map(|i| (2.0 * std::f32::consts::PI * 440.0 * i as f32 / 48000.0).sin() * 0.5)
             .collect();
         
-        let voices = effect.process(&input).unwrap();
+        let voices = effect.process_dynamic(&input, 0.6).unwrap();
         
         // Should generate 5 independent voices
         assert_eq!(voices.len(), 5);

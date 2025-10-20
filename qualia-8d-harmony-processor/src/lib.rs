@@ -1,6 +1,7 @@
 //! # Responsibility
 //! Public API for 8D audio processing with ML-powered harmonic analysis.
 
+pub mod analysis;
 pub mod audio;
 pub mod contracts;
 pub mod export;

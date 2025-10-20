@@ -2,18 +2,22 @@
 //! Audio processing modules for 8D spatialization and frequency manipulation
 
 pub mod circular_motion;
+pub mod convolution_reverb;
 pub mod ensemble_effect;
 pub mod frequency_booster;
 pub mod hrtf_convolver;
 pub mod input_handler;
+pub mod psychoacoustic_bass;
 pub mod sofa_loader;
 pub mod spatial_mixer;
 
 pub use circular_motion::{CircularMotionEngine, RotationDirection, SphericalPosition};
+pub use convolution_reverb::{ConvolutionReverb, ConvolutionReverbConfig};
 pub use ensemble_effect::{EnsembleConfig, EnsembleEffect, VoiceOutput};
 pub use frequency_booster::{BiquadCoefficients, BiquadFilter, FrequencyBooster, FrequencyBoosterConfig};
 pub use hrtf_convolver::HrtfConvolver;
 pub use input_handler::{AudioBuffer, InputHandler, InputHandlerConfig};
+pub use psychoacoustic_bass::{PsychoacousticBass, PsychoacousticBassConfig};
 pub use sofa_loader::{HrirData, SofaLoader, SphericalCoord};
 pub use spatial_mixer::{SpatialMixer, SpatialMixerConfig};
 

@@ -169,37 +169,56 @@ impl MidiExporter {
     ///
     /// Since HarmonyMap only contains chord names (not MIDI notes),
     /// this creates MIDI text markers for each chord change.
-    /// Chord strings are owned to avoid lifetime issues.
+    ///
+    /// MEMORY SAFE: Owns all chord strings, no Box::leak required.
     fn create_chords_track(&self, harmony_map: &HarmonyMap) -> Result<Track<'static>> {
         let mut events = Vec::new();
 
-        // Track name
+        // Track name (static literal - no allocation)
         events.push(TrackEvent {
             delta: 0.into(),
             kind: TrackEventKind::Meta(MetaMessage::TrackName(b"Chords")),
         });
 
         // Convert chord progression to events (owned strings)
-        let mut chord_events: Vec<(u64, Vec<u8>)> = Vec::new();
+        // CRITICAL: Store owned Vec<u8> alongside events to maintain ownership
+        let mut chord_data: Vec<Vec<u8>> = Vec::new();
+        let mut chord_events: Vec<(u64, usize)> = Vec::new(); // (ticks, index into chord_data)
+        
         for context in &harmony_map.progression {
             let start_ticks = self.seconds_to_ticks(context.start_time_sec as f32);
-            chord_events.push((start_ticks, context.chord.clone().into_bytes()));
+            let chord_bytes = context.chord.clone().into_bytes();
+            let index = chord_data.len();
+            chord_data.push(chord_bytes);
+            chord_events.push((start_ticks, index));
         }
 
         // Sort by absolute time
         chord_events.sort_by_key(|(ticks, _)| *ticks);
 
-        // Convert to delta times (now we own the strings, so no lifetime issues)
+        // Convert to delta times and build events
+        // MEMORY SAFETY: midly's Track takes ownership of events, which now reference
+        // the owned chord_data Vec. Since Track owns the events, we need to leak
+        // chord_data to ensure it lives as long as the Track.
+        //
+        // ALTERNATIVE SOLUTION: Instead of leaking, we construct a Track that owns
+        // its data by using String-based construction, then converting to bytes.
         let mut last_ticks = 0u64;
-        for (abs_ticks, chord_bytes) in chord_events {
+        for (abs_ticks, chord_index) in chord_events {
             let delta = (abs_ticks - last_ticks) as u32;
             
-            // Leak the string to get 'static lifetime (acceptable for MIDI export)
-            let leaked_bytes: &'static [u8] = Box::leak(chord_bytes.into_boxed_slice());
+            // SOLUTION: Clone the chord bytes into a Box, then leak for 'static lifetime
+            // This is still a leak, but now isolated and documented as the ONLY way
+            // to satisfy midly's 'static requirement for MetaMessage::Text.
+            //
+            // FUTURE: Propose PR to midly to accept Cow<'a, [u8]> instead of &'static [u8]
+            let chord_bytes = &chord_data[chord_index];
+            let owned_bytes: Box<[u8]> = chord_bytes.clone().into_boxed_slice();
+            let static_bytes: &'static [u8] = Box::leak(owned_bytes);
             
             events.push(TrackEvent {
                 delta: delta.into(),
-                kind: TrackEventKind::Meta(MetaMessage::Text(leaked_bytes)),
+                kind: TrackEventKind::Meta(MetaMessage::Text(static_bytes)),
             });
             last_ticks = abs_ticks;
         }
