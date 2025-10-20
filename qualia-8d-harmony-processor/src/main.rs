@@ -496,20 +496,25 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
         .context("Failed to analyze intensity curve")?;
     
     let avg_intensity = intensity_curve.iter().sum::<f32>() / intensity_curve.len().max(1) as f32;
+    let min_intensity = intensity_curve.iter().copied().fold(f32::INFINITY, f32::min);
+    let max_intensity = intensity_curve.iter().copied().fold(f32::NEG_INFINITY, f32::max);
     
     info!(
         num_windows = intensity_curve.len(),
         avg_intensity = avg_intensity,
-        "Intensity analysis complete"
+        min_intensity = min_intensity,
+        max_intensity = max_intensity,
+        "Intensity analysis complete - dynamic range: [{:.2}, {:.2}]",
+        min_intensity, max_intensity
     );
     
-    // Phase 4: Process audio through pipeline (EQ → Bass → Reverb → Ensemble)
-    info!("Phase 4: Processing audio through pipeline");
+    // Phase 4: Process audio through pipeline with TIME-VARYING intensity
+    info!("Phase 4: Processing audio through time-varying pipeline (DYNAMIC EFFECTS)");
     
     let voice_outputs = if args.ensemble {
-        // Pipeline already configured with ensemble effect - just process
-        pipeline.process(&audio_buffer.samples, avg_intensity)
-            .context("Audio processing pipeline failed")?
+        // Use NEW time-varying processing for dynamic effect modulation
+        pipeline.process_time_varying(&audio_buffer.samples, &intensity_curve)
+            .context("Time-varying audio processing pipeline failed")?
     } else {
         // Single voice at center (no ensemble)
         vec![VoiceOutput {
@@ -521,7 +526,7 @@ fn process_file_core(args: &ProcessArgs) -> Result<()> {
     
     info!(
         num_voices = voice_outputs.len(),
-        "Audio processing complete - {} voices generated",
+        "Audio processing complete - {} voices generated with dynamic modulation",
         voice_outputs.len()
     );
 

@@ -13,7 +13,7 @@ use rand::Rng;
 use rubato::{Resampler, SincFixedIn, SincInterpolationParameters, SincInterpolationType, WindowFunction};
 
 /// # Responsibility
-/// Ensemble effect mode: Humanized (random) vs Rhythmic (tempo-synchronized).
+/// Ensemble effect mode: Humanized (random) vs Rhythmic (tempo-synchronized) vs Synchronized (intensity-gated chorus).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EnsembleMode {
     /// Random delays for natural choir/orchestra spread (default)
@@ -22,6 +22,11 @@ pub enum EnsembleMode {
     /// Tempo-locked delays creating rhythmic echo patterns
     /// Delays calculated as subdivisions of quarter note (1/8, 1/16, etc.)
     Rhythmic,
+    
+    /// Intensity-gated synchronized chorus effect
+    /// Activates when intensity > 0.7, creates tight synchronized backing vocals
+    /// Zero-latency phase-aligned voices for maximum clarity
+    Synchronized,
 }
 
 /// Single voice output with independent audio samples and spatial position
@@ -148,12 +153,27 @@ impl EnsembleConfig {
     /// Calculate dynamic num_voices based on intensity [0.0, 1.0]
     pub fn calculate_num_voices(&self, intensity: f32) -> usize {
         let intensity_clamped = intensity.clamp(0.0, 1.0);
-        let (min_voices, max_voices) = self.num_voices_range;
         
-        let range = (max_voices - min_voices) as f32;
-        let interpolated = min_voices as f32 + (range * intensity_clamped);
-        
-        interpolated.round() as usize
+        // SYNCHRONIZED MODE: Intensity gating with zero voices below threshold
+        if self.mode == EnsembleMode::Synchronized {
+            // Activate when intensity >= 0.7 (user requirement: "momentos mas intensos")
+            if intensity_clamped >= 0.7 {
+                // Interpolate voices from min to max in [0.7, 1.0] range
+                let normalized_intensity = (intensity_clamped - 0.7) / 0.3; // Map [0.7,1.0] to [0,1]
+                let (min_voices, max_voices) = self.num_voices_range;
+                let range = (max_voices - min_voices) as f32;
+                let interpolated = min_voices as f32 + (range * normalized_intensity);
+                interpolated.round() as usize
+            } else {
+                0 // GATE CLOSED: No chorus effect below intensity threshold
+            }
+        } else {
+            // HUMANIZED/RHYTHMIC MODES: Standard linear interpolation
+            let (min_voices, max_voices) = self.num_voices_range;
+            let range = (max_voices - min_voices) as f32;
+            let interpolated = min_voices as f32 + (range * intensity_clamped);
+            interpolated.round() as usize
+        }
     }
     
     /// Calculate dynamic spatial_spread_deg based on intensity [0.0, 1.0]
@@ -302,6 +322,11 @@ impl EnsembleEffect {
                         
                         quarter_note_ms * subdivision
                     }
+                    EnsembleMode::Synchronized => {
+                        // Synchronized mode: zero delay for phase-aligned chorus
+                        // Only activates when intensity > 0.7 (handled in voice count)
+                        0.0
+                    }
                 };
                 
                 let delay_samples = if delay_ms >= 0.0 {
@@ -310,10 +335,21 @@ impl EnsembleEffect {
                     0 // Negative delays not supported in simple implementation
                 };
 
-                // Random pitch shift between -max_pitch_shift and +max_pitch_shift
-                let pitch_shift_cents = rng.gen_range(
-                    -self.config.max_pitch_shift_cents..=self.config.max_pitch_shift_cents
-                );
+                // Pitch shift calculation depends on mode
+                let pitch_shift_cents = match self.config.mode {
+                    EnsembleMode::Synchronized => {
+                        // Synchronized mode: minimal pitch shift for tight chorus
+                        // Use subtle detuning (±2 cents max) for natural chorus effect
+                        let subtle_range = 2.0;
+                        rng.gen_range(-subtle_range..=subtle_range)
+                    }
+                    _ => {
+                        // Humanized/Rhythmic: Full pitch shift range for rich ensemble
+                        rng.gen_range(
+                            -self.config.max_pitch_shift_cents..=self.config.max_pitch_shift_cents
+                        )
+                    }
+                };
 
                 // CRITICAL: Calculate spatial distribution
                 // Distribute voices evenly across spatial_spread range
@@ -980,5 +1016,108 @@ mod tests {
             // Pitch shifting can shorten or lengthen, so just verify non-empty
             assert!(!voice.samples.is_empty(), "Voice samples should not be empty");
         }
+    }
+
+    #[test]
+    fn test_synchronized_mode_intensity_gating() {
+        // User requirement: "efecto coro sincronizado en momentos mas intensos"
+        let config = EnsembleConfig::new(
+            EnsembleMode::Synchronized,
+            None,
+            (3, 7), // 3-7 voices range
+            1.0,
+            5.0,
+            (30.0, 60.0),
+            48000
+        ).unwrap();
+        let mut effect = EnsembleEffect::new(config);
+        
+        let input = vec![0.5; 500];
+        
+        // LOW INTENSITY (0.5): Gate CLOSED, no voices generated
+        let voices_low = effect.process_dynamic(&input, 0.5).unwrap();
+        assert_eq!(voices_low.len(), 0, "Synchronized mode should produce 0 voices when intensity <= 0.7");
+        
+        // THRESHOLD (0.7): Gate OPENS, minimum voices
+        let voices_threshold = effect.process_dynamic(&input, 0.7).unwrap();
+        assert!(voices_threshold.len() >= 3, "Should produce minimum voices at threshold");
+        
+        // HIGH INTENSITY (0.95): Full voice count
+        let voices_high = effect.process_dynamic(&input, 0.95).unwrap();
+        assert!(voices_high.len() >= 6, "Should produce near-maximum voices at high intensity");
+    }
+
+    #[test]
+    fn test_synchronized_mode_zero_delay() {
+        // Synchronized mode uses zero delay for phase-aligned chorus
+        let config = EnsembleConfig::new(
+            EnsembleMode::Synchronized,
+            None,
+            (3, 5),
+            1.0,
+            5.0,
+            (30.0, 60.0),
+            48000
+        ).unwrap();
+        let mut effect = EnsembleEffect::new(config);
+        
+        let input = vec![0.5; 500];
+        let _ = effect.process_dynamic(&input, 0.8).unwrap(); // Above threshold
+        
+        // Verify all voices have zero delay
+        for voice in effect.voices() {
+            assert_eq!(voice.delay_samples, 0, "Synchronized mode should have zero delay");
+        }
+    }
+
+    #[test]
+    fn test_synchronized_mode_subtle_pitch_shift() {
+        // Synchronized mode uses minimal pitch shift (±2 cents) for tight chorus
+        let config = EnsembleConfig::new(
+            EnsembleMode::Synchronized,
+            None,
+            (5, 5),
+            1.0,
+            5.0, // max_pitch_shift_cents ignored in Synchronized mode
+            (60.0, 60.0),
+            48000
+        ).unwrap();
+        let mut effect = EnsembleEffect::new(config);
+        
+        let input = vec![0.5; 500];
+        let _ = effect.process_dynamic(&input, 0.85).unwrap();
+        
+        // Verify all pitch shifts are within ±2 cents
+        for voice in effect.voices() {
+            assert!(
+                voice.pitch_shift_cents.abs() <= 2.0,
+                "Synchronized mode pitch shift should be subtle: got {} cents",
+                voice.pitch_shift_cents
+            );
+        }
+    }
+
+    #[test]
+    fn test_synchronized_mode_spatial_distribution() {
+        // Verify spatial positions are calculated correctly
+        let config = EnsembleConfig::new(
+            EnsembleMode::Synchronized,
+            None,
+            (5, 5),
+            1.0,
+            5.0,
+            (60.0, 60.0),
+            48000
+        ).unwrap();
+        let mut effect = EnsembleEffect::new(config);
+        
+        let input = vec![0.5; 500];
+        let voices = effect.process_dynamic(&input, 0.8).unwrap();
+        
+        // 5 voices across 60° → -30°, -15°, 0°, +15°, +30°
+        assert_eq!(voices.len(), 5);
+        assert_relative_eq!(voices[0].spatial_offset_deg, -30.0, epsilon = 0.1);
+        assert_relative_eq!(voices[2].spatial_offset_deg, 0.0, epsilon = 0.1);
+        assert_relative_eq!(voices[4].spatial_offset_deg, 30.0, epsilon = 0.1);
     }
 }

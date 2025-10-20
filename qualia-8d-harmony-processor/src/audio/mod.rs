@@ -5,23 +5,29 @@ pub mod circular_motion;
 pub mod convolution_reverb;
 pub mod ensemble_effect;
 pub mod frequency_booster;
+pub mod harmonic_exciter;
 pub mod hrtf_convolver;
 pub mod input_handler;
 pub mod pipeline;
 pub mod psychoacoustic_bass;
 pub mod sofa_loader;
 pub mod spatial_mixer;
+pub mod stereo_widener;
+pub mod transient_shaper;
 
 pub use circular_motion::{CircularMotionEngine, RotationDirection, SphericalPosition};
 pub use convolution_reverb::{ConvolutionReverb, ConvolutionReverbConfig};
 pub use ensemble_effect::{EnsembleConfig, EnsembleEffect, EnsembleMode, VoiceOutput};
 pub use frequency_booster::{FrequencyBooster, FrequencyBoosterConfig};
+pub use harmonic_exciter::{HarmonicExciter, HarmonicExciterConfig};
 pub use hrtf_convolver::HrtfConvolver;
 pub use input_handler::{AudioBuffer, InputHandler, InputHandlerConfig};
 pub use pipeline::{AudioProcessingPipeline, PipelineConfig};
 pub use psychoacoustic_bass::{PsychoacousticBass, PsychoacousticBassConfig};
 pub use sofa_loader::{HrirData, SofaLoader, SphericalCoord};
 pub use spatial_mixer::{SpatialMixer, SpatialMixerConfig};
+pub use stereo_widener::{StereoWidener, StereoWidenerConfig};
+pub use transient_shaper::{TransientShaper, TransientShaperConfig};
 
 /// Binaural (stereo) output signal
 #[derive(Debug, Clone)]

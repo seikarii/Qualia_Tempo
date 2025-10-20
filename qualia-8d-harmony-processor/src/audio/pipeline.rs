@@ -14,6 +14,7 @@ use super::{
     ConvolutionReverb, ConvolutionReverbConfig,
     EnsembleConfig, EnsembleEffect, EnsembleMode,
     FrequencyBooster, FrequencyBoosterConfig,
+    HarmonicExciter, HarmonicExciterConfig,
     PsychoacousticBass, PsychoacousticBassConfig,
     VoiceOutput,
 };
@@ -35,6 +36,9 @@ pub struct PipelineConfig {
     
     /// Frequency booster (EQ) configuration
     pub frequency_boost: FrequencyBoosterConfig,
+    
+    /// Harmonic exciter configuration
+    pub harmonic_exciter: HarmonicExciterConfig,
     
     /// Psychoacoustic bass enhancement configuration
     pub psychoacoustic_bass: PsychoacousticBassConfig,
@@ -61,6 +65,7 @@ impl PipelineConfig {
             sample_rate,
             intensity: IntensityAnalyzerConfig::new(sample_rate),
             frequency_boost: FrequencyBoosterConfig::default_8d(sample_rate),
+            harmonic_exciter: HarmonicExciterConfig::new(sample_rate)?,
             psychoacoustic_bass: PsychoacousticBassConfig::new(sample_rate)?,
             convolution_reverb: ConvolutionReverbConfig::new(sample_rate)?,
             ensemble: EnsembleConfig::new(
@@ -94,6 +99,7 @@ impl PipelineConfig {
 pub struct AudioProcessingPipeline {
     intensity_analyzer: IntensityAnalyzer,
     frequency_booster: FrequencyBooster,
+    harmonic_exciter: HarmonicExciter,
     psychoacoustic_bass: PsychoacousticBass,
     convolution_reverb: ConvolutionReverb,
     ensemble_effect: EnsembleEffect,
@@ -110,6 +116,8 @@ impl AudioProcessingPipeline {
                 .context("Failed to create IntensityAnalyzer")?,
             frequency_booster: FrequencyBooster::new(config.frequency_boost)
                 .context("Failed to create FrequencyBooster")?,
+            harmonic_exciter: HarmonicExciter::new(config.harmonic_exciter)
+                .context("Failed to create HarmonicExciter")?,
             psychoacoustic_bass: PsychoacousticBass::new(config.psychoacoustic_bass)
                 .context("Failed to create PsychoacousticBass")?,
             convolution_reverb: ConvolutionReverb::new(config.convolution_reverb)
@@ -119,9 +127,13 @@ impl AudioProcessingPipeline {
     }
     
     /// # Responsibility
-    /// Process audio through entire pipeline with intensity-driven modulation.
+    /// Process audio through entire pipeline with GLOBAL intensity (legacy method).
     ///
     /// ---
+    ///
+    /// **DEPRECATED**: Use `process_time_varying()` for dynamic temporal modulation.
+    /// This method uses a single intensity value for the entire audio, which loses
+    /// temporal dynamics. Kept for backward compatibility.
     ///
     /// **Arguments**:
     /// - `audio`: Mono input samples
@@ -129,27 +141,107 @@ impl AudioProcessingPipeline {
     ///
     /// **Returns**:
     /// - Vector of independent voice outputs ready for spatial mixing
-    ///
-    /// **Processing Order**:
-    /// 1. Frequency boost (intensity modulates band gains)
-    /// 2. Psychoacoustic bass (intensity controls saturation drive)
-    /// 3. Convolution reverb (acoustic space)
-    /// 4. Ensemble effect (intensity controls voice count + spatial spread)
     pub fn process(&mut self, audio: &[f32], intensity: f32) -> Result<Vec<VoiceOutput>> {
         // Stage 1: Frequency boost with intensity modulation
         let boosted_audio = self.frequency_booster.process(audio, intensity)
             .context("Frequency boost failed")?;
         
-        // Stage 2: Psychoacoustic bass enhancement
-        let bass_enhanced = self.psychoacoustic_bass.process(&boosted_audio, intensity)
+        // Stage 2: Harmonic exciter (presence & air)
+        let excited_audio = self.harmonic_exciter.process(&boosted_audio, intensity)
+            .context("Harmonic exciter failed")?;
+        
+        // Stage 3: Psychoacoustic bass enhancement
+        let bass_enhanced = self.psychoacoustic_bass.process(&excited_audio, intensity)
             .context("Psychoacoustic bass failed")?;
         
-        // Stage 3: Convolution reverb (acoustic space simulation)
+        // Stage 4: Convolution reverb (acoustic space simulation)
         let reverb_audio = self.convolution_reverb.process(&bass_enhanced, intensity)
             .context("Convolution reverb failed")?;
         
-        // Stage 4: Ensemble effect (generate independent voices with spatial distribution)
+        // Stage 5: Ensemble effect (generate independent voices with spatial distribution)
         let voices = self.ensemble_effect.process_dynamic(&reverb_audio, intensity)
+            .context("Ensemble effect failed")?;
+        
+        Ok(voices)
+    }
+    
+    /// # Responsibility
+    /// Process audio with TIME-VARYING intensity modulation (RECOMMENDED).
+    ///
+    /// ---
+    ///
+    /// **CRITICAL IMPROVEMENT**: Uses frame-by-frame intensity curve for dynamic
+    /// effect modulation. Effects "breathe" with the music - louder/more aggressive
+    /// during intense moments, subtle during quiet passages.
+    ///
+    /// **Arguments**:
+    /// - `audio`: Mono input samples
+    /// - `intensity_curve`: Per-frame intensity values [0.0, 1.0] from analyze_intensity()
+    ///
+    /// **Returns**:
+    /// - Vector of independent voice outputs with time-varying processing
+    ///
+    /// **Processing Strategy**:
+    /// - Maps intensity windows to audio chunks via hop_size
+    /// - Processes each chunk with its corresponding intensity value
+    /// - Seamlessly concatenates processed chunks with crossfade
+    pub fn process_time_varying(
+        &mut self, 
+        audio: &[f32], 
+        intensity_curve: &[f32]
+    ) -> Result<Vec<VoiceOutput>> {
+        if audio.is_empty() || intensity_curve.is_empty() {
+            return Ok(Vec::new());
+        }
+        
+        let hop_size = self.intensity_analyzer.config().hop_samples();
+        let window_size = self.intensity_analyzer.config().window_samples();
+        
+        // Process audio in chunks matching intensity windows
+        let mut processed_audio = Vec::with_capacity(audio.len());
+        
+        for (window_idx, &window_intensity) in intensity_curve.iter().enumerate() {
+            let start_sample = window_idx * hop_size;
+            let end_sample = (start_sample + window_size).min(audio.len());
+            
+            if start_sample >= audio.len() {
+                break;
+            }
+            
+            let chunk = &audio[start_sample..end_sample];
+            
+            // Apply effects with THIS window's intensity
+            let boosted = self.frequency_booster.process(chunk, window_intensity)
+                .context("Frequency boost failed")?;
+            let excited = self.harmonic_exciter.process(&boosted, window_intensity)
+                .context("Harmonic exciter failed")?;
+            let bass_enhanced = self.psychoacoustic_bass.process(&excited, window_intensity)
+                .context("Psychoacoustic bass failed")?;
+            let reverbed = self.convolution_reverb.process(&bass_enhanced, window_intensity)
+                .context("Convolution reverb failed")?;
+            
+            // Crossfade with previous chunk to avoid discontinuities
+            let crossfade_samples = 256; // ~5ms @ 48kHz
+            if processed_audio.len() > crossfade_samples && window_idx > 0 {
+                let overlap_start = processed_audio.len() - crossfade_samples;
+                for i in 0..crossfade_samples.min(reverbed.len()) {
+                    let fade_out = 1.0 - (i as f32 / crossfade_samples as f32);
+                    let fade_in = i as f32 / crossfade_samples as f32;
+                    processed_audio[overlap_start + i] = 
+                        processed_audio[overlap_start + i] * fade_out + reverbed[i] * fade_in;
+                }
+                processed_audio.extend_from_slice(&reverbed[crossfade_samples..]);
+            } else {
+                processed_audio.extend_from_slice(&reverbed);
+            }
+        }
+        
+        // Trim to original length
+        processed_audio.truncate(audio.len());
+        
+        // Generate ensemble voices with AVERAGE intensity (voice count decision)
+        let avg_intensity = intensity_curve.iter().sum::<f32>() / intensity_curve.len().max(1) as f32;
+        let voices = self.ensemble_effect.process_dynamic(&processed_audio, avg_intensity)
             .context("Ensemble effect failed")?;
         
         Ok(voices)
@@ -168,7 +260,6 @@ impl AudioProcessingPipeline {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_relative_eq;
 
     #[test]
     fn test_pipeline_config_creation() {

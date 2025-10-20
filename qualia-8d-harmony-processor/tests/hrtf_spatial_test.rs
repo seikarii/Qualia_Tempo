@@ -5,7 +5,6 @@
 
 use qualia_8d_harmony_processor::audio::{HrtfConvolver, SofaLoader, SphericalCoord};
 use std::sync::Arc;
-use approx::assert_relative_eq;
 
 #[test]
 fn test_hrtf_spatial_positioning_accuracy() {
@@ -20,7 +19,7 @@ fn test_hrtf_spatial_positioning_accuracy() {
     let duration_sec = 1.0;
     let num_samples = (sample_rate as f32 * duration_sec) as usize;
     let input: Vec<f32> = (0..num_samples)
-        .map(|i| ((i as f32 * 0.1).sin() * 0.5))
+        .map(|i| (i as f32 * 0.1).sin() * 0.5)
         .collect();
     
     // Test different spatial positions

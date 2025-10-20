@@ -79,6 +79,10 @@ harness = false
 name = "full_pipeline"
 harness = false
 
+[[bench]]
+name = "audio_enhancements"
+harness = false
+
 [profile.release]
 opt-level = 3
 lto = "fat"

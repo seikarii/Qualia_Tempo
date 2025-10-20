@@ -7,7 +7,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use qualia_8d_harmony_processor::{
     audio::{
-        BinauralSignal, CircularMotionEngine, EnsembleConfig, EnsembleEffect,
+        BinauralSignal, CircularMotionEngine, EnsembleConfig, EnsembleEffect, EnsembleMode,
         FrequencyBooster, FrequencyBoosterConfig, HrtfConvolver,
         RotationDirection, SofaLoader, SphericalCoord,
     },
@@ -40,14 +40,14 @@ fn bench_eq_processing(c: &mut Criterion) {
         let mut booster = FrequencyBooster::new(config).expect("Failed to create booster");
         
         b.iter(|| {
-            black_box(booster.process(black_box(&audio)))
+            black_box(booster.process(black_box(&audio), black_box(0.8)))
         });
     });
     
     group.finish();
 }
 
-/// Benchmark Phase 3: Ensemble effect (5 voices)
+/// Benchmark Phase 3: Ensemble effect (dynamic voice count)
 fn bench_ensemble_processing(c: &mut Criterion) {
     let sample_rate = 48000;
     let audio = generate_test_audio(sample_rate, 1.0);
@@ -61,16 +61,19 @@ fn bench_ensemble_processing(c: &mut Criterion) {
             &voice_count,
             |b, &voices| {
                 let config = EnsembleConfig::new(
-                    voices,
+                    EnsembleMode::Humanized,
+                    None,
+                    (voices, voices), // Static voice count for benchmark
                     5.0,  // max_delay_ms
                     3.0,  // max_pitch_shift_cents
+                    (60.0, 60.0), // spatial_spread_deg_range
                     sample_rate,
                 ).expect("Failed to create ensemble config");
                 
-                let ensemble = EnsembleEffect::new(config);
+                let mut ensemble = EnsembleEffect::new(config);
                 
                 b.iter(|| {
-                    black_box(ensemble.process(black_box(&audio)))
+                    black_box(ensemble.process_dynamic(black_box(&audio), black_box(0.8)))
                 });
             },
         );
@@ -150,22 +153,48 @@ fn bench_full_pipeline(c: &mut Criterion) {
     group.bench_function("eq_ensemble_hrtf", |b| {
         // Pre-create all processors
         let eq_config = FrequencyBoosterConfig::default_8d(sample_rate);
-        let ensemble_config = EnsembleConfig::new(5, 5.0, 3.0, sample_rate)
-            .expect("Failed to create ensemble config");
+        let ensemble_config = EnsembleConfig::new(
+            EnsembleMode::Humanized,
+            None,
+            (5, 5), // Static 5 voices for benchmark
+            5.0,
+            3.0,
+            (60.0, 60.0),
+            sample_rate
+        ).expect("Failed to create ensemble config");
         let sofa_loader = Arc::new(SofaLoader::create_mock_dataset());
         let hrtf_convolver = HrtfConvolver::new(512, 256, sample_rate, sofa_loader)
             .expect("Failed to create convolver");
         let motion_engine = CircularMotionEngine::new(8.0, 1.5, 0.0, RotationDirection::Clockwise);
         
         b.iter(|| {
+            let intensity = 0.8;
+            
             // Phase 1: EQ
             let mut booster = FrequencyBooster::new(eq_config.clone())
                 .expect("Failed to create booster");
-            let eq_audio = booster.process(&audio);
+            let eq_audio = booster.process(&audio, intensity).unwrap();
             
-            // Phase 2: Ensemble
-            let ensemble = EnsembleEffect::new(ensemble_config.clone());
-            let ensemble_audio = ensemble.process(&eq_audio);
+            // Phase 2: Ensemble (produces Vec<VoiceOutput>)
+            let mut ensemble = EnsembleEffect::new(ensemble_config.clone());
+            let voice_outputs = ensemble.process_dynamic(&eq_audio, intensity).unwrap();
+            
+            // Mix ensemble voices to mono for HRTF input
+            let ensemble_audio = if !voice_outputs.is_empty() {
+                let max_len = voice_outputs.iter().map(|v| v.samples.len()).max().unwrap_or(0);
+                let mut mixed = vec![0.0f32; max_len];
+                
+                for voice in &voice_outputs {
+                    for (i, &sample) in voice.samples.iter().enumerate() {
+                        if i < mixed.len() {
+                            mixed[i] += sample * voice.gain;
+                        }
+                    }
+                }
+                mixed
+            } else {
+                eq_audio // Fallback if no voices generated
+            };
             
             // Phase 3: HRTF
             let mut spatial_audio = BinauralSignal::new(ensemble_audio.len());
