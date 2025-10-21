@@ -282,10 +282,8 @@ fn run_spatialization(
     );
 
     // === POST-HRTF HEADROOM NORMALIZATION ===
-    // CRITICAL: HRTF convolution introduces significant gain (up to +6dB).
-    // Normalize each voice's peak to -6dBFS (0.5) before mixing to prevent
-    // summing from pushing into >0.95 danger zone.
-    const POST_HRTF_HEADROOM: f32 = 0.5; // -6dBFS safety margin
+    // CORRECTED: More conservative target to prevent over-limiting
+    const POST_HRTF_HEADROOM: f32 = 0.3; // -10dBFS (was 0.5, too hot)
     
     for voice in &mut binaural_voices {
         let peak_left = voice.left.iter().map(|&x| x.abs()).fold(0.0f32, f32::max);
@@ -297,7 +295,7 @@ fn run_spatialization(
             tracing::debug!(
                 peak_level = peak,
                 reduction_db = 20.0 * reduction_gain.log10(),
-                "Post-HRTF normalization: Reducing voice gain to prevent mixer saturation"
+                "Post-HRTF normalization: Reducing voice gain"
             );
             
             for sample in &mut voice.left {

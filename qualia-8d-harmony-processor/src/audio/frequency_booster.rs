@@ -84,14 +84,14 @@ impl FrequencyBoosterConfig {
             },
             InstrumentRole::Other => Self {
                 bass_freq: 80.0,
-                bass_base_gain_db: 3.0,   // RESTORED: Ideal gain (was 2.0 - defensive patch removed)
-                bass_max_gain_db: 6.0,    // RESTORED: Ideal gain (was 4.0 - headroom manager protects)
+                bass_base_gain_db: 0.5,   // CORRECTED: Minimal bass (was 1.5, 99.4% bass bleeding)
+                bass_max_gain_db: 1.5,    // CORRECTED: Minimal bass (was 3.0)
                 mid_freq: 1200.0,
-                mid_base_gain_db: 1.5,    // RESTORED: Ideal gain (was 1.0)
-                mid_max_gain_db: 4.0,     // RESTORED: Ideal gain (was 2.5)
+                mid_base_gain_db: 2.0,    // INCREASED: Boost mids to balance (was 1.5)
+                mid_max_gain_db: 5.0,     // INCREASED: Boost mids to balance (was 4.0)
                 high_freq: 10000.0,
-                high_base_gain_db: 0.5,   // Keep controlled
-                high_max_gain_db: 1.5,    // Keep controlled
+                high_base_gain_db: 2.0,   // INCREASED: Boost highs to balance (was 1.0)
+                high_max_gain_db: 4.0,    // INCREASED: Boost highs to balance (was 3.0)
                 q_factor: 1.0,
                 sample_rate,
             },

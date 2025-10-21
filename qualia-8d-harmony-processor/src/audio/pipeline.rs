@@ -212,12 +212,9 @@ impl AudioProcessingPipeline {
             .context("Convolution reverb failed")?;
         
         // === DIRECTIVA 1: GLOBAL HEADROOM NORMALIZATION ===
-        // Calculates peak and reduces gain if exceeding -6dBFS (0.5) headroom target.
-        // CRITICAL: Stricter than initial -3dBFS to account for downstream HRTF
-        // convolution + spatial mixing which introduce ~+3-6dB peaks.
-        // This GUARANTEES safe signal level for downstream ensemble/mixer, preventing
-        // limiter overload regardless of upstream effect chain aggressiveness.
-        const TARGET_HEADROOM: f32 = 0.5; // -6dBFS safety margin (accounting for spatial processing gain)
+        // Calculates peak and reduces gain if exceeding -12dBFS (0.25) headroom target.
+        // CORRECTED: More conservative from -6dBFS to prevent over-limiting downstream
+        const TARGET_HEADROOM: f32 = 0.25; // -12dBFS safety margin (was 0.5, too aggressive)
         
         let peak_level = reverb.iter()
             .map(|&x| x.abs())
