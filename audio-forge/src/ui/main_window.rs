@@ -149,25 +149,34 @@ impl MainWindow {
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 // File loading button (PRIMARY ACTION)
-                if ui.button("📁 Load Audio File").clicked() {
+                if ui.button("📁 Load Audio File")
+                    .on_hover_text("Open audio file (MP3, WAV, FLAC, OGG)")
+                    .clicked() 
+                {
                     self.handle_load_file();
                 }
                 
                 ui.separator();
                 
-                if ui.button("▶ Play").clicked()
+                if ui.button("▶ Play")
+                    .on_hover_text("Start/resume playback")
+                    .clicked()
                     && let Err(e) = self.audio_player.play()
                 {
                     error!("Play failed: {}", e);
                 }
 
-                if ui.button("⏸ Pause").clicked()
+                if ui.button("⏸ Pause")
+                    .on_hover_text("Pause playback (preserves position)")
+                    .clicked()
                     && let Err(e) = self.audio_player.pause()
                 {
                     error!("Pause failed: {}", e);
                 }
 
-                if ui.button("⏹ Stop").clicked()
+                if ui.button("⏹ Stop")
+                    .on_hover_text("Stop playback (resets to beginning)")
+                    .clicked()
                     && let Err(e) = self.audio_player.stop()
                 {
                     error!("Stop failed: {}", e);
@@ -190,7 +199,9 @@ impl MainWindow {
                     .text("")
                     .show_value(false);
                 
-                if ui.add(volume_slider).changed()
+                if ui.add(volume_slider)
+                    .on_hover_text("Master volume (0% = mute, 100% = full)")
+                    .changed()
                     && let Err(e) = self.audio_player.set_volume(self.volume)
                 {
                     error!("Failed to set volume: {}", e);
@@ -266,7 +277,10 @@ impl MainWindow {
                 // 8D Effect controls
                 ui.group(|ui| {
                     ui.vertical(|ui| {
-                        if ui.checkbox(&mut self.effect_config.effect_8d_enabled, "8D Audio").changed() {
+                        if ui.checkbox(&mut self.effect_config.effect_8d_enabled, "8D Audio")
+                            .on_hover_text("Circular panning effect for immersive spatial audio")
+                            .changed() 
+                        {
                             config_changed = true;
                         }
                         if self.effect_config.effect_8d_enabled {
@@ -278,7 +292,9 @@ impl MainWindow {
                                         0.0..=1.0,
                                     )
                                     .text(""),
-                                ).changed() {
+                                )
+                                .on_hover_text("Depth of panning effect (0.0 = subtle, 1.0 = extreme)")
+                                .changed() {
                                     config_changed = true;
                                 }
                             });
@@ -290,7 +306,9 @@ impl MainWindow {
                                         0.1..=1.0,
                                     )
                                     .text(""),
-                                ).changed() {
+                                )
+                                .on_hover_text("Rotation frequency (0.1Hz = slow, 1.0Hz = fast)")
+                                .changed() {
                                     config_changed = true;
                                 }
                             });
@@ -303,7 +321,10 @@ impl MainWindow {
                 // Drop Effect controls
                 ui.group(|ui| {
                     ui.vertical(|ui| {
-                        if ui.checkbox(&mut self.effect_config.drop_effect_enabled, "Drop Effect").changed() {
+                        if ui.checkbox(&mut self.effect_config.drop_effect_enabled, "Drop Effect")
+                            .on_hover_text("Volume reduction effect (sudden drop)")
+                            .changed() 
+                        {
                             config_changed = true;
                         }
                         if self.effect_config.drop_effect_enabled {
@@ -315,7 +336,9 @@ impl MainWindow {
                                         0.0..=1.0,
                                     )
                                     .text(""),
-                                ).changed() {
+                                )
+                                .on_hover_text("Volume attenuation (0.0 = no drop, 1.0 = complete silence)")
+                                .changed() {
                                     config_changed = true;
                                 }
                             });
@@ -328,7 +351,10 @@ impl MainWindow {
                 // Bass Boost controls
                 ui.group(|ui| {
                     ui.vertical(|ui| {
-                        if ui.checkbox(&mut self.effect_config.bass_boost_enabled, "Bass Boost").changed() {
+                        if ui.checkbox(&mut self.effect_config.bass_boost_enabled, "Bass Boost")
+                            .on_hover_text("Amplify low frequencies (20-250Hz)")
+                            .changed() 
+                        {
                             config_changed = true;
                         }
                         if self.effect_config.bass_boost_enabled {
@@ -340,7 +366,9 @@ impl MainWindow {
                                         1.0..=3.0,
                                     )
                                     .text("x"),
-                                ).changed() {
+                                )
+                                .on_hover_text("Gain multiplier (1.0 = no boost, 3.0 = +9.5dB)")
+                                .changed() {
                                     config_changed = true;
                                 }
                             });
@@ -353,7 +381,10 @@ impl MainWindow {
                 // Treble Boost controls
                 ui.group(|ui| {
                     ui.vertical(|ui| {
-                        if ui.checkbox(&mut self.effect_config.treble_boost_enabled, "Treble Boost").changed() {
+                        if ui.checkbox(&mut self.effect_config.treble_boost_enabled, "Treble Boost")
+                            .on_hover_text("Amplify high frequencies (4kHz-20kHz)")
+                            .changed() 
+                        {
                             config_changed = true;
                         }
                         if self.effect_config.treble_boost_enabled {
@@ -365,7 +396,9 @@ impl MainWindow {
                                         1.0..=3.0,
                                     )
                                     .text("x"),
-                                ).changed() {
+                                )
+                                .on_hover_text("Gain multiplier (1.0 = no boost, 3.0 = +9.5dB)")
+                                .changed() {
                                     config_changed = true;
                                 }
                             });

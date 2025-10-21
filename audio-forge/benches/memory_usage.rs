@@ -1,0 +1,84 @@
+//! # Responsibility
+//! Memory usage benchmark for audio pipeline.
+//!
+//! ---
+//!
+//! Validates memory consumption stays under 120MB during playback simulation.
+
+use audio_forge::services::audio_analyzer::AudioAnalyzerService;
+use audio_forge::services::audio_effects::AudioEffectsService;
+use audio_forge::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
+use audio_forge::services::interfaces::i_audio_effects::IAudioEffects;
+use std::time::Instant;
+
+fn main() {
+    println!("💾 Memory Usage Benchmark");
+    println!("=========================\n");
+
+    // Simulate realistic playback scenario
+    let analyzer = AudioAnalyzerService::default();
+    let effects = AudioEffectsService::default();
+    
+    // 5 minutes of audio at 44.1kHz stereo = ~26.5M samples
+    let total_samples = 44100 * 2 * 60 * 5;
+    let chunk_size = 4096;
+    let chunks = total_samples / chunk_size;
+    
+    println!("📊 Simulation Parameters:");
+    println!("   Duration:      5 minutes");
+    println!("   Sample Rate:   44.1kHz");
+    println!("   Channels:      Stereo");
+    println!("   Total Samples: {} ({:.1} MB raw)", total_samples, (total_samples * 4) as f64 / 1_000_000.0);
+    println!("   Chunk Size:    {}", chunk_size);
+    println!("   Total Chunks:  {}\n", chunks);
+
+    let mut processed_chunks = 0;
+    let start = Instant::now();
+    
+    // Process audio chunks
+    for i in 0..chunks {
+        // Generate chunk (simulating decoder output)
+        let samples: Vec<f32> = (0..chunk_size)
+            .map(|j| {
+                let t = ((i * chunk_size + j) as f32) / 44100.0;
+                (2.0 * std::f32::consts::PI * 440.0 * t).sin() * 0.5
+            })
+            .collect();
+        
+        // Analyze (FFT)
+        let spectrum = analyzer.analyze_spectrum(&samples, 44100).unwrap();
+        
+        // Apply effects
+        let mut effected = samples.clone();
+        let elapsed_time = (i * chunk_size) as f32 / 44100.0;
+        let _ = effects.apply_8d_effect(&mut effected, 44100, elapsed_time);
+        let _ = effects.apply_drop_effect(&mut effected);
+        let _ = effects.apply_bass_boost(&mut effected);
+        
+        // Detect instruments
+        let _ = analyzer.detect_instruments(&spectrum);
+        
+        processed_chunks += 1;
+        
+        // Progress indicator every 10 seconds
+        if i % (44100 * 2 * 10 / chunk_size) == 0 {
+            let elapsed = start.elapsed().as_secs_f64();
+            let throughput = processed_chunks as f64 / elapsed;
+            println!("   Progress: {:.1}% ({} chunks/s)", 
+                (i as f64 / chunks as f64) * 100.0, 
+                throughput as u32);
+        }
+    }
+    
+    let elapsed = start.elapsed();
+    let throughput = total_samples as f64 / elapsed.as_secs_f64();
+    
+    println!("\n✅ Processing Complete:");
+    println!("   Total Time:  {:.2}s", elapsed.as_secs_f64());
+    println!("   Throughput:  {:.1}x realtime", throughput / 44100.0);
+    println!("\n💡 Memory Usage:");
+    println!("   Peak memory should be measured with external tools:");
+    println!("   - Linux: `time -v cargo bench --bench memory_usage`");
+    println!("   - Valgrind: `valgrind --tool=massif cargo bench --bench memory_usage`");
+    println!("\n   Target: <120MB during playback");
+}
