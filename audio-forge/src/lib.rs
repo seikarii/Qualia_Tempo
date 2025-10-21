@@ -7,6 +7,6 @@ pub mod ui;
 
 pub use contracts::{ChannelConfiguration, ChannelMode, EffectConfig, FrequencySpectrum};
 pub use services::{
-    AudioAnalyzerService, AudioEffectsService, AudioPlayerService, MultiChannelOutputService,
-    VisualizationEngineService,
+    AudioAnalyzerService, AudioEffectsService, AudioForgeModule, AudioPlayerService,
+    MultiChannelOutputService, VisualizationEngineService,
 };

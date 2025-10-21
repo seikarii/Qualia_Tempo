@@ -18,18 +18,11 @@ use std::sync::RwLock;
 /// 2. Drop Effect: Volume reduction
 /// 3. Bass Boost: Low-frequency amplification (simplified)
 /// 4. Treble Boost: High-frequency amplification (simplified)
-#[derive(Component)]
+#[derive(Component, Default)]
 #[shaku(interface = IAudioEffects)]
 pub struct AudioEffectsService {
+    #[shaku(default)]
     config: RwLock<EffectConfig>,
-}
-
-impl Default for AudioEffectsService {
-    fn default() -> Self {
-        Self {
-            config: RwLock::new(EffectConfig::default()),
-        }
-    }
 }
 
 impl AudioEffectsService {

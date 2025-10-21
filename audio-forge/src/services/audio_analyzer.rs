@@ -5,11 +5,15 @@ use crate::contracts::FrequencySpectrum;
 use crate::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
 use anyhow::Result;
 use rustfft::{FftPlanner, num_complex::Complex};
+use shaku::Component;
 use tracing::debug;
 
 /// # Responsibility
 /// FFT-based audio analysis service for visualization and instrument detection.
+#[derive(Component)]
+#[shaku(interface = IAudioAnalyzer)]
 pub struct AudioAnalyzerService {
+    #[shaku(default = 2048)]
     fft_size: usize,
 }
 

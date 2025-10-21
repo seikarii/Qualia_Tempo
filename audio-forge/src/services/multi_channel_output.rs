@@ -18,6 +18,7 @@ use tracing::{info, warn};
 #[derive(Component)]
 #[shaku(interface = IMultiChannelOutput)]
 pub struct MultiChannelOutputService {
+    #[shaku(default)]
     config: RwLock<ChannelConfiguration>,
 }
 

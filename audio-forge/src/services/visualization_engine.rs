@@ -15,15 +15,24 @@ use shaku::Component;
 /// 1. Waveform: Time-domain line plot of audio samples
 /// 2. Spectrum: Frequency-domain bar chart from FFT data
 /// 3. Instrument Map: Color-coded bass/mid/treble intensity bars
-#[derive(Component, Default)]
+#[derive(Component)]
 #[shaku(interface = IVisualizationEngine)]
 pub struct VisualizationEngineService {
     /// Minimum height for waveform plot (pixels)
+    #[shaku(default = 150.0)]
     waveform_height: f32,
     /// Minimum height for spectrum plot (pixels)
+    #[shaku(default = 200.0)]
     spectrum_height: f32,
     /// Minimum height for instrument map (pixels)
+    #[shaku(default = 80.0)]
     instrument_map_height: f32,
+}
+
+impl Default for VisualizationEngineService {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl VisualizationEngineService {
@@ -209,6 +218,6 @@ mod tests {
     #[test]
     fn test_default_trait() {
         let engine = VisualizationEngineService::default();
-        assert_eq!(engine.waveform_height, 0.0); // Default trait uses zero
+        assert_eq!(engine.waveform_height, 150.0); // Default uses new() values
     }
 }

@@ -1,23 +1,27 @@
 //! # Responsibility
-//! Application entry point with egui initialization.
+//! Application entry point with egui initialization and Shaku DI.
 
-use audio_forge::ui::MainWindow;
-use audio_forge::{
-    AudioAnalyzerService, AudioEffectsService, AudioPlayerService, MultiChannelOutputService,
-    VisualizationEngineService,
+use audio_forge::services::interfaces::{
+    IAudioAnalyzer, IAudioEffects, IAudioPlayer, IMultiChannelOutput, IVisualizationEngine,
 };
+use audio_forge::ui::MainWindow;
+use audio_forge::AudioForgeModule;
 use eframe::egui;
+use shaku::HasComponent;
 use std::sync::Arc;
 
 fn main() -> Result<(), eframe::Error> {
     tracing_subscriber::fmt::init();
 
-    // Initialize services (use defaults for Phase 4)
-    let audio_player = Arc::new(AudioPlayerService::default());
-    let audio_analyzer = Arc::new(AudioAnalyzerService::default());
-    let visualization_engine = Arc::new(VisualizationEngineService::new());
-    let audio_effects = Arc::new(AudioEffectsService::default());
-    let multi_channel_output = Arc::new(MultiChannelOutputService::default());
+    // Build Shaku DI module
+    let module = AudioForgeModule::builder().build();
+
+    // Resolve services via DI
+    let audio_player: Arc<dyn IAudioPlayer> = module.resolve();
+    let audio_analyzer: Arc<dyn IAudioAnalyzer> = module.resolve();
+    let visualization_engine: Arc<dyn IVisualizationEngine> = module.resolve();
+    let audio_effects: Arc<dyn IAudioEffects> = module.resolve();
+    let multi_channel_output: Arc<dyn IMultiChannelOutput> = module.resolve();
 
     let mut main_window = MainWindow::new(
         audio_player,
@@ -30,7 +34,7 @@ fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([1280.0, 800.0])
-            .with_title("Audio Forge - Phase 4 (Multi-Channel Output)"),
+            .with_title("Audio Forge - Phase 1 (DI Architecture Corrected)"),
         ..Default::default()
     };
 
