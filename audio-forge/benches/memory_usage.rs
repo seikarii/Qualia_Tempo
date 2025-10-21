@@ -1,15 +1,58 @@
 //! # Responsibility
-//! Memory usage benchmark for audio pipeline.
+//! Memory usage benchmark for audio pipeline with real tracking.
 //!
 //! ---
 //!
 //! Validates memory consumption stays under 120MB during playback simulation.
+//! Uses custom allocator to track peak memory usage accurately.
 
 use audio_forge::services::audio_analyzer::AudioAnalyzerService;
 use audio_forge::services::audio_effects::AudioEffectsService;
 use audio_forge::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
 use audio_forge::services::interfaces::i_audio_effects::IAudioEffects;
+use std::alloc::{GlobalAlloc, Layout, System};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Instant;
+
+/// # Responsibility
+/// Custom allocator that tracks memory usage.
+struct MemoryTracker;
+
+static ALLOCATED: AtomicUsize = AtomicUsize::new(0);
+static PEAK: AtomicUsize = AtomicUsize::new(0);
+
+unsafe impl GlobalAlloc for MemoryTracker {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        let ret = System.alloc(layout);
+        if !ret.is_null() {
+            let size = layout.size();
+            let current = ALLOCATED.fetch_add(size, Ordering::Relaxed) + size;
+            
+            // Update peak atomically
+            let mut peak = PEAK.load(Ordering::Relaxed);
+            while current > peak {
+                match PEAK.compare_exchange_weak(
+                    peak,
+                    current,
+                    Ordering::Relaxed,
+                    Ordering::Relaxed,
+                ) {
+                    Ok(_) => break,
+                    Err(p) => peak = p,
+                }
+            }
+        }
+        ret
+    }
+
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        ALLOCATED.fetch_sub(layout.size(), Ordering::Relaxed);
+        System.dealloc(ptr, layout);
+    }
+}
+
+#[global_allocator]
+static GLOBAL: MemoryTracker = MemoryTracker;
 
 fn main() {
     println!("💾 Memory Usage Benchmark");
@@ -73,12 +116,27 @@ fn main() {
     let elapsed = start.elapsed();
     let throughput = total_samples as f64 / elapsed.as_secs_f64();
     
+    // Get actual memory metrics
+    let peak_bytes = PEAK.load(Ordering::Relaxed);
+    let current_bytes = ALLOCATED.load(Ordering::Relaxed);
+    let peak_mb = peak_bytes as f64 / 1_000_000.0;
+    let current_mb = current_bytes as f64 / 1_000_000.0;
+    
     println!("\n✅ Processing Complete:");
     println!("   Total Time:  {:.2}s", elapsed.as_secs_f64());
     println!("   Throughput:  {:.1}x realtime", throughput / 44100.0);
-    println!("\n💡 Memory Usage:");
-    println!("   Peak memory should be measured with external tools:");
-    println!("   - Linux: `time -v cargo bench --bench memory_usage`");
-    println!("   - Valgrind: `valgrind --tool=massif cargo bench --bench memory_usage`");
-    println!("\n   Target: <120MB during playback");
+    
+    println!("\n� Memory Usage (Actual Measurements):");
+    println!("   Current:     {:.2} MB", current_mb);
+    println!("   Peak:        {:.2} MB", peak_mb);
+    println!("   Target:      <120 MB");
+    
+    if peak_mb < 120.0 {
+        println!("\n✅ PASS: Peak memory usage ({:.2} MB) is below 120 MB target", peak_mb);
+    } else {
+        println!("\n❌ FAIL: Peak memory usage ({:.2} MB) exceeds 120 MB target", peak_mb);
+    }
+    
+    println!("\n📊 Memory Efficiency:");
+    println!("   Usage:       {:.1}% of target", (peak_mb / 120.0) * 100.0);
 }

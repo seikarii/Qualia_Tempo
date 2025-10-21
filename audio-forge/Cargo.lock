@@ -336,6 +336,7 @@ dependencies = [
  "eframe",
  "egui",
  "hound",
+ "lazy_static",
  "mockall",
  "rfd",
  "rodio",

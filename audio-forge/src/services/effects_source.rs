@@ -77,8 +77,10 @@ impl<S: Source<Item = f32>> EffectsSource<S> {
     /// 3. Bass Boost (low-frequency gain)
     /// 4. Treble Boost (high-frequency gain)
     ///
-    /// Errors are logged but don't break playback.
+    /// Errors are logged with tracing::warn but don't break playback.
     fn apply_effects_to_buffer(&mut self) {
+        use tracing::warn;
+        
         if self.buffer.is_empty() {
             return;
         }
@@ -87,15 +89,25 @@ impl<S: Source<Item = f32>> EffectsSource<S> {
         let elapsed_time = self.elapsed_samples as f32 / self.sample_rate as f32;
         
         // Apply effects in sequence (order matters for quality)
-        let _ = self.audio_effects.apply_8d_effect(
+        if let Err(e) = self.audio_effects.apply_8d_effect(
             &mut self.buffer,
             self.sample_rate,
             elapsed_time,
-        );
+        ) {
+            warn!("8D effect failed: {}", e);
+        }
         
-        let _ = self.audio_effects.apply_drop_effect(&mut self.buffer);
-        let _ = self.audio_effects.apply_bass_boost(&mut self.buffer);
-        let _ = self.audio_effects.apply_treble_boost(&mut self.buffer);
+        if let Err(e) = self.audio_effects.apply_drop_effect(&mut self.buffer) {
+            warn!("Drop effect failed: {}", e);
+        }
+        
+        if let Err(e) = self.audio_effects.apply_bass_boost(&mut self.buffer) {
+            warn!("Bass boost failed: {}", e);
+        }
+        
+        if let Err(e) = self.audio_effects.apply_treble_boost(&mut self.buffer) {
+            warn!("Treble boost failed: {}", e);
+        }
         
         // Track time progression
         self.elapsed_samples += self.buffer.len() as u64;

@@ -48,23 +48,25 @@ impl<S: Source<Item = f32>> UpmixingSource<S> {
     /// Batch size of 256 stereo frames = 512 input samples → 2048 output samples
     /// This reduces overhead of upmixing calculations.
     ///
-    /// ## Panics
-    /// Panics if source is not stereo (channels != 2)
-    pub fn new(
+    /// ## Returns
+    /// Returns Result with error if source is not stereo (proper Rust error handling)
+    pub fn try_new(
         source: S,
         multi_channel: Arc<dyn IMultiChannelOutput>,
         batch_size: usize,
-    ) -> Self {
+    ) -> anyhow::Result<Self> {
+        use anyhow::anyhow;
+        
         let channels = source.channels();
         
         if channels != 2 {
-            panic!(
+            return Err(anyhow!(
                 "UpmixingSource requires stereo input (2 channels), got {} channels",
                 channels
-            );
+            ));
         }
         
-        Self {
+        Ok(Self {
             source,
             multi_channel,
             stereo_buffer: Vec::with_capacity(batch_size * 2),
@@ -72,7 +74,23 @@ impl<S: Source<Item = f32>> UpmixingSource<S> {
             output_index: 0,
             batch_size,
             output_channels: 8, // 8.1 system (8 channels, LFE is one of them)
-        }
+        })
+    }
+    
+    /// # Responsibility
+    /// Legacy constructor for backward compatibility (panics on error).
+    ///
+    /// ---
+    ///
+    /// DEPRECATED: Use `try_new()` instead for proper error handling.
+    #[deprecated(since = "0.1.0", note = "Use try_new() for proper error handling")]
+    pub fn new(
+        source: S,
+        multi_channel: Arc<dyn IMultiChannelOutput>,
+        batch_size: usize,
+    ) -> Self {
+        Self::try_new(source, multi_channel, batch_size)
+            .expect("UpmixingSource::new failed - use try_new() instead")
     }
     
     /// # Responsibility
@@ -238,7 +256,7 @@ mod tests {
         let sample_rate = stereo_sine.sample_rate();
         
         let multi_channel = Arc::new(MultiChannelOutputService::default());
-        let upmixing_source = UpmixingSource::new(stereo_sine, multi_channel, 256);
+        let upmixing_source = UpmixingSource::try_new(stereo_sine, multi_channel, 256).unwrap();
         
         // Metadata checks
         assert_eq!(upmixing_source.sample_rate(), sample_rate);
@@ -256,7 +274,7 @@ mod tests {
         let stereo_sine = StereoTestSource::new(mono_sine);
         
         let multi_channel = Arc::new(MultiChannelOutputService::default());
-        let mut upmixing_source = UpmixingSource::new(stereo_sine, multi_channel, 256);
+        let mut upmixing_source = UpmixingSource::try_new(stereo_sine, multi_channel, 256).unwrap();
         
         // Collect output samples (limited to expected stereo count * 4)
         let output_samples: Vec<f32> = upmixing_source.by_ref().take(expected_stereo_samples * 4).collect();
@@ -278,8 +296,8 @@ mod tests {
         
         let multi_channel = Arc::new(MultiChannelOutputService::default());
         
-        // This should panic because SineWave is mono
-        let _ = UpmixingSource::new(sine, multi_channel, 256);
+        // This should panic because SineWave is mono - try_new returns Err, unwrap panics
+        let _ = UpmixingSource::try_new(sine, multi_channel, 256).unwrap();
     }
     
     #[test]
@@ -288,7 +306,7 @@ mod tests {
         let stereo_sine = StereoTestSource::new(mono_sine);
         
         let multi_channel = Arc::new(MultiChannelOutputService::default());
-        let mut upmixing_source = UpmixingSource::new(stereo_sine, multi_channel, 128);
+        let mut upmixing_source = UpmixingSource::try_new(stereo_sine, multi_channel, 128).unwrap();
         
         // Pull samples - should batch process internally
         let count = upmixing_source.by_ref().take(2000).count();

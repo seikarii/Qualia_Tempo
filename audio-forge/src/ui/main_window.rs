@@ -15,8 +15,18 @@ use std::sync::Arc;
 use std::time::Duration;
 use tracing::{error, info};
 
+use std::time::Instant;
+
 /// # Responsibility
 /// Main application window using egui immediate mode UI.
+///
+/// ---
+///
+/// OPTIMIZATIONS:
+/// - Throttled visualization updates (30fps instead of 60fps)
+/// - Debounced effect config changes (100ms delay)
+/// - Auto-clearing error messages (5 second timeout)
+/// - Conditional repaints only when playing
 pub struct MainWindow {
     audio_player: Arc<dyn IAudioPlayer>,
     audio_analyzer: Arc<dyn IAudioAnalyzer>,
@@ -26,15 +36,19 @@ pub struct MainWindow {
 
     // Effect configuration state
     effect_config: EffectConfig,
+    pending_config_change: bool,
+    last_config_update: Instant,
     
-    // Cached visualization data (updated each frame)
+    // Cached visualization data (updated at throttled rate)
     cached_waveform: Vec<f32>,
     cached_spectrum: FrequencySpectrum,
     cached_instrument_levels: (f32, f32, f32),
+    last_visualization_update: Instant,
+    visualization_update_interval: Duration,
     
     // File loading state
     current_file_path: Option<PathBuf>,
-    loading_error: Option<String>,
+    loading_error: Option<(String, Instant)>,
     
     // Playback state
     volume: f32,
@@ -65,9 +79,13 @@ impl MainWindow {
             audio_effects,
             multi_channel_output,
             effect_config,
+            pending_config_change: false,
+            last_config_update: Instant::now(),
             cached_waveform: Vec::new(),
             cached_spectrum,
             cached_instrument_levels: (0.0, 0.0, 0.0),
+            last_visualization_update: Instant::now(),
+            visualization_update_interval: Duration::from_millis(33), // 30fps
             current_file_path: None,
             loading_error: None,
             volume: 1.0, // Default 100% volume
@@ -75,14 +93,23 @@ impl MainWindow {
     }
 
     /// # Responsibility
-    /// Update visualization data from real-time audio capture.
+    /// Update visualization data from real-time audio capture (throttled).
     ///
     /// ---
     ///
-    /// Called every frame to refresh waveform and spectrum data.
-    /// Limits waveform to 2000 samples for UI performance.
+    /// OPTIMIZATION: Throttled to 30fps instead of 60fps to reduce:
+    /// - Mutex lock contention
+    /// - FFT computation overhead
+    /// - Memory allocations
     fn update_visualization_data(&mut self) {
-        // Get raw audio samples from player
+        // Throttle updates to reduce CPU/memory overhead
+        let now = Instant::now();
+        if now.duration_since(self.last_visualization_update) < self.visualization_update_interval {
+            return; // Skip update, still within interval
+        }
+        self.last_visualization_update = now;
+        
+        // Get raw audio samples from player (zero-copy Arc)
         let raw_samples = self.audio_player.get_audio_samples();
         
         if raw_samples.is_empty() {
@@ -133,7 +160,7 @@ impl MainWindow {
                 }
                 Err(e) => {
                     error!("❌ Failed to load file: {}", e);
-                    self.loading_error = Some(format!("Load error: {}", e));
+                    self.loading_error = Some((format!("Load error: {}", e), Instant::now()));
                     self.current_file_path = None;
                 }
             }
@@ -143,7 +170,14 @@ impl MainWindow {
     }
 
     pub fn update(&mut self, ctx: &Context) {
-        // Update visualization data from real-time audio
+        // Auto-clear errors after 5 seconds
+        if let Some((_, timestamp)) = &self.loading_error {
+            if timestamp.elapsed() > Duration::from_secs(5) {
+                self.loading_error = None;
+            }
+        }
+        
+        // Update visualization data from real-time audio (throttled to 30fps)
         self.update_visualization_data();
         
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
@@ -161,25 +195,28 @@ impl MainWindow {
                 if ui.button("▶ Play")
                     .on_hover_text("Start/resume playback")
                     .clicked()
-                    && let Err(e) = self.audio_player.play()
                 {
-                    error!("Play failed: {}", e);
+                    if let Err(e) = self.audio_player.play() {
+                        error!("Play failed: {}", e);
+                    }
                 }
 
                 if ui.button("⏸ Pause")
                     .on_hover_text("Pause playback (preserves position)")
                     .clicked()
-                    && let Err(e) = self.audio_player.pause()
                 {
-                    error!("Pause failed: {}", e);
+                    if let Err(e) = self.audio_player.pause() {
+                        error!("Pause failed: {}", e);
+                    }
                 }
 
                 if ui.button("⏹ Stop")
                     .on_hover_text("Stop playback (resets to beginning)")
                     .clicked()
-                    && let Err(e) = self.audio_player.stop()
                 {
-                    error!("Stop failed: {}", e);
+                    if let Err(e) = self.audio_player.stop() {
+                        error!("Stop failed: {}", e);
+                    }
                 }
 
                 ui.separator();
@@ -195,16 +232,14 @@ impl MainWindow {
                 
                 // Volume control
                 ui.label("🔊 Volume:");
-                let volume_slider = egui::Slider::new(&mut self.volume, 0.0..=1.0)
+                let volume_response = ui.add(egui::Slider::new(&mut self.volume, 0.0..=1.0)
                     .text("")
-                    .show_value(false);
+                    .show_value(false));
                 
-                if ui.add(volume_slider)
-                    .on_hover_text("Master volume (0% = mute, 100% = full)")
-                    .changed()
-                    && let Err(e) = self.audio_player.set_volume(self.volume)
-                {
-                    error!("Failed to set volume: {}", e);
+                if volume_response.changed() {
+                    if let Err(e) = self.audio_player.set_volume(self.volume) {
+                        error!("Set volume failed: {}", e);
+                    }
                 }
                 
                 ui.label(format!("{}%", (self.volume * 100.0) as u8));
@@ -226,9 +261,14 @@ impl MainWindow {
                 ));
             });
             
-            // Display loading errors if any
-            if let Some(ref error_msg) = self.loading_error {
-                ui.colored_label(egui::Color32::RED, format!("❌ {}", error_msg));
+            // Display loading errors with auto-clear countdown
+            if let Some((ref error_msg, timestamp)) = self.loading_error {
+                let elapsed = timestamp.elapsed().as_secs();
+                let remaining = 5_u64.saturating_sub(elapsed);
+                ui.colored_label(
+                    egui::Color32::RED, 
+                    format!("❌ {} (clears in {}s)", error_msg, remaining)
+                );
             }
             
             // Seek bar (only show if audio is loaded)
@@ -407,9 +447,19 @@ impl MainWindow {
                 });
             });
 
-            // Apply config changes immediately (real-time updates)
+            // Debounce config changes to reduce mutex lock spam
             if config_changed {
-                self.audio_effects.set_config(self.effect_config.clone());
+                self.pending_config_change = true;
+            }
+            
+            // Apply debounced config after 100ms of no changes
+            if self.pending_config_change {
+                let now = Instant::now();
+                if now.duration_since(self.last_config_update) > Duration::from_millis(100) {
+                    self.audio_effects.set_config(self.effect_config.clone());
+                    self.pending_config_change = false;
+                    self.last_config_update = now;
+                }
             }
         });
 
@@ -504,16 +554,16 @@ impl MainWindow {
             // Channel mode toggle
             ui.horizontal(|ui| {
                 if channel_config.is_8_1_available {
-                    if ui.button("🔁 Switch to Stereo").clicked()
-                        && let Err(e) = self.multi_channel_output.fallback_to_stereo()
-                    {
-                        error!("Failed to switch to stereo: {}", e);
+                    if ui.button("🔁 Switch to Stereo").clicked() {
+                        if let Err(e) = self.multi_channel_output.fallback_to_stereo() {
+                            error!("Failed to switch to stereo: {}", e);
+                        }
                     }
 
-                    if ui.button("🔁 Configure 8.1").clicked()
-                        && let Err(e) = self.multi_channel_output.configure_8_1_channels()
-                    {
-                        error!("Failed to configure 8.1: {}", e);
+                    if ui.button("🔁 Configure 8.1").clicked() {
+                        if let Err(e) = self.multi_channel_output.configure_8_1_channels() {
+                            error!("Failed to configure 8.1: {}", e);
+                        }
                     }
                 } else {
                     ui.label("⚠️ 8.1 hardware not detected - stereo mode only");
@@ -531,7 +581,12 @@ impl MainWindow {
             }
         });
         
-        // Request repaint for smooth visualization updates
-        ctx.request_repaint();
+        // Conditional repaint: Only request updates when playing or if config pending
+        if self.audio_player.is_playing() || self.pending_config_change {
+            ctx.request_repaint_after(self.visualization_update_interval);
+        } else {
+            // When stopped, still repaint occasionally for UI responsiveness
+            ctx.request_repaint_after(Duration::from_millis(100));
+        }
     }
 }

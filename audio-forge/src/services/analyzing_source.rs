@@ -2,6 +2,7 @@
 //! Wrapper around rodio Source that captures audio samples for real-time analysis.
 
 use rodio::Source;
+use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -11,46 +12,84 @@ use std::time::Duration;
 /// ---
 ///
 /// Stores the most recent N samples for FFT analysis.
-/// Uses circular buffer to prevent unbounded memory growth.
+/// Uses VecDeque for O(1) push/pop operations (was O(n) with Vec::drain).
+///
+/// OPTIMIZATION: VecDeque eliminates expensive Vec::drain() calls.
 #[derive(Clone)]
 pub struct SampleBuffer {
-    samples: Arc<Mutex<Vec<f32>>>,
+    samples: Arc<Mutex<VecDeque<f32>>>,
     capacity: usize,
 }
 
 impl SampleBuffer {
     pub fn new(capacity: usize) -> Self {
         Self {
-            samples: Arc::new(Mutex::new(Vec::with_capacity(capacity))),
+            samples: Arc::new(Mutex::new(VecDeque::with_capacity(capacity))),
             capacity,
         }
     }
 
     /// # Responsibility
-    /// Add samples to buffer, maintaining circular behavior.
+    /// Add samples to buffer, maintaining circular behavior with O(1) operations.
+    ///
+    /// ---
+    ///
+    /// OPTIMIZATION: Uses VecDeque::pop_front() (O(1)) instead of Vec::drain() (O(n))
     pub fn push_samples(&self, new_samples: &[f32]) {
         let mut buffer = self.samples.lock().unwrap();
         
-        // If buffer would exceed capacity, remove oldest samples
-        let total_len = buffer.len() + new_samples.len();
-        if total_len > self.capacity {
-            let overflow = total_len - self.capacity;
-            buffer.drain(0..overflow);
+        // Remove oldest samples if would exceed capacity (O(1) per removal)
+        for &sample in new_samples {
+            if buffer.len() >= self.capacity {
+                buffer.pop_front(); // O(1) removal
+            }
+            buffer.push_back(sample); // O(1) insertion
         }
-        
-        buffer.extend_from_slice(new_samples);
     }
 
     /// # Responsibility
-    /// Get snapshot of current buffer for analysis.
-    pub fn get_samples(&self) -> Vec<f32> {
-        self.samples.lock().unwrap().clone()
+    /// Get snapshot of current buffer for analysis (zero-copy via Arc).
+    ///
+    /// ---
+    ///
+    /// OPTIMIZATION: Returns Arc<[f32]> instead of Vec clone.
+    /// VecDeque requires make_contiguous() for slice conversion.
+    pub fn get_samples(&self) -> Arc<[f32]> {
+        let mut buffer = self.samples.lock().unwrap();
+        let slice = buffer.make_contiguous();
+        Arc::from(&slice[..])
+    }
+    
+    /// # Responsibility
+    /// Legacy method: Get samples with reused allocation.
+    ///
+    /// ---
+    ///
+    /// Use this if you need to modify samples. For read-only access,
+    /// prefer `get_samples()` which returns zero-copy Arc.
+    pub fn get_samples_mut(&self, output: &mut Vec<f32>) {
+        let mut buffer = self.samples.lock().unwrap();
+        output.clear();
+        let slice = buffer.make_contiguous();
+        output.extend_from_slice(slice);
     }
 
     /// # Responsibility
     /// Clear buffer (used on stop/seek).
     pub fn clear(&self) {
         self.samples.lock().unwrap().clear();
+    }
+    
+    /// # Responsibility
+    /// Get current buffer length.
+    pub fn len(&self) -> usize {
+        self.samples.lock().unwrap().len()
+    }
+    
+    /// # Responsibility
+    /// Check if buffer is empty.
+    pub fn is_empty(&self) -> bool {
+        self.samples.lock().unwrap().is_empty()
     }
 }
 

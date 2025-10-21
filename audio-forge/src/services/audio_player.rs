@@ -8,7 +8,7 @@ use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::upmixing_source::UpmixingSource;
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use rodio::{OutputStream, Sink, Source};
 use shaku::Component;
 use std::fs::File;
@@ -152,11 +152,11 @@ impl IAudioPlayer for AudioPlayerService {
         if use_upmixing {
             // Pipeline: Decoder → AnalyzingSource → EffectsSource → UpmixingSource → Sink
             info!("🔊 8.1 surround mode ACTIVE - applying upmixing");
-            let upmixing_source = UpmixingSource::new(
+            let upmixing_source = UpmixingSource::try_new(
                 effects_source,
                 self.multi_channel.clone(),
                 256, // Batch size: 256 stereo frames
-            );
+            ).map_err(|e| anyhow!("Failed to create upmixing source: {}", e))?;
             state.sink.append(upmixing_source);
         } else {
             // Pipeline: Decoder → AnalyzingSource → EffectsSource → Sink (stereo)
@@ -299,12 +299,12 @@ impl IAudioPlayer for AudioPlayerService {
         state.is_playing
     }
 
-    fn get_audio_samples(&self) -> Vec<f32> {
+    fn get_audio_samples(&self) -> Arc<[f32]> {
         let state = self.state.lock();
         if let Some(ref buffer) = state.sample_buffer {
             buffer.get_samples()
         } else {
-            Vec::new()
+            Arc::from(vec![].as_slice())
         }
     }
 

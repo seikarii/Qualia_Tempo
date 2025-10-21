@@ -1,7 +1,7 @@
 [package]
 name = "audio-forge"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
 anyhow = "1.0.100"
@@ -10,6 +10,7 @@ cpal = "0.16.0"
 eframe = { version = "0.33.0", features = ["glow", "wayland", "x11"], default-features = false }
 egui = "0.33.0"
 hound = "3.5.1"
+lazy_static = "1.5.0"
 rfd = "0.15"
 rodio = { version = "0.21.1", features = ["symphonia-all"] }
 rustfft = { version = "6.4.1", features = ["avx"] }
@@ -33,11 +34,11 @@ harness = false
 name = "memory_usage"
 harness = false
 
-# Optimización EXTREMA de compilación
+# Optimización balanceada de compilación
 [profile.dev]
 opt-level = 0              # Sin optimización para build rápido
 incremental = true
-codegen-units = 256        # Máximo paralelismo
+codegen-units = 16         # Paralelismo razonable (standard: 16-32)
 debug = 0                  # Sin debug info
 
 [profile.dev.package."*"]

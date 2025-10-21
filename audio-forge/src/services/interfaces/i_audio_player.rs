@@ -37,13 +37,14 @@ pub trait IAudioPlayer: Interface {
     fn is_playing(&self) -> bool;
 
     /// # Responsibility
-    /// Get captured audio samples for real-time analysis.
+    /// Get captured audio samples for real-time analysis (zero-copy).
     ///
     /// ---
     ///
-    /// Returns snapshot of recent audio buffer (up to 1 second).
-    /// Returns empty vec if no audio is loaded.
-    fn get_audio_samples(&self) -> Vec<f32>;
+    /// Returns Arc reference to recent audio buffer (up to 1 second).
+    /// Zero-copy design eliminates 10.5MB/s allocation overhead @ 60fps.
+    /// Returns empty slice if no audio is loaded.
+    fn get_audio_samples(&self) -> std::sync::Arc<[f32]>;
 
     /// # Responsibility
     /// Get sample rate of currently loaded audio.

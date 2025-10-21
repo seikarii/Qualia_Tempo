@@ -158,8 +158,17 @@ impl IMultiChannelOutput for MultiChannelOutputService {
             ));
         }
 
+        let config = self.config.read().unwrap();
+        let sample_rate = config.sample_rate;
         let frame_count = stereo_samples.len() / 2;
         let mut output = Vec::with_capacity(frame_count * 8);
+
+        // Calculate sample-rate-aware delays (in milliseconds converted to frames)
+        const REAR_DELAY_MS: f32 = 0.227; // Industry standard for rear channels
+        const SIDE_DELAY_MS: f32 = 0.113; // Industry standard for side channels
+        
+        let rear_delay_frames = ((REAR_DELAY_MS / 1000.0) * sample_rate as f32) as usize;
+        let side_delay_frames = ((SIDE_DELAY_MS / 1000.0) * sample_rate as f32) as usize;
 
         // Extract mono sum for FC and LFE
         let mono_sum: Vec<f32> = (0..frame_count)
@@ -191,16 +200,14 @@ impl IMultiChannelOutput for MultiChannelOutputService {
             output.push(lfe[i] * 0.5); // Attenuate LFE
 
             // BL (Back Left): Delayed + attenuated left (rear surround)
-            let delay_frames = 10; // ~0.2ms @ 44100Hz
-            let bl_index = i.saturating_sub(delay_frames);
+            let bl_index = i.saturating_sub(rear_delay_frames);
             output.push(stereo_samples[bl_index * 2] * 0.7);
 
             // BR (Back Right): Delayed + attenuated right (rear surround)
             output.push(stereo_samples[bl_index * 2 + 1] * 0.7);
 
             // SL (Side Left): Mid-delayed left (side surround)
-            let mid_delay_frames = 5; // ~0.1ms @ 44100Hz
-            let sl_index = i.saturating_sub(mid_delay_frames);
+            let sl_index = i.saturating_sub(side_delay_frames);
             output.push(stereo_samples[sl_index * 2] * 0.8);
 
             // SR (Side Right): Mid-delayed right (side surround)
