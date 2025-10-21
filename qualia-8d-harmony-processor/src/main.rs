@@ -233,48 +233,45 @@ fn run_spatialization(
         RotationDirection::Clockwise,
     );
     
-    let chunk_size = 2048;
     let mut binaural_voices: Vec<BinauralSignal> = Vec::new();
     
-    // CRITICAL: Process each voice independently
+    // === DIRECTIVA 2: CORRECTED SINGLE-PASS TIME-VARYING CONVOLUTION ===
+    // CRITICAL FIX: Eliminated manual chunking loop that was corrupting HrtfConvolver's
+    // internal overlap-add state. Now uses HrtfConvolver::convolve_time_varying() which
+    // handles overlap-add INTERNALLY with continuous state across entire signal.
+    //
+    // This eliminates clicks/pops/distortion at chunk boundaries.
     for (voice_idx, voice) in voice_outputs.iter().enumerate() {
         info!(
             voice_index = voice_idx,
             spatial_offset = voice.spatial_offset_deg,
             num_samples = voice.samples.len(),
-            "Spatializing voice"
+            "Spatializing voice with continuous HRTF convolution"
         );
         
-        let mut spatial_audio = BinauralSignal::new(voice.samples.len());
-        
-        // Process voice in chunks with time-varying position
-        for (chunk_idx, chunk) in voice.samples.chunks(chunk_size).enumerate() {
-            let time_sec = (chunk_idx * chunk_size) as f64 / args.sample_rate as f64;
-            
-            // Calculate position: base rotation + voice's spatial offset
+        // Define position function for this voice: base rotation + voice offset
+        let voice_offset = voice.spatial_offset_deg;
+        let position_generator = |time_sec: f64| -> SphericalCoord {
             let base_position = motion_engine.calculate_position(time_sec);
-            let final_azimuth = base_position.azimuth_deg + voice.spatial_offset_deg;
-            
-            let hrtf_position = SphericalCoord::new(
+            let final_azimuth = base_position.azimuth_deg + voice_offset;
+            SphericalCoord::new(
                 final_azimuth,
                 base_position.elevation_deg,
                 base_position.distance_m,
-            );
-            
-            // Convolve chunk with HRTF at this voice's unique position
-            let (left_chunk, right_chunk) = hrtf_convolver.convolve_at_position(chunk, &hrtf_position)
-                .context("HRTF convolution failed")?;
-            
-            // OVERLAP-ADD: Sum convolved chunks (preserves HRTF tail)
-            let start_idx = chunk_idx * chunk_size;
-            for (i, (&left_sample, &right_sample)) in left_chunk.iter().zip(right_chunk.iter()).enumerate() {
-                let output_idx = start_idx + i;
-                if output_idx < spatial_audio.left.len() {
-                    spatial_audio.left[output_idx] += left_sample * voice.gain;
-                    spatial_audio.right[output_idx] += right_sample * voice.gain;
-                }
-            }
-        }
+            )
+        };
+        
+        // SINGLE CALL: Process entire voice with time-varying HRTF
+        let (spatial_left, spatial_right) = hrtf_convolver.convolve_time_varying(
+            &voice.samples,
+            &position_generator
+        ).context(format!("HRTF convolution failed for voice {}", voice_idx))?;
+        
+        // Apply voice gain
+        let spatial_audio = BinauralSignal {
+            left: spatial_left.iter().map(|&x| x * voice.gain).collect(),
+            right: spatial_right.iter().map(|&x| x * voice.gain).collect(),
+        };
         
         binaural_voices.push(spatial_audio);
     }

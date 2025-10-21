@@ -298,11 +298,12 @@ impl EnsembleEffect {
         let num_voices = self.config.calculate_num_voices(intensity);
         let spatial_spread = self.config.calculate_spatial_spread(intensity);
         
-        // CRITICAL FIX: Ultra-conservative compensation for spatial processing amplification
-        // HRTF convolution + effects create significant gain before summing.
-        // Previous value (0.7/N) still caused 2.1% near-clipping.
-        // New strategy: 0.5/N provides ~3dB additional safety margin.
-        let gain = 0.5 / num_voices.max(1) as f32;
+        // RESTORED (DIRECTIVA 4.3): Voice gain compensation reverted to optimal 0.7/N.
+        // Previous defensive 0.5/N (adding ~3dB headroom) was a band-aid for nested
+        // chunking artifacts. Now that HRTF convolution is fixed (continuous overlap-add),
+        // headroom manager in pipeline.rs handles legitimate peaks. Optimal gain preserves
+        // sonic density while preventing clipping via normalization.
+        let gain = 0.7 / num_voices.max(1) as f32;
 
         (0..num_voices)
             .map(|i| {
@@ -844,8 +845,8 @@ mod tests {
             // Verify spatial distribution
             assert!(voice.spatial_offset_deg >= -30.0 && voice.spatial_offset_deg <= 30.0);
             
-            // Verify gain (UPDATED: 0.5/N with N=5 → 0.1)
-            assert_relative_eq!(voice.gain, 0.1, epsilon = 0.001);
+            // Verify gain (UPDATED: 0.7/N with N=5 → 0.14)
+            assert_relative_eq!(voice.gain, 0.14, epsilon = 0.001);
         }
     }
 
