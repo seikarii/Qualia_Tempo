@@ -6,10 +6,12 @@
 use audio_forge::services::interfaces::{
     IAudioAnalyzer, IAudioEffects, IAudioPlayer, IMultiChannelOutput,
 };
+use audio_forge::services::AudioForgeModule;
 use audio_forge::{
-    AudioAnalyzerService, AudioEffectsService, AudioPlayerService, MultiChannelOutputService,
+    AudioAnalyzerService, AudioEffectsService, MultiChannelOutputService,
     VisualizationEngineService,
 };
+use shaku::HasComponent;
 use std::sync::Arc;
 
 /// # Responsibility
@@ -18,8 +20,9 @@ use std::sync::Arc;
 /// Flow: Audio data → FFT Analysis → 8D Effect → 8.1 Upmix
 #[test]
 fn test_e2e_complete_audio_pipeline() {
-    // Arrange: Initialize all services
-    let player = Arc::new(AudioPlayerService::default());
+    // Arrange: Initialize all services via DI module
+    let module = AudioForgeModule::builder().build();
+    let player: Arc<dyn IAudioPlayer> = module.resolve();
     let analyzer = Arc::new(AudioAnalyzerService::default());
     
     // Enable 8D effect

@@ -10,6 +10,7 @@ cpal = "0.16.0"
 eframe = { version = "0.33.0", features = ["glow", "wayland", "x11"], default-features = false }
 egui = "0.33.0"
 hound = "3.5.1"
+rfd = "0.15"
 rodio = { version = "0.21.1", features = ["symphonia-all"] }
 rustfft = { version = "6.4.1", features = ["avx"] }
 serde = { version = "1.0.228", features = ["derive"] }

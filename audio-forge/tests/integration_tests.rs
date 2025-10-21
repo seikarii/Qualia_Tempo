@@ -4,18 +4,23 @@
 use audio_forge::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
 use audio_forge::services::interfaces::i_audio_player::IAudioPlayer;
 use audio_forge::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
-use audio_forge::{AudioAnalyzerService, AudioPlayerService, MultiChannelOutputService};
+use audio_forge::services::AudioForgeModule;
+use audio_forge::{AudioAnalyzerService, MultiChannelOutputService};
+use shaku::HasComponent;
+use std::sync::Arc;
 use std::time::Duration;
 
 #[test]
 fn test_audio_player_service_creates() {
-    let _player = AudioPlayerService::default();
+    let module = AudioForgeModule::builder().build();
+    let _player: Arc<dyn IAudioPlayer> = module.resolve();
     // If we get here, creation succeeded
 }
 
 #[test]
 fn test_audio_player_initial_state() {
-    let player = AudioPlayerService::default();
+    let module = AudioForgeModule::builder().build();
+    let player: Arc<dyn IAudioPlayer> = module.resolve();
 
     assert!(!player.is_playing());
     assert_eq!(player.total_duration(), Duration::ZERO);
@@ -24,7 +29,8 @@ fn test_audio_player_initial_state() {
 
 #[test]
 fn test_play_without_loaded_file_errors() {
-    let player = AudioPlayerService::default();
+    let module = AudioForgeModule::builder().build();
+    let player: Arc<dyn IAudioPlayer> = module.resolve();
     let result = player.play();
 
     assert!(result.is_err());

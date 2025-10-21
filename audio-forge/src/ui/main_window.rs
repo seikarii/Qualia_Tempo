@@ -10,8 +10,10 @@ use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::interfaces::i_visualization_engine::IVisualizationEngine;
 use egui::{CentralPanel, Context, SidePanel, TopBottomPanel};
+use std::path::PathBuf;
 use std::sync::Arc;
-use tracing::error;
+use std::time::Duration;
+use tracing::{error, info};
 
 /// # Responsibility
 /// Main application window using egui immediate mode UI.
@@ -22,12 +24,20 @@ pub struct MainWindow {
     audio_effects: Arc<dyn IAudioEffects>,
     multi_channel_output: Arc<dyn IMultiChannelOutput>,
 
-    // Demo data for visualization (will be replaced with real-time data)
-    demo_waveform: Vec<f32>,
-    demo_spectrum: FrequencySpectrum,
-
     // Effect configuration state
     effect_config: EffectConfig,
+    
+    // Cached visualization data (updated each frame)
+    cached_waveform: Vec<f32>,
+    cached_spectrum: FrequencySpectrum,
+    cached_instrument_levels: (f32, f32, f32),
+    
+    // File loading state
+    current_file_path: Option<PathBuf>,
+    loading_error: Option<String>,
+    
+    // Playback state
+    volume: f32,
 }
 
 impl MainWindow {
@@ -38,24 +48,15 @@ impl MainWindow {
         audio_effects: Arc<dyn IAudioEffects>,
         multi_channel_output: Arc<dyn IMultiChannelOutput>,
     ) -> Self {
-        // Generate demo sine wave for initial visualization
-        let demo_waveform: Vec<f32> = (0..1000).map(|i| (i as f32 * 0.05).sin() * 0.5).collect();
+        let effect_config = audio_effects.get_config();
 
-        // Generate demo spectrum data
-        let demo_spectrum = FrequencySpectrum {
-            frequencies: (0..50).map(|i| i as f32 * 100.0).collect(),
-            magnitudes: (0..50)
-                .map(|i| {
-                    let freq = i as f32;
-                    // Simulate decreasing magnitude with frequency
-                    (1.0 - freq / 50.0).max(0.1)
-                })
-                .collect(),
+        // Initialize with empty visualization data
+        let cached_spectrum = FrequencySpectrum {
+            frequencies: Vec::new(),
+            magnitudes: Vec::new(),
             sample_rate: 44100,
             window_size: 2048,
         };
-
-        let effect_config = audio_effects.get_config();
 
         Self {
             audio_player,
@@ -63,15 +64,97 @@ impl MainWindow {
             visualization_engine,
             audio_effects,
             multi_channel_output,
-            demo_waveform,
-            demo_spectrum,
             effect_config,
+            cached_waveform: Vec::new(),
+            cached_spectrum,
+            cached_instrument_levels: (0.0, 0.0, 0.0),
+            current_file_path: None,
+            loading_error: None,
+            volume: 1.0, // Default 100% volume
+        }
+    }
+
+    /// # Responsibility
+    /// Update visualization data from real-time audio capture.
+    ///
+    /// ---
+    ///
+    /// Called every frame to refresh waveform and spectrum data.
+    /// Limits waveform to 2000 samples for UI performance.
+    fn update_visualization_data(&mut self) {
+        // Get raw audio samples from player
+        let raw_samples = self.audio_player.get_audio_samples();
+        
+        if raw_samples.is_empty() {
+            // No audio loaded: clear visualizations
+            self.cached_waveform.clear();
+            self.cached_spectrum = FrequencySpectrum {
+                frequencies: Vec::new(),
+                magnitudes: Vec::new(),
+                sample_rate: self.audio_player.get_sample_rate(),
+                window_size: 2048,
+            };
+            self.cached_instrument_levels = (0.0, 0.0, 0.0);
+            return;
+        }
+
+        // Downsample waveform for UI rendering (target: 2000 samples)
+        self.cached_waveform = self.audio_analyzer.get_waveform_samples(&raw_samples, 2000);
+
+        // Perform FFT analysis
+        let sample_rate = self.audio_player.get_sample_rate();
+        if let Ok(spectrum) = self.audio_analyzer.analyze_spectrum(&raw_samples, sample_rate) {
+            self.cached_instrument_levels = self.audio_analyzer.detect_instruments(&spectrum);
+            self.cached_spectrum = spectrum;
+        }
+    }
+
+    /// # Responsibility
+    /// Handle file loading via native file picker dialog.
+    ///
+    /// ---
+    ///
+    /// Opens async file dialog, validates audio format, loads into player.
+    fn handle_load_file(&mut self) {
+        // Open file picker (blocking call, but rfd is fast)
+        if let Some(file_path) = rfd::FileDialog::new()
+            .add_filter("Audio Files", &["mp3", "wav", "flac", "ogg", "m4a", "aac"])
+            .set_title("Select Audio File")
+            .pick_file()
+        {
+            info!("User selected file: {:?}", file_path);
+            
+            // Attempt to load file
+            match self.audio_player.load_file(&file_path) {
+                Ok(_) => {
+                    info!("✅ File loaded successfully: {:?}", file_path);
+                    self.current_file_path = Some(file_path);
+                    self.loading_error = None;
+                }
+                Err(e) => {
+                    error!("❌ Failed to load file: {}", e);
+                    self.loading_error = Some(format!("Load error: {}", e));
+                    self.current_file_path = None;
+                }
+            }
+        } else {
+            info!("File picker cancelled by user");
         }
     }
 
     pub fn update(&mut self, ctx: &Context) {
+        // Update visualization data from real-time audio
+        self.update_visualization_data();
+        
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.horizontal(|ui| {
+                // File loading button (PRIMARY ACTION)
+                if ui.button("📁 Load Audio File").clicked() {
+                    self.handle_load_file();
+                }
+                
+                ui.separator();
+                
                 if ui.button("▶ Play").clicked()
                     && let Err(e) = self.audio_player.play()
                 {
@@ -91,6 +174,32 @@ impl MainWindow {
                 }
 
                 ui.separator();
+                
+                // Display current file name
+                if let Some(ref path) = self.current_file_path {
+                    ui.label(format!("🎵 {}", path.file_name().unwrap().to_str().unwrap_or("Unknown")));
+                } else {
+                    ui.label("No file loaded");
+                }
+                
+                ui.separator();
+                
+                // Volume control
+                ui.label("🔊 Volume:");
+                let volume_slider = egui::Slider::new(&mut self.volume, 0.0..=1.0)
+                    .text("")
+                    .show_value(false);
+                
+                if ui.add(volume_slider).changed()
+                    && let Err(e) = self.audio_player.set_volume(self.volume)
+                {
+                    error!("Failed to set volume: {}", e);
+                }
+                
+                ui.label(format!("{}%", (self.volume * 100.0) as u8));
+                
+                ui.separator();
+                
                 ui.label(format!(
                     "Duration: {:.2}s",
                     self.audio_player.total_duration().as_secs_f32()
@@ -105,37 +214,85 @@ impl MainWindow {
                     }
                 ));
             });
+            
+            // Display loading errors if any
+            if let Some(ref error_msg) = self.loading_error {
+                ui.colored_label(egui::Color32::RED, format!("❌ {}", error_msg));
+            }
+            
+            // Seek bar (only show if audio is loaded)
+            let total_duration = self.audio_player.total_duration();
+            if total_duration > Duration::ZERO {
+                ui.separator();
+                ui.horizontal(|ui| {
+                    ui.label("Position:");
+                    
+                    let current_pos = self.audio_player.current_position();
+                    let mut position_secs = current_pos.as_secs_f32();
+                    let duration_secs = total_duration.as_secs_f32();
+                    
+                    // Seek slider
+                    let slider = egui::Slider::new(&mut position_secs, 0.0..=duration_secs)
+                        .text("s")
+                        .show_value(true);
+                    
+                    if ui.add(slider).changed() {
+                        // User dragged slider - seek to new position
+                        let new_position = Duration::from_secs_f32(position_secs);
+                        if let Err(e) = self.audio_player.seek(new_position) {
+                            error!("Seek failed: {}", e);
+                        }
+                    }
+                    
+                    // Display formatted time
+                    ui.label(format!(
+                        "{:02}:{:02} / {:02}:{:02}",
+                        (current_pos.as_secs() / 60) % 60,
+                        current_pos.as_secs() % 60,
+                        (total_duration.as_secs() / 60) % 60,
+                        total_duration.as_secs() % 60
+                    ));
+                });
+            }
         });
 
         // Bottom panel: Effects controls
         TopBottomPanel::bottom("effects_panel").show(ctx, |ui| {
-            ui.heading("🎛️ Audio Effects");
+            ui.heading("🎛️ Audio Effects - Real-Time DSP");
+            
+            let mut config_changed = false;
 
             ui.horizontal(|ui| {
                 // 8D Effect controls
                 ui.group(|ui| {
                     ui.vertical(|ui| {
-                        ui.checkbox(&mut self.effect_config.effect_8d_enabled, "8D Audio");
+                        if ui.checkbox(&mut self.effect_config.effect_8d_enabled, "8D Audio").changed() {
+                            config_changed = true;
+                        }
                         if self.effect_config.effect_8d_enabled {
                             ui.horizontal(|ui| {
                                 ui.label("Intensity:");
-                                ui.add(
+                                if ui.add(
                                     egui::Slider::new(
                                         &mut self.effect_config.effect_8d_intensity,
                                         0.0..=1.0,
                                     )
                                     .text(""),
-                                );
+                                ).changed() {
+                                    config_changed = true;
+                                }
                             });
                             ui.horizontal(|ui| {
                                 ui.label("Speed (Hz):");
-                                ui.add(
+                                if ui.add(
                                     egui::Slider::new(
                                         &mut self.effect_config.effect_8d_rotation_hz,
                                         0.1..=1.0,
                                     )
                                     .text(""),
-                                );
+                                ).changed() {
+                                    config_changed = true;
+                                }
                             });
                         }
                     });
@@ -146,17 +303,21 @@ impl MainWindow {
                 // Drop Effect controls
                 ui.group(|ui| {
                     ui.vertical(|ui| {
-                        ui.checkbox(&mut self.effect_config.drop_effect_enabled, "Drop Effect");
+                        if ui.checkbox(&mut self.effect_config.drop_effect_enabled, "Drop Effect").changed() {
+                            config_changed = true;
+                        }
                         if self.effect_config.drop_effect_enabled {
                             ui.horizontal(|ui| {
                                 ui.label("Amount:");
-                                ui.add(
+                                if ui.add(
                                     egui::Slider::new(
                                         &mut self.effect_config.drop_amount,
                                         0.0..=1.0,
                                     )
                                     .text(""),
-                                );
+                                ).changed() {
+                                    config_changed = true;
+                                }
                             });
                         }
                     });
@@ -167,17 +328,21 @@ impl MainWindow {
                 // Bass Boost controls
                 ui.group(|ui| {
                     ui.vertical(|ui| {
-                        ui.checkbox(&mut self.effect_config.bass_boost_enabled, "Bass Boost");
+                        if ui.checkbox(&mut self.effect_config.bass_boost_enabled, "Bass Boost").changed() {
+                            config_changed = true;
+                        }
                         if self.effect_config.bass_boost_enabled {
                             ui.horizontal(|ui| {
                                 ui.label("Gain:");
-                                ui.add(
+                                if ui.add(
                                     egui::Slider::new(
                                         &mut self.effect_config.bass_boost_gain,
                                         1.0..=3.0,
                                     )
                                     .text("x"),
-                                );
+                                ).changed() {
+                                    config_changed = true;
+                                }
                             });
                         }
                     });
@@ -188,27 +353,30 @@ impl MainWindow {
                 // Treble Boost controls
                 ui.group(|ui| {
                     ui.vertical(|ui| {
-                        ui.checkbox(&mut self.effect_config.treble_boost_enabled, "Treble Boost");
+                        if ui.checkbox(&mut self.effect_config.treble_boost_enabled, "Treble Boost").changed() {
+                            config_changed = true;
+                        }
                         if self.effect_config.treble_boost_enabled {
                             ui.horizontal(|ui| {
                                 ui.label("Gain:");
-                                ui.add(
+                                if ui.add(
                                     egui::Slider::new(
                                         &mut self.effect_config.treble_boost_gain,
                                         1.0..=3.0,
                                     )
                                     .text("x"),
-                                );
+                                ).changed() {
+                                    config_changed = true;
+                                }
                             });
                         }
                     });
                 });
             });
 
-            // Update audio effects service with new config
-            if ui.button("Apply Effects").clicked() {
+            // Apply config changes immediately (real-time updates)
+            if config_changed {
                 self.audio_effects.set_config(self.effect_config.clone());
-                ui.label("✅ Effects config applied (pipeline integration pending)");
             }
         });
 
@@ -217,8 +385,13 @@ impl MainWindow {
             .default_width(400.0)
             .show(ctx, |ui| {
                 ui.heading("Waveform (Time Domain)");
-                self.visualization_engine
-                    .render_waveform(ui, &self.demo_waveform);
+                
+                if self.cached_waveform.is_empty() {
+                    ui.label("🎵 Load an audio file to see waveform");
+                } else {
+                    self.visualization_engine
+                        .render_waveform(ui, &self.cached_waveform);
+                }
             });
 
         // Right panel: Spectrum + Instrument Map
@@ -226,24 +399,34 @@ impl MainWindow {
             .default_width(400.0)
             .show(ctx, |ui| {
                 ui.heading("Frequency Spectrum");
-                self.visualization_engine
-                    .render_spectrum(ui, &self.demo_spectrum);
+                
+                if self.cached_spectrum.frequencies.is_empty() {
+                    ui.label("🎵 Load an audio file to see spectrum");
+                } else {
+                    self.visualization_engine
+                        .render_spectrum(ui, &self.cached_spectrum);
+                }
 
                 ui.separator();
 
                 ui.heading("Instrument Detection");
-                let (bass, mid, treble) =
-                    self.audio_analyzer.detect_instruments(&self.demo_spectrum);
-                self.visualization_engine
-                    .render_instrument_map(ui, bass, mid, treble);
+                
+                if self.cached_spectrum.frequencies.is_empty() {
+                    ui.label("🎵 Load an audio file to see instrument levels");
+                } else {
+                    let (bass, mid, treble) = self.cached_instrument_levels;
+                    self.visualization_engine
+                        .render_instrument_map(ui, bass, mid, treble);
+                }
             });
 
         // Center panel: Info
         CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Audio Forge - Phase 4 (Multi-Channel Output)");
-            ui.label("✅ Real-time waveform rendering");
-            ui.label("✅ FFT frequency spectrum analysis");
-            ui.label("✅ Instrument detection (Bass/Mid/Treble)");
+            ui.heading("Audio Forge - Phase 2 Complete: Real-Time Visualization");
+            ui.label("✅ Real-time audio sample capture");
+            ui.label("✅ Live waveform rendering from playback");
+            ui.label("✅ Live FFT spectrum analysis");
+            ui.label("✅ Real-time instrument detection (Bass/Mid/Treble)");
             ui.label("✅ Audio effects: 8D, Drop, Bass/Treble Boost");
             ui.label("✅ 8.1 surround channel support");
             ui.separator();
@@ -306,7 +489,16 @@ impl MainWindow {
 
             ui.separator();
             ui.label("🎛️ Effects controls available in bottom panel");
-            ui.label("📊 Demo data displayed. Load audio file for real-time processing.");
+            
+            // Show audio status
+            if self.audio_player.total_duration() > std::time::Duration::ZERO {
+                ui.label("✅ Audio file loaded and ready for visualization");
+            } else {
+                ui.label("⚠️ No audio file loaded. Load a file to see real-time visualization.");
+            }
         });
+        
+        // Request repaint for smooth visualization updates
+        ctx.request_repaint();
     }
 }

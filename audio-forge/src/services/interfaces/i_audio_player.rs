@@ -10,7 +10,7 @@ use std::time::Duration;
 /// Controls audio playback: load, play, pause, seek, volume.
 pub trait IAudioPlayer: Interface {
     /// Load audio file (WAV/MP3/FLAC/OGG/AAC). Returns total duration.
-    fn load_file(&mut self, path: &Path) -> Result<Duration>;
+    fn load_file(&self, path: &Path) -> Result<Duration>;
 
     /// Start/resume playback
     fn play(&self) -> Result<()>;
@@ -35,4 +35,21 @@ pub trait IAudioPlayer: Interface {
 
     /// Playback status
     fn is_playing(&self) -> bool;
+
+    /// # Responsibility
+    /// Get captured audio samples for real-time analysis.
+    ///
+    /// ---
+    ///
+    /// Returns snapshot of recent audio buffer (up to 1 second).
+    /// Returns empty vec if no audio is loaded.
+    fn get_audio_samples(&self) -> Vec<f32>;
+
+    /// # Responsibility
+    /// Get sample rate of currently loaded audio.
+    ///
+    /// ---
+    ///
+    /// Returns 44100 by default if no audio loaded.
+    fn get_sample_rate(&self) -> u32;
 }

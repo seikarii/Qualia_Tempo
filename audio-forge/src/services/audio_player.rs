@@ -1,6 +1,9 @@
 //! # Responsibility
 //! Implements audio playback service using rodio and symphonia.
 
+use crate::services::analyzing_source::{AnalyzingSource, SampleBuffer};
+use crate::services::effects_source::EffectsSource;
+use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use anyhow::{Context, Result};
 use rodio::{OutputStream, Sink, Source};
@@ -27,6 +30,8 @@ struct PlayerState {
     is_playing: bool,
     start_time: Option<std::time::Instant>,
     pause_position: Duration,
+    sample_buffer: Option<SampleBuffer>,
+    sample_rate: u32,
 }
 
 impl PlayerState {
@@ -52,6 +57,8 @@ impl PlayerState {
             is_playing: false,
             start_time: None,
             pause_position: Duration::ZERO,
+            sample_buffer: None,
+            sample_rate: 44100, // Default, will be updated on load
         }
     }
 }
@@ -82,15 +89,18 @@ impl PlayerStateHandle {
 
 /// # Responsibility
 /// Core audio playback service with thread-safe state management.
-#[derive(Component, Default)]
+#[derive(Component)]
 #[shaku(interface = IAudioPlayer)]
 pub struct AudioPlayerService {
     #[shaku(default)]
     state: PlayerStateHandle,
+    
+    #[shaku(inject)]
+    audio_effects: Arc<dyn IAudioEffects>,
 }
 
 impl IAudioPlayer for AudioPlayerService {
-    fn load_file(&mut self, path: &Path) -> Result<Duration> {
+    fn load_file(&self, path: &Path) -> Result<Duration> {
         info!("Loading audio file: {}", path.display());
 
         // Decode audio file
@@ -102,22 +112,44 @@ impl IAudioPlayer for AudioPlayerService {
             .total_duration()
             .ok_or_else(|| anyhow::anyhow!("Failed to get total duration"))?;
 
+        let sample_rate = source.sample_rate();
+
+        // Wrap source in AnalyzingSource for real-time capture
+        // Buffer capacity: 1 second of stereo audio @ 44100Hz = 88200 samples
+        // Chunk size: 512 samples (reduces lock contention)
+        let buffer_capacity = (sample_rate * 2) as usize; // 1 second stereo
+        let chunk_size = 512;
+        
+        // Rodio 0.21 - Source already outputs f32 samples
+        let analyzing_source = AnalyzingSource::new(source, buffer_capacity, chunk_size);
+        let sample_buffer = analyzing_source.buffer();
+        
+        // Wrap in EffectsSource for real-time DSP processing
+        // Pipeline: Decoder → AnalyzingSource → EffectsSource → Sink
+        let effects_source = EffectsSource::new(
+            analyzing_source,
+            self.audio_effects.clone(),
+            chunk_size,
+        );
+
         let mut state = self.state.lock();
         
         // CRITICAL FIX: Clear existing audio and append new source to EXISTING Sink
         // This prevents recreating OutputStream (OS resource leak + device conflicts)
-        state.sink.stop();          // Stop current playback
-        state.sink.clear();         // Remove all queued sources
-        state.sink.append(source);  // Add new decoded audio
-        state.sink.pause();         // Start paused (user must click play)
+        state.sink.stop();                      // Stop current playback
+        state.sink.clear();                     // Remove all queued sources
+        state.sink.append(effects_source);      // Add complete pipeline: Analyzing → Effects
+        state.sink.pause();                     // Start paused (user must click play)
         
         // Reset playback state
         state.total_duration = total_duration;
         state.is_playing = false;
         state.start_time = None;
         state.pause_position = Duration::ZERO;
+        state.sample_buffer = Some(sample_buffer);
+        state.sample_rate = sample_rate;
 
-        info!("Audio loaded successfully. Duration: {:?}", total_duration);
+        info!("Audio loaded successfully. Duration: {:?}, Sample Rate: {}", total_duration, sample_rate);
         Ok(total_duration)
     }
 
@@ -241,11 +273,35 @@ impl IAudioPlayer for AudioPlayerService {
         let state = self.state.lock();
         state.is_playing
     }
+
+    fn get_audio_samples(&self) -> Vec<f32> {
+        let state = self.state.lock();
+        if let Some(ref buffer) = state.sample_buffer {
+            buffer.get_samples()
+        } else {
+            Vec::new()
+        }
+    }
+
+    fn get_sample_rate(&self) -> u32 {
+        let state = self.state.lock();
+        state.sample_rate
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::audio_effects::AudioEffectsService;
+
+    /// Helper function to create AudioPlayerService for testing
+    fn create_test_service() -> AudioPlayerService {
+        let audio_effects = Arc::new(AudioEffectsService::default());
+        AudioPlayerService {
+            state: PlayerStateHandle::default(),
+            audio_effects,
+        }
+    }
 
     #[test]
     fn test_player_state_initialization() {
@@ -261,7 +317,7 @@ mod tests {
     #[test]
     fn test_audio_player_service_default() {
         // Service initializes audio stream on construction
-        let service = AudioPlayerService::default();
+        let service = create_test_service();
         let state = service.state.lock();
         assert_eq!(state.total_duration, Duration::ZERO);
         assert!(!state.is_playing);
@@ -269,7 +325,7 @@ mod tests {
 
     #[test]
     fn test_initial_state_matches_spec() {
-        let service = AudioPlayerService::default();
+        let service = create_test_service();
         assert!(!service.is_playing());
         assert_eq!(service.total_duration(), Duration::ZERO);
         assert_eq!(service.current_position(), Duration::ZERO);
@@ -277,7 +333,7 @@ mod tests {
 
     #[test]
     fn test_volume_control_works_without_file() {
-        let service = AudioPlayerService::default();
+        let service = create_test_service();
         // Volume can be set anytime (Sink exists from construction)
         let result = service.set_volume(0.5);
         assert!(result.is_ok());
@@ -285,7 +341,7 @@ mod tests {
 
     #[test]
     fn test_volume_clamping() {
-        let service = AudioPlayerService::default();
+        let service = create_test_service();
         
         // Test lower bound clamping
         assert!(service.set_volume(-1.0).is_ok());
@@ -296,7 +352,7 @@ mod tests {
 
     #[test]
     fn test_operations_without_loaded_file() {
-        let service = AudioPlayerService::default();
+        let service = create_test_service();
 
         // These should fail because no audio is loaded (total_duration == 0)
         assert!(service.play().is_err());
@@ -310,7 +366,7 @@ mod tests {
 
     #[test]
     fn test_position_tracking_when_stopped() {
-        let service = AudioPlayerService::default();
+        let service = create_test_service();
         
         // Position should be ZERO when no file loaded
         assert_eq!(service.current_position(), Duration::ZERO);
