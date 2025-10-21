@@ -196,6 +196,7 @@ impl AudioProcessingPipeline {
     /// 3. Harmonic Exciter (presence/air)
     /// 4. Psychoacoustic Bass (missing fundamental)
     /// 5. Convolution Reverb (acoustic space)
+    /// 6. **HEADROOM NORMALIZATION** [DIRECTIVE 1: Gain staging guardian]
     ///
     /// Note: Stereo Widener + Ensemble applied AFTER overlap-add reconstruction.
     fn apply_effects_chain(&mut self, chunk: &[f32], intensity: f32) -> Result<Vec<f32>> {
@@ -207,8 +208,32 @@ impl AudioProcessingPipeline {
             .context("Harmonic exciter failed")?;
         let bass = self.psychoacoustic_bass.process(&excited, intensity)
             .context("Psychoacoustic bass failed")?;
-        self.convolution_reverb.process(&bass, intensity)
-            .context("Convolution reverb failed")
+        let reverb = self.convolution_reverb.process(&bass, intensity)
+            .context("Convolution reverb failed")?;
+        
+        // === DIRECTIVA 1: GLOBAL HEADROOM NORMALIZATION ===
+        // Calculates peak and reduces gain if exceeding -6dBFS (0.5) headroom target.
+        // CRITICAL: Stricter than initial -3dBFS to account for downstream HRTF
+        // convolution + spatial mixing which introduce ~+3-6dB peaks.
+        // This GUARANTEES safe signal level for downstream ensemble/mixer, preventing
+        // limiter overload regardless of upstream effect chain aggressiveness.
+        const TARGET_HEADROOM: f32 = 0.5; // -6dBFS safety margin (accounting for spatial processing gain)
+        
+        let peak_level = reverb.iter()
+            .map(|&x| x.abs())
+            .fold(0.0f32, f32::max);
+        
+        if peak_level > TARGET_HEADROOM {
+            let reduction_gain = TARGET_HEADROOM / peak_level;
+            tracing::debug!(
+                peak_level = peak_level,
+                reduction_db = 20.0 * reduction_gain.log10(),
+                "Headroom guardian: Reducing gain to prevent saturation"
+            );
+            Ok(reverb.iter().map(|&x| x * reduction_gain).collect())
+        } else {
+            Ok(reverb)
+        }
     }
     
     /// # Responsibility

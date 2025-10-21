@@ -284,6 +284,36 @@ fn run_spatialization(
         "All voices spatialized independently"
     );
 
+    // === POST-HRTF HEADROOM NORMALIZATION ===
+    // CRITICAL: HRTF convolution introduces significant gain (up to +6dB).
+    // Normalize each voice's peak to -6dBFS (0.5) before mixing to prevent
+    // summing from pushing into >0.95 danger zone.
+    const POST_HRTF_HEADROOM: f32 = 0.5; // -6dBFS safety margin
+    
+    for voice in &mut binaural_voices {
+        let peak_left = voice.left.iter().map(|&x| x.abs()).fold(0.0f32, f32::max);
+        let peak_right = voice.right.iter().map(|&x| x.abs()).fold(0.0f32, f32::max);
+        let peak = peak_left.max(peak_right);
+        
+        if peak > POST_HRTF_HEADROOM {
+            let reduction_gain = POST_HRTF_HEADROOM / peak;
+            tracing::debug!(
+                peak_level = peak,
+                reduction_db = 20.0 * reduction_gain.log10(),
+                "Post-HRTF normalization: Reducing voice gain to prevent mixer saturation"
+            );
+            
+            for sample in &mut voice.left {
+                *sample *= reduction_gain;
+            }
+            for sample in &mut voice.right {
+                *sample *= reduction_gain;
+            }
+        }
+    }
+    
+    info!("Post-HRTF normalization applied to {} voices", binaural_voices.len());
+
     // Phase 4.5: Mix all spatialized voices with musical lookahead limiting
     info!("Phase 4.5: Mixing {} voices with lookahead limiter", binaural_voices.len());
     let mixer_config = SpatialMixerConfig::default_8d(args.sample_rate);

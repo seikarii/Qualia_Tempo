@@ -58,7 +58,7 @@ impl PsychoacousticBassConfig {
             harmonic_2x_gain: 0.5,         // 2x harmonic level
             harmonic_3x_gain: 0.3,         // 3x harmonic level
             saturation_drive: 1.2,         // Mild drive for harmonic generation
-            fundamental_boost_gain: 1.8,   // REDUCED: Was 2.5 (+5dB instead of +8dB to prevent distortion)
+            fundamental_boost_gain: 2.5,   // RESTORED: Ideal gain (+8dB - was 1.8, headroom manager protects)
             sample_rate,
         })
     }

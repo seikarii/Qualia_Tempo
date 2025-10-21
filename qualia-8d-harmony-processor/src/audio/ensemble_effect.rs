@@ -298,10 +298,11 @@ impl EnsembleEffect {
         let num_voices = self.config.calculate_num_voices(intensity);
         let spatial_spread = self.config.calculate_spatial_spread(intensity);
         
-        // CRITICAL FIX: Aggressive compensation for spatial processing amplification
-        // With HRTF + effects, each voice gets amplified before summing
-        // Standard 1/N gives near-clipping of 2.5% → use 0.7/N for safety
-        let gain = 0.7 / num_voices.max(1) as f32;
+        // CRITICAL FIX: Ultra-conservative compensation for spatial processing amplification
+        // HRTF convolution + effects create significant gain before summing.
+        // Previous value (0.7/N) still caused 2.1% near-clipping.
+        // New strategy: 0.5/N provides ~3dB additional safety margin.
+        let gain = 0.5 / num_voices.max(1) as f32;
 
         (0..num_voices)
             .map(|i| {
@@ -446,8 +447,16 @@ impl EnsembleEffect {
     /// # Responsibility
     /// Legacy static processing method (backward compatibility).
     ///
-    /// WARNING: This method uses default intensity (0.5) on first call.
-    /// For dynamic processing, use process_dynamic() instead.
+    /// **DEPRECATED (DIRECTIVE 3)**: This method uses hardcoded intensity (0.5),
+    /// losing temporal dynamics. It represents obsolete single-pass architecture.
+    ///
+    /// **Migration Path**: Use `process_dynamic()` for correct intensity-responsive behavior.
+    ///
+    /// WARNING: This method will be removed in v2.0. Update all callsites.
+    #[deprecated(
+        since = "1.1.0",
+        note = "Use process_dynamic() for intensity-responsive processing. Hardcoded intensity violates dynamic modulation principles."
+    )]
     #[allow(dead_code)]
     pub fn process(&mut self, input: &[f32]) -> Result<Vec<VoiceOutput>> {
         // Initialize voices with default intensity if empty
@@ -835,8 +844,8 @@ mod tests {
             // Verify spatial distribution
             assert!(voice.spatial_offset_deg >= -30.0 && voice.spatial_offset_deg <= 30.0);
             
-            // Verify gain
-            assert_relative_eq!(voice.gain, 0.2, epsilon = 0.001);
+            // Verify gain (UPDATED: 0.5/N with N=5 → 0.1)
+            assert_relative_eq!(voice.gain, 0.1, epsilon = 0.001);
         }
     }
 
