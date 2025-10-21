@@ -297,7 +297,11 @@ impl EnsembleEffect {
         
         let num_voices = self.config.calculate_num_voices(intensity);
         let spatial_spread = self.config.calculate_spatial_spread(intensity);
-        let gain = 1.0 / num_voices.max(1) as f32;
+        
+        // CRITICAL FIX: Aggressive compensation for spatial processing amplification
+        // With HRTF + effects, each voice gets amplified before summing
+        // Standard 1/N gives near-clipping of 2.5% → use 0.7/N for safety
+        let gain = 0.7 / num_voices.max(1) as f32;
 
         (0..num_voices)
             .map(|i| {

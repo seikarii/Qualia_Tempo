@@ -47,11 +47,11 @@ impl SpatialMixerConfig {
     /// less aggressive limiting, higher perceived volume without artifacts
     pub fn default_8d(sample_rate: u32) -> Self {
         Self {
-            limiter_threshold: 0.98,  // OPTIMIZED: Increased from 0.95 for less limiting
+            limiter_threshold: 0.99,  // CRITICAL FIX: User reports severe distortion - maximize headroom
             num_stems: 4,
             lookahead_ms: 5.0,
             release_ms: 50.0,
-            knee_db: 3.0,
+            knee_db: 1.5,             // REDUCED: Gentler knee (was 3.0 - too aggressive)
             sample_rate,
         }
     }

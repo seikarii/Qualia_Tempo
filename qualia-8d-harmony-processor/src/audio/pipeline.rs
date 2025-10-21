@@ -78,7 +78,7 @@ impl PipelineConfig {
                 (0.0, 12.0),      // Attack: 0dB → +12dB (punch at high intensity)
                 (-6.0, 0.0),      // Sustain: -6dB → 0dB (clarity at low intensity)
                 256,              // Envelope window: 5.3ms @ 48kHz (fast transient detection)
-                30.0,             // Attack threshold: 30 dB/s (moderate sensitivity)
+                15.0,             // Attack threshold: 15 dB/s (HIGH SENSITIVITY - fixes 0.00 transient density)
                 2048,             // Release: 42ms @ 48kHz (smooth transitions)
                 sample_rate,
             )?,

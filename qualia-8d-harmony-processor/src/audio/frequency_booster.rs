@@ -83,15 +83,15 @@ impl FrequencyBoosterConfig {
                 sample_rate,
             },
             InstrumentRole::Other => Self {
-                bass_freq: 70.0,
-                bass_base_gain_db: 0.5,   // OPTIMIZED: was 2.0 (reduced gain stacking)
-                bass_max_gain_db: 1.5,    // OPTIMIZED: was 4.0 (prevent limiter crushing)
+                bass_freq: 80.0,
+                bass_base_gain_db: 2.0,   // REDUCED: Was 3.0 (preventing limiter overload)
+                bass_max_gain_db: 4.0,    // REDUCED: Was 6.0 (2.44% near-clipping detected)
                 mid_freq: 1200.0,
-                mid_base_gain_db: 0.0,    // OPTIMIZED: was 1.0 (reduce midrange buildup)
-                mid_max_gain_db: 1.0,     // OPTIMIZED: was 3.0 (transparent boost)
+                mid_base_gain_db: 1.0,    // REDUCED: Was 1.5
+                mid_max_gain_db: 2.5,     // REDUCED: Was 4.0
                 high_freq: 10000.0,
-                high_base_gain_db: 0.5,   // OPTIMIZED: was 2.5 (reduce harshness)
-                high_max_gain_db: 1.5,    // OPTIMIZED: was 4.0 (controlled air)
+                high_base_gain_db: 0.5,   // Keep controlled
+                high_max_gain_db: 1.5,    // Keep controlled
                 q_factor: 1.0,
                 sample_rate,
             },

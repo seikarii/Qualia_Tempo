@@ -289,7 +289,7 @@ fn run_spatialization(
     let mixer_config = SpatialMixerConfig::default_8d(args.sample_rate);
     let spatial_mixer = SpatialMixer::new(mixer_config);
     let final_mix = spatial_mixer.mix(&binaural_voices);
-    info!("Lookahead limiter applied (threshold: 0.95, knee: 3dB)");
+    info!("Lookahead limiter applied (threshold: 0.99, knee: 1.5dB)");
 
     Ok(final_mix)
 }

@@ -38,6 +38,10 @@ pub struct PsychoacousticBassConfig {
     /// Saturation drive amount (0.5-2.0, controls harmonic richness)
     pub saturation_drive: f32,
     
+    /// Fundamental boost gain (direct bass boost, NOT psychoacoustic)
+    /// Values: 1.0 = no boost, 1.5 = +3.5dB, 2.0 = +6dB
+    pub fundamental_boost_gain: f32,
+    
     pub sample_rate: u32,
 }
 
@@ -54,6 +58,7 @@ impl PsychoacousticBassConfig {
             harmonic_2x_gain: 0.5,         // 2x harmonic level
             harmonic_3x_gain: 0.3,         // 3x harmonic level
             saturation_drive: 1.2,         // Mild drive for harmonic generation
+            fundamental_boost_gain: 1.8,   // REDUCED: Was 2.5 (+5dB instead of +8dB to prevent distortion)
             sample_rate,
         })
     }
@@ -77,6 +82,10 @@ impl PsychoacousticBassConfig {
         
         if self.saturation_drive < 0.1 || self.saturation_drive > 5.0 {
             bail!("saturation_drive must be in [0.1, 5.0], got {}", self.saturation_drive);
+        }
+        
+        if self.fundamental_boost_gain < 0.5 || self.fundamental_boost_gain > 3.0 {
+            bail!("fundamental_boost_gain must be in [0.5, 3.0], got {}", self.fundamental_boost_gain);
         }
         
         Ok(())
@@ -272,16 +281,22 @@ impl PsychoacousticBass {
             })
             .collect();
         
-        // Step 4: Blend harmonics with original signal (intensity-modulated)
+        // Step 4: Blend fundamentals + harmonics with original signal (intensity-modulated)
         let output: Vec<f32> = input
             .iter()
             .enumerate()
             .map(|(i, &orig)| {
                 let h2 = harmonic_2x_filtered.get(i).copied().unwrap_or(0.0);
                 let h3 = harmonic_3x_filtered.get(i).copied().unwrap_or(0.0);
+                let fundamental = bass_signal.get(i).copied().unwrap_or(0.0);
                 
-                // Intensity-scaled harmonic injection
-                let enhanced = orig + (h2 + h3) * intensity_clamped;
+                // CORRECTED: Scale from 1.0x (no boost) to fundamental_boost_gain (full boost)
+                // At intensity=0: 1.0x, At intensity=1.0: 1.5x
+                let boost_multiplier = 1.0 + (self.config.fundamental_boost_gain - 1.0) * intensity_clamped;
+                
+                let enhanced = orig 
+                    + fundamental * boost_multiplier
+                    + (h2 + h3) * intensity_clamped;
                 
                 // Soft limiting to prevent clipping
                 enhanced.clamp(-1.0, 1.0)
