@@ -18,7 +18,7 @@ pub mod transient_shaper;
 pub use circular_motion::{CircularMotionEngine, RotationDirection, SphericalPosition};
 pub use convolution_reverb::{ConvolutionReverb, ConvolutionReverbConfig};
 pub use ensemble_effect::{EnsembleConfig, EnsembleEffect, EnsembleMode, VoiceOutput};
-pub use frequency_booster::{FrequencyBooster, FrequencyBoosterConfig};
+pub use frequency_booster::{FrequencyBooster, FrequencyBoosterConfig, InstrumentRole};
 pub use harmonic_exciter::{HarmonicExciter, HarmonicExciterConfig};
 pub use hrtf_convolver::HrtfConvolver;
 pub use input_handler::{AudioBuffer, InputHandler, InputHandlerConfig};

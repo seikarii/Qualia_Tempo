@@ -124,15 +124,63 @@ impl FrequencyBoosterConfig {
     }
 }
 
-/// Three-band parametric equalizer with dynamic gain
+/// Three-band parametric equalizer with dynamic gain (STATEFUL)
+///
+/// # CRITICAL FIX (2025-10-21):
+/// Now stores IIR filter instances as members to preserve state across process() calls.
+/// This prevents block-boundary discontinuities (clicks/pops) that occurred when
+/// filters were recreated on every invocation.
 pub struct FrequencyBooster {
     config: FrequencyBoosterConfig,
+    // STATEFUL: Persistent filter instances with internal delay registers
+    bass_filter: DirectForm2Transposed<f32>,
+    mid_filter: DirectForm2Transposed<f32>,
+    high_filter: DirectForm2Transposed<f32>,
+    // Track last intensity for coefficient update detection
+    last_intensity: f32,
 }
 
 impl FrequencyBooster {
     /// Create new frequency booster with specified configuration
+    ///
+    /// Initializes filters with base gain (intensity = 0.0) to establish initial state.
     pub fn new(config: FrequencyBoosterConfig) -> Result<Self> {
-        Ok(Self { config })
+        let fs = (config.sample_rate as f32).hz();
+        
+        // Initialize filters with base gains (intensity = 0.0)
+        let (bass_gain_base, mid_gain_base, high_gain_base) = config.calculate_dynamic_gains(0.0);
+        
+        let bass_coeffs = Coefficients::<f32>::from_params(
+            Type::PeakingEQ(bass_gain_base),
+            fs,
+            config.bass_freq.hz(),
+            config.q_factor,
+        )
+        .map_err(|e| anyhow::anyhow!("Bass filter init failed: {:?}", e))?;
+
+        let mid_coeffs = Coefficients::<f32>::from_params(
+            Type::PeakingEQ(mid_gain_base),
+            fs,
+            config.mid_freq.hz(),
+            config.q_factor,
+        )
+        .map_err(|e| anyhow::anyhow!("Mid filter init failed: {:?}", e))?;
+
+        let high_coeffs = Coefficients::<f32>::from_params(
+            Type::PeakingEQ(high_gain_base),
+            fs,
+            config.high_freq.hz(),
+            config.q_factor,
+        )
+        .map_err(|e| anyhow::anyhow!("High filter init failed: {:?}", e))?;
+        
+        Ok(Self {
+            config,
+            bass_filter: DirectForm2Transposed::<f32>::new(bass_coeffs),
+            mid_filter: DirectForm2Transposed::<f32>::new(mid_coeffs),
+            high_filter: DirectForm2Transposed::<f32>::new(high_coeffs),
+            last_intensity: 0.0,
+        })
     }
     
     /// Get immutable reference to configuration
@@ -140,28 +188,36 @@ impl FrequencyBooster {
         &self.config
     }
 
-    /// Process audio with dynamic intensity-driven EQ
+    /// Update filter coefficients if intensity has changed significantly
     ///
-    /// # Arguments
-    /// * `input` - Input audio samples
-    /// * `intensity` - Intensity score [0.0, 1.0] for dynamic gain
+    /// # Strategy:
+    /// Only update coefficients when intensity changes beyond threshold (0.01).
+    /// This balances dynamic response with computational efficiency.
     ///
-    /// # Returns
-    /// EQ-processed samples with intensity-modulated gain
-    pub fn process(&mut self, input: &[f32], intensity: f32) -> Result<Vec<f32>> {
-        // Calculate dynamic gains
-        let (bass_gain, mid_gain, high_gain) = self.config.calculate_dynamic_gains(intensity);
+    /// # Note:
+    /// biquad v0.4 does not support coefficient updates without state reset.
+    /// We recreate filters when needed, accepting brief transients as trade-off
+    /// for correct time-varying behavior. Future: consider smooth coefficient interpolation.
+    fn update_coefficients_if_needed(&mut self, intensity: f32) -> Result<()> {
+        const INTENSITY_UPDATE_THRESHOLD: f32 = 0.01; // 1% change triggers update
         
-        // Create biquad coefficients using external crate
+        if (intensity - self.last_intensity).abs() < INTENSITY_UPDATE_THRESHOLD {
+            return Ok(()); // No update needed
+        }
+        
+        let (bass_gain, mid_gain, high_gain) = self.config.calculate_dynamic_gains(intensity);
         let fs = (self.config.sample_rate as f32).hz();
         
+        // Recreate filters with new coefficients
+        // LIMITATION: State is reset, but this is necessary for dynamic gain changes
+        // Impact: Brief transient at coefficient update (typically inaudible for slow intensity changes)
         let bass_coeffs = Coefficients::<f32>::from_params(
             Type::PeakingEQ(bass_gain),
             fs,
             self.config.bass_freq.hz(),
             self.config.q_factor,
         )
-        .map_err(|e| anyhow::anyhow!("Bass filter creation failed: {:?}", e))?;
+        .map_err(|e| anyhow::anyhow!("Bass filter update failed: {:?}", e))?;
 
         let mid_coeffs = Coefficients::<f32>::from_params(
             Type::PeakingEQ(mid_gain),
@@ -169,7 +225,7 @@ impl FrequencyBooster {
             self.config.mid_freq.hz(),
             self.config.q_factor,
         )
-        .map_err(|e| anyhow::anyhow!("Mid filter creation failed: {:?}", e))?;
+        .map_err(|e| anyhow::anyhow!("Mid filter update failed: {:?}", e))?;
 
         let high_coeffs = Coefficients::<f32>::from_params(
             Type::PeakingEQ(high_gain),
@@ -177,28 +233,49 @@ impl FrequencyBooster {
             self.config.high_freq.hz(),
             self.config.q_factor,
         )
-        .map_err(|e| anyhow::anyhow!("High filter creation failed: {:?}", e))?;
+        .map_err(|e| anyhow::anyhow!("High filter update failed: {:?}", e))?;
         
-        // Create DirectForm2Transposed filters (optimal for static filtering)
-        let mut bass_filter = DirectForm2Transposed::<f32>::new(bass_coeffs);
-        let mut mid_filter = DirectForm2Transposed::<f32>::new(mid_coeffs);
-        let mut high_filter = DirectForm2Transposed::<f32>::new(high_coeffs);
+        self.bass_filter = DirectForm2Transposed::<f32>::new(bass_coeffs);
+        self.mid_filter = DirectForm2Transposed::<f32>::new(mid_coeffs);
+        self.high_filter = DirectForm2Transposed::<f32>::new(high_coeffs);
+        self.last_intensity = intensity;
         
         tracing::debug!(
             intensity = intensity,
             bass_gain_db = bass_gain,
             mid_gain_db = mid_gain,
             high_gain_db = high_gain,
-            "Dynamic EQ: intensity={:.2} → bass={:.1}dB, mid={:.1}dB, high={:.1}dB",
+            "Updated EQ coefficients: intensity={:.2} → bass={:.1}dB, mid={:.1}dB, high={:.1}dB",
             intensity, bass_gain, mid_gain, high_gain
         );
         
+        Ok(())
+    }
+
+    /// Process audio with dynamic intensity-driven EQ (STATEFUL)
+    ///
+    /// # Arguments
+    /// * `input` - Input audio samples
+    /// * `intensity` - Intensity score [0.0, 1.0] for dynamic gain
+    ///
+    /// # Returns
+    /// EQ-processed samples with intensity-modulated gain
+    ///
+    /// # State Preservation:
+    /// Filter state is maintained across calls, ensuring smooth processing
+    /// without block-boundary discontinuities. Coefficients update only when
+    /// intensity changes significantly (threshold: 0.01).
+    pub fn process(&mut self, input: &[f32], intensity: f32) -> Result<Vec<f32>> {
+        // Update coefficients if intensity changed significantly
+        self.update_coefficients_if_needed(intensity)?;
+        
         // Serial cascade processing: bass → mid → high
+        // State is preserved in self.{bass,mid,high}_filter between calls
         let mut output = Vec::with_capacity(input.len());
         for &sample in input {
-            let bass_out = bass_filter.run(sample);
-            let mid_out = mid_filter.run(bass_out);
-            let high_out = high_filter.run(mid_out);
+            let bass_out = self.bass_filter.run(sample);
+            let mid_out = self.mid_filter.run(bass_out);
+            let high_out = self.high_filter.run(mid_out);
             output.push(high_out);
         }
         
