@@ -1,0 +1,9 @@
+# Optimización de compilación paralela con SCCACHE
+[build]
+# Paralelismo máximo
+pipelining = true
+rustc-wrapper = "sccache"
+
+# Configuración de caché
+[net]
+git-fetch-with-cli = true
