@@ -16,6 +16,8 @@ use super::{
     FrequencyBooster, FrequencyBoosterConfig,
     HarmonicExciter, HarmonicExciterConfig,
     PsychoacousticBass, PsychoacousticBassConfig,
+    StereoWidener, StereoWidenerConfig,
+    TransientShaper, TransientShaperConfig,
     VoiceOutput,
 };
 
@@ -34,6 +36,9 @@ pub struct PipelineConfig {
     /// Intensity analyzer configuration
     pub intensity: IntensityAnalyzerConfig,
     
+    /// Transient shaper configuration (NEW: percussive clarity)
+    pub transient_shaper: TransientShaperConfig,
+    
     /// Frequency booster (EQ) configuration
     pub frequency_boost: FrequencyBoosterConfig,
     
@@ -46,6 +51,9 @@ pub struct PipelineConfig {
     /// Convolution reverb configuration
     pub convolution_reverb: ConvolutionReverbConfig,
     
+    /// Stereo widener configuration (NEW: Haas + Mid-Side)
+    pub stereo_widener: StereoWidenerConfig,
+    
     /// Ensemble effect configuration
     pub ensemble: EnsembleConfig,
 }
@@ -56,18 +64,34 @@ impl PipelineConfig {
     ///
     /// Uses sensible defaults for orchestral 8D audio processing:
     /// - Intensity: 250ms windows with 50% overlap
+    /// - Transient Shaper: 0 → +12dB attack, 0 → -6dB sustain (NEW)
     /// - Frequency Boost: Default 8D EQ profile
     /// - Psychoacoustic Bass: 20-150Hz fundamental extraction
     /// - Convolution Reverb: Synthetic IR fallback
+    /// - Stereo Widener: 5ms → 35ms Haas, 1.0x → 2.0x width (NEW)
     /// - Ensemble: 5-13 voices, humanized mode
     pub fn new(sample_rate: u32) -> Result<Self> {
         Ok(Self {
             sample_rate,
             intensity: IntensityAnalyzerConfig::new(sample_rate),
+            transient_shaper: TransientShaperConfig::new(
+                (0.0, 12.0),      // Attack: 0dB → +12dB (punch at high intensity)
+                (-6.0, 0.0),      // Sustain: -6dB → 0dB (clarity at low intensity)
+                256,              // Envelope window: 5.3ms @ 48kHz (fast transient detection)
+                30.0,             // Attack threshold: 30 dB/s (moderate sensitivity)
+                2048,             // Release: 42ms @ 48kHz (smooth transitions)
+                sample_rate,
+            )?,
             frequency_boost: FrequencyBoosterConfig::default_8d(sample_rate),
             harmonic_exciter: HarmonicExciterConfig::new(sample_rate)?,
             psychoacoustic_bass: PsychoacousticBassConfig::new(sample_rate)?,
             convolution_reverb: ConvolutionReverbConfig::new(sample_rate)?,
+            stereo_widener: StereoWidenerConfig::new(
+                (5.0, 35.0),      // Haas delay: 5ms → 35ms (dramatic at high intensity)
+                (1.0, 2.0),       // Width: 100% → 200% (double side content)
+                8000.0,           // Low-pass for Haas: 8kHz (prevent harsh artifacts)
+                sample_rate,
+            )?,
             ensemble: EnsembleConfig::new(
                 EnsembleMode::Humanized,
                 None,   // No tempo for humanized mode
@@ -90,18 +114,23 @@ impl PipelineConfig {
 /// processor dependency graph, simplifying main.rs and enabling
 /// easy testing/mocking of full pipeline.
 ///
-/// **Processing Chain**:
+/// **CORRECTED Processing Chain**:
 /// 1. Intensity Analysis (dynamic parameter extraction)
-/// 2. Frequency Boost (EQ with intensity modulation)
-/// 3. Psychoacoustic Bass (missing fundamental illusion)
-/// 4. Convolution Reverb (acoustic space simulation)
-/// 5. Ensemble Effect (voice generation with spatial distribution)
+/// 2. **Transient Shaper** (percussive clarity: attack boost + sustain reduction) [NEW]
+/// 3. Frequency Boost (EQ with intensity modulation)
+/// 4. Harmonic Exciter (presence/air enhancement)
+/// 5. Psychoacoustic Bass (missing fundamental illusion)
+/// 6. Convolution Reverb (acoustic space simulation)
+/// 7. **Stereo Widener** (Haas effect + Mid-Side processing) [NEW]
+/// 8. Ensemble Effect (voice generation with spatial distribution)
 pub struct AudioProcessingPipeline {
     intensity_analyzer: IntensityAnalyzer,
+    transient_shaper: TransientShaper,
     frequency_booster: FrequencyBooster,
     harmonic_exciter: HarmonicExciter,
     psychoacoustic_bass: PsychoacousticBass,
     convolution_reverb: ConvolutionReverb,
+    stereo_widener: StereoWidener,
     ensemble_effect: EnsembleEffect,
 }
 
@@ -114,6 +143,7 @@ impl AudioProcessingPipeline {
         Ok(Self {
             intensity_analyzer: IntensityAnalyzer::new(config.intensity)
                 .context("Failed to create IntensityAnalyzer")?,
+            transient_shaper: TransientShaper::new(config.transient_shaper),
             frequency_booster: FrequencyBooster::new(config.frequency_boost)
                 .context("Failed to create FrequencyBooster")?,
             harmonic_exciter: HarmonicExciter::new(config.harmonic_exciter)
@@ -122,6 +152,7 @@ impl AudioProcessingPipeline {
                 .context("Failed to create PsychoacousticBass")?,
             convolution_reverb: ConvolutionReverb::new(config.convolution_reverb)
                 .context("Failed to create ConvolutionReverb")?,
+            stereo_widener: StereoWidener::new(config.stereo_widener),
             ensemble_effect: EnsembleEffect::new(config.ensemble),
         })
     }
@@ -159,15 +190,18 @@ impl AudioProcessingPipeline {
     ///
     /// ---
     ///
-    /// **Processing Chain**:
-    /// 1. Frequency Boost (EQ)
-    /// 2. Harmonic Exciter (presence/air)
-    /// 3. Psychoacoustic Bass (missing fundamental)
-    /// 4. Convolution Reverb (acoustic space)
+    /// **CORRECTED Processing Chain**:
+    /// 1. Transient Shaper (percussive clarity) [NEW]
+    /// 2. Frequency Boost (EQ)
+    /// 3. Harmonic Exciter (presence/air)
+    /// 4. Psychoacoustic Bass (missing fundamental)
+    /// 5. Convolution Reverb (acoustic space)
     ///
-    /// Note: Ensemble is applied AFTER overlap-add reconstruction in process_time_varying_v2.
+    /// Note: Stereo Widener + Ensemble applied AFTER overlap-add reconstruction.
     fn apply_effects_chain(&mut self, chunk: &[f32], intensity: f32) -> Result<Vec<f32>> {
-        let boosted = self.frequency_booster.process(chunk, intensity)
+        let shaped = self.transient_shaper.process(chunk, intensity)
+            .context("Transient shaper failed")?;
+        let boosted = self.frequency_booster.process(&shaped, intensity)
             .context("Frequency boost failed")?;
         let excited = self.harmonic_exciter.process(&boosted, intensity)
             .context("Harmonic exciter failed")?;
@@ -193,24 +227,42 @@ impl AudioProcessingPipeline {
     /// **Returns**:
     /// - Vector of independent voice outputs ready for spatial mixing
     pub fn process(&mut self, audio: &[f32], intensity: f32) -> Result<Vec<VoiceOutput>> {
-        // Stage 1: Frequency boost with intensity modulation
-        let boosted_audio = self.frequency_booster.process(audio, intensity)
+        // Stage 1: Transient shaper (percussive clarity) [NEW]
+        let shaped_audio = self.transient_shaper.process(audio, intensity)
+            .context("Transient shaper failed")?;
+        
+        // Stage 2: Frequency boost with intensity modulation
+        let boosted_audio = self.frequency_booster.process(&shaped_audio, intensity)
             .context("Frequency boost failed")?;
         
-        // Stage 2: Harmonic exciter (presence & air)
+        // Stage 3: Harmonic exciter (presence & air)
         let excited_audio = self.harmonic_exciter.process(&boosted_audio, intensity)
             .context("Harmonic exciter failed")?;
         
-        // Stage 3: Psychoacoustic bass enhancement
+        // Stage 4: Psychoacoustic bass enhancement
         let bass_enhanced = self.psychoacoustic_bass.process(&excited_audio, intensity)
             .context("Psychoacoustic bass failed")?;
         
-        // Stage 4: Convolution reverb (acoustic space simulation)
+        // Stage 5: Convolution reverb (acoustic space simulation)
         let reverb_audio = self.convolution_reverb.process(&bass_enhanced, intensity)
             .context("Convolution reverb failed")?;
         
-        // Stage 5: Ensemble effect (generate independent voices with spatial distribution)
-        let voices = self.ensemble_effect.process_dynamic(&reverb_audio, intensity)
+        // Stage 6: Stereo widener (Haas + Mid-Side) [NEW]
+        // Split mono to pseudo-stereo for widener input
+        let (widened_left, widened_right) = self.stereo_widener.process(
+            &reverb_audio, 
+            &reverb_audio, // Duplicate mono as L/R for widening
+            intensity
+        ).context("Stereo widener failed")?;
+        
+        // Merge back to mono for ensemble (average L+R)
+        let widened_mono: Vec<f32> = widened_left.iter()
+            .zip(&widened_right)
+            .map(|(l, r)| (l + r) * 0.5)
+            .collect();
+        
+        // Stage 7: Ensemble effect (generate independent voices with spatial distribution)
+        let voices = self.ensemble_effect.process_dynamic(&widened_mono, intensity)
             .context("Ensemble effect failed")?;
         
         Ok(voices)
@@ -237,8 +289,10 @@ impl AudioProcessingPipeline {
     /// 1. For EACH window in intensity_curve:
     ///    a. Window audio with Hann function
     ///    b. Apply effects chain with window-specific intensity
-    ///    c. Generate Vec<VoiceOutput> via ensemble.process_dynamic() with that intensity
-    ///    d. Accumulate each voice into its own buffer via overlap-add
+    ///    c. Apply stereo widener (Haas + Mid-Side) [NEW]
+    ///    d. Merge widened stereo back to mono
+    ///    e. Generate Vec<VoiceOutput> via ensemble.process_dynamic() with that intensity
+    ///    f. Accumulate each voice into its own buffer via overlap-add
     /// 2. Voice buffer count grows dynamically (high intensity → more voices)
     /// 3. Normalize by overlap factor (2/3 for 50% overlap)
     /// 4. Return final voice outputs with accumulated samples
@@ -287,11 +341,24 @@ impl AudioProcessingPipeline {
             // 2. Apply effects chain with THIS window's intensity
             let processed_chunk = self.apply_effects_chain(&chunk, intensity)?;
             
-            // 3. Generate voice outputs for THIS window with THIS intensity
-            let window_voices = self.ensemble_effect.process_dynamic(&processed_chunk, intensity)
+            // 3. Apply stereo widener (Haas + Mid-Side) [NEW]
+            let (widened_left, widened_right) = self.stereo_widener.process(
+                &processed_chunk,
+                &processed_chunk, // Duplicate mono as L/R
+                intensity
+            ).context(format!("Stereo widener failed at window {}", window_idx))?;
+            
+            // 4. Merge widened stereo back to mono (average L+R)
+            let widened_mono: Vec<f32> = widened_left.iter()
+                .zip(&widened_right)
+                .map(|(l, r)| (l + r) * 0.5)
+                .collect();
+            
+            // 5. Generate voice outputs for THIS window with THIS intensity
+            let window_voices = self.ensemble_effect.process_dynamic(&widened_mono, intensity)
                 .context(format!("Ensemble effect failed at window {}", window_idx))?;
             
-            // 4. Accumulate into per-voice buffers via OVERLAP-ADD
+            // 6. Accumulate into per-voice buffers via OVERLAP-ADD
             for (voice_idx, voice_output) in window_voices.iter().enumerate() {
                 // Grow voice buffer array if this is a new voice (high intensity moments)
                 if voice_idx >= voice_buffers.len() {
@@ -310,7 +377,7 @@ impl AudioProcessingPipeline {
             }
         }
         
-        // 5. Normalize by overlap factor (Hann @ 50% overlap = 2/3)
+        // 7. Normalize by overlap factor (Hann @ 50% overlap = 2/3)
         let norm_factor = 2.0 / 3.0;
         for voice_buffer in voice_buffers.iter_mut() {
             for sample in voice_buffer.iter_mut() {
@@ -318,7 +385,7 @@ impl AudioProcessingPipeline {
             }
         }
         
-        // 6. Trim to original length and construct final VoiceOutput vector
+        // 8. Trim to original length and construct final VoiceOutput vector
         let final_voices: Vec<VoiceOutput> = voice_buffers
             .into_iter()
             .zip(voice_metadata.iter())

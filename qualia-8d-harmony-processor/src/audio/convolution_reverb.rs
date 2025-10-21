@@ -109,6 +109,9 @@ pub struct ConvolutionReverb {
     
     /// Overlap buffer for overlap-add algorithm
     overlap_buffer: Vec<f32>,
+    
+    /// PERFORMANCE FIX: Pre-computed FFT/iFFT plans (expensive to recreate)
+    fft_planner: std::sync::Arc<std::sync::Mutex<realfft::RealFftPlanner<f32>>>,
 }
 
 impl ConvolutionReverb {
@@ -172,11 +175,15 @@ impl ConvolutionReverb {
         // Overlap buffer size depends on actual IR length
         let overlap_size = ir.len().saturating_sub(1);
         
+        // PERFORMANCE FIX: Store FFT planner for reuse (avoid recreation overhead)
+        let fft_planner = std::sync::Arc::new(std::sync::Mutex::new(fft_planner));
+        
         Ok(Self {
             config,
             ir_fft: ir_spectrum,
             fft_size,
             overlap_buffer: vec![0.0; overlap_size],
+            fft_planner,
         })
     }
     
@@ -347,10 +354,11 @@ impl ConvolutionReverb {
         let block_size = self.config.block_size;
         let fft_size = self.fft_size;
         
-        // Create fresh FFT planners for this process() call
-        let mut fft_planner = RealFftPlanner::<f32>::new();
-        let fft = fft_planner.plan_fft_forward(fft_size);
-        let ifft = fft_planner.plan_fft_inverse(fft_size);
+        // PERFORMANCE FIX: Reuse pre-computed FFT planners (avoid expensive recreation)
+        let mut planner_guard = self.fft_planner.lock().unwrap();
+        let fft = planner_guard.plan_fft_forward(fft_size);
+        let ifft = planner_guard.plan_fft_inverse(fft_size);
+        drop(planner_guard); // Release lock early
         
         for block_start in (0..input.len()).step_by(block_size) {
             let block_end = (block_start + block_size).min(input.len());

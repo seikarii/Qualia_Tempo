@@ -1,0 +1,38 @@
+[2m2025-10-20T23:40:07.130975Z[0m [32m INFO[0m ThreadId(01) [2m175:[0m Starting Qualia 8D Audio Processor [3minput[0m[2m=[0m"../docs/music/Inicio.mp3" [3moutput_dir[0m[2m=[0m"output_final" [3msample_rate[0m[2m=[0m48000
+[2m2025-10-20T23:40:07.131209Z[0m [32m INFO[0m ThreadId(01) [2m471:[0m Phase 1: Audio decoding
+[2m2025-10-20T23:40:07.640116Z[0m [32m INFO[0m ThreadId(01) [2m478:[0m Audio loaded successfully [3mduration_sec[0m[2m=[0m196.704 [3msample_rate[0m[2m=[0m48000 [3mnum_samples[0m[2m=[0m9441792
+[2m2025-10-20T23:40:07.640132Z[0m [32m INFO[0m ThreadId(01) [2m486:[0m Phase 2: Initializing audio processing pipeline
+[2m2025-10-20T23:40:07.640504Z[0m [32m INFO[0m ThreadId(01) [2m156:[0m No IR file specified, using synthetic IR
+[2m2025-10-20T23:40:07.641633Z[0m [32m INFO[0m ThreadId(01) [2m493:[0m Phase 3: Analyzing intensity dynamics (RMS + Crest + Spectral Flux)
+[2m2025-10-20T23:40:08.061841Z[0m [32m INFO[0m ThreadId(01) [2m502:[0m Intensity analysis complete - dynamic range: [0.00, 0.92] [3mnum_windows[0m[2m=[0m1572 [3mavg_intensity[0m[2m=[0m0.5544352531433105 [3mmin_intensity[0m[2m=[0m0.0 [3mmax_intensity[0m[2m=[0m0.9206410646438599
+[2m2025-10-20T23:40:08.061874Z[0m [32m INFO[0m ThreadId(01) [2m512:[0m Phase 4: Processing audio through time-varying pipeline (DYNAMIC EFFECTS)
+[2m2025-10-20T23:41:27.056307Z[0m [32m INFO[0m ThreadId(01) [2m527:[0m Audio processing complete - 12 voices generated with dynamic modulation [3mnum_voices[0m[2m=[0m12
+[2m2025-10-20T23:41:27.056325Z[0m [32m INFO[0m ThreadId(01) [2m206:[0m Phase 4: Individual voice spatialization (HRTF + circular motion) [3mrpm[0m[2m=[0m8.0 [3mnum_voices[0m[2m=[0m12
+[2m2025-10-20T23:41:27.056331Z[0m [32m INFO[0m ThreadId(01) [2m217:[0m Using synthetic mock HRTF dataset (72 positions)
+[2m2025-10-20T23:41:27.056418Z[0m [32m INFO[0m ThreadId(01) [2m241:[0m Spatializing voice [3mvoice_index[0m[2m=[0m0 [3mspatial_offset[0m[2m=[0m-30.0 [3mnum_samples[0m[2m=[0m9441792
+[2m2025-10-20T23:41:27.382365Z[0m [32m INFO[0m ThreadId(01) [2m241:[0m Spatializing voice [3mvoice_index[0m[2m=[0m1 [3mspatial_offset[0m[2m=[0m-15.0 [3mnum_samples[0m[2m=[0m9441792
+[2m2025-10-20T23:41:27.706706Z[0m [32m INFO[0m ThreadId(01) [2m241:[0m Spatializing voice [3mvoice_index[0m[2m=[0m2 [3mspatial_offset[0m[2m=[0m0.0 [3mnum_samples[0m[2m=[0m9441792
+[2m2025-10-20T23:41:28.031840Z[0m [32m INFO[0m ThreadId(01) [2m241:[0m Spatializing voice [3mvoice_index[0m[2m=[0m3 [3mspatial_offset[0m[2m=[0m15.0 [3mnum_samples[0m[2m=[0m9441792
+[2m2025-10-20T23:41:28.354613Z[0m [32m INFO[0m ThreadId(01) [2m241:[0m Spatializing voice [3mvoice_index[0m[2m=[0m4 [3mspatial_offset[0m[2m=[0m30.0 [3mnum_samples[0m[2m=[0m9441792
+[2m2025-10-20T23:41:28.656463Z[0m [32m INFO[0m ThreadId(01) [2m241:[0m Spatializing voice [3mvoice_index[0m[2m=[0m5 [3mspatial_offset[0m[2m=[0m34.725616455078125 [3mnum_samples[0m[2m=[0m9441792
+[2m2025-10-20T23:41:28.970659Z[0m [32m INFO[0m ThreadId(01) [2m241:[0m Spatializing voice [3mvoice_index[0m[2m=[0m6 [3mspatial_offset[0m[2m=[0m36.71906661987305 [3mnum_samples[0m[2m=[0m9441792
+[2m2025-10-20T23:41:29.291764Z[0m [32m INFO[0m ThreadId(01) [2m241:[0m Spatializing voice [3mvoice_index[0m[2m=[0m7 [3mspatial_offset[0m[2m=[0m39.97297668457031 [3mnum_samples[0m[2m=[0m9441792
+[2m2025-10-20T23:41:29.613636Z[0m [32m INFO[0m ThreadId(01) [2m241:[0m Spatializing voice [3mvoice_index[0m[2m=[0m8 [3mspatial_offset[0m[2m=[0m43.2114143371582 [3mnum_samples[0m[2m=[0m9441792
+[2m2025-10-20T23:41:29.936233Z[0m [32m INFO[0m ThreadId(01) [2m241:[0m Spatializing voice [3mvoice_index[0m[2m=[0m9 [3mspatial_offset[0m[2m=[0m46.932804107666016 [3mnum_samples[0m[2m=[0m9441792
+[2m2025-10-20T23:41:30.260278Z[0m [32m INFO[0m ThreadId(01) [2m241:[0m Spatializing voice [3mvoice_index[0m[2m=[0m10 [3mspatial_offset[0m[2m=[0m51.87598419189453 [3mnum_samples[0m[2m=[0m9441792
+[2m2025-10-20T23:41:30.583197Z[0m [32m INFO[0m ThreadId(01) [2m241:[0m Spatializing voice [3mvoice_index[0m[2m=[0m11 [3mspatial_offset[0m[2m=[0m54.420013427734375 [3mnum_samples[0m[2m=[0m9441792
+[2m2025-10-20T23:41:30.906612Z[0m [32m INFO[0m ThreadId(01) [2m282:[0m All voices spatialized independently [3mnum_spatialized_voices[0m[2m=[0m12
+[2m2025-10-20T23:41:30.906627Z[0m [32m INFO[0m ThreadId(01) [2m288:[0m Phase 4.5: Mixing 12 voices with lookahead limiter
+[2m2025-10-20T23:41:42.749582Z[0m [32m INFO[0m ThreadId(01) [2m292:[0m Lookahead limiter applied (threshold: 0.95, knee: 3dB)
+[2m2025-10-20T23:41:42.855916Z[0m [32m INFO[0m ThreadId(01) [2m308:[0m Phase 5: ML-powered MIDI transcription (McLeod Pitch Method)
+[2m2025-10-20T23:41:42.873391Z[0m [33m WARN[0m ThreadId(01) [1mapply_execution_providers[0m[2m:[0m [2m915:[0m No execution providers registered successfully. Falling back to CPU.
+[2m2025-10-20T23:41:49.362607Z[0m [32m INFO[0m ThreadId(01) [2m315:[0m MIDI transcription complete [3mnote_count[0m[2m=[0m312
+[2m2025-10-20T23:41:49.372025Z[0m [32m INFO[0m ThreadId(01) [2m327:[0m Phase 6: Chromagram + chord recognition + key detection
+[2m2025-10-20T23:41:50.081644Z[0m [32m INFO[0m ThreadId(01) [2m356:[0m Chromagram analysis complete [3mnum_frames[0m[2m=[0m4607
+[2m2025-10-20T23:41:50.092357Z[0m [32m INFO[0m ThreadId(01) [2m379:[0m Harmonic analysis complete [3mkey[0m[2m=[0mG# Minor [3mtempo_bpm[0m[2m=[0m120.0 [3mnum_contexts[0m[2m=[0m1
+[2m2025-10-20T23:41:50.092370Z[0m [32m INFO[0m ThreadId(01) [2m404:[0m Phase 7: File export [3moutput_dir[0m[2m=[0m"output_final"
+[2m2025-10-20T23:41:50.390777Z[0m [32m INFO[0m ThreadId(01) [2m421:[0m Exported 8D WAV [3mpath[0m[2m=[0m"output_final/Inicio_8d.wav"
+[2m2025-10-20T23:41:50.390875Z[0m [32m INFO[0m ThreadId(01) [2m429:[0m Exported HarmonyMap JSON [3mpath[0m[2m=[0m"output_final/Inicio_harmony.json"
+[2m2025-10-20T23:41:50.390931Z[0m [32m INFO[0m ThreadId(01) [2m437:[0m Exported chord progression MIDI [3mpath[0m[2m=[0m"output_final/Inicio_chords.mid"
+[2m2025-10-20T23:41:50.391019Z[0m [32m INFO[0m ThreadId(01) [2m449:[0m Exported pitch-tracked MIDI transcription [3mpath[0m[2m=[0m"output_final/Inicio_transcription.mid" [3mnote_count[0m[2m=[0m312
+[2m2025-10-20T23:41:50.398738Z[0m [32m INFO[0m ThreadId(01) [2m192:[0m All phases completed successfully
