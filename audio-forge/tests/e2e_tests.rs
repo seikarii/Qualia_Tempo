@@ -176,8 +176,8 @@ fn test_e2e_effects_chain() {
 /// Flow: Detect hardware → Configure 8.1 → Fallback to stereo
 #[test]
 fn test_e2e_channel_mode_switching() {
-    // Arrange
-    let multi_channel = Arc::new(MultiChannelOutputService::default());
+    // Arrange: Inject false to isolate test from host hardware
+    let multi_channel = Arc::new(MultiChannelOutputService::new(false));
 
     // Act & Assert: Initial state should be stereo (no 8.1 hardware)
     let config = multi_channel.get_configuration();

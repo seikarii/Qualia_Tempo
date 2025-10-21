@@ -24,9 +24,19 @@ pub struct MultiChannelOutputService {
 
 impl Default for MultiChannelOutputService {
     fn default() -> Self {
-        // Detect 8.1 support at initialization
-        let is_8_1_available = Self::detect_8_1_support();
+        Self::new(Self::detect_8_1_support())
+    }
+}
 
+impl MultiChannelOutputService {
+    /// # Responsibility
+    /// Create service with explicit hardware detection result.
+    ///
+    /// ---
+    ///
+    /// Allows dependency injection of hardware detection for testing.
+    /// Production code uses Default trait, tests inject false.
+    pub fn new(is_8_1_available: bool) -> Self {
         let config = ChannelConfiguration {
             mode: if is_8_1_available {
                 ChannelMode::Surround8_1
@@ -47,26 +57,56 @@ impl Default for MultiChannelOutputService {
             config: RwLock::new(config),
         }
     }
-}
 
-impl MultiChannelOutputService {
     /// # Responsibility
     /// Detect if 8.1 hardware is available.
     ///
     /// ---
     ///
-    /// Note: Actual cpal device enumeration would be implemented here.
-    /// For now, returns false (stereo-only mode for initial implementation).
+    /// Enumerates all output devices using cpal and checks if any
+    /// support 8 or more channels. Returns true if 8.1-capable
+    /// hardware is found.
     fn detect_8_1_support() -> bool {
-        // TODO: Implement cpal device enumeration
-        // let host = cpal::default_host();
-        // for device in host.output_devices()? {
-        //     if let Ok(config) = device.default_output_config() {
-        //         if config.channels() >= 8 {
-        //             return true;
-        //         }
-        //     }
-        // }
+        use cpal::traits::{DeviceTrait, HostTrait};
+        
+        let host = cpal::default_host();
+        
+        // Enumerate output devices
+        let devices = match host.output_devices() {
+            Ok(devices) => devices,
+            Err(e) => {
+                warn!("Failed to enumerate output devices: {}", e);
+                return false;
+            }
+        };
+        
+        for device in devices {
+            // Get device name for logging
+            let device_name = device.name().unwrap_or_else(|_| "Unknown".to_string());
+            
+            // Check default output config
+            if let Ok(config) = device.default_output_config() {
+                let channels = config.channels();
+                info!("Device '{}': {} channels", device_name, channels);
+                
+                if channels >= 8 {
+                    info!("✅ 8.1 surround capable device found: '{}' ({} channels)", device_name, channels);
+                    return true;
+                }
+            }
+            
+            // Also check supported output configs for 8+ channel support
+            if let Ok(configs) = device.supported_output_configs() {
+                for config_range in configs {
+                    if config_range.channels() >= 8 {
+                        info!("✅ 8.1 surround capable device found (in supported configs): '{}' ({} channels)", device_name, config_range.channels());
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        info!("❌ No 8.1 surround capable devices detected - fallback to stereo");
         false
     }
 
@@ -192,7 +232,8 @@ mod tests {
 
     #[test]
     fn test_service_creation() {
-        let service = MultiChannelOutputService::default();
+        // Inject false for hardware detection (test isolation)
+        let service = MultiChannelOutputService::new(false);
         let config = service.get_configuration();
 
         // Should default to stereo (8.1 not available in test environment)
@@ -202,13 +243,13 @@ mod tests {
 
     #[test]
     fn test_is_8_1_supported_returns_false() {
-        let service = MultiChannelOutputService::default();
+        let service = MultiChannelOutputService::new(false);
         assert!(!service.is_8_1_supported());
     }
 
     #[test]
     fn test_configure_8_1_fails_when_unavailable() {
-        let service = MultiChannelOutputService::default();
+        let service = MultiChannelOutputService::new(false);
         let result = service.configure_8_1_channels();
 
         assert!(result.is_err());
@@ -222,7 +263,7 @@ mod tests {
 
     #[test]
     fn test_fallback_to_stereo_succeeds() {
-        let service = MultiChannelOutputService::default();
+        let service = MultiChannelOutputService::new(false);
         let result = service.fallback_to_stereo();
 
         assert!(result.is_ok());
@@ -231,7 +272,7 @@ mod tests {
 
     #[test]
     fn test_upmix_empty_input() {
-        let service = MultiChannelOutputService::default();
+        let service = MultiChannelOutputService::new(false);
         let stereo: Vec<f32> = vec![];
 
         let result = service.upmix_stereo_to_8_1(&stereo);
@@ -243,7 +284,7 @@ mod tests {
 
     #[test]
     fn test_upmix_odd_sample_count_fails() {
-        let service = MultiChannelOutputService::default();
+        let service = MultiChannelOutputService::new(false);
         let stereo = vec![1.0, 0.5, 0.3]; // Odd count (invalid)
 
         let result = service.upmix_stereo_to_8_1(&stereo);
@@ -258,7 +299,7 @@ mod tests {
 
     #[test]
     fn test_upmix_single_stereo_frame() {
-        let service = MultiChannelOutputService::default();
+        let service = MultiChannelOutputService::new(false);
         let stereo = vec![1.0, -1.0]; // L=1.0, R=-1.0
 
         let result = service.upmix_stereo_to_8_1(&stereo);
@@ -288,7 +329,7 @@ mod tests {
 
     #[test]
     fn test_upmix_multiple_frames() {
-        let service = MultiChannelOutputService::default();
+        let service = MultiChannelOutputService::new(false);
         // 2 stereo frames: [L1, R1, L2, R2]
         let stereo = vec![0.5, 0.5, -0.5, -0.5];
 
@@ -323,7 +364,7 @@ mod tests {
 
     #[test]
     fn test_channel_count_calculation() {
-        let service = MultiChannelOutputService::default();
+        let service = MultiChannelOutputService::new(false);
         let config = service.get_configuration();
 
         assert_eq!(config.channel_count(), 2); // Stereo mode

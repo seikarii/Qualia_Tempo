@@ -1,10 +1,13 @@
 //! # Responsibility
 //! Implements audio playback service using rodio and symphonia.
 
+use crate::contracts::channel_configuration::ChannelMode;
 use crate::services::analyzing_source::{AnalyzingSource, SampleBuffer};
 use crate::services::effects_source::EffectsSource;
 use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
+use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
+use crate::services::upmixing_source::UpmixingSource;
 use anyhow::{Context, Result};
 use rodio::{OutputStream, Sink, Source};
 use shaku::Component;
@@ -97,6 +100,9 @@ pub struct AudioPlayerService {
     
     #[shaku(inject)]
     audio_effects: Arc<dyn IAudioEffects>,
+    
+    #[shaku(inject)]
+    multi_channel: Arc<dyn IMultiChannelOutput>,
 }
 
 impl IAudioPlayer for AudioPlayerService {
@@ -125,20 +131,39 @@ impl IAudioPlayer for AudioPlayerService {
         let sample_buffer = analyzing_source.buffer();
         
         // Wrap in EffectsSource for real-time DSP processing
-        // Pipeline: Decoder → AnalyzingSource → EffectsSource → Sink
         let effects_source = EffectsSource::new(
             analyzing_source,
             self.audio_effects.clone(),
             chunk_size,
         );
-
+        
+        // Conditional upmixing: Check if 8.1 mode is enabled
+        let channel_config = self.multi_channel.get_configuration();
+        let use_upmixing = channel_config.mode == ChannelMode::Surround8_1 
+                        && channel_config.is_8_1_available;
+        
         let mut state = self.state.lock();
         
         // CRITICAL FIX: Clear existing audio and append new source to EXISTING Sink
         // This prevents recreating OutputStream (OS resource leak + device conflicts)
         state.sink.stop();                      // Stop current playback
         state.sink.clear();                     // Remove all queued sources
-        state.sink.append(effects_source);      // Add complete pipeline: Analyzing → Effects
+        
+        if use_upmixing {
+            // Pipeline: Decoder → AnalyzingSource → EffectsSource → UpmixingSource → Sink
+            info!("🔊 8.1 surround mode ACTIVE - applying upmixing");
+            let upmixing_source = UpmixingSource::new(
+                effects_source,
+                self.multi_channel.clone(),
+                256, // Batch size: 256 stereo frames
+            );
+            state.sink.append(upmixing_source);
+        } else {
+            // Pipeline: Decoder → AnalyzingSource → EffectsSource → Sink (stereo)
+            info!("🎧 Stereo mode - no upmixing");
+            state.sink.append(effects_source);
+        }
+        
         state.sink.pause();                     // Start paused (user must click play)
         
         // Reset playback state
@@ -293,13 +318,16 @@ impl IAudioPlayer for AudioPlayerService {
 mod tests {
     use super::*;
     use crate::services::audio_effects::AudioEffectsService;
+    use crate::services::multi_channel_output::MultiChannelOutputService;
 
     /// Helper function to create AudioPlayerService for testing
     fn create_test_service() -> AudioPlayerService {
         let audio_effects = Arc::new(AudioEffectsService::default());
+        let multi_channel = Arc::new(MultiChannelOutputService::default());
         AudioPlayerService {
             state: PlayerStateHandle::default(),
             audio_effects,
+            multi_channel,
         }
     }
 
