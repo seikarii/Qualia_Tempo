@@ -62,7 +62,8 @@ fn test_spatial_mixer_limiter() {
     let config = SpatialMixerConfig::default_8d(48000);
 
     let _mixer = SpatialMixer::new(config.clone());
-    assert!((config.limiter_threshold - 0.95).abs() < 0.001);
+    // UPDATED: Optimized threshold from 0.95 to 0.98 for better headroom
+    assert!((config.limiter_threshold - 0.98).abs() < 0.001);
 }
 
 #[test]

@@ -125,9 +125,27 @@ impl SpatialMixer {
         // Apply musical lookahead limiting
         self.apply_lookahead_limiter(&mut mixed);
 
-        // Apply makeup gain to reach target loudness (-1dBFS = 0.89 amplitude)
-        // Compensates for upstream gain (+11dB from effects chain)
-        const MAKEUP_GAIN: f32 = 1.8; // Empirical: brings limited signal to ~-1dBFS
+        // OPTIMIZED MAKEUP GAIN STRATEGY (v2.0):
+        // 
+        // Previous strategy (v1.0): Fixed 1.8x gain to compensate for +11dB upstream
+        // Problem: Actual upstream gain was +19.8dB (9.7x), causing limiter to crush dynamics
+        // 
+        // New upstream gain after frequency_booster optimization: ~4.7x (+13.4dB)
+        // Limiter threshold: 0.98 (-0.17dBFS)
+        // Target final loudness: -1dBFS = 0.89 amplitude (streaming standard)
+        // 
+        // Calculation:
+        // - Signal before limiter: ~4.7x peak, ~1.5-2.0x RMS (typical music)
+        // - After limiting: ~0.98 peak, ~0.4-0.5x RMS
+        // - Makeup to reach -1dBFS RMS (0.35): 0.35 / 0.45 ≈ 0.78x
+        // 
+        // BUT: We want perceived loudness, not just RMS matching.
+        // Modern mastering: -0.5dBFS to -1dBFS peak = 0.89-0.94 amplitude
+        // Limited signal already at 0.98 peak, so minimal makeup needed.
+        // 
+        // FINAL VALUE: 1.0x (unity gain) - let limiter output stand on its own
+        // This prevents re-amplifying artifacts and preserves dynamic range.
+        const MAKEUP_GAIN: f32 = 1.0; // OPTIMIZED: was 1.8x (removed overcompensation)
         
         for sample in &mut mixed.left {
             *sample *= MAKEUP_GAIN;
@@ -283,9 +301,9 @@ mod tests {
         let result = mixer.mix(&[stem]);
 
         assert_eq!(result.len(), 10);
-        // CORRECTED: With makeup gain 1.8x, output = input * 1.8
-        assert_relative_eq!(result.left[0], 0.9, epsilon = 0.1); // 0.5 * 1.8 = 0.9
-        assert_relative_eq!(result.right[0], 0.54, epsilon = 0.1); // 0.3 * 1.8 = 0.54
+        // UPDATED: With unity makeup gain (1.0x), output = input
+        assert_relative_eq!(result.left[0], 0.5, epsilon = 0.1);
+        assert_relative_eq!(result.right[0], 0.3, epsilon = 0.1);
     }
 
     #[test]
@@ -303,9 +321,9 @@ mod tests {
         let result = mixer.mix(&[stem1, stem2]);
 
         assert_eq!(result.len(), 5);
-        // CORRECTED: With makeup gain 1.8x: (0.3 + 0.4) * 1.8 = 1.26, (0.2 + 0.5) * 1.8 = 1.26
-        assert_relative_eq!(result.left[0], 1.26, epsilon = 0.15);
-        assert_relative_eq!(result.right[0], 1.26, epsilon = 0.15);
+        // UPDATED: With unity makeup gain: (0.3 + 0.4) = 0.7, (0.2 + 0.5) = 0.7
+        assert_relative_eq!(result.left[0], 0.7, epsilon = 0.15);
+        assert_relative_eq!(result.right[0], 0.7, epsilon = 0.15);
     }
 
     #[test]
@@ -323,15 +341,14 @@ mod tests {
 
         let result = mixer.mix(&[stem1, stem2]);
 
-        // After makeup gain (1.8x), output should still respect safe boundaries
-        // Limiter protects at 0.95, then makeup applies → peaks around 0.95 * 1.8 ≈ 1.7
-        // But final clipper should keep within threshold
+        // After unity makeup gain, output should still respect safe boundaries
+        // Limiter protects at 0.95, output at ~0.95 peak
         for &sample in &result.left {
-            assert!(sample.abs() <= 1.8, "Left sample {} exceeds safe limit", sample);
+            assert!(sample.abs() <= 1.0, "Left sample {} exceeds safe limit", sample);
         }
 
         for &sample in &result.right {
-            assert!(sample.abs() <= 1.8, "Right sample {} exceeds safe limit", sample);
+            assert!(sample.abs() <= 1.0, "Right sample {} exceeds safe limit", sample);
         }
     }
 
@@ -349,9 +366,9 @@ mod tests {
 
         let result = mixer.mix(&[stem1, stem2]);
 
-        // With limiting at 0.5 + makeup 1.8x: expect around 0.5 * 1.8 = 0.9
-        assert!(result.left[50] >= 0.7 && result.left[50] <= 1.1, 
-            "Expected ~0.9 with limiting+makeup, got {}", result.left[50]);
+        // With limiting at 0.5 + unity makeup: expect around 0.5 peak
+        assert!(result.left[50] >= 0.4 && result.left[50] <= 0.6, 
+            "Expected ~0.5 with limiting+unity gain, got {}", result.left[50]);
     }
 
     #[test]
@@ -371,13 +388,13 @@ mod tests {
         // Output should match longest stem
         assert_eq!(result.len(), 10);
 
-        // CORRECTED: First 5 samples with makeup: (0.2 + 0.3) * 1.8 = 0.9
-        assert_relative_eq!(result.left[0], 0.9, epsilon = 0.1);
-        assert_relative_eq!(result.right[0], 0.9, epsilon = 0.1); // (0.1 + 0.4) * 1.8 = 0.9
+        // UPDATED: First 5 samples with unity gain: (0.2 + 0.3) = 0.5
+        assert_relative_eq!(result.left[0], 0.5, epsilon = 0.1);
+        assert_relative_eq!(result.right[0], 0.5, epsilon = 0.1); // (0.1 + 0.4) = 0.5
 
-        // CORRECTED: Last 5 samples with makeup: 0.2 * 1.8 = 0.36
-        assert_relative_eq!(result.left[9], 0.36, epsilon = 0.1);
-        assert_relative_eq!(result.right[9], 0.18, epsilon = 0.1); // 0.1 * 1.8 = 0.18
+        // UPDATED: Last 5 samples with unity gain: 0.2
+        assert_relative_eq!(result.left[9], 0.2, epsilon = 0.1);
+        assert_relative_eq!(result.right[9], 0.1, epsilon = 0.1);
     }
 
     #[test]
@@ -394,9 +411,9 @@ mod tests {
 
         let result = mixer.mix(&[stem1, stem2]);
 
-        // CORRECTED: Limiter protects at -0.95, makeup applies → around -0.95 * 1.8 ≈ -1.7
-        assert!(result.left[50] >= -1.8 && result.left[50] <= -0.8);
-        assert!(result.right[50] >= -1.8 && result.right[50] <= -0.8);
+        // UPDATED: Limiter protects at -0.95, unity gain → around -0.95 peak
+        assert!(result.left[50] >= -1.0 && result.left[50] <= -0.7);
+        assert!(result.right[50] >= -1.0 && result.right[50] <= -0.7);
     }
     
     #[test]

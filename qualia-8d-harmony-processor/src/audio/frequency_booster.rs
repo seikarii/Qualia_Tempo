@@ -45,11 +45,11 @@ impl FrequencyBoosterConfig {
         match role {
             InstrumentRole::Bass => Self {
                 bass_freq: 65.0,
-                bass_base_gain_db: 2.5,   // Base: +2.5dB
-                bass_max_gain_db: 7.0,    // Climax: +7.0dB (DRAMATIC)
+                bass_base_gain_db: 1.5,   // OPTIMIZED: was 2.5 (tighter control)
+                bass_max_gain_db: 4.5,    // OPTIMIZED: was 7.0 (prevent mud)
                 mid_freq: 250.0,
                 mid_base_gain_db: 0.0,    // No mid boost for bass
-                mid_max_gain_db: 1.0,
+                mid_max_gain_db: 0.5,     // OPTIMIZED: was 1.0 (minimal)
                 high_freq: 5000.0,
                 high_base_gain_db: -1.0,  // Reduce harshness
                 high_max_gain_db: 0.0,
@@ -59,39 +59,39 @@ impl FrequencyBoosterConfig {
             InstrumentRole::Vocals => Self {
                 bass_freq: 150.0,
                 bass_base_gain_db: 0.0,   // Minimal low-end
-                bass_max_gain_db: 1.0,
+                bass_max_gain_db: 0.5,    // OPTIMIZED: was 1.0 (cleaner)
                 mid_freq: 2500.0,         // Vocal presence peak
-                mid_base_gain_db: 1.5,    // Base: +1.5dB
-                mid_max_gain_db: 5.0,     // Climax: +5.0dB (CUT THROUGH MIX)
+                mid_base_gain_db: 1.0,    // OPTIMIZED: was 1.5 (controlled)
+                mid_max_gain_db: 3.5,     // OPTIMIZED: was 5.0 (CUT THROUGH without harshness)
                 high_freq: 10000.0,       // Air/breath
-                high_base_gain_db: 2.0,
-                high_max_gain_db: 4.0,
+                high_base_gain_db: 1.0,   // OPTIMIZED: was 2.0 (subtle air)
+                high_max_gain_db: 2.5,    // OPTIMIZED: was 4.0 (prevent sibilance)
                 q_factor: 1.5,            // Focused mid Q
                 sample_rate,
             },
             InstrumentRole::Drums => Self {
                 bass_freq: 80.0,          // Kick drum
-                bass_base_gain_db: 3.0,
-                bass_max_gain_db: 6.0,
+                bass_base_gain_db: 2.0,   // OPTIMIZED: was 3.0 (tight punch)
+                bass_max_gain_db: 4.5,    // OPTIMIZED: was 6.0 (controlled impact)
                 mid_freq: 3000.0,         // Snare attack
-                mid_base_gain_db: 2.0,
-                mid_max_gain_db: 4.0,
+                mid_base_gain_db: 1.0,    // OPTIMIZED: was 2.0 (clarity)
+                mid_max_gain_db: 2.5,     // OPTIMIZED: was 4.0 (presence)
                 high_freq: 12000.0,       // Cymbals/hi-hats
-                high_base_gain_db: 2.5,
-                high_max_gain_db: 5.0,
+                high_base_gain_db: 1.5,   // OPTIMIZED: was 2.5 (controlled shimmer)
+                high_max_gain_db: 3.5,    // OPTIMIZED: was 5.0 (prevent harshness)
                 q_factor: 1.2,
                 sample_rate,
             },
             InstrumentRole::Other => Self {
                 bass_freq: 70.0,
-                bass_base_gain_db: 2.0,
-                bass_max_gain_db: 4.0,
+                bass_base_gain_db: 0.5,   // OPTIMIZED: was 2.0 (reduced gain stacking)
+                bass_max_gain_db: 1.5,    // OPTIMIZED: was 4.0 (prevent limiter crushing)
                 mid_freq: 1200.0,
-                mid_base_gain_db: 1.0,
-                mid_max_gain_db: 3.0,
+                mid_base_gain_db: 0.0,    // OPTIMIZED: was 1.0 (reduce midrange buildup)
+                mid_max_gain_db: 1.0,     // OPTIMIZED: was 3.0 (transparent boost)
                 high_freq: 10000.0,
-                high_base_gain_db: 2.5,
-                high_max_gain_db: 4.0,
+                high_base_gain_db: 0.5,   // OPTIMIZED: was 2.5 (reduce harshness)
+                high_max_gain_db: 1.5,    // OPTIMIZED: was 4.0 (controlled air)
                 q_factor: 1.0,
                 sample_rate,
             },
@@ -225,8 +225,8 @@ mod tests {
         let (bass_low, _, _) = config.calculate_dynamic_gains(0.0);
         let (bass_high, _, _) = config.calculate_dynamic_gains(1.0);
         
-        assert_relative_eq!(bass_low, 2.5);  // Base gain
-        assert_relative_eq!(bass_high, 7.0); // Max gain
+        assert_relative_eq!(bass_low, 1.5);  // UPDATED: Base gain (was 2.5)
+        assert_relative_eq!(bass_high, 4.5); // UPDATED: Max gain (was 7.0)
         assert!(bass_high > bass_low);
     }
 
