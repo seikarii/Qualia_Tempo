@@ -11,11 +11,30 @@ use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::interfaces::i_visualization_engine::IVisualizationEngine;
 use egui::{CentralPanel, Context, SidePanel, TopBottomPanel};
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tracing::{error, info};
 
 use std::time::Instant;
+
+/// # Responsibility
+/// Thread-safe mutable state for MainWindow, shared with async tasks.
+///
+/// ---
+///
+/// ARCHITECTURE: Extracted from MainWindow to enable Arc<Mutex<>> wrapping.
+/// Async file picker tasks can safely update this state without data races.
+#[derive(Default)]
+struct MainWindowState {
+    /// Currently loaded audio file path (updated from async tasks)
+    current_file_path: Option<PathBuf>,
+    
+    /// Loading error message with timestamp for auto-clear (5s timeout)
+    loading_error: Option<(String, Instant)>,
+    
+    /// Flag to prevent multiple simultaneous file picker dialogs
+    file_picker_open: bool,
+}
 
 /// # Responsibility
 /// Main application window using egui immediate mode UI.
@@ -27,32 +46,35 @@ use std::time::Instant;
 /// - Debounced effect config changes (100ms delay)
 /// - Auto-clearing error messages (5 second timeout)
 /// - Conditional repaints only when playing
-/// - ASYNC file picker (non-blocking UI)
+/// - ASYNC file picker (non-blocking UI with thread-safe state updates)
+///
+/// ARCHITECTURE:
+/// - Mutable state extracted to MainWindowState (Arc<Mutex<>> wrapped)
+/// - Async tasks (tokio::spawn) can safely update state via cloned Arc
+/// - UI thread reads state with lock acquisition (minimal contention)
 pub struct MainWindow {
+    /// Thread-safe state shared with async tasks
+    state: Arc<Mutex<MainWindowState>>,
+    
     audio_player: Arc<dyn IAudioPlayer>,
     audio_analyzer: Arc<dyn IAudioAnalyzer>,
     visualization_engine: Arc<dyn IVisualizationEngine>,
     audio_effects: Arc<dyn IAudioEffects>,
     multi_channel_output: Arc<dyn IMultiChannelOutput>,
 
-    // Effect configuration state
+    // Effect configuration state (UI-thread only)
     effect_config: EffectConfig,
     pending_config_change: bool,
     last_config_update: Instant,
     
-    // Cached visualization data (updated at throttled rate)
+    // Cached visualization data (UI-thread only, updated at throttled rate)
     cached_waveform: Vec<f32>,
     cached_spectrum: FrequencySpectrum,
     cached_instrument_levels: (f32, f32, f32),
     last_visualization_update: Instant,
     visualization_update_interval: Duration,
     
-    // File loading state
-    current_file_path: Option<PathBuf>,
-    loading_error: Option<(String, Instant)>,
-    file_picker_open: bool, // Track async file picker state
-    
-    // Playback state
+    // Playback state (UI-thread only)
     volume: f32,
 }
 
@@ -75,6 +97,7 @@ impl MainWindow {
         };
 
         Self {
+            state: Arc::new(Mutex::new(MainWindowState::default())),
             audio_player,
             audio_analyzer,
             visualization_engine,
@@ -88,9 +111,6 @@ impl MainWindow {
             cached_instrument_levels: (0.0, 0.0, 0.0),
             last_visualization_update: Instant::now(),
             visualization_update_interval: Duration::from_millis(33), // 30fps
-            current_file_path: None,
-            loading_error: None,
-            file_picker_open: false,
             volume: 1.0, // Default 100% volume
         }
     }
@@ -144,16 +164,25 @@ impl MainWindow {
     ///
     /// ---
     ///
-    /// OPTIMIZED: Uses rfd::AsyncFileDialog to prevent UI freeze.
-    /// File loading happens in background tokio task with ctx.request_repaint().
-    fn handle_load_file(&mut self, ctx: &Context) {
-        if self.file_picker_open {
-            return; // Prevent multiple dialogs
+    /// ARCHITECTURE: Thread-safe async file picker with state synchronization.
+    /// - Uses rfd::AsyncFileDialog to prevent UI freeze
+    /// - Spawns tokio task with cloned Arc<Mutex<MainWindowState>>
+    /// - Updates state (file path, errors) from async context safely
+    /// - UI reflects state changes via request_repaint()
+    fn handle_load_file(&self, ctx: &Context) {
+        // Check if picker already open (prevent multiple dialogs)
+        {
+            let mut state = self.state.lock().unwrap();
+            if state.file_picker_open {
+                return;
+            }
+            state.file_picker_open = true;
         }
         
-        self.file_picker_open = true;
-        let audio_player = self.audio_player.clone();
-        let ctx = ctx.clone();
+        // Clone Arc references for async task
+        let state_clone = self.state.clone();
+        let audio_player_clone = self.audio_player.clone();
+        let ctx_clone = ctx.clone();
         
         // Spawn async file picker (non-blocking)
         tokio::spawn(async move {
@@ -163,35 +192,44 @@ impl MainWindow {
                 .pick_file()
                 .await;
             
+            // Lock state to update from async context
+            let mut state = state_clone.lock().unwrap();
+            state.file_picker_open = false; // Reset flag regardless of outcome
+            
             if let Some(file) = file_handle {
                 let file_path = file.path().to_path_buf();
                 info!("User selected file: {:?}", file_path);
                 
-                // Load file in background
-                match audio_player.load_file(&file_path) {
+                // Load file and update state based on result
+                match audio_player_clone.load_file(&file_path) {
                     Ok(_) => {
                         info!("✅ File loaded successfully: {:?}", file_path);
-                        // Note: State update would need Arc<Mutex> wrapper
-                        // For now, file path is updated via player state
+                        state.current_file_path = Some(file_path);
+                        state.loading_error = None; // Clear any previous errors
                     }
                     Err(e) => {
                         error!("❌ Failed to load file: {}", e);
-                        // Error state would need Arc<Mutex> wrapper
+                        state.loading_error = Some((format!("Load error: {}", e), Instant::now()));
                     }
                 }
-                
-                ctx.request_repaint(); // Update UI after loading
             } else {
                 info!("File picker cancelled by user");
             }
+            
+            // Release lock before requesting repaint
+            drop(state);
+            ctx_clone.request_repaint(); // Update UI after state change
         });
     }
 
     pub fn update(&mut self, ctx: &Context) {
-        // Auto-clear errors after 5 seconds
-        if let Some((_, timestamp)) = &self.loading_error {
-            if timestamp.elapsed() > Duration::from_secs(5) {
-                self.loading_error = None;
+        // Auto-clear errors after 5 seconds (read from shared state)
+        {
+            let mut state = self.state.lock().unwrap();
+            if let Some((_, timestamp)) = &state.loading_error {
+                if timestamp.elapsed() > Duration::from_secs(5) {
+                    state.loading_error = None;
+                }
             }
         }
         
@@ -206,7 +244,6 @@ impl MainWindow {
                     .clicked() 
                 {
                     self.handle_load_file(ctx);
-                    self.file_picker_open = false; // Reset after spawn
                 }
                 
                 ui.separator();
@@ -240,11 +277,14 @@ impl MainWindow {
 
                 ui.separator();
                 
-                // Display current file name
-                if let Some(ref path) = self.current_file_path {
-                    ui.label(format!("🎵 {}", path.file_name().unwrap().to_str().unwrap_or("Unknown")));
-                } else {
-                    ui.label("No file loaded");
+                // Display current file name (read from shared state)
+                {
+                    let state = self.state.lock().unwrap();
+                    if let Some(ref path) = state.current_file_path {
+                        ui.label(format!("🎵 {}", path.file_name().unwrap().to_str().unwrap_or("Unknown")));
+                    } else {
+                        ui.label("No file loaded");
+                    }
                 }
                 
                 ui.separator();
@@ -280,14 +320,17 @@ impl MainWindow {
                 ));
             });
             
-            // Display loading errors with auto-clear countdown
-            if let Some((ref error_msg, timestamp)) = self.loading_error {
-                let elapsed = timestamp.elapsed().as_secs();
-                let remaining = 5_u64.saturating_sub(elapsed);
-                ui.colored_label(
-                    egui::Color32::RED, 
-                    format!("❌ {} (clears in {}s)", error_msg, remaining)
-                );
+            // Display loading errors with auto-clear countdown (read from shared state)
+            {
+                let state = self.state.lock().unwrap();
+                if let Some((ref error_msg, timestamp)) = state.loading_error {
+                    let elapsed = timestamp.elapsed().as_secs();
+                    let remaining = 5_u64.saturating_sub(elapsed);
+                    ui.colored_label(
+                        egui::Color32::RED, 
+                        format!("❌ {} (clears in {}s)", error_msg, remaining)
+                    );
+                }
             }
             
             // Seek bar (only show if audio is loaded)
