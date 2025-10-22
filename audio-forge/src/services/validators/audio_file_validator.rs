@@ -14,9 +14,8 @@
 //! - OGG: b"OggS" at offset 0
 //! - M4A/AAC: b"ftyp" at offset 4
 
-use anyhow::{Context, Result};
 use std::fs::File;
-use std::io::Read;
+use std::io::{self, Read};
 use std::path::Path;
 
 /// # Responsibility
@@ -40,13 +39,11 @@ impl AudioFileValidator {
     /// 3. Return Ok(()) if recognized, Err with diagnostic message if not
     ///
     /// PERFORMANCE: Single file read (12 bytes), no allocation, O(1) checks.
-    pub fn validate(path: &Path) -> Result<()> {
-        let mut file = File::open(path)
-            .with_context(|| format!("Failed to open file: {}", path.display()))?;
+    pub fn validate(path: &Path) -> io::Result<()> {
+        let mut file = File::open(path)?;
         
         let mut magic = [0u8; 12];
-        file.read_exact(&mut magic)
-            .with_context(|| format!("File too small to identify: {}", path.display()))?;
+        file.read_exact(&mut magic)?;
         
         // WAV format (RIFF container)
         if &magic[0..4] == b"RIFF" {
@@ -79,7 +76,8 @@ impl AudioFileValidator {
         }
         
         // No recognized format: return diagnostic error
-        Err(anyhow::anyhow!(
+        Err(io::Error::new(
+            io::ErrorKind::InvalidData,
             "Unsupported or invalid audio file format. Supported: WAV, FLAC, MP3, OGG, M4A/AAC"
         ))
     }

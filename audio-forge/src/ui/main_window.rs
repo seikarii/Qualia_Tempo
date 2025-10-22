@@ -76,6 +76,28 @@ pub struct MainWindow {
 
 impl MainWindow {
     /// # Responsibility
+    /// Create MainWindow from DI container (simplified constructor).
+    ///
+    /// ---
+    ///
+    /// **DIRECTIVE FINAL-DI**: Factory method that accepts IApplicationServices,
+    /// simplifying main.rs to just: MainWindow::from_services(services, config).
+    pub fn from_services(
+        services: std::sync::Arc<dyn crate::services::IApplicationServices>,
+        config: AppConfig,
+    ) -> Self {
+        Self::new_with_config(
+            config,
+            services.audio_player(),
+            services.audio_analyzer(),
+            services.audio_effects(),
+            services.audio_exporter(),
+            services.multi_channel_output(),
+            services.event_bus(),
+        )
+    }
+
+    /// # Responsibility
     /// Create MainWindow with loaded configuration (Directive 10).
     ///
     /// ---

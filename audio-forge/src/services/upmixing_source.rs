@@ -54,13 +54,11 @@ impl<S: Source<Item = f32>> UpmixingSource<S> {
         source: S,
         multi_channel: Arc<dyn IMultiChannelOutput>,
         batch_size: usize,
-    ) -> anyhow::Result<Self> {
-        use anyhow::anyhow;
-        
+    ) -> Result<Self, String> {
         let channels = source.channels();
         
         if channels != 2 {
-            return Err(anyhow!(
+            return Err(format!(
                 "UpmixingSource requires stereo input (2 channels), got {} channels",
                 channels
             ));

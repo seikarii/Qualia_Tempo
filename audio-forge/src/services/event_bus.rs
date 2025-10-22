@@ -8,7 +8,6 @@
 //! implementations are STRICTLY FORBIDDEN.
 
 use crate::events::AudioForgeEvent;
-use anyhow::Result;
 use shaku::Interface;
 use tokio::sync::broadcast;
 
@@ -19,8 +18,8 @@ use tokio::sync::broadcast;
 ///
 /// Provides lock-free event emission and subscription.
 pub trait IEventBus: Interface {
-    /// Emit event to all subscribers
-    fn emit(&self, event: AudioForgeEvent) -> Result<usize>;
+    /// Emit event to all subscribers. Returns number of receivers that received the event.
+    fn emit(&self, event: AudioForgeEvent) -> Result<usize, broadcast::error::SendError<AudioForgeEvent>>;
 
     /// Subscribe to events (returns new receiver)
     fn subscribe(&self) -> broadcast::Receiver<AudioForgeEvent>;
@@ -64,10 +63,8 @@ impl<M: shaku::Module> shaku::Component<M> for EventBusService {
 }
 
 impl IEventBus for EventBusService {
-    fn emit(&self, event: AudioForgeEvent) -> Result<usize> {
-        self.tx
-            .send(event)
-            .map_err(|e| anyhow::anyhow!("EventBus send failed: {:?}", e))
+    fn emit(&self, event: AudioForgeEvent) -> Result<usize, broadcast::error::SendError<AudioForgeEvent>> {
+        self.tx.send(event)
     }
 
     fn subscribe(&self) -> broadcast::Receiver<AudioForgeEvent> {

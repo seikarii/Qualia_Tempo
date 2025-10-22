@@ -2,8 +2,8 @@
 //! Configuration persistence layer with cross-platform directory support.
 
 use super::app_config::AppConfig;
-use anyhow::{Context, Result};
 use std::fs;
+use std::io;
 use std::path::PathBuf;
 use tracing::info;
 
@@ -21,7 +21,7 @@ const APP_NAME: &str = "audio-forge";
 /// - macOS: ~/Library/Application Support/audio-forge/audio-forge.yaml
 ///
 /// Returns default config if file doesn't exist (first run).
-pub fn load_config() -> Result<AppConfig> {
+pub fn load_config() -> io::Result<AppConfig> {
     let config_path = get_config_path()?;
     
     if !config_path.exists() {
@@ -29,11 +29,10 @@ pub fn load_config() -> Result<AppConfig> {
         return Ok(AppConfig::default());
     }
     
-    let contents = fs::read_to_string(&config_path)
-        .with_context(|| format!("Failed to read config: {}", config_path.display()))?;
+    let contents = fs::read_to_string(&config_path)?;
     
     let config: AppConfig = serde_yaml::from_str(&contents)
-        .with_context(|| format!("Failed to parse YAML config: {}", config_path.display()))?;
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
     
     info!("✅ Config loaded from: {:?}", config_path);
     Ok(config)
@@ -46,20 +45,18 @@ pub fn load_config() -> Result<AppConfig> {
 ///
 /// Creates parent directories if they don't exist.
 /// Writes human-readable YAML format.
-pub fn save_config(config: &AppConfig) -> Result<()> {
+pub fn save_config(config: &AppConfig) -> io::Result<()> {
     let config_path = get_config_path()?;
     
     // Ensure parent directory exists
     if let Some(parent) = config_path.parent() {
-        fs::create_dir_all(parent)
-            .with_context(|| format!("Failed to create config directory: {}", parent.display()))?;
+        fs::create_dir_all(parent)?;
     }
     
     let yaml = serde_yaml::to_string(config)
-        .context("Failed to serialize config to YAML")?;
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
     
-    fs::write(&config_path, yaml)
-        .with_context(|| format!("Failed to write config: {}", config_path.display()))?;
+    fs::write(&config_path, yaml)?;
     
     info!("✅ Config saved to: {:?}", config_path);
     Ok(())
@@ -71,9 +68,9 @@ pub fn save_config(config: &AppConfig) -> Result<()> {
 /// ---
 ///
 /// Uses `dirs` crate for cross-platform directory detection.
-fn get_config_path() -> Result<PathBuf> {
+fn get_config_path() -> io::Result<PathBuf> {
     let base_dir = dirs::config_dir()
-        .ok_or_else(|| anyhow::anyhow!("Failed to get config directory (unsupported platform?)"))?;
+        .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "Config directory not supported on this platform"))?;
     
     let app_dir = base_dir.join(APP_NAME);
     Ok(app_dir.join(CONFIG_FILENAME))

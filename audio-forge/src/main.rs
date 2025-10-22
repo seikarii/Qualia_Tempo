@@ -3,11 +3,11 @@
 //!
 //! ---
 //!
-//! ## CRITICAL ARCHITECTURE (Directive 22.5)
+//! ## CRITICAL ARCHITECTURE (Directive 22.5 + FINAL-DI)
 //! - **Tokio Runtime**: Required for async file picker (rfd::AsyncFileDialog)
 //! - **eframe Integration**: Uses tokio::runtime::Runtime for background tasks
 //! - **Panic Protection**: All async tasks wrapped in catch_unwind boundaries
-//! - **DI Pattern**: Single module.resolve() call (eliminates Service Locator)
+//! - **DI PURITY**: Single module.resolve() + factory pattern (MainWindow::from_services)
 
 use audio_forge::services::IApplicationServices;
 use audio_forge::ui::{MainWindow, QualiaTheme};
@@ -43,28 +43,19 @@ fn main() -> Result<(), eframe::Error> {
     };
 
     // ============================================================================
-    // DI REFACTOR: Single module resolve (eliminates Service Locator anti-pattern)
+    // DIRECTIVE FINAL-DI: Simplified main.rs (factory pattern)
     // ============================================================================
     let module = AudioForgeModule::builder().build();
-    
-    // Resolve ApplicationServices aggregate (all 6 services in one component)
     let services: Arc<dyn IApplicationServices> = module.resolve();
     
-    // Apply loaded configuration to services that need it
+    // Apply loaded configuration to services
     services.audio_effects().set_config(config.effects.clone());
     if let Err(e) = services.audio_player().set_volume(config.audio.default_volume) {
         warn!("Failed to set initial volume: {}", e);
     }
 
-    let mut main_window = MainWindow::new_with_config(
-        config,
-        services.audio_player(),
-        services.audio_analyzer(),
-        services.audio_effects(),
-        services.audio_exporter(),
-        services.multi_channel_output(),
-        services.event_bus(),
-    );
+    // DIRECTIVE FINAL-DI: Single factory call (eliminates manual dependency wiring)
+    let mut main_window = MainWindow::from_services(services, config);
 
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
