@@ -9,6 +9,7 @@ use crate::services::interfaces::i_audio_exporter::IAudioExporter;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::interfaces::i_visualization_engine::IVisualizationEngine;
+use crate::ui::theme::QualiaTheme;
 use crate::ui::widgets::{
     control_panel::{ControlPanel, ControlPanelState},
     EffectsPanel, InfoPanel, Panel, SpectrumPanel, WaveformPanel,
@@ -306,9 +307,21 @@ impl MainWindow {
                 if let Some(path) = &dropped_file.path {
                     info!("🎵 File dropped: {:?}", path);
                     self.load_audio_file_validated(path);
+                    
+                    // Check if load succeeded by inspecting state
+                    let state = self.state.lock().unwrap();
+                    if state.loading_error.is_some() {
+                        warn!("❌ Drag-and-drop failed: {:?}", state.loading_error);
+                    }
+                    
                     ctx.request_repaint();
                 } else {
                     warn!("Dropped file has no path");
+                    let mut state = self.state.lock().unwrap();
+                    state.loading_error = Some((
+                        "❌ Dropped file has no valid path".to_string(),
+                        Instant::now()
+                    ));
                 }
             }
         });
@@ -375,24 +388,25 @@ impl MainWindow {
                             |ui| {
                                 ui.add_space(overlay_size.y * 0.3);
                                 
-                                // Semi-transparent background
+                                // Modern dark theme overlay
                                 let frame = egui::Frame::new()
-                                    .fill(egui::Color32::from_rgba_unmultiplied(30, 30, 40, 200))
-                                    .corner_radius(egui::CornerRadius::same(10))
-                                    .inner_margin(egui::Margin::same(20));
+                                    .fill(QualiaTheme::BG_DARK.linear_multiply(0.95))
+                                    .stroke(egui::Stroke::new(2.0, QualiaTheme::ACCENT_PRIMARY))
+                                    .corner_radius(egui::CornerRadius::same(15))
+                                    .inner_margin(egui::Margin::same(30));
                                 
                                 frame.show(ui, |ui| {
                                     ui.vertical_centered(|ui| {
                                         ui.heading(
                                             egui::RichText::new("🎵 Drop Audio File Here")
-                                                .size(32.0)
-                                                .color(egui::Color32::from_rgb(100, 200, 255)),
+                                                .size(36.0)
+                                                .color(QualiaTheme::ACCENT_PRIMARY),
                                         );
                                         ui.add_space(10.0);
                                         ui.label(
                                             egui::RichText::new("Supported: WAV, FLAC, MP3, OGG, M4A, AAC")
-                                                .size(16.0)
-                                                .color(egui::Color32::LIGHT_GRAY),
+                                                .size(18.0)
+                                                .color(QualiaTheme::TEXT_SECONDARY),
                                         );
                                     });
                                 });

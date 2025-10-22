@@ -14,6 +14,7 @@ use crate::services::interfaces::{
     i_audio_player::IAudioPlayer,
     i_multi_channel_output::IMultiChannelOutput,
 };
+use crate::ui::theme::QualiaTheme;
 use crate::ui::widgets::Panel;
 use egui;
 use std::sync::Arc;
@@ -88,10 +89,10 @@ impl Panel for InfoPanel {
             ui.label("Current Mode:");
             match channel_config.mode {
                 ChannelMode::Stereo => {
-                    ui.colored_label(egui::Color32::LIGHT_BLUE, "Stereo (2.0)");
+                    ui.colored_label(QualiaTheme::STATUS_STEREO, "Stereo (2.0)");
                 }
                 ChannelMode::Surround8_1 => {
-                    ui.colored_label(egui::Color32::GREEN, "Surround (8.1)");
+                    ui.colored_label(QualiaTheme::STATUS_8_1_ENABLED, "Surround (8.1)");
                 }
             }
         });
@@ -99,9 +100,9 @@ impl Panel for InfoPanel {
         ui.horizontal(|ui| {
             ui.label("8.1 Hardware:");
             if channel_config.is_8_1_available {
-                ui.colored_label(egui::Color32::GREEN, "✅ Available");
+                ui.colored_label(QualiaTheme::ACCENT_SUCCESS, "✅ Available");
             } else {
-                ui.colored_label(egui::Color32::GRAY, "❌ Not Available");
+                ui.colored_label(QualiaTheme::ACCENT_ERROR, "❌ Not Available");
             }
         });
 
@@ -135,6 +136,23 @@ impl Panel for InfoPanel {
                 }
             } else {
                 ui.label("⚠️ 8.1 hardware not detected - stereo mode only");
+            }
+        });
+        
+        // ====================================================================
+        // MANUAL 8.1 RE-DETECTION BUTTON
+        // ====================================================================
+        ui.horizontal(|ui| {
+            if ui.button("🔍 Re-detect 8.1 Hardware")
+                .on_hover_text("Manually scan for 8.1 capable audio devices (useful after hotplug)")
+                .clicked()
+            {
+                let detected = self.multi_channel_output.redetect_8_1_hardware();
+                if detected {
+                    tracing::info!("✅ 8.1 hardware detected!");
+                } else {
+                    tracing::warn!("❌ No 8.1 hardware found");
+                }
             }
         });
 

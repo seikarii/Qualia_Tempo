@@ -56,4 +56,18 @@ pub trait IMultiChannelOutput: Interface {
     /// # Responsibility
     /// Get current channel configuration.
     fn get_configuration(&self) -> ChannelConfiguration;
+    
+    /// # Responsibility
+    /// Force re-detection of 8.1 hardware support.
+    ///
+    /// ---
+    ///
+    /// ## USE CASE
+    /// User hotplugs new audio device (e.g., USB DAC, HDMI output) after app launch.
+    /// This method re-scans cpal devices and updates internal state.
+    ///
+    /// ## Returns
+    /// - `true` if 8.1 capable device detected (state updated)
+    /// - `false` if no 8.1 devices found (state remains unchanged)
+    fn redetect_8_1_hardware(&self) -> bool;
 }

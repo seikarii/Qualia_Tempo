@@ -123,7 +123,23 @@ impl IAudioPlayer for AudioPlayerService {
         // Decode audio file
         let file = File::open(path).context("Failed to open audio file")?;
         let buf_reader = BufReader::new(file);
-        let source = rodio::Decoder::new(buf_reader).context("Failed to decode audio file")?;
+        
+        // CRITICAL FIX: Wrap decoder in catch_unwind to prevent Symphonia panics from crashing UI
+        // Symphonia can panic on severely corrupted files despite magic number validation
+        let source = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            rodio::Decoder::new(buf_reader)
+        }))
+        .map_err(|panic_info| {
+            let panic_msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
+                s.to_string()
+            } else if let Some(s) = panic_info.downcast_ref::<String>() {
+                s.clone()
+            } else {
+                "Unknown panic during audio decode".to_string()
+            };
+            anyhow!("Decoder panic (corrupted file?): {}", panic_msg)
+        })?
+        .context("Failed to decode audio file")?;
 
         let total_duration = source
             .total_duration()

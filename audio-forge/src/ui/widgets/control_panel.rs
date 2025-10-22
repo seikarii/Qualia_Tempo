@@ -13,6 +13,7 @@
 
 use crate::services::interfaces::i_audio_exporter::IAudioExporter;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
+use crate::ui::theme::QualiaTheme;
 use crate::ui::widgets::Panel;
 use anyhow::{Context as AnyhowContext, Result};
 use egui::{self, Context};
@@ -421,8 +422,10 @@ impl Panel for ControlPanel {
             if let Some((ref error_msg, timestamp)) = state.loading_error {
                 let elapsed = timestamp.elapsed().as_secs();
                 let remaining = 5_u64.saturating_sub(elapsed);
+                
+                // Modern error display with theme colors
                 ui.colored_label(
-                    egui::Color32::RED, 
+                    QualiaTheme::ACCENT_ERROR,
                     format!("❌ {} (clears in {}s)", error_msg, remaining)
                 );
                 

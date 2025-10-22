@@ -5,7 +5,7 @@ use audio_forge::services::interfaces::{
     IAudioAnalyzer, IAudioEffects, IAudioExporter, IAudioPlayer, IMultiChannelOutput,
     IVisualizationEngine,
 };
-use audio_forge::ui::MainWindow;
+use audio_forge::ui::{MainWindow, QualiaTheme};
 use audio_forge::{load_config, AudioForgeModule};
 use eframe::egui;
 use shaku::HasComponent;
@@ -64,6 +64,9 @@ fn main() -> Result<(), eframe::Error> {
     };
 
     eframe::run_simple_native("audio-forge", options, move |ctx, _frame| {
+        // APPLY THEME ON FIRST FRAME
+        QualiaTheme::apply(ctx);
+        
         main_window.update(ctx);
     })
 }

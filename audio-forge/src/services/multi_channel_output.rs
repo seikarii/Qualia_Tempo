@@ -238,6 +238,27 @@ impl IMultiChannelOutput for MultiChannelOutputService {
     fn get_configuration(&self) -> ChannelConfiguration {
         self.config.read().unwrap().clone()
     }
+    
+    fn redetect_8_1_hardware(&self) -> bool {
+        info!("🔍 Manually re-detecting 8.1 hardware support...");
+        
+        let newly_detected = Self::detect_8_1_support();
+        
+        // Update internal state with new detection result
+        let mut config = self.config.write().unwrap();
+        config.is_8_1_available = newly_detected;
+        
+        // Auto-enable 8.1 mode if newly detected
+        if newly_detected && config.mode == ChannelMode::Stereo {
+            config.mode = ChannelMode::Surround8_1;
+            info!("✅ 8.1 hardware detected! Auto-enabled surround mode.");
+        } else if !newly_detected && config.mode == ChannelMode::Surround8_1 {
+            config.mode = ChannelMode::Stereo;
+            warn!("❌ 8.1 hardware no longer detected. Switched to stereo.");
+        }
+        
+        newly_detected
+    }
 }
 
 #[cfg(test)]
