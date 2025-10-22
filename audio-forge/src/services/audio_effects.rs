@@ -4,9 +4,89 @@
 use crate::contracts::effect_parameters::EffectConfig;
 use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use anyhow::Result;
+use biquad::*;
 use shaku::Component;
 use std::f32::consts::PI;
-use std::sync::RwLock;
+use std::sync::{Mutex, RwLock};
+
+/// # Responsibility
+/// Biquad filter state for bass/treble boost with lazy recalculation.
+///
+/// ---
+///
+/// Filters are recalculated ONLY when gain parameters change,
+/// not on every audio frame (performance critical).
+pub struct FilterState {
+    bass_filter: DirectForm2Transposed<f32>,
+    treble_filter: DirectForm2Transposed<f32>,
+    last_bass_gain: f32,
+    last_treble_gain: f32,
+}
+
+impl Default for FilterState {
+    fn default() -> Self {
+        Self::new(44100) // Standard CD-quality sample rate
+    }
+}
+
+impl FilterState {
+    fn new(sample_rate: u32) -> Self {
+        // Initialize with neutral coefficients (0dB gain)
+        let bass_coeffs = Coefficients::<f32>::from_params(
+            Type::LowShelf(0.0), // 0dB = unity gain
+            sample_rate.hz(),
+            250.hz(),
+            Q_BUTTERWORTH_F32,
+        ).unwrap();
+
+        let treble_coeffs = Coefficients::<f32>::from_params(
+            Type::HighShelf(0.0),
+            sample_rate.hz(),
+            3000.hz(),
+            Q_BUTTERWORTH_F32,
+        ).unwrap();
+
+        Self {
+            bass_filter: DirectForm2Transposed::<f32>::new(bass_coeffs),
+            treble_filter: DirectForm2Transposed::<f32>::new(treble_coeffs),
+            last_bass_gain: 1.0,
+            last_treble_gain: 1.0,
+        }
+    }
+
+    fn update_bass_if_changed(&mut self, new_gain: f32, sample_rate: u32) {
+        if (new_gain - self.last_bass_gain).abs() > 0.01 {
+            // Convert linear gain (1.0-3.0) to dB: dB = 20*log10(gain)
+            let db_gain = 20.0 * (new_gain.max(0.1)).log10();
+            
+            let coeffs = Coefficients::<f32>::from_params(
+                Type::LowShelf(db_gain), // dB passed directly to enum variant
+                sample_rate.hz(),
+                250.hz(),
+                Q_BUTTERWORTH_F32,
+            ).unwrap();
+
+            self.bass_filter = DirectForm2Transposed::<f32>::new(coeffs);
+            self.last_bass_gain = new_gain;
+        }
+    }
+
+    fn update_treble_if_changed(&mut self, new_gain: f32, sample_rate: u32) {
+        if (new_gain - self.last_treble_gain).abs() > 0.01 {
+            let db_gain = 20.0 * (new_gain.max(0.1)).log10();
+            
+            let coeffs = Coefficients::<f32>::from_params(
+                Type::HighShelf(db_gain),
+                sample_rate.hz(),
+                3000.hz(),
+                Q_BUTTERWORTH_F32,
+            ).unwrap();
+
+            self.treble_filter = DirectForm2Transposed::<f32>::new(coeffs);
+            self.last_treble_gain = new_gain;
+        }
+    }
+}
 
 /// # Responsibility
 /// Real-time audio effects service with DSP algorithms.
@@ -16,19 +96,24 @@ use std::sync::RwLock;
 /// Provides:
 /// 1. 8D Audio: Circular panning via sin-wave modulation
 /// 2. Drop Effect: Volume reduction
-/// 3. Bass Boost: Low-frequency amplification (simplified)
-/// 4. Treble Boost: High-frequency amplification (simplified)
+/// 3. Bass Boost: LowShelf biquad filter @ 250Hz (OPTIMIZED)
+/// 4. Treble Boost: HighShelf biquad filter @ 3kHz (OPTIMIZED)
 #[derive(Component, Default)]
 #[shaku(interface = IAudioEffects)]
 pub struct AudioEffectsService {
     #[shaku(default)]
     config: RwLock<EffectConfig>,
+    
+    // Biquad filters with lazy recalculation (Mutex for interior mutability)
+    #[shaku(default)]
+    filter_state: Mutex<FilterState>,
 }
 
 impl AudioEffectsService {
     pub fn new(config: EffectConfig) -> Self {
         Self {
             config: RwLock::new(config),
+            filter_state: Mutex::new(FilterState::new(44100)),
         }
     }
 }
@@ -98,11 +183,15 @@ impl IAudioEffects for AudioEffectsService {
         }
 
         let gain = config.bass_boost_gain.clamp(1.0, 3.0);
+        let sample_rate = 44100u32; // FIXME: Should come from config or parameter
+        
+        // Update filter coefficients ONLY if gain changed (lazy recalculation)
+        let mut filter_state = self.filter_state.lock().unwrap();
+        filter_state.update_bass_if_changed(gain, sample_rate);
 
-        // Simplified: apply gain to all samples
-        // NOTE: True bass boost requires low-pass filter + gain
+        // Apply LowShelf biquad filter @ 250Hz
         for sample in samples.iter_mut() {
-            *sample *= gain;
+            *sample = filter_state.bass_filter.run(*sample);
             *sample = sample.clamp(-1.0, 1.0); // Prevent clipping
         }
 
@@ -117,11 +206,15 @@ impl IAudioEffects for AudioEffectsService {
         }
 
         let gain = config.treble_boost_gain.clamp(1.0, 3.0);
+        let sample_rate = 44100u32;
+        
+        // Update filter coefficients ONLY if gain changed
+        let mut filter_state = self.filter_state.lock().unwrap();
+        filter_state.update_treble_if_changed(gain, sample_rate);
 
-        // Simplified: apply gain to all samples
-        // NOTE: True treble boost requires high-pass filter + gain
+        // Apply HighShelf biquad filter @ 3kHz
         for sample in samples.iter_mut() {
-            *sample *= gain;
+            *sample = filter_state.treble_filter.run(*sample);
             *sample = sample.clamp(-1.0, 1.0); // Prevent clipping
         }
 
@@ -248,35 +341,45 @@ mod tests {
     fn test_bass_boost_enabled() {
         let config = EffectConfig {
             bass_boost_enabled: true,
-            bass_boost_gain: 2.0,
+            bass_boost_gain: 2.0, // +6dB shelf
             ..Default::default()
         };
 
         let service = AudioEffectsService::new(config);
-        let mut samples = vec![0.3, -0.3];
+        let mut samples = vec![0.3, -0.3, 0.3, -0.3]; // Multiple samples for filter settling
 
         service.apply_bass_boost(&mut samples).unwrap();
 
-        assert_eq!(samples[0], 0.6);
-        assert_eq!(samples[1], -0.6);
+        // Biquad shelving filter DOES NOT multiply linearly
+        // Instead, it boosts low frequencies (< 250Hz) by ~6dB
+        // With constant DC input, filter will amplify but not by exact 2x
+        // Just verify output differs from input (filter is active)
+        assert_ne!(samples[0], 0.3, "Bass boost should modify signal");
+        assert!(samples.iter().all(|s| s.abs() <= 1.0), "Should not clip");
     }
 
     #[test]
     fn test_bass_boost_clipping_prevention() {
         let config = EffectConfig {
             bass_boost_enabled: true,
-            bass_boost_gain: 3.0,
+            bass_boost_gain: 3.0, // +9.5dB shelf (aggressive)
             ..Default::default()
         };
 
         let service = AudioEffectsService::new(config);
-        let mut samples = vec![0.5, -0.5];
+        // Generate low-frequency sine wave (100Hz) which will be boosted
+        let sample_rate = 44100.0;
+        let frequency = 100.0;
+        let mut samples: Vec<f32> = (0..100)
+            .map(|i| 0.8 * (2.0 * std::f32::consts::PI * frequency * i as f32 / sample_rate).sin())
+            .collect();
 
         service.apply_bass_boost(&mut samples).unwrap();
 
-        // 0.5 * 3.0 = 1.5, should clamp to 1.0
-        assert_eq!(samples[0], 1.0);
-        assert_eq!(samples[1], -1.0);
+        // Verify clipping prevention: all samples should be in [-1.0, 1.0]
+        for sample in &samples {
+            assert!(sample.abs() <= 1.0, "Sample {} exceeds clipping threshold", sample);
+        }
     }
 
     #[test]

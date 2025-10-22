@@ -84,9 +84,10 @@ impl IAudioAnalyzer for AudioAnalyzerService {
         input.resize(self.fft_size, Complex::new(0.0, 0.0));
 
         // Apply pre-calculated Hann window to reduce spectral leakage (O(1) lookup)
-        for (i, sample) in input.iter_mut().enumerate() {
-            *sample *= self.hann_window[i];
-        }
+        // OPTIMIZATION: zip iterator allows better auto-vectorization by compiler
+        input.iter_mut()
+            .zip(self.hann_window.iter())
+            .for_each(|(sample, &window)| *sample *= window);
 
         // Perform FFT using globally cached planner (eliminates 3MB/s allocations)
         let mut planner = FFT_PLANNER.lock().unwrap();
@@ -94,28 +95,32 @@ impl IAudioAnalyzer for AudioAnalyzerService {
         fft.process(&mut input);
 
         // Extract magnitudes manually (spectrum-analyzer expects different format)
-        let mut frequencies = Vec::new();
-        let mut magnitudes = Vec::new();
+        // OPTIMIZATION: Pre-allocate with exact capacity to avoid reallocs
+        let half_fft = self.fft_size / 2;
+        let mut frequencies = Vec::with_capacity(half_fft);
+        let mut magnitudes = Vec::with_capacity(half_fft);
 
         let freq_resolution = sample_rate as f32 / self.fft_size as f32;
+        let fft_size_f32 = self.fft_size as f32;
 
         // Only use first half of FFT output (positive frequencies)
-        for (i, complex_value) in input.iter().enumerate().take(self.fft_size / 2) {
+        // OPTIMIZATION: Hoist division out of loop
+        for (i, complex_value) in input.iter().enumerate().take(half_fft) {
             let freq = i as f32 * freq_resolution;
             let magnitude =
                 (complex_value.re * complex_value.re + complex_value.im * complex_value.im).sqrt()
-                    / self.fft_size as f32;
+                    / fft_size_f32;
 
             frequencies.push(freq);
             magnitudes.push(magnitude);
         }
 
         // Normalize magnitudes to [0.0, 1.0]
+        // OPTIMIZATION: Using iterator pattern for better vectorization
         if let Some(&max_mag) = magnitudes.iter().max_by(|a, b| a.partial_cmp(b).unwrap()) {
             if max_mag > 0.0 {
-                for mag in &mut magnitudes {
-                    *mag /= max_mag;
-                }
+                let inv_max = 1.0 / max_mag; // Single division, multiple multiplications
+                magnitudes.iter_mut().for_each(|mag| *mag *= inv_max);
             }
         }
 

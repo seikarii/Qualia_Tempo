@@ -4,6 +4,7 @@
 use crate::contracts::channel_configuration::{ChannelConfiguration, ChannelMode};
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use anyhow::{Result, anyhow};
+use biquad::*;
 use shaku::Component;
 use std::sync::RwLock;
 use tracing::{info, warn};
@@ -115,23 +116,24 @@ impl MultiChannelOutputService {
     ///
     /// ---
     ///
-    /// Simple moving average filter (3-tap).
-    /// Proper implementation would use biquad filter.
-    fn low_pass_filter(samples: &[f32]) -> Vec<f32> {
-        if samples.len() < 3 {
-            return samples.to_vec();
+    /// OPTIMIZED: Butterworth low-pass biquad filter @ 120Hz for LFE channel.
+    /// Replaces acoustically-inadequate 3-tap moving average.
+    fn low_pass_filter(samples: &[f32], sample_rate: u32) -> Vec<f32> {
+        if samples.is_empty() {
+            return vec![];
         }
 
-        let mut filtered = Vec::with_capacity(samples.len());
-        filtered.push(samples[0]); // First sample unchanged
+        // Butterworth low-pass @ 120Hz (LFE standard cutoff)
+        let coeffs = Coefficients::<f32>::from_params(
+            Type::LowPass, // LowPass doesn't take dB gain parameter
+            sample_rate.hz(),
+            120.hz(),
+            Q_BUTTERWORTH_F32,
+        ).unwrap();
 
-        for i in 1..samples.len() - 1 {
-            let avg = (samples[i - 1] + samples[i] + samples[i + 1]) / 3.0;
-            filtered.push(avg);
-        }
-
-        filtered.push(samples[samples.len() - 1]); // Last sample unchanged
-        filtered
+        let mut filter = DirectForm2Transposed::<f32>::new(coeffs);
+        
+        samples.iter().map(|&sample| filter.run(sample)).collect()
     }
 }
 
@@ -179,8 +181,8 @@ impl IMultiChannelOutput for MultiChannelOutputService {
             })
             .collect();
 
-        // Low-pass filter for LFE
-        let lfe = Self::low_pass_filter(&mono_sum);
+        // Low-pass filter for LFE (120Hz Butterworth)
+        let lfe = Self::low_pass_filter(&mono_sum, sample_rate);
 
         // Upmix each stereo frame to 8 channels
         for i in 0..frame_count {
@@ -357,16 +359,21 @@ mod tests {
 
     #[test]
     fn test_low_pass_filter_basic() {
-        let samples = vec![1.0, 0.0, -1.0];
-        let filtered = MultiChannelOutputService::low_pass_filter(&samples);
+        let sample_rate = 44100;
+        // Generate 440Hz sine wave (should be attenuated by 120Hz LPF)
+        let samples: Vec<f32> = (0..100)
+            .map(|i| (2.0 * std::f32::consts::PI * 440.0 * i as f32 / sample_rate as f32).sin())
+            .collect();
+        
+        let filtered = MultiChannelOutputService::low_pass_filter(&samples, sample_rate);
 
-        assert_eq!(filtered.len(), 3);
-        // First sample unchanged
-        assert_eq!(filtered[0], 1.0);
-        // Middle: (1.0 + 0.0 + -1.0) / 3 = 0.0
-        assert_eq!(filtered[1], 0.0);
-        // Last sample unchanged
-        assert_eq!(filtered[2], -1.0);
+        assert_eq!(filtered.len(), samples.len());
+        
+        // High frequency (440Hz) should be attenuated by 120Hz LPF
+        let input_magnitude: f32 = samples.iter().map(|x| x.abs()).sum();
+        let output_magnitude: f32 = filtered.iter().map(|x| x.abs()).sum();
+        
+        assert!(output_magnitude < input_magnitude, "LPF should attenuate 440Hz signal");
     }
 
     #[test]
