@@ -120,26 +120,13 @@ impl IAudioPlayer for AudioPlayerService {
     fn load_file(&self, path: &Path) -> Result<Duration> {
         info!("Loading audio file: {}", path.display());
 
-        // Decode audio file
+        // Decode audio file with proper error handling (Directive 1: No catch_unwind)
         let file = File::open(path).context("Failed to open audio file")?;
         let buf_reader = BufReader::new(file);
         
-        // CRITICAL FIX: Wrap decoder in catch_unwind to prevent Symphonia panics from crashing UI
-        // Symphonia can panic on severely corrupted files despite magic number validation
-        let source = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            rodio::Decoder::new(buf_reader)
-        }))
-        .map_err(|panic_info| {
-            let panic_msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
-                s.to_string()
-            } else if let Some(s) = panic_info.downcast_ref::<String>() {
-                s.clone()
-            } else {
-                "Unknown panic during audio decode".to_string()
-            };
-            anyhow!("Decoder panic (corrupted file?): {}", panic_msg)
-        })?
-        .context("Failed to decode audio file")?;
+        // Rodio's Decoder returns Result - propagate errors naturally
+        let source = rodio::Decoder::new(buf_reader)
+            .context("Failed to decode audio file - file may be corrupted or unsupported format")?;
 
         let total_duration = source
             .total_duration()

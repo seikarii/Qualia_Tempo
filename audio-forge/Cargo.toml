@@ -14,6 +14,7 @@ egui = "0.33.0"
 hound = "3.5.1"
 lazy_static = "1.5.0"
 rfd = "0.15"
+ringbuf = "0.4.2"
 rodio = { version = "0.21.1", features = ["symphonia-all"] }
 rustfft = { version = "6.4.1", features = ["avx"] }
 serde = { version = "1.0.228", features = ["derive"] }
