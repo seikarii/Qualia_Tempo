@@ -64,9 +64,13 @@ impl MultiChannelOutputService {
     ///
     /// ---
     ///
-    /// Enumerates all output devices using cpal and checks if any
-    /// support 8 or more channels. Returns true if 8.1-capable
-    /// hardware is found.
+    /// ## DIRECTIVE 21: Enhanced Detection Logic
+    /// Enumerates all output devices using cpal and checks:
+    /// 1. Default output config (fast path)
+    /// 2. **All supported configs** (comprehensive check)
+    ///
+    /// Returns true if ANY device supports 8+ channels in ANY configuration.
+    /// This fixes false negatives when 8.1 is available but not the default.
     fn detect_8_1_support() -> bool {
         use cpal::traits::{DeviceTrait, HostTrait};
         
@@ -85,18 +89,19 @@ impl MultiChannelOutputService {
             // Get device name for logging
             let device_name = device.name().unwrap_or_else(|_| "Unknown".to_string());
             
-            // Check default output config
+            // FAST PATH: Check default output config first
             if let Ok(config) = device.default_output_config() {
                 let channels = config.channels();
-                info!("Device '{}': {} channels", device_name, channels);
+                info!("Device '{}': {} channels (default config)", device_name, channels);
                 
                 if channels >= 8 {
-                    info!("✅ 8.1 surround capable device found: '{}' ({} channels)", device_name, channels);
+                    info!("✅ 8.1 surround capable device found: '{}' ({} channels - default)", device_name, channels);
                     return true;
                 }
             }
             
-            // Also check supported output configs for 8+ channel support
+            // DIRECTIVE 21: COMPREHENSIVE PATH - Check ALL supported configs
+            // Many audio devices support 8+ channels in non-default configurations
             if let Ok(configs) = device.supported_output_configs() {
                 for config_range in configs {
                     if config_range.channels() >= 8 {
