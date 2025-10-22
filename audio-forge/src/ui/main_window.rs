@@ -5,6 +5,7 @@ use crate::config::{save_config, AppConfig};
 use crate::contracts::frequency_spectrum::FrequencySpectrum;
 use crate::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
 use crate::services::interfaces::i_audio_effects::IAudioEffects;
+use crate::services::interfaces::i_audio_exporter::IAudioExporter;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::interfaces::i_visualization_engine::IVisualizationEngine;
@@ -86,6 +87,7 @@ impl MainWindow {
         audio_analyzer: Arc<dyn IAudioAnalyzer>,
         visualization_engine: Arc<dyn IVisualizationEngine>,
         audio_effects: Arc<dyn IAudioEffects>,
+        audio_exporter: Arc<dyn IAudioExporter>,
         multi_channel_output: Arc<dyn IMultiChannelOutput>,
     ) -> Self {
         let volume = config.audio.default_volume;
@@ -109,6 +111,7 @@ impl MainWindow {
 
         let control_panel = ControlPanel::new(
             audio_player.clone(),
+            audio_exporter.clone(),
             state.clone(),
             volume,
         );

@@ -53,4 +53,25 @@ pub trait IAudioPlayer: Interface {
     ///
     /// Returns 44100 by default if no audio loaded.
     fn get_sample_rate(&self) -> u32;
+
+    /// # Responsibility
+    /// Capture all processed audio samples from the currently loaded file.
+    ///
+    /// ---
+    ///
+    /// ## Directive 17: Non-Realtime Export Capture
+    /// Reloads the current audio file and passes it through the full
+    /// processing pipeline (Decoder → SampleCountingSource → AnalyzingSource → EffectsSource)
+    /// to collect all processed samples for export.
+    ///
+    /// ## Performance
+    /// - Non-realtime: Processing speed uncapped (no playback sync)
+    /// - Memory: Allocates Vec for full audio (e.g., 10.5MB for 1 minute stereo @ 44.1kHz)
+    /// - Thread-safe: Does not interfere with active playback
+    ///
+    /// ## Errors
+    /// - No file currently loaded
+    /// - File I/O errors during reload
+    /// - Decoder errors
+    fn capture_processed_audio(&self) -> Result<Vec<f32>>;
 }

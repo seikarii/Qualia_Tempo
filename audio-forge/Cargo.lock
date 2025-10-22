@@ -348,6 +348,7 @@ dependencies = [
  "shaku",
  "spectrum-analyzer",
  "symphonia",
+ "tempfile",
  "tokio",
  "tracing",
  "tracing-subscriber",

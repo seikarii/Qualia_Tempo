@@ -6,6 +6,7 @@ use shaku::module;
 pub mod analyzing_source;
 pub mod audio_analyzer;
 pub mod audio_effects;
+pub mod audio_exporter;
 pub mod audio_player;
 pub mod effects_source;
 pub mod interfaces;
@@ -17,6 +18,7 @@ pub mod visualization_engine;
 pub use analyzing_source::{AnalyzingSource, SampleBuffer};
 pub use audio_analyzer::AudioAnalyzerService;
 pub use audio_effects::AudioEffectsService;
+pub use audio_exporter::AudioExporterService;
 pub use audio_player::AudioPlayerService;
 pub use effects_source::EffectsSource;
 pub use multi_channel_output::MultiChannelOutputService;
@@ -31,6 +33,7 @@ pub use visualization_engine::VisualizationEngineService;
 // - IVisualizationEngine → VisualizationEngineService
 // - IAudioEffects → AudioEffectsService
 // - IMultiChannelOutput → MultiChannelOutputService
+// - IAudioExporter → AudioExporterService (Directive 17)
 module! {
     pub AudioForgeModule {
         components = [
@@ -39,6 +42,7 @@ module! {
             VisualizationEngineService,
             AudioEffectsService,
             MultiChannelOutputService,
+            AudioExporterService,
         ],
         providers = []
     }

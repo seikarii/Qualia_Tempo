@@ -11,6 +11,7 @@
 //! - Current file name display
 //! - Loading error messages with auto-clear
 
+use crate::services::interfaces::i_audio_exporter::IAudioExporter;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::ui::widgets::Panel;
 use anyhow::{Context as AnyhowContext, Result};
@@ -44,9 +45,13 @@ pub struct ControlPanelState {
 /// - **File Loading**: Owns async file picker with magic number validation
 /// - **Playback**: Direct IAudioPlayer service calls
 /// - **State Sync**: Uses Arc<Mutex<>> for thread-safe coordination
+/// - **Export**: IAudioExporter service for WAV export (Directive 17)
 pub struct ControlPanel {
     /// Audio player service (injected dependency)
     audio_player: Arc<dyn IAudioPlayer>,
+    
+    /// Audio exporter service (Directive 17)
+    audio_exporter: Arc<dyn IAudioExporter>,
     
     /// Shared state (for async file picker coordination)
     state: Arc<Mutex<ControlPanelState>>,
@@ -63,15 +68,18 @@ impl ControlPanel {
     ///
     /// ## Parameters
     /// - `audio_player`: Service for playback control
+    /// - `audio_exporter`: Service for WAV export (Directive 17)
     /// - `state`: Shared state with parent window
     /// - `initial_volume`: Starting volume level [0.0, 1.0]
     pub fn new(
         audio_player: Arc<dyn IAudioPlayer>,
+        audio_exporter: Arc<dyn IAudioExporter>,
         state: Arc<Mutex<ControlPanelState>>,
         initial_volume: f32,
     ) -> Self {
         Self {
             audio_player,
+            audio_exporter,
             state,
             volume: initial_volume,
         }
@@ -206,6 +214,84 @@ impl ControlPanel {
             error!("Failed to set volume: {}", e);
         }
     }
+
+    /// # Responsibility
+    /// Launch async file save dialog and export processed audio to WAV.
+    ///
+    /// ---
+    ///
+    /// ## Directive 17: Audio Export Workflow
+    /// 1. Open save file dialog (rfd::AsyncFileDialog)
+    /// 2. Capture all processed audio via audio_player.capture_processed_audio()
+    /// 3. Export to WAV via audio_exporter.export_wav()
+    /// 4. Update state with success/error notification
+    ///
+    /// ## Non-Blocking Architecture
+    /// Uses tokio::spawn to avoid UI freezing during:
+    /// - File dialog display
+    /// - Audio capture (reprocessing full file)
+    /// - WAV file writing
+    fn handle_export_wav(&self, ctx: &Context) {
+        info!("🎬 Starting WAV export workflow...");
+        
+        let audio_player = self.audio_player.clone();
+        let audio_exporter = self.audio_exporter.clone();
+        let state_clone = self.state.clone();
+        let ctx_clone = ctx.clone();
+        
+        tokio::spawn(async move {
+            // Step 1: Open save file dialog
+            let file_handle = rfd::AsyncFileDialog::new()
+                .add_filter("WAV Audio", &["wav"])
+                .set_file_name("exported_audio.wav")
+                .save_file()
+                .await;
+            
+            if let Some(file) = file_handle {
+                let save_path = file.path().to_path_buf();
+                info!("💾 User selected save path: {}", save_path.display());
+                
+                // Step 2: Capture processed audio (non-realtime)
+                match audio_player.capture_processed_audio() {
+                    Ok(samples) => {
+                        let sample_rate = audio_player.get_sample_rate();
+                        
+                        // Step 3: Export to WAV
+                        match audio_exporter.export_wav(&save_path, &samples, sample_rate) {
+                            Ok(_) => {
+                                info!("✅ Export successful: {}", save_path.display());
+                                let mut state = state_clone.lock().unwrap();
+                                state.loading_error = Some((
+                                    format!("✅ Exported to: {}", save_path.file_name().unwrap().to_string_lossy()),
+                                    Instant::now()
+                                ));
+                            }
+                            Err(e) => {
+                                error!("❌ Export failed: {}", e);
+                                let mut state = state_clone.lock().unwrap();
+                                state.loading_error = Some((
+                                    format!("❌ Export error: {}", e),
+                                    Instant::now()
+                                ));
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        error!("❌ Audio capture failed: {}", e);
+                        let mut state = state_clone.lock().unwrap();
+                        state.loading_error = Some((
+                            format!("❌ Capture error: {}", e),
+                            Instant::now()
+                        ));
+                    }
+                }
+            } else {
+                info!("Export cancelled by user");
+            }
+            
+            ctx_clone.request_repaint(); // Update UI after operation
+        });
+    }
 }
 
 impl Panel for ControlPanel {
@@ -260,6 +346,18 @@ impl Panel for ControlPanel {
                 if let Err(e) = self.audio_player.stop() {
                     error!("Stop failed: {}", e);
                 }
+            }
+
+            ui.separator();
+            
+            // ================================================================
+            // EXPORT BUTTON (Directive 17)
+            // ================================================================
+            if ui.button("💾 Export to WAV")
+                .on_hover_text("Export processed audio with effects to WAV file")
+                .clicked()
+            {
+                self.handle_export_wav(ctx);
             }
 
             ui.separator();
@@ -379,6 +477,7 @@ impl Panel for ControlPanel {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::interfaces::i_audio_exporter::IAudioExporter;
     use crate::services::interfaces::i_audio_player::IAudioPlayer;
     use crate::services::AudioForgeModule;
     use shaku::HasComponent;
@@ -387,9 +486,10 @@ mod tests {
     fn test_control_panel_creates_with_valid_state() {
         let module = AudioForgeModule::builder().build();
         let player: Arc<dyn IAudioPlayer> = module.resolve();
+        let exporter: Arc<dyn IAudioExporter> = module.resolve();
         let state = Arc::new(Mutex::new(ControlPanelState::default()));
         
-        let panel = ControlPanel::new(player, state, 0.5);
+        let panel = ControlPanel::new(player, exporter, state, 0.5);
         
         assert_eq!(panel.get_volume(), 0.5);
     }
@@ -398,9 +498,10 @@ mod tests {
     fn test_control_panel_volume_clamping() {
         let module = AudioForgeModule::builder().build();
         let player: Arc<dyn IAudioPlayer> = module.resolve();
+        let exporter: Arc<dyn IAudioExporter> = module.resolve();
         let state = Arc::new(Mutex::new(ControlPanelState::default()));
         
-        let mut panel = ControlPanel::new(player, state, 0.5);
+        let mut panel = ControlPanel::new(player, exporter, state, 0.5);
         
         panel.set_volume(1.5); // Above max
         assert_eq!(panel.get_volume(), 1.0);

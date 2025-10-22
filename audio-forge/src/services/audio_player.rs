@@ -14,7 +14,7 @@ use rodio::{OutputStream, Sink, Source};
 use shaku::Component;
 use std::fs::File;
 use std::io::BufReader;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -43,6 +43,9 @@ struct PlayerState {
     /// Sample-accurate position counter (Directive 15)
     /// Replaces start_time/pause_position time-based tracking
     sample_counter: Arc<std::sync::atomic::AtomicU64>,
+    
+    /// Currently loaded file path (Directive 17: for export capture)
+    current_file: Option<PathBuf>,
 }
 
 impl PlayerState {
@@ -69,6 +72,7 @@ impl PlayerState {
             sample_buffer: None,
             sample_rate: 44100, // Default, will be updated on load
             sample_counter: Arc::new(std::sync::atomic::AtomicU64::new(0)),
+            current_file: None,
         }
     }
 }
@@ -182,6 +186,7 @@ impl IAudioPlayer for AudioPlayerService {
         state.sample_buffer = Some(sample_buffer);
         state.sample_rate = sample_rate;
         state.sample_counter = sample_counter; // Store counter for position queries
+        state.current_file = Some(path.to_path_buf()); // Store path for export (Directive 17)
         
         // Reset counter to zero for new file
         state.sample_counter.store(0, Ordering::Relaxed);
@@ -308,6 +313,53 @@ impl IAudioPlayer for AudioPlayerService {
     fn get_sample_rate(&self) -> u32 {
         let state = self.state.lock();
         state.sample_rate
+    }
+
+    fn capture_processed_audio(&self) -> Result<Vec<f32>> {
+        info!("📼 Capturing processed audio for export...");
+        
+        // Get current file path from state
+        let state = self.state.lock();
+        let current_file = state.current_file.clone()
+            .ok_or_else(|| anyhow!("No audio file currently loaded"))?;
+        drop(state); // Release lock before heavy I/O
+        
+        // Reload audio file (non-destructive to playback state)
+        let file = File::open(&current_file)
+            .context("Failed to open audio file for capture")?;
+        let buf_reader = BufReader::new(file);
+        let source = rodio::Decoder::new(buf_reader)
+            .context("Failed to decode audio file for capture")?;
+        
+        let sample_rate = source.sample_rate();
+        
+        // Build processing pipeline (same as load_file, but without sink attachment)
+        // Pipeline: Decoder → SampleCountingSource → AnalyzingSource → EffectsSource
+        let (counting_source, _sample_counter) = SampleCountingSource::new(source);
+        
+        let buffer_capacity = (sample_rate * 2) as usize;
+        let chunk_size = 512;
+        let analyzing_source = AnalyzingSource::new(counting_source, buffer_capacity, chunk_size);
+        
+        let mut effects_source = EffectsSource::new(
+            analyzing_source,
+            self.audio_effects.clone(),
+            chunk_size,
+        );
+        
+        // Consume iterator and collect all processed samples
+        info!("   Processing audio through effects pipeline...");
+        let mut processed_samples = Vec::new();
+        
+        for sample in &mut effects_source {
+            processed_samples.push(sample);
+        }
+        
+        let duration_secs = processed_samples.len() as f64 / sample_rate as f64 / 2.0;
+        info!("✅ Captured {} samples ({:.2}s) at {} Hz", 
+              processed_samples.len(), duration_secs, sample_rate);
+        
+        Ok(processed_samples)
     }
 }
 

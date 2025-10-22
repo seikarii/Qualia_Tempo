@@ -2,7 +2,8 @@
 //! Application entry point with egui initialization and Shaku DI.
 
 use audio_forge::services::interfaces::{
-    IAudioAnalyzer, IAudioEffects, IAudioPlayer, IMultiChannelOutput, IVisualizationEngine,
+    IAudioAnalyzer, IAudioEffects, IAudioExporter, IAudioPlayer, IMultiChannelOutput,
+    IVisualizationEngine,
 };
 use audio_forge::ui::MainWindow;
 use audio_forge::{load_config, AudioForgeModule};
@@ -36,6 +37,7 @@ fn main() -> Result<(), eframe::Error> {
     let audio_analyzer: Arc<dyn IAudioAnalyzer> = module.resolve();
     let visualization_engine: Arc<dyn IVisualizationEngine> = module.resolve();
     let audio_effects: Arc<dyn IAudioEffects> = module.resolve();
+    let audio_exporter: Arc<dyn IAudioExporter> = module.resolve(); // Directive 17
     let multi_channel_output: Arc<dyn IMultiChannelOutput> = module.resolve();
     
     // Apply loaded configuration
@@ -50,6 +52,7 @@ fn main() -> Result<(), eframe::Error> {
         audio_analyzer,
         visualization_engine,
         audio_effects,
+        audio_exporter,
         multi_channel_output,
     );
 
