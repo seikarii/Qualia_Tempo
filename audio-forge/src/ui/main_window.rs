@@ -2,14 +2,16 @@
 //! Root UI window with playback controls and visualization panels.
 
 use crate::config::{save_config, AppConfig};
-use crate::contracts::channel_configuration::ChannelMode;
 use crate::contracts::frequency_spectrum::FrequencySpectrum;
 use crate::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
 use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::interfaces::i_visualization_engine::IVisualizationEngine;
-use crate::ui::widgets::{effects_panel::EffectsPanel, Panel};
+use crate::ui::widgets::{
+    control_panel::{ControlPanel, ControlPanelState},
+    EffectsPanel, InfoPanel, Panel, SpectrumPanel, WaveformPanel,
+};
 use anyhow::{Context as AnyhowContext, Result};
 use egui::{CentralPanel, Context, SidePanel, TopBottomPanel};
 use std::fs::File;
@@ -28,18 +30,6 @@ use std::time::Instant;
 ///
 /// ARCHITECTURE: Extracted from MainWindow to enable Arc<Mutex<>> wrapping.
 /// Async file picker tasks can safely update this state without data races.
-#[derive(Default)]
-struct MainWindowState {
-    /// Currently loaded audio file path (updated from async tasks)
-    current_file_path: Option<PathBuf>,
-    
-    /// Loading error message with timestamp for auto-clear (5s timeout)
-    loading_error: Option<(String, Instant)>,
-    
-    /// Flag to prevent multiple simultaneous file picker dialogs
-    file_picker_open: bool,
-}
-
 /// # Responsibility
 /// Main application window using egui immediate mode UI.
 ///
@@ -58,28 +48,28 @@ struct MainWindowState {
 /// - UI thread reads state with lock acquisition (minimal contention)
 pub struct MainWindow {
     /// Thread-safe state shared with async tasks
-    state: Arc<Mutex<MainWindowState>>,
+    state: Arc<Mutex<ControlPanelState>>,
     
     /// Persisted configuration (Directive 10)
     app_config: AppConfig,
     
+    // Core services (retained for orchestration logic)
     audio_player: Arc<dyn IAudioPlayer>,
     audio_analyzer: Arc<dyn IAudioAnalyzer>,
-    visualization_engine: Arc<dyn IVisualizationEngine>,
-    multi_channel_output: Arc<dyn IMultiChannelOutput>,
 
-    // DIRECTIVE 12: Modular UI widgets (extracted from monolith)
+    // DIRECTIVE 12 & 13: Modular UI widgets (full decomposition)
+    control_panel: ControlPanel,
     effects_panel: EffectsPanel,
+    waveform_panel: WaveformPanel,
+    spectrum_panel: SpectrumPanel,
+    info_panel: InfoPanel,
     
-    // Cached visualization data (UI-thread only, updated at throttled rate)
+    // Cached visualization data (updated at throttled rate, passed to panels)
     cached_waveform: Vec<f32>,
     cached_spectrum: FrequencySpectrum,
     cached_instrument_levels: (f32, f32, f32),
     last_visualization_update: Instant,
     visualization_update_interval: Duration,
-    
-    // Playback state (UI-thread only)
-    volume: f32,
 }
 
 impl MainWindow {
@@ -108,26 +98,45 @@ impl MainWindow {
             window_size: 2048,
         };
 
-        // DIRECTIVE 12: Create modular effects panel with injected service
+        // Shared state for control panel and file loading
+        let state = Arc::new(Mutex::new(ControlPanelState::default()));
+
+        // DIRECTIVE 12 & 13: Create all modular UI panels
         let effects_panel = EffectsPanel::new(
             audio_effects.clone(),
             config.effects.clone(),
         );
 
+        let control_panel = ControlPanel::new(
+            audio_player.clone(),
+            state.clone(),
+            volume,
+        );
+
+        let waveform_panel = WaveformPanel::new(visualization_engine.clone());
+        
+        let spectrum_panel = SpectrumPanel::new(visualization_engine.clone());
+        
+        let info_panel = InfoPanel::new(
+            audio_player.clone(),
+            multi_channel_output.clone(),
+        );
+
         Self {
-            state: Arc::new(Mutex::new(MainWindowState::default())),
+            state,
             app_config: config,
             audio_player,
             audio_analyzer,
-            visualization_engine,
-            multi_channel_output,
+            control_panel,
             effects_panel,
+            waveform_panel,
+            spectrum_panel,
+            info_panel,
             cached_waveform: Vec::new(),
             cached_spectrum,
             cached_instrument_levels: (0.0, 0.0, 0.0),
             last_visualization_update: Instant::now(),
             visualization_update_interval: Duration::from_millis(33), // 30fps
-            volume,
         }
     }
     
@@ -142,8 +151,8 @@ impl MainWindow {
         
         AppConfig {
             audio: crate::config::AudioConfig {
-                default_volume: self.volume,
-                channel_mode: self.multi_channel_output.get_configuration().mode,
+                default_volume: self.control_panel.get_volume(),
+                channel_mode: self.info_panel.multi_channel_output.get_configuration().mode,
                 last_file_path: state.current_file_path.clone(),
             },
             effects: self.effects_panel.get_config().clone(),
@@ -358,7 +367,7 @@ impl MainWindow {
 
     pub fn update(&mut self, ctx: &Context) {
         // ============================================================================
-        // DRAG-AND-DROP FILE HANDLING (DIRECTIVE 9)
+        // PRE-RENDER: DRAG-AND-DROP + VISUALIZATION UPDATES
         // ============================================================================
         
         // Handle dropped files (synchronous, runs on UI thread)
@@ -368,33 +377,29 @@ impl MainWindow {
                 
                 if let Some(path) = &dropped_file.path {
                     info!("🎵 File dropped: {:?}", path);
-                    
-                    // Validate and load file (magic number check + load)
                     self.load_audio_file_validated(path);
-                    
-                    ctx.request_repaint(); // Update UI immediately
+                    ctx.request_repaint();
                 } else {
                     warn!("Dropped file has no path");
                 }
             }
         });
         
-        // Auto-clear errors after 5 seconds (read from shared state)
-        {
-            let mut state = self.state.lock().unwrap();
-            if let Some((_, timestamp)) = &state.loading_error {
-                if timestamp.elapsed() > Duration::from_secs(5) {
-                    state.loading_error = None;
-                }
-            }
-        }
-        
         // Update visualization data from real-time audio (throttled to 30fps)
         self.update_visualization_data();
         
+        // Update panel data caches
+        self.waveform_panel.update_waveform(self.cached_waveform.clone());
+        self.spectrum_panel.update_data(
+            self.cached_spectrum.clone(),
+            self.cached_instrument_levels,
+        );
+        
+        // TOP PANEL: File loading + ControlPanel orchestration
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.horizontal(|ui| {
-                // File loading button (PRIMARY ACTION - ASYNC)
+                // TODO(Directive 13): File picker requires Context, but Panel::render() only has Ui
+                // Temporary: Keep file button in MainWindow until Panel trait accepts Context
                 if ui.button("📁 Load Audio File")
                     .on_hover_text("Open audio file (MP3, WAV, FLAC, OGG) - Non-blocking")
                     .clicked() 
@@ -404,125 +409,9 @@ impl MainWindow {
                 
                 ui.separator();
                 
-                if ui.button("▶ Play")
-                    .on_hover_text("Start/resume playback")
-                    .clicked()
-                {
-                    if let Err(e) = self.audio_player.play() {
-                        error!("Play failed: {}", e);
-                    }
-                }
-
-                if ui.button("⏸ Pause")
-                    .on_hover_text("Pause playback (preserves position)")
-                    .clicked()
-                {
-                    if let Err(e) = self.audio_player.pause() {
-                        error!("Pause failed: {}", e);
-                    }
-                }
-
-                if ui.button("⏹ Stop")
-                    .on_hover_text("Stop playback (resets to beginning)")
-                    .clicked()
-                {
-                    if let Err(e) = self.audio_player.stop() {
-                        error!("Stop failed: {}", e);
-                    }
-                }
-
-                ui.separator();
-                
-                // Display current file name (read from shared state)
-                {
-                    let state = self.state.lock().unwrap();
-                    if let Some(ref path) = state.current_file_path {
-                        ui.label(format!("🎵 {}", path.file_name().unwrap().to_str().unwrap_or("Unknown")));
-                    } else {
-                        ui.label("No file loaded");
-                    }
-                }
-                
-                ui.separator();
-                
-                // Volume control
-                ui.label("🔊 Volume:");
-                let volume_response = ui.add(egui::Slider::new(&mut self.volume, 0.0..=1.0)
-                    .text("")
-                    .show_value(false));
-                
-                if volume_response.changed() {
-                    if let Err(e) = self.audio_player.set_volume(self.volume) {
-                        error!("Set volume failed: {}", e);
-                    }
-                }
-                
-                ui.label(format!("{}%", (self.volume * 100.0) as u8));
-                
-                ui.separator();
-                
-                ui.label(format!(
-                    "Duration: {:.2}s",
-                    self.audio_player.total_duration().as_secs_f32()
-                ));
-
-                ui.label(format!(
-                    "Status: {}",
-                    if self.audio_player.is_playing() {
-                        "🎵 Playing"
-                    } else {
-                        "⏸ Stopped"
-                    }
-                ));
+                // Delegate rest to ControlPanel widget
+                self.control_panel.render(ui);
             });
-            
-            // Display loading errors with auto-clear countdown (read from shared state)
-            {
-                let state = self.state.lock().unwrap();
-                if let Some((ref error_msg, timestamp)) = state.loading_error {
-                    let elapsed = timestamp.elapsed().as_secs();
-                    let remaining = 5_u64.saturating_sub(elapsed);
-                    ui.colored_label(
-                        egui::Color32::RED, 
-                        format!("❌ {} (clears in {}s)", error_msg, remaining)
-                    );
-                }
-            }
-            
-            // Seek bar (only show if audio is loaded)
-            let total_duration = self.audio_player.total_duration();
-            if total_duration > Duration::ZERO {
-                ui.separator();
-                ui.horizontal(|ui| {
-                    ui.label("Position:");
-                    
-                    let current_pos = self.audio_player.current_position();
-                    let mut position_secs = current_pos.as_secs_f32();
-                    let duration_secs = total_duration.as_secs_f32();
-                    
-                    // Seek slider
-                    let slider = egui::Slider::new(&mut position_secs, 0.0..=duration_secs)
-                        .text("s")
-                        .show_value(true);
-                    
-                    if ui.add(slider).changed() {
-                        // User dragged slider - seek to new position
-                        let new_position = Duration::from_secs_f32(position_secs);
-                        if let Err(e) = self.audio_player.seek(new_position) {
-                            error!("Seek failed: {}", e);
-                        }
-                    }
-                    
-                    // Display formatted time
-                    ui.label(format!(
-                        "{:02}:{:02} / {:02}:{:02}",
-                        (current_pos.as_secs() / 60) % 60,
-                        current_pos.as_secs() % 60,
-                        (total_duration.as_secs() / 60) % 60,
-                        total_duration.as_secs() % 60
-                    ));
-                });
-            }
         });
 
         // ====================================================================
@@ -532,122 +421,23 @@ impl MainWindow {
             self.effects_panel.render(ui);
         });
 
-        // Left panel: Waveform visualization
+        // LEFT PANEL: WaveformPanel orchestration
         SidePanel::left("waveform_panel")
             .default_width(400.0)
             .show(ctx, |ui| {
-                ui.heading("Waveform (Time Domain)");
-                
-                if self.cached_waveform.is_empty() {
-                    ui.label("🎵 Load an audio file to see waveform");
-                } else {
-                    self.visualization_engine
-                        .render_waveform(ui, &self.cached_waveform);
-                }
+                self.waveform_panel.render(ui);
             });
 
-        // Right panel: Spectrum + Instrument Map
+        // RIGHT PANEL: SpectrumPanel orchestration
         SidePanel::right("spectrum_panel")
             .default_width(400.0)
             .show(ctx, |ui| {
-                ui.heading("Frequency Spectrum");
-                
-                if self.cached_spectrum.frequencies.is_empty() {
-                    ui.label("🎵 Load an audio file to see spectrum");
-                } else {
-                    self.visualization_engine
-                        .render_spectrum(ui, &self.cached_spectrum);
-                }
-
-                ui.separator();
-
-                ui.heading("Instrument Detection");
-                
-                if self.cached_spectrum.frequencies.is_empty() {
-                    ui.label("🎵 Load an audio file to see instrument levels");
-                } else {
-                    let (bass, mid, treble) = self.cached_instrument_levels;
-                    self.visualization_engine
-                        .render_instrument_map(ui, bass, mid, treble);
-                }
+                self.spectrum_panel.render(ui);
             });
 
-        // Center panel: Info
+        // CENTER PANEL: InfoPanel orchestration
         CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Audio Forge - Phase 2 Complete: Real-Time Visualization");
-            ui.label("✅ Real-time audio sample capture");
-            ui.label("✅ Live waveform rendering from playback");
-            ui.label("✅ Live FFT spectrum analysis");
-            ui.label("✅ Real-time instrument detection (Bass/Mid/Treble)");
-            ui.label("✅ Audio effects: 8D, Drop, Bass/Treble Boost");
-            ui.label("✅ 8.1 surround channel support");
-            ui.separator();
-
-            // Channel configuration status
-            let channel_config = self.multi_channel_output.get_configuration();
-            ui.heading("🔊 Channel Configuration");
-
-            ui.horizontal(|ui| {
-                ui.label("Current Mode:");
-                match channel_config.mode {
-                    ChannelMode::Stereo => {
-                        ui.colored_label(egui::Color32::LIGHT_BLUE, "Stereo (2.0)");
-                    }
-                    ChannelMode::Surround8_1 => {
-                        ui.colored_label(egui::Color32::GREEN, "Surround (8.1)");
-                    }
-                }
-            });
-
-            ui.horizontal(|ui| {
-                ui.label("8.1 Hardware:");
-                if channel_config.is_8_1_available {
-                    ui.colored_label(egui::Color32::GREEN, "✅ Available");
-                } else {
-                    ui.colored_label(egui::Color32::GRAY, "❌ Not Available");
-                }
-            });
-
-            ui.horizontal(|ui| {
-                ui.label("Channels:");
-                ui.label(format!("{}", channel_config.channel_count()));
-            });
-
-            ui.horizontal(|ui| {
-                ui.label("Sample Rate:");
-                ui.label(format!("{} Hz", channel_config.sample_rate));
-            });
-
-            ui.separator();
-
-            // Channel mode toggle
-            ui.horizontal(|ui| {
-                if channel_config.is_8_1_available {
-                    if ui.button("🔁 Switch to Stereo").clicked() {
-                        if let Err(e) = self.multi_channel_output.fallback_to_stereo() {
-                            error!("Failed to switch to stereo: {}", e);
-                        }
-                    }
-
-                    if ui.button("🔁 Configure 8.1").clicked() {
-                        if let Err(e) = self.multi_channel_output.configure_8_1_channels() {
-                            error!("Failed to configure 8.1: {}", e);
-                        }
-                    }
-                } else {
-                    ui.label("⚠️ 8.1 hardware not detected - stereo mode only");
-                }
-            });
-
-            ui.separator();
-            ui.label("🎛️ Effects controls available in bottom panel");
-            
-            // Show audio status
-            if self.audio_player.total_duration() > std::time::Duration::ZERO {
-                ui.label("✅ Audio file loaded and ready for visualization");
-            } else {
-                ui.label("⚠️ No audio file loaded. Drag & drop an audio file or click Load Audio File.");
-            }
+            self.info_panel.render(ui);
         });
         
         // ============================================================================

@@ -7,12 +7,23 @@
 //! the monolithic MainWindow. Each widget encapsulates a specific UI concern
 //! and can be tested independently.
 //!
-//! ## Architecture
+//! ## Architecture (Directive 12 & 13)
 //! - **Panel trait**: Common interface for all UI panels
 //! - **EffectsPanel**: Audio effects controls (8D, drop, bass, treble)
-//! - Future widgets: VisualizationPanel, PlaybackControlsPanel, etc.
+//! - **ControlPanel**: File loading, playback controls, volume, seek bar
+//! - **WaveformPanel**: Time-domain waveform visualization
+//! - **SpectrumPanel**: Frequency-domain spectrum + instrument detection
+//! - **InfoPanel**: Status display and channel configuration
 
+pub mod control_panel;
 pub mod effects_panel;
+pub mod info_panel;
+pub mod visualization_panels;
+
+pub use control_panel::{ControlPanel, ControlPanelState};
+pub use effects_panel::EffectsPanel;
+pub use info_panel::InfoPanel;
+pub use visualization_panels::{SpectrumPanel, WaveformPanel};
 
 use egui;
 
