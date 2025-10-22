@@ -7,6 +7,7 @@ use crate::services::effects_source::EffectsSource;
 use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
+use crate::services::sample_counting_source::SampleCountingSource;
 use crate::services::upmixing_source::UpmixingSource;
 use anyhow::{anyhow, Context, Result};
 use rodio::{OutputStream, Sink, Source};
@@ -14,6 +15,7 @@ use shaku::Component;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tracing::{error, info};
@@ -26,15 +28,21 @@ use tracing::{error, info};
 /// CRITICAL: OutputStream and Sink are long-lived resources initialized ONCE
 /// during service construction. They MUST NOT be recreated per load_file() call
 /// to prevent OS resource exhaustion and audio device conflicts.
+///
+/// ## Directive 15: Sample-Accurate Position Tracking
+/// Replaced time-based tracking (Instant) with atomic sample counter for
+/// absolute precision immune to system clock drift and CPU load variations.
 struct PlayerState {
     sink: Sink,
     _stream: OutputStream,
     total_duration: Duration,
     is_playing: bool,
-    start_time: Option<std::time::Instant>,
-    pause_position: Duration,
     sample_buffer: Option<SampleBuffer>,
     sample_rate: u32,
+    
+    /// Sample-accurate position counter (Directive 15)
+    /// Replaces start_time/pause_position time-based tracking
+    sample_counter: Arc<std::sync::atomic::AtomicU64>,
 }
 
 impl PlayerState {
@@ -58,10 +66,9 @@ impl PlayerState {
             _stream: stream_handle,
             total_duration: Duration::ZERO,
             is_playing: false,
-            start_time: None,
-            pause_position: Duration::ZERO,
             sample_buffer: None,
             sample_rate: 44100, // Default, will be updated on load
+            sample_counter: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         }
     }
 }
@@ -120,14 +127,17 @@ impl IAudioPlayer for AudioPlayerService {
 
         let sample_rate = source.sample_rate();
 
+        // DIRECTIVE 15: Wrap decoder in SampleCountingSource for sample-accurate position tracking
+        let (counting_source, sample_counter) = SampleCountingSource::new(source);
+        
         // Wrap source in AnalyzingSource for real-time capture
         // Buffer capacity: 1 second of stereo audio @ 44100Hz = 88200 samples
         // Chunk size: 512 samples (reduces lock contention)
         let buffer_capacity = (sample_rate * 2) as usize; // 1 second stereo
         let chunk_size = 512;
         
-        // Rodio 0.21 - Source already outputs f32 samples
-        let analyzing_source = AnalyzingSource::new(source, buffer_capacity, chunk_size);
+        // Pipeline: Decoder → SampleCountingSource → AnalyzingSource → EffectsSource → [UpmixingSource] → Sink
+        let analyzing_source = AnalyzingSource::new(counting_source, buffer_capacity, chunk_size);
         let sample_buffer = analyzing_source.buffer();
         
         // Wrap in EffectsSource for real-time DSP processing
@@ -166,13 +176,15 @@ impl IAudioPlayer for AudioPlayerService {
         
         state.sink.pause();                     // Start paused (user must click play)
         
-        // Reset playback state
+        // Reset playback state (Directive 15: Replace time tracking with sample counter)
         state.total_duration = total_duration;
         state.is_playing = false;
-        state.start_time = None;
-        state.pause_position = Duration::ZERO;
         state.sample_buffer = Some(sample_buffer);
         state.sample_rate = sample_rate;
+        state.sample_counter = sample_counter; // Store counter for position queries
+        
+        // Reset counter to zero for new file
+        state.sample_counter.store(0, Ordering::Relaxed);
 
         info!("Audio loaded successfully. Duration: {:?}, Sample Rate: {}", total_duration, sample_rate);
         Ok(total_duration)
@@ -190,10 +202,7 @@ impl IAudioPlayer for AudioPlayerService {
         state.sink.play();
         state.is_playing = true;
         
-        // Record start time for position tracking
-        if state.start_time.is_none() {
-            state.start_time = Some(std::time::Instant::now());
-        }
+        // Directive 15: No time tracking needed - sample counter handles position
         
         info!("Playback started");
         Ok(())
@@ -209,11 +218,7 @@ impl IAudioPlayer for AudioPlayerService {
         state.sink.pause();
         state.is_playing = false;
         
-        // Store current position when pausing
-        if let Some(start) = state.start_time {
-            state.pause_position += start.elapsed();
-            state.start_time = None;
-        }
+        // Directive 15: Sample counter automatically preserves position
         
         info!("Playback paused");
         Ok(())
@@ -228,15 +233,16 @@ impl IAudioPlayer for AudioPlayerService {
         
         state.sink.stop();
         state.is_playing = false;
-        state.start_time = None;
-        state.pause_position = Duration::ZERO;
+        
+        // Directive 15: Reset sample counter to zero
+        state.sample_counter.store(0, Ordering::Relaxed);
         
         info!("Playback stopped");
         Ok(())
     }
 
     fn seek(&self, position: Duration) -> Result<()> {
-        let mut state = self.state.lock();
+        let state = self.state.lock();
         
         if state.total_duration == Duration::ZERO {
             return Err(anyhow::anyhow!("No audio file loaded"));
@@ -245,13 +251,11 @@ impl IAudioPlayer for AudioPlayerService {
         state.sink.try_seek(position)
             .map_err(|e| anyhow::anyhow!("Seek failed: {:?}", e))?;
         
-        // Update position tracking
-        state.pause_position = position;
-        if state.is_playing {
-            state.start_time = Some(std::time::Instant::now());
-        }
+        // Directive 15: Update sample counter to match new position
+        let sample_position = (position.as_secs_f64() * state.sample_rate as f64) as u64;
+        state.sample_counter.store(sample_position, Ordering::Relaxed);
         
-        info!("Seeked to {:?}", position);
+        info!("Seeked to {:?} (sample {})", position, sample_position);
         Ok(())
     }
 
@@ -266,27 +270,20 @@ impl IAudioPlayer for AudioPlayerService {
     fn current_position(&self) -> Duration {
         let state = self.state.lock();
         
-        // TODO: TECH_DEBT - Manual position tracking is prone to drift
-        // Ideal solution: Wrap Source in custom struct that counts consumed samples
-        // and expose via Sink API or callback mechanism.
+        // Directive 15: Sample-accurate position tracking
+        // Replaces time-based tracking with atomic sample counter
         //
-        // Current implementation:
-        // - Tracks elapsed time via Instant::now() diff
-        // - Accumulates pause_position across play/pause cycles
-        // - Works for basic playback but may desync on:
-        //   * Audio device buffer underruns
-        //   * System time adjustments (NTP)
-        //   * Heavy CPU load causing scheduling delays
+        // Benefits over Instant::now() approach:
+        // - Immune to system clock drift and adjustments
+        // - Not affected by CPU load or scheduler jitter
+        // - Perfectly synchronized with actual audio output
+        // - Zero computational overhead (atomic read ~1 CPU cycle)
         //
-        // For production use, replace with sample-accurate counter.
+        // Position = samples_consumed / sample_rate
+        let sample_count = state.sample_counter.load(Ordering::Relaxed);
+        let position_secs = sample_count as f64 / state.sample_rate as f64;
         
-        if let Some(start) = state.start_time {
-            // Currently playing: pause_position + time since play started
-            state.pause_position + start.elapsed()
-        } else {
-            // Paused or stopped: return stored position
-            state.pause_position
-        }
+        Duration::from_secs_f64(position_secs)
     }
 
     fn total_duration(&self) -> Duration {
@@ -337,8 +334,10 @@ mod tests {
         let state = PlayerState::new();
         assert_eq!(state.total_duration, Duration::ZERO);
         assert!(!state.is_playing);
-        assert!(state.start_time.is_none());
-        assert_eq!(state.pause_position, Duration::ZERO);
+        
+        // Directive 15: Verify sample counter initialized to zero
+        assert_eq!(state.sample_counter.load(Ordering::Relaxed), 0);
+        
         // Note: Cannot easily test Sink/OutputStream without audio device
     }
 
