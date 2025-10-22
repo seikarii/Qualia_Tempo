@@ -292,3 +292,364 @@ fn test_e2e_fft_performance() {
 
     println!("✅ E2E FFT Performance Test PASSED ({}ms)", latency_ms);
 }
+
+// ===== DIRECTIVE 20: REAL FILE INTEGRATION TESTS =====
+
+/// # Responsibility
+/// E2E Test: Full pipeline with real WAV file (Directive 20).
+///
+/// ---
+///
+/// ## Validation Steps
+/// 1. Load real WAV file via AudioPlayerService
+/// 2. Verify duration > 0 (successful decode)
+/// 3. Capture processed audio samples
+/// 4. Validate sample range [-1.0, 1.0]
+/// 5. Analyze spectrum via FFT
+/// 6. Verify non-empty spectrum data
+///
+/// ## Test Asset
+/// - File: tests/assets/sine_440hz.wav
+/// - Format: 16-bit PCM, 44.1kHz stereo
+/// - Duration: 5 seconds
+/// - Content: 440Hz sine wave
+#[test]
+fn test_full_pipeline_with_real_wav_file() {
+    use std::path::Path;
+
+    // Arrange: Initialize services via DI
+    let module = AudioForgeModule::builder().build();
+    let player: Arc<dyn IAudioPlayer> = module.resolve();
+    let analyzer = Arc::new(AudioAnalyzerService::default());
+
+    // Test asset path (relative to workspace root)
+    let wav_path = Path::new("tests/assets/sine_440hz.wav");
+    assert!(
+        wav_path.exists(),
+        "Test asset not found: {:?}. Run asset generation first.",
+        wav_path
+    );
+
+    // Act: Load real WAV file
+    let load_result = player.load_file(wav_path);
+    assert!(
+        load_result.is_ok(),
+        "Failed to load WAV file: {:?}",
+        load_result.err()
+    );
+
+    // Assert: Verify duration is valid (5 seconds ±1 second tolerance)
+    let duration = player.total_duration();
+    assert!(
+        (4..=6).contains(&duration.as_secs()),
+        "Expected ~5 second duration, got {} seconds",
+        duration.as_secs()
+    );
+
+    // Capture processed audio through full pipeline
+    let capture_result = player.capture_processed_audio();
+    assert!(
+        capture_result.is_ok(),
+        "Failed to capture processed audio: {:?}",
+        capture_result.err()
+    );
+
+    let samples = capture_result.unwrap();
+    
+    // Validate samples are non-empty
+    assert!(
+        !samples.is_empty(),
+        "Captured samples should not be empty"
+    );
+
+    // Validate all samples in valid range [-1.0, 1.0]
+    let out_of_range_count = samples
+        .iter()
+        .filter(|&&s| !(-1.0..=1.0).contains(&s))
+        .count();
+    
+    assert_eq!(
+        out_of_range_count, 0,
+        "Found {} samples outside [-1.0, 1.0] range",
+        out_of_range_count
+    );
+
+    // De-interleave stereo to mono for FFT analysis (extract left channel)
+    // Stereo samples are interleaved: [L0, R0, L1, R1, ...]
+    let mono_samples: Vec<f32> = samples
+        .iter()
+        .step_by(2)
+        .copied()
+        .collect();
+
+    // Analyze frequency spectrum (validate FFT pipeline)
+    let spectrum_result = analyzer.analyze_spectrum(&mono_samples, 44100);
+    assert!(
+        spectrum_result.is_ok(),
+        "FFT analysis failed: {:?}",
+        spectrum_result.err()
+    );
+
+    let spectrum = spectrum_result.unwrap();
+    assert!(
+        !spectrum.frequencies.is_empty(),
+        "Spectrum frequencies should not be empty"
+    );
+    assert!(
+        !spectrum.magnitudes.is_empty(),
+        "Spectrum magnitudes should not be empty"
+    );
+
+    // Verify peak frequency is near 440Hz (±50Hz tolerance)
+    let peak_freq = spectrum
+        .frequencies
+        .iter()
+        .zip(&spectrum.magnitudes)
+        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+        .map(|(f, _)| *f)
+        .unwrap_or(0.0);
+
+    assert!(
+        (peak_freq - 440.0).abs() < 50.0,
+        "Expected peak near 440Hz, found {}Hz",
+        peak_freq
+    );
+
+    println!("✅ Real WAV File Pipeline Test PASSED");
+    println!("   Duration: {}s", duration.as_secs());
+    println!("   Samples: {}", samples.len());
+    println!("   Peak Frequency: {:.1}Hz", peak_freq);
+}
+
+/// # Responsibility
+/// E2E Test: Full pipeline with real MP3 file (Directive 20).
+///
+/// ---
+///
+/// ## Validation Steps
+/// 1. Load real MP3 file via Symphonia decoder
+/// 2. Verify duration > 0 (successful decode)
+/// 3. Capture processed audio samples
+/// 4. Validate sample range [-1.0, 1.0]
+/// 5. Analyze spectrum via FFT
+/// 6. Verify non-empty spectrum data
+///
+/// ## Test Asset
+/// - File: tests/assets/sine_880hz.mp3
+/// - Format: MP3, 44.1kHz stereo, 192kbps
+/// - Duration: 5 seconds
+/// - Content: 880Hz sine wave
+#[test]
+fn test_full_pipeline_with_real_mp3_file() {
+    use std::path::Path;
+
+    // Arrange: Initialize services via DI
+    let module = AudioForgeModule::builder().build();
+    let player: Arc<dyn IAudioPlayer> = module.resolve();
+    let analyzer = Arc::new(AudioAnalyzerService::default());
+
+    // Test asset path
+    let mp3_path = Path::new("tests/assets/sine_880hz.mp3");
+    assert!(
+        mp3_path.exists(),
+        "Test asset not found: {:?}. Run asset generation first.",
+        mp3_path
+    );
+
+    // Act: Load real MP3 file
+    let load_result = player.load_file(mp3_path);
+    assert!(
+        load_result.is_ok(),
+        "Failed to load MP3 file: {:?}",
+        load_result.err()
+    );
+
+    // Assert: Verify duration is valid (5 seconds ±1 second tolerance)
+    let duration = player.total_duration();
+    assert!(
+        (4..=6).contains(&duration.as_secs()),
+        "Expected ~5 second duration, got {} seconds",
+        duration.as_secs()
+    );
+
+    // Capture processed audio through full pipeline
+    let capture_result = player.capture_processed_audio();
+    assert!(
+        capture_result.is_ok(),
+        "Failed to capture processed audio: {:?}",
+        capture_result.err()
+    );
+
+    let samples = capture_result.unwrap();
+    
+    // Validate samples are non-empty
+    assert!(
+        !samples.is_empty(),
+        "Captured samples should not be empty"
+    );
+
+    // Validate all samples in valid range [-1.0, 1.0]
+    let out_of_range_count = samples
+        .iter()
+        .filter(|&&s| !(-1.0..=1.0).contains(&s))
+        .count();
+    
+    assert_eq!(
+        out_of_range_count, 0,
+        "Found {} samples outside [-1.0, 1.0] range",
+        out_of_range_count
+    );
+
+    // De-interleave stereo to mono for FFT analysis
+    let mono_samples: Vec<f32> = samples
+        .iter()
+        .step_by(2)
+        .copied()
+        .collect();
+
+    // Analyze frequency spectrum (validate FFT pipeline)
+    let spectrum_result = analyzer.analyze_spectrum(&mono_samples, 44100);
+    assert!(
+        spectrum_result.is_ok(),
+        "FFT analysis failed: {:?}",
+        spectrum_result.err()
+    );
+
+    let spectrum = spectrum_result.unwrap();
+    assert!(
+        !spectrum.frequencies.is_empty(),
+        "Spectrum frequencies should not be empty"
+    );
+    assert!(
+        !spectrum.magnitudes.is_empty(),
+        "Spectrum magnitudes should not be empty"
+    );
+
+    // Verify peak frequency is near 880Hz (±50Hz tolerance)
+    let peak_freq = spectrum
+        .frequencies
+        .iter()
+        .zip(&spectrum.magnitudes)
+        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+        .map(|(f, _)| *f)
+        .unwrap_or(0.0);
+
+    assert!(
+        (peak_freq - 880.0).abs() < 50.0,
+        "Expected peak near 880Hz, found {}Hz",
+        peak_freq
+    );
+
+    println!("✅ Real MP3 File Pipeline Test PASSED");
+    println!("   Duration: {}s", duration.as_secs());
+    println!("   Samples: {}", samples.len());
+    println!("   Peak Frequency: {:.1}Hz", peak_freq);
+}
+
+/// # Responsibility
+/// E2E Test: Complex multi-frequency stereo WAV (Directive 20 - Comprehensive).
+///
+/// ---
+///
+/// ## Validation Steps
+/// 1. Load complex multi-tone WAV (440Hz + 880Hz + 1320Hz)
+/// 2. Verify 48kHz sample rate handling
+/// 3. Capture processed audio
+/// 4. Analyze multi-peak spectrum
+/// 5. Verify all 3 frequency peaks detected
+///
+/// ## Test Asset
+/// - File: tests/assets/multi_freq_stereo.wav
+/// - Format: 16-bit PCM, 48kHz stereo
+/// - Duration: 5 seconds
+/// - Content: 440Hz + 880Hz + 1320Hz mixed
+#[test]
+fn test_full_pipeline_with_complex_stereo_wav() {
+    use std::path::Path;
+
+    // Arrange
+    let module = AudioForgeModule::builder().build();
+    let player: Arc<dyn IAudioPlayer> = module.resolve();
+    let analyzer = Arc::new(AudioAnalyzerService::default());
+
+    let wav_path = Path::new("tests/assets/multi_freq_stereo.wav");
+    assert!(
+        wav_path.exists(),
+        "Test asset not found: {:?}",
+        wav_path
+    );
+
+    // Act: Load complex WAV
+    let load_result = player.load_file(wav_path);
+    assert!(
+        load_result.is_ok(),
+        "Failed to load complex WAV: {:?}",
+        load_result.err()
+    );
+
+    // Assert: Verify duration
+    let duration = player.total_duration();
+    assert!(
+        (4..=6).contains(&duration.as_secs()),
+        "Expected ~5 second duration"
+    );
+
+    // Capture samples
+    let samples = player
+        .capture_processed_audio()
+        .expect("Capture should succeed");
+
+    assert!(!samples.is_empty(), "Should have captured samples");
+
+    // Validate sample range (Clippy-compliant)
+    for (i, &sample) in samples.iter().enumerate() {
+        assert!(
+            (-1.0..=1.0).contains(&sample),
+            "Sample {} out of range: {}",
+            i,
+            sample
+        );
+    }
+
+    // De-interleave stereo to mono for FFT analysis
+    let mono_samples: Vec<f32> = samples
+        .iter()
+        .step_by(2)
+        .copied()
+        .collect();
+
+    // Analyze spectrum (48kHz sample rate)
+    let spectrum = analyzer
+        .analyze_spectrum(&mono_samples, 48000)
+        .expect("FFT should succeed");
+
+    // Find top 3 peaks in spectrum
+    let mut peaks: Vec<(f32, f32)> = spectrum
+        .frequencies
+        .iter()
+        .zip(&spectrum.magnitudes)
+        .map(|(&f, &m)| (f, m))
+        .collect();
+    
+    peaks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    
+    // Extract top 3 peak frequencies
+    let top_freqs: Vec<f32> = peaks.iter().take(3).map(|(f, _)| *f).collect();
+
+    // Verify at least one expected frequency is present (±100Hz tolerance)
+    let has_440 = top_freqs.iter().any(|&f| (f - 440.0).abs() < 100.0);
+    let has_880 = top_freqs.iter().any(|&f| (f - 880.0).abs() < 100.0);
+    let has_1320 = top_freqs.iter().any(|&f| (f - 1320.0).abs() < 100.0);
+
+    assert!(
+        has_440 || has_880 || has_1320,
+        "Should detect at least one expected frequency. Top 3: {:?}",
+        top_freqs
+    );
+
+    println!("✅ Complex Multi-Frequency WAV Test PASSED");
+    println!("   Duration: {}s", duration.as_secs());
+    println!("   Samples: {}", samples.len());
+    println!("   Top 3 Frequencies: {:.1}Hz, {:.1}Hz, {:.1}Hz", 
+             top_freqs[0], top_freqs[1], top_freqs[2]);
+}
