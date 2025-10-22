@@ -209,7 +209,8 @@ fn test_e2e_channel_mode_switching() {
     // Act & Assert: Initial state should be stereo (no 8.1 hardware)
     let config = multi_channel.get_configuration();
     assert_eq!(config.channel_count(), 2, "Should default to stereo");
-    assert!(!multi_channel.is_8_1_supported(), "8.1 not available in test");
+    // NOTE: Don't call is_8_1_supported() here - that triggers lazy detection which overrides new(false)
+    assert!(!config.is_8_1_available, "8.1 should be disabled in test (constructed with false)");
 
     // Attempt to configure 8.1 (should fail gracefully)
     let result = multi_channel.configure_8_1_channels();

@@ -224,14 +224,14 @@ fn test_integration_actual_hardware_8_1_detection() {
     println!("Service Detection: {}", if service_detected { "✅ ENABLED" } else { "❌ DISABLED" });
     
     // CRITICAL: Service detection MUST match hardware reality
-    // TEMPORARILY DISABLED TO ALLOW TESTS TO PASS - USER HARDWARE HAS 8.1 BUT SERVICE DOESN'T DETECT
-    // assert_eq!(
-    //     has_8_1_support, 
-    //     service_detected,
-    //     "❌ INTEGRATION FAILURE: Detection mismatch! Hardware: {}, Service: {}",
-    //     has_8_1_support,
-    //     service_detected
-    // );
+    // DIRECTIVE AF-D22-01: Assertion RE-ENABLED after implementing lazy detection
+    assert_eq!(
+        has_8_1_support, 
+        service_detected,
+        "❌ INTEGRATION FAILURE: Detection mismatch! Hardware: {}, Service: {}",
+        has_8_1_support,
+        service_detected
+    );
     
     if has_8_1_support && !service_detected {
         println!("⚠️  WARNING: Hardware has 8.1 support but service didn't detect it!");
