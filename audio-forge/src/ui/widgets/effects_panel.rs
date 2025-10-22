@@ -90,7 +90,7 @@ impl Panel for EffectsPanel {
     ///
     /// ## Returns
     /// `true` if config was updated (for parent notification, e.g., to save config)
-    fn render(&mut self, ui: &mut egui::Ui) -> bool {
+    fn render(&mut self, _ctx: &egui::Context, ui: &mut egui::Ui) -> bool {
         ui.heading("🎛️ Audio Effects - Real-Time DSP");
         
         let mut config_changed = false;

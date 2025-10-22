@@ -64,7 +64,7 @@ impl Panel for InfoPanel {
     ///
     /// ## Returns
     /// `false` (no config changes)
-    fn render(&mut self, ui: &mut egui::Ui) -> bool {
+    fn render(&mut self, _ctx: &egui::Context, ui: &mut egui::Ui) -> bool {
         ui.heading("🎵 Audio Forge - Real-Time Visualization & Effects");
         ui.separator();
 

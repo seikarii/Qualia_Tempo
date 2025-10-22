@@ -56,7 +56,7 @@ impl Panel for WaveformPanel {
     ///
     /// ## Returns
     /// `false` (no config changes)
-    fn render(&mut self, ui: &mut egui::Ui) -> bool {
+    fn render(&mut self, _ctx: &egui::Context, ui: &mut egui::Ui) -> bool {
         ui.heading("Waveform (Time Domain)");
         
         if self.cached_waveform.is_empty() {
@@ -129,7 +129,7 @@ impl Panel for SpectrumPanel {
     ///
     /// ## Returns
     /// `false` (no config changes)
-    fn render(&mut self, ui: &mut egui::Ui) -> bool {
+    fn render(&mut self, _ctx: &egui::Context, ui: &mut egui::Ui) -> bool {
         ui.heading("Frequency Spectrum");
         
         if self.cached_spectrum.frequencies.is_empty() {

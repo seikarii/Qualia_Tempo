@@ -13,14 +13,14 @@
 
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::ui::widgets::Panel;
+use anyhow::{Context as AnyhowContext, Result};
 use egui::{self, Context};
-use std::path::PathBuf;
+use std::fs::File;
+use std::io::Read;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use tracing::{error, warn};
-
-/// Type alias for file loading callback to satisfy Clippy type complexity rule
-type FileLoadCallback = Box<dyn Fn(&Context) + Send + Sync>;
+use tracing::{error, info};
 
 /// # Responsibility
 /// Thread-safe state for file loading and error display.
@@ -40,22 +40,19 @@ pub struct ControlPanelState {
 ///
 /// ---
 ///
-/// ## Architecture
-/// - **File Loading**: Delegates to callback for async file picker
+/// ## Architecture (Directive 14: Complete Encapsulation)
+/// - **File Loading**: Owns async file picker with magic number validation
 /// - **Playback**: Direct IAudioPlayer service calls
 /// - **State Sync**: Uses Arc<Mutex<>> for thread-safe coordination
 pub struct ControlPanel {
     /// Audio player service (injected dependency)
     audio_player: Arc<dyn IAudioPlayer>,
     
-    /// Shared state with parent (for async file picker)
+    /// Shared state (for async file picker coordination)
     state: Arc<Mutex<ControlPanelState>>,
     
     /// Current volume level [0.0, 1.0]
     volume: f32,
-    
-    /// Callback for file loading (invoked by button click)
-    on_load_file: Option<FileLoadCallback>,
 }
 
 impl ControlPanel {
@@ -77,21 +74,122 @@ impl ControlPanel {
             audio_player,
             state,
             volume: initial_volume,
-            on_load_file: None,
         }
     }
     
     /// # Responsibility
-    /// Set callback for file loading button.
+    /// Validate audio file format via magic number inspection.
     ///
     /// ---
     ///
-    /// MainWindow provides this callback to handle async file picker.
-    pub fn set_load_file_callback<F>(&mut self, callback: F)
-    where
-        F: Fn(&Context) + Send + Sync + 'static,
-    {
-        self.on_load_file = Some(Box::new(callback));
+    /// ## Security (Directive 9)
+    /// Prevents loading of non-audio files by checking format signatures.
+    /// Supported formats: WAV, FLAC, MP3, OGG, M4A/AAC
+    fn validate_audio_file_format(path: &Path) -> Result<()> {
+        let mut file = File::open(path)
+            .with_context(|| format!("Failed to open file: {}", path.display()))?;
+        
+        let mut magic = [0u8; 12];
+        file.read_exact(&mut magic)
+            .with_context(|| format!("File too small to identify: {}", path.display()))?;
+        
+        // Check magic numbers
+        if &magic[0..4] == b"RIFF" {
+            return Ok(()); // WAV format
+        }
+        
+        if &magic[0..4] == b"fLaC" {
+            return Ok(()); // FLAC format
+        }
+        
+        if magic[0] == 0xFF && (magic[1] == 0xFB || magic[1] == 0xF3 || magic[1] == 0xF2) {
+            return Ok(()); // MP3 format
+        }
+        
+        if &magic[0..4] == b"OggS" {
+            return Ok(()); // OGG container
+        }
+        
+        if &magic[4..8] == b"ftyp" {
+            return Ok(()); // M4A/AAC format
+        }
+        
+        Err(anyhow::anyhow!(
+            "Unsupported or invalid audio file format. Supported: WAV, FLAC, MP3, OGG, M4A/AAC"
+        ))
+    }
+    
+    /// # Responsibility
+    /// Launch async file picker dialog and load selected file.
+    ///
+    /// ---
+    ///
+    /// ## Architecture (Directive 14)
+    /// Now fully encapsulated within ControlPanel. Uses:
+    /// - rfd::AsyncFileDialog for non-blocking file selection
+    /// - Magic number validation before loading
+    /// - Thread-safe state updates via Arc<Mutex<>>
+    fn handle_load_file(&self, ctx: &Context) {
+        // Check if picker already open (prevent multiple dialogs)
+        {
+            let mut state = self.state.lock().unwrap();
+            if state.file_picker_open {
+                return;
+            }
+            state.file_picker_open = true;
+        }
+        
+        // Clone Arc references for async task
+        let state_clone = self.state.clone();
+        let audio_player_clone = self.audio_player.clone();
+        let ctx_clone = ctx.clone();
+        
+        // Spawn async file picker (non-blocking)
+        tokio::spawn(async move {
+            let file_handle = rfd::AsyncFileDialog::new()
+                .add_filter("Audio Files", &["mp3", "wav", "flac", "ogg", "m4a", "aac"])
+                .set_title("Select Audio File")
+                .pick_file()
+                .await;
+            
+            // Lock state to update from async context
+            let mut state = state_clone.lock().unwrap();
+            state.file_picker_open = false; // Reset flag regardless of outcome
+            
+            if let Some(file) = file_handle {
+                let file_path = file.path().to_path_buf();
+                info!("User selected file via picker: {:?}", file_path);
+                
+                // Release lock before validation (avoid deadlock)
+                drop(state);
+                
+                // Validate and load file
+                if let Err(e) = Self::validate_audio_file_format(&file_path) {
+                    error!("❌ File validation failed: {}", e);
+                    let mut state = state_clone.lock().unwrap();
+                    state.loading_error = Some((format!("Invalid file: {}", e), Instant::now()));
+                } else {
+                    // Load validated file
+                    match audio_player_clone.load_file(&file_path) {
+                        Ok(_) => {
+                            info!("✅ File loaded successfully: {:?}", file_path);
+                            let mut state = state_clone.lock().unwrap();
+                            state.current_file_path = Some(file_path);
+                            state.loading_error = None;
+                        }
+                        Err(e) => {
+                            error!("❌ Failed to load file: {}", e);
+                            let mut state = state_clone.lock().unwrap();
+                            state.loading_error = Some((format!("Load error: {}", e), Instant::now()));
+                        }
+                    }
+                }
+            } else {
+                info!("File picker cancelled by user");
+            }
+            
+            ctx_clone.request_repaint(); // Update UI after state change
+        });
     }
     
     /// # Responsibility
@@ -118,22 +216,18 @@ impl Panel for ControlPanel {
     ///
     /// ## Returns
     /// `true` if volume changed (for parent notification to save config)
-    fn render(&mut self, ui: &mut egui::Ui) -> bool {
+    fn render(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) -> bool {
         let mut config_changed = false;
         
         ui.horizontal(|ui| {
             // ================================================================
-            // FILE LOADING BUTTON
+            // FILE LOADING BUTTON (Directive 14: Complete Encapsulation)
             // ================================================================
             if ui.button("📁 Load Audio File")
                 .on_hover_text("Open audio file (MP3, WAV, FLAC, OGG) - Non-blocking")
                 .clicked() 
             {
-                if let Some(ref _callback) = self.on_load_file {
-                    // Note: We need Context but only have Ui. This is a design limitation.
-                    // MainWindow should handle file loading directly.
-                    warn!("Load file button clicked, but callback requires Context");
-                }
+                self.handle_load_file(ctx);
             }
             
             ui.separator();

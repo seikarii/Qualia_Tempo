@@ -47,11 +47,16 @@ pub trait Panel {
     ///
     /// ---
     ///
-    /// ## Parameters
+    /// ## Parameters (Directive 14)
+    /// - `ctx`: The egui::Context for window-level operations (dialogs, repaints)
     /// - `ui`: The egui::Ui context for rendering widgets
     ///
     /// ## Returns
     /// `true` if the panel's state changed and requires parent notification
     /// (e.g., config updates that need to propagate to services).
-    fn render(&mut self, ui: &mut egui::Ui) -> bool;
+    ///
+    /// ## Design Note
+    /// Context access enables panels to own complex interactions like async
+    /// file dialogs without leaking responsibility to parent containers.
+    fn render(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) -> bool;
 }

@@ -290,81 +290,6 @@ impl MainWindow {
         }
     }
     
-    /// # Responsibility
-    /// Handle file loading via ASYNC native file picker dialog.
-    ///
-    /// ---
-    ///
-    /// ARCHITECTURE: Thread-safe async file picker with state synchronization.
-    /// - Uses rfd::AsyncFileDialog to prevent UI freeze
-    /// - Spawns tokio task with cloned Arc<Mutex<MainWindowState>>
-    /// - Updates state (file path, errors) from async context safely
-    /// - UI reflects state changes via request_repaint()
-    fn handle_load_file(&self, ctx: &Context) {
-        // Check if picker already open (prevent multiple dialogs)
-        {
-            let mut state = self.state.lock().unwrap();
-            if state.file_picker_open {
-                return;
-            }
-            state.file_picker_open = true;
-        }
-        
-        // Clone Arc references for async task
-        let state_clone = self.state.clone();
-        let audio_player_clone = self.audio_player.clone();
-        let ctx_clone = ctx.clone();
-        
-        // Spawn async file picker (non-blocking)
-        tokio::spawn(async move {
-            let file_handle = rfd::AsyncFileDialog::new()
-                .add_filter("Audio Files", &["mp3", "wav", "flac", "ogg", "m4a", "aac"])
-                .set_title("Select Audio File")
-                .pick_file()
-                .await;
-            
-            // Lock state to update from async context
-            let mut state = state_clone.lock().unwrap();
-            state.file_picker_open = false; // Reset flag regardless of outcome
-            
-            if let Some(file) = file_handle {
-                let file_path = file.path().to_path_buf();
-                info!("User selected file via picker: {:?}", file_path);
-                
-                // Release lock before validation (avoid deadlock)
-                drop(state);
-                
-                // Validate and load file (handles state updates internally)
-                // Note: This creates a temporary self-like struct for the closure
-                // In production, refactor to accept services as parameters
-                if let Err(e) = Self::validate_audio_file_format(&file_path) {
-                    error!("❌ File validation failed: {}", e);
-                    let mut state = state_clone.lock().unwrap();
-                    state.loading_error = Some((format!("Invalid file: {}", e), Instant::now()));
-                } else {
-                    // Load validated file
-                    match audio_player_clone.load_file(&file_path) {
-                        Ok(_) => {
-                            info!("✅ File loaded successfully: {:?}", file_path);
-                            let mut state = state_clone.lock().unwrap();
-                            state.current_file_path = Some(file_path);
-                            state.loading_error = None;
-                        }
-                        Err(e) => {
-                            error!("❌ Failed to load file: {}", e);
-                            let mut state = state_clone.lock().unwrap();
-                            state.loading_error = Some((format!("Load error: {}", e), Instant::now()));
-                        }
-                    }
-                }
-            } else {
-                info!("File picker cancelled by user");
-            }
-            
-            ctx_clone.request_repaint(); // Update UI after state change
-        });
-    }
-
     pub fn update(&mut self, ctx: &Context) {
         // ============================================================================
         // PRE-RENDER: DRAG-AND-DROP + VISUALIZATION UPDATES
@@ -395,49 +320,33 @@ impl MainWindow {
             self.cached_instrument_levels,
         );
         
-        // TOP PANEL: File loading + ControlPanel orchestration
+        // TOP PANEL: ControlPanel orchestration (Directive 14: Complete)
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                // TODO(Directive 13): File picker requires Context, but Panel::render() only has Ui
-                // Temporary: Keep file button in MainWindow until Panel trait accepts Context
-                if ui.button("📁 Load Audio File")
-                    .on_hover_text("Open audio file (MP3, WAV, FLAC, OGG) - Non-blocking")
-                    .clicked() 
-                {
-                    self.handle_load_file(ctx);
-                }
-                
-                ui.separator();
-                
-                // Delegate rest to ControlPanel widget
-                self.control_panel.render(ui);
-            });
+            self.control_panel.render(ctx, ui);
         });
 
-        // ====================================================================
-        // DIRECTIVE 12: Bottom panel delegated to EffectsPanel widget
-        // ====================================================================
+        // BOTTOM PANEL: EffectsPanel orchestration
         TopBottomPanel::bottom("effects_panel").show(ctx, |ui| {
-            self.effects_panel.render(ui);
+            self.effects_panel.render(ctx, ui);
         });
 
         // LEFT PANEL: WaveformPanel orchestration
         SidePanel::left("waveform_panel")
             .default_width(400.0)
             .show(ctx, |ui| {
-                self.waveform_panel.render(ui);
+                self.waveform_panel.render(ctx, ui);
             });
 
         // RIGHT PANEL: SpectrumPanel orchestration
         SidePanel::right("spectrum_panel")
             .default_width(400.0)
             .show(ctx, |ui| {
-                self.spectrum_panel.render(ui);
+                self.spectrum_panel.render(ctx, ui);
             });
 
         // CENTER PANEL: InfoPanel orchestration
         CentralPanel::default().show(ctx, |ui| {
-            self.info_panel.render(ui);
+            self.info_panel.render(ctx, ui);
         });
         
         // ============================================================================
