@@ -8,7 +8,7 @@
 //! CD-quality exports (44.1 kHz, 16-bit, stereo) with proper clipping
 //! prevention and error handling.
 
-use anyhow::{anyhow, Result};
+use crate::errors::AudioExporterError;
 use crate::events::AudioForgeEvent;
 use crate::services::event_bus::IEventBus;
 use hound::{WavSpec, WavWriter};
@@ -85,7 +85,7 @@ impl IAudioExporter for AudioExporterService {
         output_path: &Path,
         samples: &[f32],
         sample_rate: u32,
-    ) -> Result<()> {
+    ) -> Result<(), AudioExporterError> {
         let path_buf = output_path.to_path_buf();
         
         // Emit ExportStarted event
@@ -101,26 +101,27 @@ impl IAudioExporter for AudioExporterService {
         
         // Validation: Empty buffer check
         if samples.is_empty() {
-            let err_msg = "Cannot export empty audio buffer".to_string();
+            let err = AudioExporterError::NoAudioLoaded;
             if let Err(e) = self.event_bus.emit(AudioForgeEvent::ExportFailed {
                 path: path_buf,
-                error: err_msg.clone(),
+                error: err.to_string(),
             }) {
                 warn!("Failed to emit ExportFailed event: {}", e);
             }
-            return Err(anyhow!(err_msg));
+            return Err(err);
         }
         
         // Validation: Sample rate sanity check
         if sample_rate == 0 || sample_rate > 192_000 {
             let err_msg = format!("Invalid sample rate: {} Hz (must be 1-192000)", sample_rate);
+            let err = AudioExporterError::EncodingError(err_msg.clone());
             if let Err(e) = self.event_bus.emit(AudioForgeEvent::ExportFailed {
-                path: path_buf,
-                error: err_msg.clone(),
+                path: path_buf.clone(),
+                error: err_msg,
             }) {
                 warn!("Failed to emit ExportFailed event: {}", e);
             }
-            return Err(anyhow!(err_msg));
+            return Err(err);
         }
         
         // Validation: Stereo pair check
@@ -141,13 +142,14 @@ impl IAudioExporter for AudioExporterService {
             Ok(w) => w,
             Err(e) => {
                 let err_msg = format!("Failed to create WAV file: {} - {}", output_path.display(), e);
+                let err = AudioExporterError::WriteError(err_msg.clone());
                 if let Err(emit_err) = self.event_bus.emit(AudioForgeEvent::ExportFailed {
                     path: path_buf,
-                    error: err_msg.clone(),
+                    error: err_msg,
                 }) {
                     warn!("Failed to emit ExportFailed event: {}", emit_err);
                 }
-                return Err(anyhow!(err_msg));
+                return Err(err);
             }
         };
         
@@ -157,13 +159,14 @@ impl IAudioExporter for AudioExporterService {
             let i16_sample = Self::f32_to_i16(sample);
             if let Err(e) = writer.write_sample(i16_sample) {
                 let err_msg = format!("Failed to write sample to WAV file: {}", e);
+                let err = AudioExporterError::WriteError(err_msg.clone());
                 if let Err(emit_err) = self.event_bus.emit(AudioForgeEvent::ExportFailed {
-                    path: path_buf,
-                    error: err_msg.clone(),
+                    path: path_buf.clone(),
+                    error: err_msg,
                 }) {
                     warn!("Failed to emit ExportFailed event: {}", emit_err);
                 }
-                return Err(anyhow!(err_msg));
+                return Err(err);
             }
             written_samples += 1;
         }
@@ -171,13 +174,14 @@ impl IAudioExporter for AudioExporterService {
         // Finalize WAV file (writes headers, flushes buffers)
         if let Err(e) = writer.finalize() {
             let err_msg = format!("Failed to finalize WAV file: {}", e);
+            let err = AudioExporterError::WriteError(err_msg.clone());
             if let Err(emit_err) = self.event_bus.emit(AudioForgeEvent::ExportFailed {
                 path: path_buf,
-                error: err_msg.clone(),
+                error: err_msg,
             }) {
                 warn!("Failed to emit ExportFailed event: {}", emit_err);
             }
-            return Err(anyhow!(err_msg));
+            return Err(err);
         }
         
         let duration = Duration::from_secs_f64(samples.len() as f64 / sample_rate as f64 / 2.0);
@@ -282,7 +286,7 @@ mod tests {
         let result = service.export_wav(&output_path, &empty_samples, 44100);
         
         assert!(result.is_err(), "Should reject empty buffer");
-        assert!(result.unwrap_err().to_string().contains("empty"));
+        assert!(result.unwrap_err().to_string().contains("audio"));
     }
 
     /// # Responsibility

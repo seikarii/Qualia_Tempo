@@ -2,7 +2,7 @@
 //! Trait definition for real-time audio effects processing.
 
 use crate::contracts::effect_parameters::EffectConfig;
-use anyhow::Result;
+use crate::errors::AudioEffectsError;
 use shaku::Interface;
 
 /// # Responsibility
@@ -25,7 +25,7 @@ pub trait IAudioEffects: Interface {
         samples: &mut [f32],
         sample_rate: u32,
         elapsed_time: f32,
-    ) -> Result<()>;
+    ) -> Result<(), AudioEffectsError>;
 
     /// # Responsibility
     /// Apply drop effect (volume reduction).
@@ -33,7 +33,7 @@ pub trait IAudioEffects: Interface {
     /// ---
     ///
     /// Reduces amplitude of all samples by drop amount.
-    fn apply_drop_effect(&self, samples: &mut [f32]) -> Result<()>;
+    fn apply_drop_effect(&self, samples: &mut [f32]) -> Result<(), AudioEffectsError>;
 
     /// # Responsibility
     /// Apply bass boost to low frequencies (DIRECTIVE 11: sample_rate parameter added).
@@ -42,7 +42,7 @@ pub trait IAudioEffects: Interface {
     ///
     /// Uses biquad LowShelf filter @ 250Hz. Requires sample_rate for accurate
     /// coefficient calculation. Gain is applied via dB conversion.
-    fn apply_bass_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<()>;
+    fn apply_bass_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), AudioEffectsError>;
 
     /// # Responsibility
     /// Apply treble boost to high frequencies (DIRECTIVE 11: sample_rate parameter added).
@@ -51,7 +51,7 @@ pub trait IAudioEffects: Interface {
     ///
     /// Uses biquad HighShelf filter @ 3kHz. Requires sample_rate for accurate
     /// coefficient calculation. Gain is applied via dB conversion.
-    fn apply_treble_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<()>;
+    fn apply_treble_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), AudioEffectsError>;
 
     /// # Responsibility
     /// Get current effect configuration.

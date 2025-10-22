@@ -2,6 +2,7 @@
 //! Implements audio playback service using rodio and symphonia.
 
 use crate::contracts::channel_configuration::ChannelMode;
+use crate::errors::AudioPlayerError;
 use crate::events::AudioForgeEvent;
 use crate::services::analyzing_source::{AnalyzingSource, SampleBuffer};
 use crate::services::effects_source::EffectsSource;
@@ -11,7 +12,6 @@ use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::sample_counting_source::SampleCountingSource;
 use crate::services::upmixing_source::UpmixingSource;
-use anyhow::{anyhow, Context, Result};
 use rodio::{OutputStream, Sink, Source};
 use shaku::Component;
 use std::fs::File;
@@ -122,20 +122,21 @@ pub struct AudioPlayerService {
 }
 
 impl IAudioPlayer for AudioPlayerService {
-    fn load_file(&self, path: &Path) -> Result<Duration> {
+    fn load_file(&self, path: &Path) -> Result<Duration, AudioPlayerError> {
         info!("Loading audio file: {}", path.display());
 
         // Decode audio file with proper error handling (Directive 1: No catch_unwind)
-        let file = File::open(path).context("Failed to open audio file")?;
+        let file = File::open(path)
+            .map_err(|_| AudioPlayerError::FileNotFound(path.to_path_buf()))?;
         let buf_reader = BufReader::new(file);
         
         // Rodio's Decoder returns Result - propagate errors naturally
         let source = rodio::Decoder::new(buf_reader)
-            .context("Failed to decode audio file - file may be corrupted or unsupported format")?;
+            .map_err(|e| AudioPlayerError::DecodingError(format!("Failed to decode audio file: {}", e)))?;
 
         let total_duration = source
             .total_duration()
-            .ok_or_else(|| anyhow::anyhow!("Failed to get total duration"))?;
+            .ok_or_else(|| AudioPlayerError::DecodingError("Failed to get total duration".to_string()))?;
 
         let sample_rate = source.sample_rate();
 
@@ -178,7 +179,7 @@ impl IAudioPlayer for AudioPlayerService {
                 effects_source,
                 self.multi_channel.clone(),
                 256, // Batch size: 256 stereo frames
-            ).map_err(|e| anyhow!("Failed to create upmixing source: {}", e))?;
+            ).map_err(|e| AudioPlayerError::PlaybackError(format!("Failed to create upmixing source: {}", e)))?;
             state.sink.append(upmixing_source);
         } else {
             // Pipeline: Decoder → AnalyzingSource → EffectsSource → Sink (stereo)
@@ -216,13 +217,13 @@ impl IAudioPlayer for AudioPlayerService {
         Ok(total_duration)
     }
 
-    fn play(&self) -> Result<()> {
+    fn play(&self) -> Result<(), AudioPlayerError> {
         let mut state = self.state.lock();
         
         // Check if audio is loaded
         if state.total_duration == Duration::ZERO {
             error!("No audio file loaded");
-            return Err(anyhow::anyhow!("No audio file loaded"));
+            return Err(AudioPlayerError::NoFileLoaded);
         }
         
         state.sink.play();
@@ -249,11 +250,11 @@ impl IAudioPlayer for AudioPlayerService {
         Ok(())
     }
 
-    fn pause(&self) -> Result<()> {
+    fn pause(&self) -> Result<(), AudioPlayerError> {
         let mut state = self.state.lock();
         
         if state.total_duration == Duration::ZERO {
-            return Err(anyhow::anyhow!("No audio file loaded"));
+            return Err(AudioPlayerError::NoFileLoaded);
         }
         
         state.sink.pause();
@@ -280,11 +281,11 @@ impl IAudioPlayer for AudioPlayerService {
         Ok(())
     }
 
-    fn stop(&self) -> Result<()> {
+    fn stop(&self) -> Result<(), AudioPlayerError> {
         let mut state = self.state.lock();
         
         if state.total_duration == Duration::ZERO {
-            return Err(anyhow::anyhow!("No audio file loaded"));
+            return Err(AudioPlayerError::NoFileLoaded);
         }
         
         state.sink.stop();
@@ -308,11 +309,11 @@ impl IAudioPlayer for AudioPlayerService {
         Ok(())
     }
 
-    fn seek(&self, position: Duration) -> Result<()> {
+    fn seek(&self, position: Duration) -> Result<(), AudioPlayerError> {
         let state = self.state.lock();
         
         if state.total_duration == Duration::ZERO {
-            return Err(anyhow::anyhow!("No audio file loaded"));
+            return Err(AudioPlayerError::NoFileLoaded);
         }
         
         // Clamp position to valid range [0, total_duration]
@@ -323,7 +324,7 @@ impl IAudioPlayer for AudioPlayerService {
         // This is more reliable and handles all source types uniformly.
         
         let file_path = state.current_file.clone()
-            .ok_or_else(|| anyhow::anyhow!("No file path stored"))?;
+            .ok_or_else(|| AudioPlayerError::SeekError("No file path stored".to_string()))?;
         
         // Store playback state
         let was_playing = state.is_playing;
@@ -368,7 +369,7 @@ impl IAudioPlayer for AudioPlayerService {
         Ok(())
     }
 
-    fn set_volume(&self, volume: f32) -> Result<()> {
+    fn set_volume(&self, volume: f32) -> Result<(), AudioPlayerError> {
         let state = self.state.lock();
         
         let clamped_volume = volume.clamp(0.0, 1.0);
@@ -431,21 +432,21 @@ impl IAudioPlayer for AudioPlayerService {
         state.sample_rate
     }
 
-    fn capture_processed_audio(&self) -> Result<Vec<f32>> {
+    fn capture_processed_audio(&self) -> Result<Vec<f32>, AudioPlayerError> {
         info!("📼 Capturing processed audio for export...");
         
         // Get current file path from state
         let state = self.state.lock();
         let current_file = state.current_file.clone()
-            .ok_or_else(|| anyhow!("No audio file currently loaded"))?;
+            .ok_or_else(|| AudioPlayerError::NoFileLoaded)?;
         drop(state); // Release lock before heavy I/O
         
         // Reload audio file (non-destructive to playback state)
         let file = File::open(&current_file)
-            .context("Failed to open audio file for capture")?;
+            .map_err(|_| AudioPlayerError::FileNotFound(current_file.clone()))?;
         let buf_reader = BufReader::new(file);
         let source = rodio::Decoder::new(buf_reader)
-            .context("Failed to decode audio file for capture")?;
+            .map_err(|e| AudioPlayerError::DecodingError(format!("Failed to decode for capture: {}", e)))?;
         
         let sample_rate = source.sample_rate();
         

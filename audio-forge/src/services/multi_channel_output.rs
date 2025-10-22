@@ -2,8 +2,8 @@
 //! Implements multi-channel audio output with 8.1 surround upmixing.
 
 use crate::contracts::channel_configuration::{ChannelConfiguration, ChannelMode};
+use crate::errors::MultiChannelError;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
-use anyhow::{Result, anyhow};
 use biquad::*;
 use shaku::Component;
 use std::sync::RwLock;
@@ -162,12 +162,12 @@ impl MultiChannelOutputService {
 }
 
 impl IMultiChannelOutput for MultiChannelOutputService {
-    fn configure_8_1_channels(&self) -> Result<()> {
+    fn configure_8_1_channels(&self) -> Result<(), MultiChannelError> {
         let mut config = self.config.write().unwrap();
 
         if !config.is_8_1_available {
-            return Err(anyhow!(
-                "8.1 surround hardware not available - cannot configure"
+            return Err(MultiChannelError::UnsupportedChannelConfig(
+                "8.1 surround hardware not available - cannot configure".to_string()
             ));
         }
 
@@ -176,12 +176,12 @@ impl IMultiChannelOutput for MultiChannelOutputService {
         Ok(())
     }
 
-    fn upmix_stereo_to_8_1(&self, stereo_samples: &[f32]) -> Result<Vec<f32>> {
+    fn upmix_stereo_to_8_1(&self, stereo_samples: &[f32]) -> Result<Vec<f32>, MultiChannelError> {
         if !stereo_samples.len().is_multiple_of(2) {
-            return Err(anyhow!(
+            return Err(MultiChannelError::PlaybackError(format!(
                 "Invalid stereo input: sample count must be even (got {})",
                 stereo_samples.len()
-            ));
+            )));
         }
 
         let config = self.config.read().unwrap();
@@ -274,7 +274,7 @@ impl IMultiChannelOutput for MultiChannelOutputService {
         detected
     }
 
-    fn fallback_to_stereo(&self) -> Result<()> {
+    fn fallback_to_stereo(&self) -> Result<(), MultiChannelError> {
         let mut config = self.config.write().unwrap();
         config.mode = ChannelMode::Stereo;
         info!("Switched to stereo output mode");

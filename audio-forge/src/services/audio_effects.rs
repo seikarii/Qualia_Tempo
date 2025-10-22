@@ -2,10 +2,10 @@
 //! Implements real-time audio effects processing.
 
 use crate::contracts::effect_parameters::EffectConfig;
+use crate::errors::AudioEffectsError;
 use crate::events::AudioForgeEvent;
 use crate::services::event_bus::IEventBus;
 use crate::services::interfaces::i_audio_effects::IAudioEffects;
-use anyhow::Result;
 use biquad::*;
 use shaku::Component;
 use std::f32::consts::PI;
@@ -219,7 +219,7 @@ impl IAudioEffects for AudioEffectsService {
         samples: &mut [f32],
         _sample_rate: u32,
         elapsed_time: f32,
-    ) -> Result<()> {
+    ) -> Result<(), AudioEffectsError> {
         let config = self.config.read().unwrap();
 
         if !config.effect_8d_enabled {
@@ -263,7 +263,7 @@ impl IAudioEffects for AudioEffectsService {
         Ok(())
     }
 
-    fn apply_drop_effect(&self, samples: &mut [f32]) -> Result<()> {
+    fn apply_drop_effect(&self, samples: &mut [f32]) -> Result<(), AudioEffectsError> {
         let config = self.config.read().unwrap();
 
         if !config.drop_effect_enabled {
@@ -279,7 +279,7 @@ impl IAudioEffects for AudioEffectsService {
         Ok(())
     }
 
-    fn apply_bass_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<()> {
+    fn apply_bass_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), AudioEffectsError> {
         let config = self.config.read().unwrap();
 
         if !config.bass_boost_enabled {
@@ -303,7 +303,7 @@ impl IAudioEffects for AudioEffectsService {
         Ok(())
     }
 
-    fn apply_treble_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<()> {
+    fn apply_treble_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), AudioEffectsError> {
         let config = self.config.read().unwrap();
 
         if !config.treble_boost_enabled {

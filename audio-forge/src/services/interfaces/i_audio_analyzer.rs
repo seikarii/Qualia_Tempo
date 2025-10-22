@@ -2,14 +2,14 @@
 //! Defines the audio analysis interface for FFT and instrument detection.
 
 use crate::contracts::FrequencySpectrum;
-use anyhow::Result;
+use crate::errors::AudioAnalyzerError;
 use shaku::Interface;
 
 /// # Responsibility
 /// Performs FFT analysis for visualization and instrument detection.
 pub trait IAudioAnalyzer: Interface {
     /// Compute frequency spectrum from audio samples
-    fn analyze_spectrum(&self, samples: &[f32], sample_rate: u32) -> Result<FrequencySpectrum>;
+    fn analyze_spectrum(&self, samples: &[f32], sample_rate: u32) -> Result<FrequencySpectrum, AudioAnalyzerError>;
 
     /// Detect instruments via frequency range analysis
     /// Returns: (bass_level, mid_level, treble_level) in [0.0, 1.0]

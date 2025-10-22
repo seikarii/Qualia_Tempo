@@ -7,7 +7,7 @@
 //! implementations for various file formats (WAV, MP3, FLAC, etc.).
 //! The primary implementation uses the hound crate for WAV export.
 
-use anyhow::Result;
+use crate::errors::AudioExporterError;
 use shaku::Interface;
 use std::path::Path;
 
@@ -50,5 +50,5 @@ pub trait IAudioExporter: Interface {
         output_path: &Path,
         samples: &[f32],
         sample_rate: u32,
-    ) -> Result<()>;
+    ) -> Result<(), AudioExporterError>;
 }

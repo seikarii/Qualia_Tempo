@@ -2,7 +2,7 @@
 //! Trait definition for multi-channel audio output (8.1 surround).
 
 use crate::contracts::channel_configuration::ChannelConfiguration;
-use anyhow::Result;
+use crate::errors::MultiChannelError;
 use shaku::Interface;
 
 /// # Responsibility
@@ -19,7 +19,7 @@ pub trait IMultiChannelOutput: Interface {
     /// ---
     ///
     /// Attempts to enable 8.1 mode. Returns error if unsupported.
-    fn configure_8_1_channels(&self) -> Result<()>;
+    fn configure_8_1_channels(&self) -> Result<(), MultiChannelError>;
 
     /// # Responsibility
     /// Upmix stereo samples to 8.1 channels.
@@ -35,7 +35,7 @@ pub trait IMultiChannelOutput: Interface {
     ///
     /// Input: Stereo interleaved [L, R, L, R, ...]
     /// Output: 8-channel interleaved [FL, FR, FC, LFE, BL, BR, SL, SR, ...]
-    fn upmix_stereo_to_8_1(&self, stereo_samples: &[f32]) -> Result<Vec<f32>>;
+    fn upmix_stereo_to_8_1(&self, stereo_samples: &[f32]) -> Result<Vec<f32>, MultiChannelError>;
 
     /// # Responsibility
     /// Check if 8.1 hardware is available.
@@ -51,7 +51,7 @@ pub trait IMultiChannelOutput: Interface {
     /// ---
     ///
     /// Switches to 2-channel output if 8.1 unavailable.
-    fn fallback_to_stereo(&self) -> Result<()>;
+    fn fallback_to_stereo(&self) -> Result<(), MultiChannelError>;
 
     /// # Responsibility
     /// Get current channel configuration.

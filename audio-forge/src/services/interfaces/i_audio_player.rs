@@ -1,7 +1,7 @@
 //! # Responsibility
 //! Defines the audio playback control interface.
 
-use anyhow::Result;
+use crate::errors::AudioPlayerError;
 use shaku::Interface;
 use std::path::Path;
 use std::time::Duration;
@@ -10,22 +10,22 @@ use std::time::Duration;
 /// Controls audio playback: load, play, pause, seek, volume.
 pub trait IAudioPlayer: Interface {
     /// Load audio file (WAV/MP3/FLAC/OGG/AAC). Returns total duration.
-    fn load_file(&self, path: &Path) -> Result<Duration>;
+    fn load_file(&self, path: &Path) -> Result<Duration, AudioPlayerError>;
 
     /// Start/resume playback
-    fn play(&self) -> Result<()>;
+    fn play(&self) -> Result<(), AudioPlayerError>;
 
     /// Pause playback (non-destructive)
-    fn pause(&self) -> Result<()>;
+    fn pause(&self) -> Result<(), AudioPlayerError>;
 
     /// Stop and reset to beginning
-    fn stop(&self) -> Result<()>;
+    fn stop(&self) -> Result<(), AudioPlayerError>;
 
     /// Seek to timestamp
-    fn seek(&self, position: Duration) -> Result<()>;
+    fn seek(&self, position: Duration) -> Result<(), AudioPlayerError>;
 
     /// Set volume [0.0, 1.0]
-    fn set_volume(&self, volume: f32) -> Result<()>;
+    fn set_volume(&self, volume: f32) -> Result<(), AudioPlayerError>;
 
     /// Current position
     fn current_position(&self) -> Duration;
@@ -73,5 +73,5 @@ pub trait IAudioPlayer: Interface {
     /// - No file currently loaded
     /// - File I/O errors during reload
     /// - Decoder errors
-    fn capture_processed_audio(&self) -> Result<Vec<f32>>;
+    fn capture_processed_audio(&self) -> Result<Vec<f32>, AudioPlayerError>;
 }

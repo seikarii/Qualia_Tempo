@@ -3,6 +3,7 @@
 
 pub mod config;
 pub mod contracts;
+pub mod errors;
 pub mod events;
 pub mod services;
 pub mod ui;

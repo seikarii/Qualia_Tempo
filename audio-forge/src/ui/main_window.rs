@@ -13,8 +13,8 @@ use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::AudioFileValidator;
 use crate::ui::theme::QualiaTheme;
 use crate::ui::widgets::{
-    control_panel::{ControlPanel, ControlPanelState},
-    EffectsPanel, HeroWaveformCard, MultiBandSpectrumGrid, Panel,
+    EffectsPanel, HeroWaveformCard, ModernPlaybackBar, MultiBandSpectrumGrid, Panel,
+    PlaybackBarState,
 };
 use egui::{CentralPanel, Context, TopBottomPanel};
 use std::path::PathBuf;
@@ -48,8 +48,8 @@ use std::time::Instant;
 /// - Async tasks (tokio::spawn) can safely update state via cloned Arc
 /// - UI thread reads state with lock acquisition (minimal contention)
 pub struct MainWindow {
-    /// Thread-safe state shared with async tasks
-    state: Arc<Mutex<ControlPanelState>>,
+    /// Thread-safe state shared with async tasks (EventBus updates)
+    state: Arc<Mutex<PlaybackBarState>>,
     
     /// Persisted configuration (Directive 10)
     app_config: AppConfig,
@@ -58,11 +58,11 @@ pub struct MainWindow {
     audio_player: Arc<dyn IAudioPlayer>,
     audio_analyzer: Arc<dyn IAudioAnalyzer>,
 
-    // DIRECTIVE 12 & 13: Modular UI widgets (full decomposition)
-    control_panel: ControlPanel,
+    // DIRECTIVE UI-MOD-01: Modern playback bar (bottom) replaces old ControlPanel (top)
+    playback_bar: ModernPlaybackBar,
     effects_panel: EffectsPanel,
     
-    // NEW: Modern 2025 UI widgets
+    // Modern 2025 visualization widgets
     hero_waveform: HeroWaveformCard,
     spectrum_grid: MultiBandSpectrumGrid,
     
@@ -104,8 +104,8 @@ impl MainWindow {
             window_size: 2048,
         };
 
-        // Shared state for control panel and file loading
-        let state = Arc::new(Mutex::new(ControlPanelState::default()));
+        // Shared state for playback bar and event listener
+        let state = Arc::new(Mutex::new(PlaybackBarState::default()));
 
         // DIRECTIVE 12 & 13: Create all modular UI panels
         let effects_panel = EffectsPanel::new(
@@ -113,7 +113,8 @@ impl MainWindow {
             config.effects.clone(),
         );
 
-        let control_panel = ControlPanel::new(
+        // DIRECTIVE UI-MOD-01: Modern playback bar replaces old ControlPanel
+        let playback_bar = ModernPlaybackBar::new(
             audio_player.clone(),
             audio_exporter.clone(),
             multi_channel_output.clone(),
@@ -121,7 +122,7 @@ impl MainWindow {
             volume,
         );
 
-        // Modern 2025 UI widgets (old SidePanel widgets DELETED)
+        // Modern 2025 UI widgets
         let hero_waveform = HeroWaveformCard::new();
         let spectrum_grid = MultiBandSpectrumGrid::new(8); // 8 bands
 
@@ -192,7 +193,7 @@ impl MainWindow {
             app_config: config,
             audio_player,
             audio_analyzer,
-            control_panel,
+            playback_bar,
             effects_panel,
             hero_waveform,
             spectrum_grid,
@@ -215,7 +216,7 @@ impl MainWindow {
         
         AppConfig {
             audio: crate::config::AudioConfig {
-                default_volume: self.control_panel.get_volume(),
+                default_volume: state.volume,
                 channel_mode: crate::contracts::channel_configuration::ChannelMode::Stereo, // Default fallback
                 last_file_path: state.current_file_path.clone(),
             },
@@ -274,27 +275,20 @@ impl MainWindow {
     /// ---
     ///
     /// SECURITY: Validates file format via magic numbers before loading.
-    /// Updates MainWindowState with result (success or error message).
     fn load_audio_file_validated(&self, path: &PathBuf) {
-        let mut state = self.state.lock().unwrap();
-        
         // Step 1: Validate file format (magic number check via centralized validator)
         if let Err(e) = AudioFileValidator::validate(path) {
             error!("❌ File validation failed: {}", e);
-            state.loading_error = Some((format!("Invalid file: {}", e), Instant::now()));
             return;
         }
         
-        // Step 2: Load file via audio player
+        // Step 2: Load file via audio player (EventBus will notify UI on success/failure)
         match self.audio_player.load_file(path) {
             Ok(_) => {
                 info!("✅ File loaded successfully: {:?}", path);
-                state.current_file_path = Some(path.clone());
-                state.loading_error = None; // Clear any previous errors
             }
             Err(e) => {
                 error!("❌ Failed to load file: {}", e);
-                state.loading_error = Some((format!("Load error: {}", e), Instant::now()));
             }
         }
     }
@@ -314,21 +308,9 @@ impl MainWindow {
                 if let Some(path) = &dropped_file.path {
                     info!("🎵 File dropped: {:?}", path);
                     self.load_audio_file_validated(path);
-                    
-                    // Check if load succeeded by inspecting state
-                    let state = self.state.lock().unwrap();
-                    if state.loading_error.is_some() {
-                        warn!("❌ Drag-and-drop failed: {:?}", state.loading_error);
-                    }
-                    
                     ctx.request_repaint();
                 } else {
                     warn!("Dropped file has no path");
-                    let mut state = self.state.lock().unwrap();
-                    state.loading_error = Some((
-                        "❌ Dropped file has no valid path".to_string(),
-                        Instant::now()
-                    ));
                 }
             }
             
@@ -353,13 +335,10 @@ impl MainWindow {
         self.hero_waveform.update(self.cached_waveform.clone(), playback_position);
         self.spectrum_grid.update(&self.cached_spectrum.magnitudes);
         
-        // TOP PANEL: ControlPanel orchestration (Directive 14: Complete)
-        TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            self.control_panel.render(ctx, ui);
-        });
-
-        // BOTTOM PANEL: EffectsPanel orchestration
-        TopBottomPanel::bottom("effects_panel").show(ctx, |ui| {
+        // ============================================================================
+        // TOP PANEL: EFFECTS CONTROLS
+        // ============================================================================
+        TopBottomPanel::top("effects_panel").show(ctx, |ui| {
             self.effects_panel.render(ctx, ui);
         });
 
@@ -380,6 +359,15 @@ impl MainWindow {
             self.spectrum_grid.render(ui);
             
             ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
+        });
+
+        // ============================================================================
+        // BOTTOM PANEL: MODERN PLAYBACK BAR (Spotify-style)
+        // ============================================================================
+        TopBottomPanel::bottom("playback_bar").show(ctx, |ui| {
+            ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN / 2.0);
+            self.playback_bar.render(ui);
+            ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN / 2.0);
         });
         
         // ============================================================================

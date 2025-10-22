@@ -19,6 +19,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_yaml = "0.9.34"
 shaku = "0.6.2"
 spectrum-analyzer = "1.7.0"
+thiserror = "2.0.17"
 tokio = { version = "1.48.0", features = ["rt-multi-thread", "sync", "macros", "time"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }

@@ -9,8 +9,8 @@
 //! without the maintenance burden and architecture lock-in of manual AVX2.
 
 use crate::contracts::FrequencySpectrum;
+use crate::errors::AudioAnalyzerError;
 use crate::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
-use anyhow::Result;
 use rustfft::{FftPlanner, num_complex::Complex};
 use shaku::Component;
 use std::sync::{Mutex, OnceLock};
@@ -76,7 +76,7 @@ impl AudioAnalyzerService {
 }
 
 impl IAudioAnalyzer for AudioAnalyzerService {
-    fn analyze_spectrum(&self, samples: &[f32], sample_rate: u32) -> Result<FrequencySpectrum> {
+    fn analyze_spectrum(&self, samples: &[f32], sample_rate: u32) -> Result<FrequencySpectrum, AudioAnalyzerError> {
         if samples.is_empty() {
             return Ok(FrequencySpectrum {
                 frequencies: vec![],
