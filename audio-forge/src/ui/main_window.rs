@@ -3,13 +3,13 @@
 
 use crate::config::{save_config, AppConfig};
 use crate::contracts::channel_configuration::ChannelMode;
-use crate::contracts::effect_parameters::EffectConfig;
 use crate::contracts::frequency_spectrum::FrequencySpectrum;
 use crate::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
 use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::interfaces::i_visualization_engine::IVisualizationEngine;
+use crate::ui::widgets::{effects_panel::EffectsPanel, Panel};
 use anyhow::{Context as AnyhowContext, Result};
 use egui::{CentralPanel, Context, SidePanel, TopBottomPanel};
 use std::fs::File;
@@ -66,13 +66,10 @@ pub struct MainWindow {
     audio_player: Arc<dyn IAudioPlayer>,
     audio_analyzer: Arc<dyn IAudioAnalyzer>,
     visualization_engine: Arc<dyn IVisualizationEngine>,
-    audio_effects: Arc<dyn IAudioEffects>,
     multi_channel_output: Arc<dyn IMultiChannelOutput>,
 
-    // Effect configuration state (UI-thread only)
-    effect_config: EffectConfig,
-    pending_config_change: bool,
-    last_config_update: Instant,
+    // DIRECTIVE 12: Modular UI widgets (extracted from monolith)
+    effects_panel: EffectsPanel,
     
     // Cached visualization data (UI-thread only, updated at throttled rate)
     cached_waveform: Vec<f32>,
@@ -101,7 +98,6 @@ impl MainWindow {
         audio_effects: Arc<dyn IAudioEffects>,
         multi_channel_output: Arc<dyn IMultiChannelOutput>,
     ) -> Self {
-        let effect_config = config.effects.clone();
         let volume = config.audio.default_volume;
 
         // Initialize with empty visualization data
@@ -112,17 +108,20 @@ impl MainWindow {
             window_size: 2048,
         };
 
+        // DIRECTIVE 12: Create modular effects panel with injected service
+        let effects_panel = EffectsPanel::new(
+            audio_effects.clone(),
+            config.effects.clone(),
+        );
+
         Self {
             state: Arc::new(Mutex::new(MainWindowState::default())),
             app_config: config,
             audio_player,
             audio_analyzer,
             visualization_engine,
-            audio_effects,
             multi_channel_output,
-            effect_config,
-            pending_config_change: false,
-            last_config_update: Instant::now(),
+            effects_panel,
             cached_waveform: Vec::new(),
             cached_spectrum,
             cached_instrument_levels: (0.0, 0.0, 0.0),
@@ -147,7 +146,7 @@ impl MainWindow {
                 channel_mode: self.multi_channel_output.get_configuration().mode,
                 last_file_path: state.current_file_path.clone(),
             },
-            effects: self.effect_config.clone(),
+            effects: self.effects_panel.get_config().clone(),
             visualization: self.app_config.visualization.clone(), // Preserve visualization settings
         }
     }
@@ -526,160 +525,11 @@ impl MainWindow {
             }
         });
 
-        // Bottom panel: Effects controls
+        // ====================================================================
+        // DIRECTIVE 12: Bottom panel delegated to EffectsPanel widget
+        // ====================================================================
         TopBottomPanel::bottom("effects_panel").show(ctx, |ui| {
-            ui.heading("🎛️ Audio Effects - Real-Time DSP");
-            
-            let mut config_changed = false;
-
-            ui.horizontal(|ui| {
-                // 8D Effect controls
-                ui.group(|ui| {
-                    ui.vertical(|ui| {
-                        if ui.checkbox(&mut self.effect_config.effect_8d_enabled, "8D Audio")
-                            .on_hover_text("Circular panning effect for immersive spatial audio")
-                            .changed() 
-                        {
-                            config_changed = true;
-                        }
-                        if self.effect_config.effect_8d_enabled {
-                            ui.horizontal(|ui| {
-                                ui.label("Intensity:");
-                                if ui.add(
-                                    egui::Slider::new(
-                                        &mut self.effect_config.effect_8d_intensity,
-                                        0.0..=1.0,
-                                    )
-                                    .text(""),
-                                )
-                                .on_hover_text("Depth of panning effect (0.0 = subtle, 1.0 = extreme)")
-                                .changed() {
-                                    config_changed = true;
-                                }
-                            });
-                            ui.horizontal(|ui| {
-                                ui.label("Speed (Hz):");
-                                if ui.add(
-                                    egui::Slider::new(
-                                        &mut self.effect_config.effect_8d_rotation_hz,
-                                        0.1..=1.0,
-                                    )
-                                    .text(""),
-                                )
-                                .on_hover_text("Rotation frequency (0.1Hz = slow, 1.0Hz = fast)")
-                                .changed() {
-                                    config_changed = true;
-                                }
-                            });
-                        }
-                    });
-                });
-
-                ui.separator();
-
-                // Drop Effect controls
-                ui.group(|ui| {
-                    ui.vertical(|ui| {
-                        if ui.checkbox(&mut self.effect_config.drop_effect_enabled, "Drop Effect")
-                            .on_hover_text("Volume reduction effect (sudden drop)")
-                            .changed() 
-                        {
-                            config_changed = true;
-                        }
-                        if self.effect_config.drop_effect_enabled {
-                            ui.horizontal(|ui| {
-                                ui.label("Amount:");
-                                if ui.add(
-                                    egui::Slider::new(
-                                        &mut self.effect_config.drop_amount,
-                                        0.0..=1.0,
-                                    )
-                                    .text(""),
-                                )
-                                .on_hover_text("Volume attenuation (0.0 = no drop, 1.0 = complete silence)")
-                                .changed() {
-                                    config_changed = true;
-                                }
-                            });
-                        }
-                    });
-                });
-
-                ui.separator();
-
-                // Bass Boost controls
-                ui.group(|ui| {
-                    ui.vertical(|ui| {
-                        if ui.checkbox(&mut self.effect_config.bass_boost_enabled, "Bass Boost")
-                            .on_hover_text("Amplify low frequencies (20-250Hz)")
-                            .changed() 
-                        {
-                            config_changed = true;
-                        }
-                        if self.effect_config.bass_boost_enabled {
-                            ui.horizontal(|ui| {
-                                ui.label("Gain:");
-                                if ui.add(
-                                    egui::Slider::new(
-                                        &mut self.effect_config.bass_boost_gain,
-                                        1.0..=3.0,
-                                    )
-                                    .text("x"),
-                                )
-                                .on_hover_text("Gain multiplier (1.0 = no boost, 3.0 = +9.5dB)")
-                                .changed() {
-                                    config_changed = true;
-                                }
-                            });
-                        }
-                    });
-                });
-
-                ui.separator();
-
-                // Treble Boost controls
-                ui.group(|ui| {
-                    ui.vertical(|ui| {
-                        if ui.checkbox(&mut self.effect_config.treble_boost_enabled, "Treble Boost")
-                            .on_hover_text("Amplify high frequencies (4kHz-20kHz)")
-                            .changed() 
-                        {
-                            config_changed = true;
-                        }
-                        if self.effect_config.treble_boost_enabled {
-                            ui.horizontal(|ui| {
-                                ui.label("Gain:");
-                                if ui.add(
-                                    egui::Slider::new(
-                                        &mut self.effect_config.treble_boost_gain,
-                                        1.0..=3.0,
-                                    )
-                                    .text("x"),
-                                )
-                                .on_hover_text("Gain multiplier (1.0 = no boost, 3.0 = +9.5dB)")
-                                .changed() {
-                                    config_changed = true;
-                                }
-                            });
-                        }
-                    });
-                });
-            });
-
-            // Debounce config changes to reduce mutex lock spam
-            if config_changed {
-                self.pending_config_change = true;
-            }
-            
-            // Apply debounced config after 100ms of no changes
-            if self.pending_config_change {
-                let now = Instant::now();
-                if now.duration_since(self.last_config_update) > Duration::from_millis(100) {
-                    self.audio_effects.set_config(self.effect_config.clone());
-                    self.pending_config_change = false;
-                    self.last_config_update = now;
-                }
-            }
+            self.effects_panel.render(ui);
         });
 
         // Left panel: Waveform visualization
@@ -850,8 +700,8 @@ impl MainWindow {
             }
         });
         
-        // Conditional repaint: Only request updates when playing or if config pending
-        if self.audio_player.is_playing() || self.pending_config_change {
+        // Conditional repaint: Only request updates when playing
+        if self.audio_player.is_playing() {
             ctx.request_repaint_after(self.visualization_update_interval);
         } else {
             // When stopped, still repaint occasionally for UI responsiveness
