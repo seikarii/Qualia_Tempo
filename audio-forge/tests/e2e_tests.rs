@@ -1179,3 +1179,368 @@ fn test_brutal_e2e_export_workflow_validation() {
     
     println!("\n✅ BRUTAL EXPORT WORKFLOW TEST PASSED - Full pipeline works");
 }
+
+// =============================================================================
+// 🔥 DIRECTIVE 22: CRASH PROTECTION & UI FAILURE TESTS 🔥
+// =============================================================================
+
+/// # Responsibility
+/// E2E Test: Panic recovery in file loading (Directive 22: Crash Protection).
+///
+/// ---
+///
+/// ## What This ACTUALLY Tests
+/// - Validates AudioPlayerService::load_file() panic handling
+/// - Tests catch_unwind boundary with corrupted files
+/// - Ensures app doesn't crash on malformed audio files
+/// - Validates error message propagation to UI state
+///
+/// ## Test Strategy
+/// 1. Create intentionally corrupted "audio" file
+/// 2. Attempt to load via AudioPlayerService
+/// 3. Verify panic is caught and converted to Result::Err
+/// 4. Ensure no process termination
+#[test]
+fn test_brutal_e2e_panic_recovery_in_file_loading() {
+    use tempfile::tempdir;
+    use std::fs::File;
+    use std::io::Write;
+    
+    println!("\n=== 🔥 BRUTAL PANIC RECOVERY TEST ===\n");
+    
+    // STEP 1: Create corrupted audio file (valid magic number but garbage data)
+    let temp_dir = tempdir().expect("Failed to create temp dir");
+    let corrupted_path = temp_dir.path().join("corrupted_malicious.wav");
+    
+    let mut file = File::create(&corrupted_path).expect("Failed to create file");
+    
+    // Write valid WAV header
+    file.write_all(b"RIFF").unwrap();
+    file.write_all(&[100u8, 0, 0, 0]).unwrap(); // Fake size
+    file.write_all(b"WAVE").unwrap();
+    
+    // Write intentionally BROKEN fmt chunk (will cause decoder panic)
+    file.write_all(b"fmt ").unwrap();
+    file.write_all(&[255u8, 255, 255, 255]).unwrap(); // Invalid chunk size (huge)
+    file.write_all(&[99u8, 99, 99, 99, 99, 99, 99, 99]).unwrap(); // Garbage data
+    
+    file.flush().unwrap();
+    drop(file);
+    
+    println!("✅ Created corrupted WAV file: {:?}", corrupted_path);
+    
+    // STEP 2: Initialize services
+    let module = AudioForgeModule::builder().build();
+    let player: Arc<dyn IAudioPlayer> = module.resolve();
+    
+    // STEP 3: Attempt to load corrupted file (MUST NOT PANIC)
+    println!("⚠️  Attempting to load corrupted file (should NOT crash)...");
+    
+    let load_result = player.load_file(&corrupted_path);
+    
+    // STEP 4: Validate panic was caught and converted to error
+    assert!(
+        load_result.is_err(),
+        "❌ CORRUPTED FILE ACCEPTED (SHOULD BE REJECTED)"
+    );
+    
+    let error_msg = format!("{:?}", load_result.err().unwrap());
+    println!("✅ Panic caught successfully: {}", error_msg);
+    
+    // Validate error message contains useful debugging info
+    assert!(
+        error_msg.contains("Failed to decode") || 
+        error_msg.contains("panic") || 
+        error_msg.contains("corrupted"),
+        "Error message should mention decode failure or panic: {}",
+        error_msg
+    );
+    
+    println!("\n✅ BRUTAL PANIC RECOVERY TEST PASSED - App did not crash");
+}
+
+/// # Responsibility
+/// E2E Test: Async file picker state management (Directive 22).
+///
+/// ---
+///
+/// ## What This ACTUALLY Tests
+/// - ControlPanelState thread-safety (Arc<Mutex<>>)
+/// - file_picker_open flag prevents duplicate dialogs
+/// - Error message state updates from async context
+/// - Race condition prevention
+///
+/// ## Architecture Validation
+/// - Tests shared state mutation from simulated async task
+/// - Validates Mutex lock/unlock behavior
+/// - Ensures no deadlocks with rapid state updates
+#[test]
+fn test_brutal_e2e_async_file_picker_state_management() {
+    use std::sync::{Arc, Mutex};
+    use std::time::Instant;
+    use audio_forge::ui::widgets::ControlPanelState;
+    
+    println!("\n=== 🔄 BRUTAL ASYNC STATE MANAGEMENT TEST ===\n");
+    
+    // STEP 1: Create shared state (same pattern as ControlPanel)
+    let state = Arc::new(Mutex::new(ControlPanelState::default()));
+    
+    // STEP 2: Simulate rapid async task updates (race condition test)
+    let mut handles = vec![];
+    
+    for i in 0..10 {
+        let state_clone = state.clone();
+        let handle = std::thread::spawn(move || {
+            // Simulate async file picker opening
+            {
+                let mut s = state_clone.lock().unwrap();
+                s.file_picker_open = true;
+            }
+            
+            std::thread::sleep(std::time::Duration::from_millis(10));
+            
+            // Simulate completion with error
+            {
+                let mut s = state_clone.lock().unwrap();
+                s.file_picker_open = false;
+                s.loading_error = Some((
+                    format!("Simulated error from task {}", i),
+                    Instant::now()
+                ));
+            }
+        });
+        handles.push(handle);
+    }
+    
+    // STEP 3: Wait for all tasks to complete
+    for handle in handles {
+        handle.join().expect("Thread panicked");
+    }
+    
+    // STEP 4: Validate final state is consistent
+    let final_state = state.lock().unwrap();
+    assert!(!final_state.file_picker_open, "❌ file_picker_open should be false after all tasks");
+    assert!(final_state.loading_error.is_some(), "❌ Should have at least one error recorded");
+    
+    println!("✅ Final state: file_picker_open = {}", final_state.file_picker_open);
+    println!("✅ Final error: {:?}", final_state.loading_error);
+    
+    println!("\n✅ BRUTAL ASYNC STATE MANAGEMENT TEST PASSED - No deadlocks, state consistent");
+}
+
+// =============================================================================
+// 🔥 DIRECTIVE 22.5: TOKIO RUNTIME INTEGRATION TESTS 🔥
+// =============================================================================
+
+/// # Responsibility
+/// E2E Test: Validate tokio runtime is available for async file operations.
+///
+/// ---
+///
+/// ## What This ACTUALLY Tests
+/// - Validates tokio::spawn works without panic
+/// - Tests async file dialog simulation (non-blocking)
+/// - Validates ControlPanel async task spawning
+/// - Ensures app doesn't crash when clicking "Load File"
+///
+/// ## Critical Validation
+/// This test MUST pass for the app to function. If it fails, the app will
+/// panic immediately when user clicks "Load File" button.
+#[tokio::test]
+async fn test_brutal_e2e_tokio_runtime_available_for_async_operations() {
+    println!("\n=== ⚡ BRUTAL TOKIO RUNTIME TEST ===\n");
+    
+    // STEP 1: Validate we're running in a tokio context
+    let handle = tokio::runtime::Handle::try_current();
+    assert!(
+        handle.is_ok(),
+        "❌ NO TOKIO RUNTIME AVAILABLE (test infrastructure broken)"
+    );
+    println!("✅ Tokio runtime detected in test environment");
+    
+    // STEP 2: Simulate async task spawning (same pattern as ControlPanel)
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<String>(1);
+    
+    tokio::spawn(async move {
+        // Simulate async file picker operation
+        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+        tx.send("File picker completed".to_string()).await.unwrap();
+    });
+    
+    // STEP 3: Wait for async task to complete
+    let result = tokio::time::timeout(
+        tokio::time::Duration::from_secs(1),
+        rx.recv()
+    ).await;
+    
+    assert!(
+        result.is_ok(),
+        "❌ ASYNC TASK TIMEOUT (tokio runtime may be broken)"
+    );
+    
+    let message = result.unwrap().unwrap();
+    assert_eq!(message, "File picker completed");
+    println!("✅ Async task spawned and completed successfully");
+    
+    // STEP 4: Simulate ControlPanelState update pattern
+    use std::sync::{Arc, Mutex};
+    use std::time::Instant;
+    use audio_forge::ui::widgets::ControlPanelState;
+    
+    let state = Arc::new(Mutex::new(ControlPanelState::default()));
+    let state_clone = state.clone();
+    
+    tokio::spawn(async move {
+        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        let mut s = state_clone.lock().unwrap();
+        s.file_picker_open = false;
+        s.loading_error = Some((
+            "Test error from async task".to_string(),
+            Instant::now()
+        ));
+    })
+    .await
+    .expect("Async state update task should not panic");
+    
+    // Validate state was updated
+    let final_state = state.lock().unwrap();
+    assert!(!final_state.file_picker_open);
+    assert!(final_state.loading_error.is_some());
+    println!("✅ Async state updates work correctly");
+    
+    println!("\n✅ BRUTAL TOKIO RUNTIME TEST PASSED - Async operations functional");
+}
+
+/// # Responsibility
+/// E2E Test: Simulate full file loading workflow with tokio runtime.
+///
+/// ---
+///
+/// ## What This ACTUALLY Tests
+/// - Full ControlPanel::handle_load_file() simulation
+/// - Async file picker spawn
+/// - Magic number validation
+/// - State update propagation
+/// - Error handling in async context
+///
+/// ## Architecture Validation
+/// This test validates the EXACT code path that runs when user clicks
+/// "Load File" button, minus the actual rfd file dialog.
+#[tokio::test]
+async fn test_brutal_e2e_simulated_file_loading_workflow() {
+    use std::sync::{Arc, Mutex};
+    use std::time::Instant;
+    use audio_forge::ui::widgets::ControlPanelState;
+    use audio_forge::services::AudioForgeModule;
+    use audio_forge::services::interfaces::IAudioPlayer;
+    use shaku::HasComponent;
+    use tempfile::tempdir;
+    use std::fs::File;
+    use std::io::Write;
+    
+    println!("\n=== 📂 BRUTAL FILE LOADING WORKFLOW TEST ===\n");
+    
+    // STEP 1: Create test audio file
+    let temp_dir = tempdir().expect("Failed to create temp dir");
+    let test_wav = temp_dir.path().join("test_load.wav");
+    
+    let mut file = File::create(&test_wav).unwrap();
+    file.write_all(b"RIFF").unwrap();
+    file.write_all(&[36u8, 0, 0, 0]).unwrap();
+    file.write_all(b"WAVE").unwrap();
+    file.write_all(b"fmt ").unwrap();
+    file.write_all(&[16u8, 0, 0, 0, 1, 0, 2, 0, 68, 172, 0, 0, 16, 177, 2, 0, 4, 0, 16, 0]).unwrap();
+    file.write_all(b"data").unwrap();
+    file.write_all(&[0u8, 0, 0, 0]).unwrap();
+    file.flush().unwrap();
+    drop(file);
+    
+    println!("✅ Created test WAV file: {:?}", test_wav);
+    
+    // STEP 2: Initialize services
+    let module = AudioForgeModule::builder().build();
+    let player: Arc<dyn IAudioPlayer> = module.resolve();
+    let state = Arc::new(Mutex::new(ControlPanelState::default()));
+    
+    // STEP 3: Simulate async file loading (same pattern as ControlPanel)
+    let state_clone = state.clone();
+    let player_clone = player.clone();
+    let test_wav_clone = test_wav.clone();
+    
+    let task = tokio::spawn(async move {
+        // Simulate file picker selection (skip actual dialog)
+        let file_path = test_wav_clone;
+        
+        println!("   Simulating file selection: {:?}", file_path);
+        
+        // Lock state (same as ControlPanel)
+        {
+            let mut s = state_clone.lock().unwrap();
+            s.file_picker_open = false;
+        }
+        
+        // Load file (same as ControlPanel)
+        let load_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            player_clone.load_file(&file_path)
+        }));
+        
+        match load_result {
+            Ok(Ok(_)) => {
+                println!("   ✅ File loaded successfully");
+                let mut s = state_clone.lock().unwrap();
+                s.current_file_path = Some(file_path);
+                s.loading_error = None;
+            }
+            Ok(Err(e)) => {
+                println!("   ❌ Load error: {}", e);
+                let mut s = state_clone.lock().unwrap();
+                s.loading_error = Some((format!("Load error: {}", e), Instant::now()));
+            }
+            Err(panic_info) => {
+                let panic_msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
+                    s.to_string()
+                } else {
+                    "Unknown panic".to_string()
+                };
+                println!("   🔥 Panic caught: {}", panic_msg);
+                let mut s = state_clone.lock().unwrap();
+                s.loading_error = Some((
+                    format!("CRITICAL ERROR: {}", panic_msg),
+                    Instant::now()
+                ));
+            }
+        }
+    });
+    
+    // STEP 4: Wait for async task to complete
+    let task_result = tokio::time::timeout(
+        tokio::time::Duration::from_secs(2),
+        task
+    ).await;
+    
+    assert!(
+        task_result.is_ok(),
+        "❌ ASYNC FILE LOADING TASK TIMEOUT"
+    );
+    
+    assert!(
+        task_result.unwrap().is_ok(),
+        "❌ ASYNC TASK PANICKED"
+    );
+    
+    // STEP 5: Validate final state
+    let final_state = state.lock().unwrap();
+    assert!(
+        final_state.current_file_path.is_some(),
+        "❌ FILE PATH NOT SET (load failed)"
+    );
+    assert!(
+        final_state.loading_error.is_none(),
+        "❌ LOADING ERROR PRESENT: {:?}",
+        final_state.loading_error
+    );
+    
+    println!("✅ Final state: file loaded = {:?}", final_state.current_file_path);
+    
+    println!("\n✅ BRUTAL FILE LOADING WORKFLOW TEST PASSED - Full workflow validated");
+}

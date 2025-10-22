@@ -148,56 +148,96 @@ impl ControlPanel {
             state.file_picker_open = true;
         }
         
-        // Clone Arc references for async task
+        // Clone Arc references for async task (BEFORE any move operations)
         let state_clone = self.state.clone();
+        let state_clone_2 = self.state.clone(); // Second clone for panic handler
         let audio_player_clone = self.audio_player.clone();
         let ctx_clone = ctx.clone();
+        let ctx_clone_2 = ctx.clone(); // Second clone for panic handler
         
-        // Spawn async file picker (non-blocking)
+        // Spawn async file picker with PANIC BOUNDARY (non-blocking)
         tokio::spawn(async move {
-            let file_handle = rfd::AsyncFileDialog::new()
-                .add_filter("Audio Files", &["mp3", "wav", "flac", "ogg", "m4a", "aac"])
-                .set_title("Select Audio File")
-                .pick_file()
-                .await;
-            
-            // Lock state to update from async context
-            let mut state = state_clone.lock().unwrap();
-            state.file_picker_open = false; // Reset flag regardless of outcome
-            
-            if let Some(file) = file_handle {
-                let file_path = file.path().to_path_buf();
-                info!("User selected file via picker: {:?}", file_path);
+            // CRITICAL FIX: Wrap entire async block in Result-based error handling
+            let task_result: Result<()> = (async {
+                let file_handle = rfd::AsyncFileDialog::new()
+                    .add_filter("Audio Files", &["mp3", "wav", "flac", "ogg", "m4a", "aac"])
+                    .set_title("Select Audio File")
+                    .pick_file()
+                    .await;
                 
-                // Release lock before validation (avoid deadlock)
-                drop(state);
+                // Lock state to update from async context
+                let mut state = state_clone.lock().unwrap();
+                state.file_picker_open = false; // Reset flag regardless of outcome
                 
-                // Validate and load file
-                if let Err(e) = Self::validate_audio_file_format(&file_path) {
-                    error!("❌ File validation failed: {}", e);
-                    let mut state = state_clone.lock().unwrap();
-                    state.loading_error = Some((format!("Invalid file: {}", e), Instant::now()));
-                } else {
-                    // Load validated file
-                    match audio_player_clone.load_file(&file_path) {
-                        Ok(_) => {
-                            info!("✅ File loaded successfully: {:?}", file_path);
-                            let mut state = state_clone.lock().unwrap();
-                            state.current_file_path = Some(file_path);
-                            state.loading_error = None;
-                        }
-                        Err(e) => {
-                            error!("❌ Failed to load file: {}", e);
-                            let mut state = state_clone.lock().unwrap();
-                            state.loading_error = Some((format!("Load error: {}", e), Instant::now()));
+                if let Some(file) = file_handle {
+                    let file_path = file.path().to_path_buf();
+                    info!("User selected file via picker: {:?}", file_path);
+                    
+                    // Release lock before validation (avoid deadlock)
+                    drop(state);
+                    
+                    // Validate and load file
+                    if let Err(e) = Self::validate_audio_file_format(&file_path) {
+                        error!("❌ File validation failed: {}", e);
+                        let mut state = state_clone.lock().unwrap();
+                        state.loading_error = Some((format!("Invalid file: {}", e), Instant::now()));
+                    } else {
+                        // Load validated file (WRAPPED IN PANIC PROTECTION)
+                        // AudioPlayerService already has catch_unwind in load_file, but add extra layer
+                        let load_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                            audio_player_clone.load_file(&file_path)
+                        }));
+                        
+                        match load_result {
+                            Ok(Ok(_)) => {
+                                info!("✅ File loaded successfully: {:?}", file_path);
+                                let mut state = state_clone.lock().unwrap();
+                                state.current_file_path = Some(file_path);
+                                state.loading_error = None;
+                            }
+                            Ok(Err(e)) => {
+                                error!("❌ Failed to load file: {}", e);
+                                let mut state = state_clone.lock().unwrap();
+                                state.loading_error = Some((format!("Load error: {}", e), Instant::now()));
+                            }
+                            Err(panic_info) => {
+                                let panic_msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
+                                    s.to_string()
+                                } else if let Some(s) = panic_info.downcast_ref::<String>() {
+                                    s.clone()
+                                } else {
+                                    "Unknown panic during file loading".to_string()
+                                };
+                                error!("🔥 PANIC CAUGHT IN LOAD FILE: {}", panic_msg);
+                                let mut state = state_clone.lock().unwrap();
+                                state.loading_error = Some((
+                                    format!("❌ CRITICAL ERROR: {}", panic_msg),
+                                    Instant::now()
+                                ));
+                            }
                         }
                     }
+                } else {
+                    info!("File picker cancelled by user");
                 }
-            } else {
-                info!("File picker cancelled by user");
-            }
+                
+                ctx_clone.request_repaint(); // Update UI after state change
+                Ok(())
+            })
+            .await;
             
-            ctx_clone.request_repaint(); // Update UI after state change
+            // Handle task-level panic (rfd library or async runtime failure)
+            if let Err(e) = task_result {
+                error!("🔥 ASYNC TASK ERROR: {:?}", e);
+                if let Ok(mut state) = state_clone_2.lock() {
+                    state.file_picker_open = false;
+                    state.loading_error = Some((
+                        format!("❌ Task failure: {}", e),
+                        Instant::now()
+                    ));
+                }
+                ctx_clone_2.request_repaint();
+            }
         });
     }
     

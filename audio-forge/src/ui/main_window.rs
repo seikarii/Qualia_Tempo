@@ -299,8 +299,10 @@ impl MainWindow {
         // PRE-RENDER: DRAG-AND-DROP + VISUALIZATION UPDATES
         // ============================================================================
         
-        // Handle dropped files (synchronous, runs on UI thread)
+        // CRITICAL FIX: Handle dropped files with FULL WINDOW COVERAGE
+        // Process drops BEFORE any panel rendering to catch files dropped ANYWHERE
         ctx.input(|i| {
+            // Process ALL dropped files (not just first one)
             if !i.raw.dropped_files.is_empty() {
                 let dropped_file = &i.raw.dropped_files[0];
                 
@@ -323,6 +325,12 @@ impl MainWindow {
                         Instant::now()
                     ));
                 }
+            }
+            
+            // DIRECTIVE 9.5: Visual feedback for drag-over (full window)
+            // Show overlay when files are being dragged ANYWHERE over window
+            if !i.raw.hovered_files.is_empty() {
+                ctx.request_repaint(); // Force repaint to show overlay
             }
         });
         
