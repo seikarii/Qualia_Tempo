@@ -9,11 +9,11 @@
 use egui::{Color32, Context, Style, Visuals};
 
 /// # Responsibility
-/// Modern dark theme color palette (professional grade).
+/// Modern dark theme color palette (2025 professional grade).
 ///
 /// ---
 ///
-/// Color scheme: Dark base + Turquoise accents + High contrast
+/// Color scheme: Dark base + Neon accents + Gradient overlays
 pub struct QualiaTheme;
 
 impl QualiaTheme {
@@ -23,12 +23,29 @@ impl QualiaTheme {
     pub const BG_WIDGET: Color32 = Color32::from_rgb(30, 34, 42);        // Widget background
     pub const BG_HOVER: Color32 = Color32::from_rgb(40, 44, 52);         // Hover state
     
-    // === ACCENT COLORS ===
+    // === ACCENT COLORS (ORIGINAL) ===
     pub const ACCENT_PRIMARY: Color32 = Color32::from_rgb(64, 224, 208);  // Turquoise (main accent)
     pub const ACCENT_SECONDARY: Color32 = Color32::from_rgb(100, 180, 255); // Blue (secondary)
     pub const ACCENT_SUCCESS: Color32 = Color32::from_rgb(80, 250, 123);  // Green (success)
     pub const ACCENT_WARNING: Color32 = Color32::from_rgb(255, 184, 108); // Orange (warning)
     pub const ACCENT_ERROR: Color32 = Color32::from_rgb(255, 100, 100);   // Soft red (error)
+    
+    // === NEON ACCENT COLORS (2025 MODERN) ===
+    pub const NEON_BLUE: Color32 = Color32::from_rgb(0, 168, 255);        // Electric blue
+    pub const ELECTRIC_PURPLE: Color32 = Color32::from_rgb(138, 43, 226); // Vibrant purple
+    pub const HOT_PINK: Color32 = Color32::from_rgb(255, 20, 147);        // Hot pink
+    pub const LIME_GREEN: Color32 = Color32::from_rgb(50, 255, 100);      // Active state
+    
+    // === GRADIENT COLORS (For simulation) ===
+    pub const GRADIENT_PRIMARY_START: Color32 = Self::NEON_BLUE;
+    pub const GRADIENT_PRIMARY_END: Color32 = Self::ELECTRIC_PURPLE;
+    pub const GRADIENT_ACCENT_START: Color32 = Color32::from_rgb(64, 224, 208); // Turquoise
+    pub const GRADIENT_ACCENT_END: Color32 = Self::NEON_BLUE;
+    
+    // === SPACING (Modern breathing room) ===
+    pub const SPACING_CARD_PADDING: f32 = 20.0;    // Inner card padding
+    pub const SPACING_PANEL_MARGIN: f32 = 16.0;    // Between panels
+    pub const SPACING_ITEM_GAP: f32 = 12.0;        // Between UI elements
     
     // === TEXT COLORS ===
     pub const TEXT_PRIMARY: Color32 = Color32::from_rgb(235, 240, 245);   // Main text
@@ -100,12 +117,48 @@ impl QualiaTheme {
         visuals.warn_fg_color = Self::ACCENT_WARNING;
         visuals.error_fg_color = Self::ACCENT_ERROR;
         
-        // === SPACING ===
-        style.spacing.item_spacing = egui::vec2(8.0, 6.0);
-        style.spacing.button_padding = egui::vec2(12.0, 6.0);
-        style.spacing.window_margin = egui::Margin::same(10);
+        // === SPACING (Modern breathing room) ===
+        style.spacing.item_spacing = egui::vec2(Self::SPACING_ITEM_GAP, 8.0);
+        style.spacing.button_padding = egui::vec2(16.0, 8.0);
+        style.spacing.window_margin = egui::Margin::same(16);
         
         style.visuals = visuals;
         ctx.set_style(style);
+    }
+    
+    /// # Responsibility
+    /// Simulate vertical gradient with overlapping rects (egui limitation workaround).
+    ///
+    /// ---
+    ///
+    /// egui lacks native gradient support. This draws N rects with interpolated colors.
+    pub fn fake_gradient_vertical(
+        ui: &mut egui::Ui,
+        rect: egui::Rect,
+        top_color: Color32,
+        bottom_color: Color32,
+        steps: usize,
+    ) {
+        let height_per_step = rect.height() / steps as f32;
+        for i in 0..steps {
+            let t = i as f32 / (steps - 1).max(1) as f32;
+            let color = Self::lerp_color(top_color, bottom_color, t);
+            let step_rect = egui::Rect::from_min_size(
+                egui::pos2(rect.min.x, rect.min.y + i as f32 * height_per_step),
+                egui::vec2(rect.width(), height_per_step),
+            );
+            ui.painter().rect_filled(step_rect, 0.0, color);
+        }
+    }
+    
+    /// # Responsibility
+    /// Linear color interpolation between two Color32 values.
+    fn lerp_color(a: Color32, b: Color32, t: f32) -> Color32 {
+        Color32::from_rgba_premultiplied(
+            (a.r() as f32 + (b.r() as f32 - a.r() as f32) * t) as u8,
+            (a.g() as f32 + (b.g() as f32 - a.g() as f32) * t) as u8,
+            (a.b() as f32 + (b.b() as f32 - a.b() as f32) * t) as u8,
+            (a.a() as f32 + (b.a() as f32 - a.a() as f32) * t) as u8,
+        )
     }
 }

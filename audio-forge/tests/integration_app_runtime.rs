@@ -167,7 +167,8 @@ fn test_integration_real_file_loading_no_crash() {
 /// - Logs ALL device capabilities for debugging
 #[test]
 fn test_integration_actual_hardware_8_1_detection() {
-    use cpal::traits::{DeviceTrait, HostTrait};
+    use rodio::cpal;
+    use rodio::cpal::traits::{DeviceTrait, HostTrait};
     
     init_tracing();
     println!("\n=== INTEGRATION TEST: ACTUAL HARDWARE 8.1 DETECTION ===\n");

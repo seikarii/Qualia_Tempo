@@ -13,7 +13,7 @@ use crate::services::AudioFileValidator;
 use crate::ui::theme::QualiaTheme;
 use crate::ui::widgets::{
     control_panel::{ControlPanel, ControlPanelState},
-    EffectsPanel, InfoPanel, Panel, SpectrumPanel, WaveformPanel,
+    EffectsPanel, HeroWaveformCard, MultiBandSpectrumGrid, Panel, SpectrumPanel, WaveformPanel,
 };
 use egui::{CentralPanel, Context, SidePanel, TopBottomPanel};
 use std::path::PathBuf;
@@ -62,7 +62,10 @@ pub struct MainWindow {
     effects_panel: EffectsPanel,
     waveform_panel: WaveformPanel,
     spectrum_panel: SpectrumPanel,
-    info_panel: InfoPanel,
+    
+    // NEW: Modern 2025 UI widgets
+    hero_waveform: HeroWaveformCard,
+    spectrum_grid: MultiBandSpectrumGrid,
     
     // Cached visualization data (updated at throttled rate, passed to panels)
     cached_waveform: Vec<f32>,
@@ -111,6 +114,7 @@ impl MainWindow {
         let control_panel = ControlPanel::new(
             audio_player.clone(),
             audio_exporter.clone(),
+            multi_channel_output.clone(),
             state.clone(),
             volume,
         );
@@ -119,10 +123,9 @@ impl MainWindow {
         
         let spectrum_panel = SpectrumPanel::new(visualization_engine.clone());
         
-        let info_panel = InfoPanel::new(
-            audio_player.clone(),
-            multi_channel_output.clone(),
-        );
+        // NEW: Modern 2025 UI widgets
+        let hero_waveform = HeroWaveformCard::new();
+        let spectrum_grid = MultiBandSpectrumGrid::new(8); // 8 bands
 
         Self {
             state,
@@ -133,7 +136,8 @@ impl MainWindow {
             effects_panel,
             waveform_panel,
             spectrum_panel,
-            info_panel,
+            hero_waveform,
+            spectrum_grid,
             cached_waveform: Vec::new(),
             cached_spectrum,
             cached_instrument_levels: (0.0, 0.0, 0.0),
@@ -154,7 +158,7 @@ impl MainWindow {
         AppConfig {
             audio: crate::config::AudioConfig {
                 default_volume: self.control_panel.get_volume(),
-                channel_mode: self.info_panel.multi_channel_output.get_configuration().mode,
+                channel_mode: crate::contracts::channel_configuration::ChannelMode::Stereo, // Default fallback
                 last_file_path: state.current_file_path.clone(),
             },
             effects: self.effects_panel.get_config().clone(),
@@ -280,12 +284,23 @@ impl MainWindow {
         // Update visualization data from real-time audio (throttled to 30fps)
         self.update_visualization_data();
         
-        // Update panel data caches
+        // Update OLD panel data caches (still keeping for side panels)
         self.waveform_panel.update_waveform(self.cached_waveform.clone());
         self.spectrum_panel.update_data(
             self.cached_spectrum.clone(),
             self.cached_instrument_levels,
         );
+        
+        // UPDATE NEW WIDGETS
+        let playback_position = if self.audio_player.total_duration().as_secs() > 0 {
+            self.audio_player.current_position().as_secs_f32() 
+                / self.audio_player.total_duration().as_secs_f32()
+        } else {
+            0.0
+        };
+        
+        self.hero_waveform.update(self.cached_waveform.clone(), playback_position);
+        self.spectrum_grid.update(&self.cached_spectrum.magnitudes);
         
         // TOP PANEL: ControlPanel orchestration (Directive 14: Complete)
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
@@ -297,23 +312,37 @@ impl MainWindow {
             self.effects_panel.render(ctx, ui);
         });
 
-        // LEFT PANEL: WaveformPanel orchestration
+        // LEFT PANEL: WaveformPanel orchestration (LEGACY - keep for now)
         SidePanel::left("waveform_panel")
             .default_width(400.0)
             .show(ctx, |ui| {
                 self.waveform_panel.render(ctx, ui);
             });
 
-        // RIGHT PANEL: SpectrumPanel orchestration
+        // RIGHT PANEL: SpectrumPanel orchestration (LEGACY - keep for now)
         SidePanel::right("spectrum_panel")
             .default_width(400.0)
             .show(ctx, |ui| {
                 self.spectrum_panel.render(ctx, ui);
             });
 
-        // CENTER PANEL: InfoPanel orchestration
+        // ============================================================================
+        // CENTER PANEL: MODERN 2025 UI (Hero Waveform + Spectrum Grid)
+        // ============================================================================
         CentralPanel::default().show(ctx, |ui| {
-            self.info_panel.render(ctx, ui);
+            ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
+            
+            // Hero waveform card (300px height, full-width)
+            ui.heading("🎵 Waveform");
+            self.hero_waveform.render(ui);
+            
+            ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
+            
+            // Multi-band spectrum grid
+            ui.heading("🎚️ Spectrum Analyzer");
+            self.spectrum_grid.render(ui);
+            
+            ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
         });
         
         // ============================================================================

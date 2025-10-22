@@ -12,7 +12,8 @@
 //! cargo test --test cpal_diagnostic -- --nocapture
 //! ```
 
-use cpal::traits::{DeviceTrait, HostTrait};
+use rodio::cpal;
+use rodio::cpal::traits::{DeviceTrait, HostTrait};
 
 #[test]
 fn diagnostic_cpal_full_device_enumeration() {

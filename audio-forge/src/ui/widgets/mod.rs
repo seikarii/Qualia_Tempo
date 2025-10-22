@@ -17,12 +17,14 @@
 
 pub mod control_panel;
 pub mod effects_panel;
-pub mod info_panel;
+pub mod hero_waveform_card;
+pub mod multi_band_spectrum_grid;
 pub mod visualization_panels;
 
 pub use control_panel::{ControlPanel, ControlPanelState};
 pub use effects_panel::EffectsPanel;
-pub use info_panel::InfoPanel;
+pub use hero_waveform_card::HeroWaveformCard;
+pub use multi_band_spectrum_grid::MultiBandSpectrumGrid;
 pub use visualization_panels::{SpectrumPanel, WaveformPanel};
 
 use egui;

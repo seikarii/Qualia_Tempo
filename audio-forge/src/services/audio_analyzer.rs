@@ -11,15 +11,17 @@
 use crate::contracts::FrequencySpectrum;
 use crate::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
 use anyhow::Result;
-use lazy_static::lazy_static;
 use rustfft::{FftPlanner, num_complex::Complex};
 use shaku::Component;
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 use tracing::debug;
 
 // OPTIMIZATION: Global cached FftPlanner eliminates 3MB/s allocations @ 60fps
-lazy_static! {
-    static ref FFT_PLANNER: Mutex<FftPlanner<f32>> = Mutex::new(FftPlanner::new());
+// MODERNIZED: Using std::sync::OnceLock (lazy_static deprecated)
+static FFT_PLANNER: OnceLock<Mutex<FftPlanner<f32>>> = OnceLock::new();
+
+fn get_fft_planner() -> &'static Mutex<FftPlanner<f32>> {
+    FFT_PLANNER.get_or_init(|| Mutex::new(FftPlanner::new()))
 }
 
 /// # Responsibility
@@ -41,7 +43,7 @@ pub struct AudioAnalyzerService {
     fft_size: usize,
     
     // NOTE: Cannot use Mutex<FftPlanner> here because Shaku requires Default
-    // Planner caching is implemented via lazy_static in analyze_fft() instead
+    // Planner caching is implemented via OnceLock in analyze_fft() instead
     
     // Pre-calculated window eliminates 122,880 trig ops/sec @ 60fps
     #[shaku(default)]
@@ -101,7 +103,7 @@ impl IAudioAnalyzer for AudioAnalyzerService {
             .for_each(|(sample, &window)| *sample *= window);
 
         // Perform FFT using globally cached planner (eliminates 3MB/s allocations)
-        let mut planner = FFT_PLANNER.lock().unwrap();
+        let mut planner = get_fft_planner().lock().unwrap();
         let fft = planner.plan_fft_forward(self.fft_size);
         fft.process(&mut input);
 

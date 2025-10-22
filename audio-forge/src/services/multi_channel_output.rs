@@ -83,14 +83,15 @@ impl MultiChannelOutputService {
     /// ---
     ///
     /// ## DIRECTIVE 21: Enhanced Detection Logic
-    /// Enumerates all output devices using cpal and checks:
+    /// Enumerates all output devices using cpal (via rodio re-export) and checks:
     /// 1. Default output config (fast path)
     /// 2. **All supported configs** (comprehensive check)
     ///
     /// Returns true if ANY device supports 8+ channels in ANY configuration.
     /// This fixes false negatives when 8.1 is available but not the default.
     fn detect_8_1_support() -> bool {
-        use cpal::traits::{DeviceTrait, HostTrait};
+        use rodio::cpal;
+        use rodio::cpal::traits::{DeviceTrait, HostTrait};
         
         let host = cpal::default_host();
         

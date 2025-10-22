@@ -3,7 +3,8 @@
 //!
 //! Run with: cargo test --test device_diagnostic -- --nocapture
 
-use cpal::traits::{DeviceTrait, HostTrait};
+use rodio::cpal;
+use rodio::cpal::traits::{DeviceTrait, HostTrait};
 
 #[test]
 fn test_enumerate_all_output_devices() {

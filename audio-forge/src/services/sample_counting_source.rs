@@ -15,6 +15,7 @@
 //! - **Decorator Pattern**: Wraps any Source<Item = f32>
 //! - **Atomic Counter**: Lock-free sample counting via Arc<AtomicU64>
 //! - **Zero-Copy**: No buffering, pure pass-through with counting
+//! - **TrySeek Support**: Passes seek commands to inner source + updates counter
 
 use rodio::Source;
 use std::sync::atomic::{AtomicU64, Ordering};

@@ -13,6 +13,7 @@
 
 use crate::services::interfaces::i_audio_exporter::IAudioExporter;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
+use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::AudioFileValidator;
 use crate::ui::theme::QualiaTheme;
 use crate::ui::widgets::Panel;
@@ -39,13 +40,14 @@ pub struct ControlPanelState {
 }
 
 /// # Responsibility
-/// Control panel for file loading, playback, and volume.
+/// Control panel for file loading, playback, volume, and channel configuration.
 ///
 /// ---
 ///
 /// ## Architecture (Directive 14: Complete Encapsulation)
 /// - **File Loading**: Owns async file picker with magic number validation
 /// - **Playback**: Direct IAudioPlayer service calls
+/// - **Channel Controls**: Stereo/8.1 mode switching (migrated from InfoPanel)
 /// - **State Sync**: Uses Arc<Mutex<>> for thread-safe coordination
 /// - **Export**: IAudioExporter service for WAV export (Directive 17)
 pub struct ControlPanel {
@@ -54,6 +56,9 @@ pub struct ControlPanel {
     
     /// Audio exporter service (Directive 17)
     audio_exporter: Arc<dyn IAudioExporter>,
+    
+    /// Multi-channel output service (for channel mode switching)
+    multi_channel_output: Arc<dyn IMultiChannelOutput>,
     
     /// Shared state (for async file picker coordination)
     state: Arc<Mutex<ControlPanelState>>,
@@ -71,17 +76,20 @@ impl ControlPanel {
     /// ## Parameters
     /// - `audio_player`: Service for playback control
     /// - `audio_exporter`: Service for WAV export (Directive 17)
+    /// - `multi_channel_output`: Service for channel configuration
     /// - `state`: Shared state with parent window
     /// - `initial_volume`: Starting volume level [0.0, 1.0]
     pub fn new(
         audio_player: Arc<dyn IAudioPlayer>,
         audio_exporter: Arc<dyn IAudioExporter>,
+        multi_channel_output: Arc<dyn IMultiChannelOutput>,
         state: Arc<Mutex<ControlPanelState>>,
         initial_volume: f32,
     ) -> Self {
         Self {
             audio_player,
             audio_exporter,
+            multi_channel_output,
             state,
             volume: initial_volume,
         }
@@ -435,6 +443,48 @@ impl Panel for ControlPanel {
             });
         }
         
+        // ====================================================================
+        // CHANNEL MODE CONTROLS (Migrated from InfoPanel)
+        // ====================================================================
+        ui.separator();
+        ui.heading("🎛️ Channel Configuration");
+        
+        let channel_config = self.multi_channel_output.get_configuration();
+        
+        ui.horizontal(|ui| {
+            if channel_config.is_8_1_available {
+                if ui.button("🔁 Switch to Stereo").clicked() {
+                    if let Err(e) = self.multi_channel_output.fallback_to_stereo() {
+                        error!("Failed to switch to stereo: {}", e);
+                    }
+                    config_changed = true;
+                }
+
+                if ui.button("🔁 Configure 8.1").clicked() {
+                    if let Err(e) = self.multi_channel_output.configure_8_1_channels() {
+                        error!("Failed to configure 8.1: {}", e);
+                    }
+                    config_changed = true;
+                }
+            } else {
+                ui.label("⚠️ 8.1 hardware not detected - stereo mode only");
+            }
+        });
+        
+        ui.horizontal(|ui| {
+            if ui.button("🔍 Re-detect 8.1 Hardware")
+                .on_hover_text("Manually scan for 8.1 capable audio devices (useful after hotplug)")
+                .clicked()
+            {
+                let detected = self.multi_channel_output.redetect_8_1_hardware();
+                if detected {
+                    tracing::info!("✅ 8.1 hardware detected!");
+                } else {
+                    tracing::warn!("❌ No 8.1 hardware found");
+                }
+            }
+        });
+        
         config_changed
     }
 }
@@ -444,6 +494,7 @@ mod tests {
     use super::*;
     use crate::services::interfaces::i_audio_exporter::IAudioExporter;
     use crate::services::interfaces::i_audio_player::IAudioPlayer;
+    use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
     use crate::services::AudioForgeModule;
     use shaku::HasComponent;
     
@@ -452,9 +503,10 @@ mod tests {
         let module = AudioForgeModule::builder().build();
         let player: Arc<dyn IAudioPlayer> = module.resolve();
         let exporter: Arc<dyn IAudioExporter> = module.resolve();
+        let multi_channel: Arc<dyn IMultiChannelOutput> = module.resolve();
         let state = Arc::new(Mutex::new(ControlPanelState::default()));
         
-        let panel = ControlPanel::new(player, exporter, state, 0.5);
+        let panel = ControlPanel::new(player, exporter, multi_channel, state, 0.5);
         
         assert_eq!(panel.get_volume(), 0.5);
     }
@@ -464,9 +516,10 @@ mod tests {
         let module = AudioForgeModule::builder().build();
         let player: Arc<dyn IAudioPlayer> = module.resolve();
         let exporter: Arc<dyn IAudioExporter> = module.resolve();
+        let multi_channel: Arc<dyn IMultiChannelOutput> = module.resolve();
         let state = Arc::new(Mutex::new(ControlPanelState::default()));
         
-        let mut panel = ControlPanel::new(player, exporter, state, 0.5);
+        let mut panel = ControlPanel::new(player, exporter, multi_channel, state, 0.5);
         
         panel.set_volume(1.5); // Above max
         assert_eq!(panel.get_volume(), 1.0);

@@ -698,7 +698,8 @@ fn test_full_pipeline_with_complex_stereo_wav() {
 /// - If test fails → detection logic is broken or hardware misconfigured
 #[test]
 fn test_brutal_e2e_actual_hardware_8_1_detection() {
-    use cpal::traits::{DeviceTrait, HostTrait};
+    use rodio::cpal;
+    use rodio::cpal::traits::{DeviceTrait, HostTrait};
     
     println!("\n=== 🎧 BRUTAL HARDWARE DETECTION TEST ===\n");
     
