@@ -150,10 +150,14 @@ fn test_8_1_upmixing_integration() {
 #[test]
 fn test_full_8_1_pipeline_with_effects() {
     use audio_forge::AudioEffectsService;
+    use audio_forge::services::event_bus::EventBusService;
     use audio_forge::services::interfaces::i_audio_effects::IAudioEffects;
+    use audio_forge::EffectConfig;
+    use std::sync::Arc;
 
     let output = MultiChannelOutputService::default();
-    let effects = AudioEffectsService::default();
+    let event_bus = Arc::new(EventBusService::default());
+    let effects = AudioEffectsService::new(EffectConfig::default(), event_bus);
 
     // Generate stereo test signal
     let stereo_samples: Vec<f32> = (0..200).map(|i| (i as f32 * 0.1).sin()).collect();

@@ -2,12 +2,15 @@
 //! Implements real-time audio effects processing.
 
 use crate::contracts::effect_parameters::EffectConfig;
+use crate::events::AudioForgeEvent;
+use crate::services::event_bus::IEventBus;
 use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use anyhow::Result;
 use biquad::*;
 use shaku::Component;
 use std::f32::consts::PI;
-use std::sync::{Mutex, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
+use tracing::warn;
 
 /// # Responsibility
 /// Biquad filter state for bass/treble boost with lazy recalculation.
@@ -98,7 +101,7 @@ impl FilterState {
 /// 2. Drop Effect: Volume reduction
 /// 3. Bass Boost: LowShelf biquad filter @ 250Hz (OPTIMIZED)
 /// 4. Treble Boost: HighShelf biquad filter @ 3kHz (OPTIMIZED)
-#[derive(Component, Default)]
+#[derive(Component)]
 #[shaku(interface = IAudioEffects)]
 pub struct AudioEffectsService {
     #[shaku(default)]
@@ -107,13 +110,17 @@ pub struct AudioEffectsService {
     // Biquad filters with lazy recalculation (Mutex for interior mutability)
     #[shaku(default)]
     filter_state: Mutex<FilterState>,
+    
+    #[shaku(inject)]
+    event_bus: Arc<dyn IEventBus>,
 }
 
 impl AudioEffectsService {
-    pub fn new(config: EffectConfig) -> Self {
+    pub fn new(config: EffectConfig, event_bus: Arc<dyn IEventBus>) -> Self {
         Self {
             config: RwLock::new(config),
             filter_state: Mutex::new(FilterState::new(44100)),
+            event_bus,
         }
     }
 
@@ -325,17 +332,31 @@ impl IAudioEffects for AudioEffectsService {
     }
 
     fn set_config(&self, config: EffectConfig) {
-        *self.config.write().unwrap() = config;
+        *self.config.write().unwrap() = config.clone();
+        
+        // Emit EffectsConfigUpdated event
+        if let Err(e) = self.event_bus.emit(AudioForgeEvent::EffectsConfigUpdated {
+            config,
+        }) {
+            warn!("Failed to emit EffectsConfigUpdated event: {}", e);
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::event_bus::EventBusService;
+
+    /// Helper function to create AudioEffectsService for testing
+    fn create_test_service() -> AudioEffectsService {
+        let event_bus = Arc::new(EventBusService::default());
+        AudioEffectsService::new(EffectConfig::default(), event_bus)
+    }
 
     #[test]
     fn test_audio_effects_service_creation() {
-        let service = AudioEffectsService::default();
+        let service = create_test_service();
         let config = service.get_config();
         assert!(!config.effect_8d_enabled);
         assert!(!config.drop_effect_enabled);
@@ -343,7 +364,7 @@ mod tests {
 
     #[test]
     fn test_8d_effect_disabled() {
-        let service = AudioEffectsService::default();
+        let service = create_test_service();
         let mut samples = vec![0.5, -0.5, 0.3, -0.3];
         let original = samples.clone();
 
@@ -362,7 +383,8 @@ mod tests {
             ..Default::default()
         };
 
-        let service = AudioEffectsService::new(config);
+        let event_bus = Arc::new(EventBusService::default());
+        let service = AudioEffectsService::new(config, event_bus);
 
         // Test with asymmetric stereo input to verify panning effect
         let mut samples = vec![1.0, 0.0]; // Left=1.0, Right=0.0
@@ -382,7 +404,7 @@ mod tests {
 
     #[test]
     fn test_drop_effect_disabled() {
-        let service = AudioEffectsService::default();
+        let service = create_test_service();
         let mut samples = vec![0.5, -0.5];
         let original = samples.clone();
 
@@ -399,7 +421,8 @@ mod tests {
             ..Default::default()
         };
 
-        let service = AudioEffectsService::new(config);
+        let event_bus = Arc::new(EventBusService::default());
+        let service = AudioEffectsService::new(config, event_bus);
         let mut samples = vec![0.5, -0.5];
 
         service.apply_drop_effect(&mut samples).unwrap();
@@ -416,7 +439,8 @@ mod tests {
             ..Default::default()
         };
 
-        let service = AudioEffectsService::new(config);
+        let event_bus = Arc::new(EventBusService::default());
+        let service = AudioEffectsService::new(config, event_bus);
         let mut samples = vec![1.0, -1.0];
 
         service.apply_drop_effect(&mut samples).unwrap();
@@ -427,7 +451,7 @@ mod tests {
 
     #[test]
     fn test_bass_boost_disabled() {
-        let service = AudioEffectsService::default();
+        let service = create_test_service();
         let mut samples = vec![0.5, -0.5];
         let original = samples.clone();
 
@@ -444,7 +468,8 @@ mod tests {
             ..Default::default()
         };
 
-        let service = AudioEffectsService::new(config);
+        let event_bus = Arc::new(EventBusService::default());
+        let service = AudioEffectsService::new(config, event_bus);
         let mut samples = vec![0.3, -0.3, 0.3, -0.3]; // Multiple samples for filter settling
 
         service.apply_bass_boost(&mut samples, 44100).unwrap();
@@ -465,7 +490,8 @@ mod tests {
             ..Default::default()
         };
 
-        let service = AudioEffectsService::new(config);
+        let event_bus = Arc::new(EventBusService::default());
+        let service = AudioEffectsService::new(config, event_bus);
         // Generate low-frequency sine wave (100Hz) which will be boosted
         let sample_rate = 44100.0;
         let frequency = 100.0;
@@ -483,7 +509,7 @@ mod tests {
 
     #[test]
     fn test_config_update() {
-        let service = AudioEffectsService::default();
+        let service = create_test_service();
         assert!(!service.get_config().effect_8d_enabled);
 
         let new_config = EffectConfig {
@@ -512,7 +538,8 @@ mod tests {
             ..Default::default()
         };
 
-        let service = AudioEffectsService::new(config);
+        let event_bus = Arc::new(EventBusService::default());
+        let service = AudioEffectsService::new(config, event_bus);
 
         // Test with multiple buffer sizes to verify alignment handling
         for size in [8, 16, 17, 32, 33, 100, 1024, 4096] {
@@ -553,13 +580,15 @@ mod tests {
     /// - Zero intensity (no effect)
     #[test]
     fn test_8d_effect_edge_cases() {
+        let event_bus = Arc::new(EventBusService::default());
+        
         // Edge Case 1: Empty buffer
         let service = AudioEffectsService::new(EffectConfig {
             effect_8d_enabled: true,
             effect_8d_intensity: 1.0,
             effect_8d_rotation_hz: 1.0,
             ..Default::default()
-        });
+        }, event_bus.clone());
 
         let mut empty: Vec<f32> = vec![];
         assert!(service.apply_8d_effect(&mut empty, 44100, 0.0).is_ok());
@@ -581,7 +610,7 @@ mod tests {
             effect_8d_intensity: 0.0,
             effect_8d_rotation_hz: 1.0,
             ..Default::default()
-        });
+        }, event_bus.clone());
 
         let mut samples = vec![0.5, -0.5, 0.3, -0.3];
         let original = samples.clone();
@@ -614,7 +643,8 @@ mod tests {
             ..Default::default()
         };
 
-        let service = AudioEffectsService::new(config);
+        let event_bus = Arc::new(EventBusService::default());
+        let service = AudioEffectsService::new(config, event_bus);
 
         // Large buffer (1 second at 44.1kHz stereo)
         let buffer_size = 44100 * 2;

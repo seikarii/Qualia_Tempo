@@ -3,10 +3,11 @@
 //!
 //! ---
 //!
-//! Eliminates Service Locator anti-pattern by wrapping all 6 services
+//! Eliminates Service Locator anti-pattern by wrapping all 7 services
 //! into a single injectable component. MainWindow receives this aggregate
 //! instead of individual services, reducing coupling.
 
+use crate::services::event_bus::IEventBus;
 use crate::services::interfaces::{
     IAudioAnalyzer, IAudioEffects, IAudioExporter, IAudioPlayer, IMultiChannelOutput,
     IVisualizationEngine,
@@ -28,6 +29,7 @@ pub trait IApplicationServices: Interface {
     fn audio_effects(&self) -> Arc<dyn IAudioEffects>;
     fn audio_exporter(&self) -> Arc<dyn IAudioExporter>;
     fn multi_channel_output(&self) -> Arc<dyn IMultiChannelOutput>;
+    fn event_bus(&self) -> Arc<dyn IEventBus>;
 }
 
 /// # Responsibility
@@ -57,6 +59,9 @@ pub struct ApplicationServices {
 
     #[shaku(inject)]
     multi_channel_output: Arc<dyn IMultiChannelOutput>,
+    
+    #[shaku(inject)]
+    event_bus: Arc<dyn IEventBus>,
 }
 
 impl IApplicationServices for ApplicationServices {
@@ -82,5 +87,9 @@ impl IApplicationServices for ApplicationServices {
 
     fn multi_channel_output(&self) -> Arc<dyn IMultiChannelOutput> {
         self.multi_channel_output.clone()
+    }
+    
+    fn event_bus(&self) -> Arc<dyn IEventBus> {
+        self.event_bus.clone()
     }
 }

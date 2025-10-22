@@ -57,8 +57,8 @@ fn init_tracing() {
 /// - Creates real DI module
 /// - Initializes MainWindow with real services
 /// - Validates no panics during construction
-#[test]
-fn test_integration_app_launches_without_crash() {
+#[tokio::test]
+async fn test_integration_app_launches_without_crash() {
     init_tracing();
     info!("=== INTEGRATION TEST: App Launch ===");
     
@@ -75,11 +75,14 @@ fn test_integration_app_launches_without_crash() {
         config.clone(),
         audio_player.clone(),
         module.resolve(), // IAudioAnalyzer
-        module.resolve(), // IVisualizationEngine
         module.resolve(), // IAudioEffects
         module.resolve(), // IAudioExporter
         multi_channel.clone(),
+        module.resolve(), // IEventBus
     );
+    
+    // Allow event listener to initialize
+    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
     
     // If we reach here, construction succeeded (no panics)
     info!("✅ Application launched successfully (construction phase)");

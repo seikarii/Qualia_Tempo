@@ -32,11 +32,17 @@ use rfd;
 /// ---
 ///
 /// Shared with MainWindow for async file picker coordination.
+/// **EventBus Integration**: Updated by event listener with playback state.
 #[derive(Default)]
 pub struct ControlPanelState {
     pub current_file_path: Option<PathBuf>,
     pub loading_error: Option<(String, Instant)>,
     pub file_picker_open: bool,
+    
+    // EventBus-driven playback state (updated by MainWindow listener)
+    pub is_playing: bool,
+    pub current_position: Duration,
+    pub total_duration: Duration,
 }
 
 /// # Responsibility

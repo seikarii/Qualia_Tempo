@@ -267,10 +267,16 @@ impl Panel for EffectsPanel {
 mod tests {
     use super::*;
     use crate::services::audio_effects::AudioEffectsService;
+    use crate::services::event_bus::EventBusService;
+    
+    fn create_test_service() -> Arc<dyn IAudioEffects> {
+        let event_bus = Arc::new(EventBusService::default());
+        Arc::new(AudioEffectsService::new(EffectConfig::default(), event_bus))
+    }
     
     #[test]
     fn test_effects_panel_creates_with_default_config() {
-        let service = Arc::new(AudioEffectsService::default());
+        let service = create_test_service();
         let config = EffectConfig::default();
         
         let panel = EffectsPanel::new(service, config.clone());
@@ -281,7 +287,7 @@ mod tests {
     
     #[test]
     fn test_effects_panel_set_config_updates_service() {
-        let service = Arc::new(AudioEffectsService::default());
+        let service = create_test_service();
         let mut panel = EffectsPanel::new(service.clone(), EffectConfig::default());
         
         let new_config = EffectConfig {
@@ -304,7 +310,7 @@ mod tests {
     
     #[test]
     fn test_effects_panel_pending_flag_resets_after_set_config() {
-        let service = Arc::new(AudioEffectsService::default());
+        let service = create_test_service();
         let mut panel = EffectsPanel::new(service, EffectConfig::default());
         
         // Simulate manual config change

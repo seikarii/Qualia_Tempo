@@ -28,7 +28,7 @@
 use audio_forge::services::interfaces::{
     IAudioAnalyzer, IAudioEffects, IAudioPlayer, IMultiChannelOutput,
 };
-use audio_forge::services::{AudioFileValidator, AudioForgeModule};
+use audio_forge::services::{AudioFileValidator, AudioForgeModule, EventBusService};
 use audio_forge::{
     AudioAnalyzerService, AudioEffectsService, MultiChannelOutputService,
     VisualizationEngineService,
@@ -55,7 +55,9 @@ fn test_e2e_complete_audio_pipeline() {
         effect_8d_rotation_hz: 0.25,
         ..Default::default()
     };
-    let effects = Arc::new(AudioEffectsService::new(effect_config));
+    
+    let event_bus = Arc::new(EventBusService::default());
+    let effects = Arc::new(AudioEffectsService::new(effect_config, event_bus));
     
     let multi_channel = Arc::new(MultiChannelOutputService::default());
     let _viz = Arc::new(VisualizationEngineService::new());
@@ -159,7 +161,8 @@ fn test_e2e_effects_chain() {
         treble_boost_gain: 1.5,
     };
 
-    let effects = AudioEffectsService::new(config);
+    let event_bus = Arc::new(EventBusService::default());
+    let effects = AudioEffectsService::new(config, event_bus);
 
     // Generate test signal: 0.8 amplitude
     let mut samples = vec![0.8, -0.8, 0.8, -0.8];

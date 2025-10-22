@@ -8,10 +8,14 @@
 //! CD-quality exports (44.1 kHz, 16-bit, stereo) with proper clipping
 //! prevention and error handling.
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
+use crate::events::AudioForgeEvent;
+use crate::services::event_bus::IEventBus;
 use hound::{WavSpec, WavWriter};
 use shaku::Component;
 use std::path::Path;
+use std::sync::Arc;
+use std::time::Duration;
 use tracing::{info, warn};
 
 use super::interfaces::IAudioExporter;
@@ -39,9 +43,12 @@ use super::interfaces::IAudioExporter;
 /// - Streaming writes (no full buffer in memory)
 /// - ~100 MB/s throughput for typical audio
 /// - Memory usage: O(1) (buffered I/O)
-#[derive(Component, Default)]
+#[derive(Component)]
 #[shaku(interface = IAudioExporter)]
-pub struct AudioExporterService;
+pub struct AudioExporterService {
+    #[shaku(inject)]
+    event_bus: Arc<dyn IEventBus>,
+}
 
 impl AudioExporterService {
     /// # Responsibility
@@ -79,18 +86,41 @@ impl IAudioExporter for AudioExporterService {
         samples: &[f32],
         sample_rate: u32,
     ) -> Result<()> {
+        let path_buf = output_path.to_path_buf();
+        
+        // Emit ExportStarted event
+        if let Err(e) = self.event_bus.emit(AudioForgeEvent::ExportStarted {
+            path: path_buf.clone(),
+        }) {
+            warn!("Failed to emit ExportStarted event: {}", e);
+        }
+        
         info!("💾 Exporting audio to WAV: {}", output_path.display());
         info!("   Sample rate: {} Hz", sample_rate);
         info!("   Samples: {} ({:.2} seconds)", samples.len(), samples.len() as f64 / sample_rate as f64 / 2.0);
         
         // Validation: Empty buffer check
         if samples.is_empty() {
-            return Err(anyhow!("Cannot export empty audio buffer"));
+            let err_msg = "Cannot export empty audio buffer".to_string();
+            if let Err(e) = self.event_bus.emit(AudioForgeEvent::ExportFailed {
+                path: path_buf,
+                error: err_msg.clone(),
+            }) {
+                warn!("Failed to emit ExportFailed event: {}", e);
+            }
+            return Err(anyhow!(err_msg));
         }
         
         // Validation: Sample rate sanity check
         if sample_rate == 0 || sample_rate > 192_000 {
-            return Err(anyhow!("Invalid sample rate: {} Hz (must be 1-192000)", sample_rate));
+            let err_msg = format!("Invalid sample rate: {} Hz (must be 1-192000)", sample_rate);
+            if let Err(e) = self.event_bus.emit(AudioForgeEvent::ExportFailed {
+                path: path_buf,
+                error: err_msg.clone(),
+            }) {
+                warn!("Failed to emit ExportFailed event: {}", e);
+            }
+            return Err(anyhow!(err_msg));
         }
         
         // Validation: Stereo pair check
@@ -107,23 +137,61 @@ impl IAudioExporter for AudioExporterService {
         };
         
         // Create WAV writer
-        let mut writer = WavWriter::create(output_path, spec)
-            .context(format!("Failed to create WAV file: {}", output_path.display()))?;
+        let mut writer = match WavWriter::create(output_path, spec) {
+            Ok(w) => w,
+            Err(e) => {
+                let err_msg = format!("Failed to create WAV file: {} - {}", output_path.display(), e);
+                if let Err(emit_err) = self.event_bus.emit(AudioForgeEvent::ExportFailed {
+                    path: path_buf,
+                    error: err_msg.clone(),
+                }) {
+                    warn!("Failed to emit ExportFailed event: {}", emit_err);
+                }
+                return Err(anyhow!(err_msg));
+            }
+        };
         
         // Write samples with f32 → i16 conversion
         let mut written_samples = 0;
         for &sample in samples.iter() {
             let i16_sample = Self::f32_to_i16(sample);
-            writer.write_sample(i16_sample)
-                .context("Failed to write sample to WAV file")?;
+            if let Err(e) = writer.write_sample(i16_sample) {
+                let err_msg = format!("Failed to write sample to WAV file: {}", e);
+                if let Err(emit_err) = self.event_bus.emit(AudioForgeEvent::ExportFailed {
+                    path: path_buf,
+                    error: err_msg.clone(),
+                }) {
+                    warn!("Failed to emit ExportFailed event: {}", emit_err);
+                }
+                return Err(anyhow!(err_msg));
+            }
             written_samples += 1;
         }
         
         // Finalize WAV file (writes headers, flushes buffers)
-        writer.finalize()
-            .context("Failed to finalize WAV file")?;
+        if let Err(e) = writer.finalize() {
+            let err_msg = format!("Failed to finalize WAV file: {}", e);
+            if let Err(emit_err) = self.event_bus.emit(AudioForgeEvent::ExportFailed {
+                path: path_buf,
+                error: err_msg.clone(),
+            }) {
+                warn!("Failed to emit ExportFailed event: {}", emit_err);
+            }
+            return Err(anyhow!(err_msg));
+        }
+        
+        let duration = Duration::from_secs_f64(samples.len() as f64 / sample_rate as f64 / 2.0);
         
         info!("✅ Export complete: {} samples written", written_samples);
+        
+        // Emit ExportCompleted event
+        if let Err(e) = self.event_bus.emit(AudioForgeEvent::ExportCompleted {
+            path: path_buf,
+            duration,
+        }) {
+            warn!("Failed to emit ExportCompleted event: {}", e);
+        }
+        
         Ok(())
     }
 }
@@ -131,8 +199,15 @@ impl IAudioExporter for AudioExporterService {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::services::event_bus::EventBusService;
     use std::fs;
     use tempfile::TempDir;
+
+    /// Helper function to create AudioExporterService for testing
+    fn create_test_service() -> AudioExporterService {
+        let event_bus = Arc::new(EventBusService::default());
+        AudioExporterService { event_bus }
+    }
 
     /// # Responsibility
     /// Verify f32 → i16 conversion produces correct values.
@@ -158,7 +233,7 @@ mod tests {
     /// Verify WAV export creates valid file with correct headers.
     #[test]
     fn test_export_wav_creates_valid_file() {
-        let service = AudioExporterService;
+        let service = create_test_service();
         let temp_dir = TempDir::new().unwrap();
         let output_path = temp_dir.path().join("test_output.wav");
         
@@ -199,7 +274,7 @@ mod tests {
     /// Verify export rejects empty sample buffer.
     #[test]
     fn test_export_wav_rejects_empty_buffer() {
-        let service = AudioExporterService;
+        let service = create_test_service();
         let temp_dir = TempDir::new().unwrap();
         let output_path = temp_dir.path().join("empty.wav");
         
@@ -214,7 +289,7 @@ mod tests {
     /// Verify export rejects invalid sample rates.
     #[test]
     fn test_export_wav_rejects_invalid_sample_rate() {
-        let service = AudioExporterService;
+        let service = create_test_service();
         let temp_dir = TempDir::new().unwrap();
         let output_path = temp_dir.path().join("invalid.wav");
         
@@ -233,7 +308,7 @@ mod tests {
     /// Verify clipping prevention for out-of-range samples.
     #[test]
     fn test_export_wav_handles_clipping() {
-        let service = AudioExporterService;
+        let service = create_test_service();
         let temp_dir = TempDir::new().unwrap();
         let output_path = temp_dir.path().join("clipping.wav");
         

@@ -3,19 +3,20 @@
 
 use crate::config::{save_config, AppConfig};
 use crate::contracts::frequency_spectrum::FrequencySpectrum;
+use crate::events::AudioForgeEvent;
+use crate::services::event_bus::IEventBus;
 use crate::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
 use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use crate::services::interfaces::i_audio_exporter::IAudioExporter;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
-use crate::services::interfaces::i_visualization_engine::IVisualizationEngine;
 use crate::services::AudioFileValidator;
 use crate::ui::theme::QualiaTheme;
 use crate::ui::widgets::{
     control_panel::{ControlPanel, ControlPanelState},
-    EffectsPanel, HeroWaveformCard, MultiBandSpectrumGrid, Panel, SpectrumPanel, WaveformPanel,
+    EffectsPanel, HeroWaveformCard, MultiBandSpectrumGrid, Panel,
 };
-use egui::{CentralPanel, Context, SidePanel, TopBottomPanel};
+use egui::{CentralPanel, Context, TopBottomPanel};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -60,8 +61,6 @@ pub struct MainWindow {
     // DIRECTIVE 12 & 13: Modular UI widgets (full decomposition)
     control_panel: ControlPanel,
     effects_panel: EffectsPanel,
-    waveform_panel: WaveformPanel,
-    spectrum_panel: SpectrumPanel,
     
     // NEW: Modern 2025 UI widgets
     hero_waveform: HeroWaveformCard,
@@ -83,14 +82,17 @@ impl MainWindow {
     ///
     /// Initializes UI state from persisted config. Config will be saved
     /// via Drop trait when application exits.
+    ///
+    /// **EventBus Integration**: Subscribes to events and spawns async listener
+    /// that updates state in response to service events (play/pause/seek/etc).
     pub fn new_with_config(
         config: AppConfig,
         audio_player: Arc<dyn IAudioPlayer>,
         audio_analyzer: Arc<dyn IAudioAnalyzer>,
-        visualization_engine: Arc<dyn IVisualizationEngine>,
         audio_effects: Arc<dyn IAudioEffects>,
         audio_exporter: Arc<dyn IAudioExporter>,
         multi_channel_output: Arc<dyn IMultiChannelOutput>,
+        event_bus: Arc<dyn IEventBus>,
     ) -> Self {
         let volume = config.audio.default_volume;
 
@@ -119,13 +121,71 @@ impl MainWindow {
             volume,
         );
 
-        let waveform_panel = WaveformPanel::new(visualization_engine.clone());
-        
-        let spectrum_panel = SpectrumPanel::new(visualization_engine.clone());
-        
-        // NEW: Modern 2025 UI widgets
+        // Modern 2025 UI widgets (old SidePanel widgets DELETED)
         let hero_waveform = HeroWaveformCard::new();
         let spectrum_grid = MultiBandSpectrumGrid::new(8); // 8 bands
+
+        // **CRITICAL: EventBus Subscription**
+        // Spawn async task that listens for events and updates state
+        let mut event_receiver = event_bus.subscribe();
+        let state_clone = state.clone();
+        
+        tokio::spawn(async move {
+            info!("🎧 MainWindow event listener started");
+            
+            loop {
+                match event_receiver.recv().await {
+                    Ok(event) => {
+                        match event {
+                            AudioForgeEvent::PlaybackStateChanged { is_playing, position } => {
+                                let mut state = state_clone.lock().unwrap();
+                                state.is_playing = is_playing;
+                                state.current_position = position;
+                                info!("▶️  Playback state: playing={}, position={:?}", is_playing, position);
+                            }
+                            AudioForgeEvent::FileLoaded { path, duration, sample_rate } => {
+                                let mut state = state_clone.lock().unwrap();
+                                state.current_file_path = Some(path.clone());
+                                state.total_duration = duration;
+                                info!("📂 File loaded: {:?}, duration={:?}, rate={}", path, duration, sample_rate);
+                            }
+                            AudioForgeEvent::SeekedTo { position } => {
+                                let mut state = state_clone.lock().unwrap();
+                                state.current_position = position;
+                                info!("⏩ Seeked to {:?}", position);
+                            }
+                            AudioForgeEvent::VolumeChanged { new_volume } => {
+                                info!("🔊 Volume changed to {}", new_volume);
+                            }
+                            AudioForgeEvent::EffectsConfigUpdated { config } => {
+                                info!("🎛️  Effects config updated: 8D={}, Drop={}", 
+                                      config.effect_8d_enabled, config.drop_effect_enabled);
+                            }
+                            AudioForgeEvent::ExportStarted { path } => {
+                                info!("💾 Export started: {:?}", path);
+                            }
+                            AudioForgeEvent::ExportCompleted { path, duration } => {
+                                info!("✅ Export completed: {:?} ({:?})", path, duration);
+                            }
+                            AudioForgeEvent::ExportFailed { path, error } => {
+                                error!("❌ Export failed: {:?} - {}", path, error);
+                            }
+                            AudioForgeEvent::ErrorOccurred { message } => {
+                                error!("❌ Error: {}", message);
+                            }
+                            _ => {}
+                        }
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(skipped)) => {
+                        warn!("⚠️  Event listener lagging! Skipped {} events", skipped);
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                        info!("🛑 EventBus closed, stopping listener");
+                        break;
+                    }
+                }
+            }
+        });
 
         Self {
             state,
@@ -134,8 +194,6 @@ impl MainWindow {
             audio_analyzer,
             control_panel,
             effects_panel,
-            waveform_panel,
-            spectrum_panel,
             hero_waveform,
             spectrum_grid,
             cached_waveform: Vec::new(),
@@ -284,13 +342,6 @@ impl MainWindow {
         // Update visualization data from real-time audio (throttled to 30fps)
         self.update_visualization_data();
         
-        // Update OLD panel data caches (still keeping for side panels)
-        self.waveform_panel.update_waveform(self.cached_waveform.clone());
-        self.spectrum_panel.update_data(
-            self.cached_spectrum.clone(),
-            self.cached_instrument_levels,
-        );
-        
         // UPDATE NEW WIDGETS
         let playback_position = if self.audio_player.total_duration().as_secs() > 0 {
             self.audio_player.current_position().as_secs_f32() 
@@ -311,20 +362,6 @@ impl MainWindow {
         TopBottomPanel::bottom("effects_panel").show(ctx, |ui| {
             self.effects_panel.render(ctx, ui);
         });
-
-        // LEFT PANEL: WaveformPanel orchestration (LEGACY - keep for now)
-        SidePanel::left("waveform_panel")
-            .default_width(400.0)
-            .show(ctx, |ui| {
-                self.waveform_panel.render(ctx, ui);
-            });
-
-        // RIGHT PANEL: SpectrumPanel orchestration (LEGACY - keep for now)
-        SidePanel::right("spectrum_panel")
-            .default_width(400.0)
-            .show(ctx, |ui| {
-                self.spectrum_panel.render(ctx, ui);
-            });
 
         // ============================================================================
         // CENTER PANEL: MODERN 2025 UI (Hero Waveform + Spectrum Grid)

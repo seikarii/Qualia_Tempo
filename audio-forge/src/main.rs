@@ -60,10 +60,10 @@ fn main() -> Result<(), eframe::Error> {
         config,
         services.audio_player(),
         services.audio_analyzer(),
-        services.visualization_engine(),
         services.audio_effects(),
         services.audio_exporter(),
         services.multi_channel_output(),
+        services.event_bus(),
     );
 
     let options = eframe::NativeOptions {

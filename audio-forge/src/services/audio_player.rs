@@ -2,8 +2,10 @@
 //! Implements audio playback service using rodio and symphonia.
 
 use crate::contracts::channel_configuration::ChannelMode;
+use crate::events::AudioForgeEvent;
 use crate::services::analyzing_source::{AnalyzingSource, SampleBuffer};
 use crate::services::effects_source::EffectsSource;
+use crate::services::event_bus::IEventBus;
 use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
@@ -18,7 +20,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 /// # Responsibility
 /// Holds the rodio Sink and current playback state.
@@ -114,6 +116,9 @@ pub struct AudioPlayerService {
     
     #[shaku(inject)]
     multi_channel: Arc<dyn IMultiChannelOutput>,
+    
+    #[shaku(inject)]
+    event_bus: Arc<dyn IEventBus>,
 }
 
 impl IAudioPlayer for AudioPlayerService {
@@ -195,6 +200,19 @@ impl IAudioPlayer for AudioPlayerService {
         state.sample_counter.store(0, Ordering::Relaxed);
 
         info!("Audio loaded successfully. Duration: {:?}, Sample Rate: {}", total_duration, sample_rate);
+        
+        // Emit FileLoaded event
+        let file_path = path.to_path_buf();
+        drop(state); // Release lock before emitting event
+        
+        if let Err(e) = self.event_bus.emit(AudioForgeEvent::FileLoaded {
+            path: file_path,
+            duration: total_duration,
+            sample_rate,
+        }) {
+            warn!("Failed to emit FileLoaded event: {}", e);
+        }
+        
         Ok(total_duration)
     }
 
@@ -210,9 +228,24 @@ impl IAudioPlayer for AudioPlayerService {
         state.sink.play();
         state.is_playing = true;
         
+        // Get current position for event
+        let sample_count = state.sample_counter.load(Ordering::Relaxed);
+        let position = Duration::from_secs_f64(sample_count as f64 / state.sample_rate as f64);
+        
+        drop(state); // Release lock
+        
         // Directive 15: No time tracking needed - sample counter handles position
         
         info!("Playback started");
+        
+        // Emit PlaybackStateChanged event
+        if let Err(e) = self.event_bus.emit(AudioForgeEvent::PlaybackStateChanged {
+            is_playing: true,
+            position,
+        }) {
+            warn!("Failed to emit PlaybackStateChanged event: {}", e);
+        }
+        
         Ok(())
     }
 
@@ -226,9 +259,24 @@ impl IAudioPlayer for AudioPlayerService {
         state.sink.pause();
         state.is_playing = false;
         
+        // Get current position for event
+        let sample_count = state.sample_counter.load(Ordering::Relaxed);
+        let position = Duration::from_secs_f64(sample_count as f64 / state.sample_rate as f64);
+        
+        drop(state); // Release lock
+        
         // Directive 15: Sample counter automatically preserves position
         
         info!("Playback paused");
+        
+        // Emit PlaybackStateChanged event
+        if let Err(e) = self.event_bus.emit(AudioForgeEvent::PlaybackStateChanged {
+            is_playing: false,
+            position,
+        }) {
+            warn!("Failed to emit PlaybackStateChanged event: {}", e);
+        }
+        
         Ok(())
     }
 
@@ -245,7 +293,18 @@ impl IAudioPlayer for AudioPlayerService {
         // Directive 15: Reset sample counter to zero
         state.sample_counter.store(0, Ordering::Relaxed);
         
+        drop(state); // Release lock
+        
         info!("Playback stopped");
+        
+        // Emit PlaybackStateChanged event
+        if let Err(e) = self.event_bus.emit(AudioForgeEvent::PlaybackStateChanged {
+            is_playing: false,
+            position: Duration::ZERO,
+        }) {
+            warn!("Failed to emit PlaybackStateChanged event: {}", e);
+        }
+        
         Ok(())
     }
 
@@ -295,15 +354,37 @@ impl IAudioPlayer for AudioPlayerService {
             state.is_playing = true;
         }
         
+        drop(state); // Release lock
+        
         info!("Seeked to {:?} (sample {})", clamped_position, target_samples);
+        
+        // Emit SeekedTo event
+        if let Err(e) = self.event_bus.emit(AudioForgeEvent::SeekedTo {
+            position: clamped_position,
+        }) {
+            warn!("Failed to emit SeekedTo event: {}", e);
+        }
+        
         Ok(())
     }
 
     fn set_volume(&self, volume: f32) -> Result<()> {
         let state = self.state.lock();
         
-        state.sink.set_volume(volume.clamp(0.0, 1.0));
-        info!("Volume set to {}", volume);
+        let clamped_volume = volume.clamp(0.0, 1.0);
+        state.sink.set_volume(clamped_volume);
+        
+        drop(state); // Release lock
+        
+        info!("Volume set to {}", clamped_volume);
+        
+        // Emit VolumeChanged event
+        if let Err(e) = self.event_bus.emit(AudioForgeEvent::VolumeChanged {
+            new_volume: clamped_volume,
+        }) {
+            warn!("Failed to emit VolumeChanged event: {}", e);
+        }
+        
         Ok(())
     }
 
@@ -402,16 +483,22 @@ impl IAudioPlayer for AudioPlayerService {
 mod tests {
     use super::*;
     use crate::services::audio_effects::AudioEffectsService;
+    use crate::services::event_bus::EventBusService;
     use crate::services::multi_channel_output::MultiChannelOutputService;
 
     /// Helper function to create AudioPlayerService for testing
     fn create_test_service() -> AudioPlayerService {
-        let audio_effects = Arc::new(AudioEffectsService::default());
+        let event_bus = Arc::new(EventBusService::default());
+        let audio_effects = Arc::new(AudioEffectsService::new(
+            crate::contracts::effect_parameters::EffectConfig::default(),
+            event_bus.clone()
+        ));
         let multi_channel = Arc::new(MultiChannelOutputService::default());
         AudioPlayerService {
             state: PlayerStateHandle::default(),
             audio_effects,
             multi_channel,
+            event_bus,
         }
     }
 

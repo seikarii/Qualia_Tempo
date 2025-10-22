@@ -175,7 +175,18 @@ mod tests {
     use super::*;
     use crate::contracts::effect_parameters::EffectConfig;
     use crate::services::audio_effects::AudioEffectsService;
+    use crate::services::event_bus::EventBusService;
     use rodio::source::SineWave;
+    
+    fn create_test_effects_service() -> Arc<dyn IAudioEffects> {
+        let event_bus = Arc::new(EventBusService::default());
+        Arc::new(AudioEffectsService::new(EffectConfig::default(), event_bus))
+    }
+    
+    fn create_test_effects_service_with_config(config: EffectConfig) -> Arc<dyn IAudioEffects> {
+        let event_bus = Arc::new(EventBusService::default());
+        Arc::new(AudioEffectsService::new(config, event_bus))
+    }
     
     #[test]
     fn test_effects_source_forwards_metadata() {
@@ -183,7 +194,7 @@ mod tests {
         let sample_rate = sine.sample_rate();
         let channels = sine.channels();
         
-        let effects = Arc::new(AudioEffectsService::default());
+        let effects = create_test_effects_service();
         let effects_source = EffectsSource::new(sine, effects, 512);
         
         assert_eq!(effects_source.sample_rate(), sample_rate);
@@ -197,7 +208,7 @@ mod tests {
             .take_duration(Duration::from_millis(10))
             .amplify(0.5);
         
-        let effects = Arc::new(AudioEffectsService::default());
+        let effects = create_test_effects_service();
         let mut effects_source = EffectsSource::new(sine, effects, 512);
         
         // Collect some samples
@@ -226,7 +237,7 @@ mod tests {
             ..Default::default()
         };
         
-        let effects = Arc::new(AudioEffectsService::new(config));
+        let effects = create_test_effects_service_with_config(config);
         let mut effects_source = EffectsSource::new(sine, effects, 512);
         
         // Collect samples
@@ -242,7 +253,7 @@ mod tests {
     fn test_effects_source_buffer_processing() {
         let sine = SineWave::new(440.0).take_duration(Duration::from_secs(1));
         
-        let effects = Arc::new(AudioEffectsService::default());
+        let effects = create_test_effects_service();
         let mut effects_source = EffectsSource::new(sine, effects, 256);
         
         // Pull samples - should batch process internally
