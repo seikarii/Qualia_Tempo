@@ -28,7 +28,7 @@
 use audio_forge::services::interfaces::{
     IAudioAnalyzer, IAudioEffects, IAudioPlayer, IMultiChannelOutput,
 };
-use audio_forge::services::AudioForgeModule;
+use audio_forge::services::{AudioFileValidator, AudioForgeModule};
 use audio_forge::{
     AudioAnalyzerService, AudioEffectsService, MultiChannelOutputService,
     VisualizationEngineService,
@@ -1039,8 +1039,8 @@ fn test_brutal_e2e_drag_and_drop_logic_validation() {
     // STEP 4: Validate magic number detection (SECURITY CRITICAL)
     println!("\n--- Testing Magic Number Validation ---");
     
-    // Test valid WAV file
-    let valid_result = validate_audio_file_format_test_wrapper(&valid_wav_path);
+    // Test valid WAV file (using PRODUCTION validator)
+    let valid_result = AudioFileValidator::validate(&valid_wav_path);
     assert!(
         valid_result.is_ok(),
         "❌ VALID WAV REJECTED: {:?}",
@@ -1048,8 +1048,8 @@ fn test_brutal_e2e_drag_and_drop_logic_validation() {
     );
     println!("✅ Valid WAV file accepted");
     
-    // Test invalid file (should be REJECTED)
-    let invalid_result = validate_audio_file_format_test_wrapper(&invalid_path);
+    // Test invalid file (should be REJECTED by PRODUCTION validator)
+    let invalid_result = AudioFileValidator::validate(&invalid_path);
     assert!(
         invalid_result.is_err(),
         "❌ INVALID FILE ACCEPTED (SECURITY VULNERABILITY!)"
@@ -1058,51 +1058,6 @@ fn test_brutal_e2e_drag_and_drop_logic_validation() {
     
     println!("\n✅ BRUTAL DRAG-AND-DROP LOGIC TEST PASSED - Validation works");
     println!("⚠️  NOTE: Actual UI drag-and-drop requires manual testing (see manual_e2e_checklist.md)");
-}
-
-/// Helper function: Replicates MainWindow::validate_audio_file_format logic
-fn validate_audio_file_format_test_wrapper(path: &std::path::PathBuf) -> Result<(), anyhow::Error> {
-    use std::fs::File;
-    use std::io::Read;
-    use anyhow::Context as AnyhowContext;
-    
-    let mut file = File::open(path)
-        .with_context(|| format!("Failed to open file: {}", path.display()))?;
-    
-    let mut magic = [0u8; 12];
-    file.read_exact(&mut magic)
-        .with_context(|| format!("File too small to identify: {}", path.display()))?;
-    
-    // Check magic numbers (same logic as MainWindow)
-    if &magic[0..4] == b"RIFF" {
-        return Ok(());
-    }
-    
-    if &magic[0..4] == b"fLaC" {
-        return Ok(());
-    }
-    
-    // MP3: Check for ID3v2 tag (most MP3 files have this)
-    if &magic[0..3] == b"ID3" {
-        return Ok(());
-    }
-    
-    // MP3: Check for MPEG sync word (0xFF 0xFB/0xF3/0xF2)
-    if magic[0] == 0xFF && (magic[1] == 0xFB || magic[1] == 0xF3 || magic[1] == 0xF2) {
-        return Ok(());
-    }
-    
-    if &magic[0..4] == b"OggS" {
-        return Ok(());
-    }
-    
-    if &magic[4..8] == b"ftyp" {
-        return Ok(());
-    }
-    
-    Err(anyhow::anyhow!(
-        "Unsupported or invalid audio file format. Supported: WAV, FLAC, MP3, OGG, M4A/AAC"
-    ))
 }
 
 /// # Responsibility
@@ -1858,8 +1813,8 @@ async fn test_brutal_e2e_drag_and_drop_with_real_test_assets() {
         println!("   [DROP EVENT] File dropped: {:?}", wav_clone);
         
         // Simulate MainWindow::load_audio_file_validated() logic
-        // Step 1: Magic number validation
-        let validation = validate_audio_file_format_test_wrapper(&wav_clone);
+        // Step 1: Magic number validation (USING PRODUCTION VALIDATOR)
+        let validation = AudioFileValidator::validate(&wav_clone);
         
         if validation.is_err() {
             let mut s = state_clone.lock().unwrap();
@@ -1929,8 +1884,8 @@ async fn test_brutal_e2e_drag_and_drop_with_real_test_assets() {
     let mp3_task = tokio::spawn(async move {
         println!("   [DROP EVENT] File dropped: {:?}", mp3_clone);
         
-        // Magic number validation
-        let validation = validate_audio_file_format_test_wrapper(&mp3_clone);
+        // Magic number validation (USING PRODUCTION VALIDATOR)
+        let validation = AudioFileValidator::validate(&mp3_clone);
         
         if let Err(e) = validation {
             println!("   [DROP EVENT] ❌ Validation failed: {:?}", e);
