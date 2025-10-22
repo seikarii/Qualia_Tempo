@@ -1082,6 +1082,12 @@ fn validate_audio_file_format_test_wrapper(path: &std::path::PathBuf) -> Result<
         return Ok(());
     }
     
+    // MP3: Check for ID3v2 tag (most MP3 files have this)
+    if &magic[0..3] == b"ID3" {
+        return Ok(());
+    }
+    
+    // MP3: Check for MPEG sync word (0xFF 0xFB/0xF3/0xF2)
     if magic[0] == 0xFF && (magic[1] == 0xFB || magic[1] == 0xF3 || magic[1] == 0xF2) {
         return Ok(());
     }
@@ -1543,4 +1549,449 @@ async fn test_brutal_e2e_simulated_file_loading_workflow() {
     println!("✅ Final state: file loaded = {:?}", final_state.current_file_path);
     
     println!("\n✅ BRUTAL FILE LOADING WORKFLOW TEST PASSED - Full workflow validated");
+}
+
+// =============================================================================
+// 🔥 DIRECTIVE 23: REAL FILE PLAYBACK VALIDATION WITH TEST ASSETS 🔥
+// =============================================================================
+
+/// # Responsibility
+/// E2E Test: Load and playback real WAV file from test assets.
+///
+/// ---
+///
+/// ## What This ACTUALLY Tests
+/// - Loads tests/assets/sine_440hz.wav (REAL test asset)
+/// - Verifies file duration is valid
+/// - Starts playback via player.play()
+/// - Validates is_playing() state changes
+/// - Verifies audio samples are captured during playback
+/// - Tests pause/stop functionality
+///
+/// ## Critical Validation
+/// This test proves the COMPLETE load → play → capture workflow works
+/// with the SAME files that would be drag-and-dropped by users.
+#[tokio::test]
+async fn test_brutal_e2e_real_wav_playback_from_test_assets() {
+    use std::path::Path;
+    
+    println!("\n=== 🎵 BRUTAL REAL WAV PLAYBACK TEST ===\n");
+    
+    // STEP 1: Verify test asset exists
+    let wav_path = Path::new("tests/assets/sine_440hz.wav");
+    assert!(
+        wav_path.exists(),
+        "❌ TEST ASSET MISSING: {:?}. Run asset generation first.",
+        wav_path
+    );
+    println!("✅ Test asset found: {:?}", wav_path);
+    
+    // STEP 2: Initialize services
+    let module = AudioForgeModule::builder().build();
+    let player: Arc<dyn IAudioPlayer> = module.resolve();
+    
+    // STEP 3: Load real WAV file (same as user clicking "Load File")
+    println!("⚡ Loading WAV file...");
+    let load_result = player.load_file(wav_path);
+    
+    assert!(
+        load_result.is_ok(),
+        "❌ FAILED TO LOAD TEST ASSET: {:?}",
+        load_result.err()
+    );
+    
+    let duration = load_result.unwrap();
+    println!("✅ File loaded: duration = {:.2}s", duration.as_secs_f32());
+    
+    // Validate duration is reasonable (5 seconds ±1 second)
+    assert!(
+        (4..=6).contains(&duration.as_secs()),
+        "❌ UNEXPECTED DURATION: {} seconds (expected ~5s)",
+        duration.as_secs()
+    );
+    
+    // STEP 4: Verify player is initially stopped
+    assert!(
+        !player.is_playing(),
+        "❌ Player should be stopped after load"
+    );
+    println!("✅ Player state: stopped (expected)");
+    
+    // STEP 5: Start playback (same as user clicking "Play")
+    println!("⚡ Starting playback...");
+    let play_result = player.play();
+    
+    assert!(
+        play_result.is_ok(),
+        "❌ PLAY FAILED: {:?}",
+        play_result.err()
+    );
+    
+    // Give playback time to start
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    
+    // STEP 6: Verify playback is active
+    assert!(
+        player.is_playing(),
+        "❌ Player should be playing after play() call"
+    );
+    println!("✅ Playback started: is_playing() = true");
+    
+    // STEP 7: Verify audio samples are being processed
+    let samples = player.get_audio_samples();
+    assert!(
+        !samples.is_empty(),
+        "❌ No audio samples captured (playback may not be working)"
+    );
+    println!("✅ Audio samples captured: {} samples", samples.len());
+    
+    // STEP 8: Test pause functionality
+    println!("⚡ Testing pause...");
+    player.pause().expect("Pause should succeed");
+    
+    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    
+    assert!(
+        !player.is_playing(),
+        "❌ Player should be paused"
+    );
+    println!("✅ Pause works: is_playing() = false");
+    
+    // STEP 9: Resume playback
+    println!("⚡ Resuming playback...");
+    player.play().expect("Resume should succeed");
+    
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    
+    assert!(
+        player.is_playing(),
+        "❌ Player should be playing after resume"
+    );
+    println!("✅ Resume works: is_playing() = true");
+    
+    // STEP 10: Test stop functionality
+    println!("⚡ Testing stop...");
+    player.stop().expect("Stop should succeed");
+    
+    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    
+    assert!(
+        !player.is_playing(),
+        "❌ Player should be stopped"
+    );
+    println!("✅ Stop works: is_playing() = false");
+    
+    // Verify position reset to 0
+    let position = player.current_position();
+    assert!(
+        position.as_millis() < 100,
+        "❌ Stop should reset position to 0 (got {}ms)",
+        position.as_millis()
+    );
+    println!("✅ Stop reset position: {}ms", position.as_millis());
+    
+    println!("\n✅ BRUTAL REAL WAV PLAYBACK TEST PASSED - Full playback workflow validated");
+}
+
+/// # Responsibility
+/// E2E Test: Load and playback real MP3 file from test assets.
+///
+/// ---
+///
+/// ## What This ACTUALLY Tests
+/// - Loads tests/assets/sine_880hz.mp3 (REAL MP3 test asset)
+/// - Verifies MP3 decoder works (Symphonia codec)
+/// - Validates lossy compression handling
+/// - Tests complete play/pause/stop cycle
+/// - Verifies audio samples are captured
+///
+/// ## Critical Validation
+/// This test proves MP3 files (most common format) work end-to-end,
+/// including drag-and-drop scenario validation.
+#[tokio::test]
+async fn test_brutal_e2e_real_mp3_playback_from_test_assets() {
+    use std::path::Path;
+    
+    println!("\n=== 🎵 BRUTAL REAL MP3 PLAYBACK TEST ===\n");
+    
+    // STEP 1: Verify test asset exists
+    let mp3_path = Path::new("tests/assets/sine_880hz.mp3");
+    assert!(
+        mp3_path.exists(),
+        "❌ TEST ASSET MISSING: {:?}",
+        mp3_path
+    );
+    println!("✅ Test asset found: {:?}", mp3_path);
+    
+    // STEP 2: Initialize services
+    let module = AudioForgeModule::builder().build();
+    let player: Arc<dyn IAudioPlayer> = module.resolve();
+    
+    // STEP 3: Load real MP3 file
+    println!("⚡ Loading MP3 file...");
+    let load_result = player.load_file(mp3_path);
+    
+    assert!(
+        load_result.is_ok(),
+        "❌ FAILED TO LOAD MP3: {:?}",
+        load_result.err()
+    );
+    
+    let duration = load_result.unwrap();
+    println!("✅ MP3 loaded: duration = {:.2}s", duration.as_secs_f32());
+    
+    // Validate duration (MP3 may have slight variations due to compression)
+    assert!(
+        (4..=6).contains(&duration.as_secs()),
+        "❌ UNEXPECTED MP3 DURATION: {} seconds",
+        duration.as_secs()
+    );
+    
+    // STEP 4: Start playback
+    println!("⚡ Starting MP3 playback...");
+    let play_result = player.play();
+    
+    assert!(
+        play_result.is_ok(),
+        "❌ MP3 PLAY FAILED: {:?}",
+        play_result.err()
+    );
+    
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    
+    // STEP 5: Verify playback is active
+    assert!(
+        player.is_playing(),
+        "❌ MP3 playback should be active"
+    );
+    println!("✅ MP3 playback started: is_playing() = true");
+    
+    // STEP 6: Verify audio samples captured (lossy compression test)
+    let samples = player.get_audio_samples();
+    assert!(
+        !samples.is_empty(),
+        "❌ No audio samples from MP3 (codec may be broken)"
+    );
+    println!("✅ MP3 audio samples captured: {} samples", samples.len());
+    
+    // Validate samples are in valid range (no clipping from lossy compression)
+    let out_of_range = samples
+        .iter()
+        .filter(|&&s| !(-1.0..=1.0).contains(&s))
+        .count();
+    
+    assert_eq!(
+        out_of_range, 0,
+        "❌ {} samples out of [-1.0, 1.0] range (lossy compression artifacts)",
+        out_of_range
+    );
+    println!("✅ All MP3 samples in valid range");
+    
+    // STEP 7: Test pause/resume cycle
+    println!("⚡ Testing MP3 pause...");
+    player.pause().expect("Pause should succeed");
+    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    assert!(!player.is_playing(), "❌ MP3 should be paused");
+    println!("✅ MP3 pause works");
+    
+    println!("⚡ Resuming MP3 playback...");
+    player.play().expect("Resume should succeed");
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    assert!(player.is_playing(), "❌ MP3 should be playing after resume");
+    println!("✅ MP3 resume works");
+    
+    // STEP 8: Stop and verify cleanup
+    println!("⚡ Stopping MP3 playback...");
+    player.stop().expect("Stop should succeed");
+    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    
+    assert!(!player.is_playing(), "❌ MP3 should be stopped");
+    println!("✅ MP3 stop works");
+    
+    println!("\n✅ BRUTAL REAL MP3 PLAYBACK TEST PASSED - MP3 codec and playback validated");
+}
+
+/// # Responsibility
+/// E2E Test: Simulate drag-and-drop workflow with real test assets.
+///
+/// ---
+///
+/// ## What This ACTUALLY Tests
+/// - Simulates user dragging tests/assets/sine_440hz.wav to window
+/// - Simulates user dragging tests/assets/sine_880hz.mp3 to window
+/// - Validates magic number detection with REAL files
+/// - Tests load → play workflow for both formats
+/// - Verifies state updates match expected behavior
+///
+/// ## Critical Validation
+/// This test simulates the EXACT workflow that happens when user
+/// drags and drops a file onto the application window.
+#[tokio::test]
+async fn test_brutal_e2e_drag_and_drop_with_real_test_assets() {
+    use std::path::PathBuf;
+    use std::sync::{Arc, Mutex};
+    use audio_forge::ui::widgets::ControlPanelState;
+    
+    println!("\n=== 🖱️ BRUTAL DRAG-AND-DROP SIMULATION WITH REAL FILES ===\n");
+    
+    // STEP 1: Verify test assets exist
+    let wav_path = PathBuf::from("tests/assets/sine_440hz.wav");
+    let mp3_path = PathBuf::from("tests/assets/sine_880hz.mp3");
+    
+    assert!(wav_path.exists(), "❌ WAV test asset missing");
+    assert!(mp3_path.exists(), "❌ MP3 test asset missing");
+    println!("✅ Test assets verified");
+    
+    // STEP 2: Initialize services and state
+    let module = AudioForgeModule::builder().build();
+    let player: Arc<dyn IAudioPlayer> = module.resolve();
+    let state = Arc::new(Mutex::new(ControlPanelState::default()));
+    
+    // STEP 3: Simulate drag-and-drop WAV file
+    println!("\n--- Simulating WAV Drag-and-Drop ---");
+    
+    let player_clone = player.clone();
+    let state_clone = state.clone();
+    let wav_clone = wav_path.clone();
+    
+    let wav_task = tokio::spawn(async move {
+        println!("   [DROP EVENT] File dropped: {:?}", wav_clone);
+        
+        // Simulate MainWindow::load_audio_file_validated() logic
+        // Step 1: Magic number validation
+        let validation = validate_audio_file_format_test_wrapper(&wav_clone);
+        
+        if validation.is_err() {
+            let mut s = state_clone.lock().unwrap();
+            s.loading_error = Some((
+                format!("Invalid file: {:?}", validation.err()),
+                std::time::Instant::now()
+            ));
+            return;
+        }
+        println!("   [DROP EVENT] ✅ Magic number validation passed");
+        
+        // Step 2: Load file
+        match player_clone.load_file(&wav_clone) {
+            Ok(_) => {
+                println!("   [DROP EVENT] ✅ WAV file loaded successfully");
+                let mut s = state_clone.lock().unwrap();
+                s.current_file_path = Some(wav_clone.clone());
+                s.loading_error = None;
+            }
+            Err(e) => {
+                println!("   [DROP EVENT] ❌ Load failed: {}", e);
+                let mut s = state_clone.lock().unwrap();
+                s.loading_error = Some((format!("Load error: {}", e), std::time::Instant::now()));
+            }
+        }
+    });
+    
+    wav_task.await.expect("WAV drag-and-drop task should complete");
+    
+    // Verify WAV was loaded
+    {
+        let final_state = state.lock().unwrap();
+        assert!(
+            final_state.current_file_path.is_some(),
+            "❌ WAV not loaded after drag-and-drop simulation"
+        );
+        assert!(
+            final_state.loading_error.is_none(),
+            "❌ Error present after WAV drop: {:?}",
+            final_state.loading_error
+        );
+        println!("✅ WAV drag-and-drop: file loaded = {:?}", final_state.current_file_path);
+    }
+    
+    // Verify playback works
+    println!("   [DROP EVENT] Testing playback...");
+    player.play().expect("Playback should start");
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    assert!(player.is_playing(), "❌ WAV playback not working after drop");
+    player.stop().expect("Stop should work");
+    println!("✅ WAV playback works after drag-and-drop");
+    
+    // STEP 4: Simulate drag-and-drop MP3 file (replace WAV)
+    println!("\n--- Simulating MP3 Drag-and-Drop (replacing WAV) ---");
+    
+    // Clear state before second drop to simulate fresh drop event
+    {
+        let mut s = state.lock().unwrap();
+        s.current_file_path = None;
+        s.loading_error = None;
+    }
+    
+    let player_clone = player.clone();
+    let state_clone = state.clone();
+    let mp3_clone = mp3_path.clone();
+    
+    let mp3_task = tokio::spawn(async move {
+        println!("   [DROP EVENT] File dropped: {:?}", mp3_clone);
+        
+        // Magic number validation
+        let validation = validate_audio_file_format_test_wrapper(&mp3_clone);
+        
+        if let Err(e) = validation {
+            println!("   [DROP EVENT] ❌ Validation failed: {:?}", e);
+            let mut s = state_clone.lock().unwrap();
+            s.loading_error = Some((
+                format!("Invalid file: {:?}", e),
+                std::time::Instant::now()
+            ));
+            return;
+        }
+        println!("   [DROP EVENT] ✅ MP3 magic number validation passed");
+        
+        // Load MP3
+        match player_clone.load_file(&mp3_clone) {
+            Ok(_) => {
+                println!("   [DROP EVENT] ✅ MP3 file loaded successfully");
+                let mut s = state_clone.lock().unwrap();
+                s.current_file_path = Some(mp3_clone.clone());
+                s.loading_error = None;
+                println!("   [DROP EVENT] ✅ State updated: {:?}", s.current_file_path);
+            }
+            Err(e) => {
+                println!("   [DROP EVENT] ❌ MP3 load failed: {}", e);
+                let mut s = state_clone.lock().unwrap();
+                s.loading_error = Some((format!("Load error: {}", e), std::time::Instant::now()));
+            }
+        }
+    });
+    
+    mp3_task.await.expect("MP3 drag-and-drop task should complete");
+    
+    // Verify MP3 was loaded (replaced WAV)
+    {
+        let final_state = state.lock().unwrap();
+        assert!(
+            final_state.current_file_path.is_some(),
+            "❌ MP3 not loaded after drag-and-drop simulation"
+        );
+        
+        let loaded_file = final_state.current_file_path.as_ref().unwrap();
+        assert!(
+            loaded_file.to_str().unwrap().contains("sine_880hz.mp3"),
+            "❌ Wrong file loaded: {:?}",
+            loaded_file
+        );
+        
+        assert!(
+            final_state.loading_error.is_none(),
+            "❌ Error present after MP3 drop: {:?}",
+            final_state.loading_error
+        );
+        println!("✅ MP3 drag-and-drop: file loaded = {:?}", final_state.current_file_path);
+    }
+    
+    // Verify MP3 playback works
+    println!("   [DROP EVENT] Testing MP3 playback...");
+    player.play().expect("MP3 playback should start");
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    assert!(player.is_playing(), "❌ MP3 playback not working after drop");
+    player.stop().expect("Stop should work");
+    println!("✅ MP3 playback works after drag-and-drop");
+    
+    println!("\n✅ BRUTAL DRAG-AND-DROP SIMULATION TEST PASSED - Both WAV and MP3 validated");
 }

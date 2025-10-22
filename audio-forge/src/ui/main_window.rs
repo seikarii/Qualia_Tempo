@@ -9,16 +9,14 @@ use crate::services::interfaces::i_audio_exporter::IAudioExporter;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::interfaces::i_visualization_engine::IVisualizationEngine;
+use crate::services::AudioFileValidator;
 use crate::ui::theme::QualiaTheme;
 use crate::ui::widgets::{
     control_panel::{ControlPanel, ControlPanelState},
     EffectsPanel, InfoPanel, Panel, SpectrumPanel, WaveformPanel,
 };
-use anyhow::{Context as AnyhowContext, Result};
 use egui::{CentralPanel, Context, SidePanel, TopBottomPanel};
-use std::fs::File;
-use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tracing::{error, info, warn};
@@ -209,61 +207,6 @@ impl MainWindow {
     }
 
     /// # Responsibility
-    /// Validate audio file format via magic number detection (security critical).
-    ///
-    /// ---
-    ///
-    /// SECURITY: Does NOT trust file extensions. Reads first 12 bytes to identify
-    /// actual file format via magic numbers. Prevents malicious files from crashing
-    /// the decoder.
-    ///
-    /// Supported formats:
-    /// - WAV: b"RIFF" at offset 0
-    /// - FLAC: b"fLaC" at offset 0
-    /// - MP3: 0xFF 0xFB/0xF3/0xF2 at offset 0
-    /// - OGG: b"OggS" at offset 0
-    /// - M4A/AAC: b"ftyp" at offset 4
-    fn validate_audio_file_format(path: &Path) -> Result<()> {
-        let mut file = File::open(path)
-            .with_context(|| format!("Failed to open file: {}", path.display()))?;
-        
-        let mut magic = [0u8; 12];
-        file.read_exact(&mut magic)
-            .with_context(|| format!("File too small to identify: {}", path.display()))?;
-        
-        // Check magic numbers
-        if &magic[0..4] == b"RIFF" {
-            // WAV format (RIFF container)
-            return Ok(());
-        }
-        
-        if &magic[0..4] == b"fLaC" {
-            // FLAC format
-            return Ok(());
-        }
-        
-        if magic[0] == 0xFF && (magic[1] == 0xFB || magic[1] == 0xF3 || magic[1] == 0xF2) {
-            // MP3 format (MPEG-1 Layer 3)
-            return Ok(());
-        }
-        
-        if &magic[0..4] == b"OggS" {
-            // OGG container (Vorbis/Opus)
-            return Ok(());
-        }
-        
-        if &magic[4..8] == b"ftyp" {
-            // M4A/AAC format (ISO Base Media File Format)
-            // Next 4 bytes should be brand identifier (M4A , mp42, etc.)
-            return Ok(());
-        }
-        
-        Err(anyhow::anyhow!(
-            "Unsupported or invalid audio file format. Supported: WAV, FLAC, MP3, OGG, M4A/AAC"
-        ))
-    }
-    
-    /// # Responsibility
     /// Load audio file with validation and error handling.
     ///
     /// ---
@@ -273,8 +216,8 @@ impl MainWindow {
     fn load_audio_file_validated(&self, path: &PathBuf) {
         let mut state = self.state.lock().unwrap();
         
-        // Step 1: Validate file format (magic number check)
-        if let Err(e) = Self::validate_audio_file_format(path) {
+        // Step 1: Validate file format (magic number check via centralized validator)
+        if let Err(e) = AudioFileValidator::validate(path) {
             error!("❌ File validation failed: {}", e);
             state.loading_error = Some((format!("Invalid file: {}", e), Instant::now()));
             return;

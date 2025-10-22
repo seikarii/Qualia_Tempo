@@ -13,16 +13,17 @@
 
 use crate::services::interfaces::i_audio_exporter::IAudioExporter;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
+use crate::services::AudioFileValidator;
 use crate::ui::theme::QualiaTheme;
 use crate::ui::widgets::Panel;
-use anyhow::{Context as AnyhowContext, Result};
 use egui::{self, Context};
-use std::fs::File;
-use std::io::Read;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tracing::{error, info};
+
+#[cfg(not(target_arch = "wasm32"))]
+use rfd;
 
 /// # Responsibility
 /// Thread-safe state for file loading and error display.
@@ -87,48 +88,6 @@ impl ControlPanel {
     }
     
     /// # Responsibility
-    /// Validate audio file format via magic number inspection.
-    ///
-    /// ---
-    ///
-    /// ## Security (Directive 9)
-    /// Prevents loading of non-audio files by checking format signatures.
-    /// Supported formats: WAV, FLAC, MP3, OGG, M4A/AAC
-    fn validate_audio_file_format(path: &Path) -> Result<()> {
-        let mut file = File::open(path)
-            .with_context(|| format!("Failed to open file: {}", path.display()))?;
-        
-        let mut magic = [0u8; 12];
-        file.read_exact(&mut magic)
-            .with_context(|| format!("File too small to identify: {}", path.display()))?;
-        
-        // Check magic numbers
-        if &magic[0..4] == b"RIFF" {
-            return Ok(()); // WAV format
-        }
-        
-        if &magic[0..4] == b"fLaC" {
-            return Ok(()); // FLAC format
-        }
-        
-        if magic[0] == 0xFF && (magic[1] == 0xFB || magic[1] == 0xF3 || magic[1] == 0xF2) {
-            return Ok(()); // MP3 format
-        }
-        
-        if &magic[0..4] == b"OggS" {
-            return Ok(()); // OGG container
-        }
-        
-        if &magic[4..8] == b"ftyp" {
-            return Ok(()); // M4A/AAC format
-        }
-        
-        Err(anyhow::anyhow!(
-            "Unsupported or invalid audio file format. Supported: WAV, FLAC, MP3, OGG, M4A/AAC"
-        ))
-    }
-    
-    /// # Responsibility
     /// Launch async file picker dialog and load selected file.
     ///
     /// ---
@@ -136,7 +95,7 @@ impl ControlPanel {
     /// ## Architecture (Directive 14)
     /// Now fully encapsulated within ControlPanel. Uses:
     /// - rfd::AsyncFileDialog for non-blocking file selection
-    /// - Magic number validation before loading
+    /// - AudioFileValidator for centralized magic number validation
     /// - Thread-safe state updates via Arc<Mutex<>>
     fn handle_load_file(&self, ctx: &Context) {
         // Check if picker already open (prevent multiple dialogs)
@@ -158,7 +117,7 @@ impl ControlPanel {
         // Spawn async file picker with PANIC BOUNDARY (non-blocking)
         tokio::spawn(async move {
             // CRITICAL FIX: Wrap entire async block in Result-based error handling
-            let task_result: Result<()> = (async {
+            let task_result: anyhow::Result<()> = (async {
                 let file_handle = rfd::AsyncFileDialog::new()
                     .add_filter("Audio Files", &["mp3", "wav", "flac", "ogg", "m4a", "aac"])
                     .set_title("Select Audio File")
@@ -176,8 +135,8 @@ impl ControlPanel {
                     // Release lock before validation (avoid deadlock)
                     drop(state);
                     
-                    // Validate and load file
-                    if let Err(e) = Self::validate_audio_file_format(&file_path) {
+                    // Validate file via centralized validator
+                    if let Err(e) = AudioFileValidator::validate(&file_path) {
                         error!("❌ File validation failed: {}", e);
                         let mut state = state_clone.lock().unwrap();
                         state.loading_error = Some((format!("Invalid file: {}", e), Instant::now()));
