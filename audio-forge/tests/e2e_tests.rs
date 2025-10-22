@@ -152,7 +152,7 @@ fn test_e2e_effects_chain() {
     assert_eq!(samples[0], 0.4, "Drop should reduce to 50%");
 
     effects
-        .apply_bass_boost(&mut samples)
+        .apply_bass_boost(&mut samples, 44100)
         .expect("Bass boost should succeed");
 
     // After bass boost: Biquad LowShelf filter amplifies (not linear 2x)
@@ -162,7 +162,7 @@ fn test_e2e_effects_chain() {
     assert!(samples[0] <= 1.0, "Bass boost should not clip");
 
     effects
-        .apply_treble_boost(&mut samples)
+        .apply_treble_boost(&mut samples, 44100)
         .expect("Treble boost should succeed");
 
     // After treble boost: HighShelf affects high frequencies, DC is barely affected

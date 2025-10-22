@@ -1,6 +1,7 @@
 //! # Responsibility
 //! Root UI window with playback controls and visualization panels.
 
+use crate::config::{save_config, AppConfig};
 use crate::contracts::channel_configuration::ChannelMode;
 use crate::contracts::effect_parameters::EffectConfig;
 use crate::contracts::frequency_spectrum::FrequencySpectrum;
@@ -9,11 +10,14 @@ use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::interfaces::i_visualization_engine::IVisualizationEngine;
+use anyhow::{Context as AnyhowContext, Result};
 use egui::{CentralPanel, Context, SidePanel, TopBottomPanel};
-use std::path::PathBuf;
+use std::fs::File;
+use std::io::Read;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 use std::time::Instant;
 
@@ -56,6 +60,9 @@ pub struct MainWindow {
     /// Thread-safe state shared with async tasks
     state: Arc<Mutex<MainWindowState>>,
     
+    /// Persisted configuration (Directive 10)
+    app_config: AppConfig,
+    
     audio_player: Arc<dyn IAudioPlayer>,
     audio_analyzer: Arc<dyn IAudioAnalyzer>,
     visualization_engine: Arc<dyn IVisualizationEngine>,
@@ -79,14 +86,23 @@ pub struct MainWindow {
 }
 
 impl MainWindow {
-    pub fn new(
+    /// # Responsibility
+    /// Create MainWindow with loaded configuration (Directive 10).
+    ///
+    /// ---
+    ///
+    /// Initializes UI state from persisted config. Config will be saved
+    /// via Drop trait when application exits.
+    pub fn new_with_config(
+        config: AppConfig,
         audio_player: Arc<dyn IAudioPlayer>,
         audio_analyzer: Arc<dyn IAudioAnalyzer>,
         visualization_engine: Arc<dyn IVisualizationEngine>,
         audio_effects: Arc<dyn IAudioEffects>,
         multi_channel_output: Arc<dyn IMultiChannelOutput>,
     ) -> Self {
-        let effect_config = audio_effects.get_config();
+        let effect_config = config.effects.clone();
+        let volume = config.audio.default_volume;
 
         // Initialize with empty visualization data
         let cached_spectrum = FrequencySpectrum {
@@ -98,6 +114,7 @@ impl MainWindow {
 
         Self {
             state: Arc::new(Mutex::new(MainWindowState::default())),
+            app_config: config,
             audio_player,
             audio_analyzer,
             visualization_engine,
@@ -111,7 +128,27 @@ impl MainWindow {
             cached_instrument_levels: (0.0, 0.0, 0.0),
             last_visualization_update: Instant::now(),
             visualization_update_interval: Duration::from_millis(33), // 30fps
-            volume: 1.0, // Default 100% volume
+            volume,
+        }
+    }
+    
+    /// # Responsibility
+    /// Get current configuration snapshot for persistence.
+    ///
+    /// ---
+    ///
+    /// Captures current UI state into AppConfig for serialization.
+    fn get_current_config(&self) -> AppConfig {
+        let state = self.state.lock().unwrap();
+        
+        AppConfig {
+            audio: crate::config::AudioConfig {
+                default_volume: self.volume,
+                channel_mode: self.multi_channel_output.get_configuration().mode,
+                last_file_path: state.current_file_path.clone(),
+            },
+            effects: self.effect_config.clone(),
+            visualization: self.app_config.visualization.clone(), // Preserve visualization settings
         }
     }
 
@@ -160,6 +197,92 @@ impl MainWindow {
     }
 
     /// # Responsibility
+    /// Validate audio file format via magic number detection (security critical).
+    ///
+    /// ---
+    ///
+    /// SECURITY: Does NOT trust file extensions. Reads first 12 bytes to identify
+    /// actual file format via magic numbers. Prevents malicious files from crashing
+    /// the decoder.
+    ///
+    /// Supported formats:
+    /// - WAV: b"RIFF" at offset 0
+    /// - FLAC: b"fLaC" at offset 0
+    /// - MP3: 0xFF 0xFB/0xF3/0xF2 at offset 0
+    /// - OGG: b"OggS" at offset 0
+    /// - M4A/AAC: b"ftyp" at offset 4
+    fn validate_audio_file_format(path: &Path) -> Result<()> {
+        let mut file = File::open(path)
+            .with_context(|| format!("Failed to open file: {}", path.display()))?;
+        
+        let mut magic = [0u8; 12];
+        file.read_exact(&mut magic)
+            .with_context(|| format!("File too small to identify: {}", path.display()))?;
+        
+        // Check magic numbers
+        if &magic[0..4] == b"RIFF" {
+            // WAV format (RIFF container)
+            return Ok(());
+        }
+        
+        if &magic[0..4] == b"fLaC" {
+            // FLAC format
+            return Ok(());
+        }
+        
+        if magic[0] == 0xFF && (magic[1] == 0xFB || magic[1] == 0xF3 || magic[1] == 0xF2) {
+            // MP3 format (MPEG-1 Layer 3)
+            return Ok(());
+        }
+        
+        if &magic[0..4] == b"OggS" {
+            // OGG container (Vorbis/Opus)
+            return Ok(());
+        }
+        
+        if &magic[4..8] == b"ftyp" {
+            // M4A/AAC format (ISO Base Media File Format)
+            // Next 4 bytes should be brand identifier (M4A , mp42, etc.)
+            return Ok(());
+        }
+        
+        Err(anyhow::anyhow!(
+            "Unsupported or invalid audio file format. Supported: WAV, FLAC, MP3, OGG, M4A/AAC"
+        ))
+    }
+    
+    /// # Responsibility
+    /// Load audio file with validation and error handling.
+    ///
+    /// ---
+    ///
+    /// SECURITY: Validates file format via magic numbers before loading.
+    /// Updates MainWindowState with result (success or error message).
+    fn load_audio_file_validated(&self, path: &PathBuf) {
+        let mut state = self.state.lock().unwrap();
+        
+        // Step 1: Validate file format (magic number check)
+        if let Err(e) = Self::validate_audio_file_format(path) {
+            error!("❌ File validation failed: {}", e);
+            state.loading_error = Some((format!("Invalid file: {}", e), Instant::now()));
+            return;
+        }
+        
+        // Step 2: Load file via audio player
+        match self.audio_player.load_file(path) {
+            Ok(_) => {
+                info!("✅ File loaded successfully: {:?}", path);
+                state.current_file_path = Some(path.clone());
+                state.loading_error = None; // Clear any previous errors
+            }
+            Err(e) => {
+                error!("❌ Failed to load file: {}", e);
+                state.loading_error = Some((format!("Load error: {}", e), Instant::now()));
+            }
+        }
+    }
+    
+    /// # Responsibility
     /// Handle file loading via ASYNC native file picker dialog.
     ///
     /// ---
@@ -198,31 +321,65 @@ impl MainWindow {
             
             if let Some(file) = file_handle {
                 let file_path = file.path().to_path_buf();
-                info!("User selected file: {:?}", file_path);
+                info!("User selected file via picker: {:?}", file_path);
                 
-                // Load file and update state based on result
-                match audio_player_clone.load_file(&file_path) {
-                    Ok(_) => {
-                        info!("✅ File loaded successfully: {:?}", file_path);
-                        state.current_file_path = Some(file_path);
-                        state.loading_error = None; // Clear any previous errors
-                    }
-                    Err(e) => {
-                        error!("❌ Failed to load file: {}", e);
-                        state.loading_error = Some((format!("Load error: {}", e), Instant::now()));
+                // Release lock before validation (avoid deadlock)
+                drop(state);
+                
+                // Validate and load file (handles state updates internally)
+                // Note: This creates a temporary self-like struct for the closure
+                // In production, refactor to accept services as parameters
+                if let Err(e) = Self::validate_audio_file_format(&file_path) {
+                    error!("❌ File validation failed: {}", e);
+                    let mut state = state_clone.lock().unwrap();
+                    state.loading_error = Some((format!("Invalid file: {}", e), Instant::now()));
+                } else {
+                    // Load validated file
+                    match audio_player_clone.load_file(&file_path) {
+                        Ok(_) => {
+                            info!("✅ File loaded successfully: {:?}", file_path);
+                            let mut state = state_clone.lock().unwrap();
+                            state.current_file_path = Some(file_path);
+                            state.loading_error = None;
+                        }
+                        Err(e) => {
+                            error!("❌ Failed to load file: {}", e);
+                            let mut state = state_clone.lock().unwrap();
+                            state.loading_error = Some((format!("Load error: {}", e), Instant::now()));
+                        }
                     }
                 }
             } else {
                 info!("File picker cancelled by user");
             }
             
-            // Release lock before requesting repaint
-            drop(state);
             ctx_clone.request_repaint(); // Update UI after state change
         });
     }
 
     pub fn update(&mut self, ctx: &Context) {
+        // ============================================================================
+        // DRAG-AND-DROP FILE HANDLING (DIRECTIVE 9)
+        // ============================================================================
+        
+        // Handle dropped files (synchronous, runs on UI thread)
+        ctx.input(|i| {
+            if !i.raw.dropped_files.is_empty() {
+                let dropped_file = &i.raw.dropped_files[0];
+                
+                if let Some(path) = &dropped_file.path {
+                    info!("🎵 File dropped: {:?}", path);
+                    
+                    // Validate and load file (magic number check + load)
+                    self.load_audio_file_validated(path);
+                    
+                    ctx.request_repaint(); // Update UI immediately
+                } else {
+                    warn!("Dropped file has no path");
+                }
+            }
+        });
+        
         // Auto-clear errors after 5 seconds (read from shared state)
         {
             let mut state = self.state.lock().unwrap();
@@ -639,7 +796,57 @@ impl MainWindow {
             if self.audio_player.total_duration() > std::time::Duration::ZERO {
                 ui.label("✅ Audio file loaded and ready for visualization");
             } else {
-                ui.label("⚠️ No audio file loaded. Load a file to see real-time visualization.");
+                ui.label("⚠️ No audio file loaded. Drag & drop an audio file or click Load Audio File.");
+            }
+        });
+        
+        // ============================================================================
+        // DRAG-AND-DROP VISUAL OVERLAY (DIRECTIVE 9)
+        // ============================================================================
+        
+        // Show drop zone overlay when user hovers files over window
+        ctx.input(|i| {
+            if !i.raw.hovered_files.is_empty() {
+                egui::Area::new(egui::Id::new("drop_zone_overlay"))
+                    .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                    .interactable(false)
+                    .show(ctx, |ui| {
+                        let screen_rect = ctx.viewport_rect();
+                        let overlay_size = egui::vec2(
+                            screen_rect.width() * 0.6,
+                            screen_rect.height() * 0.3,
+                        );
+                        
+                        ui.allocate_ui_with_layout(
+                            overlay_size,
+                            egui::Layout::top_down(egui::Align::Center),
+                            |ui| {
+                                ui.add_space(overlay_size.y * 0.3);
+                                
+                                // Semi-transparent background
+                                let frame = egui::Frame::new()
+                                    .fill(egui::Color32::from_rgba_unmultiplied(30, 30, 40, 200))
+                                    .corner_radius(egui::CornerRadius::same(10))
+                                    .inner_margin(egui::Margin::same(20));
+                                
+                                frame.show(ui, |ui| {
+                                    ui.vertical_centered(|ui| {
+                                        ui.heading(
+                                            egui::RichText::new("🎵 Drop Audio File Here")
+                                                .size(32.0)
+                                                .color(egui::Color32::from_rgb(100, 200, 255)),
+                                        );
+                                        ui.add_space(10.0);
+                                        ui.label(
+                                            egui::RichText::new("Supported: WAV, FLAC, MP3, OGG, M4A, AAC")
+                                                .size(16.0)
+                                                .color(egui::Color32::LIGHT_GRAY),
+                                        );
+                                    });
+                                });
+                            },
+                        );
+                    });
             }
         });
         
@@ -649,6 +856,29 @@ impl MainWindow {
         } else {
             // When stopped, still repaint occasionally for UI responsiveness
             ctx.request_repaint_after(Duration::from_millis(100));
+        }
+    }
+}
+
+// ============================================================================
+// DIRECTIVE 10: Automatic config persistence on exit
+// ============================================================================
+
+impl Drop for MainWindow {
+    /// # Responsibility
+    /// Save configuration on application exit (Directive 10).
+    ///
+    /// ---
+    ///
+    /// Called automatically when MainWindow is dropped. Persists current
+    /// state (volume, effects, last file) to disk.
+    fn drop(&mut self) {
+        let config = self.get_current_config();
+        
+        if let Err(e) = save_config(&config) {
+            eprintln!("❌ Failed to save config on exit: {}", e);
+        } else {
+            println!("✅ Configuration saved successfully");
         }
     }
 }

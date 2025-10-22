@@ -175,7 +175,7 @@ impl IAudioEffects for AudioEffectsService {
         Ok(())
     }
 
-    fn apply_bass_boost(&self, samples: &mut [f32]) -> Result<()> {
+    fn apply_bass_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<()> {
         let config = self.config.read().unwrap();
 
         if !config.bass_boost_enabled {
@@ -183,7 +183,8 @@ impl IAudioEffects for AudioEffectsService {
         }
 
         let gain = config.bass_boost_gain.clamp(1.0, 3.0);
-        let sample_rate = 44100u32; // FIXME: Should come from config or parameter
+        
+        // DIRECTIVE 11: Use provided sample_rate (no more hardcoded 44100Hz)
         
         // Update filter coefficients ONLY if gain changed (lazy recalculation)
         let mut filter_state = self.filter_state.lock().unwrap();
@@ -198,7 +199,7 @@ impl IAudioEffects for AudioEffectsService {
         Ok(())
     }
 
-    fn apply_treble_boost(&self, samples: &mut [f32]) -> Result<()> {
+    fn apply_treble_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<()> {
         let config = self.config.read().unwrap();
 
         if !config.treble_boost_enabled {
@@ -206,7 +207,8 @@ impl IAudioEffects for AudioEffectsService {
         }
 
         let gain = config.treble_boost_gain.clamp(1.0, 3.0);
-        let sample_rate = 44100u32;
+        
+        // DIRECTIVE 11: Use provided sample_rate (no more hardcoded 44100Hz)
         
         // Update filter coefficients ONLY if gain changed
         let mut filter_state = self.filter_state.lock().unwrap();
@@ -332,7 +334,7 @@ mod tests {
         let mut samples = vec![0.5, -0.5];
         let original = samples.clone();
 
-        service.apply_bass_boost(&mut samples).unwrap();
+        service.apply_bass_boost(&mut samples, 44100).unwrap();
 
         assert_eq!(samples, original);
     }
@@ -348,7 +350,7 @@ mod tests {
         let service = AudioEffectsService::new(config);
         let mut samples = vec![0.3, -0.3, 0.3, -0.3]; // Multiple samples for filter settling
 
-        service.apply_bass_boost(&mut samples).unwrap();
+        service.apply_bass_boost(&mut samples, 44100).unwrap();
 
         // Biquad shelving filter DOES NOT multiply linearly
         // Instead, it boosts low frequencies (< 250Hz) by ~6dB
@@ -374,7 +376,7 @@ mod tests {
             .map(|i| 0.8 * (2.0 * std::f32::consts::PI * frequency * i as f32 / sample_rate).sin())
             .collect();
 
-        service.apply_bass_boost(&mut samples).unwrap();
+        service.apply_bass_boost(&mut samples, 44100).unwrap();
 
         // Verify clipping prevention: all samples should be in [-1.0, 1.0]
         for sample in &samples {

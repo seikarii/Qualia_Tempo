@@ -36,22 +36,22 @@ pub trait IAudioEffects: Interface {
     fn apply_drop_effect(&self, samples: &mut [f32]) -> Result<()>;
 
     /// # Responsibility
-    /// Apply bass boost to low frequencies.
+    /// Apply bass boost to low frequencies (DIRECTIVE 11: sample_rate parameter added).
     ///
     /// ---
     ///
-    /// Simple gain multiplier (full parametric EQ requires biquad filters).
-    /// Approximates bass boost by amplifying all samples.
-    fn apply_bass_boost(&self, samples: &mut [f32]) -> Result<()>;
+    /// Uses biquad LowShelf filter @ 250Hz. Requires sample_rate for accurate
+    /// coefficient calculation. Gain is applied via dB conversion.
+    fn apply_bass_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<()>;
 
     /// # Responsibility
-    /// Apply treble boost to high frequencies.
+    /// Apply treble boost to high frequencies (DIRECTIVE 11: sample_rate parameter added).
     ///
     /// ---
     ///
-    /// Simple gain multiplier (full parametric EQ requires biquad filters).
-    /// Approximates treble boost by amplifying all samples.
-    fn apply_treble_boost(&self, samples: &mut [f32]) -> Result<()>;
+    /// Uses biquad HighShelf filter @ 3kHz. Requires sample_rate for accurate
+    /// coefficient calculation. Gain is applied via dB conversion.
+    fn apply_treble_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<()>;
 
     /// # Responsibility
     /// Get current effect configuration.

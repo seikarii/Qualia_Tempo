@@ -101,11 +101,12 @@ impl<S: Source<Item = f32>> EffectsSource<S> {
             warn!("Drop effect failed: {}", e);
         }
         
-        if let Err(e) = self.audio_effects.apply_bass_boost(&mut self.buffer) {
+        // DIRECTIVE 11: Propagate sample_rate from source to filter calculations
+        if let Err(e) = self.audio_effects.apply_bass_boost(&mut self.buffer, self.sample_rate) {
             warn!("Bass boost failed: {}", e);
         }
         
-        if let Err(e) = self.audio_effects.apply_treble_boost(&mut self.buffer) {
+        if let Err(e) = self.audio_effects.apply_treble_boost(&mut self.buffer, self.sample_rate) {
             warn!("Treble boost failed: {}", e);
         }
         

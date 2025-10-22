@@ -5,13 +5,28 @@ use audio_forge::services::interfaces::{
     IAudioAnalyzer, IAudioEffects, IAudioPlayer, IMultiChannelOutput, IVisualizationEngine,
 };
 use audio_forge::ui::MainWindow;
-use audio_forge::AudioForgeModule;
+use audio_forge::{load_config, AudioForgeModule};
 use eframe::egui;
 use shaku::HasComponent;
 use std::sync::Arc;
+use tracing::warn;
 
 fn main() -> Result<(), eframe::Error> {
     tracing_subscriber::fmt::init();
+    
+    // ============================================================================
+    // DIRECTIVE 10: Load persisted configuration
+    // ============================================================================
+    let config = match load_config() {
+        Ok(cfg) => {
+            tracing::info!("✅ Configuration loaded successfully");
+            cfg
+        }
+        Err(e) => {
+            warn!("⚠️ Failed to load config, using defaults: {}", e);
+            audio_forge::AppConfig::default()
+        }
+    };
 
     // Build Shaku DI module
     let module = AudioForgeModule::builder().build();
@@ -22,8 +37,15 @@ fn main() -> Result<(), eframe::Error> {
     let visualization_engine: Arc<dyn IVisualizationEngine> = module.resolve();
     let audio_effects: Arc<dyn IAudioEffects> = module.resolve();
     let multi_channel_output: Arc<dyn IMultiChannelOutput> = module.resolve();
+    
+    // Apply loaded configuration
+    audio_effects.set_config(config.effects.clone());
+    if let Err(e) = audio_player.set_volume(config.audio.default_volume) {
+        warn!("Failed to set initial volume: {}", e);
+    }
 
-    let mut main_window = MainWindow::new(
+    let mut main_window = MainWindow::new_with_config(
+        config,
         audio_player,
         audio_analyzer,
         visualization_engine,
