@@ -2,6 +2,7 @@
 //! Root UI window with playback controls and visualization panels.
 
 use crate::config::{save_config, AppConfig};
+use crate::contracts::effect_parameters::EffectConfig;
 use crate::contracts::frequency_spectrum::FrequencySpectrum;
 use crate::events::AudioForgeEvent;
 use crate::services::event_bus::IEventBus;
@@ -17,6 +18,7 @@ use crate::ui::widgets::{
     PlaybackBarState,
 };
 use egui::{CentralPanel, Context, TopBottomPanel};
+use shaku::{Component, Interface};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -25,12 +27,48 @@ use tracing::{error, info, warn};
 use std::time::Instant;
 
 /// # Responsibility
-/// Thread-safe mutable state for MainWindow, shared with async tasks.
+/// Main window interface for Shaku DI (DIRECTIVE: ABSOLUTE DI PURITY).
 ///
 /// ---
 ///
-/// ARCHITECTURE: Extracted from MainWindow to enable Arc<Mutex<>> wrapping.
-/// Async file picker tasks can safely update this state without data races.
+/// **CRITICAL**: `update()` takes `&self` (not `&mut self`) because Arc<dyn Trait>
+/// is immutable. MainWindow uses interior mutability (Mutex) for all mutable state.
+pub trait IMainWindow: Interface {
+    /// Update and render UI (called every frame by eframe).
+    fn update(&self, ctx: &Context);
+}
+
+/// # Responsibility
+/// Cached visualization data wrapped in Mutex for interior mutability.
+///
+/// ---
+///
+/// PUBLIC: Required by Shaku Component derive (generates public Parameters struct).
+pub struct VisualizationCache {
+    waveform: Vec<f32>,
+    spectrum: FrequencySpectrum,
+    instrument_levels: (f32, f32, f32),
+    last_update: Instant,
+    update_interval: Duration,
+}
+
+impl Default for VisualizationCache {
+    fn default() -> Self {
+        Self {
+            waveform: Vec::new(),
+            spectrum: FrequencySpectrum {
+                frequencies: Vec::new(),
+                magnitudes: Vec::new(),
+                sample_rate: 44100,
+                window_size: 2048,
+            },
+            instrument_levels: (0.0, 0.0, 0.0),
+            last_update: Instant::now(),
+            update_interval: Duration::from_millis(33), // 30fps
+        }
+    }
+}
+
 /// # Responsibility
 /// Main application window using egui immediate mode UI.
 ///
@@ -43,35 +81,58 @@ use std::time::Instant;
 /// - Conditional repaints only when playing
 /// - ASYNC file picker (non-blocking UI with thread-safe state updates)
 ///
-/// ARCHITECTURE:
-/// - Mutable state extracted to MainWindowState (Arc<Mutex<>> wrapped)
-/// - Async tasks (tokio::spawn) can safely update state via cloned Arc
-/// - UI thread reads state with lock acquisition (minimal contention)
+/// ARCHITECTURE (SHAKU COMPONENT - ABSOLUTE DI PURITY):
+/// - ALL mutable state wrapped in Mutex<> for interior mutability
+/// - Immutable service dependencies injected via Shaku
+/// - update() takes `&self` (compatible with Arc<dyn IMainWindow>)
+/// - Resolves from DI container: `module.resolve::<Arc<dyn IMainWindow>>()`
+#[derive(Component)]
+#[shaku(interface = IMainWindow)]
 pub struct MainWindow {
     /// Thread-safe state shared with async tasks (EventBus updates)
+    /// SHAKU: Initialized with Default::default() during Component construction
+    #[shaku(default = Arc::new(Mutex::new(PlaybackBarState::default())))]
     state: Arc<Mutex<PlaybackBarState>>,
     
-    /// Persisted configuration (Directive 10)
-    app_config: AppConfig,
+    /// Visualization cache (throttled updates, interior mutability)
+    /// SHAKU: Initialized with Default::default() during Component construction
+    #[shaku(default = Arc::new(Mutex::new(VisualizationCache::default())))]
+    viz_cache: Arc<Mutex<VisualizationCache>>,
     
-    // Core services (retained for orchestration logic)
+    // Core services (Shaku-injected)
+    #[shaku(inject)]
     audio_player: Arc<dyn IAudioPlayer>,
+    
+    #[shaku(inject)]
     audio_analyzer: Arc<dyn IAudioAnalyzer>,
+    
+    #[shaku(inject)]
+    audio_effects: Arc<dyn IAudioEffects>,
+    
+    #[shaku(inject)]
+    audio_exporter: Arc<dyn IAudioExporter>,
+    
+    #[shaku(inject)]
+    multi_channel_output: Arc<dyn IMultiChannelOutput>,
+    
+    #[shaku(inject)]
+    event_bus: Arc<dyn IEventBus>,
 
-    // DIRECTIVE UI-MOD-01: Modern playback bar (bottom) replaces old ControlPanel (top)
-    playback_bar: ModernPlaybackBar,
-    effects_panel: EffectsPanel,
+    // UI widgets (lazy initialization after service injection)
+    /// SHAKU: Initialized as Mutex<None>, constructed on first update() call
+    /// CRITICAL: Widgets need service references, which are only available AFTER DI resolution
+    /// SYNC-SAFE: Mutex provides thread-safe interior mutability for Arc<dyn IMainWindow>
+    #[shaku(default = Mutex::new(None))]
+    playback_bar: Mutex<Option<ModernPlaybackBar>>,
     
-    // Modern 2025 visualization widgets
-    hero_waveform: HeroWaveformCard,
-    spectrum_grid: MultiBandSpectrumGrid,
+    #[shaku(default = Mutex::new(None))]
+    effects_panel: Mutex<Option<EffectsPanel>>,
     
-    // Cached visualization data (updated at throttled rate, passed to panels)
-    cached_waveform: Vec<f32>,
-    cached_spectrum: FrequencySpectrum,
-    cached_instrument_levels: (f32, f32, f32),
-    last_visualization_update: Instant,
-    visualization_update_interval: Duration,
+    #[shaku(default = Mutex::new(None))]
+    hero_waveform: Mutex<Option<HeroWaveformCard>>,
+    
+    #[shaku(default = Mutex::new(None))]
+    spectrum_grid: Mutex<Option<MultiBandSpectrumGrid>>,
 }
 
 impl MainWindow {
@@ -119,7 +180,8 @@ impl MainWindow {
         let volume = config.audio.default_volume;
 
         // Initialize with empty visualization data
-        let cached_spectrum = FrequencySpectrum {
+        // Initialize cached spectrum with default (unused - data updated via update_visualization_data())
+        let _cached_spectrum = FrequencySpectrum {
             frequencies: Vec::new(),
             magnitudes: Vec::new(),
             sample_rate: 44100,
@@ -128,6 +190,9 @@ impl MainWindow {
 
         // Shared state for playback bar and event listener
         let state = Arc::new(Mutex::new(PlaybackBarState::default()));
+        
+        // Visualization cache with throttling
+        let viz_cache = Arc::new(Mutex::new(VisualizationCache::default()));
 
         // DIRECTIVE 12 & 13: Create all modular UI panels
         let effects_panel = EffectsPanel::new(
@@ -210,20 +275,24 @@ impl MainWindow {
             }
         });
 
+        // CRITICAL: Widgets are now Mutex<Option<>> (lazy initialization in update())
+        // Store as Some() when using factory pattern (from_services)
+        // In pure DI mode (module.resolve()), widgets will be None and initialized on first frame
         Self {
             state,
-            app_config: config,
+            viz_cache,
             audio_player,
             audio_analyzer,
-            playback_bar,
-            effects_panel,
-            hero_waveform,
-            spectrum_grid,
-            cached_waveform: Vec::new(),
-            cached_spectrum,
-            cached_instrument_levels: (0.0, 0.0, 0.0),
-            last_visualization_update: Instant::now(),
-            visualization_update_interval: Duration::from_millis(33), // 30fps
+            audio_effects,
+            audio_exporter,
+            multi_channel_output,
+            event_bus,
+            
+            // PRE-INITIALIZE widgets when using factory pattern (from_services)
+            playback_bar: Mutex::new(Some(playback_bar)),
+            effects_panel: Mutex::new(Some(effects_panel)),
+            hero_waveform: Mutex::new(Some(hero_waveform)),
+            spectrum_grid: Mutex::new(Some(spectrum_grid)),
         }
     }
     
@@ -233,17 +302,29 @@ impl MainWindow {
     /// ---
     ///
     /// Captures current UI state into AppConfig for serialization.
+    /// Visualization config uses defaults (not customizable in current UI).
     fn get_current_config(&self) -> AppConfig {
         let state = self.state.lock().unwrap();
+        
+        // LAZY WIDGETS: Check if widgets initialized before accessing
+        let effects_panel_lock = self.effects_panel.lock().unwrap();
+        let effects_config = match effects_panel_lock.as_ref() {
+            Some(panel) => panel.get_config().clone(),
+            None => {
+                // Widgets not initialized yet - return default config
+                return AppConfig::default();
+            }
+        };
+        drop(effects_panel_lock); // Release lock
         
         AppConfig {
             audio: crate::config::AudioConfig {
                 default_volume: state.volume,
-                channel_mode: crate::contracts::channel_configuration::ChannelMode::Stereo, // Default fallback
+                channel_mode: crate::contracts::channel_configuration::ChannelMode::Stereo,
                 last_file_path: state.current_file_path.clone(),
             },
-            effects: self.effects_panel.get_config().clone(),
-            visualization: self.app_config.visualization.clone(), // Preserve visualization settings
+            effects: effects_config,
+            visualization: crate::config::VisualizationConfig::default(),
         }
     }
 
@@ -256,38 +337,40 @@ impl MainWindow {
     /// - Mutex lock contention
     /// - FFT computation overhead
     /// - Memory allocations
-    fn update_visualization_data(&mut self) {
+    fn update_visualization_data(&self) {
+        let mut cache = self.viz_cache.lock().unwrap();
+        
         // Throttle updates to reduce CPU/memory overhead
         let now = Instant::now();
-        if now.duration_since(self.last_visualization_update) < self.visualization_update_interval {
+        if now.duration_since(cache.last_update) < cache.update_interval {
             return; // Skip update, still within interval
         }
-        self.last_visualization_update = now;
+        cache.last_update = now;
         
         // Get raw audio samples from player (zero-copy Arc)
         let raw_samples = self.audio_player.get_audio_samples();
         
         if raw_samples.is_empty() {
             // No audio loaded: clear visualizations
-            self.cached_waveform.clear();
-            self.cached_spectrum = FrequencySpectrum {
+            cache.waveform.clear();
+            cache.spectrum = FrequencySpectrum {
                 frequencies: Vec::new(),
                 magnitudes: Vec::new(),
                 sample_rate: self.audio_player.get_sample_rate(),
                 window_size: 2048,
             };
-            self.cached_instrument_levels = (0.0, 0.0, 0.0);
+            cache.instrument_levels = (0.0, 0.0, 0.0);
             return;
         }
 
         // Downsample waveform for UI rendering (target: 2000 samples)
-        self.cached_waveform = self.audio_analyzer.get_waveform_samples(&raw_samples, 2000);
+        cache.waveform = self.audio_analyzer.get_waveform_samples(&raw_samples, 2000);
 
         // Perform FFT analysis
         let sample_rate = self.audio_player.get_sample_rate();
         if let Ok(spectrum) = self.audio_analyzer.analyze_spectrum(&raw_samples, sample_rate) {
-            self.cached_instrument_levels = self.audio_analyzer.detect_instruments(&spectrum);
-            self.cached_spectrum = spectrum;
+            cache.instrument_levels = self.audio_analyzer.detect_instruments(&spectrum);
+            cache.spectrum = spectrum;
         }
     }
 
@@ -315,7 +398,51 @@ impl MainWindow {
         }
     }
     
-    pub fn update(&mut self, ctx: &Context) {
+    /// # Responsibility  
+    /// Main UI update loop - handles drag-and-drop, visualization updates, widget rendering.
+    ///
+    /// ---
+    ///
+    /// CRITICAL: Uses `&self` (immutable) with interior mutability (Mutex) to comply with
+    /// Shaku Component requirements (Arc<dyn IMainWindow> shares immutable reference).
+    /// All widgets are locked per-frame via .lock().unwrap() - safe in single-threaded egui context.
+    ///
+    /// **LAZY INITIALIZATION**: Widgets constructed on first update() call (after services injected).
+    pub fn update(&self, ctx: &Context) {
+        // ============================================================================
+        // LAZY WIDGET INITIALIZATION (FIRST FRAME ONLY)
+        // ============================================================================
+        // CRITICAL: Widgets require service Arc references, which are only available
+        // AFTER Shaku Component construction. Initialize once on first update() call.
+        
+        // Check if widgets need initialization (lock to check, release immediately)
+        let needs_init = self.playback_bar.lock().unwrap().is_none();
+        
+        if needs_init {
+            info!("🏗️  Initializing MainWindow widgets (lazy construction)");
+            
+            // Construct widgets with injected services
+            let volume = 0.5; // Default volume (TODO: Load from persisted config)
+            
+            *self.playback_bar.lock().unwrap() = Some(ModernPlaybackBar::new(
+                self.audio_player.clone(),
+                self.audio_exporter.clone(),
+                self.multi_channel_output.clone(),
+                self.state.clone(),
+                volume,
+            ));
+            
+            *self.effects_panel.lock().unwrap() = Some(EffectsPanel::new(
+                self.audio_effects.clone(),
+                EffectConfig::default(), // TODO: Load from persisted config
+            ));
+            
+            *self.hero_waveform.lock().unwrap() = Some(HeroWaveformCard::new());
+            *self.spectrum_grid.lock().unwrap() = Some(MultiBandSpectrumGrid::new(8)); // 8 bands
+            
+            info!("✅ MainWindow widgets initialized successfully");
+        }
+        
         // ============================================================================
         // PRE-RENDER: DRAG-AND-DROP + VISUALIZATION UPDATES
         // ============================================================================
@@ -354,14 +481,21 @@ impl MainWindow {
             0.0
         };
         
-        self.hero_waveform.update(self.cached_waveform.clone(), playback_position);
-        self.spectrum_grid.update(&self.cached_spectrum.magnitudes);
+        // INTERIOR MUTABILITY: Extract cached viz data before UI closures (avoid borrow conflicts)
+        let (waveform_data, spectrum_data) = {
+            let cache = self.viz_cache.lock().unwrap();
+            (cache.waveform.clone(), cache.spectrum.clone())
+        };
         
+        // MUTEX LOCKING: Update widgets via .lock().unwrap() (interior mutability pattern)
+        self.hero_waveform.lock().unwrap().as_mut().unwrap().update(waveform_data.clone(), playback_position);
+        self.spectrum_grid.lock().unwrap().as_mut().unwrap().update(&spectrum_data.magnitudes);
         // ============================================================================
         // TOP PANEL: EFFECTS CONTROLS
         // ============================================================================
         TopBottomPanel::top("effects_panel").show(ctx, |ui| {
-            self.effects_panel.render(ctx, ui);
+            // MUTEX LOCKING: Access effects_panel via interior mutability
+            self.effects_panel.lock().unwrap().as_mut().unwrap().render(ctx, ui);
         });
 
         // ============================================================================
@@ -372,13 +506,15 @@ impl MainWindow {
             
             // Hero waveform card (300px height, full-width)
             ui.heading("🎵 Waveform");
-            self.hero_waveform.render(ui);
+            // MUTEX LOCKING: Access hero_waveform via interior mutability
+            self.hero_waveform.lock().unwrap().as_mut().unwrap().render(ui);
             
             ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
             
             // Multi-band spectrum grid
             ui.heading("🎚️ Spectrum Analyzer");
-            self.spectrum_grid.render(ui);
+            // MUTEX LOCKING: Access spectrum_grid via interior mutability
+            self.spectrum_grid.lock().unwrap().as_mut().unwrap().render(ui);
             
             ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
         });
@@ -388,7 +524,8 @@ impl MainWindow {
         // ============================================================================
         TopBottomPanel::bottom("playback_bar").show(ctx, |ui| {
             ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN / 2.0);
-            self.playback_bar.render(ui);
+            // MUTEX LOCKING: Access playback_bar via interior mutability
+            self.playback_bar.lock().unwrap().as_mut().unwrap().render(ui);
             ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN / 2.0);
         });
         
@@ -445,11 +582,31 @@ impl MainWindow {
         
         // Conditional repaint: Only request updates when playing
         if self.audio_player.is_playing() {
-            ctx.request_repaint_after(self.visualization_update_interval);
+            // INTERIOR MUTABILITY: Read update_interval from viz_cache
+            let update_interval = self.viz_cache.lock().unwrap().update_interval;
+            ctx.request_repaint_after(update_interval);
         } else {
             // When stopped, still repaint occasionally for UI responsiveness
             ctx.request_repaint_after(Duration::from_millis(100));
         }
+    }
+}
+
+// ============================================================================
+// SHAKU COMPONENT INTERFACE IMPLEMENTATION
+// ============================================================================
+
+impl IMainWindow for MainWindow {
+    /// # Responsibility
+    /// Delegates to inherent update() method for Shaku Component trait compliance.
+    ///
+    /// ---
+    ///
+    /// This impl block enables MainWindow to be resolved as Arc<dyn IMainWindow>
+    /// from the DI container, achieving absolute dependency injection purity.
+    fn update(&self, ctx: &Context) {
+        // Delegate to inherent implementation (same method, just different trait context)
+        MainWindow::update(self, ctx)
     }
 }
 
@@ -465,6 +622,9 @@ impl Drop for MainWindow {
     ///
     /// Called automatically when MainWindow is dropped. Persists current
     /// state (volume, effects, last file) to disk.
+    ///
+    /// CRITICAL: Cannot use `&mut self` in Drop, but our get_current_config()
+    /// now uses `&self` with interior mutability, so this works perfectly.
     fn drop(&mut self) {
         let config = self.get_current_config();
         

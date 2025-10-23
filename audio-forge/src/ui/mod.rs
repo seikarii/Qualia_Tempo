@@ -5,5 +5,5 @@ pub mod main_window;
 pub mod widgets;
 pub mod theme;
 
-pub use main_window::MainWindow;
+pub use main_window::{MainWindow, IMainWindow};
 pub use theme::QualiaTheme;

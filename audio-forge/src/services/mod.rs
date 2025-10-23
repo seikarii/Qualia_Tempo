@@ -32,7 +32,7 @@ pub use upmixing_source::UpmixingSource;
 pub use validators::AudioFileValidator;
 pub use visualization_engine::VisualizationEngineService;
 
-// Shaku DI module containing all audio-forge services.
+// Shaku DI module containing all audio-forge services + UI components.
 // Provides centralized service registration and resolution for:
 // - IAudioPlayer → AudioPlayerService
 // - IAudioAnalyzer → AudioAnalyzerService
@@ -42,6 +42,7 @@ pub use visualization_engine::VisualizationEngineService;
 // - IAudioExporter → AudioExporterService (Directive 17)
 // - IEventBus → EventBusService (Lock-free pub/sub)
 // - IApplicationServices → ApplicationServices (Aggregate pattern)
+// - IMainWindow → MainWindow (ABSOLUTE DI PURITY - UI as Shaku Component)
 module! {
     pub AudioForgeModule {
         components = [
@@ -53,6 +54,7 @@ module! {
             AudioExporterService,
             EventBusService,
             ApplicationServices,
+            crate::ui::MainWindow,
         ],
         providers = []
     }
