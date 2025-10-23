@@ -57,7 +57,7 @@ fn test_e2e_complete_audio_pipeline() {
     };
     
     let event_bus = Arc::new(EventBusService::default());
-    let effects = Arc::new(AudioEffectsService::new(effect_config, event_bus.clone(), Arc::new(audio_forge::services::logger::QualiaLogger::default())));
+    let effects = Arc::new(AudioEffectsService::new(effect_config, event_bus.clone(), Arc::new(audio_forge::services::logger::QualiaLogger)));
     
     let multi_channel = Arc::new(MultiChannelOutputService::default());
     let _viz = Arc::new(VisualizationEngineService::new());
@@ -161,15 +161,14 @@ fn test_e2e_effects_chain() {
         treble_boost_enabled: true,
         treble_boost_gain: 1.5,
         treble_cutoff_hz: 3000.0, // Standard treble cutoff
-        pitch_shift_enabled: false,
-        reference_frequency: 440.0,
     };
 
     let event_bus = Arc::new(EventBusService::default());
-    let effects = AudioEffectsService::new(config, event_bus.clone(), Arc::new(audio_forge::services::logger::QualiaLogger::default()));
+    let effects = AudioEffectsService::new(config, event_bus.clone(), Arc::new(audio_forge::services::logger::QualiaLogger));
 
-    // Generate test signal: 0.8 amplitude
-    let mut samples = vec![0.8, -0.8, 0.8, -0.8];
+    // Generate test signal: longer buffer for filter stabilization
+    let mut samples = vec![0.8; 128];  // 64 stereo frames
+    samples.extend(vec![-0.8; 128]);
     let original = samples.clone();
 
     // Act: Apply effects chain
@@ -177,29 +176,37 @@ fn test_e2e_effects_chain() {
         .apply_drop_effect(&mut samples)
         .expect("Drop effect should succeed");
 
-    // CORRECTED EXPECTATION (NEW FREQUENCY-SELECTIVE DROP ALGORITHM):
-    // Input: 0.8 (DC component = very low frequency)
+    // PROFESSIONAL MULTIBAND DROP EFFECT (Updated expectation):
+    // Input: 0.8 (DC/low-frequency test signal)
     // With drop_amount = 0.5 (50% drop):
-    //   - Bass component:   0.8 * 0.85 * 1.2 = 0.816 (preserved + boosted)
-    //   - Mid-high component: 0.8 * 0.15 * 0.5 = 0.06 (attenuated 50%)
-    //   - Total: 0.816 + 0.06 = 0.876 (HIGHER than original due to bass boost)
+    //   - Sub-bass (LPF @ 80Hz): Passes DC, boosted by 1.3x
+    //   - Bass (80-250Hz bandpass): Minimal DC content, saturated
+    //   - Mid-highs (HPF @ 250Hz): No DC, attenuated 50%
     //
-    // OLD BEHAVIOR (uniform): 0.8 * 0.5 = 0.4
-    // NEW BEHAVIOR (selective): ~0.85-0.95 (bass emphasized)
-    assert!(samples[0] > 0.4, "New drop effect should preserve/boost bass, not uniform attenuation");
-    assert!(samples[0] <= 1.0, "Drop effect should not clip beyond 1.0");
+    // DC test signal → mainly in sub-bass band → BOOSTED not attenuated
+    // Biquad filters need ~20 samples to stabilize, check steady-state
+    let steady_state = &samples[50..];
+    let max_abs = steady_state.iter().map(|s| s.abs()).fold(0.0f32, f32::max);
     
-    // Store post-drop value for bass boost comparison
-    let post_drop_value = samples[0];
+    // DC at 50% drop should be HIGHER than original due to sub-bass boost (1.3x)
+    // Allow filter transients: expect > 0.5 (not uniform 0.4 attenuation)
+    assert!(max_abs > 0.5, "Professional drop should preserve/boost bass: got {}", max_abs);
+    assert!(max_abs <= 1.0, "Drop effect should not clip beyond 1.0");
+    
+    // Store post-drop max for bass boost comparison
+    let post_drop_max = max_abs;
 
     effects
         .apply_bass_boost(&mut samples, 44100)
         .expect("Bass boost should succeed");
 
     // After bass boost: Biquad LowShelf filter amplifies further
-    // DC/low-frequency input should be boosted above post-drop level
-    assert!(samples[0] >= post_drop_value * 0.9, "Bass boost should amplify or maintain level (filter may have minimal effect on DC)");
-    assert!(samples[0] <= 1.0, "Bass boost should not clip");
+    // DC/low-frequency input should be boosted or maintained
+    let steady_state_bass = &samples[50..];
+    let max_abs_bass = steady_state_bass.iter().map(|s| s.abs()).fold(0.0f32, f32::max);
+    
+    assert!(max_abs_bass >= post_drop_max * 0.9, "Bass boost should amplify or maintain level (filter may have minimal effect on DC)");
+    assert!(max_abs_bass <= 1.0, "Bass boost should not clip");
 
     effects
         .apply_treble_boost(&mut samples, 44100)
@@ -222,7 +229,7 @@ fn test_e2e_effects_chain() {
 #[test]
 fn test_e2e_channel_mode_switching() {
     // Arrange: Inject false to isolate test from host hardware
-    let logger = Arc::new(audio_forge::services::logger::QualiaLogger::default());
+    let logger = Arc::new(audio_forge::services::logger::QualiaLogger);
     let multi_channel = Arc::new(MultiChannelOutputService::new(logger, false));
 
     // Act & Assert: Initial state should be stereo (no 8.1 hardware)

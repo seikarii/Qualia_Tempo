@@ -55,7 +55,7 @@ mod tests {
     
     #[test]
     fn test_logger_creation() {
-        let logger = QualiaLogger::default();
+        let logger = QualiaLogger;
         
         // Should not panic (tracing subscriber may not be initialized in tests)
         logger.info("Test message");

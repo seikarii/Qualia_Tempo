@@ -157,7 +157,7 @@ fn test_full_8_1_pipeline_with_effects() {
 
     let output = MultiChannelOutputService::default();
     let event_bus = Arc::new(EventBusService::default());
-    let effects = AudioEffectsService::new(EffectConfig::default(), event_bus.clone(), Arc::new(audio_forge::services::logger::QualiaLogger::default()));
+    let effects = AudioEffectsService::new(EffectConfig::default(), event_bus.clone(), Arc::new(audio_forge::services::logger::QualiaLogger));
 
     // Generate stereo test signal
     let stereo_samples: Vec<f32> = (0..200).map(|i| (i as f32 * 0.1).sin()).collect();

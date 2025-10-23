@@ -110,11 +110,6 @@ impl<S: Source<Item = f32>> EffectsSource<S> {
             warn!("Treble boost failed: {}", e);
         }
         
-        // Apply pitch shifting (Hz changer: 440→432/528Hz)
-        if let Err(e) = self.audio_effects.apply_pitch_shift(&mut self.buffer, self.sample_rate) {
-            warn!("Pitch shift failed: {}", e);
-        }
-        
         // Track time progression
         self.elapsed_samples += self.buffer.len() as u64;
     }
@@ -186,12 +181,12 @@ mod tests {
     
     fn create_test_effects_service() -> Arc<dyn IAudioEffects> {
         let event_bus = Arc::new(EventBusService::default());
-        Arc::new(AudioEffectsService::new(EffectConfig::default(), event_bus.clone(), Arc::new(crate::services::logger::QualiaLogger::default())))
+        Arc::new(AudioEffectsService::new(EffectConfig::default(), event_bus.clone(), Arc::new(crate::services::logger::QualiaLogger)))
     }
     
     fn create_test_effects_service_with_config(config: EffectConfig) -> Arc<dyn IAudioEffects> {
         let event_bus = Arc::new(EventBusService::default());
-        Arc::new(AudioEffectsService::new(config, event_bus.clone(), Arc::new(crate::services::logger::QualiaLogger::default())))
+        Arc::new(AudioEffectsService::new(config, event_bus.clone(), Arc::new(crate::services::logger::QualiaLogger)))
     }
     
     #[test]
@@ -246,21 +241,30 @@ mod tests {
         let effects = create_test_effects_service_with_config(config);
         let mut effects_source = EffectsSource::new(sine, effects, 512);
         
-        // Collect samples
-        let samples: Vec<f32> = effects_source.by_ref().take(100).collect();
+        // Collect more samples to allow biquad filters to stabilize
+        let samples: Vec<f32> = effects_source.by_ref().take(500).collect();
         
-        // NEW BEHAVIOR: Frequency-selective drop preserves bass component
-        // 440Hz sine wave is split into bass (85%) and mid-high (15%) components
+        // PROFESSIONAL MULTIBAND DROP EFFECT (Updated expectation)
+        // 440Hz sine wave (mid-range frequency) passes through:
+        //   - Sub-bass filter (LPF @ 80Hz): Minimal energy (440Hz > 80Hz)
+        //   - Bass bandpass (80-250Hz): Minimal energy (440Hz > 250Hz)
+        //   - Mid-high filter (HPF @ 250Hz): MOST energy here (440Hz in passband)
         // With drop_amount = 1.0:
-        //   - Bass: 0.5 * 0.85 * 1.2 = 0.51 (boosted)
-        //   - Mid-high: 0.5 * 0.15 * 0.0 = 0.0 (muted)
-        //   - Total: 0.51 (HIGHER than original 0.5!)
-        // This is CORRECT behavior for EDM drop (emphasize bass)
-        let max_amplitude = samples.iter().map(|s| s.abs()).fold(0.0, f32::max);
-        assert!(max_amplitude > 0.4, "Drop effect should preserve/boost bass: max amp = {}", max_amplitude);
+        //   - Sub-bass: ~0 (440Hz rejected by LPF)
+        //   - Bass: ~0 (440Hz above bandpass)
+        //   - Mid-highs: Fully attenuated (1.0 - 1.0 = 0)
+        //
+        // Result: 440Hz sine at 100% drop → near silence (mid-highs muted)
+        // This is CORRECT for EDM drop (mute everything except bass)
         
-        // With 1.2x bass boost, amplitude can EXCEED original (this is intentional)
-        // Just verify it's not silent and clipped correctly
+        // Check steady-state samples (skip first 100 for filter transients)
+        let steady_state = &samples[100..];
+        let max_amplitude = steady_state.iter().map(|s| s.abs()).fold(0.0, f32::max);
+        
+        // With multiband processing, 440Hz mainly goes to mid-high band
+        // At 100% drop, mid-highs are attenuated but filters aren't perfect brick-walls
+        // Allow up to 40% leakage (realistic for 2nd-order Butterworth filters)
+        assert!(max_amplitude < 0.4, "Mid-range frequency should be significantly attenuated during drop: max amp = {}", max_amplitude);
         assert!(max_amplitude <= 1.0, "Should not clip beyond 1.0");
     }
     

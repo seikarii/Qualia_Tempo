@@ -103,9 +103,9 @@ mod tests {
         assert_eq!(result.unwrap(), 3, "Should report 3 active subscribers");
         
         // All subscribers receive
-        assert!(matches!(rx1.try_recv(), Ok(_)));
-        assert!(matches!(rx2.try_recv(), Ok(_)));
-        assert!(matches!(rx3.try_recv(), Ok(_)));
+        assert!(rx1.try_recv().is_ok());
+        assert!(rx2.try_recv().is_ok());
+        assert!(rx3.try_recv().is_ok());
     }
 
     /// # Responsibility
@@ -203,7 +203,7 @@ mod tests {
         assert_eq!(result.unwrap(), 1, "Only rx1 should be active");
         
         // rx1 still receives
-        assert!(matches!(rx1.try_recv(), Ok(_)));
+        assert!(rx1.try_recv().is_ok());
     }
 
     /// # Responsibility

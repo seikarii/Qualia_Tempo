@@ -71,11 +71,7 @@ fn test_seek_preserves_sample_accurate_position() {
     
     // Allow slight tolerance for frame boundary alignment
     let current_position = service.current_position();
-    let delta = if current_position > target_position {
-        current_position - target_position
-    } else {
-        target_position - current_position
-    };
+    let delta = current_position.abs_diff(target_position);
     
     println!("   Target: {:?}, Current: {:?}, Delta: {:?}", 
              target_position, current_position, delta);
@@ -101,8 +97,7 @@ fn test_multiple_consecutive_seeks_no_degradation() {
     service.load_file(test_file).expect("Failed to load test file");
     
     // Perform 10 seeks and measure each latency
-    let seek_positions = vec![
-        Duration::from_millis(100),
+    let seek_positions = [Duration::from_millis(100),
         Duration::from_millis(900),
         Duration::from_millis(500),
         Duration::from_millis(200),
@@ -111,8 +106,7 @@ fn test_multiple_consecutive_seeks_no_degradation() {
         Duration::from_millis(600),
         Duration::from_millis(300),
         Duration::from_millis(700),
-        Duration::from_millis(50),
-    ];
+        Duration::from_millis(50)];
     
     for (i, pos) in seek_positions.iter().enumerate() {
         let start = Instant::now();
@@ -179,7 +173,7 @@ fn test_seek_to_boundaries() {
     // Test 2: Seek to end
     service.seek(duration).expect("Seek to end failed");
     let pos = service.current_position();
-    let delta = if pos > duration { pos - duration } else { duration - pos };
+    let delta = pos.abs_diff(duration);
     assert!(delta < Duration::from_millis(10), "Should be near end");
     
     // Test 3: Seek beyond end (should clamp)

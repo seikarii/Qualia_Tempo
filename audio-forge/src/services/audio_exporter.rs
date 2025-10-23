@@ -218,7 +218,7 @@ mod tests {
     /// Helper function to create AudioExporterService for testing
     fn create_test_service() -> AudioExporterService {
         let event_bus = Arc::new(EventBusService::default());
-        let logger = Arc::new(crate::services::logger::QualiaLogger::default());
+        let logger = Arc::new(crate::services::logger::QualiaLogger);
         AudioExporterService { event_bus, logger }
     }
 

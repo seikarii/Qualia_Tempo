@@ -656,7 +656,7 @@ mod tests {
     /// Helper function to create AudioPlayerService for testing
     fn create_test_service() -> AudioPlayerService {
         let event_bus = Arc::new(EventBusService::default());
-        let logger = Arc::new(crate::services::logger::QualiaLogger::default());
+        let logger = Arc::new(crate::services::logger::QualiaLogger);
         let audio_effects = Arc::new(AudioEffectsService::new(
             crate::contracts::effect_parameters::EffectConfig::default(),
             event_bus.clone(),

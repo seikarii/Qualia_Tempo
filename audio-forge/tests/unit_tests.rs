@@ -57,7 +57,6 @@ mock! {
         fn apply_drop_effect(&self, samples: &mut [f32]) -> Result<(), audio_forge::errors::AudioEffectsError>;
         fn apply_bass_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), audio_forge::errors::AudioEffectsError>;
         fn apply_treble_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), audio_forge::errors::AudioEffectsError>;
-        fn apply_pitch_shift(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), audio_forge::errors::AudioEffectsError>;
         fn set_config(&self, config: EffectConfig);
         fn get_config(&self) -> EffectConfig;
     }
@@ -178,8 +177,6 @@ fn test_effects_config_roundtrip() {
         treble_boost_enabled: true,
         treble_boost_gain: 1.2,
         treble_cutoff_hz: 3000.0,
-        pitch_shift_enabled: false,
-        reference_frequency: 440.0,
     };
     
     let config_clone = config.clone();

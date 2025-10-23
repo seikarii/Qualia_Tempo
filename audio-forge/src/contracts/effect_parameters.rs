@@ -47,12 +47,6 @@ pub struct EffectConfig {
     /// Treble boost cutoff frequency in Hz [1000.0, 8000.0]
     #[validate(range(min = 1000.0, max = 8000.0))]
     pub treble_cutoff_hz: f32,
-
-    /// Enable pitch shifting (Hz changer)
-    pub pitch_shift_enabled: bool,
-    /// Target reference frequency in Hz (default 440, alternatives: 432, 528)
-    #[validate(range(min = 200.0, max = 800.0))]
-    pub reference_frequency: f32,
 }
 
 impl Default for EffectConfig {
@@ -72,9 +66,6 @@ impl Default for EffectConfig {
             treble_boost_enabled: false,
             treble_boost_gain: 1.5,
             treble_cutoff_hz: 3000.0, // Standard treble filter cutoff
-
-            pitch_shift_enabled: false,
-            reference_frequency: 440.0, // Standard A4 tuning
         }
     }
 }

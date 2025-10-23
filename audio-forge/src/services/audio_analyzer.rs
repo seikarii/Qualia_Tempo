@@ -232,7 +232,7 @@ mod tests {
 
     #[test]
     fn test_custom_fft_size() {
-        let logger = Arc::new(crate::services::logger::QualiaLogger::default());
+        let logger = Arc::new(crate::services::logger::QualiaLogger);
         let analyzer = AudioAnalyzerService::new(4096, logger);
         assert_eq!(analyzer.fft_size, 4096);
     }
@@ -240,7 +240,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "FFT size must be power of 2")]
     fn test_invalid_fft_size() {
-        let logger = Arc::new(crate::services::logger::QualiaLogger::default());
+        let logger = Arc::new(crate::services::logger::QualiaLogger);
         AudioAnalyzerService::new(1000, logger);
     }
 

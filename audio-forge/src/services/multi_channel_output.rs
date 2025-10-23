@@ -324,7 +324,7 @@ mod tests {
     #[test]
     fn test_service_creation() {
         // Inject false for hardware detection (test isolation)
-        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger), false);
         let config = service.get_configuration();
 
         // Should default to stereo (8.1 not available in test environment)
@@ -356,7 +356,7 @@ mod tests {
 
     #[test]
     fn test_configure_8_1_fails_when_unavailable() {
-        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger), false);
         let result = service.configure_8_1_channels();
 
         assert!(result.is_err());
@@ -370,7 +370,7 @@ mod tests {
 
     #[test]
     fn test_fallback_to_stereo_succeeds() {
-        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger), false);
         let result = service.fallback_to_stereo();
 
         assert!(result.is_ok());
@@ -379,7 +379,7 @@ mod tests {
 
     #[test]
     fn test_upmix_empty_input() {
-        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger), false);
         let stereo: Vec<f32> = vec![];
 
         let result = service.upmix_stereo_to_8_1(&stereo);
@@ -391,7 +391,7 @@ mod tests {
 
     #[test]
     fn test_upmix_odd_sample_count_fails() {
-        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger), false);
         let stereo = vec![1.0, 0.5, 0.3]; // Odd count (invalid)
 
         let result = service.upmix_stereo_to_8_1(&stereo);
@@ -406,7 +406,7 @@ mod tests {
 
     #[test]
     fn test_upmix_single_stereo_frame() {
-        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger), false);
         let stereo = vec![1.0, -1.0]; // L=1.0, R=-1.0
 
         let result = service.upmix_stereo_to_8_1(&stereo);
@@ -436,7 +436,7 @@ mod tests {
 
     #[test]
     fn test_upmix_multiple_frames() {
-        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger), false);
         // 2 stereo frames: [L1, R1, L2, R2]
         let stereo = vec![0.5, 0.5, -0.5, -0.5];
 
@@ -476,7 +476,7 @@ mod tests {
 
     #[test]
     fn test_channel_count_calculation() {
-        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger), false);
         let config = service.get_configuration();
 
         assert_eq!(config.channel_count(), 2); // Stereo mode

@@ -67,9 +67,10 @@ fn main() {
     // Initialize EventBus for effects service (required after DI refactor)
     let event_bus = EventBusService::new(100);
     let event_bus: Arc<dyn audio_forge::services::event_bus::IEventBus> = Arc::new(event_bus);
+    let logger = Arc::new(audio_forge::services::logger::QualiaLogger);
     
     // Initialize effects service with DI
-    let effects = AudioEffectsService::new(EffectConfig::default(), event_bus);
+    let effects = AudioEffectsService::new(EffectConfig::default(), event_bus, logger);
     
     // 5 minutes of audio at 44.1kHz stereo = ~26.5M samples
     let total_samples = 44100 * 2 * 60 * 5;

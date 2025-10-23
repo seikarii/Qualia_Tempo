@@ -51,7 +51,7 @@ proptest! {
         
         // OPTIMIZATION: Instantiate service directly (no module resolution, no OutputStream)
         let event_bus = Arc::new(EventBusService::default());
-        let logger = Arc::new(audio_forge::services::logger::QualiaLogger::default());
+        let logger = Arc::new(audio_forge::services::logger::QualiaLogger);
         let service = AudioEffectsService::new(
             EffectConfig {
                 bass_boost_enabled: true,

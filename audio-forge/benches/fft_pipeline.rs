@@ -8,6 +8,7 @@
 
 use audio_forge::services::audio_analyzer::AudioAnalyzerService;
 use audio_forge::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
+use std::sync::Arc;
 use std::time::Instant;
 
 fn main() {
@@ -30,7 +31,8 @@ fn main() {
 }
 
 fn benchmark_fft_latency(name: &str, sample_rate: u32, buffer_size: usize) {
-    let analyzer = AudioAnalyzerService::new(buffer_size);
+    let logger = Arc::new(audio_forge::services::logger::QualiaLogger);
+    let analyzer = AudioAnalyzerService::new(buffer_size, logger);
     
     // Generate test signal (sine wave at 440 Hz)
     let samples: Vec<f32> = (0..buffer_size)
