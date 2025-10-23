@@ -35,12 +35,18 @@ pub struct EffectConfig {
     /// Bass boost gain multiplier [1.0, 3.0]
     #[validate(range(min = 1.0, max = 3.0))]
     pub bass_boost_gain: f32,
+    /// Bass boost cutoff frequency in Hz [20.0, 500.0]
+    #[validate(range(min = 20.0, max = 500.0))]
+    pub bass_cutoff_hz: f32,
 
     /// Enable treble boost
     pub treble_boost_enabled: bool,
     /// Treble boost gain multiplier [1.0, 3.0]
     #[validate(range(min = 1.0, max = 3.0))]
     pub treble_boost_gain: f32,
+    /// Treble boost cutoff frequency in Hz [1000.0, 8000.0]
+    #[validate(range(min = 1000.0, max = 8000.0))]
+    pub treble_cutoff_hz: f32,
 
     /// Enable pitch shifting (Hz changer)
     pub pitch_shift_enabled: bool,
@@ -61,9 +67,11 @@ impl Default for EffectConfig {
 
             bass_boost_enabled: false,
             bass_boost_gain: 1.5,
+            bass_cutoff_hz: 250.0, // Standard bass filter cutoff
 
             treble_boost_enabled: false,
             treble_boost_gain: 1.5,
+            treble_cutoff_hz: 3000.0, // Standard treble filter cutoff
 
             pitch_shift_enabled: false,
             reference_frequency: 440.0, // Standard A4 tuning

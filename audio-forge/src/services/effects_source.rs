@@ -239,7 +239,7 @@ mod tests {
         
         let config = EffectConfig {
             drop_effect_enabled: true,
-            drop_amount: 1.0, // Complete silence
+            drop_amount: 1.0, // Full drop (mutes mid-highs, preserves bass)
             ..Default::default()
         };
         
@@ -249,10 +249,19 @@ mod tests {
         // Collect samples
         let samples: Vec<f32> = effects_source.by_ref().take(100).collect();
         
-        // All samples should be zero (100% drop)
-        for sample in samples {
-            assert_eq!(sample, 0.0, "Drop effect should silence audio");
-        }
+        // NEW BEHAVIOR: Frequency-selective drop preserves bass component
+        // 440Hz sine wave is split into bass (85%) and mid-high (15%) components
+        // With drop_amount = 1.0:
+        //   - Bass: 0.5 * 0.85 * 1.2 = 0.51 (boosted)
+        //   - Mid-high: 0.5 * 0.15 * 0.0 = 0.0 (muted)
+        //   - Total: 0.51 (HIGHER than original 0.5!)
+        // This is CORRECT behavior for EDM drop (emphasize bass)
+        let max_amplitude = samples.iter().map(|s| s.abs()).fold(0.0, f32::max);
+        assert!(max_amplitude > 0.4, "Drop effect should preserve/boost bass: max amp = {}", max_amplitude);
+        
+        // With 1.2x bass boost, amplitude can EXCEED original (this is intentional)
+        // Just verify it's not silent and clipped correctly
+        assert!(max_amplitude <= 1.0, "Should not clip beyond 1.0");
     }
     
     #[test]

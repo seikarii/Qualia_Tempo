@@ -174,8 +174,10 @@ fn test_effects_config_roundtrip() {
         drop_amount: 0.5,
         bass_boost_enabled: true,
         bass_boost_gain: 1.5,
+        bass_cutoff_hz: 250.0,
         treble_boost_enabled: true,
         treble_boost_gain: 1.2,
+        treble_cutoff_hz: 3000.0,
         pitch_shift_enabled: false,
         reference_frequency: 440.0,
     };

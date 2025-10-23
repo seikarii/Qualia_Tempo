@@ -157,8 +157,10 @@ fn test_e2e_effects_chain() {
         drop_amount: 0.5, // 50% volume reduction
         bass_boost_enabled: true,
         bass_boost_gain: 2.0,
+        bass_cutoff_hz: 250.0, // Standard bass cutoff
         treble_boost_enabled: true,
         treble_boost_gain: 1.5,
+        treble_cutoff_hz: 3000.0, // Standard treble cutoff
         pitch_shift_enabled: false,
         reference_frequency: 440.0,
     };
@@ -209,7 +211,8 @@ fn test_e2e_effects_chain() {
 #[test]
 fn test_e2e_channel_mode_switching() {
     // Arrange: Inject false to isolate test from host hardware
-    let multi_channel = Arc::new(MultiChannelOutputService::new(false));
+    let logger = Arc::new(audio_forge::services::logger::QualiaLogger::default());
+    let multi_channel = Arc::new(MultiChannelOutputService::new(logger, false));
 
     // Act & Assert: Initial state should be stereo (no 8.1 hardware)
     let config = multi_channel.get_configuration();
