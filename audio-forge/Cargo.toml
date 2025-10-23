@@ -2,6 +2,7 @@
 name = "audio-forge"
 version = "0.1.0"
 edition = "2021"
+default-run = "audio-forge"
 
 [dependencies]
 anyhow = "1.0"
