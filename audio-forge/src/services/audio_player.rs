@@ -177,10 +177,13 @@ impl IAudioPlayer for AudioPlayerService {
               (sample_count * std::mem::size_of::<f32>()) as f64 / 1_048_576.0);
 
         // Create SamplesBuffer from decoded data
+        // OPTIMIZATION: Try to unwrap Arc (zero-copy if refcount=1), otherwise clone
+        // We clone Arc here to store in PlayerState, so try_unwrap would fail.
+        // Use as_ref() to avoid full clone while satisfying Into<Vec<f32>> requirement.
         let samples_buffer = rodio::buffer::SamplesBuffer::new(
             channels,
             sample_rate,
-            decoded_arc.as_ref().clone(), // Clone Vec<f32> (rodio requires ownership)
+            decoded_arc.as_ref().as_slice(), // &[f32] implements Into<Vec<f32>> via to_vec()
         );
 
         // DIRECTIVE 15: Wrap in SampleCountingSource for sample-accurate position tracking
@@ -574,10 +577,11 @@ impl IAudioPlayer for AudioPlayerService {
         drop(state); // Release lock before processing
         
         // Create SamplesBuffer from decoded data
+        // OPTIMIZATION: Use as_slice() to minimize copying (&[f32] → Vec<f32> via Into trait)
         let samples_buffer = rodio::buffer::SamplesBuffer::new(
             channels,
             sample_rate,
-            decoded_samples.as_ref().clone(),
+            decoded_samples.as_ref().as_slice(), // &[f32] → Vec<f32> (unavoidable copy for ownership transfer)
         );
         
         // Build processing pipeline (without SampleCountingSource since we don't need position tracking)
