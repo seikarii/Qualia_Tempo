@@ -63,7 +63,7 @@ impl SampleBuffer {
     /// - Overwrites oldest samples when full (circular buffer)
     /// - Zero allocations during write
     pub fn push_samples(&self, new_samples: &[f32]) {
-        let mut prod = self.producer.lock().unwrap();
+        let mut prod = self.producer.lock().expect("SampleBuffer producer mutex poisoned");
         
         // Write as many samples as possible
         // If buffer full, oldest samples are overwritten (ringbuf handles this)
@@ -80,7 +80,7 @@ impl SampleBuffer {
     ///
     /// Returns Arc for zero-copy sharing. Allocates Vec only when new data available.
     pub fn get_samples(&self) -> Arc<[f32]> {
-        let mut cons = self.consumer.lock().unwrap();
+        let mut cons = self.consumer.lock().expect("SampleBuffer consumer mutex poisoned");
         
         let len = cons.occupied_len();
         if len == 0 {
@@ -99,7 +99,7 @@ impl SampleBuffer {
     /// # Responsibility
     /// Legacy method: Get samples with reused allocation.
     pub fn get_samples_mut(&self, output: &mut Vec<f32>) {
-        let mut cons = self.consumer.lock().unwrap();
+        let mut cons = self.consumer.lock().expect("SampleBuffer consumer mutex poisoned");
         
         output.clear();
         
@@ -111,28 +111,28 @@ impl SampleBuffer {
     /// # Responsibility
     /// Clear buffer by consuming all samples.
     pub fn clear(&self) {
-        let mut cons = self.consumer.lock().unwrap();
+        let mut cons = self.consumer.lock().expect("SampleBuffer consumer mutex poisoned");
         cons.clear();
     }
     
     /// # Responsibility
     /// Get current number of samples in buffer.
     pub fn len(&self) -> usize {
-        let cons = self.consumer.lock().unwrap();
+        let cons = self.consumer.lock().expect("SampleBuffer consumer mutex poisoned");
         cons.occupied_len()
     }
     
     /// # Responsibility
     /// Check if buffer is empty.
     pub fn is_empty(&self) -> bool {
-        let cons = self.consumer.lock().unwrap();
+        let cons = self.consumer.lock().expect("SampleBuffer consumer mutex poisoned");
         cons.is_empty()
     }
     
     /// # Responsibility
     /// Get buffer capacity.
     pub fn capacity(&self) -> usize {
-        let cons = self.consumer.lock().unwrap();
+        let cons = self.consumer.lock().expect("SampleBuffer consumer mutex poisoned");
         cons.capacity().get()
     }
 }
@@ -188,6 +188,7 @@ where
 {
     type Item = f32;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         let sample = self.inner.next()?;
         

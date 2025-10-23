@@ -109,6 +109,7 @@ where
     /// Uses Ordering::Relaxed for maximum performance. Sequential consistency
     /// is not required here since we only care about the final count, not
     /// inter-thread ordering guarantees.
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         match self.inner.next() {
             Some(sample) => {

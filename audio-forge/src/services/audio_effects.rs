@@ -10,7 +10,7 @@ use biquad::*;
 use shaku::Component;
 use std::f32::consts::PI;
 use std::sync::{Arc, Mutex, RwLock};
-use tracing::warn;
+use tracing::{warn, instrument};
 
 /// # Responsibility
 /// Biquad filter state for bass/treble boost with lazy recalculation.
@@ -214,6 +214,7 @@ impl AudioEffectsService {
 }
 
 impl IAudioEffects for AudioEffectsService {
+    #[instrument(skip(self, samples), fields(sample_count = samples.len(), elapsed_time))]
     fn apply_8d_effect(
         &self,
         samples: &mut [f32],
@@ -263,6 +264,7 @@ impl IAudioEffects for AudioEffectsService {
         Ok(())
     }
 
+    #[instrument(skip(self, samples), fields(sample_count = samples.len()))]
     fn apply_drop_effect(&self, samples: &mut [f32]) -> Result<(), AudioEffectsError> {
         let config = self.config.read().unwrap();
 
@@ -279,6 +281,7 @@ impl IAudioEffects for AudioEffectsService {
         Ok(())
     }
 
+    #[instrument(skip(self, samples), fields(sample_count = samples.len(), sample_rate))]
     fn apply_bass_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), AudioEffectsError> {
         let config = self.config.read().unwrap();
 
@@ -291,7 +294,7 @@ impl IAudioEffects for AudioEffectsService {
         // DIRECTIVE 11: Use provided sample_rate (no more hardcoded 44100Hz)
         
         // Update filter coefficients ONLY if gain changed (lazy recalculation)
-        let mut filter_state = self.filter_state.lock().unwrap();
+        let mut filter_state = self.filter_state.lock().expect("FilterState mutex poisoned");
         filter_state.update_bass_if_changed(gain, sample_rate);
 
         // Apply LowShelf biquad filter @ 250Hz
@@ -303,6 +306,7 @@ impl IAudioEffects for AudioEffectsService {
         Ok(())
     }
 
+    #[instrument(skip(self, samples), fields(sample_count = samples.len(), sample_rate))]
     fn apply_treble_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), AudioEffectsError> {
         let config = self.config.read().unwrap();
 
@@ -315,7 +319,7 @@ impl IAudioEffects for AudioEffectsService {
         // DIRECTIVE 11: Use provided sample_rate (no more hardcoded 44100Hz)
         
         // Update filter coefficients ONLY if gain changed
-        let mut filter_state = self.filter_state.lock().unwrap();
+        let mut filter_state = self.filter_state.lock().expect("FilterState mutex poisoned");
         filter_state.update_treble_if_changed(gain, sample_rate);
 
         // Apply HighShelf biquad filter @ 3kHz
@@ -331,6 +335,56 @@ impl IAudioEffects for AudioEffectsService {
         self.config.read().unwrap().clone()
     }
 
+    #[instrument(skip(self, samples), fields(sample_count = samples.len()))]
+    fn apply_pitch_shift(&self, samples: &mut [f32], _sample_rate: u32) -> Result<(), AudioEffectsError> {
+        let config = self.config.read().unwrap();
+        
+        if !config.pitch_shift_enabled {
+            return Ok(());
+        }        // Pitch ratio: target_freq / 440.0
+        let pitch_ratio = config.reference_frequency / 440.0;
+        
+        // Clamp to reasonable range [0.5, 2.0] to prevent extreme artifacts
+        let pitch_ratio = pitch_ratio.clamp(0.5, 2.0);
+        
+        if (pitch_ratio - 1.0).abs() < 0.001 {
+            return Ok(()); // No shift needed
+        }
+
+        // Linear interpolation resampling for pitch shifting
+        let len = samples.len();
+        if len == 0 {
+            return Ok(());
+        }
+
+        let mut output = Vec::with_capacity((len as f32 / pitch_ratio) as usize);
+        let mut read_pos = 0.0f32;
+        let step = pitch_ratio; // Read step (> 1.0 = faster playback = higher pitch)
+
+        while (read_pos as usize) < len - 1 {
+            let idx = read_pos as usize;
+            let frac = read_pos - idx as f32;
+            
+            // Linear interpolation between adjacent samples
+            let sample = samples[idx] * (1.0 - frac) + samples[idx + 1] * frac;
+            output.push(sample);
+            
+            read_pos += step;
+        }
+
+        // Copy output back (may be shorter or longer than input)
+        let copy_len = output.len().min(len);
+        samples[..copy_len].copy_from_slice(&output[..copy_len]);
+        
+        // If output is shorter, fill remainder with silence
+        if copy_len < len {
+            samples[copy_len..].fill(0.0);
+        }
+
+        Ok(())
+    }
+
+    #[instrument(skip(self, config))]
     fn set_config(&self, config: EffectConfig) {
         *self.config.write().unwrap() = config.clone();
         
@@ -620,6 +674,80 @@ mod tests {
         // Samples WILL change due to cross-mixing at 50/50 blend
         // This is CORRECT behavior (not a pure no-op)
         assert_ne!(samples, original, "Zero intensity still applies 50/50 blend");
+    }
+
+    #[test]
+    fn test_pitch_shift_disabled() {
+        let service = create_test_service();
+        let mut samples = vec![0.5, -0.5, 0.3, -0.3];
+        let original = samples.clone();
+
+        service.apply_pitch_shift(&mut samples, 44100).unwrap();
+
+        // When disabled, samples should be unchanged
+        assert_eq!(samples, original);
+    }
+
+    #[test]
+    fn test_pitch_shift_to_432hz() {
+        let config = EffectConfig {
+            pitch_shift_enabled: true,
+            reference_frequency: 432.0, // Lower than 440
+            ..Default::default()
+        };
+
+        let event_bus = Arc::new(EventBusService::default());
+        let service = AudioEffectsService::new(config, event_bus);
+
+        // Generate 440Hz sine wave
+        let sample_rate = 44100.0;
+        let frequency = 440.0;
+        let mut samples: Vec<f32> = (0..100)
+            .map(|i| (2.0 * std::f32::consts::PI * frequency * i as f32 / sample_rate).sin())
+            .collect();
+
+        let original_len = samples.len();
+        service.apply_pitch_shift(&mut samples, 44100).unwrap();
+
+        // Pitch shift should modify samples
+        assert_eq!(samples.len(), original_len);
+        // Lower frequency = longer period, so samples should differ
+        assert_ne!(samples[10], (2.0 * std::f32::consts::PI * frequency * 10.0 / sample_rate).sin());
+    }
+
+    #[test]
+    fn test_pitch_shift_to_528hz() {
+        let config = EffectConfig {
+            pitch_shift_enabled: true,
+            reference_frequency: 528.0, // Higher than 440
+            ..Default::default()
+        };
+
+        let event_bus = Arc::new(EventBusService::default());
+        let service = AudioEffectsService::new(config, event_bus);
+
+        let mut samples = vec![0.5; 100];
+        service.apply_pitch_shift(&mut samples, 44100).unwrap();
+
+        // Should complete without error
+        assert_eq!(samples.len(), 100);
+    }
+
+    #[test]
+    fn test_pitch_shift_clamps_extreme_ratios() {
+        let config = EffectConfig {
+            pitch_shift_enabled: true,
+            reference_frequency: 1000.0, // Extreme: would be 2.27x
+            ..Default::default()
+        };
+
+        let event_bus = Arc::new(EventBusService::default());
+        let service = AudioEffectsService::new(config, event_bus);
+
+        let mut samples = vec![0.5; 100];
+        // Should not panic, clamps to 2.0x max
+        let result = service.apply_pitch_shift(&mut samples, 44100);
+        assert!(result.is_ok());
     }
 
     /// # Responsibility

@@ -141,11 +141,13 @@ async fn test_happy_path_full_workflow() {
     // ============================================================================
     // STEP 7: EFFECTS (simulates checkbox clicks)
     // ============================================================================
-    let mut config = EffectConfig::default();
-    config.effect_8d_enabled = true;
-    config.effect_8d_intensity = 0.8;
-    config.bass_boost_enabled = true;
-    config.bass_boost_gain = 1.5;
+    let config = EffectConfig {
+        effect_8d_enabled: true,
+        effect_8d_intensity: 0.8,
+        bass_boost_enabled: true,
+        bass_boost_gain: 1.5,
+        ..Default::default()
+    };
 
     services.audio_effects().set_config(config.clone());
 

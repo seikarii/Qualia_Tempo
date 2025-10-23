@@ -126,6 +126,7 @@ impl<S: Source<Item = f32>> UpmixingSource<S> {
 impl<S: Source<Item = f32>> Iterator for UpmixingSource<S> {
     type Item = f32;
     
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         // If output buffer has samples, return next one
         if self.output_index < self.output_buffer.len() {

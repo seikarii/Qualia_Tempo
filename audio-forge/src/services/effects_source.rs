@@ -110,6 +110,11 @@ impl<S: Source<Item = f32>> EffectsSource<S> {
             warn!("Treble boost failed: {}", e);
         }
         
+        // Apply pitch shifting (Hz changer: 440→432/528Hz)
+        if let Err(e) = self.audio_effects.apply_pitch_shift(&mut self.buffer, self.sample_rate) {
+            warn!("Pitch shift failed: {}", e);
+        }
+        
         // Track time progression
         self.elapsed_samples += self.buffer.len() as u64;
     }
@@ -118,6 +123,7 @@ impl<S: Source<Item = f32>> EffectsSource<S> {
 impl<S: Source<Item = f32>> Iterator for EffectsSource<S> {
     type Item = f32;
     
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         // If buffer has processed samples, return next one
         if self.buffer_index < self.buffer.len() {

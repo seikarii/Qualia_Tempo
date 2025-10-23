@@ -20,7 +20,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tracing::{error, info, warn};
+use tracing::{error, info, warn, instrument};
 
 /// # Responsibility
 /// Holds the rodio Sink and current playback state.
@@ -99,7 +99,7 @@ impl Default for PlayerStateHandle {
 
 impl PlayerStateHandle {
     fn lock(&self) -> std::sync::MutexGuard<'_, PlayerState> {
-        self.0.lock().unwrap()
+        self.0.lock().expect("PlayerState mutex poisoned - fatal error")
     }
 }
 
@@ -122,6 +122,7 @@ pub struct AudioPlayerService {
 }
 
 impl IAudioPlayer for AudioPlayerService {
+    #[instrument(skip(self), fields(path = %path.display()))]
     fn load_file(&self, path: &Path) -> Result<Duration, AudioPlayerError> {
         info!("Loading audio file: {}", path.display());
 
@@ -217,6 +218,7 @@ impl IAudioPlayer for AudioPlayerService {
         Ok(total_duration)
     }
 
+    #[instrument(skip(self))]
     fn play(&self) -> Result<(), AudioPlayerError> {
         let mut state = self.state.lock();
         
@@ -250,6 +252,7 @@ impl IAudioPlayer for AudioPlayerService {
         Ok(())
     }
 
+    #[instrument(skip(self))]
     fn pause(&self) -> Result<(), AudioPlayerError> {
         let mut state = self.state.lock();
         
@@ -281,6 +284,7 @@ impl IAudioPlayer for AudioPlayerService {
         Ok(())
     }
 
+    #[instrument(skip(self))]
     fn stop(&self) -> Result<(), AudioPlayerError> {
         let mut state = self.state.lock();
         
@@ -309,6 +313,7 @@ impl IAudioPlayer for AudioPlayerService {
         Ok(())
     }
 
+    #[instrument(skip(self), fields(position_secs = position.as_secs_f64()))]
     fn seek(&self, position: Duration) -> Result<(), AudioPlayerError> {
         let state = self.state.lock();
         
@@ -369,6 +374,7 @@ impl IAudioPlayer for AudioPlayerService {
         Ok(())
     }
 
+    #[instrument(skip(self), fields(volume))]
     fn set_volume(&self, volume: f32) -> Result<(), AudioPlayerError> {
         let state = self.state.lock();
         
@@ -389,6 +395,7 @@ impl IAudioPlayer for AudioPlayerService {
         Ok(())
     }
 
+    #[instrument(skip(self))]
     fn current_position(&self) -> Duration {
         let state = self.state.lock();
         
@@ -408,11 +415,13 @@ impl IAudioPlayer for AudioPlayerService {
         Duration::from_secs_f64(position_secs)
     }
 
+    #[instrument(skip(self))]
     fn total_duration(&self) -> Duration {
         let state = self.state.lock();
         state.total_duration
     }
 
+    #[instrument(skip(self))]
     fn is_playing(&self) -> bool {
         let state = self.state.lock();
         state.is_playing
@@ -438,7 +447,7 @@ impl IAudioPlayer for AudioPlayerService {
         // Get current file path from state
         let state = self.state.lock();
         let current_file = state.current_file.clone()
-            .ok_or_else(|| AudioPlayerError::NoFileLoaded)?;
+            .ok_or(AudioPlayerError::NoFileLoaded)?;
         drop(state); // Release lock before heavy I/O
         
         // Reload audio file (non-destructive to playback state)

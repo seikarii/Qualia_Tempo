@@ -7,7 +7,7 @@ use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use biquad::*;
 use shaku::Component;
 use std::sync::RwLock;
-use tracing::{info, warn};
+use tracing::{info, warn, instrument};
 
 /// # Responsibility
 /// Multi-channel audio output service with 8.1 upmixing.
@@ -162,6 +162,7 @@ impl MultiChannelOutputService {
 }
 
 impl IMultiChannelOutput for MultiChannelOutputService {
+    #[instrument(skip(self))]
     fn configure_8_1_channels(&self) -> Result<(), MultiChannelError> {
         let mut config = self.config.write().unwrap();
 
@@ -176,6 +177,7 @@ impl IMultiChannelOutput for MultiChannelOutputService {
         Ok(())
     }
 
+    #[instrument(skip(self, stereo_samples), fields(sample_count = stereo_samples.len()))]
     fn upmix_stereo_to_8_1(&self, stereo_samples: &[f32]) -> Result<Vec<f32>, MultiChannelError> {
         if !stereo_samples.len().is_multiple_of(2) {
             return Err(MultiChannelError::PlaybackError(format!(
@@ -274,6 +276,7 @@ impl IMultiChannelOutput for MultiChannelOutputService {
         detected
     }
 
+    #[instrument(skip(self))]
     fn fallback_to_stereo(&self) -> Result<(), MultiChannelError> {
         let mut config = self.config.write().unwrap();
         config.mode = ChannelMode::Stereo;
@@ -281,6 +284,7 @@ impl IMultiChannelOutput for MultiChannelOutputService {
         Ok(())
     }
 
+    #[instrument(skip(self))]
     fn get_configuration(&self) -> ChannelConfiguration {
         self.config.read().unwrap().clone()
     }

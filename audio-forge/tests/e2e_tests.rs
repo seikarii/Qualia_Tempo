@@ -159,6 +159,8 @@ fn test_e2e_effects_chain() {
         bass_boost_gain: 2.0,
         treble_boost_enabled: true,
         treble_boost_gain: 1.5,
+        pitch_shift_enabled: false,
+        reference_frequency: 440.0,
     };
 
     let event_bus = Arc::new(EventBusService::default());

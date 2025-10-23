@@ -54,6 +54,15 @@ pub trait IAudioEffects: Interface {
     fn apply_treble_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), AudioEffectsError>;
 
     /// # Responsibility
+    /// Apply pitch shifting (Hz changer: 440→432/528Hz).
+    ///
+    /// ---
+    ///
+    /// Resamples audio to shift pitch to target reference frequency.
+    /// Uses linear interpolation for quality/performance balance.
+    fn apply_pitch_shift(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), AudioEffectsError>;
+
+    /// # Responsibility
     /// Get current effect configuration.
     fn get_config(&self) -> EffectConfig;
 

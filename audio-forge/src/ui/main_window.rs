@@ -635,9 +635,9 @@ impl Drop for MainWindow {
         let config = self.get_current_config();
         
         if let Err(e) = save_config(&config) {
-            eprintln!("❌ Failed to save config on exit: {}", e);
+            error!("Failed to save config on exit: {}", e);
         } else {
-            println!("✅ Configuration saved successfully");
+            info!("Configuration saved successfully");
         }
     }
 }

@@ -57,6 +57,7 @@ mock! {
         fn apply_drop_effect(&self, samples: &mut [f32]) -> Result<(), audio_forge::errors::AudioEffectsError>;
         fn apply_bass_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), audio_forge::errors::AudioEffectsError>;
         fn apply_treble_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), audio_forge::errors::AudioEffectsError>;
+        fn apply_pitch_shift(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), audio_forge::errors::AudioEffectsError>;
         fn set_config(&self, config: EffectConfig);
         fn get_config(&self) -> EffectConfig;
     }
@@ -132,7 +133,7 @@ fn test_volume_out_of_range_clamped() {
         .with(eq(1.5f32)) // Out of range
         .times(1)
         .returning(|v| {
-            if v > 1.0 || v < 0.0 {
+            if !(0.0..=1.0).contains(&v) {
                 Err(AudioPlayerError::VolumeError(format!("Volume {} out of range [0.0, 1.0]", v)))
             } else {
                 Ok(())
@@ -175,6 +176,8 @@ fn test_effects_config_roundtrip() {
         bass_boost_gain: 1.5,
         treble_boost_enabled: true,
         treble_boost_gain: 1.2,
+        pitch_shift_enabled: false,
+        reference_frequency: 440.0,
     };
     
     let config_clone = config.clone();

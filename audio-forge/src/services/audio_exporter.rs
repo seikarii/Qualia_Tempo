@@ -16,7 +16,7 @@ use shaku::Component;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
-use tracing::{info, warn};
+use tracing::{info, warn, instrument};
 
 use super::interfaces::IAudioExporter;
 
@@ -66,7 +66,7 @@ impl AudioExporterService {
     /// - 0.0 → 0
     /// - -1.0 → -32767
     /// - 1.5 → 32767 (clamped)
-    #[inline]
+    #[inline(always)]
     fn f32_to_i16(sample: f32) -> i16 {
         // Clamp to valid range
         let clamped = sample.clamp(-1.0, 1.0);
@@ -80,6 +80,7 @@ impl AudioExporterService {
 }
 
 impl IAudioExporter for AudioExporterService {
+    #[instrument(skip(self, samples), fields(path = %output_path.display(), sample_count = samples.len(), sample_rate))]
     fn export_wav(
         &self,
         output_path: &Path,

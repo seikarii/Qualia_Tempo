@@ -14,7 +14,7 @@ use crate::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
 use rustfft::{FftPlanner, num_complex::Complex};
 use shaku::Component;
 use std::sync::{Mutex, OnceLock};
-use tracing::debug;
+use tracing::{debug, instrument};
 
 // OPTIMIZATION: Global cached FftPlanner eliminates 3MB/s allocations @ 60fps
 // MODERNIZED: Using std::sync::OnceLock (lazy_static deprecated)
@@ -76,6 +76,7 @@ impl AudioAnalyzerService {
 }
 
 impl IAudioAnalyzer for AudioAnalyzerService {
+    #[instrument(skip(self, samples), fields(sample_count = samples.len(), sample_rate))]
     fn analyze_spectrum(&self, samples: &[f32], sample_rate: u32) -> Result<FrequencySpectrum, AudioAnalyzerError> {
         if samples.is_empty() {
             return Ok(FrequencySpectrum {
@@ -103,7 +104,7 @@ impl IAudioAnalyzer for AudioAnalyzerService {
             .for_each(|(sample, &window)| *sample *= window);
 
         // Perform FFT using globally cached planner (eliminates 3MB/s allocations)
-        let mut planner = get_fft_planner().lock().unwrap();
+        let mut planner = get_fft_planner().lock().expect("FFT planner mutex poisoned");
         let fft = planner.plan_fft_forward(self.fft_size);
         fft.process(&mut input);
 
@@ -152,6 +153,7 @@ impl IAudioAnalyzer for AudioAnalyzerService {
         })
     }
 
+    #[instrument(skip(self, spectrum))]
     fn detect_instruments(&self, spectrum: &FrequencySpectrum) -> (f32, f32, f32) {
         // Frequency ranges per plan.md
         let bass = spectrum.average_amplitude_in_range(20.0, 250.0);

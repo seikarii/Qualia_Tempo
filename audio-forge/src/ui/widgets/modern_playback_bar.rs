@@ -279,10 +279,8 @@ impl ModernPlaybackBar {
                     error!("Failed to enable 8.1: {}", e);
                     state.is_8_1_enabled = false;
                 }
-            } else {
-                if let Err(e) = self.multi_channel.fallback_to_stereo() {
-                    error!("Failed to fallback to stereo: {}", e);
-                }
+            } else if let Err(e) = self.multi_channel.fallback_to_stereo() {
+                error!("Failed to fallback to stereo: {}", e);
             }
         }
         

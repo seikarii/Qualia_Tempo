@@ -6,6 +6,7 @@ use crate::services::interfaces::i_visualization_engine::IVisualizationEngine;
 use egui::{Color32, Response, Ui, Vec2, Pos2};
 use shaku::Component;
 use std::sync::RwLock;
+use tracing::instrument;
 
 /// # Responsibility
 /// Renders audio visualizations using egui immediate mode GUI.
@@ -69,6 +70,7 @@ impl VisualizationEngineService {
 }
 
 impl IVisualizationEngine for VisualizationEngineService {
+    #[instrument(skip(self, ui, samples), fields(sample_count = samples.len()))]
     fn render_waveform(&self, ui: &mut Ui, samples: &[f32]) -> Response {
         use egui::epaint::{CornerRadius, PathStroke, RectShape};
         use egui::{Pos2, Shape};
@@ -116,6 +118,7 @@ impl IVisualizationEngine for VisualizationEngineService {
         response
     }
 
+    #[instrument(skip(self, ui, spectrum))]
     fn render_spectrum(&self, ui: &mut Ui, spectrum: &FrequencySpectrum) -> Response {
         use egui::Rect;
         use egui::epaint::{CornerRadius, RectShape};
@@ -160,6 +163,7 @@ impl IVisualizationEngine for VisualizationEngineService {
         response
     }
 
+    #[instrument(skip(self, ui), fields(bass, mid, treble))]
     fn render_instrument_map(&self, ui: &mut Ui, bass: f32, mid: f32, treble: f32) -> Response {
         ui.vertical(|ui| {
             ui.set_min_height(self.instrument_map_height);

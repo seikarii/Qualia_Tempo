@@ -33,6 +33,11 @@ pub struct EffectConfig {
     pub treble_boost_enabled: bool,
     /// Treble boost gain multiplier [1.0, 3.0]
     pub treble_boost_gain: f32,
+
+    /// Enable pitch shifting (Hz changer)
+    pub pitch_shift_enabled: bool,
+    /// Target reference frequency in Hz (default 440, alternatives: 432, 528)
+    pub reference_frequency: f32,
 }
 
 impl Default for EffectConfig {
@@ -50,6 +55,9 @@ impl Default for EffectConfig {
 
             treble_boost_enabled: false,
             treble_boost_gain: 1.5,
+
+            pitch_shift_enabled: false,
+            reference_frequency: 440.0, // Standard A4 tuning
         }
     }
 }
