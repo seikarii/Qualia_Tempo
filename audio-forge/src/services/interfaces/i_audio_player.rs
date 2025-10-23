@@ -26,6 +26,26 @@ pub trait IAudioPlayer: Interface {
 
     /// Set volume [0.0, 1.0]
     fn set_volume(&self, volume: f32) -> Result<(), AudioPlayerError>;
+    
+    /// # Responsibility
+    /// Set playback speed multiplier (0.3x - 3.0x range).
+    ///
+    /// ---
+    ///
+    /// DIRECTIVE FIX-SPEED: Enables variable playback rate without pitch shift.
+    /// Uses rodio's `Sink::set_speed()` for real-time speed adjustment.
+    ///
+    /// ## Parameters
+    /// - `speed`: Multiplier (1.0 = normal, 0.5 = half speed, 2.0 = double speed)
+    ///
+    /// ## Range
+    /// - Minimum: 0.3x (slow motion)
+    /// - Maximum: 3.0x (fast forward)
+    /// - Values outside range are clamped
+    ///
+    /// ## Errors
+    /// - No file currently loaded
+    fn set_playback_speed(&self, speed: f32) -> Result<(), AudioPlayerError>;
 
     /// Current position
     fn current_position(&self) -> Duration;

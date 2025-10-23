@@ -33,6 +33,7 @@ mock! {
         fn stop(&self) -> Result<(), AudioPlayerError>;
         fn seek(&self, position: Duration) -> Result<(), AudioPlayerError>;
         fn set_volume(&self, volume: f32) -> Result<(), AudioPlayerError>;
+        fn set_playback_speed(&self, speed: f32) -> Result<(), AudioPlayerError>;
         fn current_position(&self) -> Duration;
         fn total_duration(&self) -> Duration;
         fn is_playing(&self) -> bool;

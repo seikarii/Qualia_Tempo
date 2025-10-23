@@ -35,12 +35,24 @@ pub enum AudioForgeEvent {
         is_playing: bool,
         position: Duration,
     },
+    
+    /// Playback position updated (emitted every 100ms during playback)
+    /// 
+    /// DIRECTIVE FIX-DESYNC: Enables smooth progress bar updates without UI polling.
+    /// Emitted by background task in AudioPlayer at 10Hz frequency.
+    PlaybackPositionUpdated {
+        position: Duration,
+        total_duration: Duration,
+    },
 
     /// User sought to new position
     SeekedTo { position: Duration },
 
     /// Volume changed
     VolumeChanged { new_volume: f32 },
+    
+    /// Playback speed changed (DIRECTIVE FIX-SPEED)
+    PlaybackSpeedChanged { new_speed: f32 },
 
     /// Effects configuration updated
     EffectsConfigUpdated { config: EffectConfig },

@@ -70,6 +70,10 @@ struct PlayerState {
     /// INSTANT-SEEK: Complete decoded audio in memory (Arc for zero-copy sharing)
     /// Size: ~10.5MB per minute of stereo audio @ 44.1kHz 16-bit
     decoded_samples: Option<Arc<Vec<f32>>>,
+    
+    /// DIRECTIVE FIX-DESYNC: Playback position update task cancellation flag
+    /// Used to stop background tokio task when pause/stop called
+    position_update_task_flag: Option<Arc<std::sync::atomic::AtomicBool>>,
 }
 
 impl PlayerState {
@@ -99,6 +103,7 @@ impl PlayerState {
             sample_counter: Arc::new(std::sync::atomic::AtomicU64::new(0)),
             current_file: None,
             decoded_samples: None, // INSTANT-SEEK: No audio loaded initially
+            position_update_task_flag: None, // DIRECTIVE FIX-DESYNC: No task running initially
         })
     }
 }
@@ -319,6 +324,17 @@ impl IAudioPlayer for AudioPlayerService {
         let sample_count = state.sample_counter.load(Ordering::Relaxed);
         let position = Duration::from_secs_f64(sample_count as f64 / state.sample_rate as f64);
         
+        // Clone values for background task before dropping lock
+        let sample_counter_clone = state.sample_counter.clone();
+        let sample_rate = state.sample_rate;
+        let total_duration = state.total_duration;
+        let event_bus_clone = self.event_bus.clone();
+        
+        // Create cancellation flag for background task
+        let is_playing_flag = Arc::new(std::sync::atomic::AtomicBool::new(true));
+        let is_playing_flag_clone = is_playing_flag.clone();
+        state.position_update_task_flag = Some(is_playing_flag);
+        
         drop(state); // Release lock
         
         // Directive 15: No time tracking needed - sample counter handles position
@@ -333,6 +349,34 @@ impl IAudioPlayer for AudioPlayerService {
             self.logger.warn(&format!("Failed to emit PlaybackStateChanged event: {}", e));
         }
         
+        // DIRECTIVE FIX-DESYNC: Spawn background task for continuous position updates
+        // Emits PlaybackPositionUpdated every 100ms at 10Hz frequency
+        tokio::spawn(async move {
+            while is_playing_flag_clone.load(Ordering::Relaxed) {
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                
+                let samples = sample_counter_clone.load(Ordering::Relaxed);
+                let current_position = Duration::from_secs_f64(samples as f64 / sample_rate as f64);
+                
+                // Stop emitting if playback finished
+                if current_position >= total_duration {
+                    is_playing_flag_clone.store(false, Ordering::Relaxed);
+                    
+                    // Emit PlaybackFinished event
+                    let _ = event_bus_clone.emit(AudioForgeEvent::PlaybackFinished);
+                    break;
+                }
+                
+                // Emit position update
+                if let Err(e) = event_bus_clone.emit(AudioForgeEvent::PlaybackPositionUpdated {
+                    position: current_position,
+                    total_duration,
+                }) {
+                    tracing::warn!("Failed to emit PlaybackPositionUpdated: {}", e);
+                }
+            }
+        });
+        
         Ok(())
     }
 
@@ -346,6 +390,11 @@ impl IAudioPlayer for AudioPlayerService {
         
         state.sink.pause();
         state.is_playing = false;
+        
+        // DIRECTIVE FIX-DESYNC: Stop background position update task
+        if let Some(flag) = &state.position_update_task_flag {
+            flag.store(false, Ordering::Relaxed);
+        }
         
         // Get current position for event
         let sample_count = state.sample_counter.load(Ordering::Relaxed);
@@ -378,6 +427,11 @@ impl IAudioPlayer for AudioPlayerService {
         
         state.sink.stop();
         state.is_playing = false;
+        
+        // DIRECTIVE FIX-DESYNC: Stop background position update task
+        if let Some(flag) = &state.position_update_task_flag {
+            flag.store(false, Ordering::Relaxed);
+        }
         
         // Directive 15: Reset sample counter to zero
         state.sample_counter.store(0, Ordering::Relaxed);
@@ -537,6 +591,34 @@ impl IAudioPlayer for AudioPlayerService {
             new_volume: clamped_volume,
         }) {
             self.logger.warn(&format!("Failed to emit VolumeChanged event: {}", e));
+        }
+        
+        Ok(())
+    }
+    
+    #[instrument(skip(self), fields(speed))]
+    fn set_playback_speed(&self, speed: f32) -> Result<(), AudioPlayerError> {
+        let state = self.state.lock();
+        
+        // Check if audio is loaded
+        if state.total_duration == Duration::ZERO {
+            self.logger.error("Cannot set playback speed: No audio file loaded");
+            return Err(AudioPlayerError::NoFileLoaded);
+        }
+        
+        // DIRECTIVE FIX-SPEED: Clamp to 0.3x - 3.0x range (user requirement)
+        let clamped_speed = speed.clamp(0.3, 3.0);
+        state.sink.set_speed(clamped_speed);
+        
+        drop(state); // Release lock
+        
+        self.logger.info(&format!("Playback speed set to {}x", clamped_speed));
+        
+        // Emit PlaybackSpeedChanged event (for UI state sync)
+        if let Err(e) = self.event_bus.emit(AudioForgeEvent::PlaybackSpeedChanged {
+            new_speed: clamped_speed,
+        }) {
+            self.logger.warn(&format!("Failed to emit PlaybackSpeedChanged event: {}", e));
         }
         
         Ok(())

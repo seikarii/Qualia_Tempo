@@ -225,6 +225,9 @@ impl MainWindow {
         // Spawn async task that listens for events and updates state
         let mut event_receiver = event_bus.subscribe();
         let state_clone = state.clone();
+        let viz_cache_clone = viz_cache.clone();
+        let audio_player_clone = audio_player.clone();
+        let audio_analyzer_clone = audio_analyzer.clone();
         
         tokio::spawn(async move {
             info!("🎧 MainWindow event listener started");
@@ -239,10 +242,30 @@ impl MainWindow {
                                 state.current_position = position;
                                 info!("▶️  Playback state: playing={}, position={:?}", is_playing, position);
                             }
+                            AudioForgeEvent::PlaybackPositionUpdated { position, total_duration } => {
+                                // DIRECTIVE FIX-DESYNC: Continuous position updates for smooth progress bar
+                                let mut state = state_clone.lock().unwrap();
+                                state.current_position = position;
+                                state.total_duration = total_duration;
+                                // No logging here - too frequent (10Hz)
+                            }
                             AudioForgeEvent::FileLoaded { path, duration, sample_rate } => {
                                 let mut state = state_clone.lock().unwrap();
                                 state.current_file_path = Some(path.clone());
                                 state.total_duration = duration;
+                                
+                                // DIRECTIVE FIX-WAVEFORM-CACHE: Generate waveform ONCE on file load
+                                // Eliminates 180MB/s memory churn from per-frame regeneration
+                                drop(state); // Release state lock before locking viz_cache
+                                
+                                let raw_samples = audio_player_clone.get_audio_samples();
+                                if !raw_samples.is_empty() {
+                                    let waveform = audio_analyzer_clone.get_waveform_samples(&raw_samples, 2000);
+                                    let mut cache = viz_cache_clone.lock().unwrap();
+                                    cache.waveform = waveform;
+                                    info!("📊 Waveform cached ({} samples)", cache.waveform.len());
+                                }
+                                
                                 info!("📂 File loaded: {:?}, duration={:?}, rate={}", path, duration, sample_rate);
                             }
                             AudioForgeEvent::SeekedTo { position } => {
@@ -251,7 +274,16 @@ impl MainWindow {
                                 info!("⏩ Seeked to {:?}", position);
                             }
                             AudioForgeEvent::VolumeChanged { new_volume } => {
+                                // DIRECTIVE FIX-VOLUME: Update state for persistence
+                                let mut state = state_clone.lock().unwrap();
+                                state.volume = new_volume;
                                 info!("🔊 Volume changed to {}", new_volume);
+                            }
+                            AudioForgeEvent::PlaybackSpeedChanged { new_speed } => {
+                                // DIRECTIVE FIX-SPEED: Update state for persistence
+                                let mut state = state_clone.lock().unwrap();
+                                state.playback_speed = new_speed;
+                                info!("⏩ Playback speed changed to {}x", new_speed);
                             }
                             AudioForgeEvent::EffectsConfigUpdated { config } => {
                                 info!("🎛️  Effects config updated: Drop={}", 
@@ -347,6 +379,10 @@ impl MainWindow {
     /// - Mutex lock contention
     /// - FFT computation overhead
     /// - Memory allocations
+    ///
+    /// DIRECTIVE FIX-WAVEFORM-CACHE: Waveform is NO LONGER regenerated here.
+    /// It's cached on file load and only updated when a new file is loaded.
+    /// This function now ONLY updates spectrum (FFT) data.
     fn update_visualization_data(&self) {
         let mut cache = self.viz_cache.lock().unwrap();
         
@@ -361,8 +397,7 @@ impl MainWindow {
         let raw_samples = self.audio_player.get_audio_samples();
         
         if raw_samples.is_empty() {
-            // No audio loaded: clear visualizations
-            cache.waveform.clear();
+            // No audio loaded: spectrum will be cleared (waveform preserved from file load)
             cache.spectrum = FrequencySpectrum {
                 frequencies: Vec::new(),
                 magnitudes: Vec::new(),
@@ -373,10 +408,10 @@ impl MainWindow {
             return;
         }
 
-        // Downsample waveform for UI rendering (target: 2000 samples)
-        cache.waveform = self.audio_analyzer.get_waveform_samples(&raw_samples, 2000);
+        // DIRECTIVE FIX-WAVEFORM-CACHE: Waveform caching removed from here
+        // Waveform is generated ONCE in FileLoaded event handler and cached permanently
 
-        // Perform FFT analysis
+        // Perform FFT analysis (still updates per-frame for real-time spectrum)
         let sample_rate = self.audio_player.get_sample_rate();
         if let Ok(spectrum) = self.audio_analyzer.analyze_spectrum(&raw_samples, sample_rate) {
             cache.instrument_levels = self.audio_analyzer.detect_instruments(&spectrum);

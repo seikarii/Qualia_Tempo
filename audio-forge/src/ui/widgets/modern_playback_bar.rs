@@ -33,6 +33,7 @@ pub struct PlaybackBarState {
     pub total_duration: Duration,
     pub is_8_1_enabled: bool,
     pub volume: f32,
+    pub playback_speed: f32, // DIRECTIVE FIX-SPEED: 0.3x - 3.0x range
 }
 
 impl Default for PlaybackBarState {
@@ -44,6 +45,7 @@ impl Default for PlaybackBarState {
             total_duration: Duration::ZERO,
             is_8_1_enabled: false,
             volume: 0.5, // Default 50% volume
+            playback_speed: 1.0, // Default 1.0x (normal speed)
         }
     }
 }
@@ -55,6 +57,9 @@ impl Default for PlaybackBarState {
 ///
 /// **DIRECTIVE UI-MOD-01**: Single-source-of-truth for playback controls.
 /// All transport, volume, and file loading operations consolidated here.
+///
+/// **DIRECTIVE FIX-UI**: Duplicate progress bar removed (kept in HeroWaveformCard only).
+/// Playback speed control added in freed space (0.3x - 3.0x range).
 pub struct ModernPlaybackBar {
     audio_player: Arc<dyn IAudioPlayer>,
     
@@ -64,9 +69,6 @@ pub struct ModernPlaybackBar {
     
     multi_channel: Arc<dyn IMultiChannelOutput>,
     state: Arc<Mutex<PlaybackBarState>>,
-    
-    /// Current volume slider value (0.0-1.0)
-    volume: f32,
 }
 
 impl ModernPlaybackBar {
@@ -77,14 +79,13 @@ impl ModernPlaybackBar {
         audio_exporter: Arc<dyn IAudioExporter>,
         multi_channel: Arc<dyn IMultiChannelOutput>,
         state: Arc<Mutex<PlaybackBarState>>,
-        volume: f32,
+        _initial_volume: f32, // DEPRECATED: Volume now managed in PlaybackBarState
     ) -> Self {
         Self {
             audio_player,
             audio_exporter,
             multi_channel,
             state,
-            volume,
         }
     }
 
@@ -93,7 +94,8 @@ impl ModernPlaybackBar {
     ///
     /// ---
     ///
-    /// Layout: [File] [Play] [Pause] [Stop] ━━━━━ Seek ━━━━━ [Volume] [8.1]
+    /// Layout: [File] [Play] [Pause] [Stop] ━━━━━ Time Display ━━━━━ [Speed] [Volume] [8.1]
+    /// DIRECTIVE FIX-UI: Removed duplicate seek slider, added playback speed control
     pub fn render(&mut self, ui: &mut Ui) {
         // Clone state to avoid borrow conflicts in closure
         let state = match self.state.lock() {
@@ -121,17 +123,24 @@ impl ModernPlaybackBar {
             ui.separator();
             ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
             
-            // CENTER: Seek slider + time display
+            // CENTER: Time display (NO SEEK SLIDER - moved to HeroWaveformCard)
             ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
-                self.render_seek_section(ui, &state);
+                self.render_time_display(ui, &state);
             });
             
             ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
             ui.separator();
             ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
             
+            // CENTER-RIGHT: Playback speed control (USER REQUIREMENT: 0.3x - 3.0x)
+            self.render_speed_control(ui);
+            
+            ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
+            ui.separator();
+            ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
+            
             // RIGHT: Volume control
-            self.render_volume_section(ui);
+            self.render_volume_section(ui, &state);
             
             ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
             ui.separator();
@@ -239,57 +248,102 @@ impl ModernPlaybackBar {
 
     /// # Responsibility
     /// Render seek slider with time display.
-    fn render_seek_section(&mut self, ui: &mut Ui, state: &PlaybackBarState) {
-        let has_file = state.total_duration > Duration::ZERO;
-        
+    ///
+    /// ---
+    ///
+    /// DIRECTIVE FIX-UI: REMOVED. Duplicate progress bar deleted.
+    /// Seeking now handled exclusively by HeroWaveformCard's clickable waveform.
+    fn render_time_display(&mut self, ui: &mut Ui, state: &PlaybackBarState) {
         // Current time display
         let current_time_str = format_duration(state.current_position);
-        ui.label(RichText::new(current_time_str).size(12.0).monospace());
+        ui.label(RichText::new(current_time_str).size(14.0).monospace());
         
-        // Seek slider
-        let mut position_secs = state.current_position.as_secs_f32();
-        let total_secs = state.total_duration.as_secs_f32().max(1.0);
-        
-        let slider_response = ui.add_enabled(
-            has_file,
-            Slider::new(&mut position_secs, 0.0..=total_secs)
-                .show_value(false)
-                .min_decimals(0)
-                .max_decimals(1)
-        );
-        
-        if slider_response.drag_stopped() || slider_response.clicked() {
-            let new_position = Duration::from_secs_f32(position_secs);
-            info!("Seeking to {:?}", new_position);
-            if let Err(e) = self.audio_player.seek(new_position) {
-                error!("Seek failed: {}", e);
-            }
-        }
+        ui.label(RichText::new("/").size(14.0));
         
         // Total time display
         let total_time_str = format_duration(state.total_duration);
-        ui.label(RichText::new(total_time_str).size(12.0).monospace());
+        ui.label(RichText::new(total_time_str).size(14.0).monospace());
+    }
+    
+    /// # Responsibility
+    /// Render playback speed control slider (USER REQUIREMENT: 0.3x - 3.0x).
+    ///
+    /// ---
+    ///
+    /// DIRECTIVE FIX-SPEED: New feature in space freed by duplicate progress bar removal.
+    /// Uses rodio's speed() API for real-time playback rate adjustment.
+    fn render_speed_control(&mut self, ui: &mut Ui) {
+        let mut state = match self.state.lock() {
+            Ok(guard) => guard,
+            Err(poisoned) => {
+                error!("PlaybackBarState mutex poisoned in speed control");
+                poisoned.into_inner()
+            }
+        };
+        
+        // Default playback speed is 1.0x (stored in state for persistence)
+        if state.playback_speed == 0.0 {
+            state.playback_speed = 1.0; // Initialize if not set
+        }
+        
+        ui.label(RichText::new("⏩ Speed:").size(12.0));
+        
+        let slider_response = ui.add(
+            Slider::new(&mut state.playback_speed, 0.3..=3.0)
+                .show_value(true)
+                .min_decimals(1)
+                .max_decimals(1)
+                .fixed_decimals(1)
+                .suffix("x")
+        );
+        
+        if slider_response.changed() {
+            // DIRECTIVE FIX-SPEED: Call AudioPlayer backend to apply speed change
+            if let Err(e) = self.audio_player.set_playback_speed(state.playback_speed) {
+                error!("Failed to set playback speed: {}", e);
+            } else {
+                info!("Playback speed changed to {}x", state.playback_speed);
+            }
+        }
     }
 
     /// # Responsibility
     /// Render volume control slider.
-    fn render_volume_section(&mut self, ui: &mut Ui) {
+    ///
+    /// ---
+    ///
+    /// DIRECTIVE FIX-VOLUME: Volume now managed in PlaybackBarState for proper persistence.
+    /// Slider directly modifies state.volume, which is read by config save on exit.
+    fn render_volume_section(&mut self, ui: &mut Ui, state: &PlaybackBarState) {
         ui.label(RichText::new("🔊").size(14.0));
         
+        let mut volume = state.volume; // Read current volume from shared state
+        
         let slider_response = ui.add(
-            Slider::new(&mut self.volume, 0.0..=1.0)
+            Slider::new(&mut volume, 0.0..=1.0)
                 .show_value(false)
                 .min_decimals(0)
                 .max_decimals(2)
         );
         
         if slider_response.changed() {
-            if let Err(e) = self.audio_player.set_volume(self.volume) {
+            // Write back to state for persistence
+            let mut state = match self.state.lock() {
+                Ok(guard) => guard,
+                Err(poisoned) => {
+                    error!("PlaybackBarState mutex poisoned in volume control");
+                    poisoned.into_inner()
+                }
+            };
+            state.volume = volume;
+            
+            // Update audio player volume
+            if let Err(e) = self.audio_player.set_volume(volume) {
                 error!("Volume change failed: {}", e);
             }
         }
         
-        ui.label(RichText::new(format!("{}%", (self.volume * 100.0) as u8)).size(12.0));
+        ui.label(RichText::new(format!("{}%", (volume * 100.0) as u8)).size(12.0));
     }
 
     /// # Responsibility

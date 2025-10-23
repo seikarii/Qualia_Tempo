@@ -149,7 +149,7 @@ async fn test_happy_path_full_workflow() {
         ..Default::default()
     };
     
-    effects.set_config(config.clone());
+    services.audio_effects().set_config(config.clone());
     
     println!(
         "✅ STEP 7: Effects enabled (Drop: {}, Bass: {})",
