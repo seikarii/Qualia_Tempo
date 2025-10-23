@@ -6,12 +6,15 @@
 //! Validates memory consumption stays under 120MB during playback simulation.
 //! Uses custom allocator to track peak memory usage accurately.
 
+use audio_forge::contracts::effect_parameters::EffectConfig;
 use audio_forge::services::audio_analyzer::AudioAnalyzerService;
 use audio_forge::services::audio_effects::AudioEffectsService;
+use audio_forge::services::event_bus::EventBusService;
 use audio_forge::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
 use audio_forge::services::interfaces::i_audio_effects::IAudioEffects;
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 use std::time::Instant;
 
 /// # Responsibility
@@ -60,7 +63,13 @@ fn main() {
 
     // Simulate realistic playback scenario
     let analyzer = AudioAnalyzerService::default();
-    let effects = AudioEffectsService::default();
+    
+    // Initialize EventBus for effects service (required after DI refactor)
+    let event_bus = EventBusService::new(100);
+    let event_bus: Arc<dyn audio_forge::services::event_bus::IEventBus> = Arc::new(event_bus);
+    
+    // Initialize effects service with DI
+    let effects = AudioEffectsService::new(EffectConfig::default(), event_bus);
     
     // 5 minutes of audio at 44.1kHz stereo = ~26.5M samples
     let total_samples = 44100 * 2 * 60 * 5;
@@ -91,12 +100,13 @@ fn main() {
         // Analyze (FFT)
         let spectrum = analyzer.analyze_spectrum(&samples, 44100).unwrap();
         
-        // Apply effects
+        // Apply effects (full DSP pipeline)
         let mut effected = samples.clone();
         let elapsed_time = (i * chunk_size) as f32 / 44100.0;
         let _ = effects.apply_8d_effect(&mut effected, 44100, elapsed_time);
         let _ = effects.apply_drop_effect(&mut effected);
         let _ = effects.apply_bass_boost(&mut effected, 44100);
+        let _ = effects.apply_treble_boost(&mut effected, 44100);
         
         // Detect instruments
         let _ = analyzer.detect_instruments(&spectrum);

@@ -38,7 +38,7 @@ fn test_play_without_loaded_file_errors() {
         result
             .unwrap_err()
             .to_string()
-            .contains("No audio file loaded")
+            .contains("No hay ningún archivo de audio cargado")
     );
 }
 

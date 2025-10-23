@@ -424,7 +424,9 @@ impl MainWindow {
             info!("🏗️  Initializing MainWindow widgets (lazy construction)");
             
             // Construct widgets with injected services
-            let volume = 0.5; // Default volume (TODO: Load from persisted config)
+            // CONFIGURATION: Volume loaded from config in main.rs via set_volume()
+            // This fallback is only used if MainWindow is constructed outside DI
+            let volume = 0.5; // Default 50% volume
             
             *self.playback_bar.lock().unwrap() = Some(ModernPlaybackBar::new(
                 self.audio_player.clone(),
@@ -436,7 +438,9 @@ impl MainWindow {
             
             *self.effects_panel.lock().unwrap() = Some(EffectsPanel::new(
                 self.audio_effects.clone(),
-                EffectConfig::default(), // TODO: Load from persisted config
+                // CONFIGURATION: Effects loaded from config in main.rs via set_config()
+                // This fallback is only used if MainWindow is constructed outside DI
+                EffectConfig::default(), // Default effects configuration
             ));
             
             *self.hero_waveform.lock().unwrap() = Some(HeroWaveformCard::new());

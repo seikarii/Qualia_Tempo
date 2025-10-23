@@ -1,19 +1,14 @@
 //! # Responsibility
-//! Modular UI widgets following Single Responsibility Principle.
+//! UI widget exports (panels, visualizations, controls).
 //!
 //! ---
 //!
-//! This module provides reusable UI components that were extracted from
-//! the monolithic MainWindow. Each widget encapsulates a specific UI concern
-//! and can be tested independently.
-//!
-//! ## Architecture (Directive 12 & 13)
-//! - **Panel trait**: Common interface for all UI panels
-//! - **EffectsPanel**: Audio effects controls (8D, drop, bass, treble)
-//! - **ControlPanel**: File loading, playback controls, volume, seek bar
-//! - **WaveformPanel**: Time-domain waveform visualization
-//! - **SpectrumPanel**: Frequency-domain spectrum + instrument detection
-//! - **InfoPanel**: Status display and channel configuration
+//! ## Widget Architecture
+//! - **Panel**: Base widget trait for reusable UI components
+//! - **EffectsPanel**: DSP effect controls (8D, drop, bass/treble boost)
+//! - **HeroWaveformCard**: Large waveform visualization (300px, center focal point)
+//! - **MultiBandSpectrumGrid**: Multi-band spectrum visualizer (6-12 bars)
+//! - **ModernPlaybackBar**: Bottom playback controls (Spotify-style)
 
 pub mod control_panel;
 pub mod effects_panel;

@@ -43,22 +43,38 @@ fn main() -> Result<(), eframe::Error> {
     };
 
     // ============================================================================
-    // DIRECTIVE ABSOLUTE-DI: MainWindow resolved from Shaku container
+    // DIRECTIVE ABSOLUTE-DI: Configure services, then resolve MainWindow
     // ============================================================================
     // CRITICAL: MainWindow is now a full Shaku Component (not factory-constructed).
     // All 6 services (audio_player, audio_analyzer, viz_engine, effects, exporter,
     // event_bus) are injected automatically via #[shaku(inject)] attributes.
-    // This achieves 100% dependency injection purity from root to leaf.
+    //
+    // Configuration Timing (QUALIA.CODE.RUST Section 2.2 Pragmatic Compliance):
+    // 1. Build DI container (services created with #[shaku(default)] fields)
+    // 2. Resolve ApplicationServices (grants access to all service instances)
+    // 3. Apply configuration to services (BEFORE MainWindow resolution)
+    // 4. Resolve MainWindow (receives the same Arc<dyn Trait> instances)
+    //
+    // RATIONALE: Shaku's Component derive doesn't support parameterized construction
+    // for non-injectable types (EffectConfig, f32 volume). Post-construction config
+    // is acceptable IFF:
+    // - Called ONCE during startup
+    // - Happens BEFORE dependent components are resolved
+    // - Services are idempotent to multiple set_config() calls (they are)
+    //
+    // This achieves functional purity: MainWindow never sees unconfigured services.
     let module = AudioForgeModule::builder().build();
     let services: Arc<dyn IApplicationServices> = module.resolve();
     
     // Apply loaded configuration to services BEFORE resolving MainWindow
+    // (MainWindow will receive these same Arc<dyn Trait> instances)
     services.audio_effects().set_config(config.effects.clone());
     if let Err(e) = services.audio_player().set_volume(config.audio.default_volume) {
         warn!("Failed to set initial volume: {}", e);
     }
 
     // ABSOLUTE DI RESOLUTION: MainWindow created by Shaku (all dependencies auto-injected)
+    // The services it receives via #[shaku(inject)] are the SAME instances configured above
     let main_window: Arc<dyn IMainWindow> = module.resolve();
 
     let options = eframe::NativeOptions {
