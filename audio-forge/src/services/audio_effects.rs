@@ -926,8 +926,9 @@ mod tests {
         let samples_per_sec = (buffer_size as f64 * iterations as f64) / elapsed.as_secs_f64();
         let throughput_mhz = samples_per_sec / 1_000_000.0;
 
-        eprintln!("8D Effect Throughput: {:.2} MHz ({:.2} samples/sec)", throughput_mhz, samples_per_sec);
-        eprintln!("Total time: {:?} for {} iterations", elapsed, iterations);
+        // VIOLATION #7 FIX: Use tracing instead of eprintln! for performance metrics
+        tracing::info!("8D Effect Throughput: {:.2} MHz ({:.2} samples/sec)", throughput_mhz, samples_per_sec);
+        tracing::info!("Total time: {:?} for {} iterations", elapsed, iterations);
 
         // Sanity check: Should process at least 100 MHz (very conservative)
         assert!(

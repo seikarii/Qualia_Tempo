@@ -350,7 +350,8 @@ mod tests {
         // On user's hardware with 8.1 support, this should be true
         // On hardware without 8.1, this should be false
         // Test validates detection logic runs and caches correctly
-        eprintln!("Lazy detection result: {}", if detected { "✅ 8.1 DETECTED" } else { "❌ NO 8.1" });
+        // VIOLATION #7 FIX: Removed eprintln! - use tracing in non-test code
+        tracing::debug!("Lazy detection result: {}", if detected { "✅ 8.1 DETECTED" } else { "❌ NO 8.1" });
     }
 
     #[test]
