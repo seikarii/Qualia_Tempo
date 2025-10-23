@@ -22,8 +22,7 @@ pub struct EffectsSource<S: Source<Item = f32>> {
     source: S,
     audio_effects: Arc<dyn IAudioEffects>,
     
-    // State tracking for time-based effects (8D audio)
-    elapsed_samples: u64,
+    // State tracking for sample rate
     sample_rate: u32,
     
     // Buffer for batch processing (reduces per-sample overhead)
@@ -58,7 +57,6 @@ impl<S: Source<Item = f32>> EffectsSource<S> {
         Self {
             source,
             audio_effects,
-            elapsed_samples: 0,
             sample_rate,
             buffer: Vec::with_capacity(chunk_size),
             buffer_index: 0,
@@ -72,10 +70,9 @@ impl<S: Source<Item = f32>> EffectsSource<S> {
     /// ---
     ///
     /// Applies effects in order:
-    /// 1. 8D Audio (panning, needs elapsed time)
-    /// 2. Drop Effect (volume reduction)
-    /// 3. Bass Boost (low-frequency gain)
-    /// 4. Treble Boost (high-frequency gain)
+    /// 1. Drop Effect (volume reduction)
+    /// 2. Bass Boost (low-frequency gain)
+    /// 3. Treble Boost (high-frequency gain)
     ///
     /// Errors are logged with tracing::warn but don't break playback.
     fn apply_effects_to_buffer(&mut self) {
@@ -85,18 +82,7 @@ impl<S: Source<Item = f32>> EffectsSource<S> {
             return;
         }
         
-        // Calculate elapsed time for time-based effects
-        let elapsed_time = self.elapsed_samples as f32 / self.sample_rate as f32;
-        
         // Apply effects in sequence (order matters for quality)
-        if let Err(e) = self.audio_effects.apply_8d_effect(
-            &mut self.buffer,
-            self.sample_rate,
-            elapsed_time,
-        ) {
-            warn!("8D effect failed: {}", e);
-        }
-        
         if let Err(e) = self.audio_effects.apply_drop_effect(&mut self.buffer, self.sample_rate) {
             warn!("Drop effect failed: {}", e);
         }
@@ -109,9 +95,6 @@ impl<S: Source<Item = f32>> EffectsSource<S> {
         if let Err(e) = self.audio_effects.apply_treble_boost(&mut self.buffer, self.sample_rate) {
             warn!("Treble boost failed: {}", e);
         }
-        
-        // Track time progression
-        self.elapsed_samples += self.buffer.len() as u64;
     }
 }
 

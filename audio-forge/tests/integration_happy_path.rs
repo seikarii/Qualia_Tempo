@@ -142,21 +142,19 @@ async fn test_happy_path_full_workflow() {
     // STEP 7: EFFECTS (simulates checkbox clicks)
     // ============================================================================
     let config = EffectConfig {
-        effect_8d_enabled: true,
-        effect_8d_intensity: 0.8,
+        drop_effect_enabled: true,
+        drop_amount: 0.8,
         bass_boost_enabled: true,
         bass_boost_gain: 1.5,
         ..Default::default()
     };
-
-    services.audio_effects().set_config(config.clone());
-
+    
+    effects.set_config(config.clone());
+    
     println!(
-        "✅ STEP 7: Effects enabled (8D: {}, Bass: {})",
-        config.effect_8d_intensity, config.bass_boost_gain
-    );
-
-    // ============================================================================
+        "✅ STEP 7: Effects enabled (Drop: {}, Bass: {})",
+        config.drop_amount, config.bass_boost_gain
+    );    // ============================================================================
     // STEP 8: EXPORT (simulates Export button click)
     // ============================================================================
     let temp_dir = tempfile::tempdir().unwrap();

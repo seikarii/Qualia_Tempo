@@ -15,15 +15,6 @@ use validator::Validate;
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct EffectConfig {
-    /// Enable 8D audio effect
-    pub effect_8d_enabled: bool,
-    /// 8D rotation speed in Hz (rotations per second)
-    #[validate(range(min = 0.0, max = 10.0))]
-    pub effect_8d_rotation_hz: f32,
-    /// 8D effect intensity [0.0, 1.0]
-    #[validate(range(min = 0.0, max = 1.0))]
-    pub effect_8d_intensity: f32,
-
     /// Enable drop effect
     pub drop_effect_enabled: bool,
     /// Drop amount [0.0, 1.0] where 1.0 = complete silence
@@ -52,10 +43,6 @@ pub struct EffectConfig {
 impl Default for EffectConfig {
     fn default() -> Self {
         Self {
-            effect_8d_enabled: false,
-            effect_8d_rotation_hz: 0.25, // 4-second rotation
-            effect_8d_intensity: 0.8,
-
             drop_effect_enabled: false,
             drop_amount: 0.5,
 
@@ -77,7 +64,6 @@ mod tests {
     #[test]
     fn test_effect_config_default() {
         let config = EffectConfig::default();
-        assert!(!config.effect_8d_enabled);
         assert!(!config.drop_effect_enabled);
         assert!(!config.bass_boost_enabled);
         assert!(!config.treble_boost_enabled);
@@ -87,26 +73,23 @@ mod tests {
     fn test_effect_config_serialization() {
         let config = EffectConfig::default();
         let yaml = serde_yaml::to_string(&config).unwrap();
-        // After camelCase rename, field is now "effect8dEnabled"
-        assert!(yaml.contains("effect8dEnabled") || yaml.contains("effect_8d_enabled"));
+        assert!(yaml.contains("dropEffectEnabled") || yaml.contains("drop_effect_enabled"));
 
         let deserialized: EffectConfig = serde_yaml::from_str(&yaml).unwrap();
         assert_eq!(
-            config.effect_8d_rotation_hz,
-            deserialized.effect_8d_rotation_hz
+            config.drop_amount,
+            deserialized.drop_amount
         );
     }
 
     #[test]
     fn test_effect_config_clamp_ranges() {
         let config = EffectConfig {
-            effect_8d_intensity: 1.2, // Should be clamped by service
             bass_boost_gain: 5.0,     // Should be clamped by service
             ..Default::default()
         };
 
         // Service layer will clamp, but config allows any values
-        assert!(config.effect_8d_intensity > 1.0);
         assert!(config.bass_boost_gain > 3.0);
     }
 }

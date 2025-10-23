@@ -6,27 +6,13 @@ use crate::errors::AudioEffectsError;
 use shaku::Interface;
 
 /// # Responsibility
-/// Real-time audio effects: 8D, drop, bass/treble boost.
+/// Real-time audio effects: drop, bass/treble boost.
 ///
 /// ---
 ///
 /// Applies DSP effects to stereo audio samples in-place.
 /// All methods modify the provided sample buffer directly.
 pub trait IAudioEffects: Interface {
-    /// # Responsibility
-    /// Apply 8D audio effect (circular panning).
-    ///
-    /// ---
-    ///
-    /// Modulates left/right channels based on rotation phase.
-    /// Requires elapsed time for rotation calculation.
-    fn apply_8d_effect(
-        &self,
-        samples: &mut [f32],
-        sample_rate: u32,
-        elapsed_time: f32,
-    ) -> Result<(), AudioEffectsError>;
-
     /// # Responsibility
     /// Apply professional EDM-style drop effect with multiband processing.
     ///

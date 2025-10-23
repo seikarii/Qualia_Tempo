@@ -14,12 +14,12 @@ use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::AudioFileValidator;
 use crate::ui::theme::QualiaTheme;
 use crate::ui::widgets::{
-    EffectsPanel, HeroWaveformCard, ModernPlaybackBar, MultiBandSpectrumGrid, Panel,
+    EffectsPanel, HeroWaveformCard, ModernPlaybackBar, Panel,
     PlaybackBarState, PlaylistPanel, PlaylistState,
 };
 use egui::{CentralPanel, Context, SidePanel, TopBottomPanel};
 use shaku::{Component, Interface};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tracing::{error, info, warn};
@@ -137,8 +137,7 @@ pub struct MainWindow {
     #[shaku(default = Mutex::new(None))]
     hero_waveform: Mutex<Option<HeroWaveformCard>>,
     
-    #[shaku(default = Mutex::new(None))]
-    spectrum_grid: Mutex<Option<MultiBandSpectrumGrid>>,
+    // DELETED: spectrum_grid (user directive - rejected quality)
     
     #[shaku(default = Mutex::new(None))]
     playlist_panel: Mutex<Option<PlaylistPanel>>,
@@ -220,7 +219,7 @@ impl MainWindow {
 
         // Modern 2025 UI widgets with PRODUCTION-GRADE interactivity
         let hero_waveform = HeroWaveformCard::new().with_event_bus(event_bus.clone());
-        let spectrum_grid = MultiBandSpectrumGrid::new(8); // 8 bands
+        // DELETED: spectrum_grid (user directive - rejected quality)
 
         // **CRITICAL: EventBus Subscription**
         // Spawn async task that listens for events and updates state
@@ -255,8 +254,8 @@ impl MainWindow {
                                 info!("🔊 Volume changed to {}", new_volume);
                             }
                             AudioForgeEvent::EffectsConfigUpdated { config } => {
-                                info!("🎛️  Effects config updated: 8D={}, Drop={}", 
-                                      config.effect_8d_enabled, config.drop_effect_enabled);
+                                info!("🎛️  Effects config updated: Drop={}", 
+                                      config.drop_effect_enabled);
                             }
                             AudioForgeEvent::ExportStarted { path } => {
                                 info!("💾 Export started: {:?}", path);
@@ -302,7 +301,7 @@ impl MainWindow {
             playback_bar: Mutex::new(Some(playback_bar)),
             effects_panel: Mutex::new(Some(effects_panel)),
             hero_waveform: Mutex::new(Some(hero_waveform)),
-            spectrum_grid: Mutex::new(Some(spectrum_grid)),
+            // DELETED: spectrum_grid (user directive - rejected quality)
             playlist_panel: Mutex::new(None), // Lazy-init in update()
         }
     }
@@ -455,7 +454,7 @@ impl MainWindow {
             *self.hero_waveform.lock().unwrap() = Some(HeroWaveformCard::new()
                 .with_event_bus(self.event_bus.clone())
             );
-            *self.spectrum_grid.lock().unwrap() = Some(MultiBandSpectrumGrid::new(8)); // 8 bands
+            // DELETED: spectrum_grid initialization (user directive)
             
             // Initialize PlaylistPanel with EventBus integration
             *self.playlist_panel.lock().unwrap() = Some(PlaylistPanel::new(
@@ -468,47 +467,61 @@ impl MainWindow {
         }
         
         // ============================================================================
-        // PRE-RENDER: DRAG-AND-DROP + VISUALIZATION UPDATES
+        // PRE-RENDER: DRAG-AND-DROP + VISUALIZATION UPDATES (CONSOLIDATED INPUT)
         // ============================================================================
         
-        // CRITICAL FIX: Handle dropped files with FULL WINDOW COVERAGE
-        // Process drops BEFORE any panel rendering to catch files dropped ANYWHERE
-        ctx.input(|i| {
-            // Process ALL dropped files (not just first one)
-            if !i.raw.dropped_files.is_empty() {
-                let dropped_file = &i.raw.dropped_files[0];
-                
-                if let Some(path) = &dropped_file.path {
-                    info!("🎵 File dropped: {:?}", path);
-                    self.load_audio_file_validated(path);
-                    ctx.request_repaint();
-                } else {
-                    warn!("Dropped file has no path");
-                }
-            }
+        // CRITICAL FIX: SINGLE ctx.input() call to prevent RwLock deadlock
+        // DEFECT: Calling ctx.input() twice in same frame causes 10s timeout panic
+        // SOLUTION: Extract ALL input data in one lock acquisition
+        let (dropped_files, show_drop_overlay) = ctx.input(|i| {
+            // Extract dropped file paths (clone PathBuf to process outside closure)
+            let files: Vec<PathBuf> = i.raw.dropped_files
+                .iter()
+                .filter_map(|f| f.path.clone())
+                .collect();
             
-            // DIRECTIVE 9.5: Visual feedback for drag-over (full window)
-            // Show overlay when files are being dragged ANYWHERE over window
-            if !i.raw.hovered_files.is_empty() {
-                ctx.request_repaint(); // Force repaint to show overlay
-            }
+            // Check if drag-over should show overlay
+            let has_hovered = !i.raw.hovered_files.is_empty();
+            
+            (files, has_hovered)
         });
+        
+        // BATCH FILE LOADING: Process ALL dropped files (multi-file drop support)
+        // DIRECTIVE: Support VSCode tree drops, explorer multi-select, etc.
+        if !dropped_files.is_empty() {
+            info!("📥 Processing {} dropped file(s)", dropped_files.len());
+            for path in dropped_files {
+                info!("   Loading: {}", path.display());
+                self.load_audio_file_validated(&path);
+            }
+            ctx.request_repaint();
+        }
+        
+        // DIRECTIVE 9.5: Visual feedback for drag-over (full window)
+        // TODO: Implement semi-transparent overlay with "Drop Audio Files Here" text
+        if show_drop_overlay {
+            ctx.request_repaint(); // Force repaint to show overlay
+        }
         
         // Update visualization data from real-time audio (throttled to 30fps)
         self.update_visualization_data();
         
         // UPDATE NEW WIDGETS
+        // CRITICAL FIX: Use f64 precision to prevent progress bar desync
+        // DEFECT: as_secs_f32() truncates sub-second precision, causing jumpy/premature 100%
+        // SOLUTION: Use as_secs_f64() throughout, cast to f32 only for final UI rendering
         let playback_position = if self.audio_player.total_duration().as_secs() > 0 {
-            self.audio_player.current_position().as_secs_f32() 
-                / self.audio_player.total_duration().as_secs_f32()
+            let current_secs = self.audio_player.current_position().as_secs_f64();
+            let total_secs = self.audio_player.total_duration().as_secs_f64();
+            (current_secs / total_secs) as f32 // Clamp to [0.0, 1.0]
         } else {
             0.0
-        };
+        }.clamp(0.0, 1.0);
         
         // INTERIOR MUTABILITY: Extract cached viz data before UI closures (avoid borrow conflicts)
-        let (waveform_data, spectrum_data) = {
+        let waveform_data = {
             let cache = self.viz_cache.lock().unwrap();
-            (cache.waveform.clone(), cache.spectrum.clone())
+            cache.waveform.clone()
         };
         
         // MUTEX LOCKING: Update widgets via .lock().unwrap() (interior mutability pattern)
@@ -518,7 +531,8 @@ impl MainWindow {
             waveform_widget.update(waveform_data.clone(), playback_position);
             waveform_widget.set_duration(self.audio_player.total_duration());
         }
-        self.spectrum_grid.lock().unwrap().as_mut().unwrap().update(&spectrum_data.magnitudes);
+        // DELETED: spectrum_grid update (user directive - widget removed)
+        
         // ============================================================================
         // TOP PANEL: EFFECTS CONTROLS
         // ============================================================================
@@ -528,9 +542,9 @@ impl MainWindow {
         });
         
         // ============================================================================
-        // LEFT SIDEBAR: PLAYLIST PANEL
+        // RIGHT SIDEBAR: PLAYLIST PANEL (USER DIRECTIVE: MODERN LAYOUT)
         // ============================================================================
-        SidePanel::left("playlist_sidebar")
+        SidePanel::right("playlist_sidebar")
             .min_width(250.0)
             .max_width(400.0)
             .default_width(300.0)
@@ -541,34 +555,44 @@ impl MainWindow {
             });
 
         // ============================================================================
-        // CENTER PANEL: MODERN 2025 UI (Hero Waveform + Spectrum Grid)
+        // BOTTOM PANEL: INTEGRATED WAVEFORM + PLAYBACK BAR (USER DIRECTIVE)
         // ============================================================================
-        CentralPanel::default().show(ctx, |ui| {
-            ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
-            
-            // Hero waveform card (300px height, full-width)
-            ui.heading("🎵 Waveform");
-            // MUTEX LOCKING: Access hero_waveform via interior mutability
-            self.hero_waveform.lock().unwrap().as_mut().unwrap().render(ui);
-            
-            ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
-            
-            // Multi-band spectrum grid
-            ui.heading("🎚️ Spectrum Analyzer");
-            // MUTEX LOCKING: Access spectrum_grid via interior mutability
-            self.spectrum_grid.lock().unwrap().as_mut().unwrap().render(ui);
-            
-            ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN);
-        });
+        // RATIONALE: Modern audio players (YouTube, Spotify) merge waveform and
+        // transport controls in a single bottom bar for space efficiency.
+        TopBottomPanel::bottom("playback_bar_integrated")
+            .min_height(150.0)
+            .show(ctx, |ui| {
+                ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN / 2.0);
+                
+                // Waveform visualization (top section)
+                ui.heading("🎵 Waveform");
+                self.hero_waveform.lock().unwrap().as_mut().unwrap().render(ui);
+                
+                ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN / 2.0);
+                
+                // Transport controls + seek bar (bottom section)
+                self.playback_bar.lock().unwrap().as_mut().unwrap().render(ui);
+                
+                ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN / 2.0);
+            });
 
         // ============================================================================
-        // BOTTOM PANEL: MODERN PLAYBACK BAR (Spotify-style)
+        // CENTER PANEL: MINIMAL (USER DIRECTIVE: SPECTRUM ANALYZER DELETED)
         // ============================================================================
-        TopBottomPanel::bottom("playback_bar").show(ctx, |ui| {
-            ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN / 2.0);
-            // MUTEX LOCKING: Access playback_bar via interior mutability
-            self.playback_bar.lock().unwrap().as_mut().unwrap().render(ui);
-            ui.add_space(QualiaTheme::SPACING_PANEL_MARGIN / 2.0);
+        CentralPanel::default().show(ctx, |ui| {
+            ui.vertical_centered(|ui| {
+                ui.add_space(100.0);
+                ui.heading(
+                    egui::RichText::new("🎵 Audio Forge")
+                        .size(48.0)
+                        .color(QualiaTheme::ACCENT_PRIMARY)
+                );
+                ui.label(
+                    egui::RichText::new("Drag & drop audio files or use the playlist panel")
+                        .size(18.0)
+                        .color(QualiaTheme::TEXT_SECONDARY)
+                );
+            });
         });
         
         // ============================================================================
@@ -576,51 +600,50 @@ impl MainWindow {
         // ============================================================================
         
         // Show drop zone overlay when user hovers files over window
-        ctx.input(|i| {
-            if !i.raw.hovered_files.is_empty() {
-                egui::Area::new(egui::Id::new("drop_zone_overlay"))
-                    .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
-                    .interactable(false)
-                    .show(ctx, |ui| {
-                        let screen_rect = ctx.viewport_rect();
-                        let overlay_size = egui::vec2(
-                            screen_rect.width() * 0.6,
-                            screen_rect.height() * 0.3,
-                        );
-                        
-                        ui.allocate_ui_with_layout(
-                            overlay_size,
-                            egui::Layout::top_down(egui::Align::Center),
-                            |ui| {
-                                ui.add_space(overlay_size.y * 0.3);
-                                
-                                // Modern dark theme overlay
-                                let frame = egui::Frame::new()
-                                    .fill(QualiaTheme::BG_DARK.linear_multiply(0.95))
-                                    .stroke(egui::Stroke::new(2.0, QualiaTheme::ACCENT_PRIMARY))
-                                    .corner_radius(egui::CornerRadius::same(15))
-                                    .inner_margin(egui::Margin::same(30));
-                                
-                                frame.show(ui, |ui| {
-                                    ui.vertical_centered(|ui| {
-                                        ui.heading(
-                                            egui::RichText::new("🎵 Drop Audio File Here")
-                                                .size(36.0)
-                                                .color(QualiaTheme::ACCENT_PRIMARY),
-                                        );
-                                        ui.add_space(10.0);
-                                        ui.label(
-                                            egui::RichText::new("Supported: WAV, FLAC, MP3, OGG, M4A, AAC")
-                                                .size(18.0)
-                                                .color(QualiaTheme::TEXT_SECONDARY),
-                                        );
-                                    });
+        // CRITICAL: Use show_drop_overlay from consolidated ctx.input() call above
+        if show_drop_overlay {
+            egui::Area::new(egui::Id::new("drop_zone_overlay"))
+                .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+                .interactable(false)
+                .show(ctx, |ui| {
+                    let screen_rect = ctx.viewport_rect();
+                    let overlay_size = egui::vec2(
+                        screen_rect.width() * 0.6,
+                        screen_rect.height() * 0.3,
+                    );
+                    
+                    ui.allocate_ui_with_layout(
+                        overlay_size,
+                        egui::Layout::top_down(egui::Align::Center),
+                        |ui| {
+                            ui.add_space(overlay_size.y * 0.3);
+                            
+                            // Modern dark theme overlay
+                            let frame = egui::Frame::new()
+                                .fill(QualiaTheme::BG_DARK.linear_multiply(0.95))
+                                .stroke(egui::Stroke::new(2.0, QualiaTheme::ACCENT_PRIMARY))
+                                .corner_radius(egui::CornerRadius::same(15))
+                                .inner_margin(egui::Margin::same(30));
+                            
+                            frame.show(ui, |ui| {
+                                ui.vertical_centered(|ui| {
+                                    ui.heading(
+                                        egui::RichText::new("🎵 Drop Audio File Here")
+                                            .size(36.0)
+                                            .color(QualiaTheme::ACCENT_PRIMARY),
+                                    );
+                                    ui.add_space(10.0);
+                                    ui.label(
+                                        egui::RichText::new("Supported: WAV, FLAC, MP3, OGG, M4A, AAC")
+                                            .size(18.0)
+                                            .color(QualiaTheme::TEXT_SECONDARY),
+                                    );
                                 });
-                            },
-                        );
-                    });
-            }
-        });
+                            });
+                        },
+                    );
+                });
+        }
         
         // Conditional repaint: Only request updates when playing
         if self.audio_player.is_playing() {

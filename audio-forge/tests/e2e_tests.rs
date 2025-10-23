@@ -39,7 +39,7 @@ use std::sync::Arc;
 /// # Responsibility
 /// E2E Test: Complete audio processing pipeline.
 ///
-/// Flow: Audio data → FFT Analysis → 8D Effect → 8.1 Upmix
+/// Flow: Audio data → FFT Analysis → Drop Effect → 8.1 Upmix
 #[test]
 fn test_e2e_complete_audio_pipeline() {
     // Arrange: Initialize all services via DI module
@@ -47,12 +47,11 @@ fn test_e2e_complete_audio_pipeline() {
     let player: Arc<dyn IAudioPlayer> = module.resolve();
     let analyzer = Arc::new(AudioAnalyzerService::default());
     
-    // Enable 8D effect
+    // Enable Drop effect
     use audio_forge::EffectConfig;
     let effect_config = EffectConfig {
-        effect_8d_enabled: true,
-        effect_8d_intensity: 0.8,
-        effect_8d_rotation_hz: 0.25,
+        drop_effect_enabled: true,
+        drop_amount: 0.8,
         ..Default::default()
     };
     
@@ -92,23 +91,24 @@ fn test_e2e_complete_audio_pipeline() {
     assert!((0.0..=1.0).contains(&mid), "Mid should be normalized");
     assert!((0.0..=1.0).contains(&treble), "Treble should be normalized");
 
-    // Step 3: Apply 8D effect
+    // Step 3: Apply Drop effect
     let mut processed_samples = stereo_samples.clone();
     effects
-        .apply_8d_effect(&mut processed_samples, sample_rate, 0.5)
-        .expect("8D effect should succeed");
+        .apply_drop_effect(&mut processed_samples, sample_rate)
+        .expect("Drop effect should succeed");
 
-    // Verify samples were modified (check first 10 samples only)
+    // Verify samples were modified (check first 50 samples for filter transient)
     let modified_count = processed_samples
         .iter()
         .zip(&stereo_samples)
-        .take(10)
+        .skip(50) // Skip filter warmup
+        .take(100)
         .filter(|&(a, b)| (*a - *b).abs() > 1e-6)
         .count();
     
     assert!(
         modified_count > 0,
-        "8D effect should modify at least some samples"
+        "Drop effect should modify at least some samples"
     );
 
     // Step 4: Upmix stereo to 8.1 channels
@@ -150,9 +150,6 @@ fn test_e2e_effects_chain() {
 
     // Arrange: Create effects service with all effects enabled
     let config = EffectConfig {
-        effect_8d_enabled: false,
-        effect_8d_intensity: 0.0,
-        effect_8d_rotation_hz: 0.0,
         drop_effect_enabled: true,
         drop_amount: 0.5, // 50% volume reduction
         bass_boost_enabled: true,

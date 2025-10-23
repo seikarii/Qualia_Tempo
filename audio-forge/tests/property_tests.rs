@@ -152,7 +152,6 @@ proptest! {
     }
 
     // REMOVED: test_volume_clamping (trivial - unit_tests.rs already validates clamping logic)
-    // REMOVED: test_8d_effect_intensity_bounds (trivial - only tests set_config doesn't panic)
 }
 
 /// # Responsibility

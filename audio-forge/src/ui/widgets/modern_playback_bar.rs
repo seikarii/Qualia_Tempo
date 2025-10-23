@@ -168,37 +168,55 @@ impl ModernPlaybackBar {
     }
 
     /// # Responsibility
-    /// Render transport controls (Play, Pause, Stop).
+    /// Render transport controls (Play/Pause toggle + Previous/Next).
+    ///
+    /// ---
+    ///
+    /// USER DIRECTIVE: Modern layout (YouTube, Spotify standard):
+    /// - Single Play/Pause toggle button (not separate)
+    /// - Previous track button (left)
+    /// - Next track button (right)
     fn render_transport_controls(&mut self, ui: &mut Ui, state: &PlaybackBarState) {
         let has_file = state.total_duration > Duration::ZERO;
         
-        // Play button (green when playing)
-        let play_color = if state.is_playing {
-            QualiaTheme::ACCENT_SUCCESS
+        // Previous track button (disabled for now - playlist integration pending)
+        if ui.add_enabled(
+            false, // TODO: Enable when playlist prev/next implemented
+            Button::new(RichText::new("⏮").size(18.0))
+        ).clicked() {
+            // TODO: playlist.previous()
+        }
+        
+        ui.add_space(8.0);
+        
+        // PLAY/PAUSE TOGGLE BUTTON (single button, changes icon)
+        // USER DIRECTIVE: Standard modern behavior
+        let (icon, button_color) = if state.is_playing {
+            ("⏸", QualiaTheme::ACCENT_WARNING) // Pause icon when playing
         } else {
-            QualiaTheme::TEXT_PRIMARY
+            ("▶", QualiaTheme::ACCENT_SUCCESS) // Play icon when stopped/paused
         };
         
         if ui.add_enabled(
             has_file,
-            Button::new(RichText::new("▶").size(18.0).color(play_color))
+            Button::new(RichText::new(icon).size(24.0).color(button_color))
+                .min_size(egui::vec2(50.0, 50.0)) // Larger touch target
         ).clicked() {
-            if let Err(e) = self.audio_player.play() {
-                error!("Play failed: {}", e);
+            // Toggle play/pause
+            if state.is_playing {
+                if let Err(e) = self.audio_player.pause() {
+                    error!("Pause failed: {}", e);
+                }
+            } else {
+                if let Err(e) = self.audio_player.play() {
+                    error!("Play failed: {}", e);
+                }
             }
         }
         
-        // Pause button
-        if ui.add_enabled(
-            has_file,
-            Button::new(RichText::new("⏸").size(18.0))
-        ).clicked() {
-            if let Err(e) = self.audio_player.pause() {
-                error!("Pause failed: {}", e);
-            }
-        }
+        ui.add_space(8.0);
         
-        // Stop button
+        // Stop button (optional - modern players often omit this)
         if ui.add_enabled(
             has_file,
             Button::new(RichText::new("⏹").size(18.0))
@@ -206,6 +224,16 @@ impl ModernPlaybackBar {
             if let Err(e) = self.audio_player.stop() {
                 error!("Stop failed: {}", e);
             }
+        }
+        
+        ui.add_space(8.0);
+        
+        // Next track button (disabled for now - playlist integration pending)
+        if ui.add_enabled(
+            false, // TODO: Enable when playlist next implemented
+            Button::new(RichText::new("⏭").size(18.0))
+        ).clicked() {
+            // TODO: playlist.next()
         }
     }
 

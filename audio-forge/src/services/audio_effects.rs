@@ -9,7 +9,6 @@ use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use crate::services::interfaces::i_logger::ILogger;
 use biquad::*;
 use shaku::Component;
-use std::f32::consts::PI;
 use std::sync::{Arc, Mutex, RwLock};
 use tracing::instrument;
 use validator::Validate;
@@ -250,10 +249,9 @@ impl FilterState {
 /// ---
 ///
 /// Provides:
-/// 1. 8D Audio: Circular panning via sin-wave modulation
-/// 2. Drop Effect: Volume reduction
-/// 3. Bass Boost: LowShelf biquad filter @ 250Hz (OPTIMIZED)
-/// 4. Treble Boost: HighShelf biquad filter @ 3kHz (OPTIMIZED)
+/// 1. Drop Effect: Volume reduction
+/// 2. Bass Boost: LowShelf biquad filter @ 250Hz (OPTIMIZED)
+/// 3. Treble Boost: HighShelf biquad filter @ 3kHz (OPTIMIZED)
 #[derive(Component)]
 #[shaku(interface = IAudioEffects)]
 pub struct AudioEffectsService {
@@ -280,177 +278,9 @@ impl AudioEffectsService {
             logger,
         }
     }
-
-    /// # Responsibility
-    /// Apply 8D circular panning effect using AVX2 SIMD instructions (private helper).
-    ///
-    /// ---
-    ///
-    /// ## Directive 16: SIMD Vectorization
-    /// Processes 4 stereo pairs (8 f32) per iteration using AVX2 intrinsics.
-    ///
-    /// ## Performance
-    /// - Theoretical speedup: 4x (processes 4 pairs simultaneously)
-    /// - Actual speedup: 3-3.5x (accounting for memory bandwidth, shuffles)
-    /// - Memory alignment: Works with unaligned loads (_mm256_loadu_ps)
-    ///
-    /// ## Algorithm
-    /// 1. Load 8 interleaved samples: [L0,R0,L1,R1,L2,R2,L3,R3]
-    /// 2. De-interleave into separate L and R vectors using shuffles
-    /// 3. Compute cross-mixed panning: L' = L*lg + R*(1-lg), R' = R*rg + L*(1-rg)
-    /// 4. Re-interleave results and store back to memory
-    #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-    #[inline]
-    unsafe fn apply_8d_effect_avx2(
-        samples: &mut [f32],
-        left_gain: f32,
-        right_gain: f32,
-    ) {
-        #[cfg(target_arch = "x86_64")]
-        use std::arch::x86_64::*;
-
-        let len = samples.len();
-        let vectorized_len = (len / 8) * 8; // Process 8 samples (4 stereo pairs) at a time
-        
-        // Precompute complementary gains
-        let left_complement = 1.0 - left_gain;
-        let right_complement = 1.0 - right_gain;
-        
-        // Create gain vectors: [lg, rg, lg, rg, lg, rg, lg, rg]
-        let gains = _mm256_setr_ps(
-            left_gain, right_gain,
-            left_gain, right_gain,
-            left_gain, right_gain,
-            left_gain, right_gain,
-        );
-        
-        // Create complement gain vectors: [lgc, rgc, lgc, rgc, ...]
-        let complements = _mm256_setr_ps(
-            left_complement, right_complement,
-            left_complement, right_complement,
-            left_complement, right_complement,
-            left_complement, right_complement,
-        );
-        
-        // Process 4 stereo pairs (8 f32) per iteration
-        for i in (0..vectorized_len).step_by(8) {
-            // Load 8 interleaved samples: [L0,R0,L1,R1,L2,R2,L3,R3]
-            let interleaved = _mm256_loadu_ps(samples.as_ptr().add(i));
-            
-            // Apply cross-mixing panning formula directly on interleaved data:
-            // L' = L * left_gain + R * left_complement
-            // R' = R * right_gain + L * right_complement
-            
-            // Primary channel contribution
-            let primary = _mm256_mul_ps(interleaved, gains);
-            
-            // Cross-channel contribution (swap L and R, then multiply by complements)
-            let swapped = _mm256_permute_ps::<0b10110001>(interleaved); // Swap adjacent pairs
-            let cross = _mm256_mul_ps(swapped, complements);
-            
-            // Combine primary and cross contributions
-            let result = _mm256_add_ps(primary, cross);
-            
-            // Store result back to memory
-            _mm256_storeu_ps(samples.as_mut_ptr().add(i), result);
-        }
-        
-        // Handle remaining samples with scalar code
-        for i in (vectorized_len..len).step_by(2) {
-            if i + 1 >= len {
-                break;
-            }
-            
-            let left = samples[i];
-            let right = samples[i + 1];
-            
-            samples[i] = left * left_gain + right * left_complement;
-            samples[i + 1] = right * right_gain + left * right_complement;
-        }
-    }
 }
 
 impl IAudioEffects for AudioEffectsService {
-    /// Apply 8D audio effect with enhanced spatial perception.
-    ///
-    /// # Responsibility
-    /// Creates immersive spatial audio by circular panning + frequency-dependent depth cues.
-    ///
-    /// ---
-    ///
-    /// ENHANCEMENTS (Issue #7 Resolution):
-    /// 1. **Circular Panning**: Sine-wave modulated L/R balance (original)
-    /// 2. **Frequency-Dependent Rotation**: Bass stays centered, treble rotates faster (psychoacoustic)
-    /// 3. **Haas Effect Simulation**: Slight delay on rotated channel for depth perception
-    /// 4. **Dynamic Intensity**: Rotation speed affects perceived distance
-    ///
-    /// NOTE: Full HRTF requires external DSP libraries. This is a perceptually-enhanced version
-    /// using simple psychoacoustic principles.
-    #[instrument(skip(self, samples), fields(sample_count = samples.len(), elapsed_time))]
-    fn apply_8d_effect(
-        &self,
-        samples: &mut [f32],
-        _sample_rate: u32,
-        elapsed_time: f32,
-    ) -> Result<(), AudioEffectsError> {
-        let config = self.config.read().unwrap_or_else(|poisoned| poisoned.into_inner());
-
-        if !config.effect_8d_enabled {
-            return Ok(());
-        }
-
-        let rotation_hz = config.effect_8d_rotation_hz;
-        let intensity = config.effect_8d_intensity.clamp(0.0, 1.0);
-
-        // ENHANCEMENT 1: Circular Panning (Original Algorithm)
-        let pan_angle = 2.0 * PI * rotation_hz * elapsed_time;
-        let pan = pan_angle.sin() * intensity;
-
-        // Pan calculation: -1.0 (full left) to +1.0 (full right)
-        let left_gain = (1.0 - pan) * 0.5;
-        let right_gain = (1.0 + pan) * 0.5;
-        
-        // ENHANCEMENT 2: Add depth perception via quadrature phase
-        // Use cosine wave (90° phase shift) to create front-back illusion
-        let depth_phase = pan_angle.cos() * intensity * 0.3; // Subtle depth modulation
-        let depth_attenuation = 1.0 - depth_phase.abs(); // 0.7-1.0 range (never fully mute)
-
-        // Directive 16: Use AVX2 vectorized implementation when available
-        #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-        unsafe {
-            Self::apply_8d_effect_avx2(samples, left_gain, right_gain);
-            
-            // ENHANCEMENT 3: Apply depth attenuation (post-panning)
-            // This creates distance perception by modulating overall volume
-            for sample in samples.iter_mut() {
-                *sample *= depth_attenuation;
-            }
-        }
-
-        // Fallback: Scalar implementation for portability
-        #[cfg(not(all(target_arch = "x86_64", target_feature = "avx2")))]
-        {
-            for i in (0..samples.len()).step_by(2) {
-                if i + 1 >= samples.len() {
-                    break;
-                }
-
-                let left = samples[i];
-                let right = samples[i + 1];
-
-                // Apply panning with cross-mixing
-                let panned_left = left * left_gain + right * (1.0 - left_gain);
-                let panned_right = right * right_gain + left * (1.0 - right_gain);
-                
-                // ENHANCEMENT 3: Apply depth attenuation for 3D perception
-                samples[i] = panned_left * depth_attenuation;
-                samples[i + 1] = panned_right * depth_attenuation;
-            }
-        }
-
-        Ok(())
-    }
-
     /// # Responsibility
     /// Apply professional EDM-style drop effect with multiband processing.
     ///
@@ -620,48 +450,7 @@ mod tests {
     fn test_audio_effects_service_creation() {
         let service = create_test_service();
         let config = service.get_config();
-        assert!(!config.effect_8d_enabled);
         assert!(!config.drop_effect_enabled);
-    }
-
-    #[test]
-    fn test_8d_effect_disabled() {
-        let service = create_test_service();
-        let mut samples = vec![0.5, -0.5, 0.3, -0.3];
-        let original = samples.clone();
-
-        service.apply_8d_effect(&mut samples, 44100, 0.0).unwrap();
-
-        // When disabled, samples should be unchanged
-        assert_eq!(samples, original);
-    }
-
-    #[test]
-    fn test_8d_effect_enabled() {
-        let config = EffectConfig {
-            effect_8d_enabled: true,
-            effect_8d_intensity: 1.0,
-            effect_8d_rotation_hz: 0.25,
-            ..Default::default()
-        };
-
-        let _event_bus = Arc::new(EventBusService::default());
-        let service = create_test_service_with_config(config);
-
-        // Test with asymmetric stereo input to verify panning effect
-        let mut samples = vec![1.0, 0.0]; // Left=1.0, Right=0.0
-
-        service.apply_8d_effect(&mut samples, 44100, 1.0).unwrap();
-
-        // At t=1s with 0.25Hz: pan = sin(π/2) = 1.0 (full right)
-        // left_gain = 0.0, right_gain = 1.0
-        // samples[0] (left) = 1.0 * 0.0 + 0.0 * 1.0 = 0.0
-        // samples[1] (right) = 0.0 * 1.0 + 1.0 * 0.0 = 0.0
-        // Actually both become 0.0, which IS different from [1.0, 0.0]
-        assert!(
-            samples[0] != 1.0 || samples[1] != 0.0,
-            "Samples should be modified by panning"
-        );
     }
 
     #[test]
@@ -793,171 +582,14 @@ mod tests {
     #[test]
     fn test_config_update() {
         let service = create_test_service();
-        assert!(!service.get_config().effect_8d_enabled);
+        assert!(!service.get_config().drop_effect_enabled);
 
         let new_config = EffectConfig {
-            effect_8d_enabled: true,
+            drop_effect_enabled: true,
             ..Default::default()
         };
 
         service.set_config(new_config);
-        assert!(service.get_config().effect_8d_enabled);
-    }
-
-    /// # Responsibility
-    /// Validate that AVX2 SIMD implementation produces identical results to scalar fallback.
-    ///
-    /// ---
-    ///
-    /// ## Directive 16: SIMD Numerical Accuracy
-    /// Compares AVX2 vs scalar output within f32::EPSILON tolerance.
-    /// Uses deterministic test vectors to isolate vectorization correctness.
-    #[test]
-    fn test_8d_effect_simd_equivalence() {
-        let config = EffectConfig {
-            effect_8d_enabled: true,
-            effect_8d_intensity: 0.7,
-            effect_8d_rotation_hz: 0.5,
-            ..Default::default()
-        };
-
-        let _event_bus = Arc::new(EventBusService::default());
-        let service = create_test_service_with_config(config);
-
-        // Test with multiple buffer sizes to verify alignment handling
-        for size in [8, 16, 17, 32, 33, 100, 1024, 4096] {
-            // Create test samples: alternating stereo pattern
-            let mut samples: Vec<f32> = (0..size)
-                .map(|i| if i % 2 == 0 { 0.5 } else { -0.5 })
-                .collect();
-
-            // Apply effect (AVX2 if available, scalar otherwise)
-            service.apply_8d_effect(&mut samples, 44100, 1.5).unwrap();
-
-            // Verify reasonable output range (sanity check)
-            for (i, &sample) in samples.iter().enumerate() {
-                assert!(
-                    sample.is_finite(),
-                    "Non-finite sample at index {} (size={}): {}",
-                    i, size, sample
-                );
-                assert!(
-                    sample.abs() <= 1.0,
-                    "Sample out of range at index {} (size={}): {}",
-                    i, size, sample
-                );
-            }
-        }
-    }
-
-    /// # Responsibility
-    /// Verify AVX2 implementation handles edge cases correctly.
-    ///
-    /// ---
-    ///
-    /// ## Edge Cases Tested
-    /// - Zero samples (empty buffer)
-    /// - Single stereo pair (no vectorization)
-    /// - Unaligned sizes (7, 9, 15 samples - odd/remainder handling)
-    /// - Extreme gain values (pan = -1.0, pan = 1.0)
-    /// - Zero intensity (no effect)
-    #[test]
-    fn test_8d_effect_edge_cases() {
-        // Edge Case 1: Empty buffer
-        let service = create_test_service_with_config(EffectConfig {
-            effect_8d_enabled: true,
-            effect_8d_intensity: 1.0,
-            effect_8d_rotation_hz: 1.0,
-            ..Default::default()
-        });
-
-        let mut empty: Vec<f32> = vec![];
-        assert!(service.apply_8d_effect(&mut empty, 44100, 0.0).is_ok());
-        assert_eq!(empty.len(), 0);
-
-        // Edge Case 2: Single sample (invalid stereo - should be skipped)
-        let mut single = vec![0.5];
-        service.apply_8d_effect(&mut single, 44100, 0.0).unwrap();
-        assert_eq!(single[0], 0.5, "Single sample should be unchanged");
-
-        // Edge Case 3: Unaligned size (9 samples = 4 pairs + 1 leftover)
-        let mut unaligned = vec![1.0; 9];
-        service.apply_8d_effect(&mut unaligned, 44100, 0.0).unwrap();
-        assert!(unaligned.iter().all(|&s| s.is_finite()));
-
-        // Edge Case 4: Zero intensity (no effect)
-        let service_zero = create_test_service_with_config(EffectConfig {
-            effect_8d_enabled: true,
-            effect_8d_intensity: 0.0,
-            effect_8d_rotation_hz: 1.0,
-            ..Default::default()
-        });
-
-        let mut samples = vec![0.5, -0.5, 0.3, -0.3];
-        let original = samples.clone();
-        service_zero.apply_8d_effect(&mut samples, 44100, 1.0).unwrap();
-
-        // With zero intensity, pan = 0.0, so left_gain = right_gain = 0.5
-        // Samples WILL change due to cross-mixing at 50/50 blend
-        // This is CORRECT behavior (not a pure no-op)
-        assert_ne!(samples, original, "Zero intensity still applies 50/50 blend");
-    }
-
-    /// # Responsibility
-    /// Benchmark scalar vs AVX2 performance to validate SIMD gains.
-    ///
-    /// ---
-    ///
-    /// ## Expected Performance
-    /// - Theoretical: 4x speedup (4 stereo pairs per cycle)
-    /// - Practical: 3-3.5x speedup (memory bandwidth, shuffle overhead)
-    /// - Regression threshold: AVX2 must be ≥2x faster than scalar
-    #[test]
-    #[ignore] // Only run with --ignored flag (requires release build)
-    fn test_8d_effect_performance() {
-        use std::time::Instant;
-
-        let config = EffectConfig {
-            effect_8d_enabled: true,
-            effect_8d_intensity: 0.8,
-            effect_8d_rotation_hz: 0.25,
-            ..Default::default()
-        };
-
-        let _event_bus = Arc::new(EventBusService::default());
-        let service = create_test_service_with_config(config);
-
-        // Large buffer (1 second at 44.1kHz stereo)
-        let buffer_size = 44100 * 2;
-        let mut samples: Vec<f32> = (0..buffer_size)
-            .map(|i| (i as f32 / buffer_size as f32) * 0.5)
-            .collect();
-
-        // Warmup (avoid cold cache effects)
-        for _ in 0..10 {
-            service.apply_8d_effect(&mut samples, 44100, 1.0).unwrap();
-        }
-
-        // Benchmark iterations
-        let iterations = 1000;
-        let start = Instant::now();
-        for i in 0..iterations {
-            service.apply_8d_effect(&mut samples, 44100, i as f32 * 0.001).unwrap();
-        }
-        let elapsed = start.elapsed();
-
-        let samples_per_sec = (buffer_size as f64 * iterations as f64) / elapsed.as_secs_f64();
-        let throughput_mhz = samples_per_sec / 1_000_000.0;
-
-        // VIOLATION #7 FIX: Use tracing instead of eprintln! for performance metrics
-        tracing::info!("8D Effect Throughput: {:.2} MHz ({:.2} samples/sec)", throughput_mhz, samples_per_sec);
-        tracing::info!("Total time: {:?} for {} iterations", elapsed, iterations);
-
-        // Sanity check: Should process at least 100 MHz (very conservative)
-        assert!(
-            throughput_mhz > 100.0,
-            "Performance regression: {:.2} MHz is below minimum threshold",
-            throughput_mhz
-        );
+        assert!(service.get_config().drop_effect_enabled);
     }
 }

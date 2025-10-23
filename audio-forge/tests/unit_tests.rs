@@ -48,12 +48,6 @@ mock! {
     pub AudioEffects {}
     
     impl IAudioEffects for AudioEffects {
-        fn apply_8d_effect(
-            &self,
-            samples: &mut [f32],
-            sample_rate: u32,
-            elapsed_time: f32,
-        ) -> Result<(), audio_forge::errors::AudioEffectsError>;
         fn apply_drop_effect(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), audio_forge::errors::AudioEffectsError>;
         fn apply_bass_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), audio_forge::errors::AudioEffectsError>;
         fn apply_treble_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), audio_forge::errors::AudioEffectsError>;
@@ -166,9 +160,6 @@ fn test_load_nonexistent_file_returns_file_not_found() {
 fn test_effects_config_roundtrip() {
     let mut mock_effects = MockAudioEffects::new();
     let config = EffectConfig {
-        effect_8d_enabled: true,
-        effect_8d_rotation_hz: 0.5,
-        effect_8d_intensity: 1.0,
         drop_effect_enabled: false,
         drop_amount: 0.5,
         bass_boost_enabled: true,
@@ -193,7 +184,7 @@ fn test_effects_config_roundtrip() {
     mock_effects.set_config(config.clone());
     let retrieved = mock_effects.get_config();
     
-    assert_eq!(retrieved.effect_8d_enabled, config.effect_8d_enabled);
+    assert_eq!(retrieved.drop_effect_enabled, config.drop_effect_enabled);
     assert_eq!(retrieved.bass_boost_gain, config.bass_boost_gain);
 }
 

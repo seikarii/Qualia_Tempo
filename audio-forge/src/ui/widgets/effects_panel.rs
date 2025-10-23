@@ -4,7 +4,6 @@
 //! ---
 //!
 //! Extracted from MainWindow (Directive 12). This widget encapsulates:
-//! - 8D Audio controls (enable, intensity, rotation speed)
 //! - Drop Effect controls (enable, attenuation amount)
 //! - Bass Boost controls (enable, gain multiplier)
 //! - Treble Boost controls (enable, gain multiplier)
@@ -96,52 +95,6 @@ impl Panel for EffectsPanel {
         let mut config_changed = false;
 
         ui.horizontal(|ui| {
-            // ====================================================================
-            // 8D AUDIO EFFECT
-            // ====================================================================
-            ui.group(|ui| {
-                ui.vertical(|ui| {
-                    if ui.checkbox(&mut self.effect_config.effect_8d_enabled, "8D Audio")
-                        .on_hover_text("Circular panning effect for immersive spatial audio")
-                        .changed() 
-                    {
-                        config_changed = true;
-                    }
-                    if self.effect_config.effect_8d_enabled {
-                        ui.horizontal(|ui| {
-                            ui.label("Intensity:");
-                            if ui.add(
-                                egui::Slider::new(
-                                    &mut self.effect_config.effect_8d_intensity,
-                                    0.0..=1.0,
-                                )
-                                .text(""),
-                            )
-                            .on_hover_text("Depth of panning effect (0.0 = subtle, 1.0 = extreme)")
-                            .changed() {
-                                config_changed = true;
-                            }
-                        });
-                        ui.horizontal(|ui| {
-                            ui.label("Speed (Hz):");
-                            if ui.add(
-                                egui::Slider::new(
-                                    &mut self.effect_config.effect_8d_rotation_hz,
-                                    0.1..=1.0,
-                                )
-                                .text(""),
-                            )
-                            .on_hover_text("Rotation frequency (0.1Hz = slow, 1.0Hz = fast)")
-                            .changed() {
-                                config_changed = true;
-                            }
-                        });
-                    }
-                });
-            });
-
-            ui.separator();
-
             // ====================================================================
             // DROP EFFECT
             // ====================================================================
@@ -281,7 +234,6 @@ mod tests {
         
         let panel = EffectsPanel::new(service, config.clone());
         
-        assert_eq!(panel.get_config().effect_8d_enabled, config.effect_8d_enabled);
         assert_eq!(panel.get_config().drop_effect_enabled, config.drop_effect_enabled);
     }
     
@@ -291,21 +243,21 @@ mod tests {
         let mut panel = EffectsPanel::new(service.clone(), EffectConfig::default());
         
         let new_config = EffectConfig {
-            effect_8d_enabled: true,
-            effect_8d_intensity: 0.8,
+            drop_effect_enabled: true,
+            drop_amount: 0.8,
             ..Default::default()
         };
         
         panel.set_config(new_config.clone());
         
         // Verify panel state updated
-        assert!(panel.get_config().effect_8d_enabled);
-        assert_eq!(panel.get_config().effect_8d_intensity, 0.8);
+        assert!(panel.get_config().drop_effect_enabled);
+        assert_eq!(panel.get_config().drop_amount, 0.8);
         
         // Verify service received update
         let service_config = service.get_config();
-        assert!(service_config.effect_8d_enabled);
-        assert_eq!(service_config.effect_8d_intensity, 0.8);
+        assert!(service_config.drop_effect_enabled);
+        assert_eq!(service_config.drop_amount, 0.8);
     }
     
     #[test]

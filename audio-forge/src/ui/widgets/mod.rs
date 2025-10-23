@@ -5,7 +5,7 @@
 //!
 //! ## Widget Architecture
 //! - **Panel**: Base widget trait for reusable UI components
-//! - **EffectsPanel**: DSP effect controls (8D, drop, bass/treble boost)
+//! - **EffectsPanel**: DSP effect controls (drop, bass/treble boost)
 //! - **HeroWaveformCard**: Large waveform visualization (300px, center focal point)
 //! - **MultiBandSpectrumGrid**: Multi-band spectrum visualizer (6-12 bars)
 //! - **ModernPlaybackBar**: Bottom playback controls (Spotify-style)
