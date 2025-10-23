@@ -97,7 +97,7 @@ impl<S: Source<Item = f32>> EffectsSource<S> {
             warn!("8D effect failed: {}", e);
         }
         
-        if let Err(e) = self.audio_effects.apply_drop_effect(&mut self.buffer) {
+        if let Err(e) = self.audio_effects.apply_drop_effect(&mut self.buffer, self.sample_rate) {
             warn!("Drop effect failed: {}", e);
         }
         

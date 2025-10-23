@@ -168,7 +168,7 @@ fn test_full_8_1_pipeline_with_effects() {
 
     // Step 2: Apply effects (on stereo for now, full pipeline would apply to multichannel)
     let mut stereo_copy = stereo_samples.clone();
-    effects.apply_drop_effect(&mut stereo_copy).unwrap();
+    effects.apply_drop_effect(&mut stereo_copy, 44100).unwrap();
 
     // Verify pipeline completed without errors
     assert_eq!(stereo_copy.len(), stereo_samples.len());

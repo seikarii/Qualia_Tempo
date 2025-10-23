@@ -10,18 +10,18 @@
 //! - **MultiBandSpectrumGrid**: Multi-band spectrum visualizer (6-12 bars)
 //! - **ModernPlaybackBar**: Bottom playback controls (Spotify-style)
 
-pub mod control_panel;
 pub mod effects_panel;
 pub mod hero_waveform_card;
 pub mod modern_playback_bar;
 pub mod multi_band_spectrum_grid;
+pub mod playlist_panel;
 pub mod visualization_panels;
 
-pub use control_panel::{ControlPanel, ControlPanelState};
 pub use effects_panel::EffectsPanel;
 pub use hero_waveform_card::HeroWaveformCard;
 pub use modern_playback_bar::{ModernPlaybackBar, PlaybackBarState};
 pub use multi_band_spectrum_grid::MultiBandSpectrumGrid;
+pub use playlist_panel::{AudioTrack, PlaylistPanel, PlaylistState};
 pub use visualization_panels::{SpectrumPanel, WaveformPanel};
 
 use egui;

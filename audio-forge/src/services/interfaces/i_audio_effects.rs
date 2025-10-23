@@ -28,12 +28,17 @@ pub trait IAudioEffects: Interface {
     ) -> Result<(), AudioEffectsError>;
 
     /// # Responsibility
-    /// Apply drop effect (volume reduction).
+    /// Apply professional EDM-style drop effect with multiband processing.
     ///
     /// ---
     ///
-    /// Reduces amplitude of all samples by drop amount.
-    fn apply_drop_effect(&self, samples: &mut [f32]) -> Result<(), AudioEffectsError>;
+    /// Uses Linkwitz-Riley crossover to separate into 3 bands:
+    /// - Sub-bass (20-80Hz): Boosted
+    /// - Bass (80-250Hz): Saturated
+    /// - Mid-highs (250Hz+): Attenuated by drop_amount
+    ///
+    /// **FIXED**: Now accepts sample_rate parameter for accurate filter coefficients.
+    fn apply_drop_effect(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), AudioEffectsError>;
 
     /// # Responsibility
     /// Apply bass boost to low frequencies (DIRECTIVE 11: sample_rate parameter added).

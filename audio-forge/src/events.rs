@@ -62,6 +62,9 @@ pub enum AudioForgeEvent {
 
     /// Channel mode changed (Stereo <-> 8.1)
     ChannelModeChanged { mode: String },
+    
+    /// Playback finished (track reached end)
+    PlaybackFinished,
 
     /// Error occurred during operation
     ErrorOccurred { message: String },

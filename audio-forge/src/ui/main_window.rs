@@ -15,9 +15,9 @@ use crate::services::AudioFileValidator;
 use crate::ui::theme::QualiaTheme;
 use crate::ui::widgets::{
     EffectsPanel, HeroWaveformCard, ModernPlaybackBar, MultiBandSpectrumGrid, Panel,
-    PlaybackBarState,
+    PlaybackBarState, PlaylistPanel, PlaylistState,
 };
-use egui::{CentralPanel, Context, TopBottomPanel};
+use egui::{CentralPanel, Context, SidePanel, TopBottomPanel};
 use shaku::{Component, Interface};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -94,6 +94,10 @@ pub struct MainWindow {
     #[shaku(default = Arc::new(Mutex::new(PlaybackBarState::default())))]
     state: Arc<Mutex<PlaybackBarState>>,
     
+    /// Playlist state shared between MainWindow and PlaylistPanel
+    #[shaku(default = Arc::new(Mutex::new(PlaylistState::default())))]
+    playlist_state: Arc<Mutex<PlaylistState>>,
+    
     /// Visualization cache (throttled updates, interior mutability)
     /// SHAKU: Initialized with Default::default() during Component construction
     #[shaku(default = Arc::new(Mutex::new(VisualizationCache::default())))]
@@ -135,6 +139,9 @@ pub struct MainWindow {
     
     #[shaku(default = Mutex::new(None))]
     spectrum_grid: Mutex<Option<MultiBandSpectrumGrid>>,
+    
+    #[shaku(default = Mutex::new(None))]
+    playlist_panel: Mutex<Option<PlaylistPanel>>,
 }
 
 impl MainWindow {
@@ -211,8 +218,8 @@ impl MainWindow {
             volume,
         );
 
-        // Modern 2025 UI widgets
-        let hero_waveform = HeroWaveformCard::new();
+        // Modern 2025 UI widgets with PRODUCTION-GRADE interactivity
+        let hero_waveform = HeroWaveformCard::new().with_event_bus(event_bus.clone());
         let spectrum_grid = MultiBandSpectrumGrid::new(8); // 8 bands
 
         // **CRITICAL: EventBus Subscription**
@@ -282,6 +289,7 @@ impl MainWindow {
         // In pure DI mode (module.resolve()), widgets will be None and initialized on first frame
         Self {
             state,
+            playlist_state: Arc::new(Mutex::new(PlaylistState::default())),
             viz_cache,
             audio_player,
             audio_analyzer,
@@ -295,6 +303,7 @@ impl MainWindow {
             effects_panel: Mutex::new(Some(effects_panel)),
             hero_waveform: Mutex::new(Some(hero_waveform)),
             spectrum_grid: Mutex::new(Some(spectrum_grid)),
+            playlist_panel: Mutex::new(None), // Lazy-init in update()
         }
     }
     
@@ -443,8 +452,17 @@ impl MainWindow {
                 EffectConfig::default(), // Default effects configuration
             ));
             
-            *self.hero_waveform.lock().unwrap() = Some(HeroWaveformCard::new());
+            *self.hero_waveform.lock().unwrap() = Some(HeroWaveformCard::new()
+                .with_event_bus(self.event_bus.clone())
+            );
             *self.spectrum_grid.lock().unwrap() = Some(MultiBandSpectrumGrid::new(8)); // 8 bands
+            
+            // Initialize PlaylistPanel with EventBus integration
+            *self.playlist_panel.lock().unwrap() = Some(PlaylistPanel::new(
+                self.playlist_state.clone(),
+                self.audio_player.clone(),
+                self.event_bus.clone(),
+            ));
             
             info!("✅ MainWindow widgets initialized successfully");
         }
@@ -494,7 +512,12 @@ impl MainWindow {
         };
         
         // MUTEX LOCKING: Update widgets via .lock().unwrap() (interior mutability pattern)
-        self.hero_waveform.lock().unwrap().as_mut().unwrap().update(waveform_data.clone(), playback_position);
+        {
+            let mut waveform = self.hero_waveform.lock().unwrap();
+            let waveform_widget = waveform.as_mut().unwrap();
+            waveform_widget.update(waveform_data.clone(), playback_position);
+            waveform_widget.set_duration(self.audio_player.total_duration());
+        }
         self.spectrum_grid.lock().unwrap().as_mut().unwrap().update(&spectrum_data.magnitudes);
         // ============================================================================
         // TOP PANEL: EFFECTS CONTROLS
@@ -503,6 +526,19 @@ impl MainWindow {
             // MUTEX LOCKING: Access effects_panel via interior mutability
             self.effects_panel.lock().unwrap().as_mut().unwrap().render(ctx, ui);
         });
+        
+        // ============================================================================
+        // LEFT SIDEBAR: PLAYLIST PANEL
+        // ============================================================================
+        SidePanel::left("playlist_sidebar")
+            .min_width(250.0)
+            .max_width(400.0)
+            .default_width(300.0)
+            .resizable(true)
+            .show(ctx, |ui| {
+                // MUTEX LOCKING: Access playlist_panel via interior mutability
+                self.playlist_panel.lock().unwrap().as_mut().unwrap().render(ctx, ui);
+            });
 
         // ============================================================================
         // CENTER PANEL: MODERN 2025 UI (Hero Waveform + Spectrum Grid)

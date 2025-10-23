@@ -96,7 +96,13 @@ impl ModernPlaybackBar {
     /// Layout: [File] [Play] [Pause] [Stop] ━━━━━ Seek ━━━━━ [Volume] [8.1]
     pub fn render(&mut self, ui: &mut Ui) {
         // Clone state to avoid borrow conflicts in closure
-        let state = self.state.lock().unwrap().clone();
+        let state = match self.state.lock() {
+            Ok(guard) => guard.clone(),
+            Err(poisoned) => {
+                error!("PlaybackBarState mutex poisoned, recovering");
+                poisoned.into_inner().clone()
+            }
+        };
         
         ui.horizontal(|ui| {
             ui.spacing_mut().item_spacing.x = QualiaTheme::SPACING_PANEL_MARGIN;
@@ -271,7 +277,13 @@ impl ModernPlaybackBar {
         };
         
         if ui.add_enabled(is_available, Button::new(button_text)).clicked() {
-            let mut state = self.state.lock().unwrap();
+            let mut state = match self.state.lock() {
+                Ok(guard) => guard,
+                Err(poisoned) => {
+                    error!("PlaybackBarState mutex poisoned during 8.1 toggle");
+                    poisoned.into_inner()
+                }
+            };
             state.is_8_1_enabled = !state.is_8_1_enabled;
             
             if state.is_8_1_enabled {
@@ -299,15 +311,20 @@ impl ModernPlaybackBar {
                 info!("✅ File loaded successfully. Duration: {:?}", duration);
                 
                 // Update state (will be overwritten by EventBus FileLoaded event)
-                let mut state = self.state.lock().unwrap();
+                let mut state = match self.state.lock() {
+                    Ok(guard) => guard,
+                    Err(poisoned) => {
+                        error!("PlaybackBarState mutex poisoned during file load");
+                        poisoned.into_inner()
+                    }
+                };
                 state.current_file_path = Some(path);
                 state.total_duration = duration;
                 state.current_position = Duration::ZERO;
                 state.is_playing = false;
             }
             Err(e) => {
-                error!("❌ Failed to load audio file: {}", e);
-                // TODO: Show error toast to user
+                error!("❌ Failed to load audio file: {}. User notification not yet implemented", e);
             }
         }
     }

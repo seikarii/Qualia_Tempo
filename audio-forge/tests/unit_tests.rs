@@ -54,7 +54,7 @@ mock! {
             sample_rate: u32,
             elapsed_time: f32,
         ) -> Result<(), audio_forge::errors::AudioEffectsError>;
-        fn apply_drop_effect(&self, samples: &mut [f32]) -> Result<(), audio_forge::errors::AudioEffectsError>;
+        fn apply_drop_effect(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), audio_forge::errors::AudioEffectsError>;
         fn apply_bass_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), audio_forge::errors::AudioEffectsError>;
         fn apply_treble_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), audio_forge::errors::AudioEffectsError>;
         fn set_config(&self, config: EffectConfig);

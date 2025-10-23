@@ -470,8 +470,8 @@ impl IAudioEffects for AudioEffectsService {
     /// - Total: ~24 cycles/sample (acceptable for real-time)
     /// - Uses lazy filter recalculation (only when drop_amount changes)
     #[inline]
-    #[instrument(skip(self, samples), fields(sample_count = samples.len()))]
-    fn apply_drop_effect(&self, samples: &mut [f32]) -> Result<(), AudioEffectsError> {
+    #[instrument(skip(self, samples), fields(sample_count = samples.len(), sample_rate))]
+    fn apply_drop_effect(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), AudioEffectsError> {
         let config = self.config.read().unwrap_or_else(|poisoned| poisoned.into_inner());
 
         if !config.drop_effect_enabled {
@@ -489,7 +489,6 @@ impl IAudioEffects for AudioEffectsService {
         
         // Get current sample rate from filter state
         let mut filter_state = self.filter_state.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        let sample_rate = 44100; // TODO: Get from actual source (for now, assume CD quality)
         
         // Update drop filters if drop_amount changed significantly
         filter_state.update_drop_filters_if_changed(drop_amount, sample_rate);
@@ -671,7 +670,7 @@ mod tests {
         let mut samples = vec![0.5, -0.5];
         let original = samples.clone();
 
-        service.apply_drop_effect(&mut samples).unwrap();
+        service.apply_drop_effect(&mut samples, 44100).unwrap();
 
         assert_eq!(samples, original);
     }
@@ -691,7 +690,7 @@ mod tests {
         let mut samples = vec![0.5; 128]; // 64 stereo frames
         samples.extend(vec![-0.5; 128]);
 
-        service.apply_drop_effect(&mut samples).unwrap();
+        service.apply_drop_effect(&mut samples, 44100).unwrap();
 
         // PROFESSIONAL MULTIBAND DROP EFFECT (Updated expectation)
         // With drop_amount = 1.0 (100% drop):
@@ -719,7 +718,7 @@ mod tests {
         let service = create_test_service_with_config(config);
         let mut samples = vec![1.0, -1.0];
 
-        service.apply_drop_effect(&mut samples).unwrap();
+        service.apply_drop_effect(&mut samples, 44100).unwrap();
 
         // PROFESSIONAL MULTIBAND DROP EFFECT (50% drop)
         // With drop_amount = 0.5:
