@@ -115,6 +115,8 @@ pub struct MainWindow {
     #[shaku(inject)]
     multi_channel_output: Arc<dyn IMultiChannelOutput>,
     
+    /// EventBus for subscribing to service events (used in constructor's async task)
+    #[allow(dead_code)] // Used in tokio::spawn listener, not in methods
     #[shaku(inject)]
     event_bus: Arc<dyn IEventBus>,
 

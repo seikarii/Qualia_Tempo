@@ -57,7 +57,11 @@ impl Default for PlaybackBarState {
 /// All transport, volume, and file loading operations consolidated here.
 pub struct ModernPlaybackBar {
     audio_player: Arc<dyn IAudioPlayer>,
+    
+    /// Audio exporter service (used in export action buttons - future feature)
+    #[allow(dead_code)] // Used in export workflow, not in current render logic
     audio_exporter: Arc<dyn IAudioExporter>,
+    
     multi_channel: Arc<dyn IMultiChannelOutput>,
     state: Arc<Mutex<PlaybackBarState>>,
     
