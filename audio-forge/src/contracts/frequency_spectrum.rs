@@ -1,11 +1,13 @@
 //! # Responsibility
 //! Data contract for FFT frequency spectrum results.
 
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// # Responsibility
 /// Represents frequency spectrum data from FFT analysis.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct FrequencySpectrum {
     /// Frequency bins (Hz)
     pub frequencies: Vec<f32>,

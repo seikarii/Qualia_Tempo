@@ -3,11 +3,12 @@
 
 use crate::contracts::channel_configuration::{ChannelConfiguration, ChannelMode};
 use crate::errors::MultiChannelError;
+use crate::services::interfaces::i_logger::ILogger;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use biquad::*;
 use shaku::Component;
-use std::sync::RwLock;
-use tracing::{info, warn, instrument};
+use std::sync::{Arc, RwLock};
+use tracing::{info, warn, instrument}; // Keep for static method detect_8_1_support()
 
 /// # Responsibility
 /// Multi-channel audio output service with 8.1 upmixing.
@@ -23,6 +24,9 @@ use tracing::{info, warn, instrument};
 #[derive(Component)]
 #[shaku(interface = IMultiChannelOutput)]
 pub struct MultiChannelOutputService {
+    #[shaku(inject)]
+    logger: Arc<dyn ILogger>,
+    
     #[shaku(default)]
     config: RwLock<ChannelConfiguration>,
     
@@ -36,6 +40,7 @@ impl Default for MultiChannelOutputService {
     fn default() -> Self {
         // DIRECTIVE AF-D22-01: Don't detect on construction, initialize with unknown state
         Self {
+            logger: Arc::new(crate::services::logger::QualiaLogger),
             config: RwLock::new(ChannelConfiguration {
                 mode: ChannelMode::Stereo, // Temporary default
                 is_8_1_available: false,    // Will be updated on first access
@@ -54,7 +59,7 @@ impl MultiChannelOutputService {
     ///
     /// Allows dependency injection of hardware detection for testing.
     /// Production code uses Default trait, tests inject false.
-    pub fn new(is_8_1_available: bool) -> Self {
+    pub fn new(logger: Arc<dyn ILogger>, is_8_1_available: bool) -> Self {
         let config = ChannelConfiguration {
             mode: if is_8_1_available {
                 ChannelMode::Surround8_1
@@ -66,12 +71,13 @@ impl MultiChannelOutputService {
         };
 
         if is_8_1_available {
-            info!("8.1 surround hardware detected - enabled by default");
+            logger.info("8.1 surround hardware detected - enabled by default");
         } else {
-            warn!("8.1 surround not available - using stereo fallback");
+            logger.warn("8.1 surround not available - using stereo fallback");
         }
 
         Self {
+            logger,
             config: RwLock::new(config),
             detection_performed: std::sync::atomic::AtomicBool::new(false),
         }
@@ -164,7 +170,7 @@ impl MultiChannelOutputService {
 impl IMultiChannelOutput for MultiChannelOutputService {
     #[instrument(skip(self))]
     fn configure_8_1_channels(&self) -> Result<(), MultiChannelError> {
-        let mut config = self.config.write().unwrap();
+        let mut config = self.config.write().unwrap_or_else(|poisoned| poisoned.into_inner());
 
         if !config.is_8_1_available {
             return Err(MultiChannelError::UnsupportedChannelConfig(
@@ -173,7 +179,7 @@ impl IMultiChannelOutput for MultiChannelOutputService {
         }
 
         config.mode = ChannelMode::Surround8_1;
-        info!("Configured for 8.1 surround output");
+        self.logger.info("Configured for 8.1 surround output");
         Ok(())
     }
 
@@ -186,7 +192,7 @@ impl IMultiChannelOutput for MultiChannelOutputService {
             )));
         }
 
-        let config = self.config.read().unwrap();
+        let config = self.config.read().unwrap_or_else(|poisoned| poisoned.into_inner());
         let sample_rate = config.sample_rate;
         let frame_count = stereo_samples.len() / 2;
         let mut output = Vec::with_capacity(frame_count * 8);
@@ -249,7 +255,7 @@ impl IMultiChannelOutput for MultiChannelOutputService {
         // DIRECTIVE AF-D22-01: Lazy detection with double-checked locking
         // Fast path: If detection already performed, return cached value
         if self.detection_performed.load(std::sync::atomic::Ordering::Acquire) {
-            return self.config.read().unwrap().is_8_1_available;
+            return self.config.read().unwrap_or_else(|poisoned| poisoned.into_inner()).is_8_1_available;
         }
         
         // Slow path: Perform detection once
@@ -258,14 +264,14 @@ impl IMultiChannelOutput for MultiChannelOutputService {
         let detected = Self::detect_8_1_support();
         
         {
-            let mut config = self.config.write().unwrap();
+            let mut config = self.config.write().unwrap_or_else(|poisoned| poisoned.into_inner());
             config.is_8_1_available = detected;
             
             if detected {
-                info!("🎵 LAZY DETECTION: 8.1 surround hardware confirmed");
+                self.logger.info("🎵 LAZY DETECTION: 8.1 surround hardware confirmed");
                 config.mode = ChannelMode::Surround8_1;
             } else {
-                warn!("⚠️  LAZY DETECTION: 8.1 hardware not detected, using stereo");
+                self.logger.warn("⚠️  LAZY DETECTION: 8.1 hardware not detected, using stereo");
                 config.mode = ChannelMode::Stereo;
             }
         }
@@ -278,33 +284,33 @@ impl IMultiChannelOutput for MultiChannelOutputService {
 
     #[instrument(skip(self))]
     fn fallback_to_stereo(&self) -> Result<(), MultiChannelError> {
-        let mut config = self.config.write().unwrap();
+        let mut config = self.config.write().unwrap_or_else(|poisoned| poisoned.into_inner());
         config.mode = ChannelMode::Stereo;
-        info!("Switched to stereo output mode");
+        self.logger.info("Switched to stereo output mode");
         Ok(())
     }
 
     #[instrument(skip(self))]
     fn get_configuration(&self) -> ChannelConfiguration {
-        self.config.read().unwrap().clone()
+        self.config.read().unwrap_or_else(|poisoned| poisoned.into_inner()).clone()
     }
     
     fn redetect_8_1_hardware(&self) -> bool {
-        info!("🔍 Manually re-detecting 8.1 hardware support...");
+        self.logger.info("🔍 Manually re-detecting 8.1 hardware support...");
         
         let newly_detected = Self::detect_8_1_support();
         
         // Update internal state with new detection result
-        let mut config = self.config.write().unwrap();
+        let mut config = self.config.write().unwrap_or_else(|poisoned| poisoned.into_inner());
         config.is_8_1_available = newly_detected;
         
         // Auto-enable 8.1 mode if newly detected
         if newly_detected && config.mode == ChannelMode::Stereo {
             config.mode = ChannelMode::Surround8_1;
-            info!("✅ 8.1 hardware detected! Auto-enabled surround mode.");
+            self.logger.info("✅ 8.1 hardware detected! Auto-enabled surround mode.");
         } else if !newly_detected && config.mode == ChannelMode::Surround8_1 {
             config.mode = ChannelMode::Stereo;
-            warn!("❌ 8.1 hardware no longer detected. Switched to stereo.");
+            self.logger.warn("❌ 8.1 hardware no longer detected. Switched to stereo.");
         }
         
         newly_detected
@@ -318,7 +324,7 @@ mod tests {
     #[test]
     fn test_service_creation() {
         // Inject false for hardware detection (test isolation)
-        let service = MultiChannelOutputService::new(false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
         let config = service.get_configuration();
 
         // Should default to stereo (8.1 not available in test environment)
@@ -344,12 +350,12 @@ mod tests {
         // On user's hardware with 8.1 support, this should be true
         // On hardware without 8.1, this should be false
         // Test validates detection logic runs and caches correctly
-        println!("Lazy detection result: {}", if detected { "✅ 8.1 DETECTED" } else { "❌ NO 8.1" });
+        eprintln!("Lazy detection result: {}", if detected { "✅ 8.1 DETECTED" } else { "❌ NO 8.1" });
     }
 
     #[test]
     fn test_configure_8_1_fails_when_unavailable() {
-        let service = MultiChannelOutputService::new(false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
         let result = service.configure_8_1_channels();
 
         assert!(result.is_err());
@@ -363,7 +369,7 @@ mod tests {
 
     #[test]
     fn test_fallback_to_stereo_succeeds() {
-        let service = MultiChannelOutputService::new(false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
         let result = service.fallback_to_stereo();
 
         assert!(result.is_ok());
@@ -372,7 +378,7 @@ mod tests {
 
     #[test]
     fn test_upmix_empty_input() {
-        let service = MultiChannelOutputService::new(false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
         let stereo: Vec<f32> = vec![];
 
         let result = service.upmix_stereo_to_8_1(&stereo);
@@ -384,7 +390,7 @@ mod tests {
 
     #[test]
     fn test_upmix_odd_sample_count_fails() {
-        let service = MultiChannelOutputService::new(false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
         let stereo = vec![1.0, 0.5, 0.3]; // Odd count (invalid)
 
         let result = service.upmix_stereo_to_8_1(&stereo);
@@ -399,7 +405,7 @@ mod tests {
 
     #[test]
     fn test_upmix_single_stereo_frame() {
-        let service = MultiChannelOutputService::new(false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
         let stereo = vec![1.0, -1.0]; // L=1.0, R=-1.0
 
         let result = service.upmix_stereo_to_8_1(&stereo);
@@ -429,7 +435,7 @@ mod tests {
 
     #[test]
     fn test_upmix_multiple_frames() {
-        let service = MultiChannelOutputService::new(false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
         // 2 stereo frames: [L1, R1, L2, R2]
         let stereo = vec![0.5, 0.5, -0.5, -0.5];
 
@@ -469,7 +475,7 @@ mod tests {
 
     #[test]
     fn test_channel_count_calculation() {
-        let service = MultiChannelOutputService::new(false);
+        let service = MultiChannelOutputService::new(Arc::new(crate::services::logger::QualiaLogger::default()), false);
         let config = service.get_configuration();
 
         assert_eq!(config.channel_count(), 2); // Stereo mode

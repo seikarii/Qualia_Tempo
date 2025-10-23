@@ -6,11 +6,30 @@ use crate::errors::AudioEffectsError;
 use crate::events::AudioForgeEvent;
 use crate::services::event_bus::IEventBus;
 use crate::services::interfaces::i_audio_effects::IAudioEffects;
+use crate::services::interfaces::i_logger::ILogger;
 use biquad::*;
 use shaku::Component;
 use std::f32::consts::PI;
 use std::sync::{Arc, Mutex, RwLock};
-use tracing::{warn, instrument};
+use tracing::instrument;
+use validator::Validate;
+
+// ═══════════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════
+
+/// Bass boost filter cutoff frequency (Hz)
+/// Lower frequencies below this threshold will be amplified
+const BASS_CUTOFF_HZ: f32 = 250.0;
+
+/// Treble boost filter cutoff frequency (Hz)
+/// Higher frequencies above this threshold will be amplified
+const TREBLE_CUTOFF_HZ: f32 = 3000.0;
+
+/// Reference frequency for pitch shifting (Concert A440)
+const REFERENCE_FREQUENCY_A440: f32 = 440.0;
+
+// ═══════════════════════════════════════════════════════════════════════
 
 /// # Responsibility
 /// Biquad filter state for bass/treble boost with lazy recalculation.
@@ -38,14 +57,14 @@ impl FilterState {
         let bass_coeffs = Coefficients::<f32>::from_params(
             Type::LowShelf(0.0), // 0dB = unity gain
             sample_rate.hz(),
-            250.hz(),
+            BASS_CUTOFF_HZ.hz(),
             Q_BUTTERWORTH_F32,
         ).unwrap();
 
         let treble_coeffs = Coefficients::<f32>::from_params(
             Type::HighShelf(0.0),
             sample_rate.hz(),
-            3000.hz(),
+            TREBLE_CUTOFF_HZ.hz(),
             Q_BUTTERWORTH_F32,
         ).unwrap();
 
@@ -65,7 +84,7 @@ impl FilterState {
             let coeffs = Coefficients::<f32>::from_params(
                 Type::LowShelf(db_gain), // dB passed directly to enum variant
                 sample_rate.hz(),
-                250.hz(),
+                BASS_CUTOFF_HZ.hz(),
                 Q_BUTTERWORTH_F32,
             ).unwrap();
 
@@ -81,7 +100,7 @@ impl FilterState {
             let coeffs = Coefficients::<f32>::from_params(
                 Type::HighShelf(db_gain),
                 sample_rate.hz(),
-                3000.hz(),
+                TREBLE_CUTOFF_HZ.hz(),
                 Q_BUTTERWORTH_F32,
             ).unwrap();
 
@@ -113,14 +132,18 @@ pub struct AudioEffectsService {
     
     #[shaku(inject)]
     event_bus: Arc<dyn IEventBus>,
+    
+    #[shaku(inject)]
+    logger: Arc<dyn ILogger>,
 }
 
 impl AudioEffectsService {
-    pub fn new(config: EffectConfig, event_bus: Arc<dyn IEventBus>) -> Self {
+    pub fn new(config: EffectConfig, event_bus: Arc<dyn IEventBus>, logger: Arc<dyn ILogger>) -> Self {
         Self {
             config: RwLock::new(config),
             filter_state: Mutex::new(FilterState::new(44100)),
             event_bus,
+            logger,
         }
     }
 
@@ -221,7 +244,7 @@ impl IAudioEffects for AudioEffectsService {
         _sample_rate: u32,
         elapsed_time: f32,
     ) -> Result<(), AudioEffectsError> {
-        let config = self.config.read().unwrap();
+        let config = self.config.read().unwrap_or_else(|poisoned| poisoned.into_inner());
 
         if !config.effect_8d_enabled {
             return Ok(());
@@ -266,7 +289,7 @@ impl IAudioEffects for AudioEffectsService {
 
     #[instrument(skip(self, samples), fields(sample_count = samples.len()))]
     fn apply_drop_effect(&self, samples: &mut [f32]) -> Result<(), AudioEffectsError> {
-        let config = self.config.read().unwrap();
+        let config = self.config.read().unwrap_or_else(|poisoned| poisoned.into_inner());
 
         if !config.drop_effect_enabled {
             return Ok(());
@@ -283,7 +306,7 @@ impl IAudioEffects for AudioEffectsService {
 
     #[instrument(skip(self, samples), fields(sample_count = samples.len(), sample_rate))]
     fn apply_bass_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), AudioEffectsError> {
-        let config = self.config.read().unwrap();
+        let config = self.config.read().unwrap_or_else(|poisoned| poisoned.into_inner());
 
         if !config.bass_boost_enabled {
             return Ok(());
@@ -294,7 +317,8 @@ impl IAudioEffects for AudioEffectsService {
         // DIRECTIVE 11: Use provided sample_rate (no more hardcoded 44100Hz)
         
         // Update filter coefficients ONLY if gain changed (lazy recalculation)
-        let mut filter_state = self.filter_state.lock().expect("FilterState mutex poisoned");
+        let mut filter_state = self.filter_state.lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         filter_state.update_bass_if_changed(gain, sample_rate);
 
         // Apply LowShelf biquad filter @ 250Hz
@@ -308,7 +332,7 @@ impl IAudioEffects for AudioEffectsService {
 
     #[instrument(skip(self, samples), fields(sample_count = samples.len(), sample_rate))]
     fn apply_treble_boost(&self, samples: &mut [f32], sample_rate: u32) -> Result<(), AudioEffectsError> {
-        let config = self.config.read().unwrap();
+        let config = self.config.read().unwrap_or_else(|poisoned| poisoned.into_inner());
 
         if !config.treble_boost_enabled {
             return Ok(());
@@ -319,7 +343,8 @@ impl IAudioEffects for AudioEffectsService {
         // DIRECTIVE 11: Use provided sample_rate (no more hardcoded 44100Hz)
         
         // Update filter coefficients ONLY if gain changed
-        let mut filter_state = self.filter_state.lock().expect("FilterState mutex poisoned");
+        let mut filter_state = self.filter_state.lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         filter_state.update_treble_if_changed(gain, sample_rate);
 
         // Apply HighShelf biquad filter @ 3kHz
@@ -332,17 +357,17 @@ impl IAudioEffects for AudioEffectsService {
     }
 
     fn get_config(&self) -> EffectConfig {
-        self.config.read().unwrap().clone()
+        self.config.read().unwrap_or_else(|poisoned| poisoned.into_inner()).clone()
     }
 
     #[instrument(skip(self, samples), fields(sample_count = samples.len()))]
     fn apply_pitch_shift(&self, samples: &mut [f32], _sample_rate: u32) -> Result<(), AudioEffectsError> {
-        let config = self.config.read().unwrap();
+        let config = self.config.read().unwrap_or_else(|poisoned| poisoned.into_inner());
         
         if !config.pitch_shift_enabled {
             return Ok(());
-        }        // Pitch ratio: target_freq / 440.0
-        let pitch_ratio = config.reference_frequency / 440.0;
+        }        // Pitch ratio: target_freq / REFERENCE_FREQUENCY_A440
+        let pitch_ratio = config.reference_frequency / REFERENCE_FREQUENCY_A440;
         
         // Clamp to reasonable range [0.5, 2.0] to prevent extreme artifacts
         let pitch_ratio = pitch_ratio.clamp(0.5, 2.0);
@@ -386,13 +411,19 @@ impl IAudioEffects for AudioEffectsService {
 
     #[instrument(skip(self, config))]
     fn set_config(&self, config: EffectConfig) {
-        *self.config.write().unwrap() = config.clone();
+        // Validate configuration before applying
+        if let Err(e) = config.validate() {
+            self.logger.warn(&format!("Invalid effect configuration rejected: {}", e));
+            return;
+        }
+        
+        *self.config.write().unwrap_or_else(|poisoned| poisoned.into_inner()) = config.clone();
         
         // Emit EffectsConfigUpdated event
         if let Err(e) = self.event_bus.emit(AudioForgeEvent::EffectsConfigUpdated {
             config,
         }) {
-            warn!("Failed to emit EffectsConfigUpdated event: {}", e);
+            self.logger.warn(&format!("Failed to emit EffectsConfigUpdated event: {}", e));
         }
     }
 }
@@ -405,7 +436,15 @@ mod tests {
     /// Helper function to create AudioEffectsService for testing
     fn create_test_service() -> AudioEffectsService {
         let event_bus = Arc::new(EventBusService::default());
-        AudioEffectsService::new(EffectConfig::default(), event_bus)
+        let logger = Arc::new(crate::services::logger::QualiaLogger::default());
+        AudioEffectsService::new(EffectConfig::default(), event_bus, logger)
+    }
+    
+    /// Helper with custom config
+    fn create_test_service_with_config(config: EffectConfig) -> AudioEffectsService {
+        let event_bus = Arc::new(EventBusService::default());
+        let logger = Arc::new(crate::services::logger::QualiaLogger::default());
+        AudioEffectsService::new(config, event_bus, logger)
     }
 
     #[test]
@@ -438,7 +477,7 @@ mod tests {
         };
 
         let event_bus = Arc::new(EventBusService::default());
-        let service = AudioEffectsService::new(config, event_bus);
+        let service = create_test_service_with_config(config);
 
         // Test with asymmetric stereo input to verify panning effect
         let mut samples = vec![1.0, 0.0]; // Left=1.0, Right=0.0
@@ -476,7 +515,7 @@ mod tests {
         };
 
         let event_bus = Arc::new(EventBusService::default());
-        let service = AudioEffectsService::new(config, event_bus);
+        let service = create_test_service_with_config(config);
         let mut samples = vec![0.5, -0.5];
 
         service.apply_drop_effect(&mut samples).unwrap();
@@ -494,7 +533,7 @@ mod tests {
         };
 
         let event_bus = Arc::new(EventBusService::default());
-        let service = AudioEffectsService::new(config, event_bus);
+        let service = create_test_service_with_config(config);
         let mut samples = vec![1.0, -1.0];
 
         service.apply_drop_effect(&mut samples).unwrap();
@@ -523,7 +562,7 @@ mod tests {
         };
 
         let event_bus = Arc::new(EventBusService::default());
-        let service = AudioEffectsService::new(config, event_bus);
+        let service = create_test_service_with_config(config);
         let mut samples = vec![0.3, -0.3, 0.3, -0.3]; // Multiple samples for filter settling
 
         service.apply_bass_boost(&mut samples, 44100).unwrap();
@@ -545,7 +584,7 @@ mod tests {
         };
 
         let event_bus = Arc::new(EventBusService::default());
-        let service = AudioEffectsService::new(config, event_bus);
+        let service = create_test_service_with_config(config);
         // Generate low-frequency sine wave (100Hz) which will be boosted
         let sample_rate = 44100.0;
         let frequency = 100.0;
@@ -593,7 +632,7 @@ mod tests {
         };
 
         let event_bus = Arc::new(EventBusService::default());
-        let service = AudioEffectsService::new(config, event_bus);
+        let service = create_test_service_with_config(config);
 
         // Test with multiple buffer sizes to verify alignment handling
         for size in [8, 16, 17, 32, 33, 100, 1024, 4096] {
@@ -634,15 +673,13 @@ mod tests {
     /// - Zero intensity (no effect)
     #[test]
     fn test_8d_effect_edge_cases() {
-        let event_bus = Arc::new(EventBusService::default());
-        
         // Edge Case 1: Empty buffer
-        let service = AudioEffectsService::new(EffectConfig {
+        let service = create_test_service_with_config(EffectConfig {
             effect_8d_enabled: true,
             effect_8d_intensity: 1.0,
             effect_8d_rotation_hz: 1.0,
             ..Default::default()
-        }, event_bus.clone());
+        });
 
         let mut empty: Vec<f32> = vec![];
         assert!(service.apply_8d_effect(&mut empty, 44100, 0.0).is_ok());
@@ -659,12 +696,12 @@ mod tests {
         assert!(unaligned.iter().all(|&s| s.is_finite()));
 
         // Edge Case 4: Zero intensity (no effect)
-        let service_zero = AudioEffectsService::new(EffectConfig {
+        let service_zero = create_test_service_with_config(EffectConfig {
             effect_8d_enabled: true,
             effect_8d_intensity: 0.0,
             effect_8d_rotation_hz: 1.0,
             ..Default::default()
-        }, event_bus.clone());
+        });
 
         let mut samples = vec![0.5, -0.5, 0.3, -0.3];
         let original = samples.clone();
@@ -697,7 +734,7 @@ mod tests {
         };
 
         let event_bus = Arc::new(EventBusService::default());
-        let service = AudioEffectsService::new(config, event_bus);
+        let service = create_test_service_with_config(config);
 
         // Generate 440Hz sine wave
         let sample_rate = 44100.0;
@@ -724,7 +761,7 @@ mod tests {
         };
 
         let event_bus = Arc::new(EventBusService::default());
-        let service = AudioEffectsService::new(config, event_bus);
+        let service = create_test_service_with_config(config);
 
         let mut samples = vec![0.5; 100];
         service.apply_pitch_shift(&mut samples, 44100).unwrap();
@@ -742,7 +779,7 @@ mod tests {
         };
 
         let event_bus = Arc::new(EventBusService::default());
-        let service = AudioEffectsService::new(config, event_bus);
+        let service = create_test_service_with_config(config);
 
         let mut samples = vec![0.5; 100];
         // Should not panic, clamps to 2.0x max
@@ -772,7 +809,7 @@ mod tests {
         };
 
         let event_bus = Arc::new(EventBusService::default());
-        let service = AudioEffectsService::new(config, event_bus);
+        let service = create_test_service_with_config(config);
 
         // Large buffer (1 second at 44.1kHz stereo)
         let buffer_size = 44100 * 2;

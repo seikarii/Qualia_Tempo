@@ -5,7 +5,8 @@ use super::app_config::AppConfig;
 use std::fs;
 use std::io;
 use std::path::PathBuf;
-use tracing::info;
+use tracing::{info, warn};
+use validator::Validate;
 
 const CONFIG_FILENAME: &str = "audio-forge.yaml";
 const APP_NAME: &str = "audio-forge";
@@ -34,6 +35,12 @@ pub fn load_config() -> io::Result<AppConfig> {
     let config: AppConfig = serde_yaml::from_str(&contents)
         .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
     
+    // Validate configuration before returning
+    if let Err(e) = config.validate() {
+        warn!("⚠️ Config validation failed, using defaults: {}", e);
+        return Ok(AppConfig::default());
+    }
+    
     info!("✅ Config loaded from: {:?}", config_path);
     Ok(config)
 }
@@ -46,6 +53,10 @@ pub fn load_config() -> io::Result<AppConfig> {
 /// Creates parent directories if they don't exist.
 /// Writes human-readable YAML format.
 pub fn save_config(config: &AppConfig) -> io::Result<()> {
+    // Validate configuration before saving
+    config.validate()
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, format!("Invalid config: {}", e)))?;
+    
     let config_path = get_config_path()?;
     
     // Ensure parent directory exists

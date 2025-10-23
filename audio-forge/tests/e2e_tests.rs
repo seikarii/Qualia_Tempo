@@ -57,7 +57,7 @@ fn test_e2e_complete_audio_pipeline() {
     };
     
     let event_bus = Arc::new(EventBusService::default());
-    let effects = Arc::new(AudioEffectsService::new(effect_config, event_bus));
+    let effects = Arc::new(AudioEffectsService::new(effect_config, event_bus.clone(), Arc::new(audio_forge::services::logger::QualiaLogger::default())));
     
     let multi_channel = Arc::new(MultiChannelOutputService::default());
     let _viz = Arc::new(VisualizationEngineService::new());
@@ -164,7 +164,7 @@ fn test_e2e_effects_chain() {
     };
 
     let event_bus = Arc::new(EventBusService::default());
-    let effects = AudioEffectsService::new(config, event_bus);
+    let effects = AudioEffectsService::new(config, event_bus.clone(), Arc::new(audio_forge::services::logger::QualiaLogger::default()));
 
     // Generate test signal: 0.8 amplitude
     let mut samples = vec![0.8, -0.8, 0.8, -0.8];

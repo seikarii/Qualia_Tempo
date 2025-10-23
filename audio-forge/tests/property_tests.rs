@@ -51,6 +51,7 @@ proptest! {
         
         // OPTIMIZATION: Instantiate service directly (no module resolution, no OutputStream)
         let event_bus = Arc::new(EventBusService::default());
+        let logger = Arc::new(audio_forge::services::logger::QualiaLogger::default());
         let service = AudioEffectsService::new(
             EffectConfig {
                 bass_boost_enabled: true,
@@ -58,6 +59,7 @@ proptest! {
                 ..Default::default()
             },
             event_bus,
+            logger,
         );
         
         // Generate random samples in valid audio range [-1.0, 1.0]

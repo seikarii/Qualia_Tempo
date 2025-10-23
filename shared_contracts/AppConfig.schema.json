@@ -1,0 +1,230 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Responsibility",
+  "description": "Root configuration struct containing all application settings.\n\n---\n\nSerialized to YAML for human-readable persistence. Includes audio, effects, and visualization configurations.",
+  "type": "object",
+  "properties": {
+    "audio": {
+      "default": {
+        "channelMode": "stereo",
+        "defaultVolume": 1.0,
+        "lastFilePath": null
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/AudioConfig"
+        }
+      ]
+    },
+    "effects": {
+      "default": {
+        "bassBoostEnabled": false,
+        "bassBoostGain": 1.5,
+        "dropAmount": 0.5,
+        "dropEffectEnabled": false,
+        "effect8dEnabled": false,
+        "effect8dIntensity": 0.800000011920929,
+        "effect8dRotationHz": 0.25,
+        "pitchShiftEnabled": false,
+        "referenceFrequency": 440.0,
+        "trebleBoostEnabled": false,
+        "trebleBoostGain": 1.5
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/EffectConfig"
+        }
+      ]
+    },
+    "visualization": {
+      "default": {
+        "spectrumBarCount": 100,
+        "updateRateFps": 30,
+        "waveformColor": [
+          100,
+          200,
+          100
+        ]
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/VisualizationConfig"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "AudioConfig": {
+      "title": "Responsibility",
+      "description": "Audio playback configuration.\n\n---\n\nPersists user preferences for volume, channel mode, and last loaded file.",
+      "type": "object",
+      "required": [
+        "channelMode",
+        "defaultVolume"
+      ],
+      "properties": {
+        "channelMode": {
+          "description": "Preferred channel mode (Stereo or 8.1 Surround)",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ChannelMode"
+            }
+          ]
+        },
+        "defaultVolume": {
+          "description": "Default volume [0.0, 1.0]",
+          "type": "number",
+          "format": "float",
+          "maximum": 1.0,
+          "minimum": 0.0
+        },
+        "lastFilePath": {
+          "description": "Last loaded audio file path (for quick reload)",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "ChannelMode": {
+      "title": "Responsibility",
+      "description": "Represents audio output channel mode (Stereo vs 8.1 Surround).\n\n---\n\nUsed to configure output device and upmixing strategy.",
+      "oneOf": [
+        {
+          "description": "Standard 2-channel stereo (L/R)",
+          "type": "string",
+          "enum": [
+            "stereo"
+          ]
+        },
+        {
+          "description": "8.1 surround (FL, FR, FC, LFE, BL, BR, SL, SR)",
+          "type": "string",
+          "enum": [
+            "surround8_1"
+          ]
+        }
+      ]
+    },
+    "EffectConfig": {
+      "title": "Responsibility",
+      "description": "Configuration for all audio effects.\n\n---\n\nControls enable/disable state and parameters for each effect. All effects are disabled by default.",
+      "type": "object",
+      "required": [
+        "bassBoostEnabled",
+        "bassBoostGain",
+        "dropAmount",
+        "dropEffectEnabled",
+        "effect8dEnabled",
+        "effect8dIntensity",
+        "effect8dRotationHz",
+        "pitchShiftEnabled",
+        "referenceFrequency",
+        "trebleBoostEnabled",
+        "trebleBoostGain"
+      ],
+      "properties": {
+        "bassBoostEnabled": {
+          "description": "Enable bass boost",
+          "type": "boolean"
+        },
+        "bassBoostGain": {
+          "description": "Bass boost gain multiplier [1.0, 3.0]",
+          "type": "number",
+          "format": "float",
+          "maximum": 3.0,
+          "minimum": 1.0
+        },
+        "dropAmount": {
+          "description": "Drop amount [0.0, 1.0] where 1.0 = complete silence",
+          "type": "number",
+          "format": "float",
+          "maximum": 1.0,
+          "minimum": 0.0
+        },
+        "dropEffectEnabled": {
+          "description": "Enable drop effect",
+          "type": "boolean"
+        },
+        "effect8dEnabled": {
+          "description": "Enable 8D audio effect",
+          "type": "boolean"
+        },
+        "effect8dIntensity": {
+          "description": "8D effect intensity [0.0, 1.0]",
+          "type": "number",
+          "format": "float",
+          "maximum": 1.0,
+          "minimum": 0.0
+        },
+        "effect8dRotationHz": {
+          "description": "8D rotation speed in Hz (rotations per second)",
+          "type": "number",
+          "format": "float",
+          "maximum": 10.0,
+          "minimum": 0.0
+        },
+        "pitchShiftEnabled": {
+          "description": "Enable pitch shifting (Hz changer)",
+          "type": "boolean"
+        },
+        "referenceFrequency": {
+          "description": "Target reference frequency in Hz (default 440, alternatives: 432, 528)",
+          "type": "number",
+          "format": "float",
+          "maximum": 800.0,
+          "minimum": 200.0
+        },
+        "trebleBoostEnabled": {
+          "description": "Enable treble boost",
+          "type": "boolean"
+        },
+        "trebleBoostGain": {
+          "description": "Treble boost gain multiplier [1.0, 3.0]",
+          "type": "number",
+          "format": "float",
+          "maximum": 3.0,
+          "minimum": 1.0
+        }
+      }
+    },
+    "VisualizationConfig": {
+      "title": "Responsibility",
+      "description": "Visualization rendering preferences.\n\n---\n\nControls waveform/spectrum appearance and update rate.",
+      "type": "object",
+      "required": [
+        "spectrumBarCount",
+        "updateRateFps",
+        "waveformColor"
+      ],
+      "properties": {
+        "spectrumBarCount": {
+          "description": "Number of spectrum bars to render",
+          "type": "integer",
+          "format": "uint",
+          "maximum": 500.0,
+          "minimum": 10.0
+        },
+        "updateRateFps": {
+          "description": "Visualization update rate (FPS)",
+          "type": "integer",
+          "format": "uint32",
+          "maximum": 144.0,
+          "minimum": 10.0
+        },
+        "waveformColor": {
+          "description": "Waveform line color (RGB)",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint8",
+            "minimum": 0.0
+          },
+          "maxItems": 3,
+          "minItems": 3
+        }
+      }
+    }
+  }
+}

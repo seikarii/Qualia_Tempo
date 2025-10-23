@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Responsibility",
+  "description": "Configuration for multi-channel audio output.\n\n---\n\nIncludes channel mode, sample rate, and buffer size.",
+  "type": "object",
+  "required": [
+    "bufferSize",
+    "is81Available",
+    "mode",
+    "sampleRate"
+  ],
+  "properties": {
+    "bufferSize": {
+      "description": "Buffer size in frames",
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0.0
+    },
+    "is81Available": {
+      "description": "Whether 8.1 hardware is available",
+      "type": "boolean"
+    },
+    "mode": {
+      "description": "Current channel mode",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ChannelMode"
+        }
+      ]
+    },
+    "sampleRate": {
+      "description": "Sample rate in Hz (typically 44100 or 48000)",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0.0
+    }
+  },
+  "definitions": {
+    "ChannelMode": {
+      "title": "Responsibility",
+      "description": "Represents audio output channel mode (Stereo vs 8.1 Surround).\n\n---\n\nUsed to configure output device and upmixing strategy.",
+      "oneOf": [
+        {
+          "description": "Standard 2-channel stereo (L/R)",
+          "type": "string",
+          "enum": [
+            "stereo"
+          ]
+        },
+        {
+          "description": "8.1 surround (FL, FR, FC, LFE, BL, BR, SL, SR)",
+          "type": "string",
+          "enum": [
+            "surround8_1"
+          ]
+        }
+      ]
+    }
+  }
+}

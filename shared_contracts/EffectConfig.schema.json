@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Responsibility",
+  "description": "Configuration for all audio effects.\n\n---\n\nControls enable/disable state and parameters for each effect. All effects are disabled by default.",
+  "type": "object",
+  "required": [
+    "bassBoostEnabled",
+    "bassBoostGain",
+    "dropAmount",
+    "dropEffectEnabled",
+    "effect8dEnabled",
+    "effect8dIntensity",
+    "effect8dRotationHz",
+    "pitchShiftEnabled",
+    "referenceFrequency",
+    "trebleBoostEnabled",
+    "trebleBoostGain"
+  ],
+  "properties": {
+    "bassBoostEnabled": {
+      "description": "Enable bass boost",
+      "type": "boolean"
+    },
+    "bassBoostGain": {
+      "description": "Bass boost gain multiplier [1.0, 3.0]",
+      "type": "number",
+      "format": "float",
+      "maximum": 3.0,
+      "minimum": 1.0
+    },
+    "dropAmount": {
+      "description": "Drop amount [0.0, 1.0] where 1.0 = complete silence",
+      "type": "number",
+      "format": "float",
+      "maximum": 1.0,
+      "minimum": 0.0
+    },
+    "dropEffectEnabled": {
+      "description": "Enable drop effect",
+      "type": "boolean"
+    },
+    "effect8dEnabled": {
+      "description": "Enable 8D audio effect",
+      "type": "boolean"
+    },
+    "effect8dIntensity": {
+      "description": "8D effect intensity [0.0, 1.0]",
+      "type": "number",
+      "format": "float",
+      "maximum": 1.0,
+      "minimum": 0.0
+    },
+    "effect8dRotationHz": {
+      "description": "8D rotation speed in Hz (rotations per second)",
+      "type": "number",
+      "format": "float",
+      "maximum": 10.0,
+      "minimum": 0.0
+    },
+    "pitchShiftEnabled": {
+      "description": "Enable pitch shifting (Hz changer)",
+      "type": "boolean"
+    },
+    "referenceFrequency": {
+      "description": "Target reference frequency in Hz (default 440, alternatives: 432, 528)",
+      "type": "number",
+      "format": "float",
+      "maximum": 800.0,
+      "minimum": 200.0
+    },
+    "trebleBoostEnabled": {
+      "description": "Enable treble boost",
+      "type": "boolean"
+    },
+    "trebleBoostGain": {
+      "description": "Treble boost gain multiplier [1.0, 3.0]",
+      "type": "number",
+      "format": "float",
+      "maximum": 3.0,
+      "minimum": 1.0
+    }
+  }
+}

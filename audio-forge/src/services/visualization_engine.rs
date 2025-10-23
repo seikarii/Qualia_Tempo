@@ -99,7 +99,8 @@ impl IVisualizationEngine for VisualizationEngineService {
         let center_y = rect.center().y;
         let amplitude_scale = rect.height() * 0.45;
 
-        let mut points = self.cached_points.write().unwrap();
+        let mut points = self.cached_points.write()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         points.clear();
         points.reserve(num_samples);
         

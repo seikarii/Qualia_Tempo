@@ -11,10 +11,11 @@
 use crate::contracts::FrequencySpectrum;
 use crate::errors::AudioAnalyzerError;
 use crate::services::interfaces::i_audio_analyzer::IAudioAnalyzer;
+use crate::services::interfaces::i_logger::ILogger;
 use rustfft::{FftPlanner, num_complex::Complex};
 use shaku::Component;
-use std::sync::{Mutex, OnceLock};
-use tracing::{debug, instrument};
+use std::sync::{Arc, Mutex, OnceLock};
+use tracing::instrument;
 
 // OPTIMIZATION: Global cached FftPlanner eliminates 3MB/s allocations @ 60fps
 // MODERNIZED: Using std::sync::OnceLock (lazy_static deprecated)
@@ -48,17 +49,15 @@ pub struct AudioAnalyzerService {
     // Pre-calculated window eliminates 122,880 trig ops/sec @ 60fps
     #[shaku(default)]
     hann_window: Vec<f32>,
+    
+    #[shaku(inject)]
+    logger: Arc<dyn ILogger>,
 }
 
 impl Default for AudioAnalyzerService {
     fn default() -> Self {
-        Self::new(2048)
-    }
-}
-
-impl AudioAnalyzerService {
-    /// Create analyzer with custom FFT size (must be power of 2)
-    pub fn new(fft_size: usize) -> Self {
+        // NOTE: Logger will be injected by Shaku, not available in Default
+        let fft_size: usize = 2048;
         assert!(fft_size.is_power_of_two(), "FFT size must be power of 2");
         
         // Pre-calculate Hann window (eliminates 122,880 trig ops/sec @ 60fps)
@@ -71,6 +70,29 @@ impl AudioAnalyzerService {
         Self { 
             fft_size,
             hann_window,
+            // Logger will be injected by Shaku after construction
+            logger: Arc::new(crate::services::logger::QualiaLogger),
+        }
+    }
+}
+
+impl AudioAnalyzerService {
+    /// Create analyzer with custom FFT size (must be power of 2)
+    /// NOTE: This is for testing only. Production code should use Shaku DI.
+    pub fn new(fft_size: usize, logger: Arc<dyn ILogger>) -> Self {
+        assert!(fft_size.is_power_of_two(), "FFT size must be power of 2");
+        
+        // Pre-calculate Hann window (eliminates 122,880 trig ops/sec @ 60fps)
+        let hann_window: Vec<f32> = (0..fft_size)
+            .map(|i| {
+                0.5 * (1.0 - f32::cos(2.0 * std::f32::consts::PI * i as f32 / fft_size as f32))
+            })
+            .collect();
+        
+        Self { 
+            fft_size,
+            hann_window,
+            logger,
         }
     }
 }
@@ -104,7 +126,8 @@ impl IAudioAnalyzer for AudioAnalyzerService {
             .for_each(|(sample, &window)| *sample *= window);
 
         // Perform FFT using globally cached planner (eliminates 3MB/s allocations)
-        let mut planner = get_fft_planner().lock().expect("FFT planner mutex poisoned");
+        let mut planner = get_fft_planner().lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let fft = planner.plan_fft_forward(self.fft_size);
         fft.process(&mut input);
 
@@ -139,11 +162,11 @@ impl IAudioAnalyzer for AudioAnalyzerService {
             }
         }
 
-        debug!(
+        self.logger.debug(&format!(
             "FFT analyzed {} samples -> {} frequency bins",
             samples.len(),
             frequencies.len()
-        );
+        ));
 
         Ok(FrequencySpectrum {
             frequencies,
@@ -209,14 +232,16 @@ mod tests {
 
     #[test]
     fn test_custom_fft_size() {
-        let analyzer = AudioAnalyzerService::new(4096);
+        let logger = Arc::new(crate::services::logger::QualiaLogger::default());
+        let analyzer = AudioAnalyzerService::new(4096, logger);
         assert_eq!(analyzer.fft_size, 4096);
     }
 
     #[test]
     #[should_panic(expected = "FFT size must be power of 2")]
     fn test_invalid_fft_size() {
-        AudioAnalyzerService::new(1000);
+        let logger = Arc::new(crate::services::logger::QualiaLogger::default());
+        AudioAnalyzerService::new(1000, logger);
     }
 
     #[test]

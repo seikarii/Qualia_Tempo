@@ -9,6 +9,7 @@ use crate::services::effects_source::EffectsSource;
 use crate::services::event_bus::IEventBus;
 use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
+use crate::services::interfaces::i_logger::ILogger;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::sample_counting_source::SampleCountingSource;
 use crate::services::upmixing_source::UpmixingSource;
@@ -20,7 +21,19 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tracing::{error, info, warn, instrument};
+use tracing::instrument;
+
+// ═══════════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════
+
+/// Default sample rate for audio playback (CD quality)
+const DEFAULT_SAMPLE_RATE: u32 = 44100;
+
+/// Stereo channel count (left + right)
+const STEREO_CHANNELS: u32 = 2;
+
+// ═══════════════════════════════════════════════════════════════════════
 
 /// # Responsibility
 /// Holds the rodio Sink and current playback state.
@@ -67,26 +80,26 @@ impl PlayerState {
     ///
     /// This method MUST be called exactly once during service construction.
     /// Panics if audio device initialization fails (unrecoverable error).
-    fn new() -> Self {
+    fn new() -> Result<Self, AudioPlayerError> {
         use rodio::OutputStreamBuilder;
         
         let stream_handle = OutputStreamBuilder::open_default_stream()
-            .expect("FATAL: Failed to initialize audio output device");
+            .map_err(|e| AudioPlayerError::DeviceError(format!("Failed to initialize audio output device: {}", e)))?;
         
         let sink = Sink::connect_new(stream_handle.mixer());
         
-        Self {
+        Ok(Self {
             sink,
             _stream: stream_handle,
             total_duration: Duration::ZERO,
             is_playing: false,
             sample_buffer: None,
-            sample_rate: 44100, // Default, will be updated on load
-            channels: 2, // Default stereo
+            sample_rate: DEFAULT_SAMPLE_RATE,
+            channels: STEREO_CHANNELS as u16,
             sample_counter: Arc::new(std::sync::atomic::AtomicU64::new(0)),
             current_file: None,
             decoded_samples: None, // INSTANT-SEEK: No audio loaded initially
-        }
+        })
     }
 }
 
@@ -104,13 +117,34 @@ pub struct PlayerStateHandle(Arc<Mutex<PlayerState>>);
 
 impl Default for PlayerStateHandle {
     fn default() -> Self {
-        Self(Arc::new(Mutex::new(PlayerState::new())))
+        // Initialize with error handling - panic only on construction failure (unrecoverable)
+        // NOTE: This panic is by design - without audio hardware, the service cannot function.
+        // For headless/CI environments, use mock implementations instead.
+        let state = PlayerState::new().expect("FATAL: Failed to initialize audio device - no audio hardware available");
+        Self(Arc::new(Mutex::new(state)))
+    }
+}
+
+impl PlayerStateHandle {
+    /// # Responsibility
+    /// Construct PlayerStateHandle with explicit error handling.
+    ///
+    /// ---
+    ///
+    /// Prefer this over Default trait for better error propagation in tests.
+    pub fn try_new() -> Result<Self, AudioPlayerError> {
+        let state = PlayerState::new()?;
+        Ok(Self(Arc::new(Mutex::new(state))))
     }
 }
 
 impl PlayerStateHandle {
     fn lock(&self) -> std::sync::MutexGuard<'_, PlayerState> {
-        self.0.lock().expect("PlayerState mutex poisoned - fatal error")
+        self.0.lock().unwrap_or_else(|poisoned| {
+            // Recover from poisoned mutex by taking ownership of guard
+            // This allows continued operation even if another thread panicked
+            poisoned.into_inner()
+        })
     }
 }
 
@@ -130,12 +164,15 @@ pub struct AudioPlayerService {
     
     #[shaku(inject)]
     event_bus: Arc<dyn IEventBus>,
+    
+    #[shaku(inject)]
+    logger: Arc<dyn ILogger>,
 }
 
 impl IAudioPlayer for AudioPlayerService {
     #[instrument(skip(self), fields(path = %path.display()))]
     fn load_file(&self, path: &Path) -> Result<Duration, AudioPlayerError> {
-        info!("🚀 INSTANT-SEEK: Loading audio file into memory: {}", path.display());
+        self.logger.info(&format!("🚀 INSTANT-SEEK: Loading audio file into memory: {}", path.display()));
 
         // Decode audio file with proper error handling (Directive 1: No catch_unwind)
         let file = File::open(path)
@@ -167,14 +204,14 @@ impl IAudioPlayer for AudioPlayerService {
         // Performance: Seek becomes pure math (index calculation + slice creation).
         // ═══════════════════════════════════════════════════════════════════════
         
-        info!("   Decoding full audio to memory...");
+        self.logger.info("   Decoding full audio to memory...");
         let decoded_samples: Vec<f32> = source.collect();
         let sample_count = decoded_samples.len();
         let decoded_arc = Arc::new(decoded_samples);
         
-        info!("✅ Decoded {} samples ({:.2} MB) in memory", 
+        self.logger.info(&format!("✅ Decoded {} samples ({:.2} MB) in memory", 
               sample_count, 
-              (sample_count * std::mem::size_of::<f32>()) as f64 / 1_048_576.0);
+              (sample_count * std::mem::size_of::<f32>()) as f64 / 1_048_576.0));
 
         // Create SamplesBuffer from decoded data
         // OPTIMIZATION: Try to unwrap Arc (zero-copy if refcount=1), otherwise clone
@@ -192,7 +229,7 @@ impl IAudioPlayer for AudioPlayerService {
         // Wrap source in AnalyzingSource for real-time capture
         // Buffer capacity: 1 second of stereo audio @ 44100Hz = 88200 samples
         // Chunk size: 512 samples (reduces lock contention)
-        let buffer_capacity = (sample_rate * 2) as usize; // 1 second stereo
+        let buffer_capacity = (sample_rate * STEREO_CHANNELS) as usize; // 1 second stereo
         let chunk_size = 512;
         
         // Pipeline: Decoder → SampleCountingSource → AnalyzingSource → EffectsSource → [UpmixingSource] → Sink
@@ -220,7 +257,7 @@ impl IAudioPlayer for AudioPlayerService {
         
         if use_upmixing {
             // Pipeline: Decoder → AnalyzingSource → EffectsSource → UpmixingSource → Sink
-            info!("🔊 8.1 surround mode ACTIVE - applying upmixing");
+            self.logger.info("🔊 8.1 surround mode ACTIVE - applying upmixing");
             let upmixing_source = UpmixingSource::try_new(
                 effects_source,
                 self.multi_channel.clone(),
@@ -229,7 +266,7 @@ impl IAudioPlayer for AudioPlayerService {
             state.sink.append(upmixing_source);
         } else {
             // Pipeline: Decoder → AnalyzingSource → EffectsSource → Sink (stereo)
-            info!("🎧 Stereo mode - no upmixing");
+            self.logger.info("🎧 Stereo mode - no upmixing");
             state.sink.append(effects_source);
         }
         
@@ -248,7 +285,7 @@ impl IAudioPlayer for AudioPlayerService {
         // Reset counter to zero for new file
         state.sample_counter.store(0, Ordering::Relaxed);
 
-        info!("Audio loaded successfully. Duration: {:?}, Sample Rate: {}", total_duration, sample_rate);
+        self.logger.info(&format!("Audio loaded successfully. Duration: {:?}, Sample Rate: {}", total_duration, sample_rate));
         
         // Emit FileLoaded event
         let file_path = path.to_path_buf();
@@ -259,7 +296,7 @@ impl IAudioPlayer for AudioPlayerService {
             duration: total_duration,
             sample_rate,
         }) {
-            warn!("Failed to emit FileLoaded event: {}", e);
+            self.logger.warn(&format!("Failed to emit FileLoaded event: {}", e));
         }
         
         Ok(total_duration)
@@ -271,7 +308,7 @@ impl IAudioPlayer for AudioPlayerService {
         
         // Check if audio is loaded
         if state.total_duration == Duration::ZERO {
-            error!("No audio file loaded");
+            self.logger.error("No audio file loaded");
             return Err(AudioPlayerError::NoFileLoaded);
         }
         
@@ -286,14 +323,14 @@ impl IAudioPlayer for AudioPlayerService {
         
         // Directive 15: No time tracking needed - sample counter handles position
         
-        info!("Playback started");
+        self.logger.info("Playback started");
         
         // Emit PlaybackStateChanged event
         if let Err(e) = self.event_bus.emit(AudioForgeEvent::PlaybackStateChanged {
             is_playing: true,
             position,
         }) {
-            warn!("Failed to emit PlaybackStateChanged event: {}", e);
+            self.logger.warn(&format!("Failed to emit PlaybackStateChanged event: {}", e));
         }
         
         Ok(())
@@ -318,14 +355,14 @@ impl IAudioPlayer for AudioPlayerService {
         
         // Directive 15: Sample counter automatically preserves position
         
-        info!("Playback paused");
+        self.logger.info("Playback paused");
         
         // Emit PlaybackStateChanged event
         if let Err(e) = self.event_bus.emit(AudioForgeEvent::PlaybackStateChanged {
             is_playing: false,
             position,
         }) {
-            warn!("Failed to emit PlaybackStateChanged event: {}", e);
+            self.logger.warn(&format!("Failed to emit PlaybackStateChanged event: {}", e));
         }
         
         Ok(())
@@ -347,14 +384,14 @@ impl IAudioPlayer for AudioPlayerService {
         
         drop(state); // Release lock
         
-        info!("Playback stopped");
+        self.logger.info("Playback stopped");
         
         // Emit PlaybackStateChanged event
         if let Err(e) = self.event_bus.emit(AudioForgeEvent::PlaybackStateChanged {
             is_playing: false,
             position: Duration::ZERO,
         }) {
-            warn!("Failed to emit PlaybackStateChanged event: {}", e);
+            self.logger.warn(&format!("Failed to emit PlaybackStateChanged event: {}", e));
         }
         
         Ok(())
@@ -402,7 +439,7 @@ impl IAudioPlayer for AudioPlayerService {
         // Clamp to valid range (prevent out-of-bounds panic)
         let target_sample_index = target_sample_index.min(decoded_samples.len());
         
-        info!("⚡ INSTANT-SEEK: Slicing from sample {} / {}", target_sample_index, decoded_samples.len());
+        self.logger.info(&format!("⚡ INSTANT-SEEK: Slicing from sample {} / {}", target_sample_index, decoded_samples.len()));
         
         // Slice Arc<Vec<f32>> from target position to end
         let sliced_samples = &decoded_samples[target_sample_index..];
@@ -424,7 +461,7 @@ impl IAudioPlayer for AudioPlayerService {
         );
         
         // Build processing pipeline (same as load_file)
-        let buffer_capacity = (sample_rate * 2) as usize;
+        let buffer_capacity = (sample_rate * STEREO_CHANNELS) as usize;
         let chunk_size = 512;
         
         let analyzing_source = AnalyzingSource::new(counting_source, buffer_capacity, chunk_size);
@@ -471,14 +508,14 @@ impl IAudioPlayer for AudioPlayerService {
         
         drop(state); // Release lock
         
-        info!("✅ INSTANT-SEEK: Jumped to {:?} (sample {}) - ZERO DISK I/O", 
-              clamped_position, target_sample_index);
+        self.logger.info(&format!("✅ INSTANT-SEEK: Jumped to {:?} (sample {}) - ZERO DISK I/O", 
+              clamped_position, target_sample_index));
         
         // Emit SeekedTo event
         if let Err(e) = self.event_bus.emit(AudioForgeEvent::SeekedTo {
             position: clamped_position,
         }) {
-            warn!("Failed to emit SeekedTo event: {}", e);
+            self.logger.warn(&format!("Failed to emit SeekedTo event: {}", e));
         }
         
         Ok(())
@@ -493,13 +530,13 @@ impl IAudioPlayer for AudioPlayerService {
         
         drop(state); // Release lock
         
-        info!("Volume set to {}", clamped_volume);
+        self.logger.info(&format!("Volume set to {}", clamped_volume));
         
         // Emit VolumeChanged event
         if let Err(e) = self.event_bus.emit(AudioForgeEvent::VolumeChanged {
             new_volume: clamped_volume,
         }) {
-            warn!("Failed to emit VolumeChanged event: {}", e);
+            self.logger.warn(&format!("Failed to emit VolumeChanged event: {}", e));
         }
         
         Ok(())
@@ -552,7 +589,7 @@ impl IAudioPlayer for AudioPlayerService {
     }
 
     fn capture_processed_audio(&self) -> Result<Vec<f32>, AudioPlayerError> {
-        info!("📼 INSTANT-SEEK OPTIMIZATION: Capturing from memory buffer...");
+        self.logger.info("📼 INSTANT-SEEK OPTIMIZATION: Capturing from memory buffer...");
         
         // ═══════════════════════════════════════════════════════════════════════
         // OPERATION INSTANT-SEEK: ZERO-DISK-I/O EXPORT
@@ -586,7 +623,7 @@ impl IAudioPlayer for AudioPlayerService {
         
         // Build processing pipeline (without SampleCountingSource since we don't need position tracking)
         // Pipeline: SamplesBuffer → AnalyzingSource → EffectsSource
-        let buffer_capacity = (sample_rate * 2) as usize;
+        let buffer_capacity = (sample_rate * STEREO_CHANNELS) as usize;
         let chunk_size = 512;
         
         let analyzing_source = AnalyzingSource::new(samples_buffer, buffer_capacity, chunk_size);
@@ -598,12 +635,12 @@ impl IAudioPlayer for AudioPlayerService {
         );
         
         // Consume iterator and collect all processed samples
-        info!("   Processing audio through effects pipeline (ZERO DISK I/O)...");
+        self.logger.info("   Processing audio through effects pipeline (ZERO DISK I/O)...");
         let processed_samples: Vec<f32> = (&mut effects_source).collect();
         
         let duration_secs = processed_samples.len() as f64 / sample_rate as f64 / channels as f64;
-        info!("✅ Captured {} samples ({:.2}s) at {} Hz from MEMORY", 
-              processed_samples.len(), duration_secs, sample_rate);
+        self.logger.info(&format!("✅ Captured {} samples ({:.2}s) at {} Hz from MEMORY", 
+              processed_samples.len(), duration_secs, sample_rate));
         
         Ok(processed_samples)
     }
@@ -619,9 +656,11 @@ mod tests {
     /// Helper function to create AudioPlayerService for testing
     fn create_test_service() -> AudioPlayerService {
         let event_bus = Arc::new(EventBusService::default());
+        let logger = Arc::new(crate::services::logger::QualiaLogger::default());
         let audio_effects = Arc::new(AudioEffectsService::new(
             crate::contracts::effect_parameters::EffectConfig::default(),
-            event_bus.clone()
+            event_bus.clone(),
+            logger.clone()
         ));
         let multi_channel = Arc::new(MultiChannelOutputService::default());
         AudioPlayerService {
@@ -629,13 +668,14 @@ mod tests {
             audio_effects,
             multi_channel,
             event_bus,
+            logger,
         }
     }
 
     #[test]
     fn test_player_state_initialization() {
-        // PlayerState::new() initializes OutputStream and Sink
-        let state = PlayerState::new();
+        // PlayerState::new() returns Result<PlayerState, AudioPlayerError>
+        let state = PlayerState::new().expect("Failed to initialize audio device for test");
         assert_eq!(state.total_duration, Duration::ZERO);
         assert!(!state.is_playing);
         

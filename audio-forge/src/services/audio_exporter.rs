@@ -11,12 +11,13 @@
 use crate::errors::AudioExporterError;
 use crate::events::AudioForgeEvent;
 use crate::services::event_bus::IEventBus;
+use crate::services::interfaces::i_logger::ILogger;
 use hound::{WavSpec, WavWriter};
 use shaku::Component;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
-use tracing::{info, warn, instrument};
+use tracing::instrument;
 
 use super::interfaces::IAudioExporter;
 
@@ -48,6 +49,9 @@ use super::interfaces::IAudioExporter;
 pub struct AudioExporterService {
     #[shaku(inject)]
     event_bus: Arc<dyn IEventBus>,
+    
+    #[shaku(inject)]
+    logger: Arc<dyn ILogger>,
 }
 
 impl AudioExporterService {
@@ -66,6 +70,9 @@ impl AudioExporterService {
     /// - 0.0 → 0
     /// - -1.0 → -32767
     /// - 1.5 → 32767 (clamped)
+    ///
+    /// ## Performance
+    /// Inlined for zero-overhead sample conversion (called millions of times)
     #[inline(always)]
     fn f32_to_i16(sample: f32) -> i16 {
         // Clamp to valid range
@@ -93,12 +100,12 @@ impl IAudioExporter for AudioExporterService {
         if let Err(e) = self.event_bus.emit(AudioForgeEvent::ExportStarted {
             path: path_buf.clone(),
         }) {
-            warn!("Failed to emit ExportStarted event: {}", e);
+            self.logger.warn(&format!("Failed to emit ExportStarted event: {}", e));
         }
         
-        info!("💾 Exporting audio to WAV: {}", output_path.display());
-        info!("   Sample rate: {} Hz", sample_rate);
-        info!("   Samples: {} ({:.2} seconds)", samples.len(), samples.len() as f64 / sample_rate as f64 / 2.0);
+        self.logger.info(&format!("💾 Exporting audio to WAV: {}", output_path.display()));
+        self.logger.info(&format!("   Sample rate: {} Hz", sample_rate));
+        self.logger.info(&format!("   Samples: {} ({:.2} seconds)", samples.len(), samples.len() as f64 / sample_rate as f64 / 2.0));
         
         // Validation: Empty buffer check
         if samples.is_empty() {
@@ -107,7 +114,7 @@ impl IAudioExporter for AudioExporterService {
                 path: path_buf,
                 error: err.to_string(),
             }) {
-                warn!("Failed to emit ExportFailed event: {}", e);
+                self.logger.warn(&format!("Failed to emit ExportFailed event: {}", e));
             }
             return Err(err);
         }
@@ -120,14 +127,14 @@ impl IAudioExporter for AudioExporterService {
                 path: path_buf.clone(),
                 error: err_msg,
             }) {
-                warn!("Failed to emit ExportFailed event: {}", e);
+                self.logger.warn(&format!("Failed to emit ExportFailed event: {}", e));
             }
             return Err(err);
         }
         
         // Validation: Stereo pair check
         if !samples.len().is_multiple_of(2) {
-            warn!("⚠️  Sample count is odd ({}), truncating last sample", samples.len());
+            self.logger.warn(&format!("⚠️  Sample count is odd ({}), truncating last sample", samples.len()));
         }
         
         // Configure WAV specification (CD quality: 44.1kHz, 16-bit, stereo)
@@ -148,7 +155,7 @@ impl IAudioExporter for AudioExporterService {
                     path: path_buf,
                     error: err_msg,
                 }) {
-                    warn!("Failed to emit ExportFailed event: {}", emit_err);
+                    self.logger.warn(&format!("Failed to emit ExportFailed event: {}", emit_err));
                 }
                 return Err(err);
             }
@@ -165,7 +172,7 @@ impl IAudioExporter for AudioExporterService {
                     path: path_buf.clone(),
                     error: err_msg,
                 }) {
-                    warn!("Failed to emit ExportFailed event: {}", emit_err);
+                    self.logger.warn(&format!("Failed to emit ExportFailed event: {}", emit_err));
                 }
                 return Err(err);
             }
@@ -180,21 +187,21 @@ impl IAudioExporter for AudioExporterService {
                 path: path_buf,
                 error: err_msg,
             }) {
-                warn!("Failed to emit ExportFailed event: {}", emit_err);
+                self.logger.warn(&format!("Failed to emit ExportFailed event: {}", emit_err));
             }
             return Err(err);
         }
         
         let duration = Duration::from_secs_f64(samples.len() as f64 / sample_rate as f64 / 2.0);
         
-        info!("✅ Export complete: {} samples written", written_samples);
+        self.logger.info(&format!("✅ Export complete: {} samples written", written_samples));
         
         // Emit ExportCompleted event
         if let Err(e) = self.event_bus.emit(AudioForgeEvent::ExportCompleted {
             path: path_buf,
             duration,
         }) {
-            warn!("Failed to emit ExportCompleted event: {}", e);
+            self.logger.warn(&format!("Failed to emit ExportCompleted event: {}", e));
         }
         
         Ok(())
@@ -211,7 +218,8 @@ mod tests {
     /// Helper function to create AudioExporterService for testing
     fn create_test_service() -> AudioExporterService {
         let event_bus = Arc::new(EventBusService::default());
-        AudioExporterService { event_bus }
+        let logger = Arc::new(crate::services::logger::QualiaLogger::default());
+        AudioExporterService { event_bus, logger }
     }
 
     /// # Responsibility

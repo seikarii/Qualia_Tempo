@@ -8,6 +8,8 @@
 
 use crate::contracts::effect_parameters::EffectConfig;
 use crate::contracts::frequency_spectrum::FrequencySpectrum;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -18,7 +20,8 @@ use std::time::Duration;
 ///
 /// All events are immutable (Clone) for safe distribution to multiple subscribers.
 /// Events represent state changes, not commands.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "type", rename_all = "camelCase")]
 pub enum AudioForgeEvent {
     /// Audio file loaded successfully
     FileLoaded {

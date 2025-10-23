@@ -1,6 +1,7 @@
 //! # Responsibility
 //! Defines channel configuration for multi-channel audio output.
 
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// # Responsibility
@@ -9,12 +10,14 @@ use serde::{Deserialize, Serialize};
 /// ---
 ///
 /// Used to configure output device and upmixing strategy.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub enum ChannelMode {
     /// Standard 2-channel stereo (L/R)
     Stereo,
 
     /// 8.1 surround (FL, FR, FC, LFE, BL, BR, SL, SR)
+    #[serde(rename = "surround8_1")]
     Surround8_1,
 }
 
@@ -30,7 +33,8 @@ impl Default for ChannelMode {
 /// ---
 ///
 /// Includes channel mode, sample rate, and buffer size.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct ChannelConfiguration {
     /// Current channel mode
     pub mode: ChannelMode,
