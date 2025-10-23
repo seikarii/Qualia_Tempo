@@ -173,7 +173,7 @@ fn test_e2e_effects_chain() {
 
     // Act: Apply effects chain
     effects
-        .apply_drop_effect(&mut samples)
+        .apply_drop_effect(&mut samples, 44100)
         .expect("Drop effect should succeed");
 
     // PROFESSIONAL MULTIBAND DROP EFFECT (Updated expectation):
@@ -1265,13 +1265,14 @@ fn test_brutal_e2e_panic_recovery_in_file_loading() {
 #[test]
 fn test_brutal_e2e_async_file_picker_state_management() {
     use std::sync::{Arc, Mutex};
-    use std::time::Instant;
-    use audio_forge::ui::widgets::ControlPanelState;
+    use std::path::PathBuf;
+    use std::time::Duration;
+    use audio_forge::ui::widgets::PlaybackBarState;
     
     println!("\n=== 🔄 BRUTAL ASYNC STATE MANAGEMENT TEST ===\n");
     
-    // STEP 1: Create shared state (same pattern as ControlPanel)
-    let state = Arc::new(Mutex::new(ControlPanelState::default()));
+    // STEP 1: Create shared state (same pattern as ModernPlaybackBar)
+    let state = Arc::new(Mutex::new(PlaybackBarState::default()));
     
     // STEP 2: Simulate rapid async task updates (race condition test)
     let mut handles = vec![];
@@ -1279,22 +1280,19 @@ fn test_brutal_e2e_async_file_picker_state_management() {
     for i in 0..10 {
         let state_clone = state.clone();
         let handle = std::thread::spawn(move || {
-            // Simulate async file picker opening
+            // Simulate async file loading (update actual state fields)
             {
                 let mut s = state_clone.lock().unwrap();
-                s.file_picker_open = true;
+                s.is_playing = false; // Simulate stop during load
             }
             
             std::thread::sleep(std::time::Duration::from_millis(10));
             
-            // Simulate completion with error
+            // Simulate completion (update file path)
             {
                 let mut s = state_clone.lock().unwrap();
-                s.file_picker_open = false;
-                s.loading_error = Some((
-                    format!("Simulated error from task {}", i),
-                    Instant::now()
-                ));
+                s.current_file_path = Some(PathBuf::from(format!("/tmp/test_file_{}.wav", i)));
+                s.total_duration = Duration::from_secs(5);
             }
         });
         handles.push(handle);
@@ -1307,11 +1305,12 @@ fn test_brutal_e2e_async_file_picker_state_management() {
     
     // STEP 4: Validate final state is consistent
     let final_state = state.lock().unwrap();
-    assert!(!final_state.file_picker_open, "❌ file_picker_open should be false after all tasks");
-    assert!(final_state.loading_error.is_some(), "❌ Should have at least one error recorded");
+    assert!(!final_state.is_playing, "❌ is_playing should be false after all tasks");
+    assert!(final_state.current_file_path.is_some(), "❌ Should have file path set");
+    assert_eq!(final_state.total_duration.as_secs(), 5, "❌ Duration should be 5 seconds");
     
-    println!("✅ Final state: file_picker_open = {}", final_state.file_picker_open);
-    println!("✅ Final error: {:?}", final_state.loading_error);
+    println!("✅ Final state: is_playing = {}", final_state.is_playing);
+    println!("✅ Final file: {:?}", final_state.current_file_path);
     
     println!("\n✅ BRUTAL ASYNC STATE MANAGEMENT TEST PASSED - No deadlocks, state consistent");
 }
@@ -1370,31 +1369,33 @@ async fn test_brutal_e2e_tokio_runtime_available_for_async_operations() {
     assert_eq!(message, "File picker completed");
     println!("✅ Async task spawned and completed successfully");
     
-    // STEP 4: Simulate ControlPanelState update pattern
-    use std::sync::{Arc, Mutex};
-    use std::time::Instant;
-    use audio_forge::ui::widgets::ControlPanelState;
-    
-    let state = Arc::new(Mutex::new(ControlPanelState::default()));
-    let state_clone = state.clone();
-    
-    tokio::spawn(async move {
-        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-        let mut s = state_clone.lock().unwrap();
-        s.file_picker_open = false;
-        s.loading_error = Some((
-            "Test error from async task".to_string(),
-            Instant::now()
-        ));
-    })
-    .await
-    .expect("Async state update task should not panic");
-    
-    // Validate state was updated
-    let final_state = state.lock().unwrap();
-    assert!(!final_state.file_picker_open);
-    assert!(final_state.loading_error.is_some());
-    println!("✅ Async state updates work correctly");
+    // STEP 4: Simulate PlaybackBarState update pattern
+    {
+        use std::path::PathBuf as PB;
+        use std::time::Duration as Dur;
+        use std::sync::{Arc as A, Mutex as M};
+        use audio_forge::ui::widgets::PlaybackBarState as PBS;
+        
+        let state = A::new(M::new(PBS::default()));
+        let state_clone = state.clone();
+        
+        tokio::spawn(async move {
+            tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+            let mut s = state_clone.lock().unwrap();
+            s.current_file_path = Some(PB::from("/tmp/async_test.wav"));
+            s.total_duration = Dur::from_secs(10);
+            s.is_playing = false;
+        })
+        .await
+        .expect("Async state update task should not panic");
+        
+        // Validate state was updated
+        let final_state = state.lock().unwrap();
+        assert!(final_state.current_file_path.is_some());
+        assert_eq!(final_state.total_duration.as_secs(), 10);
+        assert!(!final_state.is_playing);
+        println!("✅ Async state updates work correctly");
+    }
     
     println!("\n✅ BRUTAL TOKIO RUNTIME TEST PASSED - Async operations functional");
 }
@@ -1417,8 +1418,7 @@ async fn test_brutal_e2e_tokio_runtime_available_for_async_operations() {
 #[tokio::test]
 async fn test_brutal_e2e_simulated_file_loading_workflow() {
     use std::sync::{Arc, Mutex};
-    use std::time::Instant;
-    use audio_forge::ui::widgets::ControlPanelState;
+    use audio_forge::ui::widgets::PlaybackBarState;
     use audio_forge::services::AudioForgeModule;
     use audio_forge::services::interfaces::IAudioPlayer;
     use shaku::HasComponent;
@@ -1448,9 +1448,9 @@ async fn test_brutal_e2e_simulated_file_loading_workflow() {
     // STEP 2: Initialize services
     let module = AudioForgeModule::builder().build();
     let player: Arc<dyn IAudioPlayer> = module.resolve();
-    let state = Arc::new(Mutex::new(ControlPanelState::default()));
+    let state = Arc::new(Mutex::new(PlaybackBarState::default()));
     
-    // STEP 3: Simulate async file loading (same pattern as ControlPanel)
+    // STEP 3: Simulate async file loading (same pattern as ModernPlaybackBar)
     let state_clone = state.clone();
     let player_clone = player.clone();
     let test_wav_clone = test_wav.clone();
@@ -1461,28 +1461,22 @@ async fn test_brutal_e2e_simulated_file_loading_workflow() {
         
         println!("   Simulating file selection: {:?}", file_path);
         
-        // Lock state (same as ControlPanel)
-        {
-            let mut s = state_clone.lock().unwrap();
-            s.file_picker_open = false;
-        }
-        
-        // Load file (same as ControlPanel)
+        // Load file (same as ModernPlaybackBar workflow)
         let load_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             player_clone.load_file(&file_path)
         }));
         
         match load_result {
-            Ok(Ok(_)) => {
+            Ok(Ok(duration)) => {
                 println!("   ✅ File loaded successfully");
                 let mut s = state_clone.lock().unwrap();
                 s.current_file_path = Some(file_path);
-                s.loading_error = None;
+                s.total_duration = duration;
+                s.is_playing = false; // Reset playback state
             }
             Ok(Err(e)) => {
                 println!("   ❌ Load error: {}", e);
-                let mut s = state_clone.lock().unwrap();
-                s.loading_error = Some((format!("Load error: {}", e), Instant::now()));
+                // In production, error would be shown in UI overlay (not stored in state)
             }
             Err(panic_info) => {
                 let panic_msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
@@ -1491,11 +1485,7 @@ async fn test_brutal_e2e_simulated_file_loading_workflow() {
                     "Unknown panic".to_string()
                 };
                 println!("   🔥 Panic caught: {}", panic_msg);
-                let mut s = state_clone.lock().unwrap();
-                s.loading_error = Some((
-                    format!("CRITICAL ERROR: {}", panic_msg),
-                    Instant::now()
-                ));
+                // In production, critical error would be logged
             }
         }
     });
@@ -1522,10 +1512,9 @@ async fn test_brutal_e2e_simulated_file_loading_workflow() {
         final_state.current_file_path.is_some(),
         "❌ FILE PATH NOT SET (load failed)"
     );
-    assert!(
-        final_state.loading_error.is_none(),
-        "❌ LOADING ERROR PRESENT: {:?}",
-        final_state.loading_error
+    assert_eq!(
+        final_state.total_duration.as_secs(), 0,
+        "❌ Duration should be 0 for minimal WAV test file"
     );
     
     println!("✅ Final state: file loaded = {:?}", final_state.current_file_path);
@@ -1812,7 +1801,7 @@ async fn test_brutal_e2e_real_mp3_playback_from_test_assets() {
 async fn test_brutal_e2e_drag_and_drop_with_real_test_assets() {
     use std::path::PathBuf;
     use std::sync::{Arc, Mutex};
-    use audio_forge::ui::widgets::ControlPanelState;
+    use audio_forge::ui::widgets::PlaybackBarState;
     
     println!("\n=== 🖱️ BRUTAL DRAG-AND-DROP SIMULATION WITH REAL FILES ===\n");
     
@@ -1827,7 +1816,7 @@ async fn test_brutal_e2e_drag_and_drop_with_real_test_assets() {
     // STEP 2: Initialize services and state
     let module = AudioForgeModule::builder().build();
     let player: Arc<dyn IAudioPlayer> = module.resolve();
-    let state = Arc::new(Mutex::new(ControlPanelState::default()));
+    let state = Arc::new(Mutex::new(PlaybackBarState::default()));
     
     // STEP 3: Simulate drag-and-drop WAV file
     println!("\n--- Simulating WAV Drag-and-Drop ---");
@@ -1844,27 +1833,22 @@ async fn test_brutal_e2e_drag_and_drop_with_real_test_assets() {
         let validation = AudioFileValidator::validate(&wav_clone);
         
         if validation.is_err() {
-            let mut s = state_clone.lock().unwrap();
-            s.loading_error = Some((
-                format!("Invalid file: {:?}", validation.err()),
-                std::time::Instant::now()
-            ));
+            println!("   [DROP EVENT] ❌ Validation failed: {:?}", validation.err());
             return;
         }
         println!("   [DROP EVENT] ✅ Magic number validation passed");
         
         // Step 2: Load file
         match player_clone.load_file(&wav_clone) {
-            Ok(_) => {
+            Ok(duration) => {
                 println!("   [DROP EVENT] ✅ WAV file loaded successfully");
                 let mut s = state_clone.lock().unwrap();
                 s.current_file_path = Some(wav_clone.clone());
-                s.loading_error = None;
+                s.total_duration = duration;
+                s.is_playing = false;
             }
             Err(e) => {
                 println!("   [DROP EVENT] ❌ Load failed: {}", e);
-                let mut s = state_clone.lock().unwrap();
-                s.loading_error = Some((format!("Load error: {}", e), std::time::Instant::now()));
             }
         }
     });
@@ -1879,9 +1863,9 @@ async fn test_brutal_e2e_drag_and_drop_with_real_test_assets() {
             "❌ WAV not loaded after drag-and-drop simulation"
         );
         assert!(
-            final_state.loading_error.is_none(),
-            "❌ Error present after WAV drop: {:?}",
-            final_state.loading_error
+            final_state.total_duration.as_secs() >= 4,
+            "❌ Duration should be ~5 seconds, got {}",
+            final_state.total_duration.as_secs()
         );
         println!("✅ WAV drag-and-drop: file loaded = {:?}", final_state.current_file_path);
     }
@@ -1897,13 +1881,6 @@ async fn test_brutal_e2e_drag_and_drop_with_real_test_assets() {
     // STEP 4: Simulate drag-and-drop MP3 file (replace WAV)
     println!("\n--- Simulating MP3 Drag-and-Drop (replacing WAV) ---");
     
-    // Clear state before second drop to simulate fresh drop event
-    {
-        let mut s = state.lock().unwrap();
-        s.current_file_path = None;
-        s.loading_error = None;
-    }
-    
     let player_clone = player.clone();
     let state_clone = state.clone();
     let mp3_clone = mp3_path.clone();
@@ -1916,28 +1893,22 @@ async fn test_brutal_e2e_drag_and_drop_with_real_test_assets() {
         
         if let Err(e) = validation {
             println!("   [DROP EVENT] ❌ Validation failed: {:?}", e);
-            let mut s = state_clone.lock().unwrap();
-            s.loading_error = Some((
-                format!("Invalid file: {:?}", e),
-                std::time::Instant::now()
-            ));
             return;
         }
         println!("   [DROP EVENT] ✅ MP3 magic number validation passed");
         
         // Load MP3
         match player_clone.load_file(&mp3_clone) {
-            Ok(_) => {
+            Ok(duration) => {
                 println!("   [DROP EVENT] ✅ MP3 file loaded successfully");
                 let mut s = state_clone.lock().unwrap();
                 s.current_file_path = Some(mp3_clone.clone());
-                s.loading_error = None;
+                s.total_duration = duration;
+                s.is_playing = false;
                 println!("   [DROP EVENT] ✅ State updated: {:?}", s.current_file_path);
             }
             Err(e) => {
                 println!("   [DROP EVENT] ❌ MP3 load failed: {}", e);
-                let mut s = state_clone.lock().unwrap();
-                s.loading_error = Some((format!("Load error: {}", e), std::time::Instant::now()));
             }
         }
     });
@@ -1960,9 +1931,9 @@ async fn test_brutal_e2e_drag_and_drop_with_real_test_assets() {
         );
         
         assert!(
-            final_state.loading_error.is_none(),
-            "❌ Error present after MP3 drop: {:?}",
-            final_state.loading_error
+            final_state.total_duration.as_secs() >= 4,
+            "❌ Duration should be ~5 seconds, got {}",
+            final_state.total_duration.as_secs()
         );
         println!("✅ MP3 drag-and-drop: file loaded = {:?}", final_state.current_file_path);
     }

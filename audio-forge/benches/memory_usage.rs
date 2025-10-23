@@ -105,7 +105,7 @@ fn main() {
         let mut effected = samples.clone();
         let elapsed_time = (i * chunk_size) as f32 / 44100.0;
         let _ = effects.apply_8d_effect(&mut effected, 44100, elapsed_time);
-        let _ = effects.apply_drop_effect(&mut effected);
+        let _ = effects.apply_drop_effect(&mut effected, 44100);
         let _ = effects.apply_bass_boost(&mut effected, 44100);
         let _ = effects.apply_treble_boost(&mut effected, 44100);
         
