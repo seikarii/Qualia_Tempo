@@ -11,6 +11,7 @@ use crate::services::interfaces::i_audio_effects::IAudioEffects;
 use crate::services::interfaces::i_audio_player::IAudioPlayer;
 use crate::services::interfaces::i_multi_channel_output::IMultiChannelOutput;
 use crate::services::sample_counting_source::SampleCountingSource;
+use crate::services::seekable_source::SeekableSource;
 use crate::services::upmixing_source::UpmixingSource;
 use rodio::{OutputStream, Sink, Source};
 use shaku::Component;
@@ -324,45 +325,91 @@ impl IAudioPlayer for AudioPlayerService {
         // Clamp position to valid range [0, total_duration]
         let clamped_position = position.min(state.total_duration);
         
-        // CRITICAL FIX: rodio's Sink.try_seek() FAILS with custom sources (AnalyzingSource, EffectsSource).
-        // Instead of fighting rodio's seek implementation, RELOAD THE FILE and skip to position.
-        // This is more reliable and handles all source types uniformly.
+        // FIXED: Proper seeking implementation using SeekableSource wrapper.
+        // Strategy: Reload file, wrap in SeekableSource that skips samples until target position.
         
         let file_path = state.current_file.clone()
             .ok_or_else(|| AudioPlayerError::SeekError("No file path stored".to_string()))?;
         
-        // Store playback state
+        let sample_rate = state.sample_rate;
         let was_playing = state.is_playing;
         
-        // Drop lock before calling load_file (which acquires lock)
+        // Calculate target sample position
+        let target_samples = (clamped_position.as_secs_f64() * sample_rate as f64) as u64;
+        
+        // Drop lock before reload
         drop(state);
         
-        // Reload file (clears sink, rebuilds pipeline)
-        self.load_file(&file_path)?;
+        // Reload file from scratch
+        let file = File::open(&file_path)
+            .map_err(|_| AudioPlayerError::FileNotFound(file_path.clone()))?;
+        let buf_reader = BufReader::new(file);
+        let source = rodio::Decoder::new(buf_reader)
+            .map_err(|e| AudioPlayerError::DecodingError(format!("Failed to decode for seek: {}", e)))?;
         
-        // Reacquire lock after reload
+        let total_duration = source
+            .total_duration()
+            .ok_or_else(|| AudioPlayerError::DecodingError("Failed to get duration for seek".to_string()))?;
+        
+        // Build pipeline with SeekableSource wrapper
+        let (counting_source, sample_counter) = SampleCountingSource::new(source);
+        
+        // Wrap in SeekableSource to skip to target position
+        let seekable_source = SeekableSource::new(counting_source, target_samples, sample_counter.clone());
+        
+        let buffer_capacity = (sample_rate * 2) as usize;
+        let chunk_size = 512;
+        
+        let analyzing_source = AnalyzingSource::new(seekable_source, buffer_capacity, chunk_size);
+        let sample_buffer = analyzing_source.buffer();
+        
+        let effects_source = EffectsSource::new(
+            analyzing_source,
+            self.audio_effects.clone(),
+            chunk_size,
+        );
+        
+        // Check upmixing configuration
+        let channel_config = self.multi_channel.get_configuration();
+        let use_upmixing = channel_config.mode == ChannelMode::Surround8_1 
+                        && channel_config.is_8_1_available;
+        
+        // Reacquire lock and rebuild Sink
         let mut state = self.state.lock();
         
-        // Skip to target position by consuming samples
-        let target_samples = (clamped_position.as_secs_f64() * state.sample_rate as f64) as u64;
+        state.sink.stop();
+        state.sink.clear();
         
-        // Update sample counter to reflect seek position
-        state.sample_counter.store(target_samples, Ordering::Relaxed);
+        if use_upmixing {
+            let upmixing_source = UpmixingSource::try_new(
+                effects_source,
+                self.multi_channel.clone(),
+                256,
+            ).map_err(|e| AudioPlayerError::PlaybackError(format!("Failed upmixing for seek: {}", e)))?;
+            state.sink.append(upmixing_source);
+        } else {
+            state.sink.append(effects_source);
+        }
         
-        // Note: We can't actually skip samples in the pipeline without consuming them.
-        // The counter update is sufficient for UI position display.
-        // Actual audio will start from beginning but counter shows correct position.
-        // This is a known limitation of rodio's Sink architecture.
+        // Restore state
+        state.total_duration = total_duration;
+        state.sample_buffer = Some(sample_buffer);
+        state.sample_rate = sample_rate;
+        state.sample_counter = sample_counter;
+        state.current_file = Some(file_path);
         
         // Restore playback state
         if was_playing {
             state.sink.play();
             state.is_playing = true;
+        } else {
+            state.sink.pause();
+            state.is_playing = false;
         }
         
-        drop(state); // Release lock
+        drop(state);
         
-        info!("Seeked to {:?} (sample {})", clamped_position, target_samples);
+        info!("✅ Seek successful to {:?} (sample {})", clamped_position, target_samples);
         
         // Emit SeekedTo event
         if let Err(e) = self.event_bus.emit(AudioForgeEvent::SeekedTo {

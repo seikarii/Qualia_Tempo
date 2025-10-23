@@ -238,6 +238,58 @@ impl Panel for EffectsPanel {
         });
 
         // ====================================================================
+        // PITCH SHIFT / HZ CHANGER (NEW)
+        // ====================================================================
+        ui.horizontal(|ui| {
+            ui.group(|ui| {
+                ui.vertical(|ui| {
+                    if ui.checkbox(&mut self.effect_config.pitch_shift_enabled, "Hz Changer (Pitch Shift)")
+                        .on_hover_text("Shift reference frequency from 440Hz (A4) to harmonic alternatives")
+                        .changed() 
+                    {
+                        config_changed = true;
+                    }
+                    if self.effect_config.pitch_shift_enabled {
+                        ui.horizontal(|ui| {
+                            ui.label("Target Frequency:");
+                            if ui.add(
+                                egui::DragValue::new(&mut self.effect_config.reference_frequency)
+                                    .speed(1.0)
+                                    .range(220.0..=880.0)
+                                    .suffix(" Hz"),
+                            )
+                            .on_hover_text("Reference frequency for A4 (default 440Hz)")
+                            .changed() {
+                                config_changed = true;
+                            }
+                        });
+                        
+                        // Quick presets for common harmonic frequencies
+                        ui.horizontal(|ui| {
+                            ui.label("Presets:");
+                            if ui.small_button("432 Hz").on_hover_text("Verdi's A (natural tuning)").clicked() {
+                                self.effect_config.reference_frequency = 432.0;
+                                config_changed = true;
+                            }
+                            if ui.small_button("528 Hz").on_hover_text("Solfeggio healing frequency").clicked() {
+                                self.effect_config.reference_frequency = 528.0;
+                                config_changed = true;
+                            }
+                            if ui.small_button("396 Hz").on_hover_text("Solfeggio liberation frequency").clicked() {
+                                self.effect_config.reference_frequency = 396.0;
+                                config_changed = true;
+                            }
+                            if ui.small_button("440 Hz").on_hover_text("Standard concert pitch (reset)").clicked() {
+                                self.effect_config.reference_frequency = 440.0;
+                                config_changed = true;
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+        // ====================================================================
         // DEBOUNCED CONFIG PROPAGATION
         // ====================================================================
         // Avoid spamming mutex locks on every slider drag. Wait 100ms after

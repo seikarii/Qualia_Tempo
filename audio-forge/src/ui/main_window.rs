@@ -19,7 +19,7 @@ use crate::ui::widgets::{
 };
 use egui::{CentralPanel, Context, TopBottomPanel};
 use shaku::{Component, Interface};
-use std::path::PathBuf;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tracing::{error, info, warn};
@@ -382,7 +382,7 @@ impl MainWindow {
     /// ---
     ///
     /// SECURITY: Validates file format via magic numbers before loading.
-    fn load_audio_file_validated(&self, path: &PathBuf) {
+    fn load_audio_file_validated(&self, path: &Path) {
         // Step 1: Validate file format (magic number check via centralized validator)
         if let Err(e) = AudioFileValidator::validate(path) {
             error!("❌ File validation failed: {}", e);
