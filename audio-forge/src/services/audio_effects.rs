@@ -83,28 +83,22 @@ pub struct FilterState {
     last_drop_amount: f32,
 }
 
-impl Default for FilterState {
-    fn default() -> Self {
-        Self::new(44100) // Standard CD-quality sample rate
-    }
-}
-
 impl FilterState {
-    fn new(sample_rate: u32) -> Self {
+    fn new(sample_rate: u32) -> Result<Self, AudioEffectsError> {
         // Initialize with neutral coefficients (0dB gain)
         let bass_coeffs = Coefficients::<f32>::from_params(
             Type::LowShelf(0.0), // 0dB = unity gain
             sample_rate.hz(),
             BASS_CUTOFF_HZ.hz(),
             Q_BUTTERWORTH_F32,
-        ).unwrap();
+        ).map_err(|e| AudioEffectsError::ProcessingFailed(format!("Failed to create bass filter: {:?}", e)))?;
 
         let treble_coeffs = Coefficients::<f32>::from_params(
             Type::HighShelf(0.0),
             sample_rate.hz(),
             TREBLE_CUTOFF_HZ.hz(),
             Q_BUTTERWORTH_F32,
-        ).unwrap();
+        ).map_err(|e| AudioEffectsError::ProcessingFailed(format!("Failed to create treble filter: {:?}", e)))?;
         
         // Initialize drop effect filters (Linkwitz-Riley crossover)
         let drop_sub_bass_lpf_coeffs = Coefficients::<f32>::from_params(
@@ -112,30 +106,30 @@ impl FilterState {
             sample_rate.hz(),
             80.0.hz(), // Sub-bass cutoff
             Q_BUTTERWORTH_F32,
-        ).unwrap();
+        ).map_err(|e| AudioEffectsError::ProcessingFailed(format!("Failed to create sub-bass LPF: {:?}", e)))?;
         
         let drop_bass_hpf_coeffs = Coefficients::<f32>::from_params(
             Type::HighPass,
             sample_rate.hz(),
             80.0.hz(), // Bass bandpass start
             Q_BUTTERWORTH_F32,
-        ).unwrap();
+        ).map_err(|e| AudioEffectsError::ProcessingFailed(format!("Failed to create bass HPF: {:?}", e)))?;
         
         let drop_bass_lpf_coeffs = Coefficients::<f32>::from_params(
             Type::LowPass,
             sample_rate.hz(),
             250.0.hz(), // Bass bandpass end
             Q_BUTTERWORTH_F32,
-        ).unwrap();
+        ).map_err(|e| AudioEffectsError::ProcessingFailed(format!("Failed to create bass LPF: {:?}", e)))?;
         
         let drop_mid_high_hpf_coeffs = Coefficients::<f32>::from_params(
             Type::HighPass,
             sample_rate.hz(),
             250.0.hz(), // Mid-high cutoff
             Q_BUTTERWORTH_F32,
-        ).unwrap();
+        ).map_err(|e| AudioEffectsError::ProcessingFailed(format!("Failed to create mid-high HPF: {:?}", e)))?;
 
-        Self {
+        Ok(Self {
             bass_filter: DirectForm2Transposed::<f32>::new(bass_coeffs),
             treble_filter: DirectForm2Transposed::<f32>::new(treble_coeffs),
             last_bass_gain: 1.0,
@@ -149,10 +143,10 @@ impl FilterState {
             drop_bass_lpf: DirectForm2Transposed::<f32>::new(drop_bass_lpf_coeffs),
             drop_mid_high_hpf: DirectForm2Transposed::<f32>::new(drop_mid_high_hpf_coeffs),
             last_drop_amount: 0.0,
-        }
+        })
     }
 
-    fn update_bass_if_changed(&mut self, new_gain: f32, new_cutoff: f32, sample_rate: u32) {
+    fn update_bass_if_changed(&mut self, new_gain: f32, new_cutoff: f32, sample_rate: u32) -> Result<(), AudioEffectsError> {
         let gain_changed = (new_gain - self.last_bass_gain).abs() > 0.01;
         let cutoff_changed = (new_cutoff - self.last_bass_cutoff).abs() > 1.0;
         
@@ -165,15 +159,16 @@ impl FilterState {
                 sample_rate.hz(),
                 new_cutoff.hz(), // Use configurable cutoff
                 Q_BUTTERWORTH_F32,
-            ).unwrap();
+            ).map_err(|e| AudioEffectsError::ProcessingFailed(format!("Failed to update bass filter: {:?}", e)))?;
 
             self.bass_filter = DirectForm2Transposed::<f32>::new(coeffs);
             self.last_bass_gain = new_gain;
             self.last_bass_cutoff = new_cutoff;
         }
+        Ok(())
     }
 
-    fn update_treble_if_changed(&mut self, new_gain: f32, new_cutoff: f32, sample_rate: u32) {
+    fn update_treble_if_changed(&mut self, new_gain: f32, new_cutoff: f32, sample_rate: u32) -> Result<(), AudioEffectsError> {
         let gain_changed = (new_gain - self.last_treble_gain).abs() > 0.01;
         let cutoff_changed = (new_cutoff - self.last_treble_cutoff).abs() > 1.0;
         
@@ -185,12 +180,13 @@ impl FilterState {
                 sample_rate.hz(),
                 new_cutoff.hz(), // Use configurable cutoff
                 Q_BUTTERWORTH_F32,
-            ).unwrap();
+            ).map_err(|e| AudioEffectsError::ProcessingFailed(format!("Failed to update treble filter: {:?}", e)))?;
 
             self.treble_filter = DirectForm2Transposed::<f32>::new(coeffs);
             self.last_treble_gain = new_gain;
             self.last_treble_cutoff = new_cutoff;
         }
+        Ok(())
     }
     
     /// # Responsibility
@@ -244,6 +240,31 @@ impl FilterState {
 }
 
 /// # Responsibility
+/// Default implementation for FilterState with CD-quality sample rate.
+///
+/// ---
+///
+/// **DEFENSIVE PANIC**: This implementation panics if filter creation fails.
+/// However, failure is mathematically impossible given validated constants:
+/// - Sample rate: 44100 Hz (CD quality, always valid)
+/// - Cutoff frequencies: 80Hz, 250Hz, 3000Hz (all < Nyquist @ 22050Hz)
+/// - Q factor: 0.707 (Butterworth, always valid)
+///
+/// This Default impl exists solely to satisfy Shaku's #[shaku(default)] annotation
+/// which cannot handle fallible constructors.
+impl Default for FilterState {
+    fn default() -> Self {
+        // Use CD-quality sample rate (44.1kHz) as default
+        const DEFAULT_SAMPLE_RATE: u32 = 44100;
+        
+        match Self::new(DEFAULT_SAMPLE_RATE) {
+            Ok(state) => state,
+            Err(e) => panic!("FATAL: FilterState::default() failed with validated parameters - this should never happen. Error: {}", e),
+        }
+    }
+}
+
+/// # Responsibility
 /// Real-time audio effects service with DSP algorithms.
 ///
 /// ---
@@ -270,13 +291,16 @@ pub struct AudioEffectsService {
 }
 
 impl AudioEffectsService {
-    pub fn new(config: EffectConfig, event_bus: Arc<dyn IEventBus>, logger: Arc<dyn ILogger>) -> Self {
-        Self {
+    pub fn new(config: EffectConfig, event_bus: Arc<dyn IEventBus>, logger: Arc<dyn ILogger>) -> Result<Self, AudioEffectsError> {
+        // Initialize filter state with proper error handling
+        let filter_state = FilterState::new(44100)?;
+        
+        Ok(Self {
             config: RwLock::new(config),
-            filter_state: Mutex::new(FilterState::new(44100)),
+            filter_state: Mutex::new(filter_state),
             event_bus,
             logger,
-        }
+        })
     }
 }
 
@@ -365,7 +389,7 @@ impl IAudioEffects for AudioEffectsService {
         // Update filter coefficients ONLY if gain or cutoff changed (lazy recalculation)
         let mut filter_state = self.filter_state.lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
-        filter_state.update_bass_if_changed(gain, cutoff, sample_rate);
+        filter_state.update_bass_if_changed(gain, cutoff, sample_rate)?;
 
         // Apply LowShelf biquad filter @ 250Hz
         for sample in samples.iter_mut() {
@@ -393,7 +417,7 @@ impl IAudioEffects for AudioEffectsService {
         // Update filter coefficients ONLY if gain or cutoff changed
         let mut filter_state = self.filter_state.lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
-        filter_state.update_treble_if_changed(gain, cutoff, sample_rate);
+        filter_state.update_treble_if_changed(gain, cutoff, sample_rate)?;
 
         // Apply HighShelf biquad filter @ 3kHz
         for sample in samples.iter_mut() {
@@ -437,6 +461,7 @@ mod tests {
         let event_bus = Arc::new(EventBusService::default());
         let logger = Arc::new(crate::services::logger::QualiaLogger);
         AudioEffectsService::new(EffectConfig::default(), event_bus, logger)
+            .expect("Failed to create test AudioEffectsService")
     }
     
     /// Helper with custom config
@@ -444,6 +469,7 @@ mod tests {
         let event_bus = Arc::new(EventBusService::default());
         let logger = Arc::new(crate::services::logger::QualiaLogger);
         AudioEffectsService::new(config, event_bus, logger)
+            .expect("Failed to create test AudioEffectsService with custom config")
     }
 
     #[test]

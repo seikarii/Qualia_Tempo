@@ -164,12 +164,14 @@ mod tests {
     
     fn create_test_effects_service() -> Arc<dyn IAudioEffects> {
         let event_bus = Arc::new(EventBusService::default());
-        Arc::new(AudioEffectsService::new(EffectConfig::default(), event_bus.clone(), Arc::new(crate::services::logger::QualiaLogger)))
+        Arc::new(AudioEffectsService::new(EffectConfig::default(), event_bus.clone(), Arc::new(crate::services::logger::QualiaLogger))
+            .expect("Failed to create test AudioEffectsService"))
     }
     
     fn create_test_effects_service_with_config(config: EffectConfig) -> Arc<dyn IAudioEffects> {
         let event_bus = Arc::new(EventBusService::default());
-        Arc::new(AudioEffectsService::new(config, event_bus.clone(), Arc::new(crate::services::logger::QualiaLogger)))
+        Arc::new(AudioEffectsService::new(config, event_bus.clone(), Arc::new(crate::services::logger::QualiaLogger))
+            .expect("Failed to create test AudioEffectsService with config"))
     }
     
     #[test]

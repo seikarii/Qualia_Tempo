@@ -155,8 +155,11 @@ impl IAudioAnalyzer for AudioAnalyzerService {
 
         // Normalize magnitudes to [0.0, 1.0]
         // OPTIMIZATION: Using iterator pattern for better vectorization
-        if let Some(&max_mag) = magnitudes.iter().max_by(|a, b| a.partial_cmp(b).unwrap()) {
-            if max_mag > 0.0 {
+        // NOTE: partial_cmp returns None only for NaN. We use unwrap_or to treat NaN as min value.
+        if let Some(&max_mag) = magnitudes.iter().max_by(|a, b| {
+            a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
+        }) {
+            if max_mag > 0.0 && max_mag.is_finite() {
                 let inv_max = 1.0 / max_mag; // Single division, multiple multiplications
                 magnitudes.iter_mut().for_each(|mag| *mag *= inv_max);
             }
@@ -207,9 +210,12 @@ impl IAudioAnalyzer for AudioAnalyzerService {
 
         for chunk in audio_buffer.chunks(chunk_size) {
             // Preserve sign from original sample with max absolute value
+            // NOTE: partial_cmp returns None for NaN. Treat NaN as Equal to handle edge cases.
             let signed_peak = chunk
                 .iter()
-                .max_by(|a, b| a.abs().partial_cmp(&b.abs()).unwrap())
+                .max_by(|a, b| {
+                    a.abs().partial_cmp(&b.abs()).unwrap_or(std::cmp::Ordering::Equal)
+                })
                 .copied()
                 .unwrap_or(0.0);
 

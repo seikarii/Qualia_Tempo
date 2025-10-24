@@ -122,11 +122,14 @@ pub struct PlayerStateHandle(Arc<Mutex<PlayerState>>);
 
 impl Default for PlayerStateHandle {
     fn default() -> Self {
-        // Initialize with error handling - panic only on construction failure (unrecoverable)
+        // Initialize with panic fallback for Default trait (which cannot return Result)
         // NOTE: This panic is by design - without audio hardware, the service cannot function.
-        // For headless/CI environments, use mock implementations instead.
-        let state = PlayerState::new().expect("FATAL: Failed to initialize audio device - no audio hardware available");
-        Self(Arc::new(Mutex::new(state)))
+        // For headless/CI environments, use mock implementations or try_new() instead.
+        // DIRECTIVE: Prefer try_new() for error-propagatable initialization.
+        match PlayerState::new() {
+            Ok(state) => Self(Arc::new(Mutex::new(state))),
+            Err(e) => panic!("FATAL: Failed to initialize audio device - {}", e),
+        }
     }
 }
 
@@ -743,7 +746,7 @@ mod tests {
             crate::contracts::effect_parameters::EffectConfig::default(),
             event_bus.clone(),
             logger.clone()
-        ));
+        ).expect("Failed to create AudioEffectsService for test"));
         let multi_channel = Arc::new(MultiChannelOutputService::default());
         AudioPlayerService {
             state: PlayerStateHandle::default(),

@@ -216,10 +216,8 @@ impl ModernPlaybackBar {
                 if let Err(e) = self.audio_player.pause() {
                     error!("Pause failed: {}", e);
                 }
-            } else {
-                if let Err(e) = self.audio_player.play() {
-                    error!("Play failed: {}", e);
-                }
+            } else if let Err(e) = self.audio_player.play() {
+                error!("Play failed: {}", e);
             }
         }
         
