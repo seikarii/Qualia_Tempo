@@ -20,6 +20,10 @@ pub mod upmixing_source;
 pub mod validators;
 pub mod visualization_engine;
 
+// High-fidelity mocks for all service interfaces (test-only)
+#[cfg(test)]
+pub mod mocks;
+
 pub use analyzing_source::{AnalyzingSource, SampleBuffer};
 pub use application_services::{ApplicationServices, IApplicationServices};
 pub use audio_analyzer::AudioAnalyzerService;
